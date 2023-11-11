@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonar Splash Screen</title>
+    <style>
+        body {
+            text-align: center;
+            padding-top: 100px;
+            font-family: Arial, sans-serif;
+            background-color: #2f2f2f; /* Couleur de fond de votre choix */
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .logo {
+            width: 100px; /* Taille initiale du logo */
+            height: auto;
+            opacity: 0; /* Commencer avec le logo invisible */
+            animation: bounceIn 2s ease forwards; /* Animation définie ci-dessous */
+        }
+        .welcome-message {
+            margin-top: 20px;
+            font-size: 24px;
+            color: #333;
+            opacity: 0;
+            animation: fadeIn 2s ease 2s forwards; /* Commence après l'animation du logo */
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <img src="src-tauri/icons/128x128@2x.png" alt="Sonar Logo" class="logo">
+        <div class="welcome-message">
+            Bienvenue sur Sonar, votre outil de développement agile et fiable.
+        </div>
+    </div>
+    <!-- JavaScript pour la gestion de la transition ou des animations -->
+    <script>
+        window.addEventListener('load', () => {
+            // Wait for the animation to finish, then redirect or load the main app
+            setTimeout(() => {
+                window.location.href = '/'; // Redirect to the main Vue.js app
+            }, 5000); // Match this time with your animation duration
+        });
+    </script>
+</body>
+</html>
