@@ -1,52 +1,30 @@
 <script setup>
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-import Greet from "./components/Greet.vue";
+import Capture from './components/Capture.vue';
+import Ouvrir from './components/Ouvrir.vue';
+import Decouvrir from './components/Decouvrir.vue';
 </script>
 
 <template>
   <div class="container">
-    <h1>Welcome to Tauri!</h1>
 
-    <div class="row">
-      <a href="https://vitejs.dev" target="_blank">
-        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-      </a>
-      <a href="https://tauri.app" target="_blank">
-        <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-      </a>
-      <a href="https://vuejs.org/" target="_blank">
-        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-      </a>
+    <Capture />
+    <Ouvrir />
+    <Decouvrir />
+
+    <div class="footer">
+      <span>Version du logiciel: 1.0.1</span>
     </div>
-
-    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
-
-    <p>
-      Recommended IDE setup:
-      <a href="https://code.visualstudio.com/" target="_blank">VS Code</a>
-      +
-      <a href="https://github.com/johnsoncodehk/volar" target="_blank">Volar</a>
-      +
-      <a href="https://github.com/tauri-apps/tauri-vscode" target="_blank"
-        >Tauri</a
-      >
-      +
-      <a href="https://github.com/rust-lang/rust-analyzer" target="_blank"
-        >rust-analyzer</a
-      >
-    </p>
-
-    <Greet />
   </div>
 </template>
 
 <style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
 
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
+.container {
+  padding: auto;
+   border: 1px black solid;
+}
+.footer {
+  padding: 10px;
+  text-align: left;
 }
 </style>
