@@ -2707,9 +2707,9 @@ dependencies = [
 
 [[package]]
 name = "sonar_lib"
-version = "0.1.1"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e36e1a9cdebf9187b83e3acfecb57193f54a7a7e30715b0050871c57967b55b3"
+checksum = "4046d62679997ede4175f12dfefb31a77a9e05d7162f954132c5b28d58b2cb47"
 dependencies = [
  "clap",
  "colored",
