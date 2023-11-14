@@ -45,6 +45,7 @@
   
 <style scoped>
 .capture-container {
+  margin: 20px;
   display: flex;
   flex-direction: column;
   background-color: #f6f6f6; /* Adjust the background color as needed */

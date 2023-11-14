@@ -6,13 +6,20 @@
         <div class="content">
             <h1 >Gide utilisateur</h1>
             <h1 >Wiki</h1>
-            <h1 >Github</h1>
+            <h1 >Documentation</h1>
+            <h1 >Open issue</h1>
+            <h1><a href="https://github.com/Sonar-team/Sonar_desktop_app" 
+                    target="_blank">
+                    GitHub
+                </a>
+            </h1>        
         </div>
     </div>
 </template>
 
 <style scoped>
 .capture-container {
+    margin: 20px;
     display: inline-block;
 flex-direction: column;
 background-color: #f6f6f6; /* Adjust the background color as needed */
@@ -23,7 +30,7 @@ margin-right: 20px;
 .title-capture {
 color: #888;
 font-family: Oxanium;
-font-size: 40px;
+font-size: 60px;
 font-style: normal;
 font-weight: 500;
 line-height: normal;  
@@ -34,9 +41,13 @@ text-align: left;
 }
 
 .content {
-display: inline-block;
-color: black;
-font-size: 12px;
+    display: flex; /* Use flexbox for layout */
+    justify-content: space-around; /* Adjust the spacing between items */
+    align-items: center; /* Align items vertically */
+    color: black;
+    font-size: 10px;
+    font-family: Oxanium;
+    font-weight: 900;
 }
 
 </style>

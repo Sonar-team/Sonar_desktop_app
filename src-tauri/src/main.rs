@@ -15,7 +15,6 @@ fn main() {
 
 #[tauri::command(rename_all = "snake_case")]
 fn get_interfaces_tab() -> Vec<String> {
-    
     get_interfaces()
 }
 
@@ -23,5 +22,4 @@ fn get_interfaces_tab() -> Vec<String> {
 fn print_selected_interface(interface_name: String) {
     println!("You have selected the interface: {}", interface_name);
     scan_until_interrupt(&interface_name);
-    
 }

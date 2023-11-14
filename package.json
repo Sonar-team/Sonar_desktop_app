@@ -10,12 +10,14 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@fontsource/oxanium": "^5.0.17",
+    "@tauri-apps/api": "^1.5.1",
     "vue": "^3.3.4",
-    "@tauri-apps/api": "^1.5.1"
+    "vue-router": "^4.2.5"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^1.5.6",
     "@vitejs/plugin-vue": "^4.2.3",
-    "vite": "^4.4.4",
-    "@tauri-apps/cli": "^1.5.6"
+    "vite": "^4.4.4"
   }
 }
