@@ -9,39 +9,43 @@
           class="interface-item"
           v-for="netInterface in netInterfaces"
           :key="netInterface"
-          @click="handleClick(netInterface)"
+          @click="goToAnalysePage"
         >
           {{ netInterface }}
         </div>
+        <router-view></router-view>
       </div>
     </div>
   </div>
 </template>
   
-  <script>
-  import { invoke } from '@tauri-apps/api/tauri';
-  
-  export default {
-    data() {
-      return {
-        netInterfaces: []
-      };
+<script>
+import { invoke } from '@tauri-apps/api/tauri';
+
+export default {
+  data() {
+    return {
+      netInterfaces: []
+    };
+  },
+  methods: {
+      async handleClick(netInterface) {
+      console.log(`You clicked on interface: ${netInterface}`);
+      await invoke('print_selected_interface', { interface_name: netInterface });
+      goToAnalysePage();
     },
-    methods: {
-        async handleClick(netInterface) {
-        console.log(`You clicked on interface: ${netInterface}`);
-        await invoke('print_selected_interface', { interface_name: netInterface });
-        // Here you can put any code to handle the button click.
-      }
-    },
-    mounted() {
-      console.log("mounted");
-      invoke('get_interfaces_tab').then((interfaces) => {
-        this.netInterfaces = interfaces;
-      });
+    goToAnalysePage() {
+      this.$router.push("/analyse");
     }
-  };
-  </script>
+  },
+  mounted() {
+    console.log("mounted");
+    invoke('get_interfaces_tab').then((interfaces) => {
+      this.netInterfaces = interfaces;
+    });
+  }
+};
+</script>
   
 <style scoped>
 .capture-container {

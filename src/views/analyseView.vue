@@ -1,19 +1,22 @@
 <template>
-    <div>hello</div>
+    <div>"hello"</div>
+    <TramTab />
 </template>
 
 <script>
+import TramTab from '../components/CaptureVue/trameTab.vue';
 export default {
+  components: {
+        TramTab
+     },
     data() {
-      return {
-        netInterfaces: []
-      };
+      
     },
     methods: {
 
     },
     mounted() {
-      console.log("mounted");
+      console.log("analyse mounted");
 
     }
   };
