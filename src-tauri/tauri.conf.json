@@ -11,7 +11,10 @@
   },
   "tauri": {
     "allowlist": {
-      "all": false,
+      "all": true,
+      "fs":{
+        "all": true
+      },
       "shell": {
         "all": false,
         "open": true
@@ -40,14 +43,17 @@
         "width": 800,
         "height": 600,
         "visible": false,
-        "decorations": true 
+        "decorations": true,
+        "center": false 
       },
       {
         "width": 800,
         "height": 600,
         "decorations": true,
         "url": "splashscreen.html",
-        "label": "splashscreen"
+        "label": "splashscreen",
+        "resizable": true,
+        "center": false 
       }
     ]
   }

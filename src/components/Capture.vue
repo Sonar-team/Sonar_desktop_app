@@ -35,6 +35,7 @@
       }
     },
     mounted() {
+      console.log("mounted");
       invoke('get_interfaces_tab').then((interfaces) => {
         this.netInterfaces = interfaces;
       });
@@ -46,7 +47,7 @@
 .capture-container {
   display: flex;
   flex-direction: column;
-  background-color: #f0f0f0; /* Adjust the background color as needed */
+  background-color: #f6f6f6; /* Adjust the background color as needed */
   text-align: left;
 }
 

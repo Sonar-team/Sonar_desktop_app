@@ -1,54 +1,54 @@
 <template>
-    <div class="capture-container">
-      <div class="header">
-        <h1 class="title-capture">Ouvrir</h1>
-      </div>
-      <div class="content">
-        <div class="interface-list">
-          <div
-            class="interface-item"
-            v-for="netInterface in listeFiles"
-            :key="netInterface"
-            @click="handleClick(netInterface)"
-          >
-            {{ netInterface }}
-          </div>
+  <div class="capture-container">
+    <div class="header">
+      <h1 class="title-capture">Ouvrir</h1>
+    </div>
+    <div class="content">
+      <div class="interface-list">
+        <div
+          class="interface-item"
+          v-for="netInterface in listeFiles"
+          :key="netInterface"
+          @click="handleClick(netInterface)"
+        >
+          {{ netInterface }}
         </div>
       </div>
     </div>
-  </template>
+  </div>
+</template>
     
-    <script>
-    import { invoke } from '@tauri-apps/api/tauri';
-    
-    export default {
-      data() {
-        return {
-          netInterfaces: [],
-          listeFiles: ["/home/cyprien/Documents/rust_projects/pcap_rust/test2.csv (88 Kb)",
-        "/home/cyprien/Documents/rust_projects/pcap_rust/test3.csv (108 Kb)"],
-        };
-      },
-      methods: {
-          async handleClick(netInterface) {
-          console.log(`You clicked on interface: ${netInterface}`);
-          await invoke('print_selected_interface', { interface_name: netInterface });
-          // Here you can put any code to handle the button click.
-        }
-      },
-      mounted() {
-        invoke('get_interfaces_tab').then((interfaces) => {
-          this.netInterfaces = interfaces;
-        });
-      }
+<script>
+import { invoke } from '@tauri-apps/api/tauri';
+
+export default {
+  data() {
+    return {
+      netInterfaces: [],
+      listeFiles: ["/home/cyprien/Documents/rust_projects/pcap_rust/test2.csv (88 Kb)",
+    "/home/cyprien/Documents/rust_projects/pcap_rust/test3.csv (108 Kb)"],
     };
-    </script>
+  },
+  methods: {
+      async handleClick(netInterface) {
+      console.log(`You clicked on interface: ${netInterface}`);
+      await invoke('print_selected_interface', { interface_name: netInterface });
+      // Here you can put any code to handle the button click.
+    }
+  },
+  mounted() {
+    // invoke('get_interfaces_tab').then((interfaces) => {
+    //   this.netInterfaces = interfaces;
+    // });
+  }
+};
+</script>
     
 <style scoped>
 .capture-container {
 display: flex;
 flex-direction: column;
-background-color: #f0f0f0; /* Adjust the background color as needed */
+background-color: #f6f6f6; /* Adjust the background color as needed */
 text-align: left;
 }
 
@@ -90,5 +90,3 @@ background-color: #0BA4DB; /* Adjust hover state background color as needed */
 }
 
 </style>
-    
-    

@@ -20,8 +20,7 @@ import Decouvrir from './components/Decouvrir.vue';
 <style scoped>
 
 .container {
-  padding: auto;
-   border: 1px black solid;
+  color: white;
 }
 .footer {
   padding: 10px;
