@@ -10,6 +10,34 @@
     "version": "0.0.0"
   },
   "tauri": {
+    "cli": {
+      "description": "", 
+      "longDescription": "",
+      "beforeHelp": "", 
+      "afterHelp": "", 
+      "args": [
+        {
+          "name": "output",
+          "index": 1,
+          "takesValue": true
+        },
+        {
+          "name": "interface",
+          "index": 2,
+          "takesValue": true
+        },
+        {
+          "name": "time",
+          "index": 3,
+          "takesValue": true
+        }
+      ], 
+      "subcommands": {
+        "subcommand-name": {
+          
+        }
+      }
+    },
     "allowlist": {
       "all": true,
       "fs":{
