@@ -1,6 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::thread;
+
 use sonar_desktop_app::{print_banner, scan_until_interrupt, capture_packet::get_interfaces};
 use tauri::Manager;
 
@@ -26,5 +28,7 @@ fn get_interfaces_tab() -> Vec<String> {
 fn get_selected_interface(window: tauri::Window, interface_name: String) {
     let app = window.app_handle();
     println!("You have selected the interface: {}", interface_name);
-    let _ = scan_until_interrupt(app, "oui",&interface_name);
+    thread::spawn(move || {
+        let _ = scan_until_interrupt(app, "oui.csv", &interface_name);
+    });
 }

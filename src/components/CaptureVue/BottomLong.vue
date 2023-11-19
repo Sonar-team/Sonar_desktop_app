@@ -18,6 +18,7 @@
 </template>
 
 <script>
+import { invoke } from '@tauri-apps/api';
 import { listen } from '@tauri-apps/api/event'
 
 export default {
@@ -27,8 +28,10 @@ export default {
     }
   },
   async mounted() {
+    console.log('mounted bottom')
+    await invoke('get_selected_interface', { interface_name: 'all' })
     await listen('frame', (packet_info) => {
-      // Push the new counter to the array
+      console.log('Received event:', packet_info);      // Push the new counter to the array
       this.frames.push(packet_info.payload);
 
       // Keep only the last 10 elements
@@ -51,10 +54,12 @@ export default {
     border: 1px solid black;
     padding: 8px;
     text-align: center;
+    color: aliceblue;
+  
   }
 
   th {
-    background-color: #090808;
+    background-color: #000000;
   }
 </style>
  

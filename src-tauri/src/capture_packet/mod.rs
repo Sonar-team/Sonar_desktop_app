@@ -61,7 +61,7 @@ fn capture_packets(app: tauri::AppHandle, interface: datalink::NetworkInterface)
                     println!("---");
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
                     println!("{}", packet_info);
-                    main_window.emit("frame", packet_info).unwrap();
+                    main_window.emit("frame", packet_info).expect("Failed to emit event");
 
                 }
             }

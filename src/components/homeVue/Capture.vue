@@ -30,7 +30,7 @@ export default {
   },
   methods: {
       async handleClick(netInterface) {
-      console.log(`You clicked on interface: ${netInterface}`);
+      //console.log(`You clicked on interface: ${netInterface}`);
       goToAnalysePage();
 
     },
@@ -39,7 +39,7 @@ export default {
     }
   },
   mounted() {
-    console.log("mounted");
+    console.log("mounted capture");
     invoke('get_interfaces_tab').then((interfaces) => {
       this.netInterfaces = interfaces;
     });
