@@ -24,8 +24,7 @@ fn get_interfaces_tab() -> Vec<String> {
 
 #[tauri::command(rename_all = "snake_case")]
 fn get_selected_interface(window: tauri::Window, interface_name: String) {
-  let app = window.app_handle();
-
+    let app = window.app_handle();
     println!("You have selected the interface: {}", interface_name);
     let _ = scan_until_interrupt(app, "oui",&interface_name);
 }

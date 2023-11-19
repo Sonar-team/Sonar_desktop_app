@@ -32,6 +32,7 @@ export default {
       async handleClick(netInterface) {
       console.log(`You clicked on interface: ${netInterface}`);
       goToAnalysePage();
+
     },
     goToAnalysePage() {
       this.$router.push("/analyse");

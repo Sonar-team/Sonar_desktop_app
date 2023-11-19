@@ -4,7 +4,7 @@
       <thead>
         <tr>
           <th>Index</th>
-          <th>Counter Value</th>
+          <th>frame</th>
         </tr>
       </thead>
       <tbody>
@@ -27,9 +27,9 @@ export default {
     }
   },
   async mounted() {
-    await listen('frame', (event) => {
+    await listen('frame', (packet_info) => {
       // Push the new counter to the array
-      this.frames.push(event.payload);
+      this.frames.push(packet_info.payload);
 
       // Keep only the last 10 elements
       if (this.frames.length > 5) {
@@ -54,6 +54,7 @@ export default {
   }
 
   th {
-    background-color: #f2f2f2;
+    background-color: #090808;
   }
 </style>
+ 

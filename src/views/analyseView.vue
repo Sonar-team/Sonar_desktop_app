@@ -11,7 +11,8 @@ import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import TramTab from '../components/CaptureVue/trameTab.vue';
 export default {
   components: {
-    TramTab
+    TramTab,
+    BottomLong
 },
     data() {
       
