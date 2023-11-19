@@ -3,16 +3,20 @@ use pnet::datalink::{self, NetworkInterface};
 use pnet::packet::ethernet::EthernetPacket;
 use std::thread;
 
+use tauri::Manager;
+
 use layer_2_infos::PacketInfos;
 mod layer_2_infos;
 
-pub fn all_interfaces() {
+pub fn all_interfaces(app: tauri::AppHandle) {
     let interfaces = datalink::interfaces();
     let mut handles = vec![];
+    
 
     for interface in interfaces {
+        let app2 = app.clone();
         let handle = thread::spawn(move || {
-            capture_packets(interface);
+            capture_packets(app2, interface);
         });
         handles.push(handle);
     }
@@ -25,7 +29,7 @@ pub fn all_interfaces() {
     }
 }
 
-pub fn one_interface(interface: &str) {
+pub fn one_interface(app: tauri::AppHandle, interface: &str) {
     println!("L'interface choisie est: {}", interface);
     let interface_names_match = |iface: &NetworkInterface| iface.name == interface;
     let interfaces = datalink::interfaces();
@@ -35,10 +39,10 @@ pub fn one_interface(interface: &str) {
             panic!("No such interface '{}'", interface);
         }
     };
-    capture_packets(captured_interface);
+    capture_packets(app, captured_interface);
 }
 
-fn capture_packets(interface: datalink::NetworkInterface) {
+fn capture_packets(app: tauri::AppHandle, interface: datalink::NetworkInterface) {
     let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
         Ok(Ethernet(tx, rx)) => (tx, rx),
         Ok(_) => panic!("Unhandled channel type: {}", &interface),
@@ -47,6 +51,7 @@ fn capture_packets(interface: datalink::NetworkInterface) {
             e
         ),
     };
+    let main_window = app.get_window("main").unwrap();
 
     println!("Start thread reading packet on interface: {}", &interface);
     loop {
@@ -56,6 +61,8 @@ fn capture_packets(interface: datalink::NetworkInterface) {
                     println!("---");
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
                     println!("{}", packet_info);
+                    main_window.emit("frame", packet_info).unwrap();
+
                 }
             }
             Err(e) => {
@@ -63,4 +70,18 @@ fn capture_packets(interface: datalink::NetworkInterface) {
             }
         }
     }
+}
+
+pub fn get_interfaces() -> Vec<String> {
+
+    let interfaces = datalink::interfaces();
+    println!("Fetching network interfaces");
+
+    let names: Vec<String> = interfaces.iter().map(|iface| {
+        let name = iface.name.clone();
+        println!("Found interface: {}", name);
+        name
+    }).collect();
+
+    names
 }

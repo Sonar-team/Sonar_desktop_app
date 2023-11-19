@@ -11,8 +11,9 @@ use pnet::packet::{
 
 mod layer_4_infos;
 use layer_4_infos::{get_layer_4_infos, Layer4Infos};
+use serde::Serialize;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Clone)]
 pub struct Layer3Infos {
     pub ip_source: Option<String>,
     pub ip_destination: Option<String>,

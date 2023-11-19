@@ -47,14 +47,14 @@ pub fn print_banner() -> String {
     banner.green().to_string()
 }
 
-pub fn scan_for_time(output: &str, interface: &str, time: u64) -> Result<(), Box<dyn Error>> {
+pub fn scan_for_time(app: tauri::AppHandle, output: &str, interface: &str, time: u64) -> Result<(), Box<dyn Error>> {
     println!(
         "Scanning {} interface(s) for {} seconds...",
         interface, time
     );
     let interface_clone = interface.to_owned();
     thread::spawn(move || {
-        interfaces_handler(&interface_clone);
+        interfaces_handler(app, &interface_clone);
     });
 
     compte_a_rebours(time);
@@ -84,8 +84,8 @@ pub fn create_csv(output: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn scan_until_interrupt(output: &str, interface: &str) -> Result<(), Box<dyn Error>> {
-    interfaces_handler(interface);
+pub fn scan_until_interrupt(app: tauri::AppHandle, output: &str, interface: &str) -> Result<(), Box<dyn Error>> {
+    interfaces_handler(app,interface);
 
     create_csv(output)
 }
@@ -100,10 +100,10 @@ pub fn handle_interrupt(
     create_csv(output)
 }
 
-fn interfaces_handler(interface: &str) {
+fn interfaces_handler(app: tauri::AppHandle,interface: &str) {
     match check_interface(interface) {
-        true => all_interfaces(),
-        false => one_interface(interface),
+        true => all_interfaces(app),
+        false => one_interface(app,interface),
     }
 }
 

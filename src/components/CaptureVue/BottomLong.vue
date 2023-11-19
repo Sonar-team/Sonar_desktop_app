@@ -8,9 +8,9 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(counter, index) in counters" :key="index">
+        <tr v-for="(frame, index) in frames" :key="index">
           <td>{{ index + 1 }}</td>
-          <td>{{ counter }}</td>
+          <td>{{ frame }}</td>
         </tr>
       </tbody>
     </table>
@@ -18,22 +18,22 @@
 </template>
 
 <script>
-import { listengit } from '@tauri-apps/api/event'
+import { listen } from '@tauri-apps/api/event'
 
 export default {
   data() {
     return {
-      counters: []
+      frames: []
     }
   },
   async mounted() {
-    await listen('counter', (event) => {
+    await listen('frame', (event) => {
       // Push the new counter to the array
-      this.counters.push(event.payload);
+      this.frames.push(event.payload);
 
       // Keep only the last 10 elements
-      if (this.counters.length > 5) {
-        this.counters.shift();
+      if (this.frames.length > 5) {
+        this.frames.shift();
       }
     });
   }

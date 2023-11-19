@@ -2,9 +2,10 @@
 use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
 use pnet::packet::tcp::TcpPacket;
 use pnet::packet::udp::UdpPacket;
+use serde::Serialize;
 //use pnet::packet::Packet;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Clone)]
 pub struct Layer4Infos {
     pub port_source: Option<String>,
     pub port_destination: Option<String>,

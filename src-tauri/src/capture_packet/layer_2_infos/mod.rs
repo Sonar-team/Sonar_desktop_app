@@ -1,25 +1,25 @@
 use std::fmt;
 
 use pnet::packet::ethernet::EthernetPacket;
-use pnet::util::MacAddr;
 
 use layer_3_infos::{get_layer_3_infos, Layer3Infos};
+use serde::Serialize;
 mod layer_3_infos;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Clone)]
 pub struct PacketInfos {
-    mac_address_source: MacAddr,
-    mac_address_destination: MacAddr,
+    mac_address_source: String,
+    mac_address_destination: String,
     interface: String,
     l_3_protocol: String,
-    layer_3_infos: Layer3Infos,
+    layer_3_infos: Layer3Infos, // Ensure this type is also Serializable and Cloneable
 }
 
 impl PacketInfos {
     pub fn new(interface_name: &String, ethernet_packet: &EthernetPacket<'_>) -> PacketInfos {
         PacketInfos {
-            mac_address_source: ethernet_packet.get_source(),
-            mac_address_destination: ethernet_packet.get_destination(),
+            mac_address_source: ethernet_packet.get_source().to_string(),
+            mac_address_destination: ethernet_packet.get_destination().to_string(),
             interface: interface_name.to_string(),
             l_3_protocol: ethernet_packet.get_ethertype().to_string(),
             layer_3_infos: get_layer_3_infos(ethernet_packet),

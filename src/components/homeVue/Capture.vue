@@ -31,7 +31,6 @@ export default {
   methods: {
       async handleClick(netInterface) {
       console.log(`You clicked on interface: ${netInterface}`);
-      await invoke('print_selected_interface', { interface_name: netInterface });
       goToAnalysePage();
     },
     goToAnalysePage() {
