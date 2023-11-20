@@ -34,16 +34,18 @@ import { invoke } from '@tauri-apps/api';
 import { listen } from '@tauri-apps/api/event';
 
 export default {
+  props: {
+    netInterface: String
+  },
   data() {
     return {
       frames: []
     }
   },
   async mounted() {
-    console.log('mounted bottom')
-    await invoke('get_selected_interface', { interface_name: 'all' })
-    await listen('frame', (packet_info) => {
-      console.log('Received event:', packet_info);      // Push the new counter to the array
+    console.log('mounted bottom Selected interface (prop):', this.netInterface)
+    await invoke('get_selected_interface', { interface_name: this.netInterface });    await listen('frame', (packet_info) => {
+      //console.log('Received event:', packet_info);      // Push the new counter to the array
       this.frames.push(packet_info.payload);
 
       // Keep only the last 5 elements

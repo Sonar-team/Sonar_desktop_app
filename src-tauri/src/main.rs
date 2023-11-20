@@ -14,6 +14,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
             get_selected_interface,
+            save_to_csv
             ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -31,4 +32,9 @@ fn get_selected_interface(window: tauri::Window, interface_name: String) {
     thread::spawn(move || {
         let _ = scan_until_interrupt(app, "oui.csv", &interface_name);
     });
+}
+
+#[tauri::command(rename_all = "snake_case")]
+fn save_to_csv() {
+    println!("save to csv");
 }

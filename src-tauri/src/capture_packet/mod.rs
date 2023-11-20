@@ -60,7 +60,7 @@ fn capture_packets(app: tauri::AppHandle, interface: datalink::NetworkInterface)
                 if let Some(ethernet_packet) = EthernetPacket::new(packet) {
                     println!("---");
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
-                    println!("{}", packet_info);
+                    //println!("{}", packet_info);
                     main_window.emit("frame", packet_info).expect("Failed to emit event");
 
                 }

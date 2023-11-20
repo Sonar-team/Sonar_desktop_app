@@ -9,7 +9,7 @@
           class="interface-item"
           v-for="netInterface in netInterfaces"
           :key="netInterface"
-          @click="goToAnalysePage"
+          @click="goToAnalysePage(netInterface)"
         >
           {{ netInterface }}
         </div>
@@ -29,13 +29,9 @@ export default {
     };
   },
   methods: {
-      async handleClick(netInterface) {
-      //console.log(`You clicked on interface: ${netInterface}`);
-      goToAnalysePage();
-
-    },
-    goToAnalysePage() {
-      this.$router.push("/analyse");
+    goToAnalysePage(netInterface) {
+      // Passage de l'interface en tant que paramètre de route
+      this.$router.push({ path: "/analyse", query: { interface: netInterface } });
     }
   },
   mounted() {
