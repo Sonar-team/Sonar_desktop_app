@@ -29,10 +29,9 @@
   </div>
 </template>
 
-
 <script>
 import { invoke } from '@tauri-apps/api';
-import { listen } from '@tauri-apps/api/event'
+import { listen } from '@tauri-apps/api/event';
 
 export default {
   data() {
@@ -60,20 +59,22 @@ export default {
   table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
   }
 
-  th,
-  td {
-    border: 1px solid black;
+  th, td {
+    width: 120px; /* Example fixed width */
+    overflow: hidden; /* Hides content that overflows */
+    white-space: nowrap; /* Prevents text from wrapping to the next line */
+    text-overflow: ellipsis; /* Truncates with an ellipsis */
+    border: 1px solid rgb(59, 81, 121);
     padding: 8px;
     text-align: center;
-    color: aliceblue;
-  
+    color: rgb(255, 255, 255);
+    background-color: #000000;
   }
 
   th {
     background-color: #000000;
-    text-align: center;
   }
 </style>
- 
