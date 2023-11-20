@@ -3,13 +3,11 @@
     <table>
       <thead>
         <tr>
-          <th>Index</th>
           <th>frame</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(frame, index) in frames" :key="index">
-          <td>{{ index + 1 }}</td>
           <td>{{ frame }}</td>
         </tr>
       </tbody>
@@ -34,7 +32,7 @@ export default {
       console.log('Received event:', packet_info);      // Push the new counter to the array
       this.frames.push(packet_info.payload);
 
-      // Keep only the last 10 elements
+      // Keep only the last 5 elements
       if (this.frames.length > 5) {
         this.frames.shift();
       }
@@ -60,6 +58,7 @@ export default {
 
   th {
     background-color: #000000;
+    text-align: center;
   }
 </style>
  

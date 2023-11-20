@@ -26,5 +26,6 @@ import Decouvrir from '../components/homeVue/Decouvrir.vue';
 .footer {
   padding: 10px;
   text-align: left;
+  color: black;
 }
 </style>
