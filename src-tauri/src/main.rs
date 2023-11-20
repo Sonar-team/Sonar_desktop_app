@@ -14,7 +14,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
             get_selected_interface,
-            save_to_csv
+            save_to_csv,
+            save_file_from_frontend
             ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -38,3 +39,29 @@ fn get_selected_interface(window: tauri::Window, interface_name: String) {
 fn save_to_csv() {
     println!("save to csv");
 }
+
+use tauri::api::dialog::FileDialogBuilder;
+use std::fs::File;
+use std::path::PathBuf;
+
+#[tauri::command]
+fn save_file_from_frontend() {
+    FileDialogBuilder::new()
+        .set_title("Enregistrer le fichier")
+        .add_filter("Texte", &["txt", "md"])
+        .save_file(move |file_path: Option<PathBuf>| {
+            if let Some(path) = file_path {
+                match File::create(path) {
+                    Ok(mut _file) => {
+                        // Ici, vous pouvez éventuellement écrire dans le fichier
+                        // ou faire d'autres opérations
+                    }
+                    Err(e) => {
+                        // Gérer l'erreur de création du fichier
+                        println!("Erreur lors de la création du fichier : {}", e);
+                    }
+                }
+            }
+        });
+}
+

@@ -10,7 +10,9 @@ export default {
         stopAction() {
         // Logique pour arrêter une action
         console.log("Action arrêtée");
-        invoke('save_to_csv')
+        invoke('save_to_csv');
+        // Appel de la commande Tauri avec les données
+        invoke('save_file_from_frontend');
         }
     }
 }
