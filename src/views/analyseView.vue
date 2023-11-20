@@ -27,7 +27,6 @@ export default {
 
     },
     mounted() {
-      const netInterface = this.$route.query.interface;
       console.log("analyse vue Interface sélectionnée :", netInterface);
       // Utilisez netInterface selon vos besoins ici
 
