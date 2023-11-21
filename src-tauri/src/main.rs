@@ -1,6 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 
 use sonar_desktop_app::{print_banner, scan_until_interrupt, capture_packet::get_interfaces};
@@ -8,14 +10,19 @@ use tauri::Manager;
 
 extern crate sonar_desktop_app;
 
+// Structure pour encapsuler le signal d'arrêt
+struct StopSignal(Arc<AtomicBool>);
+
 fn main() {
     println!("{}", print_banner());
     tauri::Builder::default()
+        .manage(StopSignal(Arc::new(AtomicBool::new(false))))
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
             get_selected_interface,
             save_to_csv,
-            save_file_from_frontend
+            save_file_from_frontend,
+            //stop_recording
             ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -31,7 +38,7 @@ fn get_selected_interface(window: tauri::Window, interface_name: String) {
     let app = window.app_handle();
     println!("You have selected the interface: {}", interface_name);
     thread::spawn(move || {
-        let _ = scan_until_interrupt(app, "oui.csv", &interface_name);
+        scan_until_interrupt(app, &interface_name);
     });
 }
 
@@ -43,6 +50,12 @@ fn save_to_csv() {
 use tauri::api::dialog::FileDialogBuilder;
 use std::fs::File;
 use std::path::PathBuf;
+
+// #[tauri::command]
+// fn stop_recording(state: tauri::State<'_, StopSignal>) {
+//     println!("stop recording");
+//     state.0.store(true, Ordering::SeqCst);
+// }
 
 #[tauri::command]
 fn save_file_from_frontend() {

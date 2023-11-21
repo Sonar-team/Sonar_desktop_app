@@ -84,10 +84,9 @@ pub fn create_csv(output: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn scan_until_interrupt(app: tauri::AppHandle, output: &str, interface: &str) -> Result<(), Box<dyn Error>> {
+pub fn scan_until_interrupt(app: tauri::AppHandle, interface: &str)  {
     interfaces_handler(app,interface);
 
-    create_csv(output)
 }
 
 // This function expects `create_csv` to be defined elsewhere and to return Result<(), io::Error>

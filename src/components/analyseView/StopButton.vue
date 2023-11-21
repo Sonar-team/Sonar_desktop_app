@@ -13,6 +13,7 @@ export default {
         invoke('save_to_csv');
         // Appel de la commande Tauri avec les données
         invoke('save_file_from_frontend');
+        //invoke('stop_recording');
         }
     }
 }

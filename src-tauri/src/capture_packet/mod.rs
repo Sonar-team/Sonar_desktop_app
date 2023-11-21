@@ -2,6 +2,7 @@ use pnet::datalink::Channel::Ethernet;
 use pnet::datalink::{self, NetworkInterface};
 use pnet::packet::ethernet::EthernetPacket;
 use std::collections::HashSet;
+use std::sync::atomic::{Ordering, AtomicBool};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
@@ -29,11 +30,17 @@ pub fn all_interfaces(app: tauri::AppHandle) {
     let interfaces = datalink::interfaces();
     let mut handles = vec![];
     let matice_set = Arc::new(Mutex::new(HashSet::new())); // Thread-safe HashSet
+    let stop_signal = Arc::new(AtomicBool::new(false)); // Signal d'arrêt
     for interface in interfaces {
         let app2 = app.clone();
         let matice_set_clone = Arc::clone(&matice_set); // Clone the Arc
+        let stop_signal_clone = Arc::clone(&stop_signal); // Clone le signal d'arrêt
         let handle = thread::spawn(move || {
-            capture_packets(app2, interface, &matice_set_clone);
+            capture_packets(
+                app2, 
+                interface, 
+                &matice_set_clone, 
+                &stop_signal_clone);
         });
         handles.push(handle);
     }
@@ -44,10 +51,17 @@ pub fn all_interfaces(app: tauri::AppHandle) {
             Err(e) => eprintln!("A thread panicked: {:?}", e),
         }
     }
+
+    // Accéder et imprimer le contenu de matice_set
+    let matice_set_locked = matice_set.lock().unwrap();
+    for item in matice_set_locked.iter() {
+        println!("{:?}", item);
+    }
 }
 
 pub fn one_interface(app: tauri::AppHandle, interface: &str) {
     println!("L'interface choisie est: {}", interface);
+    let stop_signal = Arc::new(AtomicBool::new(false)); // Signal d'arrêt
     let matice_set = Arc::new(Mutex::new(HashSet::new())); // Thread-safe HashSet
     let interface_names_match = |iface: &NetworkInterface| iface.name == interface;
     let interfaces = datalink::interfaces();
@@ -57,10 +71,15 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str) {
             panic!("No such interface '{}'", interface);
         }
     };
-    capture_packets(app, captured_interface, &matice_set);
+    capture_packets(app, captured_interface, &matice_set, &stop_signal);
 }
 
-fn capture_packets(app: tauri::AppHandle, interface: datalink::NetworkInterface, matice_set: &Arc<Mutex<HashSet<String>>>) {
+fn capture_packets(
+    app: tauri::AppHandle, 
+    interface: datalink::NetworkInterface, 
+    matice_set: &Arc<Mutex<HashSet<String>>>,
+    stop_signal: &Arc<AtomicBool>
+) {
     let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
         Ok(Ethernet(tx, rx)) => (tx, rx),
         Ok(_) => panic!("Unhandled channel type: {}", &interface),
@@ -73,14 +92,17 @@ fn capture_packets(app: tauri::AppHandle, interface: datalink::NetworkInterface,
 
     println!("Start thread reading packet on interface: {}", &interface);
     loop {
+        if stop_signal.load(Ordering::SeqCst) {
+            break; // Arrêter le thread si le signal est activé
+        }
         match rx.next() {
             Ok(packet) => {
                 if let Some(ethernet_packet) = EthernetPacket::new(packet) {
-                    println!("---");
+                    //println!("---");
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
                     //println!("{}", packet_info);
                     main_window.emit("frame", &packet_info).expect("Failed to emit event");
-                    //process_packet(&matice_set, &packet_info)
+                    process_packet(&matice_set, &packet_info) 
                 }
             }
             Err(e) => {
@@ -94,18 +116,15 @@ fn process_packet(
     observed_packets: &Arc<Mutex<HashSet<String>>>,
     info: &PacketInfos
 ) {
-    let mut observed_packets = observed_packets.lock().unwrap(); // Lock the mutex
+    let mut locked_observed_packets = observed_packets.lock().unwrap(); // Lock the mutex
 
     let mut ips = vec![info.layer_3_infos.ip_source.clone(), info.layer_3_infos.ip_destination.clone()];
     ips.sort(); 
     let key = format!("{:?}-{:?}", ips[0], ips[1]);
 
-    if !observed_packets.contains(&key) {
+    if !locked_observed_packets.contains(&key) {
         println!("New unique packet: {:?}", &info);
-        observed_packets.insert(key);
-    }
-    else {
-        // Count or other logic
+        locked_observed_packets.insert(key);
     }
 }
 
