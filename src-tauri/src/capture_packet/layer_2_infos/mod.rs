@@ -6,13 +6,13 @@ use layer_3_infos::{get_layer_3_infos, Layer3Infos};
 use serde::Serialize;
 mod layer_3_infos;
 
-#[derive(Debug, Default, Serialize, Clone)]
+#[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
 pub struct PacketInfos {
     mac_address_source: String,
     mac_address_destination: String,
     interface: String,
     l_3_protocol: String,
-    layer_3_infos: Layer3Infos, // Ensure this type is also Serializable and Cloneable
+    pub layer_3_infos: Layer3Infos, // Ensure this type is also Serializable and Cloneable
 }
 
 impl PacketInfos {
