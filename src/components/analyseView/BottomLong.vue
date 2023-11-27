@@ -46,7 +46,7 @@ export default {
     console.log('mounted bottom Selected interface (prop):', this.netInterface)
     await invoke('get_selected_interface', { interface_name: this.netInterface });    
     await listen('frame', (packet_info) => {
-      console.log('Received event:', packet_info);      // Push the new counter to the array
+      console.log('Received event:', packet_info.payload);      // Push the new counter to the array
       this.frames.push(packet_info.payload);
       console.log('frames:', frames); 
       //Keep only the last 5 elements

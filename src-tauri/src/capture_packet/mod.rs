@@ -11,6 +11,35 @@ use tauri::Manager;
 use layer_2_infos::PacketInfos;
 mod layer_2_infos;
 
+
+/// Retrieves a list of network interfaces available on the system.
+///
+/// This function scans the system for all available network interfaces,
+/// printing each found interface to the console. It returns a vector
+/// containing the names of these interfaces. Additionally, it appends the
+/// string "all" to the end of the list.
+///
+/// # Examples
+///
+/// ```
+/// use sonar_desktop_app::capture_packet::get_interfaces;
+/// let interfaces = get_interfaces();
+/// for interface in interfaces {
+///     println!("{}", interface);
+/// }
+/// ```
+///
+/// # Side effects
+///
+/// This function prints the progress of finding interfaces to the console,
+/// with each interface found being printed as "Found interface: [interface_name]".
+///
+/// # Returns
+///
+/// Returns a `Vec<String>` where each element is the name of a network interface
+/// found on the system. The special name "all" is always appended to the end
+/// of the list.
+///
 pub fn get_interfaces() -> Vec<String> {
     let interfaces = datalink::interfaces();
     println!("Fetching network interfaces");
