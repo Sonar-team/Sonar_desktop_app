@@ -68,17 +68,17 @@
     },
     "windows": [
       {
-        "fullscreen": false,
+        "fullscreen": true,
         "resizable": true,
         "title": "sonar_desktop_app",
-        "width": 1200,
+        "width": 1400,
         "height": 800,
         "visible": false,
         "decorations": true,
         "center": false 
       },
       {
-        "width": 1200,
+        "width": 1400,
         "height": 800,
         "decorations": true,
         "url": "splashscreen.html",

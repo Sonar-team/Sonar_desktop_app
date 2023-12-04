@@ -35,16 +35,22 @@ export default {
 .analyse-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh; /* Utiliser la hauteur de la fenêtre */
 }
 
 .top-section {
   display: flex;
+  flex-wrap: wrap; /* Permet aux éléments de passer à la ligne si nécessaire */
   justify-content: space-between;
 }
 
-/* Assurez-vous que les composants Matrice et Stat ont des largeurs appropriées */
 .Matrice, .Stat {
-  flex: 1; /* Répartit l'espace également entre Matrice et Stat */
+  flex: 1; /* Répartit l'espace également */
+  min-width: 300px; /* Une largeur minimale pour éviter que les composants ne deviennent trop petits */
+}
+
+.BottomLong {
+  flex-basis: 100%; /* Prend toute la largeur disponible */
 }
 </style>
+

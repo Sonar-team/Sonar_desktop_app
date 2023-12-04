@@ -1,44 +1,55 @@
 <template>
-    <div class="chart"></div>
-    <Bar
-      id="my-chart-id"
-      :options="chartOptions"
-      :data="chartData"
-    />
-</template>
+    <div class="chart-container">
+      <BarChart />
+      <PieChart />
+    </div>
+  </template>
   
-<script>
-import { Bar } from 'vue-chartjs'
-import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
-
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
-
-export default {
-    name: 'BarChart',
-    components: { Bar },
-    data() {
-    return {
-        chartData: {
-        labels: [ 'January', 'February', 'March' ],
-        datasets: [ { 
-            data: [40, 20, 12],          
-            backgroundColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'] 
-        } ]
-        },
-        chartOptions: {
-        responsive: true
-        }
+  <script>
+  import BarChart from './Stats/Bar.vue';
+  import PieChart from './Stats/Pie.vue';
+  
+  export default {
+    name: 'App',
+    components: {
+      BarChart,
+      PieChart
     }
-    }
+  }
+  </script>
+  
+  <style>
+table_mat {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto; /* Pour des largeurs de colonnes flexibles */
+  margin: 20px 0; /* Ajouter de l'espace autour du tableau */
+  background-color: rgba(255, 255, 255, 0.9); /* Fond semi-transparent pour la lisibilité */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre portée pour une meilleure distinction */
 }
-</script>
 
-<style>
-    .chart {
-        background-color: #ffffff;
+th_mat, td_mat {
+  padding: 15px; /* Augmentation du padding */
+  text-align: left; /* Alignement du texte à gauche */
+  border-bottom: 1px solid #ddd; /* Bordure inférieure plus claire */
+  color: #042330; /* Couleur de texte foncée pour contraste */
+  font-size: 15px; /* Taille de police légèrement augmentée */
+}
 
-    }
-</style>
+th_mat {
+  background-color: #3a6978; /* Couleur d'arrière-plan foncée pour les en-têtes */
+  color: #ffffff; /* Texte blanc pour contraste */
+  font-size: 16px; /* Taille de police plus grande pour les en-têtes */
+}
 
+tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.3); /* Lignes alternées plus claires */
+}
 
+tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.5); /* Effet de survol */
+}
+
+  
+  </style>
   

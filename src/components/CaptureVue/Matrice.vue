@@ -71,13 +71,13 @@ export default {
 </script>
 
 <style>
-  table_mat {
+  table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
   }
 
-  th_mat, td_mat {
+  th, td {
     width: 120px; /* Example fixed width */
     overflow: hidden; /* Hides content that overflows */
     white-space: nowrap; /* Prevents text from wrapping to the next line */
@@ -85,11 +85,12 @@ export default {
     border: 1px solid rgb(59, 81, 121);
     padding: 8px;
     text-align: center;
-    color: rgb(3, 3, 3);
-    background-color: #ffffff;
+    color: rgb(255, 255, 255);
+    background-color: #000000;
   }
 
-  th_mat {
-    background-color: #ffffff;
+  th {
+    background-color: #000000;
   }
 </style>
+
