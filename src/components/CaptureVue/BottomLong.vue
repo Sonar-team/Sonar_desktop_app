@@ -43,7 +43,7 @@ export default {
     console.log('mounted bottom')
     await invoke('get_selected_interface', { interface_name: 'all' })
     await listen('frame', (packet_info) => {
-      console.log('Received event:', packet_info);      // Push the new counter to the array
+      //console.log('Received event:', packet_info);      // Push the new counter to the array
       this.frames.push(packet_info.payload);
 
       // Keep only the last 5 elements

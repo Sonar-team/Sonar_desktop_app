@@ -12,7 +12,9 @@
   "dependencies": {
     "@fontsource/oxanium": "^5.0.17",
     "@tauri-apps/api": "^1.5.1",
+    "chart.js": "^4.4.0",
     "vue": "^3.3.4",
+    "vue-chartjs": "^5.2.0",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
