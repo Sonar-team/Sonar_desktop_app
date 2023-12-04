@@ -9,8 +9,7 @@
             text-align: center;
             padding-top: 100px;
             font-family: Arial, sans-serif;
-            background-color: #f6f6f6; /* Couleur de fond de votre choix */
-            margin: 0;
+            background: linear-gradient(155deg, #2F7F9C 15.23%, #32515C 86.27%);            margin: 0;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -20,7 +19,7 @@
             width: 100px; /* Taille initiale du logo */
             height: auto;
             opacity: 0; /* Commencer avec le logo invisible */
-            animation: bounceIn 2s ease forwards; /* Animation définie ci-dessous */
+            animation: bounceIn 4s ease forwards; /* Animation définie ci-dessous */
         }
         .welcome-message {
             margin-top: 20px;
@@ -40,11 +39,20 @@
             0% { opacity: 0; }
             100% { opacity: 1; }
         }
+        .software-name {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #ffffff;
+            opacity: 0;
+            animation: fadeIn 4s ease forwards; /* Starts after the welcome message animation */
+        }
+
     </style>
 </head>
 <body>
     <div>
         <img src="src-tauri/icons/128x128@2x.png" alt="Sonar Logo" class="logo">
+        <img src="public/Group 3.png" alt="Sonar Logo" class="software-name">
         <div class="welcome-message">
             Bienvenue sur Sonar, votre outil de développement agile et fiable.
         </div>

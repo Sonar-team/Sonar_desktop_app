@@ -1,11 +1,11 @@
 <template>
-
+<div class="bg"></div>
     <router-view></router-view> 
 
 </template>
 
 <script>
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterView } from 'vue-router'
 export default {
   mounted() {
       console.log("mounted");
@@ -17,4 +17,5 @@ export default {
 
 <style>
 /* Global styles for your app */
+
 </style>
