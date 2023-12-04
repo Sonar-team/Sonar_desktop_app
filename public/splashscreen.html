@@ -7,63 +7,52 @@
     <style>
         body {
             text-align: center;
-            padding-top: 100px;
             font-family: Arial, sans-serif;
-            background: linear-gradient(155deg, #2F7F9C 15.23%, #32515C 86.27%);            margin: 0;
+            background: linear-gradient(155deg, #2F7F9C 15.23%, #32515C 86.27%);
+            margin: 0;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
         }
-        .logo {
-            width: 100px; /* Taille initiale du logo */
+        .logo, .software-name {
+            width: 100px; 
             height: auto;
-            opacity: 0; /* Commencer avec le logo invisible */
-            animation: bounceIn 4s ease forwards; /* Animation définie ci-dessous */
+            opacity: 0;
+            animation: bounceIn 8s ease forwards;
         }
         .welcome-message {
             margin-top: 20px;
             font-size: 24px;
             color: #ffffff;
             opacity: 0;
-            animation: fadeIn 2s ease 2s forwards; /* Commence après l'animation du logo */
+            animation: fadeIn 4s ease 6s forwards;
         }
-
         @keyframes bounceIn {
             0% { transform: scale(0); opacity: 0; }
             50% { transform: scale(1.2); opacity: 1; }
             100% { transform: scale(1); }
         }
-
         @keyframes fadeIn {
             0% { opacity: 0; }
             100% { opacity: 1; }
         }
-        .software-name {
-            margin-top: 10px;
-            font-size: 18px;
-            color: #ffffff;
-            opacity: 0;
-            animation: fadeIn 4s ease forwards; /* Starts after the welcome message animation */
-        }
-
     </style>
 </head>
 <body>
     <div>
         <img src="src-tauri/icons/128x128@2x.png" alt="Sonar Logo" class="logo">
-        <img src="public/Group 3.png" alt="Sonar Logo" class="software-name">
+        <img src="public/Group 3.png" alt="Software Name" class="software-name">
         <div class="welcome-message">
             Bienvenue sur Sonar, votre outil de développement agile et fiable.
         </div>
     </div>
-    <!-- JavaScript pour la gestion de la transition ou des animations -->
     <script>
         window.addEventListener('load', () => {
-            // Wait for the animation to finish, then redirect or load the main app
             setTimeout(() => {
-                window.location.href = '/'; // Redirect to the main Vue.js app
-            }, 5000); // Match this time with your animation duration
+                window.location.href = '/';
+            }, 5000);
         });
     </script>
 </body>

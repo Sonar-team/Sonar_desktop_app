@@ -1,7 +1,7 @@
 <template>
     <div class="capture-container">
         <div class="header">
-            <h1 class="title-capture">Découvrir</h1>
+            <h1 class="title-capture">Aide</h1>
         </div>
         <div class="content">
             <h1 >Gide utilisateur</h1>
@@ -22,7 +22,6 @@
     margin: 20px;
     display: inline-block;
 flex-direction: column;
-background-color: #f6f6f6; /* Adjust the background color as needed */
 text-align: left;
 margin-right: 20px;
 }
@@ -35,7 +34,7 @@ font-style: normal;
 font-weight: 500;
 line-height: normal;  
 font-size: 2em; /* Adjust the font size as needed */
-color: #333; /* Adjust the text color as needed */
+color: #DB770B; /* Adjust the text color as needed */
 margin: 0 0 10px 0; /* Adjust the margin as needed */
 text-align: left;
 }
@@ -47,7 +46,8 @@ text-align: left;
     color: black;
     font-size: 10px;
     font-family: Oxanium;
-    font-weight: 900;
+    font-weight: bold;
+    
 }
 
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div class="capture-container">
     <div class="header">
-      <h1 class="title-capture">Capture</h1>
+      <h1 class="title-capture">Lancer la Capture</h1>
     </div>
     <div class="content">
       <div class="interface-list">
@@ -52,7 +52,6 @@ export default {
   margin: 20px;
   display: flex;
   flex-direction: column;
-  background-color: #f6f6f6; /* Adjust the background color as needed */
   text-align: left;
 }
 
@@ -64,7 +63,7 @@ export default {
   font-weight: 500;
   line-height: normal;  
   font-size: 2em; /* Adjust the font size as needed */
-  color: #333; /* Adjust the text color as needed */
+  color: #DB770B; /* Adjust the text color as needed */
   margin: 0 0 10px 0; /* Adjust the margin as needed */
   text-align: left;
 }
