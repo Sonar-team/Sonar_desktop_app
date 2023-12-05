@@ -1,6 +1,6 @@
 <template>
   <div>
-    <table>
+    <table class="trames">
       <thead>
         <tr>
           <th>MAC Source</th>
@@ -55,7 +55,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
   table {
     width: 100%;
     border-collapse: collapse;

@@ -1,32 +1,32 @@
 <template>
-    <div>
-        <table_mat>
-        <thead>
-            <tr>
-            <th_mat>MAC Source</th_mat>
-            <th_mat>MAC Destination</th_mat>
-            <th_mat>Interface</th_mat>
-            <th_mat>IP Source</th_mat>
-            <th_mat>IP Destination</th_mat>
-            <th_mat>Protocol</th_mat>
-            <th_mat>Port Source</th_mat>
-            <th_mat>Port Destination</th_mat>
-            </tr>
-        </thead>
-        <tbody>
-            <tr v-for="(frame, index) in frames" :key="index">
-            <td_mat>{{ frame.mac_address_source }}</td_mat>
-            <td_mat>{{ frame.mac_address_destination }}</td_mat>
-            <td_mat>{{ frame.interface }}</td_mat>
-            <td_mat>{{ frame.layer_3_infos.ip_source }}</td_mat>
-            <td_mat>{{ frame.layer_3_infos.ip_destination }}</td_mat>
-            <td_mat>{{ frame.layer_3_infos.l_4_protocol }}</td_mat>
-            <td_mat>{{ frame.layer_3_infos.layer_4_infos.port_source }}</td_mat>
-            <td_mat>{{ frame.layer_3_infos.layer_4_infos.port_destination }}</td_mat>
-            </tr>
-        </tbody>
-        </table_mat>
-    </div>
+  <div>
+    <table class="matrice">
+      <thead>
+        <tr>
+          <th>MAC Source</th>
+          <th>MAC Destination</th>
+          <th>Interface</th>
+          <th>IP Source</th>
+          <th>IP Destination</th>
+          <th>Protocol</th>
+          <th>Port Source</th>
+          <th>Port Destination</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(frame, index) in frames" :key="index">
+          <td>{{ frame.mac_address_source }}</td>
+          <td>{{ frame.mac_address_destination }}</td>
+          <td>{{ frame.interface }}</td>
+          <td>{{ frame.layer_3_infos.ip_source }}</td>
+          <td>{{ frame.layer_3_infos.ip_destination }}</td>
+          <td>{{ frame.layer_3_infos.l_4_protocol }}</td>
+          <td>{{ frame.layer_3_infos.layer_4_infos.port_source }}</td>
+          <td>{{ frame.layer_3_infos.layer_4_infos.port_destination }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <script>
@@ -70,7 +70,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
   table {
     width: 100%;
     border-collapse: collapse;
@@ -85,12 +85,13 @@ export default {
     border: 1px solid rgb(59, 81, 121);
     padding: 8px;
     text-align: center;
-    color: rgb(255, 255, 255);
-    background-color: #000000;
+    color: rgb(0, 0, 0);
+    background-color: #ffffff;
   }
 
   th {
     background-color: #000000;
+    color: rgb(255, 255, 255);
   }
 </style>
 
