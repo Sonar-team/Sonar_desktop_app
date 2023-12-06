@@ -12,7 +12,7 @@ pub struct PacketInfos {
     mac_address_destination: String,
     interface: String,
     l_3_protocol: String,
-    layer_3_infos: Layer3Infos, // Ensure this type is also Serializable and Cloneable
+    pub layer_3_infos: Layer3Infos, // Ensure this type is also Serializable and Cloneable
 }
 
 impl PacketInfos {
@@ -74,3 +74,4 @@ impl fmt::Display for PacketInfos {
         Ok(())
     }
 }
+

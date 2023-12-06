@@ -32,13 +32,13 @@ trait HandlePacket {
 impl HandlePacket for Ipv4Handler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(ipv4_packet) = Ipv4Packet::new(data) {
-            println!(
-                "Layer 3: IPv4 packet: source {} destination {} => {} {}",
-                ipv4_packet.get_source(),
-                ipv4_packet.get_destination(),
-                ipv4_packet.get_next_level_protocol(),
-                ipv4_packet.get_total_length()
-            );
+            // //println!(
+            //     "Layer 3: IPv4 packet: source {} destination {} => {} {}",
+            //     ipv4_packet.get_source(),
+            //     ipv4_packet.get_destination(),
+            //     ipv4_packet.get_next_level_protocol(),
+            //     ipv4_packet.get_total_length()
+            // );
             //handle_next_proto_util(data, ipv4_packet.get_next_level_protocol());
             Layer3Infos {
                 ip_source: Some(ipv4_packet.get_source().to_string()),
@@ -55,13 +55,13 @@ impl HandlePacket for Ipv4Handler {
 impl HandlePacket for Ipv6Handler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(ipv6_packet) = Ipv6Packet::new(data) {
-            println!(
-                "Layer 3: IPv6 packet: source {} destination {} => {} {}",
-                ipv6_packet.get_source(),
-                ipv6_packet.get_destination(),
-                ipv6_packet.get_next_header(),
-                ipv6_packet.get_payload_length()
-            );
+            // println!(
+            //     "Layer 3: IPv6 packet: source {} destination {} => {} {}",
+            //     ipv6_packet.get_source(),
+            //     ipv6_packet.get_destination(),
+            //     ipv6_packet.get_next_header(),
+            //     ipv6_packet.get_payload_length()
+            // );
             Layer3Infos {
                 ip_source: Some(ipv6_packet.get_source().to_string()),
                 ip_destination: Some(ipv6_packet.get_destination().to_string()),
