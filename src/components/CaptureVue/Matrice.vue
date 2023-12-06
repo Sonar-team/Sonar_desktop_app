@@ -14,7 +14,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(frame, index) in frames" :key="index">
+        <tr v-for="(frame, index) in matrices" :key="index">
           <td>{{ frame.mac_address_source }}</td>
           <td>{{ frame.mac_address_destination }}</td>
           <td>{{ frame.interface }}</td>
@@ -30,43 +30,26 @@
 </template>
 
 <script>
-//import { listen } from '@tauri-apps/api/event';
+import { listen } from '@tauri-apps/api/event';
 
 export default {
   data() {
     return {
-      frames: [
-      {
-          mac_address_source: '00:1A:2B:3C:4D:5E',
-          mac_address_destination: '5E:4D:3C:2B:1A:00',
-          interface: 'eth0',
-          layer_3_infos: {
-            ip_source: '192.168.0.1',
-            ip_destination: '192.168.0.2',
-            l_4_protocol: 'TCP',
-            layer_4_infos: {
-              port_source: 443,
-              port_destination: 80
-            }
-          }
-        },
-        {
-        mac_address_source: '00:1A:2B:0C:4D:5E',
-          mac_address_destination: '5E:0D:3C:2B:1A:00',
-          interface: 'eth0',
-          layer_3_infos: {
-            ip_source: '192.108.0.1',
-            ip_destination: '102.168.0.2',
-            l_4_protocol: 'TCP',
-            layer_4_infos: {
-              port_source: 403,
-              port_destination: 800
-            }
-          }
-        }
-      ]
+      matrices: []
     }
   },
+  async mounted() {
+    console.log('mounted top right matrice')
+    await listen('matrice', (packet_info) => {
+      //console.log('Received event:', packet_info);      // Push the new counter to the array
+      this.matrices.push(packet_info.payload);
+
+      // Keep only the last 5 elements
+      if (this.matrices.length > 5) {
+        this.matrices.shift();
+      }
+    });
+  }
 }
 </script>
 

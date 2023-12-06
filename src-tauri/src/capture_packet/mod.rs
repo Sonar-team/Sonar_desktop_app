@@ -19,12 +19,14 @@ pub fn all_interfaces(app: tauri::AppHandle) {
     let (tx, rx) = mpsc::channel();
 
     let observed_packets_clone = observed_packets.clone();
+    let app_clone_for_thread = app.clone();  // Clone app for the processing thread
     thread::spawn(move || {
         for packet in rx {
             //let mut set = packet_set_clone.lock().unwrap();
             //println!("{:?}", packet);
+            
             let mut op = observed_packets_clone.lock().unwrap();
-            process_packet(&mut op, packet);
+            process_packet(&mut op, packet, app_clone_for_thread.clone());
         }
     });
     
@@ -110,14 +112,17 @@ pub fn get_interfaces() -> Vec<String> {
 
 fn process_packet(
     observed_packets: &mut HashSet<String>,
-    info: PacketInfos
+    info: PacketInfos,
+    app: tauri::AppHandle
 ) {
+    let main_window = app.get_window("main").unwrap();
     let mut ips = vec![info.layer_3_infos.ip_source.clone(), info.layer_3_infos.ip_source.clone()];
     ips.sort();
     let key = format!("{:?}-{:?}", ips[0], ips[1]);
     if !observed_packets.contains(&key) {
         println!("New unique packet: {:?}", &info);
         observed_packets.insert(key);
+        main_window.emit("matrice", &info).expect("Failed to emit event");
 
     }
 }
