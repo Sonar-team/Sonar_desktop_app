@@ -32,3 +32,4 @@ fn get_selected_interface(window: tauri::Window, interface_name: String) {
         let _ = scan_until_interrupt(app, "oui.csv", &interface_name);
     });
 }
+//todo : could be async 
