@@ -3,7 +3,11 @@
 
 use std::thread;
 
-use sonar_desktop_app::{print_banner, scan_until_interrupt, capture_packet::get_interfaces};
+use sonar_desktop_app::{
+    print_banner, 
+    scan_until_interrupt, 
+    get_interfaces::get_interfaces
+};
 use tauri::Manager;
 
 extern crate sonar_desktop_app;
@@ -31,5 +35,4 @@ fn get_selected_interface(window: tauri::Window, interface_name: String) {
     thread::spawn(move || {
         let _ = scan_until_interrupt(app, "oui.csv", &interface_name);
     });
-}
-//todo : could be async 
+}//todo : could be async 

@@ -1,3 +1,6 @@
+pub mod capture_packet;
+pub mod get_interfaces;
+
 use std::{
     error::Error,
     sync::{
@@ -7,13 +10,11 @@ use std::{
     thread::{self, sleep},
     time::Duration,
 };
-
 use capture_packet::{all_interfaces, one_interface};
 use clap::Parser;
 use colored::Colorize;
 use csv::Writer;
 
-pub mod capture_packet;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -110,5 +111,7 @@ fn interfaces_handler(app: tauri::AppHandle,interface: &str) {
 fn check_interface(interface: &str) -> bool {
     matches!(interface, "all")
 }
+
+
 
 mod tests_unitaires;
