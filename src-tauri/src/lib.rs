@@ -91,7 +91,6 @@ pub fn scan_until_interrupt(app: tauri::AppHandle, output: &str, interface: &str
     create_csv(output)
 }
 
-// This function expects `create_csv` to be defined elsewhere and to return Result<(), io::Error>
 pub fn handle_interrupt(
     r: Arc<AtomicBool>,
     output: &str,
@@ -111,7 +110,6 @@ fn interfaces_handler(app: tauri::AppHandle,interface: &str) {
 fn check_interface(interface: &str) -> bool {
     matches!(interface, "all")
 }
-
 
 
 mod tests_unitaires;

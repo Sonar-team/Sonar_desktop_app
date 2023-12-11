@@ -94,8 +94,6 @@ fn capture_packets(app: tauri::AppHandle, interface: datalink::NetworkInterface,
     }
 }
 
-
-
 fn process_packet(
     observed_packets: &mut HashSet<String>,
     info: PacketInfos,
