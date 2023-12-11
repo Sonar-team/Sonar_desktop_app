@@ -1,23 +1,48 @@
 <template>
   <div class="capture-container">
     <div class="header">
-      <h1 class="title-capture">Lancer la Capture</h1>
+      <h1 class="title-capture">Choisir une interface réseau</h1>
     </div>
     <div class="content">
-      <div class="interface-list">
-        <div
-          class="interface-item"
-          v-for="netInterface in netInterfaces"
-          :key="netInterface"
-          @click="goToAnalysePage"
-        >
+      <select v-model="selectedNetInterface">
+        <option disabled value="all">Toutes</option>
+        <option v-for="netInterface in netInterfaces" :key="netInterface" :value="netInterface">
           {{ netInterface }}
-        </div>
-        <router-view></router-view>
-      </div>
+        </option>
+      </select>
+      <router-view></router-view>
     </div>
+
+    <div class="header">
+      <h1 class="title-capture">Choisir une confidentialité</h1>
+    </div>
+    <div class="content">
+      <select v-model="confidentialite">
+        <option v-for="confidentialité in confidentialités" :key="confidentialité">
+          {{ confidentialité }}
+        </option>
+      </select>
+      <router-view></router-view>
+    </div>
+
+    <div class="header">
+      <h1 class="title-capture">Entrer le nom de la machine</h1>
+    </div>
+    <div class="content">
+      <input v-model="installationName" placeholder="Nom de l'installation" />
+    </div>
+
+    <div class="header">
+      <h1 class="title-capture">Entrer le temps de relevé</h1>
+    </div>
+    <div class="content">
+      <input v-model="time" type="time" placeholder="HH:MM" />
+    </div>
+  <button @click="goToAnalysePage">Lancer le relevé</button>
+
   </div>
 </template>
+
   
 <script>
 import { invoke } from '@tauri-apps/api/tauri';
@@ -25,7 +50,10 @@ import { invoke } from '@tauri-apps/api/tauri';
 export default {
   data() {
     return {
-      netInterfaces: []
+      netInterfaces: [],
+      confidentialités: ["NP","DR","TS","S"],
+      confidentialite: '',
+      time: '',
     };
   },
   methods: {
@@ -52,46 +80,51 @@ export default {
   margin: 20px;
   display: flex;
   flex-direction: column;
-  text-align: left;
+  text-align: center;
+
+  color: white; /* White text color for the entire container */
 }
 
 .title-capture {
-  color: #888;
   font-family: Oxanium;
-  font-size: 40px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: normal;  
-  font-size: 2em; /* Adjust the font size as needed */
-  color: #DB770B; /* Adjust the text color as needed */
-  margin: 0 0 10px 0; /* Adjust the margin as needed */
+  font-size: 2em;
+  margin: 0 0 10px 0;
   text-align: left;
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* Aligns items to the start of the container */
+  align-items: flex-start;
 }
 
-.interface-list {
-  list-style: none; /* Removes default list styling */
-  padding: 0; /* Removes default padding */
-  margin: 0; /* Removes default margin */
+select, input {
+  color: black; /* Dark text for input and select content for readability */
+  background-color: white; /* Light background for inputs and selects */
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
-.interface-item {
-  font-family: Oxanium; 
-  color: #333; /* Adjust the text color as needed */
+select:hover, input:hover {
+  border-color: #0BA4DB; /* Hover effect for inputs */
+}
+
+button {
+  padding: 10px 15px;
+  background-color: #333; /* Dark background for buttons */
+  color: white; /* White text for buttons */
   border: none;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s; /* Smooth transition for hover effect */
 }
 
-.interface-item:hover {
-  background-color: #0BA4DB; /* Adjust hover state background color as needed */
+button:hover {
+  background-color: #555; /* Slightly lighter hover state for buttons */
 }
 
+/* Remove unused styles related to .interface-list and .interface-item */
 </style>
   
   
