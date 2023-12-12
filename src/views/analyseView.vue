@@ -25,6 +25,7 @@ import Matrice from '../components/CaptureVue/Matrice.vue';
 import Stat from '../components/CaptureVue/Stat.vue';
 
 import { invoke } from '@tauri-apps/api'
+import { save } from '@tauri-apps/api/dialog';
 
 export default {
   data() {
@@ -33,7 +34,8 @@ export default {
       tempsReleve: '00:00:00', // Exemple de format, à ajuster selon vos données
       tramesRecues: 1000,
       tramesEnregistrees: 100,
-      niveauConfidentialite: 'DR' // Exemple, à ajuster selon vos besoins
+      niveauConfidentialite: 'DR', // Exemple, à ajuster selon vos besoins
+      filePath: ''
     };
   },
   components: {
@@ -52,8 +54,15 @@ export default {
     goToNextPage() {
       this.$router.push("/graph");
     },
-    stopAndSave() {
+    async stopAndSave() {
       console.log("stop and save")
+      save({
+        filters: [{
+          name: 'Image',
+          extensions: ['csv']
+        }]
+      }).then((filePath) => console.log(filePath))
+
       invoke('stop_and_save').then((response) => console.log(response))
     }
   },

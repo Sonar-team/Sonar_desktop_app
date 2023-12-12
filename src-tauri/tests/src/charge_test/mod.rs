@@ -1,7 +1,8 @@
 use std::net::UdpSocket;
 use rand::{distributions::Uniform, Rng};
 
-fn main() {
+#[test]
+fn charge_test() {
     let socket = UdpSocket::bind("0.0.0.0:0").expect("Ne peut pas lier au socket local");
     socket.set_nonblocking(true).expect("Impossible de passer en mode non-bloquant");
 
