@@ -1,22 +1,19 @@
 <template>
   <div >
     <div >
-    <button @click="goToNextPage">Vue graphique</button>
-    <button @click="stopAndSave">Stop</button>
-  </div>
+      <button @click="goToNextPage">Vue graphique</button>
+      <button @click="stopAndSave">Stop</button>
+    </div>
     <div >
       <Matrice />
       <BottomLong />
-
       <div class="additional-info">
         <p>Temps de relevé: 00:00:00</p>
         <p>Trames reçues: 100 / 1000</p>
         <p>Niveau de confidentialité: DR</p>
       </div>
     </div>
-    
   </div>
-  
 </template>
 
 <script>
