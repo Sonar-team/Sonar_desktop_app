@@ -9,7 +9,7 @@ fn charge_test() {
     let mut rng = rand::thread_rng();
     let range = Uniform::new(0, 256);
 
-    for _ in 0..10 {
+    for _ in 0..10_000_000 {
         let ip = format!("{}.{}.{}.{}",
                          rng.sample(&range), rng.sample(&range),
                          rng.sample(&range), rng.sample(&range));
