@@ -42,5 +42,4 @@ fn get_selected_interface(window: tauri::Window, interface_name: String) {
 fn stop_and_save() -> String {
     println!("stopping...");
     format!("stoped !")
-
 }
