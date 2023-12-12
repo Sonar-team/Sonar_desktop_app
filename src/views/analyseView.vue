@@ -2,7 +2,7 @@
   <div class="analyse-container">
     <div class="button-container">
     <button @click="goToNextPage">Vue graphique</button>
-    <button >Stop</button>
+    <button @click="stopAndSave">Stop</button>
   </div>
     <div class="top-section">
       <Matrice />
@@ -23,6 +23,8 @@
 import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
 import Stat from '../components/CaptureVue/Stat.vue';
+
+import { invoke } from '@tauri-apps/api'
 
 export default {
   data() {
@@ -49,6 +51,10 @@ export default {
     },
     goToNextPage() {
       this.$router.push("/graph");
+    },
+    stopAndSave() {
+      console.log("stop and save")
+      invoke('stop_and_save').then((response) => console.log(response))
     }
   },
   mounted() {

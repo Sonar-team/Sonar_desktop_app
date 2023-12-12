@@ -18,6 +18,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
             get_selected_interface,
+            stop_and_save,
             ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -36,3 +37,10 @@ fn get_selected_interface(window: tauri::Window, interface_name: String) {
         let _ = scan_until_interrupt(app, "oui.csv", &interface_name);
     });
 }//todo : could be async 
+
+#[tauri::command(rename_all = "snake_case")]
+fn stop_and_save() -> String {
+    println!("stopping...");
+    format!("stoped !")
+
+}
