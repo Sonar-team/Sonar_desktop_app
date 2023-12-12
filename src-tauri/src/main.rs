@@ -39,7 +39,7 @@ fn get_selected_interface(window: tauri::Window, interface_name: String) {
 }//todo : could be async 
 
 #[tauri::command(rename_all = "snake_case")]
-fn stop_and_save() -> String {
-    println!("stopping...");
+fn stop_and_save(file_path: String) -> String {
+    println!("stopping... and saving... {}", file_path);
     format!("stoped !")
 }

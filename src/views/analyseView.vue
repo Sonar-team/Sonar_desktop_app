@@ -35,7 +35,6 @@ export default {
       tramesRecues: 1000,
       tramesEnregistrees: 100,
       niveauConfidentialite: 'DR', // Exemple, à ajuster selon vos besoins
-      filePath: ''
     };
   },
   components: {
@@ -43,9 +42,7 @@ export default {
     Matrice,
     Stat
   },
-  data() {
-    // ...
-  },
+
   methods: {
     async handleClick() {
       //console.log(`You clicked on interface: ${netInterface}`);
@@ -55,15 +52,20 @@ export default {
       this.$router.push("/graph");
     },
     async stopAndSave() {
+ 
       console.log("stop and save")
       save({
         filters: [{
           name: 'Image',
           extensions: ['csv']
         }]
-      }).then((filePath) => console.log(filePath))
+      }).then((response) => 
+        invoke('stop_and_save', { file_path: response })
+          .then((response) => 
+            console.log(response))
+            )
 
-      invoke('stop_and_save').then((response) => console.log(response))
+      
     }
   },
   mounted() {
