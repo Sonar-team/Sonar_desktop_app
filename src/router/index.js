@@ -12,9 +12,10 @@ const router = createRouter({
     component: HomeComponent
   },
   {
-    path: '/analyse', // URL path for AnalyseView
-    name: 'analyseView',
-    component: AnalyseView
+    path: '/analyse/:netInterface/:confidentialite/:installationName/:time',
+    name: 'Analyse',
+    component: AnalyseView,
+    props: true
   },
   {
     path: '/graph', // URL path for AnalyseView

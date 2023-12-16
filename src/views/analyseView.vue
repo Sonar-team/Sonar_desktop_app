@@ -1,22 +1,20 @@
 <template>
-  <div class="analyse-container">
-    <div class="button-container">
-    <button @click="goToNextPage">Vue graphique</button>
-    <button >Stop</button>
-  </div>
-    <div class="top-section">
-      <Matrice />
-      <Stat />
-      <!-- Ajout d'une nouvelle section pour les informations supplémentaires -->
-      <div class="additional-info">
-        <p>Temps de relevé: 00:00:00</p>
-        <p>Trames reçues: 100 / 1000</p>
-        <p>Niveau de confidentialité: DR</p>
-      </div>
+  <div class="container">
+    <div class="sidebar">
+      <p>Temps de relevé: {{ tempsReleve }}</p>
+      <p>Trames reçues: {{ tramesRecues }} / {{ tramesEnregistrees }}</p>
+      <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
     </div>
-    <BottomLong />
+    <div class="content">
+      <h1 class="titre-relevé">{{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h1>
+      <h2 class="titre">Matrice de flux</h2>
+      <Matrice @incrementedMat="incrementMatriceCount"/>
+      <h2 class="titre">Trames sniffées</h2>
+      <BottomLong @incremented="incrementTramesRecues" />
+      <button @click="goToNextPage">Vue graphique</button>
+      <button>Stop</button>
+    </div>
   </div>
-  
 </template>
 
 <script>
@@ -28,105 +26,100 @@ import Matrice from '../components/CaptureVue/Matrice.vue';
 export default {
   data() {
     return {
-      // Initialisation des données
-      tempsReleve: '00:00:00', // Exemple de format, à ajuster selon vos données
-      tramesRecues: 1000,
-      tramesEnregistrees: 100,
-      niveauConfidentialite: 'DR' // Exemple, à ajuster selon vos besoins
+      tempsReleve: '01:00:00',
+      tramesRecues: 0,
+      tramesEnregistrees: 0,
+      niveauConfidentialite: '',
+      installationName:''
     };
   },
   components: {
     BottomLong,
     Matrice,
-    Stat
-  },
-  data() {
-    // ...
   },
   methods: {
-    async handleClick() {
-      //console.log(`You clicked on interface: ${netInterface}`);
-      goToNextPage();
-    },
     goToNextPage() {
       this.$router.push("/graph");
-    }
+    },
+    incrementTramesRecues() {
+      this.tramesRecues++;
+    },
+    incrementMatriceCount() {
+      this.tramesEnregistrees++;
+    },
+    updateTempsReleve() {
+      // Fonction pour mettre à jour tempsReleve toutes les secondes
+      setInterval(() => {
+        const timeParts = this.tempsReleve.split(':');
+        let hours = parseInt(timeParts[0]);
+        let minutes = parseInt(timeParts[1]);
+        let seconds = parseInt(timeParts[2]);
+
+        if (seconds > 0) {
+          seconds--;
+        } else {
+          if (minutes > 0) {
+            minutes--;
+            seconds = 59;
+          } else {
+            if (hours > 0) {
+              hours--;
+              minutes = 59;
+              seconds = 59;
+            } else {
+              // Le temps est écoulé, arrêter le timer ici si nécessaire
+            }
+          }
+        }
+
+        this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
+      }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
+    },
+    padZero(value) {
+      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
+      return value < 10 ? `0${value}` : value;
+    },
+    getCurrentDate() {
+      // Fonction pour obtenir la date actuelle
+      const now = new Date();
+      // Formattez la date en DD/MM/YYYY
+      const formattedDate = `${this.padZero(now.getDate())}/${this.padZero(now.getMonth() + 1)}/${now.getFullYear()}`;
+      return formattedDate;
+    },
   },
   mounted() {
     console.log("analyse mounted");
+    this.updateTempsReleve();
+
+    this.netInterface = this.$route.params.netInterface;
+    this.installationName = this.$route.params.installationName;
+    this.tempsReleve = this.$route.params.time;
+    this.niveauConfidentialite = this.$route.params.confidentialite;
   }
 };
 </script>
 
-<style>
-.analyse-container {
+<style scoped>
+.container {
   display: flex;
-  flex-direction: column;
-  height: 100vh; /* Full height of the viewport */
-  color: #333; /* Default text color for visibility */
+  height: 100vh; /* Remplit toute la hauteur de la fenêtre */
 }
 
-.top-section {
-  display: flex;
-  flex-wrap: wrap; /* Wrap items when not enough space */
-  justify-content: space-between;
-  padding: 20px; /* Spacing around the inner content */
-  border-bottom: 1px solid #ddd; /* Separator from the rest of the content */
+.titre-relevé,
+.titre {
+  color: aliceblue;
 }
 
-.Matrice, .Stat {
-  flex: 1; /* Each takes equal width */
-  min-width: 300px; /* Minimum width so they don't get too narrow */
-  margin: 10px; /* Spacing between components */
-  border: 1px solid #ddd; /* Border for definition */
-  border-radius: 4px; /* Slightly rounded corners */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+.sidebar {
+  width: 20%; /* Largeur de la barre latérale */
+  background-color: #444444;
+  padding: 20px;
+  color: aliceblue;
 }
 
-.BottomLong {
-  flex-basis: 100%; /* Takes full width */
-  padding: 20px; /* Spacing around the inner content */
-  position: right ;
-  border-top: 1px solid; /* Separates from the above content */
+.content {
+  flex-grow: 1; /* Prend le reste de l'espace disponible */
+  padding: 20px;
+  overflow: auto; /* Ajoute un défilement si le contenu dépasse la hauteur de la fenêtre */
 }
-
-.button-container {
-  display: flex;
-  justify-content: flex-end; /* Aligns the button to the right */
-  padding: 20px; /* Adds some space around the button */
-}
-
-.button-container button:hover {
-  background-color: #0056b3; /* Darker shade on hover */
-}
-
-.additional-info {
-  padding: 10px;
-  border: 1px solid #ddd;
-  margin-top: 10px;
-  color: chocolate;
-  border-radius: 4px; /* Consistency in design */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* As with Matrice and Stat */
-}
-
-/* Additional styles for the charts if needed */
-.chart {
-  padding: 15px;
-  background: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Responsive design adjustments */
-@media (max-width: 768px) {
-  .top-section {
-    flex-direction: column; /* Stack the components on smaller screens */
-  }
-
-  .Matrice, .Stat {
-    flex-basis: 100%; /* Full width on smaller screens */
-  }
-}
-
 </style>
-
