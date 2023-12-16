@@ -6,10 +6,11 @@ use std::thread;
 use sonar_desktop_app::{
     print_banner, 
     scan_until_interrupt, 
-    get_interfaces::get_interfaces
+    get_interfaces::get_interfaces,
+    save_packets::cmd_save_packets_to_csv,
+    tauri_state::SonarState
 };
 use tauri::Manager;
-
 extern crate sonar_desktop_app;
 
 fn main() {
@@ -18,7 +19,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
             get_selected_interface,
-            stop_and_save,
+            save_packets_to_csv,
             ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -38,8 +39,7 @@ fn get_selected_interface(window: tauri::Window, interface_name: String) {
     });
 }//todo : could be async 
 
-#[tauri::command(rename_all = "snake_case")]
-fn stop_and_save(file_path: String) -> String {
-    println!("stopping... and saving... {}", file_path);
-    format!("stoped !")
+#[tauri::command]
+fn save_packets_to_csv(file_path: String, state: tauri::State<SonarState> ) -> Result<String, String> {
+    cmd_save_packets_to_csv(file_path,state)
 }

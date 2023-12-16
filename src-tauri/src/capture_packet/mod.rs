@@ -8,7 +8,7 @@ use std::thread;
 use tauri::Manager;
 
 use layer_2_infos::PacketInfos;
-mod layer_2_infos;
+pub mod layer_2_infos;
 
 pub fn all_interfaces(app: tauri::AppHandle) {
     let interfaces = datalink::interfaces();
