@@ -22,7 +22,8 @@
 <script>
 import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
-import Stat from '../components/CaptureVue/Stat.vue';
+
+//okok
 
 export default {
   data() {
