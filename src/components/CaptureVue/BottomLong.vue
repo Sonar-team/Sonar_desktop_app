@@ -36,13 +36,15 @@ import { listen } from '@tauri-apps/api/event';
 export default {
   data() {
     return {
-      frames: []
+      frames: [],
+      counter: 0 // Initialisez le compteur à 0
     }
   },
   async mounted() {
     console.log('mounted bottom')
     await invoke('get_selected_interface', { interface_name: 'all' })
     await listen('frame', (packet_info) => {
+      this.incrementAndEmit()
       //console.log('Received event:', packet_info);      // Push the new counter to the array
       this.frames.push(packet_info.payload);
 
@@ -51,6 +53,12 @@ export default {
         this.frames.shift();
       }
     });
+  },
+  methods: {
+    incrementAndEmit() {
+      // Emit the custom event without specifying a value
+      this.$emit('incremented');
+    }
   }
 }
 </script>

@@ -41,6 +41,7 @@ export default {
   async mounted() {
     console.log('mounted top right matrice')
     await listen('matrice', (packet_info) => {
+      this.incrementAndEmit()
       //console.log('Received event:', packet_info);      // Push the new counter to the array
       this.matrices.push(packet_info.payload);
 
@@ -49,6 +50,12 @@ export default {
         this.matrices.shift();
       }
     });
+  },
+  methods: {
+    incrementAndEmit() {
+      // Emit the custom event without specifying a value
+      this.$emit('incrementedMat');
+    }
   }
 }
 </script>
