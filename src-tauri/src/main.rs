@@ -31,11 +31,11 @@ fn get_interfaces_tab() -> Vec<String> {
 }
 
 #[tauri::command(rename_all = "snake_case")]
-fn get_selected_interface(window: tauri::Window, interface_name: String) {
+fn get_selected_interface(window: tauri::Window, interface_name: String, state: tauri::State<SonarState>) {
     let app = window.app_handle();
     println!("You have selected the interface: {}", interface_name);
     thread::spawn(move || {
-        let _ = scan_until_interrupt(app, "oui.csv", &interface_name);
+        scan_until_interrupt(app, &interface_name, state);
     });
 }//todo : could be async 
 

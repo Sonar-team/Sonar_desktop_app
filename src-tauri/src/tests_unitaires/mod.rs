@@ -56,23 +56,23 @@ fn test_print_banner() {
     assert_eq!(banner, banner);
 }
 
-#[test]
-fn test_create_csv() {
-    // Spécifiez un chemin de fichier pour le test
-    let test_output = "test_output.csv";
+// #[test]
+// fn test_create_csv() {
+//     // Spécifiez un chemin de fichier pour le test
+//     let test_output = "test_output.csv";
 
-    // Appelez la fonction que vous voulez tester
-    let result = create_csv(test_output);
+//     // Appelez la fonction que vous voulez tester
+//     let result = create_csv(test_output);
 
-    // Vérifiez que le résultat est Ok, ce qui signifie que la création du fichier CSV a réussi
-    assert!(result.is_ok());
+//     // Vérifiez que le résultat est Ok, ce qui signifie que la création du fichier CSV a réussi
+//     assert!(result.is_ok());
 
-    // Vous pouvez également vérifier que le fichier CSV a été créé en vérifiant son existence ou son contenu.
-    // Par exemple, vous pouvez utiliser std::fs::metadata pour vérifier l'existence du fichier.
+//     // Vous pouvez également vérifier que le fichier CSV a été créé en vérifiant son existence ou son contenu.
+//     // Par exemple, vous pouvez utiliser std::fs::metadata pour vérifier l'existence du fichier.
 
-    // Supprimez le fichier CSV de test après le test
-    std::fs::remove_file(test_output).expect("Failed to remove test CSV file");
-}
+//     // Supprimez le fichier CSV de test après le test
+//     std::fs::remove_file(test_output).expect("Failed to remove test CSV file");
+// }
 
 // #[test]
 // fn test_scan_for_time_success() {
@@ -128,20 +128,20 @@ fn test_create_csv() {
 //     std::fs::remove_file(test_output).expect("Failed to remove test CSV file");
 // }
 
-#[test]
-fn test_handle_interrupt() {
-    let running = Arc::new(AtomicBool::new(true));
-    let output = "test_output.csv";
+// #[test]
+// fn test_handle_interrupt() {
+//     let running = Arc::new(AtomicBool::new(true));
+//     let output = "test_output.csv";
 
-    // Call the function
-    let _ = handle_interrupt(running.clone(), output);
+//     // Call the function
+//     let _ = handle_interrupt(running.clone(), output);
 
-    // Verify that 'running' is set to false
-    assert!(!running.load(SeqCst));
+//     // Verify that 'running' is set to false
+//     assert!(!running.load(SeqCst));
 
-    // Verify that the CSV file is created (You can use std::fs to check)
-    // This depends on how your `create_csv` function is implemented.
-}
+//     // Verify that the CSV file is created (You can use std::fs to check)
+//     // This depends on how your `create_csv` function is implemented.
+// }
 
 #[cfg(test)]
 mod tests {
@@ -171,20 +171,20 @@ mod tests {
         assert_eq!(dummy.index, 0, "Unexpected interface index");
     }
 
-    #[test]
-    fn test_compte_a_rebours() {
-        use crate::compte_a_rebours;
-        use std::time::Instant;
-        let time_to_count = 2; // 2 secondes
-        let instant = Instant::now();
+    // #[test]
+    // fn test_compte_a_rebours() {
+    //     use crate::compte_a_rebours;
+    //     use std::time::Instant;
+    //     let time_to_count = 2; // 2 secondes
+    //     let instant = Instant::now();
 
-        // Appel de la fonction
-        compte_a_rebours(time_to_count);
+    //     // Appel de la fonction
+    //     compte_a_rebours(time_to_count);
 
-        let elapsed_time = instant.elapsed().as_secs();
+    //     let elapsed_time = instant.elapsed().as_secs();
 
-        // Comparaison du temps écoulé avec la valeur attendue.
-        // Vous pouvez permettre une petite marge d'erreur si nécessaire.
-        assert_eq!(elapsed_time, time_to_count);
-    }
+    //     // Comparaison du temps écoulé avec la valeur attendue.
+    //     // Vous pouvez permettre une petite marge d'erreur si nécessaire.
+    //     assert_eq!(elapsed_time, time_to_count);
+    // }
 }

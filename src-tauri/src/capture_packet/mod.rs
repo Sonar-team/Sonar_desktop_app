@@ -8,14 +8,15 @@ use std::thread;
 use tauri::Manager;
 
 use layer_2_infos::PacketInfos;
+
+use crate::tauri_state::SonarState;
 pub mod layer_2_infos;
 
-pub fn all_interfaces(app: tauri::AppHandle) {
+pub fn all_interfaces(app: tauri::AppHandle, state: tauri::State<SonarState>) {
     let interfaces = datalink::interfaces();
     let mut handles = vec![];
     
-    //type SharedPacketSet = Arc<Mutex<HashSet<PacketInfos>>>;
-    let observed_packets = Arc::new(Mutex::new(HashSet::new()));
+    let observed_packets = state.matrice;
     let (tx, rx) = mpsc::channel();
 
     let observed_packets_clone = observed_packets.clone();
@@ -26,7 +27,7 @@ pub fn all_interfaces(app: tauri::AppHandle) {
             //println!("{:?}", packet);
             
             let mut op = observed_packets_clone.lock().unwrap();
-            process_packet(&mut op, packet, app_clone_for_thread.clone());
+            process_packet(observed_packets, packet, app_clone_for_thread.clone());
         }
     });
     
@@ -95,7 +96,7 @@ fn capture_packets(app: tauri::AppHandle, interface: datalink::NetworkInterface,
 }
 
 fn process_packet(
-    observed_packets: &mut HashSet<String>,
+    state: tauri::State<SonarState>,
     info: PacketInfos,
     app: tauri::AppHandle
 ) {
@@ -103,10 +104,10 @@ fn process_packet(
     let mut ips = vec![info.layer_3_infos.ip_source.clone(), info.layer_3_infos.ip_source.clone()];
     ips.sort();
     let key = format!("{:?}-{:?}", ips[0], ips[1]);
-    if !observed_packets.contains(&key) {
+    let mut state_matrice = state.matrice.lock().unwrap();
+    if !state_matrice.contains(&key) {
         println!("New unique packet: {:?}", &info);
-        observed_packets.insert(key);
+        state_matrice.insert(key);
         main_window.emit("matrice", &info).expect("Failed to emit event");
-
     }
 }
