@@ -36,7 +36,7 @@
       <h1 class="title-capture">Entrer le temps de relevé</h1>
     </div>
     <div class="content">
-      <input v-model="time" type="time" placeholder="HH:MM" />
+      <input v-model="time" type="time" step="1" placeholder="HH:MM:SS" />
     </div>
   <button @click="goToAnalysePage">Lancer le relevé</button>
 
@@ -63,7 +63,15 @@ export default {
 
     },
     goToAnalysePage() {
-      this.$router.push("/analyse");
+      this.$router.push({
+        name: 'Analyse',
+        params: {
+          netInterface: this.selectedNetInterface,
+          confidentialite: this.confidentialite,
+          installationName: this.installationName,
+          time: this.time,
+        },
+      });
     }
   },
   mounted() {
