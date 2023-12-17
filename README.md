@@ -16,3 +16,6 @@ This template should help get you started developing with Tauri + Vue 3 in Vite.
     - ICMPv4, ICMPv6
     - UDP, TCP
     - HTTP, DNS, TLS
+
+
+sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar-desktop-app

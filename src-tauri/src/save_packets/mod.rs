@@ -1,10 +1,12 @@
 use std::fs::File;
 use crate::tauri_state::SonarState;
 use csv::Writer;
+use tauri::State;
 
-pub fn cmd_save_packets_to_csv(file_path: String, state: tauri::State<SonarState>) -> Result<String, String> {
-    let packets = state.matrice.lock().map_err(|e| e.to_string())?;
-    
+pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> Result<String, String> {
+    // Access the inner SonarState and then call lock on it
+    let packets = state.inner().0.lock().map_err(|e| e.to_string())?;
+
     let file = File::create(&file_path).map_err(|e| e.to_string())?;
     let mut wtr = Writer::from_writer(file);
 

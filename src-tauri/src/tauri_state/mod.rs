@@ -1,7 +1,5 @@
-use std::{sync::{Mutex, Arc}, collections::HashSet};
+use std::sync::{Mutex, Arc};
 use crate::capture_packet::layer_2_infos::PacketInfos;
 
-pub struct SonarState {
-    is_running: Mutex<bool>,
-    pub matrice: Arc<Mutex<HashSet<PacketInfos>>>
-}
+pub struct SonarState (pub Arc<Mutex<Vec<PacketInfos>>>);
+

@@ -12,22 +12,20 @@ use layer_2_infos::PacketInfos;
 use crate::tauri_state::SonarState;
 pub mod layer_2_infos;
 
-pub fn all_interfaces(app: tauri::AppHandle, state: tauri::State<SonarState>) {
+pub fn all_interfaces(app: tauri::AppHandle, state: &mut Vec<PacketInfos>) {
     let interfaces = datalink::interfaces();
     let mut handles = vec![];
-    
-    let observed_packets = state.matrice;
-    let (tx, rx) = mpsc::channel();
-
+    let observed_packets = Arc::new(Mutex::new(HashSet::new()));
     let observed_packets_clone = observed_packets.clone();
+    let (tx, rx) = mpsc::channel();
+    let mut state_clone = state.clone(); // Clone the state for the thread
     let app_clone_for_thread = app.clone();  // Clone app for the processing thread
     thread::spawn(move || {
         for packet in rx {
-            //let mut set = packet_set_clone.lock().unwrap();
             //println!("{:?}", packet);
-            
             let mut op = observed_packets_clone.lock().unwrap();
-            process_packet(observed_packets, packet, app_clone_for_thread.clone());
+            let mut packets: &mut Vec<PacketInfos> = &mut state_clone;
+            process_packet(&mut packets,&mut op, packet, app_clone_for_thread.clone());
         }
     });
     
@@ -96,18 +94,24 @@ fn capture_packets(app: tauri::AppHandle, interface: datalink::NetworkInterface,
 }
 
 fn process_packet(
-    state: tauri::State<SonarState>,
+    state: &mut Vec<PacketInfos>,
+    observed_packets: &mut HashSet<String>,
     info: PacketInfos,
     app: tauri::AppHandle
 ) {
+    //println!("{}", state);
     let main_window = app.get_window("main").unwrap();
     let mut ips = vec![info.layer_3_infos.ip_source.clone(), info.layer_3_infos.ip_source.clone()];
     ips.sort();
     let key = format!("{:?}-{:?}", ips[0], ips[1]);
-    let mut state_matrice = state.matrice.lock().unwrap();
-    if !state_matrice.contains(&key) {
-        println!("New unique packet: {:?}", &info);
-        state_matrice.insert(key);
+    if !observed_packets.contains(&key) {
+        //println!("New unique packet: {:?}", &info);
+        observed_packets.insert(key);
+            
         main_window.emit("matrice", &info).expect("Failed to emit event");
+        // Add the packet info to the vector
+        state.push(info);
+        println!("{} packets captured", state.len());
+
     }
 }
