@@ -56,7 +56,7 @@ export default {
           extensions: ['csv']
         }]
       }).then((response) => 
-        invoke('stop_and_save', { file_path: response })
+        invoke('save_packets_to_csv', { file_path: response })
           .then((response) => 
             console.log(response))
             )

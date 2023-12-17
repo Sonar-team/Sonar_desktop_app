@@ -11,6 +11,7 @@ use sonar_desktop_app::{
     tauri_state::SonarState, capture_packet::layer_2_infos::PacketInfos
 };
 use tauri::Manager;
+use tauri::State;
 extern crate sonar_desktop_app;
 
 fn main() {
@@ -49,7 +50,9 @@ fn get_selected_interface(
 
     }//todo : could be async 
 
-#[tauri::command]
-fn save_packets_to_csv(file_path: String, state: tauri::State<SonarState> ) -> Result<String, String> {
-    cmd_save_packets_to_csv(file_path,state)
+#[tauri::command(async,rename_all = "snake_case")]
+ fn save_packets_to_csv(file_path: String, state: State<SonarState> ) -> Result<String, String> {
+    
+    cmd_save_packets_to_csv(file_path, state)
+
 }
