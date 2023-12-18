@@ -12,7 +12,10 @@ use layer_2_infos::PacketInfos;
 use crate::tauri_state::SonarState;
 pub mod layer_2_infos;
 
-pub fn all_interfaces(app: tauri::AppHandle, state: &mut Vec<PacketInfos>) {
+pub fn all_interfaces(
+        app: tauri::AppHandle, 
+        state: tauri::State<SonarState>
+    ) {
     let interfaces = datalink::interfaces();
     let mut handles = vec![];
     let observed_packets = Arc::new(Mutex::new(HashSet::new()));
@@ -20,6 +23,8 @@ pub fn all_interfaces(app: tauri::AppHandle, state: &mut Vec<PacketInfos>) {
     let (tx, rx) = mpsc::channel();
     let mut state_clone = state.clone(); // Clone the state for the thread
     let app_clone_for_thread = app.clone();  // Clone app for the processing thread
+
+    // thread fifo
     thread::spawn(move || {
         for packet in rx {
             //println!("{:?}", packet);
@@ -29,6 +34,7 @@ pub fn all_interfaces(app: tauri::AppHandle, state: &mut Vec<PacketInfos>) {
         }
     });
     
+    // threads qui ecoute les trames
     for interface in interfaces {
         let app2 = app.clone();
         let tx_clone = tx.clone();
@@ -62,7 +68,11 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str) {
     capture_packets(app, captured_interface, tx);
 }
 
-fn capture_packets(app: tauri::AppHandle, interface: datalink::NetworkInterface, tx: mpsc::Sender<PacketInfos>) {
+fn capture_packets(
+        app: tauri::AppHandle, 
+        interface: datalink::NetworkInterface, 
+        tx: mpsc::Sender<PacketInfos>
+    ) {
     let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
         Ok(Ethernet(tx, rx)) => (tx, rx),
         Ok(_) => panic!("Unhandled channel type: {}", &interface),

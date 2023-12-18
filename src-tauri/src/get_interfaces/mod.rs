@@ -7,7 +7,7 @@ pub fn get_interfaces() -> Vec<String> {
 
     let mut names: Vec<String> = interfaces.iter().map(|iface| {
         let name = iface.name.clone();
-        println!("Found interface: {}", name);
+        //println!("Found interface: {}", name);
         name
     }).collect();
     let all = String::from("all");

@@ -32,7 +32,7 @@ fn get_interfaces_tab() -> Vec<String> {
     get_interfaces()
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command(async,rename_all = "snake_case")]
 fn get_selected_interface(
     window: tauri::Window, 
     interface_name: String, 
@@ -42,10 +42,9 @@ fn get_selected_interface(
         let state_clone = state.inner().0.clone(); // Clone the state for the thread
 
         println!("You have selected the interface: {}", interface_name);
-        thread::spawn(move || {
-            let mut packets: std::sync::MutexGuard<'_, Vec<PacketInfos>> = state_clone.lock().unwrap();
-            scan_until_interrupt(app, &interface_name, &mut packets);
-        });
+
+        scan_until_interrupt(app, &interface_name, state);
+
         
 
     }//todo : could be async 

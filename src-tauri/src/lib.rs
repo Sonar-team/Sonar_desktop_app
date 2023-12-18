@@ -44,12 +44,13 @@ pub fn print_banner() -> String {
 pub fn scan_until_interrupt(
     app: tauri::AppHandle, 
     interface: &str, 
-    state: &mut Vec<PacketInfos>)  {
-    match check_interface(interface) {
-        true => all_interfaces(app, state),
-        false => one_interface(app,interface),
+    state: tauri::State<SonarState>)  
+    {
+        match check_interface(interface) {
+            true => all_interfaces(app, state),
+            false => one_interface(app,interface),
+        }
     }
-}
 
 fn check_interface(interface: &str) -> bool {
     matches!(interface, "all")
