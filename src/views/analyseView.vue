@@ -1,18 +1,19 @@
 <template>
   <div class="container">
     <div class="sidebar">
-      <p>Temps de relevé: {{ tempsReleve }}</p>
+      <p>Temps restant: {{ tempsReleve }}</p>
       <p>Trames reçues: {{ tramesRecues }} / {{ tramesEnregistrees }}</p>
       <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
+      <button>Stop</button>
+      <button @click="goToNextPage">Vue graphique</button>
     </div>
     <div class="content">
       <h1 class="titre-relevé">{{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h1>
-      <h2 class="titre">Matrice de flux</h2>
-      <Matrice @incrementedMat="incrementMatriceCount"/>
-      <h2 class="titre">Trames sniffées</h2>
-      <BottomLong @incremented="incrementTramesRecues" />
-      <button @click="goToNextPage">Vue graphique</button>
-      <button>Stop</button>
+        <h2 class="titre">Matrice de flux</h2>
+          <Matrice @incrementedMat="incrementMatriceCount"/>
+        <h2 class="titre">Trames sniffées</h2>
+          <BottomLong @incremented="incrementTramesRecues" />
+      
     </div>
   </div>
 </template>
@@ -107,6 +108,7 @@ export default {
 
 .titre-relevé,
 .titre {
+  text-align: center;
   color: aliceblue;
 }
 

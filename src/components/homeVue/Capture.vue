@@ -26,14 +26,14 @@
     </div>
 
     <div class="header">
-      <h1 class="title-capture">Entrer le nom de la machine</h1>
+      <h1 class="title-capture">Entrer le nom de la matrice</h1>
     </div>
     <div class="content">
       <input v-model="installationName" placeholder="Nom de l'installation" />
     </div>
 
     <div class="header">
-      <h1 class="title-capture">Entrer le temps de relevé</h1>
+      <h1 class="title-capture">Entrer la durée de relevé</h1>
     </div>
     <div class="content">
       <input v-model="time" type="time" step="1" placeholder="HH:MM:SS" />
