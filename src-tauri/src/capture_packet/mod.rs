@@ -5,7 +5,7 @@ use std::collections::{HashSet, HashMap};
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 
-use tauri::Manager;
+use tauri::{Manager, State};
 
 use layer_2_infos::PacketInfos;
 
@@ -14,27 +14,31 @@ pub mod layer_2_infos;
 
 pub fn all_interfaces(
         app: tauri::AppHandle, 
-        state: tauri::State<SonarState>
+        state: State<SonarState>
     ) {
-    let interfaces = datalink::interfaces();
     let mut handles = vec![];
-    let observed_packets = Arc::new(Mutex::new(HashSet::new()));
-    let observed_packets_clone = observed_packets.clone();
-    let (tx, rx) = mpsc::channel();
-    let mut state_clone = state.clone(); // Clone the state for the thread
-    let app_clone_for_thread = app.clone();  // Clone app for the processing thread
+    let (tx, rx) = mpsc::channel::<PacketInfos>();
 
     // thread fifo
+    // Clone the state for the thread
+    let state_clone = state.0.clone();
+
+    // Spawn a thread to process packets
     thread::spawn(move || {
         for packet in rx {
-            //println!("{:?}", packet);
-            let mut op = observed_packets_clone.lock().unwrap();
-            let mut packets = &mut state_clone;
-            process_packet( state_clone,&mut op, packet, app_clone_for_thread.clone());
+            let mut vector = state_clone.lock().expect("Failed to lock the mutex");
+
+            // Check if the packet exists in the vector and update its count
+            let found = vector.iter_mut().find(|(p, _)| *p == packet);
+            match found {
+                Some((_, count)) => *count += 1,
+                None => vector.push((packet, 1)),
+            }
         }
     });
     
     // threads qui ecoute les trames
+    let interfaces = datalink::interfaces();
     for interface in interfaces {
         let app2 = app.clone();
         let tx_clone = tx.clone();
@@ -90,7 +94,7 @@ fn capture_packets(
                 if let Some(ethernet_packet) = EthernetPacket::new(packet) {
                     //println!("---");
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
-                    //println!("{}", packet_info);
+                    //println!("{}", &packet_info);
                     main_window.emit("frame", &packet_info).expect("Failed to emit event");
                     tx.send(packet_info).expect("Failed to send packet to queue");
 
@@ -103,25 +107,25 @@ fn capture_packets(
     }
 }
 
-fn process_packet(
-    state: tauri::State<SonarState>,
-    observed_packets: &mut HashSet<String>,
-    info: PacketInfos,
-    app: tauri::AppHandle
-) {
-    //println!("{}", state);
-    let main_window = app.get_window("main").unwrap();
-    let mut ips = vec![info.layer_3_infos.ip_source.clone(), info.layer_3_infos.ip_source.clone()];
-    ips.sort();
-    let key = format!("{:?}-{:?}", ips[0], ips[1]);
-    if !observed_packets.contains(&key) {
-        //println!("New unique packet: {:?}", &info);
-        observed_packets.insert(key);
+// fn process_packet(
+//     state: tauri::State<SonarState>,
+//     observed_packets: &mut HashSet<String>,
+//     info: PacketInfos,
+//     app: tauri::AppHandle
+// ) {
+//     //println!("{}", state);
+//     let main_window = app.get_window("main").unwrap();
+//     let mut ips = vec![info.layer_3_infos.ip_source.clone(), info.layer_3_infos.ip_source.clone()];
+//     ips.sort();
+//     let key = format!("{:?}-{:?}", ips[0], ips[1]);
+//     if !observed_packets.contains(&key) {
+//         //println!("New unique packet: {:?}", &info);
+//         observed_packets.insert(key);
             
-        main_window.emit("matrice", &info).expect("Failed to emit event");
-        // Add the packet info to the vector
-        state.push_to_hash_map(info);
-        //println!("{} packets captured", state);
+//         main_window.emit("matrice", &info).expect("Failed to emit event");
+//         // Add the packet info to the vector
+//         state.push_to_hash_map(info);
+//         //println!("{} packets captured", state);
 
-    }
-}
+//     }
+// }

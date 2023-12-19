@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <table class="matrice">
+  <div >
+    <table >
       <thead>
         <tr>
           <th>MAC Source</th>
@@ -11,18 +11,20 @@
           <th>Protocol</th>
           <th>Port Source</th>
           <th>Port Destination</th>
+          <th>Count</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(frame, index) in matrices" :key="index">
-          <td>{{ frame.mac_address_source }}</td>
-          <td>{{ frame.mac_address_destination }}</td>
-          <td>{{ frame.interface }}</td>
-          <td>{{ frame.layer_3_infos.ip_source }}</td>
-          <td>{{ frame.layer_3_infos.ip_destination }}</td>
-          <td>{{ frame.layer_3_infos.l_4_protocol }}</td>
-          <td>{{ frame.layer_3_infos.layer_4_infos.port_source }}</td>
-          <td>{{ frame.layer_3_infos.layer_4_infos.port_destination }}</td>
+        <tr v-for="packet in processedPackets" :key="packet.id">
+          <td>{{ packet.info.mac_address_source }}</td>
+          <td>{{ packet.info.mac_address_destination }}</td>
+          <td>{{ packet.info.interface }}</td>
+          <td>{{ packet.info.layer_3_infos.ip_source }}</td>
+          <td>{{ packet.info.layer_3_infos.ip_destination }}</td>
+          <td>{{ packet.info.layer_3_infos.l_4_protocol }}</td>
+          <td>{{ packet.info.layer_3_infos.layer_4_infos.port_source }}</td>
+          <td>{{ packet.info.layer_3_infos.layer_4_infos.port_destination }}</td>
+          <td>{{ packet.count }}</td>
         </tr>
       </tbody>
     </table>
@@ -30,27 +32,47 @@
 </template>
 
 <script>
-import { listen } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/tauri';
 
 export default {
   data() {
     return {
-      matrices: []
+      packets: [],
+      intervalId: null,
+    };
+  },
+  computed: {
+    processedPackets() {
+      return this.processData(this.packets);
     }
   },
-  async mounted() {
-    console.log('mounted top right matrice')
-    await listen('matrice', (packet_info) => {
-      //console.log('Received event:', packet_info);      // Push the new counter to the array
-      this.matrices.push(packet_info.payload);
-
-      // Keep only the last 5 elements
-      if (this.matrices.length > 5) {
-        this.matrices.shift();
+  mounted() {
+    this.intervalId = setInterval(this.fetchPacketInfos, 1000);
+  },
+  beforeDestroy() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+  },
+  methods: {
+    async fetchPacketInfos() {
+      try {
+        const jsonString = await invoke('get_hash_map_state', {});
+        this.packets = JSON.parse(jsonString);
+      } catch (error) {
+        console.error("Error fetching packet infos:", error);
       }
-    });
-  }
-}
+    },
+    processData(data) {
+      // Assuming each item in 'data' is an array of [PacketInfos, count]
+      return data.map(([packetInfo, count], index) => ({
+        id: index,
+        info: packetInfo,
+        count: count
+      }));
+    }
+  },
+};
 </script>
 
 <style scoped>
@@ -77,4 +99,3 @@ export default {
     color: rgb(255, 255, 255);
   }
 </style>
-

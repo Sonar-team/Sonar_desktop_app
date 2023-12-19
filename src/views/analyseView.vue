@@ -58,7 +58,7 @@ export default {
       }).then((response) => 
         invoke('save_packets_to_csv', { file_path: response })
           .then((response) => 
-            console.log(response))
+            console.log("save error: ",response))
             )
     }
   },
