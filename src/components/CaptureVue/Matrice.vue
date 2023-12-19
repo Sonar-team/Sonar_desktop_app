@@ -98,4 +98,17 @@ export default {
     background-color: #000000;
     color: rgb(255, 255, 255);
   }
+
+  tbody {
+    display: block; /* Change display to block */
+    max-height: 500px; /* Set a max height */
+    overflow-y: auto; /* Add scrollbar if content exceeds max height */
+  }
+
+  thead, tbody tr {
+    display: table; /* Enable tables to behave like normal */
+    width: 100%; /* Set width to match table width */
+    table-layout: fixed; /* Ensure layout is fixed */
+  }
 </style>
+
