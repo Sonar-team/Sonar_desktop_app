@@ -1,7 +1,7 @@
 use pnet::datalink::Channel::Ethernet;
 use pnet::datalink::{self, NetworkInterface};
 use pnet::packet::ethernet::EthernetPacket;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 
@@ -29,8 +29,8 @@ pub fn all_interfaces(
         for packet in rx {
             //println!("{:?}", packet);
             let mut op = observed_packets_clone.lock().unwrap();
-            let mut packets: &mut Vec<PacketInfos> = &mut state_clone;
-            process_packet(&mut packets,&mut op, packet, app_clone_for_thread.clone());
+            let mut packets = &mut state_clone;
+            process_packet( state_clone,&mut op, packet, app_clone_for_thread.clone());
         }
     });
     
@@ -104,7 +104,7 @@ fn capture_packets(
 }
 
 fn process_packet(
-    state: &mut Vec<PacketInfos>,
+    state: tauri::State<SonarState>,
     observed_packets: &mut HashSet<String>,
     info: PacketInfos,
     app: tauri::AppHandle
@@ -120,8 +120,8 @@ fn process_packet(
             
         main_window.emit("matrice", &info).expect("Failed to emit event");
         // Add the packet info to the vector
-        state.push(info);
-        println!("{} packets captured", state.len());
+        state.push_to_hash_map(info);
+        //println!("{} packets captured", state);
 
     }
 }

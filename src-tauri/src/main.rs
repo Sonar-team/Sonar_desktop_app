@@ -45,8 +45,6 @@ fn get_selected_interface(
 
         scan_until_interrupt(app, &interface_name, state);
 
-        
-
     }//todo : could be async 
 
 #[tauri::command(async,rename_all = "snake_case")]

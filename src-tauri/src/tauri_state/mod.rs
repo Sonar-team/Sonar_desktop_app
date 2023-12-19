@@ -31,3 +31,11 @@ use crate::capture_packet::layer_2_infos::PacketInfos;
 /// // Utilisez `state` ici pour gérer les trames réseau et leur comptage
 /// ```
 pub struct SonarState(pub Arc<Mutex<HashMap<PacketInfos, u32>>>);
+
+impl SonarState {
+    pub fn push_to_hash_map(&self, key: PacketInfos) {
+        let mut hash_map = self.0.lock().expect("Failed to lock the mutex");
+        *hash_map.entry(key).or_insert(0) += 1;
+
+    }
+}

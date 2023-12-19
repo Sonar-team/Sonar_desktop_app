@@ -3,7 +3,7 @@ use crate::tauri_state::SonarState;
 use csv::Writer;
 use tauri::State;
 
-pub fn cmd_save_packets_to_csv(file_path: String, state: tauri::State<SonarState>) -> Result<String, String> {
+pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> Result<String, String> {
     // Access the inner SonarState and then call lock on it
     let packets = state.inner().0.lock().map_err(|e| e.to_string())?;
 
