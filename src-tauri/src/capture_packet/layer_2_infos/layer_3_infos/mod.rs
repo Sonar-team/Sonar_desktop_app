@@ -13,7 +13,7 @@ mod layer_4_infos;
 use layer_4_infos::{get_layer_4_infos, Layer4Infos};
 use serde::Serialize;
 
-#[derive(Debug, Default, Serialize, Clone)]
+#[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
 pub struct Layer3Infos {
     pub ip_source: Option<String>,
     pub ip_destination: Option<String>,

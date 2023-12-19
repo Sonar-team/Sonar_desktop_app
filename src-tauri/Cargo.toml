@@ -21,8 +21,9 @@ clap = {version = "4.4.6", features = ["derive"] }
 csv  = "1.3.0"
 ctrlc = "3.4.1"
 colored = "2.0.4"
-
+rand = "0.8.5"
 pnet = "0.34.0"
+thiserror ="1.0.51"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
