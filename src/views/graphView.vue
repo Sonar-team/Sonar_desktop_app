@@ -15,8 +15,14 @@
     }
 
     function goToAnalysePage() {
-    router.push('/analyse'); // Navigate to the graph page
-    }
+      router.push({
+        name: 'Analyse',
+        params: {
+          netInterface: this.selectedNetInterface
+        }
+      })
+    } // Navigate to the graph page
+
 
   const nodes = {
   node1: { name: "Source\nMAC: 00:00:00:00:00:00\nIP: 127.0.0.1\nPort: 17664" },
