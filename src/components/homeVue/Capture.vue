@@ -53,7 +53,7 @@ export default {
       netInterfaces: [],
       confidentialités: ["NP","DR","TS","S"],
       confidentialite: '',
-      time: '',
+      time: '04:00:00',
     };
   },
   methods: {
