@@ -1,14 +1,10 @@
 <script setup>
-import Capture from '../components/homeVue/Capture.vue';
-
+import SetInfos from '../components/homeVue/SetInfos.vue';
 </script>
 
 <template>
   <div class="container">
-
-    <Capture />
-  
-
+    <SetInfos />
     <div class="footer">
       <span>Version du logiciel: 1.0.1</span>
     </div>
@@ -16,10 +12,8 @@ import Capture from '../components/homeVue/Capture.vue';
 </template>
 
 <style scoped>
-
 .container {
   margin: 40px;
-  
 }
 .footer {
   padding: 10px;

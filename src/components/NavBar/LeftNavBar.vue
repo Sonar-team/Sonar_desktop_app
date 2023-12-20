@@ -1,25 +1,13 @@
 <template>
-    <div class="container">
-      <div class="sidebar">
-        <p>Temps restant: {{ tempsReleve }}</p>
-        <p>Trames reçues: {{ tramesRecues }} / {{ tramesEnregistrees }}</p>
-        <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
-        
-        <!-- Navigation Links -->
-        <router-link to="/" class="nav-link">Home</router-link>
-        <router-link :to="{ name: 'Analyse' }" class="nav-link">Analyse</router-link>
-        <router-link to="/graph" class="nav-link">Graph View</router-link>
-  
-        <button @click="stopAndSave">Stop</button>
-        <button @click="goToAnalysePage">Vue analyse</button>
-      </div>
-  
-      <!-- Contenu principal de la page -->
-      <div class="content">
-        <router-view></router-view>
-      </div>
+  <div class="container">
+    <div class="sidebar">
+      <p>Temps restant: {{ tempsReleve }}</p>
+      <p>Trames reçues: {{ tramesRecues }} / {{ tramesEnregistrees }}</p>
+      <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
+      <button @click="stopAndSave">Stop</button>
     </div>
-  </template>
+  </div>
+</template>
   
 <script>
   export default {
@@ -32,27 +20,7 @@
       installationName:''
     };
   },
-  components: {
-    NetworkGraphComponent
-  },
   methods: {
-
-    goToAnalysePage() {
-      this.$router.push({
-        name: 'Analyse',
-        params: {
-          netInterface: this.selectedNetInterface,
-          confidentialite: this.confidentialite,
-          installationName: this.installationName,
-          time: this.time,
-        },
-      });
-    }
-  },
-  methods: {
-    goToNextPage() {
-      this.$router.push("/graph");
-    },
     incrementTramesRecues() {
       this.tramesRecues++;
     },
@@ -71,13 +39,6 @@
           .then((response) => 
             console.log("save error: ",response))
             )
-    },
-    getCurrentDate() {
-      // Fonction pour obtenir la date actuelle
-      const now = new Date();
-      // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${this.padZero(now.getDate())}/${this.padZero(now.getMonth() + 1)}/${now.getFullYear()}`;
-      return formattedDate;
     },
     updateTempsReleve() {
       // Fonction pour mettre à jour tempsReleve toutes les secondes
@@ -108,7 +69,7 @@
     },
   },
   mounted() {
-    console.log("analyse mounted");
+    console.log("Leftnvabar mounted");
     this.updateTempsReleve();
 
     this.netInterface = this.$route.params.netInterface;

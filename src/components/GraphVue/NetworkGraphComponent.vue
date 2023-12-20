@@ -45,7 +45,6 @@
 <style scoped>
 .graph {
   width: 100%; /* Use 100% to be more responsive */
-  max-width: 800px; /* Maximum width to maintain design integrity */
   height: auto; /* Responsive height */
   aspect-ratio: 4 / 3; /* Maintain aspect ratio */
   border: none; /* Remove border or set to a style that fits the theme */

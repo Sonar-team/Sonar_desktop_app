@@ -5,7 +5,7 @@
     </div>
     <div class="content">
       <select v-model="selectedNetInterface">
-        <option disabled value="all">Toutes</option>
+        
         <option v-for="netInterface in netInterfaces" :key="netInterface" :value="netInterface">
           {{ netInterface }}
         </option>
@@ -17,7 +17,7 @@
       <h1 class="title-capture">Choisir une confidentialité</h1>
     </div>
     <div class="content">
-      <select v-model="confidentialite">
+      <select v-model="confidentialite" >
         <option v-for="confidentialité in confidentialités" :key="confidentialité">
           {{ confidentialité }}
         </option>
@@ -38,30 +38,39 @@
     <div class="content">
       <input v-model="time" type="time" step="1" placeholder="HH:MM:SS" />
     </div>
-  <button @click="goToAnalysePage">Lancer le relevé</button>
-
+    <button @click="goToAnalysePage" :disabled="!isFormComplete">Lancer le relevé</button>
   </div>
 </template>
 
-  
 <script>
 import { invoke } from '@tauri-apps/api/tauri';
 
 export default {
   data() {
     return {
+      
       netInterfaces: [],
       confidentialités: ["NP","DR","TS","S"],
-      confidentialite: '',
+      confidentialite: 'DR',
+      installationName: '',
+      selectedNetInterface: '',
       time: '04:00:00',
     };
   },
-  methods: {
-      async handleClick(netInterface) {
-      //console.log(`You clicked on interface: ${netInterface}`);
-      goToAnalysePage();
+  computed: {
+    isFormComplete() {
+      // Explicitly checking each field
+      const isNetInterfaceSelected = this.selectedNetInterface !== '' && this.selectedNetInterface !== null;
+      const isConfidentialiteSelected = this.confidentialite !== '' && this.confidentialite !== null;
+      const isInstallationNameEntered = this.installationName !== '' && this.installationName !== null;
+      const isTimeEntered = this.time !== '' && this.time !== null && this.time !== '00:00:00';
 
-    },
+      const complete = isNetInterfaceSelected && isConfidentialiteSelected && isInstallationNameEntered && isTimeEntered;
+      console.log("Computed isFormComplete:", complete);
+      return complete;
+    }
+  },
+  methods: {
     goToAnalysePage() {
       this.$router.push({
         name: 'Analyse',

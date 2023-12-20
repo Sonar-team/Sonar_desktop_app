@@ -1,5 +1,5 @@
 <template>
-<div class="bg"></div>
+<div></div>
     <router-view></router-view> 
 
 </template>
@@ -11,11 +11,10 @@ export default {
       console.log("mounted");
 
     }
-  // Any additional script or logic for App.vue
 };
 </script>
 
 <style scoped>
-/* Global styles for your app */
+
 
 </style>
