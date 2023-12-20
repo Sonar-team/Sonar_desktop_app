@@ -67,6 +67,10 @@
         this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
       }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
     },
+    padZero(value) {
+      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
+      return value < 10 ? `0${value}` : value;
+    },
   },
   mounted() {
     console.log("Leftnvabar mounted");
@@ -90,8 +94,9 @@
     .sidebar {
       width: 20%; /* Largeur de la barre latérale */
       background-color: #444444;
-      padding: 20px;
+      padding: 10px;
       color: aliceblue;
+      width: 200px;
     }
     .nav-link {
       display: block;
