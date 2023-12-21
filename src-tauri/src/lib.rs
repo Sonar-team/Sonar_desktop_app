@@ -3,7 +3,7 @@ pub mod get_interfaces;
 pub mod save_packets;
 pub mod tauri_state;
 
-use capture_packet::{all_interfaces, one_interface, layer_2_infos::PacketInfos};
+use capture_packet::{all_interfaces, one_interface};
 use clap::Parser;
 use colored::Colorize;
 use tauri_state::SonarState;

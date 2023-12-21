@@ -1,14 +1,14 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{thread, sync::{Arc, Mutex}, collections::HashMap};
+use std::sync::{Arc, Mutex};
 
 use sonar_desktop_app::{
     print_banner, 
     scan_until_interrupt, 
     get_interfaces::get_interfaces,
     save_packets::{cmd_save_packets_to_csv, MyError},
-    tauri_state::SonarState, capture_packet::layer_2_infos::PacketInfos
+    tauri_state::SonarState
 };
 use tauri::Manager;
 use tauri::State;
