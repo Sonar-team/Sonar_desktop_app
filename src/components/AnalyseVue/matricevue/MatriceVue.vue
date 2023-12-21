@@ -9,10 +9,10 @@
     </div>
   </template>
   
-  <script>
-  import BottomLong from '../components/CaptureVue/BottomLong.vue';
-  import Matrice from '../components/CaptureVue/Matrice.vue';
-  
+<script>
+  import BottomLong from '/BottomLong.vue';
+  import Matrice from '/Matrice.vue';
+
   export default {
     data() {
       return {
@@ -28,7 +28,7 @@
       Matrice
     }
   }
-  </script>
+</script>
   
   <style scoped>
   .container {

@@ -2,9 +2,11 @@
     <div class="topbar">
         <h1 class="titre-relevé">{{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h1>
         <div class="button-group">
-            <button @click="goToGraphView">Vue Graphique</button>
-            <button @click="goToMatrixView">Vue Matricielle</button>
-            <button @click="goToStatisticsView">Vue Statistique</button>
+
+          <button @click="emitChangeComponent('GraphComponent')">Vue Graphique</button>
+          <button @click="emitChangeComponent('MatrixComponent')">Vue Matricielle</button>
+          <button @click="emitChangeComponent('StatisticComponent')">Vue Statistique</button>
+
         </div>
     </div>
 </template>
@@ -39,8 +41,6 @@
 }
 </style>
 
-
-
 <script scoped>
 export default {
   data() {
@@ -65,15 +65,9 @@ export default {
       // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
       return value < 10 ? `0${value}` : value;
     },
-    goToGraphView() {
-      // Logic to navigate to the Graph View
-    },
-    goToMatrixView() {
-      // Logic to navigate to the Matrix View
-    },
-    goToStatisticsView() {
-      // Logic to navigate to the Statistics View
-    },
+    emitChangeComponent(componentName) {
+      this.$emit('change-component', componentName);
+    }
   },
   mounted() {
     console.log("Leftnvabar mounted");

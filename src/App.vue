@@ -8,8 +8,7 @@
 import { RouterView } from 'vue-router'
 export default {
   mounted() {
-      console.log("mounted");
-
+      //console.log("App mounted successfully");
     }
 };
 </script>

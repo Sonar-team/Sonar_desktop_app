@@ -4,8 +4,6 @@
             <h1 class="title-capture">Aide</h1>
         </div>
         <div class="content">
-            <h1 >Gide utilisateur</h1>
-            <h1 >Wiki</h1>
             <h1 >Documentation</h1>
             <h1 >Open issue</h1>
             <h1><a href="https://github.com/Sonar-team/Sonar_desktop_app" 
