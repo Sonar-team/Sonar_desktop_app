@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 *.csv
 *.lock
+src-tauri/Cargo.lock
