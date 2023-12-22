@@ -5,7 +5,6 @@
     </div>
     <div class="content">
       <select v-model="selectedNetInterface">
-        <option disabled value="all">Toutes</option>
         <option v-for="netInterface in netInterfaces" :key="netInterface" :value="netInterface">
           {{ netInterface }}
         </option>
@@ -52,8 +51,8 @@ export default {
     return {
       netInterfaces: [],
       confidentialités: ["NP","DR","TS","S"],
-      confidentialite: '',
-      time: '',
+      confidentialite: 'NP',
+      time: '04:00:00',
     };
   },
   methods: {
