@@ -1,7 +1,7 @@
 // vite.config.js
 import { defineConfig } from "file:///home/erdt-cyber/Documents/Sonar/Sonar_desktop_app/node_modules/vite/dist/node/index.js";
 import vue from "file:///home/erdt-cyber/Documents/Sonar/Sonar_desktop_app/node_modules/@vitejs/plugin-vue/dist/index.mjs";
-var vite_config_default = defineConfig(async () => ({
+let vite_config_default = defineConfig(async () => ({
   plugins: [vue()],
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
