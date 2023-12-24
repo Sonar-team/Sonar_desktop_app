@@ -59,20 +59,6 @@ export default {
       }
     },
 
-
-    async stopAndSave() {
-      console.log("stop and save")
-      save({
-        filters: [{
-          name: 'Image',
-          extensions: ['csv']
-        }]
-      }).then((response) => 
-        invoke('save_packets_to_csv', { file_path: response })
-          .then((response) => 
-            console.log("save error: ",response))
-            )
-    },
     incrementTramesRecues() {
       this.tramesRecues++;
     },
