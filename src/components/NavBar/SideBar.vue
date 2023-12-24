@@ -103,14 +103,16 @@ export default {
   },
   mounted() {
     console.log("analyse mounted");
+    this.$bus.on('increment-event', this.incrementTramesRecues);
     this.updateTempsReleve();
 
     this.netInterface = this.$route.params.netInterface;
     this.installationName = this.$route.params.installationName;
     this.tempsReleve = this.$route.params.time;
     this.niveauConfidentialite = this.$route.params.confidentialite;
-  }
+  },
+  beforeUnmount() {
+    this.$bus.off('increment-event', this.incrementTramesRecues);
+  },
 };
   </script>
-  
-  
