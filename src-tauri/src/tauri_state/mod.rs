@@ -5,7 +5,7 @@
 
 use std::sync::{Mutex, Arc};
 
-use crate::capture_packet::layer_2_infos::PacketInfos;
+use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
 
 /// `SonarState` encapsule l'état global de l'application Sonar.
 ///

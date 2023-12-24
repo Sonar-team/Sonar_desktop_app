@@ -1,4 +1,4 @@
-use crate::{tauri_state::SonarState, capture_packet::layer_2_infos::PacketInfos};
+use crate::{tauri_state::SonarState, sniff::capture_packet::layer_2_infos::PacketInfos};
 use csv::Writer;
 use serde::Serialize;
 use tauri::State;

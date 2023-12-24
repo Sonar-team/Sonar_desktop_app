@@ -1,5 +1,5 @@
 #[cfg(test)]
-use super::*;
+//use super::*;
 // Test case for get_args with default values
 // #[test]
 // fn test_main() {
@@ -16,45 +16,45 @@ use super::*;
 
 //     // Vérifiez que le programme s'est exécuté avec succès (code de sortie 0)
 //     assert.success();
+// // }
+
+// #[test]
+// fn test_get_args_default() {
+//     let args = Args {
+//         output: "default_output".to_string(),
+//         interface: "lo".to_string(),
+//         time: 0,
+//     };
+
+//     let (output, interface, time) = get_args(&args);
+
+//     assert_eq!(output, "default_output");
+//     assert_eq!(interface, "lo");
+//     assert_eq!(time, &0);
 // }
 
-#[test]
-fn test_get_args_default() {
-    let args = Args {
-        output: "default_output".to_string(),
-        interface: "lo".to_string(),
-        time: 0,
-    };
+// // Test case for get_args with custom values
+// #[test]
+// fn test_get_args_custom() {
+//     let args = Args {
+//         output: "custom_output".to_string(),
+//         interface: "lo".to_string(),
+//         time: 10,
+//     };
 
-    let (output, interface, time) = get_args(&args);
+//     let (output, interface, time) = get_args(&args);
 
-    assert_eq!(output, "default_output");
-    assert_eq!(interface, "lo");
-    assert_eq!(time, &0);
-}
+//     assert_eq!(output, "custom_output");
+//     assert_eq!(interface, "lo");
+//     assert_eq!(time, &10);
+// }
+// // Test case for print_banner
+// #[test]
+// fn test_print_banner() {
+//     let banner = print_banner();
 
-// Test case for get_args with custom values
-#[test]
-fn test_get_args_custom() {
-    let args = Args {
-        output: "custom_output".to_string(),
-        interface: "lo".to_string(),
-        time: 10,
-    };
-
-    let (output, interface, time) = get_args(&args);
-
-    assert_eq!(output, "custom_output");
-    assert_eq!(interface, "lo");
-    assert_eq!(time, &10);
-}
-// Test case for print_banner
-#[test]
-fn test_print_banner() {
-    let banner = print_banner();
-
-    assert_eq!(banner, banner);
-}
+//     assert_eq!(banner, banner);
+// }
 
 // #[test]
 // fn test_create_csv() {

@@ -4,8 +4,8 @@
 use std::sync::{Arc, Mutex};
 
 use sonar_desktop_app::{
-    print_banner, 
-    scan_until_interrupt, 
+    cli::print_banner, 
+    sniff::scan_until_interrupt, 
     get_interfaces::get_interfaces,
     save_packets::{cmd_save_packets_to_csv, MyError},
     tauri_state::SonarState
@@ -44,7 +44,6 @@ fn get_selected_interface(
         println!("You have selected the interface: {}", interface_name);
 
         scan_until_interrupt(app, &interface_name, state);
-
     }
 
 #[tauri::command(async,rename_all = "snake_case")]

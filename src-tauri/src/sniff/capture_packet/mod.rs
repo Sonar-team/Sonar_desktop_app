@@ -5,11 +5,13 @@ use std::sync::mpsc;
 use std::thread;
 
 use tauri::{Manager, State};
+pub(crate) mod layer_2_infos;
 
-use layer_2_infos::PacketInfos;
 
 use crate::tauri_state::SonarState;
-pub mod layer_2_infos;
+
+use self::layer_2_infos::PacketInfos;
+
 
 pub fn all_interfaces(
         app: tauri::AppHandle, 
