@@ -85,32 +85,30 @@ export default {
     },
 
     updateTempsReleve() {
-      // Fonction pour mettre à jour tempsReleve toutes les secondes
-      setInterval(() => {
-        const timeParts = this.tempsReleve.split(':');
-        let hours = parseInt(timeParts[0]);
-        let minutes = parseInt(timeParts[1]);
-        let seconds = parseInt(timeParts[2]);
+  // Fonction pour mettre à jour tempsReleve toutes les secondes
+  setInterval(() => {
+    const timeParts = this.tempsReleve.split(':');
+    let hours = parseInt(timeParts[0]);
+    let minutes = parseInt(timeParts[1]);
+    let seconds = parseInt(timeParts[2]);
 
-        if (seconds > 0) {
-          seconds--;
-        } else {
-          if (minutes > 0) {
-            minutes--;
-            seconds = 59;
-          } else {
-            if (hours > 0) {
-              hours--;
-              minutes = 59;
-              seconds = 59;
-            } else {
-              // Le temps est écoulé, arrêter le timer ici si nécessaire
-            }
-          }
-        }
-        this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
-      }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
-    },
+    if (seconds > 0) {
+      seconds--;
+    } else if (minutes > 0) {
+      minutes--;
+      seconds = 59;
+    } else if (hours > 0) {
+      hours--;
+      minutes = 59;
+      seconds = 59;
+    } else {
+      // Le temps est écoulé, arrêter le timer ici si nécessaire
+    }
+
+    this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
+  }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
+},
+
   },
   mounted() {
     console.log("analyse mounted");
