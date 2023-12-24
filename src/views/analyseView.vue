@@ -58,8 +58,6 @@ export default {
 
   },
   mounted() {
-    
-        // TODO: ne doit pas lancer all mais l'interface selectioné ...
     invoke('get_selected_interface', { interface_name: this.$route.params.netInterface })
     console.log('get_selected_interface');
     console.log("analyse mounted")
