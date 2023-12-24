@@ -57,12 +57,13 @@ export default {
     };
   },
   methods: {
+
     captureCurrentTime() {
       const now = new Date();
       this.currentTime = now.toISOString(); // Format the current time as needed
     },
     goToAnalysePage() {
-      this.captureCurrentTime();
+      this.captureCurrentTime()
       this.$router.push({
         name: 'Analyse',
         params: {

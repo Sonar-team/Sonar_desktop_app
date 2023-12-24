@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { invoke } from '@tauri-apps/api';
+
 import { listen } from '@tauri-apps/api/event';
 
 export default {
@@ -42,9 +42,7 @@ export default {
   },
   async mounted() {
     console.log('mounted bottom')
-    // TODO: ne doit pas lancer all mais l'interface selectioné ...
-    invoke('get_selected_interface', { interface_name: 'all' })
-    console.log('get_selected_interface');
+
     await listen('frame', (packet_info) => {
       this.incrementAndEmit()
       //console.log('Received event:', packet_info);      // Push the new counter to the array

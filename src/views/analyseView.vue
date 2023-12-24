@@ -21,6 +21,8 @@
 import Sidebar from '../components/NavBar/SideBar.vue';
 import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
+import { invoke } from '@tauri-apps/api/tauri';
+
 
 export default {
   data() {
@@ -56,6 +58,10 @@ export default {
 
   },
   mounted() {
+    
+        // TODO: ne doit pas lancer all mais l'interface selectioné ...
+    invoke('get_selected_interface', { interface_name: this.$route.params.netInterface })
+    console.log('get_selected_interface');
     console.log("analyse mounted")
 
     this.installationName = this.$route.params.installationName;
