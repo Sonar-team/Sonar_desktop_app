@@ -74,7 +74,7 @@ export default {
   }
 
   th, td {
-    width: 120px; /* Example fixed width */
+    width: 110px; /* Example fixed width */
     overflow: hidden; /* Hides content that overflows */
     white-space: nowrap; /* Prevents text from wrapping to the next line */
     text-overflow: ellipsis; /* Truncates with an ellipsis */

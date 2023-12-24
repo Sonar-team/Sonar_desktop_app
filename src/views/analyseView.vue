@@ -5,6 +5,7 @@
       :confidentialite="$route.params.confidentialite"
       :installationName="$route.params.installationName"
       :time="$route.params.time"
+      :currentTime="$route.params.currentTime"
     />
     <div class="content">
       <h1 class="titre-relevé">{{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h1>

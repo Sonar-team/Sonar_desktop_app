@@ -1,7 +1,7 @@
 <template>
     <div class="sidebar">
         <p>Heure de départ: {{ heureDepart }}</p>
-        <p>Heure de fin: {{ heurefin }}</p>
+        <p>Heure de fin: {{ heureFin }}</p>
         <p>Temps restant: {{ tempsReleve }}</p>
         <p>Trames reçues: {{ tramesRecues }} </p>
         <p>Matrice de flux: {{ tramesEnregistrees }}</p>
@@ -18,14 +18,48 @@ import { invoke } from '@tauri-apps/api'
 export default {
   data() {
     return {
-      tempsReleve: '01:00:00',
+      tempsReleve: '',
       tramesRecues: 0,
       tramesEnregistrees: 0,
       niveauConfidentialite: '',
-      installationName:''
+      installationName:'',
+      heureDepart:'',
+      heureFin:'',
     };
   },
   methods: {
+    formatTime(date) {
+      const hours = this.padZero(date.getHours());
+      const minutes = this.padZero(date.getMinutes());
+      const seconds = this.padZero(date.getSeconds());
+      return `${hours}:${minutes}:${seconds}`;
+    },
+
+    calculateEndTime() {
+      if (!this.heureDepart) {
+        console.warn("heureDepart is empty. Skipping calculation of endTime.");
+        return;
+      }
+
+      try {
+        const startTime = new Date(this.heureDepart);
+        if (isNaN(startTime.getTime())) {
+          throw new Error('Invalid start time');
+        }
+
+        const [hours, minutes, seconds] = this.tempsReleve.split(':').map(Number);
+        const durationInSeconds = hours * 3600 + minutes * 60 + seconds;
+        const endTime = new Date(startTime.getTime() + durationInSeconds * 1000);
+
+        // Format heureDepart and heureFin
+        this.heureDepart = this.formatTime(startTime);
+        this.heureFin = this.formatTime(endTime);
+      } catch (error) {
+        console.error("Error in calculateEndTime:", error);
+      }
+    },
+
+
     async stopAndSave() {
       console.log("stop and save")
       save({
@@ -38,10 +72,6 @@ export default {
           .then((response) => 
             console.log("save error: ",response))
             )
-    },
-
-    goToNextPage() {
-      this.$router.push("/graph");
     },
     incrementTramesRecues() {
       this.tramesRecues++;
@@ -61,14 +91,6 @@ export default {
           .then((response) => 
             console.log("save error: ",response))
             )
-    },
-
-    getCurrentDate() {
-      // Fonction pour obtenir la date actuelle
-      const now = new Date();
-      // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${this.padZero(now.getDate())}/${this.padZero(now.getMonth() + 1)}/${now.getFullYear()}`;
-      return formattedDate;
     },
 
     padZero(value) {
@@ -106,13 +128,17 @@ export default {
   },
   mounted() {
     console.log("analyse mounted");
+
+    this.heureDepart = this.$route.params.currentTime;
+    this.tempsReleve = this.$route.params.time;
+    this.calculateEndTime(); // Calculate the end time when the component is mounted
+    
     this.$bus.on('increment-event', this.incrementTramesRecues);
     this.$bus.on('update-packet-count', this.incrementMatriceCount);
     this.updateTempsReleve();
 
     this.netInterface = this.$route.params.netInterface;
     this.installationName = this.$route.params.installationName;
-    this.tempsReleve = this.$route.params.time;
     this.niveauConfidentialite = this.$route.params.confidentialite;
   },
   beforeUnmount() {
@@ -122,11 +148,35 @@ export default {
 };
   </script>
 
-  <style scoped>
+<style scoped>
 .sidebar {
-  width: 2000px; /* Largeur de la barre latérale */
-  background-color: #444444;
+  width: 300px; /* Largeur ajustée */
+  background-color: #0b1118; /* Couleur de fond */
+  color: #ECF0F1; /* Couleur du texte */
   padding: 20px;
-  color: aliceblue;
+  border-radius: 5px; /* Bordures arrondies */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre */
+  display: flex;
+  flex-direction: column; /* Organisation verticale */
+  gap: 10px; /* Espacement entre les éléments */
+}
+
+.sidebar p {
+  margin: 0;
+  padding: 5px 0;
+}
+
+.sidebar button {
+  padding: 10px 15px;
+  background-color: #183244; /* Couleur du bouton */
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Transition pour le survol */
+}
+
+.sidebar button:hover {
+  background-color: #0b1b25; /* Couleur au survol */
 }
 </style>

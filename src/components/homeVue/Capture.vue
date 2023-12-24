@@ -53,15 +53,16 @@ export default {
       confidentialités: ["NP","DR","TS","S"],
       confidentialite: 'NP',
       time: '04:00:00',
+      currentTime: '',
     };
   },
   methods: {
-      async handleClick(netInterface) {
-      //console.log(`You clicked on interface: ${netInterface}`);
-      goToAnalysePage();
-
+    captureCurrentTime() {
+      const now = new Date();
+      this.currentTime = now.toISOString(); // Format the current time as needed
     },
     goToAnalysePage() {
+      this.captureCurrentTime();
       this.$router.push({
         name: 'Analyse',
         params: {
@@ -69,6 +70,7 @@ export default {
           confidentialite: this.confidentialite,
           installationName: this.installationName,
           time: this.time,
+          currentTime: this.currentTime,
         },
       });
     }
@@ -88,7 +90,6 @@ export default {
   display: flex;
   flex-direction: column;
   text-align: center;
-
   color: white; /* White text color for the entire container */
 }
 
