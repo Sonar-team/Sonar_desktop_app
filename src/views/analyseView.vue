@@ -39,15 +39,6 @@ export default {
   },
 
   methods: {
-    goToNextPage() {
-      this.$router.push("/graph");
-    },
-    incrementTramesRecues() {
-      this.tramesRecues++;
-    },
-    incrementMatriceCount() {
-      this.tramesEnregistrees++;
-    },
 
     getCurrentDate() {
       // Fonction pour obtenir la date actuelle

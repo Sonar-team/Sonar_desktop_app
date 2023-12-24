@@ -121,31 +121,6 @@
 
   
   <style scoped>
-    .container {
-      display: flex; /* Utilise flexbox pour aligner les enfants côte à côte */
-      height: 100vh; /* Remplit toute la hauteur de la fenêtre */
-    }
-  
-    .sidebar {
-      width: 20%; /* Largeur de la barre latérale */
-      background-color: #444444;
-      padding: 20px;
-      color: aliceblue;
-    }
-    .nav-link {
-      display: block;
-      margin: 10px 0;
-      color: aliceblue;
-      text-decoration: none;
-    }
-    .nav-link:hover {
-      text-decoration: underline;
-    }
-  
-    .content {
-      flex-grow: 1; /* Prend le reste de l'espace disponible */
-      padding: 20px;
-      overflow: auto; /* Ajoute un défilement si le contenu dépasse la hauteur de la fenêtre */
-    }
+
   </style>
   

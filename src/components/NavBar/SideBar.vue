@@ -1,10 +1,12 @@
 <template>
     <div class="sidebar">
-      <p>Temps restant: {{ tempsReleve }}</p>
-      <p>Trames reçues: {{ tramesRecues }} </p>
-      <p>Matrice de flux: {{ tramesEnregistrees }}</p>
-      <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
-      <button @click="stopAndSave">Stop</button>
+        <p>Heure de départ: {{ heureDepart }}</p>
+        <p>Heure de fin: {{ heurefin }}</p>
+        <p>Temps restant: {{ tempsReleve }}</p>
+        <p>Trames reçues: {{ tramesRecues }} </p>
+        <p>Matrice de flux: {{ tramesEnregistrees }}</p>
+        <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
+        <button @click="stopAndSave">Stop</button>
      
     </div>
   </template>
@@ -122,7 +124,7 @@ export default {
 
   <style scoped>
 .sidebar {
-  width: 100px; /* Largeur de la barre latérale */
+  width: 2000px; /* Largeur de la barre latérale */
   background-color: #444444;
   padding: 20px;
   color: aliceblue;
