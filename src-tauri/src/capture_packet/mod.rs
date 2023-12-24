@@ -55,12 +55,36 @@ pub fn all_interfaces(
     }
 }
 
-pub fn one_interface(app: tauri::AppHandle, interface: &str) {
+pub fn one_interface(
+        app: tauri::AppHandle, 
+        interface: &str,
+        state: State<SonarState>
+    ) {
     println!("L'interface choisie est: {}", interface);
+
+    // thread fifo
+    let (tx, rx) = mpsc::channel();
+
+    // Clone the state for the thread
+    let state_clone = state.0.clone();
+
+    // Spawn a thread to process packets
+    thread::spawn(move || {
+        for packet in rx {
+            let mut vector = state_clone.lock().expect("Failed to lock the mutex");
+
+            // Check if the packet exists in the vector and update its count
+            let found = vector.iter_mut().find(|(p, _)| *p == packet);
+            match found {
+                Some((_, count)) => *count += 1,
+                None => vector.push((packet, 1)),
+            }
+        }
+    });
+
     let interface_names_match = |iface: &NetworkInterface| iface.name == interface;
     let interfaces = datalink::interfaces();
 
-    let (tx, _) = mpsc::channel();
 
     let captured_interface = match interfaces.into_iter().find(interface_names_match) {
         Some(interface) => interface,

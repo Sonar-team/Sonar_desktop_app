@@ -48,7 +48,7 @@ pub fn scan_until_interrupt(
     {
         match check_interface(interface) {
             true => all_interfaces(app, state),
-            false => one_interface(app,interface),
+            false => one_interface(app,interface, state),
         }
     }
 

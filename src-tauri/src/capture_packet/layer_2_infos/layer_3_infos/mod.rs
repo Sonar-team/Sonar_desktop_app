@@ -79,17 +79,17 @@ impl HandlePacket for Ipv6Handler {
 impl HandlePacket for ArpHandler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(arp_packet) = ArpPacket::new(data) {
-            println!(
-                "Layer 2: arp packet: source {} destination {} => {:?} {} {} {:?} {} {}",
-                arp_packet.get_sender_hw_addr(),
-                arp_packet.get_target_hw_addr(),
-                arp_packet.get_operation(),
-                arp_packet.get_target_proto_addr(),
-                arp_packet.get_sender_proto_addr(),
-                arp_packet.get_hardware_type(),
-                arp_packet.get_proto_addr_len(),
-                arp_packet.packet().len()
-            );
+            // println!(
+            //     "Layer 2: arp packet: source {} destination {} => {:?} {} {} {:?} {} {}",
+            //     arp_packet.get_sender_hw_addr(),
+            //     arp_packet.get_target_hw_addr(),
+            //     arp_packet.get_operation(),
+            //     arp_packet.get_target_proto_addr(),
+            //     arp_packet.get_sender_proto_addr(),
+            //     arp_packet.get_hardware_type(),
+            //     arp_packet.get_proto_addr_len(),
+            //     arp_packet.packet().len()
+            // );
             Layer3Infos {
                 ip_source: Some(arp_packet.get_target_proto_addr().to_string()),
                 ip_destination: Some(arp_packet.get_target_proto_addr().to_string()),
