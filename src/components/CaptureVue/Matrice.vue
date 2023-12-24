@@ -59,6 +59,8 @@ export default {
       try {
         const jsonString = await invoke('get_hash_map_state', {});
         this.packets = JSON.parse(jsonString);
+        
+        this.$bus.emit('update-packet-count', this.packets.length);
       } catch (error) {
         console.error("Error fetching packet infos:", error);
       }

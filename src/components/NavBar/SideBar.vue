@@ -1,7 +1,8 @@
 <template>
     <div class="sidebar">
       <p>Temps restant: {{ tempsReleve }}</p>
-      <p>Trames reçues: {{ tramesRecues }} / {{ tramesEnregistrees }}</p>
+      <p>Trames reçues: {{ tramesRecues }} </p>
+      <p>Matrice de flux: {{ tramesEnregistrees }}</p>
       <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
       <button @click="stopAndSave">Stop</button>
      
@@ -43,14 +44,14 @@ export default {
     incrementTramesRecues() {
       this.tramesRecues++;
     },
-    incrementMatriceCount() {
-      this.tramesEnregistrees++;
+    incrementMatriceCount(packetCount) {
+      this.tramesEnregistrees = packetCount;
     },
     async stopAndSave() {
       console.log("stop and save")
       save({
         filters: [{
-          name: 'Image',
+          name: 'Relevée',
           extensions: ['csv']
         }]
       }).then((response) => 
@@ -104,6 +105,7 @@ export default {
   mounted() {
     console.log("analyse mounted");
     this.$bus.on('increment-event', this.incrementTramesRecues);
+    this.$bus.on('update-packet-count', this.incrementMatriceCount);
     this.updateTempsReleve();
 
     this.netInterface = this.$route.params.netInterface;
@@ -112,7 +114,17 @@ export default {
     this.niveauConfidentialite = this.$route.params.confidentialite;
   },
   beforeUnmount() {
+    this.$bus.off('update-packet-count', this.incrementMatriceCount);
     this.$bus.off('increment-event', this.incrementTramesRecues);
   },
 };
   </script>
+
+  <style scoped>
+.sidebar {
+  width: 100px; /* Largeur de la barre latérale */
+  background-color: #444444;
+  padding: 20px;
+  color: aliceblue;
+}
+</style>

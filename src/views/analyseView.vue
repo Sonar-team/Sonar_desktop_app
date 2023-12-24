@@ -9,9 +9,9 @@
     <div class="content">
       <h1 class="titre-relevé">{{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h1>
         <h2 class="titre">Matrice de flux</h2>
-          <Matrice @incrementedMat="incrementMatriceCount"/>
+          <Matrice />
         <h2 class="titre">Trames sniffées</h2>
-          <BottomLong @incremented="incrementTramesRecues" />
+          <BottomLong  />
     </div>
   </div>
 </template>
@@ -76,12 +76,7 @@ export default {
   display: flex;
   height: 100vh; /* Remplit toute la hauteur de la fenêtre */
 }
-.sidebar {
-  width: 20%; /* Largeur de la barre latérale */
-  background-color: #444444;
-  padding: 20px;
-  color: aliceblue;
-}
+
 .analyse-container {
   display: flex;
   flex-direction: column;
