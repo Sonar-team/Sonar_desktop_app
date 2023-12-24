@@ -1,12 +1,11 @@
 <template>
   <div class="container">
-    <div class="sidebar">
-      <p>Temps restant: {{ tempsReleve }}</p>
-      <p>Trames reçues: {{ tramesRecues }} / {{ tramesEnregistrees }}</p>
-      <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
-      <button @click="stopAndSave">Stop</button>
-      <button @click="goToNextPage">Vue graphique</button>
-    </div>
+    <Sidebar
+      :netInterface="$route.params.netInterface"
+      :confidentialite="$route.params.confidentialite"
+      :installationName="$route.params.installationName"
+      :time="$route.params.time"
+    />
     <div class="content">
       <h1 class="titre-relevé">{{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h1>
         <h2 class="titre">Matrice de flux</h2>
@@ -18,26 +17,27 @@
 </template>
 
 <script>
+import Sidebar from '../components/NavBar/SideBar.vue';
 import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
-
-import { save } from '@tauri-apps/api/dialog';
-import { invoke } from '@tauri-apps/api'
 
 export default {
   data() {
     return {
-      tempsReleve: '01:00:00',
+      tempsReleve: '',
       tramesRecues: 0,
       tramesEnregistrees: 0,
       niveauConfidentialite: '',
       installationName:''
     };
   },
+
   components: {
     BottomLong,
-    Matrice
+    Matrice,
+    Sidebar
   },
+
   methods: {
     goToNextPage() {
       this.$router.push("/graph");
@@ -48,25 +48,12 @@ export default {
     incrementMatriceCount() {
       this.tramesEnregistrees++;
     },
-    async stopAndSave() {
-      console.log("stop and save")
-      save({
-        filters: [{
-          name: 'Image',
-          extensions: ['csv']
-        }]
-      }).then((response) => 
-        invoke('save_packets_to_csv', { file_path: response })
-          .then((response) => 
-            console.log("save error: ",response))
-            )
-    },
 
     getCurrentDate() {
       // Fonction pour obtenir la date actuelle
       const now = new Date();
       // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${this.padZero(now.getDate())}/${this.padZero(now.getMonth() + 1)}/${now.getFullYear()}`;
+      const formattedDate = `${this.padZero(now.getDate())}-${this.padZero(now.getMonth() + 1)}-${now.getFullYear()}`;
       return formattedDate;
     },
 
@@ -75,44 +62,13 @@ export default {
       return value < 10 ? `0${value}` : value;
     },
 
-    updateTempsReleve() {
-      // Fonction pour mettre à jour tempsReleve toutes les secondes
-      setInterval(() => {
-        const timeParts = this.tempsReleve.split(':');
-        let hours = parseInt(timeParts[0]);
-        let minutes = parseInt(timeParts[1]);
-        let seconds = parseInt(timeParts[2]);
-
-        if (seconds > 0) {
-          seconds--;
-        } else {
-          if (minutes > 0) {
-            minutes--;
-            seconds = 59;
-          } else {
-            if (hours > 0) {
-              hours--;
-              minutes = 59;
-              seconds = 59;
-            } else {
-              // Le temps est écoulé, arrêter le timer ici si nécessaire
-            }
-          }
-        }
-        this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
-      }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
-    },
   },
   mounted() {
-    console.log("analyse mounted");
-    this.updateTempsReleve();
+    console.log("analyse mounted")
 
-    this.netInterface = this.$route.params.netInterface;
     this.installationName = this.$route.params.installationName;
-    this.tempsReleve = this.$route.params.time;
     this.niveauConfidentialite = this.$route.params.confidentialite;
-  }
-};
+  }}
 </script>
 
 <style scoped>

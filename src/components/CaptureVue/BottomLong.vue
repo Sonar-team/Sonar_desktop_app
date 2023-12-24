@@ -59,7 +59,8 @@ export default {
   methods: {
     incrementAndEmit() {
       // Emit the custom event without specifying a value
-      this.$emit('incremented');
+      this.$bus.emit('increment-event');
+
     }
   }
 }
