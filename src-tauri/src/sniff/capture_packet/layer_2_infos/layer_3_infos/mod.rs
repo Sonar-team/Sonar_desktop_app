@@ -114,7 +114,7 @@ pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
         _ => {
             // General case for all other EtherTypes
             println!(
-                "Unknown or unsupported packet type: {:?}",
+                "Layer 3 - Unknown or unsupported packet type: {:?}",
                 ethernet_packet.get_ethertype()
             );
             Default::default()

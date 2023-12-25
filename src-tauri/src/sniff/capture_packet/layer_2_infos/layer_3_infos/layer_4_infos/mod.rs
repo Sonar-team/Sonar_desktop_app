@@ -1,3 +1,4 @@
+
 //use pnet::packet::dhcp::DhcpPacket;
 use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
 use pnet::packet::tcp::TcpPacket;
@@ -33,15 +34,11 @@ impl PacketPorts for UdpPacket<'_> {
     }
 }
 
+
 pub fn get_layer_4_infos(proto: IpNextHeaderProtocol, data: &[u8]) -> Layer4Infos {
     match proto {
         IpNextHeaderProtocols::Tcp => {
             if let Some(tcp_packet) = TcpPacket::new(data) {
-                // if let Some(_) = DhcpPacket::new(tcp_packet.payload()) {
-                //     //println!("{:?}", dhcp_packet.get_flags());
-                //     println!("Dhcp");
-                // }
-
                 tcp_packet.ports()
             } else {
                 Default::default()
@@ -54,11 +51,10 @@ pub fn get_layer_4_infos(proto: IpNextHeaderProtocol, data: &[u8]) -> Layer4Info
                 Default::default()
             }
         }
-
         _ => {
             // General case for all other EtherTypes
             println!(
-                "Unknown or unsupported packet type: {:?}",
+                "layer 4 - Unknown or unsupported packet type: {:?}",
                 proto.to_string()
             );
             Default::default()
