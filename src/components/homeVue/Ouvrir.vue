@@ -36,11 +36,6 @@ export default {
       // Here you can put any code to handle the button click.
     }
   },
-  mounted() {
-    // invoke('get_interfaces_tab').then((interfaces) => {
-    //   this.netInterfaces = interfaces;
-    // });
-  }
 };
 </script>
     
@@ -54,7 +49,6 @@ text-align: left;
 
 .title-capture {
 color: #888;
-font-family: Oxanium;
 font-size: 40px;
 font-style: normal;
 font-weight: 500;
@@ -77,8 +71,7 @@ padding: 0; /* Removes default padding */
 margin: 0; /* Removes default margin */
 }
 
-.interface-item {
-font-family: Oxanium; 
+.interface-item { 
 color: #333; /* Adjust the text color as needed */
 border: none;
 cursor: pointer;
