@@ -2,7 +2,7 @@
 <script setup lang="ts">
   import { VNetworkGraph } from "v-network-graph"
   import "v-network-graph/lib/style.css"
-  import { useRoute, useRouter } from 'vue-router';
+  import { useRouter } from 'vue-router';
 
     // Define nodes and edges as before
     // ...

@@ -30,7 +30,6 @@ export default {
                             'rgba(153, 102, 255, 1)'
                         ],
                         fontColor: 'black', 
-                            data: [40, 20, 12, 39, 10]
                     } ]
                 },
             chartOptions: { 
@@ -54,10 +53,5 @@ export default {
 }
 
 </script>
-
-<style>
-
-</style>
-
 
   

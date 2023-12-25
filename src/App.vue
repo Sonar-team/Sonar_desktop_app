@@ -5,7 +5,6 @@
 </template>
 
 <script>
-import { RouterView } from 'vue-router'
 export default {
   mounted() {
       console.log("mounted");

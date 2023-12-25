@@ -28,7 +28,6 @@ margin-right: 20px;
 
 .title-capture {
 color: #888;
-font-family: Oxanium;
 font-size: 60px;
 font-style: normal;
 font-weight: 500;
@@ -45,7 +44,6 @@ text-align: left;
     align-items: center; /* Align items vertically */
     color: black;
     font-size: 10px;
-    font-family: Oxanium;
     font-weight: bold;
     
 }

@@ -95,7 +95,6 @@ export default {
 }
 
 .title-capture {
-  font-family: Oxanium;
   font-size: 2em;
   margin: 0 0 10px 0;
   text-align: left;
