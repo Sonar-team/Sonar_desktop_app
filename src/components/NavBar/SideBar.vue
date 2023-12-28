@@ -1,5 +1,7 @@
 <template>
     <div class="sidebar">
+        <img src="../dist/128x128@2x.png" alt="Logo" class="sidebar-logo" />
+        
         <p>Heure de départ: {{ heureDepart }}</p>
         <p>Heure de fin: {{ heureFin }}</p>
         <p>Temps restant: {{ tempsReleve }}</p>
@@ -133,6 +135,13 @@ export default {
   </script>
 
 <style scoped>
+.sidebar-logo {
+  width: 100%; /* Adjust the width as necessary */
+  max-width: 128px; /* Adjust the max width as necessary */
+  height: auto; /* Maintain aspect ratio */
+  margin-bottom: 20px; /* Add some space below the logo */
+}
+
 .sidebar {
   width: 300px; /* Largeur ajustée */
   background-color: #0b1118; /* Couleur de fond */
