@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies (windows only)
         if: matrix.platform == 'windows-latest'
         run: |
-          chocolatey install winpcap -y
+          choco install winpcap -y
           echo "WinPcap installed"
           (new-object System.Net.WebClient).DownloadFile('https://www.winpcap.org/install/bin/WpdPack_4_1_2.zip','WpdPack_4_1_2.zip')
           7z x WpdPack_4_1_2.zip
