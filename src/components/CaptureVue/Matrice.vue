@@ -6,6 +6,7 @@
           <th>MAC Source</th>
           <th>MAC Destination</th>
           <th>Interface</th>
+          <th>Protocol L 3</th>
           <th>IP Source</th>
           <th>IP Destination</th>
           <th>Protocol</th>
@@ -19,6 +20,7 @@
           <td>{{ packet.info.mac_address_source }}</td>
           <td>{{ packet.info.mac_address_destination }}</td>
           <td>{{ packet.info.interface }}</td>
+          <td>{{ packet.info.l_3_protocol }}</td>
           <td>{{ packet.info.layer_3_infos.ip_source }}</td>
           <td>{{ packet.info.layer_3_infos.ip_destination }}</td>
           <td>{{ packet.info.layer_3_infos.l_4_protocol }}</td>

@@ -6,9 +6,10 @@
           <th>MAC Source</th>
           <th>MAC Destination</th>
           <th>Interface</th>
+          <th>Protocol L 3</th>
           <th>IP Source</th>
           <th>IP Destination</th>
-          <th>Protocol</th>
+          <th>Protocol L 4</th>
           <th>Port Source</th>
           <th>Port Destination</th>
         </tr>
@@ -18,6 +19,7 @@
           <td>{{ frame.mac_address_source }}</td>
           <td>{{ frame.mac_address_destination }}</td>
           <td>{{ frame.interface }}</td>
+          <td>{{ frame.l_3_protocol }}</td>
           <td>{{ frame.layer_3_infos.ip_source }}</td>
           <td>{{ frame.layer_3_infos.ip_destination }}</td>
           <td>{{ frame.layer_3_infos.l_4_protocol }}</td>
@@ -46,7 +48,6 @@ export default {
     await listen('frame', (packet_info) => {
       this.incrementAndEmit()
       this.frames.push(packet_info.payload);
-
       // Keep only the last 5 elements
       if (this.frames.length > 5) {
         this.frames.shift();
