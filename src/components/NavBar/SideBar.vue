@@ -1,7 +1,5 @@
 <template>
-    <div class="sidebar">
-        <img src="../dist/128x128@2x.png" alt="Logo" class="sidebar-logo" />
-        
+    <div class="sidebar">        
         <p>Heure de départ: {{ heureDepart }}</p>
         <p>Heure de fin: {{ heureFin }}</p>
         <p>Temps restant: {{ tempsReleve }}</p>
