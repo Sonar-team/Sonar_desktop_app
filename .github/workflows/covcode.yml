@@ -15,10 +15,13 @@ jobs:
         with:
           toolchain: stable
           override: true
+          
+      - name: Install tarpaulin
+        run: |
+          cargo install cargo-tarpaulin --version 0.15.0
 
       - name: Run cargo-tarpaulin
         run: |
-          pwd
           cd src-tauri  # Change to the correct directory
           /home/runner/.cargo/bin/cargo tarpaulin --out Xml -- --test-threads 1
 
