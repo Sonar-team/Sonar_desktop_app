@@ -18,7 +18,8 @@ jobs:
 
       - name: Run cargo-tarpaulin
         run: |
-          cd Sonar_desktop_app/src-tauri  # Change to the correct directory
+          pwd
+          cd src-tauri  # Change to the correct directory
           /home/runner/.cargo/bin/cargo tarpaulin --out Xml -- --test-threads 1
 
 
