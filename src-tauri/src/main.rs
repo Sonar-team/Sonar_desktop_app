@@ -16,7 +16,16 @@ extern crate sonar_desktop_app;
 
 fn main() {
     println!("{}", print_banner());
-    tauri::Builder::default()
+
+    #[cfg(debug_assertions)] // only enable instrumentation in development builds
+    let devtools = devtools::init();
+
+    let builder = tauri::Builder::default();
+
+    #[cfg(debug_assertions)]
+    let builder = builder.plugin(devtools);
+
+    builder
         .manage(SonarState(Arc::new(Mutex::new(Vec::new()))))
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
