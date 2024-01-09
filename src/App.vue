@@ -8,9 +8,7 @@
 export default {
   mounted() {
       console.log("mounted");
-
     }
-  // Any additional script or logic for App.vue
 };
 </script>
 
