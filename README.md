@@ -1,5 +1,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Sonar-team_Sonar_desktop_app&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Sonar-team_Sonar_desktop_app)
 
+[![Release](https://github.com/Sonar-team/Sonar_desktop_app/actions/workflows/build-release.yml/badge.svg)](https://github.com/Sonar-team/Sonar_desktop_app/actions/workflows/build-release.yml)
+
 # Application de bureau Sonar
 ![logo](src-tauri/icons/Square310x310Logo.png)
 ## Fonctionnalités Clés
