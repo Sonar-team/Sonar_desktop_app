@@ -1,5 +1,6 @@
 <template>
-    <div class="sidebar">        
+    <div class="sidebar">    
+        <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="150" height="150">   
         <p>Heure de départ: {{ heureDepart }}</p>
         <p>Heure de fin: {{ heureFin }}</p>
         <p>Temps restant: {{ tempsReleve }}</p>

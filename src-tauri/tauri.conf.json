@@ -71,14 +71,14 @@
         "fullscreen": true,
         "resizable": true,
         "title": "sonar_desktop_app",
-        "width": 1400,
+        "width": 1800,
         "height": 1000,
         "visible": false,
         "decorations": true,
         "center": false 
       },
       {
-        "width": 1400,
+        "width": 1800,
         "height": 1000,
         "decorations": true,
         "url": "splashscreen.html",
