@@ -74,7 +74,7 @@ pub fn get_layer_4_infos(proto: IpNextHeaderProtocol, data: &[u8]) -> Layer4Info
             // General case for all other EtherTypes
             println!(
                 "layer 4 - Unknown or unsupported packet type: {}",
-                proto.to_string()
+                proto
             );
             Default::default()
         }
