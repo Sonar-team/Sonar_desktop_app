@@ -146,9 +146,37 @@
 #[cfg(test)]
 mod tests {
     use pnet::datalink::dummy::{dummy_interface, interfaces};
+    
+    use pnet::packet::ethernet::{EthernetPacket, MutableEthernetPacket, EtherTypes};
+    use pnet::packet::ip::IpNextHeaderProtocols;
+    use pnet::packet::ipv4::MutableIpv4Packet;
+    use pnet::packet::Packet;
+    use std::net::{Ipv4Addr, AddrParseError};
+
+    fn create_ipv4_packet(src_ip: Ipv4Addr, dst_ip: Ipv4Addr) -> Vec<u8> {
+        let mut buf = [0u8; 34]; // Ethernet header (14 bytes) + IPv4 header (20 bytes)
+        let mut eth_packet = MutableEthernetPacket::new(&mut buf[..]).unwrap();
+        eth_packet.set_ethertype(EtherTypes::Ipv4);
+    
+        let mut ipv4_buf = [0u8; 20]; // Minimum IPv4 header size
+        let mut ipv4_packet = MutableIpv4Packet::new(&mut ipv4_buf[..]).unwrap();
+        ipv4_packet.set_version(4);
+        ipv4_packet.set_header_length(5);
+        ipv4_packet.set_total_length(20);
+        ipv4_packet.set_next_level_protocol(IpNextHeaderProtocols::Tcp); // Set the protocol field to indicate TCP
+        ipv4_packet.set_source(src_ip);
+        ipv4_packet.set_destination(dst_ip);
+    
+        eth_packet.set_payload(ipv4_packet.packet());
+    
+        buf.to_vec()
+    }
+    
 
     #[test]
     fn test_dummy_interface_creation() {
+
+
         // Create a dummy interface
         let dummy = dummy_interface(0);
         println!("{}", &dummy);
@@ -187,4 +215,22 @@ mod tests {
     //     // Vous pouvez permettre une petite marge d'erreur si nécessaire.
     //     assert_eq!(elapsed_time, time_to_count);
     // }
+
+    #[test]
+    fn test_get_layer_3_infos_ipv4() -> Result<(), AddrParseError> {
+
+        use crate::sniff::capture_packet::layer_2_infos::layer_3_infos::get_layer_3_infos;
+        let src_ip = "192.168.1.1".parse()?;
+        let dst_ip = "192.168.1.2".parse()?;
+        let packet_data = create_ipv4_packet(src_ip, dst_ip);
+        let ethernet_packet = EthernetPacket::new(&packet_data[..]).unwrap();
+        
+        let layer3_infos = get_layer_3_infos(&ethernet_packet);
+
+        assert_eq!(layer3_infos.ip_source, Some("192.168.1.1".to_string()));
+        assert_eq!(layer3_infos.ip_destination, Some("192.168.1.2".to_string()));
+        assert_eq!(layer3_infos.l_4_protocol, Some("Tcp".to_string())); // Or whatever protocol you set in your mock packet
+
+        Ok(())
+    }
 }

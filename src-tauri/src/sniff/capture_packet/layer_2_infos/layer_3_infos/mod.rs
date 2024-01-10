@@ -6,7 +6,7 @@ use pnet::packet::{
     },
     ipv4::Ipv4Packet,
     ipv6::Ipv6Packet,
-    Packet,
+    Packet, vlan::VlanPacket,
 };
 
 mod layer_4_infos;
@@ -24,6 +24,8 @@ pub struct Layer3Infos {
 struct Ipv4Handler;
 struct Ipv6Handler;
 struct ArpHandler;
+struct VlanHandler;
+struct PppoeDiscoveryHandler;
 
 trait HandlePacket {
     fn get_layer_3(data: &[u8]) -> Layer3Infos;
@@ -106,15 +108,79 @@ impl HandlePacket for ArpHandler {
     }
 }
 
+impl HandlePacket for VlanHandler {
+    fn get_layer_3(data: &[u8]) -> Layer3Infos {
+        if let Some(outer_vlan_packet) = VlanPacket::new(data) {
+            // Check if the encapsulated packet is also a VLAN packet (QinQ)
+            if outer_vlan_packet.get_ethertype() == EtherTypes::Vlan {
+                if let Some(inner_vlan_packet) = VlanPacket::new(outer_vlan_packet.payload()) {
+                    // Handle the encapsulated packet inside the inner VLAN tag
+                    let encapsulated_ether_type = inner_vlan_packet.get_ethertype();
+                    let encapsulated_data = inner_vlan_packet.payload();
+
+                    match encapsulated_ether_type {
+                        EtherTypes::Ipv4 => Ipv4Handler::get_layer_3(encapsulated_data),
+                        EtherTypes::Ipv6 => Ipv6Handler::get_layer_3(encapsulated_data),
+                        // Handle other types or default...
+                        _ => Default::default(),
+                    }
+                } else {
+                    // Handle case where inner VLAN packet is not valid
+                    Default::default()
+                }
+            } else {
+                // Process single VLAN-tagged packet as before
+                let encapsulated_ether_type = outer_vlan_packet.get_ethertype();
+                let encapsulated_data = outer_vlan_packet.payload();
+
+                match encapsulated_ether_type {
+                    EtherTypes::Ipv4 => Ipv4Handler::get_layer_3(encapsulated_data),
+                    EtherTypes::Ipv6 => Ipv6Handler::get_layer_3(encapsulated_data),
+                    // Handle other types or default...
+                    _ => Default::default(),
+                }
+            }
+        } else {
+            Default::default()
+        }
+    }
+}
+
+impl HandlePacket for PppoeDiscoveryHandler {
+    fn get_layer_3(data: &[u8]) -> Layer3Infos {
+        // Here, you would parse the PPPoE Discovery packet.
+        // This is a simplified example, as actual parsing would be more complex.
+        if let Some(ethernet_packet) = EthernetPacket::new(data) {
+            if ethernet_packet.get_ethertype() == EtherTypes::PppoeDiscovery {
+                Layer3Infos {
+                    ip_source: None, // PPPoE packets do not have IP source/destination
+                    ip_destination: None,
+                    l_4_protocol: Default::default(),
+                    layer_4_infos: Layer4Infos {
+                        port_source: None,
+                        port_destination: None,
+                    },
+                }
+            } else {
+                Default::default()
+            }
+        } else {
+            Default::default()
+        }
+    }
+}
+
 pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
     match ethernet_packet.get_ethertype() {
         EtherTypes::Ipv6 => Ipv6Handler::get_layer_3(ethernet_packet.payload()),
         EtherTypes::Ipv4 => Ipv4Handler::get_layer_3(ethernet_packet.payload()),
         EtherTypes::Arp => ArpHandler::get_layer_3(ethernet_packet.payload()),
+        EtherTypes::Vlan => VlanHandler::get_layer_3(ethernet_packet.payload()),
+        EtherTypes::PppoeDiscovery => PppoeDiscoveryHandler::get_layer_3(ethernet_packet.payload()),
         _ => {
             // General case for all other EtherTypes
             println!(
-                "Layer 3 - Unknown or unsupported packet type: {:?}",
+                "Layer 3 - Unknown or unsupported packet type: {}",
                 ethernet_packet.get_ethertype()
             );
             Default::default()

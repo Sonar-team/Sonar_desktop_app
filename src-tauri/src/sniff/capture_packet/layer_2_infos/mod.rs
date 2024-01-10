@@ -4,7 +4,7 @@ use pnet::packet::ethernet::EthernetPacket;
 
 use layer_3_infos::{get_layer_3_infos, Layer3Infos};
 use serde::Serialize;
-mod layer_3_infos;
+pub(crate) mod layer_3_infos;
 
 #[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
 pub struct PacketInfos {
