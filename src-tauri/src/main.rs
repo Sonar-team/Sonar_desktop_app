@@ -10,8 +10,8 @@ use sonar_desktop_app::{
     sniff::scan_until_interrupt,
     tauri_state::SonarState,
 };
-use tauri::Manager;
-use tauri::State;
+use tauri::{Manager,State};
+
 extern crate sonar_desktop_app;
 
 fn main() {
@@ -26,6 +26,12 @@ fn main() {
     let builder = builder.plugin(devtools);
 
     builder
+    .on_window_event(|event| match event.event() {
+        tauri::WindowEvent::CloseRequested { .. } => {
+          std::process::exit(0);
+        }
+        _ => {}
+      })
         .manage(SonarState(Arc::new(Mutex::new(Vec::new()))))
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
@@ -33,6 +39,17 @@ fn main() {
             save_packets_to_csv,
             get_hash_map_state
         ])
+        .setup(move |app| {
+            let app_handle = app.handle();
+
+            // Event listener for before-quit
+            app_handle.listen_global("tauri://before-quit", move |_| {
+                println!("Quit event received");
+                
+            });
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

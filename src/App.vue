@@ -5,9 +5,24 @@
 </template>
 
 <script>
+  import { appWindow } from "@tauri-apps/api/window";
+  import { confirm } from '@tauri-apps/api/dialog';
+
 export default {
-  mounted() {
+
+  async mounted() {
       console.log("mounted");
+      const unlisten = await appWindow.onCloseRequested(async (event) => {
+      const confirmed = await confirm('Etes vous sûr ?');
+      if (!confirmed) {
+        // user did not confirm closing the window; let's prevent it
+        event.preventDefault();
+      }
+    });
+
+    this.$once('hook:beforeDestroy', () => {
+      unlisten();
+    });
     }
 };
 </script>
