@@ -1,5 +1,15 @@
 from scapy.all import Ether, PPPoED , sendp, Dot1Q, IP
 
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+
+# Access variables
+src_ip = os.getenv('SRC_IP')
+dst_ip = os.getenv('DST_IP')
+
 def send_vlan_packet(interface, vlan_id, src_mac, dst_mac, src_ip, dst_ip):
     packet = Ether(src=src_mac, dst=dst_mac)
     packet = packet / Dot1Q(vlan=vlan_id)
@@ -13,8 +23,8 @@ send_vlan_packet(
     vlan_id=100,        # VLAN ID
     src_mac="00:01:02:03:04:05",  # Replace with source MAC address
     dst_mac="ff:ff:ff:ff:ff:ff",  # Replace with destination MAC address or broadcast
-    src_ip="192.168.1.10",        # Replace with source IP address
-    dst_ip="192.168.1.20"         # Replace with destination IP address
+    src_ip=src_ip,        # Using variable from .env file
+    dst_ip=dst_ip         # Using variable from .env file
 )
 # https://www.youtube.com/watch?v=Nlyx5lFQR34   
 
