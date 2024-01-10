@@ -70,7 +70,7 @@ export default {
       console.log("stop and save")
       save({
         filters: [{
-          name: 'Relevée',
+          name: 'Relevée CSV',
           extensions: ['csv']
         }]
       }).then((response) => 
