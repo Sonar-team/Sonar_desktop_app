@@ -1,5 +1,2 @@
-mod integration_test;
 mod charge_test;
-
-
-
+mod integration_test;

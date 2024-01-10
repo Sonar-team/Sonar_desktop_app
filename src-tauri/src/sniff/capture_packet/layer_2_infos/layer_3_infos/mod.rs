@@ -6,7 +6,8 @@ use pnet::packet::{
     },
     ipv4::Ipv4Packet,
     ipv6::Ipv6Packet,
-    Packet, vlan::VlanPacket,
+    vlan::VlanPacket,
+    Packet,
 };
 
 mod layer_4_infos;

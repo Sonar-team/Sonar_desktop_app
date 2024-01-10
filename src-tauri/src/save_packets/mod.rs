@@ -1,4 +1,4 @@
-use crate::{tauri_state::SonarState, sniff::capture_packet::layer_2_infos::PacketInfos};
+use crate::{sniff::capture_packet::layer_2_infos::PacketInfos, tauri_state::SonarState};
 use csv::Writer;
 use serde::Serialize;
 use tauri::State;
@@ -24,7 +24,7 @@ struct PacketInfosCsv {
     ip_source: Option<String>,
     ip_destination: Option<String>,
     l_4_protocol: Option<String>,
-    port_source: Option<String>, // Assuming port is of type u16
+    port_source: Option<String>,      // Assuming port is of type u16
     port_destination: Option<String>, // Assuming port is of type u16
     count: u32,
 }
@@ -57,8 +57,7 @@ pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> R
     let data = state.0.lock().unwrap();
 
     // Create a CSV writer
-    let mut wtr = Writer::from_path(file_path)
-        .map_err(|e| MyError::IoError(e.to_string()))?;
+    let mut wtr = Writer::from_path(file_path).map_err(|e| MyError::IoError(e.to_string()))?;
 
     // Serialize the entire vector to the CSV
     for (packet, count) in data.iter() {
@@ -68,8 +67,7 @@ pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> R
     }
 
     // Flush to ensure all data is written to the file
-    wtr.flush()
-        .map_err(|e| MyError::IoError(e.to_string()))?;
+    wtr.flush().map_err(|e| MyError::IoError(e.to_string()))?;
 
     Ok(())
 }
