@@ -7,16 +7,11 @@ use std::thread;
 use tauri::{Manager, State};
 pub(crate) mod layer_2_infos;
 
-
 use crate::tauri_state::SonarState;
 
 use self::layer_2_infos::PacketInfos;
 
-
-pub fn all_interfaces(
-        app: tauri::AppHandle, 
-        state: State<SonarState>
-    ) {
+pub fn all_interfaces(app: tauri::AppHandle, state: State<SonarState>) {
     let mut handles = vec![];
     let (tx, rx) = mpsc::channel::<PacketInfos>();
 
@@ -37,7 +32,7 @@ pub fn all_interfaces(
             }
         }
     });
-    
+
     // threads qui ecoute les trames
     let interfaces = datalink::interfaces();
     for interface in interfaces {
@@ -57,11 +52,7 @@ pub fn all_interfaces(
     }
 }
 
-pub fn one_interface(
-        app: tauri::AppHandle, 
-        interface: &str,
-        state: State<SonarState>
-    ) {
+pub fn one_interface(app: tauri::AppHandle, interface: &str, state: State<SonarState>) {
     println!("L'interface choisie est: {}", interface);
 
     // thread fifo
@@ -87,7 +78,6 @@ pub fn one_interface(
     let interface_names_match = |iface: &NetworkInterface| iface.name == interface;
     let interfaces = datalink::interfaces();
 
-
     let captured_interface = match interfaces.into_iter().find(interface_names_match) {
         Some(interface) => interface,
         None => {
@@ -98,10 +88,10 @@ pub fn one_interface(
 }
 
 fn capture_packets(
-        app: tauri::AppHandle, 
-        interface: datalink::NetworkInterface, 
-        tx: mpsc::Sender<PacketInfos>
-    ) {
+    app: tauri::AppHandle,
+    interface: datalink::NetworkInterface,
+    tx: mpsc::Sender<PacketInfos>,
+) {
     let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
         Ok(Ethernet(tx, rx)) => (tx, rx),
         Ok(_) => panic!("Unhandled channel type: {}", &interface),
@@ -120,9 +110,11 @@ fn capture_packets(
                     //println!("---");
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
                     //println!("{}", &packet_info);
-                    main_window.emit("frame", &packet_info).expect("Failed to emit event");
-                    tx.send(packet_info).expect("Failed to send packet to queue");
-
+                    main_window
+                        .emit("frame", &packet_info)
+                        .expect("Failed to emit event");
+                    tx.send(packet_info)
+                        .expect("Failed to send packet to queue");
                 }
             }
             Err(e) => {
@@ -146,7 +138,7 @@ fn capture_packets(
 //     if !observed_packets.contains(&key) {
 //         //println!("New unique packet: {:?}", &info);
 //         observed_packets.insert(key);
-            
+
 //         main_window.emit("matrice", &info).expect("Failed to emit event");
 //         // Add the packet info to the vector
 //         state.push_to_hash_map(info);

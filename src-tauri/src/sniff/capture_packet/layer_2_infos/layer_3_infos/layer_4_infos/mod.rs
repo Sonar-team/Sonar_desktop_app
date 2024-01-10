@@ -1,4 +1,3 @@
-
 use pnet::packet::icmp::IcmpPacket;
 use pnet::packet::icmpv6::Icmpv6Packet;
 //use pnet::packet::dhcp::DhcpPacket;
@@ -36,7 +35,6 @@ impl PacketPorts for UdpPacket<'_> {
     }
 }
 
-
 pub fn get_layer_4_infos(proto: IpNextHeaderProtocol, data: &[u8]) -> Layer4Infos {
     match proto {
         IpNextHeaderProtocols::Tcp => {
@@ -67,9 +65,7 @@ pub fn get_layer_4_infos(proto: IpNextHeaderProtocol, data: &[u8]) -> Layer4Info
                 Default::default()
             }
         }
-        IpNextHeaderProtocols::Igmp => {
-            Default::default()
-        }
+        IpNextHeaderProtocols::Igmp => Default::default(),
         IpNextHeaderProtocols::Hopopt => {
             // Handle HOPOPT protocol, if necessary
             Default::default()
@@ -78,7 +74,7 @@ pub fn get_layer_4_infos(proto: IpNextHeaderProtocol, data: &[u8]) -> Layer4Info
             // General case for all other EtherTypes
             println!(
                 "layer 4 - Unknown or unsupported packet type: {}",
-                proto.to_string()
+                proto
             );
             Default::default()
         }
