@@ -42,18 +42,22 @@
 </head>
 <body>
     <div>
-        <img src="src-tauri/icons/128x128@2x.png" alt="Sonar Logo" class="logo">
+        <img src="128x128@2x.png" alt="Sonar Logo" class="logo">
         <img src="Group 3.png" alt="Software Name" class="software-name">
         <div class="welcome-message">
             Bienvenue sur Sonar, votre outil d'analyse de resaux.
         </div>
     </div>
     <script>
+        function redirectToMain() {
+            window.location.href = '/'; // Redirect to the main window
+        }
+
         window.addEventListener('load', () => {
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 5000);
+            setTimeout(redirectToMain, 5000); // Automatically redirect after 5 seconds
         });
+
+        document.body.addEventListener('click', redirectToMain); // Redirect on click
     </script>
 </body>
 </html>
