@@ -7,7 +7,7 @@
         <p>Trames reçues: {{ tramesRecues }} </p>
         <p>Matrice de flux: {{ tramesEnregistrees }}</p>
         <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
-        <button @click="stopAndSave">Stop</button>
+        <button @click="stopAndSave">Sauvegarder</button>
      
     </div>
   </template>
