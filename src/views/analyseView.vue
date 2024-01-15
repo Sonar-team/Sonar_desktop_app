@@ -9,7 +9,7 @@
     />
     <div class="content">
       <h1 class="titre-relevé">Titre-du relevé :</h1>
-      <h1 class="titre-relevé">{{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h1>
+      <h2 class="titre-relevé">{{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h2>
         <h2 class="titre">Matrice de flux :</h2>
           <Matrice />
         <h2 class="titre">Trames sniffées :</h2>
