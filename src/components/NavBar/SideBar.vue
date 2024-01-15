@@ -16,6 +16,7 @@
 import { save } from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api'
 import { desktopDir } from '@tauri-apps/api/path';
+import { message } from '@tauri-apps/api/dialog';
 
 export default {
   data() {
@@ -92,8 +93,9 @@ export default {
     async SaveToDesktop() {
       console.log("save to desktop")
       const dir = await this.getDesktopDirPath();
-      if (dir) {
-        invoke('save_packets_to_csv', { file_path: dir })
+      const dirPath = dir + '/' + this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName + '.csv';
+      if (dirPath) {
+        invoke('save_packets_to_csv', { file_path: dirPath })
       } else {
         console.error("Failed to get desktop directory path");
       }
@@ -114,29 +116,36 @@ export default {
     },
 
     updateTempsReleve() {
-  // Fonction pour mettre à jour tempsReleve toutes les secondes
-  setInterval(() => {
-    const timeParts = this.tempsReleve.split(':');
-    let hours = parseInt(timeParts[0]);
-    let minutes = parseInt(timeParts[1]);
-    let seconds = parseInt(timeParts[2]);
+      // Fonction pour mettre à jour tempsReleve toutes les secondes
+      setInterval(async () => {
+        const timeParts = this.tempsReleve.split(':');
+        let hours = parseInt(timeParts[0]);
+        let minutes = parseInt(timeParts[1]);
+        let seconds = parseInt(timeParts[2]);
 
-    if (seconds > 0) {
-      seconds--;
-    } else if (minutes > 0) {
-      minutes--;
-      seconds = 59;
-    } else if (hours > 0) {
-      hours--;
-      minutes = 59;
-      seconds = 59;
-    } else {
-      
-    }
+        if (seconds > 0) {
+          seconds--;
+        } else if (minutes > 0) {
+          minutes--;
+          seconds = 59;
+        } else if (hours > 0) {
+          hours--;
+          minutes = 59;
+          seconds = 59;
+        } else {
+              // Time is up, stop the timer here if necessary
+              this.SaveToDesktop(); // Call the SaveToSelection method
+              await message('Sauvegarde automatique sur le Bureau',
+               { 
+                title: 'Relevée terminée',
+                type: 'info' 
+              });
 
-    this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
-  }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
-},
+        }
+
+        this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
+      }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
+    },
 
   },
   mounted() {

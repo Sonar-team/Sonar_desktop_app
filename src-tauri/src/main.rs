@@ -74,6 +74,7 @@ fn get_selected_interface(
 
 #[tauri::command(async, rename_all = "snake_case")]
 fn save_packets_to_csv(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
+    println!("{}", &file_path);
     cmd_save_packets_to_csv(file_path, state)
 }
 
