@@ -116,36 +116,38 @@ export default {
     },
 
     updateTempsReleve() {
-      // Fonction pour mettre à jour tempsReleve toutes les secondes
-      setInterval(async () => {
-        const timeParts = this.tempsReleve.split(':');
-        let hours = parseInt(timeParts[0]);
-        let minutes = parseInt(timeParts[1]);
-        let seconds = parseInt(timeParts[2]);
+  // Stocker l'identifiant de l'intervalle
+  const intervalId = setInterval(async () => {
+    const timeParts = this.tempsReleve.split(':');
+    let hours = parseInt(timeParts[0]);
+    let minutes = parseInt(timeParts[1]);
+    let seconds = parseInt(timeParts[2]);
 
-        if (seconds > 0) {
-          seconds--;
-        } else if (minutes > 0) {
-          minutes--;
-          seconds = 59;
-        } else if (hours > 0) {
-          hours--;
-          minutes = 59;
-          seconds = 59;
-        } else {
-              // Time is up, stop the timer here if necessary
-              this.SaveToDesktop(); // Call the SaveToSelection method
-              await message('Sauvegarde automatique sur le Bureau',
-               { 
-                title: 'Relevée terminée',
-                type: 'info' 
-              });
+    if (seconds > 0) {
+      seconds--;
+    } else if (minutes > 0) {
+      minutes--;
+      seconds = 59;
+    } else if (hours > 0) {
+      hours--;
+      minutes = 59;
+      seconds = 59;
+    } else {
+      // Temps écoulé, arrêter l'intervalle
+      clearInterval(intervalId);
 
-        }
+      // Appeler SaveToDesktop et attendre la réponse au dialogue
+      this.SaveToDesktop();
+      await message('Sauvegarde automatique sur le Bureau', { 
+        title: 'Relevée terminée',
+        type: 'info'
+      });
+      return; // Important pour sortir de la fonction
+    }
 
-        this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
-      }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
-    },
+    this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
+  }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
+},
 
   },
   mounted() {
