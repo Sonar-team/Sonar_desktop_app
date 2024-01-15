@@ -93,7 +93,7 @@ export default {
     async SaveToDesktop() {
       console.log("save to desktop")
       const dir = await this.getDesktopDirPath();
-      const dirPath = dir + '/' + this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName + '.csv';
+      const dirPath = dir + this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName + '.csv';
       if (dirPath) {
         invoke('save_packets_to_csv', { file_path: dirPath })
       } else {
@@ -181,7 +181,7 @@ export default {
 
 .sidebar {
   width: 300px; /* Largeur ajustée */
-  background-color: #0b1118; /* Couleur de fond */
+  background-color: #2A2A2A; /* Couleur de fond */
   color: #ECF0F1; /* Couleur du texte */
   padding: 20px;
   border-radius: 5px; /* Bordures arrondies */
@@ -198,7 +198,7 @@ export default {
 
 .sidebar button {
   padding: 10px 15px;
-  background-color: #183244; /* Couleur du bouton */
+  background-color: #11212c; /* Couleur du bouton */
   color: white;
   border: none;
   border-radius: 3px;
