@@ -7,7 +7,7 @@
         <p>Trames reçues: {{ tramesRecues }} </p>
         <p>Matrice de flux: {{ tramesEnregistrees }}</p>
         <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
-        <button @click="stopAndSave">Sauvegarder</button>
+        <button @click="SaveToSelction">Sauvegarder</button>
      
     </div>
   </template>
@@ -15,6 +15,7 @@
   <script>
 import { save } from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api'
+import { desktopDir } from '@tauri-apps/api/path';
 
 export default {
   data() {
@@ -29,6 +30,13 @@ export default {
     };
   },
   methods: {
+    getCurrentDate() {
+      // Fonction pour obtenir la date actuelle
+      const now = new Date();
+      // Formattez la date en DD/MM/YYYY
+      const formattedDate = `${this.padZero(now.getDate())}-${this.padZero(now.getMonth() + 1)}-${now.getFullYear()}`;
+      return formattedDate;
+    },
     formatTime(date) {
       const hours = this.padZero(date.getHours());
       const minutes = this.padZero(date.getMinutes());
@@ -66,19 +74,39 @@ export default {
     incrementMatriceCount(packetCount) {
       this.tramesEnregistrees = packetCount;
     },
-    async stopAndSave() {
+    async SaveToSelction() {
       console.log("stop and save")
       save({
         filters: [{
           name: 'Relevée CSV',
           extensions: ['csv']
-        }]
+        }],
+        title: 'Sauvegarder la matrice de flux',
+        defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName + '.csv' // Set the default file name here
       }).then((response) => 
         invoke('save_packets_to_csv', { file_path: response })
           .then((response) => 
             console.log("save error: ",response))
             )
     },
+    async SaveToDesktop() {
+      console.log("save to desktop")
+      const dir = await this.getDesktopDirPath();
+      if (dir) {
+        invoke('save_packets_to_csv', { file_path: dir })
+      } else {
+        console.error("Failed to get desktop directory path");
+      }
+    },
+    async getDesktopDirPath() {
+    try {
+      const dir = await desktopDir();
+      console.log("App Data Directory: ", dir);
+      return dir;
+    } catch (error) {
+      console.error("Error getting app data directory: ", error);
+    }
+  },
 
     padZero(value) {
       // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
@@ -103,7 +131,7 @@ export default {
       minutes = 59;
       seconds = 59;
     } else {
-      // Le temps est écoulé, arrêter le timer ici si nécessaire
+      
     }
 
     this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
@@ -113,6 +141,7 @@ export default {
   },
   mounted() {
     console.log("analyse mounted");
+    this.getDesktopDirPath();
 
     this.heureDepart = this.$route.params.currentTime;
     this.tempsReleve = this.$route.params.time;

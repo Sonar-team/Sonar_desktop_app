@@ -61,7 +61,11 @@
         "icons/128x128@2x.png",
         "icons/icon.icns",
         "icons/icon.ico"
-      ]
+        ],
+      "category": "Utility",
+      "shortDescription": "Network audit software",
+      "publisher": "Akmot",
+      "copyright": "Copyright (c) 2012-2024 Cyprien Avico"
     },
     "security": {
       "csp": null
