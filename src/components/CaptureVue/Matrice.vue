@@ -6,13 +6,13 @@
           <th>MAC Source</th>
           <th>MAC Destination</th>
           <th>Interface</th>
-          <th>Protocol L 3</th>
+          <th>Protocole</th>
           <th>IP Source</th>
           <th>IP Destination</th>
-          <th>Protocol</th>
+          <th>Protocole</th>
           <th>Port Source</th>
           <th>Port Destination</th>
-          <th>Count</th>
+          <th>Occurences</th>
         </tr>
       </thead>
       <tbody>
