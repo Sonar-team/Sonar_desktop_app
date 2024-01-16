@@ -3,10 +3,13 @@
         <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="150" height="150">   
         <p>Heure de départ: {{ heureDepart }}</p>
         <p>Heure de fin: {{ heureFin }}</p>
+        <button @click="augmenterTemps">⬆️</button>
         <p>Temps restant: {{ tempsReleve }}</p>
+        <button @click="diminuerTemps">⬇️</button>
+        <p>Temps écoulé: {{ tempsEcoule }}</p>
         <p>Trames reçues: {{ tramesRecues }} </p>
         <p>Matrice de flux: {{ tramesEnregistrees }}</p>
-        <p>Niveau de confidentialité: {{ niveauConfidentialite }}</p>
+        
         <button @click="SaveToSelction">Sauvegarder</button>
      
     </div>
@@ -22,6 +25,7 @@ export default {
   data() {
     return {
       tempsReleve: '',
+      tempsEcoule: '',
       tramesRecues: 0,
       tramesEnregistrees: 0,
       niveauConfidentialite: '',
@@ -31,11 +35,27 @@ export default {
     };
   },
   methods: {
+    augmenterTemps() {
+    this.ajusterTemps(1); // Augmenter d'une seconde
+  },
+  diminuerTemps() {
+    this.ajusterTemps(-1); // Diminuer d'une seconde
+  },
+  ajusterTemps(ajustement) {
+    let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
+    const tempsTotalEnSecondes = heures * 3600 + minutes * 60 + secondes + ajustement;
+
+    heures = Math.floor(tempsTotalEnSecondes / 3600);
+    minutes = Math.floor((tempsTotalEnSecondes % 3600) / 60);
+    secondes = tempsTotalEnSecondes % 60;
+
+    this.tempsReleve = `${this.padZero(heures)}:${this.padZero(minutes)}:${this.padZero(secondes)}`;
+  },
     getCurrentDate() {
       // Fonction pour obtenir la date actuelle
       const now = new Date();
       // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${this.padZero(now.getDate())}-${this.padZero(now.getMonth() + 1)}-${now.getFullYear()}`;
+      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
       return formattedDate;
     },
     formatTime(date) {
@@ -115,6 +135,22 @@ export default {
       return value < 10 ? `0${value}` : value;
     },
 
+    updateTempsEcoule() {
+  const startTime = new Date();
+  
+  const intervalId = setInterval(() => {
+    const now = new Date();
+    let elapsed = new Date(now - startTime);
+
+    // Calcul du temps écoulé
+    let hours = elapsed.getUTCHours();
+    let minutes = elapsed.getUTCMinutes();
+    let seconds = elapsed.getUTCSeconds();
+
+    this.tempsEcoule = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
+  }, 1000);
+},
+
     updateTempsReleve() {
   // Stocker l'identifiant de l'intervalle
   const intervalId = setInterval(async () => {
@@ -157,10 +193,11 @@ export default {
     this.heureDepart = this.$route.params.currentTime;
     this.tempsReleve = this.$route.params.time;
     this.calculateEndTime(); // Calculate the end time when the component is mounted
-    
+    this.updateTempsReleve();
+    this.updateTempsEcoule(); // calculate
     this.$bus.on('increment-event', this.incrementTramesRecues);
     this.$bus.on('update-packet-count', this.incrementMatriceCount);
-    this.updateTempsReleve();
+    
 
     this.netInterface = this.$route.params.netInterface;
     this.installationName = this.$route.params.installationName;

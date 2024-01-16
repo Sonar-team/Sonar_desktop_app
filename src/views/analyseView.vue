@@ -8,11 +8,10 @@
       :currentTime="$route.params.currentTime"
     />
     <div class="content">
-      <h1 class="titre-relevé">Titre-du relevé :</h1>
-      <h2 class="titre-relevé">{{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h2>
-        <h2 class="titre">Matrice de flux :</h2>
+     
+        <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
           <Matrice />
-        <h2 class="titre">Trames sniffées :</h2>
+        <h3 class="titre">Trames :</h3>
           <BottomLong  />
     </div>
   </div>
@@ -48,7 +47,7 @@ export default {
       // Fonction pour obtenir la date actuelle
       const now = new Date();
       // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${this.padZero(now.getDate())}-${this.padZero(now.getMonth() + 1)}-${now.getFullYear()}`;
+      const formattedDate = `${now.getFullYear()}${this.padZero(now.getDate())}${this.padZero(now.getMonth() + 1)}`;
       return formattedDate;
     },
 
