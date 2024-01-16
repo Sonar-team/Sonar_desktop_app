@@ -45,6 +45,7 @@
 <script>
 import { invoke } from '@tauri-apps/api/tauri';
 import { message } from '@tauri-apps/api/dialog';
+import { trace, attachConsole } from "tauri-plugin-log-api";
 
 export default {
   data() {
@@ -111,11 +112,13 @@ goToAnalysePage() {
   }
 }
 },
-mounted() {
-  console.log("mounted capture");
+async mounted() {
+  const detach = await attachConsole();
+  trace("mounted capture");
   invoke('get_interfaces_tab').then((interfaces) => {
     this.netInterfaces = interfaces;
   });
+  detach();
 }
 };
 </script>
