@@ -3,6 +3,7 @@ use pnet::datalink::{self, NetworkInterface};
 use pnet::packet::ethernet::EthernetPacket;
 use std::sync::mpsc;
 use std::thread;
+use log::{info, error};
 
 use tauri::{Manager, State};
 pub(crate) mod layer_2_infos;
@@ -53,7 +54,7 @@ pub fn all_interfaces(app: tauri::AppHandle, state: State<SonarState>) {
 }
 
 pub fn one_interface(app: tauri::AppHandle, interface: &str, state: State<SonarState>) {
-    println!("L'interface choisie est: {}", interface);
+    info!("L'interface choisie est: {}", interface);
 
     // thread fifo
     let (tx, rx) = mpsc::channel();
@@ -81,7 +82,8 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str, state: State<SonarS
     let captured_interface = match interfaces.into_iter().find(interface_names_match) {
         Some(interface) => interface,
         None => {
-            panic!("No such interface '{}'", interface);
+            error!("Aucune interface de ce type: '{}'", interface);
+            panic!("Aucune interface de ce type: '{}'", interface);
         }
     };
     capture_packets(app, captured_interface, tx);
@@ -94,31 +96,34 @@ fn capture_packets(
 ) {
     let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
         Ok(Ethernet(tx, rx)) => (tx, rx),
-        Ok(_) => panic!("Unhandled channel type: {}", &interface),
-        Err(e) => panic!(
-            "An error occurred when creating the datalink channel: {}",
-            e
-        ),
-    };
+        Ok(_) => {
+            error!("Type de canal non géré : {}", &interface);
+            panic!("Type de canal non géré : {}", &interface)
+            }
+        Err(e) => {
+                error!("Une erreur s'est produite lors de la création du canal de liaison de données: {}", &interface);
+                panic!("Une erreur s'est produite lors de la création du canal de liaison de données: {}",e)
+            }
+        };
     let main_window = app.get_window("main").unwrap();
 
-    println!("Start thread reading packet on interface: {}", &interface);
+    info!("Démarrage du thread de lecture de paquets sur l'interface :{}", &interface);
     loop {
         match rx.next() {
             Ok(packet) => {
                 if let Some(ethernet_packet) = EthernetPacket::new(packet) {
-                    //println!("---");
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
-                    //println!("{}", &packet_info);
-                    main_window
-                        .emit("frame", &packet_info)
-                        .expect("Failed to emit event");
-                    tx.send(packet_info)
-                        .expect("Failed to send packet to queue");
+                    if let Err(err) = main_window.emit("frame", &packet_info) {
+                        error!("Failed to emit event: {}", err);
+                    }
+                    if let Err(err) = tx.send(packet_info) {
+                        error!("Failed to send packet to queue: {}", err);
+                    }
                 }
             }
             Err(e) => {
-                panic!("An error occurred while reading: {}", e);
+                error!("An error occurred while reading: {}", e);
+                break;
             }
         }
     }

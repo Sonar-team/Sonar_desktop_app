@@ -45,6 +45,8 @@
   
 <script>
 import { invoke } from '@tauri-apps/api/tauri';
+import { trace, info, error, attachConsole } from "tauri-plugin-log-api";
+
 
 export default {
   data() {
@@ -76,11 +78,14 @@ export default {
       });
     }
   },
-  mounted() {
-    console.log("mounted capture");
+  async mounted() {
+    // with LogTarget::Webview enabled this function will print logs to the browser console
+    const detach = await attachConsole();
+    trace("mounted capture");
     invoke('get_interfaces_tab').then((interfaces) => {
       this.netInterfaces = interfaces;
     });
+    detach();
   }
 };
 </script>

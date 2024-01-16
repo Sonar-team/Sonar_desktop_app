@@ -13,6 +13,7 @@
     "@fontsource/oxanium": "^5.0.17",
     "@tauri-apps/api": "^1.5.1",
     "chart.js": "^4.4.0",
+    "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1",
     "v-network-graph": "^0.9.13",
     "vue": "^3.3.4",
     "vue-chartjs": "^5.2.0",
