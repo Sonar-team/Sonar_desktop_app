@@ -12,7 +12,7 @@ pub fn get_interfaces() -> Vec<String> {
             //println!("Found interface: {}", name);
         })
         .collect();
-    let all = String::from("all");
+    let all = String::from("Toutes les interfaces");
     names.push(all);
 
     names

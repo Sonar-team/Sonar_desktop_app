@@ -211,13 +211,6 @@ export default {
   </script>
 
 <style scoped>
-.sidebar-logo {
-  width: 100%; /* Adjust the width as necessary */
-  max-width: 128px; /* Adjust the max width as necessary */
-  height: auto; /* Maintain aspect ratio */
-  margin-bottom: 20px; /* Add some space below the logo */
-}
-
 .sidebar {
   width: 300px; /* Largeur ajustée */
   background-color: #2A2A2A; /* Couleur de fond */
@@ -230,9 +223,16 @@ export default {
   gap: 10px; /* Espacement entre les éléments */
 }
 
+.sidebar img {
+  width: 150px; /* Taille du logo */
+  height: auto; /* Maintenir le ratio de l'image */
+  margin-bottom: 20px; /* Espacement sous l'image */
+}
+
 .sidebar p {
   margin: 0;
   padding: 5px 0;
+  font-size: 1.2em; /* Augmenter la taille de la police */
 }
 
 .sidebar button {
@@ -243,9 +243,19 @@ export default {
   border-radius: 3px;
   cursor: pointer;
   transition: background-color 0.3s ease; /* Transition pour le survol */
+  font-size: 1.1em; /* Taille de la police du bouton */
 }
 
 .sidebar button:hover {
   background-color: #0b1b25; /* Couleur au survol */
 }
+
+/* Responsive Design pour les petits écrans */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%; /* Pleine largeur pour les petits écrans */
+    box-shadow: none; /* Pas d'ombre pour un look plus simple */
+  }
+}
+
 </style>

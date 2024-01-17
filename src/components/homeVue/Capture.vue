@@ -125,53 +125,66 @@ async mounted() {
 
 <style scoped>
 .capture-container {
-  margin: 20px;
+  margin: 30px;
   display: flex;
   flex-direction: column;
-  text-align: center;
-  color: white; /* White text color for the entire container */
+  align-items: center;
+  color: #333;
 }
 
 .title-capture {
-  font-size: 2em
-;
-margin: 0 0 10px 0;
-text-align: left;
+  font-size: 2.5em;
+  margin: 10px 0;
+  text-align: center;
+  color: #bacbfa;
 }
 
 .content {
-display: flex;
-flex-direction: column;
-align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%; /* Utilisation de la largeur complète */
 }
 
 select, input {
-color: black; /* Dark text for input and select content for readability /
-background-color: white; / Light background for inputs and selects */
-padding: 8px;
-margin-bottom: 10px;
-border: 1px solid #ddd;
-border-radius: 4px;
+  font-size: 5.3em;
+  color: #333;
+  background-color: #FFF;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  width: 80%; /* Largeur plus grande pour améliorer la lisibilité */
 }
 
 .invalid {
-border-color: red; /* Red border for invalid inputs */
+  border-color: #e92525; /* Couleur rouge pour les champs invalides */
+  border-width: 5px;
 }
 
 select:hover, input:hover {
-border-color: #0BA4DB; /* Hover effect for inputs */
+  border-color: #cbdee5; /* Effet de survol pour les champs */
 }
 
 button {
-padding: 10px 15px;
-background-color: #333; /* Dark background for buttons /
-color: white; / White text for buttons */
-border: none;
-border-radius: 4px;
-cursor: pointer;
+  padding: 12px 20px;
+  background-color: #333;
+  color: #FFF;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.2em; /* Bouton avec une police plus grande */
 }
 
 button:hover {
-background-color: #555; /* Slightly lighter hover state for buttons */
+  background-color: #555;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content {
+    width: 95%; /* Adaptation pour les écrans plus petits */
+  }
+}
+
+
 </style>

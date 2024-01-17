@@ -15,5 +15,5 @@ pub fn scan_until_interrupt(
 }
 
 fn check_interface(interface: &str) -> bool {
-    matches!(interface, "all")
+    matches!(interface, "Toutes les interfaces")
 }

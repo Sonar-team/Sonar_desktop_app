@@ -66,6 +66,7 @@ pub fn get_layer_4_infos(proto: IpNextHeaderProtocol, data: &[u8]) -> Layer4Info
             }
         }
         IpNextHeaderProtocols::Igmp => Default::default(),
+        IpNextHeaderProtocols::Ipv6Frag => Default::default(),
         IpNextHeaderProtocols::Hopopt => {
             // Handle HOPOPT protocol, if necessary
             Default::default()

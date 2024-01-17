@@ -10,7 +10,8 @@ import Capture from '../components/homeVue/Capture.vue';
   
 
     <div class="footer">
-      <span>Version du logiciel: 1.0.1</span>
+      <span>Version du logiciel: 1.0.1 - </span>
+      <span>© 2024 Marine Nationale - SSF TOULON - ERDT CYBER</span>
     </div>
   </div>
 </template>
