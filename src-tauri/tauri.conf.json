@@ -84,6 +84,7 @@
       {
         "width": 1800,
         "height": 1000,
+        "title": "Sonar",
         "decorations": true,
         "url": "splashscreen.html",
         "label": "splashscreen",
