@@ -105,7 +105,7 @@ export default {
 
   tbody {
     display: block; /* Change display to block */
-    max-height: 500px; /* Set a max height */
+    max-height: 620px; /* Set a max height */
     overflow-y: auto; /* Add scrollbar if content exceeds max height */
   }
 
