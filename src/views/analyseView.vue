@@ -11,7 +11,7 @@
      
         <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
           <Matrice />
-        <h3 class="titre">Trames :</h3>
+        <h3 class="titre"></h3>
           <BottomLong  />
     </div>
   </div>

@@ -6,12 +6,14 @@
           <th>MAC Source</th>
           <th>MAC Destination</th>
           <th>Interface</th>
-          <th>Protocol L 3</th>
+          <th>Protocole</th>
           <th>IP Source</th>
           <th>IP Destination</th>
-          <th>Protocol L 4</th>
+          <th>Protocole</th>
           <th>Port Source</th>
           <th>Port Destination</th>
+          <th>Horodatage</th> <!-- Nouvelle en-tête pour l'horodatage -->
+
         </tr>
       </thead>
       <tbody>
@@ -25,6 +27,8 @@
           <td>{{ frame.layer_3_infos.l_4_protocol }}</td>
           <td>{{ frame.layer_3_infos.layer_4_infos.port_source }}</td>
           <td>{{ frame.layer_3_infos.layer_4_infos.port_destination }}</td>
+          <td>{{ frame.timestamp }}</td> <!-- Nouvelle cellule pour l'horodatage -->
+
         </tr>
       </tbody>
     </table>
@@ -43,11 +47,13 @@ export default {
     }
   },
   async mounted() {
-    console.log('mounted bottom')
 
     await listen('frame', (packet_info) => {
       this.incrementAndEmit()
-      this.frames.push(packet_info.payload);
+      const timestamp = new Date().toLocaleTimeString(); // Obtains the current time
+      const frameWithTimestamp = { ...packet_info.payload, timestamp }; // Ajoute l'horodatage au packet
+
+      this.frames.push(frameWithTimestamp);
       // Keep only the last 5 elements
       if (this.frames.length > 5) {
         this.frames.shift();

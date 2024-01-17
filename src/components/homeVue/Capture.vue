@@ -1,4 +1,7 @@
 <template>
+  <div class="image-container">
+    <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="150" height="150">
+  </div>
   <div class="capture-container">
     <div class="header">
       <h1 class="title-capture">1. Choisir une interface réseau</h1>
@@ -124,6 +127,13 @@ async mounted() {
 </script>
 
 <style scoped>
+
+.image-container {
+  display: flex;
+  justify-content: center; /* Centre horizontalement */
+  align-items: center; /* Centre verticalement (si nécessaire) */
+  margin: 0 auto; /* Optionnel, pour le centrage additionnel */
+}
 .capture-container {
   margin: 30px;
   display: flex;
@@ -147,7 +157,7 @@ async mounted() {
 }
 
 select, input {
-  font-size: 5.3em;
+  font-size: 2.5em;
   color: #333;
   background-color: #FFF;
   padding: 12px;
@@ -155,6 +165,9 @@ select, input {
   border: 2px solid #ddd;
   border-radius: 5px;
   width: 80%; /* Largeur plus grande pour améliorer la lisibilité */
+  -webkit-appearance: none; /* Désactive le style par défaut pour Safari */
+  -moz-appearance: none; /* Désactive le style par défaut pour Firefox */
+  appearance: none; /* Désactive le style par défaut standard */
 }
 
 .invalid {
