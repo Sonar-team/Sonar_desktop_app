@@ -48,6 +48,7 @@ jobs:
           cargo clippy
           --all-features
           --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
+        working-directory: ./src-tauri
         continue-on-error: true
 
       - name: Upload analysis results to GitHub
