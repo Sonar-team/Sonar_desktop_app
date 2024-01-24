@@ -56,3 +56,13 @@ jobs:
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
+
+      - name: Trigger Documentation Update
+        run: |
+          curl -X POST -H "Authorization: token ${TOKEN}" \
+          -H "Accept: application/vnd.github.everest-preview+json" \
+          -H "Content-Type: application/json" \
+          https://api.github.com/repos/Sonar-team/Sonar_desktop_app/dispatches \
+          -d '{"event_type": "trigger-update"}'
+        env:
+          TOKEN: ${{ secrets.SONAR_PAT}}
