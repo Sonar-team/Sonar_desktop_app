@@ -41,6 +41,8 @@ jobs:
       - name: Install required cargo
         run: cargo install clippy-sarif sarif-fmt
 
+      - name: go in rust dir
+        run: cd src-tauri
       - name: Run rust-clippy
         run:
           cargo clippy
