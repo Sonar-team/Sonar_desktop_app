@@ -19,7 +19,7 @@ jobs:
       - name: Node.js setup
         uses: actions/setup-node@v1
         with:
-          node-version: 16
+          node-version: 20
 
       - name: Rust setup
         uses: actions-rs/toolchain@v1
@@ -58,6 +58,7 @@ jobs:
           prerelease: false
 
       - name: Trigger Documentation Update
+        if: matrix.platform == 'ubuntu-latest' 
         run: |
           curl -X POST -H "Authorization: token ${TOKEN}" \
           -H "Accept: application/vnd.github.everest-preview+json" \
