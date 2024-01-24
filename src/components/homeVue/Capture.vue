@@ -143,7 +143,7 @@ async mounted() {
 }
 
 .title-capture {
-  font-size: 2.5em;
+  font-size: 2em;
   margin: 10px 0;
   text-align: center;
   color: #bacbfa;
@@ -157,14 +157,14 @@ async mounted() {
 }
 
 select, input {
-  font-size: 2.5em;
+  font-size: 1.5em;
   color: #333;
   background-color: #FFF;
   padding: 12px;
   margin-bottom: 15px;
   border: 2px solid #ddd;
   border-radius: 5px;
-  width: 80%; /* Largeur plus grande pour améliorer la lisibilité */
+  width: 50%; /* Largeur plus grande pour améliorer la lisibilité */
   -webkit-appearance: none; /* Désactive le style par défaut pour Safari */
   -moz-appearance: none; /* Désactive le style par défaut pour Firefox */
   appearance: none; /* Désactive le style par défaut standard */
