@@ -10,7 +10,7 @@
     <div class="content">
     
         <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
-          <button @click="toggleComponent">Toggle View</button> <!-- Toggle Button -->
+          <button @click="toggleComponent">Changer de vue</button> <!-- Toggle Button -->
           <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
           <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
 
