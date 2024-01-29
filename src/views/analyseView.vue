@@ -8,9 +8,12 @@
       :currentTime="$route.params.currentTime"
     />
     <div class="content">
-     
+    
         <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
-          <Matrice />
+          <button @click="toggleComponent">Toggle View</button> <!-- Toggle Button -->
+          <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
+          <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
+
         <h3 class="titre"></h3>
           <BottomLong  />
     </div>
@@ -21,6 +24,8 @@
 import Sidebar from '../components/NavBar/SideBar.vue';
 import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
+import NetworkGraphComponent from '../components/AnalyseVue/GraphVue/NetworkGraphComponent.vue'; // Import the other component
+
 import { invoke } from '@tauri-apps/api/tauri';
 
 
@@ -31,17 +36,23 @@ export default {
       tramesRecues: 0,
       tramesEnregistrees: 0,
       niveauConfidentialite: '',
-      installationName:''
+      installationName:'',
+      showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
+
     };
   },
 
   components: {
     BottomLong,
     Matrice,
-    Sidebar
+    Sidebar,
+    NetworkGraphComponent
   },
 
   methods: {
+    toggleComponent() {
+      this.showMatrice = !this.showMatrice; // Toggle the state
+    },
 
     getCurrentDate() {
       // Fonction pour obtenir la date actuelle
