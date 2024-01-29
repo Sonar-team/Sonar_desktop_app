@@ -140,8 +140,6 @@ async mounted() {
   justify-content: center;
   align-items: center;
   height: 70vh;
-
-
   border-radius: 15px;
   padding: 20px;
 }
@@ -177,16 +175,16 @@ async mounted() {
 
 select, input {
   font-size: 1.5em;
-  color: #333;
-  background-color: #FFF;
+  color: #FFF; /* Texte en blanc */
+  background-color: #333; /* Fond plus sombre pour les champs */
   padding: 12px;
   margin-bottom: 15px;
-  border: 2px solid #ddd;
+  border: 2px solid #555; /* Bordure plus sombre */
   border-radius: 5px;
-  width: 50%; /* Largeur plus grande pour améliorer la lisibilité */
-  -webkit-appearance: none; /* Désactive le style par défaut pour Safari */
-  -moz-appearance: none; /* Désactive le style par défaut pour Firefox */
-  appearance: none; /* Désactive le style par défaut standard */
+  width: 50%;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .invalid {
@@ -195,20 +193,20 @@ select, input {
 }
 
 select:hover, input:hover {
-  border-color: #cbdee5; /* Effet de survol pour les champs */
+  border-color: #cbdee5; /* Couleur de survol */
 }
 
 button {
   padding: 12px 20px;
-  background-color: #333;
-  color: #FFF;
+  background-color: #444; /* Fond du bouton plus sombre */
+  color: #FFF; /* Texte en blanc */
   border-radius: 5px;
   cursor: pointer;
-  font-size: 1.2em; /* Bouton avec une police plus grande */
+  font-size: 1.2em;
 }
 
 button:hover {
-  background-color: #555;
+  background-color: #555; /* Couleur de survol */
 }
 
 /* Responsive Design */
