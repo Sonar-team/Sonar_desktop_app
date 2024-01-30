@@ -3,9 +3,9 @@
         <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="150" height="150">   
         <p>Heure de départ: {{ heureDepart }}</p>
         <p>Heure de fin: {{ heureFin }}</p>
-        <button @click="augmenterTemps">⬆️</button>
+        <button class="button-up" @click="augmenterTemps"></button>
         <p>Temps restant: {{ tempsReleve }}</p>
-        <button @click="diminuerTemps">⬇️</button>
+        <button class="button-down" @click="diminuerTemps"></button>
         <p>Temps écoulé: {{ tempsEcoule }}</p>
         <p>Trames reçues: {{ tramesRecues }} </p>
         <p>Matrice de flux: {{ tramesEnregistrees }}</p>
@@ -256,6 +256,47 @@ export default {
     width: 100%; /* Pleine largeur pour les petits écrans */
     box-shadow: none; /* Pas d'ombre pour un look plus simple */
   }
+}
+
+.button-up, .button-down {
+  display: inline-block;
+  background-color: #11212c; /* Couleur de fond du bouton */
+  color: #ffffff; /* Couleur du texte du bouton */
+  text-align: center;
+  padding: 10px;
+  margin: 5px;
+  border: none;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+  position: relative; /* Position relative pour les pseudo-éléments */
+}
+
+/* Style pour le contenu du bouton (la flèche) */
+.button-up::before, .button-down::before {
+  content: '';
+  display: block;
+  margin: auto; /* Centre automatiquement la flèche */
+  width: 0; 
+  height: 0;
+  border-style: solid;
+}
+
+/* Flèche vers le haut */
+.button-up::before {
+  border-width: 0 5px 8px 5px; /* Ajuste la taille de la flèche */
+  border-color: transparent transparent #ffffff transparent; /* Flèche blanche */
+}
+
+/* Flèche vers le bas */
+.button-down::before {
+  border-width: 8px 5px 0 5px; /* Ajuste la taille de la flèche */
+  border-color: #ffffff transparent transparent transparent; /* Flèche blanche */
+}
+
+/* Effet de survol pour les boutons */
+.button-up:hover, .button-down:hover {
+  background-color: #0b1b25; /* Couleur de survol plus foncée */
+  cursor: pointer;
 }
 
 </style>
