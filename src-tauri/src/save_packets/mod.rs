@@ -1,5 +1,6 @@
 use crate::{sniff::capture_packet::layer_2_infos::PacketInfos, tauri_state::SonarState};
 use csv::Writer;
+use rust_xlsxwriter::*;
 use serde::Serialize;
 use tauri::State;
 use thiserror::Error;
@@ -14,6 +15,9 @@ pub enum MyError {
 
     #[error("UTF-8 Conversion Error: {0}")]
     Utf8Error(String),
+
+    #[error("XLSX Error: {0}")]
+    XlsxError(String),
 }
 
 #[derive(Serialize)]
@@ -68,6 +72,69 @@ pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> R
 
     // Flush to ensure all data is written to the file
     wtr.flush().map_err(|e| MyError::IoError(e.to_string()))?;
+
+    Ok(())
+}
+
+pub fn cmd_save_packets_to_excel(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
+    // Lock the state to access the data
+    let data = state.0.lock().unwrap();
+
+    // Create an Excel workbook
+    let mut workbook = Workbook::new();
+
+    // Add a worksheet
+    let sheet = workbook.add_worksheet();
+
+    // Write header
+    let headers = ["MAC Source", "MAC Destination", "Interface", "IP Source", "IP Destination", "L4 Protocol", "Source Port", "Destination Port", "Count"];
+    for (i, header) in headers.iter().enumerate() {
+        sheet.write_string(0, i as u16, header.to_string())
+            .map_err(|e| MyError::XlsxError(e.to_string()))?;
+    }
+
+    // Serialize the entire vector to the Excel sheet
+    for (i, (packet, count)) in data.iter().enumerate() {
+        let packet_csv = PacketInfosCsv::from_packet_infos(packet, *count);
+    
+        // Écriture des champs dans chaque colonne
+        sheet.write_string(i as u32 + 1, 0, &packet_csv.mac_address_source)
+            .map_err(|e| MyError::XlsxError(e.to_string()))?;
+        sheet.write_string(i as u32 + 1, 1, &packet_csv.mac_address_destination)
+            .map_err(|e| MyError::XlsxError(e.to_string()))?;
+        sheet.write_string(i as u32 + 1, 2, &packet_csv.interface)
+            .map_err(|e| MyError::XlsxError(e.to_string()))?;
+        
+        // Les champs optionnels doivent être gérés pour éviter les valeurs null
+        if let Some(ip_src) = &packet_csv.ip_source {
+            sheet.write_string(i as u32 + 1, 3, ip_src)
+                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+        }
+        if let Some(ip_dst) = &packet_csv.ip_destination {
+            sheet.write_string(i as u32 + 1, 4, ip_dst)
+                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+        }
+        if let Some(l4_proto) = &packet_csv.l_4_protocol {
+            sheet.write_string(i as u32 + 1, 5, l4_proto)
+                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+        }
+        if let Some(port_src) = &packet_csv.port_source {
+            sheet.write_string(i as u32 + 1, 6, port_src)
+                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+        }
+        if let Some(port_dst) = &packet_csv.port_destination {
+            sheet.write_string(i as u32 + 1, 7, port_dst)
+                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+        }
+    
+        // Écriture du champ 'count'
+        sheet.write_number(i as u32 + 1, 8, packet_csv.count as f64)
+            .map_err(|e| MyError::XlsxError(e.to_string()))?;
+    }
+
+    // Close the workbook
+    workbook.save(file_path)
+        .map_err(|e| MyError::XlsxError(e.to_string()))?;
 
     Ok(())
 }

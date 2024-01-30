@@ -8,7 +8,7 @@ use log::{info,error};
 use sonar_desktop_app::{
     cli::print_banner,
     get_interfaces::get_interfaces,
-    save_packets::{cmd_save_packets_to_csv, MyError},
+    save_packets::{cmd_save_packets_to_csv, MyError, cmd_save_packets_to_excel},
     sniff::scan_until_interrupt,
     tauri_state::SonarState,
 };
@@ -40,6 +40,7 @@ fn main() {
             get_interfaces_tab,
             get_selected_interface,
             save_packets_to_csv,
+            save_packets_to_excel,
             get_hash_map_state
         ])
         .setup(move |app| {
@@ -82,6 +83,12 @@ fn get_selected_interface(
 fn save_packets_to_csv(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du CSV: {}", &file_path);
     cmd_save_packets_to_csv(file_path, state)
+}
+
+#[tauri::command(async, rename_all = "snake_case")]
+fn save_packets_to_excel(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
+    info!("Chemin d'enregistrement du Excel: {}", &file_path);
+    cmd_save_packets_to_excel(file_path, state)
 }
 
 #[tauri::command]

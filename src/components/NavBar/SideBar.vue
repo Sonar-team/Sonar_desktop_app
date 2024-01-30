@@ -9,11 +9,15 @@
         <p>Temps écoulé: {{ tempsEcoule }}</p>
         <p>Trames reçues: {{ tramesRecues }} </p>
         <p>Matrice de flux: {{ tramesEnregistrees }}</p>
-        
-        <button @click="SaveToSelction">Sauvegarder</button>
-     
-    </div>
-  </template>
+        <p>Choix du format:</p>
+        <select v-model="selectedFormat">
+      <option value="csv">CSV</option>
+      <option value="xlsx">Excel</option>
+    </select>
+
+    <button @click="SaveFile">Sauvegarder</button>
+  </div>
+</template>
   
   <script>
 import { save } from '@tauri-apps/api/dialog';
@@ -24,6 +28,7 @@ import { message } from '@tauri-apps/api/dialog';
 export default {
   data() {
     return {
+      selectedFormat: 'xlsx',
       tempsReleve: '',
       tempsEcoule: '',
       tramesRecues: 0,
@@ -35,22 +40,29 @@ export default {
     };
   },
   methods: {
+    SaveFile() {
+      if (this.selectedFormat === 'csv') {
+        this.SaveAsCsv();
+      } else if (this.selectedFormat === 'xlsx') {
+        this.SaveAsXlsx();
+      }
+    },
     augmenterTemps() {
     this.ajusterTemps(1); // Augmenter d'une seconde
-  },
-  diminuerTemps() {
-    this.ajusterTemps(-1); // Diminuer d'une seconde
-  },
-  ajusterTemps(ajustement) {
-    let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
-    const tempsTotalEnSecondes = heures * 3600 + minutes * 60 + secondes + ajustement;
+    },
+    diminuerTemps() {
+      this.ajusterTemps(-1); // Diminuer d'une seconde
+    },
+    ajusterTemps(ajustement) {
+      let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
+      const tempsTotalEnSecondes = heures * 3600 + minutes * 60 + secondes + ajustement;
 
-    heures = Math.floor(tempsTotalEnSecondes / 3600);
-    minutes = Math.floor((tempsTotalEnSecondes % 3600) / 60);
-    secondes = tempsTotalEnSecondes % 60;
+      heures = Math.floor(tempsTotalEnSecondes / 3600);
+      minutes = Math.floor((tempsTotalEnSecondes % 3600) / 60);
+      secondes = tempsTotalEnSecondes % 60;
 
-    this.tempsReleve = `${this.padZero(heures)}:${this.padZero(minutes)}:${this.padZero(secondes)}`;
-  },
+      this.tempsReleve = `${this.padZero(heures)}:${this.padZero(minutes)}:${this.padZero(secondes)}`;
+    },
     getCurrentDate() {
       // Fonction pour obtenir la date actuelle
       const now = new Date();
@@ -95,17 +107,34 @@ export default {
     incrementMatriceCount(packetCount) {
       this.tramesEnregistrees = packetCount;
     },
-    async SaveToSelction() {
-      console.log("stop and save")
+    async SaveAsCsv() {
+      console.log("Save as csv")
       save({
         filters: [{
           name: 'Relevée CSV',
           extensions: ['csv']
         }],
         title: 'Sauvegarder la matrice de flux',
-        defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName + '.csv' // Set the default file name here
+        defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.csv' // Set the default file name here
+      
       }).then((response) => 
         invoke('save_packets_to_csv', { file_path: response })
+          .then((response) => 
+            console.log("save error: ",response))
+            )
+    },
+    async SaveAsXlsx() {
+      console.log("Save as xlsx")
+      save({
+        filters: [{
+          name: 'Relevée Excel',
+          extensions: ['xlsx']
+        }],
+        title: 'Sauvegarder la matrice de flux',
+        defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName + '.xlsx'// Set the default file name here
+      
+      }).then((response) => 
+        invoke('save_packets_to_excel', { file_path: response })
           .then((response) => 
             console.log("save error: ",response))
             )
