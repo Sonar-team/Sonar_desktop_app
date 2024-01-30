@@ -147,9 +147,7 @@ async mounted() {
 .capture-container {
   border: 2px solid #3a3a3a; /* Bordure plus sombre */
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   padding: 20px;
-  background-color: #242424; /* Fond sombre pour le contenu */
   width: 60%;
   max-width: 600px;
   text-align: center;
