@@ -32,9 +32,32 @@
       })
     };
   },
+  computed: {
+    processedPackets() {
+      return this.processData(this.packets);
+    }
+  },
+  mounted() {
+    this.intervalId = setInterval(this.fetchPacketInfos, 1000);
+  },
+  beforeDestroy() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+  },
+  methods: {
+    async fetchPacketInfos() {
+      try {
+        const jsonString = await invoke('get_hash_map_state', {});
+        this.packets = JSON.parse(jsonString);
+        
+        this.$bus.emit('update-packet-count', this.packets.length);
+      } catch (error) {
+        console.error("Error fetching packet infos:", error);
+      }
+    },
+  }
 }
-
-
 
 </script>
 
