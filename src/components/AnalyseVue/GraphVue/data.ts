@@ -17,10 +17,10 @@ const nodes:  Nodes = {
 
     const layouts: Layouts  = {
     nodes: {
-        node1: { x: 0, y: 0 },
-        node2: { x: 50, y: 50 },
-        node3: { x: 100, y: 0 },
-        node4: { x: 150, y: 50 },
+      node2: { x: 100, y: 100 }, // Central node
+      node1: { x: 100, y: 50 },  // Top node
+      node3: { x: 50, y: 150 },  // Bottom left node
+      node4: { x: 150, y: 150 },
     },
 }
 
