@@ -37,20 +37,14 @@
 
 <style scoped>
 .graph {
-
-
   height: 650px;
-  
   border: 2px solid #3a3a3a; /* Bordure plus sombre */
   border-radius: 10px;
- 
   width: 100%;
-
   text-align: center;
   color: #FFF; /* Texte en blanc */
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
   background-color: #1a1a1a; /* Fond plus sombre */
-  
 }
 
 </style>
