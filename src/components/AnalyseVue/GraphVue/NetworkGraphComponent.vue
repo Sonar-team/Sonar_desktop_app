@@ -50,7 +50,7 @@
   methods: {
     async fetchPacketInfos() {
       try {
-        const jsonString = await invoke('get_hash_map_state', {});
+        const jsonString = await invoke('get_graph_state', {});
         this.packets = JSON.parse(jsonString);
         this.processPacketsIntoGraphData(this.packets);
       

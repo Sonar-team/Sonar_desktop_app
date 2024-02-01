@@ -6,12 +6,17 @@ use std::sync::{Arc, Mutex};
 use log::{info,error};
 
 use sonar_desktop_app::{
-    cli::print_banner,
-    get_interfaces::get_interfaces,
-    save_packets::{cmd_save_packets_to_csv, MyError, cmd_save_packets_to_excel},
-    sniff::scan_until_interrupt,
-    tauri_state::SonarState,
-};
+        cli::print_banner, 
+        get_interfaces::get_interfaces, 
+        get_matrice::{
+            get_matrice_data::get_matrice_data, 
+            get_graph_data::get_graph_data},
+        save_packets::{
+            cmd_save_packets_to_csv, 
+            MyError, cmd_save_packets_to_excel}, 
+        sniff::scan_until_interrupt, 
+        tauri_state::SonarState
+    };
 use tauri::{Manager, State};
 use tauri_plugin_log::LogTarget;
 
@@ -41,7 +46,8 @@ fn main() {
             get_selected_interface,
             save_packets_to_csv,
             save_packets_to_excel,
-            get_hash_map_state
+            get_hash_map_state,
+            get_graph_state
         ])
         .setup(move |app| {
             let app_handle = app.handle();
@@ -93,20 +99,10 @@ fn save_packets_to_excel(file_path: String, state: State<SonarState>) -> Result<
 
 #[tauri::command]
 fn get_hash_map_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
-    // Attempt to acquire the lock on the shared state
-    match shared_hash_map.0.lock() {
-        Ok(hash_map) => {
-            // Serialize the hash map to a JSON string
-            serde_json::to_string(&*hash_map).map_err(|e| {
-                let err_msg = format!("Serialization error: {}", e);
-                error!("{}", err_msg);
-                err_msg
-            })
-        },
-        Err(_) => {
-            let err_msg = "Failed to lock the mutex".to_string();
-            error!("{}", err_msg);
-            Err(err_msg)
-        }
-    }
+    get_matrice_data(shared_hash_map)
+}
+
+#[tauri::command]
+fn get_graph_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
+    get_graph_data(shared_hash_map)
 }
