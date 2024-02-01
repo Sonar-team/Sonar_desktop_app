@@ -12,8 +12,10 @@
   },
   data() {
     return {
-      graphData: importedInfo, // Use the imported info here
-
+      graphData: {
+        nodes: [],
+        edges: [],
+      },
       packets: [],
       intervalId: null,
 
@@ -50,16 +52,63 @@
       try {
         const jsonString = await invoke('get_hash_map_state', {});
         this.packets = JSON.parse(jsonString);
-        console.log("Packets:", this.packets);
-        
+        this.processPacketsIntoGraphData(this.packets);
+      
         this.$bus.emit('update-packet-count', this.packets.length);
       } catch (error) {
         console.error("Error fetching packet infos:", error);
       }
     },
-  }
-}
+    processPacketsIntoGraphData(packets) {
+      function EdgeList() {
+    this.edges = {};
 
+    this.addEdge = function(sourceMac, targetMac) {
+        // Generate a unique edge name
+        let edgeName;
+        let i = 1;
+        do {
+            edgeName = `edge${i}`;
+            i++;
+        } while (this.edges[edgeName]);
+
+        // Add the edge to the edges object
+        this.edges[edgeName] = { source: sourceMac, target: targetMac };
+        console.log(`Edge added: ${edgeName} - source: ${sourceMac}, target: ${targetMac}`);
+    };
+}
+      const edgeList = new EdgeList();
+      packets.forEach(packet => {
+        //console.log("Packet:", packet[0].mac_address_destination);
+        const sourceMac = packet[0].mac_address_source;
+        const targetMac = packet[0].mac_address_destination;
+        //console.log("edge:", targetMac,sourceMac);
+        edgeList.addEdge(sourceMac, targetMac);
+      });
+      //console.log("Edges:", edgeList.edges);
+      this.graphData.edges = edgeList.edges;
+      this.graphData.nodes = nodes;
+
+
+
+      // Update component data
+      // this.graphData.nodes = {
+      //   node1: { name: "Source\nMAC: 00:00:00:00:00:00\nIP: 127.0.0.1\nPort: 17664" },
+      //   node2: { name: "L2 Interface: lo" },
+      //   node3: { name: "Destination\nMAC: 00:00:00:00:00:00\nIP: 127.0.0.1\nPort: 53" },
+      //   node4: { name: "Destination\nMAC: 00:00:00:00:00:00\nIP: 127.0.0.1\nPort: 52" },
+      //   node5: { name: "Additional Node\nMAC: AA:BB:CC:DD:EE:FF\nIP: 127.0.0.2\nPort: 80" },
+      // }
+      // this.graphData.edges = {
+      //   edge1: { source: "node1", target: "node2" },
+      //   edge2: { source: "node2", target: "node3" },
+      //   edge3: { source: "node2", target: "node4"},
+      //   edge4: { source: "node2", target: "node5" },
+      // }
+    },
+  },
+}
+  
 </script>
 
 <template>
