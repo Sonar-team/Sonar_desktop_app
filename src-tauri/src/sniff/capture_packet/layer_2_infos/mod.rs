@@ -11,7 +11,7 @@ pub struct PacketInfos {
     pub mac_address_source: String,
     pub mac_address_destination: String,
     pub interface: String,
-    l_3_protocol: String,
+    pub l_3_protocol: String,
     pub layer_3_infos: Layer3Infos, // Ensure this type is also Serializable and Cloneable
 }
 

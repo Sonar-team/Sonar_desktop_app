@@ -25,21 +25,23 @@ struct PacketInfosCsv {
     mac_address_source: String,
     mac_address_destination: String,
     interface: String,
+    l_3_protocol: String, // Corresponding field for CSV serialization
     ip_source: Option<String>,
     ip_destination: Option<String>,
     l_4_protocol: Option<String>,
-    port_source: Option<String>,      // Assuming port is of type u16
-    port_destination: Option<String>, // Assuming port is of type u16
+    port_source: Option<String>,
+    port_destination: Option<String>,
     count: u32,
 }
 
-// Assuming you have a function to convert PacketInfos to PacketInfosCsv
+
 impl PacketInfosCsv {
     fn from_packet_infos(packet: &PacketInfos, count: u32) -> Self {
         PacketInfosCsv {
             mac_address_source: packet.mac_address_source.clone(),
             mac_address_destination: packet.mac_address_destination.clone(),
             interface: packet.interface.clone(),
+            l_3_protocol: packet.l_3_protocol.clone(), // Populate from PacketInfos
             ip_source: packet.layer_3_infos.ip_source.clone(),
             ip_destination: packet.layer_3_infos.ip_destination.clone(),
             l_4_protocol: packet.layer_3_infos.l_4_protocol.clone(),
@@ -49,6 +51,7 @@ impl PacketInfosCsv {
         }
     }
 }
+
 
 #[derive(Serialize)]
 struct PacketData<'a> {
@@ -87,7 +90,19 @@ pub fn cmd_save_packets_to_excel(file_path: String, state: State<SonarState>) ->
     let sheet = workbook.add_worksheet();
 
     // Write header
-    let headers = ["MAC Source", "MAC Destination", "Interface", "IP Source", "IP Destination", "L4 Protocol", "Source Port", "Destination Port", "Count"];
+    let headers = [
+        "MAC Source", 
+        "MAC Destination", 
+        "Interface", 
+        "L3 Protocol", 
+        "IP Source", 
+        "IP Destination", 
+        "L4 Protocol", 
+        "Source Port", 
+        "Destination Port", 
+        "Count"
+    ];
+
     for (i, header) in headers.iter().enumerate() {
         sheet.write_string(0, i as u16, header.to_string())
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
@@ -104,7 +119,9 @@ pub fn cmd_save_packets_to_excel(file_path: String, state: State<SonarState>) ->
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
         sheet.write_string(i as u32 + 1, 2, &packet_csv.interface)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
-        
+        sheet.write_string(i as u32 + 1, 3, &packet_csv.l_3_protocol)
+            .map_err(|e| MyError::XlsxError(e.to_string()))?;
+
         // Les champs optionnels doivent être gérés pour éviter les valeurs null
         if let Some(ip_src) = &packet_csv.ip_source {
             sheet.write_string(i as u32 + 1, 3, ip_src)
