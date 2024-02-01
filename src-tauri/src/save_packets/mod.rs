@@ -124,28 +124,28 @@ pub fn cmd_save_packets_to_excel(file_path: String, state: State<SonarState>) ->
 
         // Les champs optionnels doivent être gérés pour éviter les valeurs null
         if let Some(ip_src) = &packet_csv.ip_source {
-            sheet.write_string(i as u32 + 1, 3, ip_src)
+            sheet.write_string(i as u32 + 1, 4, ip_src)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(ip_dst) = &packet_csv.ip_destination {
-            sheet.write_string(i as u32 + 1, 4, ip_dst)
+            sheet.write_string(i as u32 + 1, 5, ip_dst)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(l4_proto) = &packet_csv.l_4_protocol {
-            sheet.write_string(i as u32 + 1, 5, l4_proto)
+            sheet.write_string(i as u32 + 1, 6, l4_proto)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(port_src) = &packet_csv.port_source {
-            sheet.write_string(i as u32 + 1, 6, port_src)
+            sheet.write_string(i as u32 + 1, 7, port_src)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(port_dst) = &packet_csv.port_destination {
-            sheet.write_string(i as u32 + 1, 7, port_dst)
+            sheet.write_string(i as u32 + 1, 8, port_dst)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
     
         // Écriture du champ 'count'
-        sheet.write_number(i as u32 + 1, 8, packet_csv.count as f64)
+        sheet.write_number(i as u32 + 1, 9, packet_csv.count as f64)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
     }
 

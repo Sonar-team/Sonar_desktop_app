@@ -50,6 +50,7 @@
       try {
         const jsonString = await invoke('get_hash_map_state', {});
         this.packets = JSON.parse(jsonString);
+        console.log("Packets:", this.packets);
         
         this.$bus.emit('update-packet-count', this.packets.length);
       } catch (error) {
