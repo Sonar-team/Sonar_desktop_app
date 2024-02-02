@@ -51,43 +51,16 @@
     async fetchPacketInfos() {
       try {
         const jsonString = await invoke('get_graph_state', {});
-        this.packets = JSON.parse(jsonString);
-        this.processPacketsIntoGraphData(this.packets);
+        this.graphData = JSON.parse(jsonString);
+        console.log(this.graphData)
+
       
         this.$bus.emit('update-packet-count', this.packets.length);
       } catch (error) {
         console.error("Error fetching packet infos:", error);
       }
     },
-    processPacketsIntoGraphData(packets) {
-      function EdgeList() {
-    this.edges = {};
 
-    this.addEdge = function(sourceMac, targetMac) {
-        // Generate a unique edge name
-        let edgeName;
-        let i = 1;
-        do {
-            edgeName = `edge${i}`;
-            i++;
-        } while (this.edges[edgeName]);
-
-        // Add the edge to the edges object
-        this.edges[edgeName] = { source: sourceMac, target: targetMac };
-        console.log(`Edge added: ${edgeName} - source: ${sourceMac}, target: ${targetMac}`);
-    };
-}
-      const edgeList = new EdgeList();
-      packets.forEach(packet => {
-        //console.log("Packet:", packet[0].mac_address_destination);
-        const sourceMac = packet[0].mac_address_source;
-        const targetMac = packet[0].mac_address_destination;
-        //console.log("edge:", targetMac,sourceMac);
-        edgeList.addEdge(sourceMac, targetMac);
-      });
-      //console.log("Edges:", edgeList.edges);
-      this.graphData.edges = edgeList.edges;
-      this.graphData.nodes = nodes;
 
 
 
@@ -106,8 +79,8 @@
       //   edge4: { source: "node2", target: "node5" },
       // }
     },
-  },
-}
+  }
+
   
 </script>
 
