@@ -1,5 +1,5 @@
 <template>
-  <div >
+  <div class="matrice">
     <table >
       <thead>
         <tr>
@@ -80,6 +80,18 @@ export default {
 </script>
 
 <style scoped>
+.matrice {
+  height: 630px;
+  border: 2px solid #3a3a3a; /* Darker border */
+  border-radius: 10px;
+  width: 100%;
+  text-align: center;
+  color: #FFF; /* White text */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  background-color: #1a1a1a; /* Darker background */
+  overflow-y: auto; /* Add vertical scrollbar if content exceeds max height */
+  padding: 10px; /* Optional padding for better appearance */
+}
   table {
     width: 100%;
     border-collapse: collapse;
