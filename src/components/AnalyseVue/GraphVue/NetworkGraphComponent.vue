@@ -25,7 +25,9 @@
           normal: { color: "#E0E0E0" }, // Light grey for visibility on dark background
           label: { 
             color: "#E0E0E0",
-            fontSize: 18},   // Same as node color for consistency
+            fontSize: 18,
+            directionAutoAdjustment: true,
+          },   // Same as node color for consistency
         },
         edge: {
           selectable: true,
