@@ -61,6 +61,8 @@ struct Node {
 struct Edge {
     source: String,
     target: String,
+    label: String, // Added to include L3 protocol as a label
+
 }
 
 struct GraphBuilder {
@@ -86,7 +88,7 @@ impl GraphBuilder {
         }
     }
 
-    fn add_edge(&mut self, source_mac: String, target_mac: String) {
+    fn add_edge(&mut self, source_mac: String, target_mac: String, label: String) {
         self.add_node(source_mac.clone());
         self.add_node(target_mac.clone());
 
@@ -95,6 +97,7 @@ impl GraphBuilder {
             self.edges.insert(edge_name.clone(), Edge {
                 source: source_mac.clone(),
                 target: target_mac.clone(),
+                label
             });
             self.edge_counter += 1;
         }
@@ -116,7 +119,7 @@ impl fmt::Debug for GraphData {
         }
         write!(f, "  }}, edges  {{\n")?;
         for (key, value) in &self.edges {
-            write!(f, "    {}: {{ source: \"{}\", target: \"{}\" }},\n", key, value.source, value.target)?;
+            write!(f, "    {}: {{ source: \"{}\", target: \"{}\", label: \"{}\" }},\n", key, value.source, value.target, value.label)?;
         }
         write!(f, "  }}\n}}")
     }
@@ -144,8 +147,10 @@ pub fn get_graph_data(shared_vec_infopackets: State<SonarState>) -> Result<Strin
             for (packet, _) in matrice.iter() {
                 let source_mac = packet.mac_address_source.clone();
                 let target_mac = packet.mac_address_destination.clone();
+                let l3_protocol_label = packet.l_3_protocol.clone(); // Assume this is a String
 
-                graph_builder.add_edge(source_mac, target_mac);
+
+                graph_builder.add_edge(source_mac, target_mac, l3_protocol_label);
             }
 
             let graph_data = graph_builder.build_graph_data();
@@ -156,7 +161,7 @@ pub fn get_graph_data(shared_vec_infopackets: State<SonarState>) -> Result<Strin
                 error!("{}", err_msg);
                 err_msg
             })?;
-            //println!("{:?}", graph_data);
+            println!("{:?}", graph_data);
 
             Ok(json_data)
         },

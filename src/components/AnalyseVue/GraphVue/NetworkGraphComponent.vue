@@ -1,10 +1,8 @@
 <!-- YourVueComponent.vue -->
 <script >
-  import { VNetworkGraph } from "v-network-graph"
+  import { VNetworkGraph, VEdgeLabel } from "v-network-graph"
   import { invoke } from '@tauri-apps/api/tauri';
   import { save } from '@tauri-apps/api/dialog';
-
-
   import * as vNG from "v-network-graph"
   import {
     ForceLayout,
@@ -13,6 +11,8 @@
   export default {
   components: {
     VNetworkGraph,
+    VEdgeLabel
+    
   },
   data() {
     return {
@@ -31,6 +31,7 @@
           selectable: true,
           normal: { color: "#E0E0E0" }, // Light grey for visibility on dark background
           label: { 
+            visible: true,
             color: "#E0E0E0",
             fontSize: 18,
             directionAutoAdjustment: true,
@@ -38,7 +39,23 @@
         },
         edge: {
           selectable: true,
-          normal: { color: "#C0C0C0" }, // Slightly darker grey for distinction but still visible
+          hoverable: true,
+          label: {
+            fontFamily: undefined,
+            fontSize: 11,
+            lineHeight: 1.1,
+            color: "#E0E0E0",
+            margin: 4,
+            background: {
+              visible: true,
+              color: "#000000",
+              padding: {
+                vertical: 1,
+                horizontal: 4,
+              },
+              borderRadius: 2,
+            },
+          },
         }
       })
     };
@@ -67,42 +84,40 @@
       }
     },
     async downloadSvg() {
-  if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
-    try {
-      const svgContent = await this.$refs.graphnodes.exportAsSvgText();
-      
-      // Use Tauri's dialog API to open a save file dialog
-      save({
-        filters: [{
-          name: 'SVG File',
-          extensions: ['svg']
-        }],
-        defaultPath: 'network-graph.svg'
-      }).then((filePath) => {
-        if (filePath) {
-          // Use Tauri's fs API to write the file
-          invoke('write_file', { path: filePath, contents: svgContent })
-            .then(() => console.log('SVG successfully saved'))
-            .catch((error) => console.error('Error saving SVG:', error));
-        }
-      });
-    } catch (error) {
-      console.error('Error exporting SVG:', error);
+    if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
+      try {
+        const svgContent = await this.$refs.graphnodes.exportAsSvgText();
+        
+        // Use Tauri's dialog API to open a save file dialog
+        save({
+          filters: [{
+            name: 'SVG File',
+            extensions: ['svg']
+          }],
+          defaultPath: 'network-graph.svg'
+        }).then((filePath) => {
+          if (filePath) {
+            // Use Tauri's fs API to write the file
+            invoke('write_file', { path: filePath, contents: svgContent })
+              .then(() => console.log('SVG successfully saved'))
+              .catch((error) => console.error('Error saving SVG:', error));
+          }
+        });
+      } catch (error) {
+        console.error('Error exporting SVG:', error);
+      }
+    } else {
+      console.error('SVG export function not available or graph component not loaded.');
     }
-  } else {
-    console.error('SVG export function not available or graph component not loaded.');
-  }
+    },
     
-  },
-}}
+  }
+}
 
-  
 </script>
 
 <template>
-
-  <button @click="downloadSvg">Download SVG</button>
-
+  <!-- ... your existing template code ... -->
   <v-network-graph
     ref="graphnodes"
     class="graph"
@@ -110,9 +125,18 @@
     :edges="graphData.edges"
     :layouts="graphData.layouts"
     :configs="configs"
-  />
-
+  >
+    <!-- Define a slot for the edge label -->
+    <template #edge-label="{ edge, ...slotProps }">
+      <v-edge-label
+        :text="edge.label"
+        align="above"
+        v-bind="slotProps"
+      />
+    </template>
+  </v-network-graph>
 </template>
+
 
 <style scoped>
 .graph {
@@ -125,5 +149,10 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
   background-color: #1a1a1a; /* Fond plus sombre */
 }
-
+.custom-edge-label {
+    background-color: #ffffff; /* Customize the background color */
+    color: #fff; /* Customize the text color */
+    padding: 5px; /* Add padding as needed */
+    border-radius: 5px; /* Add border-radius for styling */
+  }
 </style>

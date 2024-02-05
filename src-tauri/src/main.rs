@@ -3,7 +3,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use log::{info,error};
+use log::info;
 
 use sonar_desktop_app::{
         cli::print_banner, 
