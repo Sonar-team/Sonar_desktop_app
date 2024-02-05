@@ -71,6 +71,13 @@ export default {
 </script>
 
 <style scoped>
+.trames {
+  height: 60px;
+  border: 2px solid #3a3a3a; /* Darker border */
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  overflow-y: auto; /* Add vertical scrollbar if content exceeds max height */
+}
   table {
     width: 100%;
     border-collapse: collapse;

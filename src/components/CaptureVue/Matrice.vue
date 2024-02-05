@@ -81,7 +81,7 @@ export default {
 
 <style scoped>
 .matrice {
-  height: 630px;
+  height: 660px;
   border: 2px solid #3a3a3a; /* Darker border */
   border-radius: 10px;
   width: 100%;
@@ -127,4 +127,3 @@ export default {
     table-layout: fixed; /* Ensure layout is fixed */
   }
 </style>
-

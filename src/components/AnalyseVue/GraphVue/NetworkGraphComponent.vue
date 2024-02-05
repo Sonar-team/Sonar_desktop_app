@@ -59,32 +59,13 @@
       try {
         const jsonString = await invoke('get_graph_state', {});
         this.graphData = JSON.parse(jsonString);
-        //console.log(this.graphData)
-        //this.$bus.emit('update-packet-count', this.packets.length);
+
       } catch (error) {
         console.error("Error fetching packet infos:", error);
       }
     },
-
-
-
-
-      // Update component data
-      // this.graphData.nodes = {
-      //   node1: { name: "Source\nMAC: 00:00:00:00:00:00\nIP: 127.0.0.1\nPort: 17664" },
-      //   node2: { name: "L2 Interface: lo" },
-      //   node3: { name: "Destination\nMAC: 00:00:00:00:00:00\nIP: 127.0.0.1\nPort: 53" },
-      //   node4: { name: "Destination\nMAC: 00:00:00:00:00:00\nIP: 127.0.0.1\nPort: 52" },
-      //   node5: { name: "Additional Node\nMAC: AA:BB:CC:DD:EE:FF\nIP: 127.0.0.2\nPort: 80" },
-      // }
-      // this.graphData.edges = {
-      //   edge1: { source: "node1", target: "node2" },
-      //   edge2: { source: "node2", target: "node3" },
-      //   edge3: { source: "node2", target: "node4"},
-      //   edge4: { source: "node2", target: "node5" },
-      // }
-    },
-  }
+  },
+}
 
   
 </script>
@@ -97,14 +78,13 @@
     :edges="graphData.edges"
     :layouts="graphData.layouts"
     :configs="configs"
-
   />
 
 </template>
 
 <style scoped>
 .graph {
-  height: 650px;
+  height: 680px;
   border: 2px solid #3a3a3a; /* Bordure plus sombre */
   border-radius: 10px;
   width: 100%;

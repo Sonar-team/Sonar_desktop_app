@@ -1,8 +1,8 @@
 <template>
     <div class="sidebar">    
         <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="150" height="150">   
-        <p>Heure de départ: {{ heureDepart }}</p>
-        <p>Heure de fin: {{ heureFin }}</p>
+        <p>Départ: {{ heureDepart }}</p>
+        <p>Fin: {{ heureFin }}</p>
         <button class="button-up" @click="augmenterTemps"></button>
         <p>Temps restant: {{ tempsReleve }}</p>
         <button class="button-down" @click="diminuerTemps"></button>
