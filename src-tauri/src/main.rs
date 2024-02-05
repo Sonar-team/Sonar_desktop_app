@@ -47,7 +47,8 @@ fn main() {
             save_packets_to_csv,
             save_packets_to_excel,
             get_hash_map_state,
-            get_graph_state
+            get_graph_state,
+            write_file
         ])
         .setup(move |app| {
             let app_handle = app.handle();
@@ -105,4 +106,10 @@ fn get_hash_map_state(shared_hash_map: State<SonarState>) -> Result<String, Stri
 #[tauri::command]
 fn get_graph_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
     get_graph_data(shared_hash_map)
+}
+
+#[tauri::command]
+fn write_file(path: String, contents: String) -> Result<(), String> {
+    std::fs::write(path, contents)
+        .map_err(|e| e.to_string())
 }

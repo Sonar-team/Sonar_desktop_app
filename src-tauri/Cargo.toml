@@ -2,7 +2,7 @@
 name = "sonar_desktop_app"
 version = "1.0.2"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["Cyprien Avico"]
 license = "MIT License"
 repository = ""
 edition = "2021"
