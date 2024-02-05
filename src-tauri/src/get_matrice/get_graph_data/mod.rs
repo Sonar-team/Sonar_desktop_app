@@ -156,7 +156,7 @@ pub fn get_graph_data(shared_vec_infopackets: State<SonarState>) -> Result<Strin
                 error!("{}", err_msg);
                 err_msg
             })?;
-            println!("{:?}", graph_data);
+            //println!("{:?}", graph_data);
 
             Ok(json_data)
         },

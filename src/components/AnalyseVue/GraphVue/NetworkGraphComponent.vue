@@ -4,7 +4,9 @@
   import { invoke } from '@tauri-apps/api/tauri';
 
   import * as vNG from "v-network-graph"
-  import importedInfo from './data.ts';
+  import {
+    ForceLayout,
+  } from "v-network-graph/lib/force-layout"
 
   export default {
   components: {
@@ -20,6 +22,9 @@
       intervalId: null,
 
       configs: vNG.defineConfigs({
+        view: {
+          layoutHandler: new ForceLayout({}),
+        },
         node: {
           selectable: true,
           normal: { color: "#E0E0E0" }, // Light grey for visibility on dark background
@@ -54,10 +59,8 @@
       try {
         const jsonString = await invoke('get_graph_state', {});
         this.graphData = JSON.parse(jsonString);
-        console.log(this.graphData)
-
-      
-        this.$bus.emit('update-packet-count', this.packets.length);
+        //console.log(this.graphData)
+        //this.$bus.emit('update-packet-count', this.packets.length);
       } catch (error) {
         console.error("Error fetching packet infos:", error);
       }
