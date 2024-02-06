@@ -158,5 +158,4 @@
   border-radius: 5px; /* Ajouter une bordure arrondie au bouton */
   cursor: pointer; /* Curseur de type pointeur au survol */
 }
-
 </style>
