@@ -53,11 +53,5 @@ jobs:
         with:
           tagName: 1.1.1 # tauri-action replaces \_\_VERSION\_\_ with the app version
           releaseName: 'v1.1.1'
-          releaseBody: '#### Version 1.1.1
-
-          **Nouvelles fonctionnalités :**
-          - **Enregistrement de la vue graphique au format SVG :** Il est désormais possible d'enregistrer la vue graphique de vos données réseau au format SVG. Cette fonctionnalité permet une préservation de haute qualité de vos visualisations pour une utilisation dans des rapports ou des présentations. Pour sauvegarder votre visualisation, sélectionnez l'option 'Sauvegarder en SVG' depuis la vue graphique.
-          
-          - **Affichage des protocoles sur les arêtes :** Les visualisations graphiques ont été améliorées pour afficher les protocoles qui interagissent entre les adresses MAC. Cette mise à jour enrichit l'analyse en offrant une compréhension immédiate des types de communications se déroulant au sein de votre réseau, permettant ainsi d'identifier plus facilement les modèles de trafic et les éventuelles anomalies.'
           releaseDraft: true
           prerelease: false
