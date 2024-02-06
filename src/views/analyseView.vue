@@ -9,7 +9,7 @@
     />
     <div class="content">
         <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
-          <button @click="toggleComponent">Changer de vue</button> <!-- Toggle Button -->
+        <button class="button" @click="toggleComponent">Changer de vue</button> <!-- Toggle Button -->
           <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
           <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
 
@@ -95,6 +95,13 @@ export default {
   margin: 1px 0; /* Reduce top and bottom margin */
   padding: 1px 0; /* Reduce top and bottom padding */
 }
-
+.button {
+  background-color: #0b1b25; /* Couleur de fond du bouton */
+  color: #fff; /* Couleur du texte du bouton */
+  padding: 10px 20px; /* Espacement intérieur du bouton */
+  border: none; /* Supprimer la bordure du bouton */
+  border-radius: 5px; /* Ajouter une bordure arrondie au bouton */
+  cursor: pointer; /* Curseur de type pointeur au survol */
+}
 
 </style>

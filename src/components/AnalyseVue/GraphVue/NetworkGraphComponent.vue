@@ -117,7 +117,7 @@
 </script>
 
 <template>
-  <!-- ... your existing template code ... -->
+  <button class="download-button" @click="downloadSvg">Télécharger l'image</button>
   <v-network-graph
     ref="graphnodes"
     class="graph"
@@ -149,10 +149,14 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
   background-color: #1a1a1a; /* Fond plus sombre */
 }
-.custom-edge-label {
-    background-color: #ffffff; /* Customize the background color */
-    color: #fff; /* Customize the text color */
-    padding: 5px; /* Add padding as needed */
-    border-radius: 5px; /* Add border-radius for styling */
-  }
+
+.download-button {
+  background-color: #0b1b25; /* Couleur de fond du bouton */
+  color: #fff; /* Couleur du texte du bouton */
+  padding: 10px 20px; /* Espacement intérieur du bouton */
+  border: none; /* Supprimer la bordure du bouton */
+  border-radius: 5px; /* Ajouter une bordure arrondie au bouton */
+  cursor: pointer; /* Curseur de type pointeur au survol */
+}
+
 </style>
