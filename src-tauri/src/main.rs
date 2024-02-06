@@ -6,17 +6,13 @@ use std::sync::{Arc, Mutex};
 use log::info;
 
 use sonar_desktop_app::{
-        cli::print_banner, 
-        get_interfaces::get_interfaces, 
-        get_matrice::{
-            get_matrice_data::get_matrice_data, 
-            get_graph_data::get_graph_data},
-        save_packets::{
-            cmd_save_packets_to_csv, 
-            MyError, cmd_save_packets_to_excel}, 
-        sniff::scan_until_interrupt, 
-        tauri_state::SonarState
-    };
+    cli::print_banner,
+    get_interfaces::get_interfaces,
+    get_matrice::{get_graph_data::get_graph_data, get_matrice_data::get_matrice_data},
+    save_packets::{cmd_save_packets_to_csv, cmd_save_packets_to_excel, MyError},
+    sniff::scan_until_interrupt,
+    tauri_state::SonarState,
+};
 use tauri::{Manager, State};
 use tauri_plugin_log::LogTarget;
 
@@ -34,12 +30,11 @@ fn main() {
     // let builder = builder.plugin(devtools);
 
     builder
-        .on_window_event(|event| match event.event() {
-            tauri::WindowEvent::CloseRequested { .. } => {
-                std::process::exit(0);
-            }
-            _ => {}
-        })
+        .on_window_event(|event| if let tauri::WindowEvent::CloseRequested { .. } = event.event() {
+                     std::process::exit(0);
+                })
+        
+        
         .manage(SonarState(Arc::new(Mutex::new(Vec::new()))))
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
@@ -110,6 +105,5 @@ fn get_graph_state(shared_hash_map: State<SonarState>) -> Result<String, String>
 
 #[tauri::command]
 fn write_file(path: String, contents: String) -> Result<(), String> {
-    std::fs::write(path, contents)
-        .map_err(|e| e.to_string())
+    std::fs::write(path, contents).map_err(|e| e.to_string())
 }

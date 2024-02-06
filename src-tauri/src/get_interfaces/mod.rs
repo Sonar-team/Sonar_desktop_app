@@ -1,5 +1,5 @@
-use pnet::datalink;
 use log::info;
+use pnet::datalink;
 
 pub fn get_interfaces() -> Vec<String> {
     let interfaces = datalink::interfaces();

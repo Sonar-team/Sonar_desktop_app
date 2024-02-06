@@ -1,5 +1,5 @@
-use tauri::State;
 use log::error;
+use tauri::State;
 
 use crate::tauri_state::SonarState;
 
@@ -13,7 +13,7 @@ pub fn get_matrice_data(shared_vec_infopackets: State<SonarState>) -> Result<Str
                 error!("{}", err_msg);
                 err_msg
             })
-        },
+        }
         Err(_) => {
             let err_msg = "Failed to lock the mutex".to_string();
             error!("{}", err_msg);

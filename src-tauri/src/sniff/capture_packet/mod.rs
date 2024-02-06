@@ -1,9 +1,9 @@
+use log::{error, info};
 use pnet::datalink::Channel::Ethernet;
 use pnet::datalink::{self, NetworkInterface};
 use pnet::packet::ethernet::EthernetPacket;
 use std::sync::mpsc;
 use std::thread;
-use log::{info, error};
 
 use tauri::{Manager, State};
 pub(crate) mod layer_2_infos;
@@ -99,15 +99,24 @@ fn capture_packets(
         Ok(_) => {
             error!("Type de canal non géré : {}", &interface);
             panic!("Type de canal non géré : {}", &interface)
-            }
+        }
         Err(e) => {
-                error!("Une erreur s'est produite lors de la création du canal de liaison de données: {}", &interface);
-                panic!("Une erreur s'est produite lors de la création du canal de liaison de données: {}",e)
-            }
-        };
+            error!(
+                "Une erreur s'est produite lors de la création du canal de liaison de données: {}",
+                &interface
+            );
+            panic!(
+                "Une erreur s'est produite lors de la création du canal de liaison de données: {}",
+                e
+            )
+        }
+    };
     let main_window = app.get_window("main").unwrap();
 
-    info!("Démarrage du thread de lecture de paquets sur l'interface :{}", &interface);
+    info!(
+        "Démarrage du thread de lecture de paquets sur l'interface :{}",
+        &interface
+    );
     loop {
         match rx.next() {
             Ok(packet) => {

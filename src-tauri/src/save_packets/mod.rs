@@ -34,7 +34,6 @@ struct PacketInfosCsv {
     count: u32,
 }
 
-
 impl PacketInfosCsv {
     fn from_packet_infos(packet: &PacketInfos, count: u32) -> Self {
         PacketInfosCsv {
@@ -51,7 +50,6 @@ impl PacketInfosCsv {
         }
     }
 }
-
 
 #[derive(Serialize)]
 struct PacketData<'a> {
@@ -79,7 +77,10 @@ pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> R
     Ok(())
 }
 
-pub fn cmd_save_packets_to_excel(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
+pub fn cmd_save_packets_to_excel(
+    file_path: String,
+    state: State<SonarState>,
+) -> Result<(), MyError> {
     // Lock the state to access the data
     let data = state.0.lock().unwrap();
 
@@ -91,66 +92,78 @@ pub fn cmd_save_packets_to_excel(file_path: String, state: State<SonarState>) ->
 
     // Write header
     let headers = [
-        "MAC Source", 
-        "MAC Destination", 
-        "Interface", 
-        "L3 Protocol", 
-        "IP Source", 
-        "IP Destination", 
-        "L4 Protocol", 
-        "Source Port", 
-        "Destination Port", 
-        "Count"
+        "MAC Source",
+        "MAC Destination",
+        "Interface",
+        "L3 Protocol",
+        "IP Source",
+        "IP Destination",
+        "L4 Protocol",
+        "Source Port",
+        "Destination Port",
+        "Count",
     ];
 
     for (i, header) in headers.iter().enumerate() {
-        sheet.write_string(0, i as u16, header.to_string())
+        sheet
+            .write_string(0, i as u16, header.to_string())
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
     }
 
     // Serialize the entire vector to the Excel sheet
     for (i, (packet, count)) in data.iter().enumerate() {
         let packet_csv = PacketInfosCsv::from_packet_infos(packet, *count);
-    
+
         // Écriture des champs dans chaque colonne
-        sheet.write_string(i as u32 + 1, 0, &packet_csv.mac_address_source)
+        sheet
+            .write_string(i as u32 + 1, 0, &packet_csv.mac_address_source)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
-        sheet.write_string(i as u32 + 1, 1, &packet_csv.mac_address_destination)
+        sheet
+            .write_string(i as u32 + 1, 1, &packet_csv.mac_address_destination)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
-        sheet.write_string(i as u32 + 1, 2, &packet_csv.interface)
+        sheet
+            .write_string(i as u32 + 1, 2, &packet_csv.interface)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
-        sheet.write_string(i as u32 + 1, 3, &packet_csv.l_3_protocol)
+        sheet
+            .write_string(i as u32 + 1, 3, &packet_csv.l_3_protocol)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
 
         // Les champs optionnels doivent être gérés pour éviter les valeurs null
         if let Some(ip_src) = &packet_csv.ip_source {
-            sheet.write_string(i as u32 + 1, 4, ip_src)
+            sheet
+                .write_string(i as u32 + 1, 4, ip_src)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(ip_dst) = &packet_csv.ip_destination {
-            sheet.write_string(i as u32 + 1, 5, ip_dst)
+            sheet
+                .write_string(i as u32 + 1, 5, ip_dst)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(l4_proto) = &packet_csv.l_4_protocol {
-            sheet.write_string(i as u32 + 1, 6, l4_proto)
+            sheet
+                .write_string(i as u32 + 1, 6, l4_proto)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(port_src) = &packet_csv.port_source {
-            sheet.write_string(i as u32 + 1, 7, port_src)
+            sheet
+                .write_string(i as u32 + 1, 7, port_src)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(port_dst) = &packet_csv.port_destination {
-            sheet.write_string(i as u32 + 1, 8, port_dst)
+            sheet
+                .write_string(i as u32 + 1, 8, port_dst)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
-    
+
         // Écriture du champ 'count'
-        sheet.write_number(i as u32 + 1, 9, packet_csv.count as f64)
+        sheet
+            .write_number(i as u32 + 1, 9, packet_csv.count as f64)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
     }
 
     // Close the workbook
-    workbook.save(file_path)
+    workbook
+        .save(file_path)
         .map_err(|e| MyError::XlsxError(e.to_string()))?;
 
     Ok(())
