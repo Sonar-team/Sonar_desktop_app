@@ -50,11 +50,12 @@ fn main() {
 
             // Event listener for before-quit
             app_handle.listen_global("tauri://before-quit", move |_| {
-                println!("Quit event received");
+                info!("Quit event received");
             });
 
             Ok(())
         })
+        //.plugin(devtools::init())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
@@ -77,7 +78,6 @@ fn get_selected_interface(
 ) {
     let app = window.app_handle();
     info!("Interface sélectionée: {}", interface_name);
-
     scan_until_interrupt(app, &interface_name, state);
 }
 
@@ -105,5 +105,6 @@ fn get_graph_state(shared_hash_map: State<SonarState>) -> Result<String, String>
 
 #[tauri::command]
 fn write_file(path: String, contents: String) -> Result<(), String> {
+    info!("Chemin d'enregistrement du VSG: {}", &path);
     std::fs::write(path, contents).map_err(|e| e.to_string())
 }
