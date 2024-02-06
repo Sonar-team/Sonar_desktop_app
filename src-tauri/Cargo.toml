@@ -4,7 +4,7 @@ version = "1.1.1"
 description = "Audit reseau"
 authors = ["Cyprien Avico"]
 license = "MIT License"
-repository = ""
+repository = "https://github.com/Sonar-team/Sonar_desktop_app"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
