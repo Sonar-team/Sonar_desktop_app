@@ -16,10 +16,20 @@
   },
   data() {
     return {
+      position: { left: "0", top: "0" },
+
       graphData: {
         nodes: [],
         edges: [],
       },
+      selectedNode: null,
+
+      viewMenu: null, // Utilisez les refs pour les éléments de menu
+      nodeMenu: null,
+      edgeMenu: null,
+      menuTargetNode: '', // Pour stocker le nœud ciblé par le menu contextuel
+      menuTargetEdges: [], // Pour stocker les arêtes ciblées par le menu contextuel
+      
       packets: [],
       intervalId: null,
 
@@ -63,10 +73,14 @@
   computed: {
     processedPackets() {
       return this.processData(this.packets);
-    }
+    },
+  
   },
   mounted() {
     this.intervalId = setInterval(this.fetchPacketInfos, 1000);
+    this.viewMenu = this.$refs.viewMenu;
+    this.nodeMenu = this.$refs.nodeMenu;
+    this.edgeMenu = this.$refs.edgeMenu;
   },
   beforeDestroy() {
     if (this.intervalId) {
@@ -110,31 +124,86 @@
       console.error('SVG export function not available or graph component not loaded.');
     }
     },
-    
+    handleNodeClick(node) {
+      // Supposons que `selectedNode` est une propriété de données que vous utiliserez pour stocker les informations du node sélectionné
+      this.selectedNode = node;
+      console.log('selected node:',this.selectedNode)
+    },
+    showContextMenu(element, event) {
+      console.log('element', element)
+      console.log('event', event)
+
+      element.style.left = event.x + "px"
+      element.style.top = event.y + "px"
+      element.style.visibility = "visible"
+      const handler = (event) => {
+        if (!event.target || !element.contains(event.target)) {
+          element.style.visibility = "hidden"
+          document.removeEventListener("pointerdown", handler, { capture: true })
+        }
+      }
+      document.addEventListener("pointerdown", handler, { passive: true, capture: true })
+    },
+    showViewContextMenu(event) {
+      // Utilisation de showContextMenu pour le menu de la vue
+      if (this.viewMenu) {
+        this.showContextMenu(this.viewMenu, event);
+      }
+    },
+    showEdgeContextMenu({ edge, event }) {
+      // Utilisation de showContextMenu pour le menu de l'arête
+      if (this.edgeMenu) {
+        const edgeData = this.graphData.edges[edge];
+        // Formattez ou choisissez les informations de l'arête à afficher
+        this.menuTargetEdges = [
+          `Adresse Mac Source: ${edgeData.source}, 
+          Adresse Mac Destination: ${edgeData.target}, 
+          Protocole: ${edgeData.label}`];
+        this.showContextMenu(this.edgeMenu, event);
+      }
+    },
+    showNodeContextMenu({ node, event }) {
+      // Utilisation de showContextMenu pour le menu du nœud
+      if (this.nodeMenu) {
+        //console.log("node: " + node)
+        const nodeData = this.graphData.nodes[node];
+      // Formattez ou choisissez les informations du nœud à afficher
+      this.menuTargetNode = `Adresse Mac: ${nodeData.name}`;
+        this.showContextMenu(this.nodeMenu, event);
+      }
+    },
   }
 }
-
 </script>
 
 <template>
   <button class="download-button" @click="downloadSvg">Télécharger l'image</button>
   <v-network-graph
-    ref="graphnodes"
     class="graph"
     :nodes="graphData.nodes"
     :edges="graphData.edges"
     :layouts="graphData.layouts"
     :configs="configs"
+    :event-handlers="{
+      'view:contextmenu': showViewContextMenu,
+      'node:click': showNodeContextMenu,
+      'edge:click': showEdgeContextMenu,
+    }"
   >
-    <!-- Define a slot for the edge label -->
     <template #edge-label="{ edge, ...slotProps }">
-      <v-edge-label
-        :text="edge.label"
-        align="above"
-        v-bind="slotProps"
-      />
+      <v-edge-label :text="edge.label" align="above" v-bind="slotProps" />
     </template>
   </v-network-graph>
+  <div ref="viewMenu" class="context-menu">
+    Menu for the background</div>
+  <div ref="nodeMenu" class="context-menu">
+    Infos du noeud:
+    <div >{{ menuTargetNode }}</div>
+  </div>
+  <div ref="edgeMenu" class="context-menu">
+    Infos de l'arête
+    <div>{{ menuTargetEdges.join(", ") }}</div>
+  </div>
 </template>
 
 
@@ -158,4 +227,21 @@
   border-radius: 5px; /* Ajouter une bordure arrondie au bouton */
   cursor: pointer; /* Curseur de type pointeur au survol */
 }
+
+.context-menu {
+  width: 180px;
+  background-color: #efefef;
+  padding: 10px;
+  position: fixed;
+  visibility: hidden;
+  font-size: 12px;
+  border: 1px solid #aaa;
+  box-shadow: 2px 2px 2px #aaa;
+  > div {
+    border: 1px dashed #aaa;
+    padding: 4px;
+    margin-top: 8px;
+  }
+}
+
 </style>
