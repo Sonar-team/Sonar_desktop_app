@@ -144,12 +144,7 @@
       }
       document.addEventListener("pointerdown", handler, { passive: true, capture: true })
     },
-    showViewContextMenu(event) {
-      // Utilisation de showContextMenu pour le menu de la vue
-      if (this.viewMenu) {
-        this.showContextMenu(this.viewMenu, event);
-      }
-    },
+
     showEdgeContextMenu({ edge, event }) {
       // Utilisation de showContextMenu pour le menu de l'arête
       if (this.edgeMenu) {
@@ -186,7 +181,6 @@
     :layouts="graphData.layouts"
     :configs="configs"
     :event-handlers="{
-      'view:contextmenu': showViewContextMenu,
       'node:click': showNodeContextMenu,
       'edge:click': showEdgeContextMenu,
     }"
@@ -195,15 +189,13 @@
       <v-edge-label :text="edge.label" align="above" v-bind="slotProps" />
     </template>
   </v-network-graph>
-  <div ref="viewMenu" class="context-menu">
-    Menu for the background</div>
   <div ref="nodeMenu" class="context-menu">
     Infos du noeud:
-    <div >{{ menuTargetNode }}</div>
+    <div class="contenue">{{ menuTargetNode }}</div>
   </div>
   <div ref="edgeMenu" class="context-menu">
-    Infos de l'arête
-    <div>{{ menuTargetEdges.join(", ") }}</div>
+    Infos de l'arête:
+    <div class="contenue">{{ menuTargetEdges.join(", ") }}</div>
   </div>
 </template>
 
@@ -230,19 +222,20 @@
 }
 
 .context-menu {
+  border-radius: 10px;
   width: 180px;
   background-color: #efefef;
   padding: 10px;
   position: fixed;
   visibility: hidden;
   font-size: 12px;
-  border: 1px solid #aaa;
-  box-shadow: 2px 2px 2px #aaa;
-  > div {
-    border: 1px dashed #aaa;
+  border: 1px solid #aaaaaa;
+  box-shadow: 2px 2px 2px #e7bf0c;
+}
+.contenue {
+  border: 1px dashed #aaa;
     padding: 4px;
     margin-top: 8px;
-  }
 }
 
 </style>
