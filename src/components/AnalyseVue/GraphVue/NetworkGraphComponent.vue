@@ -180,6 +180,7 @@
   <button class="download-button" @click="downloadSvg">Télécharger l'image</button>
   <v-network-graph
     class="graph"
+    ref="graphnodes"
     :nodes="graphData.nodes"
     :edges="graphData.edges"
     :layouts="graphData.layouts"
