@@ -1,4 +1,12 @@
 ### Journal des Modifications Sonar
+
+---
+
+#### Version 1.2.1
+
+**Nouvelles fonctionnalités :**
+- **info bulle avec ip sur les nodes** 
+
 ---
 
 #### Version 1.1.1

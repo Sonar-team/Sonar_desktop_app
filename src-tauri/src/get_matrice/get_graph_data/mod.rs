@@ -43,7 +43,8 @@ use crate::tauri_state::SonarState;
 //     edges {
 //       edges: {
 //           source: “node1”,
-//           target: “node2”}
+//           target: “node2”
+//           label: l_3_protocol}
 //   }
 
 #[derive(Serialize)]
@@ -173,7 +174,7 @@ pub fn get_graph_data(shared_vec_infopackets: State<SonarState>) -> Result<Strin
                 error!("{}", err_msg);
                 err_msg
             })?;
-            //println!("{:?}", graph_data);
+            println!("{:?}", graph_data);
 
             Ok(json_data)
         }
