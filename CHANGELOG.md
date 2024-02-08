@@ -6,6 +6,7 @@
 
 **Nouvelles fonctionnalités :**
 - **Matrice plus détaillé** 
+
 ---
 
 #### Version 1.2.1

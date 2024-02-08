@@ -45,6 +45,7 @@
             color: "#E0E0E0",
             fontSize: 18,
             directionAutoAdjustment: true,
+            text: "mac",
           },   // Same as node color for consistency
         },
         edge: {
@@ -163,7 +164,7 @@
         //console.log("node: " + node)
         const nodeData = this.graphData.nodes[node];
       // Formattez ou choisissez les informations du nœud à afficher
-      this.menuTargetNode = `Adresse Mac: ${nodeData.name}`;
+      this.menuTargetNode = `Adresse Mac: ${nodeData.mac}`;
         this.showContextMenu(this.nodeMenu, event);
       }
     },

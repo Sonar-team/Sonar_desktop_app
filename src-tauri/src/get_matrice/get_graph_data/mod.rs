@@ -45,10 +45,14 @@ struct GraphData {
 ///
 /// Un `Node` est typiquement utilisé pour représenter une entité réseau, telle qu'une adresse MAC,
 /// dans le graphe.
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Hash, Eq, PartialEq)]
 struct Node {
-    /// Le nom du nœud.
-    name: String,
+    /// L'adresse MAC du nœud.
+    mac: String,
+    /// L'adresse IP du nœud.
+    ip: String,
+    /// Le port du nœud.
+    port: String,
 }
 
 /// Représente une arête dans un graphe, définie par une source, une cible et un label.
@@ -98,16 +102,20 @@ impl GraphBuilder {
     /// ```
     ///
     /// Si le nœud existe déjà, cette fonction ne modifie pas le graphe.
-    fn add_node(&mut self, mac_address: String) {
-        if !self.nodes.contains_key(&mac_address) {
+    fn add_node(&mut self, mac: String, ip: String, port: String) {
+        let node_key = format!("{}-{}-{}", mac, ip, port);
+        if !self.nodes.contains_key(&node_key) {
             self.nodes.insert(
-                mac_address.clone(),
+                node_key.clone(),
                 Node {
-                    name: mac_address.clone(),
+                    mac,
+                    ip,
+                    port,
                 },
             );
         }
     }
+    
 
     /// Ajoute une arête au graphe, créant les nœuds source et cible si nécessaire.
     ///
@@ -124,23 +132,23 @@ impl GraphBuilder {
     /// ```
     ///
     /// Cette méthode assure l'unicité des arêtes dans le graphe.
-    fn add_edge(&mut self, source: String, target: String, label: String) {
-        self.add_node(source.clone());
-        self.add_node(target.clone());
-
-        // Utilisez une clé combinée pour vérifier l'unicité de l'arête.
-        let edge_key = format!("{}-{}-{}", source, target, label);
+    fn add_edge(&mut self, source_mac: String, source_ip: String, source_port: String, target_mac: String, target_ip: String, target_port: String, label: String) {
+        self.add_node(source_mac.clone(), source_ip.clone(), source_port.clone());
+        self.add_node(target_mac.clone(), target_ip.clone(), target_port.clone());
+    
+        let edge_key = format!("{}-{}:{}->{}-{}:{}", source_mac, source_ip, source_port, target_mac, target_ip, target_port);
         if !self.edges.contains_key(&edge_key) {
             self.edges.insert(
                 edge_key,
                 Edge {
-                    source,
-                    target,
+                    source: format!("{}-{}-{}", source_mac, source_ip, source_port),
+                    target: format!("{}-{}-{}", target_mac, target_ip, target_port),
                     label,
                 },
             );
         }
     }
+    
 
     /// Construit et retourne les données du graphe à partir des éléments ajoutés.
     ///
@@ -161,7 +169,7 @@ impl fmt::Debug for GraphData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "graphData {{ nodes {{")?;
         for (key, value) in &self.nodes {
-            writeln!(f, "    {}: {{ name: \"{}\" }},", key, value.name)?;
+            writeln!(f, "    {}: {{ mac: \"{}\", ip: \"{}\", port: : \"{}\"}} ", key, value.mac, value.ip, value.port)?;
         }
         writeln!(f, "  }}, edges  {{")?;
         for (key, value) in &self.edges {
@@ -177,7 +185,7 @@ impl fmt::Debug for GraphData {
 
 impl fmt::Debug for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "Node {{ name: \"{}\" }}", self.name)
+        writeln!(f, "Node {{ mac: \"{}\" }}", self.mac)
     }
 }
 
@@ -204,12 +212,16 @@ pub fn get_graph_data(shared_vec_infopackets: State<SonarState>) -> Result<Strin
             let mut graph_builder = GraphBuilder::new();
 
             // Traitez vos données de paquet ici pour peupler les nœuds et les arêtes
-            for (packet, _) in matrice.iter() {
-                let source_mac = packet.mac_address_source.clone();
-                let target_mac = packet.mac_address_destination.clone();
-                let l3_protocol_label = packet.l_3_protocol.clone(); // Supposons que c'est une String
-
-                graph_builder.add_edge(source_mac, target_mac, l3_protocol_label);
+            for packet in matrice.iter() {
+                let source_mac = packet.0.mac_address_source.clone();
+                let target_mac = packet.0.mac_address_destination.clone();
+                let l3_protocol_label = packet.0.l_3_protocol.clone(); 
+                let source_ip = packet.0.layer_3_infos.ip_source.clone().unwrap_or_default();
+                let target_ip = packet.0.layer_3_infos.ip_destination.clone().unwrap_or_default();
+                let source_port = packet.0.layer_3_infos.layer_4_infos.port_source.clone().unwrap_or_default();
+                let target_port = packet.0.layer_3_infos.layer_4_infos.port_destination.clone().unwrap_or_default();
+        
+                graph_builder.add_edge(source_mac, source_ip, source_port, target_mac, target_ip, target_port, l3_protocol_label);
             }
 
             let graph_data = graph_builder.build_graph_data();
@@ -240,13 +252,16 @@ mod tests {
     fn test_add_node() {
         let mut graph_builder = GraphBuilder::new();
         let mac_address = "00:1B:44:11:3A:B7".to_string();
-        graph_builder.add_node(mac_address.clone());
+        let ip_address = "192.168.1.1".to_string();
+        let port = "8080".to_string();
+        graph_builder.add_node(mac_address.clone(), ip_address.clone(), port.clone());
 
-        assert!(graph_builder.nodes.contains_key(&mac_address));
-        assert_eq!(
-            graph_builder.nodes.get(&mac_address).unwrap().name,
-            mac_address
-        );
+        let node_key = format!("{}-{}-{}", mac_address, ip_address, port);
+        assert!(graph_builder.nodes.contains_key(&node_key));
+        let node = graph_builder.nodes.get(&node_key).unwrap();
+        assert_eq!(node.mac, node_key);
+        assert_eq!(node.ip, ip_address);
+        assert_eq!(node.port, port);
     }
 
     #[test]
@@ -254,30 +269,39 @@ mod tests {
         let mut graph_builder = GraphBuilder::new();
         let source_mac = "00:1B:44:11:3A:B7".to_string();
         let target_mac = "00:1B:44:11:3A:B8".to_string();
+        let source_ip = "192.168.1.1".to_string();
+        let target_ip = "192.168.1.2".to_string();
+        let source_port = "8080".to_string();
+        let target_port = "8081".to_string();
         let label = "TCP".to_string();
 
-        graph_builder.add_edge(source_mac.clone(), target_mac.clone(), label.clone());
+        graph_builder.add_edge(source_mac.clone(), source_ip.clone(), source_port.clone(), target_mac.clone(), target_ip.clone(), target_port.clone(), label.clone());
 
-        // Vérifiez que les nœuds source et cible ont été ajoutés
-        assert!(graph_builder.nodes.contains_key(&source_mac));
-        assert!(graph_builder.nodes.contains_key(&target_mac));
-
-        // Vérifiez qu'une arête a été ajoutée
-        assert_eq!(graph_builder.edges.len(), 1);
-        let edge = graph_builder.edges.values().next().unwrap();
-        assert_eq!(edge.source, source_mac);
-        assert_eq!(edge.target, target_mac);
+        let edge_key = format!("{}-{}:{}->{}-{}:{}", source_mac, source_ip, source_port, target_mac, target_ip, target_port);
+        assert!(graph_builder.edges.contains_key(&edge_key));
+        let edge = graph_builder.edges.get(&edge_key).unwrap();
+        assert_eq!(edge.source, format!("{}-{}-{}", source_mac, source_ip, source_port));
+        assert_eq!(edge.target, format!("{}-{}-{}", target_mac, target_ip, target_port));
         assert_eq!(edge.label, label);
     }
 
     #[test]
     fn test_build_graph_data() {
         let mut graph_builder = GraphBuilder::new();
-        graph_builder.add_node("00:1B:44:11:3A:B7".to_string());
-        graph_builder.add_edge(
+        graph_builder.add_node(
             "00:1B:44:11:3A:B7".to_string(),
+            "192.168.1.1".to_string(),
+            "8080".to_string()
+        );
+        graph_builder.add_node(
             "00:1B:44:11:3A:B8".to_string(),
-            "TCP".to_string(),
+            "192.168.1.2".to_string(),
+            "8081".to_string()
+        );
+        graph_builder.add_edge(
+            "00:1B:44:11:3A:B7".to_string(), "192.168.1.1".to_string(), "8080".to_string(),
+            "00:1B:44:11:3A:B8".to_string(), "192.168.1.2".to_string(), "8081".to_string(),
+            "TCP".to_string()
         );
 
         let graph_data = graph_builder.build_graph_data();
@@ -291,24 +315,33 @@ mod tests {
     fn test_duplicate_nodes_are_not_added() {
         let mut graph_builder = GraphBuilder::new();
         let mac_address = "00:1B:44:11:3A:B7".to_string();
-        graph_builder.add_node(mac_address.clone());
-        graph_builder.add_node(mac_address.clone());
-
-        // Vérifiez qu'un seul nœud a été ajouté pour l'adresse MAC dupliquée
+        let ip_address = "192.168.1.1".to_string();
+        let port = "8080".to_string();
+        // Ajoutez le même nœud deux fois.
+        graph_builder.add_node(mac_address.clone(), ip_address.clone(), port.clone());
+        graph_builder.add_node(mac_address.clone(), ip_address.clone(), port.clone());
+    
+        // Vérifiez qu'un seul nœud a été ajouté.
         assert_eq!(graph_builder.nodes.len(), 1);
     }
-
+    
     #[test]
     fn test_duplicate_edges_are_not_added() {
         let mut graph_builder = GraphBuilder::new();
-        let source_mac = "00:1B:44:11:3A:B7".to_string();
-        let target_mac = "00:1B:44:11:3A:B8".to_string();
-        let label = "TCP".to_string();
-
-        graph_builder.add_edge(source_mac.clone(), target_mac.clone(), label.clone());
-        graph_builder.add_edge(source_mac.clone(), target_mac.clone(), label.clone());
-
-        // Vérifiez qu'une seule arête a été ajoutée malgré la tentative d'ajout d'un doublon
+        // Ajoutez la même arête deux fois avec les informations complètes.
+        graph_builder.add_edge(
+            "00:1B:44:11:3A:B7".to_string(), "192.168.1.1".to_string(), "8080".to_string(),
+            "00:1B:44:11:3A:B8".to_string(), "192.168.1.2".to_string(), "8081".to_string(),
+            "TCP".to_string()
+        );
+        graph_builder.add_edge(
+            "00:1B:44:11:3A:B7".to_string(), "192.168.1.1".to_string(), "8080".to_string(),
+            "00:1B:44:11:3A:B8".to_string(), "192.168.1.2".to_string(), "8081".to_string(),
+            "TCP".to_string()
+        );
+    
+        // Vérifiez qu'une seule arête a été ajoutée.
         assert_eq!(graph_builder.edges.len(), 1);
     }
+    
 }
