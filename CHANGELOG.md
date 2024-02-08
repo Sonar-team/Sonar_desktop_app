@@ -2,10 +2,16 @@
 
 ---
 
+#### Version 1.3.0
+
+**Nouvelles fonctionnalités :**
+- **Matrice plus détaillé** 
+---
+
 #### Version 1.2.1
 
 **Nouvelles fonctionnalités :**
-- **info bulle avec ip sur les nodes** 
+- **info bulle** 
 
 ---
 
