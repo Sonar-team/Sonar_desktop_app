@@ -30,11 +30,11 @@ fn main() {
     // let builder = builder.plugin(devtools);
 
     builder
-        .on_window_event(|event| if let tauri::WindowEvent::CloseRequested { .. } = event.event() {
-                     std::process::exit(0);
-                })
-        
-        
+        .on_window_event(|event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event.event() {
+                std::process::exit(0);
+            }
+        })
         .manage(SonarState(Arc::new(Mutex::new(Vec::new()))))
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
