@@ -1,8 +1,25 @@
+//! # Module de capture de paquets
+//!
+//! Ce module fournit des fonctionnalités pour capturer le trafic réseau, soit sur toutes les interfaces réseau disponibles,
+//! soit sur une interface spécifique choisie par l'utilisateur. L'intégration avec Tauri permet une interaction fluide
+//! avec l'interface utilisateur pour démarrer ou arrêter la capture à la demande.
+
 pub(crate) mod capture_packet;
 use capture_packet::{all_interfaces, one_interface};
 
 use crate::tauri_state::SonarState;
 
+/// Démarre la capture de paquets jusqu'à interruption par l'utilisateur.
+///
+/// Cette fonction détermine si la capture doit être effectuée sur toutes les interfaces réseau ou juste une spécifique,
+/// puis démarre le processus de capture approprié. Elle est conçue pour être appelée depuis une interface utilisateur Tauri,
+/// permettant aux utilisateurs de contrôler la capture de trafic réseau directement depuis l'interface graphique.
+///
+/// # Arguments
+///
+/// * `app` - Handle vers l'application Tauri, utilisé pour interagir avec l'état de l'application et l'interface utilisateur.
+/// * `interface` - Le nom de l'interface réseau sur laquelle effectuer la capture, ou une chaîne spéciale pour indiquer toutes les interfaces.
+/// * `state` - L'état partagé de l'application, encapsulé dans un objet `SonarState` pour maintenir les données à travers l'application.
 pub fn scan_until_interrupt(
     app: tauri::AppHandle,
     interface: &str,
@@ -14,6 +31,14 @@ pub fn scan_until_interrupt(
     }
 }
 
+/// Vérifie si l'utilisateur a demandé la capture sur toutes les interfaces réseau.
+///
+/// Cette fonction interne sert à déterminer si l'argument `interface` correspond à la demande de capture sur toutes les interfaces.
+/// Elle renvoie `true` si l'utilisateur souhaite capturer le trafic sur toutes les interfaces réseau, ou `false` sinon.
+///
+/// # Arguments
+///
+/// * `interface` - Le nom de l'interface réseau spécifié par l'utilisateur, à vérifier.
 fn check_interface(interface: &str) -> bool {
     matches!(interface, "Toutes les interfaces")
 }

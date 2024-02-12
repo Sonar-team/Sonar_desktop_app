@@ -12,6 +12,7 @@
           <th>Protocole</th>
           <th>Port Source</th>
           <th>Port Destination</th>
+          <th>Taille du paquet</th>
           <th>Horodatage</th> <!-- Nouvelle en-tête pour l'horodatage -->
 
         </tr>
@@ -27,6 +28,7 @@
           <td>{{ frame.layer_3_infos.l_4_protocol }}</td>
           <td>{{ frame.layer_3_infos.layer_4_infos.port_source }}</td>
           <td>{{ frame.layer_3_infos.layer_4_infos.port_destination }}</td>
+          <td>{{ frame.packet_size }}</td>
           <td>{{ frame.timestamp }}</td> <!-- Nouvelle cellule pour l'horodatage -->
 
         </tr>
@@ -85,7 +87,7 @@ export default {
   }
 
   th, td {
-    width: 110px; /* Example fixed width */
+    width: 136px; /* Example fixed width */
     overflow: hidden; /* Hides content that overflows */
     white-space: nowrap; /* Prevents text from wrapping to the next line */
     text-overflow: ellipsis; /* Truncates with an ellipsis */

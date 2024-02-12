@@ -31,6 +31,7 @@ struct PacketInfosCsv {
     l_4_protocol: Option<String>,
     port_source: Option<String>,
     port_destination: Option<String>,
+    packet_size: usize, //
     count: u32,
 }
 
@@ -46,6 +47,7 @@ impl PacketInfosCsv {
             l_4_protocol: packet.layer_3_infos.l_4_protocol.clone(),
             port_source: packet.layer_3_infos.layer_4_infos.port_source.clone(),
             port_destination: packet.layer_3_infos.layer_4_infos.port_destination.clone(),
+            packet_size: packet.packet_size.clone(),
             count,
         }
     }
@@ -101,6 +103,7 @@ pub fn cmd_save_packets_to_excel(
         "L4 Protocol",
         "Source Port",
         "Destination Port",
+        "Taille des packets",
         "Count",
     ];
 
@@ -155,9 +158,14 @@ pub fn cmd_save_packets_to_excel(
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
 
+        // Écriture du champ 'size'
+        sheet
+            .write_number(i as u32 + 1, 9, packet_csv.packet_size as f64)
+            .map_err(|e| MyError::XlsxError(e.to_string()))?;
+
         // Écriture du champ 'count'
         sheet
-            .write_number(i as u32 + 1, 9, packet_csv.count as f64)
+            .write_number(i as u32 + 1, 10, packet_csv.count as f64)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
     }
 
