@@ -2,6 +2,13 @@
 
 ---
 
+#### Version 1.3.0
+
+**Nouvelles fonctionnalités :**
+- **ajout de la colonne Packet Size** 
+
+---
+
 #### Version 1.2.1
 
 **Nouvelles fonctionnalités :**
