@@ -1,3 +1,8 @@
+//! # Traitement des paquets de la couche 3
+//!
+//! Ce module implémente la logique pour extraire les informations de la couche 3 (et supérieures)
+//! à partir de paquets Ethernet, en prenant en charge plusieurs protocoles comme IPv4, IPv6, ARP, et VLAN.
+
 use pnet::packet::{
     arp::ArpPacket,
     ethernet::{
@@ -14,6 +19,7 @@ mod layer_4_infos;
 use layer_4_infos::{get_layer_4_infos, Layer4Infos};
 use serde::Serialize;
 
+/// Représente les informations extraites de la couche 3 d'un paquet réseau.
 #[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
 pub struct Layer3Infos {
     pub ip_source: Option<String>,
@@ -22,17 +28,20 @@ pub struct Layer3Infos {
     pub layer_4_infos: Layer4Infos,
 }
 
+// Définitions des handlers pour chaque type de paquet pris en charge.
 struct Ipv4Handler;
 struct Ipv6Handler;
 struct ArpHandler;
 struct VlanHandler;
 struct PppoeDiscoveryHandler;
 
+/// Trait définissant la fonctionnalité pour extraire les informations de la couche 3.
 trait HandlePacket {
     fn get_layer_3(data: &[u8]) -> Layer3Infos;
 }
 
 impl HandlePacket for Ipv4Handler {
+    /// Traite les paquets IPv4 pour extraire les informations de la couche 3 et 4.
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(ipv4_packet) = Ipv4Packet::new(data) {
             // //println!(
@@ -56,6 +65,7 @@ impl HandlePacket for Ipv4Handler {
 }
 
 impl HandlePacket for Ipv6Handler {
+    /// Traite les paquets IPv6 pour extraire les informations de la couche 3 et 4.
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(ipv6_packet) = Ipv6Packet::new(data) {
             // println!(
@@ -80,6 +90,7 @@ impl HandlePacket for Ipv6Handler {
 }
 
 impl HandlePacket for ArpHandler {
+    /// Traite les paquets ARP pour extraire les informations de la couche 3.
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(arp_packet) = ArpPacket::new(data) {
             // println!(
@@ -110,6 +121,7 @@ impl HandlePacket for ArpHandler {
 }
 
 impl HandlePacket for VlanHandler {
+    /// Traite les paquets VLAN pour extraire les informations de la couche 3 et 4, y compris le support QinQ.
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(outer_vlan_packet) = VlanPacket::new(data) {
             // Check if the encapsulated packet is also a VLAN packet (QinQ)
@@ -148,6 +160,7 @@ impl HandlePacket for VlanHandler {
 }
 
 impl HandlePacket for PppoeDiscoveryHandler {
+    /// Traite les paquets PPPoE Discovery pour extraire les informations pertinentes.
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         // Here, you would parse the PPPoE Discovery packet.
         // This is a simplified example, as actual parsing would be more complex.
@@ -171,6 +184,7 @@ impl HandlePacket for PppoeDiscoveryHandler {
     }
 }
 
+/// Fonction d'entrée pour traiter un paquet Ethernet et extraire les informations de la couche 3 en fonction du type EtherType.
 pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
     match ethernet_packet.get_ethertype() {
         EtherTypes::Ipv6 => Ipv6Handler::get_layer_3(ethernet_packet.payload()),

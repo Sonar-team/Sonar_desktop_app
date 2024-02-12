@@ -1,3 +1,8 @@
+//! Module de capture des paquets réseau pour le projet Sonar.
+//!
+//! Fournit des fonctionnalités pour capturer le trafic réseau à travers une ou toutes les interfaces réseau.
+//! Utilise `pnet` pour la capture des paquets et `tauri` pour l'intégration avec l'interface utilisateur.
+
 use log::{error, info};
 use pnet::datalink::Channel::Ethernet;
 use pnet::datalink::{self, NetworkInterface};
@@ -11,6 +16,13 @@ pub(crate) mod layer_2_infos;
 use crate::tauri_state::SonarState;
 
 use self::layer_2_infos::PacketInfos;
+
+/// Capture le trafic réseau sur toutes les interfaces disponibles.
+///
+/// # Arguments
+///
+/// * `app` - Handle vers l'application Tauri, utilisé pour interagir avec l'interface utilisateur.
+/// * `state` - État global de l'application, contenant les données capturées.
 
 pub fn all_interfaces(app: tauri::AppHandle, state: State<SonarState>) {
     let mut handles = vec![];
@@ -53,6 +65,13 @@ pub fn all_interfaces(app: tauri::AppHandle, state: State<SonarState>) {
     }
 }
 
+/// Capture le trafic réseau sur une interface spécifique.
+///
+/// # Arguments
+///
+/// * `app` - Handle vers l'application Tauri.
+/// * `interface` - Nom de l'interface réseau sur laquelle effectuer la capture.
+/// * `state` - État global de l'application.
 pub fn one_interface(app: tauri::AppHandle, interface: &str, state: State<SonarState>) {
     info!("L'interface choisie est: {}", interface);
 
@@ -88,6 +107,14 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str, state: State<SonarS
     };
     capture_packets(app, captured_interface, tx);
 }
+
+/// Fonction interne pour démarrer la capture des paquets sur une interface donnée.
+///
+/// # Arguments
+///
+/// * `app` - Handle vers l'application Tauri.
+/// * `interface` - Interface réseau sur laquelle capturer les paquets.
+/// * `tx` - Canal de transmission pour envoyer les informations de paquets capturés.
 
 fn capture_packets(
     app: tauri::AppHandle,
