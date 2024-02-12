@@ -28,20 +28,32 @@ pub fn all_interfaces(app: tauri::AppHandle, state: State<SonarState>) {
     let mut handles = vec![];
     let (tx, rx) = mpsc::channel::<PacketInfos>();
 
-    // thread fifo
-    // Clone the state for the thread
     let state_clone = state.0.clone();
 
-    // Spawn a thread to process packets
     thread::spawn(move || {
-        for packet in rx {
-            let mut vector = state_clone.lock().expect("Failed to lock the mutex");
+        for new_packet in rx {
+            let mut state_locked = state_clone.lock().expect("Failed to lock the mutex");
+            
+            let mut is_found = false;
+            for (existing_packet, count) in state_locked.iter_mut() {
+                // Définissez ici la logique pour déterminer si `new_packet` est "le même" que `existing_packet`.
+                // Cela pourrait dépendre des adresses MAC, des adresses IP, du protocole, etc.
+                if existing_packet.mac_address_source == new_packet.mac_address_source &&
+                   existing_packet.mac_address_destination == new_packet.mac_address_destination &&
+                   existing_packet.interface == new_packet.interface &&
+                   existing_packet.l_3_protocol == new_packet.l_3_protocol &&
+                   existing_packet.layer_3_infos == new_packet.layer_3_infos {
+                    // Un paquet correspondant a été trouvé, incrémentez son compteur
+                    *count += 1;
+                    existing_packet.packet_size += new_packet.packet_size;
+                    is_found = true;
+                    break;
+                }
+            }
 
-            // Check if the packet exists in the vector and update its count
-            let found = vector.iter_mut().find(|(p, _)| *p == packet);
-            match found {
-                Some((_, count)) => *count += 1,
-                None => vector.push((packet, 1)),
+            if !is_found {
+                // Si aucun paquet correspondant n'a été trouvé, ajoutez `new_packet` comme une nouvelle entrée
+                state_locked.push((new_packet, 1));
             }
         }
     });
@@ -86,11 +98,20 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str, state: State<SonarS
         for packet in rx {
             let mut vector = state_clone.lock().expect("Failed to lock the mutex");
 
-            // Check if the packet exists in the vector and update its count
-            let found = vector.iter_mut().find(|(p, _)| *p == packet);
-            match found {
-                Some((_, count)) => *count += 1,
-                None => vector.push((packet, 1)),
+            // Vérification de l'existence du paquet dans le vecteur et mise à jour de son comptage et de sa taille
+            let mut found = false;
+            for (packet_info, count) in vector.iter_mut() {
+                if *packet_info == packet {
+                    *count += 1;
+                    packet_info.packet_size += packet.packet_size;
+                    found = true;
+                    break;
+                }
+            }
+
+            if !found {
+                // Si le paquet n'existe pas déjà, ajout avec un compteur initialisé à 1
+                vector.push((packet, 1));
             }
         }
     });
@@ -149,6 +170,7 @@ fn capture_packets(
             Ok(packet) => {
                 if let Some(ethernet_packet) = EthernetPacket::new(packet) {
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
+                    //println!("{packet_info}");
                     if let Err(err) = main_window.emit("frame", &packet_info) {
                         error!("Failed to emit event: {}", err);
                     }

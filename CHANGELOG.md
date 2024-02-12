@@ -1,11 +1,12 @@
-### Journal des Modifications Sonar
+# Changelog
 
 ---
 
-#### Version 1.3.0
+## [1.3.0] - 2024-02-13
 
-**Nouvelles fonctionnalités :**
-- **ajout de la colonne Packet Size** 
+### Nouvelles fonctionnalités
+
+- **Ajout de la colonne Packet Size** : Une nouvelle colonne pour la taille des paquets a été ajoutée pour fournir plus de détails sur chaque paquet capturé. Cela permet une analyse plus approfondie du trafic réseau en offrant une visibilité sur la taille des paquets en plus de leurs métadonnées existantes.
 
 ---
 

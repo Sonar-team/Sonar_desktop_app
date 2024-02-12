@@ -95,8 +95,18 @@ fn save_packets_to_excel(file_path: String, state: State<SonarState>) -> Result<
 
 #[tauri::command]
 fn get_hash_map_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
-    get_matrice_data(shared_hash_map)
+    match get_matrice_data(shared_hash_map) {
+        Ok(data) => {
+            println!("Data: {}", data); // Utilisez log::info si vous avez configuré un logger
+            Ok(data)
+        }
+        Err(e) => {
+            println!("Error: {}", e); // Utilisez log::error pour les erreurs
+            Err(e)
+        }
+    }
 }
+
 
 #[tauri::command]
 fn get_graph_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
