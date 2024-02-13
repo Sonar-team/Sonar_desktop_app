@@ -14,9 +14,11 @@ jobs:
         run: |
           pwd
           ls
+        shell: bash
 
       - name: Change to src-tauri directory
         run: cd src-tauri
+        shell: bash
 
       - name: Checkout repository
         uses: actions/checkout@v2
