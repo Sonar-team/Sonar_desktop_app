@@ -7,7 +7,7 @@ use log::{error, info};
 use pnet::datalink::Channel::Ethernet;
 use pnet::datalink::{self, NetworkInterface};
 use pnet::packet::ethernet::EthernetPacket;
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
 use tauri::{Manager, State};
@@ -32,29 +32,7 @@ pub fn all_interfaces(app: tauri::AppHandle, state: State<SonarState>) {
 
     thread::spawn(move || {
         for new_packet in rx {
-            let mut state_locked = state_clone.lock().expect("Failed to lock the mutex");
-            
-            let mut is_found = false;
-            for (existing_packet, count) in state_locked.iter_mut() {
-                // Définissez ici la logique pour déterminer si `new_packet` est "le même" que `existing_packet`.
-                // Cela pourrait dépendre des adresses MAC, des adresses IP, du protocole, etc.
-                if existing_packet.mac_address_source == new_packet.mac_address_source &&
-                   existing_packet.mac_address_destination == new_packet.mac_address_destination &&
-                   existing_packet.interface == new_packet.interface &&
-                   existing_packet.l_3_protocol == new_packet.l_3_protocol &&
-                   existing_packet.layer_3_infos == new_packet.layer_3_infos {
-                    // Un paquet correspondant a été trouvé, incrémentez son compteur
-                    *count += 1;
-                    existing_packet.packet_size += new_packet.packet_size;
-                    is_found = true;
-                    break;
-                }
-            }
-
-            if !is_found {
-                // Si aucun paquet correspondant n'a été trouvé, ajoutez `new_packet` comme une nouvelle entrée
-                state_locked.push((new_packet, 1));
-            }
+            update_state_with_packet(state_clone.clone(), new_packet);
         }
     });
 
@@ -95,24 +73,8 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str, state: State<SonarS
 
     // Spawn a thread to process packets
     thread::spawn(move || {
-        for packet in rx {
-            let mut vector = state_clone.lock().expect("Failed to lock the mutex");
-
-            // Vérification de l'existence du paquet dans le vecteur et mise à jour de son comptage et de sa taille
-            let mut found = false;
-            for (packet_info, count) in vector.iter_mut() {
-                if *packet_info == packet {
-                    *count += 1;
-                    packet_info.packet_size += packet.packet_size;
-                    found = true;
-                    break;
-                }
-            }
-
-            if !found {
-                // Si le paquet n'existe pas déjà, ajout avec un compteur initialisé à 1
-                vector.push((packet, 1));
-            }
+        for new_packet in rx {
+            update_state_with_packet(state_clone.clone(), new_packet);
         }
     });
 
@@ -187,25 +149,86 @@ fn capture_packets(
     }
 }
 
-// fn process_packet(
-//     state: tauri::State<SonarState>,
-//     observed_packets: &mut HashSet<String>,
-//     info: PacketInfos,
-//     app: tauri::AppHandle
-// ) {
-//     //println!("{}", state);
-//     let main_window = app.get_window("main").unwrap();
-//     let mut ips = vec![info.layer_3_infos.ip_source.clone(), info.layer_3_infos.ip_source.clone()];
-//     ips.sort();
-//     let key = format!("{:?}-{:?}", ips[0], ips[1]);
-//     if !observed_packets.contains(&key) {
-//         //println!("New unique packet: {:?}", &info);
-//         observed_packets.insert(key);
+fn update_state_with_packet(state: Arc<Mutex<Vec<(PacketInfos, u32)>>>, new_packet: PacketInfos) {
+    let mut state_locked = state.lock().expect("Failed to lock the mutex");
 
-//         main_window.emit("matrice", &info).expect("Failed to emit event");
-//         // Add the packet info to the vector
-//         state.push_to_hash_map(info);
-//         //println!("{} packets captured", state);
+    let mut is_found = false;
+    for (existing_packet, count) in state_locked.iter_mut() {
+        // Définissez ici la logique pour déterminer si `new_packet` est "le même" que `existing_packet`.
+        // Cela pourrait dépendre des adresses MAC, des adresses IP, du protocole, etc.
+        if existing_packet.mac_address_source == new_packet.mac_address_source &&
+           existing_packet.mac_address_destination == new_packet.mac_address_destination &&
+           existing_packet.interface == new_packet.interface &&
+           existing_packet.l_3_protocol == new_packet.l_3_protocol &&
+           existing_packet.layer_3_infos == new_packet.layer_3_infos 
+        {
+            // Un paquet correspondant a été trouvé, incrémentez son compteur
+            *count += 1;
+            existing_packet.packet_size += new_packet.packet_size;
+            is_found = true;
+            break;
+        }
+    }
 
-//     }
-// }
+    if !is_found {
+        // Si aucun paquet correspondant n'a été trouvé, ajoutez `new_packet` comme une nouvelle entrée
+        state_locked.push((new_packet, 1));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Arc, Mutex};
+
+    #[test]
+    fn test_update_state_with_packet() {
+        let state = Arc::new(Mutex::new(vec![]));
+        let buffer = vec![0u8; 64]; // Local buffer
+        let ethernet_packet = EthernetPacket::new(&buffer).unwrap();
+        let packet = PacketInfos::new(&String::from("eth0"),  &ethernet_packet);
+        
+        // Add a packet to the state and verify it
+        update_state_with_packet(state.clone(), packet.clone());
+        assert_eq!(state.lock().unwrap().len(), 1);
+
+        // Add the same packet again and verify that the count is incremented
+        update_state_with_packet(state.clone(), packet.clone());
+        assert_eq!(state.lock().unwrap().len(), 1);
+        assert_eq!(state.lock().unwrap()[0].1, 2);
+
+        // Add a different packet and verify that it's added as a new entry
+        let different_packet = PacketInfos::new(&String::from("eth2"), &ethernet_packet);
+        update_state_with_packet(state.clone(), different_packet.clone());
+        assert_eq!(state.lock().unwrap().len(), 2);
+    }
+
+    // #[test]
+    // fn test_capture_packets() {
+    //     // Create a mock channel
+    //     let (tx, rx) = mpsc::channel();
+    //     let tx_clone = tx.clone();
+    //     let app: tauri::Window;
+    //     // Spawn a thread to capture packets
+    //     let handle = thread::spawn(move || {
+    //         let interface = datalink::interfaces().into_iter().next().unwrap();
+    //         capture_packets(app.app_handle(),interface,tx_clone);
+    //     });
+
+    //     // Wait a short time to allow the capture thread to start
+    //     thread::sleep(Duration::from_secs(1));
+
+    //     // Send a mock packet through the channel and verify
+    //     let mock_eth_packet = mock_packet();
+    //     tx.send(PacketInfos::new(&String::from("eth0"), &mock_eth_packet)).unwrap();
+    //     let received_packet = rx.recv().unwrap();
+    //     assert_eq!(received_packet.interface.len(), 64);
+    //     assert_eq!(received_packet.l_3_protocol.len(), 64);
+    //     assert_eq!(received_packet.mac_address_destination.len(), 64);
+    //     assert_eq!(received_packet.mac_address_source.len(), 64);
+
+
+    //     // Clean up by joining the capture thread
+    //     handle.join().unwrap();
+    // }
+}
