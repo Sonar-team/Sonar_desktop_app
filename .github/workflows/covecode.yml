@@ -10,28 +10,30 @@ jobs:
       image: xd009642/tarpaulin:develop-nightly
       options: --security-opt seccomp=unconfined
     steps:
-      - name: infos debug 
-        run: |
-          pwd
-          ls
-        shell: bash
-
-      - name: Change to src-tauri directory
-        run: cd src-tauri
-        shell: bash
-
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Build Rust project
-        run: cargo build --verbose
+      - name: Debug information
+        run: |
+          pwd
+          echo "pwd exit status: $?"
+          ls -a
+          echo "LS exit status: $?"
+        shell: bash --noprofile --norc -e -o pipefail {0}
 
-      - name: List project directory contents
-        run: ls /__w/Sonar_cli_app/Sonar_cli_app/target/debug/
+      # Combine directory change with Rust project build in a single step
+      - name: Build Rust project in src-tauri directory
+        run: |
+          cd src-tauri
+          cargo build --verbose
+          ls -a # List contents to verify
+        shell: bash --noprofile --norc -e -o pipefail {0}
 
       - name: Generate code coverage
         run: |
+          cd src-tauri
           cargo +nightly tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
+        shell: bash --noprofile --norc -e -o pipefail {0}
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v2
