@@ -163,7 +163,7 @@
         //console.log("node: " + node)
         const nodeData = this.graphData.nodes[node];
       // Formattez ou choisissez les informations du nœud à afficher
-      this.menuTargetNode = `Adresse Mac: ${nodeData.name}`;
+      this.menuTargetNode = `Adresse IP: ${nodeData.name}`;
         this.showContextMenu(this.nodeMenu, event);
       }
     },
