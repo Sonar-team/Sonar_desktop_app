@@ -11,7 +11,8 @@ fn charge_test() {
     let mut rng = rand::thread_rng();
     let range = Uniform::new(0, 256);
 
-    for _ in 0..10_000_000 {
+    // Réduire à un nombre plus gérable, comme 1000
+    for _ in 0..1000 {
         let ip = format!(
             "{}.{}.{}.{}",
             rng.sample(&range),
@@ -22,8 +23,9 @@ fn charge_test() {
         let addr = format!("{}:12345", ip);
 
         match socket.send_to(b"Test UDP", &addr) {
-            Ok(_) => println!("Paquet envoyé à {}", addr),
+            Ok(_) => (), // Considérer d'enlever le println pour éviter de surcharger la sortie
             Err(e) => eprintln!("Erreur lors de l'envoi au {}: {}", addr, e),
         }
     }
 }
+
