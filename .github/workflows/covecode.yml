@@ -10,14 +10,20 @@ jobs:
       image: xd009642/tarpaulin:develop-nightly
       options: --security-opt seccomp=unconfined
     steps:
+      - name: infos debug 
+        run: |
+          pwd
+          ls
+
       - name: Change to src-tauri directory
         run: cd src-tauri
-        
+
       - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Build Rust project
         run: cargo build --verbose
+
       - name: List project directory contents
         run: ls /__w/Sonar_cli_app/Sonar_cli_app/target/debug/
 
