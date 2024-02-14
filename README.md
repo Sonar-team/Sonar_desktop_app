@@ -2,6 +2,8 @@
 
 [![Release](https://github.com/Sonar-team/Sonar_desktop_app/actions/workflows/build-release.yml/badge.svg)](https://github.com/Sonar-team/Sonar_desktop_app/actions/workflows/build-release.yml)
 
+[![codecov](https://codecov.io/github/Sonar-team/Sonar_desktop_app/graph/badge.svg?token=UC4N2TUFRN)](https://codecov.io/github/Sonar-team/Sonar_desktop_app)
+
 # Application de bureau Sonar
 ![logo](src-tauri/icons/Square310x310Logo.png)
 ## Fonctionnalités Clés
