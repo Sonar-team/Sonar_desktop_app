@@ -2,6 +2,14 @@
 
 ---
 
+## [1.3.2] - 2024-02-13
+
+### Nouvelles fonctionnalités
+
+- **Ajout de code coverage** :  Implémentation d'outils de couverture de code pour garantir la qualité des suites de tests et identifier les parties du code non testées.
+
+---
+
 ## [1.3.1] - 2024-02-13
 
 ### Nouvelles fonctionnalités
