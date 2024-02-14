@@ -23,6 +23,8 @@ use pnet::datalink;
 /// Utilisation simple :
 ///
 /// ```
+/// use sonar_desktop_app::get_interfaces::get_interfaces;
+/// 
 /// let interface_names = get_interfaces();
 /// for name in interface_names {
 ///     println!("{}", name);
@@ -38,14 +40,34 @@ pub fn get_interfaces() -> Vec<String> {
     let mut names: Vec<String> = interfaces
         .iter()
         .map(|iface| {
-            iface.name.clone() // Clone le nom de chaque interface.
+            // Utilise l'adresse MAC comme nom de l'interface.
+            format!("Interface MAC: {}", iface.mac.unwrap_or_default())
         })
         .collect();
-
+ 
     // Ajoute une chaîne représentant l'option de sélection de toutes les interfaces.
     let all = String::from("Toutes les interfaces");
     names.push(all);
 
     // Retourne le vecteur de noms d'interface.
     names
+}
+
+#[cfg(test)]
+mod tests {
+    // Importe la fonction à tester.
+    use super::*;
+
+    #[test]
+    fn test_get_interfaces() {
+
+        // Appelle la fonction à tester.
+        let interface_names = get_interfaces();
+
+        // Vérifie que le vecteur de noms d'interface n'est pas vide.
+        assert!(!interface_names.is_empty());
+
+        // Vérifie que le dernier élément du vecteur est "Toutes les interfaces".
+        assert_eq!(interface_names.last(), Some(&String::from("Toutes les interfaces")));
+    }
 }
