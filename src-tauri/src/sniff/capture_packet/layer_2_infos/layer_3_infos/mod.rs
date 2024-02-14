@@ -105,7 +105,7 @@ impl HandlePacket for ArpHandler {
             //     arp_packet.packet().len()
             // );
             Layer3Infos {
-                ip_source: Some(arp_packet.get_target_proto_addr().to_string()),
+                ip_source: Some(arp_packet.get_sender_proto_addr().to_string()),
                 ip_destination: Some(arp_packet.get_target_proto_addr().to_string()),
                 l_4_protocol: Default::default(),
                 layer_4_infos: Layer4Infos {
