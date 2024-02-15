@@ -2,6 +2,14 @@
 
 ---
 
+## [1.3.3] - 2024-02-15
+
+### Corrections de bugs
+
+- **Liste des interfaces sur Windows** : Correction d'un problème où les noms des interfaces réseau étaient mal affichés sur Windows, apparaissant comme des UUID au lieu de noms conviviaux. Maintenant, les adresses MAC des interfaces sont utilisées pour permettre une identification plus aisée des interfaces réseau sur cette plateforme.
+
+---
+
 ## [1.3.2] - 2024-02-13
 
 ### Nouvelles fonctionnalités

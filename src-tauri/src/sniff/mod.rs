@@ -42,3 +42,21 @@ pub fn scan_until_interrupt(
 fn check_interface(interface: &str) -> bool {
     matches!(interface, "Toutes les interfaces")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_check_interface_all() {
+        // Vérifie que la fonction renvoie vrai lorsque l'interface est "Toutes les interfaces"
+        assert!(check_interface("Toutes les interfaces"));
+    }
+
+    #[test]
+    fn test_check_interface_specific() {
+        // Vérifie que la fonction renvoie faux lorsque l'interface est spécifique
+        assert!(!check_interface("en0"));
+    }
+
+}

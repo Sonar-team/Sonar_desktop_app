@@ -1,23 +1,23 @@
-use clap::Parser;
+//use clap::Parser;
 use colored::Colorize;
 
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-pub struct Args {
+//#[derive(Parser, Debug)]
+//#[command(author, version, about, long_about = None)]
+//pub struct Args {
     /// Name the output name of the csv
-    #[arg(short, long, default_value = "output.csv")]
-    output: String,
-    #[arg(short, long, default_value = "all")]
+//    #[arg(short, long, default_value = "output.csv")]
+//    output: String,
+//    #[arg(short, long, default_value = "all")]
     /// give the interface name to scan
-    interface: String,
+ //   interface: String,
     /// Give the scan time
-    #[arg(short, long, default_value_t = 0)]
-    time: u64,
-}
+//    #[arg(short, long, default_value_t = 0)]
+ //   time: u64,
+//}
 
-pub fn get_args(args: &Args) -> (&String, &String, &u64) {
-    (&args.output, &args.interface, &args.time)
-}
+//pub fn get_args(args: &Args) -> (&String, &String, &u64) {
+//    (&args.output, &args.interface, &args.time)
+//}
 
 pub fn print_banner() -> String {
     // ASCII art banner
@@ -31,4 +31,26 @@ pub fn print_banner() -> String {
    ";
 
     banner.green().to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_print_banner() {
+        // Appelle la fonction print_banner
+        let banner = print_banner();
+
+        // Vérifie que la chaîne retournée n'est pas vide
+        assert!(!banner.is_empty());
+
+        // Vérifie que la chaîne retournée contient le texte du banner
+        assert!(banner.contains("_______"));
+        assert!(banner.contains("/   _____/"));
+        assert!(banner.contains("\\_____  \\"));
+        assert!(banner.contains("/        ("));
+        assert!(banner.contains("/_______  /"));
+        assert!(banner.contains("          \\/"));
+    }
 }
