@@ -1,4 +1,12 @@
 # Changelog
+---
+
+## [1.4.0] - 2024-02-15
+
+### Corrections de bugs
+
+- **filtre les Type d'ip** : 
+
 
 ---
 
