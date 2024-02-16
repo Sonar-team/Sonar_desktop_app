@@ -2,6 +2,16 @@
 //!
 //! Fournit des fonctionnalités pour capturer le trafic réseau à travers une ou toutes les interfaces réseau.
 //! Utilise `pnet` pour la capture des paquets et `tauri` pour l'intégration avec l'interface utilisateur.
+//!
+//! ## Fonctions
+//!
+//! - [`all_interfaces`](fn.all_interfaces.html): Capture le trafic réseau sur toutes les interfaces disponibles.
+//! - [`one_interface`](fn.one_interface.html): Capture le trafic réseau sur une interface spécifique.
+//! - [`capture_packets`](fn.capture_packets.html): Fonction interne pour démarrer la capture des paquets sur une interface donnée.
+//!
+//! ## Tests
+//!
+//! Ce module contient également des tests pour la fonction `update_state_with_packet` et la fonction `capture_packets`.
 
 use log::{error, info};
 use pnet::datalink::Channel::Ethernet;
