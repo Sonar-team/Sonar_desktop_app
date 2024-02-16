@@ -12,6 +12,7 @@
           <th>Protocole</th>
           <th>Port Source</th>
           <th>Port Destination</th>
+          <th>Protocole</th>
           <th>Taille Total</th>
           <th>Occurences</th>
         </tr>
@@ -27,6 +28,7 @@
           <td>{{ packet.info.layer_3_infos.l_4_protocol }}</td>
           <td>{{ packet.info.layer_3_infos.layer_4_infos.port_source }}</td>
           <td>{{ packet.info.layer_3_infos.layer_4_infos.port_destination }}</td>
+          <td>{{ packet.info.layer_3_infos.layer_4_infos.l_7_protocol }}</td>
           <td>{{ packet.info.packet_size}}</td>
           <td>{{ packet.count }}</td>
         </tr>

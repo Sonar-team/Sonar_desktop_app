@@ -157,6 +157,7 @@ impl HandlePacket for ArpHandler {
                 layer_4_infos: Layer4Infos {
                     port_source: None,
                     port_destination: None,
+                    l_7_protocol: None,
                 },
             }
         } else {
@@ -219,6 +220,7 @@ impl HandlePacket for PppoeDiscoveryHandler {
                     layer_4_infos: Layer4Infos {
                         port_source: None,
                         port_destination: None,
+                        l_7_protocol: None,
                     },
                 }
             } else {
@@ -244,6 +246,7 @@ impl HandlePacket for LldpHandler {
             layer_4_infos: Layer4Infos {
                 port_source: None,
                 port_destination: None,
+                l_7_protocol: None,
             },
         }
     }

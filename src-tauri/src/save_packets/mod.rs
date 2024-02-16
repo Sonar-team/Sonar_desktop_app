@@ -47,6 +47,7 @@ struct PacketInfosCsv {
     /// Port destination du paquet (optionnel).
     port_destination: Option<String>,
     /// Taille du paquet.
+    l_7_protocol: Option<String>,
     packet_size: usize,
     /// Nombre de fois que ce paquet a été rencontré.
     count: u32,
@@ -65,6 +66,7 @@ impl PacketInfosCsv {
             l_4_protocol: packet.layer_3_infos.l_4_protocol.clone(),
             port_source: packet.layer_3_infos.layer_4_infos.port_source.clone(),
             port_destination: packet.layer_3_infos.layer_4_infos.port_destination.clone(),
+            l_7_protocol: packet.layer_3_infos.layer_4_infos.l_7_protocol.clone(),
             packet_size: packet.packet_size.clone(),
             count,
         }
