@@ -97,7 +97,7 @@ fn save_packets_to_excel(file_path: String, state: State<SonarState>) -> Result<
 fn get_hash_map_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
     match get_matrice_data(shared_hash_map) {
         Ok(data) => {
-            println!("Data: {}", data); // Utilisez log::info si vous avez configuré un logger
+            //println!("Data: {}", data); // Utilisez log::info si vous avez configuré un logger
             Ok(data)
         }
         Err(e) => {

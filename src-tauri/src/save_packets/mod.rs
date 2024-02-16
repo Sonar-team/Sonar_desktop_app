@@ -5,37 +5,55 @@ use serde::Serialize;
 use tauri::State;
 use thiserror::Error;
 
+/// Enum représentant les différentes erreurs pouvant survenir lors de l'écriture de paquets vers un fichier CSV ou Excel.
 #[derive(Debug, Error, serde::Serialize)]
 pub enum MyError {
-    #[error("IO Error: {0}")]
+    /// Erreur d'entrée/sortie avec un message explicatif.
+    #[error("Erreur d'E/S : {0}")]
     IoError(String),
 
-    #[error("CSV Error: {0}")]
+    /// Erreur lors de la manipulation de fichiers CSV avec un message explicatif.
+    #[error("Erreur CSV : {0}")]
     CsvError(String),
 
-    #[error("UTF-8 Conversion Error: {0}")]
+    /// Erreur de conversion UTF-8 avec un message explicatif.
+    #[error("Erreur de conversion UTF-8 : {0}")]
     Utf8Error(String),
 
-    #[error("XLSX Error: {0}")]
+    /// Erreur lors de la manipulation de fichiers Excel avec un message explicatif.
+    #[error("Erreur Excel : {0}")]
     XlsxError(String),
 }
 
+/// Structure représentant les informations des paquets à sérialiser vers un fichier CSV.
 #[derive(Serialize)]
 struct PacketInfosCsv {
+    /// Adresse MAC source du paquet.
     mac_address_source: String,
+    /// Adresse MAC destination du paquet.
     mac_address_destination: String,
+    /// Interface du paquet.
     interface: String,
-    l_3_protocol: String, // Corresponding field for CSV serialization
+    /// Protocole de la couche 3 du paquet.
+    l_3_protocol: String,
+    /// Adresse IP source du paquet (optionnel).
     ip_source: Option<String>,
+    /// Adresse IP destination du paquet (optionnel).
     ip_destination: Option<String>,
+    /// Protocole de la couche 4 du paquet (optionnel).
     l_4_protocol: Option<String>,
+    /// Port source du paquet (optionnel).
     port_source: Option<String>,
+    /// Port destination du paquet (optionnel).
     port_destination: Option<String>,
-    packet_size: usize, //
+    /// Taille du paquet.
+    packet_size: usize,
+    /// Nombre de fois que ce paquet a été rencontré.
     count: u32,
 }
 
 impl PacketInfosCsv {
+    /// Convertit les informations du paquet en une structure `PacketInfosCsv`.
     fn from_packet_infos(packet: &PacketInfos, count: u32) -> Self {
         PacketInfosCsv {
             mac_address_source: packet.mac_address_source.clone(),
@@ -53,12 +71,26 @@ impl PacketInfosCsv {
     }
 }
 
+/// Structure représentant les données d'un paquet pour la sérialisation vers un fichier Excel.
 #[derive(Serialize)]
 struct PacketData<'a> {
+    /// Référence au paquet.
     packet: &'a PacketInfos,
+    /// Nombre de fois que ce paquet a été rencontré.
     count: u32,
 }
-
+/// Fonction pour enregistrer les paquets vers un fichier CSV.
+///
+/// # Arguments
+///
+/// * `file_path` - Chemin du fichier CSV.
+/// * `state` - État contenant les données des paquets.
+///
+/// # Exemple
+///
+/// ```rust
+/// cmd_save_packets_to_csv(String::from("paquets.csv"), state);
+/// ```
 pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
     // Lock the state to access the data
     let data = state.0.lock().unwrap();
@@ -79,6 +111,19 @@ pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> R
     Ok(())
 }
 
+
+/// Fonction pour enregistrer les paquets vers un fichier Excel.
+///
+/// # Arguments
+///
+/// * `file_path` - Chemin du fichier Excel.
+/// * `state` - État contenant les données des paquets.
+///
+/// # Exemple
+///
+/// ```rust
+/// cmd_save_packets_to_excel(String::from("paquets.xlsx"), state);
+/// ```
 pub fn cmd_save_packets_to_excel(
     file_path: String,
     state: State<SonarState>,

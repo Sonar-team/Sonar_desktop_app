@@ -2,6 +2,51 @@
 //!
 //! Ce module implémente la logique pour extraire les informations de la couche 3 (et supérieures)
 //! à partir de paquets Ethernet, en prenant en charge plusieurs protocoles comme IPv4, IPv6, ARP, et VLAN.
+//!
+//! ## Exemple d'utilisation
+//!
+//! ```rust
+//! use pnet::packet::ethernet::EthernetPacket;
+//! use layer_3_infos::get_layer_3_infos;
+//!
+//! // Exemple d'utilisation de la fonction get_layer_3_infos avec un paquet Ethernet
+//! let ethernet_packet_data: &[u8] = &[/* données du paquet Ethernet */];
+//! if let Some(ethernet_packet) = EthernetPacket::new(ethernet_packet_data) {
+//!     let layer_3_infos = get_layer_3_infos(&ethernet_packet);
+//!     println!("Layer 3 Infos: {:?}", layer_3_infos);
+//! }
+//! ```
+//!
+//! ## Structures
+//!
+//! - [`Layer3Infos`](struct.Layer3Infos.html): Représente les informations extraites de la couche 3 d'un paquet réseau.
+//!
+//! ## Traits
+//!
+//! - [`HandlePacket`](trait.HandlePacket.html): Trait définissant la fonctionnalité pour extraire les informations de la couche 3.
+//!
+//! ## Implémentations de Trait
+//!
+//! - [`HandlePacket`](trait.HandlePacket.html) est implémenté pour les types suivants:
+//!     - [`Ipv4Handler`](struct.Ipv4Handler.html)
+//!     - [`Ipv6Handler`](struct.Ipv6Handler.html)
+//!     - [`ArpHandler`](struct.ArpHandler.html)
+//!     - [`VlanHandler`](struct.VlanHandler.html)
+//!     - [`PppoeDiscoveryHandler`](struct.PppoeDiscoveryHandler.html)
+//!
+//! ## Handlers de Paquets
+//!
+//! Les handlers de paquets sont des structures définies dans ce module et implémentent le trait [`HandlePacket`](trait.HandlePacket.html)
+//! pour chaque type de paquet pris en charge.
+//!
+//! ## Fonctions
+//!
+//! - [`get_layer_3_infos`](fn.get_layer_3_infos.html): Fonction d'entrée pour traiter un paquet Ethernet et extraire les informations de la couche 3.
+//!
+//! ## Handlers de Paquets
+//!
+//! Les handlers de paquets sont des structures définies dans ce module et implémentent le trait [`HandlePacket`](trait.HandlePacket.html)
+//! pour chaque type de paquet pris en charge.
 
 use pnet::packet::{
     arp::ArpPacket,
@@ -28,12 +73,13 @@ pub struct Layer3Infos {
     pub layer_4_infos: Layer4Infos,
 }
 
-// Définitions des handlers pour chaque type de paquet pris en charge.
+// Définitions des handlers pour chaque type de paquet pris en charge...
 struct Ipv4Handler;
 struct Ipv6Handler;
 struct ArpHandler;
 struct VlanHandler;
 struct PppoeDiscoveryHandler;
+struct LldpHandler;
 
 /// Trait définissant la fonctionnalité pour extraire les informations de la couche 3.
 trait HandlePacket {
@@ -184,6 +230,25 @@ impl HandlePacket for PppoeDiscoveryHandler {
     }
 }
 
+impl HandlePacket for LldpHandler {
+    fn get_layer_3(_data: &[u8]) -> Layer3Infos {
+        // Ici, vous devez implémenter la logique pour parser les paquets LLDP.
+        // Comme LLDP est un protocole de la couche 2, les informations spécifiques de la couche 3 peuvent ne pas être disponibles.
+        // Vous pourriez vouloir extraire des informations comme le nom de l'appareil, le port, la description, etc., et les stocker d'une manière qui a du sens pour votre application.
+
+        Layer3Infos {
+            // Ajustez selon les informations que vous pouvez extraire des paquets LLDP.
+            ip_source: None,
+            ip_destination: None,
+            l_4_protocol: None,
+            layer_4_infos: Layer4Infos {
+                port_source: None,
+                port_destination: None,
+            },
+        }
+    }
+}
+
 /// Fonction d'entrée pour traiter un paquet Ethernet et extraire les informations de la couche 3 en fonction du type EtherType.
 pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
     match ethernet_packet.get_ethertype() {
@@ -192,6 +257,7 @@ pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
         EtherTypes::Arp => ArpHandler::get_layer_3(ethernet_packet.payload()),
         EtherTypes::Vlan => VlanHandler::get_layer_3(ethernet_packet.payload()),
         EtherTypes::PppoeDiscovery => PppoeDiscoveryHandler::get_layer_3(ethernet_packet.payload()),
+        EtherTypes::Lldp => LldpHandler::get_layer_3(ethernet_packet.payload()),
         _ => {
             // General case for all other EtherTypes
             println!(

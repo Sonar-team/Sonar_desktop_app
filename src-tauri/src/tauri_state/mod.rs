@@ -13,11 +13,11 @@ use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
 /// capturées, y compris le comptage de leurs occurrences.
 ///
 /// # Structure
-/// `SonarState` contient un `Arc<Mutex<HashMap<PacketInfos, u32>>>`.
+/// `SonarState` contient un `Arc<Mutex<Vec<(PacketInfos, u32)>>>`.
 /// - `Arc` permet un accès thread-safe et partagé à l'état.
 /// - `Mutex` garantit que l'accès à l'état est mutuellement exclusif,
 ///   empêchant les conditions de concurrence.
-/// - `HashMap<PacketInfos, u32>` stocke les trames réseau (`PacketInfos`) et
+/// - `Vec<(PacketInfos, u32)>` stocke les trames réseau (`PacketInfos`) et
 ///   leur nombre d'occurrences (`u32`).
 ///
 /// # Exemple
@@ -27,13 +27,18 @@ use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
 /// use crate::capture_packet::layer_2_infos::PacketInfos;
 /// use crate::SonarState;
 ///
-/// let state = SonarState(Arc::new(Mutex::new(HashMap::new())));
+/// let state = SonarState(Arc::new(Mutex::new(Vec::new())));
 /// // Utilisez `state` ici pour gérer les trames réseau et leur comptage
 /// ```
 
 pub struct SonarState(pub Arc<Mutex<Vec<(PacketInfos, u32)>>>);
 
 impl SonarState {
+    /// Ajoute une nouvelle trame réseau à l'état, en incrémentant son compteur si elle existe déjà.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - La trame réseau (`PacketInfos`) à ajouter à l'état.
     pub fn push_to_vector(&self, key: PacketInfos) {
         let mut vec = self.0.lock().expect("Failed to lock the mutex");
 

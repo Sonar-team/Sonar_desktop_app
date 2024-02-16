@@ -5,6 +5,8 @@ use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
 use pnet::packet::tcp::TcpPacket;
 use pnet::packet::udp::UdpPacket;
 use serde::Serialize;
+
+use log::info;
 //use pnet::packet::Packet;
 
 #[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
@@ -73,7 +75,7 @@ pub fn get_layer_4_infos(proto: IpNextHeaderProtocol, data: &[u8]) -> Layer4Info
         }
         _ => {
             // General case for all other EtherTypes
-            println!("layer 4 - Unknown or unsupported packet type: {}", proto);
+            info!("layer 4 - Unknown or unsupported packet type: {}", proto);
             Default::default()
         }
     }

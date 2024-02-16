@@ -1,4 +1,16 @@
 //! Ce module fournit des utilitaires pour le traitement des paquets, y compris l'extraction et l'affichage des informations de paquet.
+//!
+//! ## Structures
+//!
+//! - [`PacketInfos`](struct.PacketInfos.html): Représente des informations détaillées sur un paquet réseau, y compris les adresses MAC, l'interface, et les données des couches 3 et 4.
+//!
+//! ## Fonctions
+//!
+//! - [`PacketInfos::new`](struct.PacketInfos.html#method.new): Construit une nouvelle instance de `PacketInfos` à partir d'un paquet Ethernet et du nom de l'interface.
+//!
+//! ## Implémentation de Trait
+//!
+//! - [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html): L'implémentation de cette trait permet d'afficher les informations du paquet de manière conviviale.
 
 use std::fmt;
 
@@ -43,6 +55,28 @@ impl PacketInfos {
         }
     }
 }
+
+
+/// Construit une nouvelle instance de `PacketInfos` à partir d'un paquet Ethernet et du nom de l'interface.
+///
+/// # Arguments
+///
+/// * `interface_name` - Une chaîne de caractères qui contient le nom de l'interface réseau.
+/// * `ethernet_packet` - Une référence au paquet Ethernet à partir duquel extraire les informations.
+///
+/// # Exemple
+///
+/// ```rust
+/// use pnet::packet::ethernet::EthernetPacket;
+/// use packet_infos::PacketInfos;
+///
+/// let interface_name = String::from("eth0");
+/// let ethernet_packet_data: &[u8] = &[/* données du paquet Ethernet */];
+/// if let Some(ethernet_packet) = EthernetPacket::new(ethernet_packet_data) {
+///     let packet_infos = PacketInfos::new(&interface_name, &ethernet_packet);
+///     println!("Packet Infos: {:?}", packet_infos);
+/// }
+/// ```
 
 impl fmt::Display for PacketInfos {
     /// Formate les informations du paquet pour l'affichage.
