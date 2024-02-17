@@ -44,7 +44,7 @@ pub fn get_interfaces() -> Vec<String> {
             // Retourne le nom de l'interface sous Linux.
             #[cfg(target_os = "linux")]
             {
-                format!("Interface MAC: {}", iface.name.unwrap_or_default())
+                iface.name.clone()
             }
             // Retourne l'adresse MAC de l'interface sous Windows.
             #[cfg(target_os = "windows")]
