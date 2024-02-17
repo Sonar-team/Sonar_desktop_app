@@ -41,13 +41,20 @@ pub fn get_interfaces() -> Vec<String> {
     let mut names: Vec<String> = interfaces
         .iter()
         .map(|iface| {
+            // Retourne le nom de l'interface sous Linux.
             #[cfg(target_os = "linux")]
             {
-                iface.name.clone() // Retourne le nom de l'interface sous Linux.
+                format!("Interface MAC: {}", iface.name.unwrap_or_default())
             }
+            // Retourne l'adresse MAC de l'interface sous Windows.
             #[cfg(target_os = "windows")]
             {
-                format!("Interface MAC: {}", iface.mac.unwrap_or_default()) // Retourne l'adresse MAC de l'interface sous Windows.
+                format!("Interface MAC: {}", iface.mac.unwrap_or_default())
+            }
+            // Retourne l'adresse MAC de l'interface pour d'autres systèmes.
+            #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+            {
+                format!("Interface MAC: {}", iface.mac.unwrap_or_default())
             }
         })
         .collect();
