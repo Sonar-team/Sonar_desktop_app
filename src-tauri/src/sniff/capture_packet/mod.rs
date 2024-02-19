@@ -159,6 +159,26 @@ fn capture_packets(
     }
 }
 
+
+/// Met à jour l'état avec les informations d'un nouveau paquet.
+///
+/// Cette fonction prend un état partagé et un `PacketInfos` en tant que nouveau paquet.
+/// Elle parcourt l'état pour trouver un paquet existant qui correspond au nouveau paquet
+/// (basé sur certaines propriétés comme les adresses MAC source et destination, l'interface,
+/// le protocole de couche 3, etc.). Si un tel paquet est trouvé, la fonction met à jour
+/// le compteur et la taille du paquet pour cet élément. Sinon, elle ajoute le nouveau paquet
+/// comme une nouvelle entrée dans l'état.
+///
+/// # Arguments
+///
+/// * `state` - Un `Arc<Mutex<Vec<(PacketInfos, u32)>>>` qui représente l'état partagé contenant
+///             les paquets capturés et leurs compteurs.
+/// * `new_packet` - Un `PacketInfos` représentant le nouveau paquet capturé à ajouter ou mettre à jour dans l'état.
+///
+/// # Panics
+///
+/// Panique si le verrou sur l'état ne peut pas être acquis.
+///
 fn update_state_with_packet(state: Arc<Mutex<Vec<(PacketInfos, u32)>>>, new_packet: PacketInfos) {
     let mut state_locked = state.lock().expect("Failed to lock the mutex");
 

@@ -33,10 +33,11 @@ impl HandleLayer4 for TcpHandler {
     fn get_layer_4_infos(data: &[u8]) -> Layer4Infos {
         if let Some(tcp_packet) = TcpPacket::new(data) {
             let layer7_info = get_protocol(tcp_packet.packet());
+            println!("{:?}", &layer7_info);
             Layer4Infos {
                 port_source: Some(tcp_packet.get_source().to_string()),
                 port_destination: Some(tcp_packet.get_destination().to_string()),
-                l_7_protocol: Some(layer7_info),
+                l_7_protocol: layer7_info,
             }
         } else {
             Default::default()
@@ -48,10 +49,11 @@ impl HandleLayer4 for UdpHandler {
     fn get_layer_4_infos(data: &[u8]) -> Layer4Infos {
         if let Some(udp_packet) = UdpPacket::new(data) {
             let layer7_info = get_protocol(udp_packet.packet());
+            println!("{:?}", &layer7_info);
             Layer4Infos {
                 port_source: Some(udp_packet.get_source().to_string()),
                 port_destination: Some(udp_packet.get_destination().to_string()),
-                l_7_protocol: Some(layer7_info), // UDP does not inherently contain Layer 7 protocol information
+                l_7_protocol: layer7_info, // UDP does not inherently contain Layer 7 protocol information
             }
         } else {
             Default::default()
