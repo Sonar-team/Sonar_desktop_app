@@ -1,3 +1,5 @@
+// Ce module est responsable de transformer les informations de paquets réseau en une structure de données graphique,
+// qui est ensuite utilisée à des fins de visualisation. Il utilise le framework Tauri pour construire des applications multiplateformes.
 use std::{collections::HashMap, fmt};
 
 use log::error;
@@ -47,23 +49,33 @@ use crate::tauri_state::SonarState;
 //           label: l_3_protocol}
 //   }
 
+/// La structure GraphData contient les nœuds et les arêtes d'un graphe.
+/// Chaque nœud représente une adresse MAC unique et chaque arête représente une transmission de paquet réseau
+/// entre deux nœuds. L'arête inclut une étiquette indiquant le protocole de couche 3 utilisé.
 #[derive(Serialize)]
 struct GraphData {
     nodes: HashMap<String, Node>,
     edges: HashMap<String, Edge>,
 }
 
+/// La structure Node représente un nœud dans le graphe réseau.
+/// Elle contient le nom du nœud, qui est l'adresse MAC d'un dispositif réseau.
 #[derive(Serialize, Clone)]
 struct Node {
     name: String,
 }
 
+/// La structure Edge représente une arête dans le graphe réseau.
+/// Elle contient le nœud source, le nœud cible et une étiquette indiquant le protocole de couche 3.
 #[derive(Serialize, Clone)]
 struct Edge {
     source: String,
     target: String,
     label: String, // Added to include L3 protocol as a label
 }
+
+/// GraphBuilder est une structure utilitaire utilisée pour construire GraphData.
+/// Elle maintient une collection de nœuds et d'arêtes et fournit des méthodes pour ajouter des nœuds et des arêtes au graphe.
 
 struct GraphBuilder {
     nodes: HashMap<String, Node>,
@@ -72,6 +84,7 @@ struct GraphBuilder {
 }
 
 impl GraphBuilder {
+    /// Crée une nouvelle instance de GraphBuilder avec des nœuds et des arêtes vides.
     fn new() -> Self {
         GraphBuilder {
             nodes: HashMap::new(),
@@ -80,6 +93,8 @@ impl GraphBuilder {
         }
     }
 
+    /// Ajoute un nœud au graphe s'il n'existe pas déjà.
+    /// Le nœud est identifié par une adresse MAC.
     fn add_node(&mut self, mac_address: String) {
         if !self.nodes.contains_key(&mac_address) {
             self.nodes.insert(
@@ -91,6 +106,9 @@ impl GraphBuilder {
         }
     }
 
+    /// Ajoute une arête entre deux nœuds. Si les nœuds n'existent pas, ils sont créés.
+    /// Chaque arête est identifiée par un nom unique et inclut les adresses MAC source et cible,
+    /// ainsi que l'étiquette du protocole de couche 3.
     fn add_edge(&mut self, source_mac: String, target_mac: String, label: String) {
         self.add_node(source_mac.clone());
         self.add_node(target_mac.clone());
@@ -109,6 +127,7 @@ impl GraphBuilder {
         }
     }
 
+    /// Construit et retourne GraphData à partir de l'état actuel du constructeur.
     fn build_graph_data(&self) -> GraphData {
         GraphData {
             nodes: self.nodes.clone(),
@@ -117,6 +136,7 @@ impl GraphBuilder {
     }
 }
 
+// Implémentation des traits Debug pour améliorer les capacités de journalisation et de débogage.
 impl fmt::Debug for GraphData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "graphData {{ nodes {{")?;
@@ -151,6 +171,10 @@ impl fmt::Debug for Edge {
     }
 }
 
+/// get_graph_data est une fonction publique qui traite les données partagées de paquets réseau
+/// et les transforme en une représentation JSON de GraphData.
+/// Elle acquiert un verrou sur l'état partagé, itère à travers les paquets réseau,
+/// et peuple le graphe avec des nœuds et des arêtes.
 pub fn get_graph_data(shared_vec_infopackets: State<SonarState>) -> Result<String, String> {
     // Attempt to acquire the lock on the shared state
     match shared_vec_infopackets.0.lock() {

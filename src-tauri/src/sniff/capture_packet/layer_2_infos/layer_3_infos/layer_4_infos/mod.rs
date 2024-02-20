@@ -15,7 +15,7 @@ use layer_7_infos::get_protocol;
 pub struct Layer4Infos {
     pub port_source: Option<String>,
     pub port_destination: Option<String>,
-    pub l_7_protocol: Option<String>
+    pub l_7_protocol: Option<String>,
 }
 
 struct TcpHandler;

@@ -67,7 +67,7 @@ impl PacketInfosCsv {
             port_source: packet.layer_3_infos.layer_4_infos.port_source.clone(),
             port_destination: packet.layer_3_infos.layer_4_infos.port_destination.clone(),
             l_7_protocol: packet.layer_3_infos.layer_4_infos.l_7_protocol.clone(),
-            packet_size: packet.packet_size.clone(),
+            packet_size: packet.packet_size,
             count,
         }
     }
@@ -112,7 +112,6 @@ pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> R
 
     Ok(())
 }
-
 
 /// Fonction pour enregistrer les paquets vers un fichier Excel.
 ///
@@ -223,4 +222,3 @@ pub fn cmd_save_packets_to_excel(
 
     Ok(())
 }
-

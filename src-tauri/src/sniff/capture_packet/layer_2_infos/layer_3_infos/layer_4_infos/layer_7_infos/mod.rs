@@ -36,7 +36,7 @@ fn is_dhcp_packet(data: &[u8]) -> bool {
     const DHCP_MAGIC_COOKIE: [u8; 4] = [99, 130, 83, 99];
     const UDP_HEADER_LENGTH: usize = 8;
     const BOOTP_HEADER_LENGTH: usize = 236;
-    
+
     // Ports UDP pour DHCP
     const DHCP_SERVER_PORT: u16 = 67;
     const DHCP_CLIENT_PORT: u16 = 68;
@@ -55,13 +55,14 @@ fn is_dhcp_packet(data: &[u8]) -> bool {
     }
 
     // Vérifier la présence du Magic Cookie à la position correcte
-    if data[UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH..UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH + 4] == DHCP_MAGIC_COOKIE {
+    if data[UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH..UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH + 4]
+        == DHCP_MAGIC_COOKIE
+    {
         true
     } else {
         false
     }
 }
-
 
 fn is_modbus_packet(data: &[u8]) -> bool {
     const MODBUS_TCP_HEADER_LENGTH: usize = 7;
@@ -87,13 +88,13 @@ fn is_modbus_packet(data: &[u8]) -> bool {
     true
 }
 
-
-
 fn is_http_packet(data: &[u8]) -> bool {
     // Convertit les données en chaîne pour une recherche simplifiée.
     // Attention : cela ne fonctionnera pas bien avec des données binaires non-ASCII.
     if let Ok(data_str) = std::str::from_utf8(data) {
-        data_str.starts_with("GET ") || data_str.starts_with("POST ") || data_str.starts_with("HTTP/1.")
+        data_str.starts_with("GET ")
+            || data_str.starts_with("POST ")
+            || data_str.starts_with("HTTP/1.")
     } else {
         false
     }

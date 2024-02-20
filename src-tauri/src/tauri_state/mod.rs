@@ -32,23 +32,3 @@ use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
 /// ```
 
 pub struct SonarState(pub Arc<Mutex<Vec<(PacketInfos, u32)>>>);
-
-impl SonarState {
-    /// Ajoute une nouvelle trame réseau à l'état, en incrémentant son compteur si elle existe déjà.
-    ///
-    /// # Arguments
-    ///
-    /// * `key` - La trame réseau (`PacketInfos`) à ajouter à l'état.
-    pub fn push_to_vector(&self, key: PacketInfos) {
-        let mut vec = self.0.lock().expect("Failed to lock the mutex");
-
-        // Find if the key already exists in the vector
-        if let Some((_, count)) = vec.iter_mut().find(|(packet_info, _)| *packet_info == key) {
-            // If found, increment the count
-            *count += 1;
-        } else {
-            // If not found, add the key with a count of 1
-            vec.push((key, 1));
-        }
-    }
-}
