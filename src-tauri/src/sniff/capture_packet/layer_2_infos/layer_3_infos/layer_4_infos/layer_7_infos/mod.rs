@@ -55,13 +55,7 @@ fn is_dhcp_packet(data: &[u8]) -> bool {
     }
 
     // Vérifier la présence du Magic Cookie à la position correcte
-    if data[UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH..UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH + 4]
-        == DHCP_MAGIC_COOKIE
-    {
-        true
-    } else {
-        false
-    }
+    data[UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH..UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH + 4] == DHCP_MAGIC_COOKIE
 }
 
 fn is_modbus_packet(data: &[u8]) -> bool {
