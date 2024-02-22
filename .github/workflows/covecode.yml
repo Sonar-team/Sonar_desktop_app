@@ -62,11 +62,11 @@ jobs:
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           fail_ci_if_error: true
-          
+
       - name: Publish to Crates.io
         env:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
         run: |
+          cd src-tauri
           cargo login $CRATES_IO_TOKEN
           cargo publish --verbose --allow-dirty
-
