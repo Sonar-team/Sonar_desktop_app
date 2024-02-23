@@ -46,31 +46,33 @@ jobs:
           git add ../docs
           git commit --amend --no-edit
           git push --force
+
       - name: Publish to Crates.io
         env:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        working-directory: ./src-tauri
         run: |
-          cd src-tauri
           cargo login $CRATES_IO_TOKEN
           cargo publish --verbose --allow-dirty
-  # deploy:
-  #   needs: documentation
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
-  # 
-  #     - name: Setup Pages
-  #       uses: actions/configure-pages@v2
-  # 
-  #     - name: Upload artifact
-  #       uses: actions/upload-pages-artifact@v1
-  #       with:
-  #         path: './docs'
-  # 
-  #     - name: Deploy to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v1
+          
+  deploy:
+    needs: documentation
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+  
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+  
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: './docs'
+  
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
