@@ -25,7 +25,7 @@ use pnet::datalink;
 ///
 /// ```
 /// use sonar_desktop_app::get_interfaces::get_interfaces;
-/// 
+///
 /// let interface_names = get_interfaces();
 /// for name in interface_names {
 ///     println!("{}", name);
@@ -58,7 +58,7 @@ pub fn get_interfaces() -> Vec<String> {
             }
         })
         .collect();
- 
+
     // Ajoute une chaîne représentant l'option de sélection de toutes les interfaces.
     let all = String::from("Toutes les interfaces");
     names.push(all);
@@ -81,9 +81,14 @@ mod tests {
         assert!(!interface_names.is_empty());
 
         #[cfg(target_os = "windows")]
-        assert!(interface_names.iter().any(|name| name.starts_with("Interface MAC: ")));
+        assert!(interface_names
+            .iter()
+            .any(|name| name.starts_with("Interface MAC: ")));
 
         // Vérifie que le dernier élément du vecteur est "Toutes les interfaces".
-        assert_eq!(interface_names.last(), Some(&String::from("Toutes les interfaces")));
+        assert_eq!(
+            interface_names.last(),
+            Some(&String::from("Toutes les interfaces"))
+        );
     }
 }

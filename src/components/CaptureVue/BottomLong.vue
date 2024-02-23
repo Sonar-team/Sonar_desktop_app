@@ -12,6 +12,7 @@
           <th>Protocole</th>
           <th>Port Source</th>
           <th>Port Destination</th>
+          <th>Protocole</th>
           <th>Taille du paquet</th>
           <th>Horodatage</th> <!-- Nouvelle en-tête pour l'horodatage -->
 
@@ -28,6 +29,7 @@
           <td>{{ frame.layer_3_infos.l_4_protocol }}</td>
           <td>{{ frame.layer_3_infos.layer_4_infos.port_source }}</td>
           <td>{{ frame.layer_3_infos.layer_4_infos.port_destination }}</td>
+          <td>{{ frame.layer_3_infos.layer_4_infos.l_7_protocol }}</td>
           <td>{{ frame.packet_size }}</td>
           <td>{{ frame.timestamp }}</td> <!-- Nouvelle cellule pour l'horodatage -->
 

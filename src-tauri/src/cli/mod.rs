@@ -16,17 +16,17 @@ use colored::Colorize;
 /// let banner = print_banner();
 /// println!("{}", banner);
 /// ```
-/// 
+///
 /// Cela affichera la bannière suivante en vert dans la console :
 /// ```text
 ///   _________                           
-///  /   _____/ ____   ____ _____ _______ 
+///  /   _____/ ____   ____ _____ _______
 ///  \_____  \ /  _ \ /    \\__  \\_  __ \
 ///  /        (  <_> )   |  \/ __ \|  | \/
 /// /_______  /\____/|___|  (____  /__|   
 ///         \/            \/     \/          
 /// ```
- 
+
 pub fn print_banner() -> String {
     // ASCII art banner
     let banner = r"

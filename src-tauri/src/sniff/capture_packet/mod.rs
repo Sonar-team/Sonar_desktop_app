@@ -159,6 +159,25 @@ fn capture_packets(
     }
 }
 
+/// Met à jour l'état avec les informations d'un nouveau paquet.
+///
+/// Cette fonction prend un état partagé et un `PacketInfos` en tant que nouveau paquet.
+/// Elle parcourt l'état pour trouver un paquet existant qui correspond au nouveau paquet
+/// (basé sur certaines propriétés comme les adresses MAC source et destination, l'interface,
+/// le protocole de couche 3, etc.). Si un tel paquet est trouvé, la fonction met à jour
+/// le compteur et la taille du paquet pour cet élément. Sinon, elle ajoute le nouveau paquet
+/// comme une nouvelle entrée dans l'état.
+///
+/// # Arguments
+///
+/// * `state` - Un `Arc<Mutex<Vec<(PacketInfos, u32)>>>` qui représente l'état partagé contenant
+///             les paquets capturés et leurs compteurs.
+/// * `new_packet` - Un `PacketInfos` représentant le nouveau paquet capturé à ajouter ou mettre à jour dans l'état.
+///
+/// # Panics
+///
+/// Panique si le verrou sur l'état ne peut pas être acquis.
+///
 fn update_state_with_packet(state: Arc<Mutex<Vec<(PacketInfos, u32)>>>, new_packet: PacketInfos) {
     let mut state_locked = state.lock().expect("Failed to lock the mutex");
 
@@ -166,11 +185,11 @@ fn update_state_with_packet(state: Arc<Mutex<Vec<(PacketInfos, u32)>>>, new_pack
     for (existing_packet, count) in state_locked.iter_mut() {
         // Définissez ici la logique pour déterminer si `new_packet` est "le même" que `existing_packet`.
         // Cela pourrait dépendre des adresses MAC, des adresses IP, du protocole, etc.
-        if existing_packet.mac_address_source == new_packet.mac_address_source &&
-           existing_packet.mac_address_destination == new_packet.mac_address_destination &&
-           existing_packet.interface == new_packet.interface &&
-           existing_packet.l_3_protocol == new_packet.l_3_protocol &&
-           existing_packet.layer_3_infos == new_packet.layer_3_infos 
+        if existing_packet.mac_address_source == new_packet.mac_address_source
+            && existing_packet.mac_address_destination == new_packet.mac_address_destination
+            && existing_packet.interface == new_packet.interface
+            && existing_packet.l_3_protocol == new_packet.l_3_protocol
+            && existing_packet.layer_3_infos == new_packet.layer_3_infos
         {
             // Un paquet correspondant a été trouvé, incrémentez son compteur
             *count += 1;
@@ -196,8 +215,8 @@ mod tests {
         let state = Arc::new(Mutex::new(vec![]));
         let buffer = vec![0u8; 64]; // Local buffer
         let ethernet_packet = EthernetPacket::new(&buffer).unwrap();
-        let packet = PacketInfos::new(&String::from("eth0"),  &ethernet_packet);
-        
+        let packet = PacketInfos::new(&String::from("eth0"), &ethernet_packet);
+
         // Add a packet to the state and verify it
         update_state_with_packet(state.clone(), packet.clone());
         assert_eq!(state.lock().unwrap().len(), 1);
@@ -236,7 +255,6 @@ mod tests {
     //     assert_eq!(received_packet.l_3_protocol.len(), 64);
     //     assert_eq!(received_packet.mac_address_destination.len(), 64);
     //     assert_eq!(received_packet.mac_address_source.len(), 64);
-
 
     //     // Clean up by joining the capture thread
     //     handle.join().unwrap();

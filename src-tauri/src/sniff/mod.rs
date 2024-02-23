@@ -58,5 +58,4 @@ mod tests {
         // Vérifie que la fonction renvoie faux lorsque l'interface est spécifique
         assert!(!check_interface("en0"));
     }
-
 }

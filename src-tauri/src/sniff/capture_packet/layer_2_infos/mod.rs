@@ -56,7 +56,6 @@ impl PacketInfos {
     }
 }
 
-
 /// Construit une nouvelle instance de `PacketInfos` à partir d'un paquet Ethernet et du nom de l'interface.
 ///
 /// # Arguments

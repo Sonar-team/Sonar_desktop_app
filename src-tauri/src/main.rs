@@ -107,7 +107,6 @@ fn get_hash_map_state(shared_hash_map: State<SonarState>) -> Result<String, Stri
     }
 }
 
-
 #[tauri::command]
 fn get_graph_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
     get_graph_data(shared_hash_map)
