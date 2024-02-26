@@ -1,11 +1,18 @@
 # Changelog
 ---
 
+## [1.5.0] - 2024-02-15
+
+### Nouvelles fonctionnalités
+
+- **l7** : 
+- **documentation**
+
+---
+
 ## [1.4.0] - 2024-02-15
 
-### Corrections de bugs
-
-- **filtre les Type d'ip** : 
+### Corrections de bugs 
 
 
 ---

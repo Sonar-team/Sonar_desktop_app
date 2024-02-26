@@ -9,7 +9,7 @@ import Capture from '../components/homeVue/Capture.vue';
     <Capture />
   
     <div class="footer">
-      <span>Version du logiciel: 1.3.3 - </span>
+      <span>Version 1.5.0 - Bêta: Ne pas utiliser en production</span>
       <span>© 2024 MIT - SSF TOULON - ERDT CYBER - CYPRIEN AVICO</span>
     </div>
   </div>
