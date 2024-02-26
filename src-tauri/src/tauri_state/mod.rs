@@ -53,4 +53,3 @@ impl SonarState {
         *filter_ipv6_locked = !*filter_ipv6_locked; // Inverse l'état actuel
     }
 }
-

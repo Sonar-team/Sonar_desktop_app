@@ -49,12 +49,15 @@ pub fn all_interfaces(app: tauri::AppHandle, state: State<SonarState>) {
     // threads qui ecoute les trames
     let interfaces = datalink::interfaces();
     for interface in interfaces {
-        let app2 = app.clone();
-        let tx_clone = tx.clone();
-        let handle = thread::spawn(move || {
-            capture_packets(app2, interface, tx_clone);
-        });
-        handles.push(handle);
+        // Vérifier si le nom de l'interface n'est pas 'lo' avant de créer un thread
+        if interface.name != "lo" {
+            let app2 = app.clone();
+            let tx_clone = tx.clone();
+            let handle = thread::spawn(move || {
+                capture_packets(app2, interface, tx_clone);
+            });
+            handles.push(handle);
+        }
     }
     // Wait for all threads to complete
     for handle in handles {
@@ -137,15 +140,25 @@ fn capture_packets(
         "Démarrage du thread de lecture de paquets sur l'interface :{}",
         &interface
     );
+    
     loop {
         match rx.next() {
             Ok(packet) => {
                 if let Some(ethernet_packet) = EthernetPacket::new(packet) {
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
+
+
+
                     //println!("{packet_info}");
+                    if packet_info.l_3_protocol == "Ipv6" {
+                        //print!("ipv6 packet");
+                        continue;
+                    }
+                    // afficher dans le composant bottom long
                     if let Err(err) = main_window.emit("frame", &packet_info) {
                         error!("Failed to emit event: {}", err);
                     }
+                    // envoyer au thread qui met a jour la matrice
                     if let Err(err) = tx.send(packet_info) {
                         error!("Failed to send packet to queue: {}", err);
                     }
