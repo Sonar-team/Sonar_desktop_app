@@ -177,7 +177,7 @@ impl fmt::Debug for Edge {
 /// et peuple le graphe avec des nœuds et des arêtes.
 pub fn get_graph_data(shared_vec_infopackets: State<SonarState>) -> Result<String, String> {
     // Attempt to acquire the lock on the shared state
-    match shared_vec_infopackets.0.lock() {
+    match shared_vec_infopackets.matrice.lock() {
         Ok(matrice) => {
             let mut graph_builder = GraphBuilder::new();
 

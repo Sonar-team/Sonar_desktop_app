@@ -37,7 +37,7 @@ use crate::tauri_state::SonarState;
 /// ```
 pub fn get_matrice_data(shared_vec_infopackets: State<SonarState>) -> Result<String, String> {
     // Tentative d'acquisition du verrou sur l'état partagé
-    match shared_vec_infopackets.0.lock() {
+    match shared_vec_infopackets.matrice.lock() {
         Ok(matrice) => {
             // Sérialise le hash map en une chaîne JSON
             serde_json::to_string(&*matrice).map_err(|e| {

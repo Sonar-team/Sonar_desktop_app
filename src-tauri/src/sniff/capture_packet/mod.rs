@@ -38,7 +38,7 @@ pub fn all_interfaces(app: tauri::AppHandle, state: State<SonarState>) {
     let mut handles = vec![];
     let (tx, rx) = mpsc::channel::<PacketInfos>();
 
-    let state_clone = state.0.clone();
+    let state_clone = state.matrice.clone();
 
     thread::spawn(move || {
         for new_packet in rx {
@@ -79,7 +79,7 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str, state: State<SonarS
     let (tx, rx) = mpsc::channel();
 
     // Clone the state for the thread
-    let state_clone = state.0.clone();
+    let state_clone = state.matrice.clone();
 
     // Spawn a thread to process packets
     thread::spawn(move || {

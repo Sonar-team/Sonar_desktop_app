@@ -1,8 +1,9 @@
-// Module `filter_packets`
+use crate::SonarState;
+use log::info;
 
-/// Ce module fournit des fonctions pour filtrer les paquets réseau capturés par l'application.
+pub fn update_filter(state: &mut SonarState, enable_ipv6_filter: bool) {
+    let mut filter_ipv6_lock = state.filter_ipv6.lock().expect("Failed to lock mutex");
+    *filter_ipv6_lock = enable_ipv6_filter;
 
-
-pub fn update_filter(l3: &String) {
-    println!("{}",&l3)
+    info!("IPv6 filter is now {}", enable_ipv6_filter);
 }

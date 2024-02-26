@@ -10,7 +10,7 @@ trait PacketPayload {
 // Implémentez ce trait pour les tranches de données (data slices) qui pourraient contenir des paquets DHCP
 impl PacketPayload for &[u8] {
     fn get_protocol(data: &[u8]) -> Option<String> {
-        println!("data: {:?}", data);
+        //println!("data: {:?}", data);
         if is_dhcp_packet(data) {
             Some("DHCP".to_string())
         } else if is_dns_packet(data) {

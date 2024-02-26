@@ -1,55 +1,40 @@
 <template>
     <div class="to-bar-filter">
-      <label for="protocol-select">Protocole:</label>
-      <select id="protocol-select" v-model="selectedProtocol" @change="applyFilter">
-        <option value="">Tous</option>
-        <option v-for="protocol in protocols" :key="protocol" :value="protocol">
-          {{ protocol }}
-        </option>
-      </select>
-  
-      <template v-if="showTimeFilter">
-        <label for="start-time">Heure de début:</label>
-        <input type="datetime-local" id="start-time" v-model="startTime" />
-  
-        <label for="end-time">Heure de fin:</label>
-        <input type="datetime-local" id="end-time" v-model="endTime" />
-      </template>
-  
-      <button @click="applyFilter">Appliquer</button>
+      <label for="protocol-select">Filtrer IPv6:</label>
+      <input type="checkbox" id="ipv6-filter" @change="toggleIPv6Filter" />
     </div>
-  </template>
+</template>
   
   <script>
+import { invoke } from '@tauri-apps/api'
   export default {
-    props: {
-      protocols: Array,
-      applyFilter: Function,
-      currentProtocol: String,
-      startTime: String,
-      endTime: String,
-    },
-    data() {
-      return {
-        selectedProtocol: this.currentProtocol || "", // Default to current protocol
-        startTime: this.startTime || "", // Default to initial start time
-        endTime: this.endTime || "", // Default to initial end time
-        showTimeFilter: false, // Flag to control optional time filter visibility
-      };
-    },
     methods: {
-      applyFilter() {
-        this.$emit("filter-applied", {
-          protocol: this.selectedProtocol,
-          startTime: this.startTime, // Pass start time if applicable
-          endTime: this.endTime, // Pass end time if applicable
-        });
+      toggleIPv6Filter() {
+        invoke("toggle_ipv6_filter")
       },
     },
   };
   </script>
   
   <style scoped>
-  /* Style the component as needed */
+.to-bar-filter {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    color: #f2f2f2;
+    background-color: #312c2c;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.to-bar-filter label {
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+#ipv6-filter {
+    accent-color: #3a80cf; /* This sets the color of the checkbox */
+}
+
   </style>
   
