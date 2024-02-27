@@ -11,6 +11,7 @@
 ### Nouvelles fonctionnalités
 
 - **Filtre ip** : Ajout d'un filtre pour IPv4 permettant une meilleure catégorisation et recherche des trames réseau.
+- **rm lo on linux** :
 
 ---
 
