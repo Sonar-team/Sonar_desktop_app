@@ -1,8 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::sync::{Arc, Mutex};
-
 use log::info;
 
 use sonar_desktop_app::{
@@ -35,7 +33,7 @@ fn main() {
                 std::process::exit(0);
             }
         })
-        .manage(SonarState(Arc::new(Mutex::new(Vec::new()))))
+        .manage(SonarState::new())
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
             get_selected_interface,
@@ -43,7 +41,8 @@ fn main() {
             save_packets_to_excel,
             get_hash_map_state,
             get_graph_state,
-            write_file
+            write_file,
+            toggle_ipv6_filter
         ])
         .setup(move |app| {
             let app_handle = app.handle();
@@ -116,4 +115,10 @@ fn get_graph_state(shared_hash_map: State<SonarState>) -> Result<String, String>
 fn write_file(path: String, contents: String) -> Result<(), String> {
     info!("Chemin d'enregistrement du VSG: {}", &path);
     std::fs::write(path, contents).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn toggle_ipv6_filter(state: tauri::State<SonarState>) {
+    state.inner().toggle_filter_ipv6();
+    info!("etat du filtre {:?}", &state.filter_ipv6);
 }

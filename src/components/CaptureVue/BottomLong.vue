@@ -46,10 +46,28 @@ import { listen } from '@tauri-apps/api/event';
 export default {
   data() {
     return {
-      frames: [],
-      counter: 0 // Initialisez le compteur à 0
+      frames: Array(5).fill({}).map(() => ({
+        mac_address_source: ' ',
+        mac_address_destination: ' ',
+        interface: ' ',
+        l_3_protocol: ' ',
+        layer_3_infos: {
+          ip_source: '',
+          ip_destination: '',
+          l_4_protocol: '',
+          layer_4_infos: {
+            port_source: '',
+            port_destination: '',
+            l_7_protocol: ''
+          }
+        },
+        packet_size: '',
+        timestamp: ''
+      })),
+      counter: 0
     }
   },
+
   async mounted() {
 
     await listen('frame', (packet_info) => {
@@ -76,7 +94,7 @@ export default {
 
 <style scoped>
 .trames {
-  height: 60px;
+  height: 200px;
   border: 2px solid #3a3a3a; /* Darker border */
   border-radius: 10px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
@@ -86,6 +104,7 @@ export default {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    min-height: 50px;
   }
 
   th, td {

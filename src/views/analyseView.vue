@@ -8,6 +8,7 @@
       :currentTime="$route.params.currentTime"
     />
     <div class="content">
+      <TopBarFilter />
         <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
         <button class="button" @click="toggleComponent">Changer de vue</button> <!-- Toggle Button -->
           <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
@@ -24,6 +25,7 @@ import Sidebar from '../components/NavBar/SideBar.vue';
 import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseVue/GraphVue/NetworkGraphComponent.vue'; // Import the other component
+import TopBarFilter from '../components/TopBarFilter/TopBarFilter.vue';
 
 import { invoke } from '@tauri-apps/api/tauri';
 
@@ -42,6 +44,7 @@ export default {
   },
 
   components: {
+    TopBarFilter,
     BottomLong,
     Matrice,
     Sidebar,

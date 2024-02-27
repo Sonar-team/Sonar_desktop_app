@@ -1,11 +1,25 @@
 # Changelog
+
+---
+## [1.6.0] - 2024-02-26
+
+### UI/UX
+
+- Tableau des trames en temps réel présentant désormais 5 lignes vides par défaut pour une meilleure visibilité initiale.
+- Ajustement de la hauteur des lignes du tableau des trames en temps réel pour améliorer la cohérence visuelle.
+
+### Nouvelles fonctionnalités
+
+- **Filtre ip** : Ajout d'un filtre pour IPv4 permettant une meilleure catégorisation et recherche des trames réseau.
+- **rm lo on linux** :
+
 ---
 
 ## [1.5.0] - 2024-02-15
 
 ### Nouvelles fonctionnalités
 
-- **l7** : 
+- **colonne l7** : 
 - **documentation**
 
 ---

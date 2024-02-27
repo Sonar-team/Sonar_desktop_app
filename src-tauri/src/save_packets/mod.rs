@@ -95,7 +95,7 @@ struct PacketData<'a> {
 /// ```
 pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
     // Lock the state to access the data
-    let data = state.0.lock().unwrap();
+    let data = state.matrice.lock().unwrap();
 
     // Create a CSV writer
     let mut wtr = Writer::from_path(file_path).map_err(|e| MyError::IoError(e.to_string()))?;
@@ -130,7 +130,7 @@ pub fn cmd_save_packets_to_excel(
     state: State<SonarState>,
 ) -> Result<(), MyError> {
     // Lock the state to access the data
-    let data = state.0.lock().unwrap();
+    let data = state.matrice.lock().unwrap();
 
     // Create an Excel workbook
     let mut workbook = Workbook::new();

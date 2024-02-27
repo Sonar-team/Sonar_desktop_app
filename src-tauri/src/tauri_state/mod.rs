@@ -31,4 +31,25 @@ use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
 /// // Utilisez `state` ici pour gérer les trames réseau et leur comptage
 /// ```
 
-pub struct SonarState(pub Arc<Mutex<Vec<(PacketInfos, u32)>>>);
+pub struct SonarState {
+    // Contient les trames réseau et leur nombre d'occurrences
+    pub matrice: Arc<Mutex<Vec<(PacketInfos, u32)>>>,
+    // Indique si le filtrage des adresses IPv6 est activé
+    pub filter_ipv6: Arc<Mutex<bool>>,
+}
+
+impl SonarState {
+    // Constructeur pour initialiser `SonarState`
+    pub fn new() -> SonarState {
+        SonarState {
+            matrice: Arc::new(Mutex::new(Vec::new())),
+            filter_ipv6: Arc::new(Mutex::new(false)), // Par défaut, le filtrage IPv6 est désactivé
+        }
+    }
+
+    // Méthode pour basculer l'état de `filter_ipv6`
+    pub fn toggle_filter_ipv6(&self) {
+        let mut filter_ipv6_locked = self.filter_ipv6.lock().expect("Failed to lock the mutex");
+        *filter_ipv6_locked = !*filter_ipv6_locked; // Inverse l'état actuel
+    }
+}
