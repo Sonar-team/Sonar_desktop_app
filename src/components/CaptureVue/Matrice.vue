@@ -63,7 +63,7 @@ export default {
   methods: {
     async fetchPacketInfos() {
       try {
-        const jsonString = await invoke('get_hash_map_state', {});
+        const jsonString = await invoke('get_matrice', {});
         this.packets = JSON.parse(jsonString);
         
         this.$bus.emit('update-packet-count', this.packets.length);

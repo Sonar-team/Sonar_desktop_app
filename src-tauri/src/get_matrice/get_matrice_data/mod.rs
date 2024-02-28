@@ -1,5 +1,7 @@
+use std::sync::Mutex;
+
 use log::error;
-use tauri::State;
+use tauri::{Manager, State};
 
 use crate::tauri_state::SonarState;
 
@@ -35,21 +37,20 @@ use crate::tauri_state::SonarState;
 ///     Err(e) => eprintln!("Erreur : {}", e),
 /// }
 /// ```
-pub fn get_matrice_data(shared_vec_infopackets: State<SonarState>) -> Result<String, String> {
-    // Tentative d'acquisition du verrou sur l'état partagé
-    match shared_vec_infopackets.matrice.lock() {
-        Ok(matrice) => {
-            // Sérialise le hash map en une chaîne JSON
-            serde_json::to_string(&*matrice).map_err(|e| {
-                let err_msg = format!("Erreur de sérialisation : {}", e);
-                error!("{}", err_msg);
-                err_msg
-            })
+pub fn get_matrice_data(app: tauri::AppHandle) -> Result<String, String> {
+    // Directly access the `matrice` field from `SonarState`
+    let state = app.state::<Mutex<SonarState>>();
+    match serde_json::to_string(&state.) {
+        Ok(serialized_data) => {
+            // Successfully serialized the matrice to a JSON string
+            Ok(serialized_data)
         }
-        Err(_) => {
-            let err_msg = "Échec de verrouillage du mutex".to_string();
+        Err(e) => {
+            // Handle serialization errors
+            let err_msg = format!("Erreur de sérialisation : {}", e);
             error!("{}", err_msg);
             Err(err_msg)
         }
     }
 }
+

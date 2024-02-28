@@ -1,6 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::sync::Mutex;
+
 use log::info;
 
 use sonar_desktop_app::{
@@ -33,13 +35,13 @@ fn main() {
                 std::process::exit(0);
             }
         })
-        .manage(SonarState::new())
+        .manage(Mutex::new(SonarState::new()))
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
             get_selected_interface,
             save_packets_to_csv,
             save_packets_to_excel,
-            get_hash_map_state,
+            get_matrice,
             get_graph_state,
             write_file,
             toggle_ipv6_filter
@@ -51,6 +53,7 @@ fn main() {
             app_handle.listen_global("tauri://before-quit", move |_| {
                 info!("Quit event received");
             });
+            app_handle.manage(Mutex::new(SonarState::new()));
 
             Ok(())
         })
@@ -71,13 +74,11 @@ fn get_interfaces_tab() -> Vec<String> {
 
 #[tauri::command(async, rename_all = "snake_case")]
 fn get_selected_interface(
-    window: tauri::Window,
-    interface_name: String,
-    state: tauri::State<SonarState>,
+    app: tauri::AppHandle,
+    interface_name: String
 ) {
-    let app = window.app_handle();
     info!("Interface sélectionée: {}", interface_name);
-    scan_until_interrupt(app, &interface_name, state);
+    scan_until_interrupt(app, &interface_name);
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
@@ -93,8 +94,8 @@ fn save_packets_to_excel(file_path: String, state: State<SonarState>) -> Result<
 }
 
 #[tauri::command]
-fn get_hash_map_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
-    match get_matrice_data(shared_hash_map) {
+fn get_matrice(app: tauri::AppHandle) -> Result<String, String> {
+    match get_matrice_data(app) {
         Ok(data) => {
             //println!("Data: {}", data); // Utilisez log::info si vous avez configuré un logger
             Ok(data)
