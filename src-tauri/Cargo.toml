@@ -1,6 +1,6 @@
 [package]
 name = "sonar_desktop_app"
-version = "1.6.1"
+version = "1.6.2"
 description = "Audit reseau"
 authors = ["Cyprien Avico"]
 license = "MIT License"
@@ -13,21 +13,21 @@ edition = "2021"
 tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
-devtools = "0.3.0"
+devtools = "0.3.1"
 tauri = { version = "1.5.4", features = [ "cli", "api-all", "tracing"] }
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-serde = { version = "1.0.193", features = ["derive"] }
-serde_json = "1.0.108"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
 
-log = "0.4.20"
-clap = {version = "4.4.11", features = ["derive"] }
+log = "0.4.21"
+clap = {version = "4.5.1", features = ["derive"] }
 csv  = "1.3.0"
 rust_xlsxwriter = "0.63.0"
-ctrlc = "3.4.1"
-colored = "2.0.4"
+ctrlc = "3.4.2"
+colored = "2.1.0"
 rand = "0.8.5"
 pnet = "0.34.0"
-thiserror ="1.0.51"
+thiserror ="1.0.57"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
