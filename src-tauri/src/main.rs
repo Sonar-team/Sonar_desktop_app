@@ -68,7 +68,7 @@ fn main() {
         .expect("error while running tauri application");
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command(async,rename_all = "snake_case")]
 fn get_interfaces_tab() -> Vec<String> {
     get_interfaces()
 }
@@ -91,7 +91,7 @@ fn save_packets_to_excel(file_path: String, app: AppHandle) -> Result<(), MyErro
     cmd_save_packets_to_excel(file_path, app)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn get_matrice(app: AppHandle) -> Result<String, String> {
     match get_matrice_data(app) {
         Ok(data) => {
@@ -105,18 +105,18 @@ fn get_matrice(app: AppHandle) -> Result<String, String> {
     }
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn get_graph_state(app: AppHandle) -> Result<String, String> {
     get_graph_data(app)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn write_file(path: String, contents: String) -> Result<(), String> {
     info!("Chemin d'enregistrement du SVG: {}", &path);
     std::fs::write(path, contents).map_err(|e| e.to_string())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn toggle_ipv6_filter(app: AppHandle) {
     let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
     let mut state_guard = state.lock().unwrap();

@@ -23,9 +23,10 @@ import { invoke } from '@tauri-apps/api'
     align-items: center;
     padding: 10px;
     color: #f2f2f2;
-    background-color: #723030;
+    background-color: #2A2A2A;
     border-radius: 5px;
     margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre */
 }
 
 .to-bar-filter label {
