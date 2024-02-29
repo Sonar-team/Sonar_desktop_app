@@ -46,7 +46,7 @@ import { listen } from '@tauri-apps/api/event';
 export default {
   data() {
     return {
-      frames: Array(5).fill({}).map(() => ({
+      frames: Array(4).fill({}).map(() => ({
         mac_address_source: ' ',
         mac_address_destination: ' ',
         interface: ' ',
@@ -77,7 +77,7 @@ export default {
 
       this.frames.push(frameWithTimestamp);
       // Keep only the last 5 elements
-      if (this.frames.length > 5) {
+      if (this.frames.length > 4) {
         this.frames.shift();
       }
     });
@@ -94,21 +94,25 @@ export default {
 
 <style scoped>
 .trames {
-  height: 200px;
+  height: 120px;
   border: 2px solid #3a3a3a; /* Darker border */
   border-radius: 10px;
+  width: 100%;
+  text-align: center;
+  color: #FFF; /* White text */
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  background-color: #1a1a1a; /* Darker background */
   overflow-y: auto; /* Add vertical scrollbar if content exceeds max height */
+  padding: 10px; /* Optional padding for better appearance */
 }
   table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
-    min-height: 50px;
   }
 
-  th, td {
-    width: 136px; /* Example fixed width */
+  td {
+    width: 110px; /* Example fixed width */
     overflow: hidden; /* Hides content that overflows */
     white-space: nowrap; /* Prevents text from wrapping to the next line */
     text-overflow: ellipsis; /* Truncates with an ellipsis */
@@ -121,5 +125,18 @@ export default {
 
   th {
     background-color: #000000;
+    color: rgb(255, 255, 255);
+  }
+
+  tbody {
+    display: block; /* Change display to block */
+    max-height: 620px; /* Set a max height */
+    overflow-y: auto; /* Add scrollbar if content exceeds max height */
+  }
+
+  thead, tbody tr {
+    display: table; /* Enable tables to behave like normal */
+    width: 100%; /* Set width to match table width */
+    table-layout: fixed; /* Ensure layout is fixed */
   }
 </style>

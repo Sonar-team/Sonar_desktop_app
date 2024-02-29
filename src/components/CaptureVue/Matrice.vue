@@ -85,7 +85,7 @@ export default {
 
 <style scoped>
 .matrice {
-  height: 660px;
+  height: 620px;
   border: 2px solid #3a3a3a; /* Darker border */
   border-radius: 10px;
   width: 100%;
@@ -102,7 +102,7 @@ export default {
     table-layout: fixed;
   }
 
-  th, td {
+  td {
     width: 110px; /* Example fixed width */
     overflow: hidden; /* Hides content that overflows */
     white-space: nowrap; /* Prevents text from wrapping to the next line */

@@ -202,7 +202,7 @@
 
 <style scoped>
 .graph {
-  height: 680px;
+  height: 620px;
   border: 2px solid #3a3a3a; /* Bordure plus sombre */
   border-radius: 10px;
   width: 100%;

@@ -19,10 +19,11 @@ import { invoke } from '@tauri-apps/api'
   <style scoped>
 .to-bar-filter {
     display: flex;
+    width: 100%;
     align-items: center;
     padding: 10px;
     color: #f2f2f2;
-    background-color: #312c2c;
+    background-color: #723030;
     border-radius: 5px;
     margin-bottom: 10px;
 }

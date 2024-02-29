@@ -9,13 +9,12 @@
     />
     <div class="content">
       <TopBarFilter />
-        <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
-        <button class="button" @click="toggleComponent">Changer de vue</button> <!-- Toggle Button -->
-          <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
-          <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
-
-        <h3 class="titre"></h3>
-          <BottomLong  />
+      <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
+      <button class="button" @click="toggleComponent">Changer de vue</button> <!-- Toggle Button -->
+        <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
+        <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
+      <BottomLong  />
+        
     </div>
   </div>
 </template>
@@ -28,7 +27,6 @@ import NetworkGraphComponent from '../components/AnalyseVue/GraphVue/NetworkGrap
 import TopBarFilter from '../components/TopBarFilter/TopBarFilter.vue';
 
 import { invoke } from '@tauri-apps/api/tauri';
-
 
 export default {
   data() {
