@@ -20,7 +20,7 @@ use pnet::packet::ethernet::EthernetPacket;
 use std::sync::{mpsc, Mutex};
 use std::thread;
 
-use tauri::Manager;
+use tauri::{AppHandle, Manager};
 pub(crate) mod layer_2_infos;
 
 use crate::tauri_state::SonarState;
@@ -34,7 +34,7 @@ use self::layer_2_infos::PacketInfos;
 /// * `app` - Handle vers l'application Tauri, utilisé pour interagir avec l'interface utilisateur.
 /// * `state` - État global de l'application, contenant les données capturées.
 
-pub fn all_interfaces(app: tauri::AppHandle) {
+pub fn all_interfaces(app: AppHandle) {
     let mut handles = vec![];
     let (tx, rx) = mpsc::channel::<PacketInfos>();
     let app_for_thread = app.clone();

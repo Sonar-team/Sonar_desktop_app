@@ -46,9 +46,8 @@ impl SonarState {
     }
 
     // Méthode pour basculer l'état de `filter_ipv6`
-    pub fn toggle_filter_ipv6(&self) {
-        let mut filter_ipv6_locked = self.filter_ipv6;
-        filter_ipv6_locked = !filter_ipv6_locked; // Inverse l'état actuel
+    pub fn toggle_filter_ipv6(&mut self) {
+        self.filter_ipv6 = !self.filter_ipv6; // Inverse l'état actuel
     }
 
     pub fn update_state_with_packet(&mut self, new_packet: PacketInfos) {

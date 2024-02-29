@@ -1,7 +1,5 @@
-use std::sync::Mutex;
-
 use log::error;
-use tauri::{Manager, State};
+use tauri::State;
 
 use crate::tauri_state::SonarState;
 
@@ -37,10 +35,9 @@ use crate::tauri_state::SonarState;
 ///     Err(e) => eprintln!("Erreur : {}", e),
 /// }
 /// ```
-pub fn get_matrice_data(app: tauri::AppHandle) -> Result<String, String> {
+pub fn get_matrice_data(shared_vec_info_packets: State<SonarState>) -> Result<String, String> {
     // Directly access the `matrice` field from `SonarState`
-    let state = app.state::<Mutex<SonarState>>();
-    match serde_json::to_string(&state.) {
+    match serde_json::to_string(&shared_vec_info_packets.matrice) {
         Ok(serialized_data) => {
             // Successfully serialized the matrice to a JSON string
             Ok(serialized_data)
