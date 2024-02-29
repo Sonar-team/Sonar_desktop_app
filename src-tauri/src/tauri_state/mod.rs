@@ -50,7 +50,12 @@ impl SonarState {
         self.filter_ipv6 = !self.filter_ipv6; // Inverse l'état actuel
     }
 
-    pub fn update_state_with_packet(&mut self, new_packet: PacketInfos) {
+    // Getter method for matrice
+    pub fn get_matrice(&self) -> &Vec<(PacketInfos, u32)> {
+        &self.matrice
+    }
+
+    pub fn update_matrice_with_packet(&mut self, new_packet: PacketInfos) {
         let mut is_found = false;
 
         for (existing_packet, count) in self.matrice.iter_mut() {

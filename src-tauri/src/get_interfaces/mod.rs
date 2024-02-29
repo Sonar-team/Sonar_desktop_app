@@ -63,7 +63,6 @@ pub fn get_interfaces() -> Vec<String> {
     let all = String::from("Toutes les interfaces");
     names.push(all);
 
-
     // Retourne le vecteur de noms d'interface.
     names
 }

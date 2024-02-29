@@ -1,10 +1,10 @@
 // Ce module est responsable de transformer les informations de paquets réseau en une structure de données graphique,
 // qui est ensuite utilisée à des fins de visualisation. Il utilise le framework Tauri pour construire des applications multiplateformes.
-use std::{collections::HashMap, fmt};
+use std::{collections::HashMap, fmt, sync::Mutex};
 
 use log::error;
 use serde::Serialize;
-use tauri::State;
+use tauri::{AppHandle, Manager};
 
 use crate::tauri_state::SonarState;
 
@@ -175,8 +175,10 @@ impl fmt::Debug for Edge {
 /// et les transforme en une représentation JSON de GraphData.
 /// Elle acquiert un verrou sur l'état partagé, itère à travers les paquets réseau,
 /// et peuple le graphe avec des nœuds et des arêtes.
-pub fn get_graph_data(shared_vec_infopackets: State<SonarState>) -> Result<String, String> {
-    let matrice = &shared_vec_infopackets.matrice; // Directly access the vector
+pub fn get_graph_data(app: AppHandle) -> Result<String, String> {
+    let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
+    let state_guard = state.lock().unwrap();
+    let matrice = state_guard.get_matrice();
 
     let mut graph_builder = GraphBuilder::new();
 
@@ -198,4 +200,3 @@ pub fn get_graph_data(shared_vec_infopackets: State<SonarState>) -> Result<Strin
         err_msg
     })
 }
-

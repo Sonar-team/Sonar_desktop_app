@@ -13,7 +13,7 @@ use sonar_desktop_app::{
     sniff::scan_until_interrupt,
     tauri_state::SonarState,
 };
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Manager};
 use tauri_plugin_log::LogTarget;
 
 extern crate sonar_desktop_app;
@@ -74,29 +74,26 @@ fn get_interfaces_tab() -> Vec<String> {
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn get_selected_interface(
-    app: AppHandle,
-    interface_name: String
-) {
+fn get_selected_interface(app: AppHandle, interface_name: String) {
     info!("Interface sélectionée: {}", interface_name);
     scan_until_interrupt(app, &interface_name);
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn save_packets_to_csv(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
+fn save_packets_to_csv(file_path: String, app: AppHandle) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du CSV: {}", &file_path);
-    cmd_save_packets_to_csv(file_path, state)
+    cmd_save_packets_to_csv(file_path, app)
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn save_packets_to_excel(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
+fn save_packets_to_excel(file_path: String, app: AppHandle) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du Excel: {}", &file_path);
-    cmd_save_packets_to_excel(file_path, state)
+    cmd_save_packets_to_excel(file_path, app)
 }
 
 #[tauri::command]
-fn get_matrice(shared_hash_map: State<SonarState>) -> Result<String, String> {
-    match get_matrice_data(shared_hash_map) {
+fn get_matrice(app: AppHandle) -> Result<String, String> {
+    match get_matrice_data(app) {
         Ok(data) => {
             //println!("Data: {}", data); // Utilisez log::info si vous avez configuré un logger
             Ok(data)
@@ -109,8 +106,8 @@ fn get_matrice(shared_hash_map: State<SonarState>) -> Result<String, String> {
 }
 
 #[tauri::command]
-fn get_graph_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
-    get_graph_data(shared_hash_map)
+fn get_graph_state(app: AppHandle) -> Result<String, String> {
+    get_graph_data(app)
 }
 
 #[tauri::command]

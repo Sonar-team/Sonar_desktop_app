@@ -11,7 +11,7 @@
 //!
 //! ## Tests
 //!
-//! Ce module contient également des tests pour la fonction `update_state_with_packet` et la fonction `capture_packets`.
+//! Ce module contient également des tests pour la fonction `update_matrice_with_packet` et la fonction `capture_packets`.
 
 use log::{error, info};
 use pnet::datalink::Channel::Ethernet;
@@ -43,7 +43,7 @@ pub fn all_interfaces(app: AppHandle) {
             let state = app_for_thread.state::<Mutex<SonarState>>();
 
             let mut state_guard = state.lock().unwrap();
-            state_guard.update_state_with_packet(new_packet);
+            state_guard.update_matrice_with_packet(new_packet);
         }
     });
 
@@ -89,8 +89,8 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str) {
             let state = app_for_thread.state::<Mutex<SonarState>>();
 
             let mut state_guard = state.lock().unwrap();
-            // Appel de la méthode update_state_with_packet directement sur l'instance SonarState
-            state_guard.update_state_with_packet(new_packet);
+            // Appel de la méthode update_matrice_with_packet directement sur l'instance SonarState
+            state_guard.update_matrice_with_packet(new_packet);
         }
     });
 
@@ -143,14 +143,12 @@ fn capture_packets(
         "Démarrage du thread de lecture de paquets sur l'interface :{}",
         &interface
     );
-    
+
     loop {
         match rx.next() {
             Ok(packet) => {
                 if let Some(ethernet_packet) = EthernetPacket::new(packet) {
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
-
-
 
                     //println!("{packet_info}");
                     if packet_info.l_3_protocol == "Ipv6" {
@@ -175,61 +173,58 @@ fn capture_packets(
     }
 }
 
-
-
-
 // #[cfg(test)]
 // mod tests {
 //     use super::*;
 //     use std::sync::{Arc, Mutex};
 
 //     #[test]
-//     fn test_update_state_with_packet() {
+//     fn test_update_matrice_with_packet() {
 //         let state = Arc::new(Mutex::new(vec![]));
 //         let buffer = vec![0u8; 64]; // Local buffer
 //         let ethernet_packet = EthernetPacket::new(&buffer).unwrap();
 //         let packet = PacketInfos::new(&String::from("eth0"), &ethernet_packet);
 
 //         // Add a packet to the state and verify it
-//         update_state_with_packet(state.clone(), packet.clone());
+//         update_matrice_with_packet(state.clone(), packet.clone());
 //         assert_eq!(state.lock().unwrap().len(), 1);
 
 //         // Add the same packet again and verify that the count is incremented
-//         update_state_with_packet(state.clone(), packet.clone());
+//         update_matrice_with_packet(state.clone(), packet.clone());
 //         assert_eq!(state.lock().unwrap().len(), 1);
 //         assert_eq!(state.lock().unwrap()[0].1, 2);
 
 //         // Add a different packet and verify that it's added as a new entry
 //         let different_packet = PacketInfos::new(&String::from("eth2"), &ethernet_packet);
-//         update_state_with_packet(state.clone(), different_packet.clone());
+//         update_matrice_with_packet(state.clone(), different_packet.clone());
 //         assert_eq!(state.lock().unwrap().len(), 2);
 //     }
 
-    // #[test]
-    // fn test_capture_packets() {
-    //     // Create a mock channel
-    //     let (tx, rx) = mpsc::channel();
-    //     let tx_clone = tx.clone();
-    //     let app: tauri::Window;
-    //     // Spawn a thread to capture packets
-    //     let handle = thread::spawn(move || {
-    //         let interface = datalink::interfaces().into_iter().next().unwrap();
-    //         capture_packets(app.app_handle(),interface,tx_clone);
-    //     });
+// #[test]
+// fn test_capture_packets() {
+//     // Create a mock channel
+//     let (tx, rx) = mpsc::channel();
+//     let tx_clone = tx.clone();
+//     let app: tauri::Window;
+//     // Spawn a thread to capture packets
+//     let handle = thread::spawn(move || {
+//         let interface = datalink::interfaces().into_iter().next().unwrap();
+//         capture_packets(app.app_handle(),interface,tx_clone);
+//     });
 
-    //     // Wait a short time to allow the capture thread to start
-    //     thread::sleep(Duration::from_secs(1));
+//     // Wait a short time to allow the capture thread to start
+//     thread::sleep(Duration::from_secs(1));
 
-    //     // Send a mock packet through the channel and verify
-    //     let mock_eth_packet = mock_packet();
-    //     tx.send(PacketInfos::new(&String::from("eth0"), &mock_eth_packet)).unwrap();
-    //     let received_packet = rx.recv().unwrap();
-    //     assert_eq!(received_packet.interface.len(), 64);
-    //     assert_eq!(received_packet.l_3_protocol.len(), 64);
-    //     assert_eq!(received_packet.mac_address_destination.len(), 64);
-    //     assert_eq!(received_packet.mac_address_source.len(), 64);
+//     // Send a mock packet through the channel and verify
+//     let mock_eth_packet = mock_packet();
+//     tx.send(PacketInfos::new(&String::from("eth0"), &mock_eth_packet)).unwrap();
+//     let received_packet = rx.recv().unwrap();
+//     assert_eq!(received_packet.interface.len(), 64);
+//     assert_eq!(received_packet.l_3_protocol.len(), 64);
+//     assert_eq!(received_packet.mac_address_destination.len(), 64);
+//     assert_eq!(received_packet.mac_address_source.len(), 64);
 
-    //     // Clean up by joining the capture thread
-    //     handle.join().unwrap();
-    // }
+//     // Clean up by joining the capture thread
+//     handle.join().unwrap();
+// }
 // }
