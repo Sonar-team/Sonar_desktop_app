@@ -36,6 +36,12 @@ pub struct SonarState {
     pub filter_ipv6: bool,
 }
 
+impl Default for SonarState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SonarState {
     // Constructeur pour initialiser `SonarState`
     pub fn new() -> SonarState {
