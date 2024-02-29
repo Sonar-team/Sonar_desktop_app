@@ -1,8 +1,10 @@
+use std::sync::Mutex;
+
 use crate::{sniff::capture_packet::layer_2_infos::PacketInfos, tauri_state::SonarState};
 use csv::Writer;
 use rust_xlsxwriter::*;
 use serde::Serialize;
-use tauri::State;
+use tauri::{AppHandle, Manager};
 use thiserror::Error;
 
 /// Enum représentant les différentes erreurs pouvant survenir lors de l'écriture de paquets vers un fichier CSV ou Excel.
@@ -93,9 +95,11 @@ struct PacketData<'a> {
 /// ```rust
 /// cmd_save_packets_to_csv(String::from("paquets.csv"), state);
 /// ```
-pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
+pub fn cmd_save_packets_to_csv(file_path: String, app: AppHandle) -> Result<(), MyError> {
     // Lock the state to access the data
-    let data = state.matrice.lock().unwrap();
+    let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
+    let state_guard = state.lock().unwrap();
+    let data = state_guard.get_matrice();
 
     // Create a CSV writer
     let mut wtr = Writer::from_path(file_path).map_err(|e| MyError::IoError(e.to_string()))?;
@@ -125,12 +129,11 @@ pub fn cmd_save_packets_to_csv(file_path: String, state: State<SonarState>) -> R
 /// ```rust
 /// cmd_save_packets_to_excel(String::from("paquets.xlsx"), state);
 /// ```
-pub fn cmd_save_packets_to_excel(
-    file_path: String,
-    state: State<SonarState>,
-) -> Result<(), MyError> {
+pub fn cmd_save_packets_to_excel(file_path: String, app: AppHandle) -> Result<(), MyError> {
     // Lock the state to access the data
-    let data = state.matrice.lock().unwrap();
+    let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
+    let state_guard = state.lock().unwrap();
+    let data = state_guard.get_matrice();
 
     // Create an Excel workbook
     let mut workbook = Workbook::new();

@@ -1,6 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::sync::Mutex;
+
 use log::info;
 
 use sonar_desktop_app::{
@@ -11,7 +13,7 @@ use sonar_desktop_app::{
     sniff::scan_until_interrupt,
     tauri_state::SonarState,
 };
-use tauri::{Manager, State};
+use tauri::{AppHandle, Manager};
 use tauri_plugin_log::LogTarget;
 
 extern crate sonar_desktop_app;
@@ -33,13 +35,14 @@ fn main() {
                 std::process::exit(0);
             }
         })
+        .manage(Mutex::new(SonarState::new()))
         .manage(SonarState::new())
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
             get_selected_interface,
             save_packets_to_csv,
             save_packets_to_excel,
-            get_hash_map_state,
+            get_matrice,
             get_graph_state,
             write_file,
             toggle_ipv6_filter
@@ -51,6 +54,7 @@ fn main() {
             app_handle.listen_global("tauri://before-quit", move |_| {
                 info!("Quit event received");
             });
+            app_handle.manage(Mutex::new(SonarState::new()));
 
             Ok(())
         })
@@ -70,31 +74,26 @@ fn get_interfaces_tab() -> Vec<String> {
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn get_selected_interface(
-    window: tauri::Window,
-    interface_name: String,
-    state: tauri::State<SonarState>,
-) {
-    let app = window.app_handle();
+fn get_selected_interface(app: AppHandle, interface_name: String) {
     info!("Interface sélectionée: {}", interface_name);
-    scan_until_interrupt(app, &interface_name, state);
+    scan_until_interrupt(app, &interface_name);
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn save_packets_to_csv(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
+fn save_packets_to_csv(file_path: String, app: AppHandle) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du CSV: {}", &file_path);
-    cmd_save_packets_to_csv(file_path, state)
+    cmd_save_packets_to_csv(file_path, app)
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn save_packets_to_excel(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
+fn save_packets_to_excel(file_path: String, app: AppHandle) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du Excel: {}", &file_path);
-    cmd_save_packets_to_excel(file_path, state)
+    cmd_save_packets_to_excel(file_path, app)
 }
 
 #[tauri::command]
-fn get_hash_map_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
-    match get_matrice_data(shared_hash_map) {
+fn get_matrice(app: AppHandle) -> Result<String, String> {
+    match get_matrice_data(app) {
         Ok(data) => {
             //println!("Data: {}", data); // Utilisez log::info si vous avez configuré un logger
             Ok(data)
@@ -107,18 +106,20 @@ fn get_hash_map_state(shared_hash_map: State<SonarState>) -> Result<String, Stri
 }
 
 #[tauri::command]
-fn get_graph_state(shared_hash_map: State<SonarState>) -> Result<String, String> {
-    get_graph_data(shared_hash_map)
+fn get_graph_state(app: AppHandle) -> Result<String, String> {
+    get_graph_data(app)
 }
 
 #[tauri::command]
 fn write_file(path: String, contents: String) -> Result<(), String> {
-    info!("Chemin d'enregistrement du VSG: {}", &path);
+    info!("Chemin d'enregistrement du SVG: {}", &path);
     std::fs::write(path, contents).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn toggle_ipv6_filter(state: tauri::State<SonarState>) {
-    state.inner().toggle_filter_ipv6();
-    info!("etat du filtre {:?}", &state.filter_ipv6);
+fn toggle_ipv6_filter(app: AppHandle) {
+    let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
+    let mut state_guard = state.lock().unwrap();
+    state_guard.toggle_filter_ipv6();
+    info!("etat du filtre {:?}", state_guard.filter_ipv6);
 }

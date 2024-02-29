@@ -1,10 +1,10 @@
 // Ce module est responsable de transformer les informations de paquets réseau en une structure de données graphique,
 // qui est ensuite utilisée à des fins de visualisation. Il utilise le framework Tauri pour construire des applications multiplateformes.
-use std::{collections::HashMap, fmt};
+use std::{collections::HashMap, fmt, sync::Mutex};
 
 use log::error;
 use serde::Serialize;
-use tauri::State;
+use tauri::{AppHandle, Manager};
 
 use crate::tauri_state::SonarState;
 
@@ -175,37 +175,28 @@ impl fmt::Debug for Edge {
 /// et les transforme en une représentation JSON de GraphData.
 /// Elle acquiert un verrou sur l'état partagé, itère à travers les paquets réseau,
 /// et peuple le graphe avec des nœuds et des arêtes.
-pub fn get_graph_data(shared_vec_infopackets: State<SonarState>) -> Result<String, String> {
-    // Attempt to acquire the lock on the shared state
-    match shared_vec_infopackets.matrice.lock() {
-        Ok(matrice) => {
-            let mut graph_builder = GraphBuilder::new();
+pub fn get_graph_data(app: AppHandle) -> Result<String, String> {
+    let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
+    let state_guard = state.lock().unwrap();
+    let matrice = state_guard.get_matrice();
 
-            // Process your packet data here to populate nodes and edges
-            for (packet, _) in matrice.iter() {
-                let source_mac = packet.mac_address_source.clone();
-                let target_mac = packet.mac_address_destination.clone();
-                let l3_protocol_label = packet.l_3_protocol.clone(); // Assume this is a String
+    let mut graph_builder = GraphBuilder::new();
 
-                graph_builder.add_edge(source_mac, target_mac, l3_protocol_label);
-            }
+    // Process your packet data here to populate nodes and edges
+    for (packet, _) in matrice.iter() {
+        let source_mac = packet.mac_address_source.clone();
+        let target_mac = packet.mac_address_destination.clone();
+        let l3_protocol_label = packet.l_3_protocol.clone(); // Assume this is a String
 
-            let graph_data = graph_builder.build_graph_data();
-
-            // Serialize the GraphData to a JSON string
-            let json_data = serde_json::to_string(&graph_data).map_err(|e| {
-                let err_msg = format!("Serialization error: {}", e);
-                error!("{}", err_msg);
-                err_msg
-            })?;
-            //println!("{:?}", graph_data);
-
-            Ok(json_data)
-        }
-        Err(_) => {
-            let err_msg = "Failed to lock the mutex".to_string();
-            error!("{}", err_msg);
-            Err(err_msg)
-        }
+        graph_builder.add_edge(source_mac, target_mac, l3_protocol_label);
     }
+
+    let graph_data = graph_builder.build_graph_data();
+
+    // Serialize the GraphData to a JSON string
+    serde_json::to_string(&graph_data).map_err(|e| {
+        let err_msg = format!("Serialization error: {}", e);
+        error!("{}", err_msg);
+        err_msg
+    })
 }

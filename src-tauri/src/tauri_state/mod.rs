@@ -3,8 +3,6 @@
 //! Ce module fournit les structures nécessaires pour maintenir l'état
 //! actuel de l'application Sonar, en particulier pour suivre les trames réseau.
 
-use std::sync::{Arc, Mutex};
-
 use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
 
 /// `SonarState` encapsule l'état global de l'application Sonar.
@@ -33,23 +31,58 @@ use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
 
 pub struct SonarState {
     // Contient les trames réseau et leur nombre d'occurrences
-    pub matrice: Arc<Mutex<Vec<(PacketInfos, u32)>>>,
+    pub matrice: Vec<(PacketInfos, u32)>,
     // Indique si le filtrage des adresses IPv6 est activé
-    pub filter_ipv6: Arc<Mutex<bool>>,
+    pub filter_ipv6: bool,
+}
+
+impl Default for SonarState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SonarState {
     // Constructeur pour initialiser `SonarState`
     pub fn new() -> SonarState {
         SonarState {
-            matrice: Arc::new(Mutex::new(Vec::new())),
-            filter_ipv6: Arc::new(Mutex::new(false)), // Par défaut, le filtrage IPv6 est désactivé
+            matrice: Vec::new(),
+            filter_ipv6: false, // Par défaut, le filtrage IPv6 est désactivé
         }
     }
 
     // Méthode pour basculer l'état de `filter_ipv6`
-    pub fn toggle_filter_ipv6(&self) {
-        let mut filter_ipv6_locked = self.filter_ipv6.lock().expect("Failed to lock the mutex");
-        *filter_ipv6_locked = !*filter_ipv6_locked; // Inverse l'état actuel
+    pub fn toggle_filter_ipv6(&mut self) {
+        self.filter_ipv6 = !self.filter_ipv6; // Inverse l'état actuel
+    }
+
+    // Getter method for matrice
+    pub fn get_matrice(&self) -> &Vec<(PacketInfos, u32)> {
+        &self.matrice
+    }
+
+    pub fn update_matrice_with_packet(&mut self, new_packet: PacketInfos) {
+        let mut is_found = false;
+
+        for (existing_packet, count) in self.matrice.iter_mut() {
+            // Logique pour déterminer si `new_packet` est "le même" que `existing_packet`.
+            if existing_packet.mac_address_source == new_packet.mac_address_source
+                && existing_packet.mac_address_destination == new_packet.mac_address_destination
+                && existing_packet.interface == new_packet.interface
+                && existing_packet.l_3_protocol == new_packet.l_3_protocol
+                && existing_packet.layer_3_infos == new_packet.layer_3_infos
+            {
+                // Un paquet correspondant a été trouvé, incrémentez son compteur
+                *count += 1;
+                existing_packet.packet_size += new_packet.packet_size;
+                is_found = true;
+                break;
+            }
+        }
+
+        if !is_found {
+            // Si aucun paquet correspondant n'a été trouvé, ajoutez `new_packet` comme une nouvelle entrée
+            self.matrice.push((new_packet, 1));
+        }
     }
 }

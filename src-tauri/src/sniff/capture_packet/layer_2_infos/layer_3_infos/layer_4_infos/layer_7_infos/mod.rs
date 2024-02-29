@@ -59,7 +59,8 @@ fn is_dhcp_packet(data: &[u8]) -> bool {
     }
 
     // Vérifier la présence du Magic Cookie à la position correcte
-    data[UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH..UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH + 4] == DHCP_MAGIC_COOKIE
+    data[UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH..UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH + 4]
+        == DHCP_MAGIC_COOKIE
 }
 
 fn is_modbus_packet(data: &[u8]) -> bool {
@@ -154,7 +155,6 @@ fn is_dns_packet(data: &[u8]) -> bool {
     true
 }
 
-
 fn is_quic_packet(data: &[u8]) -> bool {
     // Longueur minimale pour un en-tête QUIC
     const QUIC_MIN_HEADER_LENGTH: usize = 20;
@@ -167,7 +167,8 @@ fn is_quic_packet(data: &[u8]) -> bool {
     // Vérifier le premier octet (flag)
     // Les paquets QUIC commencent par un octet spécifique
     let first_byte = data[0];
-    if first_byte & 0x80 == 0 {  // Si le bit le plus significatif est 0, ce n'est pas un long header
+    if first_byte & 0x80 == 0 {
+        // Si le bit le plus significatif est 0, ce n'est pas un long header
         return false;
     }
 
@@ -178,9 +179,9 @@ fn is_quic_packet(data: &[u8]) -> bool {
 
     // Extraire la version
     let version = ((data[1] as u32) << 24)
-                | ((data[2] as u32) << 16)
-                | ((data[3] as u32) << 8)
-                | data[4] as u32;
+        | ((data[2] as u32) << 16)
+        | ((data[3] as u32) << 8)
+        | data[4] as u32;
 
     // Liste des versions QUIC connues
     let known_versions = [0x00000001, 0x00000002, 0x00000003]; // Remplacer par les versions QUIC actuelles
@@ -209,5 +210,3 @@ fn is_tls_v1_2_packet(data: &[u8]) -> bool {
     // et la version du protocole (0x0303 pour TLS 1.2)
     record_type == 0x16 && version_major == 0x03 && version_minor == 0x03
 }
-
-
