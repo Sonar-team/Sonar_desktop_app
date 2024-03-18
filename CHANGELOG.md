@@ -1,6 +1,34 @@
 # Changelog
 
 ---
+
+## [1.7.0] - 2024-02-26
+
+### Nouvelles fonctionnalités
+
+- **Type d'IP** : Implémentation d'une nouvelle fonctionnalité permettant de déterminer le type d'une adresse IP (privée, APIPA, multicast, loopback, lien-local, ULA, publique ou inconnue) à partir d'une chaîne de caractères. Cette amélioration apporte une capacité critique à l'analyse et à la classification des adresses IP dans divers contextes de réseau.
+
+### Améliorations
+
+- **Détection des adresses APIPA** : Amélioration de la précision dans la détection des adresses IP APIPA (Automatic Private IP Addressing), permettant une identification plus fiable des appareils configurés automatiquement sans serveur DHCP.
+
+- **Support Multicast IPv4** : Extension du support pour identifier les adresses multicast IPv4, facilitant la gestion et le filtrage des paquets destinés à des groupes d'écoute multicast.
+
+- **Prise en charge IPv6** : Renforcement de la prise en charge des adresses IPv6 avec l'identification spécifique des adresses lien-local et ULA (Unique Local Address), améliorant ainsi la capacité à traiter et analyser le trafic IPv6 moderne.
+
+### Corrections de bugs
+
+- **Correction de la classification Loopback IPv6** : Résolution d'un problème où les adresses loopback IPv6 (`::1`) étaient incorrectement classifiées comme publiques, assurant désormais une identification correcte comme adresses loopback.
+
+### Documentation
+
+- **Mise à jour de la documentation** : Ajout de documentation pour la nouvelle fonctionnalité de type d'IP, incluant des exemples d'utilisation et des descriptions des différents types d'adresses IP supportés.
+
+### Tests
+
+- **Amélioration des tests unitaires** : Ajout et mise à jour de tests unitaires pour couvrir les nouvelles fonctionnalités et améliorations, notamment pour la détection des types d'adresses IP et la correction de la classification des adresses IPv6 loopback.
+
+---
 ## [1.6.0] - 2024-02-26
 
 ### UI/UX
