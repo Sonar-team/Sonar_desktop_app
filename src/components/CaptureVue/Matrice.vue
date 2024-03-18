@@ -8,7 +8,9 @@
           <th>Interface</th>
           <th>Protocole</th>
           <th>IP Source</th>
+          <th>IP Source Type</th>
           <th>IP Destination</th>
+          <th>IP Destination Type</th>
           <th>Protocole</th>
           <th>Port Source</th>
           <th>Port Destination</th>
@@ -24,7 +26,9 @@
           <td>{{ packet.info.interface }}</td>
           <td>{{ packet.info.l_3_protocol }}</td>
           <td>{{ packet.info.layer_3_infos.ip_source }}</td>
+          <td>{{ packet.info.layer_3_infos.ip_source_type }}</td>
           <td>{{ packet.info.layer_3_infos.ip_destination }}</td>
+          <td>{{ packet.info.layer_3_infos.ip_destination_type }}</td>
           <td>{{ packet.info.layer_3_infos.l_4_protocol }}</td>
           <td>{{ packet.info.layer_3_infos.layer_4_infos.port_source }}</td>
           <td>{{ packet.info.layer_3_infos.layer_4_infos.port_destination }}</td>

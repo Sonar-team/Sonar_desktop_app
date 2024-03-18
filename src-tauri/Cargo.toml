@@ -1,6 +1,6 @@
 [package]
 name = "sonar_desktop_app"
-version = "1.6.2"
+version = "1.7.0"
 description = "Audit reseau"
 authors = ["Cyprien Avico"]
 license = "MIT License"

@@ -48,6 +48,7 @@
 //! Les handlers de paquets sont des structures définies dans ce module et implémentent le trait [`HandlePacket`](trait.HandlePacket.html)
 //! pour chaque type de paquet pris en charge.
 
+
 use pnet::packet::{
     arp::ArpPacket,
     ethernet::{
@@ -61,14 +62,18 @@ use pnet::packet::{
 };
 
 mod layer_4_infos;
+mod ip_type;
 use layer_4_infos::{get_layer_4_infos, Layer4Infos};
+use ip_type::IpType;
 use serde::Serialize;
 
 /// Représente les informations extraites de la couche 3 d'un paquet réseau.
 #[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
 pub struct Layer3Infos {
     pub ip_source: Option<String>,
+    ip_source_type: Option<IpType>,
     pub ip_destination: Option<String>,
+    ip_destination_type: Option<IpType>,
     pub l_4_protocol: Option<String>,
     pub layer_4_infos: Layer4Infos,
 }
@@ -87,20 +92,21 @@ trait HandlePacket {
 }
 
 impl HandlePacket for Ipv4Handler {
-    /// Traite les paquets IPv4 pour extraire les informations de la couche 3 et 4.
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(ipv4_packet) = Ipv4Packet::new(data) {
-            // //println!(
-            //     "Layer 3: IPv4 packet: source {} destination {} => {} {}",
-            //     ipv4_packet.get_source(),
-            //     ipv4_packet.get_destination(),
-            //     ipv4_packet.get_next_level_protocol(),
-            //     ipv4_packet.get_total_length()
-            // );
-            //handle_next_proto_util(data, ipv4_packet.get_next_level_protocol());
+            // Convertir les adresses IP source et destination en String
+            let source_ip_str = ipv4_packet.get_source().to_string();
+            let destination_ip_str = ipv4_packet.get_destination().to_string();
+            
+            // Utiliser les chaînes pour déterminer le type d'adresse IP
+            let ip_source_type = IpType::from_ip(&source_ip_str);
+            let ip_destination_type = IpType::from_ip(&destination_ip_str);
+
             Layer3Infos {
-                ip_source: Some(ipv4_packet.get_source().to_string()),
-                ip_destination: Some(ipv4_packet.get_destination().to_string()),
+                ip_source: Some(source_ip_str),
+                ip_source_type: Some(ip_source_type), // Correction ici
+                ip_destination: Some(destination_ip_str),
+                ip_destination_type: Some(ip_destination_type), // Correction ici
                 l_4_protocol: Some(ipv4_packet.get_next_level_protocol().to_string()),
                 layer_4_infos: get_layer_4_infos(ipv4_packet.get_next_level_protocol(), data),
             }
@@ -110,50 +116,53 @@ impl HandlePacket for Ipv4Handler {
     }
 }
 
+
+
 impl HandlePacket for Ipv6Handler {
-    /// Traite les paquets IPv6 pour extraire les informations de la couche 3 et 4.
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(ipv6_packet) = Ipv6Packet::new(data) {
-            // println!(
-            //     "Layer 3: IPv6 packet: source {} destination {} => {} {}",
-            //     ipv6_packet.get_source(),
-            //     ipv6_packet.get_destination(),
-            //     ipv6_packet.get_next_header(),
-            //     ipv6_packet.get_payload_length()
-            // );
+            let ip_source = ipv6_packet.get_source().to_string();
+            let ip_destination = ipv6_packet.get_destination().to_string();
+            
+            // Déterminez le type d'IP pour l'adresse source et destination
+            let ip_source_type = IpType::from_ip(&ip_source);
+            let ip_destination_type = IpType::from_ip(&ip_destination);
+
             Layer3Infos {
-                ip_source: Some(ipv6_packet.get_source().to_string()),
-                ip_destination: Some(ipv6_packet.get_destination().to_string()),
+                ip_source: Some(ip_source),
+                ip_source_type: Some(ip_source_type),
+                ip_destination: Some(ip_destination),
+                ip_destination_type: Some(ip_destination_type),
                 l_4_protocol: Some(ipv6_packet.get_next_header().to_string()),
                 layer_4_infos: get_layer_4_infos(ipv6_packet.get_next_header(), data),
             }
-            //handle_next_proto_util(data, ipv6_packet.get_next_header());
         } else {
-            // Handle the case when the data is not a valid IPv4 packet
             Default::default()
         }
     }
 }
 
+
 impl HandlePacket for ArpHandler {
-    /// Traite les paquets ARP pour extraire les informations de la couche 3.
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(arp_packet) = ArpPacket::new(data) {
-            // println!(
-            //     "Layer 2: arp packet: source {} destination {} => {:?} {} {} {:?} {} {}",
-            //     arp_packet.get_sender_hw_addr(),
-            //     arp_packet.get_target_hw_addr(),
-            //     arp_packet.get_operation(),
-            //     arp_packet.get_target_proto_addr(),
-            //     arp_packet.get_sender_proto_addr(),
-            //     arp_packet.get_hardware_type(),
-            //     arp_packet.get_proto_addr_len(),
-            //     arp_packet.packet().len()
-            // );
+            // Convertir les adresses proto (IP) en String pour déterminer leur type
+            let ip_source = arp_packet.get_sender_proto_addr().to_string();
+            let ip_destination = arp_packet.get_target_proto_addr().to_string();
+
+            // Déterminer le type d'IP pour les adresses source et destination
+            // Notez que ARP est principalement utilisé avec des adresses IPv4, 
+            // donc une logique spéciale pour ARP n'est peut-être pas nécessaire
+            let ip_source_type = IpType::from_ip(&ip_source);
+            let ip_destination_type = IpType::from_ip(&ip_destination);
+
             Layer3Infos {
-                ip_source: Some(arp_packet.get_sender_proto_addr().to_string()),
-                ip_destination: Some(arp_packet.get_target_proto_addr().to_string()),
-                l_4_protocol: Default::default(),
+                ip_source: Some(ip_source),
+                ip_source_type: Some(ip_source_type),
+                ip_destination: Some(ip_destination),
+                ip_destination_type: Some(ip_destination_type),
+                // ARP n'utilise pas de protocole de couche 4, donc on laisse cela comme None
+                l_4_protocol: None,
                 layer_4_infos: Layer4Infos {
                     port_source: None,
                     port_destination: None,
@@ -161,11 +170,11 @@ impl HandlePacket for ArpHandler {
                 },
             }
         } else {
-            // Handle the case when the data is not a valid IPv4 packet
             Default::default()
         }
     }
 }
+
 
 impl HandlePacket for VlanHandler {
     /// Traite les paquets VLAN pour extraire les informations de la couche 3 et 4, y compris le support QinQ.
@@ -215,7 +224,9 @@ impl HandlePacket for PppoeDiscoveryHandler {
             if ethernet_packet.get_ethertype() == EtherTypes::PppoeDiscovery {
                 Layer3Infos {
                     ip_source: None, // PPPoE packets do not have IP source/destination
+                    ip_destination_type: None, // PPPoE packets do not have IP destination
                     ip_destination: None,
+                    ip_source_type: None,
                     l_4_protocol: Default::default(),
                     layer_4_infos: Layer4Infos {
                         port_source: None,
@@ -241,7 +252,9 @@ impl HandlePacket for LldpHandler {
         Layer3Infos {
             // Ajustez selon les informations que vous pouvez extraire des paquets LLDP.
             ip_source: None,
+            ip_destination_type: None,
             ip_destination: None,
+            ip_source_type: None,
             l_4_protocol: None,
             layer_4_infos: Layer4Infos {
                 port_source: None,
