@@ -2,7 +2,15 @@
 
 ---
 
-## [1.7.0] - 2024-02-26
+## [1.8.0] - 2024-03-19
+
+### Nouvelles fonctionnalités
+
+- **Visualisation des Réseaux**: Implémentation d'une fonctionnalité de visualisation de réseaux améliorée, offrant des vues en courbes pour les connexions et un système de couleurs dynamique basé sur les types de protocoles.
+
+---
+
+## [1.7.0] - 2024-03-18
 
 ### Nouvelles fonctionnalités
 

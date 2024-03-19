@@ -51,7 +51,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: 1.7.0 # tauri-action replaces \_\_VERSION\_\_ with the app version
-          releaseName: 'v1.7.0'
+          tagName: 1.8.0 # tauri-action replaces \_\_VERSION\_\_ with the app version
+          releaseName: 'v1.8.0'
           releaseDraft: true
           prerelease: false
