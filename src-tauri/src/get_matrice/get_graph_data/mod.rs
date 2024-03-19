@@ -1,10 +1,9 @@
-use std::{collections::HashMap, fmt, sync::Mutex};
+use std::{collections::HashMap, sync::Mutex};
 use log::error;
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
 use crate::{sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos}, tauri_state::SonarState};
 
-const BROADCAST_MAC: &str = "ff:ff:ff:ff:ff:ff";
 
 #[derive(Serialize)]
 struct GraphData {
@@ -39,20 +38,15 @@ impl GraphBuilder {
         }
     }
 
-    fn add_node(&mut self, mac_address: String) {
-        self.nodes.entry(mac_address.clone()).or_insert(Node { name: mac_address });
-    }
+
 
     fn add_edge(&mut self, packet: &PacketInfos) {
-        // Extrait les adresses MAC
         let source_mac = packet.mac_address_source.clone();
         let target_mac = packet.mac_address_destination.clone();
         
-        // Vérifie si les adresses IP sont privées
         let is_source_ip_private = matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
         let is_target_ip_private = matches!(packet.layer_3_infos.ip_destination_type, Some(IpType::Private));
         
-        // Construit les noms de nœud en fonction de la disponibilité et du type d'adresse IP
         let source_node_name = if is_source_ip_private {
             format!("{} ({})", source_mac, packet.layer_3_infos.ip_source.clone().unwrap_or_default())
         } else {
@@ -64,27 +58,33 @@ impl GraphBuilder {
             target_mac.clone()
         };
     
-        // Continue uniquement si les deux adresses IP sont privées
         if is_source_ip_private && is_target_ip_private {
-            // Ajoute les nœuds avec les noms construits
             self.nodes.entry(source_node_name.clone()).or_insert(Node { name: source_node_name.clone() });
             self.nodes.entry(target_node_name.clone()).or_insert(Node { name: target_node_name.clone() });
-        
-            // Ajoute une arête entre les deux nœuds
+    
             let label = packet.l_3_protocol.clone();
-            let edge_name = format!("edge{}", self.edge_counter);
-            self.edges.insert(
-                edge_name,
-                Edge {
-                    source: source_node_name,
-                    target: target_node_name,
-                    label,
-                },
-            );
-            self.edge_counter += 1;
+    
+            // Vérifie si un Edge avec le même label existe déjà entre la source et la destination
+            let edge_exists = self.edges.values().any(|e| {
+                (e.source == source_node_name && e.target == target_node_name && e.label == label) ||
+                (e.source == target_node_name && e.target == source_node_name && e.label == label)
+            });
+    
+            if !edge_exists {
+                let edge_name = format!("edge{}", self.edge_counter);
+                self.edges.insert(
+                    edge_name,
+                    Edge {
+                        source: source_node_name,
+                        target: target_node_name,
+                        label,
+                    },
+                );
+                self.edge_counter += 1;
+            }
         }
-        // Si les adresses IP ne sont pas privées, la fonction se termine sans ajouter d'arête
     }
+    
     
 
     fn build_graph_data(&self) -> GraphData {
