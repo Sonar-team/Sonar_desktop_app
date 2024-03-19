@@ -62,7 +62,7 @@ use pnet::packet::{
 };
 
 mod layer_4_infos;
-mod ip_type;
+pub mod ip_type;
 use layer_4_infos::{get_layer_4_infos, Layer4Infos};
 use ip_type::IpType;
 use serde::Serialize;
@@ -71,9 +71,9 @@ use serde::Serialize;
 #[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
 pub struct Layer3Infos {
     pub ip_source: Option<String>,
-    ip_source_type: Option<IpType>,
+    pub ip_source_type: Option<IpType>,
     pub ip_destination: Option<String>,
-    ip_destination_type: Option<IpType>,
+    pub ip_destination_type: Option<IpType>,
     pub l_4_protocol: Option<String>,
     pub layer_4_infos: Layer4Infos,
 }
