@@ -15,61 +15,76 @@
     
   },
   data() {
-    return {
-      position: { left: "0", top: "0" },
-
-      graphData: {
-        nodes: [],
-        edges: [],
+  return {
+    position: { left: "0", top: "0" },
+    graphData: {
+      nodes: [],
+      edges: [],
+    },
+    selectedNode: null,
+    viewMenu: null, // Utilisez les refs pour les éléments de menu
+    nodeMenu: null,
+    edgeMenu: null,
+    menuTargetNode: '', // Pour stocker le nœud ciblé par le menu contextuel
+    menuTargetEdges: [], // Pour stocker les arêtes ciblées par le menu contextuel
+    packets: [],
+    intervalId: null,
+    configs: vNG.defineConfigs({
+      view: {
+        layoutHandler: new ForceLayout({}),
       },
-      selectedNode: null,
-
-      viewMenu: null, // Utilisez les refs pour les éléments de menu
-      nodeMenu: null,
-      edgeMenu: null,
-      menuTargetNode: '', // Pour stocker le nœud ciblé par le menu contextuel
-      menuTargetEdges: [], // Pour stocker les arêtes ciblées par le menu contextuel
-      
-      packets: [],
-      intervalId: null,
-
-      configs: vNG.defineConfigs({
-        view: {
-          layoutHandler: new ForceLayout({}),
-        },
-        node: {
-          selectable: true,
-          normal: { color: "#E0E0E0" }, // Light grey for visibility on dark background
-          label: { 
-            visible: true,
-            color: "#E0E0E0",
-            fontSize: 18,
-            directionAutoAdjustment: true,
-          },   // Same as node color for consistency
-        },
-        edge: {
-          selectable: true,
-          hoverable: true,
-          label: {
-            fontFamily: undefined,
-            fontSize: 11,
-            lineHeight: 1.1,
-            color: "#E0E0E0",
-            margin: 4,
-            background: {
-              visible: true,
-              color: "#000000",
-              padding: {
-                vertical: 1,
-                horizontal: 4,
-              },
-              borderRadius: 2,
-            },
+      node: {
+        selectable: true,
+        normal: { color: "#E0E0E0" }, // Light grey for visibility on dark background
+        label: { 
+          visible: true,
+          color: "#E0E0E0",
+          fontSize: 18,
+          directionAutoAdjustment: true,
+        }, // Same as node color for consistency
+      },
+      edge: {
+        gap: 40,
+        type: "curve",
+        selectable: true,
+        hoverable: true,
+        normal: {
+          width: 2, // Ou toute autre largeur par défaut que vous souhaitez
+          color: edge => { // Ici, vous définissez dynamiquement la couleur de l'arête
+            switch(edge.label) {
+              case 'Arp':
+                return 'yellow';
+              case 'Ipv4':
+                return 'orange';
+              // Ajoutez d'autres cas selon vos besoins
+              default:
+                return 'black'; // Couleur par défaut
+            }
           },
-        }
-      })
-    };
-  },
+          
+        },
+        
+        label: { // Configuration du label conservée telle quelle
+          fontFamily: undefined,
+          fontSize: 21,
+          lineHeight: 1.1,
+          color: "#E0E0E0",
+          margin: 4,
+          background: {
+            visible: true,
+            color: "#000000",
+            padding: {
+              vertical: 1,
+              horizontal: 4,
+            },
+            borderRadius: 2,
+          },
+        },
+      },
+    }),
+  };
+},
+
   computed: {
     processedPackets() {
       return this.processData(this.packets);
