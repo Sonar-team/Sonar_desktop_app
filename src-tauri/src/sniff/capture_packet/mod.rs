@@ -151,7 +151,7 @@ fn capture_packets(
                     let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
                     let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
                     let state_guard = state.lock().unwrap();
-                    
+
                     //println!("{packet_info}");
                     if packet_info.l_3_protocol == "Ipv6" && !state_guard.filter_ipv6 {
                         continue;

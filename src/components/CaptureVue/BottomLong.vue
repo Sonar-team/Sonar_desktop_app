@@ -96,7 +96,7 @@ export default {
 .trames {
   height: 120px;
   border: 2px solid #3a3a3a; /* Darker border */
-  border-radius: 10px;
+
   width: 100%;
   text-align: center;
   color: #FFF; /* White text */

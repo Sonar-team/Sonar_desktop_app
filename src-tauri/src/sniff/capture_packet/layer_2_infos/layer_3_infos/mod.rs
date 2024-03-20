@@ -48,7 +48,6 @@
 //! Les handlers de paquets sont des structures définies dans ce module et implémentent le trait [`HandlePacket`](trait.HandlePacket.html)
 //! pour chaque type de paquet pris en charge.
 
-
 use pnet::packet::{
     arp::ArpPacket,
     ethernet::{
@@ -61,10 +60,10 @@ use pnet::packet::{
     Packet,
 };
 
-mod layer_4_infos;
 pub mod ip_type;
-use layer_4_infos::{get_layer_4_infos, Layer4Infos};
+mod layer_4_infos;
 use ip_type::IpType;
+use layer_4_infos::{get_layer_4_infos, Layer4Infos};
 use serde::Serialize;
 
 /// Représente les informations extraites de la couche 3 d'un paquet réseau.
@@ -97,7 +96,7 @@ impl HandlePacket for Ipv4Handler {
             // Convertir les adresses IP source et destination en String
             let source_ip_str = ipv4_packet.get_source().to_string();
             let destination_ip_str = ipv4_packet.get_destination().to_string();
-            
+
             // Utiliser les chaînes pour déterminer le type d'adresse IP
             let ip_source_type = IpType::from_ip(&source_ip_str);
             let ip_destination_type = IpType::from_ip(&destination_ip_str);
@@ -116,14 +115,12 @@ impl HandlePacket for Ipv4Handler {
     }
 }
 
-
-
 impl HandlePacket for Ipv6Handler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(ipv6_packet) = Ipv6Packet::new(data) {
             let ip_source = ipv6_packet.get_source().to_string();
             let ip_destination = ipv6_packet.get_destination().to_string();
-            
+
             // Déterminez le type d'IP pour l'adresse source et destination
             let ip_source_type = IpType::from_ip(&ip_source);
             let ip_destination_type = IpType::from_ip(&ip_destination);
@@ -142,7 +139,6 @@ impl HandlePacket for Ipv6Handler {
     }
 }
 
-
 impl HandlePacket for ArpHandler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(arp_packet) = ArpPacket::new(data) {
@@ -151,7 +147,7 @@ impl HandlePacket for ArpHandler {
             let ip_destination = arp_packet.get_target_proto_addr().to_string();
 
             // Déterminer le type d'IP pour les adresses source et destination
-            // Notez que ARP est principalement utilisé avec des adresses IPv4, 
+            // Notez que ARP est principalement utilisé avec des adresses IPv4,
             // donc une logique spéciale pour ARP n'est peut-être pas nécessaire
             let ip_source_type = IpType::from_ip(&ip_source);
             let ip_destination_type = IpType::from_ip(&ip_destination);
@@ -174,7 +170,6 @@ impl HandlePacket for ArpHandler {
         }
     }
 }
-
 
 impl HandlePacket for VlanHandler {
     /// Traite les paquets VLAN pour extraire les informations de la couche 3 et 4, y compris le support QinQ.
@@ -223,7 +218,7 @@ impl HandlePacket for PppoeDiscoveryHandler {
         if let Some(ethernet_packet) = EthernetPacket::new(data) {
             if ethernet_packet.get_ethertype() == EtherTypes::PppoeDiscovery {
                 Layer3Infos {
-                    ip_source: None, // PPPoE packets do not have IP source/destination
+                    ip_source: None,           // PPPoE packets do not have IP source/destination
                     ip_destination_type: None, // PPPoE packets do not have IP destination
                     ip_destination: None,
                     ip_source_type: None,

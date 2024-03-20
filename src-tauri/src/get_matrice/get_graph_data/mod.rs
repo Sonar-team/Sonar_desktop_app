@@ -1,9 +1,11 @@
-use std::{collections::HashMap, sync::Mutex};
+use crate::{
+    sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos},
+    tauri_state::SonarState,
+};
 use log::error;
 use serde::Serialize;
+use std::{collections::HashMap, sync::Mutex};
 use tauri::{AppHandle, Manager};
-use crate::{sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos}, tauri_state::SonarState};
-
 
 #[derive(Serialize)]
 struct GraphData {
@@ -14,8 +16,9 @@ struct GraphData {
 #[derive(Serialize, Clone)]
 struct Node {
     name: String,
+    color: String,
+    mac: String,
 }
-
 #[derive(Serialize, Clone)]
 struct Edge {
     source: String,
@@ -38,54 +41,70 @@ impl GraphBuilder {
         }
     }
 
-
-
     fn add_edge(&mut self, packet: &PacketInfos) {
-        let source_mac = packet.mac_address_source.clone();
-        let target_mac = packet.mac_address_destination.clone();
-        
-        let is_source_ip_private = matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
-        let is_target_ip_private = matches!(packet.layer_3_infos.ip_destination_type, Some(IpType::Private));
-        
-        let source_node_name = if is_source_ip_private {
-            format!("{} ({})", source_mac, packet.layer_3_infos.ip_source.clone().unwrap_or_default())
-        } else {
-            source_mac.clone()
-        };
-        let target_node_name = if is_target_ip_private {
-            format!("{} ({})", target_mac, packet.layer_3_infos.ip_destination.clone().unwrap_or_default())
-        } else {
-            target_mac.clone()
-        };
-    
-        if is_source_ip_private && is_target_ip_private {
-            self.nodes.entry(source_node_name.clone()).or_insert(Node { name: source_node_name.clone() });
-            self.nodes.entry(target_node_name.clone()).or_insert(Node { name: target_node_name.clone() });
-    
-            let label = packet.l_3_protocol.clone();
-    
-            // Vérifie si un Edge avec le même label existe déjà entre la source et la destination
-            let edge_exists = self.edges.values().any(|e| {
-                (e.source == source_node_name && e.target == target_node_name && e.label == label) ||
-                (e.source == target_node_name && e.target == source_node_name && e.label == label)
-            });
-    
-            if !edge_exists {
-                let edge_name = format!("edge{}", self.edge_counter);
-                self.edges.insert(
-                    edge_name,
-                    Edge {
-                        source: source_node_name,
-                        target: target_node_name,
-                        label,
-                    },
-                );
-                self.edge_counter += 1;
+        let is_source_ip_private =
+            matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
+        let is_target_ip_private = matches!(
+            packet.layer_3_infos.ip_destination_type,
+            Some(IpType::Private)
+        );
+
+        if let (Some(source_ip), true) =
+            (packet.layer_3_infos.ip_source.clone(), 
+            is_source_ip_private)
+        {
+            if let (Some(target_ip), true) = (
+                packet.layer_3_infos.ip_destination.clone(),
+                is_target_ip_private,
+            ) {
+                // Déterminez la couleur basée sur si l'adresse IP se termine par '1'
+                let source_color = if source_ip.ends_with(".1") {
+                    "#D4D3DC".to_string()
+                } else {
+                    "#317AC1".to_string()
+                };
+                let mac_src = packet.mac_address_source.clone();
+                let target_color = if target_ip.ends_with(".1") {
+                    "#D4D3DC".to_string()
+                } else {
+                    "#317AC1".to_string()
+                };
+                let mac_dest = packet.mac_address_destination.clone();
+                
+
+                self.nodes.entry(source_ip.clone()).or_insert_with(|| Node {
+                    name: source_ip.clone(),
+                    color: source_color,
+                    mac: mac_src,
+                });
+                self.nodes.entry(target_ip.clone()).or_insert_with(|| Node {
+                    name: target_ip.clone(),
+                    color: target_color,
+                    mac: mac_dest,
+                });
+
+                let label = packet.l_3_protocol.clone();
+
+                let edge_exists = self.edges.values().any(|e| {
+                    (e.source == source_ip && e.target == target_ip && e.label == label)
+                        || (e.source == target_ip && e.target == source_ip && e.label == label)
+                });
+
+                if !edge_exists {
+                    let edge_name = format!("edge{}", self.edge_counter);
+                    self.edges.insert(
+                        edge_name,
+                        Edge {
+                            source: source_ip,
+                            target: target_ip,
+                            label,
+                        },
+                    );
+                    self.edge_counter += 1;
+                }
             }
         }
     }
-    
-    
 
     fn build_graph_data(&self) -> GraphData {
         GraphData {
@@ -107,9 +126,10 @@ pub fn get_graph_data(app: AppHandle) -> Result<String, String> {
     }
 
     let graph_data = graph_builder.build_graph_data();
+    //println!("{:?}", serde_json::to_string(&graph_data).unwrap());
+
     serde_json::to_string(&graph_data).map_err(|e| {
         error!("Serialization error: {}", e);
         format!("Serialization error: {}", e)
     })
 }
-
