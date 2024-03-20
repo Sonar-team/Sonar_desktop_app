@@ -41,49 +41,38 @@ impl GraphBuilder {
 
 
     fn add_edge(&mut self, packet: &PacketInfos) {
-        let source_mac = packet.mac_address_source.clone();
-        let target_mac = packet.mac_address_destination.clone();
-        
         let is_source_ip_private = matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
         let is_target_ip_private = matches!(packet.layer_3_infos.ip_destination_type, Some(IpType::Private));
         
-        let source_node_name = if is_source_ip_private {
-            format!("{} ({})", source_mac, packet.layer_3_infos.ip_source.clone().unwrap_or_default())
-        } else {
-            source_mac.clone()
-        };
-        let target_node_name = if is_target_ip_private {
-            format!("{} ({})", target_mac, packet.layer_3_infos.ip_destination.clone().unwrap_or_default())
-        } else {
-            target_mac.clone()
-        };
+        if let (Some(source_ip), true) = (packet.layer_3_infos.ip_source.clone(), is_source_ip_private) {
+            if let (Some(target_ip), true) = (packet.layer_3_infos.ip_destination.clone(), is_target_ip_private) {
+                self.nodes.entry(source_ip.clone()).or_insert(Node { name: source_ip.clone() });
+                self.nodes.entry(target_ip.clone()).or_insert(Node { name: target_ip.clone() });
     
-        if is_source_ip_private && is_target_ip_private {
-            self.nodes.entry(source_node_name.clone()).or_insert(Node { name: source_node_name.clone() });
-            self.nodes.entry(target_node_name.clone()).or_insert(Node { name: target_node_name.clone() });
+                let label = packet.l_3_protocol.clone();
     
-            let label = packet.l_3_protocol.clone();
+                // Check if an Edge with the same label already exists between the source and destination
+                let edge_exists = self.edges.values().any(|e| {
+                    (e.source == source_ip && e.target == target_ip && e.label == label) ||
+                    (e.source == target_ip && e.target == source_ip && e.label == label)
+                });
     
-            // Vérifie si un Edge avec le même label existe déjà entre la source et la destination
-            let edge_exists = self.edges.values().any(|e| {
-                (e.source == source_node_name && e.target == target_node_name && e.label == label) ||
-                (e.source == target_node_name && e.target == source_node_name && e.label == label)
-            });
-    
-            if !edge_exists {
-                let edge_name = format!("edge{}", self.edge_counter);
-                self.edges.insert(
-                    edge_name,
-                    Edge {
-                        source: source_node_name,
-                        target: target_node_name,
-                        label,
-                    },
-                );
-                self.edge_counter += 1;
+                if !edge_exists {
+                    let edge_name = format!("edge{}", self.edge_counter);
+                    self.edges.insert(
+                        edge_name,
+                        Edge {
+                            source: source_ip,
+                            target: target_ip,
+                            label,
+                        },
+                    );
+                    self.edge_counter += 1;
+                }
             }
         }
     }
+    
     
     
 
