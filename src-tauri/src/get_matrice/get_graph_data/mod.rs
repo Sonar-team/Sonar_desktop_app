@@ -14,8 +14,8 @@ struct GraphData {
 #[derive(Serialize, Clone)]
 struct Node {
     name: String,
+    color: String,
 }
-
 #[derive(Serialize, Clone)]
 struct Edge {
     source: String,
@@ -43,15 +43,25 @@ impl GraphBuilder {
     fn add_edge(&mut self, packet: &PacketInfos) {
         let is_source_ip_private = matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
         let is_target_ip_private = matches!(packet.layer_3_infos.ip_destination_type, Some(IpType::Private));
-        
+    
         if let (Some(source_ip), true) = (packet.layer_3_infos.ip_source.clone(), is_source_ip_private) {
             if let (Some(target_ip), true) = (packet.layer_3_infos.ip_destination.clone(), is_target_ip_private) {
-                self.nodes.entry(source_ip.clone()).or_insert(Node { name: source_ip.clone() });
-                self.nodes.entry(target_ip.clone()).or_insert(Node { name: target_ip.clone() });
+    
+                // Déterminez la couleur basée sur si l'adresse IP se termine par '1'
+                let source_color = if source_ip.ends_with('1') { "red".to_string() } else { "blue".to_string() };
+                let target_color = if target_ip.ends_with('1') { "red".to_string() } else { "blue".to_string() };
+    
+                self.nodes.entry(source_ip.clone()).or_insert_with(|| Node { 
+                    name: source_ip.clone(),
+                    color: source_color,
+                });
+                self.nodes.entry(target_ip.clone()).or_insert_with(|| Node { 
+                    name: target_ip.clone(),
+                    color: target_color,
+                });
     
                 let label = packet.l_3_protocol.clone();
     
-                // Check if an Edge with the same label already exists between the source and destination
                 let edge_exists = self.edges.values().any(|e| {
                     (e.source == source_ip && e.target == target_ip && e.label == label) ||
                     (e.source == target_ip && e.target == source_ip && e.label == label)
@@ -72,6 +82,7 @@ impl GraphBuilder {
             }
         }
     }
+    
     
     
     
@@ -96,9 +107,12 @@ pub fn get_graph_data(app: AppHandle) -> Result<String, String> {
     }
 
     let graph_data = graph_builder.build_graph_data();
+    //println!("{:?}", serde_json::to_string(&graph_data).unwrap());
+
     serde_json::to_string(&graph_data).map_err(|e| {
         error!("Serialization error: {}", e);
         format!("Serialization error: {}", e)
     })
+    
 }
 
