@@ -53,7 +53,6 @@ fn is_ula(ip: &std::net::Ipv6Addr) -> bool {
     first_byte & 0xfe == 0xfc
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -64,7 +63,7 @@ mod tests {
         assert_eq!(IpType::from_ip(ip), IpType::Apipa);
     }
 
-    // Reprenons les tests pour les adresses privées, publiques et spéciales, 
+    // Reprenons les tests pour les adresses privées, publiques et spéciales,
     // tout en s'assurant qu'ils utilisent la nouvelle logique.
     #[test]
     fn test_private_ipv4() {
@@ -102,7 +101,10 @@ mod tests {
 
     #[test]
     fn test_ipv6_public() {
-        assert_eq!(IpType::from_ip("2001:0db8:85a3:0000:0000:8a2e:0370:7334"), IpType::Public);
+        assert_eq!(
+            IpType::from_ip("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
+            IpType::Public
+        );
     }
 
     #[test]
@@ -115,7 +117,4 @@ mod tests {
         assert_eq!(IpType::from_ip("224.0.0.1"), IpType::Multicast); // Adresse multicast de base
         assert_eq!(IpType::from_ip("239.255.255.255"), IpType::Multicast); // Fin de la plage multicast
     }
-
-
 }
-

@@ -68,7 +68,7 @@ fn main() {
         .expect("error while running tauri application");
 }
 
-#[tauri::command(async,rename_all = "snake_case")]
+#[tauri::command(async, rename_all = "snake_case")]
 fn get_interfaces_tab() -> Vec<String> {
     get_interfaces()
 }

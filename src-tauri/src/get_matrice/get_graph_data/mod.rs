@@ -1,9 +1,11 @@
-use std::{collections::HashMap, sync::Mutex};
+use crate::{
+    sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos},
+    tauri_state::SonarState,
+};
 use log::error;
 use serde::Serialize;
+use std::{collections::HashMap, sync::Mutex};
 use tauri::{AppHandle, Manager};
-use crate::{sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos}, tauri_state::SonarState};
-
 
 #[derive(Serialize)]
 struct GraphData {
@@ -38,35 +40,49 @@ impl GraphBuilder {
         }
     }
 
-
-
     fn add_edge(&mut self, packet: &PacketInfos) {
-        let is_source_ip_private = matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
-        let is_target_ip_private = matches!(packet.layer_3_infos.ip_destination_type, Some(IpType::Private));
-    
-        if let (Some(source_ip), true) = (packet.layer_3_infos.ip_source.clone(), is_source_ip_private) {
-            if let (Some(target_ip), true) = (packet.layer_3_infos.ip_destination.clone(), is_target_ip_private) {
-    
+        let is_source_ip_private =
+            matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
+        let is_target_ip_private = matches!(
+            packet.layer_3_infos.ip_destination_type,
+            Some(IpType::Private)
+        );
+
+        if let (Some(source_ip), true) =
+            (packet.layer_3_infos.ip_source.clone(), is_source_ip_private)
+        {
+            if let (Some(target_ip), true) = (
+                packet.layer_3_infos.ip_destination.clone(),
+                is_target_ip_private,
+            ) {
                 // Déterminez la couleur basée sur si l'adresse IP se termine par '1'
-                let source_color = if source_ip.ends_with('1') { "red".to_string() } else { "blue".to_string() };
-                let target_color = if target_ip.ends_with('1') { "red".to_string() } else { "blue".to_string() };
-    
-                self.nodes.entry(source_ip.clone()).or_insert_with(|| Node { 
+                let source_color = if source_ip.ends_with('1') {
+                    "red".to_string()
+                } else {
+                    "blue".to_string()
+                };
+                let target_color = if target_ip.ends_with('1') {
+                    "red".to_string()
+                } else {
+                    "blue".to_string()
+                };
+
+                self.nodes.entry(source_ip.clone()).or_insert_with(|| Node {
                     name: source_ip.clone(),
                     color: source_color,
                 });
-                self.nodes.entry(target_ip.clone()).or_insert_with(|| Node { 
+                self.nodes.entry(target_ip.clone()).or_insert_with(|| Node {
                     name: target_ip.clone(),
                     color: target_color,
                 });
-    
+
                 let label = packet.l_3_protocol.clone();
-    
+
                 let edge_exists = self.edges.values().any(|e| {
-                    (e.source == source_ip && e.target == target_ip && e.label == label) ||
-                    (e.source == target_ip && e.target == source_ip && e.label == label)
+                    (e.source == source_ip && e.target == target_ip && e.label == label)
+                        || (e.source == target_ip && e.target == source_ip && e.label == label)
                 });
-    
+
                 if !edge_exists {
                     let edge_name = format!("edge{}", self.edge_counter);
                     self.edges.insert(
@@ -82,10 +98,6 @@ impl GraphBuilder {
             }
         }
     }
-    
-    
-    
-    
 
     fn build_graph_data(&self) -> GraphData {
         GraphData {
@@ -113,6 +125,4 @@ pub fn get_graph_data(app: AppHandle) -> Result<String, String> {
         error!("Serialization error: {}", e);
         format!("Serialization error: {}", e)
     })
-    
 }
-
