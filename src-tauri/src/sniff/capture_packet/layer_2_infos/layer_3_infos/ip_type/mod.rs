@@ -3,6 +3,7 @@ use std::net::IpAddr;
 use serde::Serialize;
 // Définition de l'énumération `IpType`
 #[derive(Debug, Serialize, Clone, Eq, Hash, PartialEq)]
+#[derive(Default)]
 pub enum IpType {
     Private,
     Multicast,
@@ -11,6 +12,7 @@ pub enum IpType {
     LinkLocal,
     Ula,
     Public,
+    #[default]
     Unknown,
 }
 
@@ -33,11 +35,7 @@ impl IpType {
 }
 
 // Implémenter Default pour IpType
-impl Default for IpType {
-    fn default() -> Self {
-        IpType::Unknown
-    }
-}
+
 
 // Fonctions auxiliaires pour les vérifications spécifiques
 fn is_apipa_ip(ip: &std::net::Ipv4Addr) -> bool {

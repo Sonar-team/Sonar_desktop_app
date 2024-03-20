@@ -158,7 +158,7 @@ async mounted() {
 
 
 .title-capture {
-  font-size: 2em;
+  font-size: 20px;
   margin: 10px 0;
   text-align: center;
   color: #bacbfa;

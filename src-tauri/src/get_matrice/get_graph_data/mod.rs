@@ -17,6 +17,7 @@ struct GraphData {
 struct Node {
     name: String,
     color: String,
+    mac: String,
 }
 #[derive(Serialize, Clone)]
 struct Edge {
@@ -49,31 +50,37 @@ impl GraphBuilder {
         );
 
         if let (Some(source_ip), true) =
-            (packet.layer_3_infos.ip_source.clone(), is_source_ip_private)
+            (packet.layer_3_infos.ip_source.clone(), 
+            is_source_ip_private)
         {
             if let (Some(target_ip), true) = (
                 packet.layer_3_infos.ip_destination.clone(),
                 is_target_ip_private,
             ) {
                 // Déterminez la couleur basée sur si l'adresse IP se termine par '1'
-                let source_color = if source_ip.ends_with('1') {
-                    "red".to_string()
+                let source_color = if source_ip.ends_with(".1") {
+                    "#D4D3DC".to_string()
                 } else {
-                    "blue".to_string()
+                    "#317AC1".to_string()
                 };
-                let target_color = if target_ip.ends_with('1') {
-                    "red".to_string()
+                let mac_src = packet.mac_address_source.clone();
+                let target_color = if target_ip.ends_with(".1") {
+                    "#D4D3DC".to_string()
                 } else {
-                    "blue".to_string()
+                    "#317AC1".to_string()
                 };
+                let mac_dest = packet.mac_address_destination.clone();
+                
 
                 self.nodes.entry(source_ip.clone()).or_insert_with(|| Node {
                     name: source_ip.clone(),
                     color: source_color,
+                    mac: mac_src,
                 });
                 self.nodes.entry(target_ip.clone()).or_insert_with(|| Node {
                     name: target_ip.clone(),
                     color: target_color,
+                    mac: mac_dest,
                 });
 
                 let label = packet.l_3_protocol.clone();

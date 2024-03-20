@@ -2,6 +2,14 @@
 
 ---
 
+## [1.9.0] - 2024-03-20
+
+### Nouvelles fonctionnalités
+
+- **Tableau avec vutify**: 
+
+---
+
 ## [1.8.0] - 2024-03-19
 
 ### Nouvelles fonctionnalités

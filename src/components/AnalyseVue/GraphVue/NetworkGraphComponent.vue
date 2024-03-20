@@ -25,7 +25,7 @@
     viewMenu: null, // Utilisez les refs pour les éléments de menu
     nodeMenu: null,
     edgeMenu: null,
-    menuTargetNode: '', // Pour stocker le nœud ciblé par le menu contextuel
+    menuTargetNode: [], // Pour stocker le nœud ciblé par le menu contextuel
     menuTargetEdges: [], // Pour stocker les arêtes ciblées par le menu contextuel
     packets: [],
     intervalId: null,
@@ -64,9 +64,7 @@
                 return 'black'; // Couleur par défaut
             }
           },
-          
         },
-        
         label: { // Configuration du label conservée telle quelle
           fontFamily: undefined,
           fontSize: 21,
@@ -164,24 +162,23 @@
     },
 
     showEdgeContextMenu({ edge, event }) {
-      // Utilisation de showContextMenu pour le menu de l'arête
       if (this.edgeMenu) {
         const edgeData = this.graphData.edges[edge];
-        // Formattez ou choisissez les informations de l'arête à afficher
         this.menuTargetEdges = [
           `Adresse Mac Source: ${edgeData.source}, 
           Adresse Mac Destination: ${edgeData.target}, 
-          Protocole: ${edgeData.label}`];
+          Protocole: ${edgeData.label}`
+        ];
         this.showContextMenu(this.edgeMenu, event);
       }
     },
     showNodeContextMenu({ node, event }) {
-      // Utilisation de showContextMenu pour le menu du nœud
       if (this.nodeMenu) {
-        //console.log("node: " + node)
         const nodeData = this.graphData.nodes[node];
-      // Formattez ou choisissez les informations du nœud à afficher
-      this.menuTargetNode = `Adresse IP: ${nodeData.name}`;
+        this.menuTargetNode = [
+          `Adresse IP: ${nodeData.name},
+          Mac_address: ${nodeData.mac}`
+        ];
         this.showContextMenu(this.nodeMenu, event);
       }
     },
@@ -209,7 +206,9 @@
   </v-network-graph>
   <div ref="nodeMenu" class="context-menu">
     Infos du noeud:
-    <div class="contenue">{{ menuTargetNode }}</div>
+    <ul class="contenu">
+    <li v-for="(info, index) in menuTargetNode" :key="index">{{ info }}</li>
+  </ul>
   </div>
   <div ref="edgeMenu" class="context-menu">
     Infos de l'arête:
@@ -257,5 +256,7 @@
     padding: 4px;
     margin-top: 8px;
 }
+
+
 
 </style>

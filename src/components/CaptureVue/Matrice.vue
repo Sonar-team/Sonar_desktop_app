@@ -1,15 +1,6 @@
 <template>
   <v-theme-provider theme="dark">
-    <template v-slot:text>
-      <v-text-field
-        v-model="search"
-        label="Search"
-        prepend-inner-icon="mdi-magnify"
-        variant="outlined"
-        hide-details
-        single-line
-      ></v-text-field>
-    </template>
+
     <v-data-table
       :headers="headers"
       :items="processedPackets"
@@ -17,6 +8,8 @@
       class="elevation-1 matrice"
       :fixed-header="true"
       :hide-default-footer="true"
+      dense
+      expand
     ></v-data-table>
   </v-theme-provider>
 </template>
@@ -84,5 +77,8 @@ export default {
 </script>
 
 <style scoped>
-/* Your CSS styles */
+.elevation-1.matrice {
+  width: 100%;
+  max-width: 100%;
+}
 </style>
