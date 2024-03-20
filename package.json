@@ -18,7 +18,8 @@
     "v-network-graph": "^0.9.13",
     "vue": "^3.3.4",
     "vue-chartjs": "^5.2.0",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.2.5",
+    "vuetify": "^3.5.9"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.5.9",

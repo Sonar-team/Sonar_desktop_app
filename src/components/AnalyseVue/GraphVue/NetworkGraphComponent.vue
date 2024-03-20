@@ -44,7 +44,7 @@
         }, // Same as node color for consistency
       },
       edge: {
-        gap: 40,
+        gap: 50,
         type: "curve",
         selectable: true,
         hoverable: true,
