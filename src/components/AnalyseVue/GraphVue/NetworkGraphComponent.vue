@@ -35,7 +35,10 @@
       },
       node: {
         selectable: true,
-        normal: { color: "#E0E0E0" }, // Light grey for visibility on dark background
+        normal: { 
+          radius: 40,
+          color: node => node.color
+         }, // Light grey for visibility on dark background
         label: { 
           visible: true,
           color: "#E0E0E0",
@@ -237,6 +240,7 @@
 }
 
 .context-menu {
+  color: #0b1b25;
   border-radius: 10px;
   width: 180px;
   background-color: #efefef;
@@ -248,6 +252,7 @@
   box-shadow: 2px 2px 2px #e7bf0c;
 }
 .contenue {
+  color: #0b1b25;
   border: 1px dashed #aaa;
     padding: 4px;
     margin-top: 8px;
