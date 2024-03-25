@@ -4,9 +4,9 @@
   </div>
   <div class="center-container">
     <div class="capture-container">
-        <div class="header">
-          <h1 class="title-capture">1. Choisir une interface réseau</h1>
-        </div>
+      <div class="header">
+        <h1 class="title-capture">1. Choisir une interface réseau</h1>
+      </div>
       <div class="content">
         <select v-model="selectedNetInterface" :class="{ 'invalid': !validation.netInterfaceValid }" @change="validateNetInterface">
           <option v-for="netInterface in netInterfaces" :key="netInterface" :value="netInterface">

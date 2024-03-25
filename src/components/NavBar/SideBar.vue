@@ -241,7 +241,7 @@ export default {
 
 <style scoped>
 .sidebar {
-  width: 300px; /* Largeur ajustée */
+  width: 190px; /* Largeur ajustée */
   background-color: #2A2A2A; /* Couleur de fond */
   color: #ECF0F1; /* Couleur du texte */
   padding: 20px;

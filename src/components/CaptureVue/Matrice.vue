@@ -5,11 +5,12 @@
       :headers="headers"
       :items="processedPackets"
       item-key="id"
-      class="elevation-1 matrice"
-      :fixed-header="true"
-      :hide-default-footer="true"
-      dense
-      expand
+      items-per-page="17"
+    
+
+
+      density="compact"
+      
     ></v-data-table>
   </v-theme-provider>
 </template>
@@ -29,13 +30,13 @@ export default {
         { title: 'Interface', value: 'info.interface' ,sortable: true},
         { title: 'Protocole L3', value: 'info.l_3_protocol' ,sortable: true},
         { title: 'IP Source', value: 'info.layer_3_infos.ip_source',sortable: true },
-        { title: 'IP Source Type', value: 'info.layer_3_infos.ip_source_type' ,sortable: true},
+        { title: 'Type', value: 'info.layer_3_infos.ip_source_type' ,sortable: true},
         { title: 'IP Destination', value: 'info.layer_3_infos.ip_destination' ,sortable: true},
-        { title: 'IP Destination Type', value: 'info.layer_3_infos.ip_destination_type',sortable: true ,removable: true,},
+        { title: 'Type', value: 'info.layer_3_infos.ip_destination_type',sortable: true ,removable: true,},
         { title: 'Protocole L4', value: 'info.layer_3_infos.l_4_protocol' ,sortable: true},
         { title: 'Port Source', value: 'info.layer_3_infos.layer_4_infos.port_source' ,sortable: true},
         { title: 'Port Destination', value: 'info.layer_3_infos.layer_4_infos.port_destination' ,sortable: true},
-        { title: 'Protocole L7', value: 'info.layer_3_infos.layer_4_infos.l_7_protocol' ,sortable: true},
+        { title: 'L7', value: 'info.layer_3_infos.layer_4_infos.l_7_protocol' ,sortable: true},
         { title: 'Taille Total', value: 'info.packet_size' ,sortable: true},
         { title: 'Occurences', value: 'count' ,sortable: true},
       ],

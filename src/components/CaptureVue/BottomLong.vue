@@ -95,48 +95,41 @@ export default {
 <style scoped>
 .trames {
   height: 120px;
-  border: 2px solid #3a3a3a; /* Darker border */
-
   width: 100%;
   text-align: center;
-  color: #FFF; /* White text */
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-  background-color: #1a1a1a; /* Darker background */
+  background-color: #000; /* Black background */
   overflow-y: auto; /* Add vertical scrollbar if content exceeds max height */
-  padding: 10px; /* Optional padding for better appearance */
+  font-family: 'Courier New', Courier, monospace; /* Monospace font for terminal look */
+  font-size: 14px; /* Adjust font size if necessary */
+  animation: matrixAnimation 60s infinite linear; /* Optional: Add Matrix-like animation */
 }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
 
-  td {
-    width: 110px; /* Example fixed width */
-    overflow: hidden; /* Hides content that overflows */
-    white-space: nowrap; /* Prevents text from wrapping to the next line */
-    text-overflow: ellipsis; /* Truncates with an ellipsis */
-    border: 1px solid rgb(59, 81, 121);
-    padding: 8px;
-    text-align: center;
-    color: rgb(255, 255, 255);
-    background-color: #000000;
-  }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
 
-  th {
-    background-color: #000000;
-    color: rgb(255, 255, 255);
-  }
+td, th {
+  padding: 8px;
+  text-align: center;
+  color: rgb(132, 195, 247); /* Matrix green text */
+  background-color: #000; /* Black background */
+  overflow: hidden; /* Hides content that overflows */
+  white-space: nowrap; /* Prevents text from wrapping to the next line */
+  text-overflow: ellipsis; /* Truncates with an ellipsis */
+}
 
-  tbody {
-    display: block; /* Change display to block */
-    max-height: 620px; /* Set a max height */
-    overflow-y: auto; /* Add scrollbar if content exceeds max height */
-  }
+tbody {
+  display: block; /* Change display to block */
+  max-height: 620px; /* Set a max height */
+  overflow-y: auto; /* Add scrollbar if content exceeds max height */
+}
 
-  thead, tbody tr {
-    display: table; /* Enable tables to behave like normal */
-    width: 100%; /* Set width to match table width */
-    table-layout: fixed; /* Ensure layout is fixed */
-  }
+thead, tbody tr {
+  display: table; /* Enable tables to behave like normal */
+  width: 100%; /* Set width to match table width */
+  table-layout: fixed; /* Ensure layout is fixed */
+}
 </style>
+

@@ -11,8 +11,8 @@
       <TopBarFilter />
       <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
       <button class="button" @click="toggleComponent">Changer de vue</button> <!-- Toggle Button -->
-        <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
-        <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
+      <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
+      <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
         
     </div>
@@ -81,13 +81,14 @@ export default {
 <style scoped>
 .container {
   display: flex;
-  width: flex;
+
+
 }
 
 .content {
-  flex-grow: 1; /* Prend le reste de l'espace disponible */
-  padding: 20px;
-  overflow: auto; /* Ajoute un défilement si le contenu dépasse la hauteur de la fenêtre */
+  overflow:auto; /* Ajoute un défilement si le contenu dépasse la hauteur de la fenêtre */
+  flex: 1; /* Allow content to expand and fill available space */
+
 }
 
 .titre {
@@ -96,6 +97,7 @@ export default {
   margin: 1px 0; /* Reduce top and bottom margin */
   padding: 1px 0; /* Reduce top and bottom padding */
 }
+
 .button {
   background-color: #0b1b25; /* Couleur de fond du bouton */
   color: #fff; /* Couleur du texte du bouton */
