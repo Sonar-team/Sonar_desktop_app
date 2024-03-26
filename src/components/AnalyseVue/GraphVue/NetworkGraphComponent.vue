@@ -33,6 +33,7 @@
       view: {
         maxZoomLevel: 5,
         minZoomLevel: 0.1,
+        
         layoutHandler: new ForceLayout({}),
       },
       node: {
@@ -190,10 +191,12 @@
 
 <template>
   <div class="graph-container">
+    
     <button class="download-button" @click="downloadSvg">Télécharger l'image</button>
     <v-network-graph
       class="graph"
       ref="graphnodes"
+      zoom-level=3
       :nodes="graphData.nodes"
       :edges="graphData.edges"
       :layouts="graphData.layouts"
@@ -223,7 +226,7 @@
 <style scoped>
 .graph-container {
   position: relative; /* Establishes a relative positioning context */
-  height: 750px; /* Adjust height as needed */
+  height: 800px; /* Adjust height as needed */
   width: 100%; /* Container takes full width */
 }
 

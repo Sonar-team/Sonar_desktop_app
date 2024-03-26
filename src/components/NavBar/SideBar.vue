@@ -41,6 +41,7 @@ export default {
       installationName:'',
       heureDepart:'',
       heureFin:'',
+      showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
     };
   },
   computed: {
@@ -50,6 +51,10 @@ export default {
     }
   },
   methods: {
+    toggleComponent() {
+      this.$bus.emit('toggle')
+      this.showMatrice = !this.showMatrice; // Toggle the state
+    },
     triggerSave() {
     if (this.selectedFormat === 'csv') {
       this.SaveAsCsv();
@@ -237,7 +242,6 @@ export default {
     this.$bus.on('increment-event', this.incrementTramesRecues);
     this.$bus.on('update-packet-count', this.incrementMatriceCount);
     
-
     this.netInterface = this.$route.params.netInterface;
     this.installationName = this.$route.params.installationName;
     this.niveauConfidentialite = this.$route.params.confidentialite;
@@ -247,7 +251,7 @@ export default {
     this.$bus.off('increment-event', this.incrementTramesRecues);
   },
 };
-  </script>
+</script>
 
 <style scoped>
 .sidebar {

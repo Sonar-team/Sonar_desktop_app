@@ -9,7 +9,6 @@
     />
     <div class="content">
       <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
-      <button class="button" @click="toggleComponent">{{ buttonText }}</button> <!-- Toggle Button -->
       <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
@@ -29,7 +28,6 @@ import { invoke } from '@tauri-apps/api/tauri';
 export default {
   data() {
     return {
-      buttonText: 'Afficher la matrice',
       tempsReleve: '',
       tramesRecues: 0,
       tramesEnregistrees: 0,
@@ -44,12 +42,6 @@ export default {
     Matrice,
     Sidebar,
     NetworkGraphComponent
-  },
-  computed: {
-    buttonText() {
-      // Change le texte du bouton en fonction de la vue actuellement affichée
-      return this.showMatrice ? 'Voir Vue Graphique' : 'Voir Vue Matrice';
-    }
   },
   methods: {
     toggleComponent() {
@@ -74,10 +66,14 @@ export default {
     invoke('get_selected_interface', { interface_name: this.$route.params.netInterface })
     console.log('get_selected_interface');
     console.log("analyse mounted")
-
+    this.$bus.on('toggle',this.toggleComponent)
     this.installationName = this.$route.params.installationName;
     this.niveauConfidentialite = this.$route.params.confidentialite;
-  }}
+  },
+  beforeMount() {
+    this.$bus.off('toggle',this.toggleComponent)
+  }
+}
 </script>
 
 <style scoped>
@@ -97,7 +93,7 @@ export default {
   text-align: center;
   color: aliceblue;
   margin: 1px 0; /* Reduce top and bottom margin */
-  padding: 1px 0; /* Reduce top and bottom padding */
+  padding: 10px 0; /* Reduce top and bottom padding */
 }
 
 .button {
