@@ -16,18 +16,14 @@ use sonar_desktop_app::{
 use tauri::{AppHandle, Manager};
 use tauri_plugin_log::LogTarget;
 
+
+
 extern crate sonar_desktop_app;
 
 fn main() {
     println!("{}", print_banner());
 
-    // #[cfg(debug_assertions)] // only enable instrumentation in development builds
-    // let devtools = devtools::init();
-
     let builder = tauri::Builder::default();
-
-    // #[cfg(debug_assertions)]
-    // let builder = builder.plugin(devtools);
 
     builder
         .on_window_event(|event| {
@@ -55,7 +51,8 @@ fn main() {
                 info!("Quit event received");
             });
             app_handle.manage(Mutex::new(SonarState::new()));
-
+            #[cfg(debug_assertions)]
+            app.get_window("main").unwrap().open_devtools();
             Ok(())
         })
         //.plugin(devtools::init())
@@ -64,8 +61,9 @@ fn main() {
                 .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
                 .build(),
         )
+        
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+            .expect("error while running tauri application");
 }
 
 #[tauri::command(async, rename_all = "snake_case")]

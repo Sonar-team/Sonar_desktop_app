@@ -9,17 +9,20 @@
       <p>Temps écoulé: {{ tempsEcoule }}</p>
       <p>Trames reçues: {{ tramesRecues }} </p>
       <p>Matrice de flux: {{ tramesEnregistrees }}</p>
-      <p>Choix du format:</p>
-      <select v-model="selectedFormat">
-        <option value="csv">CSV</option>
+      <p>Exporter: </p>
+      <select v-model="selectedFormat" 
+        @change="triggerSave" 
+        style="border: 2px solid #89CFF0;">
+        <option value="csv">Csv</option>
         <option value="xlsx">Excel</option>
       </select>
+      <button class="button" @click="toggleComponent">{{ buttonText }}</button> <!-- Toggle Button -->
 
-    <button @click="SaveFile">Sauvegarder</button>
+
   </div>
 </template>
   
-  <script>
+<script>
 import { save } from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api'
 import { desktopDir } from '@tauri-apps/api/path';
@@ -28,6 +31,7 @@ import { message } from '@tauri-apps/api/dialog';
 export default {
   data() {
     return {
+      buttonText: '',
       selectedFormat: 'xlsx',
       tempsReleve: '',
       tempsEcoule: '',
@@ -37,16 +41,27 @@ export default {
       installationName:'',
       heureDepart:'',
       heureFin:'',
+      showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
     };
   },
+  computed: {
+    buttonText() {
+      // Change le texte du bouton en fonction de la vue actuellement affichée
+      return this.showMatrice ? 'Voir Vue Graphique' : 'Voir Vue Matrice';
+    }
+  },
   methods: {
-    SaveFile() {
-      if (this.selectedFormat === 'csv') {
-        this.SaveAsCsv();
-      } else if (this.selectedFormat === 'xlsx') {
-        this.SaveAsXlsx();
-      }
+    toggleComponent() {
+      this.$bus.emit('toggle')
+      this.showMatrice = !this.showMatrice; // Toggle the state
     },
+    triggerSave() {
+    if (this.selectedFormat === 'csv') {
+      this.SaveAsCsv();
+    } else if (this.selectedFormat === 'xlsx') {
+      this.SaveAsXlsx();
+    }
+  },
     augmenterTemps() {
     this.ajusterTemps(1); // Augmenter d'une seconde
     },
@@ -111,7 +126,7 @@ export default {
       console.log("Save as csv")
       save({
         filters: [{
-          name: 'Relevée CSV',
+          name: '.csv',
           extensions: ['csv']
         }],
         title: 'Sauvegarder la matrice de flux',
@@ -127,7 +142,7 @@ export default {
       console.log("Save as xlsx")
       save({
         filters: [{
-          name: 'Relevée Excel',
+          name: '.xlsx',
           extensions: ['xlsx']
         }],
         title: 'Sauvegarder la matrice de flux',
@@ -227,7 +242,6 @@ export default {
     this.$bus.on('increment-event', this.incrementTramesRecues);
     this.$bus.on('update-packet-count', this.incrementMatriceCount);
     
-
     this.netInterface = this.$route.params.netInterface;
     this.installationName = this.$route.params.installationName;
     this.niveauConfidentialite = this.$route.params.confidentialite;
@@ -237,11 +251,11 @@ export default {
     this.$bus.off('increment-event', this.incrementTramesRecues);
   },
 };
-  </script>
+</script>
 
 <style scoped>
 .sidebar {
-  width: 300px; /* Largeur ajustée */
+  width: 190px; /* Largeur ajustée */
   background-color: #2A2A2A; /* Couleur de fond */
   color: #ECF0F1; /* Couleur du texte */
   padding: 20px;

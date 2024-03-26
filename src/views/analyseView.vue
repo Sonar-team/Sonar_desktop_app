@@ -8,11 +8,9 @@
       :currentTime="$route.params.currentTime"
     />
     <div class="content">
-      <TopBarFilter />
       <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
-      <button class="button" @click="toggleComponent">Changer de vue</button> <!-- Toggle Button -->
-        <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
-        <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
+      <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
+      <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
         
     </div>
@@ -24,7 +22,6 @@ import Sidebar from '../components/NavBar/SideBar.vue';
 import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseVue/GraphVue/NetworkGraphComponent.vue'; // Import the other component
-import TopBarFilter from '../components/TopBarFilter/TopBarFilter.vue';
 
 import { invoke } from '@tauri-apps/api/tauri';
 
@@ -40,15 +37,12 @@ export default {
 
     };
   },
-
   components: {
-    TopBarFilter,
     BottomLong,
     Matrice,
     Sidebar,
     NetworkGraphComponent
   },
-
   methods: {
     toggleComponent() {
       this.showMatrice = !this.showMatrice; // Toggle the state
@@ -72,30 +66,36 @@ export default {
     invoke('get_selected_interface', { interface_name: this.$route.params.netInterface })
     console.log('get_selected_interface');
     console.log("analyse mounted")
-
+    this.$bus.on('toggle',this.toggleComponent)
     this.installationName = this.$route.params.installationName;
     this.niveauConfidentialite = this.$route.params.confidentialite;
-  }}
+  },
+  beforeMount() {
+    this.$bus.off('toggle',this.toggleComponent)
+  }
+}
 </script>
 
 <style scoped>
 .container {
   display: flex;
-  width: flex;
+
+
 }
 
 .content {
-  flex-grow: 1; /* Prend le reste de l'espace disponible */
-  padding: 20px;
-  overflow: auto; /* Ajoute un défilement si le contenu dépasse la hauteur de la fenêtre */
+  overflow:auto; /* Ajoute un défilement si le contenu dépasse la hauteur de la fenêtre */
+  flex: 1; /* Allow content to expand and fill available space */
+
 }
 
 .titre {
   text-align: center;
   color: aliceblue;
   margin: 1px 0; /* Reduce top and bottom margin */
-  padding: 1px 0; /* Reduce top and bottom padding */
+  padding: 10px 0; /* Reduce top and bottom padding */
 }
+
 .button {
   background-color: #0b1b25; /* Couleur de fond du bouton */
   color: #fff; /* Couleur du texte du bouton */

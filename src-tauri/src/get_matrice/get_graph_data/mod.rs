@@ -41,63 +41,56 @@ impl GraphBuilder {
         }
     }
 
-    fn add_edge(&mut self, packet: &PacketInfos) {
-        let is_source_ip_private =
-            matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
-        let is_target_ip_private = matches!(
-            packet.layer_3_infos.ip_destination_type,
-            Some(IpType::Private)
-        );
+    // Fonction pour déterminer la couleur d'un nœud basée sur son IP
+    fn determine_color(ip: &String) -> String {
+        if ip.ends_with(".1") {
+            "#D4D3DC".to_string()
+        } else {
+            "#317AC1".to_string()
+        }
+    }
 
-        if let (Some(source_ip), true) =
-            (packet.layer_3_infos.ip_source.clone(), 
-            is_source_ip_private)
-        {
-            if let (Some(target_ip), true) = (
-                packet.layer_3_infos.ip_destination.clone(),
-                is_target_ip_private,
-            ) {
-                // Déterminez la couleur basée sur si l'adresse IP se termine par '1'
-                let source_color = if source_ip.ends_with(".1") {
-                    "#D4D3DC".to_string()
-                } else {
-                    "#317AC1".to_string()
-                };
-                let mac_src = packet.mac_address_source.clone();
-                let target_color = if target_ip.ends_with(".1") {
-                    "#D4D3DC".to_string()
-                } else {
-                    "#317AC1".to_string()
-                };
-                let mac_dest = packet.mac_address_destination.clone();
+    // Fonction pour vérifier si une arête existe déjà
+    fn edge_exists(&self, source_ip: &String, target_ip: &String, label: &String) -> bool {
+        self.edges.values().any(|e| {
+            (e.source == *source_ip && e.target == *target_ip && e.label == *label)
+                || (e.source == *target_ip && e.target == *source_ip && e.label == *label)
+        })
+    }
+
+    fn add_edge(&mut self, packet: &PacketInfos) {
+        let is_source_ip_private = matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
+        let is_target_ip_private = matches!(packet.layer_3_infos.ip_destination_type, Some(IpType::Private));
+
+        // Vérification supplémentaire pour s'assurer que les adresses IP sont bien IPv4 privées
+        if is_source_ip_private && is_target_ip_private {
+            if let (Some(source_ip), Some(target_ip)) = 
+                (&packet.layer_3_infos.ip_source, &packet.layer_3_infos.ip_destination) {
                 
+                let source_color = Self::determine_color(source_ip);
+                let target_color = Self::determine_color(target_ip);
 
                 self.nodes.entry(source_ip.clone()).or_insert_with(|| Node {
                     name: source_ip.clone(),
                     color: source_color,
-                    mac: mac_src,
+                    mac: packet.mac_address_source.clone(),
                 });
                 self.nodes.entry(target_ip.clone()).or_insert_with(|| Node {
                     name: target_ip.clone(),
                     color: target_color,
-                    mac: mac_dest,
+                    mac: packet.mac_address_destination.clone(),
                 });
 
-                let label = packet.l_3_protocol.clone();
+                let label = &packet.l_3_protocol;
 
-                let edge_exists = self.edges.values().any(|e| {
-                    (e.source == source_ip && e.target == target_ip && e.label == label)
-                        || (e.source == target_ip && e.target == source_ip && e.label == label)
-                });
-
-                if !edge_exists {
+                if !self.edge_exists(source_ip, target_ip, label) {
                     let edge_name = format!("edge{}", self.edge_counter);
                     self.edges.insert(
                         edge_name,
                         Edge {
-                            source: source_ip,
-                            target: target_ip,
-                            label,
+                            source: source_ip.clone(),
+                            target: target_ip.clone(),
+                            label: label.clone(),
                         },
                     );
                     self.edge_counter += 1;
@@ -105,7 +98,6 @@ impl GraphBuilder {
             }
         }
     }
-
     fn build_graph_data(&self) -> GraphData {
         GraphData {
             nodes: self.nodes.clone(),

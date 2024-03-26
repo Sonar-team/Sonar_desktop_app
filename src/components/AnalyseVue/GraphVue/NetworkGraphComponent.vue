@@ -31,12 +31,15 @@
     intervalId: null,
     configs: vNG.defineConfigs({
       view: {
+        maxZoomLevel: 5,
+        minZoomLevel: 0.1,
+        
         layoutHandler: new ForceLayout({}),
       },
       node: {
         selectable: true,
         normal: { 
-          radius: 40,
+          radius: 20,
           color: node => node.color
          }, // Light grey for visibility on dark background
         label: { 
@@ -187,28 +190,32 @@
 </script>
 
 <template>
-  <button class="download-button" @click="downloadSvg">Télécharger l'image</button>
-  <v-network-graph
-    class="graph"
-    ref="graphnodes"
-    :nodes="graphData.nodes"
-    :edges="graphData.edges"
-    :layouts="graphData.layouts"
-    :configs="configs"
-    :event-handlers="{
-      'node:click': showNodeContextMenu,
-      'edge:click': showEdgeContextMenu,
-    }"
-  >
-    <template #edge-label="{ edge, ...slotProps }">
-      <v-edge-label :text="edge.label" align="above" v-bind="slotProps" />
-    </template>
-  </v-network-graph>
+  <div class="graph-container">
+    
+    <button class="download-button" @click="downloadSvg">Télécharger l'image</button>
+    <v-network-graph
+      class="graph"
+      ref="graphnodes"
+      zoom-level=3
+      :nodes="graphData.nodes"
+      :edges="graphData.edges"
+      :layouts="graphData.layouts"
+      :configs="configs"
+      :event-handlers="{
+        'node:click': showNodeContextMenu,
+        'edge:click': showEdgeContextMenu,
+      }"
+    >
+      <template #edge-label="{ edge, ...slotProps }">
+        <v-edge-label :text="edge.label" align="above" v-bind="slotProps" />
+      </template>
+    </v-network-graph>
+  </div>
   <div ref="nodeMenu" class="context-menu">
     Infos du noeud:
     <ul class="contenu">
-    <li v-for="(info, index) in menuTargetNode" :key="index">{{ info }}</li>
-  </ul>
+      <li v-for="(info, index) in menuTargetNode" :key="index">{{ info }}</li>
+    </ul>
   </div>
   <div ref="edgeMenu" class="context-menu">
     Infos de l'arête:
@@ -216,26 +223,35 @@
   </div>
 </template>
 
-
 <style scoped>
+.graph-container {
+  position: relative; /* Establishes a relative positioning context */
+  height: 800px; /* Adjust height as needed */
+  width: 100%; /* Container takes full width */
+}
+
 .graph {
-  height: 620px;
-  border: 2px solid #3a3a3a; /* Bordure plus sombre */
+  height: 100%; /* Graph takes full height of the container */
+  border: 2px solid #3a3a3a;
   border-radius: 10px;
   width: 100%;
   text-align: center;
-  color: #FFF; /* Texte en blanc */
+  color: #FFF;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-  background-color: #1a1a1a; /* Fond plus sombre */
+  background-color: #1a1a1a;
 }
 
 .download-button {
-  background-color: #0b1b25; /* Couleur de fond du bouton */
-  color: #fff; /* Couleur du texte du bouton */
-  padding: 10px 20px; /* Espacement intérieur du bouton */
-  border: none; /* Supprimer la bordure du bouton */
-  border-radius: 5px; /* Ajouter une bordure arrondie au bouton */
-  cursor: pointer; /* Curseur de type pointeur au survol */
+  position: absolute; /* Absolutely positioned relative to its nearest positioned ancestor */
+  top: 10px; /* Distance from the top of the container */
+  left: 10px; /* Distance from the left of the container */
+  background-color: #0b1b25;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 10; /* Ensure the button is above the graph */
 }
 
 .context-menu {
@@ -250,13 +266,12 @@
   border: 1px solid #aaaaaa;
   box-shadow: 2px 2px 2px #e7bf0c;
 }
+
 .contenue {
   color: #0b1b25;
   border: 1px dashed #aaa;
-    padding: 4px;
-    margin-top: 8px;
+  padding: 4px;
+  margin-top: 8px;
 }
-
-
 
 </style>

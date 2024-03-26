@@ -1,7 +1,7 @@
 {
   "name": "sonar_desktop_app",
   "private": true,
-  "version": "1.9.0",
+  "version": "1.10.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -19,7 +19,7 @@
     "vue": "^3.3.4",
     "vue-chartjs": "^5.2.0",
     "vue-router": "^4.2.5",
-    "vuetify": "^3.5.9"
+    "vuetify": "^3.5.11"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.5.9",
