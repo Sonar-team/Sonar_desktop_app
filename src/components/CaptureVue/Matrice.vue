@@ -5,10 +5,7 @@
       :headers="headers"
       :items="processedPackets"
       item-key="id"
-      items-per-page="17"
-    
-
-
+      items-per-page="16"
       density="compact"
       
     ></v-data-table>
@@ -27,7 +24,7 @@ export default {
       headers: [
         { title: 'MAC Source', value: 'info.mac_address_source',key: 'info.mac_address_source',sortable: true },
         { title: 'MAC Destination', value: 'info.mac_address_destination' ,sortable: true},
-        { title: 'Interface', value: 'info.interface' ,sortable: true},
+        { title: 'Interface', value: 'info.interface' ,sortable: true,},
         { title: 'Protocole L3', value: 'info.l_3_protocol' ,sortable: true},
         { title: 'IP Source', value: 'info.layer_3_infos.ip_source',sortable: true },
         { title: 'Type', value: 'info.layer_3_infos.ip_source_type' ,sortable: true},

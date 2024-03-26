@@ -8,9 +8,8 @@
       :currentTime="$route.params.currentTime"
     />
     <div class="content">
-      <TopBarFilter />
       <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
-      <button class="button" @click="toggleComponent">Changer de vue</button> <!-- Toggle Button -->
+      <button class="button" @click="toggleComponent">{{ buttonText }}</button> <!-- Toggle Button -->
       <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
@@ -24,13 +23,13 @@ import Sidebar from '../components/NavBar/SideBar.vue';
 import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseVue/GraphVue/NetworkGraphComponent.vue'; // Import the other component
-import TopBarFilter from '../components/TopBarFilter/TopBarFilter.vue';
 
 import { invoke } from '@tauri-apps/api/tauri';
 
 export default {
   data() {
     return {
+      buttonText: 'Afficher la matrice',
       tempsReleve: '',
       tramesRecues: 0,
       tramesEnregistrees: 0,
@@ -40,15 +39,18 @@ export default {
 
     };
   },
-
   components: {
-    TopBarFilter,
     BottomLong,
     Matrice,
     Sidebar,
     NetworkGraphComponent
   },
-
+  computed: {
+    buttonText() {
+      // Change le texte du bouton en fonction de la vue actuellement affichée
+      return this.showMatrice ? 'Voir Vue Graphique' : 'Voir Vue Matrice';
+    }
+  },
   methods: {
     toggleComponent() {
       this.showMatrice = !this.showMatrice; // Toggle the state

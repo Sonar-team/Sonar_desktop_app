@@ -9,17 +9,20 @@
       <p>Temps écoulé: {{ tempsEcoule }}</p>
       <p>Trames reçues: {{ tramesRecues }} </p>
       <p>Matrice de flux: {{ tramesEnregistrees }}</p>
-      <p>Choix du format:</p>
-      <select v-model="selectedFormat">
-        <option value="csv">CSV</option>
+      <p>Exporter: </p>
+      <select v-model="selectedFormat" 
+        @change="triggerSave" 
+        style="border: 2px solid #89CFF0;">
+        <option value="csv">Csv</option>
         <option value="xlsx">Excel</option>
       </select>
+      <button class="button" @click="toggleComponent">{{ buttonText }}</button> <!-- Toggle Button -->
 
-    <button @click="SaveFile">Sauvegarder</button>
+
   </div>
 </template>
   
-  <script>
+<script>
 import { save } from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api'
 import { desktopDir } from '@tauri-apps/api/path';
@@ -28,6 +31,7 @@ import { message } from '@tauri-apps/api/dialog';
 export default {
   data() {
     return {
+      buttonText: '',
       selectedFormat: 'xlsx',
       tempsReleve: '',
       tempsEcoule: '',
@@ -39,14 +43,20 @@ export default {
       heureFin:'',
     };
   },
+  computed: {
+    buttonText() {
+      // Change le texte du bouton en fonction de la vue actuellement affichée
+      return this.showMatrice ? 'Voir Vue Graphique' : 'Voir Vue Matrice';
+    }
+  },
   methods: {
-    SaveFile() {
-      if (this.selectedFormat === 'csv') {
-        this.SaveAsCsv();
-      } else if (this.selectedFormat === 'xlsx') {
-        this.SaveAsXlsx();
-      }
-    },
+    triggerSave() {
+    if (this.selectedFormat === 'csv') {
+      this.SaveAsCsv();
+    } else if (this.selectedFormat === 'xlsx') {
+      this.SaveAsXlsx();
+    }
+  },
     augmenterTemps() {
     this.ajusterTemps(1); // Augmenter d'une seconde
     },
@@ -111,7 +121,7 @@ export default {
       console.log("Save as csv")
       save({
         filters: [{
-          name: 'Relevée CSV',
+          name: '.csv',
           extensions: ['csv']
         }],
         title: 'Sauvegarder la matrice de flux',
@@ -127,7 +137,7 @@ export default {
       console.log("Save as xlsx")
       save({
         filters: [{
-          name: 'Relevée Excel',
+          name: '.xlsx',
           extensions: ['xlsx']
         }],
         title: 'Sauvegarder la matrice de flux',
