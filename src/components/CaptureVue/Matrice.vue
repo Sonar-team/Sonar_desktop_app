@@ -8,10 +8,11 @@
       items-per-page="18"
       density="compact"
       
-    ></v-data-table>
+    >
+
+  </v-data-table>
   </v-theme-provider>
 </template>
-
 
 <script>
 import { invoke } from '@tauri-apps/api/tauri';
@@ -22,7 +23,7 @@ export default {
       packets: [],
       intervalId: null,
       headers: [
-        { title: 'MAC Source', value: 'info.mac_address_source',key: 'info.mac_address_source',sortable: true },
+        { title: 'MAC Source', value: 'info.mac_address_source',key: 'info.mac_address_source',sortable: true , },
         { title: 'MAC Destination', value: 'info.mac_address_destination' ,sortable: true},
         { title: 'Interface', value: 'info.interface' ,sortable: true,},
         { title: 'Protocole L3', value: 'info.l_3_protocol' ,sortable: true},
@@ -79,4 +80,5 @@ export default {
   width: 100%;
   max-width: 100%;
 }
+
 </style>

@@ -67,7 +67,7 @@ impl GraphBuilder {
                 let target_color = if target_ip.ends_with(".1") {
                     "#D4D3DC".to_string()
                 } else {
-                    "#317AC1".to_string()
+                    "blue".to_string()
                 };
                 let mac_dest = packet.mac_address_destination.clone();
                 

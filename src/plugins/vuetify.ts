@@ -2,12 +2,10 @@
 import { createVuetify } from 'vuetify';
 import 'vuetify/styles';
 import * as components from 'vuetify/components';
+import 'vuetify/dist/vuetify.min.css' // Ensure you are using css-loader
 
 const vuetify = createVuetify({
     components,
-    theme: {
-        defaultTheme: 'dark' // This sets the default theme to dark.
-      }
   // Configuration de Vuetify (thèmes, icônes, etc.)
 });
 
