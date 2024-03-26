@@ -74,7 +74,7 @@
       {
         "fullscreen": true,
         "resizable": true,
-        "title": "sonar_desktop_app",
+        "title": "Sonar",
         "width": 1800,
         "height": 1000,
         "visible": false,
@@ -82,6 +82,7 @@
         "center": false 
       },
       {
+        "fullscreen": true,
         "width": 1800,
         "height": 1000,
         "title": "Sonar",
