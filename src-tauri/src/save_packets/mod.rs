@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 
-use crate::{sniff::capture_packet::layer_2_infos::PacketInfos, tauri_state::SonarState};
+use crate::{sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos}, tauri_state::SonarState};
 use csv::Writer;
 use rust_xlsxwriter::*;
 use serde::Serialize;
@@ -29,7 +29,7 @@ pub enum MyError {
 
 /// Structure représentant les informations des paquets à sérialiser vers un fichier CSV.
 #[derive(Serialize)]
-struct PacketInfosCsv {
+struct PacketInfosFlaten {
     /// Adresse MAC source du paquet.
     mac_address_source: String,
     /// Adresse MAC destination du paquet.
@@ -40,8 +40,10 @@ struct PacketInfosCsv {
     l_3_protocol: String,
     /// Adresse IP source du paquet (optionnel).
     ip_source: Option<String>,
+    ip_source_type: Option<IpType>,
     /// Adresse IP destination du paquet (optionnel).
     ip_destination: Option<String>,
+    ip_destination_type: Option<IpType>,
     /// Protocole de la couche 4 du paquet (optionnel).
     l_4_protocol: Option<String>,
     /// Port source du paquet (optionnel).
@@ -55,16 +57,18 @@ struct PacketInfosCsv {
     count: u32,
 }
 
-impl PacketInfosCsv {
-    /// Convertit les informations du paquet en une structure `PacketInfosCsv`.
+impl PacketInfosFlaten {
+    /// Convertit les informations du paquet en une structure `PacketInfosFlaten`.
     fn from_packet_infos(packet: &PacketInfos, count: u32) -> Self {
-        PacketInfosCsv {
+        PacketInfosFlaten {
             mac_address_source: packet.mac_address_source.clone(),
             mac_address_destination: packet.mac_address_destination.clone(),
             interface: packet.interface.clone(),
             l_3_protocol: packet.l_3_protocol.clone(), // Populate from PacketInfos
             ip_source: packet.layer_3_infos.ip_source.clone(),
+            ip_source_type: packet.layer_3_infos.ip_source_type.clone(),
             ip_destination: packet.layer_3_infos.ip_destination.clone(),
+            ip_destination_type: packet.layer_3_infos.ip_destination_type.clone(),
             l_4_protocol: packet.layer_3_infos.l_4_protocol.clone(),
             port_source: packet.layer_3_infos.layer_4_infos.port_source.clone(),
             port_destination: packet.layer_3_infos.layer_4_infos.port_destination.clone(),
@@ -106,7 +110,7 @@ pub fn cmd_save_packets_to_csv(file_path: String, app: AppHandle) -> Result<(), 
 
     // Serialize the entire vector to the CSV
     for (packet, count) in data.iter() {
-        let packet_csv = PacketInfosCsv::from_packet_infos(packet, *count);
+        let packet_csv = PacketInfosFlaten::from_packet_infos(packet, *count);
         wtr.serialize(packet_csv)
             .map_err(|e| MyError::CsvError(e.to_string()))?;
     }
@@ -148,7 +152,9 @@ pub fn cmd_save_packets_to_excel(file_path: String, app: AppHandle) -> Result<()
         "Interface",
         "L3 Protocol",
         "IP Source",
+        "IP Source Type",
         "IP Destination",
+        "IP Destination Type",
         "L4 Protocol",
         "Source Port",
         "Destination Port",
@@ -164,7 +170,7 @@ pub fn cmd_save_packets_to_excel(file_path: String, app: AppHandle) -> Result<()
 
     // Serialize the entire vector to the Excel sheet
     for (i, (packet, count)) in data.iter().enumerate() {
-        let packet_csv = PacketInfosCsv::from_packet_infos(packet, *count);
+        let packet_csv = PacketInfosFlaten::from_packet_infos(packet, *count);
 
         // Écriture des champs dans chaque colonne
         sheet
@@ -186,35 +192,45 @@ pub fn cmd_save_packets_to_excel(file_path: String, app: AppHandle) -> Result<()
                 .write_string(i as u32 + 1, 4, ip_src)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
+        if let Some(ip_src_type) = &packet_csv.ip_source_type {
+            sheet
+                .write_string(i as u32 + 1, 5, ip_src_type.to_string())
+                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+        }
         if let Some(ip_dst) = &packet_csv.ip_destination {
             sheet
-                .write_string(i as u32 + 1, 5, ip_dst)
+                .write_string(i as u32 + 1, 6, ip_dst)
+                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+        }
+        if let Some(ip_dst_type) = &packet_csv.ip_destination_type {
+            sheet
+                .write_string(i as u32 + 1, 7, ip_dst_type.to_string())
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(l4_proto) = &packet_csv.l_4_protocol {
             sheet
-                .write_string(i as u32 + 1, 6, l4_proto)
+                .write_string(i as u32 + 1, 8, l4_proto)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(port_src) = &packet_csv.port_source {
             sheet
-                .write_string(i as u32 + 1, 7, port_src)
+                .write_string(i as u32 + 1, 9, port_src)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
         if let Some(port_dst) = &packet_csv.port_destination {
             sheet
-                .write_string(i as u32 + 1, 8, port_dst)
+                .write_string(i as u32 + 1, 10, port_dst)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
 
         // Écriture du champ 'size'
         sheet
-            .write_number(i as u32 + 1, 9, packet_csv.packet_size as f64)
+            .write_number(i as u32 + 1, 11, packet_csv.packet_size as f64)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
 
         // Écriture du champ 'count'
         sheet
-            .write_number(i as u32 + 1, 10, packet_csv.count as f64)
+            .write_number(i as u32 + 1, 12, packet_csv.count as f64)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
     }
 

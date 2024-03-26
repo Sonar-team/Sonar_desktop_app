@@ -1,5 +1,5 @@
 use std::net::IpAddr;
-
+use std::fmt;
 use serde::Serialize;
 // Définition de l'énumération `IpType`
 #[derive(Debug, Serialize, Clone, Eq, Hash, PartialEq)]
@@ -33,6 +33,25 @@ impl IpType {
         }
     }
 }
+
+
+impl fmt::Display for IpType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let display_string = match self {
+            IpType::Private => "Privée",
+            IpType::Multicast => "Multicast",
+            IpType::Loopback => "Loopback",
+            IpType::Apipa => "APIPA",
+            IpType::LinkLocal => "Link-Local",
+            IpType::Ula => "ULA",
+            IpType::Public => "Publique",
+            IpType::Unknown => "Inconnue",
+        };
+
+        write!(f, "{}", display_string)
+    }
+}
+
 
 // Implémenter Default pour IpType
 
