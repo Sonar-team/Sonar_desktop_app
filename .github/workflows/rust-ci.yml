@@ -1,0 +1,53 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  rust_checks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        components: rustfmt, clippy
+        override: true
+
+    - name: Check formatting with cargo fmt
+      run: cargo fmt -- --check
+
+    - name: Lint with cargo clippy
+      run: cargo clippy -- -D warnings
+
+    - name: Build
+      run: cargo build --verbose
+
+    - name: Run tests
+      run: cargo test --verbose
+
+    - name: Audit dependencies with cargo audit
+      uses: actions-rs/audit-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check licenses and configurations with cargo deny
+      uses: EmbarkStudios/cargo-deny-action@v1
+
+    - name: Check for outdated dependencies with cargo outdated
+      uses: actions-rs/cargo@v1
+      with:
+        command: outdated
+
+    - name: Check unused dependencies with cargo udeps
+      uses: actions-rs/cargo@v1
+      with:
+        command: udeps
+        args: --all-targets
