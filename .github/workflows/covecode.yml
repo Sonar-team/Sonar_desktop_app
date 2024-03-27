@@ -34,7 +34,6 @@ jobs:
           yarn && yarn build
         shell: bash --noprofile --norc -e -o pipefail {0}
 
-
       - name: Debug information
         run: |
           pwd

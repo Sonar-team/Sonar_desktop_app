@@ -28,6 +28,7 @@ colored = "2.1.0"
 rand = "0.8.5"
 pnet = "0.34.0"
 thiserror ="1.0.57"
+cargo-sonar = "1.2.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

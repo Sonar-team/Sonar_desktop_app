@@ -1,6 +1,9 @@
 use std::sync::Mutex;
 
-use crate::{sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos}, tauri_state::SonarState};
+use crate::{
+    sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos},
+    tauri_state::SonarState,
+};
 use csv::Writer;
 use rust_xlsxwriter::*;
 use serde::Serialize;

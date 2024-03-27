@@ -59,14 +59,19 @@ impl GraphBuilder {
     }
 
     fn add_edge(&mut self, packet: &PacketInfos) {
-        let is_source_ip_private = matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
-        let is_target_ip_private = matches!(packet.layer_3_infos.ip_destination_type, Some(IpType::Private));
+        let is_source_ip_private =
+            matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
+        let is_target_ip_private = matches!(
+            packet.layer_3_infos.ip_destination_type,
+            Some(IpType::Private)
+        );
 
         // Vérification supplémentaire pour s'assurer que les adresses IP sont bien IPv4 privées
         if is_source_ip_private && is_target_ip_private {
-            if let (Some(source_ip), Some(target_ip)) = 
-                (&packet.layer_3_infos.ip_source, &packet.layer_3_infos.ip_destination) {
-                
+            if let (Some(source_ip), Some(target_ip)) = (
+                &packet.layer_3_infos.ip_source,
+                &packet.layer_3_infos.ip_destination,
+            ) {
                 let source_color = Self::determine_color(source_ip);
                 let target_color = Self::determine_color(target_ip);
 

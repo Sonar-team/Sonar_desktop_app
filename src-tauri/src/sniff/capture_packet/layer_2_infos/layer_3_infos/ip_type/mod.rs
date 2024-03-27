@@ -1,9 +1,8 @@
-use std::net::IpAddr;
-use std::fmt;
 use serde::Serialize;
+use std::fmt;
+use std::net::IpAddr;
 // Définition de l'énumération `IpType`
-#[derive(Debug, Serialize, Clone, Eq, Hash, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Serialize, Clone, Eq, Hash, PartialEq, Default)]
 pub enum IpType {
     Private,
     Multicast,
@@ -34,7 +33,6 @@ impl IpType {
     }
 }
 
-
 impl fmt::Display for IpType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let display_string = match self {
@@ -52,9 +50,7 @@ impl fmt::Display for IpType {
     }
 }
 
-
 // Implémenter Default pour IpType
-
 
 // Fonctions auxiliaires pour les vérifications spécifiques
 fn is_apipa_ip(ip: &std::net::Ipv4Addr) -> bool {

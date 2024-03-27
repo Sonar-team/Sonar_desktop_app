@@ -16,8 +16,6 @@ use sonar_desktop_app::{
 use tauri::{AppHandle, Manager};
 use tauri_plugin_log::LogTarget;
 
-
-
 extern crate sonar_desktop_app;
 
 fn main() {
@@ -61,9 +59,8 @@ fn main() {
                 .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
                 .build(),
         )
-        
         .run(tauri::generate_context!())
-            .expect("error while running tauri application");
+        .expect("error while running tauri application");
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
