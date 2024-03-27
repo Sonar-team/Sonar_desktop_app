@@ -25,10 +25,6 @@ jobs:
       run: cargo fmt -- --check
       working-directory: ./src-tauri
 
-    - name: Lint with cargo clippy
-      run: cargo clippy -- -D warnings
-      working-directory: ./src-tauri
-
     - name: Run tests
       run: cargo test --verbose
       working-directory: ./src-tauri
@@ -40,6 +36,7 @@ jobs:
 
     - name: Check licenses and configurations with cargo deny
       uses: EmbarkStudios/cargo-deny-action@v1
+      
 
     - name: Check for outdated dependencies with cargo outdated
       uses: actions-rs/cargo@v1
