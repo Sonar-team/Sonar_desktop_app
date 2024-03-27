@@ -30,23 +30,26 @@ jobs:
         run: rustup component add clippy
 
       - name: Install cargo-sonar and run Clippy
+        working-directory: ./src-tauri
         run: |
             cargo install cargo-sonar
             cargo clippy --message-format json > my-clippy-report.json
             cargo sonar --issues clippy --clippy-path my-clippy-report.json
 
       - name: Build with coverage
+        working-directory: ./src-tauri
         run: |
           RUSTFLAGS="-C instrument-coverage" cargo build
 
       - name: Generate code coverage
+        working-directory: ./src-tauri
         run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_PAT }}
         with:
           args: >
             -Dsonar.externalIssuesReportPaths=sonar-issues.json

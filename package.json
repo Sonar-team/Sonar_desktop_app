@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test": "jest"
   },
   "dependencies": {
     "@fontsource/oxanium": "^5.0.17",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@tauri-apps/cli": "^1.5.9",
     "@vitejs/plugin-vue": "^4.2.3",
+    "jest": "^29.7.0",
     "vite": "^4.5.1"
   }
 }
