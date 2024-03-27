@@ -32,7 +32,11 @@ jobs:
       - name: Install cargo-sonar and run Clippy
         working-directory: ./src-tauri
         run: |
+            pwd
+            ls
             cargo install cargo-sonar
+            pwd
+            ls
             cargo clippy --message-format json > my-clippy-report.json
             cargo sonar --issues clippy --clippy-path my-clippy-report.json
 
