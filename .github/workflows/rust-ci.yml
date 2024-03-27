@@ -23,15 +23,15 @@ jobs:
 
     - name: Check formatting with cargo fmt
       run: cargo fmt -- --check
+      working-directory: ./src-tauri
 
     - name: Lint with cargo clippy
       run: cargo clippy -- -D warnings
-
-    - name: Build
-      run: cargo build --verbose
+      working-directory: ./src-tauri
 
     - name: Run tests
       run: cargo test --verbose
+      working-directory: ./src-tauri
 
     - name: Audit dependencies with cargo audit
       uses: actions-rs/audit-check@v1
