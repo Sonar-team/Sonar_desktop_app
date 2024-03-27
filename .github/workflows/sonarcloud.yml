@@ -49,7 +49,7 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ env.SONAR_ENV}}
+          SONAR_TOKEN: ${{ env.SONAR_T}}
         with:
           args: >
             -Dsonar.externalIssuesReportPaths=sonar-issues.json
