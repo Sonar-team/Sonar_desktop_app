@@ -1,4 +1,4 @@
-name: "Create Documentation"
+name: publish Documentation
 on:
   workflow_dispatch:
   workflow_run:

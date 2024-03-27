@@ -1,4 +1,4 @@
-name: Sonarcloud
+name: Sonarcloud rust
 
 on:
   workflow_dispatch:
