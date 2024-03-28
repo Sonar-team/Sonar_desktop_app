@@ -1,6 +1,8 @@
 <template>
     <div class="sidebar">    
       <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="150" height="150">   
+      <button class="button" @click="toggleComponent">{{ buttonText }}</button> <!-- Toggle Button -->
+
       <p>Départ: {{ heureDepart }}</p>
       <p>Fin: {{ heureFin }}</p>
       <button class="button-up" @click="augmenterTemps"></button>
@@ -12,11 +14,10 @@
       <p>Exporter: </p>
       <select v-model="selectedFormat" 
         @change="triggerSave" 
-        style="border: 2px solid #89CFF0;">
+        style="border: 2px solid #89CFF0; color: aliceblue">
         <option value="csv">Csv</option>
         <option value="xlsx">Excel</option>
       </select>
-      <button class="button" @click="toggleComponent">{{ buttonText }}</button> <!-- Toggle Button -->
 
 
   </div>
@@ -47,7 +48,7 @@ export default {
   computed: {
     buttonText() {
       // Change le texte du bouton en fonction de la vue actuellement affichée
-      return this.showMatrice ? 'Voir Vue Graphique' : 'Voir Vue Matrice';
+      return this.showMatrice ? 'Graphique' : 'Matrice';
     }
   },
   methods: {
@@ -259,6 +260,7 @@ export default {
   background-color: #2A2A2A; /* Couleur de fond */
   color: #ECF0F1; /* Couleur du texte */
   padding: 20px;
+  padding-top: 32px;
   border-radius: 5px; /* Bordures arrondies */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre */
   display: flex;
@@ -269,7 +271,7 @@ export default {
 .sidebar img {
   width: 150px; /* Taille du logo */
   height: auto; /* Maintenir le ratio de l'image */
-  margin-bottom: 20px; /* Espacement sous l'image */
+  margin-bottom: 10px; /* Espacement sous l'image */
 }
 
 .sidebar p {

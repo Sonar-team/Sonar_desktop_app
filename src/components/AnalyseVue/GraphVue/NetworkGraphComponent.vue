@@ -64,7 +64,7 @@
                 return 'orange';
               // Ajoutez d'autres cas selon vos besoins
               default:
-                return 'black'; // Couleur par défaut
+                return 'white'; // Couleur par défaut
             }
           },
         },
@@ -226,7 +226,7 @@
 <style scoped>
 .graph-container {
   position: relative; /* Establishes a relative positioning context */
-  height: 800px; /* Adjust height as needed */
+  height: 850px; /* Adjust height as needed */
   width: 100%; /* Container takes full width */
 }
 

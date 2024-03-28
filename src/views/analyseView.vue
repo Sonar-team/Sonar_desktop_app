@@ -93,7 +93,7 @@ export default {
   text-align: center;
   color: aliceblue;
   margin: 1px 0; /* Reduce top and bottom margin */
-  padding: 10px 0; /* Reduce top and bottom padding */
+
 }
 
 .button {

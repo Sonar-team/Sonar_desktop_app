@@ -5,7 +5,7 @@
       :headers="headers"
       :items="processedPackets"
       item-key="id"
-      items-per-page="18"
+      items-per-page="21"
       density="compact"
       
     >

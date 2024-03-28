@@ -14,7 +14,6 @@ use sonar_desktop_app::{
     tauri_state::SonarState,
 };
 use tauri::{AppHandle, Manager};
-use tauri_plugin_log::LogTarget;
 
 extern crate sonar_desktop_app;
 
@@ -54,17 +53,15 @@ fn main() {
             Ok(())
         })
         //.plugin(devtools::init())
-        .plugin(
-            tauri_plugin_log::Builder::default()
-                .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
-                .build(),
-        )
+        
+        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
 fn get_interfaces_tab() -> Vec<String> {
+    info!("demande des Interfaces réseaux");
     get_interfaces()
 }
 
