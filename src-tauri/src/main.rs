@@ -38,7 +38,8 @@ fn main() {
             get_matrice,
             get_graph_state,
             write_file,
-            toggle_ipv6_filter
+            toggle_ipv6_filter,
+            toggle_pause
         ])
         .setup(move |app| {
             let app_handle = app.handle();
@@ -53,7 +54,6 @@ fn main() {
             Ok(())
         })
         //.plugin(devtools::init())
-        
         
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -114,4 +114,14 @@ fn toggle_ipv6_filter(app: AppHandle) {
     let mut state_guard = state.lock().unwrap();
     state_guard.toggle_filter_ipv6();
     info!("etat du filtre {:?}", state_guard.filter_ipv6);
+}
+
+#[tauri::command(async)]
+fn toggle_pause(app: AppHandle) {
+    let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
+    let mut state_guard = state.lock().unwrap();
+    state_guard.toggle_actif();
+    println!("etat du actif");
+    info!("etat du filtre {:?}", state_guard.actif);
+
 }

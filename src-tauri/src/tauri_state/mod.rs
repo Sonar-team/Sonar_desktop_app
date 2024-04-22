@@ -34,6 +34,7 @@ pub struct SonarState {
     pub matrice: Vec<(PacketInfos, u32)>,
     // Indique si le filtrage des adresses IPv6 est activé
     pub filter_ipv6: bool,
+    pub actif: bool,
 }
 
 impl Default for SonarState {
@@ -48,7 +49,13 @@ impl SonarState {
         SonarState {
             matrice: Vec::new(),
             filter_ipv6: true, // Par défaut, le filtrage IPv6 est désactivé
+            actif: true
         }
+    }
+
+    // Méthode pour basculer l'état de `actif`
+    pub fn toggle_actif(&mut self) {
+        self.actif = !self.actif; // Inverse l'état actuel
     }
 
     // Méthode pour basculer l'état de `filter_ipv6`

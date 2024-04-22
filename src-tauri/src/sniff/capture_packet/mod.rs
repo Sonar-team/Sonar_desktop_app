@@ -27,6 +27,15 @@ use crate::tauri_state::SonarState;
 
 use self::layer_2_infos::PacketInfos;
 
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::Arc;
+
+struct ThreadStatus {
+    is_alive: AtomicBool,
+    packets_processed: AtomicUsize,
+    last_error: Mutex<Option<String>>, // Using Mutex to allow mutable access across threads
+}
+
 /// Capture le trafic réseau sur toutes les interfaces disponibles.
 ///
 /// # Arguments
