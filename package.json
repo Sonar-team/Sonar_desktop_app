@@ -13,7 +13,6 @@
   "dependencies": {
     "@fontsource/oxanium": "^5.0.17",
     "@tauri-apps/api": "^1.5.3",
-    "@tauri-apps/plugin-log": "github:tauri-apps/tauri-plugin-log#v2",
     "chart.js": "^4.4.0",
     "d3-force": "^3.0.0",
     "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1",

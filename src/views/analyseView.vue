@@ -9,6 +9,7 @@
     />
     <div class="content">
       <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
+      <button @click="togglePause">pause</button>
       <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
@@ -23,7 +24,7 @@ import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseVue/GraphVue/NetworkGraphComponent.vue'; // Import the other component
 
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/tauri'
 
 export default {
   data() {
@@ -47,6 +48,19 @@ export default {
     toggleComponent() {
       this.showMatrice = !this.showMatrice; // Toggle the state
     },
+    togglePause() {
+      console.log("toggle pause")
+      invoke('toggle_pause')
+          .then((message) => {
+              console.log("Réponse reçue de 'toggle_pause':", message);
+              return message; // S'assure que le message est renvoyé pour une utilisation future
+          })
+          .catch((error) => {
+              console.error("Erreur lors de l'invocation de 'toggle_pause':", error);
+              throw error; // Permet de propager l'erreur pour une gestion plus avancée si nécessaire
+          });
+
+    },
 
     getCurrentDate() {
       // Fonction pour obtenir la date actuelle
@@ -64,8 +78,6 @@ export default {
   },
   mounted() {
     invoke('get_selected_interface', { interface_name: this.$route.params.netInterface })
-    console.log('get_selected_interface');
-    console.log("analyse mounted")
     this.$bus.on('toggle',this.toggleComponent)
     this.installationName = this.$route.params.installationName;
     this.niveauConfidentialite = this.$route.params.confidentialite;
@@ -79,7 +91,6 @@ export default {
 <style scoped>
 .container {
   display: flex;
-
 
 }
 

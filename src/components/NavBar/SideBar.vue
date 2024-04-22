@@ -32,7 +32,7 @@ import { message } from '@tauri-apps/api/dialog';
 export default {
   data() {
     return {
-      buttonText: '',
+
       selectedFormat: 'xlsx',
       tempsReleve: '',
       tempsEcoule: '',
