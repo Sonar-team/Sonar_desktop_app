@@ -27,8 +27,8 @@ use crate::tauri_state::SonarState;
 
 use self::layer_2_infos::PacketInfos;
 
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize};
+
 
 struct ThreadStatus {
     is_alive: AtomicBool,
