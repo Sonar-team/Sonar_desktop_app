@@ -1,7 +1,7 @@
 {
   "name": "sonar_desktop_app",
   "private": true,
-  "version": "1.10.0",
+  "version": "1.11.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
