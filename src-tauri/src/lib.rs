@@ -39,5 +39,10 @@ pub mod sniff;
 /// en particulier lors de l'utilisation de Tauri pour créer une interface graphique.
 pub mod tauri_state;
 
+
+pub mod get_hostname;
+
+
 // Les tests unitaires pour valider la fonctionnalité de chaque composant de `sonar`.
 mod tests_unitaires;
+

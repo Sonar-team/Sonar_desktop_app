@@ -6,10 +6,10 @@
           <th>MAC Source</th>
           <th>MAC Destination</th>
           <th>Interface</th>
-          <th>Protocole</th>
+          <th>Protocole L3</th>
           <th>IP Source</th>
           <th>IP Destination</th>
-          <th>Protocole</th>
+          <th>Protocole L4</th>
           <th>Port Source</th>
           <th>Port Destination</th>
           <th>Protocole</th>

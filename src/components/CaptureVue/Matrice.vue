@@ -36,7 +36,7 @@ export default {
         { title: 'Port Destination', value: 'info.layer_3_infos.layer_4_infos.port_destination' ,sortable: true},
         { title: 'L7', value: 'info.layer_3_infos.layer_4_infos.l_7_protocol' ,sortable: true},
         { title: 'Taille Total', value: 'info.packet_size' ,sortable: true},
-        { title: 'Occurences', value: 'count' ,sortable: true},
+        { title: 'Occ', value: 'count' ,sortable: true},
       ],
     };
   },

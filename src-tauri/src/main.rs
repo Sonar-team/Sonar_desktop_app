@@ -12,6 +12,7 @@ use sonar_desktop_app::{
     save_packets::{cmd_save_packets_to_csv, cmd_save_packets_to_excel, MyError},
     sniff::scan_until_interrupt,
     tauri_state::SonarState,
+    get_hostname::hostname_to_s,
 };
 use tauri::{AppHandle, Manager};
 use tauri_plugin_log::LogTarget;
@@ -40,7 +41,8 @@ fn main() {
             get_graph_state,
             write_file,
             toggle_ipv6_filter,
-            toggle_pause
+            toggle_pause,
+            get_hostname_to_string,
         ])
         .setup(move |app| {
             let app_handle = app.handle();
@@ -68,6 +70,12 @@ fn main() {
 fn get_interfaces_tab() -> Vec<String> {
     info!("demande des Interfaces réseaux");
     get_interfaces()
+}
+
+#[tauri::command(async, rename_all = "snake_case")]
+fn get_hostname_to_string() -> String {
+    info!("demande du hostname");
+    hostname_to_s()
 }
 
 #[tauri::command(async, rename_all = "snake_case")]

@@ -39,7 +39,7 @@
         <h1 class="title-capture">4. Entrer la durée de relevé</h1>
       </div>
       <div class="content">
-        <input v-model="time" type="time" step="1" placeholder="HH:MM:SS" :class="{ 'invalid': !validation.timeValid }" @input="validateTime" />
+        <input v-model="time" type="text" step="1" placeholder="HH:MM:SS" :class="{ 'invalid': !validation.timeValid }" @input="validateTime" />
       </div>
         <button @click="goToAnalysePage">Lancer le relevé</button>
     </div>
@@ -60,7 +60,7 @@ export default {
       selectedNetInterface: '',
       confidentialite: 'NP',
       installationName: '',
-      time: '04:00:00',
+      time: '48:00:00',
       currentTime: '',
       validation: {
         netInterfaceValid: true,
@@ -80,51 +80,74 @@ export default {
     },
     
     validateInstallationName() {  this.validation.installationNameValid = this.installationName && this.installationName.trim().length > 0;
-},
+  },
 
-validateTime() {
-  this.validation.timeValid = this.time && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/.test(this.time);
-},
+  validateTime() {
+    // Use regex or manual splitting to validate input
+    const parts = this.time.split(':');
+    if (parts.length === 3) {
+      const hours = parseInt(parts[0], 10);
+      const minutes = parseInt(parts[1], 10);
+      const seconds = parseInt(parts[2], 10);
+      this.validation.timeValid = 
+        hours >= 0 && hours <= 48 &&
+        minutes >= 0 && minutes < 60 &&
+        seconds >= 0 && seconds < 60;
+    } else {
+      this.validation.timeValid = false;
+    }
+  },
 
-validateForm() {
-  this.validateNetInterface();
-  this.validateConfidentialite();
-  this.validateInstallationName();
-  this.validateTime();
-  return this.validation.netInterfaceValid && this.validation.confidentialiteValid && this.validation.installationNameValid && this.validation.timeValid;
-},
 
-captureCurrentTime() {
-  const now = new Date();
-  this.currentTime = now.toISOString(); // Format the current time as needed
-},
+  validateForm() {
+    this.validateNetInterface();
+    this.validateConfidentialite();
+    this.validateInstallationName();
+    this.validateTime();
+    return this.validation.netInterfaceValid && this.validation.confidentialiteValid && this.validation.installationNameValid && this.validation.timeValid;
+  },
 
-goToAnalysePage() {
-  if (this.validateForm()) {
-    this.captureCurrentTime();
-    this.$router.push({
-      name: 'Analyse',
-      params: {
-        netInterface: this.selectedNetInterface,
-        confidentialite: this.confidentialite,
-        installationName: this.installationName,
-        time: this.time,
-        currentTime: this.currentTime,
-      },
-    });
-  } else {
-    message('Remplissez les champs en rouges ...', { title: 'Champs non remplis', type: 'warning' });
+  captureCurrentTime() {
+    const now = new Date();
+    this.currentTime = now.toISOString(); // Format the current time as needed
+  },
+
+  goToAnalysePage() {
+    if (this.validateForm()) {
+      this.captureCurrentTime();
+      this.$router.push({
+        name: 'Analyse',
+        params: {
+          netInterface: this.selectedNetInterface,
+          confidentialite: this.confidentialite,
+          installationName: this.installationName,
+          time: this.time,
+          currentTime: this.currentTime,
+        },
+      });
+    } else {
+      message('Remplissez les champs en rouges ...', { title: 'Champs non remplis', type: 'warning' });
+    }
   }
-}
-},
-async mounted() {
-  const detach = await attachConsole();
-  trace("mounted capture");
-  invoke('get_interfaces_tab').then((interfaces) => {
-    this.netInterfaces = interfaces;
-  });
-  detach();
-}
+  },
+  async mounted() {
+    const detach = await attachConsole();
+    trace("mounted capture");
+    invoke('get_interfaces_tab').then((interfaces) => {
+      this.netInterfaces = interfaces;
+      if (interfaces.length > 0) {
+        this.selectedNetInterface = interfaces[interfaces.length - 1]; // Set the last item as default
+      }
+    }).catch(error => {
+      console.error("Failed to load interfaces:", error);
+    });
+    invoke('get_hostname_to_string').then((hostname) => {
+      this.installationName = hostname;
+    }).catch(error => {
+      console.error("Failed to load hostname:", error);
+    });
+    detach();
+  }
 };
 </script>
 
