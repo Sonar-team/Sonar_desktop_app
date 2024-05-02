@@ -49,7 +49,7 @@ impl SonarState {
         SonarState {
             matrice: Vec::new(),
             filter_ipv6: true, // Par défaut, le filtrage IPv6 est désactivé
-            actif: true
+            actif: true,
         }
     }
 

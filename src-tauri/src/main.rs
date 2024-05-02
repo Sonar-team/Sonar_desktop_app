@@ -7,12 +7,12 @@ use log::info;
 
 use sonar_desktop_app::{
     cli::print_banner,
+    get_hostname::hostname_to_s,
     get_interfaces::get_interfaces,
     get_matrice::{get_graph_data::get_graph_data, get_matrice_data::get_matrice_data},
     save_packets::{cmd_save_packets_to_csv, cmd_save_packets_to_excel, MyError},
     sniff::scan_until_interrupt,
     tauri_state::SonarState,
-    get_hostname::hostname_to_s,
 };
 use tauri::{AppHandle, Manager};
 use tauri_plugin_log::LogTarget;
@@ -136,5 +136,4 @@ fn toggle_pause(app: AppHandle) {
     state_guard.toggle_actif();
     println!("etat du actif");
     info!("etat du filtre {:?}", state_guard.actif);
-
 }

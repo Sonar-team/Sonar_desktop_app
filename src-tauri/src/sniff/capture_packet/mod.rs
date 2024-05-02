@@ -29,7 +29,6 @@ use self::layer_2_infos::PacketInfos;
 
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 
-
 struct ThreadStatus {
     is_alive: AtomicBool,
     packets_processed: AtomicUsize,
