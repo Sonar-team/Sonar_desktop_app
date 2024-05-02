@@ -41,12 +41,12 @@ impl GraphBuilder {
         }
     }
 
-    // Fonction pour déterminer la couleur d'un nœud basée sur son IP
-    fn determine_color(ip: &String) -> String {
-        if ip.ends_with(".1") {
-            "#D4D3DC".to_string()
-        } else {
-            "#317AC1".to_string()
+    // Function to determine the color of a node based on its IP type
+    fn determine_color(ip_type: &Option<IpType>) -> String {
+        match ip_type {
+            Some(IpType::Private) => "#D4D3DC".to_string(), // Light gray for private IPs
+            Some(IpType::Public)  => "#317AC1".to_string(), // Blue for public IPs
+            _ => "#FF5733".to_string(), // Red for others (e.g., multicast or loopback, if they ever get through)
         }
     }
 
@@ -59,22 +59,25 @@ impl GraphBuilder {
     }
 
     fn add_edge(&mut self, packet: &PacketInfos) {
-        let is_source_ip_private =
-            matches!(packet.layer_3_infos.ip_source_type, Some(IpType::Private));
-        let is_target_ip_private = matches!(
-            packet.layer_3_infos.ip_destination_type,
-            Some(IpType::Private)
-        );
-
-        // Vérification supplémentaire pour s'assurer que les adresses IP sont bien IPv4 privées
-        if is_source_ip_private && is_target_ip_private {
-            if let (Some(source_ip), Some(target_ip)) = (
-                &packet.layer_3_infos.ip_source,
-                &packet.layer_3_infos.ip_destination,
-            ) {
-                let source_color = Self::determine_color(source_ip);
-                let target_color = Self::determine_color(target_ip);
-
+        if let (Some(source_ip), Some(target_ip)) = (
+            &packet.layer_3_infos.ip_source,
+            &packet.layer_3_infos.ip_destination,
+        ) {
+            let is_source_ip_private_or_public_ipv4 = matches!(
+                packet.layer_3_infos.ip_source_type,
+                Some(IpType::Private | IpType::Public) if is_ipv4(source_ip)
+            );
+            let is_target_ip_private_or_public_ipv4 = matches!(
+                packet.layer_3_infos.ip_destination_type,
+                Some(IpType::Private | IpType::Public) if is_ipv4(target_ip)
+            );
+    
+            if is_source_ip_private_or_public_ipv4 && is_target_ip_private_or_public_ipv4 {
+                // Use IP type to determine color
+                let source_color = Self::determine_color(&packet.layer_3_infos.ip_source_type);
+                let target_color = Self::determine_color(&packet.layer_3_infos.ip_destination_type);
+    
+                // Ensure nodes for source and target IPs are created
                 self.nodes.entry(source_ip.clone()).or_insert_with(|| Node {
                     name: source_ip.clone(),
                     color: source_color,
@@ -85,9 +88,10 @@ impl GraphBuilder {
                     color: target_color,
                     mac: packet.mac_address_destination.clone(),
                 });
-
+    
                 let label = &packet.l_3_protocol;
-
+    
+                // Add edge if it doesn't exist yet
                 if !self.edge_exists(source_ip, target_ip, label) {
                     let edge_name = format!("edge{}", self.edge_counter);
                     self.edges.insert(
@@ -103,6 +107,8 @@ impl GraphBuilder {
             }
         }
     }
+    
+    
     fn build_graph_data(&self) -> GraphData {
         GraphData {
             nodes: self.nodes.clone(),
@@ -129,4 +135,9 @@ pub fn get_graph_data(app: AppHandle) -> Result<String, String> {
         error!("Serialization error: {}", e);
         format!("Serialization error: {}", e)
     })
+}
+
+// Helper function to determine if an IP address is IPv4
+fn is_ipv4(ip: &String) -> bool {
+    ip.contains('.') && !ip.contains(':')
 }

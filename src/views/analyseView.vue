@@ -9,7 +9,7 @@
     />
     <div class="content">
       <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
-      <button @click="togglePause">pause</button>
+      <!--button @click="togglePause">pause</button-->
       <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
