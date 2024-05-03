@@ -2,6 +2,22 @@
 
 ---
 
+## [1.11.0] - 2024-05-02
+
+### Ajouté
+- Affichage des adresses IP publiques dans la vue graphique. Cela permet aux utilisateurs de visualiser les adresses IP directement depuis l'interface graphique de l'application.
+
+### Modifié
+- Modification de l'entrée pour la durée du relevé dans l'interface utilisateur de Vue.js pour accepter des valeurs jusqu'à 48 heures. Auparavant, l'entrée était limitée à 24 heures.
+- Adaptation du type d'entrée pour la durée de relevé de `type="time"` à `type="text"` pour permettre la saisie manuelle de la durée en format "HH:MM:SS", permettant ainsi de saisir des durées supérieures à 24 heures.
+- Mise à jour de la fonction `validateTime` pour valider les heures, les minutes et les secondes manuellement en utilisant une nouvelle logique qui supporte jusqu'à 48 heures.
+
+### Corrigé
+- Mise à jour de la fonction de récupération des informations système pour utiliser `whoami` via Rust et traiter la sortie pour obtenir spécifiquement le nom de la machine et la version du noyau.
+
+
+---
+
 ## [1.9.0] - 2024-03-20
 
 ### Nouvelles fonctionnalités
