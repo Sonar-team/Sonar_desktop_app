@@ -56,7 +56,7 @@ fn main() {
             app.get_window("main").unwrap().open_devtools();
             Ok(())
         })
-        //.plugin(devtools::init())
+        .plugin(devtools::init())
         // .plugin(
         //     tauri_plugin_log::Builder::default()
         //         .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])

@@ -24,10 +24,9 @@
 </template>
   
 <script>
-import { save } from '@tauri-apps/api/dialog';
+import { save, message } from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api'
 import { desktopDir } from '@tauri-apps/api/path';
-import { message } from '@tauri-apps/api/dialog';
 
 export default {
   data() {
