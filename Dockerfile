@@ -11,6 +11,13 @@ RUN apt-get update && \
     patchelf \
     libpcap-dev
 
+# Installer Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
+
+# Installer Yarn
+RUN npm install -g yarn
+
 # Définir le répertoire de travail
 WORKDIR /app
 
@@ -23,4 +30,5 @@ COPY . .
 
 # Construire l'application
 RUN yarn build && yarn tauri build
+
 
