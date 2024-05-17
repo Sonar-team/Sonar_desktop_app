@@ -27,6 +27,3 @@ COPY . .
 
 # Construire l'application
 RUN npm run tauri build
-
-
-

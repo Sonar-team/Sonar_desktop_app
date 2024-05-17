@@ -10,8 +10,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-latest, windows-latest, arm]
-    runs-on: ${{ matrix.platform == 'arm' && 'ubuntu-latest' || matrix.platform }}
+        platform: [macos-latest, ubuntu-latest, windows-latest, ubuntu-20.04-arm]
+    runs-on: ${{ matrix.platform == 'ubuntu-20.04-arm' && 'ubuntu-20.04' || matrix.platform }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -42,30 +43,26 @@ jobs:
           echo "LIB=$env:GITHUB_WORKSPACE\WpdPack\Lib\x64\" >> $env:GITHUB_ENV
           echo "WinPcap Developers Pack installed"
 
-      - name: Install dependencies (arm only)
-        if: matrix.platform == 'arm'
+      - name: Setup QEMU (arm only)
+        if: matrix.platform == 'ubuntu-20.04-arm'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf libpcap-dev
-          
-      - name: Set up QEMU (for arm builds)
-        if: matrix.platform == 'arm'
-        run: |
           sudo apt-get install -y qemu qemu-user-static binfmt-support
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-      - name: Build Docker image for arm
-        if: matrix.platform == 'arm'
+      - name: Build the app (arm only)
+        if: matrix.platform == 'ubuntu-20.04-arm'
         run: |
-          docker buildx create --use
-          docker buildx build --platform linux/arm/v7 -t myapp:arm --file Dockerfile --load .
+          docker build --platform linux/arm/v7 -t tauri-app:arm .
+          docker run --rm -v $(pwd):/app tauri-app:arm
 
-      - name: Install app dependencies and build web
+      - name: Install app dependencies and build web (non-arm)
+        if: matrix.platform != 'ubuntu-20.04-arm'
         run: yarn && yarn build
 
-      - name: Build the app
+      - name: Build the app (non-arm)
+        if: matrix.platform != 'ubuntu-20.04-arm'
         uses: tauri-apps/tauri-action@v0
-
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
