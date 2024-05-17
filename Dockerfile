@@ -15,20 +15,18 @@ RUN apt-get update && \
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs
 
-# Installer Yarn
-RUN npm install -g yarn
-
 # Définir le répertoire de travail
 WORKDIR /app
 
 # Copier le fichier de dépendances et installer les dépendances
-COPY package.json yarn.lock ./
-RUN yarn install
+COPY package.json package-lock.json ./
+RUN npm install
 
 # Copier le reste du code
 COPY . .
 
 # Construire l'application
-RUN yarn build && yarn tauri build
+RUN npm run tauri build
+
 
 
