@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.11.1] - 2024-05-17
+### Ajouté
+Pipeline cicd pour raspberry pi
+
 ---
 
 ## [1.11.0] - 2024-05-02
