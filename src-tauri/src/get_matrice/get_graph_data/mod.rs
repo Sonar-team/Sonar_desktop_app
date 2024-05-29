@@ -7,6 +7,36 @@ use serde::Serialize;
 use std::{collections::HashMap, sync::Mutex};
 use tauri::{AppHandle, Manager};
 
+/// Récupère et sérialise les données de trafic réseau en une représentation de graph.
+///
+/// Cette fonction tente d'acquérir un verrou sur l'état partagé contenant les informations des paquets
+/// et sérialise ces données en une chaîne JSON. Cela permet une transmission facile des données
+/// pour la visualisation ou l'analyse ultérieure.
+///
+/// # Structures
+///
+/// `GraphData` représente les données de graph avec des nœuds et des arêtes.
+/// `Node` représente un nœud dans le graph.
+/// `Edge` représente une arête entre deux nœuds dans le graph.
+/// `GraphBuilder` est utilisé pour construire les données de graph.
+///
+/// # Fonctionnement
+///
+/// La fonction `get_graph_data` construit les données de graph à partir des paquets de trafic réseau
+/// et les sérialise en JSON.
+///
+/// # Exemple
+///
+/// Supposons que vous ayez un état partagé `shared_state` initialisé et passé à cette fonction :
+///
+/// ```ignore
+/// let result = get_graph_data(shared_state);
+/// match result {
+///     Ok(json_string) => println!("Données sérialisées : {}", json_string),
+///     Err(e) => eprintln!("Erreur : {}", e),
+/// }
+/// ```
+
 #[derive(Serialize)]
 struct GraphData {
     nodes: HashMap<String, Node>,

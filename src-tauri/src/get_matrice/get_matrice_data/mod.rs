@@ -37,6 +37,30 @@ use crate::tauri_state::SonarState;
 ///     Err(e) => eprintln!("Erreur : {}", e),
 /// }
 /// ```
+/// 
+/// # Diagramme d'état
+///
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// ```mermaid
+/// stateDiagram-v2
+///     [*] --> AcquireState
+///     AcquireState --> LockMutex
+///     LockMutex --> LockAcquired
+///     LockAcquired --> AccessMatrice : Lock Successful
+///     LockAcquired --> HandleLockError : Lock Failed
+///     AccessMatrice --> SerializeData
+///     SerializeData --> SerializationSuccess : Serialization Successful
+///     SerializeData --> SerializationFailure : Serialization Failed
+///     SerializationSuccess --> ReturnOk
+///     SerializationFailure --> LogSerializationError
+///     LogSerializationError --> ReturnErr
+///     HandleLockError --> LogLockError
+///     LogLockError --> ReturnErr
+///     ReturnOk --> [*]
+///     ReturnErr --> [*]
+/// ```
+///
+
 pub fn get_matrice_data(app: AppHandle) -> Result<String, String> {
     let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
     let state_guard = state.lock().unwrap();
