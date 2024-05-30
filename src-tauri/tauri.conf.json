@@ -54,7 +54,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "fr.akmot.sonar",
+      "identifier": "fr.Cyprien.sonar",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -64,7 +64,7 @@
         ],
       "category": "Utility",
       "shortDescription": "Network audit software",
-      "publisher": "Akmot",
+      "publisher": "Cyprien Avico",
       "copyright": "Copyright (c) 2012-2024 Cyprien Avico"
     },
     "security": {
