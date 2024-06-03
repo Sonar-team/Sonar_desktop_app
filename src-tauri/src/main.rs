@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::sync::Mutex;
+use std::{fs::File, io::BufWriter, sync::Mutex};
 
 use log::info;
 
@@ -16,6 +16,11 @@ use sonar_desktop_app::{
 };
 use tauri::{AppHandle, Manager};
 use tauri_plugin_log::LogTarget;
+
+
+use resvg::tiny_skia::{Pixmap, Transform};
+use usvg::{Tree, Options};
+
 
 extern crate sonar_desktop_app;
 
@@ -40,6 +45,7 @@ fn main() {
             get_matrice,
             get_graph_state,
             write_file,
+            write_file_as_png,
             toggle_ipv6_filter,
             toggle_pause,
             get_hostname_to_string,
@@ -118,6 +124,26 @@ fn get_graph_state(app: AppHandle) -> Result<String, String> {
 fn write_file(path: String, contents: String) -> Result<(), String> {
     info!("Chemin d'enregistrement du SVG: {}", &path);
     std::fs::write(path, contents).map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
+fn write_file_as_png(path: String, contents: String) -> Result<(), String> {
+    // Parse the SVG contents
+    let opt = Options::default();
+    let rtree = Tree::from_str(&contents, &opt).map_err(|e| e.to_string())?;
+    
+    // Create a pixmap with the dimensions of the SVG
+    let pixmap_size = rtree.size();
+    let mut pixmap = Pixmap::new(pixmap_size.width() as u32, pixmap_size.height() as u32)
+       .ok_or("Failed to create pixmap")?;
+    
+    // Render the SVG onto the pixmap
+    resvg::render(&rtree, Transform::identity(), &mut pixmap.as_mut());
+
+    // Save the rendered image as a PNG file
+    pixmap.save_png(&path).map_err(|e| e.to_string())?;
+
+    Ok(())
 }
 
 #[tauri::command(async)]

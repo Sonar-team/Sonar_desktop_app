@@ -157,32 +157,31 @@
       }
     },
     async downloadPng() {
-        const node = this.$refs.graphnodes.$el;
-        if (node) {
-          try {
-            const dataUrl = await domtoimage.toPng(node);
-            save({
-              filters: [
-                {
-                  name: "PNG File",
-                  extensions: ["png"],
-                },
-              ],
-              defaultPath: "network-graph.png",
-            }).then((filePath) => {
-              if (filePath) {
-                // Use Tauri's fs API to write the file
-                invoke("write_file", { path: filePath, contents: dataUrl.split(",")[1], options: { encoding: "base64" } })
-                  .then(() => console.log("PNG successfully saved"))
-                  .catch((error) => console.error("Error saving PNG:", error));
-              }
-            });
-          } catch (error) {
-            console.error("Error exporting PNG:", error);
-          }
-        } else {
-          console.error("PNG export function not available or graph component not loaded.");
+      if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
+        try {
+          const svgContent = await this.$refs.graphnodes.exportAsSvgText();
+          
+          // Use Tauri's dialog API to open a save file dialog
+          save({
+            filters: [{
+              name: 'PNG File',
+              extensions: ['png']
+            }],
+            defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.png' // Set the default file name here
+          }).then((filePath) => {
+            if (filePath) {
+              // Use Tauri's fs API to write the file
+              invoke('write_file', { path: filePath, contents: svgContent })
+                .then(() => console.log('SVG successfully saved'))
+                .catch((error) => console.error('Error saving SVG:', error));
+            }
+          });
+        } catch (error) {
+          console.error('Error exporting SVG:', error);
         }
+      } else {
+        console.error('SVG export function not available or graph component not loaded.');
+      }
       },
     handleNodeClick(node) {
       // Supposons que `selectedNode` est une propriété de données que vous utiliserez pour stocker les informations du node sélectionné
@@ -233,7 +232,7 @@
 <template>
   <div class="graph-container">
     
-    <button class="download-button" @click="downloadSvg">Télécharger l'image</button>
+    <button class="download-button" @click="downloadPng">Télécharger l'image</button>
     <v-network-graph
       class="graph"
       ref="graphnodes"
