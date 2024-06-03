@@ -5,9 +5,22 @@
 
       <p>Départ: {{ heureDepart }}</p>
       <p>Fin: {{ heureFin }}</p>
-      <button class="button-up" @click="augmenterTemps"></button>
+
+      <div class= "buttons">
+        <button class="button-up" @click="augmenterHeures"></button>
+        <button class="button-up" @click="augmenterMinutes"></button>
+        <button class="button-up" @click="augmenterSecondes"></button>
+      </div>
+
       <p>Temps restant: {{ tempsReleve }}</p>
-      <button class="button-down" @click="diminuerTemps"></button>
+
+      <div class= "buttons">
+        <button class="button-down" @click="diminuerHeures"></button>
+        <button class="button-down" @click="diminuerMinutes"></button>
+        <button class="button-down" @click="diminuerSecondes"></button>
+      </div>
+      
+
       <p>Temps écoulé: {{ tempsEcoule }}</p>
       <p>Trames reçues: {{ tramesRecues }} </p>
       <p>Matrice de flux: {{ tramesEnregistrees }}</p>
@@ -19,6 +32,10 @@
         <option value="xlsx">Excel</option>
       </select>
 
+      <button @click="quit">
+        Quitter
+      </button>
+
 
   </div>
 </template>
@@ -27,12 +44,13 @@
 import { save, message } from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api'
 import { desktopDir } from '@tauri-apps/api/path';
+import { exit } from '@tauri-apps/api/process';
 
 export default {
   data() {
     return {
 
-      selectedFormat: 'xlsx',
+      selectedFormat: '',
       tempsReleve: '',
       tempsEcoule: '',
       tramesRecues: 0,
@@ -56,17 +74,29 @@ export default {
       this.showMatrice = !this.showMatrice; // Toggle the state
     },
     triggerSave() {
-    if (this.selectedFormat === 'csv') {
-      this.SaveAsCsv();
-    } else if (this.selectedFormat === 'xlsx') {
-      this.SaveAsXlsx();
-    }
-  },
-    augmenterTemps() {
-    this.ajusterTemps(1); // Augmenter d'une seconde
+      if (this.selectedFormat === 'csv') {
+        this.SaveAsCsv();
+      } else if (this.selectedFormat === 'xlsx') {
+        this.SaveAsXlsx();
+      }
     },
-    diminuerTemps() {
+    augmenterSecondes() {
+      this.ajusterTemps(1); // Augmenter d'une seconde
+    },
+    diminuerSecondes() {
       this.ajusterTemps(-1); // Diminuer d'une seconde
+    },
+    augmenterMinutes() {
+      this.ajusterTemps(60); // Augmenter d'une minute
+    },
+    diminuerMinutes() {
+      this.ajusterTemps(-60); // Diminuer d'une minute
+    },
+    augmenterHeures() {
+      this.ajusterTemps(3600); // Augmenter d'une heure
+    },
+    diminuerHeures() {
+      this.ajusterTemps(-3600); // Diminuer d'une heure
     },
     ajusterTemps(ajustement) {
       let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
@@ -194,6 +224,12 @@ export default {
     this.tempsEcoule = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
   }, 1000);
 },
+    async quit() {
+      exit(1)
+        .catch((error) => {
+          console.error("Error quitting application: ", error);
+        });
+    },
 
     updateTempsReleve() {
   // Stocker l'identifiant de l'intervalle
@@ -300,6 +336,10 @@ export default {
     width: 100%; /* Pleine largeur pour les petits écrans */
     box-shadow: none; /* Pas d'ombre pour un look plus simple */
   }
+}
+
+.buttons {
+  display: flex;
 }
 
 .button-up, .button-down {

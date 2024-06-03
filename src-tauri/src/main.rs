@@ -52,8 +52,7 @@ fn main() {
                 info!("Quit event received");
             });
             app_handle.manage(Mutex::new(SonarState::new()));
-            #[cfg(debug_assertions)]
-            app.get_window("main").unwrap().open_devtools();
+
             Ok(())
         })
         .plugin(devtools::init())
@@ -134,6 +133,6 @@ fn toggle_pause(app: AppHandle) {
     let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
     let mut state_guard = state.lock().unwrap();
     state_guard.toggle_actif();
-    println!("etat du actif");
+    println!("etat actif");
     info!("etat du filtre {:?}", state_guard.actif);
 }

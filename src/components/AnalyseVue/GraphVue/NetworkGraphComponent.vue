@@ -4,9 +4,8 @@
   import { invoke } from '@tauri-apps/api/tauri';
   import { save } from '@tauri-apps/api/dialog';
   import * as vNG from "v-network-graph"
-  import {
-    ForceLayout,
-  } from "v-network-graph/lib/force-layout"
+  import {ForceLayout} from "v-network-graph/lib/force-layout"
+  import domtoimage from "dom-to-image";
 
   export default {
   components: {
@@ -100,6 +99,9 @@
     this.viewMenu = this.$refs.viewMenu;
     this.nodeMenu = this.$refs.nodeMenu;
     this.edgeMenu = this.$refs.edgeMenu;
+
+    this.installationName = this.$route.params.installationName;
+    this.niveauConfidentialite = this.$route.params.confidentialite;
   },
   beforeDestroy() {
     if (this.intervalId) {
@@ -116,33 +118,72 @@
         console.error("Error fetching packet infos:", error);
       }
     },
-    async downloadSvg() {
-    if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
-      try {
-        const svgContent = await this.$refs.graphnodes.exportAsSvgText();
-        
-        // Use Tauri's dialog API to open a save file dialog
-        save({
-          filters: [{
-            name: 'SVG File',
-            extensions: ['svg']
-          }],
-          defaultPath: 'network-graph.svg'
-        }).then((filePath) => {
-          if (filePath) {
-            // Use Tauri's fs API to write the file
-            invoke('write_file', { path: filePath, contents: svgContent })
-              .then(() => console.log('SVG successfully saved'))
-              .catch((error) => console.error('Error saving SVG:', error));
-          }
-        });
-      } catch (error) {
-        console.error('Error exporting SVG:', error);
-      }
-    } else {
-      console.error('SVG export function not available or graph component not loaded.');
-    }
+    getCurrentDate() {
+      // Fonction pour obtenir la date actuelle
+      const now = new Date();
+      // Formattez la date en DD/MM/YYYY
+      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
+      return formattedDate;
     },
+    padZero(value) {
+      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
+      return value < 10 ? `0${value}` : value;
+    },
+    async downloadSvg() {
+      if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
+        try {
+          const svgContent = await this.$refs.graphnodes.exportAsSvgText();
+          
+          // Use Tauri's dialog API to open a save file dialog
+          save({
+            filters: [{
+              name: 'SVG File',
+              extensions: ['svg']
+            }],
+            defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.svg' // Set the default file name here
+          }).then((filePath) => {
+            if (filePath) {
+              // Use Tauri's fs API to write the file
+              invoke('write_file', { path: filePath, contents: svgContent })
+                .then(() => console.log('SVG successfully saved'))
+                .catch((error) => console.error('Error saving SVG:', error));
+            }
+          });
+        } catch (error) {
+          console.error('Error exporting SVG:', error);
+        }
+      } else {
+        console.error('SVG export function not available or graph component not loaded.');
+      }
+    },
+    async downloadPng() {
+        const node = this.$refs.graphnodes.$el;
+        if (node) {
+          try {
+            const dataUrl = await domtoimage.toPng(node);
+            save({
+              filters: [
+                {
+                  name: "PNG File",
+                  extensions: ["png"],
+                },
+              ],
+              defaultPath: "network-graph.png",
+            }).then((filePath) => {
+              if (filePath) {
+                // Use Tauri's fs API to write the file
+                invoke("write_file", { path: filePath, contents: dataUrl.split(",")[1], options: { encoding: "base64" } })
+                  .then(() => console.log("PNG successfully saved"))
+                  .catch((error) => console.error("Error saving PNG:", error));
+              }
+            });
+          } catch (error) {
+            console.error("Error exporting PNG:", error);
+          }
+        } else {
+          console.error("PNG export function not available or graph component not loaded.");
+        }
+      },
     handleNodeClick(node) {
       // Supposons que `selectedNode` est une propriété de données que vous utiliserez pour stocker les informations du node sélectionné
       this.selectedNode = node;
