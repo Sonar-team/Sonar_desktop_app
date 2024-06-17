@@ -19,6 +19,7 @@ use pnet::datalink::{self, NetworkInterface};
 use pnet::packet::ethernet::EthernetPacket;
 use std::sync::{mpsc, Mutex};
 use std::thread;
+use std::time::Duration;
 
 use tauri::{AppHandle, Manager};
 pub(crate) mod layer_2_infos;
@@ -128,55 +129,58 @@ fn capture_packets(
     interface: datalink::NetworkInterface,
     tx: mpsc::Sender<PacketInfos>,
 ) {
-    let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
-        Ok(Ethernet(tx, rx)) => (tx, rx),
-        Ok(_) => {
-            error!("Type de canal non géré : {}", &interface);
-            panic!("Type de canal non géré : {}", &interface)
-        }
-        Err(e) => {
-            error!(
-                "Une erreur s'est produite lors de la création du canal de liaison de données: {}",
-                &interface
-            );
-            panic!(
-                "Une erreur s'est produite lors de la création du canal de liaison de données: {}",
-                e
-            )
-        }
-    };
-    let main_window = app.get_window("main").unwrap();
-
-    info!(
-        "Démarrage du thread de lecture de paquets sur l'interface :{}",
-        &interface
-    );
-
+    
     loop {
-        match rx.next() {
-            Ok(packet) => {
-                if let Some(ethernet_packet) = EthernetPacket::new(packet) {
-                    let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
-                    let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
-                    let state_guard = state.lock().unwrap();
+        
+            let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
+                Ok(Ethernet(tx, rx)) => (tx, rx),
+                Ok(_) => {
+                    println!("Type de canal non géré : {}", &interface);
+                    continue;
+                }
+                Err(e) => {
+                    println!(
+                        "Une erreur s'est produite lors de la création du canal de liaison de données: {}",
+                        &interface
+                    );
+                    thread::sleep(Duration::from_secs(2));
+                    continue;
+                }
+            };
+        let main_window = app.get_window("main").unwrap();
 
-                    //println!("{packet_info}");
-                    if packet_info.l_3_protocol == "Ipv6" && !state_guard.filter_ipv6 {
-                        continue;
-                    }
-                    // afficher dans le composant bottom long
-                    if let Err(err) = main_window.emit("frame", &packet_info) {
-                        error!("Failed to emit event: {}", err);
-                    }
-                    // envoyer au thread qui met a jour la matrice
-                    if let Err(err) = tx.send(packet_info) {
-                        error!("Failed to send packet to queue: {}", err);
+        info!(
+            "Démarrage du thread de lecture de paquets sur l'interface :{}",
+            &interface
+        );
+
+        loop {
+            match rx.next() {
+                Ok(packet) => {
+                    if let Some(ethernet_packet) = EthernetPacket::new(packet) {
+                        let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
+                        let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
+                        let state_guard = state.lock().unwrap();
+
+                        //println!("{packet_info}");
+                        if packet_info.l_3_protocol == "Ipv6" && !state_guard.filter_ipv6 {
+                            continue;
+                        }
+                        // afficher dans le composant bottom long
+                        if let Err(err) = main_window.emit("frame", &packet_info) {
+                            println!("Failed to emit event: {}", err);
+                        }
+                        // envoyer au thread qui met a jour la matrice
+                        if let Err(err) = tx.send(packet_info) {
+                            println!("Failed to send packet to queue: {}", err);
+                        }
                     }
                 }
-            }
-            Err(e) => {
-                error!("An error occurred while reading: {}", e);
-                break;
+                Err(e) => {
+                    println!("Connexion perdu. redemarrage: {}", e);
+                    thread::sleep(Duration::from_secs(2));
+                    break;
+                }
             }
         }
     }

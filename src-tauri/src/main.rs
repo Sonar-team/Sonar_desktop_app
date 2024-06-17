@@ -61,7 +61,7 @@ fn main() {
 
             Ok(())
         })
-        .plugin(devtools::init())
+        //.plugin(devtools::init())
         // .plugin(
         //     tauri_plugin_log::Builder::default()
         //         .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
