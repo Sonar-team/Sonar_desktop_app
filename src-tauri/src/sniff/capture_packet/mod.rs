@@ -140,16 +140,17 @@ fn capture_packets(
                 }
                 Err(e) => {
                     println!(
-                        "Une erreur s'est produite lors de la création du canal de liaison de données: {}",
-                        &interface
+                        "Une erreur s'est produite lors de la création du canal de liaison de données: {}. 
+                        sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar-desktop-app",
+                        &e
                     );
-                    thread::sleep(Duration::from_secs(2));
+                    thread::sleep(Duration::from_secs(6));
                     continue;
                 }
             };
         let main_window = app.get_window("main").unwrap();
 
-        info!(
+        println!(
             "Démarrage du thread de lecture de paquets sur l'interface :{}",
             &interface
         );
@@ -178,7 +179,7 @@ fn capture_packets(
                 }
                 Err(e) => {
                     println!("Connexion perdu. redemarrage: {}", e);
-                    thread::sleep(Duration::from_secs(2));
+                    thread::sleep(Duration::from_secs(6));
                     break;
                 }
             }
