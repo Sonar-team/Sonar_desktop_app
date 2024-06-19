@@ -48,6 +48,8 @@
 //! Les handlers de paquets sont des structures définies dans ce module et implémentent le trait [`HandlePacket`](trait.HandlePacket.html)
 //! pour chaque type de paquet pris en charge.
 
+use std::any::Any;
+
 use pnet::packet::{
     arp::ArpPacket,
     ethernet::{
@@ -269,13 +271,30 @@ pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
         EtherTypes::Vlan => VlanHandler::get_layer_3(ethernet_packet.payload()),
         EtherTypes::PppoeDiscovery => PppoeDiscoveryHandler::get_layer_3(ethernet_packet.payload()),
         EtherTypes::Lldp => LldpHandler::get_layer_3(ethernet_packet.payload()),
+        EtherTypes::Ipx => todo!("Handle IPX packets"),
+        EtherTypes::AppleTalk => todo!("Handle AppleTalk packets"),
+        EtherTypes::Mpls => todo!("Handle MPLS packets"),
+        EtherTypes::MplsMcast => todo!("Handle MPLS multicast packets"),
+        EtherTypes::PBridge => todo!("Handle Provider Bridging packets"),
+        EtherTypes::Qnx => todo!("Handle QNX packets"),
+        EtherTypes::PppoeSession => todo!("Handle PPPoE Session packets"),
+        EtherTypes::Trill => todo!("Handle TRILL packets"),
+        EtherTypes::CobraNet => todo!("Handle CobraNet packets"),
+        EtherTypes::Aarp => todo!("Handle AppleTalk ARP packets"),
+        EtherTypes::QinQ => todo!("Handle QinQ packets"),
+        EtherTypes::FlowControl => todo!("Handle Flow Control packets"),
         _ => {
             // General case for all other EtherTypes
             println!(
-                "Layer 3 - Unknown or unsupported packet type: {}, payload: {:?}, source: {}, eth_packet {:?}",
-                ethernet_packet.get_ethertype(), ethernet_packet.payload(), ethernet_packet.get_source(), ethernet_packet
+                "Layer 3 - Unknown or unsupported packet type: {}, payload: {:?}, source: {}, eth_type {}, eth_type_nbr: {}",
+                ethernet_packet.get_ethertype(), 
+                ethernet_packet.payload(), 
+                ethernet_packet.get_source(), 
+                ethernet_packet.get_ethertype().to_string(), 
+                ethernet_packet.get_ethertype().0
             );
             Default::default()
-        }
+        },
+
     }
 }
