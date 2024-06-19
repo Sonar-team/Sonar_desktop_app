@@ -130,9 +130,7 @@ fn capture_packets(
     interface: datalink::NetworkInterface,
     tx: mpsc::Sender<PacketInfos>,
 ) {
-    
     loop {
-        
             let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
                 Ok(Ethernet(tx, rx)) => (tx, rx),
                 Ok(_) => {
