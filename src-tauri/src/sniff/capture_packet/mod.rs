@@ -17,6 +17,7 @@ use log::{error, info};
 use pnet::datalink::Channel::Ethernet;
 use pnet::datalink::{self, NetworkInterface};
 use pnet::packet::ethernet::EthernetPacket;
+use std::process::exit;
 use std::sync::{mpsc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -144,8 +145,7 @@ fn capture_packets(
                         sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar-desktop-app",
                         &e
                     );
-                    thread::sleep(Duration::from_secs(6));
-                    continue;
+                    exit(1);
                 }
             };
         let main_window = app.get_window("main").unwrap();
