@@ -82,14 +82,7 @@ impl PacketInfosFlaten {
     }
 }
 
-/// Structure représentant les données d'un paquet pour la sérialisation vers un fichier Excel.
-#[derive(Serialize)]
-struct PacketData<'a> {
-    /// Référence au paquet.
-    packet: &'a PacketInfos,
-    /// Nombre de fois que ce paquet a été rencontré.
-    count: u32,
-}
+
 /// Fonction pour enregistrer les paquets vers un fichier CSV.
 ///
 /// # Arguments

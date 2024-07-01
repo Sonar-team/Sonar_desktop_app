@@ -1,7 +1,25 @@
-use serde::Serialize;
+use std::fmt;
+use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
-struct DhcpHandler;
+use pnet::packet::ethernet::EtherTypes::DECnet;
+use serde::Serialize;
+use pnet::packet::{dhcp::DhcpPacket, dns::DnsPacket};
+
+#[derive(Default, Debug)]
+pub struct Layer7Info<'a> {
+    pub dns_info: Option<DnsPacket<'a>>,
+    pub dhcp_info: Option<DhcpPacket<'a>>,
+}
+
+
+// impl Layer7Info {
+//     pub fn to_string(&self) -> String {
+//         format!("{}: {}", self.protocol, self.layer7_info)
+
+//     }
+// }
+
+
 
 trait PacketPayload {
     fn get_protocol(data: &[u8]) -> Option<String>;
@@ -11,10 +29,10 @@ trait PacketPayload {
 impl PacketPayload for &[u8] {
     fn get_protocol(data: &[u8]) -> Option<String> {
         //println!("data: {:?}", data);
-        if is_dhcp_packet(data) {
-            Some("DHCP".to_string())
-        } else if is_dns_packet(data) {
+        if is_dns_packet(data) {
             Some("DNS".to_string())
+        } else if  is_dhcp_packet(data){
+            Some("DHCP".to_string())
         } else if is_http_packet(data) {
             Some("HTTP".to_string())
         } else if is_ssh_packet(data) {
@@ -36,31 +54,7 @@ pub fn get_protocol(data: &[u8]) -> Option<String> {
 }
 
 fn is_dhcp_packet(data: &[u8]) -> bool {
-    const DHCP_MIN_LENGTH: usize = 244;
-    const DHCP_MAGIC_COOKIE: [u8; 4] = [99, 130, 83, 99];
-    const UDP_HEADER_LENGTH: usize = 8;
-    const BOOTP_HEADER_LENGTH: usize = 236;
-
-    // Ports UDP pour DHCP
-    const DHCP_SERVER_PORT: u16 = 67;
-    const DHCP_CLIENT_PORT: u16 = 68;
-
-    if data.len() < DHCP_MIN_LENGTH + UDP_HEADER_LENGTH {
-        return false;
-    }
-
-    // Extraire les ports source et destination (les 2 premiers champs du header UDP)
-    let src_port = ((data[0] as u16) << 8) | (data[1] as u16);
-    let dst_port = ((data[2] as u16) << 8) | (data[3] as u16);
-
-    // Vérifier si les ports correspondent à ceux utilisés par DHCP
-    if src_port != DHCP_SERVER_PORT && dst_port != DHCP_CLIENT_PORT {
-        return false;
-    }
-
-    // Vérifier la présence du Magic Cookie à la position correcte
-    data[UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH..UDP_HEADER_LENGTH + BOOTP_HEADER_LENGTH + 4]
-        == DHCP_MAGIC_COOKIE
+    DhcpPacket::new(data).is_some()
 }
 
 fn is_modbus_packet(data: &[u8]) -> bool {
@@ -109,51 +103,9 @@ fn is_ssh_packet(data: &[u8]) -> bool {
 }
 
 fn is_dns_packet(data: &[u8]) -> bool {
-    const DNS_HEADER_LENGTH: usize = 12;
-    const QTYPE_LENGTH: usize = 2;
-    const QCLASS_LENGTH: usize = 2;
-
-    // Vérifier la longueur minimale pour contenir l'en-tête DNS
-    if data.len() < DNS_HEADER_LENGTH {
-        return false;
-    }
-
-    // Extraire qdcount (nombre de questions)
-    let qdcount = ((data[4] as u16) << 8) | data[5] as u16;
-
-    // Vérifier si qdcount est supérieur à 0
-    if qdcount == 0 {
-        return false;
-    }
-
-    // Vérifier le bit QR dans les flags pour s'assurer qu'il s'agit d'une requête
-    let qr = (data[2] & 0b10000000) >> 7;
-    if qr != 0 {
-        return false;
-    }
-
-    // Commencer l'analyse après l'en-tête DNS
-    let mut offset = DNS_HEADER_LENGTH;
-
-    // Analyser chaque question
-    for _ in 0..qdcount {
-        // Trouver la fin du nom de domaine (0x00 marque la fin)
-        while offset < data.len() && data[offset] != 0 {
-            offset += 1;
-        }
-
-        // Vérifier la présence de QTYPE et QCLASS après le nom de domaine
-        if offset + 1 + QTYPE_LENGTH + QCLASS_LENGTH > data.len() {
-            return false;
-        }
-
-        // Passer au-delà du QTYPE et du QCLASS pour la question suivante
-        offset += 1 + QTYPE_LENGTH + QCLASS_LENGTH;
-    }
-
-    // Si toutes les vérifications sont passées, c'est probablement un paquet DNS
-    true
+    DnsPacket::new(data).is_some()
 }
+
 
 fn is_quic_packet(data: &[u8]) -> bool {
     // Longueur minimale pour un en-tête QUIC
@@ -210,3 +162,85 @@ fn is_tls_v1_2_packet(data: &[u8]) -> bool {
     // et la version du protocole (0x0303 pour TLS 1.2)
     record_type == 0x16 && version_major == 0x03 && version_minor == 0x03
 }
+
+
+#[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
+struct DhcpHandler;
+
+trait HandleLayer7 {
+    fn get_layer7_infos(data: &[u8]) -> Layer7Info;
+}
+
+// impl HandleLayer7 for DhcpHandler {
+//     fn get_layer7_infos(data: &[u8]) -> Layer7Info {
+//         if let Some(dhcp_packet) = DhcpPacket::new(data) {
+//             println!("DHCP packet detected: {:?}", dhcp_packet.get_flags());
+//             Layer7Info {
+//                 protocol: "DHCP".to_string(),
+//                 //layer7_info: format!("{:?}", dhcp_packet),
+//             }
+//         } else {
+//             Default::default()
+//         }
+//     }
+// }
+
+struct DnsHandler;
+
+// impl HandleLayer7 for DnsHandler {
+//     fn get_layer7_infos(data: &[u8]) -> Layer7Info {
+//         if let Some(dns_packet) = DnsPacket::new(data) {
+//             println!("DNS packet detected: id: {}", 
+//                 dns_packet.get_id(),
+             
+//             );
+//             Layer7Info {
+//                 protocol: "DNS".to_string(),
+//                 //layer7_info: format!("{:?}", dns_packet),
+//             }
+//         } else {
+//             Default::default()
+//         }
+//     }
+// }
+
+pub fn get_layer7_infos(data: &[u8]) -> String {
+    let dns_info = if let Some(dns_packet) = DnsPacket::new(data) {
+        println!("DNS packet detected: {:?}", dns_packet.get_id());
+        Some(dns_packet)
+    } else {
+        None
+    };
+
+    let dhcp_info = if let Some(dhcp_packet) = DhcpPacket::new(data) {
+        println!("DHCP packet detected: {:?}", dhcp_packet.get_flags());
+        Some(dhcp_packet)
+    } else {
+        None
+    };
+
+    let layer7 = Layer7Info {
+        dns_info,
+        dhcp_info,
+        
+    };
+    println!("layer 7 infos: {:?} {:?}", layer7.dns_info.is_some(), layer7.dhcp_info.is_some());
+    String::from("ok")
+}
+// if let Some(protocol) = get_protocol(data) {
+//     match protocol.as_str() {
+//         "DNS" => DnsHandler::get_layer7_infos(data),
+//         "DHCP" => DhcpHandler::get_layer7_infos(data),
+        
+//         _ => {
+//             // General case for all other EtherTypes
+//             //println!("layer 7 - Unknown or unsupported packet type: {:?}", data);
+//             Default::default()
+//         },
+        
+//     }
+// } else {
+//     // General case for all other EtherTypes
+//     //println!("layer 7 - Unknown or unsupported packet type: {:?}", data);
+//     Default::default()
+// }
