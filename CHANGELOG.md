@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.12.0] - 2024-07-04
+### Ajouté
+parse pacquet 7
+
+---
+
 ## [1.11.1] - 2024-05-17
 ### Ajouté
 Pipeline cicd pour raspberry pi

@@ -1,3 +1,4 @@
+use log::info;
 // use pnet::packet::icmp::IcmpPacket;
 // use pnet::packet::icmpv6::Icmpv6Packet;
 //use pnet::packet::dhcp::DhcpPacket;
@@ -7,9 +8,9 @@ use pnet::packet::udp::UdpPacket;
 use pnet::packet::Packet;
 use serde::Serialize;
 
-use log::info;
 mod layer_7_infos;
 use layer_7_infos::get_layer7_infos;
+
 
 #[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
 pub struct Layer4Infos {
@@ -32,13 +33,15 @@ trait HandleLayer4 {
 impl HandleLayer4 for TcpHandler {
     fn get_layer_4_infos(data: &[u8]) -> Layer4Infos {
         if let Some(tcp_packet) = TcpPacket::new(data) {
-            print!("TCP packet detected: {:?}", tcp_packet.get_source());
-            let layer7_info = get_layer7_infos(tcp_packet.payload());
+            // println!("TCP packet detected: port source :{:?} - port destination :{:?}", 
+            //     tcp_packet.to_immutable().get_source(), 
+            //     tcp_packet.to_immutable().get_destination());
+            
             //println!("{:?}", &layer7_info);
             Layer4Infos {
                 port_source: Some(tcp_packet.get_source().to_string()),
                 port_destination: Some(tcp_packet.get_destination().to_string()),
-                l_7_protocol: Some(Default::default()),// TCP does not inherently contain Layer 7 protocol information
+                l_7_protocol: get_layer7_infos(tcp_packet.payload()),// TCP does not inherently contain Layer 7 protocol information
             }
         } else {
             Default::default()
@@ -50,13 +53,15 @@ impl HandleLayer4 for UdpHandler {
     fn get_layer_4_infos(data: &[u8]) -> Layer4Infos {
 
         if let Some(udp_packet) = UdpPacket::new(data) {
-            print!("UDP packet detected: {:?}", udp_packet.get_source());
-            let layer7_info = get_layer7_infos(udp_packet.payload());
+            // println!("UDP packet detected: port source :{:?} - port destination :{:?}", 
+            //     udp_packet.to_immutable().get_source(), 
+            //     udp_packet.to_immutable().get_destination());
+            
             //println!("{:?}", &layer7_info);
             Layer4Infos {
                 port_source: Some(udp_packet.get_source().to_string()),
                 port_destination: Some(udp_packet.get_destination().to_string()),
-                l_7_protocol: Some(Default::default()), // UDP does not inherently contain Layer 7 protocol information
+                l_7_protocol: get_layer7_infos(udp_packet.payload()), // UDP does not inherently contain Layer 7 protocol information
             }
         } else {
             Default::default()

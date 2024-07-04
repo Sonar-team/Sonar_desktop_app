@@ -108,7 +108,7 @@ impl HandlePacket for Ipv4Handler {
                 ip_destination: Some(destination_ip_str),
                 ip_destination_type: Some(ip_destination_type), // Correction ici
                 l_4_protocol: Some(ipv4_packet.get_next_level_protocol().to_string()),
-                layer_4_infos: get_layer_4_infos(ipv4_packet.get_next_level_protocol(), data),
+                layer_4_infos: get_layer_4_infos(ipv4_packet.get_next_level_protocol(), ipv4_packet.payload()),
             }
         } else {
             Default::default()
@@ -132,7 +132,7 @@ impl HandlePacket for Ipv6Handler {
                 ip_destination: Some(ip_destination),
                 ip_destination_type: Some(ip_destination_type),
                 l_4_protocol: Some(ipv6_packet.get_next_header().to_string()),
-                layer_4_infos: get_layer_4_infos(ipv6_packet.get_next_header(), data),
+                layer_4_infos: get_layer_4_infos(ipv6_packet.get_next_header(), ipv6_packet.payload()),
             }
         } else {
             Default::default()
