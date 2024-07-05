@@ -5,7 +5,7 @@
   import { save } from '@tauri-apps/api/dialog';
   import * as vNG from "v-network-graph"
   import {ForceLayout} from "v-network-graph/lib/force-layout"
-  import domtoimage from "dom-to-image";
+ 
 
   export default {
   components: {
@@ -132,9 +132,47 @@
     async downloadSvg() {
       if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
         try {
+          console.log('Attempting to export SVG...');
           const svgContent = await this.$refs.graphnodes.exportAsSvgText();
+          console.log('SVG content:', svgContent);
           
+          const url = URL.createObjectURL(new Blob([text], { type: "octet/stream" }))
+          console.log('Blob URL created:', url);
+
+          const a = document.createElement("a")
+          a.href = url
+          a.download = `${this.getCurrentDate()}_${this.niveauConfidentialite}_${this.installationName}.svg`;
+          console.log('Download link created:', a);
+          a.click()
+          window.URL.revokeObjectURL(url)
+          console.log('Download initiated and URL revoked.');
           // Use Tauri's dialog API to open a save file dialog
+          save({
+            filters: [{
+              name: 'SVG File',
+              extensions: ['svg']
+            }],
+            defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.svg' // Set the default file name here
+          }).then((filePath) => {
+            if (filePath) {
+              // Use Tauri's fs API to write the file
+              invoke('write_file', { path: filePath, contents: svgContent })
+                .then(() => console.log('SVG successfully saved'))
+                .catch((error) => console.error('Error saving SVG:', error));
+            }
+          });
+        } catch (error) {
+          console.error('Error exporting SVG:', error);
+        }
+      } else {
+        console.error('SVG export function not available or graph component not loaded.');
+      }
+    },
+    async downloadSvg() {
+      if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
+        try {
+          console.log('Attempting to export SVG...');
+          const svgContent = await this.$refs.graphnodes.exportAsSvgText();
           save({
             filters: [{
               name: 'SVG File',
@@ -172,15 +210,15 @@
             if (filePath) {
               // Use Tauri's fs API to write the file
               invoke('write_file', { path: filePath, contents: svgContent })
-                .then(() => console.log('SVG successfully saved'))
-                .catch((error) => console.error('Error saving SVG:', error));
+                .then(() => console.log('png successfully saved'))
+                .catch((error) => console.error('Error saving png:', error));
             }
           });
         } catch (error) {
-          console.error('Error exporting SVG:', error);
+          console.error('Error exporting png:', error);
         }
       } else {
-        console.error('SVG export function not available or graph component not loaded.');
+        console.error('png export function not available or graph component not loaded.');
       }
       },
     handleNodeClick(node) {
@@ -233,6 +271,8 @@
   <div class="graph-container">
     
     <button class="download-button" @click="downloadPng">Télécharger l'image</button>
+    <button class="download-button" @click="downloadSvg" style="left: 200px;">Télécharger SVG</button>
+    
     <v-network-graph
       class="graph"
       ref="graphnodes"
