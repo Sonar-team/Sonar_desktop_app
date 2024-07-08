@@ -52,7 +52,7 @@ pub fn all_interfaces(app: AppHandle) {
         for new_packet in rx {
             let state = app_for_thread.state::<Mutex<SonarState>>();
 
-            let mut state_guard = state.lock().unwrap();
+            let state_guard = state.lock().unwrap();
             state_guard.update_matrice_with_packet(new_packet);
         }
     });
@@ -98,7 +98,7 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str) {
         for new_packet in rx {
             let state = app_for_thread.state::<Mutex<SonarState>>();
 
-            let mut state_guard = state.lock().unwrap();
+            let state_guard = state.lock().unwrap();
             // Appel de la méthode update_matrice_with_packet directement sur l'instance SonarState
             state_guard.update_matrice_with_packet(new_packet);
         }

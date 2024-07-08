@@ -21,11 +21,6 @@ pub mod get_interfaces;
 /// pour organiser et stocker les informations sur les paquets capturés, facilitant leur analyse ultérieure.
 pub mod get_matrice;
 
-/// Sauvegarde des paquets capturés.
-///
-/// Le module `save_packets` offre des fonctionnalités pour enregistrer les paquets réseau capturés.
-/// Il permet la persistance des données pour une analyse postérieure ou pour la documentation.
-pub mod save_packets;
 
 /// Capture et analyse des paquets réseau.
 ///

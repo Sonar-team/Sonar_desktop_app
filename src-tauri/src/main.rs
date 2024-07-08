@@ -9,14 +9,11 @@ use sonar_desktop_app::{
     cli::print_banner,
     get_hostname::hostname_to_s,
     get_interfaces::get_interfaces,
-    get_matrice::{get_graph_data::get_graph_data, get_matrice_data::get_matrice_data},
-    save_packets::{cmd_save_packets_to_csv, cmd_save_packets_to_excel, MyError},
     sniff::scan_until_interrupt,
-    tauri_state::SonarState,
+    tauri_state::{MyError, SonarState},
 };
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
 // use tauri_plugin_log::LogTarget;
-
 
 use resvg::tiny_skia::{Pixmap, Transform};
 use usvg::{Tree, Options};
@@ -35,8 +32,17 @@ fn main() {
                 std::process::exit(0);
             }
         })
-        .manage(Mutex::new(SonarState::new()))
         .manage(SonarState::new())
+        .setup(move |app| {
+            let app_handle = app.handle();
+
+            // Event listener for before-quit
+            app_handle.listen_global("tauri://before-quit", move |_| {
+                info!("Quit event received");
+            });
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
             get_selected_interface,
@@ -50,23 +56,7 @@ fn main() {
             toggle_pause,
             get_hostname_to_string,
         ])
-        .setup(move |app| {
-            let app_handle = app.handle();
-
-            // Event listener for before-quit
-            app_handle.listen_global("tauri://before-quit", move |_| {
-                info!("Quit event received");
-            });
-            app_handle.manage(Mutex::new(SonarState::new()));
-
-            Ok(())
-        })
-        //.plugin(devtools::init())
-        // .plugin(
-        //     tauri_plugin_log::Builder::default()
-        //         .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
-        //         .build(),
-        // )
+        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -90,20 +80,21 @@ fn get_selected_interface(app: AppHandle, interface_name: String) {
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn save_packets_to_csv(file_path: String, app: AppHandle) -> Result<(), MyError> {
+fn save_packets_to_csv(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du CSV: {}", &file_path);
-    cmd_save_packets_to_csv(file_path, app)
+    state.cmd_save_packets_to_csv(file_path)
+    
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn save_packets_to_excel(file_path: String, app: AppHandle) -> Result<(), MyError> {
+fn save_packets_to_excel(file_path: String, state: State<SonarState>) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du Excel: {}", &file_path);
-    cmd_save_packets_to_excel(file_path, app)
+    state.cmd_save_packets_to_excel(file_path)
 }
 
 #[tauri::command(async)]
-fn get_matrice(app: AppHandle) -> Result<String, String> {
-    match get_matrice_data(app) {
+fn get_matrice(state: State<SonarState>) -> Result<String, String> {
+    match state.get_matrice_data() {
         Ok(data) => {
             //println!("Data: {}", data); // Utilisez log::info si vous avez configuré un logger
             Ok(data)
@@ -116,8 +107,8 @@ fn get_matrice(app: AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command(async)]
-fn get_graph_state(app: AppHandle) -> Result<String, String> {
-    get_graph_data(app)
+fn get_graph_state(state: State<SonarState>) -> Result<String, String> {
+    state.get_graph_data()
 }
 
 #[tauri::command(async)]
