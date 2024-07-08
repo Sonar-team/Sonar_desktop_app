@@ -52,8 +52,7 @@
 use pnet::packet::{
     arp::ArpPacket,
     ethernet::{
-        EtherTypes::{self},
-        EthernetPacket,
+        EtherTypes, EthernetPacket
     },
     ipv4::Ipv4Packet,
     ipv6::Ipv6Packet,
@@ -63,6 +62,8 @@ use pnet::packet::{
 
 pub mod ip_type;
 mod layer_4_infos;
+mod profinet;
+use profinet::ProfinetPacket;
 use ip_type::IpType;
 use layer_4_infos::{get_layer_4_infos, Layer4Infos};
 use serde::Serialize;
@@ -85,10 +86,35 @@ struct ArpHandler;
 struct VlanHandler;
 struct PppoeDiscoveryHandler;
 struct LldpHandler;
+struct ProfinetHandler;
 
 /// Trait définissant la fonctionnalité pour extraire les informations de la couche 3.
 trait HandlePacket {
     fn get_layer_3(data: &[u8]) -> Layer3Infos;
+}
+
+impl HandlePacket for ProfinetHandler {
+    fn get_layer_3(data: &[u8]) -> Layer3Infos {
+        if let Some(profinet_packet) = ProfinetPacket::new(data) {
+            let source_ip_str = profinet_packet.source;
+            let destination_ip_str = profinet_packet.destination;
+
+            Layer3Infos {
+                ip_source: Some(source_ip_str),
+                ip_source_type: None, // Définissez un type approprié
+                ip_destination: Some(destination_ip_str),
+                ip_destination_type: None, // Définissez un type approprié
+                l_4_protocol: Some("Profinet".to_string()),
+                layer_4_infos: Layer4Infos {
+                    port_source: None,
+                    port_destination: None,
+                    l_7_protocol: None,
+                },
+            }
+        } else {
+            Default::default()
+        }
+    }
 }
 
 impl HandlePacket for Ipv4Handler {
@@ -270,6 +296,7 @@ pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
         EtherTypes::Vlan => VlanHandler::get_layer_3(ethernet_packet.payload()),
         EtherTypes::PppoeDiscovery => PppoeDiscoveryHandler::get_layer_3(ethernet_packet.payload()),
         EtherTypes::Lldp => LldpHandler::get_layer_3(ethernet_packet.payload()),
+        EtherTypes::Profinet => ProfinetHandler::get_layer_3(ethernet_packet.payload()), // Ajout pour Profinet
         // EtherTypes::Ipx => todo!("Handle IPX packets"),
         // EtherTypes::AppleTalk => todo!("Handle AppleTalk packets"),
         // EtherTypes::Mpls => todo!("Handle MPLS packets"),
