@@ -18,11 +18,11 @@ use pnet::datalink::Channel::Ethernet;
 use pnet::datalink::{self, NetworkInterface};
 use pnet::packet::ethernet::EthernetPacket;
 use std::process::exit;
-use std::sync::{mpsc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
 pub(crate) mod layer_2_infos;
 
 use crate::tauri_state::SonarState;
@@ -47,13 +47,19 @@ use self::layer_2_infos::PacketInfos;
 pub fn all_interfaces(app: AppHandle) {
     let mut handles = vec![];
     let (tx, rx) = mpsc::channel::<PacketInfos>();
-    let app_for_thread = app.clone();
+    
+    let state_clone: Arc<Mutex<SonarState>> = Arc::clone(&app.state());
+
+    // Creer un thread pour traiter les paquets
+    
     thread::spawn(move || {
         for new_packet in rx {
-            let state = app_for_thread.state::<Mutex<SonarState>>();
-
-            let mut state_guard = state.lock().unwrap();
-            state_guard.update_matrice_with_packet(new_packet);
+            // 1. lock the state
+            let mut locked_state = state_clone.lock().map_err(|_| "Failed to lock state".to_string()).unwrap();
+            //println!("  mutex matrice: {:?}", &locked_state.matrice);
+            // 2. update the state
+            locked_state.update_matrice_with_packet(new_packet);
+            //println!("  mutex matrice updated: {:?}", &locked_state.matrice);
         }
     });
 
@@ -88,19 +94,17 @@ pub fn all_interfaces(app: AppHandle) {
 /// * `state` - État global de l'application.
 pub fn one_interface(app: tauri::AppHandle, interface: &str) {
     info!("L'interface choisie est: {}", interface);
-
+    let app_clone = app.clone();
     // Création d'un canal de communication de type FIFO
     let (tx, rx) = mpsc::channel();
-
-    let app_for_thread = app.clone();
+    
     // Démarrer un thread pour traiter les paquets
     thread::spawn(move || {
         for new_packet in rx {
-            let state = app_for_thread.state::<Mutex<SonarState>>();
+            let state: State<'_, Arc<Mutex<SonarState>>> = app_clone.state(); // Acquire a lock
+            let mut locked_state = state.lock().map_err(|_| "Failed to lock state".to_string()).unwrap();
 
-            let mut state_guard = state.lock().unwrap();
-            // Appel de la méthode update_matrice_with_packet directement sur l'instance SonarState
-            state_guard.update_matrice_with_packet(new_packet);
+            locked_state.update_matrice_with_packet(new_packet);
         }
     });
 
@@ -158,12 +162,17 @@ fn capture_packets(
                 Ok(packet) => {
                     if let Some(ethernet_packet) = EthernetPacket::new(packet) {
                         let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
-                        let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
+                        //println!("      capture_packet: {:?}", &packet_info);
+                        let state: State<'_, Arc<Mutex<SonarState>>> = app.state(); // Acquire a lock
                         let state_guard = state.lock().unwrap();
 
                         //println!("{packet_info}");
-                        if packet_info.l_3_protocol == "Ipv6" && !state_guard.filter_ipv6 {
-                            continue;
+                        if packet_info.l_3_protocol == "Ipv6" {
+                            let filter_ipv6 = state_guard.filter_ipv6;
+                            if !filter_ipv6 {
+                                continue;
+                            }
+                            
                         }
                         // afficher dans le composant bottom long
                         if let Err(err) = main_window.emit("frame", &packet_info) {

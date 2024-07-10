@@ -11,10 +11,4 @@
 /// facilitant ainsi la compréhension des motifs de trafic réseau.
 pub mod get_graph_data;
 
-/// Module pour obtenir les données de la matrice de trafic réseau.
-///
-/// Ce sous-module se concentre sur l'extraction et la structuration des données nécessaires
-/// pour construire une "matrice de trafic", qui peut être utilisée pour analyser les interactions
-/// entre différents nœuds dans le réseau. Cela inclut la préparation des données pour des analyses
-/// de connectivité, de volume de trafic, et d'autres mesures clés.
-pub mod get_matrice_data;
+

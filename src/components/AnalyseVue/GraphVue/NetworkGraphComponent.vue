@@ -270,8 +270,8 @@
 <template>
   <div class="graph-container">
     
-    <button class="download-button" @click="downloadPng">Télécharger l'image</button>
-    <button class="download-button" @click="downloadSvg" style="left: 200px;">Télécharger SVG</button>
+    <button class="download-button" @click="downloadPng">Dl l'image</button>
+    <button class="download-button" @click="downloadSvg" style="left: 200px;">Dl SVG</button>
     
     <v-network-graph
       class="graph"

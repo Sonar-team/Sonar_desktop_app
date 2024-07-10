@@ -1,35 +1,34 @@
 [package]
 name = "sonar_desktop_app"
-version = "1.13.0"
+version = "1.13.1"
 description = "Audit reseau"
 authors = ["Cyprien Avico"]
-license = "MIT License"
+license = "A-GPL"
 repository = "https://github.com/Sonar-team/Sonar_desktop_app"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5.1", features = [] }
+tauri-build = { version = "1.5.3", features = [] }
 
 [dependencies]
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 
-devtools = "0.3.1"
-tauri = { version = "1.6.2", features = [ "cli", "api-all", "tracing" ] }
+tauri = { version = "1.7.1", features = [ "cli", "api-all", "tracing" ] }
 
-serde = { version = "1.0.197", features = ["derive"] }
-serde_json = "1.0.114"
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = "1.0.120"
 
-log = "0.4.21"
+log = "0.4.22"
 clap = {version = "4.5.1", features = ["derive"] }
 csv  = "1.3.0"
 rust_xlsxwriter = "0.69.0"
-ctrlc = "3.4.2"
+ctrlc = "3.4.4"
 colored = "2.1.0"
 rand = "0.8.5"
 pnet = { git = "https://github.com/Akmot9/libpnet" }
-thiserror ="1.0.57"
+thiserror ="1.0.61"
 cargo-sonar = "1.2.0"
 whoami = "1.5.1"
 aquamarine = "0.5.0"

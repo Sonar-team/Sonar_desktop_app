@@ -1,11 +1,8 @@
-use crate::{
-    sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos},
-    tauri_state::SonarState,
-};
-use log::error;
+use crate::sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos};
+
 use serde::Serialize;
-use std::{collections::HashMap, sync::Mutex};
-use tauri::{AppHandle, Manager};
+use std::collections::HashMap;
+
 
 /// Récupère et sérialise les données de trafic réseau en une représentation de graph.
 ///
@@ -38,7 +35,7 @@ use tauri::{AppHandle, Manager};
 /// ```
 
 #[derive(Serialize)]
-struct GraphData {
+pub struct GraphData {
     nodes: HashMap<String, Node>,
     edges: HashMap<String, Edge>,
 }
@@ -56,14 +53,14 @@ struct Edge {
     label: String,
 }
 
-struct GraphBuilder {
+pub struct GraphBuilder {
     nodes: HashMap<String, Node>,
     edges: HashMap<String, Edge>,
     edge_counter: u32,
 }
 
 impl GraphBuilder {
-    fn new() -> Self {
+    pub fn new() -> Self {
         GraphBuilder {
             nodes: HashMap::new(),
             edges: HashMap::new(),
@@ -81,14 +78,14 @@ impl GraphBuilder {
     }
 
     // Fonction pour vérifier si une arête existe déjà
-    fn edge_exists(&self, source_ip: &String, target_ip: &String, label: &String) -> bool {
+    pub fn edge_exists(&self, source_ip: &String, target_ip: &String, label: &String) -> bool {
         self.edges.values().any(|e| {
             (e.source == *source_ip && e.target == *target_ip && e.label == *label)
                 || (e.source == *target_ip && e.target == *source_ip && e.label == *label)
         })
     }
 
-    fn add_edge(&mut self, packet: &PacketInfos) {
+    pub fn add_edge(&mut self, packet: &PacketInfos) {
         if let (Some(source_ip), Some(target_ip)) = (
             &packet.layer_3_infos.ip_source,
             &packet.layer_3_infos.ip_destination,
@@ -138,7 +135,7 @@ impl GraphBuilder {
         }
     }
 
-    fn build_graph_data(&self) -> GraphData {
+    pub fn build_graph_data(&self) -> GraphData {
         GraphData {
             nodes: self.nodes.clone(),
             edges: self.edges.clone(),
@@ -146,25 +143,6 @@ impl GraphBuilder {
     }
 }
 
-pub fn get_graph_data(app: AppHandle) -> Result<String, String> {
-    let state = app.state::<Mutex<SonarState>>();
-    let state_guard = state.lock().unwrap();
-    let matrice = state_guard.get_matrice();
-
-    let mut graph_builder = GraphBuilder::new();
-
-    for (packet, _) in matrice.iter() {
-        graph_builder.add_edge(packet);
-    }
-
-    let graph_data = graph_builder.build_graph_data();
-    //println!("{:?}", serde_json::to_string(&graph_data).unwrap());
-
-    serde_json::to_string(&graph_data).map_err(|e| {
-        error!("Serialization error: {}", e);
-        format!("Serialization error: {}", e)
-    })
-}
 
 // Helper function to determine if an IP address is IPv4
 fn is_ipv4(ip: &String) -> bool {

@@ -9,8 +9,8 @@ import Capture from '../components/homeVue/Capture.vue';
     <Capture />
   
     <div class="footer">
-      <span>Version 1.13.0 - Bêta: Ne pas utiliser en production</span>
-      <span>© 2024 MIT - SSF TOULON - ERDT CYBER - CYPRIEN AVICO</span>
+      <span>Version 1.13.1 - Bêta:</span>
+      <span>© 2024 A-GPL - MARINE NATIONALE - SSF TOULON - ERDT CYBER - CYPRIEN AVICO</span>
     </div>
   </div>
 </template>

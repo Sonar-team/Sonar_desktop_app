@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std:: sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use log::info;
 
@@ -9,35 +9,37 @@ use sonar_desktop_app::{
     cli::print_banner,
     get_hostname::hostname_to_s,
     get_interfaces::get_interfaces,
-    get_matrice::{get_graph_data::get_graph_data, get_matrice_data::get_matrice_data},
-    save_packets::{cmd_save_packets_to_csv, cmd_save_packets_to_excel, MyError},
     sniff::scan_until_interrupt,
-    tauri_state::SonarState,
+    tauri_state::{MyError, SonarState},
 };
-use tauri::{AppHandle, Manager};
+use tauri::{generate_handler, AppHandle, Manager, State};
 // use tauri_plugin_log::LogTarget;
-
 
 use resvg::tiny_skia::{Pixmap, Transform};
 use usvg::{Tree, Options};
-
 
 extern crate sonar_desktop_app;
 
 fn main() {
     println!("{}", print_banner());
 
-    let builder = tauri::Builder::default();
-
-    builder
+    tauri::Builder::default()
+        .manage(SonarState::new())
         .on_window_event(|event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event.event() {
                 std::process::exit(0);
             }
         })
-        .manage(Mutex::new(SonarState::new()))
-        .manage(SonarState::new())
-        .invoke_handler(tauri::generate_handler![
+        .setup(move |app| {
+            let app_handle = app.handle();
+            // Event listener for before-quit
+            app_handle.listen_global("tauri://before-quit", move |_| {
+                info!("Quit event received");
+            });
+
+            Ok(())
+        })
+        .invoke_handler(generate_handler![
             get_interfaces_tab,
             get_selected_interface,
             save_packets_to_csv,
@@ -50,23 +52,7 @@ fn main() {
             toggle_pause,
             get_hostname_to_string,
         ])
-        .setup(move |app| {
-            let app_handle = app.handle();
-
-            // Event listener for before-quit
-            app_handle.listen_global("tauri://before-quit", move |_| {
-                info!("Quit event received");
-            });
-            app_handle.manage(Mutex::new(SonarState::new()));
-
-            Ok(())
-        })
-        //.plugin(devtools::init())
-        // .plugin(
-        //     tauri_plugin_log::Builder::default()
-        //         .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
-        //         .build(),
-        // )
+        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -90,20 +76,28 @@ fn get_selected_interface(app: AppHandle, interface_name: String) {
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn save_packets_to_csv(file_path: String, app: AppHandle) -> Result<(), MyError> {
+fn save_packets_to_csv(file_path: String, state: State<'_,Arc<Mutex<SonarState>>>) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du CSV: {}", &file_path);
-    cmd_save_packets_to_csv(file_path, app)
+    let locked_state = state.lock().unwrap();
+    locked_state.cmd_save_packets_to_csv(file_path)
+    
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn save_packets_to_excel(file_path: String, app: AppHandle) -> Result<(), MyError> {
+fn save_packets_to_excel(file_path: String, state: State<'_,Arc<Mutex<SonarState>>>) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du Excel: {}", &file_path);
-    cmd_save_packets_to_excel(file_path, app)
+    let locked_state = state.lock().unwrap();
+
+    locked_state.cmd_save_packets_to_excel(file_path)
+    
 }
 
 #[tauri::command(async)]
-fn get_matrice(app: AppHandle) -> Result<String, String> {
-    match get_matrice_data(app) {
+fn get_matrice(state: State<'_,Arc<Mutex<SonarState>>>) -> Result<String, String> {
+    //println!("  getmarice");
+    let locked_state = state.lock().map_err(|_| "Failed to lock state".to_string())?;
+
+    match locked_state.get_matrice_data() {
         Ok(data) => {
             //println!("Data: {}", data); // Utilisez log::info si vous avez configuré un logger
             Ok(data)
@@ -116,8 +110,10 @@ fn get_matrice(app: AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command(async)]
-fn get_graph_state(app: AppHandle) -> Result<String, String> {
-    get_graph_data(app)
+fn get_graph_state(state: State<'_,Arc<Mutex<SonarState>>>) -> Result<String, String> {
+    let locked_state = state.lock().map_err(|_| "Failed to lock state".to_string())?;
+
+    locked_state.get_graph_data()
 }
 
 #[tauri::command(async)]
@@ -147,18 +143,19 @@ fn write_file_as_png(path: String, contents: String) -> Result<(), String> {
 }
 
 #[tauri::command(async)]
-fn toggle_ipv6_filter(app: AppHandle) {
-    let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
-    let mut state_guard = state.lock().unwrap();
-    state_guard.toggle_filter_ipv6();
-    info!("etat du filtre {:?}", state_guard.filter_ipv6);
+fn toggle_ipv6_filter(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
+    let locked_state = state.lock().map_err(|_| "Failed to lock state".to_string())?;
+
+    locked_state.toggle_filter_ipv6();
+    info!("etat du filtre {:?}", locked_state.filter_ipv6);
+    Ok(())
 }
 
 #[tauri::command(async)]
-fn toggle_pause(app: AppHandle) {
-    let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
-    let mut state_guard = state.lock().unwrap();
-    state_guard.toggle_actif();
+fn toggle_pause(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
+    let locked_state = state.lock().map_err(|_| "Failed to lock state".to_string())?;
+    locked_state.toggle_actif();
     println!("etat actif");
-    info!("etat du filtre {:?}", state_guard.actif);
+    info!("etat du filtre {:?}", locked_state.actif);
+    Ok(())
 }
