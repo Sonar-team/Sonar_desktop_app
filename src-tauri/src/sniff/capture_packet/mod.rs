@@ -47,11 +47,19 @@ use self::layer_2_infos::PacketInfos;
 pub fn all_interfaces(app: AppHandle) {
     let mut handles = vec![];
     let (tx, rx) = mpsc::channel::<PacketInfos>();
-    let app_clone = app.clone();
+    
+    let state_clone: Arc<Mutex<SonarState>> = Arc::clone(&app.state());
+
+    // Creer un thread pour traiter les paquets
+    
     thread::spawn(move || {
         for new_packet in rx {
-            let state: State<SonarState> = app_clone.state();
-            state.update_matrice_with_packet(new_packet);
+            // 1. lock the state
+            let mut locked_state = state_clone.lock().map_err(|_| "Failed to lock state".to_string()).unwrap();
+            //println!("  mutex matrice: {:?}", &locked_state.matrice);
+            // 2. update the state
+            locked_state.update_matrice_with_packet(new_packet);
+            //println!("  mutex matrice updated: {:?}", &locked_state.matrice);
         }
     });
 
@@ -93,8 +101,10 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str) {
     // Démarrer un thread pour traiter les paquets
     thread::spawn(move || {
         for new_packet in rx {
-            let state: State<SonarState> = app_clone.state();
-            state.update_matrice_with_packet(new_packet);
+            let state: State<'_, Arc<Mutex<SonarState>>> = app_clone.state(); // Acquire a lock
+            let mut locked_state = state.lock().map_err(|_| "Failed to lock state".to_string()).unwrap();
+
+            locked_state.update_matrice_with_packet(new_packet);
         }
     });
 
@@ -152,12 +162,13 @@ fn capture_packets(
                 Ok(packet) => {
                     if let Some(ethernet_packet) = EthernetPacket::new(packet) {
                         let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
-                        let state = app.state::<Mutex<SonarState>>(); // Acquire a lock
+                        //println!("      capture_packet: {:?}", &packet_info);
+                        let state: State<'_, Arc<Mutex<SonarState>>> = app.state(); // Acquire a lock
                         let state_guard = state.lock().unwrap();
 
                         //println!("{packet_info}");
                         if packet_info.l_3_protocol == "Ipv6" {
-                            let filter_ipv6 = *state_guard.filter_ipv6.lock().unwrap();
+                            let filter_ipv6 = state_guard.filter_ipv6;
                             if !filter_ipv6 {
                                 continue;
                             }

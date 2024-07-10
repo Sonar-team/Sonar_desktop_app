@@ -16,6 +16,12 @@ use crate::get_matrice::get_graph_data::GraphBuilder;
 use crate::sniff::capture_packet::layer_2_infos::layer_3_infos::ip_type::IpType;
 use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
 
+#[derive(Debug, Serialize)]
+struct PacketInfoEntry {
+    info: PacketInfos,
+    count: u32,
+}
+
 /// `SonarState` encapsule l'état global de l'application Sonar.
 ///
 /// Cette structure est conçue pour stocker et gérer les informations sur les trames réseau
@@ -42,54 +48,52 @@ use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
 
 pub struct SonarState {
     // Contient les trames réseau et leur nombre d'occurrences
-    pub matrice: Arc<Mutex<HashMap<PacketInfos, u32>>>,
+    pub matrice: HashMap<PacketInfos, u32>,
     // Indique si le filtrage des adresses IPv6 est activé
-    pub filter_ipv6: Arc<Mutex<bool>>,
-    pub actif: Arc<Mutex<bool>>,
-}
-
-impl Default for SonarState {
-    fn default() -> Self {
-        Self::new()
-    }
+    pub filter_ipv6: bool,
+    pub actif: bool,
 }
 
 impl SonarState {
     // Constructeur pour initialiser `SonarState`
-    pub fn new() -> SonarState {
-        SonarState {
-            matrice: Arc::new(Mutex::new(HashMap::new())),
-            filter_ipv6: Arc::new(Mutex::new(true)), // Par défaut, le filtrage IPv6 est activé
-            actif: Arc::new(Mutex::new(true)),
-        }
+    pub fn new() -> Arc<Mutex<Self>> {
+        let state =  Arc::new(Mutex::new(SonarState { 
+                matrice: HashMap::new(),
+                filter_ipv6: true, // Par défaut, le filtrage IPv6 est activé
+                actif: true,
+            }));
+        state
     }
 
     // Méthode pour basculer l'état de `actif`
     pub fn toggle_actif(&self) {
-        let mut filter_state = self.actif.lock().unwrap();
-        *filter_state = !*filter_state; // Inverse l'état actuel
+        let mut filter_state = self.actif;
+        filter_state = !filter_state; // Inverse l'état actuel
+        println!("filter_state: {:?}", filter_state);
     }
 
     // Méthode pour basculer l'état de `filter_ipv6`
     pub fn toggle_filter_ipv6(&self) {
-        let mut filter_state = self.filter_ipv6.lock().unwrap();
-        *filter_state = !*filter_state; // Inverse l'état actuel
+        let mut filter_state = self.filter_ipv6;
+        filter_state = !filter_state; // Inverse l'état actuel
+        println!("filter_state: {:?}", filter_state);
     }
 
     // Getter method for matrice
-    pub fn get_matrice(&self) -> Arc<Mutex<HashMap<PacketInfos, u32>>> {
-        Arc::clone(&self.matrice)
+    pub fn get_matrice(&self) -> &HashMap<PacketInfos, u32> {
+        &self.matrice
     }
 
     // Met à jour `matrice` avec un nouveau paquet
-    pub fn update_matrice_with_packet(&self, new_packet: PacketInfos) {
-        println!("new_packet: {:?}", new_packet);
-        let mut matrice = self.matrice.lock().unwrap();
-        let entry = matrice.entry(new_packet).or_insert(0);
-        *entry += 1;
-        println!("updated matrice: {:?}", matrice);
-    }
+    pub fn update_matrice_with_packet(&mut self, new_packet: PacketInfos) {
+        //println!("new_packet: {:?}", new_packet);
 
+        //println!("  before update matrice: {:?}", self.matrice);
+        let entry = self.matrice.entry(new_packet).or_insert(0);
+        *entry += 1;
+        //println!("  updated matrice: {:?}", self.matrice);
+        //println!("");
+    }
 
     /// Fonction pour enregistrer les paquets vers un fichier CSV.
     ///
@@ -104,7 +108,7 @@ impl SonarState {
     /// cmd_save_packets_to_csv(String::from("paquets.csv"), state);
     /// ```
     pub fn cmd_save_packets_to_csv(&self, file_path: String) -> Result<(), MyError> {
-        let data = self.matrice.lock().unwrap(); // Acquire a lock
+        let data = self.matrice.clone(); // Acquire a lock
 
         // Create a CSV writer
         let mut wtr = Writer::from_path(file_path).map_err(|e| MyError::IoError(e.to_string()))?;
@@ -136,7 +140,7 @@ impl SonarState {
 /// ```
 pub fn cmd_save_packets_to_excel(&self,file_path: String) -> Result<(), MyError> {
         // Lock the state to access the data
-        let data = self.matrice.lock().unwrap(); // Acquire a lock
+        let data = self.matrice.clone(); // Acquire a lock
 
         // Create an Excel workbook
         let mut workbook = Workbook::new();
@@ -258,22 +262,15 @@ pub fn cmd_save_packets_to_excel(&self,file_path: String) -> Result<(), MyError>
     /// }
     /// ```
     pub fn get_matrice_data(&self) -> Result<String, String> {
-        {
-            // Ajout d'une trace avant l'acquisition du verrou
-            println!("Trying to acquire lock for get_matrice_data");
-        }
-        let data = self.matrice.lock().unwrap(); // Acquire a lock
-        // Directly access the `matrice` field from `SonarState`
-        println!("Lock acquired. Matrice: {:?}", data);
-        match serde_json::to_string(&*data) {
-            Ok(serialized_data) => {
-                // Successfully serialized the matrice to a JSON string
-                println!("Serialized data: {}", serialized_data); // Trace pour les données sérialisées
+        let data: &HashMap<PacketInfos, u32> = &self.matrice;
 
-                Ok(serialized_data)
-            }
+        let entries: Vec<PacketInfoEntry> = data.iter()
+            .map(|(info, &count)| PacketInfoEntry { info: info.clone(), count })
+            .collect();
+
+        match serde_json::to_string(&entries) {
+            Ok(serialized_data) => Ok(serialized_data),
             Err(e) => {
-                // Handle serialization errors
                 let err_msg = format!("Erreur de sérialisation : {}", e);
                 error!("{}", err_msg);
                 Err(err_msg)
@@ -282,7 +279,7 @@ pub fn cmd_save_packets_to_excel(&self,file_path: String) -> Result<(), MyError>
     }
 
     pub fn get_graph_data(&self) -> Result<String, String> {
-        let data = self.matrice.lock().unwrap(); // Acquire a lock
+        let data = self.matrice.clone(); // Acquire a lock
     
         let mut graph_builder = GraphBuilder::new();
     
@@ -299,6 +296,7 @@ pub fn cmd_save_packets_to_excel(&self,file_path: String) -> Result<(), MyError>
         })
     }
 }
+
 
 /// Enum représentant les différentes erreurs pouvant survenir lors de l'écriture de paquets vers un fichier CSV ou Excel.
 #[derive(Debug, Error, serde::Serialize)]

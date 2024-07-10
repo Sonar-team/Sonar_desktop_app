@@ -6,12 +6,12 @@
 
 pub(crate) mod capture_packet;
 
-use std::sync::{Arc, Mutex};
+
 
 use capture_packet::{all_interfaces, one_interface};
-use tauri::{AppHandle, State};
+use tauri::AppHandle;
 
-use crate::tauri_state::SonarState;
+
 
 /// Démarre la capture de paquets jusqu'à interruption par l'utilisateur.
 ///
