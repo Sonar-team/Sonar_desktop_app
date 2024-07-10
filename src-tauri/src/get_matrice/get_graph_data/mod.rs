@@ -92,11 +92,11 @@ impl GraphBuilder {
         ) {
             let is_source_ip_private_or_public_ipv4 = matches!(
                 packet.layer_3_infos.ip_source_type,
-                Some(IpType::Private | IpType::Public) if is_ipv4(source_ip)
+                Some(IpType::Private | IpType::Public) 
             );
             let is_target_ip_private_or_public_ipv4 = matches!(
                 packet.layer_3_infos.ip_destination_type,
-                Some(IpType::Private | IpType::Public) if is_ipv4(target_ip)
+                Some(IpType::Private | IpType::Public) 
             );
 
             if is_source_ip_private_or_public_ipv4 && is_target_ip_private_or_public_ipv4 {
