@@ -18,11 +18,11 @@ use pnet::datalink::Channel::Ethernet;
 use pnet::datalink::{self, NetworkInterface};
 use pnet::packet::ethernet::EthernetPacket;
 use std::process::exit;
-use std::sync::{mpsc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
 pub(crate) mod layer_2_infos;
 
 use crate::tauri_state::SonarState;
@@ -47,13 +47,11 @@ use self::layer_2_infos::PacketInfos;
 pub fn all_interfaces(app: AppHandle) {
     let mut handles = vec![];
     let (tx, rx) = mpsc::channel::<PacketInfos>();
-    let app_for_thread = app.clone();
+    let app_clone = app.clone();
     thread::spawn(move || {
         for new_packet in rx {
-            let state = app_for_thread.state::<Mutex<SonarState>>();
-
-            let state_guard = state.lock().unwrap();
-            state_guard.update_matrice_with_packet(new_packet);
+            let state: State<SonarState> = app_clone.state();
+            state.update_matrice_with_packet(new_packet);
         }
     });
 
@@ -88,19 +86,15 @@ pub fn all_interfaces(app: AppHandle) {
 /// * `state` - État global de l'application.
 pub fn one_interface(app: tauri::AppHandle, interface: &str) {
     info!("L'interface choisie est: {}", interface);
-
+    let app_clone = app.clone();
     // Création d'un canal de communication de type FIFO
     let (tx, rx) = mpsc::channel();
-
-    let app_for_thread = app.clone();
+    
     // Démarrer un thread pour traiter les paquets
     thread::spawn(move || {
         for new_packet in rx {
-            let state = app_for_thread.state::<Mutex<SonarState>>();
-
-            let state_guard = state.lock().unwrap();
-            // Appel de la méthode update_matrice_with_packet directement sur l'instance SonarState
-            state_guard.update_matrice_with_packet(new_packet);
+            let state: State<SonarState> = app_clone.state();
+            state.update_matrice_with_packet(new_packet);
         }
     });
 
@@ -162,8 +156,12 @@ fn capture_packets(
                         let state_guard = state.lock().unwrap();
 
                         //println!("{packet_info}");
-                        if packet_info.l_3_protocol == "Ipv6" && !state_guard.filter_ipv6 {
-                            continue;
+                        if packet_info.l_3_protocol == "Ipv6" {
+                            let filter_ipv6 = *state_guard.filter_ipv6.lock().unwrap();
+                            if !filter_ipv6 {
+                                continue;
+                            }
+                            
                         }
                         // afficher dans le composant bottom long
                         if let Err(err) = main_window.emit("frame", &packet_info) {

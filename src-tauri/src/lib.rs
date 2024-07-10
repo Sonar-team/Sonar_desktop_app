@@ -21,7 +21,6 @@ pub mod get_interfaces;
 /// pour organiser et stocker les informations sur les paquets capturés, facilitant leur analyse ultérieure.
 pub mod get_matrice;
 
-
 /// Capture et analyse des paquets réseau.
 ///
 /// `sniff` est le cœur de l'application, responsable de la capture des paquets réseau sur une interface spécifiée,

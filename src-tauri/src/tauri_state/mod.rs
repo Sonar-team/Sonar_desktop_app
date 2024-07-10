@@ -44,8 +44,8 @@ pub struct SonarState {
     // Contient les trames réseau et leur nombre d'occurrences
     pub matrice: Arc<Mutex<HashMap<PacketInfos, u32>>>,
     // Indique si le filtrage des adresses IPv6 est activé
-    pub filter_ipv6: bool,
-    pub actif: bool,
+    pub filter_ipv6: Arc<Mutex<bool>>,
+    pub actif: Arc<Mutex<bool>>,
 }
 
 impl Default for SonarState {
@@ -59,19 +59,21 @@ impl SonarState {
     pub fn new() -> SonarState {
         SonarState {
             matrice: Arc::new(Mutex::new(HashMap::new())),
-            filter_ipv6: true, // Par défaut, le filtrage IPv6 est activé
-            actif: true,
+            filter_ipv6: Arc::new(Mutex::new(true)), // Par défaut, le filtrage IPv6 est activé
+            actif: Arc::new(Mutex::new(true)),
         }
     }
 
     // Méthode pour basculer l'état de `actif`
-    pub fn toggle_actif(&mut self) {
-        self.actif = !self.actif; // Inverse l'état actuel
+    pub fn toggle_actif(&self) {
+        let mut filter_state = self.actif.lock().unwrap();
+        *filter_state = !*filter_state; // Inverse l'état actuel
     }
 
     // Méthode pour basculer l'état de `filter_ipv6`
-    pub fn toggle_filter_ipv6(&mut self) {
-        self.filter_ipv6 = !self.filter_ipv6; // Inverse l'état actuel
+    pub fn toggle_filter_ipv6(&self) {
+        let mut filter_state = self.filter_ipv6.lock().unwrap();
+        *filter_state = !*filter_state; // Inverse l'état actuel
     }
 
     // Getter method for matrice
@@ -295,7 +297,6 @@ pub fn cmd_save_packets_to_excel(&self,file_path: String) -> Result<(), MyError>
             error!("Serialization error: {}", e);
             format!("Serialization error: {}", e)
         })
-    
     }
 }
 
