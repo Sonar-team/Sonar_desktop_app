@@ -99,7 +99,7 @@ fn get_matrice(state: State<'_,Arc<Mutex<SonarState>>>) -> Result<String, String
 
     match locked_state.get_matrice_data() {
         Ok(data) => {
-            println!("Data: {}", data); // Utilisez log::info si vous avez configuré un logger
+            //println!("Data: {}", data); // Utilisez log::info si vous avez configuré un logger
             Ok(data)
         }
         Err(e) => {
