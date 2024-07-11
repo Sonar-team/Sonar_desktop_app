@@ -93,15 +93,14 @@ trait HandlePacket {
 impl HandlePacket for ProfinetHandler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(profinet_packet) = ProfinetPacket::new(data) {
-            let source_ip_str = profinet_packet.source;
-            let destination_ip_str = profinet_packet.destination;
-
+            println!("profint");
+            println!("profinet_packet: {:?}", profinet_packet);
             Layer3Infos {
-                ip_source: Some(source_ip_str),
+                ip_source: None,
                 ip_source_type: None, // Définissez un type approprié
-                ip_destination: Some(destination_ip_str),
+                ip_destination: None,
                 ip_destination_type: None, // Définissez un type approprié
-                l_4_protocol: Some("Profinet".to_string()),
+                l_4_protocol: Some("Profinet_rt".to_string()),
                 layer_4_infos: Layer4Infos {
                     port_source: None,
                     port_destination: None,
@@ -109,7 +108,9 @@ impl HandlePacket for ProfinetHandler {
                 },
             }
         } else {
+            println!("no profinet");
             Default::default()
+            
         }
     }
 }

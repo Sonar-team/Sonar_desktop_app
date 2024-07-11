@@ -172,6 +172,11 @@ fn capture_packets(
                         let state: State<'_, Arc<Mutex<SonarState>>> = app.state(); // Acquire a lock
                         let state_guard = state.lock().unwrap();
 
+                        let active_state = state_guard.actif;
+                        if !active_state {
+                            continue;
+                        }
+                        
                         //println!("{packet_info}");
                         if packet_info.l_3_protocol == "Ipv6" {
                             let filter_ipv6 = state_guard.filter_ipv6;
