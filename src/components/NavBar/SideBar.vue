@@ -19,7 +19,6 @@
         <button class="button-down" @click="diminuerMinutes"></button>
         <button class="button-down" @click="diminuerSecondes"></button>
       </div>
-      
 
       <p>Temps écoulé: {{ tempsEcoule }}</p>
       <p>Trames reçues: {{ tramesRecues }} </p>
@@ -150,6 +149,7 @@ export default {
       this.tramesRecues++;
     },
     incrementMatriceCount(packetCount) {
+      console.log("incrementMatriceCount", packetCount)
       this.tramesEnregistrees = packetCount;
     },
     async SaveAsCsv() {
