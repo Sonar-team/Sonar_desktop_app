@@ -16,7 +16,7 @@ use tauri::{generate_handler, AppHandle, Manager, State};
 // use tauri_plugin_log::LogTarget;
 
 use resvg::tiny_skia::{Pixmap, Transform};
-use usvg::{Tree, Options};
+use usvg::{Options, Tree};
 
 extern crate sonar_desktop_app;
 
@@ -52,7 +52,6 @@ fn main() {
             toggle_pause,
             get_hostname_to_string,
         ])
-        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -76,26 +75,32 @@ fn get_selected_interface(app: AppHandle, interface_name: String) {
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn save_packets_to_csv(file_path: String, state: State<'_,Arc<Mutex<SonarState>>>) -> Result<(), MyError> {
+fn save_packets_to_csv(
+    file_path: String,
+    state: State<'_, Arc<Mutex<SonarState>>>,
+) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du CSV: {}", &file_path);
     let locked_state = state.lock().unwrap();
     locked_state.cmd_save_packets_to_csv(file_path)
-    
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-fn save_packets_to_excel(file_path: String, state: State<'_,Arc<Mutex<SonarState>>>) -> Result<(), MyError> {
+fn save_packets_to_excel(
+    file_path: String,
+    state: State<'_, Arc<Mutex<SonarState>>>,
+) -> Result<(), MyError> {
     info!("Chemin d'enregistrement du Excel: {}", &file_path);
     let locked_state = state.lock().unwrap();
 
     locked_state.cmd_save_packets_to_excel(file_path)
-    
 }
 
 #[tauri::command(async)]
-fn get_matrice(state: State<'_,Arc<Mutex<SonarState>>>) -> Result<String, String> {
+fn get_matrice(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<String, String> {
     //println!("  getmarice");
-    let locked_state = state.lock().map_err(|_| "Failed to lock state".to_string())?;
+    let locked_state = state
+        .lock()
+        .map_err(|_| "Failed to lock state".to_string())?;
 
     match locked_state.get_matrice_data() {
         Ok(data) => {
@@ -110,8 +115,10 @@ fn get_matrice(state: State<'_,Arc<Mutex<SonarState>>>) -> Result<String, String
 }
 
 #[tauri::command(async)]
-fn get_graph_state(state: State<'_,Arc<Mutex<SonarState>>>) -> Result<String, String> {
-    let locked_state = state.lock().map_err(|_| "Failed to lock state".to_string())?;
+fn get_graph_state(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<String, String> {
+    let locked_state = state
+        .lock()
+        .map_err(|_| "Failed to lock state".to_string())?;
 
     locked_state.get_graph_data()
 }
@@ -127,12 +134,12 @@ fn write_file_as_png(path: String, contents: String) -> Result<(), String> {
     // Parse the SVG contents
     let opt = Options::default();
     let rtree = Tree::from_str(&contents, &opt).map_err(|e| e.to_string())?;
-    
+
     // Create a pixmap with the dimensions of the SVG
     let pixmap_size = rtree.size();
     let mut pixmap = Pixmap::new(pixmap_size.width() as u32, pixmap_size.height() as u32)
-       .ok_or("Failed to create pixmap")?;
-    
+        .ok_or("Failed to create pixmap")?;
+
     // Render the SVG onto the pixmap
     resvg::render(&rtree, Transform::identity(), &mut pixmap.as_mut());
 
@@ -144,7 +151,9 @@ fn write_file_as_png(path: String, contents: String) -> Result<(), String> {
 
 #[tauri::command(async)]
 fn toggle_ipv6_filter(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
-    let locked_state = state.lock().map_err(|_| "Failed to lock state".to_string())?;
+    let locked_state = state
+        .lock()
+        .map_err(|_| "Failed to lock state".to_string())?;
 
     locked_state.toggle_filter_ipv6();
     info!("etat du filtre {:?}", locked_state.filter_ipv6);
@@ -153,7 +162,9 @@ fn toggle_ipv6_filter(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), St
 
 #[tauri::command(async)]
 fn toggle_pause(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
-    let locked_state = state.lock().map_err(|_| "Failed to lock state".to_string())?;
+    let locked_state = state
+        .lock()
+        .map_err(|_| "Failed to lock state".to_string())?;
     locked_state.toggle_actif();
     println!("etat actif");
     info!("etat du filtre {:?}", locked_state.actif);

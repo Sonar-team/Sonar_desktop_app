@@ -47,15 +47,18 @@ use self::layer_2_infos::PacketInfos;
 pub fn all_interfaces(app: AppHandle) {
     let mut handles = vec![];
     let (tx, rx) = mpsc::channel::<PacketInfos>();
-    
+
     let state_clone: Arc<Mutex<SonarState>> = Arc::clone(&app.state());
 
     // Creer un thread pour traiter les paquets
-    
+
     thread::spawn(move || {
         for new_packet in rx {
             // 1. lock the state
-            let mut locked_state = state_clone.lock().map_err(|_| "Failed to lock state".to_string()).unwrap();
+            let mut locked_state = state_clone
+                .lock()
+                .map_err(|_| "Failed to lock state".to_string())
+                .unwrap();
             //println!("  mutex matrice: {:?}", &locked_state.matrice);
             // 2. update the state
             locked_state.update_matrice_with_packet(new_packet);
@@ -97,12 +100,15 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str) {
     let app_clone = app.clone();
     // Création d'un canal de communication de type FIFO
     let (tx, rx) = mpsc::channel();
-    
+
     // Démarrer un thread pour traiter les paquets
     thread::spawn(move || {
         for new_packet in rx {
             let state: State<'_, Arc<Mutex<SonarState>>> = app_clone.state(); // Acquire a lock
-            let mut locked_state = state.lock().map_err(|_| "Failed to lock state".to_string()).unwrap();
+            let mut locked_state = state
+                .lock()
+                .map_err(|_| "Failed to lock state".to_string())
+                .unwrap();
 
             locked_state.update_matrice_with_packet(new_packet);
         }
@@ -135,21 +141,21 @@ fn capture_packets(
     tx: mpsc::Sender<PacketInfos>,
 ) {
     loop {
-            let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
-                Ok(Ethernet(tx, rx)) => (tx, rx),
-                Ok(_) => {
-                    println!("Type de canal non géré : {}", &interface);
-                    continue;
-                }
-                Err(e) => {
-                    println!(
+        let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
+            Ok(Ethernet(tx, rx)) => (tx, rx),
+            Ok(_) => {
+                println!("Type de canal non géré : {}", &interface);
+                continue;
+            }
+            Err(e) => {
+                println!(
                         "Une erreur s'est produite lors de la création du canal de liaison de données: {}. 
                         sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar-desktop-app",
                         &e
                     );
-                    exit(1);
-                }
-            };
+                exit(1);
+            }
+        };
         let main_window = app.get_window("main").unwrap();
 
         println!(
@@ -172,7 +178,6 @@ fn capture_packets(
                             if !filter_ipv6 {
                                 continue;
                             }
-                            
                         }
                         // afficher dans le composant bottom long
                         if let Err(err) = main_window.emit("frame", &packet_info) {

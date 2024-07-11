@@ -48,12 +48,9 @@
 //! Les handlers de paquets sont des structures définies dans ce module et implémentent le trait [`HandlePacket`](trait.HandlePacket.html)
 //! pour chaque type de paquet pris en charge.
 
-
 use pnet::packet::{
     arp::ArpPacket,
-    ethernet::{
-        EtherTypes, EthernetPacket
-    },
+    ethernet::{EtherTypes, EthernetPacket},
     ipv4::Ipv4Packet,
     ipv6::Ipv6Packet,
     vlan::VlanPacket,
@@ -63,9 +60,9 @@ use pnet::packet::{
 pub mod ip_type;
 mod layer_4_infos;
 mod profinet;
-use profinet::ProfinetPacket;
 use ip_type::IpType;
 use layer_4_infos::{get_layer_4_infos, Layer4Infos};
+use profinet::ProfinetPacket;
 use serde::Serialize;
 
 /// Représente les informations extraites de la couche 3 d'un paquet réseau.
@@ -134,7 +131,10 @@ impl HandlePacket for Ipv4Handler {
                 ip_destination: Some(destination_ip_str),
                 ip_destination_type: Some(ip_destination_type), // Correction ici
                 l_4_protocol: Some(ipv4_packet.get_next_level_protocol().to_string()),
-                layer_4_infos: get_layer_4_infos(ipv4_packet.get_next_level_protocol(), ipv4_packet.payload()),
+                layer_4_infos: get_layer_4_infos(
+                    ipv4_packet.get_next_level_protocol(),
+                    ipv4_packet.payload(),
+                ),
             }
         } else {
             Default::default()
@@ -158,7 +158,10 @@ impl HandlePacket for Ipv6Handler {
                 ip_destination: Some(ip_destination),
                 ip_destination_type: Some(ip_destination_type),
                 l_4_protocol: Some(ipv6_packet.get_next_header().to_string()),
-                layer_4_infos: get_layer_4_infos(ipv6_packet.get_next_header(), ipv6_packet.payload()),
+                layer_4_infos: get_layer_4_infos(
+                    ipv6_packet.get_next_header(),
+                    ipv6_packet.payload(),
+                ),
             }
         } else {
             Default::default()
@@ -320,7 +323,6 @@ pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
                 ethernet_packet.get_ethertype().0
             );
             Default::default()
-        },
-
+        }
     }
 }

@@ -3,7 +3,6 @@ use crate::sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType
 use serde::Serialize;
 use std::collections::HashMap;
 
-
 /// Récupère et sérialise les données de trafic réseau en une représentation de graph.
 ///
 /// Cette fonction tente d'acquérir un verrou sur l'état partagé contenant les informations des paquets
@@ -92,11 +91,11 @@ impl GraphBuilder {
         ) {
             let is_source_ip_private_or_public_ipv4 = matches!(
                 packet.layer_3_infos.ip_source_type,
-                Some(IpType::Private | IpType::Public) 
+                Some(IpType::Private | IpType::Public)
             );
             let is_target_ip_private_or_public_ipv4 = matches!(
                 packet.layer_3_infos.ip_destination_type,
-                Some(IpType::Private | IpType::Public) 
+                Some(IpType::Private | IpType::Public)
             );
 
             if is_source_ip_private_or_public_ipv4 && is_target_ip_private_or_public_ipv4 {
@@ -143,8 +142,7 @@ impl GraphBuilder {
     }
 }
 
-
 // Helper function to determine if an IP address is IPv4
-fn is_ipv4(ip: &String) -> bool {
-    ip.contains('.') && !ip.contains(':')
-}
+// fn is_ipv4(ip: &String) -> bool {
+//     ip.contains('.') && !ip.contains(':')
+// }

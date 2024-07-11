@@ -31,7 +31,9 @@ impl ProfinetPacket {
             Err(_) => return None,
         };
 
-        let destination = match str::from_utf8(&packet[destination_offset..destination_offset + destination_length]) {
+        let destination = match str::from_utf8(
+            &packet[destination_offset..destination_offset + destination_length],
+        ) {
             Ok(s) => s.to_string(),
             Err(_) => return None,
         };

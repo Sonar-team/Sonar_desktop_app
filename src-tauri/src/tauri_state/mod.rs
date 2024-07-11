@@ -57,11 +57,11 @@ pub struct SonarState {
 impl SonarState {
     // Constructeur pour initialiser `SonarState`
     pub fn new() -> Arc<Mutex<Self>> {
-        let state =  Arc::new(Mutex::new(SonarState { 
-                matrice: HashMap::new(),
-                filter_ipv6: true, // Par défaut, le filtrage IPv6 est activé
-                actif: true,
-            }));
+        let state = Arc::new(Mutex::new(SonarState {
+            matrice: HashMap::new(),
+            filter_ipv6: true, // Par défaut, le filtrage IPv6 est activé
+            actif: true,
+        }));
         state
     }
 
@@ -112,33 +112,33 @@ impl SonarState {
 
         // Create a CSV writer
         let mut wtr = Writer::from_path(file_path).map_err(|e| MyError::IoError(e.to_string()))?;
-    
+
         // Serialize the entire vector to the CSV
         for (packet, count) in data.iter() {
             let packet_csv = PacketInfosFlaten::from_packet_infos(packet, *count);
             wtr.serialize(packet_csv)
                 .map_err(|e| MyError::CsvError(e.to_string()))?;
         }
-    
+
         // Flush to ensure all data is written to the file
         wtr.flush().map_err(|e| MyError::IoError(e.to_string()))?;
-    
+
         Ok(())
     }
 
-/// Fonction pour enregistrer les paquets vers un fichier Excel.
-///
-/// # Arguments
-///
-/// * `file_path` - Chemin du fichier Excel.
-/// * `state` - État contenant les données des paquets.
-///
-/// # Exemple
-///
-/// ```rust
-/// cmd_save_packets_to_excel(String::from("paquets.xlsx"), state);
-/// ```
-pub fn cmd_save_packets_to_excel(&self,file_path: String) -> Result<(), MyError> {
+    /// Fonction pour enregistrer les paquets vers un fichier Excel.
+    ///
+    /// # Arguments
+    ///
+    /// * `file_path` - Chemin du fichier Excel.
+    /// * `state` - État contenant les données des paquets.
+    ///
+    /// # Exemple
+    ///
+    /// ```rust
+    /// cmd_save_packets_to_excel(String::from("paquets.xlsx"), state);
+    /// ```
+    pub fn cmd_save_packets_to_excel(&self, file_path: String) -> Result<(), MyError> {
         // Lock the state to access the data
         let data = self.matrice.clone(); // Acquire a lock
 
@@ -264,8 +264,12 @@ pub fn cmd_save_packets_to_excel(&self,file_path: String) -> Result<(), MyError>
     pub fn get_matrice_data(&self) -> Result<String, String> {
         let data: &HashMap<PacketInfos, u32> = &self.matrice;
 
-        let entries: Vec<PacketInfoEntry> = data.iter()
-            .map(|(info, &count)| PacketInfoEntry { info: info.clone(), count })
+        let entries: Vec<PacketInfoEntry> = data
+            .iter()
+            .map(|(info, &count)| PacketInfoEntry {
+                info: info.clone(),
+                count,
+            })
             .collect();
 
         match serde_json::to_string(&entries) {
@@ -280,23 +284,22 @@ pub fn cmd_save_packets_to_excel(&self,file_path: String) -> Result<(), MyError>
 
     pub fn get_graph_data(&self) -> Result<String, String> {
         let data = self.matrice.clone(); // Acquire a lock
-    
+
         let mut graph_builder = GraphBuilder::new();
-    
+
         for (packet, _) in data.iter() {
             graph_builder.add_edge(packet);
         }
-    
+
         let graph_data = graph_builder.build_graph_data();
         //println!("{:?}", serde_json::to_string(&graph_data).unwrap());
-    
+
         serde_json::to_string(&graph_data).map_err(|e| {
             error!("Serialization error: {}", e);
             format!("Serialization error: {}", e)
         })
     }
 }
-
 
 /// Enum représentant les différentes erreurs pouvant survenir lors de l'écriture de paquets vers un fichier CSV ou Excel.
 #[derive(Debug, Error, serde::Serialize)]

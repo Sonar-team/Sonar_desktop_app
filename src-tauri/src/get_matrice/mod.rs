@@ -10,5 +10,3 @@
 /// qui peuvent être directement utilisées pour alimenter des graphiques ou des visualisations,
 /// facilitant ainsi la compréhension des motifs de trafic réseau.
 pub mod get_graph_data;
-
-

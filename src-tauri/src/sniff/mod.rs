@@ -6,12 +6,8 @@
 
 pub(crate) mod capture_packet;
 
-
-
 use capture_packet::{all_interfaces, one_interface};
 use tauri::AppHandle;
-
-
 
 /// Démarre la capture de paquets jusqu'à interruption par l'utilisateur.
 ///
@@ -26,7 +22,7 @@ use tauri::AppHandle;
 /// * `state` - L'état partagé de l'application, encapsulé dans un objet `SonarState` pour maintenir les données à travers l'application.
 pub fn scan_until_interrupt(app: AppHandle, interface: &str) {
     match check_interface(interface) {
-        true => all_interfaces(app), 
+        true => all_interfaces(app),
         false => one_interface(app, interface),
     }
 }
