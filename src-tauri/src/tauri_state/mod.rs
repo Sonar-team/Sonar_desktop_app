@@ -161,6 +161,7 @@ impl SonarState {
             "L4 Protocol",
             "Source Port",
             "Destination Port",
+            "L7 Protocol",
             "Taille des packets",
             "Count",
         ];
@@ -225,15 +226,20 @@ impl SonarState {
                     .write_string(i as u32 + 1, 10, port_dst)
                     .map_err(|e| MyError::XlsxError(e.to_string()))?;
             }
+            if let Some(l7_ptoto) = &packet_csv.l_7_protocol {
+                sheet
+                    .write_string(i as u32 + 1, 11, l7_ptoto)
+                    .map_err(|e| MyError::XlsxError(e.to_string()))?;
+            }
 
             // Écriture du champ 'size'
             sheet
-                .write_number(i as u32 + 1, 11, packet_csv.packet_size as f64)
+                .write_number(i as u32 + 1, 12, packet_csv.packet_size as f64)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
 
             // Écriture du champ 'count'
             sheet
-                .write_number(i as u32 + 1, 12, packet_csv.count as f64)
+                .write_number(i as u32 + 1, 13, packet_csv.count as f64)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
 
