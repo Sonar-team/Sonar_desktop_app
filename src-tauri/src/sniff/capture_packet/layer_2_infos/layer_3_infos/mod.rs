@@ -59,11 +59,13 @@ use pnet::packet::{
 
 pub mod ip_type;
 mod layer_4_infos;
-mod profinet;
+
 use ip_type::IpType;
 use layer_4_infos::{get_layer_4_infos, Layer4Infos};
-use profinet::ProfinetPacket;
+use profinet_rt::ProfinetPacket;
 use serde::Serialize;
+
+use parse_mrp_packet::parse_mrp_data;
 
 /// Représente les informations extraites de la couche 3 d'un paquet réseau.
 #[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
@@ -84,6 +86,7 @@ struct VlanHandler;
 struct PppoeDiscoveryHandler;
 struct LldpHandler;
 struct ProfinetHandler;
+struct MrpHandler;
 
 /// Trait définissant la fonctionnalité pour extraire les informations de la couche 3.
 trait HandlePacket {
@@ -92,15 +95,16 @@ trait HandlePacket {
 
 impl HandlePacket for ProfinetHandler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
-        if let Some(profinet_packet) = ProfinetPacket::new(data) {
+        let ethernet_packet = EthernetPacket::new(data).unwrap();
+        if let Some(profinet_packet) = ProfinetPacket::new(ethernet_packet.payload()) {
             println!("profint");
             println!("profinet_packet: {:?}", profinet_packet);
             Layer3Infos {
-                ip_source: None,
-                ip_source_type: None, // Définissez un type approprié
-                ip_destination: None,
-                ip_destination_type: None, // Définissez un type approprié
-                l_4_protocol: Some("Profinet_rt".to_string()),
+                ip_source: Some(ethernet_packet.get_source().to_string()),
+                ip_source_type: Some(IpType::Private), // Définissez un type approprié
+                ip_destination: Some(ethernet_packet.get_destination().to_string()),
+                ip_destination_type: Some(IpType::Private), // Définissez un type approprié
+                l_4_protocol: None,
                 layer_4_infos: Layer4Infos {
                     port_source: None,
                     port_destination: None,
@@ -291,6 +295,29 @@ impl HandlePacket for LldpHandler {
     }
 }
 
+impl HandlePacket for MrpHandler {
+    fn get_layer_3(data: &[u8]) -> Layer3Infos {
+        if let Some(_mrp_packet) = parse_mrp_data(data) {
+            //println!("MRP packet: {:?}", mrp_packet);
+            
+            Layer3Infos { 
+                ip_source: None,
+                ip_destination_type: None,
+                ip_destination: None,
+                ip_source_type: None,
+                l_4_protocol: None,
+                layer_4_infos: Layer4Infos {
+                    port_source: None,
+                    port_destination: None,
+                    l_7_protocol: None,
+                },
+            }
+        } else {
+            Default::default()
+        }
+    }
+}
+
 /// Fonction d'entrée pour traiter un paquet Ethernet et extraire les informations de la couche 3 en fonction du type EtherType.
 pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
     match ethernet_packet.get_ethertype() {
@@ -300,7 +327,8 @@ pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
         EtherTypes::Vlan => VlanHandler::get_layer_3(ethernet_packet.payload()),
         EtherTypes::PppoeDiscovery => PppoeDiscoveryHandler::get_layer_3(ethernet_packet.payload()),
         EtherTypes::Lldp => LldpHandler::get_layer_3(ethernet_packet.payload()),
-        EtherTypes::Profinet => ProfinetHandler::get_layer_3(ethernet_packet.payload()), // Ajout pour Profinet
+        EtherTypes::Profinet_rt => ProfinetHandler::get_layer_3(ethernet_packet.packet()), // Ajout pour Profinet
+        EtherTypes::Mrp => MrpHandler::get_layer_3(ethernet_packet.payload()), // Ajout pour Mrp
         // EtherTypes::Ipx => todo!("Handle IPX packets"),
         // EtherTypes::AppleTalk => todo!("Handle AppleTalk packets"),
         // EtherTypes::Mpls => todo!("Handle MPLS packets"),
