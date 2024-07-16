@@ -6,14 +6,14 @@
           <th>MAC Source</th>
           <th>MAC Destination</th>
           <th>Interface</th>
-          <th>Protocole L3</th>
+          <th>L3</th>
           <th>IP Source</th>
           <th>IP Destination</th>
-          <th>Protocole L4</th>
+          <th>L4</th>
           <th>Port Source</th>
           <th>Port Destination</th>
           <th>Protocole</th>
-          <th>Taille du paquet</th>
+          <th>Taille (b)</th>
           <th>Horodatage</th> <!-- Nouvelle en-tête pour l'horodatage -->
 
         </tr>
