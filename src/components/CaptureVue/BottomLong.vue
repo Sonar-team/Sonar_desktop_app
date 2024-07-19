@@ -12,8 +12,8 @@
           <th>L4</th>
           <th>Port Source</th>
           <th>Port Destination</th>
-          <th>Protocole</th>
-          <th>Taille (b)</th>
+          <th>L7</th>
+          <th>Taille (o)</th>
           <th>Horodatage</th> <!-- Nouvelle en-tête pour l'horodatage -->
 
         </tr>
