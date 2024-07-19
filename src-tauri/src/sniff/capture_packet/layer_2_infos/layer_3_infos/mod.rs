@@ -97,8 +97,6 @@ impl HandlePacket for ProfinetHandler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         let ethernet_packet = EthernetPacket::new(data).unwrap();
         if let Some(profinet_packet) = ProfinetPacket::new(ethernet_packet.payload()) {
-            println!("profint");
-            println!("profinet_packet: {:?}", profinet_packet);
             Layer3Infos {
                 ip_source: Some(ethernet_packet.get_source().to_string()),
                 ip_source_type: Some(IpType::Private), // Définissez un type approprié
@@ -112,7 +110,6 @@ impl HandlePacket for ProfinetHandler {
                 },
             }
         } else {
-            println!("no profinet");
             Default::default()
             
         }

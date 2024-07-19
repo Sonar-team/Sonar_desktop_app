@@ -1,6 +1,6 @@
 [package]
 name = "sonar_desktop_app"
-version = "1.13.1"
+version = "1.13.2"
 description = "Audit reseau"
 authors = ["Cyprien Avico"]
 license = "A-GPL"
@@ -39,7 +39,7 @@ image = "0.25.1"
 resvg = "0.42.0"
 usvg ="0.42.0"
 
-parse_layer7 = "0.3.0"
+parse_layer7 = "0.3.1"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

@@ -61,6 +61,10 @@
                 return 'yellow';
               case 'Ipv4':
                 return 'orange';
+              case 'Ipv6':
+                return 'violet';
+              case 'Profinet_rt':
+                return 'green';
               // Ajoutez d'autres cas selon vos besoins
               default:
                 return 'white'; // Couleur par défaut
@@ -270,8 +274,8 @@
 <template>
   <div class="graph-container">
     
-    <button class="download-button" @click="downloadPng">Dl l'image</button>
-    <button class="download-button" @click="downloadSvg" style="left: 200px;">Dl SVG</button>
+    <button class="download-button" @click="downloadPng">PNG</button>
+    <button class="download-button" @click="downloadSvg" style="left: 200px;">SVG</button>
     
     <v-network-graph
       class="graph"
