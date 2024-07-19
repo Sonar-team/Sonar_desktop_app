@@ -32,7 +32,7 @@ export default {
         { title: 'Port Source', value: 'info.layer_3_infos.layer_4_infos.port_source', sortable: true },
         { title: 'Port Destination', value: 'info.layer_3_infos.layer_4_infos.port_destination', sortable: true },
         { title: 'L7', value: 'info.layer_3_infos.layer_4_infos.l_7_protocol', sortable: true },
-        { title: 'Taille trame(o)', value: 'info.packet_size', sortable: true },
+        { title: 'Taille trame (o)', value: 'info.packet_size', sortable: true },
         { title: 'Occ', value: 'count', sortable: true },
       ],
     };

@@ -96,7 +96,7 @@ trait HandlePacket {
 impl HandlePacket for ProfinetHandler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         let ethernet_packet = EthernetPacket::new(data).unwrap();
-        if let Some(profinet_packet) = ProfinetPacket::new(ethernet_packet.payload()) {
+        if let Some(_profinet_packet) = ProfinetPacket::new(ethernet_packet.payload()) {
             Layer3Infos {
                 ip_source: Some(ethernet_packet.get_source().to_string()),
                 ip_source_type: Some(IpType::Private), // Définissez un type approprié

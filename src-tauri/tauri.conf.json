@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "sonar_desktop_app",
-    "version": "1.13.1"
+    "version": "1.13.2"
   },
   "tauri": {
     "cli": {

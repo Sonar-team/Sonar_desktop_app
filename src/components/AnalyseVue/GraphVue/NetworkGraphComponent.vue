@@ -275,7 +275,7 @@
   <div class="graph-container">
     
     <button class="download-button" @click="downloadPng">PNG</button>
-    <button class="download-button" @click="downloadSvg" style="left: 200px;">SVG</button>
+    <button class="download-button" @click="downloadSvg" style="left: 100px;">SVG</button>
     
     <v-network-graph
       class="graph"
