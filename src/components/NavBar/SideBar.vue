@@ -195,14 +195,14 @@ export default {
       }
     },
     async getDesktopDirPath() {
-    try {
-      const dir = await desktopDir();
-      console.log("App Data Directory: ", dir);
-      return dir;
-    } catch (error) {
-      console.error("Error getting app data directory: ", error);
-    }
-  },
+      try {
+        const dir = await desktopDir();
+        console.log("App Data Directory: ", dir);
+        return dir;
+      } catch (error) {
+        console.error("Error getting app data directory: ", error);
+      }
+    },
 
     padZero(value) {
       // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
