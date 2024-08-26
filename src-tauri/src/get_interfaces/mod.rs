@@ -49,12 +49,12 @@ pub fn get_interfaces() -> Vec<String> {
             // Retourne l'adresse MAC de l'interface sous Windows.
             #[cfg(target_os = "windows")]
             {
-                format!("Interface MAC: {}", iface.mac.unwrap_or_default())
+                iface.mac.unwrap_or_default().to_string()
             }
             // Retourne l'adresse MAC de l'interface pour d'autres systèmes.
             #[cfg(not(any(target_os = "linux", target_os = "windows")))]
             {
-                format!("Interface MAC: {}", iface.mac.unwrap_or_default())
+                iface.mac.unwrap_or_default().to_string()
             }
         })
         .collect();

@@ -21,6 +21,7 @@ use tauri::AppHandle;
 /// * `interface` - Le nom de l'interface réseau sur laquelle effectuer la capture, ou une chaîne spéciale pour indiquer toutes les interfaces.
 /// * `state` - L'état partagé de l'application, encapsulé dans un objet `SonarState` pour maintenir les données à travers l'application.
 pub fn scan_until_interrupt(app: AppHandle, interface: &str) {
+    // println!("Démarrage de la capture de paquets sur l'interface : {}", interface);
     match check_interface(interface) {
         true => all_interfaces(app),
         false => one_interface(app, interface),

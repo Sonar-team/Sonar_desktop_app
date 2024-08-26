@@ -114,7 +114,7 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str) {
         }
     });
 
-    let interface_names_match = |iface: &NetworkInterface| iface.name == interface;
+    let interface_names_match = |iface: &NetworkInterface| iface.name == interface || iface.mac.unwrap_or_default().to_string() == interface;
     let interfaces = datalink::interfaces();
 
     let captured_interface = match interfaces.into_iter().find(interface_names_match) {
