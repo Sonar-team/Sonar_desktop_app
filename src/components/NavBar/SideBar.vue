@@ -80,30 +80,36 @@ export default {
     },
     augmenterSecondes() {
       this.ajusterTemps(1); // Augmenter d'une seconde
+      
     },
     diminuerSecondes() {
       // Empêcher les secondes de passer en dessous de 0
       let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
       if (heures === 0 && minutes === 0 && secondes === 0) return; // Bloquer si toutes les valeurs sont déjà à 0
       this.ajusterTemps(-1); // Diminuer d'une seconde
+  
     },
     augmenterMinutes() {
       this.ajusterTemps(60); // Augmenter d'une minute
+
     },
-    diminuerMinutes() {
+    diminuerMinutes() { 
       // Empêcher les minutes de passer en dessous de 0
       let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
       if (heures === 0 && minutes === 0 && secondes === 0) return; // Bloquer si toutes les valeurs sont déjà à 0
       this.ajusterTemps(-60); // Diminuer d'une minute
+ 
     },
     augmenterHeures() {
       this.ajusterTemps(3600); // Augmenter d'une heure
-    },
+ 
+    },  
     diminuerHeures() {
       // Empêcher les heures de passer en dessous de 0
       let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
       if (heures === 0 && minutes === 0 && secondes === 0) return; // Bloquer si toutes les valeurs sont déjà à 0
       this.ajusterTemps(-3600); // Diminuer d'une heure
+    
     },
     ajusterTemps(ajustement) {
       let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
@@ -119,21 +125,8 @@ export default {
       secondes = tempsTotalEnSecondes % 60;
 
       this.tempsReleve = `${this.padZero(heures)}:${this.padZero(minutes)}:${this.padZero(secondes)}`;
+      this.calculateEndTime();
     },
-    getCurrentDate() {
-      // Fonction pour obtenir la date actuelle
-      const now = new Date();
-      // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
-      return formattedDate;
-    },
-    formatTime(date) {
-      const hours = this.padZero(date.getHours());
-      const minutes = this.padZero(date.getMinutes());
-      const seconds = this.padZero(date.getSeconds());
-      return `${hours}:${minutes}:${seconds}`;
-    },
-
     calculateEndTime() {
       if (!this.heureDepart) {
         console.warn("heureDepart is empty. Skipping calculation of endTime.");
@@ -141,7 +134,26 @@ export default {
       }
 
       try {
-        const startTime = new Date(this.heureDepart);
+        console.log("heureDepart initial value: ", this.heureDepart);
+
+        let startTime;
+
+        if (typeof this.heureDepart === 'string') {
+          // Si heureDepart est sous la forme "HH:mm:ss", ajoutez la date actuelle
+          if (this.heureDepart.match(/^\d{2}:\d{2}:\d{2}$/)) {
+            const currentDate = new Date().toISOString().split('T')[0]; // Obtenez la date d'aujourd'hui (YYYY-MM-DD)
+            this.heureDepart = `${currentDate}T${this.heureDepart}`; // Combinez la date et l'heure
+          }
+          startTime = new Date(this.heureDepart); // Convertir la chaîne en objet Date
+        } else if (this.heureDepart instanceof Date) {
+          // Si c'est déjà un objet Date, l'utiliser directement
+          startTime = this.heureDepart;
+        } else {
+          throw new Error('Invalid start time format');
+        }
+
+        console.log("Parsed startTime: ", startTime);
+
         if (isNaN(startTime.getTime())) {
           throw new Error('Invalid start time');
         }
@@ -150,13 +162,18 @@ export default {
         const durationInSeconds = hours * 3600 + minutes * 60 + seconds;
         const endTime = new Date(startTime.getTime() + durationInSeconds * 1000);
 
-        // Format heureDepart and heureFin
+        // Format heureDepart et heureFin
         this.heureDepart = this.formatTime(startTime);
         this.heureFin = this.formatTime(endTime);
+
+        console.log("Calculated heureFin: ", this.heureFin);
+
+
       } catch (error) {
         console.error("Error in calculateEndTime:", error);
       }
     },
+
 
     incrementTramesRecues() {
       this.tramesRecues++;
@@ -222,6 +239,13 @@ export default {
       return value < 10 ? `0${value}` : value;
     },
 
+    formatTime(date) {
+      const hours = this.padZero(date.getHours());
+      const minutes = this.padZero(date.getMinutes());
+      const seconds = this.padZero(date.getSeconds());
+      return `${hours}:${minutes}:${seconds}`;
+    },
+
     updateTempsEcoule() {
   const startTime = new Date();
   
@@ -283,11 +307,12 @@ export default {
     console.log("analyse mounted");
     this.getDesktopDirPath();
 
-    this.heureDepart = this.$route.params.currentTime;
-    this.tempsReleve = this.$route.params.time;
-    this.calculateEndTime(); // Calculate the end time when the component is mounted
+    // Exemple d'initialisation de heureDepart au format ISO 8601 (YYYY-MM-DDTHH:mm:ss)
+    this.heureDepart = this.$route.params.currentTime || new Date().toISOString();
+    this.tempsReleve = this.$route.params.time || '00:00:00'; // Valeur par défaut si pas de temps relevé
+    this.calculateEndTime(); // Calculer l'heure de fin lors du montage
     this.updateTempsReleve();
-    this.updateTempsEcoule(); // calculate
+    this.updateTempsEcoule(); // Calculer le temps écoulé
     this.$bus.on('increment-event', this.incrementTramesRecues);
     this.$bus.on('update-packet-count', this.incrementMatriceCount);
     
