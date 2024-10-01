@@ -35,7 +35,6 @@
         Quitter
       </button>
 
-
   </div>
 </template>
   
