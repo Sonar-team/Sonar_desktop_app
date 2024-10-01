@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["sonar_desktop_app"];

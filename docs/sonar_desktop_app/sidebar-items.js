@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["cli","get_hostname","get_interfaces","get_matrice","sniff","tauri_state"]};

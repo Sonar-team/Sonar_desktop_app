@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"sonar_desktop_app":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.81.0/core/fmt/trait.Debug.html\" title=\"trait core::fmt::Debug\">Debug</a> for <a class=\"enum\" href=\"sonar_desktop_app/tauri_state/enum.MyError.html\" title=\"enum sonar_desktop_app::tauri_state::MyError\">MyError</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
