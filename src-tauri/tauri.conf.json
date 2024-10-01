@@ -1,97 +1,37 @@
 {
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "sonar",
+  "version": "2.0.0",
+  "identifier": "com.tauri.dev",
   "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist"
+    "beforeBuildCommand": "npm run build"
   },
-  "package": {
-    "productName": "sonar_desktop_app",
-    "version": "1.13.2"
-  },
-  "tauri": {
-    "cli": {
-      "description": "", 
-      "longDescription": "",
-      "beforeHelp": "", 
-      "afterHelp": "", 
-      "args": [
-        {
-          "name": "output",
-          "index": 1,
-          "takesValue": true
-        },
-        {
-          "name": "interface",
-          "index": 2,
-          "takesValue": true
-        },
-        {
-          "name": "time",
-          "index": 3,
-          "takesValue": true
-        }
-      ], 
-      "subcommands": {
-        "subcommand-name": {
-          
-        }
-      }
-    },
-    "allowlist": {
-      "all": true,
-      "fs":{
-        "all": true
-      },
-      "shell": {
-        "all": false,
-        "open": true
-      },
-      "dialog": {
-        "all": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "fr.Cyprien.sonar",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-        ],
-      "category": "Utility",
-      "shortDescription": "Network audit software",
-      "publisher": "Cyprien Avico",
-      "copyright": "Copyright (c) 2012-2024 Cyprien Avico"
-    },
-    "security": {
-      "csp": null
-    },
+  "app": {
     "windows": [
       {
-        "fullscreen": true,
-        "resizable": true,
         "title": "Sonar",
-        "width": 1800,
-        "height": 1000,
-        "visible": false,
-        "decorations": true,
-        "center": false 
-      },
-      {
-        "fullscreen": true,
-        "width": 1800,
-        "height": 1000,
-        "title": "Sonar",
-        "decorations": true,
-        "url": "splashscreen.html",
-        "label": "splashscreen",
+        "width": 800,
+        "height": 600,
         "resizable": true,
-        "center": false 
+        "fullscreen": false
       }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
     ]
   }
 }

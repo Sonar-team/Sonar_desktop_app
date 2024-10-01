@@ -1,49 +1,25 @@
 [package]
-name = "sonar_desktop_app"
-version = "1.13.2"
-description = "Audit reseau"
-authors = ["Cyprien Avico"]
-license = "A-GPL"
-repository = "https://github.com/Sonar-team/Sonar_desktop_app"
+name = "app"
+version = "2.0.0"
+description = "A Tauri App"
+authors = ["you"]
+license = ""
+repository = ""
 edition = "2021"
+rust-version = "1.71"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
 [build-dependencies]
-tauri-build = { version = "1.5.4", features = [] }
+tauri-build = { version = "2.0.0-rc.13", features = [] }
 
 [dependencies]
-tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-
-tauri = { version = "1.7.2", features = [ "cli", "api-all", "tracing" ] }
-
-serde = { version = "1.0.209", features = ["derive"] }
-serde_json = "1.0.127"
-
-log = "0.4.22"
-clap = {version = "4.5.16", features = ["derive"] }
-csv  = "1.3.0"
-rust_xlsxwriter = "0.74.0"
-ctrlc = "3.4.5"
-colored = "2.1.0"
-rand = "0.8.5"
-pnet = { git = "https://github.com/Akmot9/libpnet" , branch = "V1"}
-parse_mrp_packet = { git = "https://github.com/Akmot9/parse_mrp_packet"}
-profinet_rt = { git = "https://github.com/Akmot9/profinet_prasing_rs"}
-thiserror ="1.0.63"
-cargo-sonar = "1.2.0"
-whoami = "1.5.1"
-aquamarine = "0.5.0"
-
-image = "0.25.2"
-resvg = "0.43.0"
-usvg ="0.43.0"
-
-parse_layer7 = "0.3.2"
-time = "0.3.36"
-
-
-[features]
-# this feature is used for production builds or when `devPath` points to the filesystem
-# DO NOT REMOVE!!
-custom-protocol = ["tauri/custom-protocol"]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.0.0-rc.16", features = [] }
+tauri-plugin-log = "2.0.0-rc"
