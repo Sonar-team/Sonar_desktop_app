@@ -49,7 +49,7 @@ export default {
   data() {
     return {
 
-      selectedFormat: '',
+      selectedFormat: 'xlsx',
       tempsReleve: '',
       tempsEcoule: '',
       tramesRecues: 0,
@@ -83,23 +83,37 @@ export default {
       this.ajusterTemps(1); // Augmenter d'une seconde
     },
     diminuerSecondes() {
+      // Empêcher les secondes de passer en dessous de 0
+      let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
+      if (heures === 0 && minutes === 0 && secondes === 0) return; // Bloquer si toutes les valeurs sont déjà à 0
       this.ajusterTemps(-1); // Diminuer d'une seconde
     },
     augmenterMinutes() {
       this.ajusterTemps(60); // Augmenter d'une minute
     },
     diminuerMinutes() {
+      // Empêcher les minutes de passer en dessous de 0
+      let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
+      if (heures === 0 && minutes === 0 && secondes === 0) return; // Bloquer si toutes les valeurs sont déjà à 0
       this.ajusterTemps(-60); // Diminuer d'une minute
     },
     augmenterHeures() {
       this.ajusterTemps(3600); // Augmenter d'une heure
     },
     diminuerHeures() {
+      // Empêcher les heures de passer en dessous de 0
+      let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
+      if (heures === 0 && minutes === 0 && secondes === 0) return; // Bloquer si toutes les valeurs sont déjà à 0
       this.ajusterTemps(-3600); // Diminuer d'une heure
     },
     ajusterTemps(ajustement) {
       let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
-      const tempsTotalEnSecondes = heures * 3600 + minutes * 60 + secondes + ajustement;
+      let tempsTotalEnSecondes = heures * 3600 + minutes * 60 + secondes + ajustement;
+
+      // S'assurer que le temps ne passe pas en dessous de 0
+      if (tempsTotalEnSecondes < 0) {
+        tempsTotalEnSecondes = 0;
+      }
 
       heures = Math.floor(tempsTotalEnSecondes / 3600);
       minutes = Math.floor((tempsTotalEnSecondes % 3600) / 60);
@@ -290,6 +304,7 @@ export default {
 </script>
 
 <style scoped>
+
 .sidebar {
   width: 190px; /* Largeur ajustée */
   background-color: #2A2A2A; /* Couleur de fond */
