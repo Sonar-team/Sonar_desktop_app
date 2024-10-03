@@ -199,20 +199,30 @@ export default {
             )
     },
     async SaveAsXlsx() {
-      console.log("Save as xlsx")
-      save({
-        filters: [{
-          name: '.xlsx',
-          extensions: ['xlsx']
-        }],
-        title: 'Sauvegarder la matrice de flux',
-        defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName + '.xlsx'// Set the default file name here
-      
-      }).then((response) => 
-        invoke('save_packets_to_excel', { file_path: response })
-          .then((response) => 
-            console.log("save error: ",response))
-            )
+      try {
+        console.log("Début de la sauvegarde en xlsx");
+        const response = await save({
+          filters: [{
+            name: '.xlsx',
+            extensions: ['xlsx']
+          }],
+          title: 'Sauvegarder la matrice de flux',
+          defaultPath: this.getCurrentDate() + '_' + this.niveauConfidentialite + '_' + this.installationName + '.xlsx'
+        });
+
+        if (response) {
+          // Attendez que l'invocation d'API pour sauvegarder soit terminée
+          const saveResponse = await invoke('save_packets_to_excel', { file_path: response });
+          console.log("Sauvegarde terminée:", saveResponse);
+          return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
+        } else {
+          console.log("Aucun chemin de fichier sélectionné");
+          throw new Error("Sauvegarde annulée ou chemin non sélectionné");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la sauvegarde en xlsx:", error);
+        throw error; // Relancer l'erreur pour la gestion dans quit()
+      }
     },
     async SaveToDesktop() {
       console.log("save to desktop")
@@ -247,25 +257,28 @@ export default {
     },
 
     updateTempsEcoule() {
-  const startTime = new Date();
-  
-  const intervalId = setInterval(() => {
-    const now = new Date();
-    let elapsed = new Date(now - startTime);
+      const startTime = new Date();
+      
+      const intervalId = setInterval(() => {
+        const now = new Date();
+        let elapsed = new Date(now - startTime);
 
-    // Calcul du temps écoulé
-    let hours = elapsed.getUTCHours();
-    let minutes = elapsed.getUTCMinutes();
-    let seconds = elapsed.getUTCSeconds();
+        // Calcul du temps écoulé
+        let hours = elapsed.getUTCHours();
+        let minutes = elapsed.getUTCMinutes();
+        let seconds = elapsed.getUTCSeconds();
 
-    this.tempsEcoule = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
-  }, 1000);
-},
+        this.tempsEcoule = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
+      }, 1000);
+    },
     async quit() {
-      exit(1)
-        .catch((error) => {
-          console.error("Error quitting application: ", error);
-        });
+      try {
+        await this.SaveAsXlsx(); // Attendre que SaveAsXlsx soit terminé
+        console.log('Sauvegarde terminée, fermeture de l\'application');
+        await exit(1); // Appeler exit après la sauvegarde
+      } catch (error) {
+        console.error("Erreur lors de la sauvegarde ou de la fermeture de l'application:", error);
+      }
     },
 
     updateTempsReleve() {
@@ -301,6 +314,14 @@ export default {
     this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
   }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
 },
+
+getCurrentDate() {
+      // Fonction pour obtenir la date actuelle
+      const now = new Date();
+      // Formattez la date en DD/MM/YYYY
+      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
+      return formattedDate;
+    },
 
   },
   mounted() {
