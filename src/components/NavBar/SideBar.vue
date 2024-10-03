@@ -32,7 +32,7 @@
       </select>
 
       <button @click="quit">
-        Quitter
+        Sauvegarder et Quitter
       </button>
 
   </div>
@@ -47,7 +47,6 @@ import { exit } from '@tauri-apps/api/process';
 export default {
   data() {
     return {
-
       selectedFormat: 'xlsx',
       tempsReleve: '',
       tempsEcoule: '',
