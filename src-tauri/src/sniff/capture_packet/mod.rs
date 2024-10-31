@@ -166,7 +166,9 @@ fn capture_packets(
         loop {
             match rx.next() {
                 Ok(packet) => {
+                    //println!("      packet: {:?} ", packet);
                     if let Some(ethernet_packet) = EthernetPacket::new(packet) {
+                        // println!("      ethernet_packet: {:?} ", ethernet_packet);
                         let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
                         //println!("      capture_packet: {:?}", &packet_info);
                         let state: State<'_, Arc<Mutex<SonarState>>> = app.state(); // Acquire a lock

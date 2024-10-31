@@ -9,7 +9,7 @@ import Capture from '../components/homeVue/Capture.vue';
     <Capture />
   
     <div class="footer">
-      <span>Version 1.13.2 - Bêta:</span>
+      <span>Version 1.14.1 - Bêta:</span>
       <span>© 2024 A-GPL - MARINE NATIONALE - SSF TOULON - ERDT CYBER - CYPRIEN AVICO</span>
     </div>
   </div>
