@@ -1,6 +1,6 @@
 [package]
 name = "sonar_desktop_app"
-version = "1.14.0"
+version = "1.14.1"
 description = "Audit reseau"
 authors = ["Cyprien Avico"]
 license = "A-GPL"
@@ -35,11 +35,11 @@ cargo-sonar = "1.2.0"
 whoami = "1.5.1"
 aquamarine = "0.5.0"
 
-image = "0.25.2"
-resvg = "0.43.0"
-usvg ="0.43.0"
+image = "0.25.4"
+resvg = "0.44.0"
+usvg ="0.44.0"
 
-parse_layer7 = "0.3.2"
+parse_layer7 = "0.3.3"
 time = "0.3.36"
 
 

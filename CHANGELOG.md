@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.1] - 2024-10-31
+### FIX
+Reload ... ! 
+Résolution d'une erreur de parsing des paquets DNS qui provoquait le blocage de l'application Sonar. Ce correctif améliore la stabilité et la fiabilité de l'analyse des paquets DNS.
+
+---
+
 ## [1.12.0] - 2024-07-04
 ### Ajouté
 parse pacquet 7
