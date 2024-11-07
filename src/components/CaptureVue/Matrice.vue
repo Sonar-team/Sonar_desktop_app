@@ -20,19 +20,19 @@ export default {
       packets: [],
       intervalId: null,
       headers: [
-        { title: 'MAC Source', value: 'info.mac_address_source', key: 'info.mac_address_source', sortable: true },
-        { title: 'MAC Destination', value: 'info.mac_address_destination', sortable: true },
-        { title: 'Interface', value: 'info.interface', sortable: true },
-        { title: 'L3', value: 'info.l_3_protocol', sortable: true },
-        { title: 'IP Source', value: 'info.layer_3_infos.ip_source', sortable: true },
-        // { title: 'Type Source', value: 'info.layer_3_infos.ip_source_type', sortable: true },
-        { title: 'Type', value: 'info.layer_3_infos.ip_destination_type', sortable: true, removable: true },
-        { title: 'IP Destination', value: 'info.layer_3_infos.ip_destination', sortable: true },
-        { title: 'L4', value: 'info.layer_3_infos.l_4_protocol', sortable: true },
-        { title: 'Port Source', value: 'info.layer_3_infos.layer_4_infos.port_source', sortable: true },
-        { title: 'Port Destination', value: 'info.layer_3_infos.layer_4_infos.port_destination', sortable: true },
-        { title: 'L7', value: 'info.layer_3_infos.layer_4_infos.l_7_protocol', sortable: true },
-        { title: 'Trame (o)', value: 'info.packet_size', sortable: true },
+        { title: 'MAC Source', value: 'mac_address_source', key: 'mac_address_source', sortable: true },
+        { title: 'MAC Destination', value: 'mac_address_destination', sortable: true },
+        //{ title: 'Interface', value: 'interface', sortable: true },
+        { title: 'L3', value: 'l_3_protocol', sortable: true },
+        { title: 'IP Source', value: 'layer_3_infos.ip_source', sortable: true },
+        // { title: 'Type Source', value: 'ip_source_type', sortable: true },
+        { title: 'Type', value: 'layer_3_infos.ip_destination_type', sortable: true, removable: true },
+        { title: 'IP Destination', value: 'layer_3_infos.ip_destination', sortable: true },
+        { title: 'L4', value: 'layer_3_infos.l_4_protocol', sortable: true },
+        { title: 'Port Source', value: 'layer_3_infos.layer_4_infos.port_source', sortable: true },
+        { title: 'Port Destination', value: 'layer_3_infos.layer_4_infos.port_destination', sortable: true },
+        { title: 'L7', value: 'layer_3_infos.layer_4_infos.l_7_protocol', sortable: true },
+        { title: 'Trame (o)', value: 'packet_size_total', sortable: true },
         { title: 'Occ', value: 'count', sortable: true },
       ],
     };
@@ -55,8 +55,8 @@ export default {
       try {
         const jsonString = await invoke('get_matrice', {});
         this.packets = JSON.parse(jsonString);
+        // console.log("packets", this.packets);
         this.$bus.emit('update-packet-count', this.packets.length);
-        //console.log("packets", this.packets.length)
       } catch (error) {
         console.error("Error fetching packet infos:", error);
       }
@@ -64,8 +64,9 @@ export default {
     processData(data) {
       return data.map((packet, index) => ({
         id: index,
-        info: packet.info,
-        count: packet.count,
+        ...packet.infos,
+        count: packet.stats.count,
+        packet_size_total: packet.stats.packet_size_total,
       }));
     }
   },

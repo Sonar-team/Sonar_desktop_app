@@ -1,9 +1,0 @@
-(function() {
-    var implementors = Object.fromEntries([["sonar_desktop_app",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.82.0/core/marker/trait.Sync.html\" title=\"trait core::marker::Sync\">Sync</a> for <a class=\"enum\" href=\"sonar_desktop_app/tauri_state/enum.MyError.html\" title=\"enum sonar_desktop_app::tauri_state::MyError\">MyError</a>",1,["sonar_desktop_app::tauri_state::MyError"]],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.82.0/core/marker/trait.Sync.html\" title=\"trait core::marker::Sync\">Sync</a> for <a class=\"struct\" href=\"sonar_desktop_app/get_matrice/get_graph_data/struct.GraphBuilder.html\" title=\"struct sonar_desktop_app::get_matrice::get_graph_data::GraphBuilder\">GraphBuilder</a>",1,["sonar_desktop_app::get_matrice::get_graph_data::GraphBuilder"]],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.82.0/core/marker/trait.Sync.html\" title=\"trait core::marker::Sync\">Sync</a> for <a class=\"struct\" href=\"sonar_desktop_app/get_matrice/get_graph_data/struct.GraphData.html\" title=\"struct sonar_desktop_app::get_matrice::get_graph_data::GraphData\">GraphData</a>",1,["sonar_desktop_app::get_matrice::get_graph_data::GraphData"]],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.82.0/core/marker/trait.Sync.html\" title=\"trait core::marker::Sync\">Sync</a> for <a class=\"struct\" href=\"sonar_desktop_app/tauri_state/struct.SonarState.html\" title=\"struct sonar_desktop_app::tauri_state::SonarState\">SonarState</a>",1,["sonar_desktop_app::tauri_state::SonarState"]]]]]);
-    if (window.register_implementors) {
-        window.register_implementors(implementors);
-    } else {
-        window.pending_implementors = implementors;
-    }
-})()
-//{"start":57,"fragment_lengths":[1511]}

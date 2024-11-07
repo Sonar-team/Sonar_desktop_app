@@ -14,12 +14,13 @@ use thiserror::Error;
 
 use crate::get_matrice::get_graph_data::GraphBuilder;
 use crate::sniff::capture_packet::layer_2_infos::layer_3_infos::ip_type::IpType;
+use crate::sniff::capture_packet::layer_2_infos::layer_3_infos::Layer3Infos;
 use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
 
 #[derive(Debug, Serialize)]
 struct PacketInfoEntry {
-    info: PacketInfos,
-    count: u32,
+    infos: PacketKey,
+    stats: PacketStats,
 }
 
 /// `SonarState` encapsule l'état global de l'application Sonar.
@@ -46,9 +47,52 @@ struct PacketInfoEntry {
 /// // Utilisez `state` ici pour gérer les trames réseau et leur comptage
 /// ```
 
+// Clé sans `packet_size` pour éviter de considérer les tailles comme des doublons
+#[derive(Debug, Serialize, Clone, Eq, PartialEq, Hash)]
+pub struct PacketKey {
+    pub mac_address_source: String,
+    pub mac_address_destination: String,
+    interface: String,
+    pub l_3_protocol: String,
+    pub layer_3_infos: Layer3Infos,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PacketStats {
+    count: u32,            // Nombre de paquets similaires
+    packet_size_total: u32, // Taille totale cumulée des paquets
+}
+
+impl PacketStats {
+    fn new(packet_size: u32) -> Self {
+        Self {
+            count: 1,
+            packet_size_total: packet_size,
+        }
+    }
+
+    fn update(&mut self, packet_size: u32) {
+        self.count += 1;
+        self.packet_size_total += packet_size;
+    }
+}
+
+// Conversion de `PacketInfos` en `PacketKey` pour utiliser comme clé du `HashMap`
+impl From<&PacketInfos> for PacketKey {
+    fn from(info: &PacketInfos) -> Self {
+        PacketKey {
+            mac_address_source: info.mac_address_source.clone(),
+            mac_address_destination: info.mac_address_destination.clone(),
+            interface: info.interface.clone(),
+            l_3_protocol: info.l_3_protocol.clone(),
+            layer_3_infos: info.layer_3_infos.clone(),
+        }
+    }
+}
+
 pub struct SonarState {
     // Contient les trames réseau et leur nombre d'occurrences
-    pub matrice: HashMap<PacketInfos, u32>,
+    pub matrice: HashMap<PacketKey, PacketStats>,
     // Indique si le filtrage des adresses IPv6 est activé
     pub filter_ipv6: bool,
     pub actif: bool,
@@ -80,19 +124,20 @@ impl SonarState {
     }
 
     // Getter method for matrice
-    pub fn get_matrice(&self) -> &HashMap<PacketInfos, u32> {
+    pub fn get_matrice(&self) -> &HashMap<PacketKey, PacketStats> {
         &self.matrice
     }
 
     // Met à jour `matrice` avec un nouveau paquet
     pub fn update_matrice_with_packet(&mut self, new_packet: PacketInfos) {
-        //println!("new_packet: {:?}", new_packet);
-
-        //println!("  before update matrice: {:?}", self.matrice);
-        let entry = self.matrice.entry(new_packet).or_insert(0);
-        *entry += 1;
-        //println!("  updated matrice: {:?}", self.matrice);
-        //println!("");
+        let packet_size = new_packet.packet_size as u32;
+        // Crée une clé à partir de `PacketInfos` en utilisant `PacketKey`
+        let key = PacketKey::from(&new_packet);
+        // Insertion ou mise à jour dans la matrice
+        self.matrice
+            .entry(key)
+            .and_modify(|stats| stats.update(packet_size))
+            .or_insert(PacketStats::new(packet_size));
     }
 
     /// Fonction pour enregistrer les paquets vers un fichier CSV.
@@ -108,14 +153,14 @@ impl SonarState {
     /// cmd_save_packets_to_csv(String::from("paquets.csv"), state);
     /// ```
     pub fn cmd_save_packets_to_csv(&self, file_path: String) -> Result<(), MyError> {
-        let data = self.matrice.clone(); // Acquire a lock
+        let data = self.matrice.clone();
 
         // Create a CSV writer
         let mut wtr = Writer::from_path(file_path).map_err(|e| MyError::IoError(e.to_string()))?;
 
         // Serialize the entire vector to the CSV
-        for (packet, count) in data.iter() {
-            let packet_csv = PacketInfosFlaten::from_packet_infos(packet, *count);
+        for (packet_key, stats) in data.iter() {
+            let packet_csv = PacketInfosFlaten::from_packet_key_and_stats(packet_key, stats);
             wtr.serialize(packet_csv)
                 .map_err(|e| MyError::CsvError(e.to_string()))?;
         }
@@ -125,7 +170,6 @@ impl SonarState {
 
         Ok(())
     }
-
     /// Fonction pour enregistrer les paquets vers un fichier Excel.
     ///
     /// # Arguments
@@ -139,16 +183,11 @@ impl SonarState {
     /// cmd_save_packets_to_excel(String::from("paquets.xlsx"), state);
     /// ```
     pub fn cmd_save_packets_to_excel(&self, file_path: String) -> Result<(), MyError> {
-        // Lock the state to access the data
-        let data = self.matrice.clone(); // Acquire a lock
+        let data = self.matrice.clone();
 
-        // Create an Excel workbook
         let mut workbook = Workbook::new();
-
-        // Add a worksheet
         let sheet = workbook.add_worksheet();
 
-        // Write header
         let headers = [
             "MAC Source",
             "MAC Destination",
@@ -172,11 +211,9 @@ impl SonarState {
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
 
-        // Serialize the entire vector to the Excel sheet
-        for (i, (packet, count)) in data.iter().enumerate() {
-            let packet_csv = PacketInfosFlaten::from_packet_infos(packet, *count);
+        for (i, (packet_key, stats)) in data.iter().enumerate() {
+            let packet_csv = PacketInfosFlaten::from_packet_key_and_stats(packet_key, stats);
 
-            // Écriture des champs dans chaque colonne
             sheet
                 .write_string(i as u32 + 1, 0, &packet_csv.mac_address_source)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
@@ -190,7 +227,6 @@ impl SonarState {
                 .write_string(i as u32 + 1, 3, &packet_csv.l_3_protocol)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
 
-            // Les champs optionnels doivent être gérés pour éviter les valeurs null
             if let Some(ip_src) = &packet_csv.ip_source {
                 sheet
                     .write_string(i as u32 + 1, 4, ip_src)
@@ -226,24 +262,20 @@ impl SonarState {
                     .write_string(i as u32 + 1, 10, port_dst)
                     .map_err(|e| MyError::XlsxError(e.to_string()))?;
             }
-            if let Some(l7_ptoto) = &packet_csv.l_7_protocol {
+            if let Some(l7_proto) = &packet_csv.l_7_protocol {
                 sheet
-                    .write_string(i as u32 + 1, 11, l7_ptoto)
+                    .write_string(i as u32 + 1, 11, l7_proto)
                     .map_err(|e| MyError::XlsxError(e.to_string()))?;
             }
 
-            // Écriture du champ 'size'
             sheet
                 .write_number(i as u32 + 1, 12, packet_csv.packet_size as f64)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
-
-            // Écriture du champ 'count'
             sheet
                 .write_number(i as u32 + 1, 13, packet_csv.count as f64)
                 .map_err(|e| MyError::XlsxError(e.to_string()))?;
         }
 
-        // Close the workbook
         workbook
             .save(file_path)
             .map_err(|e| MyError::XlsxError(e.to_string()))?;
@@ -268,13 +300,13 @@ impl SonarState {
     /// }
     /// ```
     pub fn get_matrice_data(&self) -> Result<String, String> {
-        let data: &HashMap<PacketInfos, u32> = &self.matrice;
+        let data: &HashMap<PacketKey, PacketStats> = &self.matrice;
 
         let entries: Vec<PacketInfoEntry> = data
             .iter()
-            .map(|(info, &count)| PacketInfoEntry {
-                info: info.clone(),
-                count,
+            .map(|(info, &ref stats)| PacketInfoEntry {
+                infos: info.clone(),
+                stats: stats.clone(),
             })
             .collect();
 
@@ -357,24 +389,24 @@ struct PacketInfosFlaten {
     count: u32,
 }
 
+/// Modifie `from_packet_infos` pour accepter `PacketKey` et `PacketStats`
 impl PacketInfosFlaten {
-    /// Convertit les informations du paquet en une structure `PacketInfosFlaten`.
-    fn from_packet_infos(packet: &PacketInfos, count: u32) -> Self {
+    fn from_packet_key_and_stats(key: &PacketKey, stats: &PacketStats) -> Self {
         PacketInfosFlaten {
-            mac_address_source: packet.mac_address_source.clone(),
-            mac_address_destination: packet.mac_address_destination.clone(),
-            interface: packet.interface.clone(),
-            l_3_protocol: packet.l_3_protocol.clone(), // Populate from PacketInfos
-            ip_source: packet.layer_3_infos.ip_source.clone(),
-            ip_source_type: packet.layer_3_infos.ip_source_type.clone(),
-            ip_destination: packet.layer_3_infos.ip_destination.clone(),
-            ip_destination_type: packet.layer_3_infos.ip_destination_type.clone(),
-            l_4_protocol: packet.layer_3_infos.l_4_protocol.clone(),
-            port_source: packet.layer_3_infos.layer_4_infos.port_source.clone(),
-            port_destination: packet.layer_3_infos.layer_4_infos.port_destination.clone(),
-            l_7_protocol: packet.layer_3_infos.layer_4_infos.l_7_protocol.clone(),
-            packet_size: packet.packet_size,
-            count,
+            mac_address_source: key.mac_address_source.clone(),
+            mac_address_destination: key.mac_address_destination.clone(),
+            interface: key.interface.clone(),
+            l_3_protocol: key.l_3_protocol.clone(),
+            ip_source: key.layer_3_infos.ip_source.clone(),
+            ip_source_type: key.layer_3_infos.ip_source_type.clone(),
+            ip_destination: key.layer_3_infos.ip_destination.clone(),
+            ip_destination_type: key.layer_3_infos.ip_destination_type.clone(),
+            l_4_protocol: key.layer_3_infos.l_4_protocol.clone(),
+            port_source: key.layer_3_infos.layer_4_infos.port_source.clone(),
+            port_destination: key.layer_3_infos.layer_4_infos.port_destination.clone(),
+            l_7_protocol: key.layer_3_infos.layer_4_infos.l_7_protocol.clone(),
+            packet_size: stats.packet_size_total as usize, // Utilisation de la taille totale cumulée
+            count: stats.count,
         }
     }
 }

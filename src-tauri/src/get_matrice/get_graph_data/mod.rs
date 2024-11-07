@@ -1,4 +1,4 @@
-use crate::sniff::capture_packet::layer_2_infos::{layer_3_infos::ip_type::IpType, PacketInfos};
+use crate::{sniff::capture_packet::layer_2_infos::layer_3_infos::ip_type::IpType, tauri_state::PacketKey};
 
 use serde::Serialize;
 use std::collections::HashMap;
@@ -84,7 +84,7 @@ impl GraphBuilder {
         })
     }
 
-    pub fn add_edge(&mut self, packet: &PacketInfos) {
+    pub fn add_edge(&mut self, packet: &PacketKey) {
         if let (Some(source_ip), Some(target_ip)) = (
             &packet.layer_3_infos.ip_source,
             &packet.layer_3_infos.ip_destination,

@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.15.0] - 2024-11-07
+### NEW
+- Intégration de la structure `PacketKey` pour distinguer les paquets sans considérer leur taille (`packet_size`) dans la clé, permettant une meilleure gestion des doublons et l'accumulation des tailles des paquets dans `PacketStats`.
+- Ajout de la fonctionnalité de conversion de `PacketKey` en `PacketInfos` pour assurer la compatibilité avec les méthodes existantes nécessitant `PacketInfos`.
+
+### FIX
+- Résolution d'un problème de type qui empêchait l'exportation correcte des données de la matrice de paquets vers les fichiers CSV et Excel. Les méthodes d'enregistrement ont été adaptées pour utiliser `PacketKey` et `PacketStats`.
+- Mise à jour des méthodes du front-end pour traiter correctement la structure de l'API, en tenant compte des nouvelles propriétés `infos` et `stats`. Cela garantit un affichage précis des données, y compris la taille totale des paquets et le nombre d'occurrences.
+
+### IMPROVEMENT
+- Refactoring de la méthode `get_matrice_data` pour une sérialisation plus claire et un traitement efficace des données.
+- Amélioration des journaux de debug pour une meilleure traçabilité des paquets et de leur traitement dans l'application.
+
+Cette version améliore la gestion des paquets avec des tailles différentes, la stabilité et la clarté du code tout en offrant une meilleure expérience utilisateur dans l'interface de visualisation.
+
+---
+
 ## [1.14.1] - 2024-10-31
 ### FIX
 Reload ... ! 
