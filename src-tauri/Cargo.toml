@@ -30,7 +30,7 @@ rand = "0.8.5"
 pnet = { git = "https://github.com/Akmot9/libpnet" , branch = "V1"}
 parse_mrp_packet = { git = "https://github.com/Akmot9/parse_mrp_packet"}
 
-profinet_rt = {path = "/home/erdt-cyber/Documents/gitHub/profinet_rt"}
+profinet_rt = {git = "https://github.com/Akmot9/profinet_prasing_rs"}
 
 
 thiserror ="1.0.63"
