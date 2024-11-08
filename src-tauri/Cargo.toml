@@ -38,9 +38,9 @@ cargo-sonar = "1.2.0"
 whoami = "1.5.1"
 aquamarine = "0.5.0"
 
-image = "0.25.4"
-resvg = "0.44.0"
-usvg ="0.44.0"
+image = "0.25.1"
+resvg = "0.42.0"
+usvg ="0.42.0"
 
 parse_layer7 = "0.3.3"
 time = "0.3.36"
