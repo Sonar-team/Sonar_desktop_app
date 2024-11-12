@@ -134,12 +134,12 @@ fn write_file_as_png(path: String, contents: String) -> Result<(), String> {
     // Parse the SVG contents
     let opt = Options::default();
     let rtree = Tree::from_str(&contents, &opt).map_err(|e| e.to_string())?;
-
+    
     // Create a pixmap with the dimensions of the SVG
     let pixmap_size = rtree.size();
     let mut pixmap = Pixmap::new(pixmap_size.width() as u32, pixmap_size.height() as u32)
-        .ok_or("Failed to create pixmap")?;
-
+       .ok_or("Failed to create pixmap")?;
+    
     // Render the SVG onto the pixmap
     resvg::render(&rtree, Transform::identity(), &mut pixmap.as_mut());
 
@@ -148,6 +148,8 @@ fn write_file_as_png(path: String, contents: String) -> Result<(), String> {
 
     Ok(())
 }
+
+
 
 #[tauri::command(async)]
 fn toggle_ipv6_filter(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {

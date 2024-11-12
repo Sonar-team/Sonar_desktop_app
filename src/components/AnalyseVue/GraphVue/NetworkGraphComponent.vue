@@ -164,7 +164,6 @@
       if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
         try {
           const svgContent = await this.$refs.graphnodes.exportAsSvgText();
-          
           // Use Tauri's dialog API to open a save file dialog
           save({
             filters: [{
@@ -175,7 +174,7 @@
           }).then((filePath) => {
             if (filePath) {
               // Use Tauri's fs API to write the file
-              invoke('write_file', { path: filePath, contents: svgContent })
+              invoke('write_file_as_png', { path: filePath, contents: svgContent })
                 .then(() => console.log('png successfully saved'))
                 .catch((error) => console.error('Error saving png:', error));
             }
