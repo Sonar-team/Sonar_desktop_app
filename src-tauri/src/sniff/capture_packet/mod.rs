@@ -166,7 +166,7 @@ fn capture_packets(
         loop {
             match rx.next() {
                 Ok(packet) => {
-                    //println!("      packet: {:?} ", packet);
+                    // println!("      packet: {:?} ", packet);
                     if let Some(ethernet_packet) = EthernetPacket::new(packet) {
                         // println!("      ethernet_packet: {:?} ", ethernet_packet);
                         let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
