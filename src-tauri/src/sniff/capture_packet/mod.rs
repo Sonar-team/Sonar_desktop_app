@@ -23,7 +23,7 @@ use std::thread;
 use std::time::Duration;
 
 use tauri::{AppHandle, Manager, State};
-pub(crate) mod layer_2_infos;
+pub mod layer_2_infos;
 
 use crate::tauri_state::SonarState;
 

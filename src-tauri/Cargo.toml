@@ -31,8 +31,7 @@ pnet = { git = "https://github.com/Akmot9/libpnet" , branch = "V1"}
 parse_mrp_packet = { git = "https://github.com/Akmot9/parse_mrp_packet"}
 
 profinet_rt = {git = "https://github.com/Akmot9/profinet_prasing_rs"}
-
-
+pcap = "2.2.0"
 thiserror ="1.0.63"
 cargo-sonar = "1.2.0"
 whoami = "1.5.1"

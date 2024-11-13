@@ -18,7 +18,7 @@ use pnet::packet::{ethernet::EthernetPacket, Packet};
 
 use layer_3_infos::{get_layer_3_infos, Layer3Infos};
 use serde::Serialize;
-pub(crate) mod layer_3_infos;
+pub mod layer_3_infos;
 
 /// Représente des informations détaillées sur un paquet réseau, y compris les adresses MAC, l'interface, et les données des couches 3 et 4.
 #[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]

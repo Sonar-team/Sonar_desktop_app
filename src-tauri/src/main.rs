@@ -5,6 +5,8 @@ use std::sync::{Arc, Mutex};
 
 use log::info;
 
+use pcap::Capture;
+use pnet::packet::ethernet::EthernetPacket;
 use sonar_desktop_app::{
     cli::print_banner,
     get_hostname::hostname_to_s,
@@ -12,7 +14,7 @@ use sonar_desktop_app::{
     sniff::scan_until_interrupt,
     tauri_state::{MyError, SonarState},
 };
-use tauri::{generate_handler, AppHandle, Manager, State};
+use tauri::{generate_handler, AppHandle, InvokeError, Manager, State};
 // use tauri_plugin_log::LogTarget;
 
 use resvg::tiny_skia::{Pixmap, Transform};
@@ -185,7 +187,58 @@ fn reset(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
     Ok(())
 }
 
+use thiserror::Error;
+
 #[tauri::command(async)]
-fn convert_from_pcap_list(_state: State<'_, Arc<Mutex<SonarState>>>, pcaps: Vec<String>)  {
-    println!("pcaps: {:?}", pcaps);
+fn convert_from_pcap_list(
+    state: State<'_, Arc<Mutex<SonarState>>>,
+    pcaps: Vec<String>,
+) -> Result<(), PcapProcessingError> {
+    println!("Liste des fichiers pcap : {:?}", pcaps);
+
+    for file_path in pcaps {
+        handle_pcap_file(&file_path, &state)?;
+    }
+    Ok(())
+}
+
+#[derive(Error, Debug)]
+pub enum PcapProcessingError {
+    #[error("Failed to open pcap file {0}: {1}")]
+    OpenFileError(String, String),
+}
+// Implémentation de `Into<InvokeError>` pour que `PcapProcessingError` soit compatible avec tauri::command
+impl From<PcapProcessingError> for InvokeError {
+    fn from(error: PcapProcessingError) -> Self {
+        InvokeError::from(error.to_string())
+    }
+}
+
+use crate::sonar_desktop_app::sniff::capture_packet::layer_2_infos::PacketInfos;
+fn handle_pcap_file(file_path: &str, state: &State<'_, Arc<Mutex<SonarState>>>) -> Result<(), PcapProcessingError> {
+    let mut cap = Capture::from_file(file_path).map_err(|e| {
+        PcapProcessingError::OpenFileError(file_path.to_string(), e.to_string())
+    })?;
+
+    // Itérer sur les paquets, les afficher en hexadécimal et mettre à jour la matrice
+    while let Ok(packet) = cap.next_packet() {
+        print_packet_in_hex(&packet.data);
+        if let Some(ethernet_packet) = EthernetPacket::new(&packet.data) {
+            // Créez une instance de PacketInfos pour le paquet actuel
+            let packet_info = PacketInfos::new(&file_path.to_string(), &ethernet_packet);
+
+            // Mettre à jour l'état de SonarState avec ce paquet
+            let mut sonar_state = state.lock().unwrap();
+            sonar_state.update_matrice_with_packet(packet_info);
+        }
+    }
+    Ok(())
+}
+
+// Fonction pour afficher un paquet en hexadécimal
+fn print_packet_in_hex(data: &[u8]) {
+    for byte in data {
+        print!("{:02X} ", byte);
+    }
+    println!();
 }

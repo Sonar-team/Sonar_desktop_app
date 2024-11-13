@@ -4,7 +4,7 @@
 //! soit sur une interface spécifique choisie par l'utilisateur. L'intégration avec Tauri permet une interaction fluide
 //! avec l'interface utilisateur pour démarrer ou arrêter la capture à la demande.
 
-pub(crate) mod capture_packet;
+pub mod capture_packet;
 
 use capture_packet::{all_interfaces, one_interface};
 use tauri::AppHandle;
