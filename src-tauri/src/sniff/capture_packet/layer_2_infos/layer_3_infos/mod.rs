@@ -296,8 +296,8 @@ impl HandlePacket for MrpHandler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         if let Some(_mrp_packet) = parse_mrp_data(data) {
             //println!("MRP packet: {:?}", mrp_packet);
-            
-            Layer3Infos { 
+
+            Layer3Infos {
                 ip_source: None,
                 ip_destination_type: None,
                 ip_destination: None,

@@ -11,7 +11,7 @@ use sonar_desktop_app::{
     cli::print_banner,
     get_hostname::hostname_to_s,
     get_interfaces::get_interfaces,
-    sniff::scan_until_interrupt,
+    sniff::{capture_packet::layer_2_infos::PacketInfos, scan_until_interrupt},
     tauri_state::{MyError, SonarState},
 };
 use tauri::{generate_handler, AppHandle, InvokeError, Manager, State};
@@ -138,12 +138,12 @@ fn write_file_as_png(path: String, contents: String) -> Result<(), String> {
     // Parse the SVG contents
     let opt = Options::default();
     let rtree = Tree::from_str(&contents, &opt).map_err(|e| e.to_string())?;
-    
+
     // Create a pixmap with the dimensions of the SVG
     let pixmap_size = rtree.size();
     let mut pixmap = Pixmap::new(pixmap_size.width() as u32, pixmap_size.height() as u32)
-       .ok_or("Failed to create pixmap")?;
-    
+        .ok_or("Failed to create pixmap")?;
+
     // Render the SVG onto the pixmap
     resvg::render(&rtree, Transform::identity(), &mut pixmap.as_mut());
 
@@ -152,8 +152,6 @@ fn write_file_as_png(path: String, contents: String) -> Result<(), String> {
 
     Ok(())
 }
-
-
 
 #[tauri::command(async)]
 fn toggle_ipv6_filter(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
@@ -177,7 +175,6 @@ fn toggle_pause(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> 
     Ok(())
 }
 
-
 #[tauri::command(async)]
 fn reset(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
     let mut locked_state = state
@@ -189,24 +186,12 @@ fn reset(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
 
 use thiserror::Error;
 
-#[tauri::command(async)]
-fn convert_from_pcap_list(
-    state: State<'_, Arc<Mutex<SonarState>>>,
-    pcaps: Vec<String>,
-) -> Result<(), PcapProcessingError> {
-    println!("Liste des fichiers pcap : {:?}", pcaps);
-
-    for file_path in pcaps {
-        handle_pcap_file(&file_path, &state)?;
-    }
-    Ok(())
-}
-
 #[derive(Error, Debug)]
 pub enum PcapProcessingError {
     #[error("Failed to open pcap file {0}: {1}")]
     OpenFileError(String, String),
 }
+
 // Implémentation de `Into<InvokeError>` pour que `PcapProcessingError` soit compatible avec tauri::command
 impl From<PcapProcessingError> for InvokeError {
     fn from(error: PcapProcessingError) -> Self {
@@ -214,15 +199,37 @@ impl From<PcapProcessingError> for InvokeError {
     }
 }
 
-use crate::sonar_desktop_app::sniff::capture_packet::layer_2_infos::PacketInfos;
-fn handle_pcap_file(file_path: &str, state: &State<'_, Arc<Mutex<SonarState>>>) -> Result<(), PcapProcessingError> {
-    let mut cap = Capture::from_file(file_path).map_err(|e| {
-        PcapProcessingError::OpenFileError(file_path.to_string(), e.to_string())
-    })?;
+#[tauri::command(async)]
+fn convert_from_pcap_list(
+    state: State<'_, Arc<Mutex<SonarState>>>,
+    pcaps: Vec<String>,
+) -> Result<u32, PcapProcessingError> {
+    println!("Liste des fichiers pcap : {:?}", pcaps);
+
+    let mut total_count = 0;
+
+    for file_path in pcaps {
+        // Ajoute le nombre de paquets lus pour chaque fichier `.pcap`
+        total_count += handle_pcap_file(&file_path, &state)?;
+    }
+
+    Ok(total_count)
+}
+
+fn handle_pcap_file(
+    file_path: &str,
+    state: &State<'_, Arc<Mutex<SonarState>>>,
+) -> Result<u32, PcapProcessingError> {
+    let mut cap = Capture::from_file(file_path)
+        .map_err(|e| PcapProcessingError::OpenFileError(file_path.to_string(), e.to_string()))?;
+
+    let mut packet_count = 0;
 
     // Itérer sur les paquets, les afficher en hexadécimal et mettre à jour la matrice
     while let Ok(packet) = cap.next_packet() {
-        print_packet_in_hex(&packet.data);
+        packet_count += 1; // Incrémente le compteur pour chaque paquet
+
+        // print_packet_in_hex(&packet.data);
         if let Some(ethernet_packet) = EthernetPacket::new(&packet.data) {
             // Créez une instance de PacketInfos pour le paquet actuel
             let packet_info = PacketInfos::new(&file_path.to_string(), &ethernet_packet);
@@ -232,13 +239,14 @@ fn handle_pcap_file(file_path: &str, state: &State<'_, Arc<Mutex<SonarState>>>) 
             sonar_state.update_matrice_with_packet(packet_info);
         }
     }
-    Ok(())
+
+    Ok(packet_count) // Retourne le nombre de paquets lus pour ce fichier
 }
 
-// Fonction pour afficher un paquet en hexadécimal
-fn print_packet_in_hex(data: &[u8]) {
-    for byte in data {
-        print!("{:02X} ", byte);
-    }
-    println!();
-}
+// // Fonction pour afficher un paquet en hexadécimal
+// fn print_packet_in_hex(data: &[u8]) {
+//     for byte in data {
+//         print!("{:02X} ", byte);
+//     }
+//     println!();
+// }

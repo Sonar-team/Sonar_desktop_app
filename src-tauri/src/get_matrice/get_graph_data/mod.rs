@@ -1,4 +1,6 @@
-use crate::{sniff::capture_packet::layer_2_infos::layer_3_infos::ip_type::IpType, tauri_state::PacketKey};
+use crate::{
+    sniff::capture_packet::layer_2_infos::layer_3_infos::ip_type::IpType, tauri_state::PacketKey,
+};
 
 use serde::Serialize;
 use std::collections::HashMap;

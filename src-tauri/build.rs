@@ -1,7 +1,7 @@
 fn main() {
     // Tauri build process
     tauri_build::build();
-    
+
     // Only add the Packet.lib library on Windows
     #[cfg(target_os = "windows")]
     {

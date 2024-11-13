@@ -59,7 +59,7 @@ pub struct PacketKey {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PacketStats {
-    count: u32,            // Nombre de paquets similaires
+    count: u32,             // Nombre de paquets similaires
     packet_size_total: u32, // Taille totale cumulée des paquets
 }
 
