@@ -3,9 +3,9 @@
     <pcapSideBar />
     <div class="content">
       <h3 class="titre">Matrice de flux : {{ getCurrentDate() + '_' + niveauConfidentialite + '_' + installationName }}</h3>
+      <p class="info">Nombre total de paquets lus : {{ totalPackets }}</p> <!-- Affichage du nombre total de paquets -->
       <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
-      <BottomLong />
     </div>
   </div>
 </template>
@@ -32,7 +32,8 @@ export default {
       tramesEnregistrees: 0,
       niveauConfidentialite: '',
       installationName: '',
-      showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
+      showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
+      totalPackets: 0 // Propriété pour stocker le nombre total de paquets
     };
   },
   components: {
@@ -61,7 +62,10 @@ export default {
     console.log(this.localPcapList);
 
     invoke('convert_from_pcap_list', { pcaps: this.localPcapList })
-      .then(response => console.log(response))
+      .then(response => {
+        this.totalPackets = response; // Définit totalPackets avec la réponse renvoyée
+        console.log(`Total packets read: ${this.totalPackets}`);
+      })
       .catch(error => console.error(error));
 
     this.$bus.on('toggle', this.toggleComponent);
@@ -85,6 +89,11 @@ export default {
 }
 
 .titre {
+  text-align: center;
+  color: aliceblue;
+  margin: 1px 0;
+}
+.info {
   text-align: center;
   color: aliceblue;
   margin: 1px 0;

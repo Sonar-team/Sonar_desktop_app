@@ -2,7 +2,9 @@
     <div class="sidebar">    
       <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="150" height="150">   
       <button class="button" @click="toggleComponent">{{ buttonText }}</button> <!-- Toggle Button -->
+      <p>Trames reçues: {{ tramesRecues }} </p>
       <p>Matrice de flux: {{ tramesEnregistrees }}</p>
+      
       <p>Exporter: </p>
       <select v-model="selectedFormat" 
         @change="triggerSave" 
@@ -22,16 +24,16 @@
 </template>
   
 <script>
-import { save, message } from '@tauri-apps/api/dialog';
+import { save } from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api'
-import { desktopDir } from '@tauri-apps/api/path';
 import { exit } from '@tauri-apps/api/process';
 
 export default {
   data() {
     return {
       selectedFormat: 'xlsx',
-  
+      tramesRecues: 0,
+
       tramesEnregistrees: 0,
       niveauConfidentialite: '',
       installationName:'',
@@ -56,7 +58,9 @@ export default {
         this.SaveAsXlsx();
       }
     },
-
+    incrementTramesRecues() {
+      this.tramesRecues++;
+    },
     incrementMatriceCount(packetCount) {
       console.log("incrementMatriceCount", packetCount)
       this.tramesEnregistrees = packetCount;
