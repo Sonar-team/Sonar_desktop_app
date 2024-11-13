@@ -108,6 +108,9 @@ impl SonarState {
         }));
         state
     }
+    pub fn reset(&mut self) {
+        self.matrice.clear();
+    }
 
     // Méthode pour basculer l'état de `actif`
     pub fn toggle_actif(&self) {

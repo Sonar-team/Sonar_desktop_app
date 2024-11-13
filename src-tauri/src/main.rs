@@ -51,6 +51,7 @@ fn main() {
             toggle_ipv6_filter,
             toggle_pause,
             get_hostname_to_string,
+            reset
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -170,5 +171,15 @@ fn toggle_pause(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> 
     locked_state.toggle_actif();
     println!("etat actif");
     info!("etat du filtre {:?}", locked_state.actif);
+    Ok(())
+}
+
+
+#[tauri::command(async)]
+fn reset(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
+    let mut locked_state = state
+        .lock()
+        .map_err(|_| "Failed to lock state".to_string())?;
+    locked_state.reset();
     Ok(())
 }

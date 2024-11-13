@@ -32,7 +32,10 @@
       </select>
 
       <button @click="quit">
-        Sauvegarder et Quitter
+        Quitter
+      </button>
+      <button @click="reset">
+        Reset
       </button>
 
   </div>
@@ -278,6 +281,10 @@ export default {
       } catch (error) {
         console.error("Erreur lors de la sauvegarde ou de la fermeture de l'application:", error);
       }
+    },
+
+    async reset() {
+      invoke('reset')    
     },
 
     updateTempsReleve() {
