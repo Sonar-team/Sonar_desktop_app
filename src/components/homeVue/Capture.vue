@@ -45,7 +45,6 @@
     </div>
   </div>
 </template>
-
   
 <script>
 import { invoke } from '@tauri-apps/api/tauri';

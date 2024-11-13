@@ -51,7 +51,8 @@ fn main() {
             toggle_ipv6_filter,
             toggle_pause,
             get_hostname_to_string,
-            reset
+            reset,
+            convert_from_pcap_list
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -182,4 +183,9 @@ fn reset(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
         .map_err(|_| "Failed to lock state".to_string())?;
     locked_state.reset();
     Ok(())
+}
+
+#[tauri::command(async)]
+fn convert_from_pcap_list(_state: State<'_, Arc<Mutex<SonarState>>>, pcaps: Vec<String>)  {
+    println!("pcaps: {:?}", pcaps);
 }
