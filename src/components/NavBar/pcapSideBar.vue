@@ -107,7 +107,17 @@ export default {
         throw error; // Relancer l'erreur pour la gestion dans quit()
       }
     },
-   
+    getCurrentDate() {
+      // Fonction pour obtenir la date actuelle
+      const now = new Date();
+      // Formattez la date en DD/MM/YYYY
+      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
+      return formattedDate;
+    },
+    padZero(value) {
+      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
+      return value < 10 ? `0${value}` : value;
+    },
     async quit() {
       try {
         await this.SaveAsXlsx(); // Attendre que SaveAsXlsx soit terminé
