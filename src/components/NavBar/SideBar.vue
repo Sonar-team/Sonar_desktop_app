@@ -35,7 +35,7 @@
         Quitter
       </button>
       <button @click="reset">
-        Reset
+        Réinitialiser
       </button>
 
   </div>
