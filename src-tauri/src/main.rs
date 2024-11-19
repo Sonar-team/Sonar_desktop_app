@@ -134,6 +134,7 @@ fn write_file(path: String, contents: String) -> Result<(), String> {
     std::fs::write(path, contents).map_err(|e| e.to_string())
 }
 
+use base64::{engine::general_purpose, Engine};
 #[tauri::command(async)]
 fn write_png_file(path: String, contents: String) -> Result<(), String> {
     // Journal pour vérifier le chemin et la taille des données
@@ -141,7 +142,7 @@ fn write_png_file(path: String, contents: String) -> Result<(), String> {
     info!("Taille des données Base64 : {}", contents.len());
 
     // Décoder la chaîne Base64
-    let decoded_data = match base64::decode(contents) {
+    let decoded_data = match general_purpose::STANDARD.decode(contents) {
         Ok(data) => data,
         Err(e) => {
             println!("Erreur lors du décodage Base64 : {}", e);

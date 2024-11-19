@@ -29,4 +29,5 @@ src-tauri/Cargo.lock
 
 package-lock.json
 *.svg
+*.png
 .env

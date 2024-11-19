@@ -13,7 +13,7 @@
       <NetworkGraphComponent v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <Matrice v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
-        
+    
     </div>
   </div>
 </template>
@@ -34,7 +34,7 @@ export default {
       tramesEnregistrees: 0,
       niveauConfidentialite: '',
       installationName:'',
-      showMatrice: false // Toggle state (true for Matrice, false for NetworkGraphComponent)
+      showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
 
     };
   },
