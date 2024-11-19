@@ -23,19 +23,18 @@
       <p>Temps écoulé: {{ tempsEcoule }}</p>
       <p>Trames reçues: {{ tramesRecues }} </p>
       <p>Matrice de flux: {{ tramesEnregistrees }}</p>
-      <p>Exporter: </p>
-      <select v-model="selectedFormat" 
-        @change="triggerSave" 
-        style="border: 2px solid #89CFF0; color: aliceblue">
-        <option value="csv">Csv</option>
-        <option value="xlsx">Excel</option>
-      </select>
 
       <button @click="quit">
         Quitter
       </button>
       <button @click="reset">
         Réinitialiser
+      </button>
+      <button @click="triggerSave">
+        Sauvegarder
+      </button>
+      <button @click="return_to_home">
+        Retour
       </button>
 
   </div>
@@ -72,13 +71,6 @@ export default {
     toggleComponent() {
       this.$bus.emit('toggle')
       this.showMatrice = !this.showMatrice; // Toggle the state
-    },
-    triggerSave() {
-      if (this.selectedFormat === 'csv') {
-        this.SaveAsCsv();
-      } else if (this.selectedFormat === 'xlsx') {
-        this.SaveAsXlsx();
-      }
     },
     augmenterSecondes() {
       this.ajusterTemps(1); // Augmenter d'une seconde
@@ -181,8 +173,16 @@ export default {
       this.tramesRecues++;
     },
     incrementMatriceCount(packetCount) {
-      console.log("incrementMatriceCount", packetCount)
+      // console.log("incrementMatriceCount", packetCount)
       this.tramesEnregistrees = packetCount;
+    },
+
+    triggerSave() {
+     
+      this.SaveAsCsv();
+    
+      this.SaveAsXlsx();
+      
     },
     async SaveAsCsv() {
       console.log("Save as csv")
@@ -282,11 +282,14 @@ export default {
         console.error("Erreur lors de la sauvegarde ou de la fermeture de l'application:", error);
       }
     },
-
     async reset() {
+      this.tramesRecues = 0
       invoke('reset')    
     },
-
+    async return_to_home() {
+      this.tramesRecues = 0
+      invoke('reset')    
+    },
     updateTempsReleve() {
   // Stocker l'identifiant de l'intervalle
   const intervalId = setInterval(async () => {

@@ -5,7 +5,7 @@
   import { save } from '@tauri-apps/api/dialog';
   import * as vNG from "v-network-graph"
   import {ForceLayout} from "v-network-graph/lib/force-layout"
- 
+  import html2canvas from 'html2canvas';
 
   export default {
   components: {
@@ -161,31 +161,31 @@
       }
     },
     async downloadPng() {
-      if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
-        try {
-          const svgContent = await this.$refs.graphnodes.exportAsSvgText();
-          // Use Tauri's dialog API to open a save file dialog
-          save({
-            filters: [{
-              name: 'PNG File',
-              extensions: ['png']
-            }],
-            defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.png' // Set the default file name here
-          }).then((filePath) => {
-            if (filePath) {
-              // Use Tauri's fs API to write the file
-              invoke('write_file_as_png', { path: filePath, contents: svgContent })
-                .then(() => console.log('png successfully saved'))
-                .catch((error) => console.error('Error saving png:', error));
-            }
-          });
-        } catch (error) {
-          console.error('Error exporting png:', error);
-        }
-      } else {
-        console.error('png export function not available or graph component not loaded.');
-      }
-      },
+  // Ouvre une boîte de dialogue pour choisir l'emplacement du fichier
+  const filePath = await save({
+    filters: [{
+      name: 'PNG File',
+      extensions: ['png']
+    }],
+    defaultPath: this.getCurrentDate() + '_' + this.niveauConfidentialite + '_' + this.installationName + '.png' // Nom de fichier par défaut
+  });
+
+  if (filePath) {
+    // Capture tout le document
+    html2canvas(document.body, { scale: 2, useCORS: true }).then(canvas => {
+      // Convertit le canvas en une chaîne Base64
+      const base64Data = canvas.toDataURL('image/png'); // Format PNG
+
+      // Supprime l'en-tête "data:image/png;base64,"
+      const base64WithoutHeader = base64Data.replace(/^data:image\/png;base64,/, '');
+
+      // Envoie les données au backend
+      invoke('write_png_file', { path: filePath, contents: base64WithoutHeader })
+        .then(() => console.log('PNG successfully saved at:', filePath))
+        .catch((error) => console.error('Error saving PNG:', error));
+    });
+  }
+},
     handleNodeClick(node) {
       // Supposons que `selectedNode` est une propriété de données que vous utiliserez pour stocker les informations du node sélectionné
       this.selectedNode = node;

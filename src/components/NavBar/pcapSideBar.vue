@@ -62,7 +62,7 @@ export default {
       this.tramesRecues++;
     },
     incrementMatriceCount(packetCount) {
-      console.log("incrementMatriceCount", packetCount)
+      // console.log("incrementMatriceCount", packetCount)
       this.tramesEnregistrees = packetCount;
     },
     async SaveAsCsv() {

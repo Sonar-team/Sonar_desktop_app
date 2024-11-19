@@ -14,7 +14,7 @@ use sonar_desktop_app::{
     sniff::{capture_packet::layer_2_infos::PacketInfos, scan_until_interrupt},
     tauri_state::{MyError, SonarState},
 };
-use tauri::{generate_handler, AppHandle, InvokeError, Manager, State};
+use tauri::{command, generate_handler, AppHandle, InvokeError, Manager, State};
 // use tauri_plugin_log::LogTarget;
 
 use resvg::tiny_skia::{Pixmap, Transform};
@@ -54,7 +54,8 @@ fn main() {
             toggle_pause,
             get_hostname_to_string,
             reset,
-            convert_from_pcap_list
+            convert_from_pcap_list,
+            write_png_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -127,11 +128,40 @@ fn get_graph_state(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<String, S
     locked_state.get_graph_data()
 }
 
-#[tauri::command(async)]
+#[command(async)]
 fn write_file(path: String, contents: String) -> Result<(), String> {
     info!("Chemin d'enregistrement du SVG: {}", &path);
     std::fs::write(path, contents).map_err(|e| e.to_string())
 }
+
+#[tauri::command(async)]
+fn write_png_file(path: String, contents: String) -> Result<(), String> {
+    // Journal pour vérifier le chemin et la taille des données
+    info!("Chemin d'enregistrement du PNG : {}", &path);
+    info!("Taille des données Base64 : {}", contents.len());
+
+    // Décoder la chaîne Base64
+    let decoded_data = match base64::decode(contents) {
+        Ok(data) => data,
+        Err(e) => {
+            println!("Erreur lors du décodage Base64 : {}", e);
+            return Err(format!("Erreur lors du décodage Base64 : {}", e));
+        }
+    };
+
+    // Écrire les données binaires dans le fichier
+    match std::fs::write(&path, decoded_data) {
+        Ok(_) => {
+            info!("Fichier PNG écrit avec succès !");
+            Ok(())
+        }
+        Err(e) => {
+            println!("Erreur lors de l'écriture du fichier : {}", e);
+            Err(format!("Erreur lors de l'écriture du fichier : {}", e))
+        }
+    }
+}
+
 
 #[tauri::command(async)]
 fn write_file_as_png(path: String, contents: String) -> Result<(), String> {

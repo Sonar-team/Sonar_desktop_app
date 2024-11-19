@@ -10,8 +10,8 @@
     <div class="content">
       <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
       <!--button @click="togglePause">pause</button-->
-      <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
-      <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
+      <NetworkGraphComponent v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
+      <Matrice v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
         
     </div>
@@ -34,7 +34,7 @@ export default {
       tramesEnregistrees: 0,
       niveauConfidentialite: '',
       installationName:'',
-      showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
+      showMatrice: false // Toggle state (true for Matrice, false for NetworkGraphComponent)
 
     };
   },
