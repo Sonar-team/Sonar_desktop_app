@@ -29,10 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup node
-        uses: actions/setup-node@v4
+      - name: setup deno
+        uses: denoland/setup-deno@v2
         with:
-          node-version: lts/*
+          deno-version: vx.x.x
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -49,7 +49,7 @@ jobs:
         # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
 
       - name: install frontend dependencies
-        run: npm install # change this to npm, pnpm or bun depending on which one you use.
+        run: deno install # change this to npm, pnpm or bun depending on which one you use.
 
       - uses: tauri-apps/tauri-action@v0
         env:
