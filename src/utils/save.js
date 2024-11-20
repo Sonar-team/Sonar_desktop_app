@@ -1,6 +1,6 @@
-import { save } from '@tauri-apps/api/dialog';
-import { invoke } from '@tauri-apps/api';
-import { message } from '@tauri-apps/api/dialog';
+import { save } from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core';
+import { message } from '@tauri-apps/plugin-dialog';
 
 // Fonction pour sauvegarder en CSV
 export async function SaveAsCsv(getCurrentDate, niveauConfidentialite, installationName) {

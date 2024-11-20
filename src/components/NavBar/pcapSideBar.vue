@@ -24,9 +24,9 @@
 </template>
   
 <script>
-import { save } from '@tauri-apps/api/dialog';
-import { invoke } from '@tauri-apps/api'
-import { exit } from '@tauri-apps/api/process';
+import { save } from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core';
+import { exit } from '@tauri-apps/plugin-process';
 
 export default {
   data() {

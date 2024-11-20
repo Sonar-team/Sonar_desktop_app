@@ -12,10 +12,11 @@ use rust_xlsxwriter::Workbook;
 use serde::Serialize;
 use thiserror::Error;
 
-use crate::get_matrice::get_graph_data::GraphBuilder;
-use crate::sniff::capture_packet::layer_2_infos::layer_3_infos::ip_type::IpType;
-use crate::sniff::capture_packet::layer_2_infos::layer_3_infos::Layer3Infos;
-use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
+
+use crate::commandes::get_graph_data::GraphBuilder;
+use crate::commandes::sniff::capture_packet::layer_2_infos::layer_3_infos::ip_type::IpType;
+use crate::commandes::sniff::capture_packet::layer_2_infos::layer_3_infos::Layer3Infos;
+use crate::commandes::sniff::capture_packet::layer_2_infos::PacketInfos;
 
 #[derive(Debug, Serialize)]
 struct PacketInfoEntry {

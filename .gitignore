@@ -22,12 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-*.csv
-*.xlsx
-*.lock
-src-tauri/Cargo.lock
-
-package-lock.json
-*.svg
-*.png
-.env

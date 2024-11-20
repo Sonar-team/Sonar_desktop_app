@@ -1,39 +1,66 @@
-//! # Sonar - Outil de surveillance réseau
-//!
-//! `sonar` est une bibliothèque et une application permettant la surveillance et l'analyse du trafic réseau.
-//! Elle offre des fonctionnalités pour capturer, analyser et enregistrer les paquets réseau sur différentes interfaces.
+mod commandes;
+use colored::Colorize;
+use commandes::{export::{save_packets_to_csv, save_packets_to_excel, write_file, write_file_as_png, write_png_file}, get_graph_state, get_hostname_to_string, get_interfaces_tab, get_matrice, import::convert_from_pcap_list, reset, sniff::get_selected_interface, toggle_ipv6_filter, toggle_pause};
+mod tauri_state;
 
-/// Gestion de l'interface de ligne de commande.
-///
-/// Ce module fournit les fonctionnalités nécessaires pour interpréter les commandes de l'utilisateur,
-/// traiter les arguments de ligne de commande et contrôler le comportement de l'application en fonction de ces entrées.
-pub mod cli;
+use log::info;
+use tauri_state::SonarState;
 
-/// Récupération des interfaces réseau.
-///
-/// Le module `get_interfaces` permet d'identifier et de lister les interfaces réseau disponibles sur la machine.
-/// Il est essentiel pour permettre à l'utilisateur de sélectionner l'interface sur laquelle écouter le trafic réseau.
-pub mod get_interfaces;
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() -> Result<(), tauri::Error> {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        // liste des plugins
+        .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init())
+        // State    
+        .manage(SonarState::new())
+        // Actions au lancement
+        .setup(|_app| {
+            println!("{}", print_banner());
+            get_os();
+            Ok(())
+        })
+        // Commandes
+        .invoke_handler(tauri::generate_handler![
+            get_interfaces_tab,
+            get_selected_interface,
+            save_packets_to_csv,
+            save_packets_to_excel,
+            get_matrice,
+            get_graph_state,
+            write_file,
+            write_file_as_png,
+            toggle_ipv6_filter,
+            toggle_pause,
+            get_hostname_to_string,
+            reset,
+            convert_from_pcap_list,
+            write_png_file
+        ])
+        // Exécuter l'application
+        .run(tauri::generate_context!())
+}
 
-/// Construction et gestion de la matrice des paquets.
-///
-/// Ce module, `get_matrice`, est responsable de la création et de la gestion d'une structure de données
-/// pour organiser et stocker les informations sur les paquets capturés, facilitant leur analyse ultérieure.
-pub mod get_matrice;
+fn get_os() {
+    let platform = tauri_plugin_os::platform();
+    info!("Platform: {}", platform);
+}
 
-/// Capture et analyse des paquets réseau.
-///
-/// `sniff` est le cœur de l'application, responsable de la capture des paquets réseau sur une interface spécifiée,
-/// et de l'analyse de ces paquets pour en extraire des informations utiles.
-pub mod sniff;
+fn print_banner() -> String {
+    // ASCII art banner
+    let banner = r"
+    _________                           
+   /   _____/ ____   ____ _____ _______ 
+   \_____  \ /  _ \ /    \\__  \\_  __ \
+   /        (  <_> )   |  \/ __ \|  | \/
+  /_______  /\____/|___|  (____  /__|   
+          \/            \/     \/          
+   ";
 
-/// Gestion de l'état pour l'intégration avec Tauri.
-///
-/// Ce module, `tauri_state`, permet de gérer l'état partagé entre les différentes composantes de l'application,
-/// en particulier lors de l'utilisation de Tauri pour créer une interface graphique.
-pub mod tauri_state;
-
-pub mod get_hostname;
-
-// Les tests unitaires pour valider la fonctionnalité de chaque composant de `sonar`.
-mod tests_unitaires;
+    // La bannière est colorée en vert avant d'être retournée.
+    banner.green().to_string()
+}

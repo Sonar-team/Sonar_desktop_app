@@ -41,10 +41,10 @@
 </template>
   
 <script>
-import { save, message } from '@tauri-apps/api/dialog';
-import { invoke } from '@tauri-apps/api'
+import { save, message } from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core'
 import { desktopDir } from '@tauri-apps/api/path';
-import { exit } from '@tauri-apps/api/process';
+import { exit, relaunch } from '@tauri-apps/plugin-process';
 
 export default {
   data() {

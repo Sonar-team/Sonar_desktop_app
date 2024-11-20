@@ -33,6 +33,7 @@ const toggleView = () => {
 .container {
   position: relative;
   margin: 40px;
+
 }
 
 .tab {

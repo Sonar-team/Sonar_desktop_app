@@ -47,9 +47,9 @@
 </template>
   
 <script>
-import { invoke } from '@tauri-apps/api/tauri';
-import { message } from '@tauri-apps/api/dialog';
-import { trace, attachConsole } from "tauri-plugin-log-api";
+import { invoke } from '@tauri-apps/api/core';
+import { message } from '@tauri-apps/plugin-dialog';
+import { trace, attachConsole } from "@tauri-apps/plugin-log";
 
 export default {
   data() {

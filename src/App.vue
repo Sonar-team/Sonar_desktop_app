@@ -4,8 +4,9 @@
 </template>
 
 <script>
-import { appWindow } from "@tauri-apps/api/window";
-import { confirm } from '@tauri-apps/api/dialog';
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { confirm } from '@tauri-apps/plugin-dialog';
+const appWindow = getCurrentWebviewWindow()
 
 export default {
   data() {
@@ -37,6 +38,4 @@ export default {
 };
 </script>
 
-<style scoped>
-/* Global styles for your app */
-</style>
+
