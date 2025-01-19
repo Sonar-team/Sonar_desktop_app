@@ -20,7 +20,7 @@ jobs:
           - platform: "ubuntu-22.04"
             args: ""
           - platform: "windows-latest"
-            args: "--config src-tauri/tauri.windows.conf.json"
+            args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -55,3 +55,4 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+          retryAttempts: 3  # Ajout d'un retry en cas d'échec

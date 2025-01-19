@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+  <!-- Référence au dossier d'installation de l'application -->
+  <Fragment>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="NpcapComponent" Guid="*">
+        <File Id="NpcapInstaller" Source="$(var.SourceDir)\npcap-1.80.exe" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+
+  <!-- Exécution automatique de Npcap après installation -->
+  <Fragment>
+    <CustomAction Id="InstallNpcap"
+                  FileKey="NpcapInstaller"
+                  ExeCommand="/S"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check"/>
+
+    <InstallExecuteSequence>
+      <!-- Installation de Npcap uniquement s'il n'est pas déjà installé -->
+      <Custom Action="InstallNpcap" After="InstallFiles">NOT NPCAPINSTALLED</Custom>
+    </InstallExecuteSequence>
+
+    <!-- Vérification de la présence de Npcap -->
+    <Property Id="NPCAPINSTALLED">
+      <RegistrySearch Id="NpcapCheck"
+                      Root="HKLM"
+                      Key="SOFTWARE\WOW6432Node\Npcap"
+                      Name="Version"
+                      Type="raw"/>
+    </Property>
+  </Fragment>
+
+  <!-- Ajout de la fonctionnalité Npcap -->
+  <Fragment>
+    <Feature Id="NpcapFeature" Title="Npcap Installation" Level="1">
+      <ComponentRef Id="NpcapComponent"/>
+    </Feature>
+  </Fragment>
+
+</Wix>
