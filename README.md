@@ -19,7 +19,7 @@
 ## Dépendances Système
 
 ### Pour Windows
-- **WinPcap :** Nécessaire pour le fonctionnement de l'application. Il faut également installer le Pack de Développeur WinPcap.
+- **NPcap :** Nécessaire pour le fonctionnement de l'application. Il faut également installer le Pack de Développeur WinPcap.
 - **Configuration de l'Environnement :** Ajoutez le dossier `/Lib` ou `/Lib/x64` à votre variable d'environnement `LIB`.
 
 ### Pour Linux
