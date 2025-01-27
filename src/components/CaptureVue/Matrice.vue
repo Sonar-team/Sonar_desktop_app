@@ -4,7 +4,7 @@
       :headers="headers"
       :items="processedPackets"
       item-key="id"
-      items-per-page="21"
+      items-per-page="19"
       density="compact"
     >
     </v-data-table>

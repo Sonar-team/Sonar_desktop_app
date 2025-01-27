@@ -271,7 +271,7 @@
 <style scoped>
 .graph-container {
   position: relative; /* Establishes a relative positioning context */
-  height: 850px; /* Adjust height as needed */
+  height: 800px; /* Adjust height as needed */
   width: 100%; /* Container takes full width */
 }
 
