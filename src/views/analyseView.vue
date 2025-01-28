@@ -62,7 +62,6 @@ export default {
               console.error("Erreur lors de l'invocation de 'toggle_pause':", error);
               throw error; // Permet de propager l'erreur pour une gestion plus avancée si nécessaire
           });
-
     },
 
     getCurrentDate() {

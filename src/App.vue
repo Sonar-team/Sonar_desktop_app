@@ -9,8 +9,6 @@ import { confirm } from '@tauri-apps/plugin-dialog';
 import { exit } from '@tauri-apps/plugin-process';
 import { info } from '@tauri-apps/plugin-log';
 
-
-
 const appWindow = getCurrentWebviewWindow()
 
 export default {

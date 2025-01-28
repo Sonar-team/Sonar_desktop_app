@@ -6,19 +6,11 @@
       <p>Début: {{ heureDepart }}</p>
       <p>Fin: {{ heureFin }}</p>
 
-      <div class= "buttons">
-        <button class="button-up" @click="augmenterHeures"></button>
-        <button class="button-up" @click="augmenterMinutes"></button>
-        <button class="button-up" @click="augmenterSecondes"></button>
-      </div>
+
 
       <p>Temps restant: {{ tempsReleve }}</p>
 
-      <div class= "buttons">
-        <button class="button-down" @click="diminuerHeures"></button>
-        <button class="button-down" @click="diminuerMinutes"></button>
-        <button class="button-down" @click="diminuerSecondes"></button>
-      </div>
+
 
       <p>Temps écoulé: {{ tempsEcoule }}</p>
 
