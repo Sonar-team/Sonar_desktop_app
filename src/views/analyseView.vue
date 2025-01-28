@@ -13,7 +13,8 @@
       <NetworkGraphComponent v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <Matrice v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
-    
+      <StatusBar :tramesRecues="tramesRecues" :tramesEnregistrees="tramesEnregistrees" />
+
     </div>
   </div>
 </template>
@@ -23,6 +24,7 @@ import Sidebar from '../components/NavBar/SideBar.vue';
 import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
 import NetworkGraphComponent from '../components/CaptureVue/NetworkGraphComponent.vue'; // Import the other component
+import StatusBar from '../components/NavBar/StatusBar.vue'; // Import du composant
 
 import { invoke } from '@tauri-apps/api/core'
 
@@ -42,7 +44,8 @@ export default {
     BottomLong,
     Matrice,
     Sidebar,
-    NetworkGraphComponent
+    NetworkGraphComponent,
+    StatusBar
   },
   methods: {
     toggleComponent() {
