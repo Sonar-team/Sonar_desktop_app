@@ -21,8 +21,6 @@
       </div>
 
       <p>Temps écoulé: {{ tempsEcoule }}</p>
-      <p>Trames reçues: {{ tramesRecues }} </p>
-      <p>Matrice de flux: {{ tramesEnregistrees }}</p>
 
       <button @click="quit">
         Quitter
@@ -52,8 +50,6 @@ export default {
       selectedFormat: 'xlsx',
       tempsReleve: '',
       tempsEcoule: '',
-      tramesRecues: 0,
-      tramesEnregistrees: 0,
       niveauConfidentialite: '',
       installationName:'',
       heureDepart:'',
@@ -166,15 +162,6 @@ export default {
       } catch (error) {
         console.error("Error in calculateEndTime:", error);
       }
-    },
-
-
-    incrementTramesRecues() {
-      this.tramesRecues++;
-    },
-    incrementMatriceCount(packetCount) {
-      // console.log("incrementMatriceCount", packetCount)
-      this.tramesEnregistrees = packetCount;
     },
 
     triggerSave() {
@@ -343,17 +330,12 @@ getCurrentDate() {
     this.calculateEndTime(); // Calculer l'heure de fin lors du montage
     this.updateTempsReleve();
     this.updateTempsEcoule(); // Calculer le temps écoulé
-    this.$bus.on('increment-event', this.incrementTramesRecues);
-    this.$bus.on('update-packet-count', this.incrementMatriceCount);
-    
+
     this.netInterface = this.$route.params.netInterface;
     this.installationName = this.$route.params.installationName;
     this.niveauConfidentialite = this.$route.params.confidentialite;
   },
-  beforeUnmount() {
-    this.$bus.off('update-packet-count', this.incrementMatriceCount);
-    this.$bus.off('increment-event', this.incrementTramesRecues);
-  },
+
 };
 </script>
 

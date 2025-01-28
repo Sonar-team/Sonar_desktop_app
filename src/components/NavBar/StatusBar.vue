@@ -13,16 +13,30 @@
 
 <script>
   export default {
-    props: {
-      tramesRecues: {
-        type: Number,
-        default: 0
+    data() {
+      return {
+        tramesRecues: 0,
+        tramesEnregistrees: 0,
+        };
+    },
+    methods: {
+      incrementTramesRecues() {
+        this.tramesRecues++;
       },
-      tramesEnregistrees: {
-        type: Number,
-        default: 0
-      }
-    }
+    incrementMatriceCount(packetCount) {
+        // console.log("incrementMatriceCount", packetCount)
+        this.tramesEnregistrees = packetCount;
+      },
+    },
+    mounted() {
+      this.$bus.on('increment-event', this.incrementTramesRecues);
+      this.$bus.on('update-packet-count', this.incrementMatriceCount);
+    
+    },
+    beforeUnmount() {
+      this.$bus.off('update-packet-count', this.incrementMatriceCount);
+      this.$bus.off('increment-event', this.incrementTramesRecues);
+    },
   }
 </script>
   

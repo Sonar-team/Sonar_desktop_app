@@ -13,7 +13,7 @@
       <NetworkGraphComponent v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <Matrice v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
-      <StatusBar :tramesRecues="tramesRecues" :tramesEnregistrees="tramesEnregistrees" />
+      <StatusBar />
 
     </div>
   </div>
