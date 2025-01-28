@@ -1,35 +1,34 @@
 <template>
   <div class="container">
-    <!-- <Top /> -->
-    <Sidebar
+
+    <Topbar
       :netInterface="$route.params.netInterface"
       :confidentialite="$route.params.confidentialite"
       :installationName="$route.params.installationName"
       :time="$route.params.time"
       :currentTime="$route.params.currentTime"
     />
+    <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
     <div class="content">
-      <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
-      <!--button @click="togglePause">pause</button-->
       <NetworkGraphComponent v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <Matrice v-else /> <!-- Show NetworkGraphComponent otherwise -->
-      <BottomLong  />
-      <StatusBar 
-        :time="$route.params.time"
-        :currentTime="$route.params.currentTime"
-        />
 
     </div>
+    <BottomLong  />
+    <StatusBar 
+      :time="$route.params.time"
+      :currentTime="$route.params.currentTime"
+      />
   </div>
 </template>
 
 <script>
-import Sidebar from '../components/NavBar/SideBar.vue';
+import Topbar from '../components/NavBar/TopBar.vue';
 import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
 import NetworkGraphComponent from '../components/CaptureVue/NetworkGraphComponent.vue'; // Import the other component
 import StatusBar from '../components/NavBar/StatusBar.vue'; // Import du composant
-import Top from '../components/NavBar/Top.vue';
+
 import { invoke } from '@tauri-apps/api/core'
 
 export default {
@@ -47,10 +46,10 @@ export default {
   components: {
     BottomLong,
     Matrice,
-    Sidebar,
+    Topbar,
     NetworkGraphComponent,
     StatusBar,
-    Top
+    
   },
   methods: {
     toggleComponent() {
@@ -98,7 +97,7 @@ export default {
 <style scoped>
 .container {
   display: flex;
-
+  flex-direction: column;
 }
 
 .content {

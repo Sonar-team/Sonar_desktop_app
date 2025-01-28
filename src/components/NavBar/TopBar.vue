@@ -175,24 +175,13 @@ getCurrentDate() {
   border-radius: 5px; /* Bordures arrondies */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre */
   display: flex;
-  flex-direction:column; /* Organisation verticale */
+  flex-direction:row; /* Organisation verticale */
   gap: 10px; /* Espacement entre les éléments */
 }
 
-.sidebar img {
-  width: 150px; /* Taille du logo */
-  height: auto; /* Maintenir le ratio de l'image */
-  margin-bottom: 10px; /* Espacement sous l'image */
-}
-
-.sidebar p {
-  margin: 0;
-  padding: 5px 0;
-  font-size: 1.2em; /* Augmenter la taille de la police */
-}
 
 .sidebar button {
-  padding: 10px 15px;
+  padding: 0px 15px;
   background-color: #11212c; /* Couleur du bouton */
   color: white;
   border: none;
