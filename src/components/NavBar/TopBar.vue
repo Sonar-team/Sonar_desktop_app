@@ -1,6 +1,6 @@
 <template>
     <div class="sidebar">    
-      <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="150" height="150">   
+      <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="50" height="50">   
       <button class="button" 
         @click="toggleComponent">
         {{ buttonText }}
@@ -167,16 +167,20 @@ getCurrentDate() {
 <style scoped>
 
 .sidebar {
-  width: 190px; /* Largeur ajustée */
-  background-color: #2A2A2A; /* Couleur de fond */
-  color: #ECF0F1; /* Couleur du texte */
-  padding: 20px;
-  padding-top: 32px;
-  border-radius: 5px; /* Bordures arrondies */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #2A2A2A;
+  color: #ECF0F1;
+  padding: 10px;
+  padding-top: 2px;
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-direction:row; /* Organisation verticale */
-  gap: 10px; /* Espacement entre les éléments */
+  flex-direction: row;
+  gap: 10px;
+  z-index: 9999;
 }
 
 

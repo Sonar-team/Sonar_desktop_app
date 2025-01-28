@@ -75,7 +75,13 @@ export default {
 
 <style scoped>
 .elevation-1.matrice {
+  position: fixed; /* Establishes a relative positioning context */
+  bottom: 225px; /* Ajustez cette valeur selon la hauteur de votre barre de statut */
+  left: 0;
+  right: 0;
   width: 100%;
+  height: 120px; /* Adjust height as needed */
+
   max-width: 100%;
 }
 </style>

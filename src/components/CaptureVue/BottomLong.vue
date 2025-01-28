@@ -94,14 +94,14 @@ export default {
 
 <style scoped>
 .trames {
+  position: fixed;
+  bottom: 25px; /* Ajustez cette valeur selon la hauteur de votre barre de statut */
+  left: 0;
+  right: 0;
   height: 120px;
   width: 100%;
-  text-align: center;
   background-color: #000; /* Black background */
-  overflow-y: auto; /* Add vertical scrollbar if content exceeds max height */
   font-family: 'Courier New', Courier, monospace; /* Monospace font for terminal look */
-  font-size: 14px; /* Adjust font size if necessary */
-  animation: matrixAnimation 60s infinite linear; /* Optional: Add Matrix-like animation */
 }
 
 table {

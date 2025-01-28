@@ -1,6 +1,5 @@
 <template>
   <div class="container">
-
     <Topbar
       :netInterface="$route.params.netInterface"
       :confidentialite="$route.params.confidentialite"
@@ -8,12 +7,12 @@
       :time="$route.params.time"
       :currentTime="$route.params.currentTime"
     />
-    <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3>
+    <!-- <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3> -->
     <div class="content">
       <NetworkGraphComponent v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <Matrice v-else /> <!-- Show NetworkGraphComponent otherwise -->
-
     </div>
+
     <BottomLong  />
     <StatusBar 
       :time="$route.params.time"
@@ -98,28 +97,6 @@ export default {
 .container {
   display: flex;
   flex-direction: column;
-}
-
-.content {
-  overflow:auto; /* Ajoute un défilement si le contenu dépasse la hauteur de la fenêtre */
-  flex: 1; /* Allow content to expand and fill available space */
-
-}
-
-.titre {
-  text-align: center;
-  color: aliceblue;
-  margin: 1px 0; /* Reduce top and bottom margin */
-
-}
-
-.button {
-  background-color: #0b1b25; /* Couleur de fond du bouton */
-  color: #fff; /* Couleur du texte du bouton */
-  padding: 10px 20px; /* Espacement intérieur du bouton */
-  border: none; /* Supprimer la bordure du bouton */
-  border-radius: 5px; /* Ajouter une bordure arrondie au bouton */
-  cursor: pointer; /* Curseur de type pointeur au survol */
 }
 
 </style>
