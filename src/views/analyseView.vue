@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <!-- <Top /> -->
     <Sidebar
       :netInterface="$route.params.netInterface"
       :confidentialite="$route.params.confidentialite"
@@ -13,7 +14,10 @@
       <NetworkGraphComponent v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <Matrice v-else /> <!-- Show NetworkGraphComponent otherwise -->
       <BottomLong  />
-      <StatusBar />
+      <StatusBar 
+        :time="$route.params.time"
+        :currentTime="$route.params.currentTime"
+        />
 
     </div>
   </div>
@@ -25,7 +29,7 @@ import BottomLong from '../components/CaptureVue/BottomLong.vue';
 import Matrice from '../components/CaptureVue/Matrice.vue';
 import NetworkGraphComponent from '../components/CaptureVue/NetworkGraphComponent.vue'; // Import the other component
 import StatusBar from '../components/NavBar/StatusBar.vue'; // Import du composant
-
+import Top from '../components/NavBar/Top.vue';
 import { invoke } from '@tauri-apps/api/core'
 
 export default {
@@ -45,7 +49,8 @@ export default {
     Matrice,
     Sidebar,
     NetworkGraphComponent,
-    StatusBar
+    StatusBar,
+    Top
   },
   methods: {
     toggleComponent() {

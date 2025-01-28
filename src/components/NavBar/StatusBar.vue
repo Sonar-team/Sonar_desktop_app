@@ -17,21 +17,150 @@
       return {
         tramesRecues: 0,
         tramesEnregistrees: 0,
+        tempsReleve: '',
+        heureDepart:'',
         };
     },
     methods: {
       incrementTramesRecues() {
         this.tramesRecues++;
       },
-    incrementMatriceCount(packetCount) {
+      incrementMatriceCount(packetCount) {
         // console.log("incrementMatriceCount", packetCount)
         this.tramesEnregistrees = packetCount;
       },
+      updateTempsEcoule() {
+        const startTime = new Date();
+        
+        const intervalId = setInterval(() => {
+          const now = new Date();
+          let elapsed = new Date(now - startTime);
+
+          // Calcul du temps écoulé
+          let hours = elapsed.getUTCHours();
+          let minutes = elapsed.getUTCMinutes();
+          let seconds = elapsed.getUTCSeconds();
+
+          this.tempsEcoule = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
+        }, 1000);
+      },
+      updateTempsReleve() {
+        // Stocker l'identifiant de l'intervalle
+        const intervalId = setInterval(async () => {
+          const timeParts = this.tempsReleve.split(':');
+          let hours = parseInt(timeParts[0]);
+          let minutes = parseInt(timeParts[1]);
+          let seconds = parseInt(timeParts[2]);
+
+        if (seconds > 0) {
+          seconds--;
+        } else if (minutes > 0) {
+          minutes--;
+          seconds = 59;
+        } else if (hours > 0) {
+          hours--;
+          minutes = 59;
+          seconds = 59;
+        } else {
+          // Temps écoulé, arrêter l'intervalle
+          clearInterval(intervalId);
+
+          // Appeler SaveToDesktop et attendre la réponse au dialogue
+          this.SaveToDesktop();
+          await message('Sauvegarde automatique sur le Bureau', { 
+            title: 'Relevée terminée',
+            type: 'info'
+          });
+          return; // Important pour sortir de la fonction
+        }
+
+        this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
+      }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
+    },
+    calculateEndTime() {
+      if (!this.heureDepart) {
+        console.warn("heureDepart is empty. Skipping calculation of endTime.");
+        return;
+      }
+
+      try {
+        console.log("heureDepart initial value: ", this.heureDepart);
+
+        let startTime;
+
+        if (typeof this.heureDepart === 'string') {
+          // Si heureDepart est sous la forme "HH:mm:ss", ajoutez la date actuelle
+          if (this.heureDepart.match(/^\d{2}:\d{2}:\d{2}$/)) {
+            const currentDate = new Date().toISOString().split('T')[0]; // Obtenez la date d'aujourd'hui (YYYY-MM-DD)
+            this.heureDepart = `${currentDate}T${this.heureDepart}`; // Combinez la date et l'heure
+          }
+          startTime = new Date(this.heureDepart); // Convertir la chaîne en objet Date
+        } else if (this.heureDepart instanceof Date) {
+          // Si c'est déjà un objet Date, l'utiliser directement
+          startTime = this.heureDepart;
+        } else {
+          throw new Error('Invalid start time format');
+        }
+
+        console.log("Parsed startTime: ", startTime);
+
+        if (isNaN(startTime.getTime())) {
+          throw new Error('Invalid start time');
+        }
+
+        const [hours, minutes, seconds] = this.tempsReleve.split(':').map(Number);
+        const durationInSeconds = hours * 3600 + minutes * 60 + seconds;
+        const endTime = new Date(startTime.getTime() + durationInSeconds * 1000);
+
+        // Format heureDepart et heureFin
+        this.heureDepart = this.formatTime(startTime);
+        this.heureFin = this.formatTime(endTime);
+
+        console.log("Calculated heureFin: ", this.heureFin);
+
+
+      } catch (error) {
+        console.error("Error in calculateEndTime:", error);
+      }
+    },
+    ajusterTemps(ajustement) {
+      let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
+      let tempsTotalEnSecondes = heures * 3600 + minutes * 60 + secondes + ajustement;
+
+      // S'assurer que le temps ne passe pas en dessous de 0
+      if (tempsTotalEnSecondes < 0) {
+        tempsTotalEnSecondes = 0;
+      }
+
+      heures = Math.floor(tempsTotalEnSecondes / 3600);
+      minutes = Math.floor((tempsTotalEnSecondes % 3600) / 60);
+      secondes = tempsTotalEnSecondes % 60;
+
+      this.tempsReleve = `${this.padZero(heures)}:${this.padZero(minutes)}:${this.padZero(secondes)}`;
+      this.calculateEndTime();
+    },
+    padZero(value) {
+      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
+      return value < 10 ? `0${value}` : value;
+    },
+
+    formatTime(date) {
+      const hours = this.padZero(date.getHours());
+      const minutes = this.padZero(date.getMinutes());
+      const seconds = this.padZero(date.getSeconds());
+      return `${hours}:${minutes}:${seconds}`;
+    },
     },
     mounted() {
       this.$bus.on('increment-event', this.incrementTramesRecues);
       this.$bus.on('update-packet-count', this.incrementMatriceCount);
-    
+
+      this.heureDepart = this.$route.params.currentTime || new Date().toISOString();
+      this.tempsReleve = this.$route.params.time || '00:00:00'; // Valeur par défaut si pas de temps relevé
+      this.calculateEndTime(); // Calculer l'heure de fin lors du montage
+      this.updateTempsReleve();
+      this.updateTempsEcoule(); // Calculer le temps écoulé
+
     },
     beforeUnmount() {
       this.$bus.off('update-packet-count', this.incrementMatriceCount);

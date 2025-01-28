@@ -1,18 +1,10 @@
 <template>
     <div class="sidebar">    
       <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="150" height="150">   
-      <button class="button" @click="toggleComponent">{{ buttonText }}</button> <!-- Toggle Button -->
-
-      <p>Début: {{ heureDepart }}</p>
-      <p>Fin: {{ heureFin }}</p>
-
-
-
-      <p>Temps restant: {{ tempsReleve }}</p>
-
-
-
-      <p>Temps écoulé: {{ tempsEcoule }}</p>
+      <button class="button" 
+        @click="toggleComponent">
+        {{ buttonText }}
+      </button> <!-- Toggle Button -->
 
       <button @click="quit">
         Quitter
@@ -40,12 +32,10 @@ export default {
   data() {
     return {
       selectedFormat: 'xlsx',
-      tempsReleve: '',
-      tempsEcoule: '',
+
       niveauConfidentialite: '',
       installationName:'',
-      heureDepart:'',
-      heureFin:'',
+
       showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
     };
   },
@@ -60,106 +50,12 @@ export default {
       this.$bus.emit('toggle')
       this.showMatrice = !this.showMatrice; // Toggle the state
     },
-    augmenterSecondes() {
-      this.ajusterTemps(1); // Augmenter d'une seconde
-      
-    },
-    diminuerSecondes() {
-      // Empêcher les secondes de passer en dessous de 0
-      let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
-      if (heures === 0 && minutes === 0 && secondes === 0) return; // Bloquer si toutes les valeurs sont déjà à 0
-      this.ajusterTemps(-1); // Diminuer d'une seconde
-  
-    },
-    augmenterMinutes() {
-      this.ajusterTemps(60); // Augmenter d'une minute
 
-    },
-    diminuerMinutes() { 
-      // Empêcher les minutes de passer en dessous de 0
-      let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
-      if (heures === 0 && minutes === 0 && secondes === 0) return; // Bloquer si toutes les valeurs sont déjà à 0
-      this.ajusterTemps(-60); // Diminuer d'une minute
- 
-    },
-    augmenterHeures() {
-      this.ajusterTemps(3600); // Augmenter d'une heure
- 
-    },  
-    diminuerHeures() {
-      // Empêcher les heures de passer en dessous de 0
-      let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
-      if (heures === 0 && minutes === 0 && secondes === 0) return; // Bloquer si toutes les valeurs sont déjà à 0
-      this.ajusterTemps(-3600); // Diminuer d'une heure
+
     
-    },
-    ajusterTemps(ajustement) {
-      let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
-      let tempsTotalEnSecondes = heures * 3600 + minutes * 60 + secondes + ajustement;
-
-      // S'assurer que le temps ne passe pas en dessous de 0
-      if (tempsTotalEnSecondes < 0) {
-        tempsTotalEnSecondes = 0;
-      }
-
-      heures = Math.floor(tempsTotalEnSecondes / 3600);
-      minutes = Math.floor((tempsTotalEnSecondes % 3600) / 60);
-      secondes = tempsTotalEnSecondes % 60;
-
-      this.tempsReleve = `${this.padZero(heures)}:${this.padZero(minutes)}:${this.padZero(secondes)}`;
-      this.calculateEndTime();
-    },
-    calculateEndTime() {
-      if (!this.heureDepart) {
-        console.warn("heureDepart is empty. Skipping calculation of endTime.");
-        return;
-      }
-
-      try {
-        console.log("heureDepart initial value: ", this.heureDepart);
-
-        let startTime;
-
-        if (typeof this.heureDepart === 'string') {
-          // Si heureDepart est sous la forme "HH:mm:ss", ajoutez la date actuelle
-          if (this.heureDepart.match(/^\d{2}:\d{2}:\d{2}$/)) {
-            const currentDate = new Date().toISOString().split('T')[0]; // Obtenez la date d'aujourd'hui (YYYY-MM-DD)
-            this.heureDepart = `${currentDate}T${this.heureDepart}`; // Combinez la date et l'heure
-          }
-          startTime = new Date(this.heureDepart); // Convertir la chaîne en objet Date
-        } else if (this.heureDepart instanceof Date) {
-          // Si c'est déjà un objet Date, l'utiliser directement
-          startTime = this.heureDepart;
-        } else {
-          throw new Error('Invalid start time format');
-        }
-
-        console.log("Parsed startTime: ", startTime);
-
-        if (isNaN(startTime.getTime())) {
-          throw new Error('Invalid start time');
-        }
-
-        const [hours, minutes, seconds] = this.tempsReleve.split(':').map(Number);
-        const durationInSeconds = hours * 3600 + minutes * 60 + seconds;
-        const endTime = new Date(startTime.getTime() + durationInSeconds * 1000);
-
-        // Format heureDepart et heureFin
-        this.heureDepart = this.formatTime(startTime);
-        this.heureFin = this.formatTime(endTime);
-
-        console.log("Calculated heureFin: ", this.heureFin);
-
-
-      } catch (error) {
-        console.error("Error in calculateEndTime:", error);
-      }
-    },
 
     triggerSave() {
-     
       this.SaveAsCsv();
-    
       this.SaveAsXlsx();
       
     },
@@ -225,33 +121,9 @@ export default {
       }
     },
 
-    padZero(value) {
-      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
-      return value < 10 ? `0${value}` : value;
-    },
 
-    formatTime(date) {
-      const hours = this.padZero(date.getHours());
-      const minutes = this.padZero(date.getMinutes());
-      const seconds = this.padZero(date.getSeconds());
-      return `${hours}:${minutes}:${seconds}`;
-    },
 
-    updateTempsEcoule() {
-      const startTime = new Date();
-      
-      const intervalId = setInterval(() => {
-        const now = new Date();
-        let elapsed = new Date(now - startTime);
 
-        // Calcul du temps écoulé
-        let hours = elapsed.getUTCHours();
-        let minutes = elapsed.getUTCMinutes();
-        let seconds = elapsed.getUTCSeconds();
-
-        this.tempsEcoule = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
-      }, 1000);
-    },
     async quit() {
       try {
         await this.SaveAsXlsx(); // Attendre que SaveAsXlsx soit terminé
@@ -269,39 +141,7 @@ export default {
       this.tramesRecues = 0
       invoke('reset')    
     },
-    updateTempsReleve() {
-  // Stocker l'identifiant de l'intervalle
-  const intervalId = setInterval(async () => {
-    const timeParts = this.tempsReleve.split(':');
-    let hours = parseInt(timeParts[0]);
-    let minutes = parseInt(timeParts[1]);
-    let seconds = parseInt(timeParts[2]);
 
-    if (seconds > 0) {
-      seconds--;
-    } else if (minutes > 0) {
-      minutes--;
-      seconds = 59;
-    } else if (hours > 0) {
-      hours--;
-      minutes = 59;
-      seconds = 59;
-    } else {
-      // Temps écoulé, arrêter l'intervalle
-      clearInterval(intervalId);
-
-      // Appeler SaveToDesktop et attendre la réponse au dialogue
-      this.SaveToDesktop();
-      await message('Sauvegarde automatique sur le Bureau', { 
-        title: 'Relevée terminée',
-        type: 'info'
-      });
-      return; // Important pour sortir de la fonction
-    }
-
-    this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
-  }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
-},
 
 getCurrentDate() {
       // Fonction pour obtenir la date actuelle
@@ -315,13 +155,6 @@ getCurrentDate() {
   mounted() {
     console.log("analyse mounted");
     this.getDesktopDirPath();
-
-    // Exemple d'initialisation de heureDepart au format ISO 8601 (YYYY-MM-DDTHH:mm:ss)
-    this.heureDepart = this.$route.params.currentTime || new Date().toISOString();
-    this.tempsReleve = this.$route.params.time || '00:00:00'; // Valeur par défaut si pas de temps relevé
-    this.calculateEndTime(); // Calculer l'heure de fin lors du montage
-    this.updateTempsReleve();
-    this.updateTempsEcoule(); // Calculer le temps écoulé
 
     this.netInterface = this.$route.params.netInterface;
     this.installationName = this.$route.params.installationName;
@@ -342,7 +175,7 @@ getCurrentDate() {
   border-radius: 5px; /* Bordures arrondies */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre */
   display: flex;
-  flex-direction: column; /* Organisation verticale */
+  flex-direction:column; /* Organisation verticale */
   gap: 10px; /* Espacement entre les éléments */
 }
 
@@ -385,45 +218,6 @@ getCurrentDate() {
   display: flex;
 }
 
-.button-up, .button-down {
-  display: inline-block;
-  background-color: #11212c; /* Couleur de fond du bouton */
-  color: #ffffff; /* Couleur du texte du bouton */
-  text-align: center;
-  padding: 10px;
-  margin: 5px;
-  border: none;
-  border-radius: 3px;
-  transition: all 0.3s ease;
-  position: relative; /* Position relative pour les pseudo-éléments */
-}
 
-/* Style pour le contenu du bouton (la flèche) */
-.button-up::before, .button-down::before {
-  content: '';
-  display: block;
-  margin: auto; /* Centre automatiquement la flèche */
-  width: 0; 
-  height: 0;
-  border-style: solid;
-}
-
-/* Flèche vers le haut */
-.button-up::before {
-  border-width: 0 5px 8px 5px; /* Ajuste la taille de la flèche */
-  border-color: transparent transparent #ffffff transparent; /* Flèche blanche */
-}
-
-/* Flèche vers le bas */
-.button-down::before {
-  border-width: 8px 5px 0 5px; /* Ajuste la taille de la flèche */
-  border-color: #ffffff transparent transparent transparent; /* Flèche blanche */
-}
-
-/* Effet de survol pour les boutons */
-.button-up:hover, .button-down:hover {
-  background-color: #0b1b25; /* Couleur de survol plus foncée */
-  cursor: pointer;
-}
 
 </style>
