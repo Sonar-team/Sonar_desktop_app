@@ -11,9 +11,9 @@
 </template>
 
 <script>
-import BottomLong from '../components/CaptureVue/BottomLong.vue';
-import Matrice from '../components/CaptureVue/Matrice.vue';
-import NetworkGraphComponent from '../components/CaptureVue/NetworkGraphComponent.vue';
+import BottomLong from '../components/AnalyseView/BottomLong.vue';
+import Matrice from '../components/AnalyseView/Matrice.vue';
+import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue';
 import pcapSideBar from '../components/NavBar/pcapSideBar.vue';
 import { invoke } from '@tauri-apps/api/core';
 

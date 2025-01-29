@@ -23,9 +23,9 @@
 
 <script>
 import Topbar from '../components/NavBar/TopBar.vue';
-import BottomLong from '../components/CaptureVue/BottomLong.vue';
-import Matrice from '../components/CaptureVue/Matrice.vue';
-import NetworkGraphComponent from '../components/CaptureVue/NetworkGraphComponent.vue'; // Import the other component
+import BottomLong from '../components/AnalyseView/BottomLong.vue';
+import Matrice from '../components/AnalyseView/Matrice.vue';
+import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue'; // Import the other component
 import StatusBar from '../components/NavBar/StatusBar.vue'; // Import du composant
 
 import { invoke } from '@tauri-apps/api/core'
