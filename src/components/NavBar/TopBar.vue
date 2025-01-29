@@ -33,6 +33,8 @@ import { save, message } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core'
 import { desktopDir } from '@tauri-apps/api/path';
 import { exit, relaunch } from '@tauri-apps/plugin-process';
+import { info, error } from '@tauri-apps/plugin-log';
+
 
 export default {
   data() {
@@ -58,12 +60,13 @@ export default {
     },
 
     triggerSave() {
+      info("trigger save")
       this.SaveAsCsv();
       this.SaveAsXlsx();
       
     },
     async SaveAsCsv() {
-      console.log("Save as csv")
+      info("Save as csv")
       save({
         filters: [{
           name: '.csv',
@@ -75,12 +78,12 @@ export default {
       }).then((response) => 
         invoke('save_packets_to_csv', { file_path: response })
           .then((response) => 
-            console.log("save error: ",response))
+            error("save error: ",response))
             )
     },
     async SaveAsXlsx() {
       try {
-        console.log("Début de la sauvegarde en xlsx");
+        info("Début de la sauvegarde en xlsx");
         const response = await save({
           filters: [{
             name: '.xlsx',
@@ -93,14 +96,14 @@ export default {
         if (response) {
           // Attendez que l'invocation d'API pour sauvegarder soit terminée
           const saveResponse = await invoke('save_packets_to_excel', { file_path: response });
-          console.log("Sauvegarde terminée:", saveResponse);
+          info("Sauvegarde terminée:", saveResponse);
           return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
         } else {
-          console.log("Aucun chemin de fichier sélectionné");
+          info("Aucun chemin de fichier sélectionné");
           throw new Error("Sauvegarde annulée ou chemin non sélectionné");
         }
       } catch (error) {
-        console.error("Erreur lors de la sauvegarde en xlsx:", error);
+        error("Erreur lors de la sauvegarde en xlsx:", error);
         throw error; // Relancer l'erreur pour la gestion dans quit()
       }
     },
@@ -123,17 +126,12 @@ export default {
         console.error("Error getting app data directory: ", error);
       }
     },
-
-
-
-
     async quit() {
       try {
-        await this.SaveAsXlsx(); // Attendre que SaveAsXlsx soit terminé
-        console.log('Sauvegarde terminée, fermeture de l\'application');
+        info("close resquested")
         await exit(1); // Appeler exit après la sauvegarde
       } catch (error) {
-        console.error("Erreur lors de la sauvegarde ou de la fermeture de l'application:", error);
+        error("Erreur lors de la sauvegarde ou de la fermeture de l'application:", error);
       }
     },
     async reset() {
@@ -145,13 +143,17 @@ export default {
       invoke('reset')    
     },
 
-
-getCurrentDate() {
+    getCurrentDate() {
       // Fonction pour obtenir la date actuelle
       const now = new Date();
       // Formattez la date en DD/MM/YYYY
       const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
+      info("current date: ",formattedDate)
       return formattedDate;
+    },
+    padZero(value) {
+      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
+      return value < 10 ? `0${value}` : value;
     },
 
   },

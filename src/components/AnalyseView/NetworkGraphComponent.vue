@@ -6,6 +6,7 @@
   import * as vNG from "v-network-graph"
   import {ForceLayout} from "v-network-graph/lib/force-layout"
   import html2canvas from 'html2canvas';
+  import { info, error } from '@tauri-apps/plugin-log';
 
   export default {
   components: {
@@ -127,6 +128,8 @@
       const now = new Date();
       // Formattez la date en DD/MM/YYYY
       const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
+      info("current date: ",formattedDate)
+
       return formattedDate;
     },
     padZero(value) {
@@ -137,7 +140,7 @@
     async downloadSvg() {
       if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
         try {
-          console.log('Attempting to export SVG...');
+          info('Attempting to export SVG...');
           const svgContent = await this.$refs.graphnodes.exportAsSvgText();
           save({
             filters: [{
@@ -161,31 +164,33 @@
       }
     },
     async downloadPng() {
-  // Ouvre une boîte de dialogue pour choisir l'emplacement du fichier
-  const filePath = await save({
-    filters: [{
-      name: 'PNG File',
-      extensions: ['png']
-    }],
-    defaultPath: this.getCurrentDate() + '_' + this.niveauConfidentialite + '_' + this.installationName + '.png' // Nom de fichier par défaut
-  });
+      // Ouvre une boîte de dialogue pour choisir l'emplacement du fichier
+      info("save png")
+      const filePath = await save({
+        filters: [{
+          name: 'PNG File',
+          extensions: ['png']
+        }],
+        defaultPath: this.getCurrentDate() + '_' + this.niveauConfidentialite + '_' + this.installationName + '.png' // Nom de fichier par défaut
+      });
 
-  if (filePath) {
-    // Capture tout le document
-    html2canvas(document.body, { scale: 2, useCORS: true }).then(canvas => {
-      // Convertit le canvas en une chaîne Base64
-      const base64Data = canvas.toDataURL('image/png'); // Format PNG
+      if (filePath) {
+        // Capture tout le document
+        info("file path: ",filePath)
+        html2canvas(document.body, { scale: 2, useCORS: true }).then(canvas => {
+          // Convertit le canvas en une chaîne Base64
+          const base64Data = canvas.toDataURL('image/png'); // Format PNG
 
-      // Supprime l'en-tête "data:image/png;base64,"
-      const base64WithoutHeader = base64Data.replace(/^data:image\/png;base64,/, '');
+          // Supprime l'en-tête "data:image/png;base64,"
+          const base64WithoutHeader = base64Data.replace(/^data:image\/png;base64,/, '');
 
-      // Envoie les données au backend
-      invoke('write_png_file', { path: filePath, contents: base64WithoutHeader })
-        .then(() => console.log('PNG successfully saved at:', filePath))
-        .catch((error) => console.error('Error saving PNG:', error));
-    });
-  }
-},
+          // Envoie les données au backend
+          invoke('write_png_file', { path: filePath, contents: base64WithoutHeader })
+            .then(() => console.log('PNG successfully saved at:', filePath))
+            .catch((error) => console.error('Error saving PNG:', error));
+        });
+      }
+    },
     handleNodeClick(node) {
       // Supposons que `selectedNode` est une propriété de données que vous utiliserez pour stocker les informations du node sélectionné
       this.selectedNode = node;
