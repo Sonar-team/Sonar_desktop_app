@@ -274,7 +274,7 @@
   bottom: 225px; /* Ajustez cette valeur selon la hauteur de votre barre de statut */
   left: 0;
   right: 0;
-  height: 720px; /* Adjust height as needed */
+  height: 735px; /* Adjust height as needed */
   width: 100%; /* Container takes full width */
 }
 

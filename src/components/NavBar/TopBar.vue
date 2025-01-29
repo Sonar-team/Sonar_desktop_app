@@ -1,22 +1,28 @@
 <template>
     <div class="sidebar">    
-      <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="50" height="50">   
-      <button class="button" 
+      <button class="image-btn">
+        <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" >   
+      </button>
+      <button class="image-btn" 
         @click="toggleComponent">
-        {{ buttonText }}
+        <img src="../../assets/images/graph.png" alt="Quitter" >
+
       </button> <!-- Toggle Button -->
 
-      <button @click="quit">
-        Quitter
+      <button @click="quit" class="image-btn">
+        <img src="../../assets/images/quit.png" alt="Quitter" >
+        
       </button>
-      <button @click="reset">
-        Réinitialiser
+      <button @click="reset" class="image-btn">
+        <img src="../../assets/images/reset.png" alt="Réinitialiser" >
       </button>
-      <button @click="triggerSave">
-        Sauvegarder
+      <button @click="triggerSave" class="image-btn">
+        <img src="../../assets/images/save.png" alt="Sauvegarder" >
+        
       </button>
-      <button @click="return_to_home">
-        Retour
+      <button @click="return_to_home" class="image-btn">
+        <img src="../../assets/images/return.png" alt="Retour" >
+        
       </button>
 
   </div>
@@ -50,9 +56,6 @@ export default {
       this.$bus.emit('toggle')
       this.showMatrice = !this.showMatrice; // Toggle the state
     },
-
-
-    
 
     triggerSave() {
       this.SaveAsCsv();
@@ -174,27 +177,23 @@ getCurrentDate() {
   background-color: #2A2A2A;
   color: #ECF0F1;
   padding: 10px;
-  padding-top: 2px;
-  border-radius: 0 0 5px 5px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 5px;
   z-index: 9999;
 }
 
-
-.sidebar button {
-  padding: 0px 15px;
-  background-color: #11212c; /* Couleur du bouton */
-  color: white;
+.image-btn {
+  background: none;
   border: none;
-  border-radius: 3px;
+  padding: 0;
   cursor: pointer;
-  transition: background-color 0.3s ease; /* Transition pour le survol */
-  font-size: 1.1em; /* Taille de la police du bouton */
 }
 
+.image-btn img {
+  width: 25px;
+  height: 25px;
+}
 .sidebar button:hover {
   background-color: #0b1b25; /* Couleur au survol */
 }
@@ -207,9 +206,7 @@ getCurrentDate() {
   }
 }
 
-.buttons {
-  display: flex;
-}
+
 
 
 
