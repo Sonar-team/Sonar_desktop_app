@@ -1,6 +1,6 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Sonar-team_Sonar_desktop_app&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Sonar-team_Sonar_desktop_app)
 
-[![Release](https://codecov.io/github/Sonar-teamSonar_desktop_app/util/livraison.png)](https://github.com/Sonar-team/Sonar_desktop_app/releases)
+[![Release](https://github.com/Sonar-team/Sonar_desktop_app/blob/main/util/livraison.png)](https://github.com/Sonar-team/Sonar_desktop_app/releases)
 
 [![codecov](https://codecov.io/github/Sonar-team/Sonar_desktop_app/graph/badge.svg?token=UC4N2TUFRN)](https://codecov.io/github/Sonar-team/Sonar_desktop_app)
 
