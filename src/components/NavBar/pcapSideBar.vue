@@ -27,6 +27,8 @@
 import { save } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { exit } from '@tauri-apps/plugin-process';
+import { getCurrentDate, padZero } from '../../utils/time';
+
 
 export default {
   data() {
@@ -73,7 +75,7 @@ export default {
           extensions: ['csv']
         }],
         title: 'Sauvegarder la matrice de flux',
-        defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.csv' // Set the default file name here
+        defaultPath: getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.csv' // Set the default file name here
       
       }).then((response) => 
         invoke('save_packets_to_csv', { file_path: response })
@@ -90,7 +92,7 @@ export default {
             extensions: ['xlsx']
           }],
           title: 'Sauvegarder la matrice de flux',
-          defaultPath: this.getCurrentDate() + '_' + this.niveauConfidentialite + '_' + this.installationName + '.xlsx'
+          defaultPath: getCurrentDate() + '_' + this.niveauConfidentialite + '_' + this.installationName + '.xlsx'
         });
 
         if (response) {
@@ -106,17 +108,6 @@ export default {
         console.error("Erreur lors de la sauvegarde en xlsx:", error);
         throw error; // Relancer l'erreur pour la gestion dans quit()
       }
-    },
-    getCurrentDate() {
-      // Fonction pour obtenir la date actuelle
-      const now = new Date();
-      // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
-      return formattedDate;
-    },
-    padZero(value) {
-      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
-      return value < 10 ? `0${value}` : value;
     },
     async quit() {
       try {

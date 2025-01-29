@@ -1,12 +1,15 @@
 <!-- YourVueComponent.vue -->
 <script >
   import { VNetworkGraph, VEdgeLabel } from "v-network-graph"
-  import { invoke } from '@tauri-apps/api/core';
-  import { save } from '@tauri-apps/plugin-dialog';
   import * as vNG from "v-network-graph"
   import {ForceLayout} from "v-network-graph/lib/force-layout"
   import html2canvas from 'html2canvas';
+
+  import { invoke } from '@tauri-apps/api/core';
+  import { save } from '@tauri-apps/plugin-dialog';
   import { info, error } from '@tauri-apps/plugin-log';
+
+  import { getCurrentDate, padZero } from '../../utils/time';
 
   export default {
   components: {
@@ -123,19 +126,7 @@
         console.error("Error fetching packet infos:", error);
       }
     },
-    getCurrentDate() {
-      // Fonction pour obtenir la date actuelle
-      const now = new Date();
-      // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
-      info("current date: ",formattedDate)
 
-      return formattedDate;
-    },
-    padZero(value) {
-      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
-      return value < 10 ? `0${value}` : value;
-    },
 
     async downloadSvg() {
       if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
@@ -147,7 +138,7 @@
               name: 'SVG File',
               extensions: ['svg']
             }],
-            defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.svg' // Set the default file name here
+            defaultPath: getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.svg' // Set the default file name here
           }).then((filePath) => {
             if (filePath) {
               // Use Tauri's fs API to write the file
@@ -171,7 +162,7 @@
           name: 'PNG File',
           extensions: ['png']
         }],
-        defaultPath: this.getCurrentDate() + '_' + this.niveauConfidentialite + '_' + this.installationName + '.png' // Nom de fichier par défaut
+        defaultPath: getCurrentDate() + '_' + this.niveauConfidentialite + '_' + this.installationName + '.png' // Nom de fichier par défaut
       });
 
       if (filePath) {

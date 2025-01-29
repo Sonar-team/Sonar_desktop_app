@@ -12,6 +12,8 @@
 </template>
 
 <script>
+  import { getCurrentDate, padZero } from '../../utils/time';
+
   export default {
     data() {
       return {
@@ -41,7 +43,7 @@
           let minutes = elapsed.getUTCMinutes();
           let seconds = elapsed.getUTCSeconds();
 
-          this.tempsEcoule = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
+          this.tempsEcoule = `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
         }, 1000);
       },
       updateTempsReleve() {
@@ -74,7 +76,7 @@
           return; // Important pour sortir de la fonction
         }
 
-        this.tempsReleve = `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
+        this.tempsReleve = `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
       }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
     },
     calculateEndTime() {
@@ -136,18 +138,14 @@
       minutes = Math.floor((tempsTotalEnSecondes % 3600) / 60);
       secondes = tempsTotalEnSecondes % 60;
 
-      this.tempsReleve = `${this.padZero(heures)}:${this.padZero(minutes)}:${this.padZero(secondes)}`;
+      this.tempsReleve = `${padZero(heures)}:${padZero(minutes)}:${padZero(secondes)}`;
       this.calculateEndTime();
-    },
-    padZero(value) {
-      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
-      return value < 10 ? `0${value}` : value;
     },
 
     formatTime(date) {
-      const hours = this.padZero(date.getHours());
-      const minutes = this.padZero(date.getMinutes());
-      const seconds = this.padZero(date.getSeconds());
+      const hours = padZero(date.getHours());
+      const minutes = padZero(date.getMinutes());
+      const seconds = padZero(date.getSeconds());
       return `${hours}:${minutes}:${seconds}`;
     },
     },

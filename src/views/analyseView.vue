@@ -27,6 +27,7 @@ import BottomLong from '../components/AnalyseView/BottomLong.vue';
 import Matrice from '../components/AnalyseView/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue'; // Import the other component
 import StatusBar from '../components/NavBar/StatusBar.vue'; // Import du composant
+import { getCurrentDate, padZero } from '../utils/time';
 
 import { invoke } from '@tauri-apps/api/core'
 
@@ -71,13 +72,8 @@ export default {
       // Fonction pour obtenir la date actuelle
       const now = new Date();
       // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${now.getFullYear()}${this.padZero(now.getDate())}${this.padZero(now.getMonth() + 1)}`;
+      const formattedDate = `${now.getFullYear()}${padZero(now.getDate())}${padZero(now.getMonth() + 1)}`;
       return formattedDate;
-    },
-
-    padZero(value) {
-      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
-      return value < 10 ? `0${value}` : value;
     },
 
   },
