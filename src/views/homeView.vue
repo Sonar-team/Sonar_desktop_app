@@ -23,7 +23,7 @@ const toggleView = () => {
     </transition>
 
     <div class="footer">
-      <span>Version 1.14.1 - Bêta:</span>
+      <span>Version 2.0.0 - Bêta:</span>
       <span>© 2024 A-GPL - MARINE NATIONALE - SSF TOULON - ERDT CYBER - CYPRIEN AVICO</span>
     </div>
   </div>

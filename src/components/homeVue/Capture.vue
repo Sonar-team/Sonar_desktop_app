@@ -55,7 +55,7 @@ export default {
   data() {
     return {
       netInterfaces: [],
-      confidentialités: ["NP","DR","TS","S"],
+      confidentialités: ["NP","DR","TS","S","S-SF"],
       selectedNetInterface: '',
       confidentialite: 'NP',
       installationName: '',

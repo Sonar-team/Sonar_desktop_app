@@ -68,14 +68,6 @@ export default {
           });
     },
 
-    getCurrentDate() {
-      // Fonction pour obtenir la date actuelle
-      const now = new Date();
-      // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${now.getFullYear()}${padZero(now.getDate())}${padZero(now.getMonth() + 1)}`;
-      return formattedDate;
-    },
-
   },
   mounted() {
     invoke('get_selected_interface', { interface_name: this.$route.params.netInterface })

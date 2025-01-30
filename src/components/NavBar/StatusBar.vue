@@ -78,76 +78,75 @@
 
         this.tempsReleve = `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
       }, 1000); // Mise à jour chaque seconde (1000 millisecondes)
-    },
-    calculateEndTime() {
-      if (!this.heureDepart) {
-        console.warn("heureDepart is empty. Skipping calculation of endTime.");
-        return;
-      }
+      },
+      calculateEndTime() {
+        if (!this.heureDepart) {
+          console.warn("heureDepart is empty. Skipping calculation of endTime.");
+          return;
+        }
 
-      try {
-        console.log("heureDepart initial value: ", this.heureDepart);
+        try {
+          console.log("heureDepart initial value: ", this.heureDepart);
 
-        let startTime;
+          let startTime;
 
-        if (typeof this.heureDepart === 'string') {
-          // Si heureDepart est sous la forme "HH:mm:ss", ajoutez la date actuelle
-          if (this.heureDepart.match(/^\d{2}:\d{2}:\d{2}$/)) {
-            const currentDate = new Date().toISOString().split('T')[0]; // Obtenez la date d'aujourd'hui (YYYY-MM-DD)
-            this.heureDepart = `${currentDate}T${this.heureDepart}`; // Combinez la date et l'heure
+          if (typeof this.heureDepart === 'string') {
+            // Si heureDepart est sous la forme "HH:mm:ss", ajoutez la date actuelle
+            if (this.heureDepart.match(/^\d{2}:\d{2}:\d{2}$/)) {
+              const currentDate = new Date().toISOString().split('T')[0]; // Obtenez la date d'aujourd'hui (YYYY-MM-DD)
+              this.heureDepart = `${currentDate}T${this.heureDepart}`; // Combinez la date et l'heure
+            }
+            startTime = new Date(this.heureDepart); // Convertir la chaîne en objet Date
+          } else if (this.heureDepart instanceof Date) {
+            // Si c'est déjà un objet Date, l'utiliser directement
+            startTime = this.heureDepart;
+          } else {
+            throw new Error('Invalid start time format');
           }
-          startTime = new Date(this.heureDepart); // Convertir la chaîne en objet Date
-        } else if (this.heureDepart instanceof Date) {
-          // Si c'est déjà un objet Date, l'utiliser directement
-          startTime = this.heureDepart;
-        } else {
-          throw new Error('Invalid start time format');
+
+          console.log("Parsed startTime: ", startTime);
+
+          if (isNaN(startTime.getTime())) {
+            throw new Error('Invalid start time');
+          }
+
+          const [hours, minutes, seconds] = this.tempsReleve.split(':').map(Number);
+          const durationInSeconds = hours * 3600 + minutes * 60 + seconds;
+          const endTime = new Date(startTime.getTime() + durationInSeconds * 1000);
+
+          // Format heureDepart et heureFin
+          this.heureDepart = this.formatTime(startTime);
+          this.heureFin = this.formatTime(endTime);
+
+          console.log("Calculated heureFin: ", this.heureFin);
+
+
+        } catch (error) {
+          console.error("Error in calculateEndTime:", error);
+        }
+      },
+      ajusterTemps(ajustement) {
+        let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
+        let tempsTotalEnSecondes = heures * 3600 + minutes * 60 + secondes + ajustement;
+
+        // S'assurer que le temps ne passe pas en dessous de 0
+        if (tempsTotalEnSecondes < 0) {
+          tempsTotalEnSecondes = 0;
         }
 
-        console.log("Parsed startTime: ", startTime);
+        heures = Math.floor(tempsTotalEnSecondes / 3600);
+        minutes = Math.floor((tempsTotalEnSecondes % 3600) / 60);
+        secondes = tempsTotalEnSecondes % 60;
 
-        if (isNaN(startTime.getTime())) {
-          throw new Error('Invalid start time');
-        }
-
-        const [hours, minutes, seconds] = this.tempsReleve.split(':').map(Number);
-        const durationInSeconds = hours * 3600 + minutes * 60 + seconds;
-        const endTime = new Date(startTime.getTime() + durationInSeconds * 1000);
-
-        // Format heureDepart et heureFin
-        this.heureDepart = this.formatTime(startTime);
-        this.heureFin = this.formatTime(endTime);
-
-        console.log("Calculated heureFin: ", this.heureFin);
-
-
-      } catch (error) {
-        console.error("Error in calculateEndTime:", error);
-      }
-    },
-    ajusterTemps(ajustement) {
-      let [heures, minutes, secondes] = this.tempsReleve.split(':').map(Number);
-      let tempsTotalEnSecondes = heures * 3600 + minutes * 60 + secondes + ajustement;
-
-      // S'assurer que le temps ne passe pas en dessous de 0
-      if (tempsTotalEnSecondes < 0) {
-        tempsTotalEnSecondes = 0;
-      }
-
-      heures = Math.floor(tempsTotalEnSecondes / 3600);
-      minutes = Math.floor((tempsTotalEnSecondes % 3600) / 60);
-      secondes = tempsTotalEnSecondes % 60;
-
-      this.tempsReleve = `${padZero(heures)}:${padZero(minutes)}:${padZero(secondes)}`;
-      this.calculateEndTime();
-    },
-
-    formatTime(date) {
-      const hours = padZero(date.getHours());
-      const minutes = padZero(date.getMinutes());
-      const seconds = padZero(date.getSeconds());
-      return `${hours}:${minutes}:${seconds}`;
-    },
+        this.tempsReleve = `${padZero(heures)}:${padZero(minutes)}:${padZero(secondes)}`;
+        this.calculateEndTime();
+      },
+      formatTime(date) {
+        const hours = padZero(date.getHours());
+        const minutes = padZero(date.getMinutes());
+        const seconds = padZero(date.getSeconds());
+        return `${hours}:${minutes}:${seconds}`;
+      },
     },
     mounted() {
       this.$bus.on('increment-event', this.incrementTramesRecues);
@@ -155,6 +154,7 @@
 
       this.heureDepart = this.$route.params.currentTime || new Date().toISOString();
       this.tempsReleve = this.$route.params.time || '00:00:00'; // Valeur par défaut si pas de temps relevé
+      
       this.calculateEndTime(); // Calculer l'heure de fin lors du montage
       this.updateTempsReleve();
       this.updateTempsEcoule(); // Calculer le temps écoulé
