@@ -55,4 +55,4 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
-          retryAttempts: 3  # Ajout d'un retry en cas d'échec
+          retryAttempts: 3 # Ajout d'un retry en cas d'échec

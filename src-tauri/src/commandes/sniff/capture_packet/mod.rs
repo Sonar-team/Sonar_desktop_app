@@ -152,7 +152,7 @@ fn capture_packets(
             Err(e) => {
                 println!(
                         "Une erreur s'est produite lors de la création du canal de liaison de données: {}. 
-                        sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar-desktop-app",
+                        sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar",
                         &e
                     );
                 exit(1);

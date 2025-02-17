@@ -2,49 +2,48 @@ name: Rust CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   rust_checks:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Setup Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        components: rustfmt, clippy
-        override: true
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: rustfmt, clippy
+          override: true
 
-    - name: Check formatting with cargo fmt
-      run: cargo fmt -- --check
-      working-directory: ./src-tauri
+      - name: Check formatting with cargo fmt
+        run: cargo fmt -- --check
+        working-directory: ./src-tauri
 
-    - name: Run tests
-      run: cargo test --verbose
-      working-directory: ./src-tauri
+      - name: Run tests
+        run: cargo test --verbose
+        working-directory: ./src-tauri
 
-    - name: Audit dependencies with cargo audit
-      uses: actions-rs/audit-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Audit dependencies with cargo audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Check licenses and configurations with cargo deny
-      uses: EmbarkStudios/cargo-deny-action@v1
-      
+      - name: Check licenses and configurations with cargo deny
+        uses: EmbarkStudios/cargo-deny-action@v1
 
-    - name: Check for outdated dependencies with cargo outdated
-      uses: actions-rs/cargo@v1
-      with:
-        command: outdated
+      - name: Check for outdated dependencies with cargo outdated
+        uses: actions-rs/cargo@v1
+        with:
+          command: outdated
 
-    - name: Check unused dependencies with cargo udeps
-      uses: actions-rs/cargo@v1
-      with:
-        command: udeps
-        args: --all-targets
+      - name: Check unused dependencies with cargo udeps
+        uses: actions-rs/cargo@v1
+        with:
+          command: udeps
+          args: --all-targets

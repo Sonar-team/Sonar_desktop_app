@@ -193,8 +193,8 @@ export default {
 }
 
 .image-btn img {
-  width: 25px;
-  height: 25px;
+  width: 50px;
+  height: 50px;
 }
 .sidebar button:hover {
   background-color: #0b1b25; /* Couleur au survol */

@@ -83,49 +83,51 @@ export default {
   height: 720px; /* Adjust height as needed */
   width: 100%; /* Container takes full width */
 }
-.v-data-table >>> .v-data-table__wrapper {
+
+.v-data-table :deep(.v-data-table__wrapper) {
   background-color: #2A2A2A;
 }
 
-.v-data-table >>> .v-data-table-header {
+.v-data-table :deep(.v-data-table-header) {
   background-color: #1B1B1B;
 }
 
-.v-data-table >>> .v-data-table-header tr th {
+.v-data-table :deep(.v-data-table-header tr th) {
   color: #ECF0F1;
   font-weight: bold;
 }
 
-.v-data-table >>> .v-data-table-header tr th.sortable:hover {
+.v-data-table :deep(.v-data-table-header tr th.sortable:hover) {
   background-color: #11212C !important;
 }
 
-.v-data-table >>> tbody tr:nth-of-type(even) {
+.v-data-table :deep(tbody tr:nth-of-type(even)) {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-.v-data-table >>> tbody tr:not(:last-child) {
+.v-data-table :deep(tbody tr:not(:last-child)) {
   border-bottom: none !important;
 }
 
-.v-data-table >>> td {
+.v-data-table :deep(td) {
   color: rgb(132, 195, 247);
   font-family: 'Courier New', Courier, monospace;
   font-size: 14px;
 }
 
 /* Pour le défilement horizontal */
-.v-data-table >>> .v-data-table__wrapper::-webkit-scrollbar {
+.v-data-table :deep(.v-data-table__wrapper)::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.v-data-table >>> .v-data-table__wrapper::-webkit-scrollbar-thumb {
+.v-data-table :deep(.v-data-table__wrapper)::-webkit-scrollbar-thumb {
   background-color: #11212C;
   border-radius: 4px;
 }
 
-.v-data-table >>> .v-data-table__wrapper::-webkit-scrollbar-track {
+.v-data-table :deep(.v-data-table__wrapper)::-webkit-scrollbar-track {
   background-color: #1B1B1B;
 }
 </style>
+

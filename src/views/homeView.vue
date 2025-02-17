@@ -14,7 +14,7 @@ const toggleView = () => {
 <template>
   <div class="container">
     <div class="tab" @click="toggleView">
-      <button>{{ showCapture ? "Afficher FromPcap" : "Afficher Capture" }}</button>
+      <button>{{ showCapture ? "Ouvrir un Pcap" : "Afficher Capture" }}</button>
     </div>
 
     <transition name="fade">
@@ -24,7 +24,7 @@ const toggleView = () => {
 
     <div class="footer">
       <span>Version 2.0.0 - Bêta:</span>
-      <span>© 2024 A-GPL - MARINE NATIONALE - SSF TOULON - ERDT CYBER - CYPRIEN AVICO</span>
+      <!-- <span>© 2024 A-GPL - MARINE NATIONALE - SSF TOULON - ERDT CYBER - CYPRIEN AVICO</span> -->
     </div>
   </div>
 </template>

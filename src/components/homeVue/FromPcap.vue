@@ -6,9 +6,9 @@
   
       <div class="center-container">
         <div class="file-group">
-          <label for="packetFiles">Packet File:</label>
-          <button class="btn" @click="addFiles">Add File(s)</button>
-          <button class="btn btn-clear" @click="clearFiles">Clear</button>
+          <label for="packetFiles"></label>
+          <button class="btn" @click="addFiles">Ajouter des fichiers</button>
+          <button class="btn btn-clear" @click="clearFiles">Effacer</button>
         </div>
         
         <ul class="file-list">
