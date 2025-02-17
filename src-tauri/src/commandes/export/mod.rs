@@ -1,5 +1,5 @@
-use std::sync::{Arc, Mutex};
 use crate::tauri_state::{MyError, SonarState};
+use std::sync::{Arc, Mutex};
 
 #[tauri::command(async, rename_all = "snake_case")]
 pub fn save_packets_to_csv(

@@ -1,5 +1,3 @@
-
-
 fn main() {
     tauri_build::build();
 
@@ -10,6 +8,4 @@ fn main() {
         println!("cargo:rustc-link-lib=static=Packet");
         println!("cargo:rustc-link-lib=static=wpcap");
     }
-
 }
-

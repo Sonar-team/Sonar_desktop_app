@@ -14,9 +14,8 @@ pub mod sniff;
 
 pub mod get_graph_data;
 
-pub mod import;
 pub mod export;
-
+pub mod import;
 
 #[tauri::command(async)]
 pub fn get_matrice(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<String, String> {
@@ -45,8 +44,6 @@ pub fn get_graph_state(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<Strin
 
     locked_state.get_graph_data()
 }
-
-
 
 #[tauri::command(async)]
 pub fn toggle_ipv6_filter(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
@@ -78,5 +75,3 @@ pub fn reset(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
     locked_state.reset();
     Ok(())
 }
-
-

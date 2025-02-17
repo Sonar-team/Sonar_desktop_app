@@ -12,7 +12,6 @@ use rust_xlsxwriter::Workbook;
 use serde::Serialize;
 use thiserror::Error;
 
-
 use crate::commandes::get_graph_data::GraphBuilder;
 use crate::commandes::sniff::capture_packet::layer_2_infos::layer_3_infos::ip_type::IpType;
 use crate::commandes::sniff::capture_packet::layer_2_infos::layer_3_infos::Layer3Infos;

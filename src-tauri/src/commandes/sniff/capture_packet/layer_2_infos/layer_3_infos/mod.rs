@@ -342,10 +342,10 @@ pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
             // General case for all other EtherTypes
             println!(
                 "Layer 3 - Unknown or unsupported packet type: {}, payload: {:?}, source: {}, eth_type {}, eth_type_nbr: {}",
-                ethernet_packet.get_ethertype(), 
-                ethernet_packet.payload(), 
-                ethernet_packet.get_source(), 
-                ethernet_packet.get_ethertype().to_string(), 
+                ethernet_packet.get_ethertype(),
+                ethernet_packet.payload(),
+                ethernet_packet.get_source(),
+                ethernet_packet.get_ethertype().to_string(),
                 ethernet_packet.get_ethertype().0
             );
             Default::default()

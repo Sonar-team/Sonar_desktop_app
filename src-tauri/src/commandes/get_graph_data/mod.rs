@@ -1,5 +1,6 @@
 use crate::{
-    commandes::sniff::capture_packet::layer_2_infos::layer_3_infos::ip_type::IpType, tauri_state::PacketKey,
+    commandes::sniff::capture_packet::layer_2_infos::layer_3_infos::ip_type::IpType,
+    tauri_state::PacketKey,
 };
 
 use serde::Serialize;
@@ -85,6 +86,20 @@ impl GraphBuilder {
                 || (e.source == *target_ip && e.target == *source_ip && e.label == *label)
         })
     }
+
+    /// Adds an edge to the graph based on packet information if the source and target IPs are
+    /// either private or public IPv4 addresses.
+    ///
+    /// This function first checks if both the source and target IP addresses in the packet
+    /// are either private or public. If so, it determines the color for each node based on
+    /// their IP type. It ensures that nodes for the source and target IPs are present in the
+    /// graph, creating them if necessary. An edge is then added between these nodes if it
+    /// does not already exist, using the layer 3 protocol as the label.
+    ///
+    /// # Arguments
+    ///
+    /// * `packet` - A reference to `PacketKey` containing information about the network packet,
+    ///   including source and target IP addresses, their types, and MAC addresses.
 
     pub fn add_edge(&mut self, packet: &PacketKey) {
         if let (Some(source_ip), Some(target_ip)) = (
