@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use csv::Writer;
-use log::error;
+use log::{error, info};
 use rust_xlsxwriter::Workbook;
 use serde::Serialize;
 use thiserror::Error;
@@ -116,14 +116,14 @@ impl SonarState {
     pub fn toggle_actif(&self) {
         let mut filter_state = self.actif;
         filter_state = !filter_state; // Inverse l'état actuel
-        println!("filter_state: {:?}", filter_state);
+        info!("filter_state: {:?}", filter_state);
     }
 
     // Méthode pour basculer l'état de `filter_ipv6`
     pub fn toggle_filter_ipv6(&self) {
         let mut filter_state = self.filter_ipv6;
         filter_state = !filter_state; // Inverse l'état actuel
-        println!("filter_state: {:?}", filter_state);
+        info!("filter_state: {:?}", filter_state);
     }
 
     // Getter method for matrice

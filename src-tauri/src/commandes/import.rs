@@ -3,13 +3,14 @@ use pcap::Capture;
 use pnet::packet::ethernet::EthernetPacket;
 use std::sync::{Arc, Mutex};
 use tauri::{ipc::InvokeError, State};
+use log::info;
 
 #[tauri::command(async)]
 pub fn convert_from_pcap_list(
     state: State<'_, Arc<Mutex<SonarState>>>,
     pcaps: Vec<String>,
 ) -> Result<u32, PcapProcessingError> {
-    println!("Liste des fichiers pcap : {:?}", pcaps);
+    info!("Liste des fichiers pcap : {:?}", pcaps);
 
     let mut total_count = 0;
 

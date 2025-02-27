@@ -5,7 +5,7 @@ pub use get_interfaces::get_interfaces_tab; // Réexporte la fonction
 
 pub mod get_hostname_to_string;
 pub use get_hostname_to_string::get_hostname_to_string;
-use log::info;
+use log::{error, info};
 use tauri::State;
 
 use crate::tauri_state::SonarState;
@@ -30,7 +30,7 @@ pub fn get_matrice(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<String, S
             Ok(data)
         }
         Err(e) => {
-            println!("Error: {}", e); // Utilisez log::error pour les erreurs
+            error!("Error: {}", e); // Utilisez log::error pour les erreurs
             Err(e)
         }
     }

@@ -146,11 +146,11 @@ fn capture_packets(
         let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
             Ok(Ethernet(tx, rx)) => (tx, rx),
             Ok(_) => {
-                println!("Type de canal non géré : {}", &interface);
+                error!("Type de canal non géré : {}", &interface);
                 continue;
             }
             Err(e) => {
-                println!(
+                error!(
                         "Une erreur s'est produite lors de la création du canal de liaison de données: {}. 
                         sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar",
                         &e
@@ -160,9 +160,9 @@ fn capture_packets(
         };
         let main_window = app.get_webview_window("main").unwrap();
 
-        println!(
+        info!(
             "Démarrage du thread de lecture de paquets sur l'interface :{}",
-            &interface
+            &interface.name
         );
 
         loop {
@@ -190,16 +190,16 @@ fn capture_packets(
                         }
                         // afficher dans le composant bottom long
                         if let Err(err) = main_window.emit("frame", &packet_info) {
-                            println!("Failed to emit event: {}", err);
+                            error!("Failed to emit event: {}", err);
                         }
                         // envoyer au thread qui met a jour la matrice
                         if let Err(err) = tx.send(packet_info) {
-                            println!("Failed to send packet to queue: {}", err);
+                            error!("Failed to send packet to queue: {}", err);
                         }
                     }
                 }
                 Err(e) => {
-                    println!("Connexion perdu. redemarrage: {}", e);
+                    error!("Connexion perdu. redemarrage: {}", e);
                     thread::sleep(Duration::from_secs(6));
                     break;
                 }

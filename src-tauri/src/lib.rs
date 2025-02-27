@@ -18,8 +18,8 @@ use tauri_state::SonarState;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
     tauri::Builder::default()
-        .plugin(tauri_plugin_process::init())
         // liste des plugins
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
@@ -29,7 +29,7 @@ pub fn run() -> Result<(), tauri::Error> {
         .manage(SonarState::new())
         // Actions au lancement
         .setup(|_app| {
-            println!("{}", print_banner());
+            info!("{}", print_banner());
             get_os();
             Ok(())
         })

@@ -48,6 +48,7 @@
 //! Les handlers de paquets sont des structures définies dans ce module et implémentent le trait [`HandlePacket`](trait.HandlePacket.html)
 //! pour chaque type de paquet pris en charge.
 
+use log::info;
 use pnet::packet::{
     arp::ArpPacket,
     ethernet::{EtherTypes, EthernetPacket},
@@ -340,7 +341,7 @@ pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
         // EtherTypes::FlowControl => todo!("Handle Flow Control packets"),
         _ => {
             // General case for all other EtherTypes
-            println!(
+            info!(
                 "Layer 3 - Unknown or unsupported packet type: {}, payload: {:?}, source: {}, eth_type {}, eth_type_nbr: {}",
                 ethernet_packet.get_ethertype(),
                 ethernet_packet.payload(),

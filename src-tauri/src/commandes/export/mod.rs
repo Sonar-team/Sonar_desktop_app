@@ -29,7 +29,7 @@ pub fn write_file(path: String, contents: String) -> Result<(), String> {
 }
 
 use base64::{engine::general_purpose, Engine};
-use log::info;
+use log::{error, info};
 use resvg::tiny_skia::Pixmap;
 use tauri::{command, State};
 use usvg::{Options, Transform, Tree};
@@ -43,7 +43,7 @@ pub fn write_png_file(path: String, contents: String) -> Result<(), String> {
     let decoded_data = match general_purpose::STANDARD.decode(contents) {
         Ok(data) => data,
         Err(e) => {
-            println!("Erreur lors du décodage Base64 : {}", e);
+            error!("Erreur lors du décodage Base64 : {}", e);
             return Err(format!("Erreur lors du décodage Base64 : {}", e));
         }
     };
@@ -55,7 +55,7 @@ pub fn write_png_file(path: String, contents: String) -> Result<(), String> {
             Ok(())
         }
         Err(e) => {
-            println!("Erreur lors de l'écriture du fichier : {}", e);
+            error!("Erreur lors de l'écriture du fichier : {}", e);
             Err(format!("Erreur lors de l'écriture du fichier : {}", e))
         }
     }
