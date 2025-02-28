@@ -24,11 +24,11 @@ pub fn run() -> Result<(), tauri::Error> {
         .plugin(tauri_plugin_log::Builder::new()
             // .level(log::LevelFilter::Error)
 
-            // .target(tauri_plugin_log::Target::new(
-            //     tauri_plugin_log::TargetKind::LogDir {
-            //     file_name: Some("logs".to_string()),
-            //     },
-            // ))
+            .target(tauri_plugin_log::Target::new(
+                tauri_plugin_log::TargetKind::LogDir {
+                file_name: Some("sonar".to_string()),
+                },
+            ))
             .build())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
