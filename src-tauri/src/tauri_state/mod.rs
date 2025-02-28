@@ -127,9 +127,9 @@ impl SonarState {
     }
 
     // Getter method for matrice
-    pub fn get_matrice(&self) -> &HashMap<PacketKey, PacketStats> {
-        &self.matrice
-    }
+    // pub fn get_matrice(&self) -> &HashMap<PacketKey, PacketStats> {
+    //     &self.matrice
+    // }
 
     // Met à jour `matrice` avec un nouveau paquet
     pub fn update_matrice_with_packet(&mut self, new_packet: PacketInfos) {
@@ -353,9 +353,9 @@ pub enum MyError {
     #[error("Erreur CSV : {0}")]
     CsvError(String),
 
-    /// Erreur de conversion UTF-8 avec un message explicatif.
-    #[error("Erreur de conversion UTF-8 : {0}")]
-    Utf8Error(String),
+    // /// Erreur de conversion UTF-8 avec un message explicatif.
+    // #[error("Erreur de conversion UTF-8 : {0}")]
+    // Utf8Error(String),
 
     /// Erreur lors de la manipulation de fichiers Excel avec un message explicatif.
     #[error("Erreur Excel : {0}")]

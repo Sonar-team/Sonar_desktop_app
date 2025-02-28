@@ -10,10 +10,8 @@
     "shell:allow-open",
     "dialog:default",
     "fs:default",
-    "log:default",
+    "log:allow-log",
     "os:default",
-    "dialog:default",
-    "process:default",
-    "log:default"
+    "process:default"
   ]
 }
