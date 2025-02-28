@@ -356,7 +356,6 @@ pub enum MyError {
     // /// Erreur de conversion UTF-8 avec un message explicatif.
     // #[error("Erreur de conversion UTF-8 : {0}")]
     // Utf8Error(String),
-
     /// Erreur lors de la manipulation de fichiers Excel avec un message explicatif.
     #[error("Erreur Excel : {0}")]
     XlsxError(String),

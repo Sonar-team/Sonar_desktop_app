@@ -1,9 +1,9 @@
 use crate::tauri_state::SonarState;
+use log::info;
 use pcap::Capture;
 use pnet::packet::ethernet::EthernetPacket;
 use std::sync::{Arc, Mutex};
 use tauri::{ipc::InvokeError, State};
-use log::info;
 
 #[tauri::command(async)]
 pub fn convert_from_pcap_list(
