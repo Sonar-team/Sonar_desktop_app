@@ -21,8 +21,8 @@ pub fn run() -> Result<(), tauri::Error> {
         // liste des plugins
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_log::Builder::new()
-                
+        .plugin(
+            tauri_plugin_log::Builder::new()
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll) // Empêche la suppression des logs
                 .max_file_size(500_000) // Définit une taille maximale de fichier
                 .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
