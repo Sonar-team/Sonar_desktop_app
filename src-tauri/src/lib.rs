@@ -35,7 +35,7 @@ pub fn run() -> Result<(), tauri::Error> {
                 ))
                 .target(tauri_plugin_log::Target::new(
                     tauri_plugin_log::TargetKind::Stdout,
-                  ))
+                ))
                 .build(),
         )
         .plugin(tauri_plugin_fs::init())
