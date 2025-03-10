@@ -23,6 +23,7 @@ pub fn run() -> Result<(), tauri::Error> {
         .plugin(tauri_plugin_os::init())
         .plugin(
             tauri_plugin_log::Builder::new()
+                .clear_targets()
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll) // Empêche la suppression des logs
                 .max_file_size(500_000) // Définit une taille maximale de fichier
                 .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
@@ -32,9 +33,9 @@ pub fn run() -> Result<(), tauri::Error> {
                         file_name: Some("sonar".to_string()),
                     },
                 ))
-                // .target(tauri_plugin_log::Target::new(
-                //     tauri_plugin_log::TargetKind::Stdout,
-                //   ))
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::Stdout,
+                  ))
                 .build(),
         )
         .plugin(tauri_plugin_fs::init())
