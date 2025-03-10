@@ -27,7 +27,7 @@
 import { save } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { exit } from '@tauri-apps/plugin-process';
-import { getCurrentDate, padZero } from '../../utils/time';
+import { getCurrentDate } from '../../utils/time';
 
 
 export default {

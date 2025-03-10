@@ -29,10 +29,10 @@
 </template>
   
 <script>
-import { save, message } from '@tauri-apps/plugin-dialog';
+import { save } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core'
 import { desktopDir } from '@tauri-apps/api/path';
-import { exit, relaunch } from '@tauri-apps/plugin-process';
+import { exit } from '@tauri-apps/plugin-process';
 import { info, error } from '@tauri-apps/plugin-log';
 
 

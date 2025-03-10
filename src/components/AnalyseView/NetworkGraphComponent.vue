@@ -7,9 +7,9 @@
 
   import { invoke } from '@tauri-apps/api/core';
   import { save } from '@tauri-apps/plugin-dialog';
-  import { info, error } from '@tauri-apps/plugin-log';
+  import { info } from '@tauri-apps/plugin-log';
 
-  import { getCurrentDate, padZero } from '../../utils/time';
+  import { getCurrentDate } from '../../utils/time';
 
   export default {
   components: {

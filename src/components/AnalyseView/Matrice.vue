@@ -55,7 +55,6 @@ export default {
       try {
         const jsonString = await invoke('get_matrice', {});
         this.packets = JSON.parse(jsonString);
-        // console.log("packets", this.packets);
         this.$bus.emit('update-packet-count', this.packets.length);
       } catch (error) {
         console.error("Error fetching packet infos:", error);

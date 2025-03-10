@@ -7,7 +7,6 @@
       :time="$route.params.time"
       :currentTime="$route.params.currentTime"
     />
-    <!-- <h3 class="titre">Matrice de flux : {{ getCurrentDate()+ '_' + niveauConfidentialite  + '_' + installationName }}</h3> -->
     <div class="content">
       <NetworkGraphComponent v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <Matrice v-else /> <!-- Show NetworkGraphComponent otherwise -->
@@ -27,7 +26,6 @@ import BottomLong from '../components/AnalyseView/BottomLong.vue';
 import Matrice from '../components/AnalyseView/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue'; // Import the other component
 import StatusBar from '../components/NavBar/StatusBar.vue'; // Import du composant
-import { getCurrentDate, padZero } from '../utils/time';
 
 import { invoke } from '@tauri-apps/api/core'
 

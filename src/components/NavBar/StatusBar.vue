@@ -12,7 +12,7 @@
 </template>
 
 <script>
-  import { getCurrentDate, padZero } from '../../utils/time';
+  import { padZero } from '../../utils/time';
 
   export default {
     data() {
