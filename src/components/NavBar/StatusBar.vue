@@ -34,7 +34,7 @@
       updateTempsEcoule() {
         const startTime = new Date();
         
-        const intervalId = setInterval(() => {
+        setInterval(() => {
           const now = new Date();
           let elapsed = new Date(now - startTime);
 
