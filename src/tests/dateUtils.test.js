@@ -16,9 +16,8 @@ Deno.test("padZero ne modifie pas les nombres supérieurs ou égaux à 10", () =
 Deno.test("getCurrentDate retourne la date actuelle au format YYYYMMDD", () => {
   const mockDate = new Date(2024, 2, 10); // Mars (2 car indexé à 0), 10
   globalThis.Date = class extends Date {
-    constructor() {
-      super();
-      return mockDate;
+    constructor(...args) {
+      super(...(args.length ? args : [mockDate.getTime()])); // ✅ Appel correct de super()
     }
   };
 
