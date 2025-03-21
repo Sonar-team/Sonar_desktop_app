@@ -1,11 +1,11 @@
 <template>
   <div class="container">
-    <pcapSideBar />
+    
     <div class="content">
-      <h3 class="titre">Matrice de flux : {{ getCurrentDate() + '_' + niveauConfidentialite + '_' + installationName }}</h3>
-      <p class="info">Nombre total de paquets lus : {{ totalPackets }}</p> <!-- Affichage du nombre total de paquets -->
+      <TopBar />
       <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
       <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
+      <StatusBar />
     </div>
   </div>
 </template>
@@ -14,8 +14,11 @@
 import BottomLong from '../components/AnalyseView/BottomLong.vue';
 import Matrice from '../components/AnalyseView/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue';
-import pcapSideBar from '../components/NavBar/pcapSideBar.vue';
+import TopBar from '../components/NavBar/TopBar.vue';
+import StatusBar from '../components/NavBar/StatusBar.vue'; // Import du composant
+
 import { invoke } from '@tauri-apps/api/core';
+
 
 export default {
   props: {
@@ -40,22 +43,13 @@ export default {
     BottomLong,
     Matrice,
     NetworkGraphComponent,
-    pcapSideBar
+    TopBar,
+    StatusBar
   },
   methods: {
     toggleComponent() {
       this.showMatrice = !this.showMatrice; // Toggle the state
     },
-
-    getCurrentDate() {
-      const now = new Date();
-      const formattedDate = `${now.getFullYear()}${this.padZero(now.getDate())}${this.padZero(now.getMonth() + 1)}`;
-      return formattedDate;
-    },
-
-    padZero(value) {
-      return value < 10 ? `0${value}` : value;
-    }
   },
   mounted() {
     this.localPcapList = [...this.pcapList]; // Copie de la prop dans la donnée locale
