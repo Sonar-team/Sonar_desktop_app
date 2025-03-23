@@ -14,13 +14,12 @@
 //! Ce module contient également des tests pour la fonction `update_matrice_with_packet` et la fonction `capture_packets`.
 
 use log::{error, info};
-use pnet::datalink::Channel::Ethernet;
-use pnet::datalink::{self, NetworkInterface};
-use pnet::packet::ethernet::EthernetPacket;
-use std::process::exit;
+use pcap::{Capture, Device};
+mod error;
+use std::sync::mpsc::Sender;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
-use std::time::Duration;
+
 
 use tauri::{AppHandle, Emitter, Manager, State};
 pub mod layer_2_infos;
@@ -44,7 +43,7 @@ use self::layer_2_infos::PacketInfos;
 /// * `app` - Handle vers l'application Tauri, utilisé pour interagir avec l'interface utilisateur.
 /// * `state` - État global de l'application, contenant les données capturées.
 
-pub fn all_interfaces(app: AppHandle) {
+pub fn all_interfaces(app: AppHandle) -> Result<(), error::CaptureError>{
     let mut handles = vec![];
     let (tx, rx) = mpsc::channel::<PacketInfos>();
 
@@ -67,7 +66,8 @@ pub fn all_interfaces(app: AppHandle) {
     });
 
     // threads qui ecoute les trames
-    let interfaces = datalink::interfaces();
+    
+    let interfaces = pcap::Device::list()?;
     for interface in interfaces {
         // Vérifier si le nom de l'interface n'est pas 'lo' avant de créer un thread
         if interface.name != "lo" {
@@ -86,6 +86,7 @@ pub fn all_interfaces(app: AppHandle) {
             Err(e) => eprintln!("A thread panicked: {:?}", e),
         }
     }
+    Ok(())
 }
 
 /// Capture le trafic réseau sur une interface spécifique.
@@ -117,7 +118,7 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str) {
     let interface_names_match = |iface: &NetworkInterface| {
         iface.name == interface || iface.mac.unwrap_or_default().to_string() == interface
     };
-    let interfaces = datalink::interfaces();
+    let interfaces = pcap::Device::list()?;
 
     let captured_interface = match interfaces.into_iter().find(interface_names_match) {
         Some(interface) => interface,
@@ -138,71 +139,67 @@ pub fn one_interface(app: tauri::AppHandle, interface: &str) {
 /// * `tx` - Canal de transmission pour envoyer les informations de paquets capturés.
 
 fn capture_packets(
-    app: tauri::AppHandle,
-    interface: datalink::NetworkInterface,
-    tx: mpsc::Sender<PacketInfos>,
+    app: AppHandle,
+    interface: Device,
+    tx: Sender<PacketInfos>,
 ) {
+    let main_window = app.get_webview_window("main").unwrap();
+
+    info!(
+        "Démarrage de la capture avec pcap sur : {}",
+        &interface.name
+    );
+
+    let mut cap = match Capture::from_device(interface)
+        .unwrap()
+        .immediate_mode(true)
+        .promisc(true)
+        .open()
+    {
+        Ok(c) => c,
+        Err(e) => {
+            error!("Erreur lors de l'ouverture de l'interface : {}", e);
+            return;
+        }
+    };
+
     loop {
-        let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
-            Ok(Ethernet(tx, rx)) => (tx, rx),
-            Ok(_) => {
-                error!("Type de canal non géré : {}", &interface);
-                continue;
-            }
-            Err(e) => {
-                error!(
-                        "Une erreur s'est produite lors de la création du canal de liaison de données: {}. 
-                        sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar",
-                        &e
-                    );
-                exit(1);
-            }
-        };
-        let main_window = app.get_webview_window("main").unwrap();
+        match cap.next_packet() {
+            Ok(packet) => {
+                if let Some(ethernet_packet) =
+                    pnet::packet::ethernet::EthernetPacket::new(packet.data)
+                {
+                    let packet_info = PacketInfos::new(&ethernet_packet);
 
-        info!(
-            "Démarrage du thread de lecture de paquets sur l'interface :{}",
-            &interface.name
-        );
+                    // Check état actif
+                    let state: State<'_, Arc<Mutex<SonarState>>> = app.state();
+                    let state_guard = state.lock().unwrap();
+                    if !state_guard.actif {
+                        continue;
+                    }
 
-        loop {
-            match rx.next() {
-                Ok(packet) => {
-                    // println!("      packet: {:?} ", packet);
-                    if let Some(ethernet_packet) = EthernetPacket::new(packet) {
-                        // println!("      ethernet_packet: {:?} ", ethernet_packet);
-                        let packet_info = PacketInfos::new(&interface.name, &ethernet_packet);
-                        //println!("      capture_packet: {:?}", &packet_info);
-                        let state: State<'_, Arc<Mutex<SonarState>>> = app.state(); // Acquire a lock
-                        let state_guard = state.lock().unwrap();
+                    // IPv6 filtering
+                    if packet_info.l_3_protocol == "Ipv6" && !state_guard.filter_ipv6 {
+                        continue;
+                    }
 
-                        let active_state = state_guard.actif;
-                        if !active_state {
-                            continue;
-                        }
+                    drop(state_guard); // Libère le lock
 
-                        //println!("{packet_info}");
-                        if packet_info.l_3_protocol == "Ipv6" {
-                            let filter_ipv6 = state_guard.filter_ipv6;
-                            if !filter_ipv6 {
-                                continue;
-                            }
-                        }
-                        // afficher dans le composant bottom long
-                        if let Err(err) = main_window.emit("frame", &packet_info) {
-                            error!("Failed to emit event: {}", err);
-                        }
-                        // envoyer au thread qui met a jour la matrice
-                        if let Err(err) = tx.send(packet_info) {
-                            error!("Failed to send packet to queue: {}", err);
-                        }
+                    // Envoi à l’interface
+                    if let Err(err) = main_window.emit("frame", &packet_info) {
+                        error!("Erreur émission Tauri: {}", err);
+                    }
+
+                    // Envoi à la matrice
+                    if let Err(err) = tx.send(packet_info) {
+                        error!("Erreur envoi dans la file: {}", err);
                     }
                 }
-                Err(e) => {
-                    error!("Connexion perdu. redemarrage: {}", e);
-                    thread::sleep(Duration::from_secs(6));
-                    break;
-                }
+            }
+            Err(e) => {
+                error!("Erreur de capture: {}", e);
+                std::thread::sleep(std::time::Duration::from_secs(6));
+                continue;
             }
         }
     }

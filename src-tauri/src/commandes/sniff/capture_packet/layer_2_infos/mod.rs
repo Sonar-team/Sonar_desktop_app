@@ -27,8 +27,6 @@ pub struct PacketInfos {
     pub mac_address_source: String,
     /// Adresse MAC de destination du paquet.
     pub mac_address_destination: String,
-    /// Interface réseau par laquelle le paquet a été reçu ou sera envoyé.
-    pub interface: String,
     /// Protocole de couche 3 utilisé dans le paquet.
     pub l_3_protocol: String,
     /// Informations détaillées de la couche 3 (par exemple, adresses IP, protocole).
@@ -44,11 +42,11 @@ impl PacketInfos {
     ///
     /// * `interface_name` - Une chaîne de caractères qui contient le nom de l'interface réseau.
     /// * `ethernet_packet` - Une référence au paquet Ethernet à partir duquel extraire les informations.
-    pub fn new(interface_name: &String, ethernet_packet: &EthernetPacket<'_>) -> PacketInfos {
+    pub fn new(ethernet_packet: &EthernetPacket<'_>) -> PacketInfos {
         PacketInfos {
             mac_address_source: ethernet_packet.get_source().to_string(),
             mac_address_destination: ethernet_packet.get_destination().to_string(),
-            interface: interface_name.to_string(),
+
             l_3_protocol: ethernet_packet.get_ethertype().to_string(),
             layer_3_infos: get_layer_3_infos(ethernet_packet),
             packet_size: ethernet_packet.packet().len(), // Initialize packet size with total packet length
