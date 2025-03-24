@@ -71,15 +71,9 @@ pub fn get_layer_4_infos(proto: IpNextHeaderProtocol, data: &[u8]) -> Layer4Info
     match proto {
         IpNextHeaderProtocols::Tcp => TcpHandler::get_layer_4_infos(data),
         IpNextHeaderProtocols::Udp => UdpHandler::get_layer_4_infos(data),
-        IpNextHeaderProtocols::Icmp => Default::default(),
-        IpNextHeaderProtocols::Icmpv6 => Default::default(),
-        IpNextHeaderProtocols::Igmp => Default::default(),
-        IpNextHeaderProtocols::Ipv6Frag => Default::default(),
-        IpNextHeaderProtocols::Hopopt => Default::default(),
-        // IpNextHeaderProtocols::Visa => Default::default(),
         _ => {
             // General case for all other EtherTypes
-            info!("layer 4 - Unknown or unsupported packet type: {}", proto);
+            
             Default::default()
         }
     }

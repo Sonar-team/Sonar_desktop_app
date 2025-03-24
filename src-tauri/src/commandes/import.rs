@@ -18,7 +18,7 @@ pub fn convert_from_pcap_list(
         // Ajoute le nombre de paquets lus pour chaque fichier `.pcap`
         total_count += handle_pcap_file(&file_path, &state)?;
     }
-
+    println!("Nombre total de paquets lus: {}", total_count);
     Ok(total_count)
 }
 
@@ -34,7 +34,7 @@ fn handle_pcap_file(
     // Itérer sur les paquets, les afficher en hexadécimal et mettre à jour la matrice
     while let Ok(packet) = cap.next_packet() {
         packet_count += 1; // Incrémente le compteur pour chaque paquet
-
+        println!("Paquet {}:", packet_count);
         // print_packet_in_hex(&packet.data);
         if let Some(ethernet_packet) = EthernetPacket::new(&packet.data) {
             // Créez une instance de PacketInfos pour le paquet actuel
@@ -43,6 +43,7 @@ fn handle_pcap_file(
             // Mettre à jour l'état de SonarState avec ce paquet
             let mut sonar_state = state.lock().unwrap();
             sonar_state.update_matrice_with_packet(packet_info);
+            println!("Matrice size: {}",sonar_state.matrice.len());
         }
     }
 

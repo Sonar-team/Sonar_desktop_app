@@ -18,7 +18,7 @@ import TopBar from '../components/NavBar/TopBar.vue';
 import StatusBar from '../components/NavBar/StatusBar.vue'; // Import du composant
 
 import { invoke } from '@tauri-apps/api/core';
-
+import { info } from '@tauri-apps/plugin-log';
 
 export default {
   props: {
@@ -53,12 +53,12 @@ export default {
   },
   mounted() {
     this.localPcapList = [...this.pcapList]; // Copie de la prop dans la donnée locale
-    console.log(this.localPcapList);
+    info(`localPcapList: ${this.localPcapList}`); // Affiche this.localPcapList ${this.localPcapList;
 
     invoke('convert_from_pcap_list', { pcaps: this.localPcapList })
       .then(response => {
         this.totalPackets = response; // Définit totalPackets avec la réponse renvoyée
-        console.log(`Total packets read: ${this.totalPackets}`);
+        info(`Total packets read: ${this.totalPackets}`);
       })
       .catch(error => console.error(error));
 
