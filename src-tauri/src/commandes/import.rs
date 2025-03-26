@@ -43,7 +43,7 @@ fn handle_pcap_file(
             // Mettre à jour l'état de SonarState avec ce paquet
             let mut sonar_state = state.lock().unwrap();
             sonar_state.update_matrice_with_packet(packet_info);
-            println!("Matrice size: {}",sonar_state.matrice.len());
+            println!("Matrice size: {}", sonar_state.matrice.len());
         }
     }
 

@@ -156,23 +156,33 @@ impl SonarState {
     /// cmd_save_packets_to_csv(String::from("paquets.csv"), state);
     /// ```
     pub fn cmd_save_packets_to_csv(&self, file_path: String) -> Result<(), MyError> {
-        let data = self.matrice.clone();
-
-        // Create a CSV writer
-        let mut wtr = Writer::from_path(file_path).map_err(|e| MyError::IoError(e.to_string()))?;
-
-        // Serialize the entire vector to the CSV
-        for (packet_key, stats) in data.iter() {
+        let mut wtr = Writer::from_path(&file_path)
+            .map_err(|e| {
+                error!("Erreur lors de l'ouverture du fichier CSV {} : {}", file_path, e);
+                MyError::IoError(e.to_string())
+            })?;
+    
+        for (packet_key, stats) in self.matrice.iter() {
+            let packet_count = stats.count;
+            println!("Packet count: {}", packet_count);
             let packet_csv = PacketInfosFlaten::from_packet_key_and_stats(packet_key, stats);
             wtr.serialize(packet_csv)
-                .map_err(|e| MyError::CsvError(e.to_string()))?;
+                .map_err(|e| {
+                    error!("Erreur de sérialisation CSV : {:?}", e);
+                    MyError::CsvError(e.to_string())
+                })?;
         }
-
-        // Flush to ensure all data is written to the file
-        wtr.flush().map_err(|e| MyError::IoError(e.to_string()))?;
-
+    
+        wtr.flush()
+            .map_err(|e| {
+                error!("Erreur lors du flush du fichier CSV : {}", e);
+                MyError::IoError(e.to_string())
+            })?;
+    
+        info!("Export CSV terminé avec succès : {}", file_path);
         Ok(())
     }
+    
     /// Fonction pour enregistrer les paquets vers un fichier Excel.
     ///
     /// # Arguments

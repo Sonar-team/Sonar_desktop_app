@@ -1,7 +1,4 @@
-use log::info;
-// use pnet::packet::icmp::IcmpPacket;
-// use pnet::packet::icmpv6::Icmpv6Packet;
-//use pnet::packet::dhcp::DhcpPacket;
+
 use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
 use pnet::packet::tcp::TcpPacket;
 use pnet::packet::udp::UdpPacket;
@@ -73,7 +70,7 @@ pub fn get_layer_4_infos(proto: IpNextHeaderProtocol, data: &[u8]) -> Layer4Info
         IpNextHeaderProtocols::Udp => UdpHandler::get_layer_4_infos(data),
         _ => {
             // General case for all other EtherTypes
-            
+
             Default::default()
         }
     }
