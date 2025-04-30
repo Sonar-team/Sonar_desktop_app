@@ -266,36 +266,38 @@
 
 <style scoped>
 .graph-container {
-  position: fixed; /* Establishes a relative positioning context */
-  bottom: 225px; /* Ajustez cette valeur selon la hauteur de votre barre de statut */
-  left: 0;
-  right: 0;
-  height: 735px; /* Adjust height as needed */
-  width: 100%; /* Container takes full width */
-}
+  position: relative; /* <-- indispensable */
 
-.graph {
-  height: 100%; /* Graph takes full height of the container */
-  border: 2px solid #3a3a3a;
-  border-radius: 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  text-align: center;
-  color: #FFF;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
   background-color: #1a1a1a;
 }
 
+.graph {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #3a3a3a;
+  border-radius: 10px;
+  text-align: center;
+  color: #FFF;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
 .download-button {
-  position: absolute; /* Absolutely positioned relative to its nearest positioned ancestor */
-  top: 10px; /* Distance from the top of the container */
-  left: 10px; /* Distance from the left of the container */
+  position: absolute;
+  top: 10px;
+  left: 10px;
   background-color: #0b1b25;
   color: #fff;
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  z-index: 10; /* Ensure the button is above the graph */
+  z-index: 10;
 }
 
 .context-menu {
@@ -304,12 +306,13 @@
   width: 180px;
   background-color: #efefef;
   padding: 10px;
-  position: fixed;
+  position: absolute;
   visibility: hidden;
   font-size: 12px;
   border: 1px solid #aaaaaa;
   box-shadow: 2px 2px 2px #e7bf0c;
 }
+
 
 .contenue {
   color: #0b1b25;

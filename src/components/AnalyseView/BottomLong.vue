@@ -94,12 +94,9 @@ export default {
 
 <style scoped>
 .trames {
-  position: fixed;
-  bottom: 25px; /* Ajustez cette valeur selon la hauteur de votre barre de statut */
-  left: 0;
-  right: 0;
-  height: 120px;
-  width: 100%;
+  display: block;
+  height: 220px; /* par exemple */
+  flex-shrink: 0;
   background-color: #000; /* Black background */
   font-family: 'Courier New', Courier, monospace; /* Monospace font for terminal look */
 }

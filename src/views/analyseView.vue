@@ -7,18 +7,20 @@
       :time="$route.params.time"
       :currentTime="$route.params.currentTime"
     />
+
     <div class="content">
-      <NetworkGraphComponent v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
-      <Matrice v-else /> <!-- Show NetworkGraphComponent otherwise -->
+      <NetworkGraphComponent v-if="showMatrice" />
+      <Matrice v-else />
     </div>
 
     <BottomLong  />
     <StatusBar 
       :time="$route.params.time"
       :currentTime="$route.params.currentTime"
-      />
+    />
   </div>
 </template>
+
 
 <script>
 import Topbar from '../components/NavBar/TopBar.vue';
@@ -83,6 +85,16 @@ export default {
 .container {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
+
+.content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 
 </style>

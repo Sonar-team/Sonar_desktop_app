@@ -172,9 +172,9 @@ export default {
 <style scoped>
 
 .sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: relative; /* ou juste supprime la ligne */
+  top: unset;
+  left: unset;
   width: 100%;
   background-color: #2A2A2A;
   color: #ECF0F1;

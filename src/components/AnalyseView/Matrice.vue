@@ -4,7 +4,7 @@
       :headers="headers"
       :items="processedPackets"
       item-key="id"
-      items-per-page="20"
+      items-per-page="16"
       density="compact"
     >
     </v-data-table>
@@ -75,16 +75,17 @@ export default {
 <style scoped>
 .v-data-table {
   background-color: transparent !important;
-  position: fixed; /* Establishes a relative positioning context */
-  bottom: 225px; /* Ajustez cette valeur selon la hauteur de votre barre de statut */
-  left: 0;
-  right: 0;
-  height: 720px; /* Adjust height as needed */
-  width: 100%; /* Container takes full width */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
 }
 
 .v-data-table :deep(.v-data-table__wrapper) {
   background-color: #2A2A2A;
+  background-color: #2A2A2A;
+  overflow-y: auto;
 }
 
 .v-data-table :deep(.v-data-table-header) {
