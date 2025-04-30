@@ -2,9 +2,9 @@ name: "publish"
 
 on:
   push:
-    branches:
-      - main
-
+    tags:
+      - "app-v*"
+      
 jobs:
   publish-tauri:
     permissions:
@@ -45,14 +45,31 @@ jobs:
       - name: install frontend dependencies
         run: deno install # change this to npm, pnpm, or bun if necessary.
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Build and package with Tauri
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: app-v__VERSION__
-          releaseName: "App v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
+          tagName: ${{ github.ref_name }}
+          releaseName: "App ${{ github.ref_name }}"
+          releaseBody: "Voir les assets ci-dessous pour télécharger cette version."
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
-          retryAttempts: 3 # Ajout d'un retry en cas d'échec
+
+      - name: Generate SHA256 for all assets
+        run: |
+          for file in src-tauri/target/release/bundle/**/*.{exe,msi,dmg,AppImage,deb,rpm,app.tar.gz}; do
+            if [ -f "$file" ]; then
+              sha256sum "$file" > "$file.sha256"
+            fi
+          done
+
+      - name: Upload binaries and hashes to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            src-tauri/target/release/bundle/**/*.{exe,msi,dmg,AppImage,deb,rpm,app.tar.gz}
+            src-tauri/target/release/bundle/**/*.{sha256}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
