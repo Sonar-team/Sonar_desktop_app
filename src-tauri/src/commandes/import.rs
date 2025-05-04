@@ -1,4 +1,4 @@
-use crate::tauri_state::SonarState;
+use crate::tauri_state::{capture::capture_handle::layer_2_infos::PacketInfos, matrice::SonarState};
 use log::info;
 use pcap::Capture;
 use pnet::packet::ethernet::EthernetPacket;
@@ -42,7 +42,7 @@ fn handle_pcap_file(
 
             // Mettre à jour l'état de SonarState avec ce paquet
             let mut sonar_state = state.lock().unwrap();
-            sonar_state.update_matrice_with_packet(packet_info);
+            sonar_state.update_matrice_with_packet(&packet_info);
             println!("Matrice size: {}", sonar_state.matrice.len());
         }
     }
@@ -52,7 +52,7 @@ fn handle_pcap_file(
 
 use thiserror::Error;
 
-use super::sniff::capture_packet::layer_2_infos::PacketInfos;
+
 
 #[derive(Error, Debug)]
 pub enum PcapProcessingError {

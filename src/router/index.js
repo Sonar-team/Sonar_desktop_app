@@ -8,16 +8,10 @@ const router = createRouter({
   routes: [
     {
       path: "/", // URL path for HomeComponent
-      name: "home",
-      component: HomeComponent,
-    },
-    {
-      path:
-        "/analyse/:netInterface/:confidentialite/:installationName/:time/:currentTime",
       name: "Analyse",
       component: AnalyseView,
-      props: true,
     },
+
     {
       path: "/readPcap",
       name: "ReadPcap",
