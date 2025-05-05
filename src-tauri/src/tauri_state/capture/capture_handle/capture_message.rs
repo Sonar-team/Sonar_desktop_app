@@ -35,6 +35,16 @@ pub struct PacketMinimal {
     pub data: Vec<u8>,
 }
 
+#[cfg(target_os = "windows")]
+#[derive(Debug, Clone, Serialize)]
+pub struct PacketMinimal {
+    pub ts_sec: i32,
+    pub ts_usec: i32,
+    pub caplen: u32,
+    pub len: u32,
+    pub data: Vec<u8>,
+}
+
 #[derive(Clone, Serialize)]
 pub struct StatsPayload {
     pub received: u32,
