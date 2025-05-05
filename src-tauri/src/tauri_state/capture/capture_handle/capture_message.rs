@@ -26,6 +26,7 @@ impl PacketCodec for Codec {
     }
 }
 
+#[cfg(target_os = "linux")]
 #[derive(Debug, Clone, Serialize)]
 pub struct PacketMinimal {
     pub ts_sec: i64,
