@@ -1,100 +1,64 @@
 <template>
-  <div class="container">
-    <Topbar
-      :netInterface="$route.params.netInterface"
-      :confidentialite="$route.params.confidentialite"
-      :installationName="$route.params.installationName"
-      :time="$route.params.time"
-      :currentTime="$route.params.currentTime"
-    />
+  <div class="page-container">
+    <TopBar @toggle-config="toggleConfig" />
+    <ConfigPanel v-if="showConfig" @update:visible="(val: any) => showConfig = val" />
 
     <div class="content">
-      <NetworkGraphComponent v-if="showMatrice" />
+      <NetworkGraphComponent v-if="!captureStore.showMatrice" />
       <Matrice v-else />
     </div>
 
-    <BottomLong  />
-    <StatusBar 
-      :time="$route.params.time"
-      :currentTime="$route.params.currentTime"
-    />
+    <BottomLong />
+    <StatusBar />
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue';
+import { useCaptureStore } from '../store/capture';
 
-<script>
-import Topbar from '../components/NavBar/TopBar.vue';
-import BottomLong from '../components/AnalyseView/BottomLong.vue';
 import Matrice from '../components/AnalyseView/Matrice.vue';
-import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue'; // Import the other component
-import StatusBar from '../components/NavBar/StatusBar.vue'; // Import du composant
+import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue';
+import TopBar from '../components/NavBar/TopBar.vue';
+import StatusBar from '../components/NavBar/status-bar/StatusBar.vue';
+import ConfigPanel from '../components/AnalyseView/ConfigPanel.vue';
+import BottomLong from '../components/AnalyseView/BottomLong.vue';
 
-import { invoke } from '@tauri-apps/api/core'
-
-export default {
+export default defineComponent({
+  name: 'MainView',
+  components: {
+    TopBar,
+    ConfigPanel,
+    NetworkGraphComponent,
+    Matrice,
+    BottomLong,
+    StatusBar
+  },
   data() {
     return {
-      tempsReleve: '',
-      tramesRecues: 0,
-      tramesEnregistrees: 0,
-      niveauConfidentialite: '',
-      installationName:'',
-      showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
-
+      showConfig: false,
     };
   },
-  components: {
-    BottomLong,
-    Matrice,
-    Topbar,
-    NetworkGraphComponent,
-    StatusBar,
-    
+  computed: {
+    captureStore() {
+      return useCaptureStore();
+    }
   },
   methods: {
-    toggleComponent() {
-      this.showMatrice = !this.showMatrice; // Toggle the state
-    },
-    togglePause() {
-      console.log("toggle pause")
-      invoke('toggle_pause')
-          .then((message) => {
-              console.log("Réponse reçue de 'toggle_pause':", message);
-              return message; // S'assure que le message est renvoyé pour une utilisation future
-          })
-          .catch((error) => {
-              console.error("Erreur lors de l'invocation de 'toggle_pause':", error);
-              throw error; // Permet de propager l'erreur pour une gestion plus avancée si nécessaire
-          });
-    },
-
-  },
-  mounted() {
-    invoke('get_selected_interface', { interface_name: this.$route.params.netInterface })
-    this.$bus.on('toggle',this.toggleComponent)
-    this.installationName = this.$route.params.installationName;
-    this.niveauConfidentialite = this.$route.params.confidentialite;
-  },
-  beforeMount() {
-    this.$bus.off('toggle',this.toggleComponent)
+    toggleConfig() {
+      this.showConfig = !this.showConfig;
+    }
   }
-}
+});
 </script>
 
+
 <style scoped>
-.container {
+.page-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  padding-top: 70px;
+  box-sizing: border-box;
   overflow: hidden;
 }
-
-.content {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-
 </style>

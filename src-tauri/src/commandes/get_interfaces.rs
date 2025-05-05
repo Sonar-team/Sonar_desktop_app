@@ -40,7 +40,7 @@ pub fn get_interfaces_tab() -> Vec<String> {
     info!("Récupération des interfaces réseau");
 
     // Mappe les interfaces à leurs noms ou adresses MAC, les collectant dans un vecteur.
-    let mut names: Vec<String> = interfaces
+    let names: Vec<String> = interfaces
         .iter()
         .map(|iface| {
             // Retourne le nom de l'interface sous Linux.
@@ -51,7 +51,7 @@ pub fn get_interfaces_tab() -> Vec<String> {
             // Retourne l'adresse MAC de l'interface sous Windows.
             #[cfg(target_os = "windows")]
             {
-                iface.mac.unwrap_or_default().to_string()
+                iface.name.clone()
             }
             // Retourne l'adresse MAC de l'interface pour d'autres systèmes.
             #[cfg(not(any(target_os = "linux", target_os = "windows")))]
@@ -60,10 +60,6 @@ pub fn get_interfaces_tab() -> Vec<String> {
             }
         })
         .collect();
-
-    // Ajoute une chaîne représentant l'option de sélection de toutes les interfaces.
-    let all = String::from("Toutes les interfaces");
-    names.push(all);
 
     // Retourne le vecteur de noms d'interface.
     names

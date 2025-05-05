@@ -15,7 +15,7 @@ import BottomLong from '../components/AnalyseView/BottomLong.vue';
 import Matrice from '../components/AnalyseView/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue';
 import TopBar from '../components/NavBar/TopBar.vue';
-import StatusBar from '../components/NavBar/StatusBar.vue'; // Import du composant
+import StatusBar from '../components/NavBar/status-bar/StatusBar.vue';
 
 import { invoke } from '@tauri-apps/api/core';
 import { info } from '@tauri-apps/plugin-log';

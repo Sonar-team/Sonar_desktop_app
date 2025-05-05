@@ -267,7 +267,7 @@
 <style scoped>
 .graph-container {
   position: relative; /* <-- indispensable */
-
+height: 735px;
   flex: 1;
   display: flex;
   flex-direction: column;

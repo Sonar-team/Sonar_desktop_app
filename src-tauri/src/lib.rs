@@ -1,4 +1,6 @@
 mod commandes;
+use std::sync::{Arc, Mutex};
+
 use colored::Colorize;
 use commandes::{
     export::{
@@ -6,14 +8,14 @@ use commandes::{
     },
     get_graph_state, get_hostname_to_string, get_interfaces_tab, get_matrice,
     import::convert_from_pcap_list,
+    net_capture::{config_capture, get_config_capture, start_capture, stop_capture},
     reset,
-    sniff::get_selected_interface,
-    toggle_ipv6_filter, toggle_pause,
 };
+mod errors;
 mod tauri_state;
-
+mod utils;
 use log::info;
-use tauri_state::SonarState;
+use tauri_state::{capture::CaptureState, matrice::SonarState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
@@ -43,6 +45,7 @@ pub fn run() -> Result<(), tauri::Error> {
         .plugin(tauri_plugin_shell::init())
         // State
         .manage(SonarState::new())
+        .manage(Arc::new(Mutex::new(CaptureState::new())))
         // Actions au lancement
         .setup(|_app| {
             info!("{}", print_banner());
@@ -52,15 +55,16 @@ pub fn run() -> Result<(), tauri::Error> {
         // Commandes
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
-            get_selected_interface,
+            start_capture,
+            stop_capture,
+            config_capture,
+            get_config_capture,
             save_packets_to_csv,
             save_packets_to_excel,
             get_matrice,
             get_graph_state,
             write_file,
             write_file_as_png,
-            toggle_ipv6_filter,
-            toggle_pause,
             get_hostname_to_string,
             reset,
             convert_from_pcap_list,

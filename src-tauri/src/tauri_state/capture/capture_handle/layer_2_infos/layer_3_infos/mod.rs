@@ -59,7 +59,7 @@ use pnet::packet::{
 };
 
 pub mod ip_type;
-mod layer_4_infos;
+pub mod layer_4_infos;
 
 use ip_type::IpType;
 use layer_4_infos::{get_layer_4_infos, Layer4Infos};

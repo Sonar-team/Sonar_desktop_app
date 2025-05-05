@@ -38,6 +38,7 @@ parse_layer7 = "0.3.5"
 parse_mrp_packet = { git = "https://github.com/Akmot9/parse_mrp_packet"}
 profinet_rt = {git = "https://github.com/Akmot9/profinet_prasing_rs"}
 pcap = "2.2.0"
+crossbeam = "0.8.4"
 
 whoami = "1.6.0"
 time = "0.3.39"

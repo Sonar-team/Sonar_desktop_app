@@ -1,4 +1,3 @@
-use crate::tauri_state::{MyError, SonarState};
 use std::sync::{Arc, Mutex};
 
 #[tauri::command(async, rename_all = "snake_case")]
@@ -33,6 +32,8 @@ use log::{error, info};
 use resvg::tiny_skia::Pixmap;
 use tauri::{command, State};
 use usvg::{Options, Transform, Tree};
+
+use crate::tauri_state::matrice::{MyError, SonarState};
 #[tauri::command(async)]
 pub fn write_png_file(path: String, contents: String) -> Result<(), String> {
     // Journal pour vérifier le chemin et la taille des données

@@ -26,5 +26,6 @@ dist-ssr
 *.xlsx
 *.png
 *.svg
+!src/assets/*.svg
 
 src-tauri/Cargo.lock

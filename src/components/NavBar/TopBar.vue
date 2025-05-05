@@ -1,69 +1,70 @@
 <template>
-    <div class="sidebar">    
-      <button class="image-btn">
-        <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" >   
-      </button>
-      <button class="image-btn" 
-        @click="toggleComponent">
-        <img src="../../assets/images/graph.png" alt="Quitter" >
+  <div class="top-bar">
+    <button class="image-btn" @click="start" title="Démarrer" :disabled="isRunning">
+      <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
+    </button>
 
-      </button> <!-- Toggle Button -->
+    <button class="image-btn" @click="stop" title="Arrêter" :disabled="!isRunning">
+      <img src="/src/assets/stop.svg" alt="Stop" class="icon-img" />
+    </button>
 
-      <button @click="quit" class="image-btn">
-        <img src="../../assets/images/quit.png" alt="Quitter" >
-        
-      </button>
-      <button @click="reset" class="image-btn">
-        <img src="../../assets/images/reset.png" alt="Réinitialiser" >
-      </button>
-      <button @click="triggerSave" class="image-btn">
-        <img src="../../assets/images/save.png" alt="Sauvegarder" >
-        
-      </button>
-      <button @click="return_to_home" class="image-btn">
-        <img src="../../assets/images/return.png" alt="Retour" >
-        
-      </button>
-
+    <button class="image-btn"  title="Config" @click="handleConfigClick">
+      <img src="/src/assets/config.svg" alt="Config" class="icon-img" />
+    </button>
+    
+    <button class="image-btn" @click="reset" title="Réinitialiser">🔄</button>
+    <button class="image-btn" @click="triggerSave" title="Sauvegarder">💾</button>
+    <button class="image-btn" title="Ouvrir">📄</button>
+    <button class="image-btn" @click="toggleComponent" :title="buttonText">📊</button>
+    <button class="image-btn" @click="quit" title="Quitter">❌</button>
   </div>
 </template>
-  
-<script>
-import { save } from '@tauri-apps/plugin-dialog';
-import { invoke } from '@tauri-apps/api/core'
-import { desktopDir } from '@tauri-apps/api/path';
+
+<script lang="ts">
+import { invoke } from '@tauri-apps/api/core';
 import { exit } from '@tauri-apps/plugin-process';
 import { info, error } from '@tauri-apps/plugin-log';
+import { save } from '@tauri-apps/plugin-dialog';
 
+import { displayCaptureError } from '../../errors/capture'; // Gestion des erreurs propre
+
+import { useCaptureStore } from '../../store/capture';
 
 export default {
+  name: "TopBar",
+  emits: ['toggle-config'],
+
+  computed: {
+    buttonText(): string {
+      return this.captureStore.showMatrice ? 'Graphique' : 'Matrice';
+    },
+
+    captureStore() {
+      return useCaptureStore();
+    },
+    isRunning(): boolean {
+      return this.captureStore.isRunning;
+    },
+
+    
+  },
   data() {
     return {
-      selectedFormat: 'xlsx',
-
-      niveauConfidentialite: '',
-      installationName:'',
-
       showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
     };
   },
-  computed: {
-    buttonText() {
-      // Change le texte du bouton en fonction de la vue actuellement affichée
-      return this.showMatrice ? 'Graphique' : 'Matrice';
-    }
-  },
   methods: {
-    toggleComponent() {
-      this.$bus.emit('toggle')
-      this.showMatrice = !this.showMatrice; // Toggle the state
+    getCurrentDate() {
+      // Fonction pour obtenir la date actuelle
+      const now = new Date();
+      // Formattez la date en DD/MM/YYYY
+      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
+      info("current date: ",formattedDate)
+      return formattedDate;
     },
-
-    triggerSave() {
-      info("trigger save")
-      this.SaveAsCsv();
-      this.SaveAsXlsx();
-      
+    padZero(value) {
+      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
+      return value < 10 ? `0${value}` : value;
     },
     async SaveAsCsv() {
       info("Save as csv")
@@ -73,7 +74,7 @@ export default {
           extensions: ['csv']
         }],
         title: 'Sauvegarder la matrice de flux',
-        defaultPath: this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.csv' // Set the default file name here
+        defaultPath: this.getCurrentDate()+ '_' + '.csv' // Set the default file name here
       
       }).then((response) => 
         invoke('save_packets_to_csv', { file_path: response })
@@ -90,7 +91,7 @@ export default {
             extensions: ['xlsx']
           }],
           title: 'Sauvegarder la matrice de flux',
-          defaultPath: this.getCurrentDate() + '_' + this.niveauConfidentialite + '_' + this.installationName + '.xlsx'
+          defaultPath: this.getCurrentDate() + '.xlsx'
         });
 
         if (response) {
@@ -107,109 +108,100 @@ export default {
         throw error; // Relancer l'erreur pour la gestion dans quit()
       }
     },
-    async SaveToDesktop() {
-      console.log("save to desktop")
-      const dir = await this.getDesktopDirPath();
-      const dirPath = dir + this.getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName + '.csv';
-      if (dirPath) {
-        invoke('save_packets_to_csv', { file_path: dirPath })
-      } else {
-        console.error("Failed to get desktop directory path");
-      }
-    },
-    async getDesktopDirPath() {
-      try {
-        const dir = await desktopDir();
-        console.log("App Data Directory: ", dir);
-        return dir;
-      } catch (error) {
-        console.error("Error getting app data directory: ", error);
-      }
-    },
-    async quit() {
-      try {
-        info("close resquested")
-        await exit(1); // Appeler exit après la sauvegarde
-      } catch (error) {
-        error("Erreur lors de la sauvegarde ou de la fermeture de l'application:", error);
-      }
+    async triggerSave() {
+      info("trigger save")
+      this.SaveAsCsv();
+      this.SaveAsXlsx();
     },
     async reset() {
       this.tramesRecues = 0
       invoke('reset')    
     },
-    async return_to_home() {
-      this.tramesRecues = 0
-      invoke('reset')    
+    toggleComponent() {
+      this.captureStore.toggleView();
+      this.$bus.emit('toggle'); // Si tu utilises toujours le bus
     },
 
-    getCurrentDate() {
-      // Fonction pour obtenir la date actuelle
-      const now = new Date();
-      // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
-      info("current date: ",formattedDate)
-      return formattedDate;
+    handleConfigClick() {
+      info("[TopBar] Bouton config cliqué");
+      this.$emit('toggle-config');
     },
-    padZero(value) {
-      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
-      return value < 10 ? `0${value}` : value;
+    async start() {
+      await invoke('start_capture')
+        .then((status) => {
+          const typedStatus = status as { is_running: boolean };
+          this.captureStore.updateStatus(typedStatus);
+          
+          info('Capture démarrée : ' + this.captureStore.isRunning);
+        })
+        .catch(async (err) => {
+          await displayCaptureError(err);
+        });
     },
-
-  },
-  mounted() {
-    console.log("analyse mounted");
-    this.getDesktopDirPath();
-
-    this.netInterface = this.$route.params.netInterface;
-    this.installationName = this.$route.params.installationName;
-    this.niveauConfidentialite = this.$route.params.confidentialite;
-  },
-
-};
+    async stop() {
+      await invoke('stop_capture')
+        .then((status) => {
+          const typedStatus = status as { is_running: boolean };
+          this.captureStore.updateStatus(typedStatus);
+          console.log(typedStatus)
+          info('Capture arretée : ' + this.captureStore.isRunning);
+          
+        })
+        .catch(async (err) => {
+          await displayCaptureError(err);
+        });
+    },
+    toggleView() {
+      info('Vue basculée');
+    },
+    async quit() {
+      info('Fermeture demandée');
+      await exit(0);
+    },
+    toggleConfig() {
+      info('Ouverture panneau config'); 
+    }
+  }
+}
 </script>
 
 <style scoped>
-
-.sidebar {
-  position: relative; /* ou juste supprime la ligne */
-  top: unset;
-  left: unset;
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 40px;
   width: 100%;
-  background-color: #2A2A2A;
-  color: #ECF0F1;
-  padding: 10px;
+  background-color: #070416;
   display: flex;
-  flex-direction: row;
-  gap: 5px;
+  align-items: center;
+  padding: 0 10px;
+  gap: 8px;
+  border-bottom: 1px solid #252526;
   z-index: 9999;
 }
 
 .image-btn {
-  background: none;
+  background: transparent;
   border: none;
-  padding: 0;
+  padding: 4px;
+  border-radius: 4px;
   cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.2s;
 }
 
-.image-btn img {
-  width: 50px;
-  height: 50px;
+.image-btn:hover {
+  background-color: #3f4758;
 }
-.sidebar button:hover {
-  background-color: #0b1b25; /* Couleur au survol */
+.image-btn:disabled {
+  opacity: 0.4; /* rend plus clair */
+  cursor: not-allowed; /* curseur interdit */
+  background-color: transparent; /* garde transparent au survol même désactivé */
 }
-
-/* Responsive Design pour les petits écrans */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%; /* Pleine largeur pour les petits écrans */
-    box-shadow: none; /* Pas d'ombre pour un look plus simple */
-  }
+.icon-img {
+  height: 30;
+  width: 30px;
+  vertical-align: middle;
 }
-
-
-
-
-
 </style>

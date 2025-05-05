@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - "app-v*"
-      
+
 jobs:
   publish-tauri:
     permissions:
