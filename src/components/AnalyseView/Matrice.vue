@@ -84,7 +84,7 @@ export default {
 
 .v-data-table :deep(.v-data-table__wrapper) {
   background-color: #2A2A2A;
-  background-color: #2A2A2A;
+
   overflow-y: auto;
 }
 
