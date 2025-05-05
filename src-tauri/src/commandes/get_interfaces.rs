@@ -51,7 +51,7 @@ pub fn get_interfaces_tab() -> Vec<String> {
             // Retourne l'adresse MAC de l'interface sous Windows.
             #[cfg(target_os = "windows")]
             {
-                iface.mac.unwrap_or_default().to_string()
+                iface.name.clone()
             }
             // Retourne l'adresse MAC de l'interface pour d'autres systèmes.
             #[cfg(not(any(target_os = "linux", target_os = "windows")))]

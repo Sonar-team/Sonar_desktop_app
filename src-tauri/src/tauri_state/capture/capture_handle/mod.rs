@@ -42,6 +42,7 @@ impl CaptureHandle {
             .into_iter()
             .find(|d| d.name == iface_name)
             .ok_or_else(|| CaptureError::InterfaceNotFound(iface_name.clone()))?;
+        
 
         info!("Interface trouvée : {}", device.name);
 

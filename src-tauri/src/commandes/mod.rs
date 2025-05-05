@@ -5,15 +5,15 @@ pub use get_interfaces::get_interfaces_tab; // Réexporte la fonction
 
 pub mod get_hostname_to_string;
 pub use get_hostname_to_string::get_hostname_to_string;
-use log::{error, info};
+use log::error;
 use tauri::State;
 
 use crate::tauri_state::matrice::SonarState;
 
-pub mod export;
 pub mod get_graph_data;
-pub mod import;
 pub mod net_capture;
+pub mod export;
+pub mod import;
 
 #[tauri::command(async)]
 pub fn get_matrice(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<String, String> {
@@ -42,6 +42,10 @@ pub fn get_graph_state(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<Strin
 
     locked_state.get_graph_data()
 }
+
+
+
+
 
 #[tauri::command(async)]
 pub fn reset(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {
