@@ -23,7 +23,8 @@
 <script lang="ts">
 import { invoke } from '@tauri-apps/api/core';
 import { exit } from '@tauri-apps/plugin-process';
-import { info } from '@tauri-apps/plugin-log';
+import { info, error } from '@tauri-apps/plugin-log';
+import { save } from '@tauri-apps/plugin-dialog';
 
 import { displayCaptureError } from '../../errors/capture'; // Gestion des erreurs propre
 
@@ -43,7 +44,9 @@ export default {
     },
     isRunning(): boolean {
       return this.captureStore.isRunning;
-    }
+    },
+
+    
   },
   data() {
     return {
@@ -51,6 +54,65 @@ export default {
     };
   },
   methods: {
+    getCurrentDate() {
+      // Fonction pour obtenir la date actuelle
+      const now = new Date();
+      // Formattez la date en DD/MM/YYYY
+      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
+      info("current date: ",formattedDate)
+      return formattedDate;
+    },
+    padZero(value) {
+      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
+      return value < 10 ? `0${value}` : value;
+    },
+    async SaveAsCsv() {
+      info("Save as csv")
+      save({
+        filters: [{
+          name: '.csv',
+          extensions: ['csv']
+        }],
+        title: 'Sauvegarder la matrice de flux',
+        defaultPath: this.getCurrentDate()+ '_' + '.csv' // Set the default file name here
+      
+      }).then((response) => 
+        invoke('save_packets_to_csv', { file_path: response })
+          .then((response) => 
+            error("save error: ",response))
+            )
+    },
+    async SaveAsXlsx() {
+      try {
+        info("Début de la sauvegarde en xlsx");
+        const response = await save({
+          filters: [{
+            name: '.xlsx',
+            extensions: ['xlsx']
+          }],
+          title: 'Sauvegarder la matrice de flux',
+          defaultPath: this.getCurrentDate() + '.xlsx'
+        });
+
+        if (response) {
+          // Attendez que l'invocation d'API pour sauvegarder soit terminée
+          const saveResponse = await invoke('save_packets_to_excel', { file_path: response });
+          info("Sauvegarde terminée:", saveResponse);
+          return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
+        } else {
+          info("Aucun chemin de fichier sélectionné");
+          throw new Error("Sauvegarde annulée ou chemin non sélectionné");
+        }
+      } catch (error) {
+        error("Erreur lors de la sauvegarde en xlsx:", error);
+        throw error; // Relancer l'erreur pour la gestion dans quit()
+      }
+    },
+    async triggerSave() {
+      info("trigger save")
+      this.SaveAsCsv();
+      this.SaveAsXlsx();
+    },
     async reset() {
       this.tramesRecues = 0
       invoke('reset')    
@@ -88,9 +150,6 @@ export default {
         .catch(async (err) => {
           await displayCaptureError(err);
         });
-    },
-    async triggerSave() {
-      info('Sauvegarde demandée');
     },
     toggleView() {
       info('Vue basculée');

@@ -100,7 +100,7 @@ export default {
     info("[ConfigPanel] Monté avec visible =", this.visible);
     this.getConfig();
 
-    invoke('get_devices_list').then((interfaces) => {
+    invoke('get_interfaces_tab').then((interfaces) => {
       this.netInterfaces = interfaces;
       if (interfaces.length > 0) {
         this.selectedNetInterface = interfaces[interfaces.length - 1]; // Set the last item as default
@@ -130,6 +130,7 @@ export default {
   padding: 20px;
   border-left: 1px solid #252526;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+  font-family: sans-serif;
 }
 
 .config-item {
@@ -139,13 +140,33 @@ export default {
 .config-item label {
   display: block;
   margin-bottom: 5px;
+  font-weight: bold;
 }
 
-.config-item input {
+/* 🆕 Champ input + select amélioré */
+.config-item input,
+select {
   width: 100%;
-  padding: 5px;
-  border: none;
-  border-radius: 4px;
+  padding: 8px;
+  background-color: #1e1e2f;
+  border: 1px solid #555;
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.config-item input:focus,
+select:focus {
+  outline: none;
+  border-color: #c53d3d;
+  box-shadow: 0 0 0 2px rgba(58, 142, 230, 0.3);
+}
+
+/* 🆕 Option dans le select */
+select option {
+  background-color: #2e2a36;
+  color: white;
 }
 
 .actions {
@@ -155,14 +176,18 @@ export default {
 }
 
 .actions button {
-  background-color: #ffffff;
+  background-color: #3e71a8;
+  color: white;
   border: none;
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
 }
 
 .actions button:hover {
   background-color: #5a6274;
 }
+
 </style>
