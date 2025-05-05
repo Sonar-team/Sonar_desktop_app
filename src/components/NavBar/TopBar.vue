@@ -14,10 +14,10 @@
     
     <button class="image-btn" @click="reset" title="Réinitialiser">🔄</button>
     <button class="image-btn" @click="triggerSave" title="Sauvegarder">💾</button>
+    <button class="image-btn" title="Ouvrir">📄</button>
     <button class="image-btn" @click="toggleComponent" :title="buttonText">📊</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
   </div>
-
 </template>
 
 <script lang="ts">
