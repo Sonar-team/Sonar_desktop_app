@@ -56,20 +56,3 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
-
-      - name: Generate SHA256 for all assets
-        run: |
-          for file in src-tauri/target/release/bundle/**/*.{exe,msi,dmg,AppImage,deb,rpm,app.tar.gz}; do
-            if [ -f "$file" ]; then
-              sha256sum "$file" > "$file.sha256"
-            fi
-          done
-
-      - name: Upload binaries and hashes to release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            src-tauri/target/release/bundle/**/*.{exe,msi,dmg,AppImage,deb,rpm,app.tar.gz}
-            src-tauri/target/release/bundle/**/*.{sha256}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
