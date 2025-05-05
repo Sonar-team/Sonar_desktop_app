@@ -51,7 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: "App ${{ github.ref_name }}"
+          releaseName: "Sonar ${{ github.ref_name }}"
           releaseBody: "Voir les assets ci-dessous pour télécharger cette version."
           releaseDraft: false
           prerelease: false

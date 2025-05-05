@@ -1,4 +1,36 @@
 # Changelog
+## [2.2.1] - 2025-05-05
+
+## Fix 
+
+* Compatibilité mac os
+
+## [2.2.1] - 2025-05-05
+
+### ✨ Fonctionnalités
+
+* Ajout de la fonctionnalité "stop record".
+* Ajout de l’icône `stop.svg` dans `src/assets`.
+* Compatibilité améliorée entre Windows 11 et Ubuntu pour les timestamps des paquets réseau (`tv_sec`, `tv_usec`).
+* Ajout d'une gestion conditionnelle multiplateforme avec `#[cfg(target_os = "...")]` pour la conversion des timestamps.
+
+### 🛠 Corrections
+
+* Correction d’un bug de compilation sous Windows 11 (mismatch de types `i32` vs `i64`).
+* Le fichier `.gitignore` n’ignore plus les `.svg` du dossier `src/assets`.
+
+### 🎨 Interface
+
+* Amélioration de la top bar.
+* Amélioration de la status bar.
+
+### 🔧 Technique
+
+* Tag `app-v2.2.0` ajouté à `main` après merge.
+* Nettoyage de warnings (`unused import: info`) dans le module `commandes`.
+* Suppression de la page de nommage de fichier au démarrage de SONAR. La discussion est ouverte pour une réintégration éventuelle au moment de la sauvegarde.
+* Retrait de la fonctionnalité d'automatisation de la sauvegarde : cette fonction n'a jamais été utilisée et ne répondait à aucun besoin identifié jusqu'à présent.
+
 
 ## [1.15.0] - 2024-11-07
 
