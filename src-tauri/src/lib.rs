@@ -5,11 +5,15 @@ use colored::Colorize;
 use commandes::{
     export::{
         save_packets_to_csv, save_packets_to_excel, write_file, write_file_as_png, write_png_file,
-    }, get_graph_state, get_hostname_to_string, get_interfaces_tab, get_matrice, import::convert_from_pcap_list, net_capture::{config_capture, get_config_capture, start_capture, stop_capture}, reset
+    },
+    get_graph_state, get_hostname_to_string, get_interfaces_tab, get_matrice,
+    import::convert_from_pcap_list,
+    net_capture::{config_capture, get_config_capture, start_capture, stop_capture},
+    reset,
 };
+mod errors;
 mod tauri_state;
 mod utils;
-mod errors;
 use log::info;
 use tauri_state::{capture::CaptureState, matrice::SonarState};
 
@@ -51,19 +55,16 @@ pub fn run() -> Result<(), tauri::Error> {
         // Commandes
         .invoke_handler(tauri::generate_handler![
             get_interfaces_tab,
-
             start_capture,
             stop_capture,
             config_capture,
             get_config_capture,
-
             save_packets_to_csv,
             save_packets_to_excel,
             get_matrice,
             get_graph_state,
             write_file,
             write_file_as_png,
-
             get_hostname_to_string,
             reset,
             convert_from_pcap_list,

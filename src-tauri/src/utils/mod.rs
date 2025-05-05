@@ -7,4 +7,3 @@ pub fn return_device_lookup() -> String {
     println!("Using device {}", device.name);
     device.name
 }
-

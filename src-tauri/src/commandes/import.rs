@@ -1,4 +1,6 @@
-use crate::tauri_state::{capture::capture_handle::layer_2_infos::PacketInfos, matrice::SonarState};
+use crate::tauri_state::{
+    capture::capture_handle::layer_2_infos::PacketInfos, matrice::SonarState,
+};
 use log::info;
 use pcap::Capture;
 use pnet::packet::ethernet::EthernetPacket;
@@ -51,8 +53,6 @@ fn handle_pcap_file(
 }
 
 use thiserror::Error;
-
-
 
 #[derive(Error, Debug)]
 pub enum PcapProcessingError {

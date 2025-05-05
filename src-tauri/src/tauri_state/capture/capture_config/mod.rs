@@ -1,5 +1,5 @@
-use serde::Serialize;
 use crate::utils::return_device_lookup;
+use serde::Serialize;
 
 #[derive(Clone, Serialize)]
 pub struct CaptureConfig {

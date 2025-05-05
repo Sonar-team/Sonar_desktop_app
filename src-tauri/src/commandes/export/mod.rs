@@ -1,4 +1,3 @@
-
 use std::sync::{Arc, Mutex};
 
 #[tauri::command(async, rename_all = "snake_case")]

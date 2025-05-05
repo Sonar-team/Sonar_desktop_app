@@ -1,12 +1,9 @@
-
 use serde::Serialize;
 use std::collections::HashMap;
 
-use crate::tauri_state::{capture::capture_handle::layer_2_infos::layer_3_infos::ip_type::IpType, matrice::PacketKey};
-
-
-
-
+use crate::tauri_state::{
+    capture::capture_handle::layer_2_infos::layer_3_infos::ip_type::IpType, matrice::PacketKey,
+};
 
 /// Récupère et sérialise les données de trafic réseau en une représentation de graph.
 ///

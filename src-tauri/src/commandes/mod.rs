@@ -10,13 +10,10 @@ use tauri::State;
 
 use crate::tauri_state::matrice::SonarState;
 
-
-
-
-pub mod get_graph_data;
-pub mod net_capture;
 pub mod export;
+pub mod get_graph_data;
 pub mod import;
+pub mod net_capture;
 
 #[tauri::command(async)]
 pub fn get_matrice(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<String, String> {
@@ -45,10 +42,6 @@ pub fn get_graph_state(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<Strin
 
     locked_state.get_graph_data()
 }
-
-
-
-
 
 #[tauri::command(async)]
 pub fn reset(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<(), String> {

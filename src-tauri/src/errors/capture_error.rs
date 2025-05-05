@@ -3,7 +3,6 @@ use thiserror::Error;
 
 use crate::tauri_state::capture::capture_handle::capture_message::CaptureMessage;
 
-
 #[derive(Debug, Error)]
 pub enum CaptureError {
     #[error("Interface réseau introuvable : {0}")]

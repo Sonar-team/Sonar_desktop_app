@@ -61,8 +61,6 @@ pub fn get_interfaces_tab() -> Vec<String> {
         })
         .collect();
 
-
-
     // Retourne le vecteur de noms d'interface.
     names
 }

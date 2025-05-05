@@ -18,7 +18,6 @@ use super::capture::capture_handle::layer_2_infos::layer_3_infos::ip_type::IpTyp
 use super::capture::capture_handle::layer_2_infos::layer_3_infos::Layer3Infos;
 use super::capture::capture_handle::layer_2_infos::PacketInfos;
 
-
 #[derive(Debug, Serialize)]
 struct PacketInfoEntry {
     infos: PacketKey,
@@ -96,7 +95,6 @@ pub struct SonarState {
     // Contient les trames réseau et leur nombre d'occurrences
     pub matrice: HashMap<PacketKey, PacketStats>,
     // Indique si le filtrage des adresses IPv6 est activé
-
 }
 
 impl SonarState {
@@ -104,7 +102,6 @@ impl SonarState {
     pub fn new() -> Arc<Mutex<Self>> {
         let state = Arc::new(Mutex::new(SonarState {
             matrice: HashMap::new(),
-
         }));
         state
     }

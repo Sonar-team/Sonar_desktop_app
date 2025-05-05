@@ -17,8 +17,8 @@ use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::{errors::capture_error::CaptureError, tauri_state::matrice::SonarState};
 pub mod capture_message;
-pub mod setup;
 pub mod layer_2_infos;
+pub mod setup;
 pub struct CaptureHandle {
     stop_flag: Arc<AtomicBool>,
 }
@@ -31,11 +31,7 @@ impl CaptureHandle {
         }
     }
 
-    pub fn start(
-        &self,
-        config: (String, i32, i32),
-        app: AppHandle,
-    ) -> Result<(), CaptureError> {
+    pub fn start(&self, config: (String, i32, i32), app: AppHandle) -> Result<(), CaptureError> {
         debug!("Démarrage de la capture sur l'interface {} avec un buffer de {} octets et une taille de channel de {}", config.0, config.1, config.2);
 
         let stop_flag = self.stop_flag.clone();
@@ -50,7 +46,8 @@ impl CaptureHandle {
         info!("Interface trouvée : {}", device.name);
 
         let cap = setup::setup_capture(device, config.1)?;
-        let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) = bounded(config.2 as usize);
+        let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) =
+            bounded(config.2 as usize);
 
         // Thread de traitement
         let app_processing = app.clone();
@@ -68,7 +65,7 @@ impl CaptureHandle {
                         CaptureMessage::Packet(pkt) => {
                             processed += 1;
 
-                            let minimal = PacketMinimal {
+                            let _minimal = PacketMinimal {
                                 ts_sec: pkt.header.ts.tv_sec,
                                 ts_usec: pkt.header.ts.tv_usec,
                                 caplen: pkt.header.caplen,
@@ -76,8 +73,10 @@ impl CaptureHandle {
                                 data: pkt.data.to_vec(),
                             };
                             let packet = EthernetPacket::new(&pkt.data).unwrap();
-                            let packet_info = PacketInfos::new(&"&interface.name".to_string(), &packet);
-                            let state: State<Arc<Mutex<SonarState>>> = app_processing.state::<Arc<Mutex<SonarState>>>();
+                            let packet_info =
+                                PacketInfos::new(&"&interface.name".to_string(), &packet);
+                            let state: State<Arc<Mutex<SonarState>>> =
+                                app_processing.state::<Arc<Mutex<SonarState>>>();
 
                             if let Ok(mut locked_state) = state.lock() {
                                 locked_state.update_matrice_with_packet(&packet_info);
@@ -222,5 +221,3 @@ impl CaptureHandle {
         }
     }
 }
-
-

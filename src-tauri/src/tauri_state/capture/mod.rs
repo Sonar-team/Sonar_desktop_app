@@ -2,9 +2,8 @@ use capture_config::CaptureConfig;
 use capture_handle::CaptureHandle;
 use capture_status::CaptureStatus;
 
-
-pub mod capture_handle;
 pub mod capture_config;
+pub mod capture_handle;
 pub mod capture_status;
 
 pub struct CaptureState {
@@ -22,5 +21,3 @@ impl CaptureState {
         }
     }
 }
-
-
