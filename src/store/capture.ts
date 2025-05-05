@@ -10,10 +10,14 @@ export type CaptureConfig = {
 export const useCaptureStore = defineStore("capture", {
   state: () => ({
     isRunning: false,
+    showMatrice: true,
   }),
   actions: {
     updateStatus(status: { is_running: boolean }) {
       this.isRunning = status.is_running;
+    },
+    toggleView() {
+      this.showMatrice = !this.showMatrice;
     },
   },
 });

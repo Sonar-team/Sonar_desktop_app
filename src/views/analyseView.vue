@@ -4,7 +4,7 @@
     <ConfigPanel v-if="showConfig" @update:visible="(val: any) => showConfig = val" />
 
     <div class="content">
-      <NetworkGraphComponent v-if="showMatrice" />
+      <NetworkGraphComponent v-if="!captureStore.showMatrice" />
       <Matrice v-else />
     </div>
 
@@ -15,6 +15,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { useCaptureStore } from '../store/capture';
+
 import Matrice from '../components/AnalyseView/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue';
 import TopBar from '../components/NavBar/TopBar.vue';
@@ -35,8 +37,12 @@ export default defineComponent({
   data() {
     return {
       showConfig: false,
-      showMatrice: false
     };
+  },
+  computed: {
+    captureStore() {
+      return useCaptureStore();
+    }
   },
   methods: {
     toggleConfig() {
@@ -45,6 +51,7 @@ export default defineComponent({
   }
 });
 </script>
+
 
 <style scoped>
 .page-container {

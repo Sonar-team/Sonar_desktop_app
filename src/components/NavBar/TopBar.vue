@@ -14,7 +14,7 @@
     
     <button class="image-btn" @click="reset" title="Réinitialiser">🔄</button>
     <button class="image-btn" @click="triggerSave" title="Sauvegarder">💾</button>
-    <button class="image-btn" @click="toggleView" title="Basculer la vue">📊</button>
+    <button class="image-btn" @click="toggleComponent" :title="buttonText">📊</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
   </div>
 
@@ -34,6 +34,10 @@ export default {
   emits: ['toggle-config'],
 
   computed: {
+    buttonText(): string {
+      return this.captureStore.showMatrice ? 'Graphique' : 'Matrice';
+    },
+
     captureStore() {
       return useCaptureStore();
     },
@@ -41,7 +45,21 @@ export default {
       return this.captureStore.isRunning;
     }
   },
+  data() {
+    return {
+      showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
+    };
+  },
   methods: {
+    async reset() {
+      this.tramesRecues = 0
+      invoke('reset')    
+    },
+    toggleComponent() {
+      this.captureStore.toggleView();
+      this.$bus.emit('toggle'); // Si tu utilises toujours le bus
+    },
+
     handleConfigClick() {
       info("[TopBar] Bouton config cliqué");
       this.$emit('toggle-config');
@@ -70,14 +88,6 @@ export default {
         .catch(async (err) => {
           await displayCaptureError(err);
         });
-    },
-    async reset() {
-      try {
-        await invoke('reset_capture');
-        info('Capture réinitialisée');
-      } catch (err) {
-        await displayCaptureError(err);
-      }
     },
     async triggerSave() {
       info('Sauvegarde demandée');

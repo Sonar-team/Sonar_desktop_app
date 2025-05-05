@@ -95,6 +95,7 @@ export default {
 <style scoped>
 .trames {
   display: block;
+  
   height: 220px; /* par exemple */
   flex-shrink: 0;
   background-color: #000; /* Black background */
