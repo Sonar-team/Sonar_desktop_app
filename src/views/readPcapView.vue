@@ -2,20 +2,13 @@
   <div class="container">
     
     <div class="content">
-      <TopBar />
-      <Matrice v-if="showMatrice" /> <!-- Show Matrice when showMatrice is true -->
-      <NetworkGraphComponent v-else /> <!-- Show NetworkGraphComponent otherwise -->
-      <StatusBar />
+
     </div>
   </div>
 </template>
 
 <script>
-import BottomLong from '../components/AnalyseView/BottomLong.vue';
-import Matrice from '../components/AnalyseView/Matrice.vue';
-import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue';
-import TopBar from '../components/NavBar/TopBar.vue';
-import StatusBar from '../components/NavBar/status-bar/StatusBar.vue';
+
 
 import { invoke } from '@tauri-apps/api/core';
 import { info } from '@tauri-apps/plugin-log';
@@ -30,27 +23,9 @@ export default {
   data() {
     return {
       localPcapList: [], // Copie locale pour la manipulation des fichiers pcap
-      tempsReleve: '',
-      tramesRecues: 0,
-      tramesEnregistrees: 0,
-      niveauConfidentialite: '',
-      installationName: '',
-      showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
-      totalPackets: 0 // Propriété pour stocker le nombre total de paquets
     };
   },
-  components: {
-    BottomLong,
-    Matrice,
-    NetworkGraphComponent,
-    TopBar,
-    StatusBar
-  },
-  methods: {
-    toggleComponent() {
-      this.showMatrice = !this.showMatrice; // Toggle the state
-    },
-  },
+
   mounted() {
     this.localPcapList = [...this.pcapList]; // Copie de la prop dans la donnée locale
     info(`localPcapList: ${this.localPcapList}`); // Affiche this.localPcapList ${this.localPcapList;
@@ -63,8 +38,6 @@ export default {
       .catch(error => console.error(error));
 
     this.$bus.on('toggle', this.toggleComponent);
-    this.installationName = this.$route.params.installationName;
-    this.niveauConfidentialite = this.$route.params.confidentialite;
   },
   beforeUnmount() {
     this.$bus.off('toggle', this.toggleComponent);

@@ -1,8 +1,8 @@
 <template>
   <div class="page-container">
-    <TopBar @toggle-config="toggleConfig" />
-    <ConfigPanel v-if="showConfig" @update:visible="(val: any) => showConfig = val" />
-
+    <TopBar @toggle-config="toggleConfig" @toggle-pcap="togglePcap"/>
+    <ConfigPanel v-if="showConfig" @update:ConfigPanel-visible="(val: any) => showConfig = val" />
+    <ImportPanel v-if="showPcap" @update:visible="(val: any) => showPcap = val"/>
     <div class="content">
       <NetworkGraphComponent v-if="!captureStore.showMatrice" />
       <Matrice v-else />
@@ -21,13 +21,16 @@ import Matrice from '../components/AnalyseView/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue';
 import TopBar from '../components/NavBar/TopBar.vue';
 import StatusBar from '../components/NavBar/status-bar/StatusBar.vue';
-import ConfigPanel from '../components/AnalyseView/ConfigPanel.vue';
+import ConfigPanel from '../components/AnalyseView/panels/ConfigPanel.vue';
 import BottomLong from '../components/AnalyseView/BottomLong.vue';
+import ImportPanel from '../components/AnalyseView/panels/ImportPalnel.vue';
+import { show } from '@tauri-apps/api/app';
 
 export default defineComponent({
   name: 'MainView',
   components: {
     TopBar,
+    ImportPanel,
     ConfigPanel,
     NetworkGraphComponent,
     Matrice,
@@ -37,6 +40,7 @@ export default defineComponent({
   data() {
     return {
       showConfig: false,
+      showPcap: false,
     };
   },
   computed: {
@@ -47,11 +51,13 @@ export default defineComponent({
   methods: {
     toggleConfig() {
       this.showConfig = !this.showConfig;
+    },
+    togglePcap() {
+      this.showPcap = !this.showPcap;
     }
   }
 });
 </script>
-
 
 <style scoped>
 .page-container {

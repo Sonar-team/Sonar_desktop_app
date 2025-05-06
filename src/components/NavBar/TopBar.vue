@@ -14,7 +14,7 @@
     
     <button class="image-btn" @click="reset" title="Réinitialiser">🔄</button>
     <button class="image-btn" @click="triggerSave" title="Sauvegarder">💾</button>
-    <button class="image-btn" title="Ouvrir">📄</button>
+    <button class="image-btn" @click="displayPcapOpener" title="Ouvrir">📄</button>
     <button class="image-btn" @click="toggleComponent" :title="buttonText">📊</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
   </div>
@@ -32,7 +32,7 @@ import { useCaptureStore } from '../../store/capture';
 
 export default {
   name: "TopBar",
-  emits: ['toggle-config'],
+  emits: ['toggle-config','toggle-pcap'],
 
   computed: {
     buttonText(): string {
@@ -46,7 +46,6 @@ export default {
       return this.captureStore.isRunning;
     },
 
-    
   },
   data() {
     return {
@@ -125,6 +124,10 @@ export default {
     handleConfigClick() {
       info("[TopBar] Bouton config cliqué");
       this.$emit('toggle-config');
+    },
+    displayPcapOpener() {
+      info("[TopBar] Bouton open cliqué");
+      this.$emit('toggle-pcap');
     },
     async start() {
       await invoke('start_capture')
