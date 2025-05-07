@@ -97,13 +97,12 @@ trait HandlePacket {
 impl HandlePacket for ProfinetHandler {
     fn get_layer_3(data: &[u8]) -> Layer3Infos {
         let ethernet_packet = EthernetPacket::new(data).unwrap();
-        if let Ok(_) = ProfinetPacket::try_from(ethernet_packet.payload()) {
-            //println!("Profinet packet: {:#?}", profinet_packet);
+        if ProfinetPacket::try_from(ethernet_packet.payload()).is_ok() {
             Layer3Infos {
                 ip_source: Some(ethernet_packet.get_source().to_string()),
-                ip_source_type: Some(IpType::Private), // Définissez un type approprié
+                ip_source_type: Some(IpType::Private),
                 ip_destination: Some(ethernet_packet.get_destination().to_string()),
-                ip_destination_type: Some(IpType::Private), // Définissez un type approprié
+                ip_destination_type: Some(IpType::Private),
                 l_4_protocol: None,
                 layer_4_infos: Layer4Infos {
                     port_source: None,
@@ -130,9 +129,9 @@ impl HandlePacket for Ipv4Handler {
 
             Layer3Infos {
                 ip_source: Some(source_ip_str),
-                ip_source_type: Some(ip_source_type), // Correction ici
+                ip_source_type: Some(ip_source_type),
                 ip_destination: Some(destination_ip_str),
-                ip_destination_type: Some(ip_destination_type), // Correction ici
+                ip_destination_type: Some(ip_destination_type),
                 l_4_protocol: Some(ipv4_packet.get_next_level_protocol().to_string()),
                 layer_4_infos: get_layer_4_infos(
                     ipv4_packet.get_next_level_protocol(),
@@ -346,7 +345,7 @@ pub fn get_layer_3_infos(ethernet_packet: &EthernetPacket<'_>) -> Layer3Infos {
                 ethernet_packet.get_ethertype(),
                 ethernet_packet.payload(),
                 ethernet_packet.get_source(),
-                ethernet_packet.get_ethertype().to_string(),
+                ethernet_packet.get_ethertype(),
                 ethernet_packet.get_ethertype().0
             );
             Default::default()

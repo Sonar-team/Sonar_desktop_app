@@ -42,7 +42,6 @@ impl CaptureHandle {
             .into_iter()
             .find(|d| d.name == iface_name)
             .ok_or_else(|| CaptureError::InterfaceNotFound(iface_name.clone()))?;
-        
 
         info!("Interface trouvée : {}", device.name);
 
@@ -75,8 +74,7 @@ impl CaptureHandle {
                                 data: pkt.data.to_vec(),
                             };
                             let packet = EthernetPacket::new(&pkt.data).unwrap();
-                            let packet_info =
-                                PacketInfos::new(&intercafe_name, &packet);
+                            let packet_info = PacketInfos::new(&intercafe_name, &packet);
                             let state: State<Arc<Mutex<SonarState>>> =
                                 app_processing.state::<Arc<Mutex<SonarState>>>();
 

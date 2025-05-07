@@ -10,9 +10,9 @@ use csv::Writer;
 use log::{error, info};
 use rust_xlsxwriter::Workbook;
 use serde::Serialize;
-use thiserror::Error;
 
 use crate::commandes::get_graph_data::GraphBuilder;
+use crate::errors::export::ExportError;
 
 use super::capture::capture_handle::layer_2_infos::layer_3_infos::ip_type::IpType;
 use super::capture::capture_handle::layer_2_infos::layer_3_infos::Layer3Infos;
@@ -100,10 +100,9 @@ pub struct SonarState {
 impl SonarState {
     // Constructeur pour initialiser `SonarState`
     pub fn new() -> Arc<Mutex<Self>> {
-        let state = Arc::new(Mutex::new(SonarState {
+        Arc::new(Mutex::new(SonarState {
             matrice: HashMap::new(),
-        }));
-        state
+        }))
     }
     pub fn reset(&mut self) {
         self.matrice.clear();
@@ -138,13 +137,13 @@ impl SonarState {
     /// ```rust
     /// cmd_save_packets_to_csv(String::from("paquets.csv"), state);
     /// ```
-    pub fn cmd_save_packets_to_csv(&self, file_path: String) -> Result<(), MyError> {
+    pub fn cmd_save_packets_to_csv(&self, file_path: String) -> Result<(), ExportError> {
         let mut wtr = Writer::from_path(&file_path).map_err(|e| {
             error!(
                 "Erreur lors de l'ouverture du fichier CSV {} : {}",
                 file_path, e
             );
-            MyError::IoError(e.to_string())
+            ExportError::Io(e.to_string())
         })?;
 
         for (packet_key, stats) in self.matrice.iter() {
@@ -153,13 +152,13 @@ impl SonarState {
             let packet_csv = PacketInfosFlaten::from_packet_key_and_stats(packet_key, stats);
             wtr.serialize(packet_csv).map_err(|e| {
                 error!("Erreur de sérialisation CSV : {:?}", e);
-                MyError::CsvError(e.to_string())
+                ExportError::Csv(e.to_string())
             })?;
         }
 
         wtr.flush().map_err(|e| {
             error!("Erreur lors du flush du fichier CSV : {}", e);
-            MyError::IoError(e.to_string())
+            ExportError::Io(e.to_string())
         })?;
 
         info!("Export CSV terminé avec succès : {}", file_path);
@@ -178,7 +177,7 @@ impl SonarState {
     /// ```rust
     /// cmd_save_packets_to_excel(String::from("paquets.xlsx"), state);
     /// ```
-    pub fn cmd_save_packets_to_excel(&self, file_path: String) -> Result<(), MyError> {
+    pub fn cmd_save_packets_to_excel(&self, file_path: String) -> Result<(), ExportError> {
         let data = self.matrice.clone();
 
         let mut workbook = Workbook::new();
@@ -204,7 +203,7 @@ impl SonarState {
         for (i, header) in headers.iter().enumerate() {
             sheet
                 .write_string(0, i as u16, header.to_string())
-                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
         }
 
         for (i, (packet_key, stats)) in data.iter().enumerate() {
@@ -212,69 +211,69 @@ impl SonarState {
 
             sheet
                 .write_string(i as u32 + 1, 0, &packet_csv.mac_address_source)
-                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             sheet
                 .write_string(i as u32 + 1, 1, &packet_csv.mac_address_destination)
-                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             sheet
                 .write_string(i as u32 + 1, 2, &packet_csv.interface)
-                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             sheet
                 .write_string(i as u32 + 1, 3, &packet_csv.l_3_protocol)
-                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
 
             if let Some(ip_src) = &packet_csv.ip_source {
                 sheet
                     .write_string(i as u32 + 1, 4, ip_src)
-                    .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             }
             if let Some(ip_src_type) = &packet_csv.ip_source_type {
                 sheet
                     .write_string(i as u32 + 1, 5, ip_src_type.to_string())
-                    .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             }
             if let Some(ip_dst) = &packet_csv.ip_destination {
                 sheet
                     .write_string(i as u32 + 1, 6, ip_dst)
-                    .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             }
             if let Some(ip_dst_type) = &packet_csv.ip_destination_type {
                 sheet
                     .write_string(i as u32 + 1, 7, ip_dst_type.to_string())
-                    .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             }
             if let Some(l4_proto) = &packet_csv.l_4_protocol {
                 sheet
                     .write_string(i as u32 + 1, 8, l4_proto)
-                    .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             }
             if let Some(port_src) = &packet_csv.port_source {
                 sheet
                     .write_string(i as u32 + 1, 9, port_src)
-                    .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             }
             if let Some(port_dst) = &packet_csv.port_destination {
                 sheet
                     .write_string(i as u32 + 1, 10, port_dst)
-                    .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             }
             if let Some(l7_proto) = &packet_csv.l_7_protocol {
                 sheet
                     .write_string(i as u32 + 1, 11, l7_proto)
-                    .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             }
 
             sheet
                 .write_number(i as u32 + 1, 12, packet_csv.packet_size as f64)
-                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
             sheet
                 .write_number(i as u32 + 1, 13, packet_csv.count as f64)
-                .map_err(|e| MyError::XlsxError(e.to_string()))?;
+                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
         }
 
         workbook
             .save(file_path)
-            .map_err(|e| MyError::XlsxError(e.to_string()))?;
+            .map_err(|e| ExportError::Xlsx(e.to_string()))?;
 
         Ok(())
     }
@@ -300,7 +299,7 @@ impl SonarState {
 
         let entries: Vec<PacketInfoEntry> = data
             .iter()
-            .map(|(info, &ref stats)| PacketInfoEntry {
+            .map(|(info, stats)| PacketInfoEntry {
                 infos: info.clone(),
                 stats: stats.clone(),
             })
@@ -333,25 +332,6 @@ impl SonarState {
             format!("Serialization error: {}", e)
         })
     }
-}
-
-/// Enum représentant les différentes erreurs pouvant survenir lors de l'écriture de paquets vers un fichier CSV ou Excel.
-#[derive(Debug, Error, serde::Serialize)]
-pub enum MyError {
-    /// Erreur d'entrée/sortie avec un message explicatif.
-    #[error("Erreur d'E/S : {0}")]
-    IoError(String),
-
-    /// Erreur lors de la manipulation de fichiers CSV avec un message explicatif.
-    #[error("Erreur CSV : {0}")]
-    CsvError(String),
-
-    // /// Erreur de conversion UTF-8 avec un message explicatif.
-    // #[error("Erreur de conversion UTF-8 : {0}")]
-    // Utf8Error(String),
-    /// Erreur lors de la manipulation de fichiers Excel avec un message explicatif.
-    #[error("Erreur Excel : {0}")]
-    XlsxError(String),
 }
 
 /// Structure représentant les informations des paquets à sérialiser vers un fichier CSV.

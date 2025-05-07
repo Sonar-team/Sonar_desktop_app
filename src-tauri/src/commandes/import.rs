@@ -38,7 +38,7 @@ fn handle_pcap_file(
         packet_count += 1; // Incrémente le compteur pour chaque paquet
         println!("Paquet {}:", packet_count);
         // print_packet_in_hex(&packet.data);
-        if let Some(ethernet_packet) = EthernetPacket::new(&packet.data) {
+        if let Some(ethernet_packet) = EthernetPacket::new(packet.data) {
             // Créez une instance de PacketInfos pour le paquet actuel
             let packet_info = PacketInfos::new(&file_path.to_string(), &ethernet_packet);
 

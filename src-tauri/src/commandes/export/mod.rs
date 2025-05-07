@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 pub fn save_packets_to_csv(
     file_path: String,
     state: State<'_, Arc<Mutex<SonarState>>>,
-) -> Result<(), MyError> {
+) -> Result<(), ExportError> {
     info!("Chemin d'enregistrement du CSV: {}", &file_path);
     let locked_state = state.lock().unwrap();
     locked_state.cmd_save_packets_to_csv(file_path)
@@ -14,7 +14,7 @@ pub fn save_packets_to_csv(
 pub fn save_packets_to_excel(
     file_path: String,
     state: State<'_, Arc<Mutex<SonarState>>>,
-) -> Result<(), MyError> {
+) -> Result<(), ExportError> {
     info!("Chemin d'enregistrement du Excel: {}", &file_path);
     let locked_state = state.lock().unwrap();
 
@@ -33,7 +33,8 @@ use resvg::tiny_skia::Pixmap;
 use tauri::{command, State};
 use usvg::{Options, Transform, Tree};
 
-use crate::tauri_state::matrice::{MyError, SonarState};
+use crate::{errors::export::ExportError, tauri_state::matrice::SonarState};
+
 #[tauri::command(async)]
 pub fn write_png_file(path: String, contents: String) -> Result<(), String> {
     // Journal pour vérifier le chemin et la taille des données

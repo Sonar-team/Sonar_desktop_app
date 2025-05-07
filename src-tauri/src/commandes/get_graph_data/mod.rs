@@ -99,7 +99,6 @@ impl GraphBuilder {
     ///
     /// * `packet` - A reference to `PacketKey` containing information about the network packet,
     ///   including source and target IP addresses, their types, and MAC addresses.
-
     pub fn add_edge(&mut self, packet: &PacketKey) {
         if let (Some(source_ip), Some(target_ip)) = (
             &packet.layer_3_infos.ip_source,

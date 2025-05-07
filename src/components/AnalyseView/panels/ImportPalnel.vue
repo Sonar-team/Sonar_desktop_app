@@ -63,7 +63,6 @@ export default {
   transform: translate(-50%, -50%); /* centre la div parfaitement */
   z-index: 1000; /* s'assure qu'elle passe au-dessus des autres */
 
-
   display: flex;
   flex-direction: column;
   justify-content: center;

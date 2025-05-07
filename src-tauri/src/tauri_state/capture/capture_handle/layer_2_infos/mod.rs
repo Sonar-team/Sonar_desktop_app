@@ -76,7 +76,6 @@ impl PacketInfos {
 ///     println!("Packet Infos: {:?}", packet_infos);
 /// }
 /// ```
-
 impl fmt::Display for PacketInfos {
     /// Formate les informations du paquet pour l'affichage.
     ///

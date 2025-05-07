@@ -36,7 +36,6 @@ pub struct PacketMinimal {
     pub data: Vec<u8>,
 }
 
-
 #[cfg(target_os = "windows")]
 #[derive(Debug, Clone, Serialize)]
 pub struct PacketMinimal {

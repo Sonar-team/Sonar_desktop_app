@@ -2,7 +2,7 @@ use capture_error::{CaptureError, CaptureErrorKind};
 use serde::Serialize;
 
 pub mod capture_error;
-
+pub mod export;
 #[derive(Debug, thiserror::Error)]
 pub enum CaptureStateError {
     #[error(transparent)]
