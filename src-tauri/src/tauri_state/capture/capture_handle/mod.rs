@@ -52,6 +52,7 @@ impl CaptureHandle {
 
         // Thread de traitement
         let app_processing = app.clone();
+        let intercafe_name = config.0.clone();
         thread::spawn(move || {
             debug!("Démarrage du thread de traitement");
             let mut processed = 0;
@@ -75,7 +76,7 @@ impl CaptureHandle {
                             };
                             let packet = EthernetPacket::new(&pkt.data).unwrap();
                             let packet_info =
-                                PacketInfos::new(&"&interface.name".to_string(), &packet);
+                                PacketInfos::new(&intercafe_name, &packet);
                             let state: State<Arc<Mutex<SonarState>>> =
                                 app_processing.state::<Arc<Mutex<SonarState>>>();
 
