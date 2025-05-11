@@ -1,48 +1,76 @@
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Sonar-team_Sonar_desktop_app&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Sonar-team_Sonar_desktop_app)
+<p align="center">
+  <img src="src-tauri/icons/Square310x310Logo.png" alt="Sonar Logo" width="120" />
+</p>
 
-[![Release](https://github.com/Sonar-team/Sonar_desktop_app/blob/main/util/livraison.png)](https://github.com/Sonar-team/Sonar_desktop_app/releases)
+<h1 align="center">Sonar Desktop App</h1>
 
-[![codecov](https://codecov.io/github/Sonar-team/Sonar_desktop_app/graph/badge.svg?token=UC4N2TUFRN)](https://codecov.io/github/Sonar-team/Sonar_desktop_app)
+<p align="center">
+  Lightweight and open-source desktop app built with Rust and Tauri.<br/>
+  Captures network traffic and generates flow matrices for critical infrastructure auditing.
+</p>
 
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSonar-team%2FSonar_desktop_app.svg?type=large&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2FSonar-team%2FSonar_desktop_app?ref=badge_large&issueType=license)
+<p align="center">
+  <a href="https://sonarcloud.io/summary/new_code?id=Sonar-team_Sonar_desktop_app">
+    <img src="https://sonarcloud.io/api/project_badges/measure?project=Sonar-team_Sonar_desktop_app&metric=alert_status" alt="Quality Gate" />
+  </a>
+    <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FSonar-team%2FSonar_desktop_app?ref=badge_large&issueType=license">
+    <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FSonar-team%2FSonar_desktop_app.svg?type=large&issueType=license" alt="FOSSA Status" />
+  </a>
+  <a href="https://github.com/Sonar-team/Sonar_desktop_app/releases">
+    <img src="https://github.com/Sonar-team/Sonar_desktop_app/blob/main/util/livraison.png" alt="Releases" />
+  </a>
+  <a href="https://codecov.io/github/Sonar-team/Sonar_desktop_app">
+    <img src="https://codecov.io/github/Sonar-team/Sonar_desktop_app/graph/badge.svg?token=UC4N2TUFRN" alt="Coverage" />
+  </a>
 
-# Application de bureau Sonar
+</p>
 
-![logo](src-tauri/icons/Square310x310Logo.png)
 
-## Fonctionnalités Clés
+---
 
-### Interception
+## 🚀 Key Features
 
-- **Fonctionnalité d'Interception :** Cette fonction configure l'adaptateur
-  réseau en mode promiscue et reconstruit de manière exhaustive les informations
-  des paquets capturés. Les paquets actuellement pris en charge pour une analyse
-  complète comprennent :
-  - Ethernet
-  - IPv4, IPv6, ARP
-  - ICMPv4, ICMPv6
-  - UDP, TCP
-  - HTTP, DNS, TLS
+### 🧲 Packet Capture Engine
 
-## Dépendances Système
+* Configures the selected network interface in **promiscuous mode**
+* Reconstructs packet metadata in real time and maps traffic relationships
+* Supports parsing of the following protocols:
 
-### Pour Windows
+  * Ethernet (MAC)
+  * IPv4, IPv6, ARP
+  * ICMPv4, ICMPv6
+  * UDP, TCP
+  * HTTP, DNS, TLS
 
-- **NPcap :** Nécessaire pour le fonctionnement de l'application. Il faut
-  également installer le Pack de Développeur WinPcap.
-- **Configuration de l'Environnement :** Ajoutez le dossier `/Lib` ou `/Lib/x64`
-  à votre variable d'environnement `LIB`.
+---
 
-### Pour Linux
+## 🧰 System Dependencies
 
-- **libpcap-dev :** Sur les distributions basées sur Debian, installez
-  `libpcap-dev`.
-- **Permissions d'Exécution :** Si l'application n'est pas exécutée en tant que
-  root, configurez les capacités système avec la commande
-  `sudo setcap cap_net_raw,cap_net_admin=eip chemin/vers/bin`. Commande pour les
-  permissions spéciales sous Linux :
-  `sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar-desktop-app`
+### Windows
 
-### Pour Mac OS X
+* **NPcap:** Required for packet capture. You must also install the **WinPcap Developer Pack**.
+* **Environment Variable:** Add the `/Lib` or `/Lib/x64` folder to your system `LIB` environment variable.
 
-- **libpcap :** Cette bibliothèque est généralement préinstallée sur Mac OS X.
+### Linux
+
+* **libpcap-dev:** On Debian-based distributions, run:
+
+  ```bash
+  sudo apt install libpcap-dev
+  ```
+* **Non-root Execution:** Grant required capabilities using:
+
+  ```bash
+  sudo setcap cap_net_raw,cap_net_admin=eip path/to/binary
+  ```
+
+  Example:
+
+  ```bash
+  sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar-desktop-app
+  ```
+
+### macOS
+
+* **libpcap:** Already included by default on macOS systems. No additional setup is required.
+
