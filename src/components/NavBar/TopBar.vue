@@ -8,7 +8,7 @@
       <img src="/src/assets/stop.svg" alt="Stop" class="icon-img" />
     </button>
 
-    <button class="image-btn"  title="Config" @click="handleConfigClick">
+    <button class="image-btn"  title="Config" :disabled="isRunning" @click="handleConfigClick">
       <img src="/src/assets/config.svg" alt="Config" class="icon-img" />
     </button>
     
@@ -58,7 +58,7 @@ export default {
       const now = new Date();
       // Formattez la date en DD/MM/YYYY
       const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
-      info("current date: ",formattedDate)
+      
       return formattedDate;
     },
     padZero(value) {

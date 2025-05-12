@@ -24,7 +24,7 @@ import StatusBar from '../components/NavBar/status-bar/StatusBar.vue';
 import ConfigPanel from '../components/AnalyseView/panels/ConfigPanel.vue';
 import BottomLong from '../components/AnalyseView/BottomLong.vue';
 import ImportPanel from '../components/AnalyseView/panels/ImportPalnel.vue';
-import { show } from '@tauri-apps/api/app';
+
 
 export default defineComponent({
   name: 'MainView',

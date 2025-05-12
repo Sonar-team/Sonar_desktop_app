@@ -1,5 +1,14 @@
 # Changelog
 
+---
+
+## [2.2.4] - 2025-05-12
+
+## Fix
+- Disable config during capture. 
+
+---
+
 ## [2.2.1] - 2025-05-05
 
 ## Fix
