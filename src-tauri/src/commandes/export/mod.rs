@@ -1,4 +1,5 @@
 use std::sync::{Arc, Mutex};
+pub mod logs;
 
 #[tauri::command(async, rename_all = "snake_case")]
 pub fn save_packets_to_csv(

@@ -17,4 +17,7 @@ pub enum ExportError {
     /// Erreur lors de la manipulation de fichiers Excel avec un message explicatif.
     #[error("Erreur Excel : {0}")]
     Xlsx(String),
+
+    #[error("Le dossier de logs est introuvable.")]
+    LogNotFound,
 }

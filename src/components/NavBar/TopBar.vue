@@ -17,6 +17,7 @@
     <button class="image-btn" @click="displayPcapOpener" title="Ouvrir">📄</button>
     <button class="image-btn" @click="toggleComponent" :title="buttonText">📊</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
+    <button class="image-btn" @click="export_logs" title="Logs">📒</button>
   </div>
 </template>
 
@@ -53,6 +54,27 @@ export default {
     };
   },
   methods: {
+    async export_logs() {
+      info("export logs")
+      const response = await save({
+        filters: [{
+          name: '.log',
+          extensions: ['log']
+        }],
+        title: 'Sauvegarder les logs',
+        defaultPath: 'sonar.log'
+      });
+
+      if (response) {
+        // Attendez que l'invocation d'API pour sauvegarder soit terminée
+        const saveResponse = await invoke('export_logs', { destination: response });
+        info("Sauvegarde terminée:", saveResponse);
+        return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
+      } else {
+        info("Aucun chemin de fichier sélectionné");
+        throw new Error("Sauvegarde annulée ou chemin non sélectionné");
+      }
+    },
     getCurrentDate() {
       // Fonction pour obtenir la date actuelle
       const now = new Date();
