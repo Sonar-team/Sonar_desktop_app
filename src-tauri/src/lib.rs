@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use colored::Colorize;
 use commandes::{
     export::{
-        save_packets_to_csv, save_packets_to_excel, write_file, write_file_as_png, write_png_file,
+        logs::export_logs, save_packets_to_csv, save_packets_to_excel, write_file, write_file_as_png, write_png_file
     },
     get_graph_state, get_hostname_to_string, get_interfaces_tab, get_matrice,
     import::convert_from_pcap_list,
@@ -68,7 +68,8 @@ pub fn run() -> Result<(), tauri::Error> {
             get_hostname_to_string,
             reset,
             convert_from_pcap_list,
-            write_png_file
+            write_png_file,
+            export_logs
         ])
         // Exécuter l'application
         .run(tauri::generate_context!())
