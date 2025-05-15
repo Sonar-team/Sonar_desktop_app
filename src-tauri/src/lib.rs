@@ -4,7 +4,8 @@ use std::sync::{Arc, Mutex};
 use colored::Colorize;
 use commandes::{
     export::{
-        logs::export_logs, save_packets_to_csv, save_packets_to_excel, write_file, write_file_as_png, write_png_file
+        logs::export_logs, save_packets_to_csv, save_packets_to_excel, write_file,
+        write_file_as_png, write_png_file,
     },
     get_graph_state, get_hostname_to_string, get_interfaces_tab, get_matrice,
     import::convert_from_pcap_list,

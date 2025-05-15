@@ -119,11 +119,9 @@ pub fn export_logs(destination: String) -> Result<String, ExportError> {
         if src_path.is_file() {
             let file_name = src_path.file_name().unwrap();
             let dest_path = destination.join(file_name);
-            fs::copy(&src_path, &dest_path)
-                .map_err(|e| ExportError::Io(format!("copy: {}", e)))?;
+            fs::copy(&src_path, &dest_path).map_err(|e| ExportError::Io(format!("copy: {}", e)))?;
         }
     }
 
     Ok("Logs exportés avec succès".to_string())
 }
-
