@@ -32,7 +32,7 @@ pub fn run() -> Result<(), tauri::Error> {
                 .level(log::LevelFilter::Info)
                 .target(tauri_plugin_log::Target::new(
                     tauri_plugin_log::TargetKind::LogDir {
-                        file_name: Some("sonar".to_string()),
+                        file_name: Some("SSF_sonar".to_string()),
                     },
                 ))
                 .target(tauri_plugin_log::Target::new(

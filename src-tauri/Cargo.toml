@@ -39,13 +39,14 @@ thiserror = "2.0.12"
 whoami = "1.6.0"
 colored = "3.0.0"
 rand = "0.9.1"
+dirs = "6.0.0"
 
 # === Date / Heure ===
 time = "0.3.39"
 
 # === Export / Fichiers ===
 csv = "1.3.1"
-rust_xlsxwriter = "0.86.1"
+rust_xlsxwriter = "0.87.0"
 
 # === Analyse Réseau ===
 pcap = "2.2.0"
