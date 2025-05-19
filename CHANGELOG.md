@@ -2,6 +2,16 @@
 
 ---
 
+## [2.2.8] - 2025-05-19
+## ✨ Fonctionnalités
+Ajout du monitoring CPU en temps réel avec affichage dans la status bar.
+
+Ajout de la fonctionnalité d’export des logs applicatifs depuis le backend Rust.
+
+
+
+---
+
 ## [2.2.4] - 2025-05-12
 
 ## Fix
