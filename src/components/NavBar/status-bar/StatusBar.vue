@@ -6,6 +6,8 @@
 
     <div class="right-status-content">
       <Timer />
+      
+      <Cpu />
       <p title="Trames reçues 📥 par la carte réseau">📥: {{ stats.received }}</p>
       <p title="Trames analysées dans la matrice de flux 📊">
         <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />: {{ stats.processed }}
@@ -22,13 +24,15 @@ import { listen } from '@tauri-apps/api/event'
 import ChannelStatus from './ChannelStatus.vue'
 import InterfaceStatus from './InterfaceStatus.vue'
 import Timer from './Timer.vue'
+import Cpu from './Cpu.vue'
 
 export default {
   name: 'StatusBar',
   components: {
     ChannelStatus,
     InterfaceStatus,
-    Timer
+    Timer,
+    Cpu
   },
   data() {
     return {
