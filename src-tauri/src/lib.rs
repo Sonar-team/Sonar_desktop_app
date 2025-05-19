@@ -15,6 +15,7 @@ use commandes::{
 mod errors;
 mod tauri_state;
 mod utils;
+mod setup;
 use log::info;
 use tauri_state::{capture::CaptureState, matrice::SonarState};
 
@@ -48,9 +49,10 @@ pub fn run() -> Result<(), tauri::Error> {
         .manage(SonarState::new())
         .manage(Arc::new(Mutex::new(CaptureState::new())))
         // Actions au lancement
-        .setup(|_app| {
+        .setup(|app| {
             info!("{}", print_banner());
             get_os();
+            setup::system_info::start_cpu_monitor(app.handle().clone());
             Ok(())
         })
         // Commandes

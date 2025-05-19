@@ -32,7 +32,6 @@ tauri-plugin-process = "2.2.1"
 # === Sérialisation / JSON ===
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-sysinfo = { version = "0.29.13", features = ["cpu_temp"] }
 
 # === Logging / Erreurs / Utilitaires ===
 log = "0.4.26"
@@ -41,6 +40,8 @@ whoami = "1.6.0"
 colored = "3.0.0"
 rand = "0.9.1"
 dirs = "6.0.0"
+sysinfo = "0.35.1"
+tokio = "1.45.0"
 
 # === Date / Heure ===
 time = "0.3.39"
