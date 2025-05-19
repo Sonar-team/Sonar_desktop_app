@@ -5,13 +5,13 @@
     </div>
 
     <div class="right-status-content">
+      <Timer />
       <p title="Trames reçues 📥 par la carte réseau">📥: {{ stats.received }}</p>
       <p title="Trames analysées dans la matrice de flux 📊">
         <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />: {{ stats.processed }}
       </p>
       <p title="Trames ❌ perdues côté kernel">❌: {{ stats.dropped }}</p>
       <p title="Trames 🚫 perdues au niveau de l’interface">🚫: {{ stats.if_dropped }}</p>
-
       <ChannelStatus />
     </div>
   </div>
@@ -20,13 +20,15 @@
 <script>
 import { listen } from '@tauri-apps/api/event'
 import ChannelStatus from './ChannelStatus.vue'
-import InterfaceStatus from './InterfaceStatus.vue' // <= Ajouté proprement
+import InterfaceStatus from './InterfaceStatus.vue'
+import Timer from './Timer.vue'
 
 export default {
   name: 'StatusBar',
   components: {
     ChannelStatus,
     InterfaceStatus,
+    Timer
   },
   data() {
     return {
@@ -35,14 +37,14 @@ export default {
         dropped: 0,
         if_dropped: 0,
         processed: 0,
-      }
+      },
     }
   },
   mounted() {
     listen('stats', (event) => {
       this.stats = event.payload
     })
-  }
+  },
 }
 </script>
 
@@ -55,13 +57,12 @@ export default {
   width: 100%;
   background-color: #243452;
   color: #ffffff;
-  
   font-size: 12px;
   display: flex;
-  flex-direction: row; /* <-- corrigé */
-  justify-content: space-between; /* <-- ajouté */
-  align-items: center; /* <-- ajouté pour aligner verticalement */
-  padding: 0 10px; /* un petit padding général */
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
   box-sizing: border-box;
 }
 
@@ -83,5 +84,4 @@ export default {
   vertical-align: middle;
   margin-right: 5px;
 }
-
 </style>

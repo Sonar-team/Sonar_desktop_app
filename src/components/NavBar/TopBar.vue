@@ -39,14 +39,12 @@ export default {
     buttonText(): string {
       return this.captureStore.showMatrice ? 'Graphique' : 'Matrice';
     },
-
     captureStore() {
       return useCaptureStore();
     },
     isRunning(): boolean {
       return this.captureStore.isRunning;
     },
-
   },
   data() {
     return {
