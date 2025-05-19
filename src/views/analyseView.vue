@@ -1,15 +1,20 @@
 <template>
   <div class="page-container">
-    <TopBar @toggle-config="toggleConfig" @toggle-pcap="togglePcap"/>
-    <ConfigPanel v-if="showConfig" @update:ConfigPanel-visible="(val: any) => showConfig = val" />
-    <ImportPanel v-if="showPcap" @update:visible="(val: any) => showPcap = val"/>
-    <div class="content">
+    <div class="top-container">
+      <TopBar @toggle-config="toggleConfig" @toggle-pcap="togglePcap"/>
+      <ConfigPanel v-if="showConfig" @update:ConfigPanel-visible="(val: any) => showConfig = val" />
+      <ImportPanel v-if="showPcap" @update:visible="(val: any) => showPcap = val"/>
+    </div>
+
+    <div class="content-container">
       <NetworkGraphComponent v-if="!captureStore.showMatrice" />
       <Matrice v-else />
     </div>
 
-    <BottomLong />
-    <StatusBar />
+    <div class="status-bar">
+      <BottomLong />
+      <StatusBar />
+    </div>
   </div>
 </template>
 
@@ -62,9 +67,26 @@ export default defineComponent({
 <style scoped>
 .page-container {
   display: flex;
+
+
+}
+
+.top-container {
+  flex-shrink: 0; /* Ne pas réduire */
+  display: flex;
   flex-direction: column;
-  padding-top: 70px;
-  box-sizing: border-box;
-  overflow: hidden;
+}
+
+.content-container {
+  margin-top: 40px;
+  flex: 1;
+}
+
+.status-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 10;
 }
 </style>
