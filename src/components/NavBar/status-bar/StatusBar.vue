@@ -10,7 +10,7 @@
       <Cpu />
       <p title="Trames reçues 📥 par la carte réseau">📥: {{ stats.received }}</p>
       <p title="Trames analysées dans la matrice de flux 📊">
-        <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />: {{ stats.processed }}
+        <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />: {{ matrice_len }}
       </p>
       <p title="Trames ❌ perdues côté kernel">❌: {{ stats.dropped }}</p>
       <p title="Trames 🚫 perdues au niveau de l’interface">🚫: {{ stats.if_dropped }}</p>
@@ -42,11 +42,15 @@ export default {
         if_dropped: 0,
         processed: 0,
       },
+      matrice_len: 0,
     }
   },
   mounted() {
     listen('stats', (event) => {
       this.stats = event.payload
+    })
+    listen('matrice_len', (event) => {
+      this.matrice_len = event.payload
     })
   },
 }

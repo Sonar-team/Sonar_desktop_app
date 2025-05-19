@@ -75,13 +75,15 @@ impl CaptureHandle {
                             };
                             let packet = EthernetPacket::new(&pkt.data).unwrap();
                             let packet_info = PacketInfos::new(&intercafe_name, &packet);
-                            let state: State<Arc<Mutex<SonarState>>> =
-                                app_processing.state::<Arc<Mutex<SonarState>>>();
+                            let state: State<Arc<Mutex<SonarState>>> = app_processing.state::<Arc<Mutex<SonarState>>>();
 
                             if let Ok(mut locked_state) = state.lock() {
                                 locked_state.update_matrice_with_packet(&packet_info);
                                 if let Err(e) = app_processing.emit("frame", &packet_info) {
                                     error!("[TAURI] Échec de l'émission 'frame' : {}", e);
+                                }
+                                if let Err(e) = app_processing.emit("matrice_len", &locked_state.get_matrice_len()) {
+                                    error!("[TAURI] Échec de l'émission 'matrice_len' : {}", e);
                                 }
                             } else {
                                 error!("Échec du verrouillage du state SonarState");

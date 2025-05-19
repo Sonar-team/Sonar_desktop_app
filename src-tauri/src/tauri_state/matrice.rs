@@ -314,6 +314,10 @@ impl SonarState {
             }
         }
     }
+    
+    pub fn get_matrice_len(&self) -> usize {
+        self.matrice.len()
+    }
 
     pub fn get_graph_data(&self) -> Result<String, String> {
         let data = self.matrice.clone(); // Acquire a lock
