@@ -76,7 +76,7 @@ export default {
       const frameWithTimestamp = { ...packet_info.payload, timestamp }; // Ajoute l'horodatage au packet
 
       this.frames.push(frameWithTimestamp);
-      // Keep only the last 5 elements
+      // Keep only the last 4 elements
       if (this.frames.length > 4) {
         this.frames.shift();
       }
@@ -96,7 +96,7 @@ export default {
 .trames {
   display: block;
   
-  height: 220px; /* par exemple */
+  height: 190px; /* par exemple */
   flex-shrink: 0;
   background-color: #000; /* Black background */
   font-family: 'Courier New', Courier, monospace; /* Monospace font for terminal look */
@@ -120,7 +120,6 @@ td, th {
 
 tbody {
   display: block; /* Change display to block */
-  max-height: 620px; /* Set a max height */
   overflow-y: auto; /* Add scrollbar if content exceeds max height */
 }
 

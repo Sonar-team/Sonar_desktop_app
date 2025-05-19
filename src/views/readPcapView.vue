@@ -8,8 +8,6 @@
 </template>
 
 <script>
-
-
 import { invoke } from '@tauri-apps/api/core';
 import { info } from '@tauri-apps/plugin-log';
 

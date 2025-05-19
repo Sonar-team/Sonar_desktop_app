@@ -18,6 +18,7 @@
     <button class="image-btn" @click="toggleComponent" :title="buttonText">📊</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
     <button class="image-btn" @click="export_logs" title="Logs">📒</button>
+    <button class="image-btn" @click="filter" title="Filtrer">🔍</button>
   </div>
 </template>
 

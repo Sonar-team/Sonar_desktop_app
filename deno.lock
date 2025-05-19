@@ -19,8 +19,7 @@
     "npm:vite@^6.0.3": "6.0.7",
     "npm:vue-router@^4.5.0": "4.5.0_vue@3.5.13__typescript@5.6.3_typescript@5.6.3",
     "npm:vue-tsc@^2.1.10": "2.2.0_typescript@5.6.3",
-    "npm:vue@^3.5.13": "3.5.13_typescript@5.6.3",
-    "npm:vuetify@^3.7.6": "3.7.6_typescript@5.6.3_vue@3.5.13__typescript@5.6.3"
+    "npm:vue@^3.5.13": "3.5.13_typescript@5.6.3"
   },
   "npm": {
     "@babel/helper-string-parser@7.25.9": {
@@ -879,16 +878,6 @@
       "optionalPeers": [
         "typescript"
       ]
-    },
-    "vuetify@3.7.6_typescript@5.6.3_vue@3.5.13__typescript@5.6.3": {
-      "integrity": "sha512-lol0Va5HtMIqZfjccSD5DLv5v31R/asJXzc6s7ULy51PHr1DjXxWylZejhq0kVpMGW64MiV1FmA/p8eYQfOWfQ==",
-      "dependencies": [
-        "typescript",
-        "vue"
-      ],
-      "optionalPeers": [
-        "typescript"
-      ]
     }
   },
   "remote": {
@@ -947,8 +936,7 @@
         "npm:vite@^6.0.3",
         "npm:vue-router@^4.5.0",
         "npm:vue-tsc@^2.1.10",
-        "npm:vue@^3.5.13",
-        "npm:vuetify@^3.7.6"
+        "npm:vue@^3.5.13"
       ]
     }
   }
