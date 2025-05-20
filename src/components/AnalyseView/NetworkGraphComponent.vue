@@ -1,17 +1,16 @@
-<!-- YourVueComponent.vue -->
 <script >
-  import { VNetworkGraph, VEdgeLabel } from "v-network-graph"
-  import * as vNG from "v-network-graph"
-  import {ForceLayout} from "v-network-graph/lib/force-layout"
-  import html2canvas from 'html2canvas';
+import { VNetworkGraph, VEdgeLabel } from "v-network-graph"
+import * as vNG from "v-network-graph"
+import {ForceLayout} from "v-network-graph/lib/force-layout"
+import html2canvas from 'html2canvas';
 
-  import { invoke } from '@tauri-apps/api/core';
-  import { save } from '@tauri-apps/plugin-dialog';
-  import { info } from '@tauri-apps/plugin-log';
+import { invoke } from '@tauri-apps/api/core';
+import { save } from '@tauri-apps/plugin-dialog';
+import { info } from '@tauri-apps/plugin-log';
 
-  import { getCurrentDate } from '../../utils/time';
+import { getCurrentDate } from '../../utils/time';
 
-  export default {
+export default {
   components: {
     VNetworkGraph,
     VEdgeLabel
@@ -267,24 +266,24 @@
 <style scoped>
 .graph-container {
   position: relative; /* <-- indispensable */
-  height: 780px;
   flex: 1;
   display: flex;
   flex-direction: column;
   width: 100%;
   overflow: hidden;
   background-color: #1a1a1a;
+
+  height: 100%;
+
 }
 
 .graph {
   flex: 1;
   width: 100%;
-  height: 100%;
-  border: 2px solid #3a3a3a;
-  border-radius: 10px;
+ 
+
   text-align: center;
   color: #FFF;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
 .download-button {
@@ -317,7 +316,6 @@
 .contenue {
   color: #0b1b25;
   border: 1px dashed #aaa;
-  padding: 4px;
   margin-top: 8px;
 }
 

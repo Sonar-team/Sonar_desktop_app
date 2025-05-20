@@ -299,6 +299,7 @@ impl SonarState {
 
         let entries: Vec<PacketInfoEntry> = data
             .iter()
+            .take(30)
             .map(|(info, stats)| PacketInfoEntry {
                 infos: info.clone(),
                 stats: stats.clone(),

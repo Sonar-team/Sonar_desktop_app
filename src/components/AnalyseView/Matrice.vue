@@ -1,13 +1,6 @@
 <template>
   <div class="custom-table-container">
     <table class="custom-table">
-      <thead>
-        <tr>
-          <th v-for="header in headers" :key="header.key || header.value">
-            {{ header.title }}
-          </th>
-        </tr>
-      </thead>
       <tbody>
         <tr v-if="processedPackets.length === 0" v-for="n in 40" :key="'empty-' + n">
           <td v-for="header in headers" :key="header.key || header.value">&nbsp;</td>
@@ -30,7 +23,6 @@
     </table>
   </div>
 </template>
-
 
 <script>
 import { invoke } from '@tauri-apps/api/core';

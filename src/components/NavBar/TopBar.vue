@@ -18,7 +18,7 @@
     <button class="image-btn" @click="toggleComponent" :title="buttonText">📊</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
     <button class="image-btn" @click="export_logs" title="Logs">📒</button>
-    <button class="image-btn" @click="filter" title="Filtrer">🔍</button>
+    <button class="image-btn" @click="handleFilterClick" title="Filtrer">🔍</button>
   </div>
 </template>
 
@@ -34,7 +34,7 @@ import { useCaptureStore } from '../../store/capture';
 
 export default {
   name: "TopBar",
-  emits: ['toggle-config','toggle-pcap'],
+  emits: ['toggle-config','toggle-pcap','toggle-filter'],
 
   computed: {
     buttonText(): string {
@@ -149,6 +149,10 @@ export default {
     displayPcapOpener() {
       info("[TopBar] Bouton open cliqué");
       this.$emit('toggle-pcap');
+    },
+    handleFilterClick() {
+      info("[TopBar] Bouton filter cliqué");
+      this.$emit('toggle-filter');
     },
     async start() {
       await invoke('start_capture')

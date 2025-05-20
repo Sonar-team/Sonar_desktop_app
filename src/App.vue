@@ -3,6 +3,32 @@
   <router-view></router-view>
 </template>
 
+<style>
+:root {
+  height: 100vh;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  height: 100%;
+}
+
+.bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #1a1a1a;
+  z-index: -1;
+}
+</style>
+
 <script>
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { confirm } from '@tauri-apps/plugin-dialog';
