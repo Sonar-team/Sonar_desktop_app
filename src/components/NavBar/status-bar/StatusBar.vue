@@ -46,16 +46,33 @@ export default {
     }
   },
   mounted() {
+    // Listen for stats updates
     listen('stats', (event) => {
       this.stats = event.payload
-    })
+      this.matrice_len = event.payload.processed;
+    });
+    
+    // Listen for reset events
+    this.$bus.on('reset', () => {
+      this.stats = {
+        received: 0,
+        dropped: 0,
+        if_dropped: 0,
+        processed: 0,
+      };
+      this.matrice_len = 0;
+    });
+    
+    // Listen for matrice length updates
     listen('matrice_len', (event) => {
-      this.matrice_len = event.payload
-    })
+      this.matrice_len = event.payload;
+    });
   },
+  beforeUnmount() {
+    this.$bus.off('reset');
+  }
 }
 </script>
-
 <style scoped>
 .status-bar {
   height: 22px;

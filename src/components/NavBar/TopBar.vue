@@ -134,8 +134,10 @@ export default {
       this.SaveAsXlsx();
     },
     async reset() {
+      info("reset")
       this.tramesRecues = 0
-      invoke('reset')    
+      await invoke('reset');
+      this.$bus.emit('reset');
     },
     toggleComponent() {
       this.captureStore.toggleView();

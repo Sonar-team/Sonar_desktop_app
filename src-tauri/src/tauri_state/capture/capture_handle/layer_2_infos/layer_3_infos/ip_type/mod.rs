@@ -1,8 +1,8 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::net::IpAddr;
 // Définition de l'énumération `IpType`
-#[derive(Debug, Serialize, Clone, Eq, Hash, PartialEq, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, Hash, PartialEq, Default)]
 pub enum IpType {
     Private,
     Multicast,

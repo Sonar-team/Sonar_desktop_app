@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use csv::Writer;
 use log::{error, info};
 use rust_xlsxwriter::Workbook;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::commandes::get_graph_data::GraphBuilder;
 use crate::errors::export::ExportError;
@@ -18,9 +18,9 @@ use super::capture::capture_handle::layer_2_infos::layer_3_infos::ip_type::IpTyp
 use super::capture::capture_handle::layer_2_infos::layer_3_infos::Layer3Infos;
 use super::capture::capture_handle::layer_2_infos::PacketInfos;
 
-#[derive(Debug, Serialize)]
-struct PacketInfoEntry {
-    infos: PacketKey,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PacketInfoEntry {
+    pub infos: PacketKey,
     stats: PacketStats,
 }
 
@@ -49,7 +49,7 @@ struct PacketInfoEntry {
 /// ```
 
 // Clé sans `packet_size` pour éviter de considérer les tailles comme des doublons
-#[derive(Debug, Serialize, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
 pub struct PacketKey {
     pub mac_address_source: String,
     pub mac_address_destination: String,
@@ -58,7 +58,7 @@ pub struct PacketKey {
     pub layer_3_infos: Layer3Infos,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PacketStats {
     count: u32,             // Nombre de paquets similaires
     packet_size_total: u32, // Taille totale cumulée des paquets

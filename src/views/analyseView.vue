@@ -50,7 +50,7 @@ export default defineComponent({
     return {
       showConfig: false,
       showPcap: false,
-      showFilter: true,
+      showFilter: false,
     };
   },
   computed: {
@@ -86,7 +86,7 @@ export default defineComponent({
 }
 
 .content-container {
-  margin-top: 65px;
+  margin-top: 40px;
   flex: 1;
   height: 100%;
   display: flex;

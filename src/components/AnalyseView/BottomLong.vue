@@ -81,6 +81,31 @@ export default {
         this.frames.shift();
       }
     });
+
+    // Listen for reset events
+    this.$bus.on('reset', () => {
+      this.frames = Array(4).fill({}).map(() => ({
+        mac_address_source: ' ',
+        mac_address_destination: ' ',
+        interface: ' ',
+        l_3_protocol: ' ',
+        layer_3_infos: {
+          ip_source: ' ',
+          ip_destination: ' ',
+          l_4_protocol: ' ',
+          layer_4_infos: {
+            port_source: ' ',
+            port_destination: ' ',
+            l_7_protocol: ' '
+          }
+        },
+        packet_size: ' ',
+        timestamp: ' '
+      }));
+    });
+  },
+  beforeUnmount() {
+    this.$bus.off('reset');
   },
   methods: {
     incrementAndEmit() {

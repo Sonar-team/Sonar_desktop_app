@@ -37,7 +37,7 @@
           warn('[CPU.vue] Event or payload is undefined');
           return;
         }
-  
+
         const { cpu_usage } = event.payload;
   
         if (typeof cpu_usage === 'number') {

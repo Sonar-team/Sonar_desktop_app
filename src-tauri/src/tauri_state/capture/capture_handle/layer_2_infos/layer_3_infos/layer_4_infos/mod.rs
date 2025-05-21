@@ -2,12 +2,12 @@ use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
 use pnet::packet::tcp::TcpPacket;
 use pnet::packet::udp::UdpPacket;
 use pnet::packet::Packet;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 mod layer_7_infos;
 use layer_7_infos::get_layer7_infos;
 
-#[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Eq, Hash, PartialEq)]
 pub struct Layer4Infos {
     pub port_source: Option<String>,
     pub port_destination: Option<String>,

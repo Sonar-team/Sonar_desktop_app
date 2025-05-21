@@ -64,12 +64,12 @@ pub mod layer_4_infos;
 use ip_type::IpType;
 use layer_4_infos::{get_layer_4_infos, Layer4Infos};
 use profinet_rt::ProfinetPacket;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use parse_mrp_packet::parse_mrp_data;
 
 /// Représente les informations extraites de la couche 3 d'un paquet réseau.
-#[derive(Debug, Default, Serialize, Clone, Eq, Hash, PartialEq)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Eq, Hash, PartialEq)]
 pub struct Layer3Infos {
     pub ip_source: Option<String>,
     pub ip_source_type: Option<IpType>,
