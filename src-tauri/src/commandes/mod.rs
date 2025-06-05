@@ -18,7 +18,6 @@ pub mod net_capture;
 #[tauri::command(async)]
 pub fn get_matrice(state: State<'_, Arc<Mutex<SonarState>>>, header_value: Option<String>) -> Result<String, String> {
     //println!("  getmarice");
-    println!("header_value: {:?}", header_value);
     let locked_state = state
         .lock()
         .map_err(|_| "Failed to lock state".to_string())?;

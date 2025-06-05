@@ -1,4 +1,4 @@
-use capture_message::{CaptureMessage, ChannelCapacityPayload, Codec, PacketMinimal, StatsPayload};
+use capture_message::{CaptureMessage, ChannelCapacityPayload, Codec, PacketFlow, StatsPayload};
 use crossbeam::channel::{bounded, Receiver, Sender};
 use layer_2_infos::PacketInfos;
 use log::{debug, error, info, warn};
@@ -6,16 +6,14 @@ use log::{debug, error, info, warn};
 use pcap::{Device, PacketCodec};
 use pnet::packet::ethernet::EthernetPacket;
 use std::{
-    sync::{
+    collections::VecDeque, sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
-    },
-    thread,
-    time::{Duration, Instant},
+    }, thread, time::{Duration, Instant}
 };
 use tauri::{AppHandle, Emitter, Manager, State};
 
-use crate::{errors::capture_error::CaptureError, tauri_state::matrice::SonarState};
+use crate::{errors::capture_error::CaptureError, tauri_state::{capture::capture_handle::capture_message::format_timestamp, matrice::SonarState}};
 pub mod capture_message;
 pub mod layer_2_infos;
 pub mod setup;
@@ -51,7 +49,7 @@ impl CaptureHandle {
 
         // Thread de traitement
         let app_processing = app.clone();
-        let intercafe_name = config.0.clone();
+        let interface_name = config.0.clone();
         thread::spawn(move || {
             debug!("Démarrage du thread de traitement");
             let mut processed = 0;
@@ -59,6 +57,7 @@ impl CaptureHandle {
             let seuil_alerte = (config.2 as f32 * 0.9).floor() as usize;
             let mut last_update = Instant::now();
             let mut last_len = 0usize;
+            let mut last_packets: VecDeque<PacketFlow> = VecDeque::with_capacity(5);
 
             loop {
                 match rx.recv() {
@@ -66,32 +65,37 @@ impl CaptureHandle {
                         CaptureMessage::Packet(pkt) => {
                             processed += 1;
 
-                            let _minimal = PacketMinimal {
+                            if last_packets.len() == 5 {
+                                last_packets.pop_back(); // supprime le plus ancien
+                            }
+
+                            let packet = EthernetPacket::new(&pkt.data).unwrap();
+                            
+                            let packet_info = PacketFlow {
                                 ts_sec: pkt.header.ts.tv_sec,
                                 ts_usec: pkt.header.ts.tv_usec,
                                 caplen: pkt.header.caplen,
                                 len: pkt.header.len,
-                                data: pkt.data.to_vec(),
+                                flow: PacketInfos::new(&interface_name, &packet),
+                                formatted_time: format_timestamp(pkt.header.ts.tv_sec, pkt.header.ts.tv_usec),
                             };
-                            let packet = EthernetPacket::new(&pkt.data).unwrap();
-                            let packet_info = PacketInfos::new(&intercafe_name, &packet);
                             let state: State<Arc<Mutex<SonarState>>> = app_processing.state::<Arc<Mutex<SonarState>>>();
 
                             if let Ok(mut locked_state) = state.lock() {
-                                locked_state.update_matrice_with_packet(&packet_info);
-                                if let Err(e) = app_processing.emit("frame", &packet_info) {
+                                locked_state.update_matrice_with_packet(&packet_info.flow);
+                                last_packets.push_front(packet_info); // ajoute le nouveau en tête
+                                println!("last_packets: {:#?}", &last_packets);
+                                if let Err(e) = app_processing.emit("frame", &last_packets) {
                                     error!("[TAURI] Échec de l'émission 'frame' : {}", e);
                                 }
+                                
                                 if let Err(e) = app_processing.emit("matrice_len", &locked_state.get_matrice_len()) {
                                     error!("[TAURI] Échec de l'émission 'matrice_len' : {}", e);
                                 }
                             } else {
                                 error!("Échec du verrouillage du state SonarState");
-                            }
+                            };
                             // (Pas besoin d'afficher ici tout le temps)
-                            if let Err(e) = app_processing.emit("frame", &packet_info) {
-                                error!("[TAURI] Échec de l'émission 'stats' : {}", e);
-                            }
                         }
                         CaptureMessage::Stats(stats) => {
                             let current = (stats.received, stats.dropped, stats.if_dropped);

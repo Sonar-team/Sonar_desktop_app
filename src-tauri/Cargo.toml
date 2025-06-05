@@ -1,6 +1,6 @@
 [package]
 name = "sonar"
-version = "2.2.8"
+version = "2.2.9"
 description = "A Tauri network analyzer App"
 authors = ["Cyprien Avico <avicocyprien@yahoo.com>"]
 edition = "2021"
@@ -40,11 +40,12 @@ whoami = "1.6.0"
 colored = "3.0.0"
 rand = "0.9.1"
 dirs = "6.0.0"
-sysinfo = "0.35.1"
-tokio = "1.45.0"
+sysinfo = "0.35.2"
+tokio = "1.45.1"
 
 # === Date / Heure ===
 time = "0.3.39"
+chrono = "0.4.41"
 
 # === Export / Fichiers ===
 csv = "1.3.1"
