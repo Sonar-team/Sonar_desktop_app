@@ -97,7 +97,7 @@ pub fn format_timestamp(ts_sec: i64, ts_usec: i64) -> String {
 
 #[cfg(target_os = "windows")]
 pub fn format_timestamp(ts_sec: i32, ts_usec: i32) -> String {
-    let naive = NaiveDateTime::from_timestamp_opt(ts_sec, (ts_usec * 1000) as u32)
+    let naive = NaiveDateTime::from_timestamp_opt(ts_sec.into(), (ts_usec * 1000) as u32)
         .unwrap_or_else(|| NaiveDateTime::from_timestamp_opt(0, 0).unwrap());
 
     let micro = ts_usec % 1_000_000;
