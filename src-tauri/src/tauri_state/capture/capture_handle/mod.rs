@@ -84,18 +84,15 @@ impl CaptureHandle {
                             if let Ok(mut locked_state) = state.lock() {
                                 locked_state.update_matrice_with_packet(&packet_info.flow);
                                 last_packets.push_front(packet_info); // ajoute le nouveau en tête
-                                println!("last_packets: {:#?}", &last_packets);
                                 if let Err(e) = app_processing.emit("frame", &last_packets) {
                                     error!("[TAURI] Échec de l'émission 'frame' : {}", e);
                                 }
-                                
                                 if let Err(e) = app_processing.emit("matrice_len", &locked_state.get_matrice_len()) {
                                     error!("[TAURI] Échec de l'émission 'matrice_len' : {}", e);
                                 }
                             } else {
                                 error!("Échec du verrouillage du state SonarState");
                             };
-                            // (Pas besoin d'afficher ici tout le temps)
                         }
                         CaptureMessage::Stats(stats) => {
                             let current = (stats.received, stats.dropped, stats.if_dropped);
@@ -121,7 +118,6 @@ impl CaptureHandle {
                     }
                 }
 
-                // dans ta boucle principale (à la place de ton if actuel) :
                 let current_len = rx.len();
                 if last_len != current_len || last_update.elapsed() >= Duration::from_millis(50) {
                     last_update = Instant::now();
