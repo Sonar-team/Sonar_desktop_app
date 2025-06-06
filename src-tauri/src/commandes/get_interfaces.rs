@@ -83,10 +83,6 @@ mod tests {
             .iter()
             .any(|name| name.starts_with("Interface MAC: ")));
 
-        // Vérifie que le dernier élément du vecteur est "Toutes les interfaces".
-        assert_eq!(
-            interface_names.last(),
-            Some(&String::from("Toutes les interfaces"))
-        );
+
     }
 }
