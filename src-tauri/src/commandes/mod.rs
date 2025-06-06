@@ -16,7 +16,11 @@ pub mod import;
 pub mod net_capture;
 
 #[tauri::command(async)]
-pub fn get_matrice(state: State<'_, Arc<Mutex<SonarState>>>, header_value: Option<String>) -> Result<String, String> {
+pub fn get_matrice(
+    state: State<'_, Arc<Mutex<SonarState>>>,
+    header_value: Option<String>,
+    ascending: Option<bool>, // true pour croissant, false pour décroissant
+) -> Result<String, String> {
     //println!("  getmarice");
     let locked_state = state
         .lock()
@@ -34,10 +38,13 @@ pub fn get_matrice(state: State<'_, Arc<Mutex<SonarState>>>, header_value: Optio
             let mut sorted_entries = entries;
             if let Some(header) = header_value {
                 sorted_entries.sort_by(|a, b| {
-                    match header.as_str() {
+                    let order = match header.as_str() {
                         "mac_address_source" => a.infos.mac_address_source.cmp(&b.infos.mac_address_source),
                         "mac_address_destination" => a.infos.mac_address_destination.cmp(&b.infos.mac_address_destination),
+                        "interface" => a.infos.interface.cmp(&b.infos.interface),
                         "l_3_protocol" => a.infos.l_3_protocol.cmp(&b.infos.l_3_protocol),
+                        "packet_size" => a.stats.packet_size_total.cmp(&b.stats.packet_size_total),
+                        "count" => a.stats.count.cmp(&b.stats.count),
                         "ip_source" => match (a.infos.layer_3_infos.ip_source.as_ref(), b.infos.layer_3_infos.ip_source.as_ref()) {
                             (Some(a_ip), Some(b_ip)) => a_ip.cmp(b_ip),
                             (None, None) => std::cmp::Ordering::Equal,
@@ -50,10 +57,41 @@ pub fn get_matrice(state: State<'_, Arc<Mutex<SonarState>>>, header_value: Optio
                             (Some(_), None) => std::cmp::Ordering::Less,
                             (None, Some(_)) => std::cmp::Ordering::Greater,
                         },
+                        "port_source" => match (a.infos.layer_3_infos.layer_4_infos.port_source.as_ref(), b.infos.layer_3_infos.layer_4_infos.port_source.as_ref()) {
+                            (Some(a_port), Some(b_port)) => a_port.cmp(b_port),
+                            (None, None) => std::cmp::Ordering::Equal,
+                            (Some(_), None) => std::cmp::Ordering::Less,
+                            (None, Some(_)) => std::cmp::Ordering::Greater,
+                        },
+                        "port_destination" => match (a.infos.layer_3_infos.layer_4_infos.port_destination.as_ref(), b.infos.layer_3_infos.layer_4_infos.port_destination.as_ref()) {
+                            (Some(a_port), Some(b_port)) => a_port.cmp(b_port),
+                            (None, None) => std::cmp::Ordering::Equal,
+                            (Some(_), None) => std::cmp::Ordering::Less,
+                            (None, Some(_)) => std::cmp::Ordering::Greater,
+                        },
+                        "l_4_protocol" => match (a.infos.layer_3_infos.l_4_protocol.as_ref(), b.infos.layer_3_infos.l_4_protocol.as_ref()) {
+                            (Some(a_proto), Some(b_proto)) => a_proto.cmp(b_proto),
+                            (None, None) => std::cmp::Ordering::Equal,
+                            (Some(_), None) => std::cmp::Ordering::Less,
+                            (None, Some(_)) => std::cmp::Ordering::Greater,
+                        },
+                        "l_7_protocol" => match (a.infos.layer_3_infos.layer_4_infos.l_7_protocol.as_ref(), b.infos.layer_3_infos.layer_4_infos.l_7_protocol.as_ref()) {
+                            (Some(a_proto), Some(b_proto)) => a_proto.cmp(b_proto),
+                            (None, None) => std::cmp::Ordering::Equal,
+                            (Some(_), None) => std::cmp::Ordering::Less,
+                            (None, Some(_)) => std::cmp::Ordering::Greater,
+                        },
                         _ => std::cmp::Ordering::Equal, // Default case if header value is not recognized
+                    };
+
+                    // Inverser l'ordre si ascending est false
+                    if ascending == Some(false) {
+                        order.reverse()
+                    } else {
+                        order
                     }
                 });
-            } // If no header_value is provided, the entries remain unsorted
+            }
 
             // Serialize back to JSON
             match serde_json::to_string(&sorted_entries) {

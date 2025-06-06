@@ -21,7 +21,7 @@ use super::capture::capture_handle::layer_2_infos::PacketInfos;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PacketInfoEntry {
     pub infos: PacketKey,
-    stats: PacketStats,
+    pub stats: PacketStats,
 }
 
 /// `SonarState` encapsule l'état global de l'application Sonar.
@@ -53,15 +53,15 @@ pub struct PacketInfoEntry {
 pub struct PacketKey {
     pub mac_address_source: String,
     pub mac_address_destination: String,
-    interface: String,
+    pub interface: String,
     pub l_3_protocol: String,
     pub layer_3_infos: Layer3Infos,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PacketStats {
-    count: u32,             // Nombre de paquets similaires
-    packet_size_total: u32, // Taille totale cumulée des paquets
+    pub count: u32,             // Nombre de paquets similaires
+    pub packet_size_total: u32, // Taille totale cumulée des paquets
 }
 
 impl PacketStats {

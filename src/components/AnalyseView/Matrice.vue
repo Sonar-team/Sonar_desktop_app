@@ -3,12 +3,27 @@
     <table class="custom-table">
       <thead>
         <tr>
-          <th v-for="header in headers" :key="header.key || header.value" @click="sort(header.value)" :class="{ 'active': sortBy === header.value }">
-            <button class="header-button">
+          <th 
+            v-for="header in headers" 
+            :key="header.key || header.value"
+            @click="sort(header.value)"
+            :class="{ 
+              'active': sortBy === header.value,
+              'sortable': true
+            }"
+            :aria-sort="sortBy === header.value ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'"
+          >
+            <button 
+              class="header-button"
+              :aria-label="`Trier par ${header.title} ${sortBy === header.value ? (sortDirection === 'asc' ? 'croissant' : 'décroissant') : ''}`"
+            >
               {{ header.title }}
-              <span v-if="sortBy === header.value" class="sort-icon">
-                <i v-if="sortDirection === 'asc'">↑</i>
-                <i v-else>↓</i>
+              <span 
+                v-if="sortBy === header.value" 
+                class="sort-icon"
+                aria-hidden="true"
+              >
+                {{ sortDirection === 'asc' ? '↑' : '↓' }}
               </span>
             </button>
           </th>
@@ -22,14 +37,13 @@
           <td>{{ packet.mac_address_source }}</td>
           <td>{{ packet.mac_address_destination }}</td>
           <td>{{ packet.l_3_protocol }}</td>
-          <td>{{ packet.layer_3_infos?.ip_source }}</td>
-          <td>{{ packet.layer_3_infos?.ip_destination_type }}</td>
-          <td>{{ packet.layer_3_infos?.ip_destination }}</td>
-          <td>{{ packet.layer_3_infos?.l_4_protocol }}</td>
-          <td>{{ packet.layer_3_infos?.layer_4_infos?.port_source }}</td>
-          <td>{{ packet.layer_3_infos?.layer_4_infos?.port_destination }}</td>
-          <td>{{ packet.layer_3_infos?.layer_4_infos?.l_7_protocol }}</td>
-          <td>{{ packet.packet_size_total }}</td>
+          <td>{{ packet.ip_source }}</td>
+          <td>{{ packet.ip_destination }}</td>
+          <td>{{ packet.l_4_protocol }}</td>
+          <td>{{ packet.port_source }}</td>
+          <td>{{ packet.port_destination }}</td>
+          <td>{{ packet.l_7_protocol }}</td>
+          <td>{{ packet.packet_size }}</td>
           <td>{{ packet.count }}</td>
         </tr>
       </tbody>
@@ -53,14 +67,13 @@ export default {
         { title: 'MAC Source', value: 'mac_address_source' },
         { title: 'MAC Destination', value: 'mac_address_destination' },
         { title: 'Internet', value: 'l_3_protocol' },
-        { title: 'IP Source', value: 'layer_3_infos.ip_source' },
-        { title: 'Type', value: 'layer_3_infos.ip_destination_type' },
-        { title: 'IP Destination', value: 'layer_3_infos.ip_destination' },
-        { title: 'Transport', value: 'layer_3_infos.l_4_protocol' },
-        { title: 'Port Source', value: 'layer_3_infos.layer_4_infos.port_source' },
-        { title: 'Port Destination', value: 'layer_3_infos.layer_4_infos.port_destination' },
-        { title: 'Application', value: 'layer_3_infos.layer_4_infos.l_7_protocol' },
-        { title: 'Trame (o)', value: 'packet_size_total' },
+        { title: 'IP Source', value: 'ip_source' },
+        { title: 'IP Destination', value: 'ip_destination' },
+        { title: 'Transport', value: 'l_4_protocol' },
+        { title: 'Port Source', value: 'port_source' },
+        { title: 'Port Destination', value: 'port_destination' },
+        { title: 'Application', value: 'l_7_protocol' },
+        { title: 'Trame (o)', value: 'packet_size' },
         { title: 'Occ', value: 'count' },
       ],
     };
@@ -109,7 +122,19 @@ export default {
     },
     async sort(headerValue) {
       try {
-        const jsonString = await invoke('get_matrice', { headerValue });
+        // Inverser la direction si on clique sur la même colonne
+        if (this.sortBy === headerValue) {
+          this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          // Nouvelle colonne de tri, réinitialiser à l'ordre croissant
+          this.sortBy = headerValue;
+          this.sortDirection = 'asc';
+        }
+
+        const jsonString = await invoke("get_matrice", { 
+          headerValue: headerValue,
+          ascending: this.sortDirection === 'asc'
+        });
         const newPackets = JSON.parse(jsonString);
         this.packets = newPackets;
       } catch (error) {
@@ -132,9 +157,18 @@ export default {
     processData(data) {
       return data.map((packet, index) => ({
         id: index,
-        ...packet.infos,
+        mac_address_source: packet.infos.mac_address_source,
+        mac_address_destination: packet.infos.mac_address_destination,
+        interface: packet.infos.interface,
+        l_3_protocol: packet.infos.l_3_protocol,
+        ip_source: packet.infos.layer_3_infos?.ip_source || '',
+        ip_destination: packet.infos.layer_3_infos?.ip_destination || '',
+        l_4_protocol: packet.infos.layer_3_infos?.l_4_protocol || '',
+        port_source: packet.infos.layer_3_infos?.layer_4_infos?.port_source || '',
+        port_destination: packet.infos.layer_3_infos?.layer_4_infos?.port_destination || '',
+        l_7_protocol: packet.infos.layer_3_infos?.layer_4_infos?.l_7_protocol || '',
+        packet_size: packet.stats.packet_size_total,
         count: packet.stats.count,
-        packet_size_total: packet.stats.packet_size_total,
       }));
     }
   },
@@ -178,27 +212,37 @@ export default {
   background-color: #3A3A3A;
 }
 
+.sortable {
+  cursor: pointer;
+}
+
+.sortable:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sort-icon {
+  margin-left: 8px;
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+}
+
 .header-button {
   background: none;
   border: none;
   color: inherit;
   font: inherit;
   cursor: pointer;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  padding: 8px;
   width: 100%;
-  height: 100%;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .header-button:hover {
   color: rgb(132, 195, 247);
-}
-
-.sort-icon {
-  font-size: 0.8em;
 }
 
 .custom-table tbody tr:nth-child(even) {
