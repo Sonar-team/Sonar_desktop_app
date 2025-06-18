@@ -42,27 +42,44 @@ pub fn get_interfaces_tab() -> Vec<String> {
     // Mappe les interfaces à leurs noms ou adresses MAC, les collectant dans un vecteur.
     let names: Vec<String> = interfaces
         .iter()
+        .filter(|iface| {
+            // Filtrer les interfaces inactives
+            iface.is_up() && !iface.is_loopback() && !iface.name.starts_with("awdl")
+        })
         .map(|iface| {
             // Retourne le nom de l'interface sous Linux.
             #[cfg(target_os = "linux")]
             {
                 iface.name.clone()
             }
-            // Retourne l'adresse MAC de l'interface sous Windows.
+            // Retourne le nom de l'interface sous Windows.
             #[cfg(target_os = "windows")]
             {
                 iface.name.clone()
             }
-            // Retourne l'adresse MAC de l'interface pour d'autres systèmes.
+            // Pour macOS et autres systèmes, utilise le nom de l'interface
             #[cfg(not(any(target_os = "linux", target_os = "windows")))]
             {
-                iface.mac.unwrap_or_default().to_string()
+                // Ajoute une description plus claire pour les interfaces
+                if iface.name.starts_with("en") {
+                    format!("Ethernet: {}", iface.name)
+                } else if iface.name.starts_with("wi") || iface.name.starts_with("en") {
+                    format!("Wi-Fi: {}", iface.name)
+                } else if iface.name.starts_with("lo") {
+                    format!("Loopback: {}", iface.name)
+                } else {
+                    iface.name.clone()
+                }
             }
         })
         .collect();
 
+    // Ajoute "Toutes les interfaces" au début de la liste
+    let mut result = vec!["Toutes les interfaces".to_string()];
+    result.extend(names);
+
     // Retourne le vecteur de noms d'interface.
-    names
+    result
 }
 
 #[cfg(test)]
