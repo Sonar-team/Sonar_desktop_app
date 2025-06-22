@@ -173,7 +173,6 @@ export default {
         .then((status) => {
           const typedStatus = status as { is_running: boolean };
           this.captureStore.updateStatus(typedStatus);
-          console.log(typedStatus)
           info('Capture arretée : ' + this.captureStore.isRunning);
           
         })

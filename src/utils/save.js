@@ -1,5 +1,6 @@
 import { message, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
+import { error } from "@tauri-apps/plugin-log";
 
 // Fonction pour sauvegarder en CSV
 export async function SaveAsCsv(
@@ -94,9 +95,8 @@ export async function triggerSave(
 export async function getDesktopDirPath() {
   try {
     const dir = await desktopDir();
-    console.log("App Data Directory: ", dir);
     return dir;
   } catch (error) {
-    console.error("Error getting app data directory: ", error);
+    error("Error getting app data directory: ", error);
   }
 }

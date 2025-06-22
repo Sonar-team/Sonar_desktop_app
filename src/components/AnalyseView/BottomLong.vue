@@ -51,12 +51,6 @@ export default {
 
   async mounted() {
     await listen('frame', (event) => {
-      console.log('[FRONT] Payload brut :', event.payload);
-      if (Array.isArray(event.payload)) {
-        console.log('[FRONT] Nombre de paquets :', event.payload.length);
-      } else {
-        console.warn('[FRONT] Payload non conforme', event.payload);
-      }
       this.frames = event.payload || [];
     });
 

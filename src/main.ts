@@ -20,5 +20,4 @@ const app = createApp(App);
 app.config.globalProperties.$bus = eventBus;
 app.use(router);
 app.use(pinia);
-console.log("Mounting Vue app with Vuetify.");
 app.mount("#app");
