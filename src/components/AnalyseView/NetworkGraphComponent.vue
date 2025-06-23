@@ -10,21 +10,22 @@ import { info } from '@tauri-apps/plugin-log';
 
 import { getCurrentDate } from '../../utils/time';
 
+// Constants for graph configuration
 const GRAPH_CONFIGS = {
   view: {
     maxZoomLevel: 5,
     minZoomLevel: 0.1,
-    layoutHandler: new ForceLayout({})
+    layoutHandler: new ForceLayout({}),
   },
   node: {
-    radius: 20,
     selectable: true,
+    radius: 20,
+    color: node => node.color,
     label: {
-      visible: true,
-      color: "#E0E0E0",
-      fontSize: 18,
-      directionAutoAdjustment: true
-    }
+      fontSize: 16,
+      color: "#ffffff",
+      direction: "north",
+    },
   },
   edge: {
     gap: 50,
@@ -32,9 +33,23 @@ const GRAPH_CONFIGS = {
     selectable: true,
     hoverable: true,
     normal: {
-      width: 2
+      width: 2, 
+      color: edge => { 
+        switch(edge.label) {
+          case 'Arp':
+            return 'yellow';
+          case 'Ipv4':
+            return 'orange';
+          case 'Ipv6':
+            return 'violet';
+          case 'Profinet_rt':
+            return 'green';
+          default:
+            return 'white'; 
+        }
+      },
     },
-    label: {
+    label: { 
       fontFamily: undefined,
       fontSize: 21,
       lineHeight: 1.1,
@@ -45,19 +60,20 @@ const GRAPH_CONFIGS = {
         color: "#000000",
         padding: {
           vertical: 1,
-          horizontal: 4
+          horizontal: 4,
         },
-        borderRadius: 2
-      }
-    }
-  }
+        borderRadius: 2,
+      },
+    },
+  },
 };
 
+// Edge color mapping for different types of connections
 const EDGE_COLORS = {
-  Arp: 'yellow',
-  Ipv4: 'orange',
-  Ipv6: 'violet',
-  Profinet_rt: 'green'
+  'Arp': 'yellow',
+  'Ipv4': 'orange',
+  'Ipv6': 'violet',
+  'Profinet_rt': 'green',
 };
 
 export default {
@@ -97,12 +113,12 @@ export default {
           label: GRAPH_CONFIGS.edge.label
         }
       }),
-      packets: []
+      notifications: []
     };
   },
   computed: {
+    // This computed property is unused, consider removing it
     processedPackets() {
-      // This computed property is unused, consider removing it
       return this.processData(this.packets);
     }
   },
@@ -121,71 +137,107 @@ export default {
     }
   },
   methods: {
+    // Fetches network packet information from backend
     async fetchPacketInfos() {
       try {
         const jsonString = await invoke('get_graph_state', {});
         this.graphData = JSON.parse(jsonString);
-
       } catch (error) {
         console.error("Error fetching packet infos:", error);
+        this.showNotification('Error fetching network data', 'error');
       }
     },
 
 
+    // Handles SVG export with error handling and notifications
     async downloadSvg() {
-      if (this.$refs.graphnodes && this.$refs.graphnodes.exportAsSvgText) {
-        try {
-          info('Attempting to export SVG...');
-          const svgContent = await this.$refs.graphnodes.exportAsSvgText();
-          save({
-            filters: [{
-              name: 'SVG File',
-              extensions: ['svg']
-            }],
-            defaultPath: getCurrentDate()+ '_' + this.niveauConfidentialite  + '_' + this.installationName+ '.svg' // Set the default file name here
-          }).then((filePath) => {
-            if (filePath) {
-              // Use Tauri's fs API to write the file
-              invoke('write_file', { path: filePath, contents: svgContent })
-                .then(() => console.log('SVG successfully saved'))
-                .catch((error) => console.error('Error saving SVG:', error));
-            }
-          });
-        } catch (error) {
-          console.error('Error exporting SVG:', error);
-        }
-      } else {
-        console.error('SVG export function not available or graph component not loaded.');
+      if (!this.$refs.graphnodes || !this.$refs.graphnodes.exportAsSvgText) {
+        this.showNotification('Graph export failed: Graph not initialized', 'error');
+        return;
+      }
+
+      try {
+        const svgContent = await this.$refs.graphnodes.exportAsSvgText();
+        await this.saveFile(svgContent, 'svg');
+      } catch (error) {
+        console.error('Error exporting SVG:', error);
+        this.showNotification('Failed to export SVG', 'error');
       }
     },
+
+    // Handles PNG export with error handling and notifications
     async downloadPng() {
-      // Ouvre une boîte de dialogue pour choisir l'emplacement du fichier
-      info("save png")
+      if (!this.$refs.graphnodes) {
+        this.showNotification('Graph export failed: Graph not initialized', 'error');
+        return;
+      }
+
+      try {
+        const canvas = await html2canvas(this.$refs.graphnodes.$el, { scale: 2, useCORS: true });
+        const pngData = canvas.toDataURL('image/png');
+        const blob = this.dataURLToBlob(pngData);
+        await this.saveFile(blob, 'png');
+      } catch (error) {
+        console.error('Error exporting PNG:', error);
+        this.showNotification('Failed to export PNG', 'error');
+      }
+    },
+
+    // Helper function to save files of any format
+    async saveFile(content, format) {
+      const fileName = this.generateFileName(format);
       const filePath = await save({
         filters: [{
-          name: 'PNG File',
-          extensions: ['png']
+          name: format.toUpperCase(),
+          extensions: [format]
         }],
-        defaultPath: getCurrentDate() + '_' + this.niveauConfidentialite + '_' + this.installationName + '.png' // Nom de fichier par défaut
+        defaultPath: fileName
       });
 
       if (filePath) {
-        // Capture tout le document
-        info("file path: ",filePath)
-        html2canvas(document.body, { scale: 2, useCORS: true }).then(canvas => {
-          // Convertit le canvas en une chaîne Base64
-          const base64Data = canvas.toDataURL('image/png'); // Format PNG
-
-          // Supprime l'en-tête "data:image/png;base64,"
-          const base64WithoutHeader = base64Data.replace(/^data:image\/png;base64,/, '');
-
-          // Envoie les données au backend
-          invoke('write_png_file', { path: filePath, contents: base64WithoutHeader })
-            .then(() => console.log('PNG successfully saved at:', filePath))
-            .catch((error) => console.error('Error saving PNG:', error));
-        });
+        try {
+          await invoke('write_file', { path: filePath, contents: content });
+          this.showNotification(`Successfully saved ${format.toUpperCase()} file`, 'success');
+        } catch (error) {
+          console.error('Error saving file:', error);
+          this.showNotification('Failed to save file', 'error');
+        }
       }
     },
+
+    // Generates standardized file names for exports
+    generateFileName(format) {
+      return `${getCurrentDate()}_${this.niveauConfidentialite}_${this.installationName}.${format}`;
+    },
+
+    // Converts data URLs to Blob objects for PNG export
+    dataURLToBlob(dataURL) {
+      const arr = dataURL.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], { type: mime });
+    },
+
+    // Shows a notification with automatic timeout
+    showNotification(message, type = 'info') {
+      const notification = {
+        message,
+        type,
+        timestamp: Date.now()
+      };
+      this.notifications.push(notification);
+      
+      // Remove notification after 5 seconds
+      setTimeout(() => {
+        this.notifications = this.notifications.filter(n => n !== notification);
+      }, 5000);
+    },
+
     handleNodeClick(node) {
       // Supposons que `selectedNode` est une propriété de données que vous utiliserez pour stocker les informations du node sélectionné
       this.selectedNode = node;
@@ -266,6 +318,9 @@ export default {
     Infos de l'arête:
     <div class="contenue">{{ menuTargetEdges.join(", ") }}</div>
   </div>
+  <div v-for="notification in notifications" :key="notification.timestamp" class="notification" :class="notification.type">
+    {{ notification.message }}
+  </div>
 </template>
 
 <style scoped>
@@ -277,18 +332,15 @@ export default {
   width: 100%;
   overflow: hidden;
   background-color: #1a1a1a;
-
   height: 100%;
-
 }
 
 .graph {
   flex: 1;
   width: 100%;
- 
-
   text-align: center;
   color: #FFF;
+  background-color: #000000;
 }
 
 .download-button {
@@ -317,11 +369,33 @@ export default {
   box-shadow: 2px 2px 2px #e7bf0c;
 }
 
-
 .contenue {
   color: #0b1b25;
   border: 1px dashed #aaa;
   margin-top: 8px;
 }
 
+.notification {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.notification.info {
+  background-color: #2196f3;
+  color: #fff;
+}
+
+.notification.success {
+  background-color: #4caf50;
+  color: #fff;
+}
+
+.notification.error {
+  background-color: #f44336;
+  color: #fff;
+}
 </style>
