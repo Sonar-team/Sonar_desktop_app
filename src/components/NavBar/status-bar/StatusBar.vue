@@ -49,7 +49,6 @@ export default {
     // Listen for stats updates
     listen('stats', (event) => {
       this.stats = event.payload
-      this.matrice_len = event.payload.processed;
     });
     
     // Listen for reset events

@@ -10,8 +10,7 @@
     </div>
 
     <div class="content-container">
-      <NetworkGraphComponent v-if="!captureStore.showMatrice" />
-      <Matrice v-else />
+      <NetworkGraphComponent />
     </div>
 
     <div class="status-bar">
@@ -25,7 +24,6 @@
 import { defineComponent } from 'vue';
 import { useCaptureStore } from '../store/capture';
 
-import Matrice from '../components/AnalyseView/Matrice.vue';
 import NetworkGraphComponent from '../components/AnalyseView/NetworkGraphComponent.vue';
 import TopBar from '../components/NavBar/TopBar.vue';
 import StatusBar from '../components/NavBar/status-bar/StatusBar.vue';
@@ -41,7 +39,6 @@ export default defineComponent({
     ImportPanel,
     ConfigPanel,
     NetworkGraphComponent,
-    Matrice,
     BottomLong,
     StatusBar,
     Filter
