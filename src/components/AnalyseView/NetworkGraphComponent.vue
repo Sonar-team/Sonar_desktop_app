@@ -10,96 +10,101 @@ import { info } from '@tauri-apps/plugin-log';
 
 import { getCurrentDate } from '../../utils/time';
 
+const GRAPH_CONFIGS = {
+  view: {
+    maxZoomLevel: 5,
+    minZoomLevel: 0.1,
+    layoutHandler: new ForceLayout({})
+  },
+  node: {
+    radius: 20,
+    selectable: true,
+    label: {
+      visible: true,
+      color: "#E0E0E0",
+      fontSize: 18,
+      directionAutoAdjustment: true
+    }
+  },
+  edge: {
+    gap: 50,
+    type: "curve",
+    selectable: true,
+    hoverable: true,
+    normal: {
+      width: 2
+    },
+    label: {
+      fontFamily: undefined,
+      fontSize: 21,
+      lineHeight: 1.1,
+      color: "#E0E0E0",
+      margin: 4,
+      background: {
+        visible: true,
+        color: "#000000",
+        padding: {
+          vertical: 1,
+          horizontal: 4
+        },
+        borderRadius: 2
+      }
+    }
+  }
+};
+
+const EDGE_COLORS = {
+  Arp: 'yellow',
+  Ipv4: 'orange',
+  Ipv6: 'violet',
+  Profinet_rt: 'green'
+};
+
 export default {
   components: {
     VNetworkGraph,
     VEdgeLabel
-    
   },
   data() {
-  return {
-    position: { left: "0", top: "0" },
-    graphData: {
-      nodes: [],
-      edges: [],
-    },
-    selectedNode: null,
-    viewMenu: null, // Utilisez les refs pour les éléments de menu
-    nodeMenu: null,
-    edgeMenu: null,
-    menuTargetNode: [], // Pour stocker le nœud ciblé par le menu contextuel
-    menuTargetEdges: [], // Pour stocker les arêtes ciblées par le menu contextuel
-    packets: [],
-    intervalId: null,
-    configs: vNG.defineConfigs({
-      view: {
-        maxZoomLevel: 5,
-        minZoomLevel: 0.1,
-        
-        layoutHandler: new ForceLayout({}),
+    return {
+      position: { left: "0", top: "0" },
+      graphData: {
+        nodes: [],
+        edges: []
       },
-      node: {
-        selectable: true,
-        normal: { 
-          radius: 20,
-          color: node => node.color
-         }, // Light grey for visibility on dark background
-        label: { 
-          visible: true,
-          color: "#E0E0E0",
-          fontSize: 18,
-          directionAutoAdjustment: true,
-        }, // Same as node color for consistency
-      },
-      edge: {
-        gap: 50,
-        type: "curve",
-        selectable: true,
-        hoverable: true,
-        normal: {
-          width: 2, // Ou toute autre largeur par défaut que vous souhaitez
-          color: edge => { // Ici, vous définissez dynamiquement la couleur de l'arête
-            switch(edge.label) {
-              case 'Arp':
-                return 'yellow';
-              case 'Ipv4':
-                return 'orange';
-              case 'Ipv6':
-                return 'violet';
-              case 'Profinet_rt':
-                return 'green';
-              // Ajoutez d'autres cas selon vos besoins
-              default:
-                return 'white'; // Couleur par défaut
-            }
-          },
+      selectedNode: null,
+      viewMenu: null,
+      nodeMenu: null,
+      edgeMenu: null,
+      menuTargetNode: [],
+      menuTargetEdges: [],
+      intervalId: null,
+      configs: vNG.defineConfigs({
+        view: GRAPH_CONFIGS.view,
+        node: {
+          ...GRAPH_CONFIGS.node,
+          normal: {
+            radius: GRAPH_CONFIGS.node.radius,
+            color: node => node.color
+          }
         },
-        label: { // Configuration du label conservée telle quelle
-          fontFamily: undefined,
-          fontSize: 21,
-          lineHeight: 1.1,
-          color: "#E0E0E0",
-          margin: 4,
-          background: {
-            visible: true,
-            color: "#000000",
-            padding: {
-              vertical: 1,
-              horizontal: 4,
-            },
-            borderRadius: 2,
+        edge: {
+          ...GRAPH_CONFIGS.edge,
+          normal: {
+            ...GRAPH_CONFIGS.edge.normal,
+            color: edge => EDGE_COLORS[edge.label] || '#ffffff'
           },
-        },
-      },
-    }),
-  };
-},
-
+          label: GRAPH_CONFIGS.edge.label
+        }
+      }),
+      packets: []
+    };
+  },
   computed: {
     processedPackets() {
+      // This computed property is unused, consider removing it
       return this.processData(this.packets);
-    },
-  
+    }
   },
   mounted() {
     this.intervalId = setInterval(this.fetchPacketInfos, 1000);
