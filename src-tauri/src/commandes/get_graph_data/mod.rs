@@ -74,6 +74,13 @@ impl GraphBuilder {
         match ip_type {
             Some(IpType::Private) => "#D4D3DC".to_string(), // Light gray for private IPs
             Some(IpType::Public) => "#317AC1".to_string(),  // Blue for public IPs
+            Some(IpType::Multicast) => "#FF5733".to_string(), // Red for multicast IPs
+            Some(IpType::Loopback) => "#FF5733".to_string(), // Red for loopback IPs    
+            Some(IpType::Unknown) => "#FF5733".to_string(), // Red for unknown IPs  
+            Some(IpType::Apipa) => "#FF5733".to_string(), // Red for APIPA IPs  
+            Some(IpType::LinkLocal) => "#FF5733".to_string(), // Red for link-local IPs  
+            Some(IpType::Ula) => "#FF5733".to_string(), // Red for ULA IPs  
+  
             _ => "#FF5733".to_string(), // Red for others (e.g., multicast or loopback, if they ever get through)
         }
     }
@@ -130,10 +137,20 @@ impl GraphBuilder {
                     mac: packet.mac_address_destination.clone(),
                 });
 
-                let label = &packet.l_3_protocol;
+                // Determine the label from protocol information
+                let label = if let Some(protocol) = packet.layer_3_infos.layer_4_infos.l_7_protocol.as_deref() {
+                    protocol
+                } else if let Some(protocol) = packet.layer_3_infos.l_4_protocol.as_deref() {
+                    protocol
+                } else if let Some(protocol) = packet.layer_3_infos.l_4_protocol.as_deref() {
+                    protocol
+                } else {
+                    &packet.l_3_protocol
+                };
+                let label: String = label.to_string();
 
                 // Add edge if it doesn't exist yet
-                if !self.edge_exists(source_ip, target_ip, label) {
+                if !self.edge_exists(source_ip, target_ip, &label) {
                     let edge_name = format!("edge{}", self.edge_counter);
                     self.edges.insert(
                         edge_name,
