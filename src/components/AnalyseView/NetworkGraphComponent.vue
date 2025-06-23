@@ -44,6 +44,10 @@ const GRAPH_CONFIGS = {
             return 'violet';
           case 'Profinet_rt':
             return 'green';
+          case 'TLS':
+            return 'blue';
+          case 'DNS':
+            return 'red';
           default:
             return 'white'; 
         }
@@ -74,6 +78,8 @@ const EDGE_COLORS = {
   'Ipv4': 'orange',
   'Ipv6': 'violet',
   'Profinet_rt': 'green',
+  'TLS': 'blue',
+  'DNS': 'red',
 };
 
 export default {
