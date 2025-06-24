@@ -48,6 +48,8 @@ const GRAPH_CONFIGS = {
             return 'blue';
           case 'DNS':
             return 'red';
+          case 'NTP':
+            return 'orange';
           default:
             return 'white'; 
         }
@@ -80,6 +82,8 @@ const EDGE_COLORS = {
   'Profinet_rt': 'green',
   'TLS': 'blue',
   'DNS': 'red',
+  'NTP': 'orange',
+  
 };
 
 export default {
@@ -280,7 +284,7 @@ export default {
       if (this.nodeMenu) {
         const nodeData = this.graphData.nodes[node];
         this.menuTargetNode = [
-          `Adresse IP: ${nodeData.name},
+          `Adresse: ${nodeData.name},
           Mac_address: ${nodeData.mac}`
         ];
         this.showContextMenu(this.nodeMenu, event);

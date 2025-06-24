@@ -135,7 +135,7 @@ impl CaptureHandle {
                 let current_len = rx.len();
                 let backpressure = current_len >= seuil_alerte;
 
-                if (current_len != last_channel_len || last_emit_channel.elapsed() >= ONE_SECOND) {
+                if current_len != last_channel_len || last_emit_channel.elapsed() >= ONE_SECOND {
                     last_channel_len = current_len;
                     last_emit_channel = Instant::now();
 
@@ -177,7 +177,7 @@ impl CaptureHandle {
                 match cap.next_packet() {
                     Ok(packet) => {
                         let owned = codec.decode(packet);
-                        if let Err(err) = tx.try_send(CaptureMessage::Packet(owned)) {
+                        if let Err(_err) = tx.try_send(CaptureMessage::Packet(owned)) {
                             let _ = app_capture.emit(
                                 "channel",
                                 ChannelCapacityPayload {
