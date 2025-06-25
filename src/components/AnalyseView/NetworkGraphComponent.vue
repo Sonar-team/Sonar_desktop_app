@@ -83,7 +83,7 @@ const EDGE_COLORS = {
   'TLS': 'blue',
   'DNS': 'red',
   'NTP': 'orange',
-  
+
 };
 
 export default {
@@ -146,18 +146,19 @@ export default {
       clearInterval(this.intervalId);
     }
   },
+  
   methods: {
     // Fetches network packet information from backend
     async fetchPacketInfos() {
       try {
         const jsonString = await invoke('get_graph_state', {});
         this.graphData = JSON.parse(jsonString);
+
       } catch (error) {
-        console.error("Error fetching packet infos:", error);
+        error("Error fetching packet infos:", error);
         this.showNotification('Error fetching network data', 'error');
       }
     },
-
 
     // Handles SVG export with error handling and notifications
     async downloadSvg() {
@@ -313,8 +314,33 @@ export default {
         'edge:click': showEdgeContextMenu,
       }"
     >
-      <template #edge-label="{ edge, ...slotProps }">
-        <v-edge-label :text="edge.label" align="above" v-bind="slotProps" />
+      <template #edge-label="{ edge, scale, ...slotProps }">
+        <!-- Ligne 1 : type de protocole -->
+        <v-edge-label
+          :text="edge.label"
+          align="center"
+          vertical-align="above"
+          v-bind="slotProps"
+          :font-size="18 * scale"
+          fill="#FFFFFF"
+        />
+        <!-- Ligne 2 : ports source/destination -->
+        <v-edge-label
+          :text="`Src: ${edge.source_port ?? '?'}`"
+          align="source"
+          vertical-align="below"
+          v-bind="slotProps"
+          :font-size="14 * scale"
+          fill="#E0E0E0"
+        />
+        <v-edge-label
+          :text="`Dst: ${edge.destination_port ?? '?'}`"
+          align="target"
+          vertical-align="below"
+          v-bind="slotProps"
+          :font-size="14 * scale"
+          fill="#E0E0E0"
+        />
       </template>
     </v-network-graph>
   </div>

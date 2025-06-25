@@ -1,5 +1,4 @@
 use serde::Serialize;
-use std::borrow::Cow;
 use std::collections::HashMap;
 
 use crate::tauri_state::{
@@ -7,44 +6,94 @@ use crate::tauri_state::{
 };
 
 #[derive(Serialize)]
-pub struct GraphData<'a> {
+pub struct GraphData {
     nodes: HashMap<String, Node>,
-    edges: HashMap<String, Edge<'a>>,
+    edges: HashMap<String, Edge>,
 }
 
 #[derive(Serialize, Clone)]
 struct Node {
     name: String,
-    color: String,
+    color: &'static str,    // Static for color constants
     mac: String,
 }
 
 #[derive(Serialize, Clone)]
-struct Edge<'a> {
+struct Edge {
     source: String,
     target: String,
-    label: Cow<'a, str>,
+    label: String,
+    source_port: Option<String>,
+    destination_port: Option<String>,
 }
 
-pub struct GraphBuilder<'a> {
+pub struct GraphBuilder {
     nodes: HashMap<String, Node>,
-    edges: HashMap<String, Edge<'a>>,
-    edge_counter: u32,
+    edges: Vec<Edge>,
 }
 
-impl<'a> GraphBuilder<'a> {
+impl GraphBuilder {
     pub fn new() -> Self {
-        GraphBuilder {
+        Self {
             nodes: HashMap::new(),
-            edges: HashMap::new(),
-            edge_counter: 1,
+            edges: Vec::new(),
         }
     }
 
-    fn determine_color(ip_type: &Option<IpType>) -> String {
+    pub fn add_edge(&mut self, packet: &PacketKey) {
+        if let (Some(source_ip), Some(target_ip)) = (
+            packet.layer_3_infos.ip_source.as_deref(),
+            packet.layer_3_infos.ip_destination.as_deref(),
+        ) {
+            // Skip if either IP is not valid
+            if !self.is_valid_ip(&packet.layer_3_infos.ip_source_type) || 
+               !self.is_valid_ip(&packet.layer_3_infos.ip_destination_type) {
+                return;
+            }
+
+            // Get or create nodes
+            let source_color = self.determine_color(&packet.layer_3_infos.ip_source_type);
+            let target_color = self.determine_color(&packet.layer_3_infos.ip_destination_type);
+
+            self.nodes.entry(source_ip.to_string()).or_insert_with(|| Node {
+                name: source_ip.to_string(),
+                color: source_color,
+                mac: packet.mac_address_source.clone(),
+            });
+
+            self.nodes.entry(target_ip.to_string()).or_insert_with(|| Node {
+                name: target_ip.to_string(),
+                color: target_color,
+                mac: packet.mac_address_destination.clone(),
+            });
+
+            // Get protocol label
+            let label = packet.layer_3_infos.layer_4_infos.l_7_protocol.as_deref()
+                .or_else(|| packet.layer_3_infos.l_4_protocol.as_deref())
+                .unwrap_or_else(|| packet.l_3_protocol.as_str())
+                .to_string();
+
+            // Add edge if it doesn't exist
+            if !self.edge_exists(source_ip, target_ip, &label) {
+                self.edges.push(Edge {
+                    source: source_ip.to_string(),
+                    target: target_ip.to_string(),
+                    label,
+                    source_port: packet.layer_3_infos.layer_4_infos.port_source.clone(),
+                    destination_port: packet.layer_3_infos.layer_4_infos.port_destination.clone(),
+                });
+            }
+        }
+    }
+
+    fn is_valid_ip(&self, ip_type: &Option<IpType>) -> bool {
+        matches!(ip_type, Some(IpType::Private | IpType::Public))
+    }
+
+    fn determine_color(&self, ip_type: &Option<IpType>) -> &'static str {
         match ip_type {
-            Some(IpType::Private) => "#D4D3DC".to_string(),
-            Some(IpType::Public) => "#317AC1".to_string(),
+            Some(IpType::Private) => "#D4D3DC",
+            Some(IpType::Public) => "#317AC1",
             Some(
                 IpType::Multicast
                 | IpType::Loopback
@@ -52,80 +101,27 @@ impl<'a> GraphBuilder<'a> {
                 | IpType::Apipa
                 | IpType::LinkLocal
                 | IpType::Ula,
-            ) => "#FF5733".to_string(),
-            _ => "#FF5733".to_string(),
+            ) => "#FF5733",
+            _ => "#FF5733",
         }
     }
 
-    pub fn edge_exists(&self, source_ip: &String, target_ip: &String, label: &str) -> bool {
-        self.edges.values().any(|e| {
-            (e.source == *source_ip && e.target == *target_ip && e.label == label)
-                || (e.source == *target_ip && e.target == *source_ip && e.label == label)
+    fn edge_exists(&self, source: &str, target: &str, label: &str) -> bool {
+        self.edges.iter().any(|e| {
+            (e.source == source && e.target == target && e.label == label) ||
+            (e.source == target && e.target == source && e.label == label)
         })
     }
 
-    pub fn add_edge(&mut self, packet: &'a PacketKey) {
-        if let (Some(source_ip), Some(target_ip)) = (
-            &packet.layer_3_infos.ip_source,
-            &packet.layer_3_infos.ip_destination,
-        ) {
-            let is_source_ip_valid = matches!(
-                packet.layer_3_infos.ip_source_type,
-                Some(IpType::Private | IpType::Public)
-            );
-            let is_target_ip_valid = matches!(
-                packet.layer_3_infos.ip_destination_type,
-                Some(IpType::Private | IpType::Public)
-            );
+    pub fn build_graph_data(self) -> GraphData {
+        let edges = self.edges.into_iter()
+            .enumerate()
+            .map(|(i, edge)| (format!("edge{}", i + 1), edge))
+            .collect();
 
-            if is_source_ip_valid && is_target_ip_valid {
-                let source_color = Self::determine_color(&packet.layer_3_infos.ip_source_type);
-                let target_color = Self::determine_color(&packet.layer_3_infos.ip_destination_type);
-
-                self.nodes.entry(source_ip.clone()).or_insert_with(|| Node {
-                    name: source_ip.clone(),
-                    color: source_color,
-                    mac: packet.mac_address_source.clone(),
-                });
-
-                self.nodes.entry(target_ip.clone()).or_insert_with(|| Node {
-                    name: target_ip.clone(),
-                    color: target_color,
-                    mac: packet.mac_address_destination.clone(),
-                });
-
-                let label = if let Some(protocol) =
-                    packet.layer_3_infos.layer_4_infos.l_7_protocol.as_deref()
-                {
-                    Cow::Borrowed(protocol)
-                } else if let Some(protocol) =
-                    packet.layer_3_infos.l_4_protocol.as_deref()
-                {
-                    Cow::Borrowed(protocol)
-                } else {
-                    Cow::Borrowed(packet.l_3_protocol.as_str())
-                };
-
-                if !self.edge_exists(source_ip, target_ip, &label) {
-                    let edge_name = format!("edge{}", self.edge_counter);
-                    self.edges.insert(
-                        edge_name,
-                        Edge {
-                            source: source_ip.clone(),
-                            target: target_ip.clone(),
-                            label,
-                        },
-                    );
-                    self.edge_counter += 1;
-                }
-            }
-        }
-    }
-
-    pub fn build_graph_data(&self) -> GraphData<'a> {
         GraphData {
-            nodes: self.nodes.clone(),
-            edges: self.edges.clone(),
+            nodes: self.nodes,
+            edges,
         }
     }
 }

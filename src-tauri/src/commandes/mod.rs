@@ -112,6 +112,7 @@ pub fn get_graph_state(state: State<'_, Arc<Mutex<SonarState>>>) -> Result<Strin
         .lock()
         .map_err(|_| "Failed to lock state".to_string())?;
 
+    // println!("get_graph_state {:?}", &locked_state.get_graph_data());
     locked_state.get_graph_data()
 }
 

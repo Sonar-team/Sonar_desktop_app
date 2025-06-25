@@ -5,11 +5,11 @@
     </button>
 
     <button class="image-btn" @click="stop" title="Arrêter" :disabled="!isRunning">
-      <img src="/src/assets/stop.svg" alt="Stop" class="icon-img" />
+      🛑
     </button>
 
     <button class="image-btn"  title="Config" :disabled="isRunning" @click="handleConfigClick">
-      <img src="/src/assets/config.svg" alt="Config" class="icon-img" />
+      ⚙️
     </button>
     
     <button class="image-btn" @click="reset" title="Réinitialiser">🔄</button>
