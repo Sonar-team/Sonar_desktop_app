@@ -9,7 +9,7 @@
     </button>
 
     <button class="image-btn"  title="Config" :disabled="isRunning" @click="handleConfigClick">
-      ⚙️
+      <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
     
     <button class="image-btn" @click="reset" title="Réinitialiser">🔄</button>
