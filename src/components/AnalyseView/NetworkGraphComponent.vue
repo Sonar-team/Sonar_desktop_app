@@ -125,8 +125,28 @@ export default {
             ...GRAPH_CONFIGS.edge.normal,
             color: edge => EDGE_COLORS[edge.label] || '#ffffff'
           },
+          marker: {
+            source: {
+              type: "none",
+              width: 4,
+              height: 4,
+              margin: -1,
+              offset: 0,
+              units: "strokeWidth",
+              color: null,
+            },
+            target: {
+              type: "arrow",
+              width: 6,
+              height: 6,
+              margin: 0,
+              offset: 0,
+              units: "strokeWidth",
+              color: null,
+            },
+          },
           label: GRAPH_CONFIGS.edge.label
-        }
+        },
       }),
       notifications: []
     };
