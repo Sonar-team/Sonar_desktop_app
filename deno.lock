@@ -11,6 +11,7 @@
     "npm:@tauri-apps/plugin-shell@2.2.2": "2.2.2",
     "npm:@vitejs/plugin-vue@6.0.0": "6.0.0_vite@7.0.0__picomatch@4.0.2_vue@3.5.16__typescript@5.8.3_typescript@5.8.3",
     "npm:chart.js@4.5.0": "4.5.0",
+    "npm:color-convert@^3.1.0": "3.1.0",
     "npm:d3-force@3": "3.0.0",
     "npm:html2canvas@^1.4.1": "1.4.1",
     "npm:pinia@3.0.3": "3.0.3_typescript@5.8.3_vue@3.5.16__typescript@5.8.3",
@@ -664,6 +665,15 @@
         "@kurkle/color"
       ]
     },
+    "color-convert@3.1.0": {
+      "integrity": "sha512-TVoqAq8ZDIpK5lsQY874DDnu65CSsc9vzq0wLpNQ6UMBq81GSZocVazPiBbYGzngzBOIRahpkTzCLVe2at4MfA==",
+      "dependencies": [
+        "color-name"
+      ]
+    },
+    "color-name@2.0.0": {
+      "integrity": "sha512-SbtvAMWvASO5TE2QP07jHBMXKafgdZz8Vrsrn96fiL+O92/FN/PLARzUW5sKt013fjAprK2d2iCn2hk2Xb5oow=="
+    },
     "copy-anything@3.0.5": {
       "integrity": "sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==",
       "dependencies": [
@@ -975,6 +985,7 @@
         "npm:@tauri-apps/plugin-shell@2.2.2",
         "npm:@vitejs/plugin-vue@6.0.0",
         "npm:chart.js@4.5.0",
+        "npm:color-convert@^3.1.0",
         "npm:d3-force@3",
         "npm:html2canvas@^1.4.1",
         "npm:pinia@3.0.3",

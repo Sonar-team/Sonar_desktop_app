@@ -1,8 +1,9 @@
-<script >
+<script lang="ts">
 import { VNetworkGraph, VEdgeLabel } from "v-network-graph"
 import * as vNG from "v-network-graph"
 import {ForceLayout} from "v-network-graph/lib/force-layout"
 import html2canvas from 'html2canvas';
+import ColorConvert from "color-convert"
 
 import { invoke } from '@tauri-apps/api/core';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -25,6 +26,7 @@ const GRAPH_CONFIGS = {
       fontSize: 16,
       color: "#ffffff",
       direction: "north",
+
     },
   },
   edge: {
@@ -111,7 +113,10 @@ export default {
           ...GRAPH_CONFIGS.node,
           normal: {
             radius: GRAPH_CONFIGS.node.radius,
-            color: node => node.color
+            color: node => node.color,
+            strokeWidth: 3,
+            strokeColor: node => this.darker(node.color, 20),
+
           }
         },
         edge: {
@@ -148,6 +153,11 @@ export default {
   },
   
   methods: {
+    darker(hex: String, level: Number) {
+      const hsv = ColorConvert.hex.hsv(hex)
+      hsv[2] -= level
+      return "#" + ColorConvert.hsv.hex(hsv)
+    },
     // Fetches network packet information from backend
     async fetchPacketInfos() {
       try {
@@ -356,7 +366,7 @@ export default {
     Infos de l'arête:
     <div class="contenue">{{ menuTargetEdges.join(", ") }}</div>
   </div>
-  
+
   <div v-for="notification in notifications" :key="notification.timestamp" class="notification" :class="notification.type">
     {{ notification.message }}
   </div>
