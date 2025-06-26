@@ -2,6 +2,21 @@
 
 ---
 
+## [2.3.2] - 2025-06-25
+
+## ✨ Fonctionnalités
+
+- Ajout de l'affichage des ports sur la vue graphique pour une meilleure visibilité des connexions réseau
+- Amélioration de la visibilité des protocoles les plus hauts dans la hiérarchie réseau
+- Optimisation des performances de rendu pour les graphes complexes
+
+## 🛠 Corrections
+
+- Correction de l'affichage des légendes dans la vue graphique
+- Amélioration de la stabilité lors de la manipulation des nœuds
+
+---
+
 ## [2.2.8] - 2025-05-19
 
 ## ✨ Fonctionnalités

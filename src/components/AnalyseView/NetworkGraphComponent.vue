@@ -344,6 +344,8 @@ export default {
       </template>
     </v-network-graph>
   </div>
+
+  <!-- Context menu -->
   <div ref="nodeMenu" class="context-menu">
     Infos du noeud:
     <ul class="contenu">
@@ -354,6 +356,7 @@ export default {
     Infos de l'arête:
     <div class="contenue">{{ menuTargetEdges.join(", ") }}</div>
   </div>
+  
   <div v-for="notification in notifications" :key="notification.timestamp" class="notification" :class="notification.type">
     {{ notification.message }}
   </div>
