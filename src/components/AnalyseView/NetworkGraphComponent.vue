@@ -116,7 +116,7 @@ export default {
             color: node => node.color,
             strokeWidth: 3,
             strokeColor: node => this.darker(node.color, 20),
-
+ 
           }
         },
         edge: {

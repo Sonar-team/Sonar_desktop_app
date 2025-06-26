@@ -87,24 +87,25 @@ impl GraphBuilder {
     }
 
     fn is_valid_ip(&self, ip_type: &Option<IpType>) -> bool {
-        matches!(ip_type, Some(IpType::Private | IpType::Public))
+        !matches!(ip_type, Some(IpType::Unknown) | None)
     }
+    
 
     fn determine_color(&self, ip_type: &Option<IpType>) -> &'static str {
         match ip_type {
-            Some(IpType::Private) => "#D4D3DC",
-            Some(IpType::Public) => "#317AC1",
-            Some(
-                IpType::Multicast
-                | IpType::Loopback
-                | IpType::Unknown
-                | IpType::Apipa
-                | IpType::LinkLocal
-                | IpType::Ula,
-            ) => "#FF5733",
-            _ => "#FF5733",
+            Some(IpType::Private)      => "#8BC34A", // Vert doux → réseau local
+            Some(IpType::Public)       => "#2196F3", // Bleu → IP publique
+            Some(IpType::Multicast)    => "#FFC107", // Jaune → multicast classique
+            Some(IpType::Broadcast)    => "#FF00FF", // Magenta → très visible
+            Some(IpType::Loopback)     => "#E53935", // Rouge vif → local à la machine
+            Some(IpType::Apipa)        => "#FF9800", // Orange → APIPA
+            Some(IpType::LinkLocal)    => "#FF5722", // Orange foncé → lien local
+            Some(IpType::Ula)          => "#9C27B0", // Violet → ULA IPv6
+            Some(IpType::Unknown)      => "#9E9E9E", // Gris → inconnu
+            None                       => "#9E9E9E", // Par défaut : gris
         }
     }
+    
 
     fn edge_exists(&self, source: &str, target: &str, label: &str) -> bool {
         self.edges.iter().any(|e| {

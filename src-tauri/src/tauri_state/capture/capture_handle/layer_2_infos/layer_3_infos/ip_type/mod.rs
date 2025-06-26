@@ -11,6 +11,7 @@ pub enum IpType {
     LinkLocal,
     Ula,
     Public,
+    Broadcast,
     #[default]
     Unknown,
 }
@@ -23,6 +24,7 @@ impl IpType {
             Ok(IpAddr::V4(ipv4_addr)) if ipv4_addr.is_loopback() => Self::Loopback,
             Ok(IpAddr::V4(ipv4_addr)) if is_apipa_ip(&ipv4_addr) => Self::Apipa,
             Ok(IpAddr::V4(ipv4_addr)) if ipv4_addr.is_multicast() => Self::Multicast,
+            Ok(IpAddr::V4(ipv4_addr)) if ipv4_addr.is_broadcast() => Self::Broadcast,
             Ok(IpAddr::V6(ipv6_addr)) if ipv6_addr.is_multicast() => Self::Multicast,
             Ok(IpAddr::V6(ipv6_addr)) if ipv6_addr.is_loopback() => Self::Loopback,
             Ok(IpAddr::V6(ipv6_addr)) if is_ipv6_unicast_link_local(&ipv6_addr) => Self::LinkLocal,
@@ -36,6 +38,7 @@ impl IpType {
 impl fmt::Display for IpType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let display_string = match self {
+            IpType::Broadcast => "Broadcast",
             IpType::Private => "Privée",
             IpType::Multicast => "Multicast",
             IpType::Loopback => "Loopback",
@@ -66,10 +69,19 @@ fn is_ula(ip: &std::net::Ipv6Addr) -> bool {
     first_byte & 0xfe == 0xfc
 }
 
+
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    #[test]
+    fn test_ipv4_broadcast() {
+        assert_eq!(IpType::from_ip("192.168.1.255"), IpType::Broadcast);
+        assert_eq!(IpType::from_ip("10.0.0.255"), IpType::Broadcast);
+    }
+    
     #[test]
     fn test_apipa_ipv4() {
         let ip = "169.254.1.1";
