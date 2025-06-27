@@ -5,9 +5,9 @@
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-
+use rust_xlsxwriter::Worksheet;
 use csv::Writer;
-use log::{error, info};
+use log::{error, info, debug};
 use rust_xlsxwriter::Workbook;
 use serde::{Deserialize, Serialize};
 
@@ -24,31 +24,6 @@ pub struct PacketInfoEntry {
     pub stats: PacketStats,
 }
 
-/// `SonarState` encapsule l'état global de l'application Sonar.
-///
-/// Cette structure est conçue pour stocker et gérer les informations sur les trames réseau
-/// capturées, y compris le comptage de leurs occurrences.
-///
-/// # Structure
-/// `SonarState` contient un `Arc<Mutex<HashMap<PacketInfos, u32>>>`.
-/// - `Arc` permet un accès thread-safe et partagé à l'état.
-/// - `Mutex` garantit que l'accès à l'état est mutuellement exclusif,
-///   empêchant les conditions de concurrence.
-/// - `HashMap<PacketInfos, u32>` stocke les trames réseau (`PacketInfos`) et
-///   leur nombre d'occurrences (`u32`).
-///
-/// # Exemple
-/// ```
-/// use std::sync::{Mutex, Arc};
-/// use std::collections::HashMap;
-/// use crate::sniff::capture_packet::layer_2_infos::PacketInfos;
-/// use crate::SonarState;
-///
-/// let state = SonarState::new();
-/// // Utilisez `state` ici pour gérer les trames réseau et leur comptage
-/// ```
-
-// Clé sans `packet_size` pour éviter de considérer les tailles comme des doublons
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
 pub struct PacketKey {
     pub mac_address_source: String,
@@ -60,8 +35,8 @@ pub struct PacketKey {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PacketStats {
-    pub count: u32,             // Nombre de paquets similaires
-    pub packet_size_total: u32, // Taille totale cumulée des paquets
+    pub count: u32,
+    pub packet_size_total: u32,
 }
 
 impl PacketStats {
@@ -78,7 +53,6 @@ impl PacketStats {
     }
 }
 
-// Conversion de `PacketInfos` en `PacketKey` pour utiliser comme clé du `HashMap`
 impl From<&PacketInfos> for PacketKey {
     fn from(info: &PacketInfos) -> Self {
         PacketKey {
@@ -92,66 +66,51 @@ impl From<&PacketInfos> for PacketKey {
 }
 
 pub struct SonarState {
-    // Contient les trames réseau et leur nombre d'occurrences
     pub matrice: HashMap<PacketKey, PacketStats>,
-    // Indique si le filtrage des adresses IPv6 est activé
 }
 
 impl SonarState {
-    // Constructeur pour initialiser `SonarState`
     pub fn new() -> Arc<Mutex<Self>> {
         Arc::new(Mutex::new(SonarState {
             matrice: HashMap::new(),
         }))
     }
+
     pub fn reset(&mut self) {
         self.matrice.clear();
     }
 
-    // Getter method for matrice
-    // pub fn get_matrice(&self) -> &HashMap<PacketKey, PacketStats> {
-    //     &self.matrice
-    // }
-
-    // Met à jour `matrice` avec un nouveau paquet
     pub fn update_matrice_with_packet(&mut self, new_packet: &PacketInfos) {
         let packet_size = new_packet.packet_size as u32;
-        // Crée une clé à partir de `PacketInfos` en utilisant `PacketKey`
         let key = PacketKey::from(new_packet);
-        // Insertion ou mise à jour dans la matrice
+
+        let existed = self.matrice.contains_key(&key);
+        if existed {
+            debug!("Mise à jour d'un paquet existant dans la matrice : {:?}", key);
+        } else {
+            debug!("Ajout d'un nouveau paquet dans la matrice : {:?}", key);
+        }
+
         self.matrice
             .entry(key)
             .and_modify(|stats| stats.update(packet_size))
             .or_insert(PacketStats::new(packet_size));
     }
 
-    /// Fonction pour enregistrer les paquets vers un fichier CSV.
-    ///
-    /// # Arguments
-    ///
-    /// * `file_path` - Chemin du fichier CSV.
-    /// * `app` - Application handle de Tauri.
-    ///
-    /// # Exemple
-    ///
-    /// ```rust
-    /// cmd_save_packets_to_csv(String::from("paquets.csv"), state);
-    /// ```
     pub fn cmd_save_packets_to_csv(&self, file_path: String) -> Result<(), ExportError> {
+        info!("Début de l'export CSV vers {}", file_path);
         let mut wtr = Writer::from_path(&file_path).map_err(|e| {
-            error!(
-                "Erreur lors de l'ouverture du fichier CSV {} : {}",
-                file_path, e
-            );
+            error!("Erreur lors de l'ouverture du fichier CSV {} : {}", file_path, e);
             ExportError::Io(e.to_string())
         })?;
 
-        for (packet_key, stats) in self.matrice.iter() {
-            let packet_count = stats.count;
-            println!("Packet count: {}", packet_count);
+        let total = self.matrice.len();
+        info!("Nombre total de lignes à écrire : {}", total);
+
+        for (i, (packet_key, stats)) in self.matrice.iter().enumerate() {
             let packet_csv = PacketInfosFlaten::from_packet_key_and_stats(packet_key, stats);
             wtr.serialize(packet_csv).map_err(|e| {
-                error!("Erreur de sérialisation CSV : {:?}", e);
+                error!("Erreur de sérialisation à la ligne {} : {:?}", i + 1, e);
                 ExportError::Csv(e.to_string())
             })?;
         }
@@ -165,135 +124,70 @@ impl SonarState {
         Ok(())
     }
 
-    /// Fonction pour enregistrer les paquets vers un fichier Excel.
-    ///
-    /// # Arguments
-    ///
-    /// * `file_path` - Chemin du fichier Excel.
-    /// * `state` - État contenant les données des paquets.
-    ///
-    /// # Exemple
-    ///
-    /// ```rust
-    /// cmd_save_packets_to_excel(String::from("paquets.xlsx"), state);
-    /// ```
     pub fn cmd_save_packets_to_excel(&self, file_path: String) -> Result<(), ExportError> {
-        let data = self.matrice.clone();
+        info!("Début de l'export Excel vers {}", file_path);
+
+        let write_cell = |sheet: &mut Worksheet, row: u32, col: u16, value: &str| -> Result<(), ExportError> {
+            sheet.write_string(row, col, value)
+                .map(|_| ())
+                .map_err(|e| ExportError::Xlsx(e.to_string()))
+        };
+        let write_number = |sheet: &mut Worksheet, row: u32, col: u16, value: f64| -> Result<(), ExportError> {
+            sheet.write_number(row, col, value)
+                .map(|_| ())
+                .map_err(|e| ExportError::Xlsx(e.to_string()))
+        };
+
+        let data = &self.matrice;
+        let total = data.len();
+        info!("Nombre total de lignes à écrire : {}", total);
 
         let mut workbook = Workbook::new();
-        let sheet = workbook.add_worksheet();
+        let mut sheet = workbook.add_worksheet();
 
         let headers = [
-            "MAC Source",
-            "MAC Destination",
-            "Interface",
-            "L3 Protocol",
-            "IP Source",
-            "IP Source Type",
-            "IP Destination",
-            "IP Destination Type",
-            "L4 Protocol",
-            "Source Port",
-            "Destination Port",
-            "L7 Protocol",
-            "Taille des packets",
-            "Count",
+            "MAC Source", "MAC Destination", "Interface", "L3 Protocol",
+            "IP Source", "IP Source Type", "IP Destination", "IP Destination Type",
+            "L4 Protocol", "Source Port", "Destination Port", "L7 Protocol",
+            "Taille des packets", "Count",
         ];
-
         for (i, header) in headers.iter().enumerate() {
-            sheet
-                .write_string(0, i as u16, header.to_string())
-                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
+            write_cell(&mut sheet, 0, i as u16, header)?;
         }
 
         for (i, (packet_key, stats)) in data.iter().enumerate() {
             let packet_csv = PacketInfosFlaten::from_packet_key_and_stats(packet_key, stats);
+            let row = i as u32 + 1;
 
-            sheet
-                .write_string(i as u32 + 1, 0, &packet_csv.mac_address_source)
-                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            sheet
-                .write_string(i as u32 + 1, 1, &packet_csv.mac_address_destination)
-                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            sheet
-                .write_string(i as u32 + 1, 2, &packet_csv.interface)
-                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            sheet
-                .write_string(i as u32 + 1, 3, &packet_csv.l_3_protocol)
-                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-
-            if let Some(ip_src) = &packet_csv.ip_source {
-                sheet
-                    .write_string(i as u32 + 1, 4, ip_src)
-                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            }
-            if let Some(ip_src_type) = &packet_csv.ip_source_type {
-                sheet
-                    .write_string(i as u32 + 1, 5, ip_src_type.to_string())
-                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            }
-            if let Some(ip_dst) = &packet_csv.ip_destination {
-                sheet
-                    .write_string(i as u32 + 1, 6, ip_dst)
-                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            }
-            if let Some(ip_dst_type) = &packet_csv.ip_destination_type {
-                sheet
-                    .write_string(i as u32 + 1, 7, ip_dst_type.to_string())
-                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            }
-            if let Some(l4_proto) = &packet_csv.l_4_protocol {
-                sheet
-                    .write_string(i as u32 + 1, 8, l4_proto)
-                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            }
-            if let Some(port_src) = &packet_csv.port_source {
-                sheet
-                    .write_string(i as u32 + 1, 9, port_src)
-                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            }
-            if let Some(port_dst) = &packet_csv.port_destination {
-                sheet
-                    .write_string(i as u32 + 1, 10, port_dst)
-                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            }
-            if let Some(l7_proto) = &packet_csv.l_7_protocol {
-                sheet
-                    .write_string(i as u32 + 1, 11, l7_proto)
-                    .map_err(|e| ExportError::Xlsx(e.to_string()))?;
+            if i % 100 == 0 {
+                debug!("Écriture de la ligne {}/{}", i + 1, total);
             }
 
-            sheet
-                .write_number(i as u32 + 1, 12, packet_csv.packet_size as f64)
-                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
-            sheet
-                .write_number(i as u32 + 1, 13, packet_csv.count as f64)
-                .map_err(|e| ExportError::Xlsx(e.to_string()))?;
+            write_cell(&mut sheet, row, 0, &packet_csv.mac_address_source)?;
+            write_cell(&mut sheet, row, 1, &packet_csv.mac_address_destination)?;
+            write_cell(&mut sheet, row, 2, &packet_csv.interface)?;
+            write_cell(&mut sheet, row, 3, &packet_csv.l_3_protocol)?;
+            write_cell(&mut sheet, row, 4, packet_csv.ip_source.as_deref().unwrap_or(""))?;
+            write_cell(&mut sheet, row, 5, packet_csv.ip_source_type.as_ref().map(|v| v.to_string()).as_deref().unwrap_or(""))?;
+            write_cell(&mut sheet, row, 6, packet_csv.ip_destination.as_deref().unwrap_or(""))?;
+            write_cell(&mut sheet, row, 7, packet_csv.ip_destination_type.as_ref().map(|v| v.to_string()).as_deref().unwrap_or(""))?;
+            write_cell(&mut sheet, row, 8, packet_csv.l_4_protocol.as_deref().unwrap_or(""))?;
+            write_cell(&mut sheet, row, 9, packet_csv.port_source.as_deref().unwrap_or(""))?;
+            write_cell(&mut sheet, row, 10, packet_csv.port_destination.as_deref().unwrap_or(""))?;
+            write_cell(&mut sheet, row, 11, packet_csv.l_7_protocol.as_deref().unwrap_or(""))?;
+            write_number(&mut sheet, row, 12, packet_csv.packet_size as f64)?;
+            write_number(&mut sheet, row, 13, packet_csv.count as f64)?;
         }
 
-        workbook
-            .save(file_path)
-            .map_err(|e| ExportError::Xlsx(e.to_string()))?;
+        workbook.save(&file_path).map_err(|e| {
+            error!("Erreur lors de la sauvegarde du fichier Excel : {}", e);
+            ExportError::Xlsx(e.to_string())
+        })?;
 
+        info!("Export Excel terminé avec succès : {}", file_path);
         Ok(())
     }
 
-    /// Récupère et sérialise les données de trafic réseau depuis l'état partagé.
-    ///
-    /// # Retour
-    ///
-    /// Cette fonction retourne `Ok(String)` contenant les données sérialisées en cas de succès,
-    /// ou `Err(String)` avec un message d'erreur en cas d'échec.
-    ///
-    /// # Exemples
-    ///
-    /// ```ignore
-    /// let result = get_matrice_data(app);
-    /// match result {
-    ///     Ok(json_string) => println!("Données sérialisées : {}", json_string),
-    ///     Err(e) => eprintln!("Erreur : {}", e),
-    /// }
-    /// ```
     pub fn get_matrice_data(&self) -> Result<String, String> {
         let data: &HashMap<PacketKey, PacketStats> = &self.matrice;
 
@@ -315,61 +209,51 @@ impl SonarState {
             }
         }
     }
-    
+
     pub fn get_matrice_len(&self) -> usize {
         self.matrice.len()
     }
 
     pub fn get_graph_data(&self) -> Result<String, String> {
-        let data = self.matrice.clone(); // Acquire a lock
-
+        let data = self.matrice.clone();
         let mut graph_builder = GraphBuilder::new();
 
-        for (packet, _) in data.iter() {
+        let total = data.len();
+
+        for (i, (packet, _)) in data.iter().enumerate() {
+            if i % 100 == 0 {
+                debug!("Ajout de l'arête {}/{}", i + 1, total);
+            }
             graph_builder.add_edge(packet);
         }
 
         let graph_data = graph_builder.build_graph_data();
-        //println!("{:?}", serde_json::to_string(&graph_data).unwrap());
 
         serde_json::to_string(&graph_data).map_err(|e| {
-            error!("Serialization error: {}", e);
+            error!("Erreur de sérialisation du graphe : {}", e);
             format!("Serialization error: {}", e)
         })
     }
 }
 
-/// Structure représentant les informations des paquets à sérialiser vers un fichier CSV.
 #[derive(Serialize)]
 struct PacketInfosFlaten {
-    /// Adresse MAC source du paquet.
     mac_address_source: String,
-    /// Adresse MAC destination du paquet.
     mac_address_destination: String,
-    /// Interface du paquet.
     interface: String,
-    /// Protocole de la couche 3 du paquet.
     l_3_protocol: String,
-    /// Adresse IP source du paquet (optionnel).
     ip_source: Option<String>,
     ip_source_type: Option<IpType>,
-    /// Adresse IP destination du paquet (optionnel).
     ip_destination: Option<String>,
     ip_destination_type: Option<IpType>,
-    /// Protocole de la couche 4 du paquet (optionnel).
     l_4_protocol: Option<String>,
-    /// Port source du paquet (optionnel).
     port_source: Option<String>,
-    /// Port destination du paquet (optionnel).
     port_destination: Option<String>,
-    /// Taille du paquet.
     l_7_protocol: Option<String>,
     packet_size: usize,
-    /// Nombre de fois que ce paquet a été rencontré.
     count: u32,
 }
 
-/// Modifie `from_packet_infos` pour accepter `PacketKey` et `PacketStats`
 impl PacketInfosFlaten {
     fn from_packet_key_and_stats(key: &PacketKey, stats: &PacketStats) -> Self {
         PacketInfosFlaten {
@@ -385,7 +269,7 @@ impl PacketInfosFlaten {
             port_source: key.layer_3_infos.layer_4_infos.port_source.clone(),
             port_destination: key.layer_3_infos.layer_4_infos.port_destination.clone(),
             l_7_protocol: key.layer_3_infos.layer_4_infos.l_7_protocol.clone(),
-            packet_size: stats.packet_size_total as usize, // Utilisation de la taille totale cumulée
+            packet_size: stats.packet_size_total as usize,
             count: stats.count,
         }
     }

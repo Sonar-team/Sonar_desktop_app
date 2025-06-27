@@ -356,7 +356,7 @@ export default {
         />
         <!-- Ligne 2 : ports source/destination -->
         <v-edge-label
-          :text="`Src: ${edge.source_port ?? '?'}`"
+          :text="`${edge.source_port ?? ''}`"
           align="source"
           vertical-align="below"
           v-bind="slotProps"
@@ -364,7 +364,7 @@ export default {
           fill="#E0E0E0"
         />
         <v-edge-label
-          :text="`Dst: ${edge.destination_port ?? '?'}`"
+          :text="`${edge.destination_port ?? ''}`"
           align="target"
           vertical-align="below"
           v-bind="slotProps"
