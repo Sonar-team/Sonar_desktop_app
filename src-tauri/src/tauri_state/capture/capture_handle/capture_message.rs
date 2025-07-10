@@ -2,7 +2,6 @@ use pcap::Stat;
 use pcap::{Packet, PacketCodec, PacketHeader};
 use serde::Serialize;
 
-
 use crate::tauri_state::capture::capture_handle::layer_2_infos::PacketInfos;
 
 pub enum CaptureMessage {

@@ -72,10 +72,11 @@ impl CaptureHandle {
             let mut last_emit_channel = Instant::now();
             let mut last_channel_len = 0usize;
 
-            static ONE_SECOND: Duration = Duration::from_secs(1);
+            static ONE_SECOND: Duration = Duration::from_secs(2);
 
             loop {
                 match rx.recv() {
+                    
                     Ok(msg) => match msg {
                         CaptureMessage::Packet(pkt) => {
                             processed += 1;
