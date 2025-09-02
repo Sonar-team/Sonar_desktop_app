@@ -13,9 +13,9 @@ use commandes::{
     reset,
 };
 mod errors;
+mod setup;
 mod tauri_state;
 mod utils;
-mod setup;
 use log::info;
 use tauri_state::{capture::CaptureState, matrice::SonarState};
 
@@ -62,22 +62,16 @@ pub fn run() -> Result<(), tauri::Error> {
             stop_capture,
             config_capture,
             get_config_capture,
-            
             save_packets_to_csv,
             save_packets_to_excel,
-
             get_matrice,
             get_graph_state,
-
             write_file,
             write_file_as_png,
-
             get_hostname_to_string,
             reset,
-
             convert_from_pcap_list,
             write_png_file,
-
             export_logs
         ])
         // Exécuter l'application

@@ -6,9 +6,17 @@ use log::{debug, error};
 use packet_parser::PacketFlow;
 use crate::{
     events::emit_event,
-    tauri_state::capture::capture_handle::{messages::{
-        capture::PacketMinimal, channel::ChannelCapacityPayload, stats::{StatTriple, StatsPayload}, CaptureMessage
-    }, threads::packet_buffer::PacketBufferPool},
+    tauri_state::capture::capture_handle::{
+        messages::{
+            capture::PacketMinimal, 
+            channel::ChannelCapacityPayload, 
+            stats::{
+                StatTriple, 
+                StatsPayload}, 
+            CaptureMessage
+        },
+        threads::packet_buffer::PacketBufferPool
+    },
 };
 
 pub fn spawn_processing_thread(

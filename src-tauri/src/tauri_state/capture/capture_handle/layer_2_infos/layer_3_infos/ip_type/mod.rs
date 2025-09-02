@@ -69,9 +69,6 @@ fn is_ula(ip: &std::net::Ipv6Addr) -> bool {
     first_byte & 0xfe == 0xfc
 }
 
-
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -81,7 +78,7 @@ mod tests {
         assert_eq!(IpType::from_ip("192.168.1.255"), IpType::Broadcast);
         assert_eq!(IpType::from_ip("10.0.0.255"), IpType::Broadcast);
     }
-    
+
     #[test]
     fn test_apipa_ipv4() {
         let ip = "169.254.1.1";

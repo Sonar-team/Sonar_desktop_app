@@ -48,7 +48,7 @@ pub struct PacketFlow {
     pub len: u32,
     pub flow: PacketInfos,
     pub formatted_time: String,
-    }
+}
 
 #[cfg(target_os = "macos")]
 #[derive(Debug, Clone, Serialize)]
@@ -59,7 +59,7 @@ pub struct PacketFlow {
     pub len: u32,
     pub flow: PacketInfos,
     pub formatted_time: String,
-    }
+}
 
 #[derive(Clone, Serialize)]
 pub struct StatsPayload {
@@ -120,6 +120,6 @@ pub fn format_timestamp(ts_sec: i64, ts_usec: i32) -> String {
         naive.hour(),
         naive.minute(),
         naive.second(),
-        micro   
+        micro
     )
 }

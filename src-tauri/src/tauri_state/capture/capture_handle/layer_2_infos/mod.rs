@@ -14,9 +14,9 @@
 
 use std::fmt;
 
-use pnet::packet::{ethernet::EthernetPacket, Packet};
+use pnet::packet::{Packet, ethernet::EthernetPacket};
 
-use layer_3_infos::{get_layer_3_infos, Layer3Infos};
+use layer_3_infos::{Layer3Infos, get_layer_3_infos};
 use serde::Serialize;
 pub mod layer_3_infos;
 

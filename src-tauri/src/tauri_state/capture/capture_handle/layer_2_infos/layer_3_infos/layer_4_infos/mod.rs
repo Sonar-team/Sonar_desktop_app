@@ -1,7 +1,7 @@
+use pnet::packet::Packet;
 use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
 use pnet::packet::tcp::TcpPacket;
 use pnet::packet::udp::UdpPacket;
-use pnet::packet::Packet;
 use serde::{Deserialize, Serialize};
 
 mod layer_7_infos;

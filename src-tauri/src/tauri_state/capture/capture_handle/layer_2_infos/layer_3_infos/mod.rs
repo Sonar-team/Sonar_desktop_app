@@ -50,19 +50,19 @@
 
 use log::info;
 use pnet::packet::{
+    Packet,
     arp::ArpPacket,
     ethernet::{EtherTypes, EthernetPacket},
     ipv4::Ipv4Packet,
     ipv6::Ipv6Packet,
     vlan::VlanPacket,
-    Packet,
 };
 
 pub mod ip_type;
 pub mod layer_4_infos;
 
 use ip_type::IpType;
-use layer_4_infos::{get_layer_4_infos, Layer4Infos};
+use layer_4_infos::{Layer4Infos, get_layer_4_infos};
 use profinet_rt::ProfinetPacket;
 use serde::{Deserialize, Serialize};
 

@@ -1,6 +1,5 @@
-
 use capture_message::{CaptureMessage, ChannelCapacityPayload, Codec, PacketFlow, StatsPayload};
-use crossbeam::channel::{bounded, Receiver, Sender};
+use crossbeam::channel::{Receiver, Sender, bounded};
 use layer_2_infos::PacketInfos;
 use log::{debug, error, info, warn};
 
@@ -9,8 +8,8 @@ use pnet::packet::ethernet::EthernetPacket;
 use std::{
     collections::VecDeque,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
     },
     thread,
     time::{Duration, Instant},
@@ -19,7 +18,9 @@ use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::{
     errors::capture_error::CaptureError,
-    tauri_state::{capture::capture_handle::capture_message::format_timestamp, matrice::SonarState},
+    tauri_state::{
+        capture::capture_handle::capture_message::format_timestamp, matrice::SonarState,
+    },
 };
 
 pub mod capture_message;
@@ -76,7 +77,6 @@ impl CaptureHandle {
 
             loop {
                 match rx.recv() {
-                    
                     Ok(msg) => match msg {
                         CaptureMessage::Packet(pkt) => {
                             processed += 1;
@@ -91,10 +91,14 @@ impl CaptureHandle {
                                 caplen: pkt.header.caplen,
                                 len: pkt.header.len,
                                 flow: PacketInfos::new(&interface_name, &packet),
-                                formatted_time: format_timestamp(pkt.header.ts.tv_sec, pkt.header.ts.tv_usec),
+                                formatted_time: format_timestamp(
+                                    pkt.header.ts.tv_sec,
+                                    pkt.header.ts.tv_usec,
+                                ),
                             };
 
-                            let state: State<Arc<Mutex<SonarState>>> = app_processing.state::<Arc<Mutex<SonarState>>>();
+                            let state: State<Arc<Mutex<SonarState>>> =
+                                app_processing.state::<Arc<Mutex<SonarState>>>();
                             if let Ok(mut locked_state) = state.lock() {
                                 locked_state.update_matrice_with_packet(&packet_info.flow);
                                 last_packets.push_front(packet_info);
@@ -102,7 +106,8 @@ impl CaptureHandle {
                                 if last_emit_frame.elapsed() >= ONE_SECOND {
                                     last_emit_frame = Instant::now();
                                     let _ = app_processing.emit("frame", &last_packets);
-                                    let _ = app_processing.emit("matrice_len", &locked_state.get_matrice_len());
+                                    let _ = app_processing
+                                        .emit("matrice_len", &locked_state.get_matrice_len());
                                 }
                             };
                         }

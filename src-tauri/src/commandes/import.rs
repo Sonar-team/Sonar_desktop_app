@@ -5,7 +5,7 @@ use log::info;
 use pcap::Capture;
 use pnet::packet::ethernet::EthernetPacket;
 use std::sync::{Arc, Mutex};
-use tauri::{ipc::InvokeError, State};
+use tauri::{State, ipc::InvokeError};
 
 #[tauri::command(async)]
 pub fn convert_from_pcap_list(

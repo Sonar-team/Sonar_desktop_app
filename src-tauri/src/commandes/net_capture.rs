@@ -1,13 +1,13 @@
 use std::sync::{Arc, Mutex};
 
 use log::info;
-use tauri::{command, AppHandle, State};
+use tauri::{AppHandle, State, command};
 
 use crate::{
     errors::CaptureStateError,
     tauri_state::capture::{
-        capture_config::CaptureConfig, capture_handle::CaptureHandle,
-        capture_status::CaptureStatus, CaptureState,
+        CaptureState, capture_config::CaptureConfig, capture_handle::CaptureHandle,
+        capture_status::CaptureStatus,
     },
 };
 

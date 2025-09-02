@@ -79,10 +79,10 @@ mod tests {
         assert!(!interface_names.is_empty());
 
         #[cfg(target_os = "windows")]
-        assert!(interface_names
-            .iter()
-            .any(|name| name.starts_with("Interface MAC: ")));
-
-
+        assert!(
+            interface_names
+                .iter()
+                .any(|name| name.starts_with("Interface MAC: "))
+        );
     }
 }

@@ -3,20 +3,20 @@
 //! Ce module fournit les structures nécessaires pour maintenir l'état
 //! actuel de l'application Sonar, en particulier pour suivre les trames réseau.
 
+use csv::Writer;
+use log::{debug, error, info};
+use rust_xlsxwriter::Workbook;
+use rust_xlsxwriter::Worksheet;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use rust_xlsxwriter::Worksheet;
-use csv::Writer;
-use log::{error, info, debug};
-use rust_xlsxwriter::Workbook;
-use serde::{Deserialize, Serialize};
 
 use crate::commandes::get_graph_data::GraphBuilder;
 use crate::errors::export::ExportError;
 
-use super::capture::capture_handle::layer_2_infos::layer_3_infos::ip_type::IpType;
-use super::capture::capture_handle::layer_2_infos::layer_3_infos::Layer3Infos;
 use super::capture::capture_handle::layer_2_infos::PacketInfos;
+use super::capture::capture_handle::layer_2_infos::layer_3_infos::Layer3Infos;
+use super::capture::capture_handle::layer_2_infos::layer_3_infos::ip_type::IpType;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PacketInfoEntry {
@@ -86,7 +86,10 @@ impl SonarState {
 
         let existed = self.matrice.contains_key(&key);
         if existed {
-            debug!("Mise à jour d'un paquet existant dans la matrice : {:?}", key);
+            debug!(
+                "Mise à jour d'un paquet existant dans la matrice : {:?}",
+                key
+            );
         } else {
             debug!("Ajout d'un nouveau paquet dans la matrice : {:?}", key);
         }
@@ -100,7 +103,10 @@ impl SonarState {
     pub fn cmd_save_packets_to_csv(&self, file_path: String) -> Result<(), ExportError> {
         info!("Début de l'export CSV vers {}", file_path);
         let mut wtr = Writer::from_path(&file_path).map_err(|e| {
-            error!("Erreur lors de l'ouverture du fichier CSV {} : {}", file_path, e);
+            error!(
+                "Erreur lors de l'ouverture du fichier CSV {} : {}",
+                file_path, e
+            );
             ExportError::Io(e.to_string())
         })?;
 
@@ -127,16 +133,20 @@ impl SonarState {
     pub fn cmd_save_packets_to_excel(&self, file_path: String) -> Result<(), ExportError> {
         info!("Début de l'export Excel vers {}", file_path);
 
-        let write_cell = |sheet: &mut Worksheet, row: u32, col: u16, value: &str| -> Result<(), ExportError> {
-            sheet.write_string(row, col, value)
-                .map(|_| ())
-                .map_err(|e| ExportError::Xlsx(e.to_string()))
-        };
-        let write_number = |sheet: &mut Worksheet, row: u32, col: u16, value: f64| -> Result<(), ExportError> {
-            sheet.write_number(row, col, value)
-                .map(|_| ())
-                .map_err(|e| ExportError::Xlsx(e.to_string()))
-        };
+        let write_cell =
+            |sheet: &mut Worksheet, row: u32, col: u16, value: &str| -> Result<(), ExportError> {
+                sheet
+                    .write_string(row, col, value)
+                    .map(|_| ())
+                    .map_err(|e| ExportError::Xlsx(e.to_string()))
+            };
+        let write_number =
+            |sheet: &mut Worksheet, row: u32, col: u16, value: f64| -> Result<(), ExportError> {
+                sheet
+                    .write_number(row, col, value)
+                    .map(|_| ())
+                    .map_err(|e| ExportError::Xlsx(e.to_string()))
+            };
 
         let data = &self.matrice;
         let total = data.len();
@@ -146,10 +156,20 @@ impl SonarState {
         let mut sheet = workbook.add_worksheet();
 
         let headers = [
-            "MAC Source", "MAC Destination", "Interface", "L3 Protocol",
-            "IP Source", "IP Source Type", "IP Destination", "IP Destination Type",
-            "L4 Protocol", "Source Port", "Destination Port", "L7 Protocol",
-            "Taille des packets", "Count",
+            "MAC Source",
+            "MAC Destination",
+            "Interface",
+            "L3 Protocol",
+            "IP Source",
+            "IP Source Type",
+            "IP Destination",
+            "IP Destination Type",
+            "L4 Protocol",
+            "Source Port",
+            "Destination Port",
+            "L7 Protocol",
+            "Taille des packets",
+            "Count",
         ];
         for (i, header) in headers.iter().enumerate() {
             write_cell(&mut sheet, 0, i as u16, header)?;
@@ -167,14 +187,64 @@ impl SonarState {
             write_cell(&mut sheet, row, 1, &packet_csv.mac_address_destination)?;
             write_cell(&mut sheet, row, 2, &packet_csv.interface)?;
             write_cell(&mut sheet, row, 3, &packet_csv.l_3_protocol)?;
-            write_cell(&mut sheet, row, 4, packet_csv.ip_source.as_deref().unwrap_or(""))?;
-            write_cell(&mut sheet, row, 5, packet_csv.ip_source_type.as_ref().map(|v| v.to_string()).as_deref().unwrap_or(""))?;
-            write_cell(&mut sheet, row, 6, packet_csv.ip_destination.as_deref().unwrap_or(""))?;
-            write_cell(&mut sheet, row, 7, packet_csv.ip_destination_type.as_ref().map(|v| v.to_string()).as_deref().unwrap_or(""))?;
-            write_cell(&mut sheet, row, 8, packet_csv.l_4_protocol.as_deref().unwrap_or(""))?;
-            write_cell(&mut sheet, row, 9, packet_csv.port_source.as_deref().unwrap_or(""))?;
-            write_cell(&mut sheet, row, 10, packet_csv.port_destination.as_deref().unwrap_or(""))?;
-            write_cell(&mut sheet, row, 11, packet_csv.l_7_protocol.as_deref().unwrap_or(""))?;
+            write_cell(
+                &mut sheet,
+                row,
+                4,
+                packet_csv.ip_source.as_deref().unwrap_or(""),
+            )?;
+            write_cell(
+                &mut sheet,
+                row,
+                5,
+                packet_csv
+                    .ip_source_type
+                    .as_ref()
+                    .map(|v| v.to_string())
+                    .as_deref()
+                    .unwrap_or(""),
+            )?;
+            write_cell(
+                &mut sheet,
+                row,
+                6,
+                packet_csv.ip_destination.as_deref().unwrap_or(""),
+            )?;
+            write_cell(
+                &mut sheet,
+                row,
+                7,
+                packet_csv
+                    .ip_destination_type
+                    .as_ref()
+                    .map(|v| v.to_string())
+                    .as_deref()
+                    .unwrap_or(""),
+            )?;
+            write_cell(
+                &mut sheet,
+                row,
+                8,
+                packet_csv.l_4_protocol.as_deref().unwrap_or(""),
+            )?;
+            write_cell(
+                &mut sheet,
+                row,
+                9,
+                packet_csv.port_source.as_deref().unwrap_or(""),
+            )?;
+            write_cell(
+                &mut sheet,
+                row,
+                10,
+                packet_csv.port_destination.as_deref().unwrap_or(""),
+            )?;
+            write_cell(
+                &mut sheet,
+                row,
+                11,
+                packet_csv.l_7_protocol.as_deref().unwrap_or(""),
+            )?;
             write_number(&mut sheet, row, 12, packet_csv.packet_size as f64)?;
             write_number(&mut sheet, row, 13, packet_csv.count as f64)?;
         }

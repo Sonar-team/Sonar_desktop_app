@@ -1,6 +1,6 @@
 use serde::Serialize;
-use sysinfo::System;
 use std::sync::{Arc, Mutex};
+use sysinfo::System;
 use tauri::{AppHandle, Emitter};
 
 #[derive(Debug, Serialize, Clone)]
@@ -26,11 +26,10 @@ pub fn start_cpu_monitor(app_handle: AppHandle) {
                     }
 
                     // Moyenne des usages CPU
-                    let average: f32 = cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len() as f32;
+                    let average: f32 =
+                        cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len() as f32;
 
-                    let info = SystemInfo {
-                        cpu_usage: average,
-                    };
+                    let info = SystemInfo { cpu_usage: average };
                     // println!("CPU Usage: {}%", info.cpu_usage);
                     let _ = app_handle.emit("cpu_usage_update", info);
                 }

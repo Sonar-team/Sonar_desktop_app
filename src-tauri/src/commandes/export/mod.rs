@@ -28,10 +28,10 @@ pub fn write_file(path: String, contents: String) -> Result<(), String> {
     std::fs::write(path, contents).map_err(|e| e.to_string())
 }
 
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use log::{error, info};
 use resvg::tiny_skia::Pixmap;
-use tauri::{command, State};
+use tauri::{State, command};
 use usvg::{Options, Transform, Tree};
 
 use crate::{errors::export::ExportError, tauri_state::matrice::SonarState};

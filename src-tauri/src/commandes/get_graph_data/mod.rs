@@ -14,7 +14,7 @@ pub struct GraphData {
 #[derive(Serialize, Clone)]
 struct Node {
     name: String,
-    color: &'static str,    // Static for color constants
+    color: &'static str, // Static for color constants
     mac: String,
 }
 
@@ -46,8 +46,9 @@ impl GraphBuilder {
             packet.layer_3_infos.ip_destination.as_deref(),
         ) {
             // Skip if either IP is not valid
-            if !self.is_valid_ip(&packet.layer_3_infos.ip_source_type) || 
-               !self.is_valid_ip(&packet.layer_3_infos.ip_destination_type) {
+            if !self.is_valid_ip(&packet.layer_3_infos.ip_source_type)
+                || !self.is_valid_ip(&packet.layer_3_infos.ip_destination_type)
+            {
                 return;
             }
 
@@ -55,20 +56,28 @@ impl GraphBuilder {
             let source_color = self.determine_color(&packet.layer_3_infos.ip_source_type);
             let target_color = self.determine_color(&packet.layer_3_infos.ip_destination_type);
 
-            self.nodes.entry(source_ip.to_string()).or_insert_with(|| Node {
-                name: source_ip.to_string(),
-                color: source_color,
-                mac: packet.mac_address_source.clone(),
-            });
+            self.nodes
+                .entry(source_ip.to_string())
+                .or_insert_with(|| Node {
+                    name: source_ip.to_string(),
+                    color: source_color,
+                    mac: packet.mac_address_source.clone(),
+                });
 
-            self.nodes.entry(target_ip.to_string()).or_insert_with(|| Node {
-                name: target_ip.to_string(),
-                color: target_color,
-                mac: packet.mac_address_destination.clone(),
-            });
+            self.nodes
+                .entry(target_ip.to_string())
+                .or_insert_with(|| Node {
+                    name: target_ip.to_string(),
+                    color: target_color,
+                    mac: packet.mac_address_destination.clone(),
+                });
 
             // Get protocol label
-            let label = packet.layer_3_infos.layer_4_infos.l_7_protocol.as_deref()
+            let label = packet
+                .layer_3_infos
+                .layer_4_infos
+                .l_7_protocol
+                .as_deref()
                 .or_else(|| packet.layer_3_infos.l_4_protocol.as_deref())
                 .unwrap_or_else(|| packet.l_3_protocol.as_str())
                 .to_string();
@@ -89,33 +98,33 @@ impl GraphBuilder {
     fn is_valid_ip(&self, ip_type: &Option<IpType>) -> bool {
         !matches!(ip_type, Some(IpType::Unknown) | None)
     }
-    
 
     fn determine_color(&self, ip_type: &Option<IpType>) -> &'static str {
         match ip_type {
-            Some(IpType::Private)      => "#8BC34A", // Vert doux → réseau local
-            Some(IpType::Public)       => "#2196F3", // Bleu → IP publique
-            Some(IpType::Multicast)    => "#FFC107", // Jaune → multicast classique
-            Some(IpType::Broadcast)    => "#FF00FF", // Magenta → très visible
-            Some(IpType::Loopback)     => "#E53935", // Rouge vif → local à la machine
-            Some(IpType::Apipa)        => "#FF9800", // Orange → APIPA
-            Some(IpType::LinkLocal)    => "#FF5722", // Orange foncé → lien local
-            Some(IpType::Ula)          => "#9C27B0", // Violet → ULA IPv6
-            Some(IpType::Unknown)      => "#9E9E9E", // Gris → inconnu
-            None                       => "#9E9E9E", // Par défaut : gris
+            Some(IpType::Private) => "#8BC34A",   // Vert doux → réseau local
+            Some(IpType::Public) => "#2196F3",    // Bleu → IP publique
+            Some(IpType::Multicast) => "#FFC107", // Jaune → multicast classique
+            Some(IpType::Broadcast) => "#FF00FF", // Magenta → très visible
+            Some(IpType::Loopback) => "#E53935",  // Rouge vif → local à la machine
+            Some(IpType::Apipa) => "#FF9800",     // Orange → APIPA
+            Some(IpType::LinkLocal) => "#FF5722", // Orange foncé → lien local
+            Some(IpType::Ula) => "#9C27B0",       // Violet → ULA IPv6
+            Some(IpType::Unknown) => "#9E9E9E",   // Gris → inconnu
+            None => "#9E9E9E",                    // Par défaut : gris
         }
     }
-    
 
     fn edge_exists(&self, source: &str, target: &str, label: &str) -> bool {
         self.edges.iter().any(|e| {
-            (e.source == source && e.target == target && e.label == label) ||
-            (e.source == target && e.target == source && e.label == label)
+            (e.source == source && e.target == target && e.label == label)
+                || (e.source == target && e.target == source && e.label == label)
         })
     }
 
     pub fn build_graph_data(self) -> GraphData {
-        let edges = self.edges.into_iter()
+        let edges = self
+            .edges
+            .into_iter()
             .enumerate()
             .map(|(i, edge)| (format!("edge{}", i + 1), edge))
             .collect();
