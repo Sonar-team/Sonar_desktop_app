@@ -10,7 +10,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.1.1",
+    "@tauri-apps/api": "^2.8.0",
     "@tauri-apps/plugin-dialog": "2.2.2",
     "@tauri-apps/plugin-fs": "2.3.0",
     "@tauri-apps/plugin-log": "2.5.0",
@@ -18,7 +18,7 @@
     "@tauri-apps/plugin-process": "2.2.2",
     "@tauri-apps/plugin-shell": "2.2.2",
     "chart.js": "4.5.0",
-    "color-convert": "^3.1.0",
+    "color-convert": "^3.1.2",
     "d3-force": "^3.0.0",
     "html2canvas": "^1.4.1",
     "pinia": "3.0.3",
@@ -27,10 +27,10 @@
     "vue-router": "4.5.1"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.5.0",
+    "@tauri-apps/cli": "^2.8.4",
     "@vitejs/plugin-vue": "6.0.0",
-    "typescript": "^5.2.2",
+    "typescript": "^5.9.2",
     "vite": "7.0.0",
-    "vue-tsc": "^2.1.10"
+    "vue-tsc": "^2.2.12"
   }
 }
