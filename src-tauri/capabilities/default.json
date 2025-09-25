@@ -12,6 +12,8 @@
     "fs:default",
     "log:allow-log",
     "os:default",
-    "process:default"
+    "process:default",
+    "log:default",
+    "shell:default"
   ]
 }

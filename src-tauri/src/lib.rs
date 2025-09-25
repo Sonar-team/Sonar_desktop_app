@@ -22,6 +22,7 @@ use tauri_state::{capture::CaptureState, matrice::SonarState};
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
     tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::new().build())
         // liste des plugins
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_os::init())
