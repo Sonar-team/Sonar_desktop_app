@@ -23,6 +23,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { info } from '@tauri-apps/plugin-log';
 
 export default {
+  name: "ImportPanel",
+  emits: ['toggle-pcap'],
   data() {
     return {
       packetFiles: []
@@ -42,10 +44,14 @@ export default {
       this.packetFiles = [];
     },
     convert() {
+      console.log('convert')
         invoke('convert_from_pcap_list', { pcaps: this.packetFiles })
+
             .then(response => {
                 this.totalPackets = response; // Définit totalPackets avec la réponse renvoyée
                 info(`Total packets read: ${this.totalPackets}`);
+                // une fois le fichier lu il retourn le nombre de paquets lus. alors on ferme le panel
+                this.$emit('toggle-pcap');
             })
             .catch(error => console.error(error));
       }

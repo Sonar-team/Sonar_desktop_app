@@ -1,23 +1,30 @@
-use thiserror::Error;
-
-/// Enum représentant les différentes erreurs pouvant survenir lors de l'écriture de paquets vers un fichier CSV ou Excel.
-#[derive(Debug, Error, serde::Serialize)]
+#[derive(Debug, thiserror::Error)]
 pub enum ExportError {
-    /// Erreur d'entrée/sortie avec un message explicatif.
-    #[error("Erreur d'E/S : {0}")]
-    Io(String),
-
-    /// Erreur lors de la manipulation de fichiers CSV avec un message explicatif.
-    #[error("Erreur CSV : {0}")]
-    Csv(String),
-
-    // /// Erreur de conversion UTF-8 avec un message explicatif.
-    // #[error("Erreur de conversion UTF-8 : {0}")]
-    // Utf8Error(String),
-    /// Erreur lors de la manipulation de fichiers Excel avec un message explicatif.
-    #[error("Erreur Excel : {0}")]
-    Xlsx(String),
-
+    #[error("Chemin de fichier vide")]
+    EmptyPath,
+    #[error("Erreur d’E/S: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Erreur CSV: {0}")]
+    Csv(#[from] csv::Error),
+    #[error("the mutex was poisoned")]
+    PoisonError(String),
     #[error("Le dossier de logs est introuvable.")]
     LogNotFound,
+}
+
+#[derive(serde::Serialize)]
+#[serde(tag = "kind", content = "message")]
+#[serde(rename_all = "camelCase")]
+pub enum ExportErrorKind {
+    EmptyPath,
+    Io(String),
+    Csv(String),
+    PoisonError(String),
+    LogNotFound,
+}
+
+impl<T> From<std::sync::PoisonError<T>> for ExportError {
+    fn from(err: std::sync::PoisonError<T>) -> Self {
+        ExportError::PoisonError(err.to_string())
+    }
 }

@@ -15,6 +15,7 @@ const eventBus = {
     document.removeEventListener(event, callback);
   },
 };
+
 const pinia = createPinia();
 const app = createApp(App);
 app.config.globalProperties.$bus = eventBus;

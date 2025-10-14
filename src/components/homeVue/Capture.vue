@@ -132,7 +132,7 @@ export default {
   async mounted() {
     const detach = await attachConsole();
     trace("mounted capture");
-    invoke('get_interfaces_tab').then((interfaces) => {
+    invoke('get_devices_list').then((interfaces) => {
       this.netInterfaces = interfaces;
       if (interfaces.length > 0) {
         this.selectedNetInterface = interfaces[interfaces.length - 1]; // Set the last item as default

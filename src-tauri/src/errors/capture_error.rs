@@ -1,7 +1,7 @@
 use crossbeam::channel::TrySendError;
 use thiserror::Error;
 
-use crate::tauri_state::capture::capture_handle::capture_message::CaptureMessage;
+use crate::state::capture::capture_handle::messages::CaptureMessage;
 
 #[derive(Debug, Error)]
 pub enum CaptureError {

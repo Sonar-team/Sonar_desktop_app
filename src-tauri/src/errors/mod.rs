@@ -1,8 +1,15 @@
 use capture_error::{CaptureError, CaptureErrorKind};
 use serde::Serialize;
 
+use crate::errors::{
+    export::{ExportError, ExportErrorKind},
+    import::{PcapImportError, PcapImportErrorKind},
+};
+
 pub mod capture_error;
 pub mod export;
+pub mod import;
+
 #[derive(Debug, thiserror::Error)]
 pub enum CaptureStateError {
     #[error(transparent)]
@@ -11,6 +18,10 @@ pub enum CaptureStateError {
     PoisonError(String),
     #[error(transparent)]
     Capture(#[from] CaptureError),
+    #[error(transparent)]
+    Export(#[from] ExportError),
+    #[error(transparent)]
+    Import(#[from] PcapImportError),
 }
 
 #[derive(serde::Serialize)]
@@ -20,6 +31,8 @@ pub enum CaptureStateErrorKind {
     Io(String),
     PoisonError(String),
     Capture(CaptureErrorKind),
+    Export(ExportErrorKind),
+    Import(PcapImportErrorKind),
 }
 
 impl Serialize for CaptureStateError {
@@ -47,6 +60,24 @@ impl Serialize for CaptureStateError {
                     }
                 };
                 CaptureStateErrorKind::Capture(kind)
+            }
+            Self::Export(e) => {
+                let kind = match e {
+                    ExportError::EmptyPath => ExportErrorKind::EmptyPath,
+                    ExportError::Io(e) => ExportErrorKind::Io(e.to_string()),
+                    ExportError::Csv(e) => ExportErrorKind::Csv(e.to_string()),
+                    ExportError::PoisonError(e) => ExportErrorKind::PoisonError(e.clone()),
+                    ExportError::LogNotFound => ExportErrorKind::LogNotFound,
+                };
+                CaptureStateErrorKind::Export(kind)
+            }
+            Self::Import(e) => {
+                let kind = match e {
+                    PcapImportError::OpenFileError(msg, msgg) => {
+                        PcapImportErrorKind::OpenFileError(msg.clone())
+                    }
+                };
+                CaptureStateErrorKind::Import(kind)
             }
         };
         kind.serialize(serializer)

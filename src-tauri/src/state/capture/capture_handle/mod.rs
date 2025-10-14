@@ -1,0 +1,97 @@
+pub mod messages;
+pub mod setup;
+pub mod threads;
+
+use crossbeam::channel::{bounded, Receiver, Sender};
+use log::{debug, info};
+use pcap::Device;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+use tauri::{ipc::Channel, AppHandle};
+
+use crate::{
+    errors::capture_error::CaptureError,
+    events::CaptureEvent,
+    state::capture::capture_handle::{
+        messages::CaptureMessage,
+        threads::{
+            capture::spawn_capture_thread_with_pool, packet_buffer::PacketBufferPool,
+            processing::spawn_processing_thread,
+        },
+    },
+};
+
+pub struct CaptureHandle {
+    stop_flag: Arc<AtomicBool>,
+}
+
+impl CaptureHandle {
+    pub fn new() -> Self {
+        println!("[DEBUG] CaptureHandle créé");
+        Self {
+            stop_flag: Arc::new(AtomicBool::new(false)),
+        }
+    }
+
+    pub fn start(
+        &self,
+        config: (String, i32, i32),
+        app: AppHandle,
+        on_event: Channel<CaptureEvent<'static>>,
+    ) -> Result<(), CaptureError> {
+        debug!("Démarrage de la capture sur l'interface {}...", config.0);
+
+        on_event
+            .send(CaptureEvent::Started {
+                device: &config.0,
+                buffer_size: config.1,
+                timeout: config.2,
+            })
+            .unwrap();
+
+        let stop_flag = self.stop_flag.clone();
+        let (iface, buf_size, chan_capacity) = config;
+
+        let device = Device::list()
+            .map_err(CaptureError::DeviceListError)?
+            .into_iter()
+            .find(|d| d.name == iface)
+            .ok_or_else(|| CaptureError::InterfaceNotFound(iface.clone()))?;
+
+        info!("Interface trouvée : {}", device.name);
+
+        let cap = setup::setup_capture(device, buf_size)?;
+        let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) =
+            bounded(chan_capacity as usize);
+
+        // 🔑 Utilisation du nouveau PacketBufferPool
+        let buffer_pool = Arc::new(PacketBufferPool::new(1000, 65536));
+
+        // Démarrage des threads avec le nouveau buffer_pool
+        spawn_processing_thread(
+            rx,
+            on_event.clone(),
+            chan_capacity,
+            app.clone(),
+            buffer_pool.clone(),
+        );
+        spawn_capture_thread_with_pool(tx, on_event, cap, stop_flag, chan_capacity, buffer_pool);
+
+        Ok(())
+    }
+
+    pub fn stop(&self, on_event: Channel<CaptureEvent<'static>>) {
+        info!("Arrêt de la capture demandé");
+        self.stop_flag.store(true, Ordering::Relaxed);
+        on_event
+            .send(CaptureEvent::Stats {
+                received: 0,
+                dropped: 0,
+                if_dropped: 0,
+                processed: 0,
+            })
+            .unwrap();
+    }
+}

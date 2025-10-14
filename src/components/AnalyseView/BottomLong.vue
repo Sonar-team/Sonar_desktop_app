@@ -5,64 +5,85 @@
         <tr>
           <th>MAC Source</th>
           <th>MAC Destination</th>
-          <th>Interface</th>
-          <th>L3</th>
+          <th>Data Link</th>
           <th>IP Source</th>
           <th>IP Destination</th>
-          <th>L4</th>
+          <th>Proto T.</th>
           <th>Port Source</th>
-          <th>Port Destination</th>
-          <th>L7</th>
-          <th>Taille (o)</th>
-          <th>Horodatage</th>
+          <th>Port Dest.</th>
+          <th>App Proto</th>
+          <th>Len</th>
+          <th>Timestamp</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(frame, index) in frames" :key="index">
-          <td>{{ frame.flow.mac_address_source }}</td>
-          <td>{{ frame.flow.mac_address_destination }}</td>
-          <td>{{ frame.flow.interface }}</td>
-          <td>{{ frame.flow.l_3_protocol }}</td>
-          <td>{{ frame.flow.layer_3_infos?.ip_source || '-' }}</td>
-          <td>{{ frame.flow.layer_3_infos?.ip_destination || '-' }}</td>
-          <td>{{ frame.flow.layer_3_infos?.l_4_protocol || '-' }}</td>
-          <td>{{ frame.flow.layer_3_infos?.layer_4_infos?.port_source || '-' }}</td>
-          <td>{{ frame.flow.layer_3_infos?.layer_4_infos?.port_destination || '-' }}</td>
-          <td>{{ frame.flow.layer_3_infos?.layer_4_infos?.l_7_protocol || '-' }}</td>
-          <td>{{ frame.len }}</td>
-          <td>{{ frame.formatted_time }}</td>
-
+        <tr v-for="(packet, index) in packets" :key="index">
+          <td>{{ packet.flow?.source_mac ?? '-' }}</td>
+          <td>{{ packet.flow?.destination_mac ?? '-' }}</td>
+          <td>{{ packet.flow?.ethertype ?? '-' }}</td>
+          <td>{{ packet.flow?.source ?? '-' }}</td>
+          <td>{{ packet.flow?.destination ?? '-' }}</td>
+          <td>{{ packet.flow?.protocol ?? '-' }}</td>
+          <td>{{ packet.flow?.source_port ?? '-' }}</td>
+          <td>{{ packet.flow?.destination_port ?? '-' }}</td>
+          <td>{{ packet.flow?.application_protocol ?? '-' }}</td>
+          <td>{{ packet.len }}</td>
+          <td>{{ formatTimestamp(packet.ts_sec, packet.ts_usec) }}</td>
         </tr>
       </tbody>
     </table>
   </div>
 </template>
 
-<script>
-import { listen } from '@tauri-apps/api/event';
-import { debug } from '@tauri-apps/plugin-log';
+<script lang="ts">
+import { defineComponent } from 'vue';
+import { useCaptureStore } from '../../store/capture';
+import { PacketMinimal } from '../../types/capture';
 
-export default {
+
+
+export default defineComponent({
   data() {
     return {
-      frames: [], // rempli directement depuis l'event backend
+      packets: [] as PacketMinimal[],
+      
     };
   },
-
+  computed: {
+    captureStore() {
+      return useCaptureStore();
+    },
+  },
   async mounted() {
-    await listen('frame', (event) => {
-      this.frames = event.payload || [];
+    this.captureStore.onPacket((packet) => {
+      this.packets.push(packet);
+      if (this.packets.length > 5) this.packets.shift(); // garde les 100 derniers
     });
 
-    this.$bus.on('reset', () => {
-      this.frames = [];
+    this.$bus?.on?.('reset', () => {
+      this.packets = [];
     });
   },
 
   beforeUnmount() {
-    this.$bus.off('reset');
+
+
+    this.$bus?.off?.('reset');
   },
-};
+
+  methods: {
+    formatTimestamp(sec: number, usec: number): string {
+      if (typeof sec !== 'number' || typeof usec !== 'number') return '-';
+      const date = new Date(sec * 1000 + Math.floor(usec / 1000));
+      return date.toLocaleTimeString('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        fractionalSecondDigits: 3,
+      });
+    },
+  },
+});
 </script>
 
 <style scoped>

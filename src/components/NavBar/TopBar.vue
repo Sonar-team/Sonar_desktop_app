@@ -11,11 +11,10 @@
     <button class="image-btn"  title="Config" :disabled="isRunning" @click="handleConfigClick">
       <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
-    
+
     <button class="image-btn" @click="reset" title="Réinitialiser">🔄</button>
     <button class="image-btn" @click="triggerSave" title="Sauvegarder">💾</button>
     <button class="image-btn" @click="displayPcapOpener" title="Ouvrir">📄</button>
-    <button class="image-btn" @click="toggleComponent" :title="buttonText">📊</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
     <button class="image-btn" @click="export_logs" title="Logs">📒</button>
     <button class="image-btn" @click="handleFilterClick" title="Filtrer">🔍</button>
@@ -23,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { invoke } from '@tauri-apps/api/core';
+import { Channel, invoke } from '@tauri-apps/api/core';
 import { exit } from '@tauri-apps/plugin-process';
 import { info, error } from '@tauri-apps/plugin-log';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -31,6 +30,7 @@ import { save } from '@tauri-apps/plugin-dialog';
 import { displayCaptureError } from '../../errors/capture'; // Gestion des erreurs propre
 
 import { useCaptureStore } from '../../store/capture';
+import { CaptureEvent } from '../../types/capture';
 
 export default {
   name: "TopBar",
@@ -94,10 +94,10 @@ export default {
           extensions: ['csv']
         }],
         title: 'Sauvegarder la matrice de flux',
-        defaultPath: this.getCurrentDate()+ '_' + '.csv' // Set the default file name here
+        defaultPath: this.getCurrentDate()+ 'Matrice' + '.csv' // Set the default file name here
       
       }).then((response) => 
-        invoke('save_packets_to_csv', { file_path: response })
+        invoke('export_csv', { path: response })
           .then((response) => 
             error("save error: ",response))
             )
@@ -111,7 +111,7 @@ export default {
             extensions: ['xlsx']
           }],
           title: 'Sauvegarder la matrice de flux',
-          defaultPath: this.getCurrentDate() + '.xlsx'
+          defaultPath: this.getCurrentDate() + 'Matrice' + '.xlsx'
         });
 
         if (response) {
@@ -131,18 +131,14 @@ export default {
     async triggerSave() {
       info("trigger save")
       this.SaveAsCsv();
-      this.SaveAsXlsx();
+      
     },
     async reset() {
       info("reset")
-      this.tramesRecues = 0
-      await invoke('reset');
+      await invoke('reset_capture');
       this.$bus.emit('reset');
     },
-    toggleComponent() {
-      this.captureStore.toggleView();
-      this.$bus.emit('toggle'); // Si tu utilises toujours le bus
-    },
+
 
     handleConfigClick() {
       info("[TopBar] Bouton config cliqué");
@@ -157,28 +153,26 @@ export default {
       this.$emit('toggle-filter');
     },
     async start() {
-      await invoke('start_capture')
+      const onEvent = new Channel<CaptureEvent>();
+      this.captureStore.setChannel(onEvent); // 🟢 rendre le Channel accessible
+
+      await invoke('start_capture', { onEvent })
         .then((status) => {
           const typedStatus = status as { is_running: boolean };
           this.captureStore.updateStatus(typedStatus);
-          
           info('Capture démarrée : ' + this.captureStore.isRunning);
         })
-        .catch(async (err) => {
-          await displayCaptureError(err);
-        });
+        .catch(displayCaptureError);
     },
     async stop() {
-      await invoke('stop_capture')
+      const onEvent = this.captureStore.getChannel();
+      await invoke('stop_capture',{ onEvent })
         .then((status) => {
           const typedStatus = status as { is_running: boolean };
           this.captureStore.updateStatus(typedStatus);
-          info('Capture arretée : ' + this.captureStore.isRunning);
-          
+          info('Capture arrêtée : ' + this.captureStore.isRunning);
         })
-        .catch(async (err) => {
-          await displayCaptureError(err);
-        });
+        .catch(displayCaptureError);
     },
     toggleView() {
       info('Vue basculée');

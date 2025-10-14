@@ -1,129 +1,126 @@
-import { Channel } from '@tauri-apps/api/core';
+// types/capture.ts
+import { Channel } from "@tauri-apps/api/core";
 
 export type Stats = {
   received: number;
   dropped: number;
   ifDropped: number;
-}
+};
 
 export type PacketMinimal = {
-    ts_sec: number;
-    ts_usec: number;
-    caplen: number;
-    len: number;
-    flow: PacketFlow | null;
-}
+  ts_sec: number;
+  ts_usec: number;
+  caplen: number;
+  len: number;
+  flow: PacketFlow | null;
+};
 
 export type PacketFlow = {
-    data_link?: DataLinkLayer;
-    internet?: InternetLayer;
-    transport?: TransportLayer;
-    application?: ApplicationLayer;
-}
+  data_link?: DataLinkLayer;
+  internet?: InternetLayer;
+  transport?: TransportLayer;
+  application?: ApplicationLayer;
+};
 
 export type DataLinkLayer = {
-    protocol?: string;
-    source?: string;
-    destination?: string;
-}
+  protocol?: string;
+  source?: string;
+  destination?: string;
+};
 
 export type InternetLayer = {
-    protocol?: string;
-    source?: string;
-    destination?: string;
-}
+  protocol?: string;
+  source?: string;
+  destination?: string;
+};
 
 export type TransportLayer = {
-    protocol?: string;
-    source?: number;
-    destination?: number;
-}
+  protocol?: string;
+  source?: number;
+  destination?: number;
+};
 
 export type ApplicationLayer = {
-    protocol?: string;
-    
-}
+  protocol?: string;
+};
+
+export type Node = {
+  id: string;
+  name: string;
+  color: string;
+  mac: string;
+};
+
+export type Edge = {
+  id: string;
+  source: string;
+  target: string;
+  label: string;
+  source_port: number | null;
+  destination_port: number | null;
+};
+
+// enum GraphUpdate : soit edge soit node
+export type GraphUpdate =
+  | { type: "NewNode"; payload: Node }
+  | { type: "NewEdge"; payload: Edge }
+  | {type: "EdgeUpdated"; payload: Edge};
 
 export type CaptureEvent =
   | {
-      event: 'started';
-      data: {
-        device: string;
-        bufferSize: number;
-        timeout: number;
-      };
-    }
-  | {
-      event: 'stats';
-      data: {
-        stats: Stats;
-        processed: number;
-      };
-    }
-  | {
-      event: 'error';
-      data: {
-        message: string;
-      };
-    }
-  | {
-      event: 'stopped';
-      data: {
-        reason: string;
-      };
-    }
-  | {
-      event: 'packet';
-      data: {
-        packet: PacketMinimal;
-      };
-    }
-  | {
-    event: 'GraphUpdate';
+    event: "started";
     data: {
-      graph: GraphUpdate;
+      device: string;
+      bufferSize: number;
+      timeout: number;
+    };
+  }
+  | {
+    event: "stats";
+    data: {
+      stats: Stats;
+      processed: number;
+    };
+  }
+  | {
+    event: "channelCapacityPayload";
+    data: {
+      channelSize: number;
+      currentSize: number;
+      backpressure: boolean;
+    };
+  }
+  | {
+    event: "error";
+    data: {
+      message: string;
+    };
+  }
+  | {
+    event: "stopped";
+    data: {
+      reason: string;
+    };
+  }
+  | {
+    event: "packet";
+    data: {
+      packet: PacketMinimal;
+    };
+  }
+  | {
+    event: "flowMatrixLen";
+    data: {
+      flowMatrixLen: number;
+    };
+  }
+  | {
+    event: "graph";
+    data: {
+      update: GraphUpdate;
     };
   };
 
 export interface CaptureChannel extends Channel<CaptureEvent> {
   onmessage: (event: { event: string; data: any }) => void;
 }
-
-
-export type GraphUpdate = {
-  nodes: NodeData[];
-  edges: EdgeData[];
-}
-type NodeId = string
-type EdgeId = string
-
-interface NodeData {
-  id: string
-  name: string
-  mac?: string
-  color: string // base fill color (hex)
-  // precomputed for hover/stroke (avoid conversion on every hover)
-  _hover?: string
-  _stroke?: string
-}
-
-interface EdgeData {
-  id: EdgeId
-  source: NodeId
-  target: NodeId
-  label: string
-  source_port?: string | number
-  destination_port?: string | number
-}
-
-// --- Constants --------------------------------------------------------------
-
-export const EDGE_COLORS: Record<string, string> = Object.freeze({
-  Arp: "#FFFF00",
-  Ipv4: "#FFA500",
-  Ipv6: "#EE82EE",
-  Profinet_rt: "#008000",
-  TLS: "#0000FF",
-  DNS: "#FF0000",
-  NTP: "#FFA500",
-})

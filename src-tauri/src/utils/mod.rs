@@ -1,9 +1,9 @@
-use pcap::Device;
+use pcap;
 
 pub fn return_device_lookup() -> String {
-    let device = Device::lookup()
+    let device = pcap::Device::lookup()
         .expect("device lookup failed")
         .expect("no device available");
-    println!("Using default device {}", device.name);
+    println!("Using device {}", device.name);
     device.name
 }

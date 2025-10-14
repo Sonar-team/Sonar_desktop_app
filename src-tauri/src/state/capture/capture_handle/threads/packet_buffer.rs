@@ -10,7 +10,10 @@ impl PacketBuffer {
     pub fn new(buffer_size: usize) -> Self {
         Self {
             header: PacketHeader {
-                ts: libc::timeval { tv_sec: 0, tv_usec: 0 },
+                ts: libc::timeval {
+                    tv_sec: 0,
+                    tv_usec: 0,
+                },
                 caplen: 0,
                 len: 0,
             },

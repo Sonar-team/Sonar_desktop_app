@@ -1,13 +1,19 @@
 use std::sync::{Arc, Mutex};
 
 use log::info;
-use tauri::{AppHandle, State, command};
+use serde::Serialize;
+use tauri::{command, ipc::Channel, AppHandle, State};
 
 use crate::{
     errors::CaptureStateError,
-    tauri_state::capture::{
-        CaptureState, capture_config::CaptureConfig, capture_handle::CaptureHandle,
-        capture_status::CaptureStatus,
+    events::CaptureEvent,
+    state::{
+        capture::{
+            capture_config::CaptureConfig, capture_handle::CaptureHandle,
+            capture_status::CaptureStatus, CaptureState,
+        },
+        flow_matrix::FlowMatrix,
+        graph::GraphData,
     },
 };
 
@@ -15,6 +21,7 @@ use crate::{
 pub fn start_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
     app: AppHandle,
+    on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
     let mut state_lock = state.lock()?;
 
@@ -23,7 +30,7 @@ pub fn start_capture(
         return Ok(state_lock.status.clone());
     }
     let capture = CaptureHandle::new();
-    capture.start(state_lock.config.get_config(), app)?;
+    capture.start(state_lock.config.get_config(), app, on_event)?;
     state_lock.capture = Some(capture);
     state_lock.status.toggle();
 
@@ -33,11 +40,11 @@ pub fn start_capture(
 #[command(async)]
 pub fn stop_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
-    app_handle: AppHandle,
+    on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
     let mut app = state.lock()?;
     if let Some(capture) = app.capture.take() {
-        capture.stop(app_handle); // Suppose que stop() ne retourne pas d'erreur
+        capture.stop(on_event); // Suppose que stop() ne retourne pas d'erreur
         app.status.toggle();
     } else {
         println!("Aucun thread à arrêter.");
@@ -72,4 +79,13 @@ pub fn get_config_capture(
     let app = state.lock()?; // Gestion d'erreur ici
 
     Ok(app.config.clone())
+}
+
+#[command(async)]
+pub fn reset_capture(
+    matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
+    graph: State<'_, Arc<Mutex<GraphData>>>,
+) {
+    graph.lock().unwrap().clear();
+    matrix.lock().unwrap().clear();
 }

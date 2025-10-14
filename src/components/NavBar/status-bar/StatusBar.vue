@@ -20,11 +20,12 @@
 </template>
 
 <script>
-import { listen } from '@tauri-apps/api/event'
 import ChannelStatus from './ChannelStatus.vue'
 import InterfaceStatus from './InterfaceStatus.vue'
 import Timer from './Timer.vue'
 import Cpu from './Cpu.vue'
+
+import { useCaptureStore } from '../../../store/capture';
 
 export default {
   name: 'StatusBar',
@@ -45,14 +46,23 @@ export default {
       matrice_len: 0,
     }
   },
+  computed: {
+    captureStore() {
+      return useCaptureStore();
+    }
+  },
   mounted() {
     // Listen for stats updates
-    listen('stats', (event) => {
-      this.stats = event.payload
+    this.captureStore.onStats((stats) => {
+      this.stats.received = stats.received;
+      this.stats.dropped = stats.dropped;
+      this.stats.if_dropped = stats.if_dropped;
+      this.stats.processed = stats.processed;
     });
-    
+  
     // Listen for reset events
     this.$bus.on('reset', () => {
+      console.log("reset entendu apr statusbaer")
       this.stats = {
         received: 0,
         dropped: 0,
@@ -63,8 +73,8 @@ export default {
     });
     
     // Listen for matrice length updates
-    listen('matrice_len', (event) => {
-      this.matrice_len = event.payload;
+    this.captureStore.onFlowMatrixLen((matrice_len) => {
+      this.matrice_len = matrice_len;
     });
   },
   beforeUnmount() {

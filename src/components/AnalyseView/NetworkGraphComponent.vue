@@ -1,381 +1,369 @@
 <script lang="ts">
+import { defineComponent, markRaw, shallowReactive } from "vue"
 import { VNetworkGraph, VEdgeLabel } from "v-network-graph"
 import * as vNG from "v-network-graph"
-import {ForceLayout} from "v-network-graph/lib/force-layout"
-import html2canvas from 'html2canvas';
-import ColorConvert from "color-convert"
+import { ForceLayout } from "v-network-graph/lib/force-layout"
+import { useCaptureStore } from "../../store/capture"
 
-import { invoke } from '@tauri-apps/api/core';
-import { save } from '@tauri-apps/plugin-dialog';
-import { info } from '@tauri-apps/plugin-log';
+// --- Types -----------------------------------------------------------------
 
-import { getCurrentDate } from '../../utils/time';
+type NodeId = string
+type EdgeId = string
 
-// Constants for graph configuration
-const GRAPH_CONFIGS = {
-  view: {
-    maxZoomLevel: 5,
-    minZoomLevel: 0.1,
-    layoutHandler: new ForceLayout({}),
-  },
-  node: {
-    selectable: true,
-    radius: 20,
-    color: node => node.color,
-    label: {
-      fontSize: 16,
-      color: "#ffffff",
-      direction: "north",
-
-    },
-  },
-  edge: {
-    gap: 50,
-    type: "curve",
-    selectable: true,
-    hoverable: true,
-    normal: {
-      width: 2, 
-      color: edge => { 
-        switch(edge.label) {
-          case 'Arp':
-            return 'yellow';
-          case 'Ipv4':
-            return 'orange';
-          case 'Ipv6':
-            return 'violet';
-          case 'Profinet_rt':
-            return 'green';
-          case 'TLS':
-            return 'blue';
-          case 'DNS':
-            return 'red';
-          case 'NTP':
-            return 'orange';
-          default:
-            return 'white'; 
-        }
-      },
-    },
-    label: { 
-      fontFamily: undefined,
-      fontSize: 21,
-      lineHeight: 1.1,
-      color: "#E0E0E0",
-      margin: 4,
-      background: {
-        visible: true,
-        color: "#000000",
-        padding: {
-          vertical: 1,
-          horizontal: 4,
-        },
-        borderRadius: 2,
-      },
-    },
-  },
-};
-
-// Edge color mapping for different types of connections
-const EDGE_COLORS = {
-  'Arp': 'yellow',
-  'Ipv4': 'orange',
-  'Ipv6': 'violet',
-  'Profinet_rt': 'green',
-  'TLS': 'blue',
-  'DNS': 'red',
-  'NTP': 'orange',
-
-};
-
-export default {
-  components: {
-    VNetworkGraph,
-    VEdgeLabel
-  },
-  data() {
-    return {
-      position: { left: "0", top: "0" },
-      graphData: {
-        nodes: [],
-        edges: []
-      },
-      selectedNode: null,
-      viewMenu: null,
-      nodeMenu: null,
-      edgeMenu: null,
-      menuTargetNode: [],
-      menuTargetEdges: [],
-      intervalId: null,
-      configs: vNG.defineConfigs({
-        view: GRAPH_CONFIGS.view,
-        node: {
-          ...GRAPH_CONFIGS.node,
-          normal: {
-            radius: GRAPH_CONFIGS.node.radius,
-            color: node => node.color,
-            strokeWidth: 3,
-            strokeColor: node => this.darker(node.color, 20),
- 
-          }
-        },
-        edge: {
-          ...GRAPH_CONFIGS.edge,
-          normal: {
-            ...GRAPH_CONFIGS.edge.normal,
-            color: edge => EDGE_COLORS[edge.label] || '#ffffff'
-          },
-          marker: {
-            source: {
-              type: "none",
-              width: 4,
-              height: 4,
-              margin: -1,
-              offset: 0,
-              units: "strokeWidth",
-              color: null,
-            },
-            target: {
-              type: "arrow",
-              width: 6,
-              height: 6,
-              margin: 0,
-              offset: 0,
-              units: "strokeWidth",
-              color: null,
-            },
-          },
-          label: GRAPH_CONFIGS.edge.label
-        },
-      }),
-      notifications: []
-    };
-  },
-  computed: {
-    // This computed property is unused, consider removing it
-    processedPackets() {
-      return this.processData(this.packets);
-    }
-  },
-  mounted() {
-    this.intervalId = setInterval(this.fetchPacketInfos, 1000);
-    this.viewMenu = this.$refs.viewMenu;
-    this.nodeMenu = this.$refs.nodeMenu;
-    this.edgeMenu = this.$refs.edgeMenu;
-
-    this.installationName = this.$route.params.installationName;
-    this.niveauConfidentialite = this.$route.params.confidentialite;
-  },
-  beforeDestroy() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-    }
-  },
-  
-  methods: {
-    darker(hex: String, level: Number) {
-      const hsv = ColorConvert.hex.hsv(hex)
-      hsv[2] -= level
-      return "#" + ColorConvert.hsv.hex(hsv)
-    },
-    // Fetches network packet information from backend
-    async fetchPacketInfos() {
-      try {
-        const jsonString = await invoke('get_graph_state', {});
-        this.graphData = JSON.parse(jsonString);
-
-      } catch (error) {
-        error("Error fetching packet infos:", error);
-        this.showNotification('Error fetching network data', 'error');
-      }
-    },
-
-    // Handles SVG export with error handling and notifications
-    async downloadSvg() {
-      if (!this.$refs.graphnodes || !this.$refs.graphnodes.exportAsSvgText) {
-        this.showNotification('Graph export failed: Graph not initialized', 'error');
-        return;
-      }
-
-      try {
-        const svgContent = await this.$refs.graphnodes.exportAsSvgText();
-        await this.saveFile(svgContent, 'svg');
-      } catch (error) {
-        console.error('Error exporting SVG:', error);
-        this.showNotification('Failed to export SVG', 'error');
-      }
-    },
-
-    // Handles PNG export with error handling and notifications
-    async downloadPng() {
-      if (!this.$refs.graphnodes) {
-        this.showNotification('Graph export failed: Graph not initialized', 'error');
-        return;
-      }
-
-      try {
-        const canvas = await html2canvas(this.$refs.graphnodes.$el, { scale: 2, useCORS: true });
-        const pngData = canvas.toDataURL('image/png');
-        const blob = this.dataURLToBlob(pngData);
-        await this.saveFile(blob, 'png');
-      } catch (error) {
-        console.error('Error exporting PNG:', error);
-        this.showNotification('Failed to export PNG', 'error');
-      }
-    },
-
-    // Helper function to save files of any format
-    async saveFile(content, format) {
-      const fileName = this.generateFileName(format);
-      const filePath = await save({
-        filters: [{
-          name: format.toUpperCase(),
-          extensions: [format]
-        }],
-        defaultPath: fileName
-      });
-
-      if (filePath) {
-        try {
-          await invoke('write_file', { path: filePath, contents: content });
-          this.showNotification(`Successfully saved ${format.toUpperCase()} file`, 'success');
-        } catch (error) {
-          console.error('Error saving file:', error);
-          this.showNotification('Failed to save file', 'error');
-        }
-      }
-    },
-
-    // Generates standardized file names for exports
-    generateFileName(format) {
-      return `${getCurrentDate()}_${this.niveauConfidentialite}_${this.installationName}.${format}`;
-    },
-
-    // Converts data URLs to Blob objects for PNG export
-    dataURLToBlob(dataURL) {
-      const arr = dataURL.split(',');
-      const mime = arr[0].match(/:(.*?);/)[1];
-      const bstr = atob(arr[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-      }
-      return new Blob([u8arr], { type: mime });
-    },
-
-    // Shows a notification with automatic timeout
-    showNotification(message, type = 'info') {
-      const notification = {
-        message,
-        type,
-        timestamp: Date.now()
-      };
-      this.notifications.push(notification);
-      
-      // Remove notification after 5 seconds
-      setTimeout(() => {
-        this.notifications = this.notifications.filter(n => n !== notification);
-      }, 5000);
-    },
-
-    handleNodeClick(node) {
-      // Supposons que `selectedNode` est une propriété de données que vous utiliserez pour stocker les informations du node sélectionné
-      this.selectedNode = node;
-      console.log('selected node:',this.selectedNode)
-    },
-    showContextMenu(element, event) {
-      console.log('element', element)
-      console.log('event', event)
-
-      element.style.left = event.x + "px"
-      element.style.top = event.y + "px"
-      element.style.visibility = "visible"
-      const handler = (event) => {
-        if (!event.target || !element.contains(event.target)) {
-          element.style.visibility = "hidden"
-          document.removeEventListener("pointerdown", handler, { capture: true })
-        }
-      }
-      document.addEventListener("pointerdown", handler, { passive: true, capture: true })
-    },
-
-    showEdgeContextMenu({ edge, event }) {
-      if (this.edgeMenu) {
-        const edgeData = this.graphData.edges[edge];
-        this.menuTargetEdges = [
-          `Adresse Mac Source: ${edgeData.source}, 
-          Adresse Mac Destination: ${edgeData.target}, 
-          Protocole: ${edgeData.label}`
-        ];
-        this.showContextMenu(this.edgeMenu, event);
-      }
-    },
-    showNodeContextMenu({ node, event }) {
-      if (this.nodeMenu) {
-        const nodeData = this.graphData.nodes[node];
-        this.menuTargetNode = [
-          `Adresse: ${nodeData.name},
-          Mac_address: ${nodeData.mac}`
-        ];
-        this.showContextMenu(this.nodeMenu, event);
-      }
-    },
-  }
+interface NodeDataBase {
+  id: string
+  name: string
+  mac?: string
+  color: string
+  _hover?: string
+  _stroke?: string
 }
+
+interface EdgeData {
+  source: NodeId
+  target: NodeId
+  label: string
+  source_port?: string | number | null
+  destination_port?: string | number | null
+  bidir?: boolean           // deux sens observés ?
+}
+
+type GraphUpdate =
+  | { type: "NodeAdded"; payload: any }
+  | { type: "EdgeAdded"; payload: any }
+  | { type: "EdgeUpdated"; payload: any }
+
+// --- Colors ----------------------------------------------------------------
+
+const EDGE_COLORS_LC: Record<string, string> = Object.freeze({
+  arp: "#FFFF00",
+  ipv4: "#FFA500",
+  ipv6: "#EE82EE",
+  profinet_rt: "#008000",
+  tls: "#0000FF",
+  dns: "#FF0000",
+  ntp: "#FFA500",
+})
+const colorForLabel = (label: string) =>
+  EDGE_COLORS_LC[label?.toLowerCase?.() ?? ""] || "#ffffff"
+
+// Small helpers --------------------------------------------------------------
+function clamp01(x: number) { return x < 0 ? 0 : x > 1 ? 1 : x }
+function hexToRgb(hex: string) {
+  const h = hex.startsWith('#') ? hex.slice(1) : hex
+  const v = parseInt(h.length === 3 ? h.replace(/(.)/g, '$1$1') : h, 16)
+  return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 }
+}
+function rgbToHex(r: number, g: number, b: number) {
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
+}
+function darken(hex: string, factor = 0.2) {
+  const { r, g, b } = hexToRgb(hex)
+  return rgbToHex((r * (1 - factor)) | 0, (g * (1 - factor)) | 0, (b * (1 - factor)) | 0)
+}
+function brighten(hex: string, factor = 0.15) {
+  const { r, g, b } = hexToRgb(hex)
+  return rgbToHex(
+    (clamp01(r / 255 + factor) * 255) | 0,
+    (clamp01(g / 255 + factor) * 255) | 0,
+    (clamp01(b / 255 + factor) * 255) | 0,
+  )
+}
+
+// clé d'edge stable = (source,target,label)
+function edgeKey(e: EdgeData): EdgeId {
+  return `${e.source}\u001F${e.target}\u001F${e.label}`
+}
+
+function clearReactiveMap<T extends Record<string, any>>(obj: T) {
+  for (const k of Object.keys(obj)) delete obj[k]
+}
+function isFn(x: any, name: string): x is (...a: any[]) => void {
+  return x && typeof x[name] === "function"
+}
+
+export default defineComponent({
+  name: "NetworkGraphComponent",
+  components: { VNetworkGraph, VEdgeLabel },
+
+  data() {
+    const force = markRaw(new ForceLayout({}))
+
+    return {
+      graphData: {
+        nodes: shallowReactive(Object.create(null) as Record<NodeId, NodeDataBase>),
+        edges: shallowReactive(Object.create(null) as Record<EdgeId, EdgeData>),
+        layouts: markRaw({}) as Record<string, unknown>,
+      },
+
+      menuTargetNode: [] as string[],
+      menuTargetEdges: [] as string[],
+
+      _queue: [] as GraphUpdate[],
+      _pendingEdges: [] as GraphUpdate[],   // edges en attente des nœuds
+      _raf: 0 as number,
+
+      configs: markRaw(
+        vNG.defineConfigs({
+          view: { maxZoomLevel: 5, minZoomLevel: 0.1, layoutHandler: force },
+          node: {
+            selectable: true,
+            normal: {
+              radius: 20,
+              color: (node: NodeDataBase) => node.color,
+              strokeWidth: 3,
+              strokeColor: (node: NodeDataBase) => node._stroke ?? darken(node.color, 0.25),
+            },
+            hover: {
+              radius: 20,
+              color: (node: NodeDataBase) => node._hover ?? brighten(node.color, 0.18),
+            },
+            label: { fontSize: 16, color: "#ffffff", direction: "north" as const },
+          },
+          edge: {
+            type: "curve",
+            gap: 30,
+            selectable: true,
+            normal: {
+              width: 2,
+              color: (edge: EdgeData) => colorForLabel(edge.label),
+            },
+            // Markers: champs dynamiques (pas un objet retourné)
+            marker: {
+              source: {
+                type: (edge: EdgeData) => (edge?.bidir ? "arrow" : "none"),
+                width: 6, height: 6, margin: 0, offset: 0,
+                units: "strokeWidth" as const, color: null,
+              },
+              target: {
+                type: "arrow" as const,
+                width: 6, height: 6, margin: 0, offset: 0,
+                units: "strokeWidth" as const, color: null,
+              },
+            },
+            label: {
+              fontSize: 21,
+              lineHeight: 1.1,
+              color: "#E0E0E0",
+              margin: 4,
+              background: { visible: true, color: "#000000", padding: { vertical: 1, horizontal: 4 }, borderRadius: 2 },
+            },
+          },
+        })
+      ),
+    }
+  },
+
+  computed: {
+    captureStore() {
+      return useCaptureStore()
+    },
+    graphNodes(): Record<NodeId, NodeDataBase> { return this.graphData.nodes },
+    graphEdges(): Record<EdgeId, EdgeData> { return this.graphData.edges },
+  },
+
+  mounted() {
+    clearReactiveMap(this.graphData.nodes)
+    clearReactiveMap(this.graphData.edges)
+
+    // abonnement aux updates backend (NodeAdded, EdgeAdded, EdgeUpdated)
+    this.captureStore.onGraphUpdate((update: GraphUpdate) => {
+      this._queue.push(update)
+      if (!this._raf) {
+        this._raf = requestAnimationFrame(() => {
+          this.flushQueue()
+          this._raf = 0
+        })
+      }
+    })
+
+    // reset containers (au cas où)
+    this.graphData.nodes = shallowReactive(Object.create(null))
+    this.graphData.edges = shallowReactive(Object.create(null))
+
+    this.$bus.on('reset', () => this.resetGraph())
+  },
+
+  beforeUnmount() {
+    if (this._raf) cancelAnimationFrame(this._raf)
+  },
+
+  methods: {
+    resetGraph() {
+      if (this._raf) { cancelAnimationFrame(this._raf); this._raf = 0 }
+      this._queue.length = 0
+      this._pendingEdges.length = 0
+
+      clearReactiveMap(this.graphData.nodes)
+      clearReactiveMap(this.graphData.edges)
+      clearReactiveMap(this.graphData.layouts)
+
+      const lh: any = this.configs.view?.layoutHandler
+      if (isFn(lh, "stop")) lh.stop()
+      if (isFn(lh, "reset")) lh.reset()
+      if (isFn(lh, "start")) lh.start()
+      if (isFn(this.$refs.graphnodes, "fitToContents")) (this.$refs as any).graphnodes.fitToContents()
+    },
+
+    // tolère { type, payload } ou { NewNode: {...} } / { NewEdge: {...} } / { EdgeUpdated: {...} }
+    normalizeGraphUpdate(raw: any): GraphUpdate | null {
+      const u = raw?.update ?? raw
+      if (!u) return null
+      if (u.type && "payload" in u) return u as GraphUpdate
+      if (u.NewNode) return { type: "NodeAdded", payload: u.NewNode }
+      if (u.NewEdge) return { type: "EdgeAdded", payload: u.NewEdge }
+      if (u.EdgeUpdated) return { type: "EdgeUpdated", payload: u.EdgeUpdated }
+      return null
+    },
+
+    flushQueue() {
+      const q = this._queue
+      if (!q.length) return
+
+      for (let i = 0; i < q.length; i++) this.applyUpdate(q[i])
+      this._queue.length = 0
+
+      // essayer de vider les arêtes en attente
+      if (this._pendingEdges.length) {
+        const pend = this._pendingEdges.slice()
+        this._pendingEdges.length = 0
+        for (const u of pend) this.applyUpdate(u)
+      }
+    },
+
+    applyUpdate(update: GraphUpdate | any) {
+      if (!update) return
+      const u = this.normalizeGraphUpdate(update)
+      if (!u) {
+        console.warn("[NetworkGraph] Unrecognized GraphUpdate shape:", update)
+        return
+      }
+
+      switch (u.type) {
+        case "NodeAdded": {
+          const node = u.payload
+          if (node) {
+            const color = node.color || "#2196F3"
+            this.graphData.nodes[node.id] = {
+              id: node.id,
+              name: node.name,
+              mac: node.mac || "",
+              color,
+              _stroke: darken(color, 0.25),
+              _hover: brighten(color, 0.18),
+            }
+          }
+          break
+        }
+
+        case "EdgeAdded": {
+          const e = u.payload
+          if (e) {
+            // garde-fou: attendre que les nœuds existent
+            if (!this.graphData.nodes[e.source] || !this.graphData.nodes[e.target]) {
+              this._pendingEdges.push(u)
+              return
+            }
+            const key = edgeKey({
+              source: e.source, target: e.target, label: e.label,
+              source_port: e.source_port ?? null, destination_port: e.destination_port ?? null,
+              bidir: !!e.bidir,
+            })
+            this.graphData.edges[key] = {
+              source: e.source,
+              target: e.target,
+              label: e.label,
+              source_port: e.source_port ?? null,
+              destination_port: e.destination_port ?? null,
+              bidir: !!e.bidir,
+            }
+          }
+          break
+        }
+
+        case "EdgeUpdated": {
+          const e = u.payload
+          if (e) {
+            if (!this.graphData.nodes[e.source] || !this.graphData.nodes[e.target]) {
+              this._pendingEdges.push(u)
+              return
+            }
+            const key = edgeKey({
+              source: e.source, target: e.target, label: e.label,
+              source_port: e.source_port ?? null, destination_port: e.destination_port ?? null,
+              bidir: !!e.bidir,
+            })
+            const existing = this.graphData.edges[key]
+            if (existing) {
+              existing.bidir = !!e.bidir
+              // si besoin de maj ports/label:
+              // existing.source_port = e.source_port ?? existing.source_port
+              // existing.destination_port = e.destination_port ?? existing.destination_port
+              // existing.label = e.label ?? existing.label
+            } else {
+              this.graphData.edges[key] = {
+                source: e.source,
+                target: e.target,
+                label: e.label,
+                source_port: e.source_port ?? null,
+                destination_port: e.destination_port ?? null,
+                bidir: !!e.bidir,
+              }
+            }
+          }
+          break
+        }
+
+        default:
+          console.warn("Unknown update type:", u)
+          break
+      }
+    },
+  },
+})
 </script>
 
 <template>
   <div class="graph-container">
-    
-    <button class="download-button" @click="downloadPng">PNG</button>
-    <button class="download-button" @click="downloadSvg" style="left: 100px;">SVG</button>
-    
     <v-network-graph
       class="graph"
       ref="graphnodes"
-      zoom-level=3
-      :nodes="graphData.nodes"
-      :edges="graphData.edges"
+      :zoom-level="3"
+      :nodes="graphNodes"
+      :edges="graphEdges"
       :layouts="graphData.layouts"
       :configs="configs"
-      :event-handlers="{
-        'node:click': showNodeContextMenu,
-        'edge:click': showEdgeContextMenu,
-      }"
     >
-      <template #edge-label="{ edge, scale, ...slotProps }">
-        <!-- Ligne 1 : type de protocole -->
+      <template #edge-label="slotProps">
         <v-edge-label
-          :text="edge.label"
+          :text="slotProps.edge.label"
           align="center"
           vertical-align="above"
           v-bind="slotProps"
-          :font-size="18 * scale"
+          :font-size="18 * slotProps.scale"
           fill="#FFFFFF"
         />
-        <!-- Ligne 2 : ports source/destination -->
         <v-edge-label
-          :text="`${edge.source_port ?? ''}`"
+          :text="`${slotProps.edge.source_port ?? ''}`"
           align="source"
           vertical-align="below"
           v-bind="slotProps"
-          :font-size="14 * scale"
+          :font-size="14 * slotProps.scale"
           fill="#E0E0E0"
         />
         <v-edge-label
-          :text="`${edge.destination_port ?? ''}`"
+          :text="`${slotProps.edge.destination_port ?? ''}`"
           align="target"
           vertical-align="below"
           v-bind="slotProps"
-          :font-size="14 * scale"
+          :font-size="14 * slotProps.scale"
           fill="#E0E0E0"
         />
       </template>
     </v-network-graph>
   </div>
 
-  <!-- Context menu -->
+  <!-- Context menus -->
   <div ref="nodeMenu" class="context-menu">
     Infos du noeud:
     <ul class="contenu">
@@ -384,87 +372,14 @@ export default {
   </div>
   <div ref="edgeMenu" class="context-menu">
     Infos de l'arête:
-    <div class="contenue">{{ menuTargetEdges.join(", ") }}</div>
-  </div>
-
-  <div v-for="notification in notifications" :key="notification.timestamp" class="notification" :class="notification.type">
-    {{ notification.message }}
+    <div class="contenu">{{ menuTargetEdges.join(", ") }}</div>
   </div>
 </template>
 
 <style scoped>
-.graph-container {
-  position: relative; /* <-- indispensable */
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  overflow: hidden;
-  background-color: #1a1a1a;
-  height: 100%;
-}
-
-.graph {
-  flex: 1;
-  width: 100%;
-  text-align: center;
-  color: #FFF;
-  background-color: #000000;
-}
-
-.download-button {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background-color: #0b1b25;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  z-index: 10;
-}
-
-.context-menu {
-  color: #0b1b25;
-  border-radius: 10px;
-  width: 180px;
-  background-color: #efefef;
-  padding: 10px;
-  position: absolute;
-  visibility: hidden;
-  font-size: 12px;
-  border: 1px solid #aaaaaa;
-  box-shadow: 2px 2px 2px #e7bf0c;
-}
-
-.contenue {
-  color: #0b1b25;
-  border: 1px dashed #aaa;
-  margin-top: 8px;
-}
-
-.notification {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 10px;
-  border-radius: 5px;
-  font-size: 12px;
-}
-
-.notification.info {
-  background-color: #2196f3;
-  color: #fff;
-}
-
-.notification.success {
-  background-color: #4caf50;
-  color: #fff;
-}
-
-.notification.error {
-  background-color: #f44336;
-  color: #fff;
-}
+.graph-container { position: relative; flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden; background-color: #1a1a1a; height: 100%; }
+.graph { flex: 1; width: 100%; text-align: center; color: #FFF; background-color: #000000; }
+.download-button { position: absolute; top: 10px; left: 10px; background-color: #0b1b25; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; z-index: 10; }
+.context-menu { color: #0b1b25; border-radius: 10px; width: 220px; background-color: #efefef; padding: 10px; position: absolute; visibility: hidden; font-size: 12px; border: 1px solid #aaaaaa; box-shadow: 2px 2px 2px #e7bf0c; z-index: 50; }
+.contenu { color: #0b1b25; border: 1px dashed #aaa; margin-top: 8px; padding: 6px; word-break: break-word; }
 </style>

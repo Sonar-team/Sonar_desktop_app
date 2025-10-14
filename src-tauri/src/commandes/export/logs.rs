@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use tauri::command;
 
 use crate::errors::export::ExportError;
+use crate::errors::CaptureStateError;
 
 /// Exporte les fichiers de logs de l'application vers un chemin donné par l'utilisateur.
 ///
@@ -73,7 +74,7 @@ use crate::errors::export::ExportError;
 /// mais elle ne fait pas de vérification de doublons ou d'intégrité.
 /// Il est recommandé de filtrer les fichiers côté Rust si nécessaire.
 #[command(async)]
-pub fn export_logs(destination: String) -> Result<String, ExportError> {
+pub fn export_logs(destination: String) -> Result<String, CaptureStateError> {
     let log_dir: PathBuf = {
         #[cfg(target_os = "linux")]
         {
@@ -103,25 +104,23 @@ pub fn export_logs(destination: String) -> Result<String, ExportError> {
     };
 
     if !log_dir.exists() {
-        return Err(ExportError::LogNotFound);
+        return Err(CaptureStateError::Export(ExportError::LogNotFound));
     }
 
     let destination = PathBuf::from(destination);
 
     if !destination.exists() {
-        fs::create_dir_all(&destination)
-            .map_err(|e| ExportError::Io(format!("create_dir_all: {}", e)))?;
+        fs::create_dir_all(&destination)?;
     }
 
-    for entry in fs::read_dir(&log_dir).map_err(|e| ExportError::Io(format!("read_dir: {}", e)))? {
-        let entry = entry.map_err(|e| ExportError::Io(format!("entry: {}", e)))?;
+    for entry in fs::read_dir(&log_dir)? {
+        let entry = entry?;
         let src_path = entry.path();
         if src_path.is_file() {
             let file_name = src_path.file_name().unwrap();
             let dest_path = destination.join(file_name);
-            fs::copy(&src_path, &dest_path).map_err(|e| ExportError::Io(format!("copy: {}", e)))?;
+            fs::copy(&src_path, &dest_path)?;
         }
     }
-
     Ok("Logs exportés avec succès".to_string())
 }

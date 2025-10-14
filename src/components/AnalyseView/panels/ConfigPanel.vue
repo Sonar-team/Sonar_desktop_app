@@ -100,7 +100,7 @@ export default {
     info("[ConfigPanel] Monté avec visible =", this.visible);
     this.getConfig();
 
-    invoke('get_interfaces_tab').then((interfaces) => {
+    invoke('get_devices_list').then((interfaces) => {
       this.netInterfaces = interfaces;
       if (interfaces.length > 0) {
         this.selectedNetInterface = interfaces[interfaces.length - 1]; // Set the last item as default

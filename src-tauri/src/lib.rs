@@ -1,100 +1,70 @@
-mod commandes;
-use std::sync::{Arc, Mutex};
-
-use colored::Colorize;
 use commandes::{
-    export::{
-        logs::export_logs, save_packets_to_csv, save_packets_to_excel, write_file,
-        write_file_as_png, write_png_file,
-    },
-    get_graph_state, get_hostname_to_string, get_interfaces_tab, get_matrice,
-    import::convert_from_pcap_list,
     net_capture::{config_capture, get_config_capture, start_capture, stop_capture},
-    reset,
+    net_interface::get_devices_list,
 };
-mod errors;
-mod setup;
-mod tauri_state;
-mod utils;
 use log::info;
-use tauri_state::{capture::CaptureState, matrice::SonarState};
+
+use std::sync::{Arc, Mutex};
+use tauri::menu::MenuBuilder;
+
+use crate::{
+    commandes::{
+        export::{csv::export_csv, logs::export_logs},
+        import::convert_from_pcap_list,
+        net_capture::reset_capture,
+    },
+    setup::{get_os, print_banner, system_info::start_cpu_monitor},
+    state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData},
+};
+
+mod commandes;
+mod errors;
+mod events;
+mod setup;
+mod state;
+mod utils;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::new().build())
-        // liste des plugins
-        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_os::init())
-        .plugin(
-            tauri_plugin_log::Builder::new()
-                .clear_targets()
-                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll) // Empêche la suppression des logs
-                .max_file_size(500_000) // Définit une taille maximale de fichier
-                .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-                .level(log::LevelFilter::Info)
-                .target(tauri_plugin_log::Target::new(
-                    tauri_plugin_log::TargetKind::LogDir {
-                        file_name: Some("SSF_sonar".to_string()),
-                    },
-                ))
-                .target(tauri_plugin_log::Target::new(
-                    tauri_plugin_log::TargetKind::Stdout,
-                ))
-                .build(),
-        )
-        .plugin(tauri_plugin_fs::init())
+        // Plugins
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
-        // State
-        .manage(SonarState::new())
+        // Etats partager dans l'application
         .manage(Arc::new(Mutex::new(CaptureState::new())))
-        // Actions au lancement
+        .manage(Arc::new(Mutex::new(FlowMatrix::new())))
+        .manage(Arc::new(Mutex::new(GraphData::new())))
+        // Menu
         .setup(|app| {
             info!("{}", print_banner());
             get_os();
-            setup::system_info::start_cpu_monitor(app.handle().clone());
+            start_cpu_monitor(app.handle().clone());
+            let menu = MenuBuilder::new(app)
+                .text("fichier", "Fichier")
+                .text("fermer", "Fermer")
+                .text("apropos", "A propos")
+                .text("preferences", "Préférences")
+                .build()?;
+
+            app.set_menu(menu)?;
+
             Ok(())
         })
-        // Commandes
+        // Gestion des appels depuis le frontend
         .invoke_handler(tauri::generate_handler![
-            get_interfaces_tab,
+            get_devices_list,
             start_capture,
             stop_capture,
             config_capture,
             get_config_capture,
-            save_packets_to_csv,
-            save_packets_to_excel,
-            get_matrice,
-            get_graph_state,
-            write_file,
-            write_file_as_png,
-            get_hostname_to_string,
-            reset,
-            convert_from_pcap_list,
-            write_png_file,
-            export_logs
+            export_csv,
+            reset_capture,
+            export_logs,
+            convert_from_pcap_list
         ])
-        // Exécuter l'application
+        // Lancement de l'application
         .run(tauri::generate_context!())
-}
-
-fn get_os() {
-    let platform = tauri_plugin_os::platform();
-    info!("Platform: {}", platform);
-}
-
-fn print_banner() -> String {
-    // ASCII art banner
-    let banner = r"
-    _________                           
-   /   _____/ ____   ____ _____ _______ 
-   \_____  \ /  _ \ /    \\__  \\_  __ \
-   /        (  <_> )   |  \/ __ \|  | \/
-  /_______  /\____/|___|  (____  /__|   
-          \/            \/     \/          
-   ";
-
-    // La bannière est colorée en vert avant d'être retournée.
-    banner.green().to_string()
 }
