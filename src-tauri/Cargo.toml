@@ -1,6 +1,6 @@
 [package]
 name = "sonar"
-version = "2.3.7"
+version = "3.0.1"
 description = "A Tauri network analyzer App"
 authors = ["Cyprien Avico <avicocyprien@yahoo.com>"]
 edition = "2024"

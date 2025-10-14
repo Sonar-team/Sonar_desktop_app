@@ -19,7 +19,7 @@
     "npm:v-network-graph@0.9.21": "0.9.21_d3-force@3.0.0_vue@3.5.22__typescript@5.9.3_typescript@5.9.3",
     "npm:vite@7.1.9": "7.1.9_picomatch@4.0.3",
     "npm:vue-router@4.5.1": "4.5.1_vue@3.5.22__typescript@5.9.3_typescript@5.9.3",
-    "npm:vue-tsc@^3.1.0": "3.1.0_typescript@5.9.3",
+    "npm:vue-tsc@^3.1.1": "3.1.1_typescript@5.9.3",
     "npm:vue@3.5.22": "3.5.22_typescript@5.9.3"
   },
   "npm": {
@@ -599,8 +599,8 @@
         "rfdc"
       ]
     },
-    "@vue/language-core@3.1.0_typescript@5.9.3": {
-      "integrity": "sha512-a7ns+X9vTbdmk7QLrvnZs8s4E1wwtxG/sELzr6F2j4pU+r/OoAv6jJGSz+5tVTU6e4+3rjepGhSP8jDmBBcb3w==",
+    "@vue/language-core@3.1.1_typescript@5.9.3": {
+      "integrity": "sha512-qjMY3Q+hUCjdH+jLrQapqgpsJ0rd/2mAY02lZoHG3VFJZZZKLjAlV+Oo9QmWIT4jh8+Rx8RUGUi++d7T9Wb6Mw==",
       "dependencies": [
         "@volar/language-core",
         "@vue/compiler-dom",
@@ -928,8 +928,8 @@
         "vue"
       ]
     },
-    "vue-tsc@3.1.0_typescript@5.9.3": {
-      "integrity": "sha512-fbMynMG7kXSnqZTRBSCh9ROYaVpXfCZbEO0gY3lqOjLbp361uuS88n6BDajiUriDIF+SGLWoinjvf6stS2J3Gg==",
+    "vue-tsc@3.1.1_typescript@5.9.3": {
+      "integrity": "sha512-fyixKxFniOVgn+L/4+g8zCG6dflLLt01Agz9jl3TO45Bgk87NZJRmJVPsiK+ouq3LB91jJCbOV+pDkzYTxbI7A==",
       "dependencies": [
         "@volar/typescript",
         "@vue/language-core",
@@ -973,7 +973,7 @@
         "npm:v-network-graph@0.9.21",
         "npm:vite@7.1.9",
         "npm:vue-router@4.5.1",
-        "npm:vue-tsc@^3.1.0",
+        "npm:vue-tsc@^3.1.1",
         "npm:vue@3.5.22"
       ]
     }
