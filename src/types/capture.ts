@@ -119,7 +119,15 @@ export type CaptureEvent =
     data: {
       update: GraphUpdate;
     };
+  }
+  | {
+    event: "finished";
+    data: {
+      fileName: string;
+      packetTotalCount: number;
+    };
   };
+  ;
 
 export interface CaptureChannel extends Channel<CaptureEvent> {
   onmessage: (event: { event: string; data: any }) => void;

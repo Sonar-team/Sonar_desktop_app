@@ -1,4 +1,4 @@
-use packet_parser::{owned::PacketFlowOwned, IpType};
+use packet_parser::{IpType, owned::PacketFlowOwned};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};

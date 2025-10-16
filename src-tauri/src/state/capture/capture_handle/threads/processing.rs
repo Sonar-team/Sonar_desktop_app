@@ -5,17 +5,17 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
-use tauri::{ipc::Channel, AppHandle, Manager};
+use tauri::{AppHandle, Manager, ipc::Channel};
 
 use crate::{
     events::CaptureEvent,
     state::{
         capture::capture_handle::{
             messages::{
+                CaptureMessage,
                 capture::PacketMinimal,
                 channel::ChannelCapacityPayload,
                 stats::{StatTriple, StatsPayload},
-                CaptureMessage,
             },
             threads::packet_buffer::PacketBufferPool,
         },
@@ -62,7 +62,6 @@ pub fn spawn_processing_thread(
                             flow,
                         };
 
-                        processed += 1;
                         // envoi des packets lue en temps réel
                         on_event
                             .send(CaptureEvent::Packet { packet: &record })
@@ -73,14 +72,7 @@ pub fn spawn_processing_thread(
                         let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
                         if let Ok(mut locked_state) = flow_matrix.lock() {
                             locked_state.update_flow(&record_owned);
-                            let new_len = locked_state.matrix.len() as u32;
-                            // ici au lieux de envoyer le graph entier, envoyer les nouvelles arêtes/nœuds ou mises à jour
-                            if let Err(e) = on_event.send(CaptureEvent::FlowMatrixLen {
-                                flow_matrix_len: &new_len,
-                            }) {
-                                error!("[TAURI] Erreur envoi matrix len: {}", e);
-                                break; // évite spammer d’erreurs si le canal est cassé
-                            }
+                            processed = locked_state.matrix.len() as u32;
                         };
 
                         let graph = app.state::<Arc<Mutex<GraphData>>>();
@@ -90,7 +82,9 @@ pub fn spawn_processing_thread(
                             // Envoi 1 par 1 (simple)
                             if !updates.is_empty() {
                                 for update in updates {
-                                    if let Err(e) = on_event.send(CaptureEvent::Graph { update }) {
+                                    if let Err(e) =
+                                        on_event.send(CaptureEvent::Graph { update: &update })
+                                    {
                                         error!("[TAURI] Erreur envoi GraphUpdate: {}", e);
                                         break; // évite spammer d’erreurs si le canal est cassé
                                     }

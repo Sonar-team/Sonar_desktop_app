@@ -43,6 +43,7 @@ export default {
     captureStore() {
       return useCaptureStore();
     },
+
     isRunning(): boolean {
       return this.captureStore.isRunning;
     },

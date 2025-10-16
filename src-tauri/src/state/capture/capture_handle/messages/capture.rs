@@ -1,5 +1,5 @@
-use packet_parser::owned::PacketFlowOwned;
 use packet_parser::PacketFlow;
+use packet_parser::owned::PacketFlowOwned;
 
 use serde::Serialize;
 

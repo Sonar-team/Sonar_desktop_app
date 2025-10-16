@@ -2,8 +2,11 @@
 import { defineComponent, markRaw, shallowReactive } from "vue"
 import { VNetworkGraph, VEdgeLabel } from "v-network-graph"
 import * as vNG from "v-network-graph"
+import type { Instance as VNGInstance } from "v-network-graph"
 import { ForceLayout } from "v-network-graph/lib/force-layout"
 import { useCaptureStore } from "../../store/capture"
+import { save } from '@tauri-apps/plugin-dialog';
+import { writeTextFile } from '@tauri-apps/plugin-fs'
 
 // --- Types -----------------------------------------------------------------
 
@@ -71,8 +74,9 @@ function brighten(hex: string, factor = 0.15) {
 }
 
 // clé d'edge stable = (source,target,label)
+const EDGE_SEP = "__"
 function edgeKey(e: EdgeData): EdgeId {
-  return `${e.source}\u001F${e.target}\u001F${e.label}`
+  return `${e.source}${EDGE_SEP}${e.target}${EDGE_SEP}${e.label}`
 }
 
 function clearReactiveMap<T extends Record<string, any>>(obj: T) {
@@ -103,6 +107,9 @@ export default defineComponent({
       _pendingEdges: [] as GraphUpdate[],   // edges en attente des nœuds
       _raf: 0 as number,
 
+      // état UI export
+      _exporting: false as boolean,
+
       configs: markRaw(
         vNG.defineConfigs({
           view: { maxZoomLevel: 5, minZoomLevel: 0.1, layoutHandler: force },
@@ -128,7 +135,6 @@ export default defineComponent({
               width: 2,
               color: (edge: EdgeData) => colorForLabel(edge.label),
             },
-            // Markers: champs dynamiques (pas un objet retourné)
             marker: {
               source: {
                 type: (edge: EdgeData) => (edge?.bidir ? "arrow" : "none"),
@@ -189,6 +195,20 @@ export default defineComponent({
   },
 
   methods: {
+    async downloadSvg() {
+      const filePath = await save({
+        filters: [{ name: 'SVG File', extensions: ['svg'] }],
+        defaultPath: 'network-graph.svg'
+      })
+      if (!filePath) return
+
+      // Récupère l'instance de v-network-graph depuis les refs
+      const vng = (this.$refs as any).graphnodes
+      const text = await vng.exportAsSvgText({ embedImages: true })
+      await writeTextFile(filePath, text)
+      console.log(`SVG exporté dans ${filePath}`)
+    },
+
     resetGraph() {
       if (this._raf) { cancelAnimationFrame(this._raf); this._raf = 0 }
       this._queue.length = 0
@@ -325,6 +345,18 @@ export default defineComponent({
 
 <template>
   <div class="graph-container">
+    <!-- Boutons d’export -->
+    <button
+      class="download-button"
+      
+      @click="downloadSvg()"
+      title="Exporter en SVG"
+    >
+      ⬇️ Export SVG
+    </button>
+
+
+
     <v-network-graph
       class="graph"
       ref="graphnodes"
@@ -379,7 +411,8 @@ export default defineComponent({
 <style scoped>
 .graph-container { position: relative; flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden; background-color: #1a1a1a; height: 100%; }
 .graph { flex: 1; width: 100%; text-align: center; color: #FFF; background-color: #000000; }
-.download-button { position: absolute; top: 10px; left: 10px; background-color: #0b1b25; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; z-index: 10; }
+.download-button { position: absolute; top: 10px; left: 10px; background-color: #0b1b25; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; z-index: 10; opacity: 0.95; }
+.download-button:disabled { opacity: 0.5; cursor: not-allowed; }
 .context-menu { color: #0b1b25; border-radius: 10px; width: 220px; background-color: #efefef; padding: 10px; position: absolute; visibility: hidden; font-size: 12px; border: 1px solid #aaaaaa; box-shadow: 2px 2px 2px #e7bf0c; z-index: 50; }
 .contenu { color: #0b1b25; border: 1px dashed #aaa; margin-top: 8px; padding: 6px; word-break: break-word; }
 </style>

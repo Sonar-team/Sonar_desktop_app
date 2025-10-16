@@ -2,14 +2,14 @@ pub mod messages;
 pub mod setup;
 pub mod threads;
 
-use crossbeam::channel::{bounded, Receiver, Sender};
+use crossbeam::channel::{Receiver, Sender, bounded};
 use log::{debug, info};
 use pcap::Device;
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
     Arc,
+    atomic::{AtomicBool, Ordering},
 };
-use tauri::{ipc::Channel, AppHandle};
+use tauri::{AppHandle, ipc::Channel};
 
 use crate::{
     errors::capture_error::CaptureError,

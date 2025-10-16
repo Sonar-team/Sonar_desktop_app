@@ -2,15 +2,15 @@ use std::sync::{Arc, Mutex};
 
 use log::info;
 use serde::Serialize;
-use tauri::{command, ipc::Channel, AppHandle, State};
+use tauri::{AppHandle, State, command, ipc::Channel};
 
 use crate::{
     errors::CaptureStateError,
     events::CaptureEvent,
     state::{
         capture::{
-            capture_config::CaptureConfig, capture_handle::CaptureHandle,
-            capture_status::CaptureStatus, CaptureState,
+            CaptureState, capture_config::CaptureConfig, capture_handle::CaptureHandle,
+            capture_status::CaptureStatus,
         },
         flow_matrix::FlowMatrix,
         graph::GraphData,

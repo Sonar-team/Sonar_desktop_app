@@ -1,9 +1,9 @@
 use std::sync::{Arc, Mutex};
 
-use tauri::{command, State};
+use tauri::{State, command};
 
 use crate::{
-    errors::{export::ExportError, CaptureStateError},
+    errors::{CaptureStateError, export::ExportError},
     state::flow_matrix::FlowMatrix,
 };
 

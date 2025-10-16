@@ -12,6 +12,8 @@ export const useCaptureStore = defineStore("capture", {
     showMatrice: true,
 
     // Listeners HMR-safe dans le state
+    startedListeners: [] as Array<(d: any) => void>,
+    finishedListeners: [] as Array<(d: any) => void>,
     packetListeners: [] as Array<(p: any) => void>,
     statsListeners: [] as Array<(d: any) => void>,
     lenFlowMatrixListeners: [] as Array<(d: any) => void>,
@@ -38,16 +40,17 @@ export const useCaptureStore = defineStore("capture", {
       __channel.onmessage = (msg: any) => {
         // console.log("[CaptureStore] Message reçu :", msg.data)
         switch (msg.event) {
+          case "started":
+            for (const cb of this.startedListeners) cb(msg.data);
+            break;
+          case "finished":
+            for (const cb of this.finishedListeners) cb(msg.data);
+            break;
           case "packet":
             for (const cb of this.packetListeners) cb(msg.data.packet);
             break;
           case "stats":
             for (const cb of this.statsListeners) cb(msg.data);
-            break;
-          case "flowMatrixLen":
-            for (const cb of this.lenFlowMatrixListeners) {
-              cb(msg.data.flow_matrix_len);
-            }
             break;
           case "channelCapacityPayload":
             for (const cb of this.channelCapacityPayloadListeners) cb(msg.data);
@@ -64,7 +67,12 @@ export const useCaptureStore = defineStore("capture", {
     getChannel(): Channel<CaptureEvent> | undefined {
       return __channel;
     },
-
+    onStarted(cb: (d: any) => void) {
+      this.startedListeners.push(cb);
+    },
+    onFinished(cb: (d: any) => void) {
+      this.finishedListeners.push(cb);
+    },
     onPacket(cb: (p: any) => void) {
       this.packetListeners.push(cb);
     },
@@ -97,6 +105,9 @@ export const useCaptureConfigStore = defineStore("captureConfig", {
       this.interface = config.device_name;
       this.buffer_size = config.buffer_size;
       this.timeout = config.timeout;
+    },
+    updateInterface(iface: string) {
+      this.interface = iface;
     },
   },
 });

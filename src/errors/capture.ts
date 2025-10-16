@@ -7,10 +7,18 @@ export type CaptureErrorKind =
   | { kind: "captureInitError"; message: string }
   | { kind: "channelSendError"; message: string };
 
-export type CaptureStateErrorKind =
+export type ImportErrorKind =
+  | { kind: "openFileError"; file: string; message: string }
+  | { kind: "invalidPacket"; message: string }
+  | { kind: "parseError"; message: string }
+  | { kind: "other"; message: string };
+
+export type CaptureStateErrorKind = 
   | { kind: "io"; message: string }
   | { kind: "poisonError"; message: string }
-  | { kind: "capture"; message: CaptureErrorKind };
+  | { kind: "capture"; message: CaptureErrorKind }
+  | { kind: "import"; message: ImportErrorKind }
+  | { kind: "other"; message: string };
 
 export async function displayCaptureError(err: unknown) {
   const captureError = err as CaptureStateErrorKind;
@@ -47,6 +55,13 @@ export async function displayCaptureError(err: unknown) {
           }
         }
         break;
+        case "import":
+          userFriendlyMessage = handleImportError(captureError.message);
+          break;
+      
+        case "other":
+          userFriendlyMessage = `Erreur inattendue : ${captureError.message}`;
+          break;
     }
   }
 
@@ -57,4 +72,23 @@ export async function displayCaptureError(err: unknown) {
   error(
     `Erreur Capture (${captureError.kind}) : ${userFriendlyMessage}`,
   );
+}
+
+function handleImportError(importError: ImportErrorKind): string {
+  if (!importError || typeof importError !== 'object' || !('kind' in importError)) {
+    return `Erreur d'import inconnue : ${JSON.stringify(importError)}`;
+  }
+
+  switch (importError.kind) {
+    case "openFileError":
+      return `Impossible d'ouvrir le fichier ${importError.file} : ${importError.message}`;
+    case "invalidPacket":
+      return `Paquet invalide : ${importError.message}`;
+    case "parseError":
+      return `Erreur d'analyse : ${importError.message}`;
+    case "other":
+      return `Erreur d'import : ${importError.message}`;
+    default:
+      return `Erreur d'import inconnue : ${JSON.stringify(importError)}`;
+  }
 }

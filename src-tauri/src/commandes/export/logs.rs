@@ -2,8 +2,8 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::command;
 
-use crate::errors::export::ExportError;
 use crate::errors::CaptureStateError;
+use crate::errors::export::ExportError;
 
 /// Exporte les fichiers de logs de l'application vers un chemin donné par l'utilisateur.
 ///

@@ -1,121 +1,84 @@
 <template>
   <div class="status-bar">
-    <div class="left-status-content">  
+    <div class="left-status-content">
       <InterfaceStatus />
     </div>
 
     <div class="right-status-content">
       <Timer />
-      
       <Cpu />
+
       <p title="Trames reçues 📥 par la carte réseau">📥: {{ stats.received }}</p>
+
       <p title="Trames analysées dans la matrice de flux 📊">
-        <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />: {{ matrice_len }}
+        <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />: {{ stats.processed }}
       </p>
+
       <p title="Trames ❌ perdues côté kernel">❌: {{ stats.dropped }}</p>
       <p title="Trames 🚫 perdues au niveau de l’interface">🚫: {{ stats.if_dropped }}</p>
+
       <ChannelStatus />
     </div>
   </div>
 </template>
 
 <script>
-import ChannelStatus from './ChannelStatus.vue'
-import InterfaceStatus from './InterfaceStatus.vue'
-import Timer from './Timer.vue'
-import Cpu from './Cpu.vue'
+import ChannelStatus from './ChannelStatus.vue';
+import InterfaceStatus from './InterfaceStatus.vue';
+import Timer from './Timer.vue';
+import Cpu from './Cpu.vue';
 
 import { useCaptureStore } from '../../../store/capture';
 
 export default {
   name: 'StatusBar',
-  components: {
-    ChannelStatus,
-    InterfaceStatus,
-    Timer,
-    Cpu
-  },
+  components: { ChannelStatus, InterfaceStatus, Timer, Cpu },
   data() {
     return {
-      stats: {
-        received: 0,
-        dropped: 0,
-        if_dropped: 0,
-        processed: 0,
-      },
-      matrice_len: 0,
-    }
+      stats: { received: 0, dropped: 0, if_dropped: 0, processed: 0 },
+      _unsub: [], // pour garder les unsubscribe si nécessaires
+    };
   },
   computed: {
-    captureStore() {
-      return useCaptureStore();
-    }
+    captureStore() { return useCaptureStore(); },
   },
   mounted() {
-    // Listen for stats updates
-    this.captureStore.onStats((stats) => {
-      this.stats.received = stats.received;
-      this.stats.dropped = stats.dropped;
-      this.stats.if_dropped = stats.if_dropped;
-      this.stats.processed = stats.processed;
+    // Stats live de la capture
+    this.captureStore.onStats((s) => {
+      this.stats.received   = s.received ?? 0;
+      this.stats.dropped    = s.dropped ?? 0;
+      this.stats.if_dropped = s.if_dropped ?? 0;
+      this.stats.processed  = s.processed ?? 0;
     });
-  
-    // Listen for reset events
+    this.captureStore.onFinished((f) => {
+      console.log('status finished', f);
+      this.stats.processed = f.packetTotalCount;
+    });
+
+    // Reset global
     this.$bus.on('reset', () => {
-      console.log("reset entendu apr statusbaer")
-      this.stats = {
-        received: 0,
-        dropped: 0,
-        if_dropped: 0,
-        processed: 0,
-      };
+      this.stats = { received: 0, dropped: 0, if_dropped: 0, processed: 0 };
       this.matrice_len = 0;
-    });
-    
-    // Listen for matrice length updates
-    this.captureStore.onFlowMatrixLen((matrice_len) => {
-      this.matrice_len = matrice_len;
     });
   },
   beforeUnmount() {
     this.$bus.off('reset');
-  }
-}
+    // si tes onXxx() renvoient une fonction d’unsubscribe, tu peux les stocker dans _unsub et les appeler ici
+    for (const u of this._unsub) { try { u(); } catch {} }
+    this._unsub = [];
+  },
+};
 </script>
+
 <style scoped>
 .status-bar {
   height: 22px;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: #243452;
-  color: #ffffff;
-  font-size: 12px;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 10px;
-  box-sizing: border-box;
+  position: fixed; bottom: 0; left: 0; width: 100%;
+  background-color: #243452; color: #ffffff; font-size: 12px;
+  display: flex; flex-direction: row; justify-content: space-between; align-items: center;
+  padding: 0 10px; box-sizing: border-box;
 }
-
-.left-status-content {
-  display: flex;
-  align-items: center;
-}
-
-.right-status-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: right;
-}
-
-.icon-img {
-  height: 16px;
-  width: 16px;
-  vertical-align: middle;
-  margin-right: 5px;
-}
+.left-status-content { display: flex; align-items: center; }
+.right-status-content { display: flex; align-items: center; gap: 12px; text-align: right; }
+.icon-img { height: 16px; width: 16px; vertical-align: middle; margin-right: 5px; }
 </style>

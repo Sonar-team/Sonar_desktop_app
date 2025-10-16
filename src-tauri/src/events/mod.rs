@@ -24,10 +24,11 @@ pub enum CaptureEvent<'a> {
     Packet {
         packet: &'a PacketMinimal<'a>,
     },
-    FlowMatrixLen {
-        flow_matrix_len: &'a u32,
-    },
     Graph {
-        update: GraphUpdate,
+        update: &'a GraphUpdate,
+    },
+    Finished {
+        file_name: &'a str,
+        packet_total_count: usize,
     },
 }
