@@ -54,7 +54,7 @@ pub fn spawn_processing_thread(
                             }
                         };
 
-                        let record = PacketMinimal {
+                        let packet = PacketMinimal {
                             ts_sec: buffer.header.ts.tv_sec,
                             ts_usec: buffer.header.ts.tv_usec,
                             caplen: buffer.header.caplen,
@@ -64,11 +64,11 @@ pub fn spawn_processing_thread(
 
                         // envoi des packets lue en temps réel
                         on_event
-                            .send(CaptureEvent::Packet { packet: &record })
+                            .send(CaptureEvent::Packet { packet: &packet })
                             .unwrap();
 
                         // ajout les paquets à la matrice de flux
-                        let record_owned = record.to_owned_packet();
+                        let record_owned = packet.to_owned_packet();
                         let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
                         if let Ok(mut locked_state) = flow_matrix.lock() {
                             locked_state.update_flow(&record_owned);

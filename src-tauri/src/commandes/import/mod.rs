@@ -98,7 +98,7 @@ fn handle_pcap_file(
 
         if let Ok(flow) = PacketFlow::try_from(packet.data.as_ref()) {
             // On own le flow dans le record pour réutiliser la même instance partout
-            let record = PacketMinimal {
+            let packet = PacketMinimal {
                 ts_sec: packet.header.ts.tv_sec,
                 ts_usec: packet.header.ts.tv_usec,
                 caplen: packet.header.caplen,
@@ -106,8 +106,8 @@ fn handle_pcap_file(
                 flow: flow,
             };
 
-            let matrice_count = matrice.update_flow(&record.to_owned_packet());
-            graph.add_packet_flow(&record.flow.to_owned());
+            let matrice_count = matrice.update_flow(&packet.to_owned_packet());
+            graph.add_packet_flow(&packet.flow.to_owned());
 
             // (option) n’envoie pas trop souvent ; ici toutes les 1000 itérations
             if packet_count % 1000 == 0 || packet_count == total {

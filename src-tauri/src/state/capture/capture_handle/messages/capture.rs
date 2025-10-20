@@ -3,10 +3,32 @@ use packet_parser::owned::PacketFlowOwned;
 
 use serde::Serialize;
 
+
+#[cfg(target_os = "linux")]
 #[derive(Debug, Clone, Serialize)]
 pub struct PacketMinimal<'a> {
     pub ts_sec: i64,
     pub ts_usec: i64,
+    pub caplen: u32,
+    pub len: u32,
+    pub flow: PacketFlow<'a>,
+}
+
+#[cfg(target_os = "windows")]
+#[derive(Debug, Clone, Serialize)]
+pub struct PacketMinimal<'a> {
+    pub ts_sec: i32,
+    pub ts_usec: i32,
+    pub caplen: u32,
+    pub len: u32,
+    pub flow: PacketFlow<'a>,
+}
+
+#[cfg(target_os = "macos")]
+#[derive(Debug, Clone, Serialize)]
+pub struct PacketMinimal<'a> {
+    pub ts_sec: i64,
+    pub ts_usec: i32,
     pub caplen: u32,
     pub len: u32,
     pub flow: PacketFlow<'a>,
