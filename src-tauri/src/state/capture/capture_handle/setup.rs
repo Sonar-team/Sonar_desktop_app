@@ -1,10 +1,10 @@
-use pcap::{Capture, Device, Error};
+use pcap::{Capture, Error};
 
-pub fn setup_capture(device: Device, buffer_size: i32) -> Result<Capture<pcap::Active>, Error> {
-    Capture::from_device(device)?
-        .promisc(false)
-        .immediate_mode(true)
-        .buffer_size(buffer_size)
+pub fn setup_capture(config: (String, i32, i32, i32)) -> Result<Capture<pcap::Active>, Error> {
+    Capture::from_device(config.0.as_str())?
+        .promisc(true)
+        .immediate_mode(false)
+        .timeout(config.3)
+        .buffer_size(config.1)
         .open()
-        
 }

@@ -14,6 +14,11 @@
     </div>
 
     <div class="config-item">
+      <label>Taille du chanel :</label>
+      <input type="number" v-model.number="chan_capacity" />
+    </div>
+
+    <div class="config-item">
       <label>Timeout (ms) :</label>
       <input type="number" v-model.number="timeout" />
     </div>
@@ -43,6 +48,7 @@ export default {
 
       deviceName: '',
       bufferSize: '',
+      chan_capacity: '',
       timeout: '',
     };
   },
@@ -62,6 +68,7 @@ export default {
         // Cast si besoin
         this.deviceName = config.device_name;
         this.bufferSize = config.buffer_size;
+        this.chan_capacity = config.chan_capacity
         this.timeout = config.timeout;
 
         this.configStore.updateConfig(config);
@@ -75,13 +82,15 @@ export default {
       info("Configuration sauvegardée : " + JSON.stringify({
         deviceName: this.deviceName,
         bufferSize: this.bufferSize,
+        chan_capacity: this.chan_capacity,
         timeout: this.timeout,
       }));
       try {
-        const config = await invoke('config_capture', { device_name: this.deviceName, buffer_size: this.bufferSize, timeout: this.timeout }); // await invoke('config_capture', this.deviceName, this.bufferSize, this.timeout);
+        const config = await invoke('config_capture', { device_name: this.deviceName, buffer_size: this.bufferSize, chan_capacity: this.chan_capacity, timeout: this.timeout }); // await invoke('config_capture', this.deviceName, this.bufferSize, this.timeout);
                 // Cast si besoin
         this.deviceName = config.device_name;
         this.bufferSize = config.buffer_size;
+        this.chan_capacity = config.chan_capacity;
         this.timeout = config.timeout;
 
         this.configStore.updateConfig(config);

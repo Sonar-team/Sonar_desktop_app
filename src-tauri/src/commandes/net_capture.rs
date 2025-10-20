@@ -1,7 +1,6 @@
 use std::sync::{Arc, Mutex};
 
 use log::info;
-use serde::Serialize;
 use tauri::{AppHandle, State, command, ipc::Channel};
 
 use crate::{
@@ -57,10 +56,11 @@ pub fn config_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
     device_name: String,
     buffer_size: i32,
-    timeout: i32,
+    chan_capacity: i32,
+    timeout: i32
 ) -> Result<CaptureConfig, CaptureStateError> {
     let mut app = state.lock()?; // Gestion d'erreur ici
-    app.config.setup(device_name, buffer_size, timeout);
+    app.config.setup(device_name, buffer_size, chan_capacity, timeout);
     info!(
         "[get_config_capture] app.config {:?}",
         app.config.device_name

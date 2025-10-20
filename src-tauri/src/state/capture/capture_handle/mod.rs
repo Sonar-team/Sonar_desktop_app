@@ -37,7 +37,7 @@ impl CaptureHandle {
 
     pub fn start(
         &self,
-        config: (String, i32, i32),
+        config: (String, i32, i32, i32),
         app: AppHandle,
         on_event: Channel<CaptureEvent<'static>>,
     ) -> Result<(), CaptureError> {
@@ -47,24 +47,25 @@ impl CaptureHandle {
             .send(CaptureEvent::Started {
                 device: &config.0,
                 buffer_size: config.1,
-                timeout: config.2,
+                chan_capacity: config.2,
+                timeout: config.3,
             })
             .unwrap();
 
         let stop_flag = self.stop_flag.clone();
-        let (iface, buf_size, chan_capacity) = config;
+        
 
         let device = Device::list()
             .map_err(CaptureError::DeviceListError)?
             .into_iter()
-            .find(|d| d.name == iface)
-            .ok_or_else(|| CaptureError::InterfaceNotFound(iface.clone()))?;
+            .find(|d| d.name == config.0)
+            .ok_or_else(|| CaptureError::InterfaceNotFound(config.0.clone()))?;
 
         info!("Interface trouvée : {}", device.name);
 
-        let cap = setup::setup_capture(device, buf_size)?;
+        let cap = setup::setup_capture(config.clone())?;
         let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) =
-            bounded(chan_capacity as usize);
+            bounded(config.2.clone() as usize);
 
         // 🔑 Utilisation du nouveau PacketBufferPool
         let buffer_pool = Arc::new(PacketBufferPool::new(1000, 65536));
@@ -73,11 +74,11 @@ impl CaptureHandle {
         spawn_processing_thread(
             rx,
             on_event.clone(),
-            chan_capacity,
+            config.2,
             app.clone(),
             buffer_pool.clone(),
         );
-        spawn_capture_thread_with_pool(tx, on_event, cap, stop_flag, chan_capacity, buffer_pool);
+        spawn_capture_thread_with_pool(tx, on_event, cap, stop_flag, config.2, buffer_pool);
 
         Ok(())
     }

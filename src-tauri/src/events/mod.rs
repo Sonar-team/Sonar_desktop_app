@@ -8,6 +8,7 @@ pub enum CaptureEvent<'a> {
     Started {
         device: &'a str,
         buffer_size: i32,
+        chan_capacity: i32,
         timeout: i32,
     },
     Stats {

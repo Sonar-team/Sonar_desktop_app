@@ -5,6 +5,7 @@ use serde::Serialize;
 pub struct CaptureConfig {
     pub device_name: String,
     pub buffer_size: i32,
+    pub chan_capacity: i32,
     pub timeout: i32,
 }
 
@@ -14,15 +15,22 @@ impl CaptureConfig {
         Self {
             device_name,
             buffer_size: 18_000_000,
-            timeout: 10_000,
+            chan_capacity: 10_000,
+            timeout: 25,
         }
     }
-    pub fn setup(&mut self, device_name: String, buffer_size: i32, timeout: i32) {
+    pub fn setup(&mut self, device_name: String, buffer_size: i32, chan_capacity: i32, timeout: i32) {
         self.device_name = device_name;
         self.buffer_size = buffer_size;
+        self.chan_capacity = chan_capacity;
         self.timeout = timeout;
     }
-    pub fn get_config(&self) -> (String, i32, i32) {
-        (self.device_name.clone(), self.buffer_size, self.timeout)
+    pub fn get_config(&self) -> (String, i32, i32, i32) {
+        (
+            self.device_name.clone(),
+            self.buffer_size,
+            self.chan_capacity,
+            self.timeout,
+        )
     }
 }

@@ -96,14 +96,16 @@ export const useCaptureConfigStore = defineStore("captureConfig", {
   state: () => ({
     interface: "",
     buffer_size: 18000000,
-    timeout: 10000,
+    chan_capacity: 1000,
+    timeout: 25,
   }),
   actions: {
     updateConfig(
-      config: { device_name: string; buffer_size: number; timeout: number },
+      config: { device_name: string; buffer_size: number; chan_capacity: number; timeout: number },
     ) {
       this.interface = config.device_name;
       this.buffer_size = config.buffer_size;
+      this.chan_capacity = config.chan_capacity;
       this.timeout = config.timeout;
     },
     updateInterface(iface: string) {

@@ -77,6 +77,7 @@ fn handle_pcap_file(
     if let Err(e) = on_event.send(CaptureEvent::Started {
         device: file_path,
         buffer_size: 0,
+        chan_capacity: 0,
         timeout: 0,
     }) {
         error!("Erreur lors de l'envoi de Started: {:?}", e);

@@ -31,7 +31,9 @@ pub fn spawn_capture_thread_with_pool(
 
         while !stop_flag.load(Ordering::Relaxed) {
             if let Ok(stats) = cap.stats() {
-                let _ = tx.try_send(CaptureMessage::Stats(stats));
+                if let Err(e) = tx.try_send(CaptureMessage::Stats(stats)) {
+                    error!("Erreur try_send stats: {}", e);
+                }
             }
 
             match cap.next_packet() {
@@ -79,7 +81,6 @@ pub fn spawn_capture_thread_with_pool(
                                 }
                             }
                         }
-
                     } else {
                         error!("Pas de buffer dispo");
                     }
@@ -88,7 +89,10 @@ pub fn spawn_capture_thread_with_pool(
                 Err(pcap::Error::PcapError(e)) if e.contains("Packets are not available") => {
                     thread::sleep(Duration::from_millis(1));
                 }
-
+                Err(pcap::Error::TimeoutExpired) => {
+                    println!("TimeoutExpired");
+                    continue;
+                }
                 Err(e) => {
                     error!("Erreur capture : {:?}", e);
                     break;
@@ -99,4 +103,3 @@ pub fn spawn_capture_thread_with_pool(
         debug!("Thread de capture terminé.");
     });
 }
-
