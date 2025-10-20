@@ -49,8 +49,7 @@ impl CaptureHandle {
                 buffer_size: config.1,
                 chan_capacity: config.2,
                 timeout: config.3,
-            })
-            .unwrap();
+            })?;
 
         let stop_flag = self.stop_flag.clone();
         

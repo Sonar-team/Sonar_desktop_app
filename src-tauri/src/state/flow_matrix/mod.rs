@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::time::SystemTime;
 
+use log::info;
 use packet_parser::owned::PacketFlowOwned;
 use serde::Serialize;
 
@@ -157,7 +158,7 @@ impl FlowMatrix {
         }
 
         wtr.flush()?;
-        println!("✅ Matrice exportée avec succès vers {}", path);
+        info!("✅ Matrice exportée avec succès vers {}", path);
         Ok(())
     }
 }

@@ -58,6 +58,9 @@ impl Serialize for CaptureStateError {
                     CaptureError::ChannelSendError(e) => {
                         CaptureErrorKind::ChannelSendError(e.to_string())
                     }
+                    CaptureError::EventSendError(e) => {
+                        CaptureErrorKind::EventSendError(e.to_string())
+                    }
                 };
                 CaptureStateErrorKind::Capture(kind)
             }
@@ -74,7 +77,7 @@ impl Serialize for CaptureStateError {
             Self::Import(e) => {
                 let kind = match e {
                     PcapImportError::OpenFileError(msg, msgg) => {
-                        PcapImportErrorKind::OpenFileError(msg.clone())
+                        PcapImportErrorKind::OpenFileError(msg.clone(), msgg.clone())
                     }
                 };
                 CaptureStateErrorKind::Import(kind)

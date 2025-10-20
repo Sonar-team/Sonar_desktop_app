@@ -16,6 +16,10 @@ pub enum CaptureError {
 
     #[error("Erreur lors de l'envoi via le canal : {0}")]
     ChannelSendError(#[from] TrySendError<CaptureMessage>),
+
+    #[error("Erreur lors de l'envoi de l'evenement : {0}")]
+    EventSendError(#[from] tauri::Error),
+    
 }
 
 #[derive(serde::Serialize)]
@@ -26,6 +30,7 @@ pub enum CaptureErrorKind {
     DeviceListError(String),
     CaptureInitError(String),
     ChannelSendError(String),
+    EventSendError(String),
 }
 
 impl serde::Serialize for CaptureError {
@@ -38,6 +43,7 @@ impl serde::Serialize for CaptureError {
             Self::DeviceListError(e) => CaptureErrorKind::DeviceListError(e.to_string()),
             Self::CaptureInitError(e) => CaptureErrorKind::CaptureInitError(e.to_string()),
             Self::ChannelSendError(e) => CaptureErrorKind::ChannelSendError(e.to_string()),
+            Self::EventSendError(e) => CaptureErrorKind::EventSendError(e.to_string()),
         };
         kind.serialize(serializer)
     }

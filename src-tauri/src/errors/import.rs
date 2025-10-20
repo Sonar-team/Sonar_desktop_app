@@ -10,5 +10,5 @@ pub enum PcapImportError {
 #[serde(tag = "kind", content = "message")]
 #[serde(rename_all = "camelCase")]
 pub enum PcapImportErrorKind {
-    OpenFileError(String),
+    OpenFileError(String, String),
 }

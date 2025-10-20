@@ -85,7 +85,8 @@ pub fn get_config_capture(
 pub fn reset_capture(
     matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
     graph: State<'_, Arc<Mutex<GraphData>>>,
-) {
-    graph.lock().unwrap().clear();
-    matrix.lock().unwrap().clear();
+) -> Result<(), CaptureStateError> {
+    graph.lock()?.clear();
+    matrix.lock()?.clear();
+    Ok(())
 }
