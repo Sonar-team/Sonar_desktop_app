@@ -26,7 +26,7 @@ impl FlowMatrix {
     }
 
     pub fn update_flow(&mut self, pkt: &PacketOwnedStats) -> u64 {
-        let ts = timeval_to_systemtime(pkt.ts_sec, pkt.ts_usec);
+        let ts = timeval_to_systemtime(pkt.ts_sec.into(), pkt.ts_usec.into());
 
         let entry = self.matrix.entry(pkt.flow.clone()).or_insert(FlowStats {
             count: 0,
