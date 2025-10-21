@@ -17,7 +17,7 @@ pub fn export_csv(
     }
 
     // Verrou + export (I/O) : la commande est déjà déplacée hors du thread UI
-    let guard = state.lock().unwrap();
+    let guard = state.lock()?;
 
     guard.export_to_csv(path)?;
     Ok(())

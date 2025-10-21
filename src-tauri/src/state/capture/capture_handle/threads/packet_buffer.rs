@@ -1,5 +1,6 @@
+use std::sync::Mutex;
+
 use pcap::PacketHeader;
-use std::sync::{Arc, Mutex};
 
 pub struct PacketBuffer {
     pub header: PacketHeader,
@@ -23,25 +24,30 @@ impl PacketBuffer {
 }
 
 pub struct PacketBufferPool {
-    pool: Mutex<Vec<Arc<Mutex<PacketBuffer>>>>,
+    pool: Mutex<Vec<Box<PacketBuffer>>>,
 }
 
 impl PacketBufferPool {
     pub fn new(pool_size: usize, buffer_size: usize) -> Self {
         let mut pool = Vec::with_capacity(pool_size);
         for _ in 0..pool_size {
-            pool.push(Arc::new(Mutex::new(PacketBuffer::new(buffer_size))));
+            pool.push(Box::new(PacketBuffer::new(buffer_size)));
         }
         Self {
             pool: Mutex::new(pool),
         }
     }
 
-    pub fn get(&self) -> Option<Arc<Mutex<PacketBuffer>>> {
-        self.pool.lock().unwrap().pop()
+    pub fn get(&self) -> Option<Box<PacketBuffer>> {
+        match self.pool.lock() {
+            Ok(mut guard) => guard.pop(),
+            Err(_) => None,
+        }
     }
 
-    pub fn put(&self, buffer: Arc<Mutex<PacketBuffer>>) {
-        self.pool.lock().unwrap().push(buffer);
+    pub fn put(&self, buffer: Box<PacketBuffer>) {
+        if let Ok(mut guard) = self.pool.lock() {
+            guard.push(buffer);
+        }
     }
 }

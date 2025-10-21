@@ -94,8 +94,8 @@ impl GraphData {
         // ===============================
         // 1) Chemin L3 (avec IP) si possible
         // ===============================
-        if let Some(internet) = packet.internet.as_ref() {
-            if let (Some(src_ip), Some(dst_ip)) = (internet.source_ip, internet.destination_ip) {
+        if let Some(internet) = packet.internet.as_ref() 
+            && let (Some(src_ip), Some(dst_ip)) = (internet.source_ip, internet.destination_ip) {
                 let src_type = internet.ip_source_type.as_ref();
                 let dst_type = internet.ip_destination_type.as_ref();
                 if is_valid_ip(src_type) && is_valid_ip(dst_type) {
@@ -172,7 +172,7 @@ impl GraphData {
                     return updates; // L3 traité
                 }
             }
-        }
+        
 
         // ===============================
         // 2) Fallback L2 (MAC-only)

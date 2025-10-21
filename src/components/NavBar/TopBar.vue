@@ -99,9 +99,11 @@ export default {
       
       }).then((response) => 
         invoke('export_csv', { path: response })
-          .then((response) => 
-            error("save error: ",response))
-            )
+          .then((response: any) => 
+            info("response: ", response))
+          .catch((error: any) => 
+            error("error: ", error))
+      )
     },
     async SaveAsXlsx() {
       try {

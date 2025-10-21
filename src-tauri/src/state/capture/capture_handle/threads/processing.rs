@@ -44,56 +44,56 @@ pub fn spawn_processing_thread(
 
         loop {
             match rx.recv() {
-                Ok(CaptureMessage::Packet(pkt_arc)) => {
-                    if let Ok(buffer) = pkt_arc.lock() {
-                        let flow = match PacketFlow::try_from(buffer.data.as_ref()) {
-                            Ok(flow) => flow,
-                            Err(e) => {
-                                error!("Failed to parse PacketFlow: {}", e);
-                                continue;
-                            }
-                        };
+                Ok(CaptureMessage::Packet(pkt)) => {
+                    let flow = match PacketFlow::try_from(pkt.data.as_ref()) {
+                        Ok(flow) => flow,
+                        Err(e) => {
+                            error!("Failed to parse PacketFlow: {}", e);
+                            continue;
+                        }
+                    };
 
-                        let packet = PacketMinimal {
-                            ts_sec: buffer.header.ts.tv_sec,
-                            ts_usec: buffer.header.ts.tv_usec,
-                            caplen: buffer.header.caplen,
-                            len: buffer.header.len,
-                            flow,
-                        };
+                    let packet = PacketMinimal {
+                        ts_sec: pkt.header.ts.tv_sec,
+                        ts_usec: pkt.header.ts.tv_usec,
+                        caplen: pkt.header.caplen,
+                        len: pkt.header.len,
+                        flow,
+                    };
 
-                        // envoi des packets lue en temps réel
-                        on_event
-                            .send(CaptureEvent::Packet { packet: &packet })
-                            .unwrap();
-
-                        // ajout les paquets à la matrice de flux
-                        let record_owned = packet.to_owned_packet();
-                        let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
-                        if let Ok(mut locked_state) = flow_matrix.lock() {
-                            locked_state.update_flow(&record_owned);
-                            processed = locked_state.matrix.len() as u32;
-                        };
-
-                        let graph = app.state::<Arc<Mutex<GraphData>>>();
-                        if let Ok(mut g) = graph.lock() {
-                            // record_owned.flow est un PacketFlowOwned
-                            let updates = g.add_packet_flow(&record_owned.flow);
-                            // Envoi 1 par 1 (simple)
-                            if !updates.is_empty() {
-                                for update in updates {
-                                    if let Err(e) =
-                                        on_event.send(CaptureEvent::Graph { update: &update })
-                                    {
-                                        error!("[TAURI] Erreur envoi GraphUpdate: {}", e);
-                                        break; // évite spammer d’erreurs si le canal est cassé
-                                    }
-                                }
-                            }
-                        };
+                    // envoi des packets lue en temps réel
+                    if let Err(e) = on_event.send(CaptureEvent::Packet { packet: &packet }) {
+                        error!("[TAURI] Erreur envoi Packet: {}", e);
+                        break; // évite spammer d’erreurs si le canal est cassé
                     }
 
-                    buffer_pool.put(pkt_arc);
+                    // ajout les paquets à la matrice de flux
+                    let record_owned = packet.to_owned_packet();
+                    let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
+                    if let Ok(mut locked_state) = flow_matrix.lock() {
+                        locked_state.update_flow(&record_owned);
+                        processed = locked_state.matrix.len() as u32;
+                    };
+
+                    let graph = app.state::<Arc<Mutex<GraphData>>>();
+                    if let Ok(mut g) = graph.lock() {
+                        // record_owned.flow est un PacketFlowOwned
+                        let updates = g.add_packet_flow(&record_owned.flow);
+                        // Envoi 1 par 1 (simple)
+                        if !updates.is_empty() {
+                            for update in updates {
+                                if let Err(e) =
+                                    on_event.send(CaptureEvent::Graph { update: &update })
+                                {
+                                    error!("[TAURI] Erreur envoi GraphUpdate: {}", e);
+                                    break; // évite spammer d’erreurs si le canal est cassé
+                                }
+                            }
+                        }
+                    };
+
+                    // Rendre le buffer au pool après traitement
+                    buffer_pool.put(pkt);
                 }
 
                 Ok(CaptureMessage::Stats(new_stats)) => {

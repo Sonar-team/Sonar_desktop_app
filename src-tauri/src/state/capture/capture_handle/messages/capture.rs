@@ -3,7 +3,6 @@ use packet_parser::owned::PacketFlowOwned;
 
 use serde::Serialize;
 
-
 #[cfg(target_os = "linux")]
 #[derive(Debug, Clone, Serialize)]
 pub struct PacketMinimal<'a> {

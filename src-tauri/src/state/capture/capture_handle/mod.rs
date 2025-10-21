@@ -43,16 +43,14 @@ impl CaptureHandle {
     ) -> Result<(), CaptureError> {
         debug!("Démarrage de la capture sur l'interface {}...", config.0);
 
-        on_event
-            .send(CaptureEvent::Started {
-                device: &config.0,
-                buffer_size: config.1,
-                chan_capacity: config.2,
-                timeout: config.3,
-            })?;
+        on_event.send(CaptureEvent::Started {
+            device: &config.0,
+            buffer_size: config.1,
+            chan_capacity: config.2,
+            timeout: config.3,
+        })?;
 
         let stop_flag = self.stop_flag.clone();
-        
 
         let device = Device::list()
             .map_err(CaptureError::DeviceListError)?
@@ -64,7 +62,7 @@ impl CaptureHandle {
 
         let cap = setup::setup_capture(config.clone())?;
         let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) =
-            bounded(config.2.clone() as usize);
+            bounded(config.2 as usize);
 
         // 🔑 Utilisation du nouveau PacketBufferPool
         let buffer_pool = Arc::new(PacketBufferPool::new(1000, 65536));
@@ -82,7 +80,7 @@ impl CaptureHandle {
         Ok(())
     }
 
-    pub fn stop(&self, on_event: Channel<CaptureEvent<'static>>) {
+    pub fn stop(&self, on_event: Channel<CaptureEvent<'static>>) -> Result<(), CaptureError> {
         info!("Arrêt de la capture demandé");
         self.stop_flag.store(true, Ordering::Relaxed);
         on_event
@@ -91,7 +89,7 @@ impl CaptureHandle {
                 dropped: 0,
                 if_dropped: 0,
                 processed: 0,
-            })
-            .unwrap();
+            })?;
+        Ok(())
     }
 }

@@ -43,7 +43,7 @@ pub fn stop_capture(
 ) -> Result<CaptureStatus, CaptureStateError> {
     let mut app = state.lock()?;
     if let Some(capture) = app.capture.take() {
-        capture.stop(on_event); // Suppose que stop() ne retourne pas d'erreur
+        capture.stop(on_event)?; // Suppose que stop() ne retourne pas d'erreur
         app.status.toggle();
     } else {
         println!("Aucun thread à arrêter.");
@@ -57,10 +57,11 @@ pub fn config_capture(
     device_name: String,
     buffer_size: i32,
     chan_capacity: i32,
-    timeout: i32
+    timeout: i32,
 ) -> Result<CaptureConfig, CaptureStateError> {
     let mut app = state.lock()?; // Gestion d'erreur ici
-    app.config.setup(device_name, buffer_size, chan_capacity, timeout);
+    app.config
+        .setup(device_name, buffer_size, chan_capacity, timeout);
     info!(
         "[get_config_capture] app.config {:?}",
         app.config.device_name

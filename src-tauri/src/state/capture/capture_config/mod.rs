@@ -19,7 +19,13 @@ impl CaptureConfig {
             timeout: 25,
         }
     }
-    pub fn setup(&mut self, device_name: String, buffer_size: i32, chan_capacity: i32, timeout: i32) {
+    pub fn setup(
+        &mut self,
+        device_name: String,
+        buffer_size: i32,
+        chan_capacity: i32,
+        timeout: i32,
+    ) {
         self.device_name = device_name;
         self.buffer_size = buffer_size;
         self.chan_capacity = chan_capacity;

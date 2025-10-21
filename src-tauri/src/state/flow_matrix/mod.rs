@@ -36,52 +36,53 @@ impl FlowMatrix {
         entry.count += 1;
         entry.total_bytes += pkt.len;
         entry.last_seen = ts;
-        return entry.count;
+
+        entry.count
     }
 
     pub fn clear(&mut self) {
         self.matrix.clear();
     }
 
-    pub fn print(&self) {
-        // En-tête
-        println!(
-            "{:<4} {:<30} {:<10} {:<12} {:<24}",
-            "#", "FLOW", "COUNT", "BYTES", "LAST SEEN"
-        );
-        println!(
-            "{:<4} {:<30} {:<10} {:<12} {:<24}",
-            "-",
-            "------------------------------",
-            "----------",
-            "------------",
-            "------------------------"
-        );
+    // pub fn print(&self) {
+    //     // En-tête
+    //     println!(
+    //         "{:<4} {:<30} {:<10} {:<12} {:<24}",
+    //         "#", "FLOW", "COUNT", "BYTES", "LAST SEEN"
+    //     );
+    //     println!(
+    //         "{:<4} {:<30} {:<10} {:<12} {:<24}",
+    //         "-",
+    //         "------------------------------",
+    //         "----------",
+    //         "------------",
+    //         "------------------------"
+    //     );
 
-        let mut count_p = 0;
-        for (flow, stats) in &self.matrix {
-            count_p += 1;
-            // Formatage de la date (timestamp en secondes)
-            let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
-                Ok(dur) => {
-                    let dt = chrono::NaiveDateTime::from_timestamp_opt(dur.as_secs() as i64, 0)
-                        .unwrap_or_default();
-                    dt.format("%Y-%m-%d %H:%M:%S").to_string()
-                }
-                Err(_) => "N/A".to_string(),
-            };
+    //     let mut count_p = 0;
+    //     for (flow, stats) in &self.matrix {
+    //         count_p += 1;
+    //         // Formatage de la date (timestamp en secondes)
+    //         let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
+    //             Ok(dur) => {
+    //                 let dt = chrono::NaiveDateTime::from_timestamp_opt(dur.as_secs() as i64, 0)
+    //                     .unwrap_or_default();
+    //                 dt.format("%Y-%m-%d %H:%M:%S").to_string()
+    //             }
+    //             Err(_) => "N/A".to_string(),
+    //         };
 
-            println!(
-                "{:<4} {:<30} {:<10} {:<12} {:<24}",
-                count_p,
-                format!("{}", flow),
-                stats.count,
-                stats.total_bytes,
-                last_seen
-            );
-        }
-        println!("count : {}", count_p);
-    }
+    //         println!(
+    //             "{:<4} {:<30} {:<10} {:<12} {:<24}",
+    //             count_p,
+    //             format!("{}", flow),
+    //             stats.count,
+    //             stats.total_bytes,
+    //             last_seen
+    //         );
+    //     }
+    //     println!("count : {}", count_p);
+    // }
 
     pub fn to_flat_vec(&self) -> Vec<FlowMatrixRow> {
         self.matrix
@@ -117,8 +118,8 @@ impl FlowMatrix {
                     .map(|i| i.protocol.clone())
                     .unwrap_or_default();
                 let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
-                    Ok(dur) => chrono::NaiveDateTime::from_timestamp_opt(dur.as_secs() as i64, 0)
-                        .unwrap_or_default()
+                    Ok(dur) => chrono::DateTime::<chrono::Utc>::from_timestamp(dur.as_secs() as i64, 0)
+                        .unwrap_or_else(|| chrono::DateTime::<chrono::Utc>::from_timestamp(0, 0).unwrap())
                         .format("%Y-%m-%d %H:%M:%S")
                         .to_string(),
                     Err(_) => "N/A".into(),

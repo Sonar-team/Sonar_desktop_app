@@ -19,7 +19,6 @@ pub enum CaptureError {
 
     #[error("Erreur lors de l'envoi de l'evenement : {0}")]
     EventSendError(#[from] tauri::Error),
-    
 }
 
 #[derive(serde::Serialize)]

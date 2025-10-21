@@ -23,7 +23,7 @@ fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
     })?;
 
     let mut count: usize = 0;
-    while let Ok(_) = cap.next_packet() {
+    while cap.next_packet().is_ok() {
         count += 1;
     }
     Ok(count)
@@ -45,9 +45,9 @@ pub fn convert_from_pcap_list(
     for file_path in pcaps {
         total_count += handle_pcap_file(
             &file_path,
-            &mut *matrice_guard,
-            &mut *graph_guard,
-            &on_event, // ← passe par référence
+            &mut matrice_guard,
+            &mut graph_guard,
+            &on_event,
         )?;
         if let Err(e) = on_event.send(CaptureEvent::Finished {
             file_name: &file_path,
@@ -96,29 +96,29 @@ fn handle_pcap_file(
     while let Ok(packet) = cap.next_packet() {
         packet_count += 1;
 
-        if let Ok(flow) = PacketFlow::try_from(packet.data.as_ref()) {
+        if let Ok(flow) = PacketFlow::try_from(packet.data) {
             // On own le flow dans le record pour réutiliser la même instance partout
             let packet = PacketMinimal {
                 ts_sec: packet.header.ts.tv_sec,
                 ts_usec: packet.header.ts.tv_usec,
                 caplen: packet.header.caplen,
                 len: packet.header.len,
-                flow: flow,
+                flow,
             };
 
             let matrice_count = matrice.update_flow(&packet.to_owned_packet());
             graph.add_packet_flow(&packet.flow.to_owned());
 
             // (option) n’envoie pas trop souvent ; ici toutes les 1000 itérations
-            if packet_count % 1000 == 0 || packet_count == total {
-                if let Err(e) = on_event.send(CaptureEvent::Stats {
+            if (packet_count.is_multiple_of(1000) || packet_count == total)
+                && let Err(e) = on_event.send(CaptureEvent::Stats {
                     received: packet_count as u32,
                     dropped: 0,
                     if_dropped: 0,
                     processed: matrice_count as u32,
-                }) {
-                    error!("Erreur lors de l'envoi de Stats: {:?}", e);
-                };
+                })
+            {
+                error!("Erreur lors de l'envoi de Stats: {:?}", e);
             }
         }
     }
