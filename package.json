@@ -1,7 +1,7 @@
 {
   "name": "sonar",
   "private": true,
-  "version": "3.2.0",
+  "version": "3.2.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/api": "^2.9.0",
     "@tauri-apps/plugin-dialog": "^2.4.0",
     "@tauri-apps/plugin-fs": "~2.4.2",
     "@tauri-apps/plugin-log": "^2.7.0",
@@ -27,7 +27,7 @@
     "vue-router": "4.6.3"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.8.4",
+    "@tauri-apps/cli": "^2.9.0",
     "@vitejs/plugin-vue": "6.0.1",
     "typescript": "^5.9.3",
     "vite": "7.1.10",
