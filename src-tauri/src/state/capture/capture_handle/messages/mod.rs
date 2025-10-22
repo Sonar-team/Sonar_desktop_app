@@ -6,6 +6,6 @@ pub mod capture;
 pub mod channel;
 pub mod stats;
 pub enum CaptureMessage {
-    Packet(Box<PacketBuffer>),
+    Packet(PacketBuffer),
     Stats(Stat),
 }

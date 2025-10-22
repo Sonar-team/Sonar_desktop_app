@@ -22,32 +22,27 @@ impl PacketBuffer {
         }
     }
 }
-
 pub struct PacketBufferPool {
-    pool: Mutex<Vec<Box<PacketBuffer>>>,
+    pool: Mutex<Vec<PacketBuffer>>,
 }
 
 impl PacketBufferPool {
     pub fn new(pool_size: usize, buffer_size: usize) -> Self {
         let mut pool = Vec::with_capacity(pool_size);
         for _ in 0..pool_size {
-            pool.push(Box::new(PacketBuffer::new(buffer_size)));
+            pool.push(PacketBuffer::new(buffer_size));
         }
-        Self {
-            pool: Mutex::new(pool),
-        }
+        Self { pool: Mutex::new(pool) }
     }
 
-    pub fn get(&self) -> Option<Box<PacketBuffer>> {
-        match self.pool.lock() {
-            Ok(mut guard) => guard.pop(),
-            Err(_) => None,
-        }
+    pub fn get(&self) -> Option<PacketBuffer> {
+        self.pool.lock().ok()?.pop()
     }
 
-    pub fn put(&self, buffer: Box<PacketBuffer>) {
+    pub fn put(&self, buffer: PacketBuffer) {
         if let Ok(mut guard) = self.pool.lock() {
             guard.push(buffer);
         }
     }
 }
+

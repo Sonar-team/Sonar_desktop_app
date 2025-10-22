@@ -39,14 +39,12 @@ pub fn spawn_capture_thread_with_pool(
                 Ok(packet) => {
                     if let Some(mut buffer) = buffer_pool.get() {
                         // On copie les octets DANS UN SCOPE LIMITE pour drop le guard avant tout move
-
-                        {
-                            let n = packet.header.caplen as usize;
-                            let size = n.min(buffer.data.len());
-                            buffer.header = *packet.header;
-                            buffer.data[..size].copy_from_slice(&packet.data[..size]);
-                        }
-
+                        
+                        let n = packet.header.caplen as usize;
+                        // let size = n.min(buffer.data.len());
+                        buffer.header = *packet.header;
+                        buffer.data[..n].copy_from_slice(&packet.data[..n]);
+                        
                         match tx.try_send(CaptureMessage::Packet(buffer)) {
                             Ok(()) => {
                                 // Succès : le processing thread RENDRA le buffer au pool.
@@ -84,7 +82,6 @@ pub fn spawn_capture_thread_with_pool(
                 }
             }
         }
-
         debug!("Thread de capture terminé.");
     });
 }

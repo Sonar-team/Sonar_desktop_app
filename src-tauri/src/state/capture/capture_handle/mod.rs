@@ -52,8 +52,7 @@ impl CaptureHandle {
 
         let stop_flag = self.stop_flag.clone();
 
-        let device = Device::list()
-            .map_err(CaptureError::DeviceListError)?
+        let device = Device::list()?
             .into_iter()
             .find(|d| d.name == config.0)
             .ok_or_else(|| CaptureError::InterfaceNotFound(config.0.clone()))?;
@@ -65,7 +64,7 @@ impl CaptureHandle {
             bounded(config.2 as usize);
 
         // 🔑 Utilisation du nouveau PacketBufferPool
-        let buffer_pool = Arc::new(PacketBufferPool::new(1000, 65536));
+        let arc_buffer_pool = Arc::new(PacketBufferPool::new(1000, 65536));
 
         // Démarrage des threads avec le nouveau buffer_pool
         spawn_processing_thread(
@@ -73,9 +72,15 @@ impl CaptureHandle {
             on_event.clone(),
             config.2,
             app.clone(),
-            buffer_pool.clone(),
+            arc_buffer_pool.clone(),
         );
-        spawn_capture_thread_with_pool(tx, on_event, cap, stop_flag, config.2, buffer_pool);
+        spawn_capture_thread_with_pool(
+            tx, 
+            on_event, 
+            cap, 
+            stop_flag, 
+            config.2, 
+            arc_buffer_pool);
 
         Ok(())
     }

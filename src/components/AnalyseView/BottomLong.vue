@@ -3,17 +3,17 @@
     <table class="trames">
       <thead>
         <tr>
-          <th>MAC Source</th>
-          <th>MAC Destination</th>
-          <th>Data Link</th>
-          <th>IP Source</th>
-          <th>IP Destination</th>
-          <th>Proto T.</th>
-          <th>Port Source</th>
-          <th>Port Dest.</th>
-          <th>App Proto</th>
-          <th>Len</th>
-          <th>Timestamp</th>
+          <th>MAC S</th>
+          <th>MAC D</th>
+          <th>Protocol</th>
+          <th>IP S</th>
+          <th>IP D</th>
+          <th>Transport</th>
+          <th>Port S</th>
+          <th>Port D</th>
+          <th>Application</th>
+          <th>Taille</th>
+          <th>Heure</th>
         </tr>
       </thead>
       <tbody>
