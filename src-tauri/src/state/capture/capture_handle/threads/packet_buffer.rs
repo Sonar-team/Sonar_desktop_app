@@ -1,6 +1,6 @@
-use std::sync::Mutex;
-
+use parking_lot::Mutex;
 use pcap::PacketHeader;
+use std::collections::VecDeque;
 
 pub struct PacketBuffer {
     pub header: PacketHeader,
@@ -21,28 +21,32 @@ impl PacketBuffer {
             data: vec![0u8; buffer_size].into_boxed_slice(),
         }
     }
+
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data[..self.header.caplen as usize]
+    }
 }
+
 pub struct PacketBufferPool {
-    pool: Mutex<Vec<PacketBuffer>>,
+    pool: Mutex<VecDeque<PacketBuffer>>,
 }
 
 impl PacketBufferPool {
     pub fn new(pool_size: usize, buffer_size: usize) -> Self {
-        let mut pool = Vec::with_capacity(pool_size);
+        let mut pool = VecDeque::with_capacity(pool_size);
         for _ in 0..pool_size {
-            pool.push(PacketBuffer::new(buffer_size));
+            pool.push_back(PacketBuffer::new(buffer_size));
         }
         Self { pool: Mutex::new(pool) }
     }
 
     pub fn get(&self) -> Option<PacketBuffer> {
-        self.pool.lock().ok()?.pop()
+        let mut pool = self.pool.lock();
+        pool.pop_front()
     }
 
     pub fn put(&self, buffer: PacketBuffer) {
-        if let Ok(mut guard) = self.pool.lock() {
-            guard.push(buffer);
-        }
+        let mut pool = self.pool.lock();
+        pool.push_back(buffer);
     }
 }
-

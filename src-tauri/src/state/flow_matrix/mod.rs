@@ -112,11 +112,7 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_destination_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
-                let protocol_network = flow
-                    .internet
-                    .as_ref()
-                    .map(|i| i.protocol.clone())
-                    .unwrap_or_default();
+
                 let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
                     Ok(dur) => chrono::DateTime::<chrono::Utc>::from_timestamp(dur.as_secs() as i64, 0)
                         .unwrap_or_else(|| chrono::DateTime::<chrono::Utc>::from_timestamp(0, 0).unwrap())
@@ -133,7 +129,6 @@ impl FlowMatrix {
                     ip_source_type,
                     ip_destination,
                     ip_destination_type,
-                    protocol_network,
                     port_source: flow.transport.as_ref().and_then(|t| t.source_port),
                     port_destination: flow.transport.as_ref().and_then(|t| t.destination_port),
                     protocol_transport: flow.transport.as_ref().map(|t| t.protocol.clone()),
@@ -173,7 +168,6 @@ pub struct FlowMatrixRow {
     pub ip_source_type: String,
     pub ip_destination: String,
     pub ip_destination_type: String,
-    pub protocol_network: String,
     pub port_source: Option<u16>,
     pub port_destination: Option<u16>,
     pub protocol_transport: Option<String>,
