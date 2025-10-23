@@ -49,6 +49,7 @@ pub fn spawn_processing_thread(
                         Ok(flow) => flow,
                         Err(e) => {
                             error!("Failed to parse PacketFlow: {}", e);
+                            buffer_pool.put(pkt);
                             continue;
                         }
                     };
@@ -64,6 +65,7 @@ pub fn spawn_processing_thread(
                     // envoi des packets lue en temps réel
                     if let Err(e) = on_event.send(CaptureEvent::Packet { packet: &packet }) {
                         error!("[TAURI] Erreur envoi Packet: {}", e);
+                        buffer_pool.put(pkt);
                         break; // évite spammer d’erreurs si le canal est cassé
                     }
 
