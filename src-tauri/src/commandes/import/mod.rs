@@ -43,12 +43,8 @@ pub fn convert_from_pcap_list(
     let mut graph_guard = graph.lock().unwrap();
 
     for file_path in pcaps {
-        total_count += handle_pcap_file(
-            &file_path,
-            &mut matrice_guard,
-            &mut graph_guard,
-            &on_event,
-        )?;
+        total_count +=
+            handle_pcap_file(&file_path, &mut matrice_guard, &mut graph_guard, &on_event)?;
         if let Err(e) = on_event.send(CaptureEvent::Finished {
             file_name: &file_path,
             packet_total_count: matrice_guard.matrix.len(),

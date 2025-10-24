@@ -94,85 +94,85 @@ impl GraphData {
         // ===============================
         // 1) Chemin L3 (avec IP) si possible
         // ===============================
-        if let Some(internet) = packet.internet.as_ref() 
-            && let (Some(src_ip), Some(dst_ip)) = (internet.source_ip, internet.destination_ip) {
-                let src_type = internet.ip_source_type.as_ref();
-                let dst_type = internet.ip_destination_type.as_ref();
-                if is_valid_ip(src_type) && is_valid_ip(dst_type) {
-                    let src_color = color_of(src_type);
-                    let dst_color = color_of(dst_type);
+        if let Some(internet) = packet.internet.as_ref()
+            && let (Some(src_ip), Some(dst_ip)) = (internet.source_ip, internet.destination_ip)
+        {
+            let src_type = internet.ip_source_type.as_ref();
+            let dst_type = internet.ip_destination_type.as_ref();
+            if is_valid_ip(src_type) && is_valid_ip(dst_type) {
+                let src_color = color_of(src_type);
+                let dst_color = color_of(dst_type);
 
-                    let src_ip_str = src_ip.to_string();
-                    let dst_ip_str = dst_ip.to_string();
+                let src_ip_str = src_ip.to_string();
+                let dst_ip_str = dst_ip.to_string();
 
-                    // Nœud source
-                    let src_node_id = match self.nodes.entry(src_ip_str.clone()) {
-                        Entry::Occupied(e) => e.get().id.clone(),
-                        Entry::Vacant(v) => {
-                            let node = Node::new(
-                                src_ip_str.clone(),
-                                packet.data_link.source_mac.clone(),
-                                src_color,
-                            );
-                            let node_id = node.id.clone();
-                            v.insert(node.clone());
-                            updates.push(GraphUpdate::NewNode(node));
-                            node_id
-                        }
-                    };
+                // Nœud source
+                let src_node_id = match self.nodes.entry(src_ip_str.clone()) {
+                    Entry::Occupied(e) => e.get().id.clone(),
+                    Entry::Vacant(v) => {
+                        let node = Node::new(
+                            src_ip_str.clone(),
+                            packet.data_link.source_mac.clone(),
+                            src_color,
+                        );
+                        let node_id = node.id.clone();
+                        v.insert(node.clone());
+                        updates.push(GraphUpdate::NewNode(node));
+                        node_id
+                    }
+                };
 
-                    // Nœud destination
-                    let dst_node_id = match self.nodes.entry(dst_ip_str.clone()) {
-                        Entry::Occupied(e) => e.get().id.clone(),
-                        Entry::Vacant(v) => {
-                            let node = Node::new(
-                                dst_ip_str.clone(),
-                                packet.data_link.destination_mac.clone(),
-                                dst_color,
-                            );
-                            let node_id = node.id.clone();
-                            v.insert(node.clone());
-                            updates.push(GraphUpdate::NewNode(node));
-                            node_id
-                        }
-                    };
+                // Nœud destination
+                let dst_node_id = match self.nodes.entry(dst_ip_str.clone()) {
+                    Entry::Occupied(e) => e.get().id.clone(),
+                    Entry::Vacant(v) => {
+                        let node = Node::new(
+                            dst_ip_str.clone(),
+                            packet.data_link.destination_mac.clone(),
+                            dst_color,
+                        );
+                        let node_id = node.id.clone();
+                        v.insert(node.clone());
+                        updates.push(GraphUpdate::NewNode(node));
+                        node_id
+                    }
+                };
 
-                    let protocol = best_protocol_label(packet);
+                let protocol = best_protocol_label(packet);
 
-                    // 🔥 Clé non orientée + direction courante vs canonique
-                    let (edge_key, a_id, b_id, current_is_a_to_b) =
-                        undirected_key(&src_node_id, &dst_node_id, &protocol);
+                // 🔥 Clé non orientée + direction courante vs canonique
+                let (edge_key, a_id, b_id, current_is_a_to_b) =
+                    undirected_key(&src_node_id, &dst_node_id, &protocol);
 
-                    match self.edges.get_mut(&edge_key) {
-                        Some(edge) => {
-                            // Arête existe déjà (A—B:proto). Si on observe le sens inverse pour la
-                            // première fois, on passe bidir=true et on notifie le front.
-                            if !edge.bidir {
-                                // À la création, edge.source == a_id et edge.target == b_id.
-                                // Si current_is_a_to_b == false -> on a vu b->a -> bidir.
-                                if !current_is_a_to_b {
-                                    edge.bidir = true;
-                                    updates.push(GraphUpdate::EdgeUpdated(edge.clone()));
-                                }
+                match self.edges.get_mut(&edge_key) {
+                    Some(edge) => {
+                        // Arête existe déjà (A—B:proto). Si on observe le sens inverse pour la
+                        // première fois, on passe bidir=true et on notifie le front.
+                        if !edge.bidir {
+                            // À la création, edge.source == a_id et edge.target == b_id.
+                            // Si current_is_a_to_b == false -> on a vu b->a -> bidir.
+                            if !current_is_a_to_b {
+                                edge.bidir = true;
+                                updates.push(GraphUpdate::EdgeUpdated(edge.clone()));
                             }
                         }
-                        None => {
-                            // Première observation de {A,B,proto} → création de l'arête canonique (A->B)
-                            let edge = Edge::new(a_id.clone(), b_id.clone())
-                                .with_label(protocol)
-                                .with_ports(
-                                    packet.transport.as_ref().and_then(|t| t.source_port),
-                                    packet.transport.as_ref().and_then(|t| t.destination_port),
-                                );
-                            self.edges.insert(edge_key, edge.clone());
-                            updates.push(GraphUpdate::NewEdge(edge));
-                        }
                     }
-
-                    return updates; // L3 traité
+                    None => {
+                        // Première observation de {A,B,proto} → création de l'arête canonique (A->B)
+                        let edge = Edge::new(a_id.clone(), b_id.clone())
+                            .with_label(protocol)
+                            .with_ports(
+                                packet.transport.as_ref().and_then(|t| t.source_port),
+                                packet.transport.as_ref().and_then(|t| t.destination_port),
+                            );
+                        self.edges.insert(edge_key, edge.clone());
+                        updates.push(GraphUpdate::NewEdge(edge));
+                    }
                 }
+
+                return updates; // L3 traité
             }
-        
+        }
 
         // ===============================
         // 2) Fallback L2 (MAC-only)

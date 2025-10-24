@@ -74,13 +74,7 @@ impl CaptureHandle {
             app.clone(),
             arc_buffer_pool.clone(),
         );
-        spawn_capture_thread_with_pool(
-            tx, 
-            on_event, 
-            cap, 
-            stop_flag, 
-            config.2, 
-            arc_buffer_pool);
+        spawn_capture_thread_with_pool(tx, on_event, cap, stop_flag, config.2, arc_buffer_pool);
 
         Ok(())
     }
@@ -88,13 +82,12 @@ impl CaptureHandle {
     pub fn stop(&self, on_event: Channel<CaptureEvent<'static>>) -> Result<(), CaptureError> {
         info!("Arrêt de la capture demandé");
         self.stop_flag.store(true, Ordering::Relaxed);
-        on_event
-            .send(CaptureEvent::Stats {
-                received: 0,
-                dropped: 0,
-                if_dropped: 0,
-                processed: 0,
-            })?;
+        on_event.send(CaptureEvent::Stats {
+            received: 0,
+            dropped: 0,
+            if_dropped: 0,
+            processed: 0,
+        })?;
         Ok(())
     }
 }

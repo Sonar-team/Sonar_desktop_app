@@ -64,6 +64,17 @@ pub struct PacketOwnedStats {
 }
 
 impl<'a> PacketMinimal<'a> {
+    // pub fn new(pkt: PacketBuffer) -> Result<Self, ParsedPacketError> {
+    //     let flow = PacketFlow::try_from(pkt.data.as_ref())?;
+    //     Ok(Self {
+    //         ts_sec: pkt.header.ts.tv_sec,
+    //         ts_usec: pkt.header.ts.tv_usec,
+    //         caplen: pkt.header.caplen,
+    //         len: pkt.header.len,
+    //         flow,
+    //     })
+    // }
+
     pub fn to_owned_packet(&self) -> PacketOwnedStats {
         PacketOwnedStats {
             ts_sec: self.ts_sec,

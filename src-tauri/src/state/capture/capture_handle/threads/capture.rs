@@ -1,6 +1,6 @@
 use crossbeam::channel::Sender;
 use log::{debug, error};
-use pcap::{Active, Capture};
+use pcap::{Active, Capture, Packet};
 use std::{
     sync::{
         Arc,
@@ -30,32 +30,35 @@ pub fn spawn_capture_thread_with_pool(
         debug!("Démarrage du thread de capture avec pool");
 
         while !stop_flag.load(Ordering::Relaxed) {
-            if let Ok(stats) = cap.stats() 
-                && let Err(e) = tx.try_send(CaptureMessage::Stats(stats)) {
-                    error!("Erreur try_send stats: {}", e);
+            if let Ok(stats) = cap.stats()
+                && let Err(e) = tx.try_send(CaptureMessage::Stats(stats))
+            {
+                error!("Erreur try_send stats: {}", e);
             }
 
             match cap.next_packet() {
                 Ok(packet) => {
                     if let Some(mut buffer) = buffer_pool.get() {
                         // On copie les octets DANS UN SCOPE LIMITE pour drop le guard avant tout move
-                        
+
                         let n = packet.header.caplen as usize;
                         // let size = n.min(buffer.data.len());
                         buffer.header = *packet.header;
                         buffer.data[..n].copy_from_slice(&packet.data[..n]);
-                        
+
                         match tx.try_send(CaptureMessage::Packet(buffer)) {
                             Ok(()) => {
                                 // Succès : le processing thread RENDRA le buffer au pool.
                             }
                             Err(err) => {
                                 error!("Erreur try_send paquet: {}", err);
-                                if let Err(e) = on_event.send(CaptureEvent::ChannelCapacityPayload {
-                                    channel_size: channel_capacity as usize,
-                                    current_size: tx.len(),
-                                    backpressure: true,
-                                }) {
+                                if let Err(e) =
+                                    on_event.send(CaptureEvent::ChannelCapacityPayload {
+                                        channel_size: channel_capacity as usize,
+                                        current_size: tx.len(),
+                                        backpressure: true,
+                                    })
+                                {
                                     error!("Erreur send channel capacity payload: {}", e);
                                 }
                                 // Échec d'envoi => on remet IMMÉDIATEMENT le buffer au pool
@@ -68,7 +71,6 @@ pub fn spawn_capture_thread_with_pool(
                         error!("Pas de buffer dispo");
                     }
                 }
-
                 Err(pcap::Error::PcapError(e)) if e.contains("Packets are not available") => {
                     thread::sleep(Duration::from_millis(1));
                 }

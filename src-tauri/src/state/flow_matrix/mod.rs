@@ -114,10 +114,14 @@ impl FlowMatrix {
                     .unwrap_or_default();
 
                 let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
-                    Ok(dur) => chrono::DateTime::<chrono::Utc>::from_timestamp(dur.as_secs() as i64, 0)
-                        .unwrap_or_else(|| chrono::DateTime::<chrono::Utc>::from_timestamp(0, 0).unwrap())
-                        .format("%Y-%m-%d %H:%M:%S")
-                        .to_string(),
+                    Ok(dur) => {
+                        chrono::DateTime::<chrono::Utc>::from_timestamp(dur.as_secs() as i64, 0)
+                            .unwrap_or_else(|| {
+                                chrono::DateTime::<chrono::Utc>::from_timestamp(0, 0).unwrap()
+                            })
+                            .format("%Y-%m-%d %H:%M:%S")
+                            .to_string()
+                    }
                     Err(_) => "N/A".into(),
                 };
 

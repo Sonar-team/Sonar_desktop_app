@@ -1,6 +1,5 @@
-use parking_lot::Mutex;
+use crossbeam::queue::SegQueue;
 use pcap::PacketHeader;
-use std::collections::VecDeque;
 
 pub struct PacketBuffer {
     pub header: PacketHeader,
@@ -22,31 +21,41 @@ impl PacketBuffer {
         }
     }
 
+    #[inline]
     pub fn as_slice(&self) -> &[u8] {
-        &self.data[..self.header.caplen as usize]
+        let n = (self.header.caplen as usize).min(self.data.len());
+        &self.data[..n]
     }
 }
 
 pub struct PacketBufferPool {
-    pool: Mutex<VecDeque<PacketBuffer>>,
+    pool: SegQueue<PacketBuffer>,
 }
 
 impl PacketBufferPool {
     pub fn new(pool_size: usize, buffer_size: usize) -> Self {
-        let mut pool = VecDeque::with_capacity(pool_size);
+        let pool = SegQueue::new();
         for _ in 0..pool_size {
-            pool.push_back(PacketBuffer::new(buffer_size));
+            pool.push(PacketBuffer::new(buffer_size));
         }
-        Self { pool: Mutex::new(pool) }
+        Self { pool }
     }
 
+    /// Récupère un buffer disponible (ou None si vide)
+    #[inline]
     pub fn get(&self) -> Option<PacketBuffer> {
-        let mut pool = self.pool.lock();
-        pool.pop_front()
+        self.pool.pop()
     }
 
+    /// Remet un buffer dans le pool
+    #[inline]
     pub fn put(&self, buffer: PacketBuffer) {
-        let mut pool = self.pool.lock();
-        pool.push_back(buffer);
+        self.pool.push(buffer);
+    }
+
+    /// Optionnel : pour debug uniquement (coûteux)
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.pool.len()
     }
 }
