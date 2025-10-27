@@ -11,7 +11,10 @@ impl PacketBuffer {
     pub fn new(buffer_size: usize) -> Self {
         Self {
             header: PacketHeader {
-                ts: libc::timeval { tv_sec: 0, tv_usec: 0 },
+                ts: libc::timeval {
+                    tv_sec: 0,
+                    tv_usec: 0,
+                },
                 caplen: 0,
                 len: 0,
             },
@@ -23,7 +26,10 @@ impl PacketBuffer {
     /// juste pour éviter de garder des valeurs trompeuses).
     #[inline]
     pub fn clear(&mut self) {
-        self.header.ts = libc::timeval { tv_sec: 0, tv_usec: 0 };
+        self.header.ts = libc::timeval {
+            tv_sec: 0,
+            tv_usec: 0,
+        };
         self.header.caplen = 0;
         self.header.len = 0;
         // Pas besoin d'effacer data: elle sera réécrite
@@ -42,12 +48,17 @@ impl PacketBuffer {
         let caplen = self.header.caplen as usize;
 
         // Garde-fous sans coût en release :
-        debug_assert!(caplen <= self.data.len(), "caplen > buffer_size (invariant brisé)");
-        debug_assert!(caplen <= src_payload.len(), "caplen > src_payload.len() (invariant brisé)");
+        debug_assert!(
+            caplen <= self.data.len(),
+            "caplen > buffer_size (invariant brisé)"
+        );
+        debug_assert!(
+            caplen <= src_payload.len(),
+            "caplen > src_payload.len() (invariant brisé)"
+        );
 
         // Copie "pile la taille"
         self.data[..caplen].copy_from_slice(&src_payload[..caplen]);
-        
     }
 
     #[inline]
@@ -55,19 +66,18 @@ impl PacketBuffer {
         let n = self.header.caplen as usize;
         &self.data[..n]
     }
-
 }
 
 impl AsRef<[u8]> for PacketBuffer {
     #[inline]
-    fn as_ref(&self) -> &[u8] { self.as_slice() }
+    fn as_ref(&self) -> &[u8] {
+        self.as_slice()
+    }
 }
-
 
 /// Pool lock-free de PacketBuffer
 pub struct PacketBufferPool {
     pool: SegQueue<PacketBuffer>,
-    
 }
 
 impl PacketBufferPool {
@@ -76,7 +86,7 @@ impl PacketBufferPool {
         for _ in 0..pool_size {
             pool.push(PacketBuffer::new(buffer_size));
         }
-        Self { pool}
+        Self { pool }
     }
 
     /// Récupère un buffer disponible (ou None si vide)
@@ -97,5 +107,4 @@ impl PacketBufferPool {
     pub fn len(&self) -> usize {
         self.pool.len()
     }
-
 }

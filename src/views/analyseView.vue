@@ -1,7 +1,12 @@
 <template>
   <div class="page-container">
     <div class="top-container">
-      <TopBar @toggle-config="toggleConfig" @toggle-pcap="togglePcap" @toggle-filter="toggleFilter"/>
+      <TopBar 
+        @toggle-config="toggleConfig" 
+        @toggle-pcap="togglePcap" 
+        @toggle-filter="toggleFilter"
+        @toggle-graph="toggleGraph"  
+      />
       <div class="panels">
         <ConfigPanel v-if="showConfig" @update:ConfigPanel-visible="(val: any) => showConfig = val" />
         <ImportPanel v-if="showPcap" @update:visible="(val: any) => showPcap = val"/>
@@ -10,7 +15,8 @@
     </div>
 
     <div class="content-container">
-      <NetworkGraphComponent />
+      <!-- ✅ affichage conditionnel du graph -->
+      <NetworkGraphComponent v-if="showGraph" />
     </div>
 
     <div class="status-bar">
@@ -48,6 +54,7 @@ export default defineComponent({
       showConfig: false,
       showPcap: false,
       showFilter: false,
+      showGraph: true, // ✅ état du graph
     };
   },
   computed: {
@@ -64,10 +71,14 @@ export default defineComponent({
     },
     toggleFilter() {
       this.showFilter = !this.showFilter;
+    },
+    toggleGraph() {
+      this.showGraph = !this.showGraph; // ✅ bascule affichage
     }
   }
 });
 </script>
+
 
 <style scoped>
 .page-container {

@@ -39,7 +39,7 @@ pub fn spawn_capture_thread_with_pool(
             match cap.next_packet() {
                 Ok(packet) => {
                     if let Some(mut buffer) = buffer_pool.get() {
-                        // On copie les octets DANS UN SCOPE LIMITE 
+                        // On copie les octets DANS UN SCOPE LIMITE
                         buffer.write_from_parts(packet.header, packet.data);
 
                         match tx.try_send(CaptureMessage::Packet(buffer)) {
