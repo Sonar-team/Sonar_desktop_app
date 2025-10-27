@@ -6,8 +6,10 @@
 
 ## ✨ Fonctionnalités
 
-- Ajout de l'affichage des ports sur la vue graphique pour une meilleure visibilité des connexions réseau
-- Amélioration de la visibilité des protocoles les plus hauts dans la hiérarchie réseau
+- Ajout de l'affichage des ports sur la vue graphique pour une meilleure
+  visibilité des connexions réseau
+- Amélioration de la visibilité des protocoles les plus hauts dans la hiérarchie
+  réseau
 - Optimisation des performances de rendu pour les graphes complexes
 
 ## 🛠 Corrections

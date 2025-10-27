@@ -58,10 +58,11 @@ pub fn config_capture(
     buffer_size: i32,
     chan_capacity: i32,
     timeout: i32,
+    snaplen: i32,
 ) -> Result<CaptureConfig, CaptureStateError> {
     let mut app = state.lock()?; // Gestion d'erreur ici
     app.config
-        .setup(device_name, buffer_size, chan_capacity, timeout);
+        .setup(device_name, buffer_size, chan_capacity, timeout, snaplen);
     info!(
         "[get_config_capture] app.config {:?}",
         app.config.device_name

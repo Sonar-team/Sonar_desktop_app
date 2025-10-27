@@ -45,7 +45,7 @@ pub fn spawn_processing_thread(
         loop {
             match rx.recv() {
                 Ok(CaptureMessage::Packet(pkt)) => {
-                    let flow = match PacketFlow::try_from(pkt.data.as_ref()) {
+                    let flow = match PacketFlow::try_from(pkt.as_ref()) {
                         Ok(flow) => flow,
                         Err(e) => {
                             error!("Failed to parse PacketFlow: {}", e);

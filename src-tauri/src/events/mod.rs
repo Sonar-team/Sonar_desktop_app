@@ -10,6 +10,7 @@ pub enum CaptureEvent<'a> {
         buffer_size: i32,
         chan_capacity: i32,
         timeout: i32,
+        snaplen: i32,
     },
     Stats {
         received: u32,

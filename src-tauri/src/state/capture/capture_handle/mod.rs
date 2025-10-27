@@ -37,7 +37,7 @@ impl CaptureHandle {
 
     pub fn start(
         &self,
-        config: (String, i32, i32, i32),
+        config: (String, i32, i32, i32, i32),
         app: AppHandle,
         on_event: Channel<CaptureEvent<'static>>,
     ) -> Result<(), CaptureError> {
@@ -48,6 +48,7 @@ impl CaptureHandle {
             buffer_size: config.1,
             chan_capacity: config.2,
             timeout: config.3,
+            snaplen: config.4,
         })?;
 
         let stop_flag = self.stop_flag.clone();
@@ -64,7 +65,7 @@ impl CaptureHandle {
             bounded(config.2 as usize);
 
         // 🔑 Utilisation du nouveau PacketBufferPool
-        let arc_buffer_pool = Arc::new(PacketBufferPool::new(1000, 65536));
+        let arc_buffer_pool = Arc::new(PacketBufferPool::new(1000, config.4 as usize));
 
         // Démarrage des threads avec le nouveau buffer_pool
         spawn_processing_thread(

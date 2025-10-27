@@ -1,6 +1,6 @@
 use crossbeam::channel::Sender;
 use log::{debug, error};
-use pcap::{Active, Capture, Packet};
+use pcap::{Active, Capture};
 use std::{
     sync::{
         Arc,
@@ -39,12 +39,8 @@ pub fn spawn_capture_thread_with_pool(
             match cap.next_packet() {
                 Ok(packet) => {
                     if let Some(mut buffer) = buffer_pool.get() {
-                        // On copie les octets DANS UN SCOPE LIMITE pour drop le guard avant tout move
-
-                        let n = packet.header.caplen as usize;
-                        // let size = n.min(buffer.data.len());
-                        buffer.header = *packet.header;
-                        buffer.data[..n].copy_from_slice(&packet.data[..n]);
+                        // On copie les octets DANS UN SCOPE LIMITE 
+                        buffer.write_from_parts(packet.header, packet.data);
 
                         match tx.try_send(CaptureMessage::Packet(buffer)) {
                             Ok(()) => {

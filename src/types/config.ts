@@ -3,4 +3,5 @@ export type CaptureConfig = {
   buffer_size: number;
   chan_capacity: number;
   timeout: number;
+  snaplen: number;
 };

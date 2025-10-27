@@ -98,15 +98,23 @@ export const useCaptureConfigStore = defineStore("captureConfig", {
     buffer_size: 18000000,
     chan_capacity: 1000,
     timeout: 25,
+    snaplen: 65536,
   }),
   actions: {
     updateConfig(
-      config: { device_name: string; buffer_size: number; chan_capacity: number; timeout: number },
+      config: {
+        device_name: string;
+        buffer_size: number;
+        chan_capacity: number;
+        timeout: number;
+        snaplen: number;
+      },
     ) {
       this.interface = config.device_name;
       this.buffer_size = config.buffer_size;
       this.chan_capacity = config.chan_capacity;
       this.timeout = config.timeout;
+      this.snaplen = config.snaplen;
     },
     updateInterface(iface: string) {
       this.interface = iface;

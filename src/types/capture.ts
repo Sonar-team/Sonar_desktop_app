@@ -64,7 +64,7 @@ export type Edge = {
 export type GraphUpdate =
   | { type: "NewNode"; payload: Node }
   | { type: "NewEdge"; payload: Edge }
-  | {type: "EdgeUpdated"; payload: Edge};
+  | { type: "EdgeUpdated"; payload: Edge };
 
 export type CaptureEvent =
   | {
@@ -127,7 +127,6 @@ export type CaptureEvent =
       packetTotalCount: number;
     };
   };
-  ;
 
 export interface CaptureChannel extends Channel<CaptureEvent> {
   onmessage: (event: { event: string; data: any }) => void;

@@ -75,6 +75,7 @@ fn handle_pcap_file(
         buffer_size: 0,
         chan_capacity: 0,
         timeout: 0,
+        snaplen: 65536,
     }) {
         error!("Erreur lors de l'envoi de Started: {:?}", e);
     };

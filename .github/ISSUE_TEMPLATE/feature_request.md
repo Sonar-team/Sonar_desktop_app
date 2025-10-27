@@ -3,7 +3,7 @@ name: Demande de fonctionnalité
 about: Suggérez une idée pour ce projet
 title: "[FONCTIONNALITÉ]"
 labels: enhancement
-assignees: ''
+assignees: ""
 ---
 
 **Votre demande de fonctionnalité est-elle liée à un problème ? Veuillez

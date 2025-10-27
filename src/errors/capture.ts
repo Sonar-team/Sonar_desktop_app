@@ -13,7 +13,7 @@ export type ImportErrorKind =
   | { kind: "parseError"; message: string }
   | { kind: "other"; message: string };
 
-export type CaptureStateErrorKind = 
+export type CaptureStateErrorKind =
   | { kind: "io"; message: string }
   | { kind: "poisonError"; message: string }
   | { kind: "capture"; message: CaptureErrorKind }
@@ -55,13 +55,13 @@ export async function displayCaptureError(err: unknown) {
           }
         }
         break;
-        case "import":
-          userFriendlyMessage = handleImportError(captureError.message);
-          break;
-      
-        case "other":
-          userFriendlyMessage = `Erreur inattendue : ${captureError.message}`;
-          break;
+      case "import":
+        userFriendlyMessage = handleImportError(captureError.message);
+        break;
+
+      case "other":
+        userFriendlyMessage = `Erreur inattendue : ${captureError.message}`;
+        break;
     }
   }
 
@@ -75,7 +75,9 @@ export async function displayCaptureError(err: unknown) {
 }
 
 function handleImportError(importError: ImportErrorKind): string {
-  if (!importError || typeof importError !== 'object' || !('kind' in importError)) {
+  if (
+    !importError || typeof importError !== "object" || !("kind" in importError)
+  ) {
     return `Erreur d'import inconnue : ${JSON.stringify(importError)}`;
   }
 
