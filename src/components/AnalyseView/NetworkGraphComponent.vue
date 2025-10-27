@@ -27,6 +27,8 @@ interface EdgeData {
   source_port?: string | number | null
   destination_port?: string | number | null
   bidir?: boolean
+  // OPTIM: couleur pré-calculée
+  _color?: string
 }
 
 type GraphUpdate =
@@ -71,6 +73,7 @@ function brighten(hex: string, factor = 0.15) {
 }
 const EDGE_SEP = "__"
 function edgeKey(e: EdgeData): EdgeId {
+  // FIX: template string correct
   return `${e.source}${EDGE_SEP}${e.target}${EDGE_SEP}${e.label}`
 }
 function clearReactiveMap<T extends Record<string, any>>(obj: T) {
@@ -90,18 +93,19 @@ export default defineComponent({
     const forceLayout = markRaw(new ForceLayout({}))
     const simpleLayout = markRaw(new vNG.SimpleLayout())
 
-    // IMPORTANT: configs doit être réactif
+    // IMPORTANT: configs réactif + OPTIM (straight, no select, couleur pré-calculée)
     const configs = reactive(
       vNG.defineConfigs({
-        view: { maxZoomLevel: 5, minZoomLevel: 0.1, layoutHandler: forceLayout },
+        view: { maxZoomLevel: 5, minZoomLevel: 0.1, layoutHandler: simpleLayout },
         node: {
-          selectable: true,
+          selectable: false,
           normal: {
             radius: 20,
             color: (node: NodeDataBase) => node.color,
             strokeWidth: 3,
             strokeColor: (node: NodeDataBase) => node._stroke ?? darken(node.color, 0.25),
           },
+          // si hover pas nécessaire, on peut le désactiver totalement
           hover: {
             radius: 20,
             color: (node: NodeDataBase) => node._hover ?? brighten(node.color, 0.18),
@@ -109,22 +113,22 @@ export default defineComponent({
           label: { fontSize: 16, color: "#ffffff", direction: "north" as const },
         },
         edge: {
-          type: "curve",
-          gap: 30,
-          selectable: true,
+          type: "straight",
+          gap: 10,
+          selectable: false,
           normal: {
             width: 2,
-            color: (edge: EdgeData) => colorForLabel(edge.label),
+            color: (edge: any) => edge._color ?? colorForLabel(edge.label),
           },
           marker: {
             source: {
-              type: (edge: EdgeData) => (edge?.bidir ? "arrow" : "none"),
-              width: 6, height: 6, margin: 0, offset: 0,
+              type: "none",
+              width: 5, height: 5, margin: 0, offset: 0,
               units: "strokeWidth" as const, color: null,
             },
             target: {
               type: "arrow" as const,
-              width: 6, height: 6, margin: 0, offset: 0,
+              width: 5, height: 5, margin: 0, offset: 0,
               units: "strokeWidth" as const, color: null,
             },
           },
@@ -144,7 +148,11 @@ export default defineComponent({
       },
 
       // toggle UI
-      forceEnabled: true,
+      // OPTIM: force désactivée par défaut
+      forceEnabled: false,
+
+      // LOD labels selon zoom
+      zoomLevel: 1,
 
       // refs layouts
       forceLayout,
@@ -186,7 +194,7 @@ export default defineComponent({
       }
     })
 
-    // démarrer la force si active
+    // démarrer la force si active (OFF par défaut)
     if (this.forceEnabled && isFn(this.forceLayout, "start")) this.forceLayout.start()
 
     // reset global
@@ -204,10 +212,16 @@ export default defineComponent({
     // === Toggle Force Layout ===============================================
     enableForce() {
       if (this.forceEnabled) return
-      // mettre le handler
       ;(this.configs.view as any).layoutHandler = this.forceLayout
       if (isFn(this.forceLayout, "start")) this.forceLayout.start()
       this.forceEnabled = true
+
+      // OPTION: arrêt auto pour geler la position après stabilisation
+      setTimeout(() => {
+        if (!this.forceEnabled) return
+        const lh: any = (this.configs.view as any)?.layoutHandler
+        if (isFn(lh, "stop")) lh.stop()
+      }, 3000)
     },
     disableForce() {
       const lh: any = (this.configs.view as any).layoutHandler
@@ -229,6 +243,7 @@ export default defineComponent({
       const vng = (this.$refs as any).graphnodes
       const text = await vng.exportAsSvgText({ embedImages: true })
       await writeTextFile(filePath, text)
+      // FIX: console.log string
       console.log(`SVG exporté dans ${filePath}`)
     },
 
@@ -305,7 +320,8 @@ export default defineComponent({
               return
             }
             const key = edgeKey(e)
-            this.graphData.edges[key] = { ...e, bidir: !!e.bidir }
+            const _color = colorForLabel(e.label) // OPTIM: pré-calcul
+            this.graphData.edges[key] = { ...e, bidir: !!e.bidir, _color }
           }
           break
         }
@@ -318,10 +334,12 @@ export default defineComponent({
             }
             const key = edgeKey(e)
             const existing = this.graphData.edges[key]
+            const _color = colorForLabel(e.label)
             if (existing) {
               existing.bidir = !!e.bidir
+              ;(existing as any)._color = _color
             } else {
-              this.graphData.edges[key] = { ...e, bidir: !!e.bidir }
+              this.graphData.edges[key] = { ...e, bidir: !!e.bidir, _color }
             }
           }
           break
@@ -354,14 +372,16 @@ export default defineComponent({
     <v-network-graph
       class="graph"
       ref="graphnodes"
-      :zoom-level="3"
+      v-model:zoom-level="zoomLevel"
       :nodes="graphNodes"
       :edges="graphEdges"
       :layouts="graphData.layouts"
       :configs="configs"
     >
       <template #edge-label="slotProps">
+        <!-- LOD: protocole uniquement si zoom >= 0.6 -->
         <v-edge-label
+          v-if="zoomLevel >= 0.6"
           :text="slotProps.edge.label"
           align="center"
           vertical-align="above"
@@ -369,7 +389,9 @@ export default defineComponent({
           :font-size="18 * slotProps.scale"
           fill="#FFFFFF"
         />
+        <!-- LOD: ports seulement si zoom >= 1.1 -->
         <v-edge-label
+          v-if="zoomLevel >= 1.1"
           :text="`${slotProps.edge.source_port ?? ''}`"
           align="source"
           vertical-align="below"
@@ -378,6 +400,7 @@ export default defineComponent({
           fill="#E0E0E0"
         />
         <v-edge-label
+          v-if="zoomLevel >= 1.1"
           :text="`${slotProps.edge.destination_port ?? ''}`"
           align="target"
           vertical-align="below"
