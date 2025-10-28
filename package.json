@@ -24,17 +24,13 @@
     "pinia": "3.0.3",
     "v-network-graph": "0.9.21",
     "vue": "3.5.22",
-    "vue-router": "4.6.3",
-    "graphology": "0.26.0",
-    "graphology-layout-force": "0.2.4",
-    "sigma": "^3.0.2",
-    "@sigma/export-image": "^3.0.0"
+    "vue-router": "4.6.3"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.9.1",
     "@vitejs/plugin-vue": "6.0.1",
     "typescript": "^5.9.3",
-    "vite": "7.1.10",
+    "vite": "7.1.12",
     "vue-tsc": "^3.1.2"
   }
 }

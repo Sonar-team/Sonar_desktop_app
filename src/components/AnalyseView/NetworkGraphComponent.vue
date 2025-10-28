@@ -364,7 +364,7 @@ export default defineComponent({
         @click="toggleForce"
         :title="forceEnabled ? 'Désactiver le layout force' : 'Activer le layout force'"
       >
-        {{ forceEnabled ? "Force: ON" : "Force: OFF" }}
+        {{ forceEnabled ? "Gravité: ON" : "Gravité: OFF" }}
       </button>
     </div>
 

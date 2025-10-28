@@ -1,7 +1,6 @@
 {
   "version": "5",
   "specifiers": {
-    "npm:@sigma/export-image@3": "3.0.0_sigma@3.0.2",
     "npm:@tauri-apps/api@^2.9.0": "2.9.0",
     "npm:@tauri-apps/cli@^2.9.1": "2.9.1",
     "npm:@tauri-apps/plugin-dialog@^2.4.2": "2.4.2",
@@ -10,18 +9,15 @@
     "npm:@tauri-apps/plugin-os@^2.3.2": "2.3.2",
     "npm:@tauri-apps/plugin-process@^2.3.1": "2.3.1",
     "npm:@tauri-apps/plugin-shell@^2.3.3": "2.3.3",
-    "npm:@vitejs/plugin-vue@6.0.1": "6.0.1_vite@7.1.10__picomatch@4.0.3_vue@3.5.22__typescript@5.9.3_typescript@5.9.3",
+    "npm:@vitejs/plugin-vue@6.0.1": "6.0.1_vite@7.1.12__picomatch@4.0.3_vue@3.5.22__typescript@5.9.3_typescript@5.9.3",
     "npm:chart.js@4.5.1": "4.5.1",
     "npm:color-convert@^3.1.2": "3.1.2",
     "npm:d3-force@3": "3.0.0",
-    "npm:graphology-layout-force@0.2.4": "0.2.4_graphology-types@0.24.8",
-    "npm:graphology@0.26.0": "0.26.0_graphology-types@0.24.8",
     "npm:html2canvas@^1.4.1": "1.4.1",
     "npm:pinia@3.0.3": "3.0.3_typescript@5.9.3_vue@3.5.22__typescript@5.9.3",
-    "npm:sigma@^3.0.2": "3.0.2",
     "npm:typescript@^5.9.3": "5.9.3",
     "npm:v-network-graph@0.9.21": "0.9.21_d3-force@3.0.0_vue@3.5.22__typescript@5.9.3_typescript@5.9.3",
-    "npm:vite@7.1.10": "7.1.10_picomatch@4.0.3",
+    "npm:vite@7.1.12": "7.1.12_picomatch@4.0.3",
     "npm:vue-router@4.6.3": "4.6.3_vue@3.5.22__typescript@5.9.3_typescript@5.9.3",
     "npm:vue-tsc@^3.1.2": "3.1.2_typescript@5.9.3",
     "npm:vue@3.5.22": "3.5.22_typescript@5.9.3"
@@ -399,13 +395,6 @@
       "os": ["win32"],
       "cpu": ["x64"]
     },
-    "@sigma/export-image@3.0.0_sigma@3.0.2": {
-      "integrity": "sha512-6JmWle7byUzAOGE3P3ttDqn2PbdnNETyFU13i4R0G3PIZcIiVqPRpRWBkz11E89oxKEzEf1XdwQKa9VxHDMD0w==",
-      "dependencies": [
-        "file-saver",
-        "sigma"
-      ]
-    },
     "@tauri-apps/api@2.9.0": {
       "integrity": "sha512-qD5tMjh7utwBk9/5PrTA/aGr3i5QaJ/Mlt7p8NilQ45WgbifUNPyKWsA63iQ8YfQq6R8ajMapU+/Q8nMcPRLNw=="
     },
@@ -520,7 +509,7 @@
     "@types/estree@1.0.8": {
       "integrity": "sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w=="
     },
-    "@vitejs/plugin-vue@6.0.1_vite@7.1.10__picomatch@4.0.3_vue@3.5.22__typescript@5.9.3_typescript@5.9.3": {
+    "@vitejs/plugin-vue@6.0.1_vite@7.1.12__picomatch@4.0.3_vue@3.5.22__typescript@5.9.3_typescript@5.9.3": {
       "integrity": "sha512-+MaE752hU0wfPFJEUAIxqw18+20euHHdxVtMvbFcOEpjEyfqXH/5DCoTHiVJ0J29EhTJdoTkjEv5YBKU9dnoTw==",
       "dependencies": [
         "@rolldown/pluginutils",
@@ -754,9 +743,6 @@
     "estree-walker@2.0.2": {
       "integrity": "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="
     },
-    "events@3.3.0": {
-      "integrity": "sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q=="
-    },
     "fdir@6.5.0_picomatch@4.0.3": {
       "integrity": "sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==",
       "dependencies": [
@@ -766,36 +752,10 @@
         "picomatch"
       ]
     },
-    "file-saver@2.0.5": {
-      "integrity": "sha512-P9bmyZ3h/PRG+Nzga+rbdI4OEpNDzAVyy74uVO9ATgzLK6VtAsYybF/+TOCvrc0MO793d6+42lLyZTw7/ArVzA=="
-    },
     "fsevents@2.3.3": {
       "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
       "os": ["darwin"],
       "scripts": true
-    },
-    "graphology-layout-force@0.2.4_graphology-types@0.24.8": {
-      "integrity": "sha512-NYZz0YAnDkn5pkm30cvB0IScFoWGtbzJMrqaiH070dYlYJiag12Oc89dbVfaMaVR/w8DMIKxn/ix9Bqj+Umm9Q==",
-      "dependencies": [
-        "graphology-types",
-        "graphology-utils"
-      ]
-    },
-    "graphology-types@0.24.8": {
-      "integrity": "sha512-hDRKYXa8TsoZHjgEaysSRyPdT6uB78Ci8WnjgbStlQysz7xR52PInxNsmnB7IBOM1BhikxkNyCVEFgmPKnpx3Q=="
-    },
-    "graphology-utils@2.5.2_graphology-types@0.24.8": {
-      "integrity": "sha512-ckHg8MXrXJkOARk56ZaSCM1g1Wihe2d6iTmz1enGOz4W/l831MBCKSayeFQfowgF8wd+PQ4rlch/56Vs/VZLDQ==",
-      "dependencies": [
-        "graphology-types"
-      ]
-    },
-    "graphology@0.26.0_graphology-types@0.24.8": {
-      "integrity": "sha512-8SSImzgUUYC89Z042s+0r/vMibY7GX/Emz4LDO5e7jYXhuoWfHISPFJYjpRLUSJGq6UQ6xlenvX1p/hJdfXuXg==",
-      "dependencies": [
-        "events",
-        "graphology-types"
-      ]
     },
     "hookable@5.5.3": {
       "integrity": "sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ=="
@@ -895,13 +855,6 @@
       ],
       "bin": true
     },
-    "sigma@3.0.2": {
-      "integrity": "sha512-/BUbeOwPGruiBOm0YQQ6ZMcLIZ6tf/W+Jcm7dxZyAX0tK3WP9/sq7/NAWBxPIxVahdGjCJoGwej0Gdrv0DxlQQ==",
-      "dependencies": [
-        "events",
-        "graphology-utils"
-      ]
-    },
     "source-map-js@1.2.1": {
       "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="
     },
@@ -950,8 +903,8 @@
         "d3-force"
       ]
     },
-    "vite@7.1.10_picomatch@4.0.3": {
-      "integrity": "sha512-CmuvUBzVJ/e3HGxhg6cYk88NGgTnBoOo7ogtfJJ0fefUWAxN/WDSUa50o+oVBxuIhO8FoEZW0j2eW7sfjs5EtA==",
+    "vite@7.1.12_picomatch@4.0.3": {
+      "integrity": "sha512-ZWyE8YXEXqJrrSLvYgrRP7p62OziLW7xI5HYGWFzOvupfAlrLvURSzv/FyGyy0eidogEM3ujU+kUG1zuHgb6Ug==",
       "dependencies": [
         "esbuild",
         "fdir",
@@ -1002,7 +955,6 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
-        "npm:@sigma/export-image@3",
         "npm:@tauri-apps/api@^2.9.0",
         "npm:@tauri-apps/cli@^2.9.1",
         "npm:@tauri-apps/plugin-dialog@^2.4.2",
@@ -1015,14 +967,11 @@
         "npm:chart.js@4.5.1",
         "npm:color-convert@^3.1.2",
         "npm:d3-force@3",
-        "npm:graphology-layout-force@0.2.4",
-        "npm:graphology@0.26.0",
         "npm:html2canvas@^1.4.1",
         "npm:pinia@3.0.3",
-        "npm:sigma@^3.0.2",
         "npm:typescript@^5.9.3",
         "npm:v-network-graph@0.9.21",
-        "npm:vite@7.1.10",
+        "npm:vite@7.1.12",
         "npm:vue-router@4.6.3",
         "npm:vue-tsc@^3.1.2",
         "npm:vue@3.5.22"
