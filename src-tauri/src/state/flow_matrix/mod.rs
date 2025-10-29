@@ -44,6 +44,7 @@ impl FlowMatrix {
 
     pub fn clear(&mut self) {
         self.matrix.clear();
+        self.label.clear();
     }
 
     // pub fn print(&self) {

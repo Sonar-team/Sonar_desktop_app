@@ -133,7 +133,7 @@ export default defineComponent({
         layouts: reactive({}) as Record<string, unknown>,
       },
 
-      forceEnabled: false,
+      forceEnabled: true,
       zoomLevel: 1,
 
       forceLayout,
@@ -151,6 +151,9 @@ export default defineComponent({
       _queue: [] as GraphUpdate[],
       _pendingEdges: [] as GraphUpdate[],
       _raf: 0 as number,
+
+      // Handlers pour cleanup
+      resetHandler: null as (() => void) | null,
     }
   },
 
@@ -181,10 +184,21 @@ export default defineComponent({
       }
     })
 
+    // Abonnement au reset via le bus global
+    this.resetHandler = () => this.resetGraph()
+    this.$bus?.on?.('reset', this.resetHandler)
+
     if (this.forceEnabled && isFn(this.forceLayout, "start")) this.forceLayout.start()
   },
 
   methods: {
+    // === Réinitialisation ==================================================
+    resetGraph() {
+      clearReactiveMap(this.graphData.nodes)
+      clearReactiveMap(this.graphData.edges)
+      this.clearNodeInfos()
+    },
+
     // === Gestion label =====================================================
     onNodeClick({ node }: { node: string }) {
       const n = this.graphData.nodes[node]

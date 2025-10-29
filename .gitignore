@@ -32,3 +32,6 @@ dist-ssr
 *.lock
 /src-tauri/Cargo.lock
 src-tauri/Cargo.lock
+
+# Tauri
+target
