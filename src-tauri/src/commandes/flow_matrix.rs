@@ -1,19 +1,19 @@
-use std::sync::Arc;
-
-use parking_lot::Mutex;
-use tauri::State;
+use std::sync::{Arc, Mutex};
+use tauri::{command, State};
 
 use crate::state::flow_matrix::FlowMatrix;
+// si tu veux un Result typé :
+use crate::errors::CaptureStateError;
 
-#[tauri::command]
+#[command]
 pub fn add_label(
-    matrix:  State<'_, Arc<Mutex<FlowMatrix>>>, 
-    mac: String, 
-    ip: String, 
-    label: String
+    matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
+    mac: String,
+    ip: String,
+    label: String,
 ) -> Result<(), String> {
-    let mut matrix = matrix.lock();
-    matrix.add_label(mac, ip, label);
+    let mut guard = matrix.lock().map_err(|_| "mutex poisoned".to_string())?;
+    guard.add_label(mac, ip, label.clone());
+    println!("Label added: {:?}", guard.label);
     Ok(())
 }
-    

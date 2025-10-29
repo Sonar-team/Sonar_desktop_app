@@ -31,16 +31,18 @@ pub struct Node {
     pub name: String,  // l’IP sous forme de string (ou MAC)
     pub color: String, // stockée en String côté struct (UI-friendly)
     pub mac: String,
+    pub ip: String,
 }
 
 impl Node {
-    pub fn new(name: String, mac: String, color: &'static str) -> Self {
+    pub fn new(name: String, mac: String, color: &'static str, ip: String) -> Self {
         let id = NODE_COUNTER.fetch_add(1, Ordering::SeqCst);
         Self {
             id: id.to_string(),
             name,
             color: color.to_string(),
             mac,
+            ip,
         }
     }
 }
@@ -110,10 +112,11 @@ impl GraphData {
                 let src_node_id = match self.nodes.entry(src_ip_str.clone()) {
                     Entry::Occupied(e) => e.get().id.clone(),
                     Entry::Vacant(v) => {
-                        let node = Node::new(
+                                                let node = Node::new(
                             src_ip_str.clone(),
                             packet.data_link.source_mac.clone(),
                             src_color,
+                            src_ip_str.clone(),
                         );
                         let node_id = node.id.clone();
                         v.insert(node.clone());
@@ -126,10 +129,11 @@ impl GraphData {
                 let dst_node_id = match self.nodes.entry(dst_ip_str.clone()) {
                     Entry::Occupied(e) => e.get().id.clone(),
                     Entry::Vacant(v) => {
-                        let node = Node::new(
+                                                let node = Node::new(
                             dst_ip_str.clone(),
                             packet.data_link.destination_mac.clone(),
                             dst_color,
+                            dst_ip_str.clone(),
                         );
                         let node_id = node.id.clone();
                         v.insert(node.clone());
@@ -189,7 +193,7 @@ impl GraphData {
         let src_node_id = match self.nodes.entry(src_key.clone()) {
             Entry::Occupied(e) => e.get().id.clone(),
             Entry::Vacant(v) => {
-                let node = Node::new(src_mac.clone(), src_mac.clone(), L2_COLOR);
+                                let node = Node::new(src_mac.clone(), src_mac.clone(), L2_COLOR, "".to_string());
                 let node_id = node.id.clone();
                 v.insert(node.clone());
                 updates.push(GraphUpdate::NewNode(node));
@@ -201,7 +205,7 @@ impl GraphData {
         let dst_node_id = match self.nodes.entry(dst_key.clone()) {
             Entry::Occupied(e) => e.get().id.clone(),
             Entry::Vacant(v) => {
-                let node = Node::new(dst_mac.clone(), dst_mac.clone(), L2_COLOR);
+                                let node = Node::new(dst_mac.clone(), dst_mac.clone(), L2_COLOR, "".to_string());
                 let node_id = node.id.clone();
                 v.insert(node.clone());
                 updates.push(GraphUpdate::NewNode(node));

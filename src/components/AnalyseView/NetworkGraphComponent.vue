@@ -7,6 +7,7 @@ import { useCaptureStore } from "../../store/capture"
 import { save } from "@tauri-apps/plugin-dialog"
 import { writeTextFile } from "@tauri-apps/plugin-fs"
 import { GraphUpdate } from "../../types/capture"
+import { invoke } from "@tauri-apps/api/core"
 
 // --- Types -----------------------------------------------------------------
 type NodeId = string
@@ -16,6 +17,7 @@ interface NodeDataBase {
   id: string
   name: string
   mac?: string
+  ip?: string      // ← NEW
   color: string
   label?: string
   _hover?: string
@@ -31,7 +33,6 @@ interface EdgeData {
   bidir?: boolean
   _color?: string
 }
-
 
 // --- Colors ----------------------------------------------------------------
 const EDGE_COLORS_LC: Record<string, string> = Object.freeze({
@@ -139,10 +140,14 @@ export default defineComponent({
       simpleLayout,
       configs,
 
-      // bandeau bas
+      // Bandeau bas
       selectedNodeInfos: [] as string[],
+      selectedNode: null as NodeDataBase | null,
+      selectedNodeId: null as string | null,
+      editedLabel: "" as string,
+      isSavingLabel: false as boolean,
 
-      // queue
+      // Queue
       _queue: [] as GraphUpdate[],
       _pendingEdges: [] as GraphUpdate[],
       _raf: 0 as number,
@@ -157,7 +162,7 @@ export default defineComponent({
     eventHandlers(): vNG.EventHandlers {
       return {
         "node:click": this.onNodeClick,
-        "view:click": this.clearNodeInfos, // clic fond => efface
+        "view:click": this.clearNodeInfos,
       }
     },
   },
@@ -180,7 +185,55 @@ export default defineComponent({
   },
 
   methods: {
-    // === Bandeau d'infos ====================================================
+    // === Gestion label =====================================================
+    onNodeClick({ node }: { node: string }) {
+      const n = this.graphData.nodes[node]
+      if (!n) return
+      this.selectedNodeId = node
+      this.selectedNode = n
+      this.editedLabel = n.label ?? ""
+      this.selectedNodeInfos = this._buildNodeInfos(node)
+    },
+    clearNodeInfos() {
+      this.selectedNodeInfos = []
+      this.selectedNode = null
+      this.selectedNodeId = null
+      this.editedLabel = ""
+    },
+    async editNodeLabel() {
+      if (!this.selectedNode || !this.selectedNodeId) return
+      const newLabel = String(this.editedLabel ?? "").trim()
+
+      // MAJ UI immédiate
+      this.selectedNode.label = newLabel
+      this.selectedNodeInfos = this._buildNodeInfos(this.selectedNodeId)
+
+      // Appel backend avec mac/ip/label
+      try {
+        this.isSavingLabel = true
+        await invoke("add_label", {
+          mac: this.selectedNode.mac ?? "",
+          ip: this.selectedNode.ip ?? "",
+          label: newLabel,
+        })
+      } catch (e) {
+        console.error("Erreur add_label:", e)
+      } finally {
+        this.isSavingLabel = false
+      }
+    },
+    onEditKeydown(e: KeyboardEvent) {
+      if (e.key === "Enter") this.editNodeLabel()
+      else if (e.key === "Escape") this.clearNodeInfos()
+    },
+    cancelEdit() {
+      if (this.selectedNode && this.selectedNodeId) {
+        this.editedLabel = this.selectedNode.label ?? ""
+        this.selectedNodeInfos = this._buildNodeInfos(this.selectedNodeId)
+      }
+    },
+
+    // === Bandeau infos =====================================================
     _buildNodeInfos(nodeId: string): string[] {
       const n = this.graphData.nodes[nodeId] as any
       if (!n) return ["Nœud introuvable"]
@@ -200,20 +253,14 @@ export default defineComponent({
         `Nom: ${n.name ?? ""}`,
         `Label: ${n.label ?? "N/A"}`,
         `MAC: ${n.mac ?? ""}`,
+        `IP: ${n.ip ?? ""}`,            // ← NEW (affichage)
         `Couleur: ${n.color}`,
         `Degré: ${degree}`,
         `Protocoles: ${[...protos].join(", ") || "—"}`,
       ]
     },
 
-    onNodeClick({ node }: { node: string }) {
-      this.selectedNodeInfos = this._buildNodeInfos(node)
-    },
-    clearNodeInfos() {
-      this.selectedNodeInfos = []
-    },
-
-    // === Toggle Force Layout ===============================================
+    // === Force Layout ======================================================
     toggleForce() {
       if (this.forceEnabled) {
         const lh: any = (this.configs.view as any).layoutHandler
@@ -275,7 +322,9 @@ export default defineComponent({
               id: node.id,
               name: node.name,
               mac: node.mac || "",
+              ip: node.ip || "",          // ← NEW (propagation)
               color,
+              label: node.label || "",
               _stroke: darken(color, 0.25),
               _hover: brighten(color, 0.18),
             }
@@ -373,6 +422,28 @@ export default defineComponent({
       <div class="sep" />
       <div class="node-infos" v-if="selectedNodeInfos.length">
         <strong>Nœud sélectionné</strong>
+
+        <!-- Édition du label -->
+        <div class="edit-row">
+          <label for="labelInput">Label :</label>
+          <input
+            id="labelInput"
+            v-model="editedLabel"
+            type="text"
+            placeholder="Entrer un label…"
+            @keydown="onEditKeydown"
+          />
+          <button
+            class="primary"
+            :disabled="isSavingLabel || !selectedNode"
+            @click="editNodeLabel"
+            title="Valider la modification"
+          >
+            {{ isSavingLabel ? "Enregistrement…" : "Enregistrer" }}
+          </button>
+          <button class="ghost" @click="cancelEdit" :disabled="isSavingLabel">Annuler</button>
+        </div>
+
         <ul>
           <li v-for="(info, idx) in selectedNodeInfos" :key="idx">{{ info }}</li>
         </ul>
@@ -398,18 +469,32 @@ export default defineComponent({
 
 /* Boutons */
 .top-buttons {
-  position: absolute; top: 10px; left: 10px; display: flex; gap: 10px; z-index: 10;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
 }
 .download-button, .force-button {
-  background: #0b1b25; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  background: #0b1b25;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
 }
 .force-button.on { box-shadow: 0 0 0 2px #1de9b6 inset; }
 
-/* Bandeau bas fixé */
+/* Bandeau bas */
 .bottom-info {
   position: absolute;
-  left: 0; right: 0; bottom: 200px;
-  display: flex; align-items: center; gap: 12px;
+  left: 0;
+  right: 0;
+  bottom: 200px; /* ajuste si besoin */
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 8px 12px;
   background: #0f0f0fcc;
   color: #eaeaea;
@@ -418,8 +503,59 @@ export default defineComponent({
   z-index: 20;
 }
 .bottom-info .zoom { font-variant-numeric: tabular-nums; }
-.bottom-info .sep { width: 1px; height: 20px; background: #333; }
-.node-infos ul { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.bottom-info .sep {
+  width: 1px;
+  height: 20px;
+  background: #333;
+}
+.node-infos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.node-infos ul {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 .node-infos li { opacity: 0.95; }
 .node-infos.hint { opacity: 0.7; font-style: italic; }
+
+.edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+.edit-row input {
+  background: #0b0b0b;
+  color: #eaeaea;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 6px 8px;
+  min-width: 220px;
+}
+button.primary {
+  background: #116466;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+button.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+button.ghost {
+  background: transparent;
+  color: #bbb;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
 </style>
