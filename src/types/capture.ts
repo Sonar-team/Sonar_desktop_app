@@ -49,6 +49,8 @@ export type Node = {
   name: string;
   color: string;
   mac: string;
+  ip: string;
+  label?: string;
 };
 
 export type Edge = {

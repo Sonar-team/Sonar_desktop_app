@@ -104,7 +104,7 @@ export default defineComponent({
             radius: 20,
             color: (node: NodeDataBase) => node._hover ?? brighten(node.color, 0.18),
           },
-          label: { fontSize: 16, color: "#ffffff", direction: "north" as const },
+          label: { text: (node: NodeDataBase) => node.label || node.name, fontSize: 16, color: "#ffffff", direction: "north" as const },
         },
         edge: {
           type: "straight",
@@ -206,6 +206,7 @@ export default defineComponent({
 
       // MAJ UI immédiate
       this.selectedNode.label = newLabel
+      this.configs.node.label.text = (node: NodeDataBase) => node.label || node.name
       this.selectedNodeInfos = this._buildNodeInfos(this.selectedNodeId)
 
       // Appel backend avec mac/ip/label

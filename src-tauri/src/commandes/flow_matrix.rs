@@ -11,8 +11,8 @@ pub fn add_label(
     mac: String,
     ip: String,
     label: String,
-) -> Result<(), String> {
-    let mut guard = matrix.lock().map_err(|_| "mutex poisoned".to_string())?;
+) -> Result<(), CaptureStateError> {
+    let mut guard = matrix.lock()?;
     guard.add_label(mac, ip, label.clone());
     println!("Label added: {:?}", guard.label);
     Ok(())
