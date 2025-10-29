@@ -91,7 +91,7 @@ export default defineComponent({
 
     const configs = reactive(
       vNG.defineConfigs({
-        view: { maxZoomLevel: 5, minZoomLevel: 0.1, layoutHandler: simpleLayout },
+        view: { maxZoomLevel: 5, minZoomLevel: 0.1, layoutHandler: forceLayout },
         node: {
           selectable: true,
           normal: {
