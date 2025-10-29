@@ -6,6 +6,7 @@ import { ForceLayout } from "v-network-graph/lib/force-layout"
 import { useCaptureStore } from "../../store/capture"
 import { save } from "@tauri-apps/plugin-dialog"
 import { writeTextFile } from "@tauri-apps/plugin-fs"
+import { GraphUpdate } from "../../types/capture"
 
 // --- Types -----------------------------------------------------------------
 type NodeId = string
@@ -16,6 +17,7 @@ interface NodeDataBase {
   name: string
   mac?: string
   color: string
+  label?: string
   _hover?: string
   _stroke?: string
 }
@@ -27,14 +29,9 @@ interface EdgeData {
   source_port?: string | number | null
   destination_port?: string | number | null
   bidir?: boolean
-  // OPTIM: couleur pré-calculée
   _color?: string
 }
 
-type GraphUpdate =
-  | { type: "NodeAdded"; payload: any }
-  | { type: "EdgeAdded"; payload: any }
-  | { type: "EdgeUpdated"; payload: any }
 
 // --- Colors ----------------------------------------------------------------
 const EDGE_COLORS_LC: Record<string, string> = Object.freeze({
@@ -73,7 +70,6 @@ function brighten(hex: string, factor = 0.15) {
 }
 const EDGE_SEP = "__"
 function edgeKey(e: EdgeData): EdgeId {
-  // FIX: template string correct
   return `${e.source}${EDGE_SEP}${e.target}${EDGE_SEP}${e.label}`
 }
 function clearReactiveMap<T extends Record<string, any>>(obj: T) {
@@ -89,23 +85,20 @@ export default defineComponent({
   components: { VNetworkGraph, VEdgeLabel },
 
   data() {
-    // Instances de layout
     const forceLayout = markRaw(new ForceLayout({}))
     const simpleLayout = markRaw(new vNG.SimpleLayout())
 
-    // IMPORTANT: configs réactif + OPTIM (straight, no select, couleur pré-calculée)
     const configs = reactive(
       vNG.defineConfigs({
         view: { maxZoomLevel: 5, minZoomLevel: 0.1, layoutHandler: simpleLayout },
         node: {
-          selectable: false,
+          selectable: true,
           normal: {
             radius: 20,
             color: (node: NodeDataBase) => node.color,
             strokeWidth: 3,
             strokeColor: (node: NodeDataBase) => node._stroke ?? darken(node.color, 0.25),
           },
-          // si hover pas nécessaire, on peut le désactiver totalement
           hover: {
             radius: 20,
             color: (node: NodeDataBase) => node._hover ?? brighten(node.color, 0.18),
@@ -121,16 +114,8 @@ export default defineComponent({
             color: (edge: any) => edge._color ?? colorForLabel(edge.label),
           },
           marker: {
-            source: {
-              type: "none",
-              width: 5, height: 5, margin: 0, offset: 0,
-              units: "strokeWidth" as const, color: null,
-            },
-            target: {
-              type: "arrow" as const,
-              width: 5, height: 5, margin: 0, offset: 0,
-              units: "strokeWidth" as const, color: null,
-            },
+            source: { type: "none", width: 5, height: 5, margin: 0, offset: 0, units: "strokeWidth" as const, color: null },
+            target: { type: "arrow" as const, width: 5, height: 5, margin: 0, offset: 0, units: "strokeWidth" as const, color: null },
           },
           label: {
             fontSize: 21, lineHeight: 1.1, color: "#E0E0E0", margin: 4,
@@ -147,24 +132,15 @@ export default defineComponent({
         layouts: reactive({}) as Record<string, unknown>,
       },
 
-      // toggle UI
-      // OPTIM: force désactivée par défaut
       forceEnabled: false,
-
-      // LOD labels selon zoom
       zoomLevel: 1,
 
-      // refs layouts
       forceLayout,
       simpleLayout,
-
-      // menus & file export
-      menuTargetNode: [] as string[],
-      menuTargetEdges: [] as string[],
-      _exporting: false as boolean,
-
-      // file save
       configs,
+
+      // bandeau bas
+      selectedNodeInfos: [] as string[],
 
       // queue
       _queue: [] as GraphUpdate[],
@@ -177,13 +153,19 @@ export default defineComponent({
     captureStore() { return useCaptureStore() },
     graphNodes(): Record<NodeId, NodeDataBase> { return this.graphData.nodes },
     graphEdges(): Record<EdgeId, EdgeData> { return this.graphData.edges },
+
+    eventHandlers(): vNG.EventHandlers {
+      return {
+        "node:click": this.onNodeClick,
+        "view:click": this.clearNodeInfos, // clic fond => efface
+      }
+    },
   },
 
   mounted() {
     clearReactiveMap(this.graphData.nodes)
     clearReactiveMap(this.graphData.edges)
 
-    // écoute des updates backend
     this.captureStore.onGraphUpdate((update: GraphUpdate) => {
       this._queue.push(update)
       if (!this._raf) {
@@ -194,43 +176,54 @@ export default defineComponent({
       }
     })
 
-    // démarrer la force si active (OFF par défaut)
     if (this.forceEnabled && isFn(this.forceLayout, "start")) this.forceLayout.start()
-
-    // reset global
-    // @ts-ignore - event bus local
-    this.$bus?.on?.("reset", () => this.resetGraph())
-  },
-
-  beforeUnmount() {
-    if (this._raf) cancelAnimationFrame(this._raf)
-    const lh: any = (this.configs.view as any)?.layoutHandler
-    if (isFn(lh, "stop")) lh.stop()
   },
 
   methods: {
-    // === Toggle Force Layout ===============================================
-    enableForce() {
-      if (this.forceEnabled) return
-      ;(this.configs.view as any).layoutHandler = this.forceLayout
-      if (isFn(this.forceLayout, "start")) this.forceLayout.start()
-      this.forceEnabled = true
+    // === Bandeau d'infos ====================================================
+    _buildNodeInfos(nodeId: string): string[] {
+      const n = this.graphData.nodes[nodeId] as any
+      if (!n) return ["Nœud introuvable"]
 
-      // OPTION: arrêt auto pour geler la position après stabilisation
-      setTimeout(() => {
-        if (!this.forceEnabled) return
-        const lh: any = (this.configs.view as any)?.layoutHandler
-        if (isFn(lh, "stop")) lh.stop()
-      }, 3000)
+      let degree = 0
+      const protos = new Set<string>()
+      for (const e of Object.values(this.graphData.edges) as any[]) {
+        if (!e) continue
+        if (e.source === nodeId || e.target === nodeId) {
+          degree++
+          if (e.label) protos.add(String(e.label))
+        }
+      }
+
+      return [
+        `ID: ${n.id}`,
+        `Nom: ${n.name ?? ""}`,
+        `Label: ${n.label ?? "N/A"}`,
+        `MAC: ${n.mac ?? ""}`,
+        `Couleur: ${n.color}`,
+        `Degré: ${degree}`,
+        `Protocoles: ${[...protos].join(", ") || "—"}`,
+      ]
     },
-    disableForce() {
-      const lh: any = (this.configs.view as any).layoutHandler
-      if (isFn(lh, "stop")) lh.stop() // gel positions
-      ;(this.configs.view as any).layoutHandler = this.simpleLayout
-      this.forceEnabled = false
+
+    onNodeClick({ node }: { node: string }) {
+      this.selectedNodeInfos = this._buildNodeInfos(node)
     },
+    clearNodeInfos() {
+      this.selectedNodeInfos = []
+    },
+
+    // === Toggle Force Layout ===============================================
     toggleForce() {
-      this.forceEnabled ? this.disableForce() : this.enableForce()
+      if (this.forceEnabled) {
+        const lh: any = (this.configs.view as any).layoutHandler
+        if (isFn(lh, "stop")) lh.stop()
+        ;(this.configs.view as any).layoutHandler = this.simpleLayout
+      } else {
+        (this.configs.view as any).layoutHandler = this.forceLayout
+        if (isFn(this.forceLayout, "start")) this.forceLayout.start()
+      }
+      this.forceEnabled = !this.forceEnabled
     },
 
     // === Export SVG ========================================================
@@ -243,27 +236,7 @@ export default defineComponent({
       const vng = (this.$refs as any).graphnodes
       const text = await vng.exportAsSvgText({ embedImages: true })
       await writeTextFile(filePath, text)
-      // FIX: console.log string
       console.log(`SVG exporté dans ${filePath}`)
-    },
-
-    // === Reset =============================================================
-    resetGraph() {
-      if (this._raf) { cancelAnimationFrame(this._raf); this._raf = 0 }
-      this._queue.length = 0
-      this._pendingEdges.length = 0
-
-      clearReactiveMap(this.graphData.nodes)
-      clearReactiveMap(this.graphData.edges)
-      clearReactiveMap(this.graphData.layouts)
-
-      const lh: any = (this.configs.view as any)?.layoutHandler
-      if (isFn(lh, "stop")) lh.stop()
-      if (isFn(lh, "reset")) lh.reset()
-      if (this.forceEnabled && isFn(lh, "start")) lh.start()
-
-      const graphRef = (this.$refs as any).graphnodes
-      if (isFn(graphRef, "fitToContents")) graphRef.fitToContents()
     },
 
     // === Queue & updates ===================================================
@@ -291,10 +264,7 @@ export default defineComponent({
     applyUpdate(update: GraphUpdate | any) {
       if (!update) return
       const u = this.normalizeGraphUpdate(update)
-      if (!u) {
-        console.warn("[NetworkGraph] Unrecognized GraphUpdate shape:", update)
-        return
-      }
+      if (!u) return
 
       switch (u.type) {
         case "NodeAdded": {
@@ -314,39 +284,26 @@ export default defineComponent({
         }
         case "EdgeAdded": {
           const e = u.payload
-          if (e) {
-            if (!this.graphData.nodes[e.source] || !this.graphData.nodes[e.target]) {
-              this._pendingEdges.push(u)
-              return
-            }
-            const key = edgeKey(e)
-            const _color = colorForLabel(e.label) // OPTIM: pré-calcul
-            this.graphData.edges[key] = { ...e, bidir: !!e.bidir, _color }
-          }
+          if (!this.graphData.nodes[e.source] || !this.graphData.nodes[e.target]) return
+          const key = edgeKey(e)
+          const _color = colorForLabel(e.label)
+          this.graphData.edges[key] = { ...e, bidir: !!e.bidir, _color }
           break
         }
         case "EdgeUpdated": {
           const e = u.payload
-          if (e) {
-            if (!this.graphData.nodes[e.source] || !this.graphData.nodes[e.target]) {
-              this._pendingEdges.push(u)
-              return
-            }
-            const key = edgeKey(e)
-            const existing = this.graphData.edges[key]
-            const _color = colorForLabel(e.label)
-            if (existing) {
-              existing.bidir = !!e.bidir
-              ;(existing as any)._color = _color
-            } else {
-              this.graphData.edges[key] = { ...e, bidir: !!e.bidir, _color }
-            }
+          if (!this.graphData.nodes[e.source] || !this.graphData.nodes[e.target]) return
+          const key = edgeKey(e)
+          const existing = this.graphData.edges[key]
+          const _color = colorForLabel(e.label)
+          if (existing) {
+            existing.bidir = !!e.bidir
+            ;(existing as any)._color = _color
+          } else {
+            this.graphData.edges[key] = { ...e, bidir: !!e.bidir, _color }
           }
           break
         }
-        default:
-          console.warn("Unknown update type:", u)
-          break
       }
     },
   },
@@ -360,9 +317,9 @@ export default defineComponent({
       <button class="download-button" @click="downloadSvg" title="Exporter en SVG">⬇️ Export SVG</button>
       <button
         class="force-button"
-        :class="{ on: forceEnabled, off: !forceEnabled }"
+        :class="{ on: forceEnabled }"
         @click="toggleForce"
-        :title="forceEnabled ? 'Désactiver le layout force' : 'Activer le layout force'"
+        :title="forceEnabled ? 'Désactiver la gravité' : 'Activer la gravité'"
       >
         {{ forceEnabled ? "Gravité: ON" : "Gravité: OFF" }}
       </button>
@@ -377,11 +334,11 @@ export default defineComponent({
       :edges="graphEdges"
       :layouts="graphData.layouts"
       :configs="configs"
+      :event-handlers="eventHandlers"
     >
       <template #edge-label="slotProps">
-        <!-- LOD: protocole uniquement si zoom >= 0.6 -->
         <v-edge-label
-          v-if="zoomLevel >= 0.6"
+          v-if="zoomLevel >= 1.2"
           :text="slotProps.edge.label"
           align="center"
           vertical-align="above"
@@ -389,9 +346,8 @@ export default defineComponent({
           :font-size="18 * slotProps.scale"
           fill="#FFFFFF"
         />
-        <!-- LOD: ports seulement si zoom >= 1.1 -->
         <v-edge-label
-          v-if="zoomLevel >= 1.1"
+          v-if="zoomLevel >= 1.8"
           :text="`${slotProps.edge.source_port ?? ''}`"
           align="source"
           vertical-align="below"
@@ -400,7 +356,7 @@ export default defineComponent({
           fill="#E0E0E0"
         />
         <v-edge-label
-          v-if="zoomLevel >= 1.1"
+          v-if="zoomLevel >= 1.8"
           :text="`${slotProps.edge.destination_port ?? ''}`"
           align="target"
           vertical-align="below"
@@ -410,34 +366,60 @@ export default defineComponent({
         />
       </template>
     </v-network-graph>
-  </div>
 
-  <!-- Context menus -->
-  <div ref="nodeMenu" class="context-menu">
-    Infos du noeud:
-    <ul class="contenu">
-      <li v-for="(info, index) in menuTargetNode" :key="index">{{ info }}</li>
-    </ul>
-  </div>
-  <div ref="edgeMenu" class="context-menu">
-    Infos de l'arête:
-    <div class="contenu">{{ menuTargetEdges.join(", ") }}</div>
+    <!-- Bandeau d'infos en bas -->
+    <div class="bottom-info">
+      <div class="zoom">Zoom: {{ zoomLevel.toPrecision(2) }}</div>
+      <div class="sep" />
+      <div class="node-infos" v-if="selectedNodeInfos.length">
+        <strong>Nœud sélectionné</strong>
+        <ul>
+          <li v-for="(info, idx) in selectedNodeInfos" :key="idx">{{ info }}</li>
+        </ul>
+      </div>
+      <div class="node-infos hint" v-else>
+        Clique un nœud pour afficher ses informations.
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.graph-container { position: relative; flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden; background-color: #1a1a1a; height: 100%; }
-.graph { flex: 1; width: 100%; text-align: center; color: #fff; background-color: #000; }
+.graph-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #111;
+  overflow: hidden;
+}
+.graph { flex: 1; background: #000; }
 
 /* Boutons */
-.top-buttons { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; z-index: 10; }
+.top-buttons {
+  position: absolute; top: 10px; left: 10px; display: flex; gap: 10px; z-index: 10;
+}
 .download-button, .force-button {
-  background-color: #0b1b25; color: #fff; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; opacity: .95;
+  background: #0b1b25; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer;
 }
 .force-button.on { box-shadow: 0 0 0 2px #1de9b6 inset; }
-.force-button.off { box-shadow: 0 0 0 2px #ff6e6e inset; }
 
-/* Menus contextuels */
-.context-menu { color: #0b1b25; border-radius: 10px; width: 220px; background-color: #efefef; padding: 10px; position: absolute; visibility: hidden; font-size: 12px; border: 1px solid #aaaaaa; box-shadow: 2px 2px 2px #e7bf0c; z-index: 50; }
-.contenu { color: #0b1b25; border: 1px dashed #aaa; margin-top: 8px; padding: 6px; word-break: break-word; }
+/* Bandeau bas fixé */
+.bottom-info {
+  position: absolute;
+  left: 0; right: 0; bottom: 200px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 12px;
+  background: #0f0f0fcc;
+  color: #eaeaea;
+  border-top: 1px solid #333;
+  backdrop-filter: blur(4px);
+  z-index: 20;
+}
+.bottom-info .zoom { font-variant-numeric: tabular-nums; }
+.bottom-info .sep { width: 1px; height: 20px; background: #333; }
+.node-infos ul { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.node-infos li { opacity: 0.95; }
+.node-infos.hint { opacity: 0.7; font-style: italic; }
 </style>

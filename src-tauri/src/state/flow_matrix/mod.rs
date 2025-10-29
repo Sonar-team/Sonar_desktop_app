@@ -16,12 +16,14 @@ pub struct FlowStats {
 pub struct FlowMatrix {
     // HashMap avec des clés de type PacketFlow et des valeurs de type FlowStats
     pub matrix: HashMap<PacketFlowOwned, FlowStats>,
+    pub label: HashMap<(String, String), String>,
 }
 
 impl FlowMatrix {
     pub fn new() -> Self {
         Self {
             matrix: HashMap::new(),
+            label: HashMap::new(),
         }
     }
 
@@ -100,6 +102,8 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_source_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
+                let label_source = self.label.get(&(flow.data_link.source_mac.clone(), ip_source.clone())).cloned();
+
                 let ip_destination = flow
                     .internet
                     .as_ref()
@@ -112,6 +116,8 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_destination_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
+                let label_destination = self.label.get(&(flow.data_link.destination_mac.clone(), ip_destination.clone())).cloned();
+
 
                 let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
                     Ok(dur) => {
@@ -131,8 +137,10 @@ impl FlowMatrix {
                     protocol_data_link: flow.data_link.ethertype.clone(),
                     ip_source,
                     ip_source_type,
+                    label_source,
                     ip_destination,
                     ip_destination_type,
+                    label_destination,
                     port_source: flow.transport.as_ref().and_then(|t| t.source_port),
                     port_destination: flow.transport.as_ref().and_then(|t| t.destination_port),
                     protocol_transport: flow.transport.as_ref().map(|t| t.protocol.clone()),
@@ -161,6 +169,10 @@ impl FlowMatrix {
         info!("✅ Matrice exportée avec succès vers {}", path);
         Ok(())
     }
+
+    pub fn add_label(&mut self, mac: String, ip: String, label: String) {
+        self.label.insert((mac, ip), label);
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -170,8 +182,10 @@ pub struct FlowMatrixRow {
     pub protocol_data_link: String,
     pub ip_source: String,
     pub ip_source_type: String,
+    pub label_source: Option<String>,
     pub ip_destination: String,
     pub ip_destination_type: String,
+    pub label_destination: Option<String>,
     pub port_source: Option<u16>,
     pub port_destination: Option<u16>,
     pub protocol_transport: Option<String>,

@@ -9,6 +9,7 @@ use tauri::menu::MenuBuilder;
 
 use crate::{
     commandes::{
+        flow_matrix::add_label,
         export::{csv::export_csv, logs::export_logs},
         import::convert_from_pcap_list,
         net_capture::reset_capture,
@@ -64,7 +65,8 @@ pub fn run() -> Result<(), tauri::Error> {
             export_csv,
             reset_capture,
             export_logs,
-            convert_from_pcap_list
+            convert_from_pcap_list,
+            add_label
         ])
         // Lancement de l'application
         .run(tauri::generate_context!())
