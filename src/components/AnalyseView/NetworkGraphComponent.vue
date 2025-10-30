@@ -13,7 +13,7 @@ import { invoke } from "@tauri-apps/api/core"
 type NodeId = string
 type EdgeId = string
 
-interface NodeDataBase {
+interface NodeData {
   id: string
   name: string
   mac?: string
@@ -23,7 +23,7 @@ interface NodeDataBase {
   _hover?: string
   _stroke?: string
 }
-
+ 
 interface EdgeData {
   source: NodeId
   target: NodeId
@@ -91,20 +91,33 @@ export default defineComponent({
 
     const configs = reactive(
       vNG.defineConfigs({
-        view: { maxZoomLevel: 5, minZoomLevel: 0.1, layoutHandler: forceLayout },
+        view: { maxZoomLevel: 5, minZoomLevel: 0.1, layoutHandler: forceLayout, scalingObjects: true },
         node: {
           selectable: true,
           normal: {
             radius: 20,
-            color: (node: NodeDataBase) => node.color,
+            color: (node: NodeData) => node.color,
             strokeWidth: 3,
-            strokeColor: (node: NodeDataBase) => node._stroke ?? darken(node.color, 0.25),
+            strokeColor: (node: NodeData) => node._stroke ?? darken(node.color, 0.25),
           },
           hover: {
             radius: 20,
-            color: (node: NodeDataBase) => node._hover ?? brighten(node.color, 0.18),
+            color: (node: NodeData) => node._hover ?? brighten(node.color, 0.18),
           },
-          label: { text: (node: NodeDataBase) => node.label || node.name, fontSize: 16, color: "#ffffff", direction: "north" as const },
+          label: { 
+            text: (node: NodeData) => node.label || node.name, 
+            fontSize: 10, 
+            color: "#ffffff", 
+            direction: "north" as const,
+            lineHeight: 2.0,
+            margin: 4,
+            background: { 
+               visible: true,
+               color: "#000000",
+               padding: { vertical: 1, horizontal: 4 },
+               borderRadius: 2,
+            },
+          },
         },
         edge: {
           type: "straight",
@@ -128,7 +141,7 @@ export default defineComponent({
 
     return {
       graphData: {
-        nodes: shallowReactive(Object.create(null) as Record<NodeId, NodeDataBase>),
+        nodes: shallowReactive(Object.create(null) as Record<NodeId, NodeData>),
         edges: shallowReactive(Object.create(null) as Record<EdgeId, EdgeData>),
         layouts: reactive({}) as Record<string, unknown>,
       },
@@ -142,7 +155,7 @@ export default defineComponent({
 
       // Bandeau bas
       selectedNodeInfos: [] as string[],
-      selectedNode: null as NodeDataBase | null,
+      selectedNode: null as NodeData | null,
       selectedNodeId: null as string | null,
       editedLabel: "" as string,
       isSavingLabel: false as boolean,
@@ -159,7 +172,7 @@ export default defineComponent({
 
   computed: {
     captureStore() { return useCaptureStore() },
-    graphNodes(): Record<NodeId, NodeDataBase> { return this.graphData.nodes },
+    graphNodes(): Record<NodeId, NodeData> { return this.graphData.nodes },
     graphEdges(): Record<EdgeId, EdgeData> { return this.graphData.edges },
 
     eventHandlers(): vNG.EventHandlers {
@@ -220,7 +233,7 @@ export default defineComponent({
 
       // MAJ UI immédiate
       this.selectedNode.label = newLabel
-      this.configs.node.label.text = (node: NodeDataBase) => node.label || node.name
+      this.configs.node.label.text = (node: NodeData) => node.label || node.name
       this.selectedNodeInfos = this._buildNodeInfos(this.selectedNodeId)
 
       // Appel backend avec mac/ip/label
