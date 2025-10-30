@@ -88,3 +88,13 @@ pub fn setup_capture(config: (String, i32, i32, i32, i32)) -> Result<Capture<pca
         .buffer_size(config.1)
         .open()
 }
+
+pub fn setup_filter(cap: &mut Capture<pcap::Active>, filter: Option<String>) -> Result<(), Error> {
+    if let Some(filter) = filter {
+        cap.filter(&filter, true)?;
+    }
+    Ok(())
+}
+// let filter = "ip";
+//         info!("Appliquer le filtre : {}", filter);
+//         cap.filter(filter, true)?;

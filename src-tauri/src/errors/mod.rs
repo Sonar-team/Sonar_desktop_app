@@ -61,6 +61,9 @@ impl Serialize for CaptureStateError {
                     CaptureError::EventSendError(e) => {
                         CaptureErrorKind::EventSendError(e.to_string())
                     }
+                    CaptureError::FilterError(e) => {
+                        CaptureErrorKind::FilterError(e.to_string())
+                    }
                 };
                 CaptureStateErrorKind::Capture(kind)
             }

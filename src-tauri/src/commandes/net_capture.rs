@@ -29,7 +29,7 @@ pub fn start_capture(
         return Ok(state_lock.status.clone());
     }
     let capture = CaptureHandle::new();
-    capture.start(state_lock.config.get_config(), app, on_event)?;
+    capture.start(state_lock.config.get_config(), app, on_event, state_lock.filter.clone())?;
     state_lock.capture = Some(capture);
     state_lock.status.toggle();
 
@@ -92,3 +92,14 @@ pub fn reset_capture(
     matrix.lock()?.clear();
     Ok(())
 }
+
+#[command(async)]
+pub fn set_filter(
+    state: State<'_, Arc<Mutex<CaptureState>>>,
+    filter: String,
+) -> Result<(), CaptureStateError> {
+    let mut app = state.lock()?;
+    app.filter = Some(filter);
+    Ok(())
+}
+

@@ -10,6 +10,7 @@ pub struct CaptureState {
     pub capture: Option<CaptureHandle>,
     pub status: CaptureStatus,
     pub config: CaptureConfig,
+    pub filter: Option<String>,
 }
 
 impl CaptureState {
@@ -18,6 +19,7 @@ impl CaptureState {
             capture: None,
             status: CaptureStatus::default(),
             config: CaptureConfig::default(),
+            filter: None,
         }
     }
 }

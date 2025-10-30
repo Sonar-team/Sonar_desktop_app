@@ -15,16 +15,15 @@ use crate::{
     errors::capture_error::CaptureError,
     events::CaptureEvent,
     state::capture::capture_handle::{
-        messages::CaptureMessage,
-        threads::{
+        messages::CaptureMessage, setup::{setup_capture, setup_filter}, threads::{
             capture::spawn_capture_thread_with_pool, packet_buffer::PacketBufferPool,
             processing::spawn_processing_thread,
-        },
+        }
     },
 };
 
 pub struct CaptureHandle {
-    stop_flag: Arc<AtomicBool>,
+    stop_flag: Arc<AtomicBool>
 }
 
 impl CaptureHandle {
@@ -32,6 +31,7 @@ impl CaptureHandle {
         println!("[DEBUG] CaptureHandle créé");
         Self {
             stop_flag: Arc::new(AtomicBool::new(false)),
+            
         }
     }
 
@@ -40,6 +40,7 @@ impl CaptureHandle {
         config: (String, i32, i32, i32, i32),
         app: AppHandle,
         on_event: Channel<CaptureEvent<'static>>,
+        filter: Option<String>,
     ) -> Result<(), CaptureError> {
         debug!("Démarrage de la capture sur l'interface {}...", config.0);
 
@@ -60,7 +61,10 @@ impl CaptureHandle {
 
         info!("Interface trouvée : {}", device.name);
 
-        let cap = setup::setup_capture(config.clone())?;
+        let mut cap = setup_capture(config.clone())?;
+
+        setup_filter(&mut cap, filter)?;
+
         let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) =
             bounded(config.2 as usize);
 
