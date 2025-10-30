@@ -91,7 +91,12 @@ export default defineComponent({
 
     const configs = reactive(
       vNG.defineConfigs({
-        view: { maxZoomLevel: 5, minZoomLevel: 0.1, layoutHandler: forceLayout, scalingObjects: true },
+        view: { 
+          maxZoomLevel: 5, 
+          minZoomLevel: 0.1, 
+          layoutHandler: forceLayout, 
+          scalingObjects: true 
+        },
         node: {
           selectable: true,
           normal: {
@@ -114,11 +119,12 @@ export default defineComponent({
             background: { 
                visible: true,
                color: "#000000",
-               padding: { vertical: 1, horizontal: 4 },
+               padding: { vertical: 3, horizontal: 6 },
                borderRadius: 2,
             },
           },
         },
+        
         edge: {
           type: "straight",
           gap: 10,
@@ -132,8 +138,18 @@ export default defineComponent({
             target: { type: "arrow" as const, width: 5, height: 5, margin: 0, offset: 0, units: "strokeWidth" as const, color: null },
           },
           label: {
-            fontSize: 21, lineHeight: 1.1, color: "#E0E0E0", margin: 4,
-            background: { visible: true, color: "#000000", padding: { vertical: 1, horizontal: 4 }, borderRadius: 2 },
+            fontSize: 21, 
+            lineHeight: 1.1, 
+            color: "#E0E0E0", 
+            margin: 4,
+              background: { 
+                visible: true, 
+                color: "#000000", 
+                padding: { 
+                  vertical: 1, 
+                  horizontal: 4 
+                }, 
+                borderRadius: 2 },
           },
         },
       })
