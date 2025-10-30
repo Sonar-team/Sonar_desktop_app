@@ -95,7 +95,7 @@ export default defineComponent({
           maxZoomLevel: 5, 
           minZoomLevel: 0.1, 
           layoutHandler: forceLayout, 
-          scalingObjects: true 
+          scalingObjects: false 
         },
         node: {
           selectable: true,
@@ -122,7 +122,7 @@ export default defineComponent({
                padding: { vertical: 3, horizontal: 6 },
                borderRadius: 2,
             },
-          },
+          }
         },
         
         edge: {

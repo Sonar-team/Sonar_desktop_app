@@ -1,6 +1,6 @@
 [package]
 name = "sonar"
-version = "3.3.0"
+version = "3.3.1"
 description = "A Tauri network analyzer App"
 authors = ["Cyprien Avico <avicocyprien@yahoo.com>"]
 edition = "2024"
@@ -16,16 +16,16 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2.5.1", features = [] }
-tauri-plugin-log = "2.7.0"
+tauri-plugin-log = "2.7.1"
 
 [dependencies]
-tauri = { version = "2.9.1", features = [] }
-tauri-plugin-shell = "2.3.1"
+tauri = { version = "2.9.2", features = [] }
+tauri-plugin-shell = "2.3.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.145"
-tauri-plugin-dialog = "2.4.0"
-tauri-plugin-log = "2.7.0"
-tauri-plugin-process = "2.3.0"
+tauri-plugin-dialog = "2.4.2"
+tauri-plugin-log = "2.7.1"
+tauri-plugin-process = "2.3.1"
 
 pcap = "2.3.0" 
 packet_parser = "0.9.0"
