@@ -102,7 +102,8 @@ pub fn spawn_processing_thread(
                     // new_stats: pcap::Stat
                     if let Err(e) = StatsPayload::maybe_send(
                         &mut stats, // <= ta variable déjà déclarée
-                        new_stats, processed,
+                        new_stats, 
+                        processed,
                         &on_event, // <= passe une référence, pas un move
                     ) {
                         error!("[TAURI] Erreur envoi Stats: {}", e);

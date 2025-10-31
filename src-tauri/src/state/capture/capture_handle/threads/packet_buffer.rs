@@ -22,21 +22,7 @@ impl PacketBuffer {
         }
     }
 
-    /// Réinitialise le header (utile quand tu remets le buffer dans le pool,
-    /// juste pour éviter de garder des valeurs trompeuses).
-    #[inline]
-    pub fn clear(&mut self) {
-        self.header.ts = libc::timeval {
-            tv_sec: 0,
-            tv_usec: 0,
-        };
-        self.header.caplen = 0;
-        self.header.len = 0;
-        // Pas besoin d'effacer data: elle sera réécrite
-    }
-
     /// Copie sûre depuis un PacketHeader + payload brut.
-
     #[inline]
     pub fn write_from_parts(&mut self, src_header: &PacketHeader, src_payload: &[u8]) {
         // Invariants garantis en amont :
@@ -46,16 +32,6 @@ impl PacketBuffer {
         self.header = *src_header;
 
         let caplen = self.header.caplen as usize;
-
-        // Garde-fous sans coût en release :
-        debug_assert!(
-            caplen <= self.data.len(),
-            "caplen > buffer_size (invariant brisé)"
-        );
-        debug_assert!(
-            caplen <= src_payload.len(),
-            "caplen > src_payload.len() (invariant brisé)"
-        );
 
         // Copie "pile la taille"
         self.data[..caplen].copy_from_slice(&src_payload[..caplen]);
@@ -97,8 +73,7 @@ impl PacketBufferPool {
 
     /// Remet un buffer dans le pool (optionnel: clear() ici)
     #[inline]
-    pub fn put(&self, mut buffer: PacketBuffer) {
-        buffer.clear();
+    pub fn put(&self, buffer: PacketBuffer) {
         self.pool.push(buffer);
     }
 

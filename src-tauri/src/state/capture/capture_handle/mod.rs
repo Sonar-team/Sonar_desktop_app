@@ -69,7 +69,7 @@ impl CaptureHandle {
             bounded(config.2 as usize);
 
         // 🔑 Utilisation du nouveau PacketBufferPool
-        let arc_buffer_pool = Arc::new(PacketBufferPool::new(1000, config.4 as usize));
+        let arc_buffer_pool = Arc::new(PacketBufferPool::new(config.2 as usize + 2, config.4 as usize));
 
         // Démarrage des threads avec le nouveau buffer_pool
         spawn_processing_thread(
@@ -79,7 +79,12 @@ impl CaptureHandle {
             app.clone(),
             arc_buffer_pool.clone(),
         );
-        spawn_capture_thread_with_pool(tx, on_event, cap, stop_flag, config.2, arc_buffer_pool);
+        spawn_capture_thread_with_pool(tx, 
+            on_event, 
+            cap, 
+            stop_flag, 
+            config.2, 
+            arc_buffer_pool);
 
         Ok(())
     }
