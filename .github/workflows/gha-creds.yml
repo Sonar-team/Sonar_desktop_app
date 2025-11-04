@@ -4,17 +4,18 @@ on:
   workflow_dispatch:       # lancement manuel
   schedule:
     - cron: "0 2 * * *"    # scan chaque nuit à 02:00 UTC
-  push:
-    branches: [ main ]     # (optionnel) scan à chaque push sur main
+  # push:                   # décommente si tu veux un scan à chaque push sur main
+  #   branches: [ main ]
 
 permissions:
   contents: read
-  issues: write            # pour pouvoir ouvrir un ticket (optionnel)
+  issues: write
   pull-requests: write
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,32 +26,52 @@ jobs:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           gemini_model: "gemini-2.5-pro"
           upload_artifacts: true
-          # Prompt = ce que tu veux comme livrable
           prompt: |
             Analyse l’intégralité de ce dépôt (Rust + Tauri + Vue).
             Objectifs :
             1) Détecte dettes techniques, duplications, hot spots de complexité.
             2) Repère les failles évidentes (panics non gérés, unwraps, fuite mémoire,
-               concur. non safe, risques perf/copiage vs références, blocages UI Tauri).
-            3) Propose un plan d’actions priorisé (P1/P2/P3) avec fichiers & diff suggérés.
-            4) Résume dans <2000 mots; table synthèse par fichier (chemin, problème, action).
-            Constraints :
+               concurrence non safe, risques perf/copiage vs références, blocages UI Tauri).
+            3) Propose un plan d’actions priorisé (P1 / P2 / P3) + fichiers + diff suggérés.
+            4) Résume dans <2000 mots ; table synthèse par fichier (chemin, problème, action).
+            Contexte :
+            - Application desktop Tauri v2, perf critique sur capture réseau en temps réel.
+            - Technologies : Rust (backend), Vue + Pinia (frontend), pcap, crossbeam.
+            Contraintes :
             - Ignore node_modules/, target/, dist/, .git/, .github/
-            - Contexte : application desktop Tauri v2, perf critique en capture réseau.
             - Mentionne ce qui est “safe to change” vs “breaking”.
-            - Suggère des tests (unit/intégration) par module.
+            - Suggère aussi les tests unitaires / intégration à ajouter.
 
-      # (Optionnel) Publie un ticket si quelque chose d'important est trouvé
-      - name: Create issue with summary (if non-empty)
+      # --- Issue auto (sécurisée) --------------------------------------------------
+
+      - name: Create issue with summary (safe)
         if: ${{ steps.gemini.outputs.summary != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          printf "%s\n\n---\n\n%s" "Rapport Gemini – scan complet" "${{ steps.gemini.outputs.summary }}" \
-            | gh issue create --title "Rapport Gemini – scan complet" --body-file -
+          set -euo pipefail
+          cat <<'EOF' > gemini-summary.md
+Rapport Gemini – scan complet
 
-      # (Optionnel) Ajoute un résumé dans l'onglet Actions
-      - name: Job Summary
+---
+
+${{ steps.gemini.outputs.summary }}
+EOF
+
+          gh issue create \
+            --title "Rapport Gemini – scan complet" \
+            --label "tech-debt" \
+            --body-file "gemini-summary.md"
+
+      # --- Résumé dans l’onglet Actions / Summary ----------------------------------
+
+      - name: Job Summary (safe)
         run: |
-          echo "## Résumé Gemini" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.gemini.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
+          set -euo pipefail
+          {
+            echo "## Résumé Gemini"
+            echo
+            cat <<'EOF'
+${{ steps.gemini.outputs.summary }}
+EOF
+          } >> "$GITHUB_STEP_SUMMARY"
