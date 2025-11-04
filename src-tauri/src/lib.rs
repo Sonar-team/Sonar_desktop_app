@@ -43,9 +43,8 @@ pub fn run() -> Result<(), tauri::Error> {
             start_cpu_monitor(app.handle().clone());
             let menu = MenuBuilder::new(app)
                 .text("fichier", "Fichier")
-                .text("fermer", "Fermer")
                 .text("apropos", "A propos")
-                .text("preferences", "Préférences")
+                .text("fermer", "Fermer")
                 .build()?;
 
             app.set_menu(menu)?;

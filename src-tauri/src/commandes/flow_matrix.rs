@@ -14,6 +14,5 @@ pub fn add_label(
 ) -> Result<(), CaptureStateError> {
     let mut guard = matrix.lock()?;
     guard.add_label(mac, ip, label.clone());
-    println!("Label added: {:?}", guard.label);
     Ok(())
 }

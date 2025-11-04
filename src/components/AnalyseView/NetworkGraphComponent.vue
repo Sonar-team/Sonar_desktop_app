@@ -5,7 +5,7 @@ import * as vNG from "v-network-graph"
 import { ForceLayout } from "v-network-graph/lib/force-layout"
 import { useCaptureStore } from "../../store/capture"
 import { save } from "@tauri-apps/plugin-dialog"
-import { writeTextFile } from "@tauri-apps/plugin-fs"
+import { writeTextFile, writeFile } from "@tauri-apps/plugin-fs"
 import { GraphUpdate } from "../../types/capture"
 import { invoke } from "@tauri-apps/api/core"
 
@@ -78,6 +78,58 @@ function clearReactiveMap<T extends Record<string, any>>(obj: T) {
 }
 function isFn(x: any, name: string): x is (...a: any[]) => void {
   return x && typeof x[name] === "function"
+}
+
+async function svgTextToPngBytes(svgText: string, opts?: { scale?: number; background?: "transparent" | "white" }) {
+  const scale = opts?.scale ?? 1
+  const background = opts?.background ?? "transparent"
+
+  // 1) Base64-encode du SVG (safe)
+  const svgBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)))
+
+  // 2) Crée l'image
+  const img = new Image()
+  img.decoding = "async"
+  img.src = svgBase64
+
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve()
+    img.onerror = (e) => reject(e)
+  })
+
+  // 3) Déterminer la taille via width/height OU viewBox
+  let w = img.width
+  let h = img.height
+
+  if (!w || !h) {
+    const m = svgText.match(/viewBox="([\d.\-eE]+)\s+([\d.\-eE]+)\s+([\d.\-eE]+)\s+([\d.\-eE]+)"/i)
+    if (m) {
+      const vbW = parseFloat(m[3]), vbH = parseFloat(m[4])
+      w = Math.max(1, Math.round(vbW))
+      h = Math.max(1, Math.round(vbH))
+    } else {
+      // fallback
+      w = 1920; h = 1080
+    }
+  }
+
+  const canvas = document.createElement("canvas")
+  canvas.width = Math.max(1, Math.floor(w * scale))
+  canvas.height = Math.max(1, Math.floor(h * scale))
+  const ctx = canvas.getContext("2d")!
+
+  if (background === "white") {
+    ctx.fillStyle = "#ffffff"
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+  }
+
+  // 4) Dessin
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+  // 5) Canvas → PNG (Uint8Array)
+  const blob: Blob = await new Promise((res) => canvas.toBlob(b => res(b!), "image/png"))
+  const ab = await blob.arrayBuffer()
+  return new Uint8Array(ab)
 }
 
 // --- Component -------------------------------------------------------------
@@ -319,16 +371,33 @@ export default defineComponent({
 
     // === Export SVG ========================================================
     async downloadSvg() {
+        const filePath = await save({
+          filters: [{ name: "SVG File", extensions: ["svg"] }],
+          defaultPath: "network-graph.svg",
+        })
+        if (!filePath) return
+        const vng = (this.$refs as any).graphnodes
+        const text = await vng.exportAsSvgText({ embedImages: true })
+        await writeTextFile(filePath, text)
+        console.log(`SVG exporté dans ${filePath}`)
+      },
+      async downloadPng() {
       const filePath = await save({
-        filters: [{ name: "SVG File", extensions: ["svg"] }],
-        defaultPath: "network-graph.svg",
+        filters: [{ name: "PNG File", extensions: ["png"] }],
+        defaultPath: "network-graph.png",
       })
       if (!filePath) return
+
       const vng = (this.$refs as any).graphnodes
-      const text = await vng.exportAsSvgText({ embedImages: true })
-      await writeTextFile(filePath, text)
-      console.log(`SVG exporté dans ${filePath}`)
+      const svgText = await vng.exportAsSvgText({ embedImages: true })
+
+      // Options : scale x2 et fond blanc (change selon besoin)
+      const pngBytes = await svgTextToPngBytes(svgText, { scale: 2, background: "white" })
+
+      await writeFile(filePath, pngBytes)
+      console.log(`PNG exporté dans ${filePath}`)
     },
+
 
     // === Queue & updates ===================================================
     normalizeGraphUpdate(raw: any): GraphUpdate | null {
@@ -405,9 +474,8 @@ export default defineComponent({
 
 <template>
   <div class="graph-container">
-    <!-- Boutons d’action -->
     <div class="top-buttons">
-      <button class="download-button" @click="downloadSvg" title="Exporter en SVG">⬇️ Export SVG</button>
+      <button class="download-button" @click="downloadPng" title="Exporter en PNG">⬇️ Export PNG</button>
       <button
         class="force-button"
         :class="{ on: forceEnabled }"

@@ -17,7 +17,9 @@
     <button class="image-btn" @click="displayPcapOpener" title="Ouvrir">📄</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
     <button class="image-btn" @click="export_logs" title="Logs">📒</button>
-    <button class="image-btn" @click="handleFilterClick" title="Filtrer">🔍</button>
+    <button class="image-btn" @click="handleFilterClick" title="Filtrer">
+      <img src="/src/assets/filter-solid-full.svg" alt="Flux" class="icon-img" />
+    </button>
   </div>
 </template>
 
