@@ -39,7 +39,7 @@
   - IPv4, IPv6, ARP
   - ICMPv4, ICMPv6
   - UDP, TCP
-  - HTTP, DNS, TLS
+  - HTTP, DNS, TLS, SSL
 
 ---
 
