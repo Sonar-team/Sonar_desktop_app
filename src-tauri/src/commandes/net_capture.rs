@@ -29,7 +29,7 @@ pub fn start_capture(
         return Ok(state_lock.status.clone());
     }
     let capture = CaptureHandle::new();
-    capture.start(state_lock.config.get_config(), app, on_event, state_lock.filter.clone())?;
+    capture.start(state_lock.config.clone(), app, on_event, state_lock.filter.clone())?;
     state_lock.capture = Some(capture);
     state_lock.status.toggle();
 

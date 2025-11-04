@@ -35,13 +35,5 @@ impl CaptureConfig {
         self.timeout = timeout;
         self.snaplen = snaplen;
     }
-    pub fn get_config(&self) -> (String, i32, i32, i32, i32) {
-        (
-            self.device_name.clone(),
-            self.buffer_size,
-            self.chan_capacity,
-            self.timeout,
-            self.snaplen,
-        )
-    }
+
 }

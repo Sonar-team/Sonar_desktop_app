@@ -14,12 +14,12 @@ use tauri::{AppHandle, ipc::Channel};
 use crate::{
     errors::capture_error::CaptureError,
     events::CaptureEvent,
-    state::capture::capture_handle::{
+    state::capture::{capture_config::CaptureConfig, capture_handle::{
         messages::CaptureMessage, setup::{setup_capture, setup_filter}, threads::{
             capture::spawn_capture_thread_with_pool, packet_buffer::PacketBufferPool,
             processing::spawn_processing_thread,
         }
-    },
+    }},
 };
 
 pub struct CaptureHandle {
@@ -37,27 +37,27 @@ impl CaptureHandle {
 
     pub fn start(
         &self,
-        config: (String, i32, i32, i32, i32),
+        config: CaptureConfig,
         app: AppHandle,
         on_event: Channel<CaptureEvent<'static>>,
         filter: Option<String>,
     ) -> Result<(), CaptureError> {
-        debug!("Démarrage de la capture sur l'interface {}...", config.0);
+        debug!("Démarrage de la capture sur l'interface {}...", config.device_name);
 
         on_event.send(CaptureEvent::Started {
-            device: &config.0,
-            buffer_size: config.1,
-            chan_capacity: config.2,
-            timeout: config.3,
-            snaplen: config.4,
+            device: &config.device_name,
+            buffer_size: config.buffer_size,
+            chan_capacity: config.chan_capacity,
+            timeout: config.timeout,
+            snaplen: config.snaplen,
         })?;
 
         let stop_flag = self.stop_flag.clone();
 
         let device = Device::list()?
             .into_iter()
-            .find(|d| d.name == config.0)
-            .ok_or_else(|| CaptureError::InterfaceNotFound(config.0.clone()))?;
+            .find(|d| d.name == config.device_name)
+            .ok_or_else(|| CaptureError::InterfaceNotFound(config.device_name.clone()))?;
 
         info!("Interface trouvée : {}", device.name);
 
@@ -66,16 +66,19 @@ impl CaptureHandle {
         setup_filter(&mut cap, filter)?;
 
         let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) =
-            bounded(config.2 as usize);
+            bounded(config.chan_capacity as usize);
 
         // 🔑 Utilisation du nouveau PacketBufferPool
-        let arc_buffer_pool = Arc::new(PacketBufferPool::new(config.2 as usize + 2, config.4 as usize));
+        let arc_buffer_pool = Arc::new(
+            PacketBufferPool::new(
+                config.chan_capacity as usize + 2, 
+                config.snaplen as usize));
 
         // Démarrage des threads avec le nouveau buffer_pool
         spawn_processing_thread(
             rx,
             on_event.clone(),
-            config.2,
+            config.chan_capacity,
             app.clone(),
             arc_buffer_pool.clone(),
         );
@@ -83,7 +86,7 @@ impl CaptureHandle {
             on_event, 
             cap, 
             stop_flag, 
-            config.2, 
+            config.chan_capacity, 
             arc_buffer_pool);
 
         Ok(())

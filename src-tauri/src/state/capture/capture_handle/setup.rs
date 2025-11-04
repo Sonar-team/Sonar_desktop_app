@@ -16,6 +16,8 @@
 
 use pcap::{Capture, Error};
 
+use crate::state::capture::capture_config::CaptureConfig;
+
 /// Ouvre une capture `pcap` configurée sur l’interface demandée.
 ///
 /// # Paramètres
@@ -79,13 +81,13 @@ use pcap::{Capture, Error};
 /// # Voir aussi
 /// - [`pcap::Device::list`] pour découvrir les interfaces disponibles.
 /// - [`Capture::setnonblock`] si vous devez basculer en mode non bloquant.
-pub fn setup_capture(config: (String, i32, i32, i32, i32)) -> Result<Capture<pcap::Active>, Error> {
-    Capture::from_device(config.0.as_str())?
+pub fn setup_capture(config: CaptureConfig) -> Result<Capture<pcap::Active>, Error> {
+    Capture::from_device(config.device_name.as_str())?
         .promisc(true)
-        .snaplen(config.4)
+        .snaplen(config.snaplen)
         .immediate_mode(false)
-        .timeout(config.3)
-        .buffer_size(config.1)
+        .timeout(config.timeout)
+        .buffer_size(config.buffer_size)
         .open()
 }
 
