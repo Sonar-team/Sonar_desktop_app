@@ -20,7 +20,7 @@ jobs:
 
       - name: Run Gemini CLI (full-repo scan)
         id: gemini
-        uses: google-github-actions/run-gemini-cli@v1
+        uses: google-github-actions/run-gemini-cli@v0.1.14
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           gemini_model: "gemini-2.5-pro"
