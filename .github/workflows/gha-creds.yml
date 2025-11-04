@@ -1,151 +1,56 @@
-name: Code Analysis with Gemini
+name: Gemini – Full Repo Analysis
 
 on:
-  workflow_dispatch:  # Manual trigger from Actions tab
+  workflow_dispatch:       # lancement manuel
   schedule:
-    - cron: '0 2 * * *'  # Daily at 02:00 UTC (03:00 CET in winter)
-  # Uncomment to run on every push to main:
-  # push:
-  #   branches: [ main ]
+    - cron: "0 2 * * *"    # scan chaque nuit à 02:00 UTC
+  push:
+    branches: [ main ]     # (optionnel) scan à chaque push sur main
 
-# Minimum required permissions
 permissions:
   contents: read
-  issues: write
+  issues: write            # pour pouvoir ouvrir un ticket (optionnel)
   pull-requests: write
-  actions: read
-
-# Prevent concurrent runs
-concurrency:
-  group: gemini-code-analysis-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   analyze:
-    name: Analyze Codebase
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Fetch all history for better analysis
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
-
-      - name: Run Gemini Code Analysis
-        id: gemini_analysis
-        uses: google-github-actions/run-gemini-cli@v0.1.14
+      - name: Run Gemini CLI (full-repo scan)
+        id: gemini
+        uses: google-github-actions/run-gemini-cli@v1
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           gemini_model: "gemini-2.5-pro"
           upload_artifacts: true
-          max_tokens: 4000
-          temperature: 0.2
-          top_p: 0.9
+          # Prompt = ce que tu veux comme livrable
           prompt: |
-            Conduct a comprehensive analysis of this Tauri + Vue.js application with the following focus areas:
+            Analyse l’intégralité de ce dépôt (Rust + Tauri + Vue).
+            Objectifs :
+            1) Détecte dettes techniques, duplications, hot spots de complexité.
+            2) Repère les failles évidentes (panics non gérés, unwraps, fuite mémoire,
+               concur. non safe, risques perf/copiage vs références, blocages UI Tauri).
+            3) Propose un plan d’actions priorisé (P1/P2/P3) avec fichiers & diff suggérés.
+            4) Résume dans <2000 mots; table synthèse par fichier (chemin, problème, action).
+            Constraints :
+            - Ignore node_modules/, target/, dist/, .git/, .github/
+            - Contexte : application desktop Tauri v2, perf critique en capture réseau.
+            - Mentionne ce qui est “safe to change” vs “breaking”.
+            - Suggère des tests (unit/intégration) par module.
 
-            ## Code Quality Analysis
-            - Identify code smells, anti-patterns, and technical debt
-            - Detect code duplication and suggest refactoring opportunities
-            - Highlight complex functions/methods that need simplification
-            
-            ## Security Review
-            - Identify potential security vulnerabilities (Rust unsafe blocks, JS eval, etc.)
-            - Check for proper error handling and logging
-            - Review data validation and sanitization
-            
-            ## Performance Optimization
-            - Identify performance bottlenecks in both frontend and backend
-            - Review memory management in Rust components
-            - Suggest optimizations for network requests and state management
-            
-            ## Technical Debt Assessment
-            - Categorize findings by severity (Critical/High/Medium/Low)
-            - Provide specific code references with file paths and line numbers
-            - Suggest test coverage improvements
-            
-            ## Output Format
-            Present findings in a structured markdown format with:
-            1. Executive Summary
-            2. Detailed findings by category
-            3. Actionable recommendations with priority levels
-            4. Code examples for suggested improvements
-            
-            ## Context
-            - Tauri v2 desktop application
-            - Frontend: Vue 3 + Pinia
-            - Backend: Rust with pcap and crossbeam
-            - Real-time network capture functionality
-
-      - name: Create Analysis Report
-        if: ${{ steps.gemini_analysis.outputs.summary != '' }}
+      # (Optionnel) Publie un ticket si quelque chose d'important est trouvé
+      - name: Create issue with summary (if non-empty)
+        if: ${{ steps.gemini.outputs.summary != '' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # Create a timestamp for the report
-          TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-          REPORT_FILE="gemini-analysis-report_${TIMESTAMP}.md"
-          
-          # Create markdown report
-          cat << 'EOF' > "$REPORT_FILE"
-          # Code Analysis Report - ${{ github.repository }} @ ${{ github.sha }}
-          
-          **Analysis Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          **Repository:** ${{ github.repository }}
-          **Commit:** [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
-          
-          ## Analysis Results
-          
-          ${{ steps.gemini_analysis.outputs.summary }}
-          
-          ---
-          *Generated by GitHub Actions workflow: [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})*
-          EOF
-          
-          # Upload report as artifact
-          gh run download ${{ github.run_id }} -n "code-analysis-report"
-          
-          # Create GitHub issue with the report
-          gh issue create \
-            --title "Code Analysis Report - $(date +"%Y-%m-%d")" \
-            --label "code-analysis" \
-            --body-file "$REPORT_FILE"
+          printf "%s\n\n---\n\n%s" "Rapport Gemini – scan complet" "${{ steps.gemini.outputs.summary }}" \
+            | gh issue create --title "Rapport Gemini – scan complet" --body-file -
 
-      - name: Upload Analysis Report
-        if: ${{ steps.gemini_analysis.outputs.summary != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: code-analysis-report
-          path: gemini-analysis-report_*.md
-          retention-days: 30
-
-      - name: Add Summary to Job Output
-        if: ${{ steps.gemini_analysis.outputs.summary != '' }}
+      # (Optionnel) Ajoute un résumé dans l'onglet Actions
+      - name: Job Summary
         run: |
-          {
-            echo "# Code Analysis Summary"
-            echo ""
-            echo "A detailed code analysis has been completed. "
-            echo ""
-            echo "## Key Findings"
-            echo ""
-            echo "${{ steps.gemini_analysis.outputs.summary | replace('$', '\$') }}"
-            echo ""
-            echo "---"
-            echo "View the full report in the artifacts section or check the created issue for more details."
-          } >> $GITHUB_STEP_SUMMARY
+          echo "## Résumé Gemini" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.gemini.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
