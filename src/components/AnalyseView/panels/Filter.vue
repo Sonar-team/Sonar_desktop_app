@@ -1,10 +1,6 @@
 <template>
   <div class="bpf-wrapper">
     <div class="panel">
-      <div class="panel-header">
-        <h2>Filtre BPF (builder visuel)</h2>
-        <small>Compose ton filtre sans écrire une ligne</small>
-      </div>
 
       <!-- LAYER / PROTO -->
       <section class="grid two">
@@ -107,35 +103,12 @@
         </div>
       </section>
 
-      <!-- SIZE / RAW -->
-      <section class="grid two">
-        <div class="card">
-          <h3>Taille</h3>
-          <div class="row">
-            <label>Plus petit que</label>
-            <input v-model.number="size.less" type="number" min="1" placeholder="ex: 128" />
-          </div>
-          <div class="row">
-            <label>Plus grand que</label>
-            <input v-model.number="size.greater" type="number" min="1" placeholder="ex: 1400" />
-          </div>
-          <div class="hint">Utilise <code>less N</code> / <code>greater N</code>.</div>
-        </div>
-
-        <div class="card">
-          <h3>Expression brute (optionnel)</h3>
-          <input v-model="advanced.raw" placeholder="ex: tcp[13] & 0x02 != 0 and tcp[13] & 0x10 = 0" />
-          <div class="hint">Sera ajoutée telle quelle à la fin (AND).</div>
-        </div>
-      </section>
-
       <!-- PREVIEW / ACTIONS -->
       <section class="card preview">
         <h3>Aperçu du filtre</h3>
         <pre class="preview-box" >Filtre actuel : {{ preview }}</pre>
 
         <div class="actions">
-          <button class="ghost" @click="copy(preview)" :disabled="!preview">Copier</button>
           <button class="primary" @click="apply" :disabled="!canApply">Appliquer</button>
           <button class="ghost" @click="resetAll">Réinitialiser</button>
         </div>
@@ -290,11 +263,6 @@ const preview = computed(() => {
 
 const canApply = computed(() => preview.value.length > 0 && globalErrors.value.length === 0);
 
-function copy(text: string) {
-  if (!text) return;
-  navigator.clipboard?.writeText(text);
-}
-
 async function apply() {
   if (!canApply.value) return;
   try {
@@ -350,8 +318,31 @@ function preset(name: string) {
 
 <style scoped>
 /* Layout */
-.bpf-wrapper { display:flex; justify-content:center; padding: 16px; }
-.panel { width: min(1100px, 96vw); display:flex; flex-direction:column; gap:16px; }
+.bpf-wrapper { 
+  position: fixed;
+  top: 15px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px 16px 16px;
+  z-index: 1000;
+  pointer-events: none;
+}
+.panel { 
+  width: min(1100px, 96vw); 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px;
+  background: #1e1e2e;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+}
 .panel-header { display:flex; flex-direction:column; gap:4px; }
 .panel-header h2 { margin:0; font-size:20px; }
 .grid.two { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
