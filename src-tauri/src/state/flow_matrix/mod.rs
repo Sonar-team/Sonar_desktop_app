@@ -103,7 +103,10 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_source_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
-                let label_source = self.label.get(&(flow.data_link.source_mac.clone(), ip_source.clone())).cloned();
+                let label_source = self
+                    .label
+                    .get(&(flow.data_link.source_mac.clone(), ip_source.clone()))
+                    .cloned();
 
                 let ip_destination = flow
                     .internet
@@ -117,8 +120,13 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_destination_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
-                let label_destination = self.label.get(&(flow.data_link.destination_mac.clone(), ip_destination.clone())).cloned();
-
+                let label_destination = self
+                    .label
+                    .get(&(
+                        flow.data_link.destination_mac.clone(),
+                        ip_destination.clone(),
+                    ))
+                    .cloned();
 
                 let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
                     Ok(dur) => {

@@ -4,14 +4,17 @@
 
 ## ✨ Améliorations
 
-- **Gestion des erreurs** : Amélioration de la gestion des erreurs dans les commandes réseau
+- **Gestion des erreurs** : Amélioration de la gestion des erreurs dans les
+  commandes réseau
 - **Performance** : Optimisation de la gestion des verrous dans `net_capture.rs`
 - **Sécurité** : Validation des entrées utilisateur pour les filtres réseau
-- **Documentation** : Ajout de la documentation Rust pour toutes les fonctions publiques
+- **Documentation** : Ajout de la documentation Rust pour toutes les fonctions
+  publiques
 
 ## 🛠 Corrections
 
-- Correction d'un problème potentiel de fuite de mémoire dans la gestion des captures
+- Correction d'un problème potentiel de fuite de mémoire dans la gestion des
+  captures
 - Amélioration des messages d'erreur pour faciliter le débogage
 - Correction de la gestion des filtres réseau
 

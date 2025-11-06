@@ -14,16 +14,21 @@ use tauri::{AppHandle, ipc::Channel};
 use crate::{
     errors::capture_error::CaptureError,
     events::CaptureEvent,
-    state::capture::{capture_config::CaptureConfig, capture_handle::{
-        messages::CaptureMessage, setup::{setup_capture, setup_filter}, threads::{
-            capture::spawn_capture_thread_with_pool, packet_buffer::PacketBufferPool,
-            processing::spawn_processing_thread,
-        }
-    }},
+    state::capture::{
+        capture_config::CaptureConfig,
+        capture_handle::{
+            messages::CaptureMessage,
+            setup::{setup_capture, setup_filter},
+            threads::{
+                capture::spawn_capture_thread_with_pool, packet_buffer::PacketBufferPool,
+                processing::spawn_processing_thread,
+            },
+        },
+    },
 };
 
 pub struct CaptureHandle {
-    stop_flag: Arc<AtomicBool>
+    stop_flag: Arc<AtomicBool>,
 }
 
 impl CaptureHandle {
@@ -31,7 +36,6 @@ impl CaptureHandle {
         println!("[DEBUG] CaptureHandle créé");
         Self {
             stop_flag: Arc::new(AtomicBool::new(false)),
-            
         }
     }
 
@@ -42,7 +46,10 @@ impl CaptureHandle {
         on_event: Channel<CaptureEvent<'static>>,
         filter: Option<String>,
     ) -> Result<(), CaptureError> {
-        debug!("Démarrage de la capture sur l'interface {}...", config.device_name);
+        debug!(
+            "Démarrage de la capture sur l'interface {}...",
+            config.device_name
+        );
 
         on_event.send(CaptureEvent::Started {
             device: &config.device_name,
@@ -69,10 +76,10 @@ impl CaptureHandle {
             bounded(config.chan_capacity as usize);
 
         // 🔑 Utilisation du nouveau PacketBufferPool
-        let arc_buffer_pool = Arc::new(
-            PacketBufferPool::new(
-                config.chan_capacity as usize + 2, 
-                config.snaplen as usize));
+        let arc_buffer_pool = Arc::new(PacketBufferPool::new(
+            config.chan_capacity as usize + 2,
+            config.snaplen as usize,
+        ));
 
         // Démarrage des threads avec le nouveau buffer_pool
         spawn_processing_thread(
@@ -82,12 +89,14 @@ impl CaptureHandle {
             app.clone(),
             arc_buffer_pool.clone(),
         );
-        spawn_capture_thread_with_pool(tx, 
-            on_event, 
-            cap, 
-            stop_flag, 
-            config.chan_capacity, 
-            arc_buffer_pool);
+        spawn_capture_thread_with_pool(
+            tx,
+            on_event,
+            cap,
+            stop_flag,
+            config.chan_capacity,
+            arc_buffer_pool,
+        );
 
         Ok(())
     }

@@ -112,7 +112,7 @@ impl GraphData {
                 let src_node_id = match self.nodes.entry(src_ip_str.clone()) {
                     Entry::Occupied(e) => e.get().id.clone(),
                     Entry::Vacant(v) => {
-                                                let node = Node::new(
+                        let node = Node::new(
                             src_ip_str.clone(),
                             packet.data_link.source_mac.clone(),
                             src_color,
@@ -129,7 +129,7 @@ impl GraphData {
                 let dst_node_id = match self.nodes.entry(dst_ip_str.clone()) {
                     Entry::Occupied(e) => e.get().id.clone(),
                     Entry::Vacant(v) => {
-                                                let node = Node::new(
+                        let node = Node::new(
                             dst_ip_str.clone(),
                             packet.data_link.destination_mac.clone(),
                             dst_color,
@@ -193,7 +193,7 @@ impl GraphData {
         let src_node_id = match self.nodes.entry(src_key.clone()) {
             Entry::Occupied(e) => e.get().id.clone(),
             Entry::Vacant(v) => {
-                                let node = Node::new(src_mac.clone(), src_mac.clone(), L2_COLOR, "".to_string());
+                let node = Node::new(src_mac.clone(), src_mac.clone(), L2_COLOR, "".to_string());
                 let node_id = node.id.clone();
                 v.insert(node.clone());
                 updates.push(GraphUpdate::NewNode(node));
@@ -205,7 +205,7 @@ impl GraphData {
         let dst_node_id = match self.nodes.entry(dst_key.clone()) {
             Entry::Occupied(e) => e.get().id.clone(),
             Entry::Vacant(v) => {
-                                let node = Node::new(dst_mac.clone(), dst_mac.clone(), L2_COLOR, "".to_string());
+                let node = Node::new(dst_mac.clone(), dst_mac.clone(), L2_COLOR, "".to_string());
                 let node_id = node.id.clone();
                 v.insert(node.clone());
                 updates.push(GraphUpdate::NewNode(node));

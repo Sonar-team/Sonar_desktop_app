@@ -1,7 +1,10 @@
 # Documentation du Module de Capture de Paquets
 
 ## Vue d'ensemble
-Le module de capture de paquets est une composante essentielle de l'application Sonar, permettant la capture en temps réel du trafic réseau. Il est construit en Rust et utilise la bibliothèque `pcap` pour une capture efficace des paquets.
+
+Le module de capture de paquets est une composante essentielle de l'application
+Sonar, permettant la capture en temps réel du trafic réseau. Il est construit en
+Rust et utilise la bibliothèque `pcap` pour une capture efficace des paquets.
 
 ## Architecture
 
@@ -23,6 +26,7 @@ Le module de capture de paquets est une composante essentielle de l'application 
 ## Fonctionnalités clés
 
 ### 1. Démarrer une capture
+
 ```rust
 pub fn start_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
@@ -32,6 +36,7 @@ pub fn start_capture(
 ```
 
 ### 2. Arrêter une capture
+
 ```rust
 pub fn stop_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
@@ -40,6 +45,7 @@ pub fn stop_capture(
 ```
 
 ### 3. Configuration
+
 - Interface réseau
 - Taille du buffer
 - Taille maximale des paquets
@@ -48,6 +54,7 @@ pub fn stop_capture(
 ## Gestion des événements
 
 ### Types d'événements
+
 - `Started` : Démarrage de la capture
 - `Stats` : Statistiques de capture
 - `Packet` : Paquet capturé
@@ -57,10 +64,12 @@ pub fn stop_capture(
 ## Bonnes pratiques
 
 ### Gestion de la mémoire
+
 - Utilisation d'un pool de buffers pour éviter les allocations fréquentes
 - Gestion propre des ressources avec `Drop` pour les buffers
 
 ### Performance
+
 - Capture non-bloquante
 - Traitement asynchrone
 - Gestion de la pression mémoire
@@ -90,6 +99,7 @@ handle.stop(event_channel)?;
 ## Dépannage
 
 ### Problèmes courants
+
 1. **Permissions insuffisantes**
    - Vérifier les droits d'accès à l'interface réseau
    - Exécuter avec les privilèges nécessaires
@@ -104,11 +114,13 @@ handle.stop(event_channel)?;
    - Optimiser le traitement des paquets
 
 ## Sécurité
+
 - Les paquets sont traités de manière sécurisée
 - Les données sensibles ne sont pas conservées en mémoire
 - Les filtres BPF sont validés avant utilisation
 
 ## Limitations
+
 - Dépendance à la bibliothèque `pcap`
 - Performances limitées par le matériel réseau
 - Nécessite des privilèges élevés pour la capture

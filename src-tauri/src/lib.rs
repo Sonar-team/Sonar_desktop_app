@@ -9,7 +9,10 @@ use tauri::menu::MenuBuilder;
 
 use crate::{
     commandes::{
-        export::{csv::export_csv, logs::export_logs}, flow_matrix::add_label, import::convert_from_pcap_list, net_capture::{reset_capture, set_filter}
+        export::{csv::export_csv, logs::export_logs},
+        flow_matrix::add_label,
+        import::convert_from_pcap_list,
+        net_capture::{reset_capture, set_filter},
     },
     setup::{get_os, print_banner, system_info::start_cpu_monitor},
     state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData},

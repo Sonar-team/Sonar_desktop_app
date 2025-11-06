@@ -35,5 +35,4 @@ impl CaptureConfig {
         self.timeout = timeout;
         self.snaplen = snaplen;
     }
-
 }

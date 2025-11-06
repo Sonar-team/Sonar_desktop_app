@@ -1,7 +1,7 @@
 {
   "name": "sonar",
   "private": true,
-  "version": "3.4.0",
+  "version": "3.4.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -27,10 +27,10 @@
     "vue-router": "4.6.3"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.9.2",
+    "@tauri-apps/cli": "^2.9.3",
     "@vitejs/plugin-vue": "6.0.1",
     "typescript": "^5.9.3",
     "vite": "7.1.12",
-    "vue-tsc": "^3.1.2"
+    "vue-tsc": "^3.1.3"
   }
 }

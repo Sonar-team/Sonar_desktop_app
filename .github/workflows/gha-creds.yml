@@ -1,15 +1,15 @@
 name: Gemini – Full Repo Analysis
 
 on:
-  workflow_dispatch:       # lancement manuel
+  workflow_dispatch: # lancement manuel
   schedule:
-    - cron: "0 2 * * *"    # scan chaque nuit à 02:00 UTC
+    - cron: "0 2 * * *" # scan chaque nuit à 02:00 UTC
   push:
-    branches: [ main ]     # (optionnel) scan à chaque push sur main
+    branches: [main] # (optionnel) scan à chaque push sur main
 
 permissions:
   contents: read
-  issues: write            # pour pouvoir ouvrir un ticket (optionnel)
+  issues: write # pour pouvoir ouvrir un ticket (optionnel)
   pull-requests: write
 
 jobs:

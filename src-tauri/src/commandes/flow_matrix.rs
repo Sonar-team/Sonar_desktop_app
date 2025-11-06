@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use tauri::{command, State};
+use tauri::{State, command};
 
 use crate::state::flow_matrix::FlowMatrix;
 // si tu veux un Result typé :
