@@ -7,12 +7,12 @@
     <button class="image-btn" @click="stop" title="Arrêter" :disabled="!isRunning">
       🛑
     </button>
-
+    <button class="image-btn" @click="reset" title="Réinitialiser">🔄</button>
     <button class="image-btn"  title="Config" :disabled="isRunning" @click="handleConfigClick">
       <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="reset" title="Réinitialiser">🔄</button>
+
     <button class="image-btn" @click="triggerSave" title="Sauvegarder">💾</button>
     <button class="image-btn" @click="displayPcapOpener" title="Ouvrir">📄</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
