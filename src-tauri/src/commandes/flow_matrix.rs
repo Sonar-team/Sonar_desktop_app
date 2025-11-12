@@ -16,3 +16,14 @@ pub fn add_label(
     guard.add_label(mac, ip, label.clone());
     Ok(())
 }
+
+
+
+#[command]
+pub fn get_label_list(
+    matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
+) -> Result<Vec<String>, CaptureStateError> {
+    let guard = matrix.lock()?;
+    Ok(guard.get_label_list())
+}
+    

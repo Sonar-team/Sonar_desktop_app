@@ -12,7 +12,6 @@
       <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
 
-
     <button class="image-btn" @click="triggerSave" title="Sauvegarder">💾</button>
     <button class="image-btn" @click="displayPcapOpener" title="Ouvrir">📄</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
@@ -26,7 +25,7 @@
 <script lang="ts">
 import { Channel, invoke } from '@tauri-apps/api/core';
 import { exit } from '@tauri-apps/plugin-process';
-import { info, error } from '@tauri-apps/plugin-log';
+import { info } from '@tauri-apps/plugin-log';
 import { save } from '@tauri-apps/plugin-dialog';
 
 import { displayCaptureError } from '../../errors/capture'; // Gestion des erreurs propre

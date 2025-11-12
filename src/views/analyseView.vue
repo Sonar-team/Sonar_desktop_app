@@ -15,7 +15,6 @@
     </div>
 
     <div class="content-container">
-      <!-- ✅ affichage conditionnel du graph -->
       <NetworkGraphComponent v-if="showGraph" />
     </div>
 

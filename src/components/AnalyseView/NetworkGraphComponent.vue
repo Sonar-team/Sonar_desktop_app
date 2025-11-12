@@ -273,6 +273,11 @@ export default defineComponent({
   },
 
   methods: {
+    async printLabels() {
+      await invoke('get_label_list').then((labels: any) => {
+        console.log(labels)
+      })
+    },
     // === Réinitialisation ==================================================
     resetGraph() {
       clearReactiveMap(this.graphData.nodes)
@@ -531,6 +536,8 @@ export default defineComponent({
     <!-- Bandeau d'infos en bas -->
     <div class="bottom-info">
       <div class="zoom">Zoom: {{ zoomLevel.toPrecision(2) }}</div>
+      <div class="sep" />
+      <button class="download-button" @click="printLabels" title="afficher les labels">Afficher les labels</button>
       <div class="sep" />
       <div class="node-infos" v-if="selectedNodeInfos.length">
         <strong>Nœud sélectionné</strong>

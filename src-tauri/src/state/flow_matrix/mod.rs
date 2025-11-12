@@ -182,6 +182,18 @@ impl FlowMatrix {
     pub fn add_label(&mut self, mac: String, ip: String, label: String) {
         self.label.insert((mac, ip), label);
     }
+
+    pub fn get_label_list(&self) -> Vec<String> {
+        println!("get_label_list");
+        println!("{:?}", self.label);
+        let debug_label = self.label.values().cloned().collect();
+        println!("{:?}", debug_label);
+        debug_label
+    }
+
+    // pub fn add_label_list(&mut self, list: String) {
+    //     self.label.insert((mac, ip), label);
+    // }
 }
 
 #[derive(Debug, Clone, Serialize)]
