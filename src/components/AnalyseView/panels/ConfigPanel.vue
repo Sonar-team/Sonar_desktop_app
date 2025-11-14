@@ -14,7 +14,7 @@
     </div>
 
     <div class="config-item">
-      <label>Taille du chanel :</label>
+      <label>Nombre de buffers:</label>
       <input type="number" v-model.number="chan_capacity" />
     </div>
 

@@ -17,8 +17,6 @@ pub fn add_label(
     Ok(())
 }
 
-
-
 #[command]
 pub fn get_label_list(
     matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
@@ -26,4 +24,3 @@ pub fn get_label_list(
     let guard = matrix.lock()?;
     Ok(guard.get_label_list())
 }
-    

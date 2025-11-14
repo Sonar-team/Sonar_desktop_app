@@ -8,6 +8,7 @@ import { save } from "@tauri-apps/plugin-dialog"
 import { writeTextFile, writeFile } from "@tauri-apps/plugin-fs"
 import { GraphUpdate } from "../../types/capture"
 import { invoke } from "@tauri-apps/api/core"
+import { getCurrentDate } from '../../utils/time';
 
 // --- Types -----------------------------------------------------------------
 type NodeId = string
@@ -23,7 +24,7 @@ interface NodeData {
   _hover?: string
   _stroke?: string
 }
- 
+
 interface EdgeData {
   source: NodeId
   target: NodeId
@@ -378,7 +379,7 @@ export default defineComponent({
     async downloadSvg() {
         const filePath = await save({
           filters: [{ name: "SVG File", extensions: ["svg"] }],
-          defaultPath: "network-graph.svg",
+          defaultPath: getCurrentDate()+ "_network_graph_DR_Matrice.svg",
         })
         if (!filePath) return
         const vng = (this.$refs as any).graphnodes
@@ -389,7 +390,7 @@ export default defineComponent({
       async downloadPng() {
       const filePath = await save({
         filters: [{ name: "PNG File", extensions: ["png"] }],
-        defaultPath: "network-graph.png",
+        defaultPath: getCurrentDate()+ "_network_graph_DR_Matrice.png",
       })
       if (!filePath) return
 

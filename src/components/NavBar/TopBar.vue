@@ -25,11 +25,11 @@
 <script lang="ts">
 import { Channel, invoke } from '@tauri-apps/api/core';
 import { exit } from '@tauri-apps/plugin-process';
-import { info } from '@tauri-apps/plugin-log';
+import { info, error } from '@tauri-apps/plugin-log';
 import { save } from '@tauri-apps/plugin-dialog';
 
 import { displayCaptureError } from '../../errors/capture'; // Gestion des erreurs propre
-
+import { getCurrentDate } from '../../utils/time';
 import { useCaptureStore } from '../../store/capture';
 import { CaptureEvent } from '../../types/capture';
 
@@ -76,18 +76,7 @@ export default {
         throw new Error("Sauvegarde annulée ou chemin non sélectionné");
       }
     },
-    getCurrentDate() {
-      // Fonction pour obtenir la date actuelle
-      const now = new Date();
-      // Formattez la date en DD/MM/YYYY
-      const formattedDate = `${now.getFullYear()}${this.padZero(now.getMonth() + 1)}${this.padZero(now.getDate())}`;
-      
-      return formattedDate;
-    },
-    padZero(value) {
-      // Fonction pour ajouter un zéro en cas de chiffre unique (par exemple, 5 -> 05)
-      return value < 10 ? `0${value}` : value;
-    },
+
     async SaveAsCsv() {
       info("Save as csv")
       save({
@@ -96,7 +85,7 @@ export default {
           extensions: ['csv']
         }],
         title: 'Sauvegarder la matrice de flux',
-        defaultPath: this.getCurrentDate()+ 'Matrice' + '.csv' // Set the default file name here
+        defaultPath: getCurrentDate()+ '_DR_Matrice.csv' // Set the default file name here
       
       }).then((response) => 
         invoke('export_csv', { path: response })
@@ -115,7 +104,7 @@ export default {
             extensions: ['xlsx']
           }],
           title: 'Sauvegarder la matrice de flux',
-          defaultPath: this.getCurrentDate() + 'Matrice' + '.xlsx'
+          defaultPath: getCurrentDate() + '_DR_Matrice' + '.xlsx'
         });
 
         if (response) {
@@ -215,16 +204,29 @@ export default {
   border-radius: 4px;
   cursor: pointer;
   font-size: 18px;
-  transition: background-color 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
 }
 
 .image-btn:hover {
   background-color: #3f4758;
+  transform: translateY(-1px) translateZ(0);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-btn:active {
+  transform: translateY(1px) scale(0.99) translateZ(0);
+  transition: transform 0.1s ease, background-color 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .image-btn:disabled {
-  opacity: 0.4; /* rend plus clair */
-  cursor: not-allowed; /* curseur interdit */
-  background-color: transparent; /* garde transparent au survol même désactivé */
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: transparent;
+  transform: none !important;
+  box-shadow: none !important;
 }
 .icon-img {
   height: 30;
