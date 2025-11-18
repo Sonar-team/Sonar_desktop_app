@@ -9,6 +9,7 @@ import { writeTextFile, writeFile } from "@tauri-apps/plugin-fs"
 import { GraphUpdate } from "../../types/capture"
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentDate } from '../../utils/time';
+import LegendComponent from './LegendComponent.vue';
 
 // --- Types -----------------------------------------------------------------
 type NodeId = string
@@ -136,7 +137,7 @@ async function svgTextToPngBytes(svgText: string, opts?: { scale?: number; backg
 // --- Component -------------------------------------------------------------
 export default defineComponent({
   name: "NetworkGraphComponent",
-  components: { VNetworkGraph, VEdgeLabel },
+  components: { VNetworkGraph, VEdgeLabel, LegendComponent },
 
   data() {
     const forceLayout = markRaw(new ForceLayout({}))
@@ -492,6 +493,8 @@ export default defineComponent({
       </button>
     </div>
 
+    
+
     <!-- Graph -->
     <v-network-graph
       class="graph"
@@ -571,7 +574,9 @@ export default defineComponent({
       <div class="node-infos hint" v-else>
         Clique un nœud pour afficher ses informations.
       </div>
+      
     </div>
+    <LegendComponent />
   </div>
 </template>
 
