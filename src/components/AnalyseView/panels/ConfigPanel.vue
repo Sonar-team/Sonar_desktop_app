@@ -2,11 +2,11 @@
   <div class="config-panel">
     <h2>Configuration Capture</h2>
 
-    <select class="config-item" v-model="deviceName">
-      <option v-for="netInterface in netInterfaces" :key="netInterface" :value="netInterface">
-        {{ netInterface }}
-      </option>
-    </select>
+    <InterfaceSelector 
+      v-model="netDevice"
+      :net-interfaces="netInterfaces"
+      class="config-item"
+    />
 
     <div class="config-item">
       <label>Taille du buffer :</label>
@@ -40,10 +40,13 @@ import { info } from '@tauri-apps/plugin-log';
 import { invoke } from '@tauri-apps/api/core';
 import { displayCaptureError } from '../../../errors/capture';
 import { useCaptureConfigStore } from '../../../store/capture';
+import InterfaceSelector from './CustomSelector/interfaceSelector.vue';
 
 export default {
   name: "ConfigPanel",
-
+  components: {
+    InterfaceSelector
+  },
   emits: ['update:ConfigPanel-visible'],
 
   data() {
@@ -51,7 +54,7 @@ export default {
       netInterfaces: [],
       selectedNetInterface: '',
 
-      deviceName: '',
+      netDevice: '',
       bufferSize: '',
       chan_capacity: '',
       timeout: '',
@@ -72,7 +75,7 @@ export default {
         info("[ConfigPanel] invoke response =", config);
 
         // Cast si besoin
-        this.deviceName = config.device_name;
+        this.netDevice = config.device_name;
         this.bufferSize = config.buffer_size;
         this.chan_capacity = config.chan_capacity
         this.timeout = config.timeout;
@@ -87,16 +90,32 @@ export default {
 
     async save() {
       info("Configuration sauvegardée : " + JSON.stringify({
-        deviceName: this.deviceName,
+        netDevice: this.netDevice,
         bufferSize: this.bufferSize,
         chan_capacity: this.chan_capacity,
         timeout: this.timeout,
         snaplen: this.snaplen,
       }));
       try {
-        const config = await invoke('config_capture', { device_name: this.deviceName, buffer_size: this.bufferSize, chan_capacity: this.chan_capacity, timeout: this.timeout, snaplen: this.snaplen }); // await invoke('config_capture', this.deviceName, this.bufferSize, this.timeout);
-                // Cast si besoin
-        this.deviceName = config.device_name;
+        if (!this.netDevice) {
+          console.error("Aucune interface réseau sélectionnée");
+          return;
+        }
+        
+        const config = await invoke('config_capture', { 
+          device_name: this.netDevice.name, 
+          buffer_size: this.bufferSize, 
+          chan_capacity: this.chan_capacity, 
+          timeout: this.timeout, 
+          snaplen: this.snaplen 
+        });
+        
+        // Cast si besoin - config.device_name est une chaîne, nous devons trouver l'objet NetDevice correspondant
+        if (typeof config.device_name === 'string') {
+          this.netDevice = this.netInterfaces.find(iface => iface.name === config.device_name) || null;
+        } else {
+          this.netDevice = config.device_name;
+        }
         this.bufferSize = config.buffer_size;
         this.chan_capacity = config.chan_capacity;
         this.timeout = config.timeout;
@@ -132,6 +151,17 @@ export default {
       info("[ConfigPanel] Changement de visible :", newVal);
       if (newVal) {
         this.getConfig();
+      }
+    },
+    netInterfaces(newInterfaces) {
+      // Convertir netDevice de string vers NetDevice si nécessaire
+      if (newInterfaces.length > 0 && typeof this.netDevice === 'string') {
+        const found = newInterfaces.find(iface => iface.name === this.netDevice);
+        if (found) {
+          this.netDevice = found;
+        } else {
+          this.netDevice = null;
+        }
       }
     }
   }

@@ -19,6 +19,7 @@ use crate::{
 };
 
 mod commandes;
+mod dto;
 mod errors;
 mod events;
 mod setup;
