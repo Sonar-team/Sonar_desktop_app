@@ -1,6 +1,6 @@
 [package]
 name = "sonar"
-version = "3.6.0"
+version = "3.7.0"
 description = "A Tauri network analyzer App"
 authors = ["Cyprien Avico <avicocyprien@yahoo.com>"]
 edition = "2024"
@@ -28,7 +28,7 @@ tauri-plugin-log = "2.7.1"
 tauri-plugin-process = "2.3.1"
 
 pcap = "2.3.0"
-packet_parser = "0.10.1"
+packet_parser = "0.10.2"
 
 thiserror = "2.0.17"
 crossbeam = "0.8.4"

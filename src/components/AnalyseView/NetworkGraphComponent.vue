@@ -182,7 +182,7 @@ export default defineComponent({
         edge: {
           type: "straight",
           gap: 10,
-          selectable: false,
+          selectable: true,
           normal: {
             width: 2,
             color: (edge: any) => edge._color ?? colorForLabel(edge.label),
@@ -492,8 +492,6 @@ export default defineComponent({
         {{ forceEnabled ? "Gravité: ON" : "Gravité: OFF" }}
       </button>
     </div>
-
-    
 
     <!-- Graph -->
     <v-network-graph
