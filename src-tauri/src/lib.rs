@@ -3,6 +3,7 @@ use commandes::{
     net_interface::get_devices_list,
 };
 use log::info;
+use chrono::Local;
 
 use std::sync::{Arc, Mutex};
 use tauri::menu::MenuBuilder;
@@ -28,12 +29,28 @@ mod utils;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
+    // ▶️ Génération de la date/heure dynamique
+    let now = Local::now();
+    let filename = format!(
+        "DR_SONAR_{}_{}",
+        now.format("%Y-%m-%d"),
+        now.format("%H-%M-%S"),
+    );
+
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
         // Plugins
         .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(tauri_plugin_log::Builder::new()
+            .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+            .max_file_size(500_000)
+            .target(tauri_plugin_log::Target::new(
+                tauri_plugin_log::TargetKind::LogDir { 
+                    file_name: Some(filename),
+                }
+            ))
+            .build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         // Etats partager dans l'application
