@@ -14,7 +14,7 @@ use crate::{
         import::convert_from_pcap_list,
         net_capture::{reset_capture, set_filter},
     },
-    setup::{get_os, print_banner, system_info::start_cpu_monitor},
+    setup::{get_os, get_sonar_version, print_banner, system_info::start_cpu_monitor},
     state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData},
 };
 
@@ -44,6 +44,7 @@ pub fn run() -> Result<(), tauri::Error> {
         .setup(|app| {
             info!("{}", print_banner());
             get_os();
+            get_sonar_version(app.handle());
             start_cpu_monitor(app.handle().clone());
             let menu = MenuBuilder::new(app)
                 .text("fichier", "Fichier")

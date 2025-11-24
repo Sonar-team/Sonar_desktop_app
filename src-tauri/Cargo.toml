@@ -4,7 +4,8 @@ version = "3.7.0"
 description = "A Tauri network analyzer App"
 authors = ["Cyprien Avico <avicocyprien@yahoo.com>"]
 edition = "2024"
-
+repository = "https://github.com/Sonar-team/Sonar_desktop_app"
+license = "AGPL-3.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
@@ -15,11 +16,11 @@ name = "sonar_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.5.1", features = [] }
+tauri-build = { version = "2.5.2", features = [] }
 tauri-plugin-log = "2.7.1"
 
 [dependencies]
-tauri = { version = "2.9.2", features = [] }
+tauri = { version = "2.9.3", features = [] }
 tauri-plugin-shell = "2.3.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.145"
@@ -28,7 +29,7 @@ tauri-plugin-log = "2.7.1"
 tauri-plugin-process = "2.3.1"
 
 pcap = "2.3.0"
-packet_parser = "0.10.2"
+packet_parser = "0.10.3"
 
 thiserror = "2.0.17"
 crossbeam = "0.8.4"
