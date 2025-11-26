@@ -21,7 +21,7 @@
         <tr v-for="(packet, index) in safePackets" :key="index">
           <td>{{ packet?.flow?.source_mac ?? '-' }}</td>
           <td>{{ packet?.flow?.destination_mac ?? '-' }}</td>
-          <td>{{ packet?.flow?.vlan.id ?? '-' }}</td>
+          <td>{{ packet?.flow?.vlan?.id ?? '-' }}</td>
           <td>{{ packet?.flow?.ethertype ?? '-' }}</td>
           <td>{{ packet?.flow?.source ?? '-' }}</td>
           <td>{{ packet?.flow?.destination ?? '-' }}</td>
