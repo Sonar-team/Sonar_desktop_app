@@ -566,6 +566,7 @@ export default defineComponent({
         </div>
 
         <ul>
+          infos : 
           <li v-for="(info, idx) in selectedNodeInfos" :key="idx">{{ info }}</li>
         </ul>
       </div>

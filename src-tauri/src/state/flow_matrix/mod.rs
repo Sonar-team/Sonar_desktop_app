@@ -143,6 +143,7 @@ impl FlowMatrix {
                 FlowMatrixRow {
                     mac_source: flow.data_link.source_mac.clone(),
                     mac_destination: flow.data_link.destination_mac.clone(),
+                    vlan_id: flow.data_link.vlan.as_ref().map(|v| v.id.clone()),
                     protocol_data_link: flow.data_link.ethertype.clone(),
                     ip_source,
                     ip_source_type,
@@ -200,6 +201,7 @@ impl FlowMatrix {
 pub struct FlowMatrixRow {
     pub mac_source: String,
     pub mac_destination: String,
+    pub vlan_id: Option<u16>,
     pub protocol_data_link: String,
     pub ip_source: String,
     pub ip_source_type: String,

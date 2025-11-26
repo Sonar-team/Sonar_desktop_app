@@ -5,6 +5,7 @@
         <tr>
           <th>MAC S</th>
           <th>MAC D</th>
+          <th>Vlan</th>
           <th>Protocol</th>
           <th>IP S</th>
           <th>IP D</th>
@@ -20,6 +21,7 @@
         <tr v-for="(packet, index) in safePackets" :key="index">
           <td>{{ packet?.flow?.source_mac ?? '-' }}</td>
           <td>{{ packet?.flow?.destination_mac ?? '-' }}</td>
+          <td>{{ packet?.flow?.vlan.id ?? '-' }}</td>
           <td>{{ packet?.flow?.ethertype ?? '-' }}</td>
           <td>{{ packet?.flow?.source ?? '-' }}</td>
           <td>{{ packet?.flow?.destination ?? '-' }}</td>
