@@ -3,12 +3,12 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-#[derive(Serialize, Default)]
+#[derive(Serialize, Default, Debug)]
 pub struct GraphData {
     // clé = IP (stringifiée) ou "mac:XX:XX:..."
-    nodes: HashMap<String, Node>,
+    pub nodes: HashMap<String, Node>,
     // clé = "a_id:b_id:protocol" (canonique: a_id <= b_id)
-    edges: HashMap<String, Edge>,
+    pub edges: HashMap<String, Edge>,
 }
 
 #[derive(Clone, Serialize, Debug)]
@@ -239,6 +239,12 @@ impl GraphData {
     pub fn clear(&mut self) {
         self.nodes.clear();
         self.edges.clear();
+    }
+
+    pub fn get_all_graph_data(&self) -> GraphData {
+        let nodes = self.nodes.clone();
+        let edges = self.edges.clone();
+        GraphData { nodes, edges }
     }
 }
 

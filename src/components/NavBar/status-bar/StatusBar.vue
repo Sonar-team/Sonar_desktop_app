@@ -29,6 +29,7 @@ import Timer from './Timer.vue';
 import Cpu from './Cpu.vue';
 
 import { useCaptureStore } from '../../../store/capture';
+import { info } from '@tauri-apps/plugin-log';
 
 export default {
   name: 'StatusBar',
@@ -51,7 +52,7 @@ export default {
       this.stats.processed  = s.processed ?? 0;
     });
     this.captureStore.onFinished((f) => {
-      console.log('status finished', f);
+      info('status finished', f);
       this.stats.processed = f.packetTotalCount;
     });
 

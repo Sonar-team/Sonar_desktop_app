@@ -32,5 +32,6 @@ pub enum CaptureEvent<'a> {
     Finished {
         file_name: &'a str,
         packet_total_count: usize,
+        matrix_total_count: usize,
     },
 }

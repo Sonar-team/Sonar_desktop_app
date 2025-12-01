@@ -192,6 +192,9 @@ impl FlowMatrix {
         debug_label
     }
 
+    // pub fn get_all_graph_data(&self) -> Vec<FlowMatrixRow> {
+    //     self.to_flat_vec()
+    // }
     // pub fn add_label_list(&mut self, list: String) {
     //     self.label.insert((mac, ip), label);
     // }
