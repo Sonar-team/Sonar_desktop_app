@@ -1,7 +1,7 @@
 <template>
     <div class="cpu">
-      <img :src="icon" alt="CPU icon" class="cpu-icon" :title="title" />
-      <p :title="title">{{ cpuUsage.toFixed(2) }}%</p>
+      <img src="/src/assets/images/TablerCpu.svg" alt="Flux" class="icon-img" />
+      <p>{{ cpuUsage.toFixed(2) }}%</p>
     </div>
   </template>
   
@@ -16,16 +16,7 @@
   
   export default defineComponent({
     name: 'Cpu',
-    props: {
-      title: {
-        type: String,
-        default: 'Utilisation du CPU',
-      },
-      icon: {
-        type: String,
-        default: 'src/assets/images/TablerCpu.png',
-      },
-    },
+
     data() {
       return {
         cpuUsage: 0,
@@ -61,9 +52,10 @@
     gap: 5px;
   }
   
-  .cpu-icon {
-    height: 20px;
-    width: 20px;
+  .icon-img {
+    height: 15px;
+    width: 15px;
+    vertical-align: middle;
   }
   </style>
   
