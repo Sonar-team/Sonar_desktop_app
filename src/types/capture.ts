@@ -68,6 +68,30 @@ export type Edge = {
   destination_port: number | null;
 };
 
+export type NodeId = string
+export type EdgeId = string
+
+export interface NodeData {
+  id: string
+  name: string
+  mac?: string
+  ip?: string      // ← NEW
+  color: string
+  label?: string
+  _hover?: string
+  _stroke?: string
+}
+
+export interface EdgeData {
+  source: NodeId
+  target: NodeId
+  label: string
+  source_port?: string | number | null
+  destination_port?: string | number | null
+  bidir?: boolean
+  _color?: string
+}
+
 // enum GraphUpdate : soit edge soit node
 export type GraphUpdate =
   | { type: "NewNode"; payload: Node }

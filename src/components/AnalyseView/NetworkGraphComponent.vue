@@ -6,35 +6,10 @@ import { ForceLayout } from "v-network-graph/lib/force-layout"
 import { useCaptureStore } from "../../store/capture"
 import { save } from "@tauri-apps/plugin-dialog"
 import { writeTextFile, writeFile } from "@tauri-apps/plugin-fs"
-import { GraphUpdate } from "../../types/capture"
+import { EdgeData, EdgeId, GraphData, GraphUpdate, NodeData, NodeId } from "../../types/capture"
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentDate } from '../../utils/time';
 import LegendComponent from './LegendComponent.vue';
-
-// --- Types -----------------------------------------------------------------
-export type NodeId = string
-export type EdgeId = string
-
-export interface NodeData {
-  id: string
-  name: string
-  mac?: string
-  ip?: string      // ← NEW
-  color: string
-  label?: string
-  _hover?: string
-  _stroke?: string
-}
-
-export interface EdgeData {
-  source: NodeId
-  target: NodeId
-  label: string
-  source_port?: string | number | null
-  destination_port?: string | number | null
-  bidir?: boolean
-  _color?: string
-}
 
 // --- Colors ----------------------------------------------------------------
 const EDGE_COLORS_LC: Record<string, string> = Object.freeze({
@@ -270,7 +245,7 @@ export default defineComponent({
     this.captureStore.onGraphSnapshot((graphData) => {
       console.log("[NetworkGraphComponent] GraphSnapshot reçu -> reload");
       this.loadFromGraphData(graphData);
-      });
+    });
 
     // Abonnement au reset via le bus global
     this.resetHandler = () => this.resetGraph()
@@ -291,6 +266,118 @@ export default defineComponent({
       clearReactiveMap(this.graphData.edges)
       this.clearNodeInfos()
     },
+    /**
+     * Recharge complètement le graphe à partir d'un snapshot complet
+     * envoyé par le backend (GraphSnapshot).
+     */
+async loadFromGraphData(snapshot: GraphData | null | undefined) {
+  console.log("[NetworkGraphComponent] GraphSnapshot reçu -> ", snapshot);
+
+  try {
+    // 1. Input validation
+    if (!snapshot) {
+      console.error("[NetworkGraphComponent] Aucune donnée reçue");
+      return;
+    }
+
+    if (!snapshot.nodes || !snapshot.edges) {
+      console.error("[NetworkGraphComponent] Données de graphe invalides:", {
+        hasNodes: !!snapshot.nodes,
+        hasEdges: !!snapshot.edges
+      });
+      return;
+    }
+
+    // 2. Reset
+    clearReactiveMap(this.graphData.nodes);
+    clearReactiveMap(this.graphData.edges);
+    this.clearNodeInfos();
+
+    // 3. Process nodes
+    const nodeEntries = Object.entries(snapshot.nodes || {});
+    console.log(`[NetworkGraphComponent] Chargement de ${nodeEntries.length} nœuds`);
+
+    for (const [nodeId, node] of nodeEntries) {
+      if (!node) continue;
+
+      try {
+        const color = node.color || "#2196F3";
+        const id = node.id || nodeId;
+
+        this.graphData.nodes[id] = {
+          id,
+          name: node.name || id,
+          mac: node.mac || "",
+          ip: node.ip || "",
+          color,
+          label: node.label || "",
+          _stroke: darken(color, 0.25),
+          _hover: brighten(color, 0.18),
+        };
+      } catch (error) {
+        console.error(`[NetworkGraphComponent] Erreur lors du chargement du nœud ${nodeId}:`, error);
+      }
+    }
+
+    // 4. Process edges
+    const edgeEntries = Object.entries(snapshot.edges || {});
+    console.log(`[NetworkGraphComponent] Chargement de ${edgeEntries.length} arêtes`);
+
+    for (const [edgeId, edge] of edgeEntries) {
+      if (!edge) continue;
+
+      try {
+        const source = edge.source;
+        const target = edge.target;
+        const label = edge.label || "";
+
+        if (!source || !target) {
+          console.warn(`[NetworkGraphComponent] Arête ${edgeId} invalide: source ou target manquante`);
+          continue;
+        }
+
+        if (!this.graphData.nodes[source] || !this.graphData.nodes[target]) {
+          console.warn(`[NetworkGraphComponent] Arête orpheline ignorée: ${source} -> ${target} (${label})`);
+          continue;
+        }
+
+        const _color = edge._color || colorForLabel(label);
+        const key = edgeKey({
+          source,
+          target,
+          label,
+          source_port: edge.source_port,
+          destination_port: edge.destination_port
+        } as EdgeData);
+
+        this.graphData.edges[key] = {
+          source,
+          target,
+          label,
+          source_port: edge.source_port ?? null,
+          destination_port: edge.destination_port ?? null,
+          bidir: edge.bidir || false,
+          _color,
+        };
+      } catch (error) {
+        console.error(`[NetworkGraphComponent] Erreur lors du chargement de l'arête ${edgeId}:`, error);
+      }
+    }
+
+    // 5. Update layout if needed
+    if (this.forceEnabled && this.forceLayout?.start) {
+      try {
+        this.forceLayout.start();
+      } catch (error) {
+        console.error("[NetworkGraphComponent] Erreur lors du démarrage du layout:", error);
+      }
+    }
+
+  } catch (error) {
+    console.error("[NetworkGraphComponent] Erreur critique dans loadFromGraphData:", error);
+  }
+}
+,
 
     // === Gestion label =====================================================
     onNodeClick({ node }: { node: string }) {

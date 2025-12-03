@@ -110,13 +110,13 @@ fn handle_pcap_file(
 
             matrice.update_flow(&packet_min.to_owned_packet());
             let matrix_count = matrice.matrix.len();
-            info!(
-                "[handle_pcap_file] {} : paquet {}/{} ; lignes matrice = {}",
-                file_path,
-                packet_count,
-                total,
-                matrix_count
-            );
+            // info!(
+            //     "[handle_pcap_file] {} : paquet {}/{} ; lignes matrice = {}",
+            //     file_path,
+            //     packet_count,
+            //     total,
+            //     matrix_count
+            // );
 
             graph.add_packet_flow(&packet_min.flow.to_owned());
 

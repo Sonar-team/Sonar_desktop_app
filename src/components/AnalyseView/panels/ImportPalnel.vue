@@ -1,12 +1,19 @@
 <template>
   <div class="container">
     <div class="center-container">
+
+      <!-- Overlay de chargement -->
+      <div class="overlay" v-if="isConverting">
+        <div class="spinner"></div>
+        <p class="overlay-text">Conversion en cours…</p>
+      </div>
+
       <div class="file-group">
         <label for="packetFiles"></label>
-        <button class="btn" @click="addFiles" >
+        <button class="btn" @click="addFiles" :disabled="isConverting">
           Ajouter des fichiers
         </button>
-        <button class="btn btn-clear" @click="clearFiles" >
+        <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
           Effacer
         </button>
       </div>
@@ -17,14 +24,13 @@
         </li>
       </ul>
 
-
       <button
         @click="convert"
         class="btn btn-open"
+        :disabled="isConverting || packetFiles.length === 0"
       >
         Ouvrir
       </button>
-
 
     </div>
   </div>
@@ -34,20 +40,22 @@
 import { defineComponent } from 'vue';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke, Channel } from '@tauri-apps/api/core';
-import { info, error } from '@tauri-apps/plugin-log';
+import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
 import { displayCaptureError } from '../../../errors/capture';
 
 export default defineComponent({
   name: 'ImportPanel',
-  emits: ['toggle-pcap'],
+  emits: ['update:visible'],
+
   data() {
     return {
       packetFiles: [] as string[],
-      
+      isConverting: false,
     };
   },
+
   computed: {
     captureStore() {
       return useCaptureStore();
@@ -56,45 +64,57 @@ export default defineComponent({
       return this.captureStore.isRunning;
     },
   },
+
   methods: {
     async addFiles() {
       const files = await open({
         multiple: true,
-        filters: [{ name: 'Capture File', extensions: ['pcap', 'pcapng', 'cap'] }]
+        filters: [{ name: 'Capture File', extensions: ['pcap', 'pcapng', 'cap'] }],
       });
+
       if (files) {
         const list = Array.isArray(files) ? files : [files];
         this.packetFiles.push(...list);
       }
     },
+
     clearFiles() {
       this.packetFiles = [];
     },
+
     async convert() {
+      if (this.packetFiles.length === 0) return;
+
       const onEvent = new Channel<CaptureEvent>();
       this.captureStore.setChannel(onEvent);
 
       info('convert_from_pcap_list : ' + this.packetFiles);
-       await invoke('convert_from_pcap_list', { pcapPaths: this.packetFiles, onEvent })
-        .then((graphData) => {
-          info('reponse invok ');
-          this.captureStore.setGraphData(graphData as any);
-        })
-        .catch(displayCaptureError);
+
+      this.isConverting = true;
+
+      try {
+        await invoke('convert_from_pcap_list', { pcapPaths: this.packetFiles, onEvent });
+        info('réponse invoke');
+        this.$emit('update:visible', false);
+      } catch (err) {
+        displayCaptureError(err);
+      } finally {
+        this.isConverting = false;
+      }
     },
   },
+
   mounted() {
     this.captureStore.onStarted(() => {
-      info("started hearded")
-      this.captureStore.updateStatus({is_running: true});
+      info("started hearded");
+      this.captureStore.updateStatus({ is_running: true });
     });
 
     this.captureStore.onFinished(() => {
-      info("finished hearded")
-      this.captureStore.updateStatus({is_running: false});
+      info("finished hearded");
+      this.captureStore.updateStatus({ is_running: false });
     });
   },
-
 });
 </script>
 
@@ -176,30 +196,7 @@ export default defineComponent({
   font-size: 0.9rem;
 }
 
-.progress-container {
-  width: 100%;
-  margin: 1rem 0;
-}
-
-.progress-bar {
-  height: 8px;
-  background-color: #2d3748;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 0.5rem;
-}
-
-.progress {
-  height: 100%;
-  background-color: #4299e1;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  text-align: center;
-  font-size: 0.875rem;
-  color: #a0aec0;
-}
+/* Overlay + Spinner */
 
 .overlay {
   position: absolute;
@@ -213,6 +210,7 @@ export default defineComponent({
   justify-content: center;
   align-items: center;
   border-radius: 8px;
+  z-index: 2000;
 }
 
 .spinner {
