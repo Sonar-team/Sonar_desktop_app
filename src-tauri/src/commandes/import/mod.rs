@@ -108,7 +108,8 @@ fn handle_pcap_file(
                 flow,
             };
 
-            let matrix_count = matrice.update_flow(&packet_min.to_owned_packet());
+            matrice.update_flow(&packet_min.to_owned_packet());
+            let matrix_count = matrice.matrix.len();
             info!(
                 "[handle_pcap_file] {} : paquet {}/{} ; lignes matrice = {}",
                 file_path,
