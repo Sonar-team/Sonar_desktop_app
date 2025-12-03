@@ -60,8 +60,8 @@ export default {
       this.stats.processed  = s.processed ?? 0;
     });
     this.captureStore.onFinished((f) => {
-      info('status finished', f);
-      this.stats.processed = f.packetTotalCount;
+      this.stats.processed = f.matrix_total_count;
+      this.stats.received = f.packet_total_count;
     });
 
     // Reset global

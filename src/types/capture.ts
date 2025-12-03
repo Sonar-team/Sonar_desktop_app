@@ -133,6 +133,7 @@ export type CaptureEvent =
     data: {
       fileName: string;
       packetTotalCount: number;
+      matrixTotalCount: number;
     };
   }
   | {

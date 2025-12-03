@@ -144,6 +144,6 @@ fn handle_pcap_file(
     }) {
         error!("Erreur lors de l'envoi de Finished: {:?}", e);
     };
-
+    info!("[handle_pcap_file] Finised with {} paquets lu, {} lignes matrice", total, matrice.matrix.len());
     Ok(())
 }
