@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { markRaw } from "vue";
 import type { Channel } from "@tauri-apps/api/core";
-import type { CaptureEvent, GraphUpdate } from "../types/capture";
+import type { CaptureEvent, GraphData, GraphUpdate } from "../types/capture";
 
 // ⚠️ Channel hors réactivité pour éviter le proxy de Vue
 let __channel: Channel<CaptureEvent> | undefined;
@@ -19,6 +19,7 @@ export const useCaptureStore = defineStore("capture", {
     lenFlowMatrixListeners: [] as Array<(d: any) => void>,
     channelCapacityPayloadListeners: [] as Array<(d: any) => void>,
     graphUpdateListeners: [] as Array<(u: GraphUpdate) => void>,
+    graphSnapshotListeners: [] as Array<(d: GraphData) => void>,
   }),
 
   actions: {
@@ -58,8 +59,12 @@ export const useCaptureStore = defineStore("capture", {
           case "graph": {
             const update = msg.data.update as GraphUpdate;
             for (const cb of this.graphUpdateListeners) cb(update);
-            break;
-          }
+            break;}
+          case "graphSnapshot": {
+            const graphData = msg.data.graphData as GraphData;
+            console.log("[CaptureStore] GraphSnapshot reçu");
+            for (const cb of this.graphSnapshotListeners) cb(graphData);
+            break;}
         }
       };
     },
@@ -88,6 +93,10 @@ export const useCaptureStore = defineStore("capture", {
     onGraphUpdate(cb: (u: GraphUpdate) => void) {
       console.log("[CaptureStore] GraphUpdate abonné");
       this.graphUpdateListeners.push(cb);
+    },
+    onGraphSnapshot(cb: (d: GraphData) => void) {
+      console.log("[CaptureStore] GraphSnapshot abonné");
+      this.graphSnapshotListeners.push(cb);
     },
   },
 });

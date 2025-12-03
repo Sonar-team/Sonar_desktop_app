@@ -2,18 +2,18 @@ use log::{error, info};
 use packet_parser::PacketFlow;
 use pcap::Capture;
 use std::sync::{Arc, Mutex};
-use tauri::{State, ipc::{Channel, Response}};
+use tauri::{State, ipc::Channel};
 
 use crate::{
     errors::{CaptureStateError, import::PcapImportError},
-    events::CaptureEvent, // (si tu as un module séparé, sinon garde l'enum ci-dessous)
+    events::CaptureEvent,
     state::{
-        capture::capture_handle::messages::capture::PacketMinimal, flow_matrix::FlowMatrix,
+        capture::capture_handle::messages::capture::PacketMinimal,
+        flow_matrix::FlowMatrix,
         graph::GraphData,
     },
 };
 
-// Compte les paquets d'un PCAP (premier passage)
 fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
     let mut cap = Capture::from_file(file_path).map_err(|e| {
         CaptureStateError::Import(PcapImportError::OpenFileError(
@@ -34,31 +34,47 @@ pub fn convert_from_pcap_list(
     matrice: State<'_, Arc<Mutex<FlowMatrix>>>,
     graph: State<'_, Arc<Mutex<GraphData>>>,
     pcap_paths: Vec<String>,
-    on_event: Channel<CaptureEvent>,
+    on_event: Channel<CaptureEvent<'_>>,
 ) -> Result<(), CaptureStateError> {
-    info!("Liste des fichiers pcap : {:?}", pcap_paths);
+    info!(
+        "[convert_from_pcap_list] COMMAND CALLED avec pcap_paths = {:?}",
+        pcap_paths
+    );
+
+    // started
     if let Err(e) = on_event.send(CaptureEvent::Started {
-            device: "",
-            buffer_size: 0,
-            chan_capacity: 0,
-            timeout: 0,
-            snaplen: 65536,
-        }) {
-            error!("Erreur lors de l'envoi de Started: {:?}", e);
-        };
-    let mut total_count: u32 = 0;
+        device: "",
+        buffer_size: 0,
+        chan_capacity: 0,
+        timeout: 0,
+        snaplen: 65536,
+    }) {
+        error!("Erreur lors de l'envoi de Started: {:?}", e);
+    };
+
     let mut matrice_guard = matrice.lock().unwrap();
     let mut graph_guard = graph.lock().unwrap();
     matrice_guard.clear();
     graph_guard.clear();
 
-    for pcap_path in pcap_paths {
-        
-        handle_pcap_file(&pcap_path, &mut matrice_guard, &mut graph_guard, &on_event)?;
+    info!("[convert_from_pcap_list] Matrice & GraphData reset");
+
+    for pcap_path in &pcap_paths {
+        info!("[convert_from_pcap_list] Traitement de {}", pcap_path);
+        handle_pcap_file(pcap_path, &mut matrice_guard, &mut graph_guard, &on_event)?;
     }
 
+    info!("[convert_from_pcap_list] FIN traitement liste PCAP");
 
-// Response::new(graph_guard.get_all_graph_data())
+    // 🔥 snapshot complet envoyé sur le channel
+    let snapshot: GraphData = graph_guard.get_all_graph_data(); // doit renvoyer un GraphData possédé
+
+    if let Err(e) = on_event.send(CaptureEvent::GraphSnapshot {
+        graph_data: &snapshot,
+    }) {
+        error!("Erreur lors de l'envoi de GraphSnapshot: {:?}", e);
+    }
+
     Ok(())
 }
 
@@ -66,14 +82,11 @@ fn handle_pcap_file(
     file_path: &str,
     matrice: &mut FlowMatrix,
     graph: &mut GraphData,
-    on_event: &Channel<CaptureEvent>,
+    on_event: &Channel<CaptureEvent<'_>>,
 ) -> Result<(), CaptureStateError> {
-    // 1) Compter d'abord
     let total = count_packets_in_pcap(file_path)?;
-    info!("Nombre total de paquets lus: {}", total);
-    
+    info!("[handle_pcap_file] {} : {} paquets détectés", file_path, total);
 
-    // 2) ROUVRIR le pcap pour le vrai traitement
     let mut cap = Capture::from_file(file_path).map_err(|e| {
         CaptureStateError::Import(PcapImportError::OpenFileError(
             file_path.to_string(),
@@ -87,8 +100,7 @@ fn handle_pcap_file(
         packet_count += 1;
 
         if let Ok(flow) = PacketFlow::try_from(packet.data) {
-            // On own le flow dans le record pour réutiliser la même instance partout
-            let packet = PacketMinimal {
+            let packet_min = PacketMinimal {
                 ts_sec: packet.header.ts.tv_sec,
                 ts_usec: packet.header.ts.tv_usec,
                 caplen: packet.header.caplen,
@@ -96,11 +108,19 @@ fn handle_pcap_file(
                 flow,
             };
 
-            let matrix_count = matrice.update_flow(&packet.to_owned_packet());
-            info!("Nombre de lignes lue: {}/{} pour {}", packet_count, total, matrix_count);
-            graph.add_packet_flow(&packet.flow.to_owned());
-            // (option) n’envoie pas trop souvent ; ici toutes les 1000 itérations
-            if (packet_count.is_multiple_of(1000) || packet_count as usize == total)
+            let matrix_count = matrice.update_flow(&packet_min.to_owned_packet());
+            info!(
+                "[handle_pcap_file] {} : paquet {}/{} ; lignes matrice = {}",
+                file_path,
+                packet_count,
+                total,
+                matrix_count
+            );
+
+            graph.add_packet_flow(&packet_min.flow.to_owned());
+
+            // Stats périodiques (optionnel)
+            if (packet_count.is_multiple_of(1000) || packet_count == total)
                 && let Err(e) = on_event.send(CaptureEvent::Stats {
                     received: packet_count as u32,
                     dropped: 0,
@@ -110,9 +130,11 @@ fn handle_pcap_file(
             {
                 error!("Erreur lors de l'envoi de Stats: {:?}", e);
             }
+
+            // si tu veux envoyer des Packet individuellement (live)
+            // if let Err(e) = on_event.send(CaptureEvent::Packet { packet: &packet_min }) { ... }
         }
     }
-    println!("nodes: {:?} \n \nedges: {:?} \n", graph.get_all_graph_data().nodes, graph.get_all_graph_data().edges);
 
     if let Err(e) = on_event.send(CaptureEvent::Finished {
         file_name: file_path,

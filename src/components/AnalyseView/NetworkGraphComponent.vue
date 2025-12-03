@@ -12,10 +12,10 @@ import { getCurrentDate } from '../../utils/time';
 import LegendComponent from './LegendComponent.vue';
 
 // --- Types -----------------------------------------------------------------
-type NodeId = string
-type EdgeId = string
+export type NodeId = string
+export type EdgeId = string
 
-interface NodeData {
+export interface NodeData {
   id: string
   name: string
   mac?: string
@@ -26,7 +26,7 @@ interface NodeData {
   _stroke?: string
 }
 
-interface EdgeData {
+export interface EdgeData {
   source: NodeId
   target: NodeId
   label: string
@@ -266,6 +266,11 @@ export default defineComponent({
         })
       }
     })
+
+    this.captureStore.onGraphSnapshot((graphData) => {
+      console.log("[NetworkGraphComponent] GraphSnapshot reçu -> reload");
+      this.loadFromGraphData(graphData);
+      });
 
     // Abonnement au reset via le bus global
     this.resetHandler = () => this.resetGraph()

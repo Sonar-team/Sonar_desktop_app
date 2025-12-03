@@ -73,11 +73,12 @@ export default defineComponent({
     async convert() {
       const onEvent = new Channel<CaptureEvent>();
       this.captureStore.setChannel(onEvent);
+
       info('convert_from_pcap_list : ' + this.packetFiles);
-       await invoke('convert_from_pcap_list', { pcaps: this.packetFiles, onEvent })
-        .then(() => {
-          
+       await invoke('convert_from_pcap_list', { pcapPaths: this.packetFiles, onEvent })
+        .then((graphData) => {
           info('reponse invok ');
+          this.captureStore.setGraphData(graphData as any);
         })
         .catch(displayCaptureError);
     },

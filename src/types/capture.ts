@@ -1,5 +1,11 @@
 // types/capture.ts
 import { Channel } from "@tauri-apps/api/core";
+import { EdgeData, EdgeId, NodeData, NodeId } from "../components/AnalyseView/NetworkGraphComponent.vue";
+
+export type GraphData = {
+  nodes: Record<NodeId, NodeData>;
+  edges: Record<EdgeId, EdgeData>;
+};
 
 export type Stats = {
   received: number;
@@ -128,7 +134,14 @@ export type CaptureEvent =
       fileName: string;
       packetTotalCount: number;
     };
-  };
+  }
+  | {
+    event: "graphSnapshot";
+    data: {
+      graphData: GraphData;
+    };
+  }
+  ;
 
 export interface CaptureChannel extends Channel<CaptureEvent> {
   onmessage: (event: { event: string; data: any }) => void;

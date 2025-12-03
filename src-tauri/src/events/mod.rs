@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::state::{capture::capture_handle::messages::capture::PacketMinimal, graph::GraphUpdate};
+use crate::state::{capture::capture_handle::messages::capture::PacketMinimal, graph::{GraphData, GraphUpdate}};
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]
@@ -33,5 +33,8 @@ pub enum CaptureEvent<'a> {
         file_name: &'a str,
         packet_total_count: usize,
         matrix_total_count: usize,
+    },
+    GraphSnapshot {
+        graph_data: &'a GraphData,
     },
 }

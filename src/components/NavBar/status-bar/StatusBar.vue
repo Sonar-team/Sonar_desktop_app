@@ -8,14 +8,22 @@
       <Timer />
       <Cpu />
 
-      <p title="Trames reçues 📥 par la carte réseau">📥: {{ stats.received }}</p>
-
-      <p title="Trames analysées dans la matrice de flux 📊">
-        <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />: {{ stats.processed }}
+      <p title="Trames reçues 📥 par la carte réseau">
+  📥: <span class="counter">{{ stats.received }}</span>
       </p>
 
-      <p title="Trames ❌ perdues côté kernel">❌: {{ stats.dropped }}</p>
-      <p title="Trames 🚫 perdues au niveau de l’interface">🚫: {{ stats.if_dropped }}</p>
+      <p title="Trames analysées dans la matrice de flux 📊">
+        <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
+        : <span class="counter">{{ stats.processed }}</span>
+      </p>
+
+      <p title="Trames ❌ perdues côté kernel">
+        ❌: <span class="counter">{{ stats.dropped }}</span>
+      </p>
+
+      <p title="Trames 🚫 perdues au niveau de l’interface">
+        🚫: <span class="counter">{{ stats.if_dropped }}</span>
+      </p>
 
       <ChannelStatus />
     </div>
@@ -82,4 +90,13 @@ export default {
 .left-status-content { display: flex; align-items: center; }
 .right-status-content { display: flex; align-items: center; gap: 12px; text-align: right; }
 .icon-img { height: 16px; width: 16px; vertical-align: middle; margin-right: 5px; }
+
+.counter {
+  display: inline-block;
+  width: 60px;             /* largeur stable → ajuste si besoin */
+  text-align: right;       /* chiffres alignés à droite */
+  font-family: monospace;  /* empêche la variation de largeur par caractère */
+}
+
+
 </style>

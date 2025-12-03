@@ -106,7 +106,7 @@
       <!-- PREVIEW / ACTIONS -->
       <section class="card preview">
         <h3>Aperçu du filtre</h3>
-        <pre class="preview-box" >Filtre actuel : {{ preview }}</pre>
+        <pre class="preview-box">Filtre actuel : {{ preview }}</pre>
 
         <div class="actions">
           <button class="primary" @click="apply" :disabled="!canApply">Appliquer</button>
@@ -134,187 +134,253 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed, reactive } from "vue";
+<script lang="ts">
+import { defineComponent } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 
 type Dir = "any" | "src" | "dst";
 
-const opt = reactive({
-  vlan: false,
-  onlyIp4: true,
-  excludeIpv6: false,
-  excludeArp: false,
+export default defineComponent({
+  name: "BpfFilterBuilder",
+  emits: ["update:visible"],
+
+  data() {
+    return {
+      opt: {
+        vlan: false,
+        onlyIp4: true,
+        excludeIpv6: false,
+        excludeArp: false,
+      },
+      proto: {
+        tcp: false,
+        udp: false,
+        icmp: false,
+        icmp6: false,
+      },
+      ip: {
+        includeHost: "",
+        excludeHost: "",
+        includeNet: "",
+        excludeNet: "",
+        direction: "any" as Dir,
+      },
+      ports: {
+        include: "",
+        exclude: "",
+        range: "",
+        direction: "any" as Dir,
+      },
+      size: {
+        less: undefined as number | undefined,
+        greater: undefined as number | undefined,
+      },
+      advanced: {
+        raw: "",
+      },
+    };
+  },
+
+  computed: {
+    ipErrors(): string[] {
+      const errs: string[] = [];
+      const isIp = (s: string) => /^(\d{1,3}\.){3}\d{1,3}$/.test(s);
+      const isCidr = (s: string) => /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/.test(s);
+
+      if (this.ip.includeHost && !isIp(this.ip.includeHost))
+        errs.push(`IP invalide: ${this.ip.includeHost}`);
+      if (this.ip.excludeHost && !isIp(this.ip.excludeHost))
+        errs.push(`IP invalide: ${this.ip.excludeHost}`);
+      if (this.ip.includeNet && !isCidr(this.ip.includeNet))
+        errs.push(`CIDR invalide: ${this.ip.includeNet}`);
+      if (this.ip.excludeNet && !isCidr(this.ip.excludeNet))
+        errs.push(`CIDR invalide: ${this.ip.excludeNet}`);
+      return errs;
+    },
+
+    portErrors(): string[] {
+      const errs: string[] = [];
+      const isPortList = (s: string) =>
+        s.split(",").every(
+          (p) => /^\s*\d{1,5}\s*$/.test(p) && Number(p) <= 65535,
+        );
+      const isRange = (s: string) =>
+        /^\s*\d{1,5}\s*-\s*\d{1,5}\s*$/.test(s) &&
+        Number(s.split("-")[0]) <= 65535 &&
+        Number(s.split("-")[1]) <= 65535;
+
+      if (this.ports.include && !isPortList(this.ports.include))
+        errs.push("Ports à inclure invalides");
+      if (this.ports.exclude && !isPortList(this.ports.exclude))
+        errs.push("Ports à exclure invalides");
+      if (this.ports.range && !isRange(this.ports.range))
+        errs.push("Plage de ports invalide (ex: 10000-20000)");
+      return errs;
+    },
+
+    globalErrors(): string[] {
+      return [...this.ipErrors, ...this.portErrors];
+    },
+
+    preview(): string {
+      const c: string[] = [];
+
+      const groupOr = (clauses: string[]) =>
+        clauses.length > 1 ? `(${clauses.join(" or ")})` : clauses[0] ?? "";
+
+      const dirPrefix = (d: Dir) =>
+        d === "any" ? "" : `${d} `;
+
+      // VLAN
+      if (this.opt.vlan) c.push("vlan");
+
+      // IP / ETH types
+      if (this.opt.onlyIp4) c.push("ip");
+      if (this.opt.excludeIpv6) c.push("not ip6");
+      if (this.opt.excludeArp) c.push("not arp");
+
+      // Protocoles
+      const protos: string[] = [];
+      if (this.proto.tcp) protos.push("tcp");
+      if (this.proto.udp) protos.push("udp");
+      if (this.proto.icmp) protos.push("icmp");
+      if (this.proto.icmp6) protos.push("icmp6");
+      if (protos.length) c.push(groupOr(protos));
+
+      // IP include/exclude
+      if (this.ip.includeHost)
+        c.push(`${dirPrefix(this.ip.direction)}host ${this.ip.includeHost}`);
+      if (this.ip.excludeHost)
+        c.push(`not ${dirPrefix(this.ip.direction)}host ${this.ip.excludeHost}`);
+      if (this.ip.includeNet)
+        c.push(`${dirPrefix(this.ip.direction)}net ${this.ip.includeNet}`);
+      if (this.ip.excludeNet)
+        c.push(`not ${dirPrefix(this.ip.direction)}net ${this.ip.excludeNet}`);
+
+      // Ports include/exclude/range
+      const addPorts = (list: string, negate = false) => {
+        if (!list.trim()) return;
+        const op = negate ? "not " : "";
+        const parts = list
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const clauses = parts.map(
+          (p) => `${dirPrefix(this.ports.direction)}port ${p}`,
+        );
+        c.push(op + groupOr(clauses));
+      };
+      addPorts(this.ports.include, false);
+      addPorts(this.ports.exclude, true);
+
+      if (this.ports.range.trim()) {
+        const pr = `${dirPrefix(
+          this.ports.direction,
+        )}portrange ${this.ports.range.trim()}`;
+        c.push(pr);
+      }
+
+      // Taille
+      if (this.size.less && this.size.less > 0)
+        c.push(`less ${this.size.less}`);
+      if (this.size.greater && this.size.greater > 0)
+        c.push(`greater ${this.size.greater}`);
+
+      // Avancé
+      if (this.advanced.raw.trim()) c.push(this.advanced.raw.trim());
+
+      return c.join(" and ").trim();
+    },
+
+    canApply(): boolean {
+      return this.preview.length > 0 && this.globalErrors.length === 0;
+    },
+  },
+
+  methods: {
+    async apply() {
+      if (!this.canApply) return;
+      try {
+        await invoke("set_filter", { filter: this.preview });
+        // ➜ ferme le panneau dans MainView
+        this.$emit("update:visible", false);
+      } catch (e) {
+        console.error("set_filter failed:", e);
+      }
+    },
+
+    resetAll() {
+      this.opt = {
+        vlan: false,
+        onlyIp4: true,
+        excludeIpv6: false,
+        excludeArp: false,
+      };
+      this.proto = {
+        tcp: false,
+        udp: false,
+        icmp: false,
+        icmp6: false,
+      };
+      this.ip = {
+        includeHost: "",
+        excludeHost: "",
+        includeNet: "",
+        excludeNet: "",
+        direction: "any" as Dir,
+      };
+      this.ports = {
+        include: "",
+        exclude: "",
+        range: "",
+        direction: "any" as Dir,
+      };
+      this.size = {
+        less: undefined,
+        greater: undefined,
+      };
+      this.advanced.raw = "";
+    },
+
+    preset(name: string) {
+      this.resetAll();
+      switch (name) {
+        case "ipv4":
+          this.opt.onlyIp4 = true;
+          break;
+        case "web":
+          this.opt.onlyIp4 = true;
+          this.proto.tcp = true;
+          this.ports.include = "80,443";
+          break;
+        case "dns":
+          this.opt.onlyIp4 = true;
+          this.proto.udp = true;
+          this.proto.tcp = true;
+          this.ports.include = "53";
+          break;
+        case "ntp":
+          this.opt.onlyIp4 = true;
+          this.proto.udp = true;
+          this.ports.include = "123";
+          break;
+        case "syn":
+          this.opt.onlyIp4 = true;
+          this.proto.tcp = true;
+          this.advanced.raw =
+            "tcp[13] & 0x02 != 0 and tcp[13] & 0x10 = 0";
+          break;
+        case "no-arp-ipv6":
+          this.opt.onlyIp4 = false;
+          this.opt.excludeArp = true;
+          this.opt.excludeIpv6 = true;
+          break;
+      }
+    },
+  },
 });
-
-const proto = reactive({
-  tcp: false,
-  udp: false,
-  icmp: false,
-  icmp6: false,
-});
-
-const ip = reactive({
-  includeHost: "",
-  excludeHost: "",
-  includeNet: "",
-  excludeNet: "",
-  direction: "any" as Dir,
-});
-
-const ports = reactive({
-  include: "",
-  exclude: "",
-  range: "",
-  direction: "any" as Dir,
-});
-
-const size = reactive({
-  less: undefined as number | undefined,
-  greater: undefined as number | undefined,
-});
-
-const advanced = reactive({
-  raw: "",
-});
-
-const ipErrors = computed(() => {
-  const errs: string[] = [];
-  const isIp = (s: string) => /^(\d{1,3}\.){3}\d{1,3}$/.test(s);
-  const isCidr = (s: string) => /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/.test(s);
-
-  if (ip.includeHost && !isIp(ip.includeHost)) errs.push(`IP invalide: ${ip.includeHost}`);
-  if (ip.excludeHost && !isIp(ip.excludeHost)) errs.push(`IP invalide: ${ip.excludeHost}`);
-  if (ip.includeNet && !isCidr(ip.includeNet)) errs.push(`CIDR invalide: ${ip.includeNet}`);
-  if (ip.excludeNet && !isCidr(ip.excludeNet)) errs.push(`CIDR invalide: ${ip.excludeNet}`);
-  return errs;
-});
-
-const portErrors = computed(() => {
-  const errs: string[] = [];
-  const isPortList = (s: string) =>
-    s.split(",").every(p => /^\s*\d{1,5}\s*$/.test(p) && Number(p) <= 65535);
-  const isRange = (s: string) =>
-    /^\s*\d{1,5}\s*-\s*\d{1,5}\s*$/.test(s) &&
-    Number(s.split("-")[0]) <= 65535 &&
-    Number(s.split("-")[1]) <= 65535;
-
-  if (ports.include && !isPortList(ports.include)) errs.push("Ports à inclure invalides");
-  if (ports.exclude && !isPortList(ports.exclude)) errs.push("Ports à exclure invalides");
-  if (ports.range && !isRange(ports.range)) errs.push("Plage de ports invalide (ex: 10000-20000)");
-  return errs;
-});
-
-const globalErrors = computed(() => [...ipErrors.value, ...portErrors.value]);
-
-const groupOr = (clauses: string[]) => clauses.length > 1 ? `(${clauses.join(" or ")})` : clauses[0] ?? "";
-const dirPrefix = (d: Dir) => d === "any" ? "" : `${d} `;
-
-const preview = computed(() => {
-  const c: string[] = [];
-
-  // VLAN
-  if (opt.vlan) c.push("vlan");
-
-  // IP / ETH types
-  if (opt.onlyIp4) c.push("ip");
-  if (opt.excludeIpv6) c.push("not ip6");
-  if (opt.excludeArp) c.push("not arp");
-
-  // Protocoles
-  const protos: string[] = [];
-  if (proto.tcp) protos.push("tcp");
-  if (proto.udp) protos.push("udp");
-  if (proto.icmp) protos.push("icmp");
-  if (proto.icmp6) protos.push("icmp6");
-  if (protos.length) c.push(groupOr(protos));
-
-  // IP include/exclude
-  if (ip.includeHost) c.push(`${dirPrefix(ip.direction)}host ${ip.includeHost}`);
-  if (ip.excludeHost) c.push(`not ${dirPrefix(ip.direction)}host ${ip.excludeHost}`);
-  if (ip.includeNet)  c.push(`${dirPrefix(ip.direction)}net ${ip.includeNet}`);
-  if (ip.excludeNet)  c.push(`not ${dirPrefix(ip.direction)}net ${ip.excludeNet}`);
-
-  // Ports include/exclude/range
-  const addPorts = (list: string, negate = false) => {
-    if (!list.trim()) return;
-    const op = negate ? "not " : "";
-    const parts = list.split(",").map(s => s.trim()).filter(Boolean);
-    const clauses = parts.map(p => `${dirPrefix(ports.direction)}port ${p}`);
-    c.push(op + groupOr(clauses));
-  };
-  addPorts(ports.include, false);
-  addPorts(ports.exclude, true);
-
-  if (ports.range.trim()) {
-    const pr = `${dirPrefix(ports.direction)}portrange ${ports.range.trim()}`;
-    c.push(pr);
-  }
-
-  // Taille
-  if (size.less && size.less > 0) c.push(`less ${size.less}`);
-  if (size.greater && size.greater > 0) c.push(`greater ${size.greater}`);
-
-  // Avancé
-  if (advanced.raw.trim()) c.push(advanced.raw.trim());
-
-  return c.join(" and ").trim();
-});
-
-const canApply = computed(() => preview.value.length > 0 && globalErrors.value.length === 0);
-
-async function apply() {
-  if (!canApply.value) return;
-  try {
-    await invoke("set_filter", { filter: preview.value });
-  } catch (e) {
-    console.error("set_filter failed:", e);
-  }
-}
-
-function resetAll() {
-  Object.assign(opt, { vlan: false, onlyIp4: true, excludeIpv6: false, excludeArp: false });
-  Object.assign(proto, { tcp: false, udp: false, icmp: false, icmp6: false });
-  Object.assign(ip, { includeHost: "", excludeHost: "", includeNet: "", excludeNet: "", direction: "any" as Dir });
-  Object.assign(ports, { include: "", exclude: "", range: "", direction: "any" as Dir });
-  Object.assign(size, { less: undefined, greater: undefined });
-  advanced.raw = "";
-}
-
-function preset(name: string) {
-  resetAll();
-  switch (name) {
-    case "ipv4":
-      opt.onlyIp4 = true;
-      break;
-    case "web":
-      opt.onlyIp4 = true;
-      proto.tcp = true;
-      ports.include = "80,443";
-      break;
-    case "dns":
-      opt.onlyIp4 = true;
-      proto.udp = true; proto.tcp = true;
-      ports.include = "53";
-      break;
-    case "ntp":
-      opt.onlyIp4 = true;
-      proto.udp = true;
-      ports.include = "123";
-      break;
-    case "syn":
-      opt.onlyIp4 = true;
-      proto.tcp = true;
-      advanced.raw = "tcp[13] & 0x02 != 0 and tcp[13] & 0x10 = 0";
-      break;
-    case "no-arp-ipv6":
-      opt.onlyIp4 = false;
-      opt.excludeArp = true;
-      opt.excludeIpv6 = true;
-      break;
-  }
-}
 </script>
+
 
 <style scoped>
 /* Layout */
