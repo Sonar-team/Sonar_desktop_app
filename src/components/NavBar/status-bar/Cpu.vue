@@ -23,7 +23,7 @@
       },
       icon: {
         type: String,
-        default: 'src/assets/images/TablerCpu.svg',
+        default: 'src/assets/images/TablerCpu.png',
       },
     },
     data() {
