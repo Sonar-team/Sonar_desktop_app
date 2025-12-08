@@ -1,5 +1,202 @@
 # Changelog
 
+## **[3.9.2] – 2025-12-03**
+
+## ✨ Améliorations
+
+* Mise à jour de la version de l’application (`update version`).
+* Optimisation de la gestion CPU.
+
+## 🛠 Corrections
+
+* Correction du `.gitignore`.
+* Ajustements mineurs dans les statistiques de flux (clarification des logs, simplification de `update_flow`).
+
+---
+
+## **[3.9.1] – 2025-12-03**
+
+## ✨ Améliorations
+
+* Mise à jour des dépendances.
+
+## 🖼 Interface
+
+* Correction de l'image CPU affichée dans la top bar.
+
+---
+
+## **[3.9.0] – 2025-12-03**
+
+## ✨ Fonctionnalités
+
+* Ajout d’un système de **loading** lors de l’import PCAP.
+
+---
+
+## **[3.8.3] – 2025-12-01**
+
+## ✨ Améliorations
+
+* Ajout du tag pour la version.
+
+---
+
+## **[3.8.2] – 2025-12-01**
+
+## ✨ Fonctionnalités
+
+* **Amélioration majeure de l’import PCAP**.
+* **Refonte du graph processing** pour de meilleures performances et stabilité.
+
+---
+
+## **[3.8.1] – 2025-11-24**
+
+## ✨ Améliorations
+
+* Mise à jour de la crate `packet-parser`.
+
+---
+
+## **[3.8.0] – 2025-11-24**
+
+## ✨ Améliorations
+
+* Mise à jour de la version de l'application.
+* Amélioration des logs de démarrage.
+* Informations système enrichies.
+
+---
+
+## **[3.7.0] – 2025-11-20**
+
+## ✨ Améliorations
+
+* Mise à jour du parser réseau (`packet-parser`).
+* Stabilité accrue dans le traitement des protocoles.
+
+---
+
+## **[3.6.0] – 2025-11-18**
+
+## ✨ Fonctionnalités
+
+* Ajout du **sélecteur d'interface réseau personnalisé**.
+
+## 🎨 Interface
+
+* Ajout d’une **légende flottante** sur le graphe réseau.
+
+---
+
+## **[3.5.0] – 2025-11-14**
+
+## 🎨 Interface
+
+* Ajout d’animations pour les boutons de la barre supérieure.
+
+---
+
+## **[3.4.1] – 2025-11-06**
+
+## ✨ Améliorations
+
+* Mise à jour des dépendances.
+* Mise à jour de la documentation.
+
+---
+
+## **[3.4.0] – 2025-10-31**
+
+## ✨ Fonctionnalités
+
+* Ajout d’un **système de filtres amélioré** pour la matrice.
+
+## 🛠 Corrections
+
+* Nettoyage de code inutilisé.
+
+---
+
+## **[3.3.1] – 2025-10-30**
+
+## ✨ Améliorations
+
+* Mise à jour des dépendances.
+* Ajustements mineurs du rendu.
+
+---
+
+## **[3.3.0] – 2025-10-29**
+
+## ✨ Fonctionnalités
+
+* Ajout de la **gestion des labels** sur les nœuds du graphe.
+
+## 🎨 Interface
+
+* Améliorations visuelles (zoom, level, clarity).
+
+---
+
+## **[3.2.3] – 2025-10-27**
+
+## 🛠 Technique
+
+* Ajustements internes sur le format des données.
+
+---
+
+## **[3.2.2] – 2025-10-21**
+
+## ✨ Améliorations
+
+* Mise à jour de la gestion des timestamps (`timeval`).
+
+---
+
+## **[3.2.1] – 2025-10-21**
+
+## ✨ Améliorations
+
+* Migration vers **Tauri 2.9**.
+
+---
+
+## **[3.2.0] – 2025-10-20**
+
+## ✨ Fonctionnalités
+
+* Ajout de la **fonction de stop forcé** pour la capture réseau.
+
+---
+
+## **[3.1.0] – 2025-10-20**
+
+## ✨ Fonctionnalités
+
+* Améliorations multiples de stabilité et configuration.
+
+---
+
+## **[3.0.1] – 2025-10-14**
+
+## 🛠 Corrections
+
+* Corrections sur le cycle de release.
+
+---
+
+## **[3.0.0] – 2025-10-14**
+
+## ✨ Fonctionnalités
+
+* Refonte du graphe réseau.
+* Suppression de l'ancien système de graphe pour un modèle plus robuste.
+
+---
+
 ## [2.4.0] - 2025-11-04
 
 ## ✨ Améliorations

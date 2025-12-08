@@ -1,6 +1,6 @@
 <template>
     <div class="cpu">
-      <img src="/src/assets/images/TablerCpu.svg" alt="Flux" class="icon-img" />
+      <img src="/src/assets/images/TablerCpu.png" alt="Flux" class="icon-img" />
       <p>{{ cpuUsage.toFixed(2) }}%</p>
     </div>
   </template>
