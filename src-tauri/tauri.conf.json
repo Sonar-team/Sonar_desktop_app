@@ -35,7 +35,13 @@
       "wix": {
         "language": "fr-FR",
         "bannerPath": "windows\\sonarbanner.png",
-        "dialogImagePath": "windows\\dialog.png"
+        "dialogImagePath": "windows\\dialog.png",
+        "fragmentPaths": [
+          "./windows/fragments/npcap.wxs"
+        ],
+        "componentRefs": [
+          "NpcapInstallerComponent"
+        ]
       },
       "webviewInstallMode": {
         "type": "offlineInstaller"
