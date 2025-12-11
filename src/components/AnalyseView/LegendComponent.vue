@@ -6,11 +6,11 @@
       <h4>Couleurs des nœuds</h4>
       <div class="legend-item">
         <div class="color-box" style="background-color: #2196F3;"></div>
-        <span>Nœud par défaut</span>
+        <span>@IP Publique</span>
       </div>
       <div class="legend-item">
         <div class="color-box" style="background-color: #4CAF50;"></div>
-        <span>Nœud actif/sélectionné</span>
+        <span>@IP Privée</span>
       </div>
     </div>
 
