@@ -2,13 +2,14 @@ use colored::Colorize;
 use log::info;
 use tauri::AppHandle;
 
+pub mod labels;
 pub mod system_info;
 
 /// Log des informations sur le système hôte.
 ///
 /// - Plateforme retournée par `tauri_plugin_os::platform()`
 /// - OS + architecture de compilation (`std::env::consts`)
-pub fn get_os() {
+pub fn print_os_infos() {
     let platform = tauri_plugin_os::platform();
     let os = std::env::consts::OS;
     let arch = std::env::consts::ARCH;
@@ -40,7 +41,7 @@ pub fn print_banner() -> String {
 /// - Licence (depuis `Cargo.toml` -> `CARGO_PKG_LICENSE`)
 /// - Homepage / repo si défini (`CARGO_PKG_HOMEPAGE`)
 /// - Mode build (debug / release)
-pub fn get_sonar_version(app: &AppHandle) {
+pub fn log_sonar_version(app: &AppHandle) {
     let pkg = app.package_info();
     let cfg = app.config();
 

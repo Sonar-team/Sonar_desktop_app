@@ -106,10 +106,16 @@
       <!-- PREVIEW / ACTIONS -->
       <section class="card preview">
         <h3>Aperçu du filtre</h3>
-        <pre class="preview-box">Filtre actuel : {{ preview }}</pre>
-
+        <textarea 
+          class="preview-box" 
+          :value="previewText"
+          @input="onPreviewInput"
+          placeholder="Écrivez votre filtre ici..."
+          rows="4"
+        ></textarea>
         <div class="actions">
           <button class="primary" @click="apply" :disabled="!canApply">Appliquer</button>
+          <button class="ghost" @click="clearFilter">Effacer</button>
           <button class="ghost" @click="resetAll">Réinitialiser</button>
         </div>
 
@@ -148,7 +154,8 @@ export default defineComponent({
     return {
       opt: {
         vlan: false,
-        onlyIp4: true,
+        // ⚠️ plus de ip forcé par défaut
+        onlyIp4: false,
         excludeIpv6: false,
         excludeArp: false,
       },
@@ -178,6 +185,10 @@ export default defineComponent({
       advanced: {
         raw: "",
       },
+      // état du texte visible / éditable par l'utilisateur
+      previewText: "",
+      // si true, on ne sur-écrit plus le textarea avec le preview auto
+      isManualPreview: false,
     };
   },
 
@@ -222,7 +233,8 @@ export default defineComponent({
       return [...this.ipErrors, ...this.portErrors];
     },
 
-    preview(): string {
+    // prévisualisation auto générée à partir des options
+    autoPreview(): string {
       const c: string[] = [];
 
       const groupOr = (clauses: string[]) =>
@@ -293,7 +305,20 @@ export default defineComponent({
     },
 
     canApply(): boolean {
-      return this.preview.length > 0 && this.globalErrors.length === 0;
+      return this.previewText.trim().length > 0 && this.globalErrors.length === 0;
+    },
+  },
+
+  watch: {
+    // synchro autoPreview -> previewText tant que l'utilisateur
+    // n'a pas pris la main sur le textarea
+    autoPreview: {
+      immediate: true,
+      handler(newVal: string) {
+        if (!this.isManualPreview) {
+          this.previewText = newVal;
+        }
+      },
     },
   },
 
@@ -301,18 +326,28 @@ export default defineComponent({
     async apply() {
       if (!this.canApply) return;
       try {
-        await invoke("set_filter", { filter: this.preview });
-        // ➜ ferme le panneau dans MainView
+        await invoke("set_filter", { filter: this.previewText.trim() });
         this.$emit("update:visible", false);
       } catch (e) {
         console.error("set_filter failed:", e);
       }
     },
 
+    onPreviewInput(event: Event) {
+      const value = (event.target as HTMLTextAreaElement).value;
+      this.isManualPreview = true;
+      this.previewText = value;
+    },
+
+    clearFilter() {
+      // on remet tout à zéro et on laisse autoPreview recalculer
+      this.resetAll();
+    },
+
     resetAll() {
       this.opt = {
         vlan: false,
-        onlyIp4: true,
+        onlyIp4: false,
         excludeIpv6: false,
         excludeArp: false,
       };
@@ -340,6 +375,9 @@ export default defineComponent({
         greater: undefined,
       };
       this.advanced.raw = "";
+
+      this.isManualPreview = false;
+      this.previewText = "";
     },
 
     preset(name: string) {
@@ -380,7 +418,6 @@ export default defineComponent({
   },
 });
 </script>
-
 
 <style scoped>
 /* Layout */
@@ -432,7 +469,7 @@ label.row { gap:8px; }
 }
 
 /* Actions */
-.actions { display:flex; gap:8px; margin-top:10px; }
+.actions { display:flex; gap:8px; margin-top:10px; flex-wrap: wrap; }
 button { background:#2b2b2b; color:#cb5151; border:1px solid #3a3a3a; border-radius:10px; padding:8px 14px; cursor:pointer; }
 button.primary { background:#3a77ff; border-color:#3a77ff; color:white; }
 button.ghost { background:transparent; }

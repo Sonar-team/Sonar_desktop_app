@@ -23,6 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 *.csv
+!labels.csv
 *.xlsx
 *.png
 *.svg
