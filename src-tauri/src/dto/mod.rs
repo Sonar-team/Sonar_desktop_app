@@ -1,14 +1,10 @@
 use std::net::IpAddr;
 
 use pcap::{
-    Address as PcapAddress,
-    ConnectionStatus as PcapConnectionStatus,
-    Device,
-    DeviceFlags as PcapDeviceFlags,
-    IfFlags as PcapIfFlags,
+    Address as PcapAddress, ConnectionStatus as PcapConnectionStatus, Device,
+    DeviceFlags as PcapDeviceFlags, IfFlags as PcapIfFlags,
 };
 use serde::Serialize;
-
 
 /// ====== DTO sérialisables pour l'IPC Tauri ======
 
@@ -100,7 +96,7 @@ impl From<Device> for NetDevice {
     }
 }
 
-// TODO : RUST DOC 
+// TODO : RUST DOC
 // #[derive(Debug, Error)]
 // pub enum PcapError {
 //     #[error("Impossible de lister les interfaces réseau")]

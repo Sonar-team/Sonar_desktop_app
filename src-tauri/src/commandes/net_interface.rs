@@ -1,7 +1,7 @@
+use crate::dto::NetDevice;
 use log::info;
 use pcap::Device;
 use tauri::command;
-use crate::dto::NetDevice;
 
 use crate::errors::capture_error::CaptureError;
 
@@ -12,5 +12,3 @@ pub fn get_devices_list() -> Result<Vec<NetDevice>, CaptureError> {
     let devices = Device::list()?;
     Ok(devices.into_iter().map(NetDevice::from).collect())
 }
-
-

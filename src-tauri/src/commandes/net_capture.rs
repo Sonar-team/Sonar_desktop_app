@@ -103,6 +103,7 @@ pub fn set_filter(
     state: State<'_, Arc<Mutex<CaptureState>>>,
     filter: String,
 ) -> Result<(), CaptureStateError> {
+    info!("[set_filter] filter: {}", filter);
     let mut app = state.lock()?;
     app.filter = Some(filter);
     Ok(())

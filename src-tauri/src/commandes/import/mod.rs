@@ -8,8 +8,7 @@ use crate::{
     errors::{CaptureStateError, import::PcapImportError},
     events::CaptureEvent,
     state::{
-        capture::capture_handle::messages::capture::PacketMinimal,
-        flow_matrix::FlowMatrix,
+        capture::capture_handle::messages::capture::PacketMinimal, flow_matrix::FlowMatrix,
         graph::GraphData,
     },
 };
@@ -85,7 +84,10 @@ fn handle_pcap_file(
     on_event: &Channel<CaptureEvent<'_>>,
 ) -> Result<(), CaptureStateError> {
     let total = count_packets_in_pcap(file_path)?;
-    info!("[handle_pcap_file] {} : {} paquets détectés", file_path, total);
+    info!(
+        "[handle_pcap_file] {} : {} paquets détectés",
+        file_path, total
+    );
 
     let mut cap = Capture::from_file(file_path).map_err(|e| {
         CaptureStateError::Import(PcapImportError::OpenFileError(
@@ -144,6 +146,10 @@ fn handle_pcap_file(
     }) {
         error!("Erreur lors de l'envoi de Finished: {:?}", e);
     };
-    info!("[handle_pcap_file] Finised with {} paquets lu, {} lignes matrice", total, matrice.matrix.len());
+    info!(
+        "[handle_pcap_file] Finised with {} paquets lu, {} lignes matrice",
+        total,
+        matrice.matrix.len()
+    );
     Ok(())
 }

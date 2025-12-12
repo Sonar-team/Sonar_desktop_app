@@ -1,6 +1,9 @@
 use serde::Serialize;
 
-use crate::state::{capture::capture_handle::messages::capture::PacketMinimal, graph::{GraphData, GraphUpdate}};
+use crate::state::{
+    capture::capture_handle::messages::capture::PacketMinimal,
+    graph::{GraphData, GraphUpdate},
+};
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]

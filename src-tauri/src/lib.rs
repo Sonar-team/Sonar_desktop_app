@@ -1,9 +1,9 @@
+use chrono::Local;
 use commandes::{
     net_capture::{config_capture, get_config_capture, start_capture, stop_capture},
     net_interface::get_devices_list,
 };
 use log::info;
-use chrono::Local;
 
 use std::sync::{Arc, Mutex};
 use tauri::menu::MenuBuilder;
@@ -15,7 +15,10 @@ use crate::{
         import::convert_from_pcap_list,
         net_capture::{reset_capture, set_filter},
     },
-    setup::{get_os, get_sonar_version, print_banner, system_info::start_cpu_monitor},
+    setup::{
+        labels::read_labels, log_sonar_version, print_banner, print_os_infos,
+        system_info::start_cpu_monitor,
+    },
     state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData},
 };
 
@@ -42,15 +45,17 @@ pub fn run() -> Result<(), tauri::Error> {
         .plugin(tauri_plugin_os::init())
         // Plugins
         .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_log::Builder::new()
-            .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
-            .max_file_size(500_000)
-            .target(tauri_plugin_log::Target::new(
-                tauri_plugin_log::TargetKind::LogDir { 
-                    file_name: Some(filename),
-                }
-            ))
-            .build())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+                .max_file_size(500_000)
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::LogDir {
+                        file_name: Some(filename),
+                    },
+                ))
+                .build(),
+        )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         // Etats partager dans l'application
@@ -60,9 +65,12 @@ pub fn run() -> Result<(), tauri::Error> {
         // Menu
         .setup(|app| {
             info!("{}", print_banner());
-            get_os();
-            get_sonar_version(app.handle());
+            print_os_infos();
+            read_labels(app.handle())?;
+            log_sonar_version(app.handle());
+
             start_cpu_monitor(app.handle().clone());
+
             let menu = MenuBuilder::new(app)
                 .text("fichier", "Fichier")
                 .text("apropos", "A propos")
