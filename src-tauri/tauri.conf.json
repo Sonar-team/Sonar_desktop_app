@@ -32,6 +32,7 @@
     "active": true,
     "targets": [
       "msi",
+      "nsis",
       "deb",
       "rpm",
       "dmg"
