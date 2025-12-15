@@ -27,12 +27,12 @@
     "category": "Utility",
     "license": "AGPL-3.0",
     "publisher": "avicocyprien@yahoo.com",
-    "licenseFile": "LICENSE.md",
     "shortDescription": "Outil de Relevé de matrice de flux",
     "copyright": "avicocyprien@yahoo.com",
     "active": true,
     "targets": [
       "msi",
+      "nsis",
       "deb",
       "rpm",
       "dmg"
@@ -53,8 +53,6 @@
     },
     "resources": {
       "resources/labels.csv": "resources/labels.csv"
-    },
-    "longDescription": "SONAR est une application desktop de relevé de matrices de flux réseau.\n\nElle permet de capturer ou d’importer des flux réseau (PCAP) afin de visualiser les relations de communication entre équipements et protocoles, dans une approche factuelle et non interprétative.\n\nL’outil est conçu pour faciliter la compréhension des architectures réseau lors d’audits, d’arrêts techniques ou d’analyses a posteriori, avec un fort accent sur la lisibilité et la performance."
-
+    }
   }
 }
