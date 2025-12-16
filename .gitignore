@@ -26,6 +26,8 @@ dist-ssr
 !labels.csv
 *.xlsx
 *.png
+!src-tauri/windows/header_image_nsis.png
+!src-tauri/windows/sidebar_image_nsis.png
 *.svg
 !src/assets/*.svg
 !src/assets/images/*.svg

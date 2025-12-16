@@ -49,6 +49,10 @@
         "language": "fr-FR",
         "bannerPath": "windows\\sonarbanner.png",
         "dialogImagePath": "windows\\dialog.png"
+      },
+      "nsis": {
+        "headerImage": "windows\\header_image_nsis.png",
+        "sidebarImage": "windows\\sidebar_image_nsis.png"
       }
     },
     "resources": {
