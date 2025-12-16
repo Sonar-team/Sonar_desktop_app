@@ -51,8 +51,8 @@
         "dialogImagePath": "windows\\dialog.png"
       },
       "nsis": {
-        "headerImage": "windows\\header_image_nsis.png",
-        "sidebarImage": "windows\\sidebar_image_nsis.png"
+        "headerImage": "windows\\header_image_nsis.bmp",
+        "sidebarImage": "windows\\sidebar_image_nsis.bmp"
       }
     },
     "resources": {
