@@ -52,7 +52,8 @@
       }
     },
     "resources": {
-      "resources/labels.csv": "resources/labels.csv"
+      "resources/labels.csv": "resources/labels.csv",
+      "windows/npcap-1.85.exe": "windows/npcap-1.85.exe"
     }
   }
 }
