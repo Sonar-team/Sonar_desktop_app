@@ -48,7 +48,8 @@
       "wix": {
         "language": "fr-FR",
         "bannerPath": "windows\\sonarbanner.png",
-        "dialogImagePath": "windows\\dialog.png"
+        "dialogImagePath": "windows\\dialog.png",
+        "fragmentPaths": ["windows\\fragments\\npcap.wxs"]
       },
       "nsis": {
         "headerImage": "windows\\header_image_nsis.bmp",
