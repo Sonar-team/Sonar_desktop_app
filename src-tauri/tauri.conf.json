@@ -29,6 +29,7 @@
     "shortDescription": "Outil de Relevé de matrice de flux",
     "copyright": "avicocyprien@yahoo.com",
     "active": true,
+    "licenseFile": "../LICENSE.md",
     "targets": [
       "nsis",
       "deb",
