@@ -28,6 +28,7 @@ dist-ssr
 *.png
 !src-tauri/windows/header_image_nsis.png
 !src-tauri/windows/sidebar_image_nsis.png
+!src-tauri/icons/installer_icon.png
 *.svg
 !src/assets/*.svg
 !src/assets/images/*.svg
