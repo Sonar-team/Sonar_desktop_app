@@ -8,7 +8,6 @@
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "deno task build",
     "frontendDist": "../dist"
-    
   },
   "app": {
     "windows": [
@@ -31,7 +30,6 @@
     "copyright": "avicocyprien@yahoo.com",
     "active": true,
     "targets": [
-      "msi",
       "nsis",
       "deb",
       "rpm",
@@ -45,13 +43,8 @@
       "icons/icon.ico"
     ],
     "windows": {
-      "wix": {
-        "language": "fr-FR",
-        "bannerPath": "windows\\sonarbanner.png",
-        "dialogImagePath": "windows\\dialog.png",
-        "fragmentPaths": ["windows\\fragments\\npcap.wxs"]
-      },
       "nsis": {
+        "languages": ["French"],
         "headerImage": "windows\\header_image_nsis.bmp",
         "sidebarImage": "windows\\sidebar_image_nsis.bmp",
         "installerHooks": "windows\\hooks.nsh"
