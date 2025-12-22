@@ -1,5 +1,48 @@
 # Changelog
 
+## **[Unreleased]**
+
+## 🧪 Tests / Packaging
+
+* Tests et ajustements successifs des icônes de l’installer NSIS.
+* Corrections de format d’images (PNG → BMP) pour compatibilité NSIS.
+* Ajustements visuels et techniques des ressources d’installation.
+
+---
+
+## **[3.9.5] – 2025-12-xx**
+
+## ✨ Améliorations
+
+* Migration complète de l’installer Windows vers **NSIS**.
+* Ajout de **Npcap** dans les ressources de l’installer.
+* Support de l’installation de Npcap directement depuis l’installer.
+* Ajout du support de la langue **française** dans NSIS.
+* Nettoyage et stabilisation du pipeline d’installation Windows.
+
+## 🛠 Corrections
+
+* Correction de la détection de Npcap dans l’installer.
+* Corrections multiples sur les images utilisées par NSIS (format, compatibilité).
+* Corrections mineures sur le bundling et les scripts d’installation.
+
+---
+
+## **[3.9.4] – 2025-12-xx**
+
+## 🛠 Corrections
+
+* Suppression du mode **offline install** sur Windows.
+* Ajustements liés au bundling Windows.
+
+---
+
+## **[3.9.3] – 2025-12-xx**
+
+## ✨ Améliorations
+
+* Mise à jour de la version de l’application.
+
 ## **[3.9.2] – 2025-12-03**
 
 ## ✨ Améliorations
