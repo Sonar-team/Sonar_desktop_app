@@ -1,6 +1,6 @@
 # Changelog
 
-## **[Unreleased]**
+## **[3.9.6] – 2025-12-22**
 
 ## 🧪 Tests / Packaging
 
