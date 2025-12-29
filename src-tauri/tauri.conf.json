@@ -10,13 +10,6 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [
-      {
-        "title": "SONAR",
-        "width": 1800,
-        "height": 950
-      }
-    ],
     "security": {
       "csp": null
     }
@@ -55,6 +48,29 @@
     "resources": {
       "resources/labels.csv": "resources/labels.csv",
       "windows/npcap-1.85.exe": "windows/npcap-1.85.exe"
+    }
+  },
+  "plugins": {
+    "cli": {
+      "description": "Tauri CLI Plugin Example",
+      "args": [
+        {
+          "short": "H",
+          "name": "headless",
+          "description": "Run without any window (headless mode)"
+        }
+      ],
+      "subcommands": {
+        "run": {
+          "description": "Run the application",
+          "args": [
+            {
+              "name": "debug",
+              "description": "Run application in debug mode"
+            }
+          ]
+        }
+      }
     }
   }
 }

@@ -7,7 +7,7 @@ use log::info;
 
 use std::sync::{Arc, Mutex};
 use tauri::menu::MenuBuilder;
-
+use tauri_plugin_cli::CliExt;
 use crate::{
     commandes::{
         export::{csv::export_csv, logs::export_logs},
@@ -41,6 +41,7 @@ pub fn run() -> Result<(), tauri::Error> {
     );
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
         // Plugins
@@ -69,16 +70,40 @@ pub fn run() -> Result<(), tauri::Error> {
             read_labels(app.handle())?;
             log_sonar_version(app.handle());
 
-            start_cpu_monitor(app.handle().clone());
+            let Ok(cli_matches) = app.cli().matches() else {
+                println!("Une erreur est survenue lors de l'analyse des arguments");
+                return Ok(());
+            };
+            let headless_enabled = cli_matches
+                .args
+                .get("headless")
+                .map(|a| a.occurrences > 0)
+                .unwrap_or(false);
 
-            let menu = MenuBuilder::new(app)
-                .text("fichier", "Fichier")
-                .text("apropos", "A propos")
-                .text("fermer", "Fermer")
+            println!("headless_enabled = {}", headless_enabled);
+            // si headless est pas activé, on lance la fenettre : avec les elements si dessous
+            println!("args: {:?}", cli_matches);
+            if !headless_enabled {
+                start_cpu_monitor(app.handle().clone());
+
+                let menu = MenuBuilder::new(app)
+                    .text("fichier", "Fichier")
+                    .text("apropos", "A propos")
+                    .text("fermer", "Fermer")
+                    .build()?;
+
+                app.set_menu(menu)?;
+
+                tauri::WebviewWindowBuilder::new(
+                app,
+                "main",
+                tauri::WebviewUrl::App("index.html".into()),
+                )
+                .title("SONAR")
+                .inner_size(1800.0, 950.0)
                 .build()?;
-
-            app.set_menu(menu)?;
-
+            } 
+            
             Ok(())
         })
         // Gestion des appels depuis le frontend

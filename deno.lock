@@ -3,6 +3,7 @@
   "specifiers": {
     "npm:@tauri-apps/api@^2.9.1": "2.9.1",
     "npm:@tauri-apps/cli@^2.9.6": "2.9.6",
+    "npm:@tauri-apps/plugin-cli@~2.4.1": "2.4.1",
     "npm:@tauri-apps/plugin-dialog@^2.4.2": "2.4.2",
     "npm:@tauri-apps/plugin-fs@~2.4.4": "2.4.4",
     "npm:@tauri-apps/plugin-log@^2.7.1": "2.7.1",
@@ -369,6 +370,12 @@
         "@tauri-apps/cli-win32-x64-msvc"
       ],
       "bin": true
+    },
+    "@tauri-apps/plugin-cli@2.4.1": {
+      "integrity": "sha512-8JXofQFI5cmiGolh1PlU4hzE2YJgrgB1lyaztyBYiiMCy13luVxBXaXChYPeqMkUo46J1UadxvYdjRjj0E8zaw==",
+      "dependencies": [
+        "@tauri-apps/api"
+      ]
     },
     "@tauri-apps/plugin-dialog@2.4.2": {
       "integrity": "sha512-lNIn5CZuw8WZOn8zHzmFmDSzg5zfohWoa3mdULP0YFh/VogVdMVWZPcWSHlydsiJhRQYaTNSYKN7RmZKE2lCYQ==",
@@ -857,6 +864,7 @@
       "dependencies": [
         "npm:@tauri-apps/api@^2.9.1",
         "npm:@tauri-apps/cli@^2.9.6",
+        "npm:@tauri-apps/plugin-cli@~2.4.1",
         "npm:@tauri-apps/plugin-dialog@^2.4.2",
         "npm:@tauri-apps/plugin-fs@~2.4.4",
         "npm:@tauri-apps/plugin-log@^2.7.1",

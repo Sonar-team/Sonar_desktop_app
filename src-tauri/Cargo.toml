@@ -50,3 +50,6 @@ dirs = "6.0.0"
 colored = "3.0.0"
 tauri-plugin-os = "2"
 sysinfo = "0.37.2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-cli = "2"
