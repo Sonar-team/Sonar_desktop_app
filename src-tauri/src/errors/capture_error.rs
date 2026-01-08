@@ -33,7 +33,7 @@ pub enum CaptureErrorKind {
     CaptureInitError(String),
     ChannelSendError(String),
     EventSendError(String),
-    FilterError(String),
+    // FilterError(String),
 }
 
 impl serde::Serialize for CaptureError {
@@ -47,7 +47,7 @@ impl serde::Serialize for CaptureError {
             Self::CaptureInitError(e) => CaptureErrorKind::CaptureInitError(e.to_string()),
             Self::ChannelSendError(e) => CaptureErrorKind::ChannelSendError(e.to_string()),
             Self::EventSendError(e) => CaptureErrorKind::EventSendError(e.to_string()),
-            Self::FilterError(e) => CaptureErrorKind::FilterError(e.to_string()),
+            // Self::FilterError(e) => CaptureErrorKind::FilterError(e.to_string()),
         };
         kind.serialize(serializer)
     }
