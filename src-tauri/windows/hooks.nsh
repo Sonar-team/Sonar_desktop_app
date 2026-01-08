@@ -15,7 +15,7 @@
     Goto done
 
   ; Lance l'installeur embarqué (admin requis)
-  ExecShell "runas" "$INSTDIR\windows\npcap-1.85.exe" ""
+  ExecShell "runas" "$INSTDIR\windows\npcap-1.86.exe" ""
 
 done:
 !macroend
