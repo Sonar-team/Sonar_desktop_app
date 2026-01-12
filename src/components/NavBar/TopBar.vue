@@ -1,22 +1,22 @@
 <template>
   <div class="top-bar">
-    <button class="image-btn" @click="start" title="Démarrer" :disabled="isRunning">
+    <button class="image-btn" @click="start" title="Démarrer (ctrl+p)" :disabled="isRunning">
       <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="stop" title="Arrêter" :disabled="!isRunning">
+    <button class="image-btn" @click="stop" title="Arrêter (ctrl+shift+p)" :disabled="!isRunning">
       🛑
     </button>
-    <button class="image-btn" @click="reset" title="Réinitialiser">🔄</button>
-    <button class="image-btn"  title="Config" :disabled="isRunning" @click="handleConfigClick">
+    <button class="image-btn" @click="reset" title="Réinitialiser (ctrl+shift+r)">🔄</button>
+    <button class="image-btn"  title="Config (ctrl+,)" :disabled="isRunning" @click="handleConfigClick">
       <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="triggerSave" title="Sauvegarder ctrl+s">💾</button>
-    <button class="image-btn" @click="displayPcapOpener" title="Ouvrir">📄</button>
-    <button class="image-btn" @click="quit" title="Quitter">❌</button>
-    <button class="image-btn" @click="export_logs" title="Logs">📒</button>
-    <button class="image-btn" @click="handleFilterClick" title="Filtrer">
+    <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
+    <button class="image-btn" @click="displayPcapOpener" title="Ouvrir (ctrl+o)">📄</button>
+    <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">❌</button>
+    <button class="image-btn" @click="export_logs" title="Logs (ctrl+l)">📒</button>
+    <button class="image-btn" @click="handleFilterClick" title="Filtrer (ctrl+f)">
       <img src="/src/assets/filter-solid-full.svg" alt="Flux" class="icon-img" />
     </button>
   </div>
@@ -56,28 +56,58 @@ export default {
   },
   data() {
     return {
-      showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
+      showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
+      shortcuts: [] as string[],
     };
   },
   mounted() {
-    register('CommandOrControl+S', (event) => {
-    if (event.state === 'Released') {
-          this.SaveAsCsv();
-        }
-    });
-    register('CommandOrControl+R', (event) => {
-    if (event.state === 'Released') {
-          this.reset();
-        }
-    });
-    
+    // Sauvegardes
+    this.bindShortcut('CommandOrControl+S', () => this.SaveAsCsv());
+    this.bindShortcut('CommandOrControl+Shift+S', () => this.SaveAsXlsx());
+
+    // Reset
+    this.bindShortcut('CommandOrControl+Shift+R', () => this.reset());
+
+    // Start / Stop
+    // Choix 1 (classique "Play/Stop")
+    this.bindShortcut('CommandOrControl+P', () => this.start());
+    this.bindShortcut('CommandOrControl+Shift+P', () => this.stop());
+
+    // Ouvrir (pcap opener)
+    this.bindShortcut('CommandOrControl+O', () => this.displayPcapOpener());
+
+    // Config
+    this.bindShortcut('CommandOrControl+,', () => this.handleConfigClick());
+
+    // Filtre
+    this.bindShortcut('CommandOrControl+F', () => this.handleFilterClick());
+
+    // Logs
+    this.bindShortcut('CommandOrControl+L', () => this.export_logs());
+
+    // Quit
+    this.bindShortcut('CommandOrControl+Q', () => this.quit());
   },
-  beforeUnmount() {
+
+  async beforeUnmount() {
   // recommandé en dev/hot reload
-    unregister('CommandOrControl+S');
-    unregister('CommandOrControl+R');
+    await this.unbindAllShortcuts();
   },
   methods: {
+    bindShortcut(shortcut: string, handler: () => void) {
+      this.shortcuts.push(shortcut);
+      register(shortcut, (event) => {
+        if (event.state === 'Released') handler();
+      });
+    },
+
+    async unbindAllShortcuts() {
+      // unregister accepte string | string[]
+      if (this.shortcuts.length > 0) {
+        await unregister(this.shortcuts);
+      }
+      this.shortcuts = [];
+    },
     async export_logs() {
       info("export logs")
       const response = await save({
@@ -169,6 +199,9 @@ export default {
       this.$emit('toggle-filter');
     },
     async start() {
+      if (this.captureStore.isRunning) {
+        return;
+      }
       const onEvent = new Channel<CaptureEvent>();
       this.captureStore.setChannel(onEvent); // 🟢 rendre le Channel accessible
 
@@ -181,6 +214,9 @@ export default {
         .catch(displayCaptureError);
     },
     async stop() {
+      if (!this.captureStore.isRunning) {
+        return;
+      }
       const onEvent = this.captureStore.getChannel();
       await invoke('stop_capture',{ onEvent })
         .then((status) => {
