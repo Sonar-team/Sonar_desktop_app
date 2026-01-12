@@ -6,8 +6,10 @@ use commandes::{
 use log::info;
 
 use std::sync::{Arc, Mutex};
-use tauri::menu::MenuBuilder;
+use tauri::{Manager, ipc::Channel, menu::MenuBuilder};
 use tauri_plugin_cli::CliExt;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+
 use crate::{
     commandes::{
         export::{csv::export_csv, logs::export_logs},
@@ -15,6 +17,7 @@ use crate::{
         import::convert_from_pcap_list,
         net_capture::{reset_capture, set_filter},
     },
+    events::CaptureEvent,
     setup::{
         labels::read_labels, log_sonar_version, print_banner, print_os_infos,
         system_info::start_cpu_monitor,
@@ -32,19 +35,18 @@ mod utils;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
-    // ▶️ Génération de la date/heure dynamique
     let now = Local::now();
     let filename = format!(
         "DR_SONAR_{}_{}",
         now.format("%Y-%m-%d"),
-        now.format("%H-%M-%S"),
+        now.format("%H-%M-%S")
     );
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
-        // Plugins
         .plugin(tauri_plugin_process::init())
         .plugin(
             tauri_plugin_log::Builder::new()
@@ -59,54 +61,55 @@ pub fn run() -> Result<(), tauri::Error> {
         )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
-        // Etats partager dans l'application
         .manage(Arc::new(Mutex::new(CaptureState::new())))
         .manage(Arc::new(Mutex::new(FlowMatrix::new())))
         .manage(Arc::new(Mutex::new(GraphData::new())))
-        // Menu
-        .setup(|app| {
-            info!("{}", print_banner());
-            print_os_infos();
-            read_labels(app.handle())?;
-            log_sonar_version(app.handle());
+        .setup({
+            move |app| {
+                info!("{}", print_banner());
+                print_os_infos();
+                read_labels(app.handle())?;
+                log_sonar_version(app.handle());
 
-            let Ok(cli_matches) = app.cli().matches() else {
-                println!("Une erreur est survenue lors de l'analyse des arguments");
-                return Ok(());
-            };
-            let headless_enabled = cli_matches
-                .args
-                .get("headless")
-                .map(|a| a.occurrences > 0)
-                .unwrap_or(false);
+                // CLI
+                let Ok(cli_matches) = app.cli().matches() else {
+                    println!("Une erreur est survenue lors de l'analyse des arguments");
+                    return Ok(());
+                };
 
-            println!("headless_enabled = {}", headless_enabled);
-            // si headless est pas activé, on lance la fenettre : avec les elements si dessous
-            println!("args: {:?}", cli_matches);
-            if !headless_enabled {
-                start_cpu_monitor(app.handle().clone());
+                let headless_enabled = cli_matches
+                    .args
+                    .get("headless")
+                    .map(|a| a.occurrences > 0)
+                    .unwrap_or(false);
 
-                let menu = MenuBuilder::new(app)
-                    .text("fichier", "Fichier")
-                    .text("apropos", "A propos")
-                    .text("fermer", "Fermer")
+                println!("headless_enabled = {}", headless_enabled);
+                println!("args: {:?}", cli_matches);
+
+                if !headless_enabled {
+                    start_cpu_monitor(app.handle().clone());
+
+                    let menu = MenuBuilder::new(app)
+                        .text("fichier", "Fichier")
+                        .text("apropos", "A propos")
+                        .text("fermer", "Fermer")
+                        .build()?;
+
+                    app.set_menu(menu)?;
+
+                    tauri::WebviewWindowBuilder::new(
+                        app,
+                        "main",
+                        tauri::WebviewUrl::App("index.html".into()),
+                    )
+                    .title("SONAR")
+                    .inner_size(1800.0, 950.0)
                     .build()?;
+                }
 
-                app.set_menu(menu)?;
-
-                tauri::WebviewWindowBuilder::new(
-                app,
-                "main",
-                tauri::WebviewUrl::App("index.html".into()),
-                )
-                .title("SONAR")
-                .inner_size(1800.0, 950.0)
-                .build()?;
-            } 
-            
-            Ok(())
+                Ok(())
+            }
         })
-        // Gestion des appels depuis le frontend
         .invoke_handler(tauri::generate_handler![
             get_devices_list,
             start_capture,
@@ -121,6 +124,5 @@ pub fn run() -> Result<(), tauri::Error> {
             get_label_list,
             set_filter
         ])
-        // Lancement de l'application
         .run(tauri::generate_context!())
 }

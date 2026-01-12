@@ -12,7 +12,7 @@
       <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="triggerSave" title="Sauvegarder">💾</button>
+    <button class="image-btn" @click="triggerSave" title="Sauvegarder ctrl+s">💾</button>
     <button class="image-btn" @click="displayPcapOpener" title="Ouvrir">📄</button>
     <button class="image-btn" @click="quit" title="Quitter">❌</button>
     <button class="image-btn" @click="export_logs" title="Logs">📒</button>
@@ -27,6 +27,11 @@ import { Channel, invoke } from '@tauri-apps/api/core';
 import { exit } from '@tauri-apps/plugin-process';
 import { info, error } from '@tauri-apps/plugin-log';
 import { save } from '@tauri-apps/plugin-dialog';
+import { register, unregister } from '@tauri-apps/plugin-global-shortcut';
+// when using `"withGlobalTauri": true`, you may use
+// const { register } = window.__TAURI__.globalShortcut;
+
+
 
 import { displayCaptureError } from '../../errors/capture'; // Gestion des erreurs propre
 import { getCurrentDate } from '../../utils/time';
@@ -53,6 +58,24 @@ export default {
     return {
       showMatrice: true // Toggle state (true for Matrice, false for NetworkGraphComponent)
     };
+  },
+  mounted() {
+    register('CommandOrControl+S', (event) => {
+    if (event.state === 'Released') {
+          this.SaveAsCsv();
+        }
+    });
+    register('CommandOrControl+R', (event) => {
+    if (event.state === 'Released') {
+          this.reset();
+        }
+    });
+    
+  },
+  beforeUnmount() {
+  // recommandé en dev/hot reload
+    unregister('CommandOrControl+S');
+    unregister('CommandOrControl+R');
   },
   methods: {
     async export_logs() {

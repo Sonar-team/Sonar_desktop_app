@@ -6,6 +6,7 @@
     "npm:@tauri-apps/plugin-cli@~2.4.1": "2.4.1",
     "npm:@tauri-apps/plugin-dialog@^2.4.2": "2.4.2",
     "npm:@tauri-apps/plugin-fs@~2.4.4": "2.4.4",
+    "npm:@tauri-apps/plugin-global-shortcut@~2.3.1": "2.3.1",
     "npm:@tauri-apps/plugin-log@^2.7.1": "2.7.1",
     "npm:@tauri-apps/plugin-os@^2.3.2": "2.3.2",
     "npm:@tauri-apps/plugin-process@^2.3.1": "2.3.1",
@@ -385,6 +386,12 @@
     },
     "@tauri-apps/plugin-fs@2.4.4": {
       "integrity": "sha512-MTorXxIRmOnOPT1jZ3w96vjSuScER38ryXY88vl5F0uiKdnvTKKTtaEjTEo8uPbl4e3gnUtfsDVwC7h77GQLvQ==",
+      "dependencies": [
+        "@tauri-apps/api"
+      ]
+    },
+    "@tauri-apps/plugin-global-shortcut@2.3.1": {
+      "integrity": "sha512-vr40W2N6G63dmBPaha1TsBQLLURXG538RQbH5vAm0G/ovVZyXJrmZR1HF1W+WneNloQvwn4dm8xzwpEXRW560g==",
       "dependencies": [
         "@tauri-apps/api"
       ]
@@ -867,6 +874,7 @@
         "npm:@tauri-apps/plugin-cli@~2.4.1",
         "npm:@tauri-apps/plugin-dialog@^2.4.2",
         "npm:@tauri-apps/plugin-fs@~2.4.4",
+        "npm:@tauri-apps/plugin-global-shortcut@~2.3.1",
         "npm:@tauri-apps/plugin-log@^2.7.1",
         "npm:@tauri-apps/plugin-os@^2.3.2",
         "npm:@tauri-apps/plugin-process@^2.3.1",

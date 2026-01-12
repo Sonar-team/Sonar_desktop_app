@@ -12,7 +12,16 @@
   "app": {
     "security": {
       "csp": null
-    }
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "SONAR",
+        "width": 1800,
+        "height": 950,
+        "create": false
+      }
+    ]
   },
   "bundle": {
     "homepage": "https://sonar-team.github.io/doc/",
@@ -52,7 +61,7 @@
   },
   "plugins": {
     "cli": {
-      "description": "Tauri CLI Plugin Example",
+      "description": "Sonar CLI",
       "args": [
         {
           "short": "H",

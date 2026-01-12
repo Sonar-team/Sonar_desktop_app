@@ -1,5 +1,18 @@
 # Changelog
 
+## **[3.10.0] – 2026-01-08**
+## ✨ Fonctionnalités
+
+* Ajout du parsing Modbus/TCP au niveau applicatif, permettant l’analyse et la restitution des communications industrielles OT.
+
+* Introduction d’un mode headless / CLI, permettant l’exécution de SONAR sans interface graphique (usage automatisé, serveurs, environnements contraints).
+
+## ✨ Améliorations
+
+* Mise à jour et amélioration de l’installer Npcap pour Windows.
+
+* Mise à jour du release log et du changelog.
+
 ## **[3.9.6] – 2025-12-22**
 
 ## 🧪 Tests / Packaging

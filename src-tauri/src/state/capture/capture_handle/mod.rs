@@ -112,4 +112,57 @@ impl CaptureHandle {
         })?;
         Ok(())
     }
+
+    pub fn start_no_event(
+        &self,
+        config: CaptureConfig,
+        app: AppHandle,
+        filter: Option<String>,
+    ) -> Result<(), CaptureError> {
+        debug!(
+            "Démarrage de la capture sur l'interface {}...",
+            config.device_name
+        );
+
+        let stop_flag = self.stop_flag.clone();
+
+        let device = Device::list()?
+            .into_iter()
+            .find(|d| d.name == config.device_name)
+            .ok_or_else(|| CaptureError::InterfaceNotFound(config.device_name.clone()))?;
+
+        info!("Interface trouvée : {}", device.name);
+
+        let mut cap = setup_capture(config.clone())?;
+
+        setup_filter(&mut cap, filter)?;
+
+        let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) =
+            bounded(config.chan_capacity as usize);
+
+        // 🔑 Utilisation du nouveau PacketBufferPool
+        let arc_buffer_pool = Arc::new(PacketBufferPool::new(
+            config.chan_capacity as usize + 2,
+            config.snaplen as usize,
+        ));
+
+        // Démarrage des threads avec le nouveau buffer_pool
+        spawn_processing_thread(
+            rx,
+            Channel::new(|_| Ok(())),
+            config.chan_capacity,
+            app.clone(),
+            arc_buffer_pool.clone(),
+        );
+        spawn_capture_thread_with_pool(
+            tx,
+            Channel::new(|_| Ok(())),
+            cap,
+            stop_flag,
+            config.chan_capacity,
+            arc_buffer_pool,
+        );
+
+        Ok(())
+    }
 }

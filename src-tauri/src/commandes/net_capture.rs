@@ -41,6 +41,27 @@ pub fn start_capture(
     Ok(state_lock.status.clone())
 }
 
+pub fn start_capture_core(
+    state: &Arc<Mutex<CaptureState>>,
+    app: AppHandle,
+) -> Result<CaptureStatus, CaptureStateError> {
+    let mut st = state.lock()?;
+
+    if st.capture.is_some() {
+        return Ok(st.status.clone());
+    }
+
+    let capture = CaptureHandle::new();
+
+    // Variante start sans event : start_no_event()
+    capture.start_no_event(st.config.clone(), app, st.filter.clone())?;
+
+    st.capture = Some(capture);
+    st.status.toggle();
+
+    Ok(st.status.clone())
+}
+
 #[command(async)]
 pub fn stop_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
