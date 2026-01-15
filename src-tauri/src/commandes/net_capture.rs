@@ -42,7 +42,7 @@ pub fn start_capture(
 }
 
 pub fn start_capture_core(
-    state: &Arc<Mutex<CaptureState>>,
+    state: State<'_, Arc<Mutex<CaptureState>>>,
     app: AppHandle,
 ) -> Result<CaptureStatus, CaptureStateError> {
     let mut st = state.lock()?;

@@ -1,7 +1,7 @@
 use crate::utils::return_device_lookup;
 use serde::Serialize;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub struct CaptureConfig {
     pub device_name: String,
     pub buffer_size: i32,

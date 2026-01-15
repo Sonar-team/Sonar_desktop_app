@@ -2,6 +2,7 @@ use capture_config::CaptureConfig;
 use capture_handle::CaptureHandle;
 use capture_status::CaptureStatus;
 
+use tauri::ipc::Channel;
 use crate::events::CaptureEvent;
 
 pub mod capture_config;
@@ -13,7 +14,7 @@ pub struct CaptureState {
     pub status: CaptureStatus,
     pub config: CaptureConfig,
     pub filter: Option<String>,
-    pub on_event: Option<tauri::ipc::Channel<CaptureEvent<'static>>>,
+    pub on_event: Option<Channel<CaptureEvent<'static>>>,
 }
 
 impl CaptureState {

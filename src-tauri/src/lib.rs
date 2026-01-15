@@ -6,7 +6,7 @@ use commandes::{
 use log::info;
 
 use std::sync::{Arc, Mutex};
-use tauri::{Manager, ipc::Channel, menu::MenuBuilder};
+use tauri::{Manager, menu::MenuBuilder};
 use tauri_plugin_cli::CliExt;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
@@ -15,11 +15,10 @@ use crate::{
         export::{csv::export_csv, logs::export_logs},
         flow_matrix::{add_label, get_label_list},
         import::convert_from_pcap_list,
-        net_capture::{reset_capture, set_filter},
+        net_capture::{reset_capture, set_filter, start_capture_core},
     },
-    events::CaptureEvent,
     setup::{
-        labels::read_labels, log_sonar_version, print_banner, print_os_infos,
+        labels::read_labels, log_host_and_app_snapshot, print_banner,
         system_info::start_cpu_monitor,
     },
     state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData},
@@ -42,9 +41,31 @@ pub fn run() -> Result<(), tauri::Error> {
         now.format("%H-%M-%S")
     );
 
+    let ctrl_c_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyC);
+
+    let exit_code = 0;
+
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_cli::init())
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(move |app, shortcut, event| {
+                    println!("{:?}", shortcut);
+                    if shortcut == &ctrl_c_shortcut {
+                        match event.state() {
+                            ShortcutState::Pressed => {
+                                println!("Ctrl-C Pressed!");
+                                app.exit(exit_code);
+                            }
+                            ShortcutState::Released => {
+                                println!("Ctrl-C Released!");
+                            }
+                        }
+                    }
+                })
+                .build(),
+        )
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_process::init())
@@ -67,9 +88,8 @@ pub fn run() -> Result<(), tauri::Error> {
         .setup({
             move |app| {
                 info!("{}", print_banner());
-                print_os_infos();
+                log_host_and_app_snapshot(app.app_handle());
                 read_labels(app.handle())?;
-                log_sonar_version(app.handle());
 
                 // CLI
                 let Ok(cli_matches) = app.cli().matches() else {
@@ -85,7 +105,9 @@ pub fn run() -> Result<(), tauri::Error> {
 
                 println!("headless_enabled = {}", headless_enabled);
                 println!("args: {:?}", cli_matches);
+                app.global_shortcut().register(ctrl_c_shortcut)?;
 
+                // handle the capture state here
                 if !headless_enabled {
                     start_cpu_monitor(app.handle().clone());
 
@@ -105,6 +127,11 @@ pub fn run() -> Result<(), tauri::Error> {
                     .title("SONAR")
                     .inner_size(1800.0, 950.0)
                     .build()?;
+                } else {
+                    let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
+                    let config = get_config_capture(capture_state.clone());
+                    println!("config: {:#?}", config);
+                    start_capture_core(capture_state, app.handle().clone())?;
                 }
 
                 Ok(())

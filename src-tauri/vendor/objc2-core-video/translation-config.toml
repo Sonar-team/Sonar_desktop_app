@@ -1,0 +1,63 @@
+framework = "CoreVideo"
+crate = "objc2-core-video"
+required-crates = ["objc2-core-foundation"]
+undesired-default-dependencies = ["objc2-open-gl"] # OpenGL is deprecated
+custom-lib-rs = true
+macos = "10.4"
+maccatalyst = "13.0"
+ios = "4.0"
+tvos = "9.0"
+watchos = "4.0"
+visionos = "1.0"
+
+external.__IOSurface.module = "IOSurface.IOSurfaceRef"
+
+# `cf_consumed`, requires manual handling
+fn.CVOpenGLBufferRelease.skipped = true
+fn.CVDisplayLinkRelease.skipped = true
+fn.CVOpenGLBufferPoolRelease.skipped = true
+fn.CVOpenGLTextureRelease.skipped = true
+fn.CVPixelBufferPoolRelease.skipped = true
+fn.CVPixelBufferRelease.skipped = true
+fn.CVOpenGLTextureCacheRelease.skipped = true
+fn.CVBufferRelease.skipped = true
+
+# Unknown how to handle the calling convention here?
+fn.CVMetalTextureGetCleanTexCoords.skipped = true
+fn.CVOpenGLTextureGetCleanTexCoords.skipped = true
+fn.CVOpenGLESTextureGetCleanTexCoords.skipped = true
+
+fn.CVMetalBufferGetTypeID.unsafe = false
+fn.CVMetalTextureGetTypeID.unsafe = false
+fn.CVOpenGLBufferGetTypeID.unsafe = false
+fn.CVOpenGLTextureGetTypeID.unsafe = false
+fn.CVPixelBufferGetTypeID.unsafe = false
+
+# Naming conflicts with the newer Copy variants.
+fn.CVBufferGetAttachment.renamed = "get_attachment"
+fn.CVBufferGetAttachments.renamed = "get_attachments"
+
+# TODO(breaking): Make these nonnull
+static.kCVImageBufferPostDecodeProcessingSequenceMetadataKey.nullability = "nullable"
+static.kCVImageBufferPostDecodeProcessingFrameMetadataKey.nullability = "nullable"
+
+##
+## Safety
+##
+
+# SAFETY: CoreVideo is generally well-behaved.
+#
+# TODO(breaking): Note that the way we do type-safety for it is incomplete,
+# buffers aren't distinct types. This is documented for example as:
+# > On OSX 10.10 and earlier, or iOS 8 and earlier, calling this
+# > function with a non-planar buffer will have undefined behavior.
+#
+# We only support macOS 10.12 and above though, so this should be fine. In the
+# future, we should make these distinct types though.
+unsafe-default-safety.documentation-is-reviewed = true
+# SAFETY: CoreVideo is bounds-checked internally.
+unsafe-default-safety.bounds-checked-internally = true
+
+# Unsure of soundness of over-unlocking?
+fn.CVPixelBufferLockBaseAddress.unsafe = true
+fn.CVPixelBufferUnlockBaseAddress.unsafe = true

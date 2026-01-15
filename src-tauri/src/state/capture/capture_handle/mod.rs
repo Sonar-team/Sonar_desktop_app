@@ -20,8 +20,9 @@ use crate::{
             messages::CaptureMessage,
             setup::{setup_capture, setup_filter},
             threads::{
-                capture::spawn_capture_thread_with_pool, packet_buffer::PacketBufferPool,
-                processing::spawn_processing_thread,
+                capture::spawn_capture_thread_with_pool,
+                packet_buffer::PacketBufferPool,
+                processing::{spawn_processing_thread, spawn_processing_thread_cli},
             },
         },
     },
@@ -147,7 +148,7 @@ impl CaptureHandle {
         ));
 
         // Démarrage des threads avec le nouveau buffer_pool
-        spawn_processing_thread(
+        spawn_processing_thread_cli(
             rx,
             Channel::new(|_| Ok(())),
             config.chan_capacity,

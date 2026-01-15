@@ -40,6 +40,22 @@ impl FlowMatrix {
         entry.last_seen = ts;
     }
 
+    /// Update the flow matrix from a PacketOwnedStats then return the new line in the matrice if it was not already there
+    pub fn update_flow_cli(&mut self, pkt: &PacketOwnedStats) -> (FlowStats, PacketFlowOwned) {
+        let ts = timeval_to_systemtime(pkt.ts_sec.into(), pkt.ts_usec.into());
+
+        let entry = self.matrix.entry(pkt.flow.clone()).or_insert(FlowStats {
+            count: 0,
+            total_bytes: pkt.len,
+            last_seen: ts,
+        });
+        entry.count += 1;
+        entry.total_bytes += pkt.len;
+        entry.last_seen = ts;
+
+        (entry.clone(), pkt.flow.clone())
+    }
+
     pub fn clear(&mut self) {
         self.matrix.clear();
         self.label.clear();

@@ -1,0 +1,42 @@
+[package]
+name = "packet_parser"
+version = "0.12.0"
+edition = "2024"
+authors = ["Cyprien Avico avicocyprien@yahoo.com"]
+description = "A powerful and modular Rust crate for network packet parsing."
+license = "MIT"
+repository = "https://github.com/Akmot9/Packet-parser"
+categories = ["network-programming", "parsing", "development-tools"]
+readme = "README.md"
+homepage = "https://github.com/Akmot9/Packet-parser"
+keywords = ["network", "packets", "parser", "cybersecurity", "Rust"]
+exclude = [".github/", ".gitignore", "tests/", "benches/"]
+
+
+[dependencies]
+thiserror = "2.0.17"
+pcap-file = "2.0.0"
+serde = { version = "1.0.228", features = ["derive"] }
+uuid = "1.19.0"
+chrono = "0.4.42" # for ntp timestamp
+aquamarine = "0.6.0"
+hex = "0.4.3"
+
+[dev-dependencies]
+criterion = { version = "0.8.1", features = ["html_reports"] }
+pnet = "0.35.0"
+hex = "0.4.3"
+serde_json = "1.0.149"
+
+[workspace]
+members = ["benchmark_db","integration_test", "see_unparsable"] # Spécifie que ta crate a un workspace avec d'autres projets
+
+[profile.release]
+opt-level = 3         # Highest speed optimization
+lto = "fat"           # Link Time Optimization for best performance
+codegen-units = 1     # Best for performance (slower build)
+panic = "abort"       # Optional: slightly faster, smaller
+strip = false         # Keep symbols if you want better profiling/debugging
+incremental = false   # Ensures full optimization
+debug = false         # No debug info in release
+rpath = false         # No runtime path in binary

@@ -1,0 +1,107 @@
+error: invalid component: year was 1000000
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(+1_000_000-01-01);
+  |                   ^^^^^^^^^^
+
+error: years with more than four digits must have an explicit sign
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(10_000-01-01);
+  |                   ^^^^^^
+
+error: invalid component: week was 60
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-W 60-1);
+  |                        ^^^^
+
+error: invalid component: day was 0
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-W 01-0);
+  |                             ^
+
+error: invalid component: day was 8
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-W 01-8);
+  |                             ^
+
+error: invalid component: month was 0
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-00-01);
+  |                        ^^
+
+error: invalid component: month was 13
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-13-01);
+  |                        ^^
+
+error: invalid component: day was 0
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-01-00);
+  |                           ^^
+
+error: invalid component: day was 32
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-01-32);
+  |                           ^^
+
+error: invalid component: ordinal was 0
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-000);
+  |                        ^^^
+
+error: invalid component: ordinal was 366
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-366);
+  |                        ^^^
+
+error: invalid component: year was 0a
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(0a);
+  |                   ^^
+
+error: unexpected token: :
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021:);
+  |                       ^
+
+error: invalid component: week was 0a
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-W 0a);
+  |                          ^^
+
+error: unexpected token: :
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-W 01:);
+  |                            ^
+
+error: invalid component: day was 0a
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-W 01-0a);
+  |                             ^^
+
+error: invalid component: month or ordinal was 0a
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-0a);
+  |                        ^^
+
+error: invalid component: day was 0a
+ --> $WORKSPACE/tests/compile-fail/invalid_date.rs
+  |
+  |     let _ = date!(2021-01-0a);
+  |                           ^^

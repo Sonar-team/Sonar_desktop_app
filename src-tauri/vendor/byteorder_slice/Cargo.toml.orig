@@ -1,0 +1,16 @@
+[package]
+name = "byteorder_slice"
+version = "3.0.0"
+authors = ["courvoif <courvoif@pm.me>"]
+edition = "2021"
+description = "Byteorder like crate for &[u8]"
+
+license = "MIT"
+documentation = "https://docs.rs/byteorder_slice/"
+repository = "https://github.com/courvoif/byteorder_slice"
+
+[dependencies]
+byteorder = "1.4"
+
+[dev-dependencies]
+hex-literal = "0.3.4"

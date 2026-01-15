@@ -663,7 +663,7 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
         </ul>
       </div>
       <div class="node-infos hint" v-else>
-        Clique un nœud pour afficher ses informations.
+        Clique sur un nœud pour afficher ses informations.
       </div>
       
     </div>
