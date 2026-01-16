@@ -34,20 +34,27 @@ dist-ssr
 !src/assets/images/*.svg
 !src/assets/images/*.png
 
-# --- Rust vendoring: ne rien filtrer dans vendor ---
+# --- Rust vendoring: commit vendor as-is (sources only) ---
+# Keep everything in vendor (some crates legitimately contain src/target as source code)
 !src-tauri/vendor/**
-# Ne jamais versionner d'artefacts de build dans le vendor Cargo
-src-tauri/vendor/**/target/
-src-tauri/vendor/**/target/**
-src-tauri/vendor/**/out/
-src-tauri/vendor/**/out/**
-src-tauri/vendor/**/build/
-src-tauri/vendor/**/build/**
-!src-tauri/vendor/cc/src/target
+
+# If you truly want to exclude accidental build artifacts inside vendor, do it narrowly:
+# (These are typical Cargo build outputs when someone builds *inside* a vendored crate, which should not happen.)
+src-tauri/vendor/**/target/debug/
+src-tauri/vendor/**/target/release/
+src-tauri/vendor/**/target/.fingerprint/
+src-tauri/vendor/**/target/incremental/
+src-tauri/vendor/**/target/**.d
+src-tauri/vendor/**/target/**.o
+src-tauri/vendor/**/target/**.rlib
+src-tauri/vendor/**/target/**.rmeta
+src-tauri/vendor/**/target/**.so
+src-tauri/vendor/**/target/**.dylib
+src-tauri/vendor/**/target/**.dll
+src-tauri/vendor/**/target/**.exe
 
 
 
 # Tauri
 target
 /target
-*/target
