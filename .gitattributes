@@ -1,0 +1,13 @@
+# Ensure stable line endings across OS (critical for Cargo vendoring checksums)
+* text=auto eol=lf
+
+# Rust / Cargo ecosystem
+*.rs   text eol=lf
+*.toml text eol=lf
+*.lock text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Vendored crates must never be rewritten by checkout on Windows
+src-tauri/vendor/** text eol=lf
