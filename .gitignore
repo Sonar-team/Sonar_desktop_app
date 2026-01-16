@@ -34,7 +34,7 @@ dist-ssr
 !src/assets/images/*.svg
 !src/assets/images/*.png
 
-*.lock
+
 /src-tauri/Cargo.lock
 src-tauri/Cargo.lock
 
