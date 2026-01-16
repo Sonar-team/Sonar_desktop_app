@@ -43,6 +43,7 @@ src-tauri/vendor/**/out/
 src-tauri/vendor/**/out/**
 src-tauri/vendor/**/build/
 src-tauri/vendor/**/build/**
+!src-tauri/vendor/cc/src/target
 
 
 
