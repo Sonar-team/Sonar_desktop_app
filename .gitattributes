@@ -1,13 +1,27 @@
-# Ensure stable line endings across OS (critical for Cargo vendoring checksums)
-* text=auto eol=lf
+# Default: let Git decide text/binary, but do not rewrite unexpectedly
+* text=auto
 
-# Rust / Cargo ecosystem
+# Force LF only for known text files (safe)
 *.rs   text eol=lf
 *.toml text eol=lf
 *.lock text eol=lf
 *.json text eol=lf
 *.yml  text eol=lf
 *.yaml text eol=lf
+*.md   text eol=lf
 
-# Vendored crates must never be rewritten by checkout on Windows
-src-tauri/vendor/** text eol=lf
+# Vendored crates: DO NOT apply text normalization broadly.
+# Keep vendored content byte-for-byte as committed.
+src-tauri/vendor/** -text
+
+# Explicitly mark known binaries (extra safety)
+*.fst binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
+*.gz binary
+*.xz binary
+*.bz2 binary
+*.pdf binary
