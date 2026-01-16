@@ -34,9 +34,9 @@ dist-ssr
 !src/assets/images/*.svg
 !src/assets/images/*.png
 
+# --- Rust vendoring: ne rien filtrer dans vendor ---
+!src-tauri/vendor/**
 
-/src-tauri/Cargo.lock
-src-tauri/Cargo.lock
 
 # Tauri
 target
