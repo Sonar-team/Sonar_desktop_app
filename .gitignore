@@ -36,6 +36,13 @@ dist-ssr
 
 # --- Rust vendoring: ne rien filtrer dans vendor ---
 !src-tauri/vendor/**
+# --- Safety: never commit build artifacts inside vendored crates ---
+src-tauri/vendor/**/target/
+src-tauri/vendor/**/target/**
+src-tauri/vendor/**/out/
+src-tauri/vendor/**/out/**
+src-tauri/vendor/**/build/
+src-tauri/vendor/**/build/**
 
 
 # Tauri
