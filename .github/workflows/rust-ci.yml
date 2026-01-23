@@ -33,6 +33,10 @@ jobs:
         uses: actions-rs/audit-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Run cargo clippy
+        run: cargo clippy -- -D warnings
+        working-directory: ./src-tauri
 
       - name: Check licenses and configurations with cargo deny
         uses: EmbarkStudios/cargo-deny-action@v1
