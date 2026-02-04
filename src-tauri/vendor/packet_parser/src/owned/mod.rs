@@ -1,12 +1,13 @@
-use std::{hash::Hasher, net::IpAddr};
-
 use serde::Serialize;
-use std::fmt::Display;
+use std::{
+    fmt::{Display, Formatter, Result},
+    net::IpAddr,
+};
 
 use crate::parse::data_link::vlan_tag::VlanTag;
-use crate::{Application, IpType, PacketFlow};
+use crate::{IpType, PacketFlow};
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
 pub struct PacketFlowOwned {
     #[serde(flatten)]
     pub data_link: DataLinkOwned,
@@ -15,7 +16,7 @@ pub struct PacketFlowOwned {
     #[serde(flatten)]
     pub transport: Option<TransportOwned>,
     #[serde(flatten)]
-    pub application: Option<Application>,
+    pub application: Option<ApplicationOwned>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
@@ -29,58 +30,56 @@ pub struct DataLinkOwned {
 }
 
 impl Display for DataLinkOwned {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(
             f,
-            "\n    Destination MAC: {},\n    Source MAC: {},\n    Ethertype: {}\n    VLAN: {}\n",
-            self.destination_mac,
-            self.source_mac,
-            self.ethertype,
-            match &self.vlan {
-                Some(vlan) => vlan.to_string(),
-                None => "None".to_string(),
-            },
-        )
+            "\n    Destination MAC: {},\n    Source MAC: {},\n    Ethertype: {},\n    VLAN: ",
+            self.destination_mac, self.source_mac, self.ethertype,
+        )?;
+
+        match &self.vlan {
+            Some(vlan) => write!(f, "{vlan}")?,
+            None => write!(f, "None")?,
+        }
+
+        writeln!(f)
     }
 }
 
 impl Display for InternetOwned {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let source_ip = match &self.source_ip {
-            Some(ip) => ip.to_string(),
-            None => "None".to_string(),
-        };
+        // Pas d’allocation: on écrit directement.
+        write!(f, "\n    Source IP: ")?;
+        match &self.source_ip {
+            Some(ip) => write!(f, "{ip}")?,
+            None => write!(f, "None")?,
+        }
 
-        let destination_ip = match &self.destination_ip {
-            Some(ip) => ip.to_string(),
-            None => "None".to_string(),
-        };
+        write!(f, ",\n    Destination IP: ")?;
+        match &self.destination_ip {
+            Some(ip) => write!(f, "{ip}")?,
+            None => write!(f, "None")?,
+        }
 
-        write!(
-            f,
-            "\n    Source IP: {},\n    Destination IP: {},\n    Protocol: {}\n",
-            source_ip, destination_ip, self.protocol
-        )
+        write!(f, ",\n    Protocol: {}\n", self.protocol)
     }
 }
 
 impl Display for TransportOwned {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let source_port = match self.source_port {
-            Some(port) => port.to_string(),
-            None => "None".to_string(),
-        };
+        write!(f, "\n    Source Port: ")?;
+        match self.source_port {
+            Some(p) => write!(f, "{p}")?,
+            None => write!(f, "None")?,
+        }
 
-        let destination_port = match self.destination_port {
-            Some(port) => port.to_string(),
-            None => "None".to_string(),
-        };
+        write!(f, ",\n    Destination Port: ")?;
+        match self.destination_port {
+            Some(p) => write!(f, "{p}")?,
+            None => write!(f, "None")?,
+        }
 
-        write!(
-            f,
-            "\n    Source Port: {},\n    Destination Port: {},\n    Protocol: {}\n",
-            source_port, destination_port, self.protocol
-        )
+        write!(f, ",\n    Protocol: {}\n", self.protocol)
     }
 }
 
@@ -106,7 +105,7 @@ pub struct TransportOwned {
     pub protocol: String,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
 pub struct ApplicationOwned {
     pub protocol: String,
 }
@@ -120,60 +119,37 @@ impl<'a> From<PacketFlow<'a>> for PacketFlowOwned {
                 ethertype: flow.data_link.ethertype,
                 vlan: flow.data_link.vlan,
             },
-            internet: match flow.internet {
-                Some(internet) => Some(InternetOwned {
-                    source_ip: internet.source,
-                    ip_source_type: internet.source_type,
-                    destination_ip: internet.destination,
-                    ip_destination_type: internet.destination_type,
-                    protocol: internet.protocol_name,
-                }),
-                None => None,
-            },
-            transport: match flow.transport {
-                Some(transport) => Some(TransportOwned {
-                    source_port: transport.source_port,
-                    destination_port: transport.destination_port,
-                    protocol: transport.protocol.to_string(),
-                }),
-                None => None,
-            },
-            application: match flow.application {
-                Some(application) => Some(Application {
-                    application_protocol: application.application_protocol,
-                }),
-                None => None,
-            },
+            internet: flow.internet.map(|internet| InternetOwned {
+                source_ip: internet.source,
+                ip_source_type: internet.source_type,
+                destination_ip: internet.destination,
+                ip_destination_type: internet.destination_type,
+                protocol: internet.protocol_name,
+            }),
+            transport: flow.transport.map(|transport| TransportOwned {
+                source_port: transport.source_port,
+                destination_port: transport.destination_port,
+                protocol: transport.protocol.to_string(),
+            }),
+            application: flow.application.map(|application| ApplicationOwned {
+                protocol: application.application_protocol.to_string(),
+            }),
         }
     }
 }
-
-use std::hash::Hash;
-impl Hash for PacketFlowOwned {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.data_link.hash(state);
-        self.internet.hash(state);
-        self.transport.hash(state);
-        self.application.hash(state);
-    }
-}
-
-use std::fmt::{Formatter, Result};
 
 impl Display for PacketFlowOwned {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         writeln!(f, "Packet Flow:")?;
         writeln!(f, "  Data Link: {}", self.data_link)?;
 
-        if let Some(ref internet) = self.internet {
+        if let Some(internet) = &self.internet {
             writeln!(f, "  Internet: {internet}")?;
         }
-
-        if let Some(ref transport) = self.transport {
+        if let Some(transport) = &self.transport {
             writeln!(f, "  Transport: {transport}")?;
         }
-
-        if let Some(ref application) = self.application {
+        if let Some(application) = &self.application {
             writeln!(f, "  Application: {application}")?;
         }
 

@@ -171,7 +171,7 @@ impl FlowMatrix {
                     application_protocol: flow
                         .application
                         .as_ref()
-                        .map(|a| a.application_protocol.clone()),
+                        .map(|a| a.protocol.clone()),
                     count: stats.count,
                     total_bytes: stats.total_bytes,
                     last_seen,
