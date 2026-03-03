@@ -277,7 +277,7 @@ fn is_unknown(s: &str) -> bool {
 fn best_protocol_label(flow: &PacketFlowOwned) -> String {
     // L7 d'abord (uniquement si réellement détecté)
     if let Some(app) = &flow.application {
-        let p = app.application_protocol.as_str();
+        let p = app.protocol.as_str();
         if !is_unknown(p) {
             return p.to_string();
         }
