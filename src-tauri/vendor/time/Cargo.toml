@@ -10,10 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2021"
-rust-version = "1.83.0"
+edition = "2024"
+rust-version = "1.88.0"
 name = "time"
-version = "0.3.45"
+version = "0.3.47"
 authors = [
     "Jacob Pratt <open-source@jhpratt.dev>",
     "Time contributors",
@@ -60,7 +60,10 @@ formatting = [
     "std",
     "time-macros?/formatting",
 ]
-large-dates = ["time-macros?/large-dates"]
+large-dates = [
+    "time-core/large-dates",
+    "time-macros?/large-dates",
+]
 local-offset = [
     "std",
     "dep:libc",
@@ -126,7 +129,7 @@ version = "1.0.1"
 optional = true
 
 [dependencies.num-conv]
-version = "0.1.0"
+version = "0.2.0"
 
 [dependencies.powerfmt]
 version = "0.2.0"
@@ -155,14 +158,14 @@ optional = true
 default-features = false
 
 [dependencies.time-core]
-version = "=0.1.7"
+version = "=0.1.8"
 
 [dependencies.time-macros]
-version = "=0.2.25"
+version = "=0.2.27"
 optional = true
 
 [dev-dependencies.num-conv]
-version = "0.1.0"
+version = "0.2.0"
 
 [dev-dependencies.quickcheck_macros]
 version = "1.0.0"
@@ -197,7 +200,7 @@ version = "1.0.68"
 version = "1.0.126"
 
 [dev-dependencies.time-macros]
-version = "=0.2.25"
+version = "=0.2.27"
 
 [target."cfg(__ui_tests)".dev-dependencies.trybuild]
 version = "1.0.102"

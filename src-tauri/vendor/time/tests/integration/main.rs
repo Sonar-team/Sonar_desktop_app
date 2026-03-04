@@ -73,22 +73,6 @@ macro_rules! require_all_features {
 }
 
 require_all_features! {
-    /// Construct a non-exhaustive modifier.
-    macro_rules! modifier {
-        ($name:ident $({
-            $($field:ident $(: $value:expr)?),* $(,)?
-        })?) => {{
-            // Needed for when there are no fields.
-            #[allow(unused_mut)]
-            let mut value = ::time::format_description::modifier::$name::default();
-            $($(value.$field = modifier!(@value $field $($value)?);)*)?
-            value
-        }};
-
-        (@value $field:ident) => ($field);
-        (@value $field:ident $value:expr) => ($value);
-    }
-
     /// Assert that the given expression panics.
     macro_rules! assert_panic {
         ($($x:tt)*) => {
@@ -145,6 +129,6 @@ require_all_features! {
     fn compile_fail() {
         let tests = trybuild::TestCases::new();
         // Path is relative from `time/Cargo.toml`.
-        tests.compile_fail("../tests/compile-fail/*.rs");
+        tests.compile_fail("./tests/integration/compile-fail/*.rs");
     }
 }

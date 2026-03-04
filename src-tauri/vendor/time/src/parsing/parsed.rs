@@ -3,9 +3,9 @@
 use core::num::NonZero;
 
 use deranged::{
-    OptionRangedI128, OptionRangedI16, OptionRangedI32, OptionRangedI8, OptionRangedU16,
-    OptionRangedU32, OptionRangedU8, RangedI128, RangedI16, RangedI32, RangedI8, RangedU16,
-    RangedU32, RangedU8,
+    OptionRangedI8, OptionRangedI16, OptionRangedI32, OptionRangedI128, OptionRangedU8,
+    OptionRangedU16, OptionRangedU32, RangedI8, RangedI16, RangedI32, RangedI128, RangedU8,
+    RangedU16, RangedU32,
 };
 use num_conv::prelude::*;
 
@@ -14,16 +14,16 @@ use crate::date::{MAX_YEAR, MIN_YEAR};
 use crate::error::TryFromParsed::InsufficientInformation;
 #[cfg(feature = "alloc")]
 use crate::format_description::OwnedFormatItem;
-use crate::format_description::{modifier, BorrowedFormatItem, Component};
+use crate::format_description::{BorrowedFormatItem, Component, Period, modifier};
 use crate::internal_macros::{bug, const_try_opt};
+use crate::parsing::ParsedItem;
 use crate::parsing::component::{
     parse_day, parse_end, parse_hour, parse_ignore, parse_minute, parse_month, parse_offset_hour,
     parse_offset_minute, parse_offset_second, parse_ordinal, parse_period, parse_second,
-    parse_subsecond, parse_unix_timestamp, parse_week_number, parse_weekday, parse_year, Period,
+    parse_subsecond, parse_unix_timestamp, parse_week_number, parse_weekday, parse_year,
 };
-use crate::parsing::ParsedItem;
 use crate::{
-    error, Date, Month, OffsetDateTime, PrimitiveDateTime, Time, UtcDateTime, UtcOffset, Weekday,
+    Date, Month, OffsetDateTime, PrimitiveDateTime, Time, UtcDateTime, UtcOffset, Weekday, error,
 };
 
 /// Sealed to prevent downstream implementations.
@@ -680,10 +680,10 @@ impl Parsed {
     )]
     #[inline]
     pub const fn set_offset_minute(&mut self, value: u8) -> Option<()> {
-        if value > i8::MAX as u8 {
+        if value > i8::MAX.cast_unsigned() {
             None
         } else {
-            self.set_offset_minute_signed(value as i8)
+            self.set_offset_minute_signed(value.cast_signed())
         }
     }
 
@@ -695,10 +695,10 @@ impl Parsed {
     )]
     #[inline]
     pub const fn set_offset_second(&mut self, value: u8) -> Option<()> {
-        if value > i8::MAX as u8 {
+        if value > i8::MAX.cast_unsigned() {
             None
         } else {
-            self.set_offset_second_signed(value as i8)
+            self.set_offset_second_signed(value.cast_signed())
         }
     }
 }
@@ -872,10 +872,10 @@ impl Parsed {
     )]
     #[inline]
     pub const fn with_offset_minute(self, value: u8) -> Option<Self> {
-        if value > i8::MAX as u8 {
+        if value > i8::MAX.cast_unsigned() {
             None
         } else {
-            self.with_offset_minute_signed(value as i8)
+            self.with_offset_minute_signed(value.cast_signed())
         }
     }
 
@@ -894,10 +894,10 @@ impl Parsed {
     )]
     #[inline]
     pub const fn with_offset_second(self, value: u8) -> Option<Self> {
-        if value > i8::MAX as u8 {
+        if value > i8::MAX.cast_unsigned() {
             None
         } else {
-            self.with_offset_second_signed(value as i8)
+            self.with_offset_second_signed(value.cast_signed())
         }
     }
 
@@ -1064,17 +1064,7 @@ fn utc_offset_try_from_parsed<const REQUIRED: bool>(
     let minute = minute.unwrap_or(0);
     let second = second.unwrap_or(0);
 
-    UtcOffset::from_hms(hour, minute, second).map_err(|mut err| {
-        // Provide the user a more accurate error.
-        if err.name == "hours" {
-            err.name = "offset hour";
-        } else if err.name == "minutes" {
-            err.name = "offset minute";
-        } else if err.name == "seconds" {
-            err.name = "offset second";
-        }
-        err.into()
-    })
+    UtcOffset::from_hms(hour, minute, second).map_err(Into::into)
 }
 
 impl TryFrom<Parsed> for UtcOffset {
@@ -1132,13 +1122,7 @@ impl TryFrom<Parsed> for UtcDateTime {
 
         if leap_second_input && !dt.is_valid_leap_second_stand_in() {
             return Err(error::TryFromParsed::ComponentRange(
-                error::ComponentRange {
-                    name: "second",
-                    minimum: 0,
-                    maximum: 59,
-                    value: 60,
-                    conditional_message: Some("because leap seconds are not supported"),
-                },
+                error::ComponentRange::conditional("second"),
             ));
         }
         Ok(dt)
@@ -1181,13 +1165,7 @@ impl TryFrom<Parsed> for OffsetDateTime {
 
         if leap_second_input && !dt.is_valid_leap_second_stand_in() {
             return Err(error::TryFromParsed::ComponentRange(
-                error::ComponentRange {
-                    name: "second",
-                    minimum: 0,
-                    maximum: 59,
-                    value: 60,
-                    conditional_message: Some("because leap seconds are not supported"),
-                },
+                error::ComponentRange::conditional("second"),
             ));
         }
         Ok(dt)

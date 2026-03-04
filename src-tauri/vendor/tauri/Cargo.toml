@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri"
-version = "2.9.5"
+version = "2.10.3"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 links = "Tauri"
@@ -112,7 +112,10 @@ native-tls-vendored = ["reqwest/native-tls-vendored"]
 objc-exception = []
 process-relaunch-dangerous-allow-symlink-macos = ["tauri-utils/process-relaunch-dangerous-allow-symlink-macos"]
 protocol-asset = ["http-range"]
-rustls-tls = ["reqwest/rustls-tls"]
+rustls-tls = [
+    "reqwest/rustls-no-provider",
+    "dep:rustls",
+]
 specta = ["dep:specta"]
 test = []
 tracing = [
@@ -214,18 +217,18 @@ optional = true
 default-features = false
 
 [dependencies.tauri-macros]
-version = "2.5.2"
+version = "2.5.5"
 
 [dependencies.tauri-runtime]
-version = "2.9.2"
+version = "2.10.1"
 
 [dependencies.tauri-runtime-wry]
-version = "2.9.3"
+version = "2.10.1"
 optional = true
 default-features = false
 
 [dependencies.tauri-utils]
-version = "2.8.1"
+version = "2.8.3"
 features = ["resources"]
 
 [dependencies.thiserror]
@@ -286,11 +289,11 @@ version = "0.3"
 version = "0.5"
 
 [build-dependencies.tauri-build]
-version = "2.5.3"
+version = "2.5.6"
 default-features = false
 
 [build-dependencies.tauri-utils]
-version = "2.8.1"
+version = "2.8.3"
 features = ["build"]
 
 [target.'cfg(all(target_vendor = "apple", not(target_os = "macos")))'.dependencies.libc]
@@ -309,11 +312,17 @@ version = "1"
 features = ["serde"]
 
 [target.'cfg(any(target_os = "android", all(target_vendor = "apple", not(target_os = "macos"))))'.dependencies.reqwest]
-version = "0.12"
+version = "0.13"
 features = [
     "json",
     "stream",
 ]
+default-features = false
+
+[target.'cfg(any(target_os = "android", all(target_vendor = "apple", not(target_os = "macos"))))'.dependencies.rustls]
+version = "0.23"
+features = ["ring"]
+optional = true
 default-features = false
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies.gtk]
@@ -321,7 +330,7 @@ version = "0.18"
 features = ["v3_24"]
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies.webkit2gtk]
-version = "=2.0.1"
+version = "2"
 features = ["v2_40"]
 optional = true
 
@@ -372,8 +381,10 @@ version = "0.3"
 features = [
     "objc2-app-kit",
     "WKWebView",
+    "WKWebViewConfiguration",
     "WKUserContentController",
 ]
+default-features = false
 
 [target.'cfg(target_os = "macos")'.dependencies.plist]
 version = "1"

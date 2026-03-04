@@ -249,7 +249,7 @@ dependencies = [
 
 [[package]]
 name = "serde_with_macros"
-version = "3.16.1"
+version = "3.17.0"
 dependencies = [
  "darling",
  "expect-test",

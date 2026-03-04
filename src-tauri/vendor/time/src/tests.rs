@@ -25,12 +25,10 @@
 //! reasonable manner externally.
 
 use std::format;
-use std::num::NonZero;
 
 use crate::ext::DigitCount;
 use crate::parsing::combinator::rfc::iso8601;
-use crate::parsing::shim::Integer;
-use crate::{duration, parsing};
+use crate::{duration, format_description, parsing};
 
 #[test]
 fn digit_count() {
@@ -79,7 +77,7 @@ fn digit_count() {
 fn debug() {
     let _ = format!("{:?}", duration::Padding::Optimize);
     let _ = format!("{:?}", parsing::ParsedItem(b"", 0));
-    let _ = format!("{:?}", parsing::component::Period::Am);
+    let _ = format!("{:?}", format_description::Period::Am);
     let _ = format!("{:?}", iso8601::ExtendedKind::Basic);
 }
 
@@ -87,8 +85,8 @@ fn debug() {
 #[test]
 fn clone() {
     assert_eq!(
-        parsing::component::Period::Am.clone(),
-        parsing::component::Period::Am
+        format_description::Period::Am.clone(),
+        format_description::Period::Am
     );
     // does not impl Debug
     assert!(crate::time::Padding::Optimize.clone() == crate::time::Padding::Optimize);
@@ -101,8 +99,9 @@ fn clone() {
 
 #[test]
 fn parsing_internals() {
-    assert!(parsing::ParsedItem(b"", ())
-        .flat_map(|_| None::<()>)
-        .is_none());
-    assert!(<NonZero<u8> as Integer>::parse_bytes(b"256").is_none());
+    assert!(
+        parsing::ParsedItem(b"", ())
+            .flat_map(|_| None::<()>)
+            .is_none()
+    );
 }

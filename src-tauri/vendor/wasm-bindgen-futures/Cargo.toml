@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "wasm-bindgen-futures"
-version = "0.4.58"
+version = "0.4.64"
 authors = ["The wasm-bindgen Developers"]
 build = false
 include = [
@@ -68,7 +68,7 @@ optional = true
 default-features = false
 
 [dependencies.js-sys]
-version = "=0.3.85"
+version = "=0.3.91"
 default-features = false
 
 [dependencies.once_cell]
@@ -76,7 +76,7 @@ version = "1.12"
 default-features = false
 
 [dependencies.wasm-bindgen]
-version = "=0.2.108"
+version = "=0.2.114"
 default-features = false
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies.futures-channel]
@@ -87,7 +87,7 @@ version = "2"
 default-features = false
 
 [target.'cfg(target_feature = "atomics")'.dependencies.web-sys]
-version = "=0.3.85"
+version = "=0.3.91"
 features = [
     "MessageEvent",
     "Worker",
@@ -101,6 +101,9 @@ overly_complex_bool_expr = "allow"
 too_many_arguments = "allow"
 type_complexity = "allow"
 uninlined_format_args = "warn"
+
+[lints.rust]
+unused_lifetimes = "warn"
 
 [lints.rust.unexpected_cfgs]
 level = "warn"

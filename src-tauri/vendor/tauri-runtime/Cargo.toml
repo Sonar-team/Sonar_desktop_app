@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri-runtime"
-version = "2.9.2"
+version = "2.10.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 exclude = [
@@ -75,7 +75,7 @@ features = ["derive"]
 version = "1"
 
 [dependencies.tauri-utils]
-version = "2.8.1"
+version = "2.8.3"
 
 [dependencies.thiserror]
 version = "2"
@@ -113,7 +113,9 @@ version = "0.3"
 features = [
     "objc2-app-kit",
     "WKWebView",
+    "WKWebViewConfiguration",
 ]
+default-features = false
 
 [target.'cfg(target_os = "macos")'.dependencies.url]
 version = "2"

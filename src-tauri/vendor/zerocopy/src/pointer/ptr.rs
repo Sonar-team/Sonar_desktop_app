@@ -160,7 +160,7 @@ mod _external {
 /// Methods for converting to and from `Ptr` and Rust's safe reference types.
 mod _conversions {
     use super::*;
-    use crate::pointer::cast::CastSized;
+    use crate::pointer::cast::{CastExact, CastSized, IdCast};
 
     /// `&'a T` → `Ptr<'a, T>`
     impl<'a, T> Ptr<'a, T, (Shared, Aligned, Valid)>
@@ -280,13 +280,58 @@ mod _conversions {
     {
         /// Reborrows `self`, producing another `Ptr`.
         ///
-        /// Since `self` is borrowed immutably, this prevents any mutable
-        /// methods from being called on `self` as long as the returned `Ptr`
-        /// exists.
+        /// Since `self` is borrowed mutably, this prevents any methods from
+        /// being called on `self` as long as the returned `Ptr` exists.
         #[doc(hidden)]
         #[inline]
         #[allow(clippy::needless_lifetimes)] // Allows us to name the lifetime in the safety comment below.
         pub fn reborrow<'b>(&'b mut self) -> Ptr<'b, T, I>
+        where
+            'a: 'b,
+        {
+            // SAFETY: The following all hold by invariant on `self`, and thus
+            // hold of `ptr = self.as_inner()`:
+            // 0. SEE BELOW.
+            // 1. `ptr` conforms to the alignment invariant of
+            //    [`I::Alignment`](invariant::Alignment).
+            // 2. `ptr` conforms to the validity invariant of
+            //    [`I::Validity`](invariant::Validity). `self` and the returned
+            //    `Ptr` permit the same bit values in their referents since they
+            //    have the same referent type (`T`) and the same validity
+            //    (`I::Validity`). Thus, regardless of what mutation is
+            //    permitted (`Exclusive` aliasing or `Shared`-aliased interior
+            //    mutation), neither can be used to write a value to the
+            //    referent which violates the other's validity invariant.
+            //
+            // For aliasing (0 above), since `I::Aliasing: Reference`,
+            // there are two cases for `I::Aliasing`:
+            // - For `invariant::Shared`: `'a` outlives `'b`, and so the
+            //   returned `Ptr` does not permit accessing the referent any
+            //   longer than is possible via `self`. For shared aliasing, it is
+            //   sound for multiple `Ptr`s to exist simultaneously which
+            //   reference the same memory, so creating a new one is not
+            //   problematic.
+            // - For `invariant::Exclusive`: Since `self` is `&'b mut` and we
+            //   return a `Ptr` with lifetime `'b`, `self` is inaccessible to
+            //   the caller for the lifetime `'b` - in other words, `self` is
+            //   inaccessible to the caller as long as the returned `Ptr`
+            //   exists. Since `self` is an exclusive `Ptr`, no other live
+            //   references or `Ptr`s may exist which refer to the same memory
+            //   while `self` is live. Thus, as long as the returned `Ptr`
+            //   exists, no other references or `Ptr`s which refer to the same
+            //   memory may be live.
+            unsafe { Ptr::from_inner(self.as_inner()) }
+        }
+
+        /// Reborrows `self` as shared, producing another `Ptr` with `Shared`
+        /// aliasing.
+        ///
+        /// Since `self` is borrowed mutably, this prevents any methods from
+        /// being called on `self` as long as the returned `Ptr` exists.
+        #[doc(hidden)]
+        #[inline]
+        #[allow(clippy::needless_lifetimes)] // Allows us to name the lifetime in the safety comment below.
+        pub fn reborrow_shared<'b>(&'b mut self) -> Ptr<'b, T, (Shared, I::Alignment, I::Validity)>
         where
             'a: 'b,
         {
@@ -378,15 +423,28 @@ mod _conversions {
     where
         I: Invariants,
     {
-        pub(crate) fn transmute<U, V, R>(self) -> Ptr<'a, U, (I::Aliasing, Unaligned, V)>
+        #[must_use]
+        #[inline(always)]
+        pub fn transmute<U, V, R>(self) -> Ptr<'a, U, (I::Aliasing, Unaligned, V)>
         where
             V: Validity,
-            U: TransmuteFromPtr<T, I::Aliasing, I::Validity, V, R> + SizeEq<T> + ?Sized,
+            U: TransmuteFromPtr<T, I::Aliasing, I::Validity, V, <U as SizeEq<T>>::CastFrom, R>
+                + SizeEq<T>
+                + ?Sized,
+        {
+            self.transmute_with::<U, V, <U as SizeEq<T>>::CastFrom, R>()
+        }
+
+        pub(crate) fn transmute_with<U, V, C, R>(self) -> Ptr<'a, U, (I::Aliasing, Unaligned, V)>
+        where
+            V: Validity,
+            U: TransmuteFromPtr<T, I::Aliasing, I::Validity, V, C, R> + ?Sized,
+            C: CastExact<T, U>,
         {
             // SAFETY:
-            // - By `SizeEq::CastFrom: Cast`, `SizeEq::CastFrom` preserves
-            //   referent address, and so we don't need to consider projections
-            //   in the following safety arguments.
+            // - By `C: CastExact`, `C` preserves referent address, and so we
+            //   don't need to consider projections in the following safety
+            //   arguments.
             // - If aliasing is `Shared`, then by `U: TransmuteFromPtr<T>`, at
             //   least one of the following holds:
             //   - `T: Immutable` and `U: Immutable`, in which case it is
@@ -394,9 +452,9 @@ mod _conversions {
             //     at the same time, as neither can perform interior mutation
             //   - It is directly guaranteed that it is sound for shared code to
             //     operate on these references simultaneously
-            // - By `U: TransmuteFromPtr<T, I::Aliasing, I::Validity, V>`, it is
-            //   sound to perform this transmute.
-            unsafe { self.project_transmute_unchecked::<_, _, <U as SizeEq<T>>::CastFrom>() }
+            // - By `U: TransmuteFromPtr<T, I::Aliasing, I::Validity, C, V>`, it
+            //   is sound to perform this transmute using `C`.
+            unsafe { self.project_transmute_unchecked::<_, _, C>() }
         }
 
         #[doc(hidden)]
@@ -405,18 +463,9 @@ mod _conversions {
         pub fn recall_validity<V, R>(self) -> Ptr<'a, T, (I::Aliasing, I::Alignment, V)>
         where
             V: Validity,
-            T: TransmuteFromPtr<T, I::Aliasing, I::Validity, V, R>,
+            T: TransmuteFromPtr<T, I::Aliasing, I::Validity, V, IdCast, R>,
         {
-            // SAFETY:
-            // - By `SizeEq::CastFrom: Cast`, `SizeEq::CastFrom` preserves
-            //   referent address, and so we don't need to consider projections
-            //   in the following safety arguments.
-            // - It is trivially sound to have multiple `&T` referencing the
-            //   same referent simultaneously
-            // - By `T: TransmuteFromPtr<T, I::Aliasing, I::Validity, V>`, it is
-            //   sound to perform this transmute.
-            let ptr =
-                unsafe { self.project_transmute_unchecked::<_, _, <T as SizeEq<T>>::CastFrom>() };
+            let ptr = self.transmute_with::<T, V, IdCast, R>();
             // SAFETY: `self` and `ptr` have the same address and referent type.
             // Therefore, if `self` satisfies `I::Alignment`, then so does
             // `ptr`.
@@ -444,7 +493,8 @@ mod _conversions {
         ///   subtle soundness requirement that is a function of `T`, `U`,
         ///   `I::Aliasing`, `I::Validity`, and `V`, and may depend upon the
         ///   presence, absence, or specific location of `UnsafeCell`s in `T`
-        ///   and/or `U`. See [`Validity`] for more details.
+        ///   and/or `U`, and on whether interior mutation is ever permitted via
+        ///   those `UnsafeCell`s. See [`Validity`] for more details.
         #[doc(hidden)]
         #[inline(always)]
         #[must_use]
@@ -499,6 +549,11 @@ mod _conversions {
         pub(crate) fn into_unalign(
             self,
         ) -> Ptr<'a, crate::Unalign<T>, (I::Aliasing, Aligned, I::Validity)> {
+            // FIXME(#1359): This should be a `transmute_with` call.
+            // Unfortunately, to avoid blanket impl conflicts, we only implement
+            // `TransmuteFrom<T>` for `Unalign<T>` (and vice versa) specifically
+            // for `Valid` validity, not for all validity types.
+
             // SAFETY:
             // - By `CastSized: Cast`, `CastSized` preserves referent address,
             //   and so we don't need to consider projections in the following
@@ -529,13 +584,13 @@ mod _conversions {
     {
         /// Reads the referent.
         #[must_use]
-        #[inline]
-        pub fn read_unaligned<R>(self) -> T
+        #[inline(always)]
+        pub fn read<R>(self) -> T
         where
             T: Copy,
             T: Read<I::Aliasing, R>,
         {
-            (*self.into_unalign().as_ref()).into_inner()
+            <I::Alignment as Alignment>::read(self)
         }
 
         /// Views the value as an aligned reference.
@@ -555,50 +610,16 @@ mod _conversions {
 /// State transitions between invariants.
 mod _transitions {
     use super::*;
-    use crate::pointer::transmute::TryTransmuteFromPtr;
+    use crate::{
+        pointer::{cast::IdCast, transmute::TryTransmuteFromPtr},
+        ReadOnly,
+    };
 
     impl<'a, T, I> Ptr<'a, T, I>
     where
         T: 'a + ?Sized,
         I: Invariants,
     {
-        /// Returns a `Ptr` with [`Exclusive`] aliasing if `self` already has
-        /// `Exclusive` aliasing, or generates a compile-time assertion failure.
-        ///
-        /// This allows code which is generic over aliasing to down-cast to a
-        /// concrete aliasing.
-        ///
-        /// [`Exclusive`]: crate::pointer::invariant::Exclusive
-        #[inline]
-        pub(crate) fn into_exclusive_or_pme(
-            self,
-        ) -> Ptr<'a, T, (Exclusive, I::Alignment, I::Validity)> {
-            // NOTE(https://github.com/rust-lang/rust/issues/131625): We do this
-            // rather than just having `Aliasing::IS_EXCLUSIVE` have the panic
-            // behavior because doing it that way causes rustdoc to fail while
-            // attempting to document hidden items (since it evaluates the
-            // constant - and thus panics).
-            trait AliasingExt: Aliasing {
-                const IS_EXCL: bool;
-            }
-
-            impl<A: Aliasing> AliasingExt for A {
-                const IS_EXCL: bool = {
-                    const_assert!(Self::IS_EXCLUSIVE);
-                    true
-                };
-            }
-
-            assert!(I::Aliasing::IS_EXCL);
-
-            // SAFETY: We've confirmed that `self` already has the aliasing
-            // `Exclusive`. If it didn't, either the preceding assert would fail
-            // or evaluating `I::Aliasing::IS_EXCL` would fail. We're *pretty*
-            // sure that it's guaranteed to fail const eval, but the `assert!`
-            // provides a backstop in case that doesn't work.
-            unsafe { self.assume_exclusive() }
-        }
-
         /// Assumes that `self` satisfies the invariants `H`.
         ///
         /// # Safety
@@ -621,38 +642,6 @@ mod _transitions {
             // SAFETY: The associated type bounds on `H` ensure that the
             // invariants are unchanged.
             unsafe { self.assume_invariants::<H>() }
-        }
-
-        /// Assumes that `self` satisfies the aliasing requirement of `A`.
-        ///
-        /// # Safety
-        ///
-        /// The caller promises that `self` satisfies the aliasing requirement
-        /// of `A`.
-        #[inline]
-        pub(crate) unsafe fn assume_aliasing<A: Aliasing>(
-            self,
-        ) -> Ptr<'a, T, (A, I::Alignment, I::Validity)> {
-            // SAFETY: The caller promises that `self` satisfies the aliasing
-            // requirements of `A`.
-            unsafe { self.assume_invariants() }
-        }
-
-        /// Assumes `self` satisfies the aliasing requirement of [`Exclusive`].
-        ///
-        /// # Safety
-        ///
-        /// The caller promises that `self` satisfies the aliasing requirement
-        /// of `Exclusive`.
-        ///
-        /// [`Exclusive`]: crate::pointer::invariant::Exclusive
-        #[inline]
-        pub(crate) unsafe fn assume_exclusive(
-            self,
-        ) -> Ptr<'a, T, (Exclusive, I::Alignment, I::Validity)> {
-            // SAFETY: The caller promises that `self` satisfies the aliasing
-            // requirements of `Exclusive`.
-            unsafe { self.assume_aliasing::<Exclusive>() }
         }
 
         /// Assumes that `self`'s referent is validly-aligned for `T` if
@@ -754,59 +743,6 @@ mod _transitions {
             unsafe { self.assume_validity::<Valid>() }
         }
 
-        /// Recalls that `self`'s referent is initialized.
-        #[doc(hidden)]
-        #[must_use]
-        #[inline]
-        // FIXME(#859): Reconsider the name of this method before making it
-        // public.
-        pub fn bikeshed_recall_initialized_from_bytes(
-            self,
-        ) -> Ptr<'a, T, (I::Aliasing, I::Alignment, Initialized)>
-        where
-            T: crate::IntoBytes + crate::FromBytes,
-            I: Invariants<Validity = Valid>,
-        {
-            // SAFETY: The `T: IntoBytes + FromBytes` bound ensures that `T`'s
-            // bit validity is equivalent to `[u8]`. In other words, the set of
-            // allowed referents for a `Ptr<T, (_, _, Valid)>` is the set of
-            // initialized bit patterns. The same is true of the set of allowed
-            // referents for any `Ptr<_, (_, _, Initialized)>`. Thus, this call
-            // does not change the set of allowed values in the referent.
-            unsafe { self.assume_initialized() }
-        }
-
-        /// Recalls that `self`'s referent is initialized.
-        #[doc(hidden)]
-        #[must_use]
-        #[inline]
-        // FIXME(#859): Reconsider the name of this method before making it
-        // public.
-        pub fn bikeshed_recall_initialized_immutable(
-            self,
-        ) -> Ptr<'a, T, (Shared, I::Alignment, Initialized)>
-        where
-            T: crate::IntoBytes + crate::Immutable,
-            I: Invariants<Aliasing = Shared, Validity = Valid>,
-        {
-            // SAFETY: Let `O` (for "old") be the set of allowed bit patterns in
-            // `self`'s referent, and let `N` (for "new") be the set of allowed
-            // bit patterns in the referent of the returned `Ptr`. `T:
-            // IntoBytes` and `I: Invariants<Validity = Valid>` ensures that `O`
-            // cannot contain any uninitialized bit patterns. Since the returned
-            // `Ptr` has validity `Initialized`, `N` is equal to the set of all
-            // initialized bit patterns. Thus, `O` is a subset of `N`, and so
-            // the returned `Ptr`'s validity invariant is upheld.
-            //
-            // Since `T: Immutable` and aliasing is `Shared`, the returned `Ptr`
-            // cannot be used to modify the referent. Before this call, `self`'s
-            // referent is guaranteed by invariant on `Ptr` to satisfy `self`'s
-            // validity invariant. Since the returned `Ptr` cannot be used to
-            // modify the referent, this guarantee cannot be violated by the
-            // returned `Ptr` (even if `O` is a strict subset of `N`).
-            unsafe { self.assume_initialized() }
-        }
-
         /// Checks that `self`'s referent is validly initialized for `T`,
         /// returning a `Ptr` with `Valid` on success.
         ///
@@ -826,14 +762,15 @@ mod _transitions {
         where
             T: TryFromBytes
                 + Read<I::Aliasing, R>
-                + TryTransmuteFromPtr<T, I::Aliasing, I::Validity, Valid, S>,
+                + TryTransmuteFromPtr<T, I::Aliasing, I::Validity, Valid, IdCast, S>,
+            ReadOnly<T>: Read<I::Aliasing, R>,
             I::Aliasing: Reference,
             I: Invariants<Validity = Initialized>,
         {
             // This call may panic. If that happens, it doesn't cause any
             // soundness issues, as we have not generated any invalid state
             // which we need to fix before returning.
-            if T::is_bit_valid(self.reborrow().forget_aligned()) {
+            if T::is_bit_valid(self.reborrow().transmute::<_, _, _>().reborrow_shared()) {
                 // SAFETY: If `T::is_bit_valid`, code may assume that `self`
                 // contains a bit-valid instance of `T`. By `T:
                 // TryTransmuteFromPtr<T, I::Aliasing, I::Validity, Valid>`, so
@@ -858,13 +795,14 @@ mod _transitions {
 }
 
 /// Casts of the referent type.
+pub(crate) use _casts::TryWithError;
 mod _casts {
     use core::cell::UnsafeCell;
 
     use super::*;
     use crate::{
         pointer::cast::{AsBytesCast, Cast},
-        HasField,
+        HasTag, ProjectField,
     };
 
     impl<'a, T, I> Ptr<'a, T, I>
@@ -929,42 +867,141 @@ mod _casts {
             unsafe { self.cast_unchecked::<_, C>() }
         }
 
-        // FIXME(#196): Support all validity invariants (not just those that are
-        // `CastableFrom`).
+        #[inline(always)]
+        pub fn project<F, const VARIANT_ID: i128, const FIELD_ID: i128>(
+            mut self,
+        ) -> Result<Ptr<'a, T::Type, T::Invariants>, T::Error>
+        where
+            T: ProjectField<F, I, VARIANT_ID, FIELD_ID>,
+            I::Aliasing: Reference,
+        {
+            use crate::pointer::cast::Projection;
+            match T::is_projectable(self.reborrow().project_tag()) {
+                Ok(()) => {
+                    let inner = self.as_inner();
+                    let projected = inner.project::<_, Projection<F, VARIANT_ID, FIELD_ID>>();
+                    // SAFETY: By `T: ProjectField<F, I, VARIANT_ID, FIELD_ID>`,
+                    // for `self: Ptr<'_, T, I>` such that `T::is_projectable`
+                    // (which we've verified in this match arm),
+                    // `T::project(self.as_inner())` conforms to
+                    // `T::Invariants`. The `projected` pointer satisfies these
+                    // invariants because it is produced by way of an
+                    // abstraction that is equivalent to
+                    // `T::project(ptr.as_inner())`: by invariant on
+                    // `PtrInner::project`, `projected` is guaranteed to address
+                    // the subset of the bytes of `inner`'s referent addressed
+                    // by `Projection::project(inner)`, and by invariant on
+                    // `Projection`, `Projection::project` is implemented by
+                    // delegating to an implementation of `HasField::project`.
+                    Ok(unsafe { Ptr::from_inner(projected) })
+                }
+                Err(err) => Err(err),
+            }
+        }
+
         #[must_use]
         #[inline(always)]
-        pub fn project<F, const FIELD_ID: i128>(
-            self,
-        ) -> Ptr<'a, T::Type, (I::Aliasing, Unaligned, I::Validity)>
+        pub(crate) fn project_tag(self) -> Ptr<'a, T::Tag, I>
         where
-            T: HasField<F, { crate::STRUCT_VARIANT_ID }, FIELD_ID>,
-            T::Type: 'a + CastableFrom<T, I::Validity, I::Validity>,
+            T: HasTag,
         {
-            let ptr = self.as_inner().project::<_, crate::pointer::cast::Projection<
-                F,
-                { crate::STRUCT_VARIANT_ID },
-                FIELD_ID,
-            >>();
-
-            // SAFETY:
-            // 0. `PtrInner::project` promises that it produces a pointer which
-            //    references a subset of its argument's referent. Since, by
-            //    invariant on `Ptr`, its argument (`self.as_inner()`) satisfies
-            //    the aliasing invariant `I::Aliasing`, so does `ptr`.
-            // 1. The `Ptr` has alignment `Unaligned`, which is trivially
-            //    satisfied.
-            // 2. By `CastableFrom<T, I::Validity, I::Validity>`, `I::Validity`
-            //    is `Uninit` or `Initialized`. In either case, if `I::Validity`
-            //    holds of `self`'s referent, then it holds any subset of its
-            //    referent.
-            unsafe { Ptr::from_inner(ptr) }
+            // SAFETY: By invariant on `Self::ProjectToTag`, this is a sound
+            // projection.
+            let tag = unsafe { self.project_transmute_unchecked::<_, _, T::ProjectToTag>() };
+            // SAFETY: By invariant on `Self::ProjectToTag`, the projected
+            // pointer has the same alignment as `ptr`.
+            let tag = unsafe { tag.assume_alignment() };
+            tag.unify_invariants()
         }
+
+        /// Attempts to transform the pointer, restoring the original on
+        /// failure.
+        ///
+        /// # Safety
+        ///
+        /// If `I::Aliasing != Shared`, then if `f` returns `Err(err)`, no copy
+        /// of `f`'s argument must exist outside of `err`.
+        #[inline(always)]
+        pub(crate) unsafe fn try_with_unchecked<U, J, E, F>(
+            self,
+            f: F,
+        ) -> Result<Ptr<'a, U, J>, E::Mapped>
+        where
+            U: 'a + ?Sized,
+            J: Invariants<Aliasing = I::Aliasing>,
+            E: TryWithError<Self>,
+            F: FnOnce(Ptr<'a, T, I>) -> Result<Ptr<'a, U, J>, E>,
+        {
+            let old_inner = self.as_inner();
+            #[rustfmt::skip]
+            let res = f(self).map_err(#[inline(always)] move |err: E| {
+                err.map(#[inline(always)] |src| {
+                    drop(src);
+
+                    // SAFETY:
+                    // 0. Aliasing is either `Shared` or `Exclusive`:
+                    //    - If aliasing is `Shared`, then it cannot violate
+                    //      aliasing make another copy of this pointer (in fact,
+                    //      using `I::Aliasing = Shared`, we could have just
+                    //      cloned `self`).
+                    //    - If aliasing is `Exclusive`, then `f` is not allowed
+                    //      to make another copy of `self`. In `map_err`, we are
+                    //      consuming the only value in the returned `Result`.
+                    //      By invariant on `E: TryWithError<Self>`, that `err:
+                    //      E` only contains a single `Self` and no other
+                    //      non-ZST fields which could be `Ptr`s or references
+                    //      to `self`'s referent. By the same invariant, `map`
+                    //      consumes this single `Self` and passes it to this
+                    //      closure. Since `self` was, by invariant on
+                    //      `Exclusive`, the only `Ptr` or reference live for
+                    //      `'a` with this referent, and since we `drop(src)`
+                    //      above, there are no copies left, and so we are
+                    //      creating the only copy.
+                    // 1. `self` conforms to `I::Aliasing` by invariant on
+                    //    `Ptr`, and `old_inner` has the same address, so it
+                    //    does too.
+                    // 2. `f` could not have violated `self`'s validity without
+                    //    itself being unsound. Assuming that `f` is sound, the
+                    //    referent of `self` is still valid for `T`.
+                    unsafe { Ptr::from_inner(old_inner) }
+                })
+            });
+            res
+        }
+
+        /// Attempts to transform the pointer, restoring the original on
+        /// failure.
+        pub(crate) fn try_with<U, J, E, F>(self, f: F) -> Result<Ptr<'a, U, J>, E::Mapped>
+        where
+            U: 'a + ?Sized,
+            J: Invariants<Aliasing = I::Aliasing>,
+            E: TryWithError<Self>,
+            F: FnOnce(Ptr<'a, T, I>) -> Result<Ptr<'a, U, J>, E>,
+            I: Invariants<Aliasing = Shared>,
+        {
+            // SAFETY: `I::Aliasing = Shared`, so the safety condition does not
+            // apply.
+            unsafe { self.try_with_unchecked(f) }
+        }
+    }
+
+    /// # Safety
+    ///
+    /// `Self` only contains a single `Self::Inner`, and `Self::Mapped` only
+    /// contains a single `MappedInner`. Other than that, `Self` and
+    /// `Self::Mapped` contain no non-ZST fields.
+    ///
+    /// `map` must pass ownership of `self`'s sole `Self::Inner` to `f`.
+    pub(crate) unsafe trait TryWithError<MappedInner> {
+        type Inner;
+        type Mapped;
+        fn map<F: FnOnce(Self::Inner) -> MappedInner>(self, f: F) -> Self::Mapped;
     }
 
     impl<'a, T, I> Ptr<'a, T, I>
     where
         T: 'a + KnownLayout + ?Sized,
-        I: Invariants<Validity = Initialized>,
+        I: Invariants,
     {
         /// Casts this pointer-to-initialized into a pointer-to-bytes.
         #[allow(clippy::wrong_self_convention)]
@@ -972,11 +1009,9 @@ mod _casts {
         #[inline]
         pub fn as_bytes<R>(self) -> Ptr<'a, [u8], (I::Aliasing, Aligned, Valid)>
         where
-            T: Read<I::Aliasing, R>,
-            I::Aliasing: Reference,
+            [u8]: TransmuteFromPtr<T, I::Aliasing, I::Validity, Valid, AsBytesCast, R>,
         {
-            let ptr = self.cast::<_, AsBytesCast, _>();
-            ptr.bikeshed_recall_aligned().recall_validity::<Valid, (_, (_, _))>()
+            self.transmute_with::<[u8], Valid, AsBytesCast, _>().bikeshed_recall_aligned()
         }
     }
 
@@ -1125,32 +1160,20 @@ mod _casts {
         where
             I::Aliasing: Reference,
             U: 'a + ?Sized + KnownLayout + Read<I::Aliasing, R>,
+            [u8]: Read<I::Aliasing, R>,
         {
-            // FIXME(#67): Remove this allow. See NonNulSlicelExt for more
-            // details.
-            #[allow(unstable_name_collisions)]
-            match self.try_cast_into(CastType::Prefix, meta) {
-                Ok((slf, remainder)) => {
-                    if remainder.len() == 0 {
-                        Ok(slf)
-                    } else {
-                        // Undo the cast so we can return the original bytes.
-                        let slf = slf.as_bytes();
-                        // Restore the initial alignment invariant of `self`.
-                        //
-                        // SAFETY: The referent type of `slf` is now equal to
-                        // that of `self`, but the alignment invariants
-                        // nominally differ. Since `slf` and `self` refer to the
-                        // same memory and no actions have been taken that would
-                        // violate the original invariants on `self`, it is
-                        // sound to apply the alignment invariant of `self` onto
-                        // `slf`.
-                        let slf = unsafe { slf.assume_alignment::<I::Alignment>() };
-                        let slf = slf.unify_invariants();
-                        Err(CastError::Size(SizeError::<_, U>::new(slf)))
+            // SAFETY: The provided closure returns the only copy of `slf`.
+            unsafe {
+                self.try_with_unchecked(|slf| match slf.try_cast_into(CastType::Prefix, meta) {
+                    Ok((slf, remainder)) => {
+                        if remainder.len() == 0 {
+                            Ok(slf)
+                        } else {
+                            Err(CastError::Size(SizeError::<_, U>::new(())))
+                        }
                     }
-                }
-                Err(err) => Err(err),
+                    Err(err) => Err(err.map_src(|_slf| ())),
+                })
             }
         }
     }
@@ -1487,5 +1510,19 @@ mod tests {
         // metadata to overflow to 0, and thus the cast would spuriously
         // succeed.
         test!(Dst, 8, usize::MAX - 8 + 1, None);
+    }
+
+    #[test]
+    fn test_try_cast_into_no_leftover_restores_original_slice() {
+        let bytes = [0u8; 4];
+        let ptr = Ptr::from_ref(&bytes[..]);
+        let res = ptr.try_cast_into_no_leftover::<[u8; 2], BecauseImmutable>(None);
+        match res {
+            Ok(_) => panic!("should have failed due to leftover bytes"),
+            Err(CastError::Size(e)) => {
+                assert_eq!(e.into_src().len(), 4, "Should return original slice length");
+            }
+            Err(e) => panic!("wrong error type: {:?}", e),
+        }
     }
 }

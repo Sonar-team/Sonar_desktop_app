@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.63"
 name = "cc"
-version = "1.2.52"
+version = "1.2.56"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 build = false
 exclude = [
@@ -51,7 +51,7 @@ name = "cc"
 path = "src/lib.rs"
 
 [dependencies.find-msvc-tools]
-version = "0.1.7"
+version = "0.1.9"
 
 [dependencies.jobserver]
 version = "0.1.30"

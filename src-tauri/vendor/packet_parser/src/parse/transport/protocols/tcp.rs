@@ -3,7 +3,7 @@ use thiserror::Error;
 
 /// Represents a TCP header
 #[derive(Debug, PartialEq)]
-pub struct TcpHeader {
+pub struct TcpHeader<'a> {
     pub source_port: u16,
     pub destination_port: u16,
     pub sequence_number: u32,
@@ -22,13 +22,13 @@ pub struct TcpHeader {
     pub window_size: u16,
     pub checksum: u16,
     pub urgent_pointer: u16,
-    pub options: Vec<u8>,
+    pub options: &'a [u8],
 }
 
 /// Represents a TCP packet
 #[derive(Debug)]
 pub struct TcpPacket<'a> {
-    pub header: TcpHeader,
+    pub header: TcpHeader<'a>,
     pub payload: &'a [u8],
 }
 
@@ -127,9 +127,9 @@ impl<'a> TryFrom<&'a [u8]> for TcpPacket<'a> {
             checksum: u16::from_be_bytes([packet[16], packet[17]]),
             urgent_pointer: u16::from_be_bytes([packet[18], packet[19]]),
             options: if data_offset > 20 {
-                packet[20..data_offset].to_vec()
+                &packet[20..data_offset]
             } else {
-                Vec::new()
+                &[]
             },
         };
 

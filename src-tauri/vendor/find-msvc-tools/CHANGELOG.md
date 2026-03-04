@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9](https://github.com/rust-lang/cc-rs/compare/find-msvc-tools-v0.1.8...find-msvc-tools-v0.1.9) - 2026-01-30
+
+### Other
+
+- Add `find_windows_sdk` API ([#1663](https://github.com/rust-lang/cc-rs/pull/1663))
+
+## [0.1.8](https://github.com/rust-lang/cc-rs/compare/find-msvc-tools-v0.1.7...find-msvc-tools-v0.1.8) - 2026-01-16
+
+### Other
+
+- Regenerate windows sys bindings ([#1653](https://github.com/rust-lang/cc-rs/pull/1653))
+
 ## [0.1.7](https://github.com/rust-lang/cc-rs/compare/find-msvc-tools-v0.1.6...find-msvc-tools-v0.1.7) - 2026-01-09
 
 ### Other

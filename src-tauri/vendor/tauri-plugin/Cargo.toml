@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri-plugin"
-version = "2.5.2"
+version = "2.5.4"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = false
 autolib = false
@@ -74,7 +74,7 @@ version = "1"
 optional = true
 
 [dependencies.tauri-utils]
-version = "2.8.1"
+version = "2.8.3"
 features = ["build"]
 default-features = false
 

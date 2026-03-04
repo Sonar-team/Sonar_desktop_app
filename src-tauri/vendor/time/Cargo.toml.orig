@@ -2,7 +2,7 @@ lints.workspace = true
 
 [package]
 name = "time"
-version = "0.3.45"
+version = "0.3.47"
 categories = [
     "date-and-time",
     "no-std",
@@ -33,7 +33,7 @@ bench = false
 default = ["std"]
 alloc = ["serde_core?/alloc"]
 formatting = ["dep:itoa", "std", "time-macros?/formatting"]
-large-dates = ["time-macros?/large-dates"]
+large-dates = ["time-core/large-dates", "time-macros?/large-dates"]
 local-offset = ["std", "dep:libc", "dep:num_threads"]
 macros = ["dep:time-macros"]
 parsing = ["time-macros?/parsing"]

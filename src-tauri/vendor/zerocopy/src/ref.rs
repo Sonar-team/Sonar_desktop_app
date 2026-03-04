@@ -681,7 +681,7 @@ where
                 cast_for_sized::<
                     T,
                     _,
-                    (BecauseRead, (BecauseExclusive, BecauseExclusive)),
+                    (BecauseRead, BecauseExclusive),
                     (BecauseMutationCompatible, BecauseInvariantsEq),
                 >(ptr)
             };
@@ -857,7 +857,7 @@ where
                 cast_for_sized::<
                     T,
                     _,
-                    (BecauseRead, (BecauseExclusive, BecauseExclusive)),
+                    (BecauseRead, BecauseExclusive),
                     (BecauseMutationCompatible, BecauseInvariantsEq),
                 >(ptr)
             };
@@ -876,7 +876,7 @@ where
         let ptr = Ptr::from_mut(b)
             .try_cast_into_no_leftover::<T, BecauseExclusive>(None)
             .expect("zerocopy internal error: DerefMut::deref_mut should be infallible");
-        let ptr = ptr.recall_validity::<_, (_, (_, (BecauseExclusive, BecauseExclusive)))>();
+        let ptr = ptr.recall_validity::<_, (_, (_, BecauseExclusive))>();
         ptr.as_mut()
     }
 }
@@ -960,7 +960,7 @@ where
     T: FromBytes + KnownLayout + ?Sized,
     A: crate::invariant::Aliasing,
     [u8]: MutationCompatible<T, A, Initialized, Initialized, R>,
-    T: TransmuteFromPtr<T, A, Initialized, Valid, S>,
+    T: TransmuteFromPtr<T, A, Initialized, Valid, crate::pointer::cast::IdCast, S>,
 {
     use crate::pointer::cast::{Cast, Project};
 

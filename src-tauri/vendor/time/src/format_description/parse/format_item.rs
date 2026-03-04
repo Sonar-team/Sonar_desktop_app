@@ -5,7 +5,7 @@ use alloc::string::String;
 use core::num::NonZero;
 use core::str::{self, FromStr};
 
-use super::{ast, unused, Error, Span, Spanned};
+use super::{Error, Span, Spanned, ast, unused};
 use crate::internal_macros::bug;
 
 /// Parse an AST iterator into a sequence of format items.
@@ -285,7 +285,9 @@ component_definition! {
         Day = "day" {
             padding = "padding": Option<Padding> => padding,
         },
-        End = "end" {},
+        End = "end" {
+            trailing_input = "trailing_input": Option<TrailingInput> => trailing_input,
+        },
         Hour = "hour" {
             padding = "padding": Option<Padding> => padding,
             base = "repr": Option<HourBase> => is_12_hour_clock,
@@ -487,6 +489,12 @@ modifier! {
         OneOrMore = b"1+",
     }
 
+    enum TrailingInput {
+        #[default]
+        Prohibit = b"prohibit",
+        Discard = b"discard",
+    }
+
     enum UnixTimestampPrecision {
         #[default]
         Second = b"second",
@@ -544,7 +552,10 @@ modifier! {
 
 /// Parse a modifier value using `FromStr`. Requires the modifier value to be valid UTF-8.
 #[inline]
-fn parse_from_modifier_value<T: FromStr>(value: &Spanned<&[u8]>) -> Result<Option<T>, Error> {
+fn parse_from_modifier_value<T>(value: &Spanned<&[u8]>) -> Result<Option<T>, Error>
+where
+    T: FromStr,
+{
     str::from_utf8(value)
         .ok()
         .and_then(|val| val.parse::<T>().ok())

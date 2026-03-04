@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "ntapi"
-version = "0.4.2"
+version = "0.4.3"
 authors = ["MSxDOS <melcodos@gmail.com>"]
 build = "build.rs"
 include = [

@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.74"
 name = "schemars"
-version = "1.2.0"
+version = "1.2.1"
 authors = ["Graham Esau <gesau@hotmail.co.uk>"]
 build = false
 autolib = false
@@ -166,7 +166,7 @@ default-features = false
 package = "rust_decimal"
 
 [dependencies.schemars_derive]
-version = "=1.2.0"
+version = "=1.2.1"
 optional = true
 
 [dependencies.semver1]

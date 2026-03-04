@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri-plugin-shell"
-version = "2.3.4"
+version = "2.3.5"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 links = "tauri-plugin-shell"
@@ -78,7 +78,7 @@ version = "1"
 version = "1"
 
 [dependencies.tauri]
-version = "2.9.3"
+version = "2.10"
 default-features = false
 
 [dependencies.thiserror]
@@ -96,10 +96,10 @@ version = "1"
 features = ["derive"]
 
 [build-dependencies.tauri-plugin]
-version = "2.4"
+version = "2.5"
 features = ["build"]
 
 [target.'cfg(target_os = "ios")'.dependencies.tauri]
-version = "2.9.3"
+version = "2.10"
 features = ["wry"]
 default-features = false

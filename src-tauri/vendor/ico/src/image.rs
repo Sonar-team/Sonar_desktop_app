@@ -24,6 +24,31 @@ pub struct IconImage {
 }
 
 impl IconImage {
+    /// Creates a new image with the given dimensions. The `width` and `height`
+    /// must be nonzero. The image data is initialized to zeros. Panics if the
+    /// dimensions are out of range.
+    pub fn new(width: u32, height: u32) -> IconImage {
+        if width < MIN_WIDTH {
+            panic!(
+                "Invalid width (was {}, but must be at least {})",
+                width, MIN_WIDTH
+            );
+        }
+        if height < MIN_HEIGHT {
+            panic!(
+                "Invalid height (was {}, but must be at least {})",
+                height, MIN_HEIGHT
+            );
+        }
+
+        IconImage {
+            width,
+            height,
+            hotspot: None,
+            rgba_data: vec![0u8; (width as usize) * (height as usize) * 4],
+        }
+    }
+
     /// Creates a new image with the given dimensions and RGBA data.  The
     /// `width` and `height` must be nonzero, and `rgba_data` must have `4 *
     /// width * height` bytes and be in row-major order from top to bottom.
@@ -298,8 +323,8 @@ impl IconImage {
             None => invalid_data!("Width * Height is too large"),
         };
         let mut rgba = vec![u8::MAX; num_pixels * 4];
-        let row_data_size = (width * (bits_per_pixel as u32) + 7) / 8;
-        let row_padding_size = ((row_data_size + 3) / 4) * 4 - row_data_size;
+        let row_data_size = (width * (bits_per_pixel as u32)).div_ceil(8);
+        let row_padding_size = row_data_size.div_ceil(4) * 4 - row_data_size;
         let mut row_padding = vec![0; row_padding_size as usize];
         for row in 0..height {
             let mut start = (4 * (height - row - 1) * width) as usize;
@@ -396,9 +421,9 @@ impl IconImage {
         // by row, starting from the *bottom* row, with each row padded to a
         // multiple of four bytes:
         if depth != BmpDepth::ThirtyTwo {
-            let row_mask_size = (width + 7) / 8;
+            let row_mask_size = width.div_ceil(8);
             let row_padding_size =
-                ((row_mask_size + 3) / 4) * 4 - row_mask_size;
+                row_mask_size.div_ceil(4) * 4 - row_mask_size;
             let mut row_padding = vec![0; row_padding_size as usize];
             for row in 0..height {
                 let mut start = (4 * (height - row - 1) * width) as usize;
@@ -461,11 +486,11 @@ impl IconImage {
 
         // Determine the size of the encoded data:
         let rgb_row_data_size =
-            ((width as usize) * (bits_per_pixel as usize) + 7) / 8;
-        let rgb_row_size = ((rgb_row_data_size + 3) / 4) * 4;
+            ((width as usize) * (bits_per_pixel as usize)).div_ceil(8);
+        let rgb_row_size = rgb_row_data_size.div_ceil(4) * 4;
         let rgb_row_padding = vec![0u8; rgb_row_size - rgb_row_data_size];
-        let mask_row_data_size = (width as usize + 7) / 8;
-        let mask_row_size = ((mask_row_data_size + 3) / 4) * 4;
+        let mask_row_data_size = (width as usize).div_ceil(8);
+        let mask_row_size = mask_row_data_size.div_ceil(4) * 4;
         let mask_row_padding = vec![0u8; mask_row_size - mask_row_data_size];
         let data_size = BMP_HEADER_LEN as usize
             + 4 * num_colors
@@ -639,10 +664,22 @@ impl IconImage {
         self.hotspot = hotspot;
     }
 
-    /// Returns the RGBA data for this image, in row-major order from top to
-    /// bottom.
+    /// Returns a slice to the RGBA data for this image, in row-major order
+    /// from top to bottom.
     pub fn rgba_data(&self) -> &[u8] {
         &self.rgba_data
+    }
+
+    /// Returns a mutable slice to the RGBA data for this image, in row-major
+    /// order from top to bottom.
+    pub fn rgba_data_mut(&mut self) -> &mut [u8] {
+        &mut self.rgba_data
+    }
+
+    /// Consumes this `IconImage` and returns the raw RGBA data in row-major
+    /// order as an owned `Vec<u8>`
+    pub fn into_rgba_data(self) -> Vec<u8> {
+        self.rgba_data
     }
 
     pub(crate) fn compute_stats(&self) -> ImageStats {

@@ -780,7 +780,7 @@ impl SockAddr {
             .unwrap_or_default()
     }
 
-    /// Returns the underlying `sockaddr_un` object if this addres is from the `AF_UNIX` family,
+    /// Returns the underlying `sockaddr_un` object if this address is from the `AF_UNIX` family,
     /// otherwise returns `None`.
     pub(crate) fn as_sockaddr_un(&self) -> Option<&libc::sockaddr_un> {
         self.is_unix().then(|| {
@@ -1815,7 +1815,7 @@ impl crate::Socket {
     #[cfg(all(feature = "all", any(target_os = "android", target_os = "linux")))]
     pub fn tcp_notsent_lowat(&self) -> io::Result<u32> {
         unsafe {
-            getsockopt::<Bool>(self.as_raw(), libc::IPPROTO_TCP, libc::TCP_NOTSENT_LOWAT)
+            getsockopt::<c_int>(self.as_raw(), libc::IPPROTO_TCP, libc::TCP_NOTSENT_LOWAT)
                 .map(|lowat| lowat as u32)
         }
     }

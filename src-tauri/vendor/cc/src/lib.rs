@@ -2127,6 +2127,7 @@ impl Build {
                     target.os != "windows"
                         && target.os != "none"
                         && target.os != "uefi"
+                        && target.os != "vita"
                         && target.arch != "wasm32"
                         && target.arch != "wasm64",
                 ) {
@@ -2306,10 +2307,15 @@ impl Build {
                 cmd.push_cc_arg("-Brepro".into());
 
                 if clang_cl {
-                    if target.arch == "x86_64" {
-                        cmd.push_cc_arg("-m64".into());
-                    } else if target.arch == "x86" {
-                        cmd.push_cc_arg("-m32".into());
+                    cmd.push_cc_arg(
+                        format!(
+                            "--target={}",
+                            target.llvm_target(&self.get_raw_target()?, None)
+                        )
+                        .into(),
+                    );
+
+                    if target.arch == "x86" {
                         // See
                         // <https://learn.microsoft.com/en-us/cpp/build/reference/arch-x86?view=msvc-170>.
                         //
@@ -2320,14 +2326,6 @@ impl Build {
                         // <https://github.com/microsoft/STL/issues/3922>, and -
                         // <https://github.com/microsoft/STL/pull/4741>.
                         cmd.push_cc_arg("-arch:SSE2".into());
-                    } else {
-                        cmd.push_cc_arg(
-                            format!(
-                                "--target={}",
-                                target.llvm_target(&self.get_raw_target()?, None)
-                            )
-                            .into(),
-                        );
                     }
                 } else if target.full_arch == "i586" {
                     cmd.push_cc_arg("-arch:IA32".into());
@@ -3592,8 +3590,18 @@ impl Build {
                         "riscv64-unknown-elf",
                         "riscv-none-embed",
                     ]),
+                    "riscv32im-unknown-none-elf" => self.find_working_gnu_prefix(&[
+                        "riscv32-unknown-elf",
+                        "riscv64-unknown-elf",
+                        "riscv-none-embed",
+                    ]),
                     "riscv32imac-esp-espidf" => Some("riscv32-esp-elf"),
                     "riscv32imac-unknown-none-elf" => self.find_working_gnu_prefix(&[
+                        "riscv32-unknown-elf",
+                        "riscv64-unknown-elf",
+                        "riscv-none-embed",
+                    ]),
+                    "riscv32imafc-unknown-none-elf" => self.find_working_gnu_prefix(&[
                         "riscv32-unknown-elf",
                         "riscv64-unknown-elf",
                         "riscv-none-embed",
@@ -3620,6 +3628,7 @@ impl Build {
                         "riscv-none-embed",
                     ]),
                     "riscv64gc-unknown-linux-gnu" => Some("riscv64-linux-gnu"),
+                    "riscv64a23-unknown-linux-gnu" => Some("riscv64-linux-gnu"),
                     "riscv32gc-unknown-linux-gnu" => Some("riscv32-linux-gnu"),
                     "riscv64gc-unknown-linux-musl" => Some("riscv64-linux-musl"),
                     "riscv32gc-unknown-linux-musl" => Some("riscv32-linux-musl"),
@@ -4454,7 +4463,7 @@ fn check_disabled() -> Result<(), Error> {
     if is_disabled() {
         return Err(Error::new(
             ErrorKind::Disabled,
-            "the `cc` crate's functionality has been disabled by the `CC_FORCE_DISABLE` environment variable."
+            "the `cc` crate's functionality has been disabled by the `CC_FORCE_DISABLE` environment variable.",
         ));
     }
     Ok(())

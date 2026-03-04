@@ -13,9 +13,10 @@
 edition = "2021"
 rust-version = "1.71"
 name = "tokio"
-version = "1.49.0"
+version = "1.50.0"
 authors = ["Tokio Contributors <team@tokio.rs>"]
 build = false
+autolib = false
 autobins = false
 autoexamples = false
 autotests = false
@@ -39,22 +40,15 @@ categories = [
 license = "MIT"
 repository = "https://github.com/tokio-rs/tokio"
 
-[package.metadata.cargo_check_external_types]
-allowed_external_types = [
-    "bytes::buf::buf_impl::Buf",
-    "bytes::buf::buf_mut::BufMut",
-    "tokio_macros::*",
-]
-
 [package.metadata.docs.rs]
 all-features = true
-rustc-args = [
-    "--cfg",
-    "tokio_unstable",
-]
 rustdoc-args = [
     "--cfg",
     "docsrs",
+    "--cfg",
+    "tokio_unstable",
+]
+rustc-args = [
     "--cfg",
     "tokio_unstable",
 ]
@@ -64,6 +58,83 @@ features = [
     "full",
     "test-util",
 ]
+
+[package.metadata.cargo_check_external_types]
+allowed_external_types = [
+    "bytes::buf::buf_impl::Buf",
+    "bytes::buf::buf_mut::BufMut",
+    "tokio_macros::*",
+]
+
+[features]
+default = []
+fs = []
+full = [
+    "fs",
+    "io-util",
+    "io-std",
+    "macros",
+    "net",
+    "parking_lot",
+    "process",
+    "rt",
+    "rt-multi-thread",
+    "signal",
+    "sync",
+    "time",
+]
+io-std = []
+io-uring = [
+    "dep:io-uring",
+    "libc",
+    "mio/os-poll",
+    "mio/os-ext",
+    "dep:slab",
+]
+io-util = ["bytes"]
+macros = ["tokio-macros"]
+net = [
+    "libc",
+    "mio/os-poll",
+    "mio/os-ext",
+    "mio/net",
+    "socket2",
+    "windows-sys/Win32_Foundation",
+    "windows-sys/Win32_Security",
+    "windows-sys/Win32_Storage_FileSystem",
+    "windows-sys/Win32_System_Pipes",
+    "windows-sys/Win32_System_SystemServices",
+]
+process = [
+    "bytes",
+    "libc",
+    "mio/os-poll",
+    "mio/os-ext",
+    "mio/net",
+    "signal-hook-registry",
+    "windows-sys/Win32_Foundation",
+    "windows-sys/Win32_System_Threading",
+    "windows-sys/Win32_System_WindowsProgramming",
+]
+rt = []
+rt-multi-thread = ["rt"]
+signal = [
+    "libc",
+    "mio/os-poll",
+    "mio/net",
+    "mio/os-ext",
+    "signal-hook-registry",
+    "windows-sys/Win32_Foundation",
+    "windows-sys/Win32_System_Console",
+]
+sync = []
+taskdump = ["dep:backtrace"]
+test-util = [
+    "rt",
+    "sync",
+    "time",
+]
+time = []
 
 [lib]
 name = "tokio"
@@ -164,6 +235,10 @@ path = "tests/fs_write.rs"
 [[test]]
 name = "io_async_fd"
 path = "tests/io_async_fd.rs"
+
+[[test]]
+name = "io_async_fd_memory_leak"
+path = "tests/io_async_fd_memory_leak.rs"
 
 [[test]]
 name = "io_async_read"
@@ -390,6 +465,10 @@ name = "rt_common"
 path = "tests/rt_common.rs"
 
 [[test]]
+name = "rt_common_before_park"
+path = "tests/rt_common_before_park.rs"
+
+[[test]]
 name = "rt_handle"
 path = "tests/rt_handle.rs"
 
@@ -412,6 +491,10 @@ path = "tests/rt_panic.rs"
 [[test]]
 name = "rt_poll_callbacks"
 path = "tests/rt_poll_callbacks.rs"
+
+[[test]]
+name = "rt_shutdown_err"
+path = "tests/rt_shutdown_err.rs"
 
 [[test]]
 name = "rt_threaded"
@@ -751,76 +834,6 @@ version = "0.4.0"
 version = "0.7"
 features = ["rt"]
 
-[features]
-default = []
-fs = []
-full = [
-    "fs",
-    "io-util",
-    "io-std",
-    "macros",
-    "net",
-    "parking_lot",
-    "process",
-    "rt",
-    "rt-multi-thread",
-    "signal",
-    "sync",
-    "time",
-]
-io-std = []
-io-uring = [
-    "dep:io-uring",
-    "libc",
-    "mio/os-poll",
-    "mio/os-ext",
-    "dep:slab",
-]
-io-util = ["bytes"]
-macros = ["tokio-macros"]
-net = [
-    "libc",
-    "mio/os-poll",
-    "mio/os-ext",
-    "mio/net",
-    "socket2",
-    "windows-sys/Win32_Foundation",
-    "windows-sys/Win32_Security",
-    "windows-sys/Win32_Storage_FileSystem",
-    "windows-sys/Win32_System_Pipes",
-    "windows-sys/Win32_System_SystemServices",
-]
-process = [
-    "bytes",
-    "libc",
-    "mio/os-poll",
-    "mio/os-ext",
-    "mio/net",
-    "signal-hook-registry",
-    "windows-sys/Win32_Foundation",
-    "windows-sys/Win32_System_Threading",
-    "windows-sys/Win32_System_WindowsProgramming",
-]
-rt = []
-rt-multi-thread = ["rt"]
-signal = [
-    "libc",
-    "mio/os-poll",
-    "mio/net",
-    "mio/os-ext",
-    "signal-hook-registry",
-    "windows-sys/Win32_Foundation",
-    "windows-sys/Win32_System_Console",
-]
-sync = []
-taskdump = ["dep:backtrace"]
-test-util = [
-    "rt",
-    "sync",
-    "time",
-]
-time = []
-
 [target.'cfg(all(target_family = "wasm", not(target_os = "wasi")))'.dev-dependencies.wasm-bindgen-test]
 version = "0.3.0"
 
@@ -832,7 +845,7 @@ version = "0.3.58"
 optional = true
 
 [target.'cfg(all(tokio_unstable, target_os = "linux"))'.dependencies.io-uring]
-version = "0.7.6"
+version = "0.7.11"
 optional = true
 default-features = false
 

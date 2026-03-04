@@ -155,7 +155,7 @@ dependencies = [
 
 [[package]]
 name = "toml_datetime"
-version = "0.7.5+spec-1.1.0"
+version = "1.0.0+spec-1.1.0"
 dependencies = [
  "serde_core",
  "snapbox",

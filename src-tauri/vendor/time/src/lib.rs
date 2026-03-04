@@ -149,20 +149,3 @@ pub use crate::weekday::Weekday;
 
 /// An alias for [`std::result::Result`] with a generic error from the time crate.
 pub type Result<T> = core::result::Result<T, Error>;
-
-/// This is a separate function to reduce the code size of explicit panics.
-#[inline(never)]
-#[cold]
-#[track_caller]
-const fn panic(message: &str) -> ! {
-    panic!("{}", message)
-}
-
-/// Returns the size of the pointed-to value in bytes.
-///
-/// This is a `const fn` in the standard library starting in Rust 1.85. When MSRV is at least that,
-/// this can be removed.
-#[inline]
-const fn size_of_val<T>(_: &T) -> usize {
-    size_of::<T>()
-}

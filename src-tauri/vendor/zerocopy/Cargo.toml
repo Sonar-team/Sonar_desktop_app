@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.56.0"
 name = "zerocopy"
-version = "0.8.33"
+version = "0.8.40"
 authors = [
     "Joshua Liebow-Feeser <joshlf@google.com>",
     "Jack Wrenn <jswrenn@amazon.com>",
@@ -54,8 +54,8 @@ no-zerocopy-aarch64-simd-1-59-0 = "1.59.0"
 no-zerocopy-panic-in-const-and-vec-try-reserve-1-57-0 = "1.57.0"
 
 [package.metadata.ci]
-pinned-stable = "1.92.0"
-pinned-nightly = "nightly-2026-01-04"
+pinned-stable = "1.93.1"
+pinned-nightly = "nightly-2026-01-25"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -87,27 +87,22 @@ name = "zerocopy"
 path = "src/lib.rs"
 
 [[test]]
-name = "trybuild"
-path = "tests/trybuild.rs"
+name = "include"
+path = "tests/include.rs"
+
+[[test]]
+name = "ui"
+path = "tests/ui.rs"
 
 [dependencies.zerocopy-derive]
-version = "=0.8.33"
+version = "=0.8.40"
 optional = true
-
-[dev-dependencies.either]
-version = "=1.13.0"
 
 [dev-dependencies.elain]
 version = "0.3.0"
 
-[dev-dependencies.glob]
-version = "=0.3.2"
-
 [dev-dependencies.itertools]
 version = "0.11"
-
-[dev-dependencies.itoa]
-version = "=1.0.15"
 
 [dev-dependencies.rand]
 version = "0.8.5"
@@ -117,18 +112,11 @@ default-features = false
 [dev-dependencies.rustversion]
 version = "1.0"
 
-[dev-dependencies.ryu]
-version = "=1.0.20"
-
 [dev-dependencies.static_assertions]
 version = "1.1"
 
-[dev-dependencies.trybuild]
-version = "=1.0.89"
-features = ["diff"]
-
 [dev-dependencies.zerocopy-derive]
-version = "=0.8.33"
+version = "=0.8.40"
 
 [target."cfg(any())".dependencies.zerocopy-derive]
-version = "=0.8.33"
+version = "=0.8.40"

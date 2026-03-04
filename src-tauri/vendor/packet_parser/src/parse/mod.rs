@@ -25,7 +25,6 @@
 
 use application::Application;
 use internet::Internet;
-
 use serde::Serialize;
 use transport::Transport;
 
@@ -51,23 +50,6 @@ pub mod transport;
 ///
 /// The structure borrows from the original packet buffer (`&[u8]`) and is
 /// therefore zero-copy.
-///
-/// ## Layer mapping
-///
-/// | Field        | OSI Layer | Description                         |
-/// |--------------|-----------|-------------------------------------|
-/// | `data_link`  | L2        | Ethernet / VLAN / etc.              |
-/// | `internet`   | L3        | IPv4 / IPv6 (optional)              |
-/// | `transport`  | L4        | TCP / UDP / ICMP (optional)         |
-/// | `application`| L7        | Best-effort application decoding    |
-///
-/// ## Error handling
-///
-/// Parsing stops only on **structural errors**. Unsupported protocols are
-/// handled gracefully.
-///
-/// This behavior makes `PacketFlow` suitable for offline analysis, auditing,
-/// and security-oriented tooling.
 #[derive(Debug, Clone, Serialize, Eq)]
 pub struct PacketFlow<'a> {
     /// Data link layer (mandatory).
@@ -90,22 +72,44 @@ pub struct PacketFlow<'a> {
 impl<'a> TryFrom<&'a [u8]> for PacketFlow<'a> {
     type Error = ParsedPacketError;
 
-    /// Attempts to parse a raw packet buffer into a [`PacketFlow`].
-    ///
-    /// Parsing proceeds layer by layer:
-    ///
-    /// 1. Data Link
-    /// 2. Internet (if supported)
-    /// 3. Transport (if supported)
-    /// 4. Application (best-effort)
-    ///
-    /// Unsupported protocols do not cause an error and simply stop further
-    /// decoding.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error only when a layer is structurally invalid or malformed.
+    #[inline(always)]
     fn try_from(packets: &'a [u8]) -> Result<Self, Self::Error> {
+        Self::parse_impl(packets)
+    }
+}
+
+impl<'a> PartialEq for PacketFlow<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.data_link == other.data_link
+            && self.internet == other.internet
+            && self.transport == other.transport
+            && self.application == other.application
+    }
+}
+
+use std::hash::{Hash, Hasher};
+
+impl<'a> Hash for PacketFlow<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.data_link.hash(state);
+        self.internet.hash(state);
+        self.transport.hash(state);
+        self.application.hash(state);
+    }
+}
+
+impl<'a> PacketFlow<'a> {
+    /// Converts this borrowed [`PacketFlow`] into an owned version.
+    ///
+    /// This performs the necessary allocations to detach from the original
+    /// packet buffer and is suitable for storage, serialization or cross-thread
+    /// usage.
+    pub fn to_owned(&self) -> PacketFlowOwned {
+        PacketFlowOwned::from(self.clone())
+    }
+
+    #[inline(always)]
+    fn parse_impl(packets: &'a [u8]) -> Result<Self, ParsedPacketError> {
         let data_link = DataLink::try_from(packets)?;
 
         let mut internet = match Internet::try_from(data_link.payload) {
@@ -141,35 +145,85 @@ impl<'a> TryFrom<&'a [u8]> for PacketFlow<'a> {
             application,
         })
     }
-}
 
-impl<'a> PartialEq for PacketFlow<'a> {
-    fn eq(&self, other: &Self) -> bool {
-        self.data_link == other.data_link
-            && self.internet == other.internet
-            && self.transport == other.transport
-            && self.application == other.application
+    // -------------------------------------------------------------------------
+    // Timed parsing (feature-gated) — does NOT change PacketFlow API/fields.
+    // Uses crate::timing helpers so "feature off" has zero impact elsewhere.
+    // -------------------------------------------------------------------------
+
+    #[cfg(feature = "parse_timing")]
+    #[inline(always)]
+    fn parse_impl_timed(
+        packets: &'a [u8],
+        timing: &mut crate::timing::ParseTiming,
+    ) -> Result<Self, ParsedPacketError> {
+        use crate::timing::{elapsed_ns, now};
+
+        let total_t0 = now();
+
+        // L2
+        let t0 = now();
+        let data_link = DataLink::try_from(packets)?;
+        timing.l2_ns = elapsed_ns(t0);
+
+        // L3 (tentative; may become None if unsupported)
+        let t0 = now();
+        let mut internet = match Internet::try_from(data_link.payload) {
+            Ok(internet) => Some(internet),
+            Err(InternetError::UnsupportedProtocol) => None,
+            Err(e) => return Err(e.into()),
+        };
+        timing.l3_ns = elapsed_ns(t0);
+
+        // L4 (tentative only if L3 exists)
+        let t0 = now();
+        let transport = match internet.as_mut() {
+            Some(internet) => match Transport::try_from(internet.payload) {
+                Ok(transport) => Some(transport),
+                Err(TransportError::UnsupportedProtocol) => internet
+                    .payload_protocol
+                    .take()
+                    .map(TransportProtocol::to_transport),
+                Err(e) => return Err(e.into()),
+            },
+            None => None,
+        };
+        timing.l4_ns = elapsed_ns(t0);
+
+        // L7 (best-effort; attempt only if L4 payload exists)
+        let t0 = now();
+        let application = match &transport {
+            Some(t) => match t.payload {
+                Some(p) => Application::try_from(p).ok(),
+                None => None,
+            },
+            None => None,
+        };
+        timing.l7_ns = elapsed_ns(t0);
+
+        timing.total_ns = elapsed_ns(total_t0);
+
+        Ok(PacketFlow {
+            data_link,
+            internet,
+            transport,
+            application,
+        })
     }
-}
 
-use std::hash::{Hash, Hasher};
-
-impl<'a> Hash for PacketFlow<'a> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.data_link.hash(state);
-        self.internet.hash(state);
-        self.transport.hash(state);
-        self.application.hash(state);
-    }
-}
-
-impl<'a> PacketFlow<'a> {
-    /// Converts this borrowed [`PacketFlow`] into an owned version.
+    /// Parses a raw packet buffer into a [`PacketFlow`] and fills timing data.
     ///
-    /// This performs the necessary allocations to detach from the original
-    /// packet buffer and is suitable for storage, serialization or cross-thread
-    /// usage.
-    pub fn to_owned(&self) -> PacketFlowOwned {
-        PacketFlowOwned::from(self.clone())
+    /// This is feature-gated (`parse_timing`) and does not affect normal parsing.
+    ///
+    /// Convention:
+    /// - `l*_ns` is the cost of the *attempt* (so it may be >0 even if unsupported).
+    #[cfg(feature = "parse_timing")]
+    #[inline(always)]
+    pub fn try_from_timed(
+        packets: &'a [u8],
+        timing: &mut crate::timing::ParseTiming,
+    ) -> Result<Self, ParsedPacketError> {
+        *timing = crate::timing::ParseTiming::default();
+        Self::parse_impl_timed(packets, timing)
     }
 }

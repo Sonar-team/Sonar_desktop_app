@@ -3,7 +3,7 @@
 use core::cmp::Ordering;
 use core::fmt;
 use core::iter::Sum;
-use core::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use core::time::Duration as StdDuration;
 #[cfg(feature = "std")]
 use std::time::SystemTime;
@@ -11,14 +11,19 @@ use std::time::SystemTime;
 use deranged::RangedI32;
 use num_conv::prelude::*;
 
-use crate::convert::*;
-use crate::error;
-use crate::internal_macros::{
-    const_try_opt, impl_add_assign, impl_div_assign, impl_mul_assign, impl_sub_assign,
-};
 #[cfg(feature = "std")]
 #[expect(deprecated)]
 use crate::Instant;
+use crate::convert::*;
+use crate::error;
+use crate::internal_macros::const_try_opt;
+
+#[derive(Debug)]
+enum FloatConstructorError {
+    Nan,
+    NegOverflow,
+    PosOverflow,
+}
 
 /// By explicitly inserting this enum where padding is expected, the compiler is able to better
 /// perform niche value optimization.
@@ -87,8 +92,6 @@ macro_rules! try_from_secs {
         bits_ty_signed = $bits_ty_signed:ty,
         double_ty = $double_ty:ty,
         float_ty = $float_ty:ty,
-        is_nan = $is_nan:expr,
-        is_overflow = $is_overflow:expr,
     ) => {{
         'value: {
             const MIN_EXP: i16 = 1 - (1i16 << $exp_bits) / 2;
@@ -168,13 +171,15 @@ macro_rules! try_from_secs {
                 // following numbers -128..=127. The check above (exp < 63)
                 // doesn't cover i64::MIN as that is -2^63, so we have this
                 // additional case to handle the asymmetry of iN::MIN.
-                break 'value Self::new_ranged_unchecked(i64::MIN, Nanoseconds::new_static::<0>());
+                break 'value Ok(Self::new_ranged_unchecked(i64::MIN, Nanoseconds::new_static::<0>()));
             } else if $secs.is_nan() {
                 // Change from std: std doesn't differentiate between the error
                 // cases.
-                $is_nan
+                break 'value Err(FloatConstructorError::Nan);
+            } else if $secs.is_sign_negative() {
+                break 'value Err(FloatConstructorError::NegOverflow);
             } else {
-                $is_overflow
+                break 'value Err(FloatConstructorError::PosOverflow);
             };
 
             // Change from std: All the code is mostly unmodified in that it
@@ -189,7 +194,7 @@ macro_rules! try_from_secs {
             #[allow(trivial_numeric_casts)]
             let nanos_signed = ((nanos as i32) ^ (mask as i32)) - (mask as i32);
             // Safety: `nanos_signed` is in range.
-            unsafe { Self::new_unchecked(secs_signed, nanos_signed) }
+            Ok(unsafe { Self::new_unchecked(secs_signed, nanos_signed) })
         }
     }};
 }
@@ -534,6 +539,42 @@ impl Duration {
         Self::new_ranged_unchecked(seconds, Nanoseconds::new_static::<0>())
     }
 
+    /// Create a new `Duration` from the specified number of seconds represented as `f64`.
+    ///
+    /// If the value is `NaN` or out of bounds, an error is returned that can be handled in the
+    /// desired manner by the caller.
+    #[inline]
+    const fn try_seconds_f64(seconds: f64) -> Result<Self, FloatConstructorError> {
+        try_from_secs!(
+            secs = seconds,
+            mantissa_bits = 52,
+            exponent_bits = 11,
+            offset = 44,
+            bits_ty = u64,
+            bits_ty_signed = i64,
+            double_ty = u128,
+            float_ty = f64,
+        )
+    }
+
+    /// Create a new `Duration` from the specified number of seconds represented as `f32`.
+    ///
+    /// If the value is `NaN` or out of bounds, an error is returned that can be handled in the
+    /// desired manner by the caller.
+    #[inline]
+    const fn try_seconds_f32(seconds: f32) -> Result<Self, FloatConstructorError> {
+        try_from_secs!(
+            secs = seconds,
+            mantissa_bits = 23,
+            exponent_bits = 8,
+            offset = 41,
+            bits_ty = u32,
+            bits_ty_signed = i32,
+            double_ty = u64,
+            float_ty = f32,
+        )
+    }
+
     /// Creates a new `Duration` from the specified number of seconds represented as `f64`.
     ///
     /// ```rust
@@ -544,18 +585,15 @@ impl Duration {
     #[inline]
     #[track_caller]
     pub const fn seconds_f64(seconds: f64) -> Self {
-        try_from_secs!(
-            secs = seconds,
-            mantissa_bits = 52,
-            exponent_bits = 11,
-            offset = 44,
-            bits_ty = u64,
-            bits_ty_signed = i64,
-            double_ty = u128,
-            float_ty = f64,
-            is_nan = crate::panic("passed NaN to `time::Duration::seconds_f64`"),
-            is_overflow = crate::panic("overflow constructing `time::Duration`"),
-        )
+        match Self::try_seconds_f64(seconds) {
+            Ok(duration) => duration,
+            Err(FloatConstructorError::Nan) => {
+                panic!("passed NaN to `time::Duration::seconds_f64`");
+            }
+            Err(FloatConstructorError::NegOverflow | FloatConstructorError::PosOverflow) => {
+                panic!("overflow constructing `time::Duration`");
+            }
+        }
     }
 
     /// Creates a new `Duration` from the specified number of seconds represented as `f32`.
@@ -568,18 +606,15 @@ impl Duration {
     #[inline]
     #[track_caller]
     pub const fn seconds_f32(seconds: f32) -> Self {
-        try_from_secs!(
-            secs = seconds,
-            mantissa_bits = 23,
-            exponent_bits = 8,
-            offset = 41,
-            bits_ty = u32,
-            bits_ty_signed = i32,
-            double_ty = u64,
-            float_ty = f32,
-            is_nan = crate::panic("passed NaN to `time::Duration::seconds_f32`"),
-            is_overflow = crate::panic("overflow constructing `time::Duration`"),
-        )
+        match Self::try_seconds_f32(seconds) {
+            Ok(duration) => duration,
+            Err(FloatConstructorError::Nan) => {
+                panic!("passed NaN to `time::Duration::seconds_f32`");
+            }
+            Err(FloatConstructorError::NegOverflow | FloatConstructorError::PosOverflow) => {
+                panic!("overflow constructing `time::Duration`");
+            }
+        }
     }
 
     /// Creates a new `Duration` from the specified number of seconds
@@ -606,18 +641,12 @@ impl Duration {
     /// ```
     #[inline]
     pub const fn saturating_seconds_f64(seconds: f64) -> Self {
-        try_from_secs!(
-            secs = seconds,
-            mantissa_bits = 52,
-            exponent_bits = 11,
-            offset = 44,
-            bits_ty = u64,
-            bits_ty_signed = i64,
-            double_ty = u128,
-            float_ty = f64,
-            is_nan = return Self::ZERO,
-            is_overflow = return if seconds < 0.0 { Self::MIN } else { Self::MAX },
-        )
+        match Self::try_seconds_f64(seconds) {
+            Ok(duration) => duration,
+            Err(FloatConstructorError::Nan) => Self::ZERO,
+            Err(FloatConstructorError::NegOverflow) => Self::MIN,
+            Err(FloatConstructorError::PosOverflow) => Self::MAX,
+        }
     }
 
     /// Creates a new `Duration` from the specified number of seconds
@@ -644,18 +673,12 @@ impl Duration {
     /// ```
     #[inline]
     pub const fn saturating_seconds_f32(seconds: f32) -> Self {
-        try_from_secs!(
-            secs = seconds,
-            mantissa_bits = 23,
-            exponent_bits = 8,
-            offset = 41,
-            bits_ty = u32,
-            bits_ty_signed = i32,
-            double_ty = u64,
-            float_ty = f32,
-            is_nan = return Self::ZERO,
-            is_overflow = return if seconds < 0.0 { Self::MIN } else { Self::MAX },
-        )
+        match Self::try_seconds_f32(seconds) {
+            Ok(duration) => duration,
+            Err(FloatConstructorError::Nan) => Self::ZERO,
+            Err(FloatConstructorError::NegOverflow) => Self::MIN,
+            Err(FloatConstructorError::PosOverflow) => Self::MAX,
+        }
     }
 
     /// Creates a new `Duration` from the specified number of seconds
@@ -672,18 +695,10 @@ impl Duration {
     /// ```
     #[inline]
     pub const fn checked_seconds_f64(seconds: f64) -> Option<Self> {
-        Some(try_from_secs!(
-            secs = seconds,
-            mantissa_bits = 52,
-            exponent_bits = 11,
-            offset = 44,
-            bits_ty = u64,
-            bits_ty_signed = i64,
-            double_ty = u128,
-            float_ty = f64,
-            is_nan = return None,
-            is_overflow = return None,
-        ))
+        match Self::try_seconds_f64(seconds) {
+            Ok(duration) => Some(duration),
+            Err(_) => None,
+        }
     }
 
     /// Creates a new `Duration` from the specified number of seconds
@@ -700,18 +715,10 @@ impl Duration {
     /// ```
     #[inline]
     pub const fn checked_seconds_f32(seconds: f32) -> Option<Self> {
-        Some(try_from_secs!(
-            secs = seconds,
-            mantissa_bits = 23,
-            exponent_bits = 8,
-            offset = 41,
-            bits_ty = u32,
-            bits_ty_signed = i32,
-            double_ty = u64,
-            float_ty = f32,
-            is_nan = return None,
-            is_overflow = return None,
-        ))
+        match Self::try_seconds_f32(seconds) {
+            Ok(duration) => Some(duration),
+            Err(_) => None,
+        }
     }
 
     /// Create a new `Duration` with the given number of milliseconds.
@@ -772,16 +779,26 @@ impl Duration {
 
     /// Create a new `Duration` with the given number of nanoseconds.
     ///
-    /// As the input range cannot be fully mapped to the output, this should only be used where it's
-    /// known to result in a valid value.
+    /// ```rust
+    /// # use time::{Duration, ext::NumericalDuration};
+    /// assert_eq!(
+    ///     Duration::nanoseconds_i128(1_234_567_890),
+    ///     1.seconds() + 234_567_890.nanoseconds()
+    /// );
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs. This may happen because the input range cannot be
+    /// fully mapped to the output.
     #[inline]
     #[track_caller]
-    pub(crate) const fn nanoseconds_i128(nanoseconds: i128) -> Self {
+    pub const fn nanoseconds_i128(nanoseconds: i128) -> Self {
         let seconds = nanoseconds / Nanosecond::per_t::<i128>(Second);
         let nanoseconds = nanoseconds % Nanosecond::per_t::<i128>(Second);
 
         if seconds > i64::MAX as i128 || seconds < i64::MIN as i128 {
-            crate::panic("overflow constructing `time::Duration`");
+            panic!("overflow constructing `time::Duration`");
         }
 
         // Safety: `nanoseconds` is guaranteed to be in range because of the modulus above.
@@ -1390,6 +1407,9 @@ impl Add<StdDuration> for Duration {
 impl Add<Duration> for StdDuration {
     type Output = Duration;
 
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
     #[inline]
     #[track_caller]
     fn add(self, rhs: Duration) -> Self::Output {
@@ -1397,7 +1417,27 @@ impl Add<Duration> for StdDuration {
     }
 }
 
-impl_add_assign!(Duration: Self, StdDuration);
+impl AddAssign<Self> for Duration {
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
+    #[inline]
+    #[track_caller]
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
+    }
+}
+
+impl AddAssign<StdDuration> for Duration {
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
+    #[inline]
+    #[track_caller]
+    fn add_assign(&mut self, rhs: StdDuration) {
+        *self = *self + rhs;
+    }
+}
 
 impl AddAssign<Duration> for StdDuration {
     /// # Panics
@@ -1416,6 +1456,9 @@ impl AddAssign<Duration> for StdDuration {
 impl Neg for Duration {
     type Output = Self;
 
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
     #[inline]
     #[track_caller]
     fn neg(self) -> Self::Output {
@@ -1466,7 +1509,27 @@ impl Sub<Duration> for StdDuration {
     }
 }
 
-impl_sub_assign!(Duration: Self, StdDuration);
+impl SubAssign<Self> for Duration {
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
+    #[inline]
+    #[track_caller]
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
+    }
+}
+
+impl SubAssign<StdDuration> for Duration {
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
+    #[inline]
+    #[track_caller]
+    fn sub_assign(&mut self, rhs: StdDuration) {
+        *self = *self - rhs;
+    }
+}
 
 impl SubAssign<Duration> for StdDuration {
     /// # Panics
@@ -1482,18 +1545,32 @@ impl SubAssign<Duration> for StdDuration {
     }
 }
 
-/// Implement `Mul` (reflexively) and `Div` for `Duration` for various types.
+/// Given a value and whether it is signed, cast it to the signed version.
+macro_rules! cast_signed {
+    (@signed $val:ident) => {
+        $val
+    };
+    (@unsigned $val:ident) => {
+        $val.cast_signed()
+    };
+}
+
+/// Implement `Mul` (reflexively), `MulAssign`, `Div`, and `DivAssign` for `Duration` for various
+/// signed types.
 macro_rules! duration_mul_div_int {
-    ($($type:ty),+) => {$(
+    ($(@$signedness:ident $type:ty),+ $(,)?) => {$(
         impl Mul<$type> for Duration {
             type Output = Self;
 
+            /// # Panics
+            ///
+            /// This may panic if an overflow occurs.
             #[inline]
             #[track_caller]
             fn mul(self, rhs: $type) -> Self::Output {
                 Self::nanoseconds_i128(
                     self.whole_nanoseconds()
-                        .checked_mul(rhs.cast_signed().extend::<i128>())
+                        .checked_mul(cast_signed!(@$signedness rhs).extend::<i128>())
                         .expect("overflow when multiplying duration")
                 )
             }
@@ -1502,6 +1579,9 @@ macro_rules! duration_mul_div_int {
         impl Mul<Duration> for $type {
             type Output = Duration;
 
+            /// # Panics
+            ///
+            /// This may panic if an overflow occurs.
             #[inline]
             #[track_caller]
             fn mul(self, rhs: Duration) -> Self::Output {
@@ -1509,24 +1589,60 @@ macro_rules! duration_mul_div_int {
             }
         }
 
+        impl MulAssign<$type> for Duration {
+            /// # Panics
+            ///
+            /// This may panic if an overflow occurs.
+            #[inline]
+            #[track_caller]
+            fn mul_assign(&mut self, rhs: $type) {
+                *self = *self * rhs;
+            }
+        }
+
         impl Div<$type> for Duration {
             type Output = Self;
 
+            /// # Panics
+            ///
+            /// This may panic if an overflow occurs.
             #[inline]
             #[track_caller]
             fn div(self, rhs: $type) -> Self::Output {
                 Self::nanoseconds_i128(
-                    self.whole_nanoseconds() / rhs.cast_signed().extend::<i128>()
+                    self.whole_nanoseconds() / cast_signed!(@$signedness rhs).extend::<i128>()
                 )
+            }
+        }
+
+        impl DivAssign<$type> for Duration {
+            /// # Panics
+            ///
+            /// This may panic if an overflow occurs.
+            #[inline]
+            #[track_caller]
+            fn div_assign(&mut self, rhs: $type) {
+                *self = *self / rhs;
             }
         }
     )+};
 }
-duration_mul_div_int![i8, i16, i32, u8, u16, u32];
+
+duration_mul_div_int! {
+    @signed i8,
+    @signed i16,
+    @signed i32,
+    @unsigned u8,
+    @unsigned u16,
+    @unsigned u32,
+}
 
 impl Mul<f32> for Duration {
     type Output = Self;
 
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
     #[inline]
     #[track_caller]
     fn mul(self, rhs: f32) -> Self::Output {
@@ -1537,6 +1653,9 @@ impl Mul<f32> for Duration {
 impl Mul<Duration> for f32 {
     type Output = Duration;
 
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
     #[inline]
     #[track_caller]
     fn mul(self, rhs: Duration) -> Self::Output {
@@ -1547,6 +1666,9 @@ impl Mul<Duration> for f32 {
 impl Mul<f64> for Duration {
     type Output = Self;
 
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
     #[inline]
     #[track_caller]
     fn mul(self, rhs: f64) -> Self::Output {
@@ -1557,6 +1679,9 @@ impl Mul<f64> for Duration {
 impl Mul<Duration> for f64 {
     type Output = Duration;
 
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
     #[inline]
     #[track_caller]
     fn mul(self, rhs: Duration) -> Self::Output {
@@ -1564,11 +1689,34 @@ impl Mul<Duration> for f64 {
     }
 }
 
-impl_mul_assign!(Duration: i8, i16, i32, u8, u16, u32, f32, f64);
+impl MulAssign<f32> for Duration {
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
+    #[inline]
+    #[track_caller]
+    fn mul_assign(&mut self, rhs: f32) {
+        *self = *self * rhs;
+    }
+}
+
+impl MulAssign<f64> for Duration {
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
+    #[inline]
+    #[track_caller]
+    fn mul_assign(&mut self, rhs: f64) {
+        *self = *self * rhs;
+    }
+}
 
 impl Div<f32> for Duration {
     type Output = Self;
 
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
     #[inline]
     #[track_caller]
     fn div(self, rhs: f32) -> Self::Output {
@@ -1579,6 +1727,9 @@ impl Div<f32> for Duration {
 impl Div<f64> for Duration {
     type Output = Self;
 
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
     #[inline]
     #[track_caller]
     fn div(self, rhs: f64) -> Self::Output {
@@ -1586,7 +1737,27 @@ impl Div<f64> for Duration {
     }
 }
 
-impl_div_assign!(Duration: i8, i16, i32, u8, u16, u32, f32, f64);
+impl DivAssign<f32> for Duration {
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
+    #[inline]
+    #[track_caller]
+    fn div_assign(&mut self, rhs: f32) {
+        *self = *self / rhs;
+    }
+}
+
+impl DivAssign<f64> for Duration {
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
+    #[inline]
+    #[track_caller]
+    fn div_assign(&mut self, rhs: f64) {
+        *self = *self / rhs;
+    }
+}
 
 impl Div for Duration {
     type Output = f64;
@@ -1660,14 +1831,20 @@ impl PartialOrd<Duration> for StdDuration {
 
 impl Sum for Duration {
     #[inline]
-    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
         iter.reduce(|a, b| a + b).unwrap_or_default()
     }
 }
 
 impl<'a> Sum<&'a Self> for Duration {
     #[inline]
-    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = &'a Self>,
+    {
         iter.copied().sum()
     }
 }
@@ -1676,6 +1853,9 @@ impl<'a> Sum<&'a Self> for Duration {
 impl Add<Duration> for SystemTime {
     type Output = Self;
 
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
     #[inline]
     #[track_caller]
     fn add(self, duration: Duration) -> Self::Output {
@@ -1690,7 +1870,17 @@ impl Add<Duration> for SystemTime {
     }
 }
 
-impl_add_assign!(SystemTime: #[cfg(feature = "std")] Duration);
+#[cfg(feature = "std")]
+impl AddAssign<Duration> for SystemTime {
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
+    #[inline]
+    #[track_caller]
+    fn add_assign(&mut self, rhs: Duration) {
+        *self = *self + rhs;
+    }
+}
 
 #[cfg(feature = "std")]
 impl Sub<Duration> for SystemTime {
@@ -1710,4 +1900,14 @@ impl Sub<Duration> for SystemTime {
     }
 }
 
-impl_sub_assign!(SystemTime: #[cfg(feature = "std")] Duration);
+#[cfg(feature = "std")]
+impl SubAssign<Duration> for SystemTime {
+    /// # Panics
+    ///
+    /// This may panic if an overflow occurs.
+    #[inline]
+    #[track_caller]
+    fn sub_assign(&mut self, rhs: Duration) {
+        *self = *self - rhs;
+    }
+}

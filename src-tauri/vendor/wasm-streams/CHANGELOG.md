@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.0 (2026-01-22)
+
+* Added support for `panic=unwind`. ([#26](https://github.com/MattiasBuelens/wasm-streams/issues/26), [#28](https://github.com/MattiasBuelens/wasm-streams/pull/28))
+* Persist the error state of `writable::IntoSink`. ([#27](https://github.com/MattiasBuelens/wasm-streams/pull/27))
+* Fixed lifetime elision warnings. ([#29](https://github.com/MattiasBuelens/wasm-streams/pull/29))
+* Updated to `wasm-bindgen` 0.2.108 and `web-sys` 0.3.85.
+
 ## v0.4.2 (2024-10-25)
 
 * Updated to `wasm-bindgen` 0.2.95 and `web-sys` 0.3.72.
@@ -17,7 +24,7 @@
 
 ## v0.3.0 (2022-10-16)
 
-* Added support for web workers, by removing usage of [JavaScript snippets](https://rustwasm.github.io/docs/wasm-bindgen/reference/js-snippets.html). ([#13](https://github.com/MattiasBuelens/wasm-streams/issues/13), [#14](https://github.com/MattiasBuelens/wasm-streams/pull/14))
+* Added support for web workers, by removing usage of [JavaScript snippets](https://wasm-bindgen.github.io/wasm-bindgen/reference/js-snippets.html). ([#13](https://github.com/MattiasBuelens/wasm-streams/issues/13), [#14](https://github.com/MattiasBuelens/wasm-streams/pull/14))
 * ⚠ **Breaking change:** This removes a workaround for [Chromium bug #1187774](https://crbug.com/1187774) that was previously needed for `ReadableStream::from_async_read`. This bug was fixed upstream in March 2021 with Chrome 91. ([#14](https://github.com/MattiasBuelens/wasm-streams/pull/14))
 * Updated documentation of `ReadableStream(Default|BYOB)Reader::release_lock()` around the expected behavior when there are pending read requests.
   See the corresponding [Streams specification change](https://github.com/whatwg/streams/commit/d5f92d9f17306d31ba6b27424d23d58e89bf64a5) for details.

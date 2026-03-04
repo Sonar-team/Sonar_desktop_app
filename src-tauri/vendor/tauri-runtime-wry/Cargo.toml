@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri-runtime-wry"
-version = "2.9.3"
+version = "2.10.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 exclude = [
@@ -78,10 +78,10 @@ features = ["rwh_06"]
 default-features = false
 
 [dependencies.tauri-runtime]
-version = "2.9.2"
+version = "2.10.1"
 
 [dependencies.tauri-utils]
-version = "2.8.1"
+version = "2.8.3"
 
 [dependencies.tracing]
 version = "0.1"
@@ -91,7 +91,7 @@ optional = true
 version = "2"
 
 [dependencies.wry]
-version = "0.53.4"
+version = "0.54.0"
 features = [
     "drag-drop",
     "protocol",
@@ -125,10 +125,7 @@ features = [
     "NSScreen",
     "NSGraphics",
 ]
-
-[target.'cfg(target_os = "macos")'.dependencies.objc2-foundation]
-version = "0.3"
-features = []
+default-features = false
 
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2]
 version = "0.6"

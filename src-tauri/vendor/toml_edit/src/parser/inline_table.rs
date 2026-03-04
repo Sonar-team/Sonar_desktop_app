@@ -8,10 +8,10 @@ use crate::{InlineTable, Item, RawString, Value};
 
 use indexmap::map::Entry;
 
-/// ```bnf
+/// ```abnf
 /// ;; Inline Table
 ///
-/// inline-table = inline-table-open inline-table-keyvals inline-table-close
+/// inline-table = inline-table-open [ inline-table-keyvals ] ws-comment-newline inline-table-close
 /// ```
 pub(crate) fn on_inline_table(
     open_event: &toml_parser::parser::Event,
@@ -24,6 +24,7 @@ pub(crate) fn on_inline_table(
     let mut result = InlineTable::new();
 
     let mut state = State::default();
+    state.open(open_event);
     while let Some(event) = input.next_token() {
         match event.kind() {
             EventKind::StdTableOpen
@@ -68,6 +69,7 @@ pub(crate) fn on_inline_table(
             }
             EventKind::ValueSep => {
                 state.finish_value(event, &mut result, errors);
+                state.sep_value(event);
             }
             EventKind::Whitespace | EventKind::Comment | EventKind::Newline => {
                 state.whitespace(event);
@@ -89,11 +91,18 @@ struct State {
     current_key: Option<(Vec<Key>, Key)>,
     seen_keyval_sep: bool,
     current_value: Option<Value>,
+    trailing_start: Option<usize>,
     current_suffix: Option<toml_parser::Span>,
 }
 
 impl State {
+    fn open(&mut self, open_event: &toml_parser::parser::Event) {
+        self.trailing_start = Some(open_event.span().end());
+    }
+
     fn whitespace(&mut self, event: &toml_parser::parser::Event) {
+        #[cfg(feature = "debug")]
+        let _scope = TraceScope::new("inline_table::whitespace");
         let decor = if self.is_prefix() {
             self.current_prefix.get_or_insert(event.span())
         } else {
@@ -116,6 +125,9 @@ impl State {
         path: Vec<Key>,
         key: Option<Key>,
     ) {
+        #[cfg(feature = "debug")]
+        let _scope = TraceScope::new("inline_table::capture_key");
+        self.trailing_start = None;
         self.current_prefix
             .get_or_insert_with(|| event.span().before());
         if let Some(key) = key {
@@ -124,6 +136,8 @@ impl State {
     }
 
     fn finish_key(&mut self, event: &toml_parser::parser::Event) {
+        #[cfg(feature = "debug")]
+        let _scope = TraceScope::new("inline_table::finish_key");
         self.seen_keyval_sep = true;
         if let Some(last_key) = self.current_key.as_mut().map(|(_, k)| k) {
             let prefix = self
@@ -142,6 +156,8 @@ impl State {
     }
 
     fn capture_value(&mut self, event: &toml_parser::parser::Event, value: Value) {
+        #[cfg(feature = "debug")]
+        let _scope = TraceScope::new("inline_table::capture_value");
         self.current_prefix
             .get_or_insert_with(|| event.span().before());
         self.current_value = Some(value);
@@ -199,6 +215,10 @@ impl State {
         }
     }
 
+    fn sep_value(&mut self, event: &toml_parser::parser::Event) {
+        self.trailing_start = Some(event.span().end());
+    }
+
     fn close(
         &mut self,
         open_event: &toml_parser::parser::Event,
@@ -207,16 +227,16 @@ impl State {
     ) {
         #[cfg(feature = "debug")]
         let _scope = TraceScope::new("inline_table::close");
+        let trailing_comma = self.trailing_start.is_some() && !result.is_empty();
         let span = open_event.span().append(close_event.span());
-        let preamble = self
-            .current_prefix
-            .take()
-            .map(|prefix| RawString::with_span(prefix.start()..prefix.end()));
+        let trailing_start = self
+            .trailing_start
+            .unwrap_or_else(|| close_event.span().start());
+        let trailing_end = close_event.span().start();
 
+        result.set_trailing_comma(trailing_comma);
+        result.set_trailing(RawString::with_span(trailing_start..trailing_end));
         result.span = Some(span.start()..span.end());
-        if let Some(preamble) = preamble {
-            result.set_preamble(preamble);
-        }
     }
 }
 

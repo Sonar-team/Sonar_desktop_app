@@ -135,7 +135,10 @@ macro_rules! unsafe_impl {
         fn only_derive_is_allowed_to_implement_this_trait() {}
 
         #[inline]
-        fn is_bit_valid<AA: crate::pointer::invariant::Reference>($candidate: Maybe<'_, Self, AA>) -> bool {
+        fn is_bit_valid<Alignment>($candidate: Maybe<'_, Self, Alignment>) -> bool
+        where
+            Alignment: crate::invariant::Alignment,
+        {
             $is_bit_valid
         }
     };
@@ -143,7 +146,13 @@ macro_rules! unsafe_impl {
         #[allow(clippy::missing_inline_in_public_items)]
         #[cfg_attr(all(coverage_nightly, __ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS), coverage(off))]
         fn only_derive_is_allowed_to_implement_this_trait() {}
-        #[inline(always)] fn is_bit_valid<AA: crate::pointer::invariant::Reference>(_: Maybe<'_, Self, AA>) -> bool { true }
+        #[inline(always)]
+        fn is_bit_valid<Alignment>(_candidate: Maybe<'_, Self, Alignment>) -> bool
+        where
+            Alignment: crate::invariant::Alignment,
+        {
+            true
+        }
     };
     (@method $trait:ident) => {
         #[allow(clippy::missing_inline_in_public_items, dead_code)]
@@ -164,7 +173,7 @@ macro_rules! impl_for_transmute_from {
     (
         $(#[$attr:meta])*
         $($tyvar:ident $(: $(? $optbound:ident $(+)?)* $($bound:ident $(+)?)* )?)?
-        => $trait:ident for $ty:ty [$($unsafe_cell:ident)? <$repr:ty>]
+        => $trait:ident for $ty:ty [$repr:ty]
     ) => {
         const _: () = {
             $(#[$attr])*
@@ -203,7 +212,7 @@ macro_rules! impl_for_transmute_from {
                 impl_for_transmute_from!(
                     @is_bit_valid
                     $(<$tyvar $(: $(? $optbound +)* $($bound +)*)?>)?
-                    $trait for $ty [$($unsafe_cell)? <$repr>]
+                    $trait for $ty [$repr]
                 );
             }
         };
@@ -215,35 +224,23 @@ macro_rules! impl_for_transmute_from {
     (
         @is_bit_valid
         $(<$tyvar:ident $(: $(? $optbound:ident $(+)?)* $($bound:ident $(+)?)* )?>)?
-        TryFromBytes for $ty:ty [UnsafeCell<$repr:ty>]
+        TryFromBytes for $ty:ty [$repr:ty]
     ) => {
-        #[inline]
-        fn is_bit_valid<A: crate::pointer::invariant::Reference>(candidate: Maybe<'_, Self, A>) -> bool {
-            let c: Maybe<'_, Self, crate::pointer::invariant::Exclusive> = candidate.into_exclusive_or_pme();
-            let c: Maybe<'_, $repr, _> = c.transmute::<_, _, (_, (_, (BecauseExclusive, BecauseExclusive)))>();
+        #[inline(always)]
+        fn is_bit_valid<Alignment>(candidate: $crate::Maybe<'_, Self, Alignment>) -> bool
+        where
+            Alignment: $crate::invariant::Alignment,
+        {
             // SAFETY: This macro ensures that `$repr` and `Self` have the same
             // size and bit validity. Thus, a bit-valid instance of `$repr` is
             // also a bit-valid instance of `Self`.
-            <$repr as TryFromBytes>::is_bit_valid(c)
+            <$repr as TryFromBytes>::is_bit_valid(candidate.transmute::<_, _, BecauseImmutable>())
         }
     };
     (
         @is_bit_valid
         $(<$tyvar:ident $(: $(? $optbound:ident $(+)?)* $($bound:ident $(+)?)* )?>)?
-        TryFromBytes for $ty:ty [<$repr:ty>]
-    ) => {
-        #[inline]
-        fn is_bit_valid<A: crate::pointer::invariant::Reference>(candidate: $crate::Maybe<'_, Self, A>) -> bool {
-            // SAFETY: This macro ensures that `$repr` and `Self` have the same
-            // size and bit validity. Thus, a bit-valid instance of `$repr` is
-            // also a bit-valid instance of `Self`.
-            <$repr as TryFromBytes>::is_bit_valid(candidate.transmute())
-        }
-    };
-    (
-        @is_bit_valid
-        $(<$tyvar:ident $(: $(? $optbound:ident $(+)?)* $($bound:ident $(+)?)* )?>)?
-        $trait:ident for $ty:ty [$($unsafe_cell:ident)? <$repr:ty>]
+        $trait:ident for $ty:ty [$repr:ty]
     ) => {
         // Trait other than `TryFromBytes`; no `is_bit_valid` impl.
     };
@@ -325,6 +322,9 @@ macro_rules! opt_unsafe_fn {
     ($($args:ident),* -> $ret:ident) => { Option<unsafe fn($($args),*) -> $ret> };
 }
 
+// This `allow` is needed because, when testing, we export this macro so it can
+// be used in `doctests`.
+#[allow(rustdoc::private_intra_doc_links)]
 /// Implements trait(s) for a type or verifies the given implementation by
 /// referencing an existing (derived) implementation.
 ///
@@ -345,8 +345,7 @@ macro_rules! opt_unsafe_fn {
 /// `const _: () = unsafe` macro). The reason for this restriction is that,
 /// while `impl_or_verify!` can guarantee that the provided impl is sound when
 /// it is compiled with the appropriate cfgs, there is no way to guarantee that
-/// it is
-/// ever compiled with those cfgs. In particular, it would be possible to
+/// it is ever compiled with those cfgs. In particular, it would be possible to
 /// accidentally place an `impl_or_verify!` call in a context that is only ever
 /// compiled when the `derive` feature is disabled. If that were to happen,
 /// there would be nothing to prevent an unsound trait impl from being emitted.
@@ -375,6 +374,7 @@ macro_rules! opt_unsafe_fn {
 ///     impl_or_verify!(T: Unaligned => Unaligned for Wrapper<T>);
 /// }
 /// ```
+#[cfg_attr(__ZEROCOPY_INTERNAL_USE_ONLY_DEV_MODE, macro_export)] // Used in `doctests.rs`
 macro_rules! impl_or_verify {
     // The following two match arms follow the same pattern as their
     // counterparts in `unsafe_impl!`; see the documentation on those arms for
@@ -732,28 +732,69 @@ macro_rules! define_cast {
 /// # Safety
 ///
 /// `T` and `$wrapper<T>` must have the same bit validity, and must have the
-/// same size in the sense of `SizeEq`.
+/// same size in the sense of `CastExact` (specifically, both a
+/// `T`-to-`$wrapper<T>` cast and a `$wrapper<T>`-to-`T` cast must be
+/// size-preserving).
 macro_rules! unsafe_impl_for_transparent_wrapper {
     ($vis:vis T $(: ?$optbound:ident)? => $wrapper:ident<T>) => {{
         crate::util::macros::__unsafe();
 
-        use crate::pointer::{TransmuteFrom, SizeEq, invariant::Valid};
+        use crate::pointer::{TransmuteFrom, cast::{CastExact, TransitiveProject}, SizeEq, invariant::Valid};
+        use crate::wrappers::ReadOnly;
 
         // SAFETY: The caller promises that `T` and `$wrapper<T>` have the same
         // bit validity.
         unsafe impl<T $(: ?$optbound)?> TransmuteFrom<T, Valid, Valid> for $wrapper<T> {}
         // SAFETY: See previous safety comment.
         unsafe impl<T $(: ?$optbound)?> TransmuteFrom<$wrapper<T>, Valid, Valid> for T {}
-        define_cast!(unsafe { $vis CastA<T $(: ?$optbound)? > = T => $wrapper<T> });
-        // SAFETY: The caller promises that `T` and `$wrapper<T>` satisfy
-        // `SizeEq`.
-        unsafe impl<T $(: ?$optbound)?> SizeEq<T> for $wrapper<T> {
-            type CastFrom = CastA;
+        // SAFETY: The caller promises that a `T` to `$wrapper<T>` cast is
+        // size-preserving.
+        define_cast!(unsafe { $vis CastToWrapper<T $(: ?$optbound)? > = T => $wrapper<T> });
+        // SAFETY: The caller promises that a `T` to `$wrapper<T>` cast is
+        // size-preserving.
+        unsafe impl<T $(: ?$optbound)?> CastExact<T, $wrapper<T>> for CastToWrapper {}
+        // SAFETY: The caller promises that a `$wrapper<T>` to `T` cast is
+        // size-preserving.
+        define_cast!(unsafe { $vis CastFromWrapper<T $(: ?$optbound)? > = $wrapper<T> => T });
+        // SAFETY: The caller promises that a `$wrapper<T>` to `T` cast is
+        // size-preserving.
+        unsafe impl<T $(: ?$optbound)?> CastExact<$wrapper<T>, T> for CastFromWrapper {}
+
+        impl<T $(: ?$optbound)?> SizeEq<T> for $wrapper<T> {
+            type CastFrom = CastToWrapper;
         }
-        define_cast!(unsafe { $vis CastB<T $(: ?$optbound)? > = $wrapper<T> => T });
-        // SAFETY: See previous safety comment.
-        unsafe impl<T $(: ?$optbound)?> SizeEq<$wrapper<T>> for T {
-            type CastFrom = CastB;
+        impl<T $(: ?$optbound)?> SizeEq<$wrapper<T>> for T {
+            type CastFrom = CastFromWrapper;
+        }
+
+        impl<T $(: ?$optbound)?> SizeEq<ReadOnly<T>> for $wrapper<T> {
+            type CastFrom = TransitiveProject<
+                T,
+                <T as SizeEq<ReadOnly<T>>>::CastFrom,
+                CastToWrapper,
+            >;
+        }
+        impl<T $(: ?$optbound)?> SizeEq<$wrapper<T>> for ReadOnly<T> {
+            type CastFrom = TransitiveProject<
+                T,
+                CastFromWrapper,
+                <ReadOnly<T> as SizeEq<T>>::CastFrom,
+            >;
+        }
+
+        impl<T $(: ?$optbound)?> SizeEq<ReadOnly<T>> for ReadOnly<$wrapper<T>> {
+            type CastFrom = TransitiveProject<
+                $wrapper<T>,
+                <$wrapper<T> as SizeEq<ReadOnly<T>>>::CastFrom,
+                <ReadOnly<$wrapper<T>> as SizeEq<$wrapper<T>>>::CastFrom,
+            >;
+        }
+        impl<T $(: ?$optbound)?> SizeEq<ReadOnly<$wrapper<T>>> for ReadOnly<T> {
+            type CastFrom = TransitiveProject<
+                $wrapper<T>,
+                <$wrapper<T> as SizeEq<ReadOnly<$wrapper<T>>>>::CastFrom,
+                <ReadOnly<T> as SizeEq<$wrapper<T>>>::CastFrom,
+            >;
         }
     }};
 }
@@ -763,9 +804,7 @@ macro_rules! impl_transitive_transmute_from {
         const _: () = {
             use crate::pointer::{TransmuteFrom, SizeEq, invariant::Valid};
 
-            // SAFETY: Since `$u: SizeEq<$t>` and `$v: SizeEq<U>`, this impl is
-            // transitively sound.
-            unsafe impl<$($tyvar $(: ?$optbound)?)?> SizeEq<$t> for $v
+            impl<$($tyvar $(: ?$optbound)?)?> SizeEq<$t> for $v
             where
                 $u: SizeEq<$t>,
                 $v: SizeEq<$u>,
@@ -788,119 +827,6 @@ macro_rules! impl_transitive_transmute_from {
             {}
         };
     };
-}
-
-#[rustfmt::skip]
-macro_rules! impl_size_eq {
-    ($t:ty, $u:ty) => {
-        const _: () = {
-            use $crate::{pointer::{cast::CastUnsized, SizeEq}};
-
-            // SAFETY: See inline.
-            unsafe impl SizeEq<$t> for $u {
-                type CastFrom = CastUnsized;
-            }
-            // SAFETY: See previous safety comment.
-            unsafe impl SizeEq<$u> for $t {
-                type CastFrom = CastUnsized;
-            }
-        };
-    };
-}
-
-/// Invokes `$blk` in a context in which `$src<$t>` and `$dst<$u>` implement
-/// `SizeEq`.
-///
-/// This macro emits code which implements `SizeEq`, and ensures that the impl
-/// is sound via PME.
-///
-/// # Safety
-///
-/// Inside of `$blk`, the caller must only use `$src` and `$dst` as `$src<$t>`
-/// and `$dst<$u>`. The caller must not use `$src` or `$dst` to wrap any other
-/// types.
-macro_rules! unsafe_with_size_eq {
-    (<$src:ident<$t:ident>, $dst:ident<$u:ident>> $blk:expr) => {{
-        crate::util::macros::__unsafe();
-
-        use crate::{KnownLayout, pointer::cast::TransitiveProject};
-
-        #[repr(transparent)]
-        struct $src<T: ?Sized>(T);
-
-        #[repr(transparent)]
-        struct $dst<U: ?Sized>(U);
-
-        // SAFETY: Since `$src<T>` is a `#[repr(transparent)]` wrapper around
-        // `T`, it has the same bit validity and size as `T`.
-        unsafe_impl_for_transparent_wrapper!(T: ?Sized => $src<T>);
-
-        // SAFETY: Since `$dst<T>` is a `#[repr(transparent)]` wrapper around
-        // `T`, it has the same bit validity and size as `T`.
-        unsafe_impl_for_transparent_wrapper!(T: ?Sized => $dst<T>);
-
-        // SAFETY: `$src<T>` is a `#[repr(transparent)]` wrapper around `T` with
-        // no added semantics.
-        unsafe impl<T: ?Sized> InvariantsEq<$src<T>> for T {}
-
-        // SAFETY: `$dst<T>` is a `#[repr(transparent)]` wrapper around `T` with
-        // no added semantics.
-        unsafe impl<T: ?Sized> InvariantsEq<$dst<T>> for T {}
-
-        define_cast!(unsafe { SrcCast<T: ?Sized> = $src<T> => T });
-        define_cast!(unsafe { DstCast<U: ?Sized> = U => $dst<U> });
-
-        // SAFETY: See inline for the soundness of this impl when
-        // `CastFrom::project` is actually instantiated (otherwise, PMEs may not
-        // be triggered).
-        //
-        // We manually instantiate `CastFrom::project` below to ensure that this
-        // PME can be triggered, and the caller promises not to use `$src` and
-        // `$dst` with any wrapped types other than `$t` and `$u` respectively.
-        unsafe impl<T: ?Sized, U: ?Sized> SizeEq<$src<T>> for $dst<U>
-        where
-            T: KnownLayout<PointerMetadata = usize>,
-            U: KnownLayout<PointerMetadata = usize>,
-        {
-            type CastFrom = TransitiveProject<U, TransitiveProject<
-                T,
-                SrcCast,
-                crate::layout::CastFrom<U>,
-            >, DstCast>;
-        }
-
-        // See safety comment on the preceding `unsafe impl` block for an
-        // explanation of why we need this block.
-        if 1 == 0 {
-            use crate::pointer::cast::Project as _;
-
-            let ptr = <$t as KnownLayout>::raw_dangling();
-            // SAFETY: This call is never executed.
-            #[allow(unused_unsafe, clippy::missing_transmute_annotations)]
-            let ptr = unsafe { core::mem::transmute(ptr) };
-            let _ = <$dst<$u> as SizeEq<$src<$t>>>::CastFrom::project(ptr);
-        }
-
-        impl_for_transmute_from!(T: ?Sized + TryFromBytes => TryFromBytes for $src<T>[<T>]);
-        impl_for_transmute_from!(T: ?Sized + FromBytes => FromBytes for $src<T>[<T>]);
-        impl_for_transmute_from!(T: ?Sized + FromZeros => FromZeros for $src<T>[<T>]);
-        impl_for_transmute_from!(T: ?Sized + IntoBytes => IntoBytes for $src<T>[<T>]);
-
-        impl_for_transmute_from!(U: ?Sized + TryFromBytes => TryFromBytes for $dst<U>[<U>]);
-        impl_for_transmute_from!(U: ?Sized + FromBytes => FromBytes for $dst<U>[<U>]);
-        impl_for_transmute_from!(U: ?Sized + FromZeros => FromZeros for $dst<U>[<U>]);
-        impl_for_transmute_from!(U: ?Sized + IntoBytes => IntoBytes for $dst<U>[<U>]);
-
-        // SAFETY: `$src<T>` is a `#[repr(transparent)]` wrapper around `T`, and
-        // so permits interior mutation exactly when `T` does.
-        unsafe_impl!(T: ?Sized + Immutable => Immutable for $src<T>);
-
-        // SAFETY: `$dst<T>` is a `#[repr(transparent)]` wrapper around `T`, and
-        // so permits interior mutation exactly when `T` does.
-        unsafe_impl!(T: ?Sized + Immutable => Immutable for $dst<T>);
-
-        $blk
-    }};
 }
 
 /// A no-op `unsafe fn` for use in macro expansions.

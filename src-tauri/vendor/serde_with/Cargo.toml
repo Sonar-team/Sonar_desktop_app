@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.76"
+rust-version = "1.82"
 name = "serde_with"
-version = "3.16.1"
+version = "3.17.0"
 authors = [
     "Jonas Bushart",
     "Marcin Kaźmierczak",
@@ -407,7 +407,7 @@ optional = true
 default-features = false
 
 [dependencies.serde_with_macros]
-version = "=3.16.1"
+version = "=3.17.0"
 optional = true
 
 [dependencies.smallvec_1]
@@ -483,8 +483,8 @@ features = ["preserve_order"]
 [dev-dependencies.serde_test]
 version = "1.0.124"
 
-[dev-dependencies.serde_yaml]
-version = "0.9.2"
+[dev-dependencies.yaml_serde]
+version = "0.10.3"
 
 [lints.clippy]
 cloned_instead_of_copied = "warn"

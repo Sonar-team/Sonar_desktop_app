@@ -56,13 +56,7 @@ impl Month {
             10 => Ok(October),
             11 => Ok(November),
             12 => Ok(December),
-            n => Err(error::ComponentRange {
-                name: "month",
-                minimum: 1,
-                maximum: 12,
-                value: n as i64,
-                conditional_message: None,
-            }),
+            _ => Err(error::ComponentRange::unconditional("month")),
         }
     }
 
@@ -162,7 +156,7 @@ impl Month {
     /// ```
     #[inline]
     pub const fn nth_prev(self, n: u8) -> Self {
-        match self as i8 - 1 - (n % 12) as i8 {
+        match self as i8 - 1 - (n % 12).cast_signed() {
             1 | -11 => February,
             2 | -10 => March,
             3 | -9 => April,
@@ -183,6 +177,7 @@ impl Month {
 }
 
 mod private {
+    /// Metadata for `Month`.
     #[non_exhaustive]
     #[derive(Debug, Clone, Copy)]
     pub struct MonthMetadata;
@@ -273,13 +268,7 @@ impl TryFrom<u8> for Month {
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match NonZero::new(value) {
             Some(value) => Self::from_number(value),
-            None => Err(error::ComponentRange {
-                name: "month",
-                minimum: 1,
-                maximum: 12,
-                value: 0,
-                conditional_message: None,
-            }),
+            None => Err(error::ComponentRange::unconditional("month")),
         }
     }
 }

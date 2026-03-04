@@ -45,9 +45,8 @@ use objc2_core_foundation::{CGPoint, CGRect};
 use objc2_foundation::{
   ns_string, MainThreadMarker, NSArray, NSBundle, NSDate, NSError, NSHTTPCookie,
   NSHTTPCookieDomain, NSHTTPCookieExpires, NSHTTPCookieMaximumAge, NSHTTPCookieName,
-  NSHTTPCookiePath, NSHTTPCookiePropertyKey, NSHTTPCookieSameSiteLax, NSHTTPCookieSameSitePolicy,
-  NSHTTPCookieSameSiteStrict, NSHTTPCookieSecure, NSHTTPCookieValue, NSHTTPCookieVersion,
-  NSJSONSerialization, NSMutableDictionary, NSMutableURLRequest, NSNumber,
+  NSHTTPCookiePath, NSHTTPCookiePropertyKey, NSHTTPCookieSecure, NSHTTPCookieValue,
+  NSHTTPCookieVersion, NSJSONSerialization, NSMutableDictionary, NSMutableURLRequest, NSNumber,
   NSObjectNSKeyValueCoding, NSObjectProtocol, NSString, NSUTF8StringEncoding, NSURL, NSUUID,
 };
 #[cfg(target_os = "ios")]
@@ -352,10 +351,23 @@ impl InnerWebView {
       }
 
       #[cfg(feature = "transparent")]
-      if attributes.transparent {
+      if attributes.transparent || attributes.background_color.is_some() {
         let no = NSNumber::numberWithBool(false);
         // Equivalent Obj-C:
-        config.setValue_forKey(Some(&no), ns_string!("drawsBackground"));
+        // drawsBackground is only available on macOS 10.14+
+        #[cfg(target_os = "macos")]
+        {
+          let version = util::operating_system_version();
+          if version.0 > 10 || (version.0 == 10 && version.1 >= 14) {
+            // Equivalent Obj-C:
+            config.setValue_forKey(Some(&no), ns_string!("drawsBackground"));
+          }
+        }
+        #[cfg(target_os = "ios")]
+        {
+          // Equivalent Obj-C:
+          config.setValue_forKey(Some(&no), ns_string!("drawsBackground"));
+        }
       }
 
       #[cfg(feature = "fullscreen")]
@@ -399,6 +411,22 @@ impl InnerWebView {
         };
         let webview: Retained<WryWebView> =
           objc2::msg_send![super(webview), initWithFrame: frame, configuration: &**config];
+
+        // Set the under-page background color for overscroll areas (public API, macOS 12+).
+        // drawsBackground is already disabled on the config above, so the window background
+        // shows through. This handles the color visible when scrolling past page bounds.
+        if os_major_version >= 12 {
+          if let Some((red, green, blue, alpha)) = attributes.background_color {
+            let color = objc2_app_kit::NSColor::colorWithSRGBRed_green_blue_alpha(
+              red as f64 / 255.0,
+              green as f64 / 255.0,
+              blue as f64 / 255.0,
+              alpha as f64 / 255.0,
+            );
+            webview.setUnderPageBackgroundColor(Some(&color));
+          }
+        }
+
         webview
       };
       #[cfg(target_os = "ios")]
@@ -498,8 +526,8 @@ impl InnerWebView {
           webview.setInspectable(true);
         }
         // this cannot be on an `else` statement, it does not work on macOS :(
-        let dev = NSString::from_str("developerExtrasEnabled");
-        _preference.setValue_forKey(Some(&_yes), &dev);
+        let dev = ns_string!("developerExtrasEnabled");
+        _preference.setValue_forKey(Some(&_yes), dev);
       }
 
       // Message handler
@@ -570,7 +598,7 @@ impl InnerWebView {
         id: webview_id,
         mtm,
         webview: webview.clone(),
-        manager: manager.clone(),
+        manager,
         ns_view: ns_view.retain(),
         data_store,
         pending_scripts,
@@ -629,7 +657,7 @@ r#"Object.defineProperty(window, 'ipc', {
             NSAutoresizingMaskOptions::ViewHeightSizable
               | NSAutoresizingMaskOptions::ViewWidthSizable,
           );
-          parent_view.addSubview(&webview.clone());
+          parent_view.addSubview(&webview);
 
           // Tell the webview receive keyboard events in the window.
           // See https://github.com/tauri-apps/wry/issues/739
@@ -658,7 +686,7 @@ r#"Object.defineProperty(window, 'ipc', {
     }
   }
 
-  pub fn id(&self) -> crate::WebViewId {
+  pub fn id(&self) -> crate::WebViewId<'_> {
     &self.id
   }
 
@@ -905,6 +933,29 @@ r#"Object.defineProperty(window, 'ipc', {
       self.webview.setBackgroundColor(Some(&color));
     }
 
+    #[cfg(all(target_os = "macos", feature = "transparent"))]
+    unsafe {
+      let (red, green, blue, alpha) = _background_color;
+
+      // Disable the default white background using the same drawsBackground KVC key
+      // as the `transparent` feature. On the webview instance (vs config) for runtime changes.
+      let no = NSNumber::numberWithBool(false);
+      self
+        .webview
+        .setValue_forKey(Some(&no), ns_string!("drawsBackground"));
+
+      let (os_major_version, _, _) = util::operating_system_version();
+      if os_major_version >= 12 {
+        let color = objc2_app_kit::NSColor::colorWithSRGBRed_green_blue_alpha(
+          red as f64 / 255.0,
+          green as f64 / 255.0,
+          blue as f64 / 255.0,
+          alpha as f64 / 255.0,
+        );
+        self.webview.setUnderPageBackgroundColor(Some(&color));
+      }
+    }
+
     Ok(())
   }
 
@@ -992,13 +1043,17 @@ r#"Object.defineProperty(window, 'ipc', {
     let secure = cookie.isSecure();
     cookie_builder = cookie_builder.secure(secure);
 
-    let same_site = cookie.sameSitePolicy();
-    let same_site = match same_site {
-      Some(policy) if &*policy == NSHTTPCookieSameSiteLax => cookie::SameSite::Lax,
-      Some(policy) if &*policy == NSHTTPCookieSameSiteStrict => cookie::SameSite::Strict,
-      _ => cookie::SameSite::None,
-    };
-    cookie_builder = cookie_builder.same_site(same_site);
+    // Using string comparison because of https://github.com/tauri-apps/wry/issues/1616
+    let (major, minor, _) = util::operating_system_version();
+    if major > 10 || (major == 10 && minor >= 15) {
+      let same_site = cookie.sameSitePolicy();
+      let same_site = match same_site {
+        Some(policy) if policy.to_string() == "lax" => cookie::SameSite::Lax,
+        Some(policy) if policy.to_string() == "strict" => cookie::SameSite::Strict,
+        _ => cookie::SameSite::None,
+      };
+      cookie_builder = cookie_builder.same_site(same_site);
+    }
 
     let expires = cookie.expiresDate();
     let expires = match expires {
@@ -1067,13 +1122,17 @@ r#"Object.defineProperty(window, 'ipc', {
       properties.insert(ns_string!("HttpOnly"), http_only);
     }
 
+    // Using strings because of https://github.com/tauri-apps/wry/issues/1616
     if let Some(same_site) = cookie.same_site() {
+      let key = ns_string!("SameSite");
+      let lax = ns_string!("lax");
+      let strict = ns_string!("strict");
       match same_site {
         cookie::SameSite::Lax => {
-          properties.insert(NSHTTPCookieSameSitePolicy, NSHTTPCookieSameSiteLax);
+          properties.insert(key, lax);
         }
         cookie::SameSite::Strict => {
-          properties.insert(NSHTTPCookieSameSitePolicy, NSHTTPCookieSameSiteStrict);
+          properties.insert(key, strict);
         }
         cookie::SameSite::None => {}
       };
@@ -1261,30 +1320,25 @@ pub fn url_from_webview(webview: &WKWebView) -> Result<String> {
 
 pub fn platform_webview_version() -> Result<String> {
   unsafe {
-    let Some(bundle) = NSBundle::bundleWithIdentifier(&NSString::from_str("com.apple.WebKit"))
-    else {
-      return Err(Error::Io(std::io::Error::new(
-        std::io::ErrorKind::Other,
+    let Some(bundle) = NSBundle::bundleWithIdentifier(ns_string!("com.apple.WebKit")) else {
+      return Err(Error::Io(std::io::Error::other(
         "failed to locate com.apple.WebKit bundle",
       )));
     };
     let Some(dict) = bundle.infoDictionary() else {
-      return Err(Error::Io(std::io::Error::new(
-        std::io::ErrorKind::Other,
+      return Err(Error::Io(std::io::Error::other(
         "failed to get WebKit info dictionary",
       )));
     };
 
-    let Some(webkit_version) = dict.objectForKey(&NSString::from_str("CFBundleVersion")) else {
-      return Err(Error::Io(std::io::Error::new(
-        std::io::ErrorKind::Other,
+    let Some(webkit_version) = dict.objectForKey(ns_string!("CFBundleVersion")) else {
+      return Err(Error::Io(std::io::Error::other(
         "failed to get WebKit version",
       )));
     };
 
     let Ok(webkit_version) = webkit_version.downcast::<NSString>() else {
-      return Err(Error::Io(std::io::Error::new(
-        std::io::ErrorKind::Other,
+      return Err(Error::Io(std::io::Error::other(
         "failed to parse WebKit version",
       )));
     };
@@ -1301,12 +1355,12 @@ impl Drop for InnerWebView {
     // We need to drop handler closures here
     unsafe {
       if let Some(ipc_handler) = self.ipc_handler_delegate.take() {
-        let ipc = NSString::from_str(IPC_MESSAGE_HANDLER_NAME);
+        let ipc = ns_string!(IPC_MESSAGE_HANDLER_NAME);
         // this will decrease the retain count of the ipc handler and trigger the drop
         ipc_handler
           .ivars()
           .controller
-          .removeScriptMessageHandlerForName(&ipc);
+          .removeScriptMessageHandlerForName(ipc);
       }
 
       // Remove webview from window's NSView before dropping.
@@ -1366,8 +1420,8 @@ unsafe fn wait_for_blocking_operation<T>(rx: std::sync::mpsc::Receiver<T>) -> Re
     let rl = objc2_foundation::NSRunLoop::mainRunLoop();
     let limit_date = NSDate::dateWithTimeIntervalSinceNow(interval_as_secs);
 
-    let mode = NSString::from_str("NSDefaultRunLoopMode");
+    let mode = ns_string!("NSDefaultRunLoopMode");
 
-    rl.acceptInputForMode_beforeDate(&mode, &limit_date);
+    rl.acceptInputForMode_beforeDate(mode, &limit_date);
   }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "ico"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 authors = ["Matthew D. Steele <mdsteele@alum.mit.edu>"]
 description = "A library for encoding/decoding ICO image files"

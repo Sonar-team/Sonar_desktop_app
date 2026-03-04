@@ -8,7 +8,7 @@ use crate::RawString;
 use crate::Value;
 use crate::{ArrayOfTables, Document, Table};
 
-/// ```bnf
+/// ```abnf
 /// ;; TOML
 ///
 /// toml = expression *( newline expression )
@@ -126,7 +126,7 @@ pub(crate) fn document<'s>(
     }
 }
 
-/// ```bnf
+/// ```abnf
 /// ;; Standard Table
 ///
 /// std-table = std-table-open key *( table-key-sep key) std-table-close
@@ -301,13 +301,13 @@ impl State {
             anstyle::AnsiColor::Blue.on_default(),
         );
 
-        let dotted = true;
+        let dotted = !path.is_empty();
         let Some(parent_table) = descend_path(&mut self.current_table, &path, dotted, errors)
         else {
             return;
         };
         // "Likewise, using dotted keys to redefine tables already defined in [table] form is not allowed"
-        let mixed_table_types = parent_table.is_dotted() == path.is_empty();
+        let mixed_table_types = dotted && !parent_table.is_implicit();
         if mixed_table_types {
             let key_span = get_key_span(&key).expect("all keys have spans");
             errors.report_error(ParseError::new("duplicate key").with_unexpected(key_span));
@@ -425,7 +425,7 @@ impl State {
         self.current_table.decor = decor;
         self.current_table.set_implicit(false);
         self.current_table.set_dotted(false);
-        self.current_table.set_position(self.current_position);
+        self.current_table.set_position(Some(self.current_position));
         self.current_table.span = Some(header.span.start()..header.span.end());
         self.current_header = Some(header);
     }
@@ -478,7 +478,8 @@ fn descend_path<'t>(
                         // Since tables cannot be defined more than once, redefining such tables using a
                         // [table] header is not allowed. Likewise, using dotted keys to redefine tables
                         // already defined in [table] form is not allowed.
-                        if dotted && !sweet_child_of_mine.is_implicit() {
+                        let mixed_table_types = dotted && !sweet_child_of_mine.is_implicit();
+                        if mixed_table_types {
                             let key_span = get_key_span(key).expect("all keys have spans");
                             errors.report_error(
                                 ParseError::new("duplicate key").with_unexpected(key_span),

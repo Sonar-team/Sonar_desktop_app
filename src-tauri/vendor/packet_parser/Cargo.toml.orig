@@ -1,6 +1,6 @@
 [package]
 name = "packet_parser"
-version = "0.12.1"
+version = "1.0.1"
 edition = "2024"
 authors = ["Cyprien Avico avicocyprien@yahoo.com"]
 description = "A powerful and modular Rust crate for network packet parsing."
@@ -29,7 +29,7 @@ hex = "0.4.3"
 serde_json = "1.0.149"
 
 [workspace]
-members = ["benchmark_db","integration_test", "see_unparsable"] # Spécifie que ta crate a un workspace avec d'autres projets
+members = ["benchmark_db", "ingestor","integration_test", "see_unparsable"] # Spécifie que ta crate a un workspace avec d'autres projets
 
 [profile.release]
 opt-level = 3         # Highest speed optimization
@@ -40,3 +40,7 @@ strip = false         # Keep symbols if you want better profiling/debugging
 incremental = false   # Ensures full optimization
 debug = false         # No debug info in release
 rpath = false         # No runtime path in binary
+
+[features]
+default = []
+parse_timing = []

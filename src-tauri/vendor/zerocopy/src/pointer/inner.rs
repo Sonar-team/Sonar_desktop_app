@@ -178,8 +178,8 @@ impl<'a, T: ?Sized> PtrInner<'a, T> {
 
     /// # Safety
     ///
-    /// The caller may assume that the resulting `PtrInner` addresses a subset
-    /// of the bytes of `self`'s referent.
+    /// The caller may assume that the resulting `PtrInner` addresses the subset
+    /// of the bytes of `self`'s referent addressed by `C::project(self)`.
     #[must_use]
     #[inline(always)]
     pub fn project<U: ?Sized, C: cast::Project<T, U>>(self) -> PtrInner<'a, U> {
@@ -517,8 +517,8 @@ impl<'a, T, const N: usize> PtrInner<'a, [T; N]> {
         //    operations, it has provenance for its entire referent.
         // 1. By the above lemma, if `slice`'s referent is not zero sized, then
         //    `A` is guaranteed to live for at least `'a`, because it is derived
-        //    from the same allocation as `self`, which, by invariant on `Ptr`,
-        //    lives for at least `'a`.
+        //    from the same allocation as `self`, which, by invariant on
+        //    `PtrInner`, lives for at least `'a`.
         unsafe { PtrInner::new(slice) }
     }
 }

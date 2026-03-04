@@ -10,10 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2021"
-rust-version = "1.83.0"
+edition = "2024"
+rust-version = "1.88.0"
 name = "time-core"
-version = "0.1.7"
+version = "0.1.8"
 authors = [
     "Jacob Pratt <open-source@jhpratt.dev>",
     "Time contributors",
@@ -40,6 +40,9 @@ repository = "https://github.com/time-rs/time"
 all-features = true
 targets = ["x86_64-unknown-linux-gnu"]
 rustdoc-args = ["--generate-link-to-definition"]
+
+[features]
+large-dates = []
 
 [lib]
 name = "time_core"
