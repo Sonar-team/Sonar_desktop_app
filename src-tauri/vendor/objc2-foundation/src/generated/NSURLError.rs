@@ -26,7 +26,6 @@ extern "C" {
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/foundation/nsurlerrorfailingurlstringerrorkey?language=objc)
     #[cfg(feature = "NSString")]
-    #[deprecated = "Use NSURLErrorFailingURLErrorKey instead"]
     pub static NSURLErrorFailingURLStringErrorKey: &'static NSString;
 }
 
@@ -37,7 +36,6 @@ extern "C" {
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/foundation/nserrorfailingurlstringkey?language=objc)
     #[cfg(feature = "NSString")]
-    #[deprecated = "Use NSURLErrorFailingURLErrorKey instead"]
     pub static NSErrorFailingURLStringKey: &'static NSString;
 }
 

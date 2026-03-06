@@ -111,13 +111,13 @@ impl NSSwitch {
         #[cfg(feature = "NSCell")]
         #[unsafe(method(state))]
         #[unsafe(method_family = none)]
-        pub fn state(&self) -> NSControlStateValue;
+        pub unsafe fn state(&self) -> NSControlStateValue;
 
         #[cfg(feature = "NSCell")]
         /// Setter for [`state`][Self::state].
         #[unsafe(method(setState:))]
         #[unsafe(method_family = none)]
-        pub fn setState(&self, state: NSControlStateValue);
+        pub unsafe fn setState(&self, state: NSControlStateValue);
     );
 }
 
@@ -127,11 +127,8 @@ impl NSSwitch {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -147,7 +144,7 @@ impl NSSwitch {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -157,6 +154,6 @@ impl NSSwitch {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

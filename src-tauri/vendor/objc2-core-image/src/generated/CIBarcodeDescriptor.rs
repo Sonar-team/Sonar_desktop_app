@@ -7,10 +7,10 @@ use objc2_foundation::*;
 use crate::*;
 
 extern_class!(
-    /// An abstract base class that represents a machine-readable code's attributes.
+    /// CIBarcodeDescriptor is an abstract base class that defines an abstract representation of a machine readable code's symbol attributes.
     ///
-    /// Subclasses encapsulate the formal specification and fields specific to a code type.
-    /// Each subclass is sufficient to recreate the unique symbol exactly as seen or used with a custom parser.
+    ///
+    /// Each subclass is sufficient to recreate the symbol exactly as seen or to be used with a custom parser. Subclasses of CIBarcodeDescriptor are defined for each code type to contain the formal specification of each symbology.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibarcodedescriptor?language=objc)
     #[unsafe(super(NSObject))]
@@ -57,22 +57,27 @@ impl CIBarcodeDescriptor {
 
 /// Constants indicating the percentage of the symbol that is dedicated to error correction.
 ///
+///
+/// Indicates that approximately 20% of the symbol data is dedicated to error correction.
+///
+/// Indicates that approximately 37% of the symbol data is dedicated to error correction.
+///
+/// Indicates that approximately 55% of the symbol data is dedicated to error correction.
+///
+/// Indicates that approximately 65% of the symbol data is dedicated to error correction.
+///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciqrcodeerrorcorrectionlevel?language=objc)
 // NS_ENUM
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct CIQRCodeErrorCorrectionLevel(pub NSInteger);
 impl CIQRCodeErrorCorrectionLevel {
-    /// Indicates that approximately 20% of the symbol data is dedicated to error correction.
     #[doc(alias = "CIQRCodeErrorCorrectionLevelL")]
     pub const L: Self = Self(b'L' as _);
-    /// Indicates that approximately 37% of the symbol data is dedicated to error correction.
     #[doc(alias = "CIQRCodeErrorCorrectionLevelM")]
     pub const M: Self = Self(b'M' as _);
-    /// Indicates that approximately 55% of the symbol data is dedicated to error correction.
     #[doc(alias = "CIQRCodeErrorCorrectionLevelQ")]
     pub const Q: Self = Self(b'Q' as _);
-    /// Indicates that approximately 65% of the symbol data is dedicated to error correction.
     #[doc(alias = "CIQRCodeErrorCorrectionLevelH")]
     pub const H: Self = Self(b'H' as _);
 }
@@ -86,11 +91,7 @@ unsafe impl RefEncode for CIQRCodeErrorCorrectionLevel {
 }
 
 extern_class!(
-    /// A concrete subclass of the Core Image Barcode Descriptor that represents a square QR code symbol.
-    ///
-    /// ISO/IEC 18004 defines versions from 1 to 40, where a higher symbol version indicates a
-    /// larger data-carrying capacity.
-    /// QR Codes can encode text, vCard contact information, or Uniform Resource Identifiers (URI).
+    /// CIQRCodeDescriptor is a concrete subclass of CIBarcodeDescriptor that defines an abstract representation of a QR code symbol.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciqrcodedescriptor?language=objc)
     #[unsafe(super(CIBarcodeDescriptor, NSObject))]
@@ -120,55 +121,40 @@ extern_conformance!(
 
 impl CIQRCodeDescriptor {
     extern_methods!(
-        /// The error-corrected codeword payload that comprises the QR code symbol.
+        /// The error-corrected codewords that comprise the QR code symbol.
         ///
-        /// QR Codes are formally specified in ISO/IEC 18004:2006(E).
-        /// Section 6.4.10 "Bitstream to codeword conversion" specifies the set of 8-bit codewords in the symbol
-        /// immediately prior to splitting the message into blocks and applying error correction.
         ///
-        /// During decode, error correction is applied and if successful, the message is re-ordered to the state immediately
-        /// following "Bitstream to codeword conversion."
+        /// QR Codes are formally specified in ISO/IEC 18004:2006(E). Section 6.4.10 "Bitstream to codeword conversion" specifies the set of 8-bit codewords in the symbol immediately prior to splitting the message into blocks and applying error correction.
         ///
-        /// The `errorCorrectedPayload` corresponds to this sequence of 8-bit codewords.
+        /// During decode, error correction is applied and if successful, the message is re-ordered to the state immediately following "Bitstream to codeword coversion." The errorCorrectedPayload corresponds to this sequence of 8-bit codewords.
         #[unsafe(method(errorCorrectedPayload))]
         #[unsafe(method_family = none)]
         pub unsafe fn errorCorrectedPayload(&self) -> Retained<NSData>;
 
-        /// The version of the QR code which corresponds to the size of the QR code symbol.
+        /// The version property corresponds to the size of the QR Code.
         ///
-        /// ISO/IEC 18004 defines versions from 1 to 40, where a higher symbol version indicates a larger data-carrying capacity.
-        /// This field is required in order to properly interpret the error corrected payload.
+        ///
+        /// QR Codes are square. ISO/IEC 18004 defines versions from 1 to 40, where a higher symbol version indicates a larger data carrying capacity. This field is required in order to properly interpret the error corrected payload.
         #[unsafe(method(symbolVersion))]
         #[unsafe(method_family = none)]
         pub unsafe fn symbolVersion(&self) -> NSInteger;
 
         /// The data mask pattern for the QR code symbol.
         ///
-        /// QR Codes support eight data mask patterns, which are used to avoid large black or large white areas inside the symbol body.
-        /// Valid values range from 0 to 7.
+        ///
+        /// QR Codes support eight data mask patterns, which are used to avoid large black or large white areas inside the symbol body. Valid values range from 0 to 7.
         #[unsafe(method(maskPattern))]
         #[unsafe(method_family = none)]
         pub unsafe fn maskPattern(&self) -> u8;
 
-        /// The error correction level of the QR code symbol.
+        /// The error correction level of the QR code.
         ///
-        /// QR Codes support four levels of Reed-Solomon error correction.
         ///
-        /// The possible error correction levels are enumerated in ``CIDataMatrixCodeECCVersion``.
+        /// QR Codes support four levels of Reed-Solomon error correction, in increasing error correction capability: L, M, Q, and H.
         #[unsafe(method(errorCorrectionLevel))]
         #[unsafe(method_family = none)]
         pub unsafe fn errorCorrectionLevel(&self) -> CIQRCodeErrorCorrectionLevel;
 
-        /// Initializes a QR code descriptor for the given payload and parameters.
-        ///
-        /// - Parameters:
-        /// - errorCorrectedPayload: The data to encode in the QR code symbol.
-        /// - symbolVersion: The symbol version, from 1 through 40.
-        /// - maskPattern: The mask pattern to use in the QR code, from 0 to 7.
-        /// - errorCorrectionLevel: The QR code's error correction level: L, M, Q, or H.
-        /// - Returns:
-        /// An initialized ``CIAztecCodeDescriptor`` instance
-        /// or `nil` if the parameters are invalid
         #[unsafe(method(initWithPayload:symbolVersion:maskPattern:errorCorrectionLevel:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithPayload_symbolVersion_maskPattern_errorCorrectionLevel(
@@ -179,16 +165,6 @@ impl CIQRCodeDescriptor {
             error_correction_level: CIQRCodeErrorCorrectionLevel,
         ) -> Option<Retained<Self>>;
 
-        /// Creates a QR code descriptor for the given payload and parameters.
-        ///
-        /// - Parameters:
-        /// - errorCorrectedPayload: The data to encode in the QR code symbol.
-        /// - symbolVersion: The symbol version, from 1 through 40.
-        /// - maskPattern: The mask pattern to use in the QR code, from 0 to 7.
-        /// - errorCorrectionLevel: The QR code's error correction level: L, M, Q, or H.
-        /// - Returns:
-        /// An autoreleased ``CIAztecCodeDescriptor`` instance
-        /// or `nil` if the parameters are invalid
         #[unsafe(method(descriptorWithPayload:symbolVersion:maskPattern:errorCorrectionLevel:))]
         #[unsafe(method_family = none)]
         pub unsafe fn descriptorWithPayload_symbolVersion_maskPattern_errorCorrectionLevel(
@@ -214,10 +190,10 @@ impl CIQRCodeDescriptor {
 }
 
 extern_class!(
-    /// A concrete subclass the Core Image Barcode Descriptor that represents an Aztec code symbol.
+    /// CIAztecCodeDescriptor is a concrete subclass of CIBarcodeDescriptor that defines an abstract representation of an Aztec Code symbol.
     ///
-    /// An Aztec code symbol is a 2D barcode format defined by the ISO/IEC 24778:2008 standard.
-    /// It encodes data in concentric square rings around a central bullseye pattern.
+    ///
+    /// CIAztecCodeDescriptor may not be instantiated directly.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciazteccodedescriptor?language=objc)
     #[unsafe(super(CIBarcodeDescriptor, NSObject))]
@@ -247,61 +223,44 @@ extern_conformance!(
 
 impl CIAztecCodeDescriptor {
     extern_methods!(
-        /// The error-corrected payload that comprises the the Aztec code symbol.
+        /// The error-corrected codewords that comprise the Aztec code symbol.
+        ///
         ///
         /// Aztec Codes are formally specified in ISO/IEC 24778:2008(E).
         ///
-        /// The error corrected payload consists of the 6-, 8-, 10-, or 12-bit message codewords produced
-        /// at the end of the step described in section 7.3.1.2 "Formation of data codewords", which exists
-        /// immediately prior to adding error correction. These codewords have dummy bits inserted to ensure
-        /// that an entire codeword isn't all 0's or all 1's. Clients will need to remove these extra bits
-        /// as part of interpreting the payload.
+        /// The error corrected payload consists of the 6-, 8-, 10-, or 12-bit message codewords produced at the end of the step described in section 7.3.1.2 "Formation of data codewords", which exists immediately prior to adding error correction. These codewords have dummy bits inserted to ensure that an entire codeword isn't all 0's or all 1's. Clients will need to remove these extra bits as part of interpreting the payload.
         #[unsafe(method(errorCorrectedPayload))]
         #[unsafe(method_family = none)]
         pub unsafe fn errorCorrectedPayload(&self) -> Retained<NSData>;
 
-        /// A Boolean value telling if the Aztec code is compact.
+        /// A BOOL indicating whether the symbol is compact.
         ///
-        /// Compact Aztec symbols use one-fewer ring in the central finder pattern than full-range
-        /// Aztec symbols of the same number of data layers.
+        ///
+        /// Compact Aztec symbols use one-fewer ring in the central finder pattern than full-range Aztec symbols of the same number of data layers.
         #[unsafe(method(isCompact))]
         #[unsafe(method_family = none)]
         pub unsafe fn isCompact(&self) -> bool;
 
         /// The number of data layers in the Aztec code symbol.
         ///
-        /// Combined with ``isCompact-property``, the number of data layers determines the number of
-        /// modules in the Aztec Code symbol. Valid values range from 1 to 32. Compact symbols can have
-        /// up to 4 data layers.
         ///
-        /// The number of data layers also determines the number of bits in each data codeword of the message
-        /// carried by the Aztec Code symbol.
+        /// Combined with the isCompact property, the number of data layers determines the number of modules in the Aztec Code symbol. Valid values range from 1 to 32. Compact symbols can have up to 4 data layers.
+        ///
+        /// The number of data layers also determines the number of bits in each data codeword of the message carried by the Aztec Code symbol.
         #[unsafe(method(layerCount))]
         #[unsafe(method_family = none)]
         pub unsafe fn layerCount(&self) -> NSInteger;
 
         /// The number of non-error-correction codewords carried by the Aztec code symbol.
         ///
-        /// Used to determine the level of error correction in conjunction with the number of data layers.
-        /// Valid values are 1 to 2048. Compact symbols can have up to 64 message codewords.
         ///
-        /// > Note: this value can exceed the number of message codewords allowed by the number of data
-        /// layers in this symbol. In this case, the actual number of message codewords is 1024 fewer than
-        /// this value and the message payload is to be interpreted in an application-defined manner.
+        /// Used to determine the level of error correction in conjunction with the number of data layers. Valid values are 1...2048. Compact symbols can have up to 64 message codewords.
+        ///
+        /// Note that this value can exceed the number of message codewords allowed by the number of data layers in this symbol. In this case, the actual number of message codewords is 1024 fewer than this value and the message payload is to be interpreted in an application-defined manner.
         #[unsafe(method(dataCodewordCount))]
         #[unsafe(method_family = none)]
         pub unsafe fn dataCodewordCount(&self) -> NSInteger;
 
-        /// Initializes an Aztec code descriptor for the given payload and parameters.
-        ///
-        /// - Parameters:
-        /// - errorCorrectedPayload: The data to encode in the Aztec code symbol.
-        /// - isCompact: A Boolean indicating whether or not the Aztec code is compact.
-        /// - layerCount: The number of layers in the Aztec code, from 1 to 32.
-        /// - dataCodewordCount: The number of codewords in the Aztec code, from 1 to 2048.
-        /// - Returns:
-        /// An initialized ``CIAztecCodeDescriptor`` instance
-        /// or `nil` if the parameters are invalid
         #[unsafe(method(initWithPayload:isCompact:layerCount:dataCodewordCount:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithPayload_isCompact_layerCount_dataCodewordCount(
@@ -312,16 +271,6 @@ impl CIAztecCodeDescriptor {
             data_codeword_count: NSInteger,
         ) -> Option<Retained<Self>>;
 
-        /// Creates an Aztec code descriptor for the given payload and parameters.
-        ///
-        /// - Parameters:
-        /// - errorCorrectedPayload: The data to encode in the Aztec code symbol.
-        /// - isCompact: A Boolean indicating whether or not the Aztec code is compact.
-        /// - layerCount: The number of layers in the Aztec code, from 1 to 32.
-        /// - dataCodewordCount: The number of codewords in the Aztec code, from 1 to 2048.
-        /// - Returns:
-        /// An autoreleased ``CIAztecCodeDescriptor`` instance
-        /// or `nil` if the parameters are invalid
         #[unsafe(method(descriptorWithPayload:isCompact:layerCount:dataCodewordCount:))]
         #[unsafe(method_family = none)]
         pub unsafe fn descriptorWithPayload_isCompact_layerCount_dataCodewordCount(
@@ -347,10 +296,8 @@ impl CIAztecCodeDescriptor {
 }
 
 extern_class!(
-    /// A concrete subclass of Core Image Barcode Descriptor that represents a PDF417 symbol.
+    /// CIPDF417CodeDescriptor is a concrete subclass of CIBarcodeDescriptor that defines an abstract representation of a PDF417 code symbol.
     ///
-    /// PDF417 is a stacked linear barcode symbol format used predominantly in transport, ID cards,
-    /// and inventory management. Each pattern in the code comprises 4 bars and spaces, 17 units long.
     ///
     /// Refer to the ISO/IEC 15438:2006(E) for the PDF417 symbol specification.
     ///
@@ -382,54 +329,38 @@ extern_conformance!(
 
 impl CIPDF417CodeDescriptor {
     extern_methods!(
-        /// The error-corrected payload containing the data encoded in the PDF417 code symbol.
+        /// The error-corrected codewords which comprise the PDF417 symbol. The first codeword indicates the number of data codewords in the errorCorrectedPayload.
         ///
-        /// The first codeword indicates the number of data codewords in the errorCorrectedPayload.
         ///
-        /// PDF417 codes are comprised of a start character on the left and a stop character on the right.
-        /// Each row begins and ends with special characters indicating the current row as well as information
-        /// about the dimensions of the PDF417 symbol. The errorCorrectedPayload represents the sequence
-        /// of PDF417 codewords that make up the body of the message. The first codeword indicates the number
-        /// of codewords in the message. This count includes the "count" codeword and any padding codewords,
-        /// but does not include the error correction codewords. Each codeword is a 16-bit value in the range
-        /// of 0...928. The sequence is to be interpreted as described in the PDF417 bar code symbology
-        /// specification -- ISO/IEC 15438:2006(E).
+        /// PDF417 codes are comprised of a start character on the left and a stop character on the right. Each row begins and ends with special characters indicating the current row as well as information about the dimensions of the PDF417 symbol. The errorCorrectedPayload represents the sequence of PDF417 codewords that make up the body of the message. The first codeword indicates the number of codewords in the message. This count includes the "count" codeword and any padding codewords, but does not include the error correction codewords. Each codeword is a 16-bit value in the range of 0...928. The sequence is to be interpreted as described in the PDF417 bar code symbology specification -- ISO/IEC 15438:2006(E).
         #[unsafe(method(errorCorrectedPayload))]
         #[unsafe(method_family = none)]
         pub unsafe fn errorCorrectedPayload(&self) -> Retained<NSData>;
 
-        /// A boolean value telling if the PDF417 code is compact.
+        /// A BOOL indicating whether the symbol is compact.
+        ///
         ///
         /// Compact PDF417 symbols have abbreviated right-side guard bars.
         #[unsafe(method(isCompact))]
         #[unsafe(method_family = none)]
         pub unsafe fn isCompact(&self) -> bool;
 
-        /// The number of rows in the PDF417 code symbol.
+        /// Indicates the number of rows in the rectangular matrix.
         ///
-        /// Valid row count values are from 3 to 90.
+        ///
+        /// rowCount values range from 3 to 90.
         #[unsafe(method(rowCount))]
         #[unsafe(method_family = none)]
         pub unsafe fn rowCount(&self) -> NSInteger;
 
-        /// The number of columns in the PDF417 code symbol.
+        /// Indicates the number of columns in the rectangular matrix, excluding the columns used to indicate the symbol structure.
         ///
-        /// Valid column count values are from 1 to 30.
-        /// This count excluded the columns used to indicate the symbol structure.
+        ///
+        /// columnCount values range from 1 to 30.
         #[unsafe(method(columnCount))]
         #[unsafe(method_family = none)]
         pub unsafe fn columnCount(&self) -> NSInteger;
 
-        /// Initializes an PDF417 code descriptor for the given payload and parameters.
-        ///
-        /// - Parameters:
-        /// - errorCorrectedPayload: The data to encode in the PDF417 code symbol.
-        /// - isCompact: A Boolean indicating whether or not the PDF417 code is compact.
-        /// - rowCount: The number of rows in the PDF417 code, from 3 to 90.
-        /// - columnCount: The number of columns in the Aztec code, from 1 to 30.
-        /// - Returns:
-        /// An initialized ``CIPDF417CodeDescriptor`` instance
-        /// or `nil` if the parameters are invalid
         #[unsafe(method(initWithPayload:isCompact:rowCount:columnCount:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithPayload_isCompact_rowCount_columnCount(
@@ -440,16 +371,6 @@ impl CIPDF417CodeDescriptor {
             column_count: NSInteger,
         ) -> Option<Retained<Self>>;
 
-        /// Creates an PDF417 code descriptor for the given payload and parameters.
-        ///
-        /// - Parameters:
-        /// - errorCorrectedPayload: The data to encode in the PDF417 code symbol.
-        /// - isCompact: A Boolean indicating whether or not the PDF417 code is compact.
-        /// - rowCount: The number of rows in the PDF417 code, from 3 to 90.
-        /// - columnCount: The number of columns in the Aztec code, from 1 to 30.
-        /// - Returns:
-        /// An autoreleased ``CIPDF417CodeDescriptor`` instance
-        /// or `nil` if the parameters are invalid
         #[unsafe(method(descriptorWithPayload:isCompact:rowCount:columnCount:))]
         #[unsafe(method_family = none)]
         pub unsafe fn descriptorWithPayload_isCompact_rowCount_columnCount(
@@ -476,13 +397,23 @@ impl CIPDF417CodeDescriptor {
 
 /// Constants indicating the Data Matrix code ECC version.
 ///
-/// ECC 000 - 140 symbols offer five levels of error correction using convolutional code error correction.
-/// Each successive level or error correction offers more protection for the message data but increases the
-/// size of the symbol required to carry a given message. See the ISO/IEC 16022:2006 spec for other modes.
 ///
-/// ECC 200 symbols utilize Reed-Solomon error correction.
-/// The error correction capacity for any given Data Matrix symbol is fixed by the size (in rows and columns)
-/// of the symbol. See Table 7 of ISO/IEC 16022:2006(E) for more details.
+/// ECC 000 - 140 symbols offer five levels of error correction using convolutional code error correction. Each successive level of error correction offers more protection for the message data and increases the size of the symbol required to carry a specific message. ECC 000 symbols offer no data protection. The other modes are described in ISO/IEC 16022:2006 and enumerated in this list only for completeness.
+///
+/// ECC 200 symbols utilize Reed-Solomon error correction. The error correction capacity for any given Data Matrix symbol is fixed by the size (in rows and columns) of the symbol. See Table 7 of ISO/IEC 16022:2006(E) for more details.
+///
+///
+/// Indicates error correction using convolutional code error correction with no data protection.
+///
+/// Indicates 1/4 of the symbol is dedicated to convolutional code error correction.
+///
+/// Indicates 1/3 of the symbol is dedicated to convolutional code error correction.
+///
+/// Indicates 1/2 of the symbol is dedicated to convolutional code error correction.
+///
+/// Indicates 3/4 of the symbol is dedicated to convolutional code error correction.
+///
+/// Indicates error correction using Reed-Solomon error correction. Data protection overhead varies based on symbol size.
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidatamatrixcodeeccversion?language=objc)
 // NS_ENUM
@@ -490,22 +421,16 @@ impl CIPDF417CodeDescriptor {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct CIDataMatrixCodeECCVersion(pub NSInteger);
 impl CIDataMatrixCodeECCVersion {
-    /// Indicates error correction using convolutional code error correction with no data protection.
     #[doc(alias = "CIDataMatrixCodeECCVersion000")]
     pub const Version000: Self = Self(0);
-    /// Indicates 1/4 of the symbol is dedicated to convolutional code error correction.
     #[doc(alias = "CIDataMatrixCodeECCVersion050")]
     pub const Version050: Self = Self(50);
-    /// Indicates 1/3 of the symbol is dedicated to convolutional code error correction.
     #[doc(alias = "CIDataMatrixCodeECCVersion080")]
     pub const Version080: Self = Self(80);
-    /// Indicates 1/2 of the symbol is dedicated to convolutional code error correction.
     #[doc(alias = "CIDataMatrixCodeECCVersion100")]
     pub const Version100: Self = Self(100);
-    /// Indicates 3/4 of the symbol is dedicated to convolutional code error correction.
     #[doc(alias = "CIDataMatrixCodeECCVersion140")]
     pub const Version140: Self = Self(140);
-    /// Indicates error correction using Reed-Solomon error correction. Data protection overhead varies based on symbol size.
     #[doc(alias = "CIDataMatrixCodeECCVersion200")]
     pub const Version200: Self = Self(200);
 }
@@ -519,10 +444,7 @@ unsafe impl RefEncode for CIDataMatrixCodeECCVersion {
 }
 
 extern_class!(
-    /// A concrete subclass the Core Image Barcode Descriptor that represents an Data Matrix code symbol.
-    ///
-    /// A Data Matrix code symbol is a 2D barcode format defined by the ISO/IEC 16022:2006(E) standard.
-    /// It encodes data in square or rectangular symbol with solid lines on the left and bottom sides
+    /// CIDataMatrixCodeDescriptor is a concrete subclass of CIBarcodeDescriptor that defines an abstract representation of a Data Matrix code symbol.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidatamatrixcodedescriptor?language=objc)
     #[unsafe(super(CIBarcodeDescriptor, NSObject))]
@@ -552,50 +474,40 @@ extern_conformance!(
 
 impl CIDataMatrixCodeDescriptor {
     extern_methods!(
-        /// The error-corrected payload containing the data encoded in the Data Matrix code symbol.
+        /// The error corrected payload that comprise the Data Matrix code symbol.
         ///
-        /// DataMatrix symbols are specified bn ISO/IEC 16022:2006(E). ECC 200-type symbols will always
-        /// have an even number of rows and columns.
         ///
-        /// For ECC 200-type symbols, the phases of encoding data into a symbol are described in
-        /// section 5.1 -- Encode procedure overview. The error corrected payload comprises the
-        /// de-interleaved bits of the message described at the end of Step 1: Data encodation.
+        /// DataMatrix symbols are specified bn ISO/IEC 16022:2006(E). ECC 200-type symbols will always have an even number of rows and columns.
+        ///
+        /// For ECC 200-type symbols, the phases of encoding data into a symbol are described in section 5.1 -- Encode procedure overview. The error corrected payload comprises the de-interleaved bits of the message described at the end of Step 1: Data encodation.
         #[unsafe(method(errorCorrectedPayload))]
         #[unsafe(method_family = none)]
         pub unsafe fn errorCorrectedPayload(&self) -> Retained<NSData>;
 
-        /// The number of rows in the Data Matrix code symbol.
+        /// The number of module rows.
+        ///
         ///
         /// Refer to ISO/IEC 16022:2006(E) for valid module row and column count combinations.
         #[unsafe(method(rowCount))]
         #[unsafe(method_family = none)]
         pub unsafe fn rowCount(&self) -> NSInteger;
 
-        /// The number of columns in the Data Matrix code symbol.
+        /// The number of module columns.
+        ///
         ///
         /// Refer to ISO/IEC 16022:2006(E) for valid module row and column count combinations.
         #[unsafe(method(columnCount))]
         #[unsafe(method_family = none)]
         pub unsafe fn columnCount(&self) -> NSInteger;
 
-        /// The error correction version of the Data Matrix code symbol.
+        /// The Data Matrix code ECC version.
         ///
-        /// The possible error correction version are enumerated in ``CIDataMatrixCodeECCVersion``.
-        /// Any symbol with an even number of rows and columns will be ECC 200.
+        ///
+        /// Valid values are 000, 050, 080, 100, 140, and 200. Any symbol with an even number of rows and columns will be ECC 200.
         #[unsafe(method(eccVersion))]
         #[unsafe(method_family = none)]
         pub unsafe fn eccVersion(&self) -> CIDataMatrixCodeECCVersion;
 
-        /// Initializes a Data Matrix code descriptor for the given payload and parameters.
-        ///
-        /// - Parameters:
-        /// - errorCorrectedPayload: The data to encode in the Data Matrix code symbol.
-        /// - rowCount: The number of rows in the Data Matrix code symbol.
-        /// - columnCount: The number of columns in the Data Matrix code symbol.
-        /// - eccVersion: The ``CIDataMatrixCodeECCVersion`` for the Data Matrix code symbol.
-        /// - Returns:
-        /// An initialized ``CIAztecCodeDescriptor`` instance
-        /// or `nil` if the parameters are invalid
         #[unsafe(method(initWithPayload:rowCount:columnCount:eccVersion:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithPayload_rowCount_columnCount_eccVersion(
@@ -606,16 +518,6 @@ impl CIDataMatrixCodeDescriptor {
             ecc_version: CIDataMatrixCodeECCVersion,
         ) -> Option<Retained<Self>>;
 
-        /// Creates a Data Matrix code descriptor for the given payload and parameters.
-        ///
-        /// - Parameters:
-        /// - errorCorrectedPayload: The data to encode in the Data Matrix code symbol.
-        /// - rowCount: The number of rows in the Data Matrix code symbol.
-        /// - columnCount: The number of columns in the Data Matrix code symbol.
-        /// - eccVersion: The ``CIDataMatrixCodeECCVersion`` for the Data Matrix code symbol.
-        /// - Returns:
-        /// An autoreleased ``CIAztecCodeDescriptor`` instance
-        /// or `nil` if the parameters are invalid
         #[unsafe(method(descriptorWithPayload:rowCount:columnCount:eccVersion:))]
         #[unsafe(method_family = none)]
         pub unsafe fn descriptorWithPayload_rowCount_columnCount_eccVersion(
@@ -651,8 +553,6 @@ pub unsafe trait NSUserActivityCIBarcodeDescriptor:
 {
     extern_methods!(
         /// The scanned code in the user activity passed in by system scanner.
-        ///
-        /// This property is optional. This value is present if the user activity was created from a source that detected a QR code or other code symbol.
         #[unsafe(method(detectedBarcodeDescriptor))]
         #[unsafe(method_family = none)]
         unsafe fn detectedBarcodeDescriptor(&self) -> Option<Retained<CIBarcodeDescriptor>>;

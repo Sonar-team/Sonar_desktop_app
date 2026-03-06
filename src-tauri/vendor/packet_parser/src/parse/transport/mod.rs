@@ -37,6 +37,9 @@ impl<'a> TryFrom<&'a [u8]> for Transport<'a> {
 
     fn try_from(packet: &'a [u8]) -> Result<Self, Self::Error> {
         // First try to parse as TCP (most common case)
+        // tempo de 100ms
+        // std::thread::sleep(std::time::Duration::from_nanos(1));
+
         if let Ok(tcp_packet) = TcpPacket::try_from(packet) {
             return Ok(Transport {
                 protocol: TransportProtocol::Tcp,

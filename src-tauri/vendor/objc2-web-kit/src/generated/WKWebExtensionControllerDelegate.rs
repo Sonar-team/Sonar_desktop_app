@@ -355,10 +355,6 @@ extern_protocol!(
         /// if the extension was loaded from an app extension bundle; otherwise, no action is performed if not implemented.
         ///
         /// Note: The reply message must be JSON-serializable according to ``NSJSONSerialization``.
-        ///
-        /// # Safety
-        ///
-        /// `message` should be of the correct type.
         #[optional]
         #[unsafe(method(webExtensionController:sendMessage:toApplicationWithIdentifier:forExtensionContext:replyHandler:))]
         #[unsafe(method_family = none)]

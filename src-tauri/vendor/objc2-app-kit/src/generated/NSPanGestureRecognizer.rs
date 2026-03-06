@@ -30,36 +30,36 @@ impl NSPanGestureRecognizer {
     extern_methods!(
         #[unsafe(method(buttonMask))]
         #[unsafe(method_family = none)]
-        pub fn buttonMask(&self) -> NSUInteger;
+        pub unsafe fn buttonMask(&self) -> NSUInteger;
 
         /// Setter for [`buttonMask`][Self::buttonMask].
         #[unsafe(method(setButtonMask:))]
         #[unsafe(method_family = none)]
-        pub fn setButtonMask(&self, button_mask: NSUInteger);
+        pub unsafe fn setButtonMask(&self, button_mask: NSUInteger);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(translationInView:))]
         #[unsafe(method_family = none)]
-        pub fn translationInView(&self, view: Option<&NSView>) -> NSPoint;
+        pub unsafe fn translationInView(&self, view: Option<&NSView>) -> NSPoint;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(setTranslation:inView:))]
         #[unsafe(method_family = none)]
-        pub fn setTranslation_inView(&self, translation: NSPoint, view: Option<&NSView>);
+        pub unsafe fn setTranslation_inView(&self, translation: NSPoint, view: Option<&NSView>);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(velocityInView:))]
         #[unsafe(method_family = none)]
-        pub fn velocityInView(&self, view: Option<&NSView>) -> NSPoint;
+        pub unsafe fn velocityInView(&self, view: Option<&NSView>) -> NSPoint;
 
         #[unsafe(method(numberOfTouchesRequired))]
         #[unsafe(method_family = none)]
-        pub fn numberOfTouchesRequired(&self) -> NSInteger;
+        pub unsafe fn numberOfTouchesRequired(&self) -> NSInteger;
 
         /// Setter for [`numberOfTouchesRequired`][Self::numberOfTouchesRequired].
         #[unsafe(method(setNumberOfTouchesRequired:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberOfTouchesRequired(&self, number_of_touches_required: NSInteger);
+        pub unsafe fn setNumberOfTouchesRequired(&self, number_of_touches_required: NSInteger);
     );
 }
 
@@ -67,10 +67,6 @@ impl NSPanGestureRecognizer {
 #[cfg(feature = "NSGestureRecognizer")]
 impl NSPanGestureRecognizer {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `action` must be a valid selector.
         #[unsafe(method(initWithTarget:action:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTarget_action(
@@ -79,9 +75,6 @@ impl NSPanGestureRecognizer {
             action: Option<Sel>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -97,10 +90,10 @@ impl NSPanGestureRecognizer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

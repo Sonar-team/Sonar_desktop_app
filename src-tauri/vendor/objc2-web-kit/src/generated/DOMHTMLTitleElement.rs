@@ -89,8 +89,6 @@ impl DOMHTMLTitleElement {
         pub unsafe fn text(&self) -> Retained<NSString>;
 
         /// Setter for [`text`][Self::text].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setText:))]
         #[unsafe(method_family = none)]

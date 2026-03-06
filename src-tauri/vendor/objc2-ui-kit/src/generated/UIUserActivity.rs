@@ -12,6 +12,6 @@ extern_protocol!(
     pub unsafe trait UIUserActivityRestoring: NSObjectProtocol + MainThreadOnly {
         #[unsafe(method(restoreUserActivityState:))]
         #[unsafe(method_family = none)]
-        fn restoreUserActivityState(&self, user_activity: &NSUserActivity);
+        unsafe fn restoreUserActivityState(&self, user_activity: &NSUserActivity);
     }
 );

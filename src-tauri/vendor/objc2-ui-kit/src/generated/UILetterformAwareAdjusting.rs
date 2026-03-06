@@ -43,11 +43,11 @@ extern_protocol!(
         /// `sizingRule` defaults to `UILetterformAwareSizingRuleTypographic` and determines what rule is used during the calculation of `-sizeThatFits:` and `-intrinsicContentSize`
         #[unsafe(method(sizingRule))]
         #[unsafe(method_family = none)]
-        fn sizingRule(&self) -> UILetterformAwareSizingRule;
+        unsafe fn sizingRule(&self) -> UILetterformAwareSizingRule;
 
         /// Setter for [`sizingRule`][Self::sizingRule].
         #[unsafe(method(setSizingRule:))]
         #[unsafe(method_family = none)]
-        fn setSizingRule(&self, sizing_rule: UILetterformAwareSizingRule);
+        unsafe fn setSizingRule(&self, sizing_rule: UILetterformAwareSizingRule);
     }
 );

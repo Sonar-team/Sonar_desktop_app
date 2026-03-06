@@ -46,18 +46,12 @@ impl DOMHTMLCollection {
         pub unsafe fn item(&self, index: c_uint) -> Option<Retained<DOMNode>>;
 
         #[cfg(feature = "DOMNode")]
-        /// # Safety
-        ///
-        /// `name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(namedItem:))]
         #[unsafe(method_family = none)]
         pub unsafe fn namedItem(&self, name: Option<&NSString>) -> Option<Retained<DOMNode>>;
 
         #[cfg(feature = "DOMNodeList")]
-        /// # Safety
-        ///
-        /// `name` might not allow `None`.
         #[unsafe(method(tags:))]
         #[unsafe(method_family = none)]
         pub unsafe fn tags(&self, name: Option<&NSString>) -> Option<Retained<DOMNodeList>>;

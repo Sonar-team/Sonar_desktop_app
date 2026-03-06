@@ -76,11 +76,6 @@ impl DOMMutationEvent {
         pub unsafe fn prevValue(&self) -> Retained<NSString>;
 
         #[deprecated]
-        #[unsafe(method(newValue))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn newValue(&self) -> Retained<NSString>;
-
-        #[deprecated]
         #[unsafe(method(attrName))]
         #[unsafe(method_family = none)]
         pub unsafe fn attrName(&self) -> Retained<NSString>;
@@ -91,13 +86,6 @@ impl DOMMutationEvent {
         pub unsafe fn attrChange(&self) -> c_ushort;
 
         #[cfg(feature = "DOMNode")]
-        /// # Safety
-        ///
-        /// - `type` might not allow `None`.
-        /// - `related_node` might not allow `None`.
-        /// - `prev_value` might not allow `None`.
-        /// - `new_value` might not allow `None`.
-        /// - `attr_name` might not allow `None`.
         #[unsafe(method(initMutationEvent:canBubble:cancelable:relatedNode:prevValue:newValue:attrName:attrChange:))]
         #[unsafe(method_family = none)]
         pub unsafe fn initMutationEvent_canBubble_cancelable_relatedNode_prevValue_newValue_attrName_attrChange(
@@ -144,7 +132,6 @@ impl DOMMutationEvent {
 }
 
 /// DOMMutationEventDeprecated.
-#[deprecated]
 #[cfg(all(
     feature = "DOMEvent",
     feature = "DOMObject",
@@ -153,13 +140,6 @@ impl DOMMutationEvent {
 impl DOMMutationEvent {
     extern_methods!(
         #[cfg(feature = "DOMNode")]
-        /// # Safety
-        ///
-        /// - `type` might not allow `None`.
-        /// - `related_node` might not allow `None`.
-        /// - `prev_value` might not allow `None`.
-        /// - `new_value` might not allow `None`.
-        /// - `attr_name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initMutationEvent::::::::))]
         #[unsafe(method_family = none)]

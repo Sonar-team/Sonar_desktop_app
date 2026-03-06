@@ -35,11 +35,7 @@ impl CIDetector {
         ///
         /// The detector may do image processing in this context and if the image is on the GPU and the specified context is a GPU context this may avoid additional upload to / download from the GPU. If the input image is on the CPU (or the output from a CPU based context) specifying a GPU based context (or vice versa) may reduce performance.
         ///
-        /// //  The options parameter lets you optionally specify a accuracy / performance tradeoff. Can be nil or an empty dictionary.
-        ///
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
+        /// The options parameter lets you optinally specify a accuracy / performance tradeoff. Can be nil or an empty dictionary.
         #[unsafe(method(detectorOfType:context:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn detectorOfType_context_options(
@@ -59,10 +55,6 @@ impl CIDetector {
         /// Returns an array of CIFeature instances in the given image.
         /// The array is sorted by confidence, highest confidence first.
         /// The options dictionary can contain a CIDetectorImageOrientation key value.
-        ///
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(featuresInImage:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn featuresInImage_options(
@@ -142,117 +134,31 @@ extern "C" {
 }
 
 extern "C" {
-    /// A dictionary key that configures a Core Image feature detection operation
-    /// to account for the orientation the image.
-    ///
-    /// This option is used with ``/CIDetector/featuresInImage:options:``
-    ///
-    /// The value of this key is an number object whose value is an integer between 1 and 8.
-    /// The TIFF and EXIF specifications define the orientation values that describe how the image should be displayed.
-    /// The default value is 1. For further details, see `CGImagePropertyOrientation`.
-    ///
-    /// The ``CIDetectorTypeFace`` and ``CIDetectorTypeText`` can use this option to correctly find faces or text.
-    ///
-    /// Regardless of the orientation values the ``/CIFeature/bounds-property`` which is always measured in
-    /// the cartesean coordinates system of the image that you pass to the detector.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectorimageorientation?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectorimageorientation?language=objc)
     pub static CIDetectorImageOrientation: &'static NSString;
 }
 
 extern "C" {
-    /// A dictionary key that configures a Core Image face feature detection operation
-    /// to perform additional processing to recognize closed eyes in detected faces.
-    ///
-    /// This option is used with ``/CIDetector/featuresInImage:options:``
-    ///
-    /// If the value of the key is true, then facial expressions such as blinking and smiles are extracted.
-    /// This is needed for the ``/CIFaceFeature/leftEyeClosed-property`` and ``/CIFaceFeature/rightEyeClosed-property`` to function.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectoreyeblink?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectoreyeblink?language=objc)
     pub static CIDetectorEyeBlink: &'static NSString;
 }
 
 extern "C" {
-    /// A dictionary key that configures a Core Image face feature detection operation
-    /// to perform additional processing to recognize smiles in detected faces.
-    ///
-    /// This option is used with ``/CIDetector/featuresInImage:options:``
-    ///
-    /// If the value of the key is true, then facial expressions such as blinking and smiles eyes are extracted.
-    /// This is needed for the ``/CIFaceFeature/hasSmile-property`` to function.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectorsmile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectorsmile?language=objc)
     pub static CIDetectorSmile: &'static NSString;
 }
 
 extern "C" {
-    /// A dictionary key that configures a Core Image rectangle feature detection operation
-    /// to account for the focal length of the camera used for the image.
-    ///
-    /// This option is used with ``/CIDetector/featuresInImage:options:``
-    ///
-    /// The value of this key is an NSNumber object whose value is a floating-point number. Use this option with the CIDetectorTypeRectangle
-    /// detector type to control the effect of the CIDetectorAspectRatio option on feature detection.
-    ///
-    /// This option’s value can be 0.0, -1.0, or any positive value:
-    /// * The special value of -1.0 (the default) disables the aspect ratio test for the returned rectangle.
-    /// * The special value of 0.0 enables a less precise test of aspect ratio that approximates an orthographic (non-perspective) projection.
-    /// Use this value if you want to specify the aspect ratio of the rectangle via the CIDetectorAspectRatio option, but have no means of
-    /// determining the value for the focal length in pixels. See below for a method to compute an approximate value for the focal length in pixels.
-    /// * Any other value specifies the camera focal length, in pixels, allowing the aspect ratio specification to account for perspective distortion
-    /// of rectangles in the input image.
-    ///
-    /// If you know the diagonal field of view of the camera (the scene angle subtended by the diagonal corners of an image), you can use the
-    /// following formula to compute an approximate focal length in pixels:
-    ///
-    /// `focal_length_pixels = (image_diagonal_pixels/2)/tan(FOV/2)`
-    ///
-    /// In this formula, `image_diagonal_pixels` is the length (in pixels) of the image diagonal of the maximum resolution of the camera sensor.
-    /// For example, this value is:
-    /// * `4080` pixels for a `3264 x 2448` (8 megapixel) sensor
-    /// * `5000` pixels for a `4096 x 3024` (12 megapixel) sensor.
-    ///
-    /// To measure diagonal field of view, put the camera on a tripod so that it is perpendicular to a surface and the center of the image is
-    /// oriented on a mark on the surface. Measure the distance from the mark to one of the corner points of the image (Y). Measure the distance
-    /// from the camera to the surface (Z). The field of view is then `2*arctan(Y/Z)`.
-    ///
-    /// You must specify this value in terms of the maximum sensor resolution. If the supplied CIImage has been scaled relative relative to the
-    /// maximum sensor resolution, the supplied focal length must also be similarly scaled.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectorfocallength?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectorfocallength?language=objc)
     pub static CIDetectorFocalLength: &'static NSString;
 }
 
 extern "C" {
-    /// A dictionary key that configures a Core Image rectangle feature detection operation
-    /// to search for a rectangle of a desired aspect ratio (width divided by height).
-    ///
-    /// This option is used with ``/CIDetector/featuresInImage:options:``
-    ///
-    /// The value for this key needs to be is a positive float number.
-    /// Use this option with a ``CIDetectorTypeRectangle`` detector to fine-tune the accuracy of the detector.
-    ///
-    /// For example, to more accurately find a business card (3.5 x 2 inches) in an image, specify an aspect ratio of 1.75.
-    ///
-    /// If this key is not specified, the a default value of 1.6 is used.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectoraspectratio?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectoraspectratio?language=objc)
     pub static CIDetectorAspectRatio: &'static NSString;
 }
 
 extern "C" {
-    /// A dictionary key that configures a Core Image text feature detection operation
-    /// to return feature information for components of detected features.
-    ///
-    /// This option is used with ``/CIDetector/featuresInImage:options:``
-    ///
-    /// If the value for this option configures the ``CIDetectorTypeText`` detector as follows:
-    /// * False: detect only in regions likely to contain text.
-    /// * True: detect in regions likely to contain individual characters.
-    ///
-    /// If this key is not specified, the a default is False.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectorreturnsubfeatures?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidetectorreturnsubfeatures?language=objc)
     pub static CIDetectorReturnSubFeatures: &'static NSString;
 }

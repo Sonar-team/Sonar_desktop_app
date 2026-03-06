@@ -63,88 +63,78 @@ impl UITab {
         /// The identifier associated with the tab, must be unique across the tab bar controller.
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Retained<NSString>;
+        pub unsafe fn identifier(&self) -> Retained<NSString>;
 
         /// Determines if the tab is enabled. When NO, tabs will have a disabled appearance and cannot be selected by the user.
         /// Default is YES.
         #[unsafe(method(isEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isEnabled(&self) -> bool;
+        pub unsafe fn isEnabled(&self) -> bool;
 
         /// Setter for [`isEnabled`][Self::isEnabled].
         #[unsafe(method(setEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setEnabled(&self, enabled: bool);
+        pub unsafe fn setEnabled(&self, enabled: bool);
 
         /// The title of the tab.
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: &NSString);
+        pub unsafe fn setTitle(&self, title: &NSString);
 
         #[cfg(feature = "UIImage")]
         /// The image of the tab. Default is nil.
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`image`][Self::image].
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&UIImage>);
+        pub unsafe fn setImage(&self, image: Option<&UIImage>);
 
         /// The subtitle of the tab. This is displayed only in certain contexts, like the sidebar. Default is nil.
         #[unsafe(method(subtitle))]
         #[unsafe(method_family = none)]
-        pub fn subtitle(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn subtitle(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`subtitle`][Self::subtitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSubtitle:))]
         #[unsafe(method_family = none)]
-        pub fn setSubtitle(&self, subtitle: Option<&NSString>);
+        pub unsafe fn setSubtitle(&self, subtitle: Option<&NSString>);
 
         /// The badge value of the tab. Default is nil.
         #[unsafe(method(badgeValue))]
         #[unsafe(method_family = none)]
-        pub fn badgeValue(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn badgeValue(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`badgeValue`][Self::badgeValue].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBadgeValue:))]
         #[unsafe(method_family = none)]
-        pub fn setBadgeValue(&self, badge_value: Option<&NSString>);
+        pub unsafe fn setBadgeValue(&self, badge_value: Option<&NSString>);
 
         /// The preferred placement for the tab in the contexts that allow for different tab placements.
         /// Default is `UITabPlacementAutomatic` which resolves its placement based on context.
         #[unsafe(method(preferredPlacement))]
         #[unsafe(method_family = none)]
-        pub fn preferredPlacement(&self) -> UITabPlacement;
+        pub unsafe fn preferredPlacement(&self) -> UITabPlacement;
 
         /// Setter for [`preferredPlacement`][Self::preferredPlacement].
         #[unsafe(method(setPreferredPlacement:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredPlacement(&self, preferred_placement: UITabPlacement);
+        pub unsafe fn setPreferredPlacement(&self, preferred_placement: UITabPlacement);
 
         /// A custom object associated with the tab. Default is nil.
         #[unsafe(method(userInfo))]
         #[unsafe(method_family = none)]
-        pub fn userInfo(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn userInfo(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`userInfo`][Self::userInfo].
-        ///
-        /// # Safety
-        ///
-        /// `user_info` should be of the correct type.
         #[unsafe(method(setUserInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUserInfo(&self, user_info: Option<&AnyObject>);
@@ -153,7 +143,7 @@ impl UITab {
         /// The parent group of the tab. This is only non-nil if the tab is part of a parent group, and returns nil otherwise.
         #[unsafe(method(parent))]
         #[unsafe(method_family = none)]
-        pub fn parent(&self) -> Option<Retained<UITabGroup>>;
+        pub unsafe fn parent(&self) -> Option<Retained<UITabGroup>>;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -165,61 +155,61 @@ impl UITab {
         /// otherwise.
         #[unsafe(method(tabBarController))]
         #[unsafe(method_family = none)]
-        pub fn tabBarController(&self) -> Option<Retained<UITabBarController>>;
+        pub unsafe fn tabBarController(&self) -> Option<Retained<UITabBarController>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
         /// The view controller owned by the tab. The view controller provider is used to resolve the view controller
         /// if it is currently nil. For root level tabs, the view controller for the tab must be non-nil.
         #[unsafe(method(viewController))]
         #[unsafe(method_family = none)]
-        pub fn viewController(&self) -> Option<Retained<UIViewController>>;
+        pub unsafe fn viewController(&self) -> Option<Retained<UIViewController>>;
 
         #[cfg(feature = "UITabGroup")]
-        /// The managing tab group for the tab. This returns the root-most `UITabGroup` in the tab's parent hierarchy with an
+        /// The managing tab group for the tab. This returns the rootmost `UITabGroup` in the tab's parent hierarchy with an
         /// active `managingNavigationController`. This can be different to `parent` if the tab is nested in multiple
         /// levels of tab groups. If the tab does not belong to a hierarchy with a managing navigation controller, then this
         /// will return nil. Default is nil.
         #[unsafe(method(managingTabGroup))]
         #[unsafe(method_family = none)]
-        pub fn managingTabGroup(&self) -> Option<Retained<UITabGroup>>;
+        pub unsafe fn managingTabGroup(&self) -> Option<Retained<UITabGroup>>;
 
         /// Determines if the tab is currently hidden. Default is NO.
         /// Hidden tabs cannot be accessed from the sidebar.
         #[unsafe(method(isHidden))]
         #[unsafe(method_family = none)]
-        pub fn isHidden(&self) -> bool;
+        pub unsafe fn isHidden(&self) -> bool;
 
         /// Setter for [`isHidden`][Self::isHidden].
         #[unsafe(method(setHidden:))]
         #[unsafe(method_family = none)]
-        pub fn setHidden(&self, hidden: bool);
+        pub unsafe fn setHidden(&self, hidden: bool);
 
         /// The default hidden state. When the user resets their customization, `UITab.hidden` will be set to the value
         /// of this property. Default is NO.
         #[unsafe(method(isHiddenByDefault))]
         #[unsafe(method_family = none)]
-        pub fn isHiddenByDefault(&self) -> bool;
+        pub unsafe fn isHiddenByDefault(&self) -> bool;
 
         /// Setter for [`isHiddenByDefault`][Self::isHiddenByDefault].
         #[unsafe(method(setHiddenByDefault:))]
         #[unsafe(method_family = none)]
-        pub fn setHiddenByDefault(&self, hidden_by_default: bool);
+        pub unsafe fn setHiddenByDefault(&self, hidden_by_default: bool);
 
         /// Determines if the tab's visibility can be changed by the user while editing. Default is NO.
         #[unsafe(method(allowsHiding))]
         #[unsafe(method_family = none)]
-        pub fn allowsHiding(&self) -> bool;
+        pub unsafe fn allowsHiding(&self) -> bool;
 
         /// Setter for [`allowsHiding`][Self::allowsHiding].
         #[unsafe(method(setAllowsHiding:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsHiding(&self, allows_hiding: bool);
+        pub unsafe fn setAllowsHiding(&self, allows_hiding: bool);
 
         /// Determines if the tab has a visible placement. Returns YES if the tab is visible in a tab bar
         /// that supports different tab placements. Otherwise returns NO.
         #[unsafe(method(hasVisiblePlacement))]
         #[unsafe(method_family = none)]
-        pub fn hasVisiblePlacement(&self) -> bool;
+        pub unsafe fn hasVisiblePlacement(&self) -> bool;
 
         #[cfg(all(
             feature = "UIImage",
@@ -230,10 +220,6 @@ impl UITab {
         /// Creates a tab with the specified identifier, title, image, and view controller provider.
         /// The view controller provider is called when a view controller is requested and is currently nil.
         /// For root level tabs on `UITabBarController`, the resolved view controller must be non-nil.
-        ///
-        /// # Safety
-        ///
-        /// `view_controller_provider` block's return must be a valid pointer.
         #[unsafe(method(initWithTitle:image:identifier:viewControllerProvider:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTitle_image_identifier_viewControllerProvider(
@@ -293,6 +279,6 @@ impl UIViewController {
         /// The `UITab` instance that was used to create the receiver, and represents the view controller. Default is nil.
         #[unsafe(method(tab))]
         #[unsafe(method_family = none)]
-        pub fn tab(&self) -> Option<Retained<UITab>>;
+        pub unsafe fn tab(&self) -> Option<Retained<UITab>>;
     );
 }

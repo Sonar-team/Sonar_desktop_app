@@ -42,9 +42,6 @@ extern_conformance!(
 #[cfg(feature = "NSController")]
 impl NSObjectController {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `content` should be of the correct type.
         #[unsafe(method(initWithContent:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithContent(
@@ -52,9 +49,6 @@ impl NSObjectController {
             content: Option<&AnyObject>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -64,109 +58,84 @@ impl NSObjectController {
 
         #[unsafe(method(content))]
         #[unsafe(method_family = none)]
-        pub fn content(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn content(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`content`][Self::content].
-        ///
-        /// # Safety
-        ///
-        /// `content` should be of the correct type.
         #[unsafe(method(setContent:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setContent(&self, content: Option<&AnyObject>);
 
         #[unsafe(method(selection))]
         #[unsafe(method_family = none)]
-        pub fn selection(&self) -> Retained<AnyObject>;
+        pub unsafe fn selection(&self) -> Retained<AnyObject>;
 
         #[unsafe(method(selectedObjects))]
         #[unsafe(method_family = none)]
-        pub fn selectedObjects(&self) -> Retained<NSArray>;
+        pub unsafe fn selectedObjects(&self) -> Retained<NSArray>;
 
         #[unsafe(method(automaticallyPreparesContent))]
         #[unsafe(method_family = none)]
-        pub fn automaticallyPreparesContent(&self) -> bool;
+        pub unsafe fn automaticallyPreparesContent(&self) -> bool;
 
         /// Setter for [`automaticallyPreparesContent`][Self::automaticallyPreparesContent].
         #[unsafe(method(setAutomaticallyPreparesContent:))]
         #[unsafe(method_family = none)]
-        pub fn setAutomaticallyPreparesContent(&self, automatically_prepares_content: bool);
+        pub unsafe fn setAutomaticallyPreparesContent(&self, automatically_prepares_content: bool);
 
         #[unsafe(method(prepareContent))]
         #[unsafe(method_family = none)]
-        pub fn prepareContent(&self);
+        pub unsafe fn prepareContent(&self);
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(objectClass))]
         #[unsafe(method_family = none)]
         pub unsafe fn objectClass(&self) -> Option<&'static AnyClass>;
 
         /// Setter for [`objectClass`][Self::objectClass].
-        ///
-        /// # Safety
-        ///
-        /// - `object_class` probably has further requirements.
-        /// - `object_class` might not allow `None`.
-        /// - This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setObjectClass:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setObjectClass(&self, object_class: Option<&AnyClass>);
 
         #[unsafe(method(newObject))]
         #[unsafe(method_family = new)]
-        pub fn newObject(&self) -> Retained<AnyObject>;
+        pub unsafe fn newObject(&self) -> Retained<AnyObject>;
 
-        /// # Safety
-        ///
-        /// `object` should be of the correct type.
         #[unsafe(method(addObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addObject(&self, object: &AnyObject);
 
-        /// # Safety
-        ///
-        /// `object` should be of the correct type.
         #[unsafe(method(removeObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn removeObject(&self, object: &AnyObject);
 
         #[unsafe(method(isEditable))]
         #[unsafe(method_family = none)]
-        pub fn isEditable(&self) -> bool;
+        pub unsafe fn isEditable(&self) -> bool;
 
         /// Setter for [`isEditable`][Self::isEditable].
         #[unsafe(method(setEditable:))]
         #[unsafe(method_family = none)]
-        pub fn setEditable(&self, editable: bool);
+        pub unsafe fn setEditable(&self, editable: bool);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(add:))]
         #[unsafe(method_family = none)]
         pub unsafe fn add(&self, sender: Option<&AnyObject>);
 
         #[unsafe(method(canAdd))]
         #[unsafe(method_family = none)]
-        pub fn canAdd(&self) -> bool;
+        pub unsafe fn canAdd(&self) -> bool;
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(remove:))]
         #[unsafe(method_family = none)]
         pub unsafe fn remove(&self, sender: Option<&AnyObject>);
 
         #[unsafe(method(canRemove))]
         #[unsafe(method_family = none)]
-        pub fn canRemove(&self) -> bool;
+        pub unsafe fn canRemove(&self) -> bool;
 
         #[cfg(feature = "NSUserInterfaceValidation")]
         #[unsafe(method(validateUserInterfaceItem:))]
         #[unsafe(method_family = none)]
-        pub fn validateUserInterfaceItem(
+        pub unsafe fn validateUserInterfaceItem(
             &self,
             item: &ProtocolObject<dyn NSValidatedUserInterfaceItem>,
         ) -> bool;
@@ -179,7 +148,7 @@ impl NSObjectController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -189,7 +158,7 @@ impl NSObjectController {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -201,43 +170,38 @@ impl NSObjectController {
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(managedObjectContext))]
         #[unsafe(method_family = none)]
-        pub fn managedObjectContext(&self) -> Option<Retained<NSManagedObjectContext>>;
+        pub unsafe fn managedObjectContext(&self) -> Option<Retained<NSManagedObjectContext>>;
 
         #[cfg(feature = "objc2-core-data")]
         #[cfg(target_vendor = "apple")]
         /// Setter for [`managedObjectContext`][Self::managedObjectContext].
         #[unsafe(method(setManagedObjectContext:))]
         #[unsafe(method_family = none)]
-        pub fn setManagedObjectContext(
+        pub unsafe fn setManagedObjectContext(
             &self,
             managed_object_context: Option<&NSManagedObjectContext>,
         );
 
         #[unsafe(method(entityName))]
         #[unsafe(method_family = none)]
-        pub fn entityName(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn entityName(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`entityName`][Self::entityName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setEntityName:))]
         #[unsafe(method_family = none)]
-        pub fn setEntityName(&self, entity_name: Option<&NSString>);
+        pub unsafe fn setEntityName(&self, entity_name: Option<&NSString>);
 
         #[unsafe(method(fetchPredicate))]
         #[unsafe(method_family = none)]
-        pub fn fetchPredicate(&self) -> Option<Retained<NSPredicate>>;
+        pub unsafe fn fetchPredicate(&self) -> Option<Retained<NSPredicate>>;
 
         /// Setter for [`fetchPredicate`][Self::fetchPredicate].
         #[unsafe(method(setFetchPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn setFetchPredicate(&self, fetch_predicate: Option<&NSPredicate>);
+        pub unsafe fn setFetchPredicate(&self, fetch_predicate: Option<&NSPredicate>);
 
         #[cfg(feature = "objc2-core-data")]
         #[cfg(target_vendor = "apple")]
-        /// # Safety
-        ///
-        /// `fetch_request` generic should be bound by `NSFetchRequestResult`.
         #[unsafe(method(fetchWithRequest:merge:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchWithRequest_merge_error(
@@ -246,26 +210,23 @@ impl NSObjectController {
             merge: bool,
         ) -> Result<(), Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(fetch:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetch(&self, sender: Option<&AnyObject>);
 
         #[unsafe(method(usesLazyFetching))]
         #[unsafe(method_family = none)]
-        pub fn usesLazyFetching(&self) -> bool;
+        pub unsafe fn usesLazyFetching(&self) -> bool;
 
         /// Setter for [`usesLazyFetching`][Self::usesLazyFetching].
         #[unsafe(method(setUsesLazyFetching:))]
         #[unsafe(method_family = none)]
-        pub fn setUsesLazyFetching(&self, uses_lazy_fetching: bool);
+        pub unsafe fn setUsesLazyFetching(&self, uses_lazy_fetching: bool);
 
         #[cfg(feature = "objc2-core-data")]
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(defaultFetchRequest))]
         #[unsafe(method_family = none)]
-        pub fn defaultFetchRequest(&self) -> Retained<NSFetchRequest>;
+        pub unsafe fn defaultFetchRequest(&self) -> Retained<NSFetchRequest>;
     );
 }

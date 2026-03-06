@@ -11,7 +11,6 @@ use objc2_core_foundation::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgdataconsumer?language=objc)
-#[doc(alias = "CGDataConsumerRef")]
 #[repr(C)]
 pub struct CGDataConsumer {
     inner: [u8; 0],
@@ -35,7 +34,6 @@ pub type CGDataConsumerReleaseInfoCallback = Option<unsafe extern "C-unwind" fn(
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgdataconsumercallbacks?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CGDataConsumerCallbacks {
     pub putBytes: CGDataConsumerPutBytesCallback,
@@ -70,10 +68,6 @@ unsafe impl ConcreteType for CGDataConsumer {
 }
 
 impl CGDataConsumer {
-    /// # Safety
-    ///
-    /// - `info` must be a valid pointer or null.
-    /// - `cbks` must be a valid pointer or null.
     #[doc(alias = "CGDataConsumerCreate")]
     #[inline]
     pub unsafe fn new(
@@ -92,7 +86,7 @@ impl CGDataConsumer {
 
     #[doc(alias = "CGDataConsumerCreateWithURL")]
     #[inline]
-    pub fn with_url(url: Option<&CFURL>) -> Option<CFRetained<CGDataConsumer>> {
+    pub unsafe fn with_url(url: Option<&CFURL>) -> Option<CFRetained<CGDataConsumer>> {
         extern "C-unwind" {
             fn CGDataConsumerCreateWithURL(url: Option<&CFURL>) -> Option<NonNull<CGDataConsumer>>;
         }
@@ -102,7 +96,7 @@ impl CGDataConsumer {
 
     #[doc(alias = "CGDataConsumerCreateWithCFData")]
     #[inline]
-    pub fn with_cf_data(data: Option<&CFMutableData>) -> Option<CFRetained<CGDataConsumer>> {
+    pub unsafe fn with_cf_data(data: Option<&CFMutableData>) -> Option<CFRetained<CGDataConsumer>> {
         extern "C-unwind" {
             fn CGDataConsumerCreateWithCFData(
                 data: Option<&CFMutableData>,
@@ -131,7 +125,7 @@ pub unsafe extern "C-unwind" fn CGDataConsumerCreate(
 
 #[deprecated = "renamed to `CGDataConsumer::with_url`"]
 #[inline]
-pub extern "C-unwind" fn CGDataConsumerCreateWithURL(
+pub unsafe extern "C-unwind" fn CGDataConsumerCreateWithURL(
     url: Option<&CFURL>,
 ) -> Option<CFRetained<CGDataConsumer>> {
     extern "C-unwind" {
@@ -143,7 +137,7 @@ pub extern "C-unwind" fn CGDataConsumerCreateWithURL(
 
 #[deprecated = "renamed to `CGDataConsumer::with_cf_data`"]
 #[inline]
-pub extern "C-unwind" fn CGDataConsumerCreateWithCFData(
+pub unsafe extern "C-unwind" fn CGDataConsumerCreateWithCFData(
     data: Option<&CFMutableData>,
 ) -> Option<CFRetained<CGDataConsumer>> {
     extern "C-unwind" {

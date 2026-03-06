@@ -21,9 +21,6 @@ extern_conformance!(
 #[cfg(feature = "NSClassDescription")]
 impl NSScriptClassDescription {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `a_class` probably has further requirements.
         #[unsafe(method(classDescriptionForClass:))]
         #[unsafe(method_family = none)]
         pub unsafe fn classDescriptionForClass(
@@ -31,9 +28,6 @@ impl NSScriptClassDescription {
         ) -> Option<Retained<NSScriptClassDescription>>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `class_declaration` generic should be of the correct type.
         #[unsafe(method(initWithSuiteName:className:dictionary:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithSuiteName_className_dictionary(
@@ -46,39 +40,42 @@ impl NSScriptClassDescription {
         #[cfg(feature = "NSString")]
         #[unsafe(method(suiteName))]
         #[unsafe(method_family = none)]
-        pub fn suiteName(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn suiteName(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(className))]
         #[unsafe(method_family = none)]
-        pub fn className(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn className(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(implementationClassName))]
         #[unsafe(method_family = none)]
-        pub fn implementationClassName(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn implementationClassName(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(superclassDescription))]
         #[unsafe(method_family = none)]
-        pub fn superclassDescription(&self) -> Option<Retained<NSScriptClassDescription>>;
+        pub unsafe fn superclassDescription(&self) -> Option<Retained<NSScriptClassDescription>>;
 
         #[unsafe(method(appleEventCode))]
         #[unsafe(method_family = none)]
-        pub fn appleEventCode(&self) -> FourCharCode;
+        pub unsafe fn appleEventCode(&self) -> FourCharCode;
 
         #[unsafe(method(matchesAppleEventCode:))]
         #[unsafe(method_family = none)]
-        pub fn matchesAppleEventCode(&self, apple_event_code: FourCharCode) -> bool;
+        pub unsafe fn matchesAppleEventCode(&self, apple_event_code: FourCharCode) -> bool;
 
         #[cfg(feature = "NSScriptCommandDescription")]
         #[unsafe(method(supportsCommand:))]
         #[unsafe(method_family = none)]
-        pub fn supportsCommand(&self, command_description: &NSScriptCommandDescription) -> bool;
+        pub unsafe fn supportsCommand(
+            &self,
+            command_description: &NSScriptCommandDescription,
+        ) -> bool;
 
         #[cfg(feature = "NSScriptCommandDescription")]
         #[unsafe(method(selectorForCommand:))]
         #[unsafe(method_family = none)]
-        pub fn selectorForCommand(
+        pub unsafe fn selectorForCommand(
             &self,
             command_description: &NSScriptCommandDescription,
         ) -> Option<Sel>;
@@ -86,12 +83,12 @@ impl NSScriptClassDescription {
         #[cfg(feature = "NSString")]
         #[unsafe(method(typeForKey:))]
         #[unsafe(method_family = none)]
-        pub fn typeForKey(&self, key: &NSString) -> Option<Retained<NSString>>;
+        pub unsafe fn typeForKey(&self, key: &NSString) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(classDescriptionForKey:))]
         #[unsafe(method_family = none)]
-        pub fn classDescriptionForKey(
+        pub unsafe fn classDescriptionForKey(
             &self,
             key: &NSString,
         ) -> Option<Retained<NSScriptClassDescription>>;
@@ -99,12 +96,12 @@ impl NSScriptClassDescription {
         #[cfg(feature = "NSString")]
         #[unsafe(method(appleEventCodeForKey:))]
         #[unsafe(method_family = none)]
-        pub fn appleEventCodeForKey(&self, key: &NSString) -> FourCharCode;
+        pub unsafe fn appleEventCodeForKey(&self, key: &NSString) -> FourCharCode;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(keyWithAppleEventCode:))]
         #[unsafe(method_family = none)]
-        pub fn keyWithAppleEventCode(
+        pub unsafe fn keyWithAppleEventCode(
             &self,
             apple_event_code: FourCharCode,
         ) -> Option<Retained<NSString>>;
@@ -112,33 +109,35 @@ impl NSScriptClassDescription {
         #[cfg(feature = "NSString")]
         #[unsafe(method(defaultSubcontainerAttributeKey))]
         #[unsafe(method_family = none)]
-        pub fn defaultSubcontainerAttributeKey(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn defaultSubcontainerAttributeKey(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(isLocationRequiredToCreateForKey:))]
         #[unsafe(method_family = none)]
-        pub fn isLocationRequiredToCreateForKey(&self, to_many_relationship_key: &NSString)
-            -> bool;
+        pub unsafe fn isLocationRequiredToCreateForKey(
+            &self,
+            to_many_relationship_key: &NSString,
+        ) -> bool;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(hasPropertyForKey:))]
         #[unsafe(method_family = none)]
-        pub fn hasPropertyForKey(&self, key: &NSString) -> bool;
+        pub unsafe fn hasPropertyForKey(&self, key: &NSString) -> bool;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(hasOrderedToManyRelationshipForKey:))]
         #[unsafe(method_family = none)]
-        pub fn hasOrderedToManyRelationshipForKey(&self, key: &NSString) -> bool;
+        pub unsafe fn hasOrderedToManyRelationshipForKey(&self, key: &NSString) -> bool;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(hasReadablePropertyForKey:))]
         #[unsafe(method_family = none)]
-        pub fn hasReadablePropertyForKey(&self, key: &NSString) -> bool;
+        pub unsafe fn hasReadablePropertyForKey(&self, key: &NSString) -> bool;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(hasWritablePropertyForKey:))]
         #[unsafe(method_family = none)]
-        pub fn hasWritablePropertyForKey(&self, key: &NSString) -> bool;
+        pub unsafe fn hasWritablePropertyForKey(&self, key: &NSString) -> bool;
     );
 }
 
@@ -148,20 +147,12 @@ impl NSScriptClassDescription {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSClassDescription")]
-impl DefaultRetained for NSScriptClassDescription {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSDeprecated.
@@ -172,7 +163,7 @@ impl NSScriptClassDescription {
         #[deprecated]
         #[unsafe(method(isReadOnlyKey:))]
         #[unsafe(method_family = none)]
-        pub fn isReadOnlyKey(&self, key: &NSString) -> bool;
+        pub unsafe fn isReadOnlyKey(&self, key: &NSString) -> bool;
     );
 }
 
@@ -188,12 +179,12 @@ pub unsafe trait NSObjectNSScriptClassDescription:
     extern_methods!(
         #[unsafe(method(classCode))]
         #[unsafe(method_family = none)]
-        fn classCode(&self) -> FourCharCode;
+        unsafe fn classCode(&self) -> FourCharCode;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(className))]
         #[unsafe(method_family = none)]
-        fn className(&self) -> Retained<NSString>;
+        unsafe fn className(&self) -> Retained<NSString>;
     );
 }
 

@@ -109,14 +109,11 @@ impl UIContentUnavailableView {
         #[cfg(feature = "UIContentUnavailableConfiguration")]
         #[unsafe(method(initWithConfiguration:))]
         #[unsafe(method_family = init)]
-        pub fn initWithConfiguration(
+        pub unsafe fn initWithConfiguration(
             this: Allocated<Self>,
             configuration: &UIContentUnavailableConfiguration,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -138,24 +135,22 @@ impl UIContentUnavailableView {
         /// The content unavailable configuration.
         #[unsafe(method(configuration))]
         #[unsafe(method_family = none)]
-        pub fn configuration(&self) -> Retained<UIContentUnavailableConfiguration>;
+        pub unsafe fn configuration(&self) -> Retained<UIContentUnavailableConfiguration>;
 
         #[cfg(feature = "UIContentUnavailableConfiguration")]
         /// Setter for [`configuration`][Self::configuration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setConfiguration(&self, configuration: &UIContentUnavailableConfiguration);
+        pub unsafe fn setConfiguration(&self, configuration: &UIContentUnavailableConfiguration);
 
         /// Whether the content can scroll. Default is NO.
         #[unsafe(method(isScrollEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isScrollEnabled(&self) -> bool;
+        pub unsafe fn isScrollEnabled(&self) -> bool;
 
         /// Setter for [`isScrollEnabled`][Self::isScrollEnabled].
         #[unsafe(method(setScrollEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setScrollEnabled(&self, scroll_enabled: bool);
+        pub unsafe fn setScrollEnabled(&self, scroll_enabled: bool);
     );
 }

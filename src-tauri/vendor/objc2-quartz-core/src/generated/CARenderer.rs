@@ -26,11 +26,7 @@ extern_conformance!(
 
 impl CARenderer {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `ctx` must be a valid pointer.
-        /// - `dict` generic should be of the correct type.
-        #[deprecated = "OpenGL is deprecated. (Define GL_SILENCE_DEPRECATION to silence these warnings)"]
+        #[deprecated = "+rendererWithMTLTexture"]
         #[unsafe(method(rendererWithCGLContext:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn rendererWithCGLContext_options(
@@ -39,11 +35,6 @@ impl CARenderer {
         ) -> Retained<CARenderer>;
 
         #[cfg(feature = "objc2-metal")]
-        /// # Safety
-        ///
-        /// - `tex` may need to be synchronized.
-        /// - `tex` may be unretained, you must ensure it is kept alive while in use.
-        /// - `dict` generic should be of the correct type.
         #[unsafe(method(rendererWithMTLTexture:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn rendererWithMTLTexture_options(
@@ -74,9 +65,6 @@ impl CARenderer {
         pub fn setBounds(&self, bounds: CGRect);
 
         #[cfg(all(feature = "objc2-core-foundation", feature = "objc2-core-video"))]
-        /// # Safety
-        ///
-        /// `ts` must be a valid pointer or null.
         #[unsafe(method(beginFrameAtTime:timeStamp:))]
         #[unsafe(method_family = none)]
         pub unsafe fn beginFrameAtTime_timeStamp(&self, t: CFTimeInterval, ts: *mut CVTimeStamp);
@@ -105,10 +93,6 @@ impl CARenderer {
         pub fn endFrame(&self);
 
         #[cfg(feature = "objc2-metal")]
-        /// # Safety
-        ///
-        /// - `tex` may need to be synchronized.
-        /// - `tex` may be unretained, you must ensure it is kept alive while in use.
         #[unsafe(method(setDestination:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDestination(&self, tex: &ProtocolObject<dyn MTLTexture>);
@@ -120,19 +104,12 @@ impl CARenderer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for CARenderer {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern "C" {

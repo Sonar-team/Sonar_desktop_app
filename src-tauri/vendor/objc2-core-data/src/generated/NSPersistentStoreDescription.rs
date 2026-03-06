@@ -37,8 +37,6 @@ impl NSPersistentStoreDescription {
         pub unsafe fn r#type(&self) -> Retained<NSString>;
 
         /// Setter for [`type`][Self::type].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setType:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setType(&self, r#type: &NSString);
@@ -48,8 +46,6 @@ impl NSPersistentStoreDescription {
         pub unsafe fn configuration(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`configuration`][Self::configuration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setConfiguration:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setConfiguration(&self, configuration: Option<&NSString>);
@@ -59,8 +55,6 @@ impl NSPersistentStoreDescription {
         pub unsafe fn URL(&self) -> Option<Retained<NSURL>>;
 
         /// Setter for [`URL`][Self::URL].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setURL:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setURL(&self, url: Option<&NSURL>);
@@ -69,9 +63,6 @@ impl NSPersistentStoreDescription {
         #[unsafe(method_family = none)]
         pub unsafe fn options(&self) -> Retained<NSDictionary<NSString, NSObject>>;
 
-        /// # Safety
-        ///
-        /// `option` should be of the correct type.
         #[unsafe(method(setOption:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setOption_forKey(&self, option: Option<&NSObject>, key: &NSString);
@@ -98,9 +89,6 @@ impl NSPersistentStoreDescription {
         #[unsafe(method_family = none)]
         pub unsafe fn sqlitePragmas(&self) -> Retained<NSDictionary<NSString, NSObject>>;
 
-        /// # Safety
-        ///
-        /// `value` should be of the correct type.
         #[unsafe(method(setValue:forPragmaNamed:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setValue_forPragmaNamed(&self, value: Option<&NSObject>, name: &NSString);

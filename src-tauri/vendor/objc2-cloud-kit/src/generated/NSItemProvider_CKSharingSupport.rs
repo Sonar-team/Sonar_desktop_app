@@ -45,10 +45,6 @@ pub unsafe trait NSItemProviderCKSharingSupport:
         /// `CKShare,`or an
         /// `NSError`if saving failed. Invoking the share sheet with a
         /// `CKShare`registered with this method will prompt the user to start sharing.
-        ///
-        /// # Safety
-        ///
-        /// `preparation_handler` must be a valid pointer.
         #[unsafe(method(registerCKShareWithContainer:allowedSharingOptions:preparationHandler:))]
         #[unsafe(method_family = none)]
         unsafe fn registerCKShareWithContainer_allowedSharingOptions_preparationHandler(

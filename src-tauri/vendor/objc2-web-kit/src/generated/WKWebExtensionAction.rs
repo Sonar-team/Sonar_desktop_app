@@ -94,8 +94,6 @@ impl WKWebExtensionAction {
         pub unsafe fn inspectionName(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`inspectionName`][Self::inspectionName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setInspectionName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setInspectionName(&self, inspection_name: Option<&NSString>);

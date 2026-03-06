@@ -105,43 +105,31 @@ impl UIWindow {
         #[cfg(all(feature = "UIScene", feature = "UIWindowScene"))]
         #[unsafe(method(initWithWindowScene:))]
         #[unsafe(method_family = init)]
-        pub fn initWithWindowScene(
+        pub unsafe fn initWithWindowScene(
             this: Allocated<Self>,
             window_scene: &UIWindowScene,
         ) -> Retained<Self>;
 
-        #[cfg(feature = "objc2-core-foundation")]
-        #[deprecated = "Use init(windowScene:) instead."]
-        #[unsafe(method(initWithFrame:))]
-        #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
-
-        #[deprecated = "Use init(windowScene:) instead."]
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
-
         #[cfg(all(feature = "UIScene", feature = "UIWindowScene"))]
         #[unsafe(method(windowScene))]
         #[unsafe(method_family = none)]
-        pub fn windowScene(&self) -> Option<Retained<UIWindowScene>>;
+        pub unsafe fn windowScene(&self) -> Option<Retained<UIWindowScene>>;
 
         #[cfg(all(feature = "UIScene", feature = "UIWindowScene"))]
-        /// Setter for [`windowScene`][Self::windowScene].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`windowScene`][Self::windowScene].
         #[unsafe(method(setWindowScene:))]
         #[unsafe(method_family = none)]
-        pub fn setWindowScene(&self, window_scene: Option<&UIWindowScene>);
+        pub unsafe fn setWindowScene(&self, window_scene: Option<&UIWindowScene>);
 
         #[unsafe(method(canResizeToFitContent))]
         #[unsafe(method_family = none)]
-        pub fn canResizeToFitContent(&self) -> bool;
+        pub unsafe fn canResizeToFitContent(&self) -> bool;
 
         /// Setter for [`canResizeToFitContent`][Self::canResizeToFitContent].
         #[unsafe(method(setCanResizeToFitContent:))]
         #[unsafe(method_family = none)]
-        pub fn setCanResizeToFitContent(&self, can_resize_to_fit_content: bool);
+        pub unsafe fn setCanResizeToFitContent(&self, can_resize_to_fit_content: bool);
 
         #[cfg(feature = "UIScreen")]
         #[unsafe(method(screen))]
@@ -157,13 +145,13 @@ impl UIWindow {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(windowLevel))]
         #[unsafe(method_family = none)]
-        pub fn windowLevel(&self) -> UIWindowLevel;
+        pub unsafe fn windowLevel(&self) -> UIWindowLevel;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`windowLevel`][Self::windowLevel].
         #[unsafe(method(setWindowLevel:))]
         #[unsafe(method_family = none)]
-        pub fn setWindowLevel(&self, window_level: UIWindowLevel);
+        pub unsafe fn setWindowLevel(&self, window_level: UIWindowLevel);
 
         #[unsafe(method(isKeyWindow))]
         #[unsafe(method_family = none)]
@@ -171,19 +159,19 @@ impl UIWindow {
 
         #[unsafe(method(canBecomeKeyWindow))]
         #[unsafe(method_family = none)]
-        pub fn canBecomeKeyWindow(&self) -> bool;
+        pub unsafe fn canBecomeKeyWindow(&self) -> bool;
 
         #[unsafe(method(becomeKeyWindow))]
         #[unsafe(method_family = none)]
-        pub fn becomeKeyWindow(&self);
+        pub unsafe fn becomeKeyWindow(&self);
 
         #[unsafe(method(resignKeyWindow))]
         #[unsafe(method_family = none)]
-        pub fn resignKeyWindow(&self);
+        pub unsafe fn resignKeyWindow(&self);
 
         #[unsafe(method(makeKeyWindow))]
         #[unsafe(method_family = none)]
-        pub fn makeKeyWindow(&self);
+        pub unsafe fn makeKeyWindow(&self);
 
         #[unsafe(method(makeKeyAndVisible))]
         #[unsafe(method_family = none)]
@@ -203,28 +191,43 @@ impl UIWindow {
         #[cfg(feature = "UIEvent")]
         #[unsafe(method(sendEvent:))]
         #[unsafe(method_family = none)]
-        pub fn sendEvent(&self, event: &UIEvent);
+        pub unsafe fn sendEvent(&self, event: &UIEvent);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(convertPoint:toWindow:))]
         #[unsafe(method_family = none)]
-        pub fn convertPoint_toWindow(&self, point: CGPoint, window: Option<&UIWindow>) -> CGPoint;
+        pub unsafe fn convertPoint_toWindow(
+            &self,
+            point: CGPoint,
+            window: Option<&UIWindow>,
+        ) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(convertPoint:fromWindow:))]
         #[unsafe(method_family = none)]
-        pub fn convertPoint_fromWindow(&self, point: CGPoint, window: Option<&UIWindow>)
-            -> CGPoint;
+        pub unsafe fn convertPoint_fromWindow(
+            &self,
+            point: CGPoint,
+            window: Option<&UIWindow>,
+        ) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(convertRect:toWindow:))]
         #[unsafe(method_family = none)]
-        pub fn convertRect_toWindow(&self, rect: CGRect, window: Option<&UIWindow>) -> CGRect;
+        pub unsafe fn convertRect_toWindow(
+            &self,
+            rect: CGRect,
+            window: Option<&UIWindow>,
+        ) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(convertRect:fromWindow:))]
         #[unsafe(method_family = none)]
-        pub fn convertRect_fromWindow(&self, rect: CGRect, window: Option<&UIWindow>) -> CGRect;
+        pub unsafe fn convertRect_fromWindow(
+            &self,
+            rect: CGRect,
+            window: Option<&UIWindow>,
+        ) -> CGRect;
     );
 }
 
@@ -232,9 +235,11 @@ impl UIWindow {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UIWindow {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
+        #[cfg(feature = "objc2-core-foundation")]
+        #[unsafe(method(initWithFrame:))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -248,9 +253,13 @@ impl UIWindow {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UIWindow {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -262,13 +271,13 @@ extern_protocol!(
         /// Defaults to 1.0. Must be > 0.0 and values may be clamped within a reasonable range of approximately 1:100 to 100:1.
         #[unsafe(method(aspectRatio))]
         #[unsafe(method_family = none)]
-        fn aspectRatio(&self) -> CGFloat;
+        unsafe fn aspectRatio(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`aspectRatio`][Self::aspectRatio].
         #[unsafe(method(setAspectRatio:))]
         #[unsafe(method_family = none)]
-        fn setAspectRatio(&self, aspect_ratio: CGFloat);
+        unsafe fn setAspectRatio(&self, aspect_ratio: CGFloat);
     }
 );
 
@@ -291,7 +300,7 @@ impl UIWindow {
         /// controllers will not be reflected in these cases. For anything other than full-screen/window media content, the standard `safeAreaLayoutGuide` on UIView should be used.
         #[unsafe(method(safeAreaAspectFitLayoutGuide))]
         #[unsafe(method_family = none)]
-        pub fn safeAreaAspectFitLayoutGuide(&self) -> Retained<UILayoutGuide>;
+        pub unsafe fn safeAreaAspectFitLayoutGuide(&self) -> Retained<UILayoutGuide>;
     );
 }
 
@@ -390,18 +399,15 @@ extern "C" {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uikeyboardcenterbeginuserinfokey?language=objc)
-    #[deprecated]
     pub static UIKeyboardCenterBeginUserInfoKey: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uikeyboardcenterenduserinfokey?language=objc)
-    #[deprecated]
     pub static UIKeyboardCenterEndUserInfoKey: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uikeyboardboundsuserinfokey?language=objc)
-    #[deprecated]
     pub static UIKeyboardBoundsUserInfoKey: &'static NSString;
 }

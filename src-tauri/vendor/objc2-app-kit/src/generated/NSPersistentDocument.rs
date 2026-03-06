@@ -50,14 +50,14 @@ impl NSPersistentDocument {
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(managedObjectContext))]
         #[unsafe(method_family = none)]
-        pub fn managedObjectContext(&self) -> Option<Retained<NSManagedObjectContext>>;
+        pub unsafe fn managedObjectContext(&self) -> Option<Retained<NSManagedObjectContext>>;
 
         #[cfg(feature = "objc2-core-data")]
         #[cfg(target_vendor = "apple")]
         /// Setter for [`managedObjectContext`][Self::managedObjectContext].
         #[unsafe(method(setManagedObjectContext:))]
         #[unsafe(method_family = none)]
-        pub fn setManagedObjectContext(
+        pub unsafe fn setManagedObjectContext(
             &self,
             managed_object_context: Option<&NSManagedObjectContext>,
         );
@@ -66,11 +66,8 @@ impl NSPersistentDocument {
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(managedObjectModel))]
         #[unsafe(method_family = none)]
-        pub fn managedObjectModel(&self) -> Option<Retained<NSManagedObjectModel>>;
+        pub unsafe fn managedObjectModel(&self) -> Option<Retained<NSManagedObjectModel>>;
 
-        /// # Safety
-        ///
-        /// `store_options` generic should be of the correct type.
         #[unsafe(method(configurePersistentStoreCoordinatorForURL:ofType:modelConfiguration:storeOptions:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn configurePersistentStoreCoordinatorForURL_ofType_modelConfiguration_storeOptions_error(
@@ -83,11 +80,14 @@ impl NSPersistentDocument {
 
         #[unsafe(method(persistentStoreTypeForFileType:))]
         #[unsafe(method_family = none)]
-        pub fn persistentStoreTypeForFileType(&self, file_type: &NSString) -> Retained<NSString>;
+        pub unsafe fn persistentStoreTypeForFileType(
+            &self,
+            file_type: &NSString,
+        ) -> Retained<NSString>;
 
         #[unsafe(method(writeToURL:ofType:forSaveOperation:originalContentsURL:error:_))]
         #[unsafe(method_family = none)]
-        pub fn writeToURL_ofType_forSaveOperation_originalContentsURL_error(
+        pub unsafe fn writeToURL_ofType_forSaveOperation_originalContentsURL_error(
             &self,
             absolute_url: &NSURL,
             type_name: &NSString,
@@ -97,7 +97,7 @@ impl NSPersistentDocument {
 
         #[unsafe(method(readFromURL:ofType:error:_))]
         #[unsafe(method_family = none)]
-        pub fn readFromURL_ofType_error(
+        pub unsafe fn readFromURL_ofType_error(
             &self,
             absolute_url: &NSURL,
             type_name: &NSString,
@@ -105,7 +105,7 @@ impl NSPersistentDocument {
 
         #[unsafe(method(revertToContentsOfURL:ofType:error:_))]
         #[unsafe(method_family = none)]
-        pub fn revertToContentsOfURL_ofType_error(
+        pub unsafe fn revertToContentsOfURL_ofType_error(
             &self,
             in_absolute_url: &NSURL,
             in_type_name: &NSString,
@@ -119,18 +119,18 @@ impl NSPersistentDocument {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(initWithType:error:_))]
         #[unsafe(method_family = init)]
-        pub fn initWithType_error(
+        pub unsafe fn initWithType_error(
             this: Allocated<Self>,
             type_name: &NSString,
         ) -> Result<Retained<Self>, Retained<NSError>>;
 
         #[unsafe(method(initWithContentsOfURL:ofType:error:_))]
         #[unsafe(method_family = init)]
-        pub fn initWithContentsOfURL_ofType_error(
+        pub unsafe fn initWithContentsOfURL_ofType_error(
             this: Allocated<Self>,
             url: &NSURL,
             type_name: &NSString,
@@ -138,7 +138,7 @@ impl NSPersistentDocument {
 
         #[unsafe(method(initForURL:withContentsOfURL:ofType:error:_))]
         #[unsafe(method_family = init)]
-        pub fn initForURL_withContentsOfURL_ofType_error(
+        pub unsafe fn initForURL_withContentsOfURL_ofType_error(
             this: Allocated<Self>,
             url_or_nil: Option<&NSURL>,
             contents_url: &NSURL,
@@ -153,7 +153,7 @@ impl NSPersistentDocument {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -161,10 +161,6 @@ impl NSPersistentDocument {
 #[cfg(feature = "NSDocument")]
 impl NSPersistentDocument {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `url` might not allow `None`.
-        /// - `file_type` might not allow `None`.
         #[deprecated]
         #[unsafe(method(configurePersistentStoreCoordinatorForURL:ofType:error:_))]
         #[unsafe(method_family = none)]

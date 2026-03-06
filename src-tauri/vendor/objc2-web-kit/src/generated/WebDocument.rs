@@ -19,10 +19,6 @@ extern_protocol!(
         /// Called when the corresponding data source has been created.
         ///
         /// Parameter `dataSource`: The corresponding data source.
-        ///
-        /// # Safety
-        ///
-        /// `data_source` might not allow `None`.
         #[deprecated]
         #[unsafe(method(setDataSource:))]
         #[unsafe(method_family = none)]
@@ -32,10 +28,6 @@ extern_protocol!(
         /// Called when the corresponding data source has received data.
         ///
         /// Parameter `dataSource`: The corresponding data source.
-        ///
-        /// # Safety
-        ///
-        /// `data_source` might not allow `None`.
         #[deprecated]
         #[unsafe(method(dataSourceUpdated:))]
         #[unsafe(method_family = none)]
@@ -62,10 +54,6 @@ extern_protocol!(
         /// Parameter `hostWindow`: The host window for the document view.
         ///
         /// Called before the host window is set on the parent web view.
-        ///
-        /// # Safety
-        ///
-        /// `host_window` might not allow `None`.
         #[deprecated]
         #[unsafe(method(viewWillMoveToHostWindow:))]
         #[unsafe(method_family = none)]
@@ -96,10 +84,6 @@ extern_protocol!(
         /// Parameter `wrapFlag`: YES to wrap around, NO to avoid wrapping.
         ///
         /// Returns: YES if found, NO if not found.
-        ///
-        /// # Safety
-        ///
-        /// `string` might not allow `None`.
         #[deprecated]
         #[unsafe(method(searchFor:direction:caseSensitive:wrap:))]
         #[unsafe(method_family = none)]
@@ -173,10 +157,6 @@ extern_protocol!(
         /// Called soon after the document representation is created.
         ///
         /// Parameter `dataSource`: The data source that is set.
-        ///
-        /// # Safety
-        ///
-        /// `data_source` might not allow `None`.
         #[deprecated]
         #[unsafe(method(setDataSource:))]
         #[unsafe(method_family = none)]
@@ -188,11 +168,6 @@ extern_protocol!(
         /// Parameter `data`: The data that the data source has received.
         ///
         /// Parameter `dataSource`: The data source that has received data.
-        ///
-        /// # Safety
-        ///
-        /// - `data` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[unsafe(method(receivedData:withDataSource:))]
         #[unsafe(method_family = none)]
@@ -208,11 +183,6 @@ extern_protocol!(
         /// Parameter `error`: The error that the data source has received.
         ///
         /// Parameter `dataSource`: The data source that has received the error.
-        ///
-        /// # Safety
-        ///
-        /// - `error` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[unsafe(method(receivedError:withDataSource:))]
         #[unsafe(method_family = none)]
@@ -226,10 +196,6 @@ extern_protocol!(
         /// Called when the data source has finished loading.
         ///
         /// Parameter `dataSource`: The datasource that has finished loading.
-        ///
-        /// # Safety
-        ///
-        /// `data_source` might not allow `None`.
         #[deprecated]
         #[unsafe(method(finishedLoadingWithDataSource:))]
         #[unsafe(method_family = none)]

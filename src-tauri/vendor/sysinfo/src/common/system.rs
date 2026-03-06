@@ -920,6 +920,8 @@ impl System {
 
 /// This type allows to retrieve motherboard-related information.
 ///
+/// ⚠️ Not implemented on NetBSD.
+///
 /// ```
 /// use sysinfo::Motherboard;
 ///
@@ -1042,6 +1044,8 @@ impl Motherboard {
 }
 
 /// This type allows to retrieve product-related information.
+///
+/// ⚠️ Not implemented on NetBSD.
 ///
 /// ```
 /// use sysinfo::Product;
@@ -1381,6 +1385,10 @@ pub enum ProcessStatus {
     ///
     /// Tracing stop (Linux 2.6.33 onward). Stopped by debugger during the tracing.
     ///
+    /// ## NetBSD
+    ///
+    /// The process is being traced or debugged.
+    ///
     /// ## Other OS
     ///
     /// Not available.
@@ -1441,6 +1449,14 @@ pub enum ProcessStatus {
     ///
     /// Not available.
     UninterruptibleDiskSleep,
+    /// ## NetBSD
+    ///
+    /// Suspended process.
+    ///
+    /// ## Other OS
+    ///
+    /// Not available.
+    Suspended,
     /// Unknown.
     Unknown(u32),
 }
@@ -1464,6 +1480,17 @@ pub enum KillError {
     /// The signal failed to be sent to the target process.
     FailedToSendSignal,
 }
+
+impl core::fmt::Display for KillError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::SignalDoesNotExist => f.write_str("signal does not exist"),
+            Self::FailedToSendSignal => f.write_str("failed to send signal"),
+        }
+    }
+}
+
+impl core::error::Error for KillError {}
 
 /// Struct containing information of a process.
 ///
@@ -1741,6 +1768,8 @@ impl Process {
     }
 
     /// Returns the path of the root directory.
+    ///
+    /// ⚠️ Not implemented in NetBSD.
     ///
     /// ```no_run
     /// use sysinfo::{Pid, System};
@@ -2138,6 +2167,8 @@ impl Process {
     ///
     /// **Important**: this information is computed every time this function is called.
     ///
+    /// ⚠️ Not implemented on NetBSD.
+    ///
     /// ```no_run
     /// use sysinfo::System;
     ///
@@ -2239,6 +2270,7 @@ cfg_if! {
         not(feature = "unknown-ci"),
         any(
             target_os = "freebsd",
+            target_os = "netbsd",
             target_os = "linux",
             target_os = "android",
             target_os = "macos",
@@ -2708,6 +2740,7 @@ pub fn get_current_pid() -> Result<Pid, &'static str> {
             }
         } else if #[cfg(any(
             target_os = "freebsd",
+            target_os = "netbsd",
             target_os = "linux",
             target_os = "android",
             target_os = "macos",
@@ -2827,7 +2860,7 @@ impl Cpu {
         self.inner.brand()
     }
 
-    /// Returns the CPU's frequency.
+    /// Returns the CPU's frequency (in MHz).
     ///
     /// ```no_run
     /// use sysinfo::{System, RefreshKind, CpuRefreshKind};
@@ -2889,11 +2922,15 @@ mod test {
             assert_eq!(proc_.frequency(), 0);
         }
         // In a VM, it'll fail.
-        if std::env::var("APPLE_CI").is_err() && std::env::var("FREEBSD_CI").is_err() {
-            s.refresh_cpu_specifics(CpuRefreshKind::everything());
-            for proc_ in s.cpus() {
-                assert_ne!(proc_.frequency(), 0);
-            }
+        if std::env::var("APPLE_CI").is_ok()
+            || std::env::var("FREEBSD_CI").is_ok()
+            || std::env::var("NETBSD_CI").is_ok()
+        {
+            return;
+        }
+        s.refresh_cpu_specifics(CpuRefreshKind::everything());
+        for proc_ in s.cpus() {
+            assert_ne!(proc_.frequency(), 0);
         }
     }
 

@@ -26,12 +26,12 @@ impl UIWindowSceneGeometryPreferencesIOS {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[cfg(feature = "UIOrientation")]
         #[unsafe(method(initWithInterfaceOrientations:))]
         #[unsafe(method_family = init)]
-        pub fn initWithInterfaceOrientations(
+        pub unsafe fn initWithInterfaceOrientations(
             this: Allocated<Self>,
             interface_orientations: UIInterfaceOrientationMask,
         ) -> Retained<Self>;
@@ -41,13 +41,16 @@ impl UIWindowSceneGeometryPreferencesIOS {
         /// orientations and the current supported orientations. Defaults to an empty mask to indicate no preference.
         #[unsafe(method(interfaceOrientations))]
         #[unsafe(method_family = none)]
-        pub fn interfaceOrientations(&self) -> UIInterfaceOrientationMask;
+        pub unsafe fn interfaceOrientations(&self) -> UIInterfaceOrientationMask;
 
         #[cfg(feature = "UIOrientation")]
         /// Setter for [`interfaceOrientations`][Self::interfaceOrientations].
         #[unsafe(method(setInterfaceOrientations:))]
         #[unsafe(method_family = none)]
-        pub fn setInterfaceOrientations(&self, interface_orientations: UIInterfaceOrientationMask);
+        pub unsafe fn setInterfaceOrientations(
+            &self,
+            interface_orientations: UIInterfaceOrientationMask,
+        );
     );
 }
 

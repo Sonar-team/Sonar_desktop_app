@@ -40,22 +40,11 @@ impl CKFetchShareMetadataOperation {
             share_ur_ls: &NSArray<NSURL>,
         ) -> Retained<Self>;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(shareURLs))]
         #[unsafe(method_family = none)]
         pub unsafe fn shareURLs(&self) -> Option<Retained<NSArray<NSURL>>>;
 
         /// Setter for [`shareURLs`][Self::shareURLs].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setShareURLs:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setShareURLs(&self, share_ur_ls: Option<&NSArray<NSURL>>);
@@ -69,21 +58,11 @@ impl CKFetchShareMetadataOperation {
         /// `NO.`The resulting
         /// `CKShareMetadata`will have a
         /// `rootRecordID`property regardless of the value of this property.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(shouldFetchRootRecord))]
         #[unsafe(method_family = none)]
         pub unsafe fn shouldFetchRootRecord(&self) -> bool;
 
         /// Setter for [`shouldFetchRootRecord`][Self::shouldFetchRootRecord].
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setShouldFetchRootRecord:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setShouldFetchRootRecord(&self, should_fetch_root_record: bool);
@@ -97,24 +76,12 @@ impl CKFetchShareMetadataOperation {
         /// `YES.`If nil, declares the entire root record should be downloaded. If set to an empty array, declares that no user fields should be downloaded.
         /// Defaults to
         /// `nil.`
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(rootRecordDesiredKeys))]
         #[unsafe(method_family = none)]
         pub unsafe fn rootRecordDesiredKeys(&self) -> Option<Retained<NSArray<CKRecordFieldKey>>>;
 
         #[cfg(feature = "CKRecord")]
         /// Setter for [`rootRecordDesiredKeys`][Self::rootRecordDesiredKeys].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setRootRecordDesiredKeys:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRootRecordDesiredKeys(
@@ -130,15 +97,6 @@ impl CKFetchShareMetadataOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - The returned block's argument 3 must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[unsafe(method(perShareMetadataBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn perShareMetadataBlock(
@@ -147,12 +105,6 @@ impl CKFetchShareMetadataOperation {
 
         #[cfg(all(feature = "CKShareMetadata", feature = "block2"))]
         /// Setter for [`perShareMetadataBlock`][Self::perShareMetadataBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setPerShareMetadataBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPerShareMetadataBlock(
@@ -181,13 +133,6 @@ impl CKFetchShareMetadataOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[unsafe(method(fetchShareMetadataCompletionBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchShareMetadataCompletionBlock(
@@ -196,12 +141,6 @@ impl CKFetchShareMetadataOperation {
 
         #[cfg(feature = "block2")]
         /// Setter for [`fetchShareMetadataCompletionBlock`][Self::fetchShareMetadataCompletionBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setFetchShareMetadataCompletionBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setFetchShareMetadataCompletionBlock(

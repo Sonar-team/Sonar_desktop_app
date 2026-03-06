@@ -380,7 +380,6 @@ impl DataPackage {
         let this = self;
         unsafe { (windows_core::Interface::vtable(this).SetText)(windows_core::Interface::as_raw(this), core::mem::transmute_copy(value)).ok() }
     }
-    #[cfg(feature = "deprecated")]
     pub fn SetUri<P0>(&self, value: P0) -> windows_core::Result<()>
     where
         P0: windows_core::Param<super::super::Foundation::Uri>,
@@ -1001,7 +1000,6 @@ impl DataPackageView {
             (windows_core::Interface::vtable(this).GetCustomTextAsync)(windows_core::Interface::as_raw(this), core::mem::transmute_copy(formatid), &mut result__).and_then(|| windows_core::Type::from_abi(result__))
         }
     }
-    #[cfg(feature = "deprecated")]
     pub fn GetUriAsync(&self) -> windows_core::Result<windows_future::IAsyncOperation<super::super::Foundation::Uri>> {
         let this = self;
         unsafe {
@@ -1129,7 +1127,7 @@ impl windows_core::RuntimeType for DataProviderHandler {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
 impl DataProviderHandler {
-    pub fn new<F: FnMut(windows_core::Ref<'_, DataProviderRequest>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
+    pub fn new<F: Fn(windows_core::Ref<DataProviderRequest>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
         let com = DataProviderHandlerBox { vtable: &DataProviderHandlerBox::<F>::VTABLE, count: windows_core::imp::RefCount::new(1), invoke };
         unsafe { core::mem::transmute(windows_core::imp::Box::new(com)) }
     }
@@ -1148,12 +1146,12 @@ pub struct DataProviderHandler_Vtbl {
     Invoke: unsafe extern "system" fn(this: *mut core::ffi::c_void, request: *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 #[repr(C)]
-struct DataProviderHandlerBox<F: FnMut(windows_core::Ref<'_, DataProviderRequest>) -> windows_core::Result<()> + Send + 'static> {
+struct DataProviderHandlerBox<F: Fn(windows_core::Ref<DataProviderRequest>) -> windows_core::Result<()> + Send + 'static> {
     vtable: *const DataProviderHandler_Vtbl,
     invoke: F,
     count: windows_core::imp::RefCount,
 }
-impl<F: FnMut(windows_core::Ref<'_, DataProviderRequest>) -> windows_core::Result<()> + Send + 'static> DataProviderHandlerBox<F> {
+impl<F: Fn(windows_core::Ref<DataProviderRequest>) -> windows_core::Result<()> + Send + 'static> DataProviderHandlerBox<F> {
     const VTABLE: DataProviderHandler_Vtbl = DataProviderHandler_Vtbl { base__: windows_core::IUnknown_Vtbl { QueryInterface: Self::QueryInterface, AddRef: Self::AddRef, Release: Self::Release }, Invoke: Self::Invoke };
     unsafe extern "system" fn QueryInterface(this: *mut core::ffi::c_void, iid: *const windows_core::GUID, interface: *mut *mut core::ffi::c_void) -> windows_core::HRESULT {
         unsafe {
@@ -1559,10 +1557,7 @@ pub struct IDataPackage_Vtbl {
     pub SetData: unsafe extern "system" fn(*mut core::ffi::c_void, *mut core::ffi::c_void, *mut core::ffi::c_void) -> windows_core::HRESULT,
     pub SetDataProvider: unsafe extern "system" fn(*mut core::ffi::c_void, *mut core::ffi::c_void, *mut core::ffi::c_void) -> windows_core::HRESULT,
     pub SetText: unsafe extern "system" fn(*mut core::ffi::c_void, *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(feature = "deprecated")]
     pub SetUri: unsafe extern "system" fn(*mut core::ffi::c_void, *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    SetUri: usize,
     pub SetHtmlFormat: unsafe extern "system" fn(*mut core::ffi::c_void, *mut core::ffi::c_void) -> windows_core::HRESULT,
     #[cfg(feature = "Storage_Streams")]
     pub ResourceMap: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
@@ -1778,10 +1773,7 @@ pub struct IDataPackageView_Vtbl {
     pub GetDataAsync: unsafe extern "system" fn(*mut core::ffi::c_void, *mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
     pub GetTextAsync: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
     pub GetCustomTextAsync: unsafe extern "system" fn(*mut core::ffi::c_void, *mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(feature = "deprecated")]
     pub GetUriAsync: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    GetUriAsync: usize,
     pub GetHtmlFormatAsync: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
     #[cfg(feature = "Storage_Streams")]
     pub GetResourceMapAsync: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
@@ -2100,10 +2092,7 @@ impl windows_core::RuntimeType for IStandardDataFormatsStatics {
 pub struct IStandardDataFormatsStatics_Vtbl {
     pub base__: windows_core::IInspectable_Vtbl,
     pub Text: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(feature = "deprecated")]
     pub Uri: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    Uri: usize,
     pub Html: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
     pub Rtf: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
     pub Bitmap: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
@@ -2286,7 +2275,7 @@ impl windows_core::RuntimeType for ShareProviderHandler {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
 impl ShareProviderHandler {
-    pub fn new<F: FnMut(windows_core::Ref<'_, ShareProviderOperation>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
+    pub fn new<F: Fn(windows_core::Ref<ShareProviderOperation>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
         let com = ShareProviderHandlerBox { vtable: &ShareProviderHandlerBox::<F>::VTABLE, count: windows_core::imp::RefCount::new(1), invoke };
         unsafe { core::mem::transmute(windows_core::imp::Box::new(com)) }
     }
@@ -2305,12 +2294,12 @@ pub struct ShareProviderHandler_Vtbl {
     Invoke: unsafe extern "system" fn(this: *mut core::ffi::c_void, operation: *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 #[repr(C)]
-struct ShareProviderHandlerBox<F: FnMut(windows_core::Ref<'_, ShareProviderOperation>) -> windows_core::Result<()> + Send + 'static> {
+struct ShareProviderHandlerBox<F: Fn(windows_core::Ref<ShareProviderOperation>) -> windows_core::Result<()> + Send + 'static> {
     vtable: *const ShareProviderHandler_Vtbl,
     invoke: F,
     count: windows_core::imp::RefCount,
 }
-impl<F: FnMut(windows_core::Ref<'_, ShareProviderOperation>) -> windows_core::Result<()> + Send + 'static> ShareProviderHandlerBox<F> {
+impl<F: Fn(windows_core::Ref<ShareProviderOperation>) -> windows_core::Result<()> + Send + 'static> ShareProviderHandlerBox<F> {
     const VTABLE: ShareProviderHandler_Vtbl = ShareProviderHandler_Vtbl { base__: windows_core::IUnknown_Vtbl { QueryInterface: Self::QueryInterface, AddRef: Self::AddRef, Release: Self::Release }, Invoke: Self::Invoke };
     unsafe extern "system" fn QueryInterface(this: *mut core::ffi::c_void, iid: *const windows_core::GUID, interface: *mut *mut core::ffi::c_void) -> windows_core::HRESULT {
         unsafe {
@@ -2566,7 +2555,6 @@ impl StandardDataFormats {
             (windows_core::Interface::vtable(this).Text)(windows_core::Interface::as_raw(this), &mut result__).map(|| core::mem::transmute(result__))
         })
     }
-    #[cfg(feature = "deprecated")]
     pub fn Uri() -> windows_core::Result<windows_core::HSTRING> {
         Self::IStandardDataFormatsStatics(|this| unsafe {
             let mut result__ = core::mem::zeroed();

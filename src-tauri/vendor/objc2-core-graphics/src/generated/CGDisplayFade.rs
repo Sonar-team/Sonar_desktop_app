@@ -22,9 +22,6 @@ pub type CGDisplayBlendFraction = c_float;
 pub type CGDisplayFadeInterval = c_float;
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `config` must be a valid pointer or null.
     #[cfg(all(feature = "CGDisplayConfiguration", feature = "CGError"))]
     pub fn CGConfigureDisplayFadeEffect(
         config: CGDisplayConfigRef,
@@ -40,9 +37,6 @@ extern "C-unwind" {
 pub type CGDisplayReservationInterval = c_float;
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `token` must be a valid pointer or null.
     #[cfg(feature = "CGError")]
     pub fn CGAcquireDisplayFadeReservation(
         seconds: CGDisplayReservationInterval,
@@ -50,20 +44,14 @@ extern "C-unwind" {
     ) -> CGError;
 }
 
-#[cfg(feature = "CGError")]
-#[inline]
-pub extern "C-unwind" fn CGReleaseDisplayFadeReservation(
-    token: CGDisplayFadeReservationToken,
-) -> CGError {
-    extern "C-unwind" {
-        fn CGReleaseDisplayFadeReservation(token: CGDisplayFadeReservationToken) -> CGError;
-    }
-    unsafe { CGReleaseDisplayFadeReservation(token) }
+extern "C-unwind" {
+    #[cfg(feature = "CGError")]
+    pub fn CGReleaseDisplayFadeReservation(token: CGDisplayFadeReservationToken) -> CGError;
 }
 
 #[cfg(all(feature = "CGError", feature = "libc"))]
 #[inline]
-pub extern "C-unwind" fn CGDisplayFade(
+pub unsafe extern "C-unwind" fn CGDisplayFade(
     token: CGDisplayFadeReservationToken,
     duration: CGDisplayFadeInterval,
     start_blend: CGDisplayBlendFraction,
@@ -102,7 +90,7 @@ pub extern "C-unwind" fn CGDisplayFade(
 #[cfg(feature = "libc")]
 #[deprecated = "No longer supported"]
 #[inline]
-pub extern "C-unwind" fn CGDisplayFadeOperationInProgress() -> bool {
+pub unsafe extern "C-unwind" fn CGDisplayFadeOperationInProgress() -> bool {
     extern "C-unwind" {
         fn CGDisplayFadeOperationInProgress() -> libc::boolean_t;
     }

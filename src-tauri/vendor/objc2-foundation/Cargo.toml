@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "objc2-foundation"
-version = "0.3.2"
+version = "0.3.1"
 build = false
 autolib = false
 autobins = false
@@ -40,6 +40,7 @@ repository = "https://github.com/madsmtm/objc2"
 
 [package.metadata.docs.rs]
 default-target = "aarch64-apple-darwin"
+features = ["objc2-core-services"]
 rustc-args = [
     "--cfg",
     "docsrs",
@@ -55,7 +56,6 @@ targets = [
     "x86_64-unknown-linux-gnu",
     "i686-unknown-linux-gnu",
 ]
-features = ["objc2-core-services"]
 
 [features]
 FoundationErrors = []
@@ -135,7 +135,7 @@ NSLocalizedNumberFormatRule = []
 NSLock = []
 NSMapTable = []
 NSMassFormatter = []
-NSMeasurement = ["NSUnit"]
+NSMeasurement = []
 NSMeasurementFormatter = ["bitflags"]
 NSMetadata = []
 NSMetadataAttributes = []
@@ -436,13 +436,31 @@ libc = ["dep:libc"]
 objc2-core-foundation = ["dep:objc2-core-foundation"]
 objc2-core-services = ["dep:objc2-core-services"]
 std = ["alloc"]
-unstable-darwin-objc = []
 unstable-mutation-return-null = ["NSNull"]
 unstable-static-nsstring = []
 
 [lib]
 name = "objc2_foundation"
 path = "src/lib.rs"
+
+[[example]]
+name = "basic_usage"
+path = "examples/basic_usage.rs"
+required-features = [
+    "NSArray",
+    "NSDictionary",
+    "NSEnumerator",
+    "NSRange",
+    "NSObject",
+]
+
+[[example]]
+name = "speech_synthesis"
+path = "examples/speech_synthesis.rs"
+required-features = [
+    "NSString",
+    "NSObject",
+]
 
 [[test]]
 name = "glob_import"
@@ -466,45 +484,25 @@ optional = true
 default-features = false
 
 [dependencies.objc2]
-version = ">=0.6.2, <0.8.0"
+version = ">=0.6.1, <0.8.0"
 features = ["std"]
 default-features = false
 
 [dependencies.objc2-core-foundation]
-version = "0.3.2"
+version = "0.3.1"
 features = [
-    "CFArray",
-    "CFAttributedString",
     "CFCGTypes",
-    "CFCalendar",
-    "CFCharacterSet",
-    "CFData",
-    "CFDate",
-    "CFDictionary",
-    "CFError",
-    "CFFileSecurity",
-    "CFLocale",
-    "CFMachPort",
-    "CFMessagePort",
     "CFRunLoop",
-    "CFSet",
-    "CFStream",
-    "CFURL",
     "objc2",
 ]
 optional = true
-default-features = false
-
-[dev-dependencies.objc2-core-foundation]
-version = "0.3.2"
-features = ["CFString"]
 default-features = false
 
 [dev-dependencies.static_assertions]
 version = "1.1.0"
 
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2-core-services]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "AE",
     "AEDataModel",

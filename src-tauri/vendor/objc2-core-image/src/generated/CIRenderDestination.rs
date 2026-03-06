@@ -69,10 +69,6 @@ impl CIRenderDestination {
         ) -> Retained<Self>;
 
         #[cfg(feature = "objc2-metal")]
-        /// # Safety
-        ///
-        /// - `texture` may need to be synchronized.
-        /// - `texture` may be unretained, you must ensure it is kept alive while in use.
         #[unsafe(method(initWithMTLTexture:commandBuffer:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithMTLTexture_commandBuffer(
@@ -82,9 +78,6 @@ impl CIRenderDestination {
         ) -> Retained<Self>;
 
         #[cfg(all(feature = "block2", feature = "objc2-metal"))]
-        /// # Safety
-        ///
-        /// `block` block's return must be a valid pointer.
         #[unsafe(method(initWithWidth:height:pixelFormat:commandBuffer:mtlTextureProvider:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithWidth_height_pixelFormat_commandBuffer_mtlTextureProvider(
@@ -107,9 +100,6 @@ impl CIRenderDestination {
         ) -> Retained<Self>;
 
         #[cfg(feature = "CIImage")]
-        /// # Safety
-        ///
-        /// `data` must be a valid pointer.
         #[unsafe(method(initWithBitmapData:width:height:bytesPerRow:format:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithBitmapData_width_height_bytesPerRow_format(
@@ -198,20 +188,6 @@ impl CIRenderDestination {
             &self,
             blends_in_destination_color_space: bool,
         );
-
-        /// Tell the next render using this destination to capture a Metal trace.
-        ///
-        /// If this property is set to a file-based URL, then the next render using this
-        /// destination will capture a Metal trace, deleting any existing file if present.
-        /// This property is nil by default.
-        #[unsafe(method(captureTraceURL))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn captureTraceURL(&self) -> Option<Retained<NSURL>>;
-
-        /// Setter for [`captureTraceURL`][Self::captureTraceURL].
-        #[unsafe(method(setCaptureTraceURL:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn setCaptureTraceURL(&self, capture_trace_url: Option<&NSURL>);
     );
 }
 

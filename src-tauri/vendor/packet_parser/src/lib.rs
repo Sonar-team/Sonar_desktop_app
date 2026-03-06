@@ -44,13 +44,12 @@
 //! ├── Network (IPv4/IPv6)
 //! │   ├── source_ip: IpAddr
 //! │   ├── destination_ip: IpAddr
-//! │   ├── protocol: IpProtocol
-//! │   └── ttl: u8
+//! │   └── protocol: IpProtocol
 //! │
 //! ├── Transport (TCP/UDP/ICMP)
 //! │   ├── source_port: Option<u16>
 //! │   ├── destination_port: Option<u16>
-//! │   └── flags: TransportFlags
+//! │   └── protocol: TransportProtocol
 //! │
 //! └── Application
 //!     ├── protocol: ApplicationProtocol
@@ -66,6 +65,7 @@
 //! use pnet::packet::ethernet::EtherType;
 //! use pnet::packet::ip::IpNextHeaderProtocol as IpProtocol;
 //! use packet_parser::parse::application::protocols::ApplicationProtocol;
+//! use packet_parser::parse::transport::protocols::TransportProtocol;
 //!
 //! pub struct FlattenedPacket<'a> {
 //!     // Data Link Layer (Ethernet)
@@ -77,12 +77,11 @@
 //!     pub source_ip: IpAddr,
 //!     pub destination_ip: IpAddr,
 //!     pub ip_protocol: IpProtocol,
-//!     pub ttl: u8,
 //!     
 //!     // Transport Layer
 //!     pub source_port: Option<u16>,
 //!     pub destination_port: Option<u16>,
-//!     pub transport_flags: u16,  // Using u16 as a simple representation of flags
+//!     pub transport_protocol: TransportProtocol,
 //!     
 //!     // Application Layer
 //!     pub application_protocol: Option<ApplicationProtocol<'a>>,

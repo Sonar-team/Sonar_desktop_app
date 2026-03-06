@@ -7,7 +7,7 @@
 
 use crate::backend_interface::*;
 use crate::error::{InitError, SwResultExt};
-use crate::{util, Rect, SoftBufferError};
+use crate::{Rect, SoftBufferError};
 use raw_window_handle::{
     HasDisplayHandle, HasWindowHandle, RawDisplayHandle, RawWindowHandle, XcbDisplayHandle,
     XcbWindowHandle,
@@ -36,7 +36,6 @@ use x11rb::protocol::shm::{self, ConnectionExt as _};
 use x11rb::protocol::xproto::{self, ConnectionExt as _, ImageOrder, VisualClass, Visualid};
 use x11rb::xcb_ffi::XCBConnection;
 
-#[derive(Debug)]
 pub struct X11DisplayImpl<D: ?Sized> {
     /// The handle to the XCB connection.
     connection: Option<XCBConnection>,
@@ -94,7 +93,7 @@ impl<D: HasDisplayHandle + ?Sized> ContextInterface<D> for Arc<X11DisplayImpl<D>
             }
             None => {
                 // The user didn't provide an XCB connection, so create our own.
-                tracing::info!("no XCB connection provided by the user, so spawning our own");
+                log::info!("no XCB connection provided by the user, so spawning our own");
                 XCBConnection::connect(None)
                     .swbuf_err("Failed to spawn XCB connection")?
                     .0
@@ -103,7 +102,7 @@ impl<D: HasDisplayHandle + ?Sized> ContextInterface<D> for Arc<X11DisplayImpl<D>
 
         let is_shm_available = is_shm_available(&connection);
         if !is_shm_available {
-            tracing::warn!("SHM extension is not available. Performance may be poor.");
+            log::warn!("SHM extension is not available. Performance may be poor.");
         }
 
         let supported_visuals = supported_visuals(&connection);
@@ -126,7 +125,6 @@ impl<D: ?Sized> X11DisplayImpl<D> {
 }
 
 /// The handle to an X11 drawing context.
-#[derive(Debug)]
 pub struct X11Impl<D: ?Sized, W: ?Sized> {
     /// X display this window belongs to.
     display: Arc<X11DisplayImpl<D>>,
@@ -157,16 +155,14 @@ pub struct X11Impl<D: ?Sized, W: ?Sized> {
 }
 
 /// The buffer that is being drawn to.
-#[derive(Debug)]
 enum Buffer {
     /// A buffer implemented using shared memory to prevent unnecessary copying.
     Shm(ShmBuffer),
 
     /// A normal buffer that we send over the wire.
-    Wire(util::PixelBuffer),
+    Wire(Vec<u32>),
 }
 
-#[derive(Debug)]
 struct ShmBuffer {
     /// The shared memory segment, paired with its ID.
     seg: Option<(ShmSegment, shm::Seg)>,
@@ -188,10 +184,7 @@ struct ShmBuffer {
 
 impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> for X11Impl<D, W> {
     type Context = Arc<X11DisplayImpl<D>>;
-    type Buffer<'a>
-        = BufferImpl<'a, D, W>
-    where
-        Self: 'a;
+    type Buffer<'a> = BufferImpl<'a, D, W> where Self: 'a;
 
     /// Create a new `X11Impl` from a `HasWindowHandle`.
     fn new(window_src: W, display: &Arc<X11DisplayImpl<D>>) -> Result<Self, InitError<W>> {
@@ -200,8 +193,10 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> fo
         let window_handle = match raw {
             RawWindowHandle::Xcb(xcb) => xcb,
             RawWindowHandle::Xlib(xlib) => {
-                let window = NonZeroU32::new(xlib.window as u32)
-                    .ok_or(SoftBufferError::IncompleteWindowHandle)?;
+                let window = match NonZeroU32::new(xlib.window as u32) {
+                    Some(window) => window,
+                    None => return Err(SoftBufferError::IncompleteWindowHandle.into()),
+                };
                 let mut xcb_window_handle = XcbWindowHandle::new(window);
                 xcb_window_handle.visual_id = NonZeroU32::new(xlib.visual_id as u32);
                 xcb_window_handle
@@ -211,7 +206,7 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> fo
             }
         };
 
-        tracing::trace!("new: window_handle={:X}", window_handle.window);
+        log::trace!("new: window_handle={:X}", window_handle.window);
         let window = window_handle.window.get();
 
         // Run in parallel: start getting the window depth and (if necessary) visual.
@@ -289,7 +284,7 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> fo
             })
         } else {
             // SHM is not available.
-            Buffer::Wire(util::PixelBuffer(Vec::new()))
+            Buffer::Wire(Vec::new())
         };
 
         Ok(Self {
@@ -311,7 +306,7 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> fo
     }
 
     fn resize(&mut self, width: NonZeroU32, height: NonZeroU32) -> Result<(), SoftBufferError> {
-        tracing::trace!(
+        log::trace!(
             "resize: window={:X}, size={}x{}",
             self.window,
             width,
@@ -341,7 +336,7 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> fo
     }
 
     fn buffer_mut(&mut self) -> Result<BufferImpl<'_, D, W>, SoftBufferError> {
-        tracing::trace!("buffer_mut: window={:X}", self.window);
+        log::trace!("buffer_mut: window={:X}", self.window);
 
         // Finish waiting on the previous `shm::PutImage` request, if any.
         self.buffer.finish_wait(self.display.connection())?;
@@ -351,7 +346,7 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> fo
     }
 
     fn fetch(&mut self) -> Result<Vec<u32>, SoftBufferError> {
-        tracing::trace!("fetch: window={:X}", self.window);
+        log::trace!("fetch: window={:X}", self.window);
 
         let (width, height) = self
             .size
@@ -387,20 +382,11 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> fo
     }
 }
 
-#[derive(Debug)]
 pub struct BufferImpl<'a, D: ?Sized, W: ?Sized>(&'a mut X11Impl<D, W>);
 
-impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle + ?Sized> BufferInterface
-    for BufferImpl<'_, D, W>
+impl<'a, D: HasDisplayHandle + ?Sized, W: HasWindowHandle + ?Sized> BufferInterface
+    for BufferImpl<'a, D, W>
 {
-    fn width(&self) -> NonZeroU32 {
-        self.0.size.unwrap().0.into()
-    }
-
-    fn height(&self) -> NonZeroU32 {
-        self.0.size.unwrap().1.into()
-    }
-
     #[inline]
     fn pixels(&self) -> &[u32] {
         // SAFETY: We called `finish_wait` on the buffer, so it is safe to call `buffer()`.
@@ -429,12 +415,12 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle + ?Sized> BufferInterface
             .size
             .expect("Must set size of surface before calling `present_with_damage()`");
 
-        tracing::trace!("present: window={:X}", imp.window);
+        log::trace!("present: window={:X}", imp.window);
 
         match imp.buffer {
             Buffer::Wire(ref wire) => {
                 // This is a suboptimal strategy, raise a stink in the debug logs.
-                tracing::debug!("Falling back to non-SHM method for window drawing.");
+                log::debug!("Falling back to non-SHM method for window drawing.");
 
                 imp.display
                     .connection()
@@ -694,7 +680,6 @@ impl ShmBuffer {
     }
 }
 
-#[derive(Debug)]
 struct ShmSegment {
     id: File,
     ptr: NonNull<i8>,
@@ -717,21 +702,26 @@ impl ShmSegment {
         id.set_len(size as u64)?;
 
         // Map the shared memory to our file descriptor space.
-        let ptr = NonNull::new(unsafe {
-            mm::mmap(
+        let ptr = unsafe {
+            let ptr = mm::mmap(
                 null_mut(),
                 size,
                 mm::ProtFlags::READ | mm::ProtFlags::WRITE,
                 mm::MapFlags::SHARED,
                 &id,
                 0,
-            )?
-        })
-        .ok_or(io::Error::new(
-            io::ErrorKind::Other,
-            "unexpected null when mapping SHM segment",
-        ))?
-        .cast();
+            )?;
+
+            match NonNull::new(ptr.cast()) {
+                Some(ptr) => ptr,
+                None => {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        "unexpected null when mapping SHM segment",
+                    ));
+                }
+            }
+        };
 
         Ok(Self {
             id,
@@ -801,10 +791,7 @@ impl<D: ?Sized> Drop for X11DisplayImpl<D> {
 impl<D: ?Sized, W: ?Sized> Drop for X11Impl<D, W> {
     fn drop(&mut self) {
         // If we used SHM, make sure it's detached from the server.
-        if let Buffer::Shm(mut shm) = mem::replace(
-            &mut self.buffer,
-            Buffer::Wire(util::PixelBuffer(Vec::new())),
-        ) {
+        if let Buffer::Shm(mut shm) = mem::replace(&mut self.buffer, Buffer::Wire(Vec::new())) {
             // If we were in the middle of processing a buffer, wait for it to finish.
             shm.finish_wait(self.display.connection()).ok();
 
@@ -827,7 +814,7 @@ impl<D: ?Sized, W: ?Sized> Drop for X11Impl<D, W> {
 
 /// Create a shared memory identifier.
 fn create_shm_id() -> io::Result<OwnedFd> {
-    use posix_shm::{Mode, OFlags};
+    use posix_shm::{Mode, ShmOFlags};
 
     let mut rng = fastrand::Rng::new();
     let mut name = String::with_capacity(23);
@@ -840,18 +827,18 @@ fn create_shm_id() -> io::Result<OwnedFd> {
         name.extend(std::iter::repeat_with(|| rng.alphanumeric()).take(7));
 
         // Try to create the shared memory segment.
-        match posix_shm::open(
+        match posix_shm::shm_open(
             &name,
-            OFlags::RDWR | OFlags::CREATE | OFlags::EXCL,
+            ShmOFlags::RDWR | ShmOFlags::CREATE | ShmOFlags::EXCL,
             Mode::RWXU,
         ) {
             Ok(id) => {
-                posix_shm::unlink(&name).ok();
+                posix_shm::shm_unlink(&name).ok();
                 return Ok(id);
             }
 
             Err(rustix::io::Errno::EXIST) => {
-                tracing::warn!("x11: SHM ID collision at {} on try number {}", name, i);
+                log::warn!("x11: SHM ID collision at {} on try number {}", name, i);
             }
 
             Err(e) => return Err(e.into()),
@@ -903,7 +890,7 @@ fn supported_visuals(c: &impl Connection) -> HashSet<Visualid> {
         .iter()
         .any(|f| (f.depth == 24 || f.depth == 32) && f.bits_per_pixel == 32)
     {
-        tracing::warn!("X11 server does not have a depth 24/32 format with 32 bits per pixel");
+        log::warn!("X11 server does not have a depth 24/32 format with 32 bits per pixel");
         return HashSet::new();
     }
 

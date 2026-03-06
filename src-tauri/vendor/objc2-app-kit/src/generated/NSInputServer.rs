@@ -10,22 +10,11 @@ use crate::*;
 extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsinputserviceprovider?language=objc)
     pub unsafe trait NSInputServiceProvider {
-        /// # Safety
-        ///
-        /// - `string` should be of the correct type.
-        /// - `string` might not allow `None`.
-        /// - `sender` should be of the correct type.
-        /// - `sender` might not allow `None`.
         #[deprecated]
         #[unsafe(method(insertText:client:))]
         #[unsafe(method_family = none)]
         unsafe fn insertText_client(&self, string: Option<&AnyObject>, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// - `selector` must be a valid selector.
-        /// - `sender` should be of the correct type.
-        /// - `sender` might not allow `None`.
         #[deprecated]
         #[unsafe(method(doCommandBySelector:client:))]
         #[unsafe(method_family = none)]
@@ -35,18 +24,11 @@ extern_protocol!(
             sender: Option<&AnyObject>,
         );
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[deprecated]
         #[unsafe(method(markedTextAbandoned:))]
         #[unsafe(method_family = none)]
         unsafe fn markedTextAbandoned(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// - `sender` should be of the correct type.
-        /// - `sender` might not allow `None`.
         #[deprecated]
         #[unsafe(method(markedTextSelectionChanged:client:))]
         #[unsafe(method_family = none)]
@@ -56,9 +38,6 @@ extern_protocol!(
             sender: Option<&AnyObject>,
         );
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[deprecated]
         #[unsafe(method(terminate:))]
         #[unsafe(method_family = none)]
@@ -67,59 +46,43 @@ extern_protocol!(
         #[deprecated]
         #[unsafe(method(canBeDisabled))]
         #[unsafe(method_family = none)]
-        fn canBeDisabled(&self) -> bool;
+        unsafe fn canBeDisabled(&self) -> bool;
 
         #[deprecated]
         #[unsafe(method(wantsToInterpretAllKeystrokes))]
         #[unsafe(method_family = none)]
-        fn wantsToInterpretAllKeystrokes(&self) -> bool;
+        unsafe fn wantsToInterpretAllKeystrokes(&self) -> bool;
 
         #[deprecated]
         #[unsafe(method(wantsToHandleMouseEvents))]
         #[unsafe(method_family = none)]
-        fn wantsToHandleMouseEvents(&self) -> bool;
+        unsafe fn wantsToHandleMouseEvents(&self) -> bool;
 
         #[deprecated]
         #[unsafe(method(wantsToDelayTextChangeNotifications))]
         #[unsafe(method_family = none)]
-        fn wantsToDelayTextChangeNotifications(&self) -> bool;
+        unsafe fn wantsToDelayTextChangeNotifications(&self) -> bool;
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[deprecated]
         #[unsafe(method(inputClientBecomeActive:))]
         #[unsafe(method_family = none)]
         unsafe fn inputClientBecomeActive(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[deprecated]
         #[unsafe(method(inputClientResignActive:))]
         #[unsafe(method_family = none)]
         unsafe fn inputClientResignActive(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[deprecated]
         #[unsafe(method(inputClientEnabled:))]
         #[unsafe(method_family = none)]
         unsafe fn inputClientEnabled(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[deprecated]
         #[unsafe(method(inputClientDisabled:))]
         #[unsafe(method_family = none)]
         unsafe fn inputClientDisabled(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// - `sender` should be of the correct type.
-        /// - `sender` might not allow `None`.
         #[deprecated]
         #[unsafe(method(activeConversationWillChange:fromOldConversation:))]
         #[unsafe(method_family = none)]
@@ -129,10 +92,6 @@ extern_protocol!(
             old_conversation: NSInteger,
         );
 
-        /// # Safety
-        ///
-        /// - `sender` should be of the correct type.
-        /// - `sender` might not allow `None`.
         #[deprecated]
         #[unsafe(method(activeConversationChanged:toNewConversation:))]
         #[unsafe(method_family = none)]
@@ -147,10 +106,6 @@ extern_protocol!(
 extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsinputservermousetracker?language=objc)
     pub unsafe trait NSInputServerMouseTracker {
-        /// # Safety
-        ///
-        /// - `sender` should be of the correct type.
-        /// - `sender` might not allow `None`.
         #[deprecated]
         #[unsafe(method(mouseDownOnCharacterIndex:atCoordinate:withModifier:client:))]
         #[unsafe(method_family = none)]
@@ -162,10 +117,6 @@ extern_protocol!(
             sender: Option<&AnyObject>,
         ) -> bool;
 
-        /// # Safety
-        ///
-        /// - `sender` should be of the correct type.
-        /// - `sender` might not allow `None`.
         #[deprecated]
         #[unsafe(method(mouseDraggedOnCharacterIndex:atCoordinate:withModifier:client:))]
         #[unsafe(method_family = none)]
@@ -177,10 +128,6 @@ extern_protocol!(
             sender: Option<&AnyObject>,
         ) -> bool;
 
-        /// # Safety
-        ///
-        /// - `sender` should be of the correct type.
-        /// - `sender` might not allow `None`.
         #[deprecated]
         #[unsafe(method(mouseUpOnCharacterIndex:atCoordinate:withModifier:client:))]
         #[unsafe(method_family = none)]
@@ -216,11 +163,6 @@ extern_conformance!(
 
 impl NSInputServer {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `delegate` should be of the correct type.
-        /// - `delegate` might not allow `None`.
-        /// - `name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initWithDelegate:name:))]
         #[unsafe(method_family = init)]
@@ -237,17 +179,10 @@ impl NSInputServer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSInputServer {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

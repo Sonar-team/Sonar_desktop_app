@@ -89,8 +89,6 @@ impl DOMHTMLTableSectionElement {
         pub unsafe fn align(&self) -> Retained<NSString>;
 
         /// Setter for [`align`][Self::align].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAlign:))]
         #[unsafe(method_family = none)]
@@ -102,8 +100,6 @@ impl DOMHTMLTableSectionElement {
         pub unsafe fn ch(&self) -> Retained<NSString>;
 
         /// Setter for [`ch`][Self::ch].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setCh:))]
         #[unsafe(method_family = none)]
@@ -115,8 +111,6 @@ impl DOMHTMLTableSectionElement {
         pub unsafe fn chOff(&self) -> Retained<NSString>;
 
         /// Setter for [`chOff`][Self::chOff].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setChOff:))]
         #[unsafe(method_family = none)]
@@ -128,8 +122,6 @@ impl DOMHTMLTableSectionElement {
         pub unsafe fn vAlign(&self) -> Retained<NSString>;
 
         /// Setter for [`vAlign`][Self::vAlign].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setVAlign:))]
         #[unsafe(method_family = none)]

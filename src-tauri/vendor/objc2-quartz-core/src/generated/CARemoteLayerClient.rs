@@ -22,27 +22,29 @@ impl CARemoteLayerClient {
         #[cfg(feature = "libc")]
         #[unsafe(method(initWithServerPort:))]
         #[unsafe(method_family = init)]
-        pub fn initWithServerPort(this: Allocated<Self>, port: libc::mach_port_t)
-            -> Retained<Self>;
+        pub unsafe fn initWithServerPort(
+            this: Allocated<Self>,
+            port: libc::mach_port_t,
+        ) -> Retained<Self>;
 
         #[unsafe(method(invalidate))]
         #[unsafe(method_family = none)]
-        pub fn invalidate(&self);
+        pub unsafe fn invalidate(&self);
 
         #[unsafe(method(clientId))]
         #[unsafe(method_family = none)]
-        pub fn clientId(&self) -> u32;
+        pub unsafe fn clientId(&self) -> u32;
 
         #[cfg(feature = "CALayer")]
         #[unsafe(method(layer))]
         #[unsafe(method_family = none)]
-        pub fn layer(&self) -> Option<Retained<CALayer>>;
+        pub unsafe fn layer(&self) -> Option<Retained<CALayer>>;
 
         #[cfg(feature = "CALayer")]
         /// Setter for [`layer`][Self::layer].
         #[unsafe(method(setLayer:))]
         #[unsafe(method_family = none)]
-        pub fn setLayer(&self, layer: Option<&CALayer>);
+        pub unsafe fn setLayer(&self, layer: Option<&CALayer>);
     );
 }
 
@@ -51,17 +53,10 @@ impl CARemoteLayerClient {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for CARemoteLayerClient {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

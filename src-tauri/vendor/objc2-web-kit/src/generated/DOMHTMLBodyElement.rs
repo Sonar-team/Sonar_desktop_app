@@ -89,8 +89,6 @@ impl DOMHTMLBodyElement {
         pub unsafe fn aLink(&self) -> Retained<NSString>;
 
         /// Setter for [`aLink`][Self::aLink].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setALink:))]
         #[unsafe(method_family = none)]
@@ -102,8 +100,6 @@ impl DOMHTMLBodyElement {
         pub unsafe fn background(&self) -> Retained<NSString>;
 
         /// Setter for [`background`][Self::background].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setBackground:))]
         #[unsafe(method_family = none)]
@@ -115,8 +111,6 @@ impl DOMHTMLBodyElement {
         pub unsafe fn bgColor(&self) -> Retained<NSString>;
 
         /// Setter for [`bgColor`][Self::bgColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setBgColor:))]
         #[unsafe(method_family = none)]
@@ -128,8 +122,6 @@ impl DOMHTMLBodyElement {
         pub unsafe fn link(&self) -> Retained<NSString>;
 
         /// Setter for [`link`][Self::link].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setLink:))]
         #[unsafe(method_family = none)]
@@ -141,8 +133,6 @@ impl DOMHTMLBodyElement {
         pub unsafe fn text(&self) -> Retained<NSString>;
 
         /// Setter for [`text`][Self::text].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setText:))]
         #[unsafe(method_family = none)]
@@ -154,8 +144,6 @@ impl DOMHTMLBodyElement {
         pub unsafe fn vLink(&self) -> Retained<NSString>;
 
         /// Setter for [`vLink`][Self::vLink].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setVLink:))]
         #[unsafe(method_family = none)]

@@ -43,8 +43,6 @@ impl NSCompositeAttributeDescription {
         pub unsafe fn elements(&self) -> Retained<NSArray<NSAttributeDescription>>;
 
         /// Setter for [`elements`][Self::elements].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setElements:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setElements(&self, elements: &NSArray<NSAttributeDescription>);

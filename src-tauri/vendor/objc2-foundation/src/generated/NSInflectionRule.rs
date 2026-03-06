@@ -44,7 +44,7 @@ impl NSInflectionRule {
 
         #[unsafe(method(automaticRule))]
         #[unsafe(method_family = none)]
-        pub fn automaticRule() -> Retained<NSInflectionRule>;
+        pub unsafe fn automaticRule() -> Retained<NSInflectionRule>;
     );
 }
 
@@ -93,7 +93,7 @@ impl NSInflectionRuleExplicit {
         #[cfg(feature = "NSMorphology")]
         #[unsafe(method(initWithMorphology:))]
         #[unsafe(method_family = init)]
-        pub fn initWithMorphology(
+        pub unsafe fn initWithMorphology(
             this: Allocated<Self>,
             morphology: &NSMorphology,
         ) -> Retained<Self>;
@@ -101,7 +101,7 @@ impl NSInflectionRuleExplicit {
         #[cfg(feature = "NSMorphology")]
         #[unsafe(method(morphology))]
         #[unsafe(method_family = none)]
-        pub fn morphology(&self) -> Retained<NSMorphology>;
+        pub unsafe fn morphology(&self) -> Retained<NSMorphology>;
     );
 }
 
@@ -129,10 +129,10 @@ impl NSInflectionRule {
         #[cfg(feature = "NSString")]
         #[unsafe(method(canInflectLanguage:))]
         #[unsafe(method_family = none)]
-        pub fn canInflectLanguage(language: &NSString) -> bool;
+        pub unsafe fn canInflectLanguage(language: &NSString) -> bool;
 
         #[unsafe(method(canInflectPreferredLocalization))]
         #[unsafe(method_family = none)]
-        pub fn canInflectPreferredLocalization() -> bool;
+        pub unsafe fn canInflectPreferredLocalization() -> bool;
     );
 }

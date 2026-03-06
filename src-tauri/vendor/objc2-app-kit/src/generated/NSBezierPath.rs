@@ -136,20 +136,20 @@ impl NSBezierPath {
     extern_methods!(
         #[unsafe(method(bezierPath))]
         #[unsafe(method_family = none)]
-        pub fn bezierPath() -> Retained<NSBezierPath>;
+        pub unsafe fn bezierPath() -> Retained<NSBezierPath>;
 
         #[unsafe(method(bezierPathWithRect:))]
         #[unsafe(method_family = none)]
-        pub fn bezierPathWithRect(rect: NSRect) -> Retained<NSBezierPath>;
+        pub unsafe fn bezierPathWithRect(rect: NSRect) -> Retained<NSBezierPath>;
 
         #[unsafe(method(bezierPathWithOvalInRect:))]
         #[unsafe(method_family = none)]
-        pub fn bezierPathWithOvalInRect(rect: NSRect) -> Retained<NSBezierPath>;
+        pub unsafe fn bezierPathWithOvalInRect(rect: NSRect) -> Retained<NSBezierPath>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(bezierPathWithRoundedRect:xRadius:yRadius:))]
         #[unsafe(method_family = none)]
-        pub fn bezierPathWithRoundedRect_xRadius_yRadius(
+        pub unsafe fn bezierPathWithRoundedRect_xRadius_yRadius(
             rect: NSRect,
             x_radius: CGFloat,
             y_radius: CGFloat,
@@ -159,40 +159,37 @@ impl NSBezierPath {
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(bezierPathWithCGPath:))]
         #[unsafe(method_family = none)]
-        pub fn bezierPathWithCGPath(cg_path: &CGPath) -> Retained<NSBezierPath>;
+        pub unsafe fn bezierPathWithCGPath(cg_path: &CGPath) -> Retained<NSBezierPath>;
 
         #[cfg(feature = "objc2-core-graphics")]
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(CGPath))]
         #[unsafe(method_family = none)]
-        pub fn CGPath(&self) -> Retained<CGPath>;
+        pub unsafe fn CGPath(&self) -> Retained<CGPath>;
 
         #[cfg(feature = "objc2-core-graphics")]
         #[cfg(target_vendor = "apple")]
         /// Setter for [`CGPath`][Self::CGPath].
         #[unsafe(method(setCGPath:))]
         #[unsafe(method_family = none)]
-        pub fn setCGPath(&self, cg_path: &CGPath);
+        pub unsafe fn setCGPath(&self, cg_path: &CGPath);
 
         #[unsafe(method(fillRect:))]
         #[unsafe(method_family = none)]
-        pub fn fillRect(rect: NSRect);
+        pub unsafe fn fillRect(rect: NSRect);
 
         #[unsafe(method(strokeRect:))]
         #[unsafe(method_family = none)]
-        pub fn strokeRect(rect: NSRect);
+        pub unsafe fn strokeRect(rect: NSRect);
 
         #[unsafe(method(clipRect:))]
         #[unsafe(method_family = none)]
-        pub fn clipRect(rect: NSRect);
+        pub unsafe fn clipRect(rect: NSRect);
 
         #[unsafe(method(strokeLineFromPoint:toPoint:))]
         #[unsafe(method_family = none)]
-        pub fn strokeLineFromPoint_toPoint(point1: NSPoint, point2: NSPoint);
+        pub unsafe fn strokeLineFromPoint_toPoint(point1: NSPoint, point2: NSPoint);
 
-        /// # Safety
-        ///
-        /// `packed_glyphs` must be a valid pointer.
         #[unsafe(method(drawPackedGlyphs:atPoint:))]
         #[unsafe(method_family = none)]
         pub unsafe fn drawPackedGlyphs_atPoint(packed_glyphs: NonNull<c_char>, point: NSPoint);
@@ -200,74 +197,74 @@ impl NSBezierPath {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(defaultMiterLimit))]
         #[unsafe(method_family = none)]
-        pub fn defaultMiterLimit() -> CGFloat;
+        pub unsafe fn defaultMiterLimit() -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`defaultMiterLimit`][Self::defaultMiterLimit].
         #[unsafe(method(setDefaultMiterLimit:))]
         #[unsafe(method_family = none)]
-        pub fn setDefaultMiterLimit(default_miter_limit: CGFloat);
+        pub unsafe fn setDefaultMiterLimit(default_miter_limit: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(defaultFlatness))]
         #[unsafe(method_family = none)]
-        pub fn defaultFlatness() -> CGFloat;
+        pub unsafe fn defaultFlatness() -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`defaultFlatness`][Self::defaultFlatness].
         #[unsafe(method(setDefaultFlatness:))]
         #[unsafe(method_family = none)]
-        pub fn setDefaultFlatness(default_flatness: CGFloat);
+        pub unsafe fn setDefaultFlatness(default_flatness: CGFloat);
 
         #[unsafe(method(defaultWindingRule))]
         #[unsafe(method_family = none)]
-        pub fn defaultWindingRule() -> NSWindingRule;
+        pub unsafe fn defaultWindingRule() -> NSWindingRule;
 
         /// Setter for [`defaultWindingRule`][Self::defaultWindingRule].
         #[unsafe(method(setDefaultWindingRule:))]
         #[unsafe(method_family = none)]
-        pub fn setDefaultWindingRule(default_winding_rule: NSWindingRule);
+        pub unsafe fn setDefaultWindingRule(default_winding_rule: NSWindingRule);
 
         #[unsafe(method(defaultLineCapStyle))]
         #[unsafe(method_family = none)]
-        pub fn defaultLineCapStyle() -> NSLineCapStyle;
+        pub unsafe fn defaultLineCapStyle() -> NSLineCapStyle;
 
         /// Setter for [`defaultLineCapStyle`][Self::defaultLineCapStyle].
         #[unsafe(method(setDefaultLineCapStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setDefaultLineCapStyle(default_line_cap_style: NSLineCapStyle);
+        pub unsafe fn setDefaultLineCapStyle(default_line_cap_style: NSLineCapStyle);
 
         #[unsafe(method(defaultLineJoinStyle))]
         #[unsafe(method_family = none)]
-        pub fn defaultLineJoinStyle() -> NSLineJoinStyle;
+        pub unsafe fn defaultLineJoinStyle() -> NSLineJoinStyle;
 
         /// Setter for [`defaultLineJoinStyle`][Self::defaultLineJoinStyle].
         #[unsafe(method(setDefaultLineJoinStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setDefaultLineJoinStyle(default_line_join_style: NSLineJoinStyle);
+        pub unsafe fn setDefaultLineJoinStyle(default_line_join_style: NSLineJoinStyle);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(defaultLineWidth))]
         #[unsafe(method_family = none)]
-        pub fn defaultLineWidth() -> CGFloat;
+        pub unsafe fn defaultLineWidth() -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`defaultLineWidth`][Self::defaultLineWidth].
         #[unsafe(method(setDefaultLineWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setDefaultLineWidth(default_line_width: CGFloat);
+        pub unsafe fn setDefaultLineWidth(default_line_width: CGFloat);
 
         #[unsafe(method(moveToPoint:))]
         #[unsafe(method_family = none)]
-        pub fn moveToPoint(&self, point: NSPoint);
+        pub unsafe fn moveToPoint(&self, point: NSPoint);
 
         #[unsafe(method(lineToPoint:))]
         #[unsafe(method_family = none)]
-        pub fn lineToPoint(&self, point: NSPoint);
+        pub unsafe fn lineToPoint(&self, point: NSPoint);
 
         #[unsafe(method(curveToPoint:controlPoint1:controlPoint2:))]
         #[unsafe(method_family = none)]
-        pub fn curveToPoint_controlPoint1_controlPoint2(
+        pub unsafe fn curveToPoint_controlPoint1_controlPoint2(
             &self,
             end_point: NSPoint,
             control_point1: NSPoint,
@@ -276,27 +273,27 @@ impl NSBezierPath {
 
         #[unsafe(method(curveToPoint:controlPoint:))]
         #[unsafe(method_family = none)]
-        pub fn curveToPoint_controlPoint(&self, end_point: NSPoint, control_point: NSPoint);
+        pub unsafe fn curveToPoint_controlPoint(&self, end_point: NSPoint, control_point: NSPoint);
 
         #[unsafe(method(closePath))]
         #[unsafe(method_family = none)]
-        pub fn closePath(&self);
+        pub unsafe fn closePath(&self);
 
         #[unsafe(method(removeAllPoints))]
         #[unsafe(method_family = none)]
-        pub fn removeAllPoints(&self);
+        pub unsafe fn removeAllPoints(&self);
 
         #[unsafe(method(relativeMoveToPoint:))]
         #[unsafe(method_family = none)]
-        pub fn relativeMoveToPoint(&self, point: NSPoint);
+        pub unsafe fn relativeMoveToPoint(&self, point: NSPoint);
 
         #[unsafe(method(relativeLineToPoint:))]
         #[unsafe(method_family = none)]
-        pub fn relativeLineToPoint(&self, point: NSPoint);
+        pub unsafe fn relativeLineToPoint(&self, point: NSPoint);
 
         #[unsafe(method(relativeCurveToPoint:controlPoint1:controlPoint2:))]
         #[unsafe(method_family = none)]
-        pub fn relativeCurveToPoint_controlPoint1_controlPoint2(
+        pub unsafe fn relativeCurveToPoint_controlPoint1_controlPoint2(
             &self,
             end_point: NSPoint,
             control_point1: NSPoint,
@@ -305,74 +302,73 @@ impl NSBezierPath {
 
         #[unsafe(method(relativeCurveToPoint:controlPoint:))]
         #[unsafe(method_family = none)]
-        pub fn relativeCurveToPoint_controlPoint(&self, end_point: NSPoint, control_point: NSPoint);
+        pub unsafe fn relativeCurveToPoint_controlPoint(
+            &self,
+            end_point: NSPoint,
+            control_point: NSPoint,
+        );
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(lineWidth))]
         #[unsafe(method_family = none)]
-        pub fn lineWidth(&self) -> CGFloat;
+        pub unsafe fn lineWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`lineWidth`][Self::lineWidth].
         #[unsafe(method(setLineWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setLineWidth(&self, line_width: CGFloat);
+        pub unsafe fn setLineWidth(&self, line_width: CGFloat);
 
         #[unsafe(method(lineCapStyle))]
         #[unsafe(method_family = none)]
-        pub fn lineCapStyle(&self) -> NSLineCapStyle;
+        pub unsafe fn lineCapStyle(&self) -> NSLineCapStyle;
 
         /// Setter for [`lineCapStyle`][Self::lineCapStyle].
         #[unsafe(method(setLineCapStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setLineCapStyle(&self, line_cap_style: NSLineCapStyle);
+        pub unsafe fn setLineCapStyle(&self, line_cap_style: NSLineCapStyle);
 
         #[unsafe(method(lineJoinStyle))]
         #[unsafe(method_family = none)]
-        pub fn lineJoinStyle(&self) -> NSLineJoinStyle;
+        pub unsafe fn lineJoinStyle(&self) -> NSLineJoinStyle;
 
         /// Setter for [`lineJoinStyle`][Self::lineJoinStyle].
         #[unsafe(method(setLineJoinStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setLineJoinStyle(&self, line_join_style: NSLineJoinStyle);
+        pub unsafe fn setLineJoinStyle(&self, line_join_style: NSLineJoinStyle);
 
         #[unsafe(method(windingRule))]
         #[unsafe(method_family = none)]
-        pub fn windingRule(&self) -> NSWindingRule;
+        pub unsafe fn windingRule(&self) -> NSWindingRule;
 
         /// Setter for [`windingRule`][Self::windingRule].
         #[unsafe(method(setWindingRule:))]
         #[unsafe(method_family = none)]
-        pub fn setWindingRule(&self, winding_rule: NSWindingRule);
+        pub unsafe fn setWindingRule(&self, winding_rule: NSWindingRule);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(miterLimit))]
         #[unsafe(method_family = none)]
-        pub fn miterLimit(&self) -> CGFloat;
+        pub unsafe fn miterLimit(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`miterLimit`][Self::miterLimit].
         #[unsafe(method(setMiterLimit:))]
         #[unsafe(method_family = none)]
-        pub fn setMiterLimit(&self, miter_limit: CGFloat);
+        pub unsafe fn setMiterLimit(&self, miter_limit: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(flatness))]
         #[unsafe(method_family = none)]
-        pub fn flatness(&self) -> CGFloat;
+        pub unsafe fn flatness(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`flatness`][Self::flatness].
         #[unsafe(method(setFlatness:))]
         #[unsafe(method_family = none)]
-        pub fn setFlatness(&self, flatness: CGFloat);
+        pub unsafe fn setFlatness(&self, flatness: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// # Safety
-        ///
-        /// - `pattern` must be a valid pointer or null.
-        /// - `count` must be a valid pointer or null.
-        /// - `phase` must be a valid pointer or null.
         #[unsafe(method(getLineDash:count:phase:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getLineDash_count_phase(
@@ -383,9 +379,6 @@ impl NSBezierPath {
         );
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// # Safety
-        ///
-        /// `pattern` must be a valid pointer or null.
         #[unsafe(method(setLineDash:count:phase:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setLineDash_count_phase(
@@ -397,55 +390,52 @@ impl NSBezierPath {
 
         #[unsafe(method(stroke))]
         #[unsafe(method_family = none)]
-        pub fn stroke(&self);
+        pub unsafe fn stroke(&self);
 
         #[unsafe(method(fill))]
         #[unsafe(method_family = none)]
-        pub fn fill(&self);
+        pub unsafe fn fill(&self);
 
         #[unsafe(method(addClip))]
         #[unsafe(method_family = none)]
-        pub fn addClip(&self);
+        pub unsafe fn addClip(&self);
 
         #[unsafe(method(setClip))]
         #[unsafe(method_family = none)]
-        pub fn setClip(&self);
+        pub unsafe fn setClip(&self);
 
         #[unsafe(method(bezierPathByFlatteningPath))]
         #[unsafe(method_family = none)]
-        pub fn bezierPathByFlatteningPath(&self) -> Retained<NSBezierPath>;
+        pub unsafe fn bezierPathByFlatteningPath(&self) -> Retained<NSBezierPath>;
 
         #[unsafe(method(bezierPathByReversingPath))]
         #[unsafe(method_family = none)]
-        pub fn bezierPathByReversingPath(&self) -> Retained<NSBezierPath>;
+        pub unsafe fn bezierPathByReversingPath(&self) -> Retained<NSBezierPath>;
 
         #[unsafe(method(transformUsingAffineTransform:))]
         #[unsafe(method_family = none)]
-        pub fn transformUsingAffineTransform(&self, transform: &NSAffineTransform);
+        pub unsafe fn transformUsingAffineTransform(&self, transform: &NSAffineTransform);
 
         #[unsafe(method(isEmpty))]
         #[unsafe(method_family = none)]
-        pub fn isEmpty(&self) -> bool;
+        pub unsafe fn isEmpty(&self) -> bool;
 
         #[unsafe(method(currentPoint))]
         #[unsafe(method_family = none)]
-        pub fn currentPoint(&self) -> NSPoint;
+        pub unsafe fn currentPoint(&self) -> NSPoint;
 
         #[unsafe(method(controlPointBounds))]
         #[unsafe(method_family = none)]
-        pub fn controlPointBounds(&self) -> NSRect;
+        pub unsafe fn controlPointBounds(&self) -> NSRect;
 
         #[unsafe(method(bounds))]
         #[unsafe(method_family = none)]
-        pub fn bounds(&self) -> NSRect;
+        pub unsafe fn bounds(&self) -> NSRect;
 
         #[unsafe(method(elementCount))]
         #[unsafe(method_family = none)]
-        pub fn elementCount(&self) -> NSInteger;
+        pub unsafe fn elementCount(&self) -> NSInteger;
 
-        /// # Safety
-        ///
-        /// `points` must be a valid pointer or null.
         #[unsafe(method(elementAtIndex:associatedPoints:))]
         #[unsafe(method_family = none)]
         pub unsafe fn elementAtIndex_associatedPoints(
@@ -456,26 +446,20 @@ impl NSBezierPath {
 
         #[unsafe(method(elementAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn elementAtIndex(&self, index: NSInteger) -> NSBezierPathElement;
+        pub unsafe fn elementAtIndex(&self, index: NSInteger) -> NSBezierPathElement;
 
-        /// # Safety
-        ///
-        /// `points` must be a valid pointer or null.
         #[unsafe(method(setAssociatedPoints:atIndex:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAssociatedPoints_atIndex(&self, points: NSPointArray, index: NSInteger);
 
         #[unsafe(method(appendBezierPath:))]
         #[unsafe(method_family = none)]
-        pub fn appendBezierPath(&self, path: &NSBezierPath);
+        pub unsafe fn appendBezierPath(&self, path: &NSBezierPath);
 
         #[unsafe(method(appendBezierPathWithRect:))]
         #[unsafe(method_family = none)]
-        pub fn appendBezierPathWithRect(&self, rect: NSRect);
+        pub unsafe fn appendBezierPathWithRect(&self, rect: NSRect);
 
-        /// # Safety
-        ///
-        /// `points` must be a valid pointer.
         #[unsafe(method(appendBezierPathWithPoints:count:))]
         #[unsafe(method_family = none)]
         pub unsafe fn appendBezierPathWithPoints_count(
@@ -486,12 +470,12 @@ impl NSBezierPath {
 
         #[unsafe(method(appendBezierPathWithOvalInRect:))]
         #[unsafe(method_family = none)]
-        pub fn appendBezierPathWithOvalInRect(&self, rect: NSRect);
+        pub unsafe fn appendBezierPathWithOvalInRect(&self, rect: NSRect);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(appendBezierPathWithArcWithCenter:radius:startAngle:endAngle:clockwise:))]
         #[unsafe(method_family = none)]
-        pub fn appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise(
+        pub unsafe fn appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise(
             &self,
             center: NSPoint,
             radius: CGFloat,
@@ -503,7 +487,7 @@ impl NSBezierPath {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(appendBezierPathWithArcWithCenter:radius:startAngle:endAngle:))]
         #[unsafe(method_family = none)]
-        pub fn appendBezierPathWithArcWithCenter_radius_startAngle_endAngle(
+        pub unsafe fn appendBezierPathWithArcWithCenter_radius_startAngle_endAngle(
             &self,
             center: NSPoint,
             radius: CGFloat,
@@ -514,7 +498,7 @@ impl NSBezierPath {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(appendBezierPathWithArcFromPoint:toPoint:radius:))]
         #[unsafe(method_family = none)]
-        pub fn appendBezierPathWithArcFromPoint_toPoint_radius(
+        pub unsafe fn appendBezierPathWithArcFromPoint_toPoint_radius(
             &self,
             point1: NSPoint,
             point2: NSPoint,
@@ -525,13 +509,10 @@ impl NSBezierPath {
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(appendBezierPathWithCGGlyph:inFont:))]
         #[unsafe(method_family = none)]
-        pub fn appendBezierPathWithCGGlyph_inFont(&self, glyph: CGGlyph, font: &NSFont);
+        pub unsafe fn appendBezierPathWithCGGlyph_inFont(&self, glyph: CGGlyph, font: &NSFont);
 
         #[cfg(all(feature = "NSFont", feature = "objc2-core-graphics"))]
         #[cfg(target_vendor = "apple")]
-        /// # Safety
-        ///
-        /// `glyphs` must be a valid pointer.
         #[unsafe(method(appendBezierPathWithCGGlyphs:count:inFont:))]
         #[unsafe(method_family = none)]
         pub unsafe fn appendBezierPathWithCGGlyphs_count_inFont(
@@ -544,7 +525,7 @@ impl NSBezierPath {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(appendBezierPathWithRoundedRect:xRadius:yRadius:))]
         #[unsafe(method_family = none)]
-        pub fn appendBezierPathWithRoundedRect_xRadius_yRadius(
+        pub unsafe fn appendBezierPathWithRoundedRect_xRadius_yRadius(
             &self,
             rect: NSRect,
             x_radius: CGFloat,
@@ -553,7 +534,7 @@ impl NSBezierPath {
 
         #[unsafe(method(containsPoint:))]
         #[unsafe(method_family = none)]
-        pub fn containsPoint(&self, point: NSPoint) -> bool;
+        pub unsafe fn containsPoint(&self, point: NSPoint) -> bool;
     );
 }
 
@@ -562,19 +543,12 @@ impl NSBezierPath {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSBezierPath {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSBezierPathDeprecated.
@@ -583,23 +557,20 @@ impl NSBezierPath {
         #[deprecated]
         #[unsafe(method(cachesBezierPath))]
         #[unsafe(method_family = none)]
-        pub fn cachesBezierPath(&self) -> bool;
+        pub unsafe fn cachesBezierPath(&self) -> bool;
 
         #[deprecated]
         #[unsafe(method(setCachesBezierPath:))]
         #[unsafe(method_family = none)]
-        pub fn setCachesBezierPath(&self, flag: bool);
+        pub unsafe fn setCachesBezierPath(&self, flag: bool);
 
         #[cfg(feature = "NSFont")]
         #[deprecated = "Use -appendBezierPathWithCGGlyph:inFont: instead"]
         #[unsafe(method(appendBezierPathWithGlyph:inFont:))]
         #[unsafe(method_family = none)]
-        pub fn appendBezierPathWithGlyph_inFont(&self, glyph: NSGlyph, font: &NSFont);
+        pub unsafe fn appendBezierPathWithGlyph_inFont(&self, glyph: NSGlyph, font: &NSFont);
 
         #[cfg(feature = "NSFont")]
-        /// # Safety
-        ///
-        /// `glyphs` must be a valid pointer.
         #[deprecated = "Use -appendBezierPathWithCGGlyphs:count:inFont: instead"]
         #[unsafe(method(appendBezierPathWithGlyphs:count:inFont:))]
         #[unsafe(method_family = none)]
@@ -610,9 +581,6 @@ impl NSBezierPath {
             font: &NSFont,
         );
 
-        /// # Safety
-        ///
-        /// `packed_glyphs` must be a valid pointer.
         #[deprecated = "Use -appendBezierPathWithCGGlyphs:count:inFont: instead"]
         #[unsafe(method(appendBezierPathWithPackedGlyphs:))]
         #[unsafe(method_family = none)]
@@ -621,53 +589,41 @@ impl NSBezierPath {
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsbuttlinecapstyle?language=objc)
-#[deprecated]
 pub static NSButtLineCapStyle: NSLineCapStyle = NSLineCapStyle(NSLineCapStyle::Butt.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsroundlinecapstyle?language=objc)
-#[deprecated]
 pub static NSRoundLineCapStyle: NSLineCapStyle = NSLineCapStyle(NSLineCapStyle::Round.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nssquarelinecapstyle?language=objc)
-#[deprecated]
 pub static NSSquareLineCapStyle: NSLineCapStyle = NSLineCapStyle(NSLineCapStyle::Square.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmiterlinejoinstyle?language=objc)
-#[deprecated]
 pub static NSMiterLineJoinStyle: NSLineJoinStyle = NSLineJoinStyle(NSLineJoinStyle::Miter.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsroundlinejoinstyle?language=objc)
-#[deprecated]
 pub static NSRoundLineJoinStyle: NSLineJoinStyle = NSLineJoinStyle(NSLineJoinStyle::Round.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsbevellinejoinstyle?language=objc)
-#[deprecated]
 pub static NSBevelLineJoinStyle: NSLineJoinStyle = NSLineJoinStyle(NSLineJoinStyle::Bevel.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsnonzerowindingrule?language=objc)
-#[deprecated]
 pub static NSNonZeroWindingRule: NSWindingRule = NSWindingRule(NSWindingRule::NonZero.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsevenoddwindingrule?language=objc)
-#[deprecated]
 pub static NSEvenOddWindingRule: NSWindingRule = NSWindingRule(NSWindingRule::EvenOdd.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmovetobezierpathelement?language=objc)
-#[deprecated]
 pub static NSMoveToBezierPathElement: NSBezierPathElement =
     NSBezierPathElement(NSBezierPathElement::MoveTo.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nslinetobezierpathelement?language=objc)
-#[deprecated]
 pub static NSLineToBezierPathElement: NSBezierPathElement =
     NSBezierPathElement(NSBezierPathElement::LineTo.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscurvetobezierpathelement?language=objc)
-#[deprecated]
 pub static NSCurveToBezierPathElement: NSBezierPathElement =
     NSBezierPathElement(NSBezierPathElement::CurveTo.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsclosepathbezierpathelement?language=objc)
-#[deprecated]
 pub static NSClosePathBezierPathElement: NSBezierPathElement =
     NSBezierPathElement(NSBezierPathElement::ClosePath.0);

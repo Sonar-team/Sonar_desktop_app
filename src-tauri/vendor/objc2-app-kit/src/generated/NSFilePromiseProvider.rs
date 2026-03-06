@@ -27,47 +27,40 @@ impl NSFilePromiseProvider {
     extern_methods!(
         #[unsafe(method(fileType))]
         #[unsafe(method_family = none)]
-        pub fn fileType(&self) -> Retained<NSString>;
+        pub unsafe fn fileType(&self) -> Retained<NSString>;
 
         /// Setter for [`fileType`][Self::fileType].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFileType:))]
         #[unsafe(method_family = none)]
-        pub fn setFileType(&self, file_type: &NSString);
+        pub unsafe fn setFileType(&self, file_type: &NSString);
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn NSFilePromiseProviderDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(
+        pub unsafe fn setDelegate(
             &self,
             delegate: Option<&ProtocolObject<dyn NSFilePromiseProviderDelegate>>,
         );
 
         #[unsafe(method(userInfo))]
         #[unsafe(method_family = none)]
-        pub fn userInfo(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn userInfo(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`userInfo`][Self::userInfo].
-        ///
-        /// # Safety
-        ///
-        /// `user_info` should be of the correct type.
         #[unsafe(method(setUserInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUserInfo(&self, user_info: Option<&AnyObject>);
 
         #[unsafe(method(initWithFileType:delegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFileType_delegate(
+        pub unsafe fn initWithFileType_delegate(
             this: Allocated<Self>,
             file_type: &NSString,
             delegate: &ProtocolObject<dyn NSFilePromiseProviderDelegate>,
@@ -75,7 +68,7 @@ impl NSFilePromiseProvider {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -84,15 +77,8 @@ impl NSFilePromiseProvider {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSFilePromiseProvider {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_protocol!(
@@ -100,7 +86,7 @@ extern_protocol!(
     pub unsafe trait NSFilePromiseProviderDelegate: NSObjectProtocol {
         #[unsafe(method(filePromiseProvider:fileNameForType:))]
         #[unsafe(method_family = none)]
-        fn filePromiseProvider_fileNameForType(
+        unsafe fn filePromiseProvider_fileNameForType(
             &self,
             file_promise_provider: &NSFilePromiseProvider,
             file_type: &NSString,
@@ -110,7 +96,7 @@ extern_protocol!(
         #[cfg(feature = "block2")]
         #[unsafe(method(filePromiseProvider:writePromiseToURL:completionHandler:))]
         #[unsafe(method_family = none)]
-        fn filePromiseProvider_writePromiseToURL_completionHandler(
+        unsafe fn filePromiseProvider_writePromiseToURL_completionHandler(
             &self,
             file_promise_provider: &NSFilePromiseProvider,
             url: &NSURL,
@@ -120,7 +106,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(operationQueueForFilePromiseProvider:))]
         #[unsafe(method_family = none)]
-        fn operationQueueForFilePromiseProvider(
+        unsafe fn operationQueueForFilePromiseProvider(
             &self,
             file_promise_provider: &NSFilePromiseProvider,
             mtm: MainThreadMarker,

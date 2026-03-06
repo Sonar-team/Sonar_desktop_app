@@ -20,7 +20,6 @@ use buffer::WaylandBuffer;
 
 struct State;
 
-#[derive(Debug)]
 pub struct WaylandDisplayImpl<D: ?Sized> {
     conn: Option<Connection>,
     event_queue: Mutex<EventQueue<State>>,
@@ -46,11 +45,12 @@ impl<D: HasDisplayHandle + ?Sized> ContextInterface<D> for Arc<WaylandDisplayImp
         D: Sized,
     {
         let raw = display.display_handle()?.as_raw();
-        let RawDisplayHandle::Wayland(w) = raw else {
-            return Err(InitError::Unsupported(display));
+        let wayland_handle = match raw {
+            RawDisplayHandle::Wayland(w) => w.display,
+            _ => return Err(InitError::Unsupported(display)),
         };
 
-        let backend = unsafe { Backend::from_foreign_display(w.display.as_ptr().cast()) };
+        let backend = unsafe { Backend::from_foreign_display(wayland_handle.as_ptr().cast()) };
         let conn = Connection::from_backend(backend);
         let (globals, event_queue) =
             registry_queue_init(&conn).swbuf_err("Failed to make round trip to server")?;
@@ -75,7 +75,6 @@ impl<D: ?Sized> Drop for WaylandDisplayImpl<D> {
     }
 }
 
-#[derive(Debug)]
 pub struct WaylandImpl<D: ?Sized, W: ?Sized> {
     display: Arc<WaylandDisplayImpl<D>>,
     surface: Option<wl_surface::WlSurface>,
@@ -152,22 +151,20 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W>
     for WaylandImpl<D, W>
 {
     type Context = Arc<WaylandDisplayImpl<D>>;
-    type Buffer<'a>
-        = BufferImpl<'a, D, W>
-    where
-        Self: 'a;
+    type Buffer<'a> = BufferImpl<'a, D, W> where Self: 'a;
 
     fn new(window: W, display: &Arc<WaylandDisplayImpl<D>>) -> Result<Self, InitError<W>> {
         // Get the raw Wayland window.
         let raw = window.window_handle()?.as_raw();
-        let RawWindowHandle::Wayland(w) = raw else {
-            return Err(InitError::Unsupported(window));
+        let wayland_handle = match raw {
+            RawWindowHandle::Wayland(w) => w.surface,
+            _ => return Err(InitError::Unsupported(window)),
         };
 
         let surface_id = unsafe {
             ObjectId::from_ptr(
                 wl_surface::WlSurface::interface(),
-                w.surface.as_ptr().cast(),
+                wayland_handle.as_ptr().cast(),
             )
         }
         .swbuf_err("Failed to create proxy for surface ID.")?;
@@ -242,15 +239,11 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W>
             ));
         };
 
-        let width = self.buffers.as_mut().unwrap().1.width;
-        let height = self.buffers.as_mut().unwrap().1.height;
         let age = self.buffers.as_mut().unwrap().1.age;
         Ok(BufferImpl {
             stack: util::BorrowStack::new(self, |buffer| {
                 Ok(unsafe { buffer.buffers.as_mut().unwrap().1.mapped_mut() })
             })?,
-            width,
-            height,
             age,
         })
     }
@@ -263,23 +256,14 @@ impl<D: ?Sized, W: ?Sized> Drop for WaylandImpl<D, W> {
     }
 }
 
-#[derive(Debug)]
 pub struct BufferImpl<'a, D: ?Sized, W> {
     stack: util::BorrowStack<'a, WaylandImpl<D, W>, [u32]>,
-    width: i32,
-    height: i32,
     age: u8,
 }
 
-impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> BufferInterface for BufferImpl<'_, D, W> {
-    fn width(&self) -> NonZeroU32 {
-        NonZeroU32::new(self.width as u32).unwrap()
-    }
-
-    fn height(&self) -> NonZeroU32 {
-        NonZeroU32::new(self.height as usize as u32).unwrap()
-    }
-
+impl<'a, D: HasDisplayHandle + ?Sized, W: HasWindowHandle> BufferInterface
+    for BufferImpl<'a, D, W>
+{
     #[inline]
     fn pixels(&self) -> &[u32] {
         self.stack.member()

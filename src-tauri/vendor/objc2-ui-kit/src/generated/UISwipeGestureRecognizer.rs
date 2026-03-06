@@ -52,21 +52,21 @@ impl UISwipeGestureRecognizer {
     extern_methods!(
         #[unsafe(method(numberOfTouchesRequired))]
         #[unsafe(method_family = none)]
-        pub fn numberOfTouchesRequired(&self) -> NSUInteger;
+        pub unsafe fn numberOfTouchesRequired(&self) -> NSUInteger;
 
         /// Setter for [`numberOfTouchesRequired`][Self::numberOfTouchesRequired].
         #[unsafe(method(setNumberOfTouchesRequired:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberOfTouchesRequired(&self, number_of_touches_required: NSUInteger);
+        pub unsafe fn setNumberOfTouchesRequired(&self, number_of_touches_required: NSUInteger);
 
         #[unsafe(method(direction))]
         #[unsafe(method_family = none)]
-        pub fn direction(&self) -> UISwipeGestureRecognizerDirection;
+        pub unsafe fn direction(&self) -> UISwipeGestureRecognizerDirection;
 
         /// Setter for [`direction`][Self::direction].
         #[unsafe(method(setDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setDirection(&self, direction: UISwipeGestureRecognizerDirection);
+        pub unsafe fn setDirection(&self, direction: UISwipeGestureRecognizerDirection);
     );
 }
 
@@ -74,10 +74,6 @@ impl UISwipeGestureRecognizer {
 #[cfg(feature = "UIGestureRecognizer")]
 impl UISwipeGestureRecognizer {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `action` must be a valid selector.
         #[unsafe(method(initWithTarget:action:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTarget_action(
@@ -88,11 +84,8 @@ impl UISwipeGestureRecognizer {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -108,6 +101,6 @@ impl UISwipeGestureRecognizer {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

@@ -89,8 +89,6 @@ impl DOMHTMLHeadElement {
         pub unsafe fn profile(&self) -> Retained<NSString>;
 
         /// Setter for [`profile`][Self::profile].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setProfile:))]
         #[unsafe(method_family = none)]

@@ -30,7 +30,7 @@ fn create_memfile() -> File {
 
 #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
 fn create_memfile() -> File {
-    use rustix::{fs::Mode, io::Errno, shm::OFlags};
+    use rustix::{fs::Mode, io::Errno, shm::ShmOFlags};
     use std::iter;
 
     // Use a cached RNG to avoid hammering the thread local.
@@ -43,14 +43,14 @@ fn create_memfile() -> File {
 
         let name = unsafe { CStr::from_bytes_with_nul_unchecked(name.as_bytes()) };
         // `CLOEXEC` is implied with `shm_open`
-        let fd = rustix::shm::open(
+        let fd = rustix::shm::shm_open(
             name,
-            OFlags::RDWR | OFlags::CREATE | OFlags::EXCL,
+            ShmOFlags::RDWR | ShmOFlags::CREATE | ShmOFlags::EXCL,
             Mode::RWXU,
         );
         if !matches!(fd, Err(Errno::EXIST)) {
             let fd = fd.expect("Failed to create POSIX shm to store buffer.");
-            let _ = rustix::shm::unlink(name);
+            let _ = rustix::shm::shm_unlink(name);
             return File::from(fd);
         }
     }
@@ -67,7 +67,6 @@ unsafe fn map_file(file: &File) -> MmapMut {
     unsafe { MmapMut::map_mut(file.as_raw_fd()).expect("Failed to map shared memory") }
 }
 
-#[derive(Debug)]
 pub(super) struct WaylandBuffer {
     qh: QueueHandle<State>,
     tempfile: File,
@@ -75,8 +74,8 @@ pub(super) struct WaylandBuffer {
     pool: wl_shm_pool::WlShmPool,
     pool_size: i32,
     buffer: wl_buffer::WlBuffer,
-    pub width: i32,
-    pub height: i32,
+    width: i32,
+    height: i32,
     released: Arc<AtomicBool>,
     pub age: u8,
 }

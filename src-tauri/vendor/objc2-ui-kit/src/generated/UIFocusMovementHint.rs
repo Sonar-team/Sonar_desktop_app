@@ -38,33 +38,33 @@ impl UIFocusMovementHint {
         /// Value between {-1.0, -1.0} and {1.0, 1.0} representing how close focus is to moving in a particular direction.
         #[unsafe(method(movementDirection))]
         #[unsafe(method_family = none)]
-        pub fn movementDirection(&self) -> CGVector;
+        pub unsafe fn movementDirection(&self) -> CGVector;
 
         #[cfg(feature = "objc2-quartz-core")]
         #[cfg(not(target_os = "watchos"))]
         /// A 3D transform representing the perspective matrix that should be applied to match the system interaction hinting. Assumes a 0..1 near/far plane.
         #[unsafe(method(perspectiveTransform))]
         #[unsafe(method_family = none)]
-        pub fn perspectiveTransform(&self) -> CATransform3D;
+        pub unsafe fn perspectiveTransform(&self) -> CATransform3D;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// A vector representing the X and Y axis rotation expressed in radians that should be applied to match the system interaction hinting.
         #[unsafe(method(rotation))]
         #[unsafe(method_family = none)]
-        pub fn rotation(&self) -> CGVector;
+        pub unsafe fn rotation(&self) -> CGVector;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// A vector representing the X and Y axis translation expressed in points that should be applied to match the system interaction hinting.
         #[unsafe(method(translation))]
         #[unsafe(method_family = none)]
-        pub fn translation(&self) -> CGVector;
+        pub unsafe fn translation(&self) -> CGVector;
 
         #[cfg(feature = "objc2-quartz-core")]
         #[cfg(not(target_os = "watchos"))]
         /// A 3D transform that contains the combined transformations of perspective, rotation and translation.
         #[unsafe(method(interactionTransform))]
         #[unsafe(method_family = none)]
-        pub fn interactionTransform(&self) -> CATransform3D;
+        pub unsafe fn interactionTransform(&self) -> CATransform3D;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

@@ -30,11 +30,11 @@ impl UIOpenURLContext {
 
         #[unsafe(method(URL))]
         #[unsafe(method_family = none)]
-        pub fn URL(&self) -> Retained<NSURL>;
+        pub unsafe fn URL(&self) -> Retained<NSURL>;
 
         #[cfg(feature = "UISceneOptions")]
         #[unsafe(method(options))]
         #[unsafe(method_family = none)]
-        pub fn options(&self) -> Retained<UISceneOpenURLOptions>;
+        pub unsafe fn options(&self) -> Retained<UISceneOpenURLOptions>;
     );
 }

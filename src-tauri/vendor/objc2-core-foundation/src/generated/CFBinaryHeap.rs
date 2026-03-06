@@ -11,7 +11,6 @@ use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfbinaryheapcomparecontext?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CFBinaryHeapCompareContext {
     pub version: CFIndex,
@@ -63,7 +62,6 @@ unsafe impl RefEncode for CFBinaryHeapCompareContext {
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfbinaryheapcallbacks?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CFBinaryHeapCallBacks {
     pub version: CFIndex,
@@ -132,7 +130,6 @@ pub type CFBinaryHeapApplierFunction =
 /// This is the type of a reference to CFBinaryHeaps.
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfbinaryheap?language=objc)
-#[doc(alias = "CFBinaryHeapRef")]
 #[repr(C)]
 pub struct CFBinaryHeap<T: ?Sized = Opaque> {
     inner: [u8; 0],
@@ -147,24 +144,6 @@ cf_type!(
 cf_objc2_type!(
     unsafe impl<T: ?Sized> RefEncode<"__CFBinaryHeap"> for CFBinaryHeap<T> {}
 );
-
-impl<T: ?Sized> CFBinaryHeap<T> {
-    /// Unchecked conversion of the generic parameter.
-    ///
-    /// # Safety
-    ///
-    /// The generic must be valid to reinterpret as the given type.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewT: ?Sized>(&self) -> &CFBinaryHeap<NewT> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-
-    /// Convert to the opaque/untyped variant.
-    #[inline]
-    pub fn as_opaque(&self) -> &CFBinaryHeap {
-        unsafe { self.cast_unchecked() }
-    }
-}
 
 unsafe impl ConcreteType for CFBinaryHeap {
     /// Returns the type identifier of all CFBinaryHeap instances.
@@ -223,12 +202,6 @@ impl CFBinaryHeap {
     /// Parameter `compareContext`: A pointer to a CFBinaryHeapCompareContext structure.
     ///
     /// Returns: A reference to the new CFBinaryHeap.
-    ///
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `call_backs` must be a valid pointer.
-    /// - `compare_context` must be a valid pointer.
     #[doc(alias = "CFBinaryHeapCreate")]
     #[inline]
     pub unsafe fn new(
@@ -277,12 +250,6 @@ impl CFBinaryHeap {
     /// not a valid CFBinaryHeap, the behavior is undefined.
     ///
     /// Returns: A reference to the new mutable binary heap.
-    ///
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `heap` generic must be of the correct type.
-    /// - `heap` might not allow `None`.
     #[doc(alias = "CFBinaryHeapCreateCopy")]
     #[inline]
     pub unsafe fn new_copy(
@@ -307,13 +274,9 @@ impl CFBinaryHeap {
     /// CFBinaryHeap, the behavior is undefined.
     ///
     /// Returns: The number of values in the binary heap.
-    ///
-    /// # Safety
-    ///
-    /// `heap` generic must be of the correct type.
     #[doc(alias = "CFBinaryHeapGetCount")]
     #[inline]
-    pub unsafe fn count(&self) -> CFIndex {
+    pub unsafe fn count(self: &CFBinaryHeap) -> CFIndex {
         extern "C-unwind" {
             fn CFBinaryHeapGetCount(heap: &CFBinaryHeap) -> CFIndex;
         }
@@ -333,14 +296,9 @@ impl CFBinaryHeap {
     /// the behavior is undefined.
     ///
     /// Returns: The number of times the given value occurs in the binary heap.
-    ///
-    /// # Safety
-    ///
-    /// - `heap` generic must be of the correct type.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBinaryHeapGetCountOfValue")]
     #[inline]
-    pub unsafe fn count_of_value(&self, value: *const c_void) -> CFIndex {
+    pub unsafe fn count_of_value(self: &CFBinaryHeap, value: *const c_void) -> CFIndex {
         extern "C-unwind" {
             fn CFBinaryHeapGetCountOfValue(heap: &CFBinaryHeap, value: *const c_void) -> CFIndex;
         }
@@ -360,14 +318,9 @@ impl CFBinaryHeap {
     /// the behavior is undefined.
     ///
     /// Returns: true, if the value is in the specified binary heap, otherwise false.
-    ///
-    /// # Safety
-    ///
-    /// - `heap` generic must be of the correct type.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBinaryHeapContainsValue")]
     #[inline]
-    pub unsafe fn contains_value(&self, value: *const c_void) -> bool {
+    pub unsafe fn contains_value(self: &CFBinaryHeap, value: *const c_void) -> bool {
         extern "C-unwind" {
             fn CFBinaryHeapContainsValue(heap: &CFBinaryHeap, value: *const c_void) -> Boolean;
         }
@@ -383,13 +336,9 @@ impl CFBinaryHeap {
     ///
     /// Returns: A reference to the minimum value in the binary heap, or NULL if the
     /// binary heap contains no values.
-    ///
-    /// # Safety
-    ///
-    /// `heap` generic must be of the correct type.
     #[doc(alias = "CFBinaryHeapGetMinimum")]
     #[inline]
-    pub unsafe fn minimum(&self) -> *const c_void {
+    pub unsafe fn minimum(self: &CFBinaryHeap) -> *const c_void {
         extern "C-unwind" {
             fn CFBinaryHeapGetMinimum(heap: &CFBinaryHeap) -> *const c_void;
         }
@@ -408,14 +357,9 @@ impl CFBinaryHeap {
     /// stored at this address is undefined.
     ///
     /// Returns: true, if a minimum value was found in the specified binary heap, otherwise false.
-    ///
-    /// # Safety
-    ///
-    /// - `heap` generic must be of the correct type.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBinaryHeapGetMinimumIfPresent")]
     #[inline]
-    pub unsafe fn minimum_if_present(&self, value: *mut *const c_void) -> bool {
+    pub unsafe fn minimum_if_present(self: &CFBinaryHeap, value: *mut *const c_void) -> bool {
         extern "C-unwind" {
             fn CFBinaryHeapGetMinimumIfPresent(
                 heap: &CFBinaryHeap,
@@ -435,14 +379,9 @@ impl CFBinaryHeap {
     /// values from the binary heap. The values in the C array are ordered
     /// from least to greatest. If this parameter is not a valid pointer to a
     /// C array of at least CFBinaryHeapGetCount() pointers, the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// - `heap` generic must be of the correct type.
-    /// - `values` must be a valid pointer.
     #[doc(alias = "CFBinaryHeapGetValues")]
     #[inline]
-    pub unsafe fn values(&self, values: *mut *const c_void) {
+    pub unsafe fn values(self: &CFBinaryHeap, values: *mut *const c_void) {
         extern "C-unwind" {
             fn CFBinaryHeapGetValues(heap: &CFBinaryHeap, values: *mut *const c_void);
         }
@@ -466,16 +405,10 @@ impl CFBinaryHeap {
     /// otherwise unused by this function. If the context is not
     /// what is expected by the applier function, the behavior is
     /// undefined.
-    ///
-    /// # Safety
-    ///
-    /// - `heap` generic must be of the correct type.
-    /// - `applier` must be implemented correctly.
-    /// - `context` must be a valid pointer.
     #[doc(alias = "CFBinaryHeapApplyFunction")]
     #[inline]
     pub unsafe fn apply_function(
-        &self,
+        self: &CFBinaryHeap,
         applier: CFBinaryHeapApplierFunction,
         context: *mut c_void,
     ) {
@@ -498,14 +431,9 @@ impl CFBinaryHeap {
     /// the binary heap using the retain callback provided when the binary heap
     /// was created. If the value is not of the sort expected by the
     /// retain callback, the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// - `heap` generic must be of the correct type.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBinaryHeapAddValue")]
     #[inline]
-    pub unsafe fn add_value(&self, value: *const c_void) {
+    pub unsafe fn add_value(self: &CFBinaryHeap, value: *const c_void) {
         extern "C-unwind" {
             fn CFBinaryHeapAddValue(heap: &CFBinaryHeap, value: *const c_void);
         }
@@ -516,13 +444,9 @@ impl CFBinaryHeap {
     ///
     /// Parameter `heap`: The binary heap from which the minimum value is to be removed. If this
     /// parameter is not a valid mutable CFBinaryHeap, the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `heap` generic must be of the correct type.
     #[doc(alias = "CFBinaryHeapRemoveMinimumValue")]
     #[inline]
-    pub unsafe fn remove_minimum_value(&self) {
+    pub unsafe fn remove_minimum_value(self: &CFBinaryHeap) {
         extern "C-unwind" {
             fn CFBinaryHeapRemoveMinimumValue(heap: &CFBinaryHeap);
         }
@@ -534,13 +458,9 @@ impl CFBinaryHeap {
     /// Parameter `heap`: The binary heap from which all of the values are to be
     /// removed. If this parameter is not a valid mutable CFBinaryHeap,
     /// the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `heap` generic must be of the correct type.
     #[doc(alias = "CFBinaryHeapRemoveAllValues")]
     #[inline]
-    pub unsafe fn remove_all_values(&self) {
+    pub unsafe fn remove_all_values(self: &CFBinaryHeap) {
         extern "C-unwind" {
             fn CFBinaryHeapRemoveAllValues(heap: &CFBinaryHeap);
         }

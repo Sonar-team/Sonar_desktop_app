@@ -32,52 +32,52 @@ impl UIFieldBehavior {
 
         #[unsafe(method(addItem:))]
         #[unsafe(method_family = none)]
-        pub fn addItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
+        pub unsafe fn addItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
 
         #[unsafe(method(removeItem:))]
         #[unsafe(method_family = none)]
-        pub fn removeItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
+        pub unsafe fn removeItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
 
         #[unsafe(method(items))]
         #[unsafe(method_family = none)]
-        pub fn items(&self) -> Retained<NSArray<ProtocolObject<dyn UIDynamicItem>>>;
+        pub unsafe fn items(&self) -> Retained<NSArray<ProtocolObject<dyn UIDynamicItem>>>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The position (origin) of the field in the reference coordinate system
         #[unsafe(method(position))]
         #[unsafe(method_family = none)]
-        pub fn position(&self) -> CGPoint;
+        pub unsafe fn position(&self) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`position`][Self::position].
         #[unsafe(method(setPosition:))]
         #[unsafe(method_family = none)]
-        pub fn setPosition(&self, position: CGPoint);
+        pub unsafe fn setPosition(&self, position: CGPoint);
 
         #[cfg(feature = "UIRegion")]
         /// The region property is the domain of the field's effect. No force is applied to objects outside the region.
         /// The default region is the infiniteRegion
         #[unsafe(method(region))]
         #[unsafe(method_family = none)]
-        pub fn region(&self) -> Retained<UIRegion>;
+        pub unsafe fn region(&self) -> Retained<UIRegion>;
 
         #[cfg(feature = "UIRegion")]
         /// Setter for [`region`][Self::region].
         #[unsafe(method(setRegion:))]
         #[unsafe(method_family = none)]
-        pub fn setRegion(&self, region: &UIRegion);
+        pub unsafe fn setRegion(&self, region: &UIRegion);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Strength scaling value. default 1.0
         #[unsafe(method(strength))]
         #[unsafe(method_family = none)]
-        pub fn strength(&self) -> CGFloat;
+        pub unsafe fn strength(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`strength`][Self::strength].
         #[unsafe(method(setStrength:))]
         #[unsafe(method_family = none)]
-        pub fn setStrength(&self, strength: CGFloat);
+        pub unsafe fn setStrength(&self, strength: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The falloff exponent used to calculate field strength at a distance.
@@ -87,25 +87,25 @@ impl UIFieldBehavior {
         /// See: minimumRadius
         #[unsafe(method(falloff))]
         #[unsafe(method_family = none)]
-        pub fn falloff(&self) -> CGFloat;
+        pub unsafe fn falloff(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`falloff`][Self::falloff].
         #[unsafe(method(setFalloff:))]
         #[unsafe(method_family = none)]
-        pub fn setFalloff(&self, falloff: CGFloat);
+        pub unsafe fn setFalloff(&self, falloff: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Minimum radius of effect. Default is very small.
         #[unsafe(method(minimumRadius))]
         #[unsafe(method_family = none)]
-        pub fn minimumRadius(&self) -> CGFloat;
+        pub unsafe fn minimumRadius(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`minimumRadius`][Self::minimumRadius].
         #[unsafe(method(setMinimumRadius:))]
         #[unsafe(method_family = none)]
-        pub fn setMinimumRadius(&self, minimum_radius: CGFloat);
+        pub unsafe fn setMinimumRadius(&self, minimum_radius: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The direction of the field.
@@ -116,13 +116,13 @@ impl UIFieldBehavior {
         /// See: velocityFieldWithVector:direction
         #[unsafe(method(direction))]
         #[unsafe(method_family = none)]
-        pub fn direction(&self) -> CGVector;
+        pub unsafe fn direction(&self) -> CGVector;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`direction`][Self::direction].
         #[unsafe(method(setDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setDirection(&self, direction: CGVector);
+        pub unsafe fn setDirection(&self, direction: CGVector);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Fields without a smoothness component will return 0
@@ -132,13 +132,13 @@ impl UIFieldBehavior {
         /// See: turbulenceFieldWithSmoothness:smoothness:animationSpeed
         #[unsafe(method(smoothness))]
         #[unsafe(method_family = none)]
-        pub fn smoothness(&self) -> CGFloat;
+        pub unsafe fn smoothness(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`smoothness`][Self::smoothness].
         #[unsafe(method(setSmoothness:))]
         #[unsafe(method_family = none)]
-        pub fn setSmoothness(&self, smoothness: CGFloat);
+        pub unsafe fn setSmoothness(&self, smoothness: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Fields that can be animated can have non zero values. A value of 2 will animate twice as fast as a value of 1.
@@ -148,26 +148,26 @@ impl UIFieldBehavior {
         /// See: turbulenceFieldWithSmoothness:smoothness:animationSpeed
         #[unsafe(method(animationSpeed))]
         #[unsafe(method_family = none)]
-        pub fn animationSpeed(&self) -> CGFloat;
+        pub unsafe fn animationSpeed(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`animationSpeed`][Self::animationSpeed].
         #[unsafe(method(setAnimationSpeed:))]
         #[unsafe(method_family = none)]
-        pub fn setAnimationSpeed(&self, animation_speed: CGFloat);
+        pub unsafe fn setAnimationSpeed(&self, animation_speed: CGFloat);
 
         /// Slows an object proportionally to the object’s velocity.
         /// Use this to simulate effects such as friction from motion through the air.
         #[unsafe(method(dragField))]
         #[unsafe(method_family = none)]
-        pub fn dragField(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn dragField(mtm: MainThreadMarker) -> Retained<Self>;
 
         /// Applies a force tangential to the direction from the sample point to the field's position.
         /// The force will be CCW to the direction. Make the strength negative to apply force in the CW direction.
         /// Amount is proportional to distance from center and the object's mass. This can be used to create rotational effects.
         #[unsafe(method(vortexField))]
         #[unsafe(method_family = none)]
-        pub fn vortexField(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn vortexField(mtm: MainThreadMarker) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Applies a force in the direction of the origin of the field in local space. To repel objects, use a negative strength.
@@ -178,7 +178,7 @@ impl UIFieldBehavior {
         /// See: position
         #[unsafe(method(radialGravityFieldWithPosition:))]
         #[unsafe(method_family = none)]
-        pub fn radialGravityFieldWithPosition(
+        pub unsafe fn radialGravityFieldWithPosition(
             position: CGPoint,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -193,7 +193,7 @@ impl UIFieldBehavior {
         /// See: direction
         #[unsafe(method(linearGravityFieldWithVector:))]
         #[unsafe(method_family = none)]
-        pub fn linearGravityFieldWithVector(
+        pub unsafe fn linearGravityFieldWithVector(
             direction: CGVector,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -207,7 +207,7 @@ impl UIFieldBehavior {
         /// See: direction
         #[unsafe(method(velocityFieldWithVector:))]
         #[unsafe(method_family = none)]
-        pub fn velocityFieldWithVector(
+        pub unsafe fn velocityFieldWithVector(
             direction: CGVector,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -225,7 +225,7 @@ impl UIFieldBehavior {
         /// See: animationSpeed
         #[unsafe(method(noiseFieldWithSmoothness:animationSpeed:))]
         #[unsafe(method_family = none)]
-        pub fn noiseFieldWithSmoothness_animationSpeed(
+        pub unsafe fn noiseFieldWithSmoothness_animationSpeed(
             smoothness: CGFloat,
             speed: CGFloat,
             mtm: MainThreadMarker,
@@ -243,7 +243,7 @@ impl UIFieldBehavior {
         /// See: animationSpeed
         #[unsafe(method(turbulenceFieldWithSmoothness:animationSpeed:))]
         #[unsafe(method_family = none)]
-        pub fn turbulenceFieldWithSmoothness_animationSpeed(
+        pub unsafe fn turbulenceFieldWithSmoothness_animationSpeed(
             smoothness: CGFloat,
             speed: CGFloat,
             mtm: MainThreadMarker,
@@ -254,7 +254,7 @@ impl UIFieldBehavior {
         /// An example use is to keep objects confined to a particular region.
         #[unsafe(method(springField))]
         #[unsafe(method_family = none)]
-        pub fn springField(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn springField(mtm: MainThreadMarker) -> Retained<Self>;
 
         /// A force proportional to the charge on the object. A charge property has been
         /// added to UIDynamicItemBehavior to accomplish this. An example use of this field is to make objects behavior differently
@@ -262,7 +262,7 @@ impl UIFieldBehavior {
         /// This field models the first part of the Lorentz equation, F = qE
         #[unsafe(method(electricField))]
         #[unsafe(method_family = none)]
-        pub fn electricField(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn electricField(mtm: MainThreadMarker) -> Retained<Self>;
 
         /// The magnetic field is a uniform field in the positive-z direction (coming out of the screen). When the velocity
         /// of a charged dynamic item is perpendicular to the uniform magnetic field, the item feels a resulting force normal
@@ -272,7 +272,7 @@ impl UIFieldBehavior {
         /// than its mass based behavior. This field models the second part of the Lorentz equation, F = qvB
         #[unsafe(method(magneticField))]
         #[unsafe(method_family = none)]
-        pub fn magneticField(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn magneticField(mtm: MainThreadMarker) -> Retained<Self>;
 
         #[cfg(all(feature = "block2", feature = "objc2-core-foundation"))]
         /// A field force with a custom force evaluator.
@@ -290,7 +290,7 @@ impl UIFieldBehavior {
         /// Parameter `deltaTime`: The current time step
         #[unsafe(method(fieldWithEvaluationBlock:))]
         #[unsafe(method_family = none)]
-        pub fn fieldWithEvaluationBlock(
+        pub unsafe fn fieldWithEvaluationBlock(
             block: &block2::DynBlock<
                 dyn Fn(
                     NonNull<UIFieldBehavior>,

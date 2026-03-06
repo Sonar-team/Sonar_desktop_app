@@ -47,10 +47,6 @@ extern_protocol!(
             feature = "objc2-app-kit"
         ))]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// - `web_view` might not allow `None`.
-        /// - `range` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:shouldBeginEditingInDOMRange:))]
@@ -69,10 +65,6 @@ extern_protocol!(
             feature = "objc2-app-kit"
         ))]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// - `web_view` might not allow `None`.
-        /// - `range` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:shouldEndEditingInDOMRange:))]
@@ -92,11 +84,6 @@ extern_protocol!(
             feature = "objc2-app-kit"
         ))]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// - `web_view` might not allow `None`.
-        /// - `node` might not allow `None`.
-        /// - `range` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:shouldInsertNode:replacingDOMRange:givenAction:))]
@@ -117,11 +104,6 @@ extern_protocol!(
             feature = "objc2-app-kit"
         ))]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// - `web_view` might not allow `None`.
-        /// - `text` might not allow `None`.
-        /// - `range` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:shouldInsertText:replacingDOMRange:givenAction:))]
@@ -142,10 +124,6 @@ extern_protocol!(
             feature = "objc2-app-kit"
         ))]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// - `web_view` might not allow `None`.
-        /// - `range` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:shouldDeleteDOMRange:))]
@@ -164,11 +142,6 @@ extern_protocol!(
             feature = "objc2-app-kit"
         ))]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// - `web_view` might not allow `None`.
-        /// - `current_range` might not allow `None`.
-        /// - `proposed_range` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:shouldChangeSelectedDOMRange:toDOMRange:affinity:stillSelecting:))]
@@ -191,11 +164,6 @@ extern_protocol!(
             feature = "objc2-app-kit"
         ))]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// - `web_view` might not allow `None`.
-        /// - `style` might not allow `None`.
-        /// - `range` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:shouldApplyStyle:toElementsInDOMRange:))]
@@ -215,11 +183,6 @@ extern_protocol!(
             feature = "objc2-app-kit"
         ))]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// - `web_view` might not allow `None`.
-        /// - `current_style` might not allow `None`.
-        /// - `proposed_style` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:shouldChangeTypingStyle:toStyle:))]
@@ -233,10 +196,6 @@ extern_protocol!(
 
         #[cfg(all(feature = "WebView", feature = "objc2-app-kit"))]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// - `web_view` might not allow `None`.
-        /// - `selector` must be a valid selector.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:doCommandBySelector:))]
@@ -247,45 +206,30 @@ extern_protocol!(
             selector: Option<Sel>,
         ) -> bool;
 
-        /// # Safety
-        ///
-        /// `notification` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webViewDidBeginEditing:))]
         #[unsafe(method_family = none)]
         unsafe fn webViewDidBeginEditing(&self, notification: Option<&NSNotification>);
 
-        /// # Safety
-        ///
-        /// `notification` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webViewDidChange:))]
         #[unsafe(method_family = none)]
         unsafe fn webViewDidChange(&self, notification: Option<&NSNotification>);
 
-        /// # Safety
-        ///
-        /// `notification` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webViewDidEndEditing:))]
         #[unsafe(method_family = none)]
         unsafe fn webViewDidEndEditing(&self, notification: Option<&NSNotification>);
 
-        /// # Safety
-        ///
-        /// `notification` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webViewDidChangeTypingStyle:))]
         #[unsafe(method_family = none)]
         unsafe fn webViewDidChangeTypingStyle(&self, notification: Option<&NSNotification>);
 
-        /// # Safety
-        ///
-        /// `notification` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webViewDidChangeSelection:))]
@@ -294,9 +238,6 @@ extern_protocol!(
 
         #[cfg(all(feature = "WebView", feature = "objc2-app-kit"))]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// `web_view` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(undoManagerForWebView:))]
@@ -304,7 +245,6 @@ extern_protocol!(
         unsafe fn undoManagerForWebView(
             &self,
             web_view: Option<&WebView>,
-            mtm: MainThreadMarker,
         ) -> Option<Retained<NSUndoManager>>;
     }
 );

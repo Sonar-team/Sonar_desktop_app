@@ -33,9 +33,6 @@ impl NSAtomicStoreCacheNode {
         #[unsafe(method_family = none)]
         pub unsafe fn objectID(&self) -> Retained<NSManagedObjectID>;
 
-        /// # Safety
-        ///
-        /// The returned generic should be of the correct type.
         #[unsafe(method(propertyCache))]
         #[unsafe(method_family = none)]
         pub unsafe fn propertyCache(
@@ -43,10 +40,6 @@ impl NSAtomicStoreCacheNode {
         ) -> Option<Retained<NSMutableDictionary<NSString, AnyObject>>>;
 
         /// Setter for [`propertyCache`][Self::propertyCache].
-        ///
-        /// # Safety
-        ///
-        /// `property_cache` generic should be of the correct type.
         #[unsafe(method(setPropertyCache:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPropertyCache(
@@ -58,9 +51,6 @@ impl NSAtomicStoreCacheNode {
         #[unsafe(method_family = none)]
         pub unsafe fn valueForKey(&self, key: &NSString) -> Option<Retained<AnyObject>>;
 
-        /// # Safety
-        ///
-        /// `value` should be of the correct type.
         #[unsafe(method(setValue:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setValue_forKey(&self, value: Option<&AnyObject>, key: &NSString);

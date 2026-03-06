@@ -68,52 +68,45 @@ impl NSMeasurementFormatter {
     extern_methods!(
         #[unsafe(method(unitOptions))]
         #[unsafe(method_family = none)]
-        pub fn unitOptions(&self) -> NSMeasurementFormatterUnitOptions;
+        pub unsafe fn unitOptions(&self) -> NSMeasurementFormatterUnitOptions;
 
         /// Setter for [`unitOptions`][Self::unitOptions].
         #[unsafe(method(setUnitOptions:))]
         #[unsafe(method_family = none)]
-        pub fn setUnitOptions(&self, unit_options: NSMeasurementFormatterUnitOptions);
+        pub unsafe fn setUnitOptions(&self, unit_options: NSMeasurementFormatterUnitOptions);
 
         #[unsafe(method(unitStyle))]
         #[unsafe(method_family = none)]
-        pub fn unitStyle(&self) -> NSFormattingUnitStyle;
+        pub unsafe fn unitStyle(&self) -> NSFormattingUnitStyle;
 
         /// Setter for [`unitStyle`][Self::unitStyle].
         #[unsafe(method(setUnitStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setUnitStyle(&self, unit_style: NSFormattingUnitStyle);
+        pub unsafe fn setUnitStyle(&self, unit_style: NSFormattingUnitStyle);
 
         #[cfg(feature = "NSLocale")]
         #[unsafe(method(locale))]
         #[unsafe(method_family = none)]
-        pub fn locale(&self) -> Retained<NSLocale>;
+        pub unsafe fn locale(&self) -> Retained<NSLocale>;
 
         #[cfg(feature = "NSLocale")]
         /// Setter for [`locale`][Self::locale].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setLocale:))]
         #[unsafe(method_family = none)]
-        pub fn setLocale(&self, locale: Option<&NSLocale>);
+        pub unsafe fn setLocale(&self, locale: Option<&NSLocale>);
 
         #[cfg(feature = "NSNumberFormatter")]
         #[unsafe(method(numberFormatter))]
         #[unsafe(method_family = none)]
-        pub fn numberFormatter(&self) -> Retained<NSNumberFormatter>;
+        pub unsafe fn numberFormatter(&self) -> Retained<NSNumberFormatter>;
 
         #[cfg(feature = "NSNumberFormatter")]
         /// Setter for [`numberFormatter`][Self::numberFormatter].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setNumberFormatter:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberFormatter(&self, number_formatter: Option<&NSNumberFormatter>);
+        pub unsafe fn setNumberFormatter(&self, number_formatter: Option<&NSNumberFormatter>);
 
-        #[cfg(all(feature = "NSMeasurement", feature = "NSString", feature = "NSUnit"))]
-        /// # Safety
-        ///
-        /// `measurement` generic should be bound by `AsRef<NSUnit>`.
+        #[cfg(all(feature = "NSMeasurement", feature = "NSString"))]
         #[unsafe(method(stringFromMeasurement:))]
         #[unsafe(method_family = none)]
         pub unsafe fn stringFromMeasurement(
@@ -124,7 +117,7 @@ impl NSMeasurementFormatter {
         #[cfg(all(feature = "NSString", feature = "NSUnit"))]
         #[unsafe(method(stringFromUnit:))]
         #[unsafe(method_family = none)]
-        pub fn stringFromUnit(&self, unit: &NSUnit) -> Retained<NSString>;
+        pub unsafe fn stringFromUnit(&self, unit: &NSUnit) -> Retained<NSString>;
     );
 }
 
@@ -134,18 +127,10 @@ impl NSMeasurementFormatter {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSFormatter")]
-impl DefaultRetained for NSMeasurementFormatter {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

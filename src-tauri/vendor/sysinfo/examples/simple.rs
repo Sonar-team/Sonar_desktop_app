@@ -6,7 +6,10 @@
 
 use std::io::{self, BufRead, Write};
 use std::str::FromStr;
-use sysinfo::{Components, Disks, Groups, Networks, Pid, SUPPORTED_SIGNALS, System, Users};
+use sysinfo::{
+    Components, Disks, Groups, Motherboard, Networks, Pid, Product, SUPPORTED_SIGNALS, System,
+    Users,
+};
 
 fn print_help() {
     println!(
@@ -52,6 +55,8 @@ boot_time          : displays system boot time
 load_avg           : displays system load average
 system             : displays system information (such as name, version and hostname)
 uptime             : displays system uptime
+motherboard        : displays motherboard information
+product            : displays product information
 
 = Extra components commands =
 
@@ -111,7 +116,7 @@ fn interpret_input(
                     .map(|c| c.to_string())
                     .unwrap_or_else(|| "Unknown".to_owned()),
             );
-            println!("total CPU usage: {}%", sys.global_cpu_usage(),);
+            println!("total CPU usage: {}%", sys.global_cpu_usage());
             for cpu in sys.cpus() {
                 println!("{cpu:?}");
             }
@@ -139,7 +144,7 @@ fn interpret_input(
         }
         "frequency" => {
             for cpu in sys.cpus() {
-                println!("[{}] {} MHz", cpu.name(), cpu.frequency(),);
+                println!("[{}] {} MHz", cpu.name(), cpu.frequency());
             }
         }
         "vendor_id" => {
@@ -254,7 +259,7 @@ fn interpret_input(
         }
         "users" => {
             for user in users {
-                println!("{:?} => {:?}", user.name(), user.groups(),);
+                println!("{:?} => {:?}", user.name(), user.groups());
             }
         }
         "groups" => {
@@ -273,7 +278,7 @@ fn interpret_input(
             let hours = uptime / 3600;
             uptime -= hours * 3600;
             let minutes = uptime / 60;
-            println!("{days} days {hours} hours {minutes} minutes ({up} seconds in total)",);
+            println!("{days} days {hours} hours {minutes} minutes ({up} seconds in total)");
         }
         x if x.starts_with("refresh") => {
             if x == "refresh" {
@@ -324,6 +329,13 @@ fn interpret_input(
                 System::host_name().unwrap_or_else(|| "<unknown>".to_owned()),
                 System::kernel_long_version(),
             );
+        }
+        "motherboard" => match Motherboard::new() {
+            Some(m) => println!("{m:#?}"),
+            None => println!("No motherboard information available"),
+        },
+        "product" => {
+            println!("{:#?}", Product);
         }
         e => {
             println!(

@@ -55,18 +55,18 @@ impl UITabSidebarScrollTarget {
         /// Scrolls to the `headerContentConfiguration` if it is set.
         #[unsafe(method(targetForHeader))]
         #[unsafe(method_family = none)]
-        pub fn targetForHeader(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn targetForHeader(mtm: MainThreadMarker) -> Retained<Self>;
 
         /// Scrolls to the `footerContentConfiguration` if it is set.
         #[unsafe(method(targetForFooter))]
         #[unsafe(method_family = none)]
-        pub fn targetForFooter(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn targetForFooter(mtm: MainThreadMarker) -> Retained<Self>;
 
         #[cfg(feature = "UITab")]
         /// Scrolls to the item representing the tab if it exists.
         #[unsafe(method(targetForTab:))]
         #[unsafe(method_family = none)]
-        pub fn targetForTab(tab: &UITab) -> Retained<Self>;
+        pub unsafe fn targetForTab(tab: &UITab) -> Retained<Self>;
     );
 }
 
@@ -75,11 +75,11 @@ impl UITabSidebarScrollTarget {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -100,16 +100,15 @@ impl UITabBarControllerSidebar {
         /// The object managing the delegate of the sidebar.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UITabBarControllerSidebarDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(
+        pub unsafe fn setDelegate(
             &self,
             delegate: Option<&ProtocolObject<dyn UITabBarControllerSidebarDelegate>>,
         );
@@ -117,23 +116,23 @@ impl UITabBarControllerSidebar {
         /// Determines if the sidebar is currently hidden.
         #[unsafe(method(isHidden))]
         #[unsafe(method_family = none)]
-        pub fn isHidden(&self) -> bool;
+        pub unsafe fn isHidden(&self) -> bool;
 
         /// Setter for [`isHidden`][Self::isHidden].
         #[unsafe(method(setHidden:))]
         #[unsafe(method_family = none)]
-        pub fn setHidden(&self, hidden: bool);
+        pub unsafe fn setHidden(&self, hidden: bool);
 
         /// The preferred layout for how the sidebar lays out with the tab bar controller's
         /// content. Default is `.automatic`
         #[unsafe(method(preferredLayout))]
         #[unsafe(method_family = none)]
-        pub fn preferredLayout(&self) -> UITabBarControllerSidebarLayout;
+        pub unsafe fn preferredLayout(&self) -> UITabBarControllerSidebarLayout;
 
         /// Setter for [`preferredLayout`][Self::preferredLayout].
         #[unsafe(method(setPreferredLayout:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredLayout(&self, preferred_layout: UITabBarControllerSidebarLayout);
+        pub unsafe fn setPreferredLayout(&self, preferred_layout: UITabBarControllerSidebarLayout);
 
         #[cfg(all(feature = "UIDeferredMenuElement", feature = "UIMenuElement"))]
         /// Additional items to add to the overflow menu in the sidebar's navigation bar. Setting this property to a non-nil value will force the overflow button
@@ -141,13 +140,13 @@ impl UITabBarControllerSidebar {
         /// set, the "Edit Sidebar" action will also be moved into the overflow menu after the app-provided items.
         #[unsafe(method(navigationOverflowItems))]
         #[unsafe(method_family = none)]
-        pub fn navigationOverflowItems(&self) -> Option<Retained<UIDeferredMenuElement>>;
+        pub unsafe fn navigationOverflowItems(&self) -> Option<Retained<UIDeferredMenuElement>>;
 
         #[cfg(all(feature = "UIDeferredMenuElement", feature = "UIMenuElement"))]
         /// Setter for [`navigationOverflowItems`][Self::navigationOverflowItems].
         #[unsafe(method(setNavigationOverflowItems:))]
         #[unsafe(method_family = none)]
-        pub fn setNavigationOverflowItems(
+        pub unsafe fn setNavigationOverflowItems(
             &self,
             navigation_overflow_items: Option<&UIDeferredMenuElement>,
         );
@@ -157,17 +156,15 @@ impl UITabBarControllerSidebar {
         /// The header is displayed above all tab content in the sidebar.
         #[unsafe(method(headerContentConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn headerContentConfiguration(
+        pub unsafe fn headerContentConfiguration(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIContentConfiguration>>>;
 
         #[cfg(feature = "UIContentConfiguration")]
         /// Setter for [`headerContentConfiguration`][Self::headerContentConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setHeaderContentConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setHeaderContentConfiguration(
+        pub unsafe fn setHeaderContentConfiguration(
             &self,
             header_content_configuration: Option<&ProtocolObject<dyn UIContentConfiguration>>,
         );
@@ -177,17 +174,15 @@ impl UITabBarControllerSidebar {
         /// The footer is displayed below all tab content in the sidebar.
         #[unsafe(method(footerContentConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn footerContentConfiguration(
+        pub unsafe fn footerContentConfiguration(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIContentConfiguration>>>;
 
         #[cfg(feature = "UIContentConfiguration")]
         /// Setter for [`footerContentConfiguration`][Self::footerContentConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFooterContentConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setFooterContentConfiguration(
+        pub unsafe fn setFooterContentConfiguration(
             &self,
             footer_content_configuration: Option<&ProtocolObject<dyn UIContentConfiguration>>,
         );
@@ -199,25 +194,29 @@ impl UITabBarControllerSidebar {
         /// Default is nil.
         #[unsafe(method(bottomBarView))]
         #[unsafe(method_family = none)]
-        pub fn bottomBarView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn bottomBarView(&self) -> Option<Retained<UIView>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         /// Setter for [`bottomBarView`][Self::bottomBarView].
         #[unsafe(method(setBottomBarView:))]
         #[unsafe(method_family = none)]
-        pub fn setBottomBarView(&self, bottom_bar_view: Option<&UIView>);
+        pub unsafe fn setBottomBarView(&self, bottom_bar_view: Option<&UIView>);
 
         /// Scrolls to the specified target in the sidebar with an option to animate the change.
         #[unsafe(method(scrollToTarget:animated:))]
         #[unsafe(method_family = none)]
-        pub fn scrollToTarget_animated(&self, target: &UITabSidebarScrollTarget, animated: bool);
+        pub unsafe fn scrollToTarget_animated(
+            &self,
+            target: &UITabSidebarScrollTarget,
+            animated: bool,
+        );
 
         #[cfg(feature = "UITab")]
         /// Requests the sidebar reconfigure the item representing the specified tab. This method has no effect if the `tab` is not
         /// currently displayed in the sidebar.
         #[unsafe(method(reconfigureItemForTab:))]
         #[unsafe(method_family = none)]
-        pub fn reconfigureItemForTab(&self, tab: &UITab);
+        pub unsafe fn reconfigureItemForTab(&self, tab: &UITab);
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -237,12 +236,12 @@ extern_protocol!(
         #[cfg(feature = "block2")]
         #[unsafe(method(addAnimations:))]
         #[unsafe(method_family = none)]
-        fn addAnimations(&self, animations: &block2::DynBlock<dyn Fn()>);
+        unsafe fn addAnimations(&self, animations: &block2::DynBlock<dyn Fn()>);
 
         #[cfg(feature = "block2")]
         #[unsafe(method(addCompletion:))]
         #[unsafe(method_family = none)]
-        fn addCompletion(&self, completion: &block2::DynBlock<dyn Fn()>);
+        unsafe fn addCompletion(&self, completion: &block2::DynBlock<dyn Fn()>);
     }
 );
 
@@ -262,7 +261,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebarVisibilityWillChange:animator:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebarVisibilityWillChange_animator(
+        unsafe fn tabBarController_sidebarVisibilityWillChange_animator(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -281,7 +280,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebar:itemForRequest:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_itemForRequest(
+        unsafe fn tabBarController_sidebar_itemForRequest(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -295,12 +294,12 @@ extern_protocol!(
             feature = "UIViewController"
         ))]
         /// Called whenever the sidebar item's `configurationState` changes or the item is reconfigured.
-        /// The passed in item will accrue all modifications until the delegate requests for a new sidebar
+        /// The passed in item will accure all modifications until the delegate requests for a new sidebar
         /// item from the delegate method `tabBarController:sidebar:itemForRequest:`
         #[optional]
         #[unsafe(method(tabBarController:sidebar:updateItem:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_updateItem(
+        unsafe fn tabBarController_sidebar_updateItem(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -317,7 +316,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebar:willBeginDisplayingTab:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_willBeginDisplayingTab(
+        unsafe fn tabBarController_sidebar_willBeginDisplayingTab(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -334,7 +333,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebar:didEndDisplayingTab:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_didEndDisplayingTab(
+        unsafe fn tabBarController_sidebar_didEndDisplayingTab(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -353,7 +352,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebar:leadingSwipeActionsConfigurationForTab:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_leadingSwipeActionsConfigurationForTab(
+        unsafe fn tabBarController_sidebar_leadingSwipeActionsConfigurationForTab(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -372,7 +371,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebar:trailingSwipeActionsConfigurationForTab:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_trailingSwipeActionsConfigurationForTab(
+        unsafe fn tabBarController_sidebar_trailingSwipeActionsConfigurationForTab(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -391,7 +390,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebar:contextMenuConfigurationForTab:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_contextMenuConfigurationForTab(
+        unsafe fn tabBarController_sidebar_contextMenuConfigurationForTab(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -411,7 +410,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebar:itemsForBeginningDragSession:tab:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_itemsForBeginningDragSession_tab(
+        unsafe fn tabBarController_sidebar_itemsForBeginningDragSession_tab(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -432,7 +431,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebar:itemsForAddingToDragSession:tab:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_itemsForAddingToDragSession_tab(
+        unsafe fn tabBarController_sidebar_itemsForAddingToDragSession_tab(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -457,7 +456,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebar:sidebarAction:group:operationForAcceptingItemsFromDropSession:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_sidebarAction_group_operationForAcceptingItemsFromDropSession(
+        unsafe fn tabBarController_sidebar_sidebarAction_group_operationForAcceptingItemsFromDropSession(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,
@@ -481,7 +480,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBarController:sidebar:sidebarAction:group:acceptItemsFromDropSession:))]
         #[unsafe(method_family = none)]
-        fn tabBarController_sidebar_sidebarAction_group_acceptItemsFromDropSession(
+        unsafe fn tabBarController_sidebar_sidebarAction_group_acceptItemsFromDropSession(
             &self,
             tab_bar_controller: &UITabBarController,
             sidebar: &UITabBarControllerSidebar,

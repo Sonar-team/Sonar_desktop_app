@@ -102,27 +102,27 @@ impl UIPencilInteraction {
         /// The user’s preferred double-tap action as set in Settings app
         #[unsafe(method(preferredTapAction))]
         #[unsafe(method_family = none)]
-        pub fn preferredTapAction(mtm: MainThreadMarker) -> UIPencilPreferredAction;
+        pub unsafe fn preferredTapAction(mtm: MainThreadMarker) -> UIPencilPreferredAction;
 
         /// The user’s preferred squeeze action as set in Settings app
         #[unsafe(method(preferredSqueezeAction))]
         #[unsafe(method_family = none)]
-        pub fn preferredSqueezeAction(mtm: MainThreadMarker) -> UIPencilPreferredAction;
+        pub unsafe fn preferredSqueezeAction(mtm: MainThreadMarker) -> UIPencilPreferredAction;
 
         /// The user's preference for drawing with pencil only as set in Settings app or the system tool picker
         #[unsafe(method(prefersPencilOnlyDrawing))]
         #[unsafe(method_family = none)]
-        pub fn prefersPencilOnlyDrawing(mtm: MainThreadMarker) -> bool;
+        pub unsafe fn prefersPencilOnlyDrawing(mtm: MainThreadMarker) -> bool;
 
         /// The user's preference for if hovering with pencil should show a preview of the current drawing tool as set in Settings app
         #[unsafe(method(prefersHoverToolPreview))]
         #[unsafe(method_family = none)]
-        pub fn prefersHoverToolPreview(mtm: MainThreadMarker) -> bool;
+        pub unsafe fn prefersHoverToolPreview(mtm: MainThreadMarker) -> bool;
 
         /// Initialize an interaction and set the provided delegate
         #[unsafe(method(initWithDelegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDelegate(
+        pub unsafe fn initWithDelegate(
             this: Allocated<Self>,
             delegate: &ProtocolObject<dyn UIPencilInteractionDelegate>,
         ) -> Retained<Self>;
@@ -130,15 +130,15 @@ impl UIPencilInteraction {
         /// The interaction's delegate
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self)
-            -> Option<Retained<ProtocolObject<dyn UIPencilInteractionDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn UIPencilInteractionDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(
+        pub unsafe fn setDelegate(
             &self,
             delegate: Option<&ProtocolObject<dyn UIPencilInteractionDelegate>>,
         );
@@ -146,12 +146,12 @@ impl UIPencilInteraction {
         /// Whether the interaction is enabled or not
         #[unsafe(method(isEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isEnabled(&self) -> bool;
+        pub unsafe fn isEnabled(&self) -> bool;
 
         /// Setter for [`isEnabled`][Self::isEnabled].
         #[unsafe(method(setEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setEnabled(&self, enabled: bool);
+        pub unsafe fn setEnabled(&self, enabled: bool);
     );
 }
 
@@ -160,11 +160,11 @@ impl UIPencilInteraction {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -197,39 +197,39 @@ impl UIPencilHoverPose {
         /// this will be the last reported location.
         #[unsafe(method(location))]
         #[unsafe(method_family = none)]
-        pub fn location(&self) -> CGPoint;
+        pub unsafe fn location(&self) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The normalized distance from the screen of the hovering pencil. This value will be 1 at the maximum distance from the screen and will approach 0 as the pencil gets
         /// closer to the screen.
         #[unsafe(method(zOffset))]
         #[unsafe(method_family = none)]
-        pub fn zOffset(&self) -> CGFloat;
+        pub unsafe fn zOffset(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The azimuth angle in radians of the pencil in the interaction's view while performing the associated action. Zero radians points along the positive X axis.
         #[unsafe(method(azimuthAngle))]
         #[unsafe(method_family = none)]
-        pub fn azimuthAngle(&self) -> CGFloat;
+        pub unsafe fn azimuthAngle(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The azimuth unit vector of the pencil in the interaction's view while performing the associated action. The unit vector points in the direction of the azimuth angle.
         #[unsafe(method(azimuthUnitVector))]
         #[unsafe(method_family = none)]
-        pub fn azimuthUnitVector(&self) -> CGVector;
+        pub unsafe fn azimuthUnitVector(&self) -> CGVector;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The altitude angle in radians of the pencil while performing the associated action. Zero radians indicates that the stylus is parallel to the screen surface, while `M_PI/2`
         /// radians indicates that it is normal to the screen surface.
         #[unsafe(method(altitudeAngle))]
         #[unsafe(method_family = none)]
-        pub fn altitudeAngle(&self) -> CGFloat;
+        pub unsafe fn altitudeAngle(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The roll angle in radians of the pencil while performing the associated action. For pencils that don't support roll, this value will be 0.
         #[unsafe(method(rollAngle))]
         #[unsafe(method_family = none)]
-        pub fn rollAngle(&self) -> CGFloat;
+        pub unsafe fn rollAngle(&self) -> CGFloat;
     );
 }
 
@@ -260,12 +260,12 @@ impl UIPencilInteractionTap {
         /// The time in seconds from system start up when this tap occured
         #[unsafe(method(timestamp))]
         #[unsafe(method_family = none)]
-        pub fn timestamp(&self) -> NSTimeInterval;
+        pub unsafe fn timestamp(&self) -> NSTimeInterval;
 
         /// The hover pose of the pencil while performing a tap. Returns `nil` if the pencil was not in hover range or if hover is not supported on the device.
         #[unsafe(method(hoverPose))]
         #[unsafe(method_family = none)]
-        pub fn hoverPose(&self) -> Option<Retained<UIPencilHoverPose>>;
+        pub unsafe fn hoverPose(&self) -> Option<Retained<UIPencilHoverPose>>;
     );
 }
 
@@ -296,17 +296,17 @@ impl UIPencilInteractionSqueeze {
         /// The time in seconds from system start up when this squeeze occured
         #[unsafe(method(timestamp))]
         #[unsafe(method_family = none)]
-        pub fn timestamp(&self) -> NSTimeInterval;
+        pub unsafe fn timestamp(&self) -> NSTimeInterval;
 
         /// The phase of the squeeze
         #[unsafe(method(phase))]
         #[unsafe(method_family = none)]
-        pub fn phase(&self) -> UIPencilInteractionPhase;
+        pub unsafe fn phase(&self) -> UIPencilInteractionPhase;
 
         /// The hover pose of the pencil while performing a squeeze. Returns `nil` if the pencil was not in hover range or if hover is not supported on the device.
         #[unsafe(method(hoverPose))]
         #[unsafe(method_family = none)]
-        pub fn hoverPose(&self) -> Option<Retained<UIPencilHoverPose>>;
+        pub unsafe fn hoverPose(&self) -> Option<Retained<UIPencilHoverPose>>;
     );
 }
 
@@ -323,7 +323,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(pencilInteractionDidTap:))]
         #[unsafe(method_family = none)]
-        fn pencilInteractionDidTap(&self, interaction: &UIPencilInteraction);
+        unsafe fn pencilInteractionDidTap(&self, interaction: &UIPencilInteraction);
 
         /// Called when the user taps on the side of the pencil if the interaction's view is in a visible view hierarchy.
         ///
@@ -334,7 +334,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(pencilInteraction:didReceiveTap:))]
         #[unsafe(method_family = none)]
-        fn pencilInteraction_didReceiveTap(
+        unsafe fn pencilInteraction_didReceiveTap(
             &self,
             interaction: &UIPencilInteraction,
             tap: &UIPencilInteractionTap,
@@ -347,7 +347,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(pencilInteraction:didReceiveSqueeze:))]
         #[unsafe(method_family = none)]
-        fn pencilInteraction_didReceiveSqueeze(
+        unsafe fn pencilInteraction_didReceiveSqueeze(
             &self,
             interaction: &UIPencilInteraction,
             squeeze: &UIPencilInteractionSqueeze,

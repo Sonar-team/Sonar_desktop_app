@@ -46,18 +46,18 @@ impl UIListContentImageProperties {
         /// The symbol configuration to use.
         #[unsafe(method(preferredSymbolConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn preferredSymbolConfiguration(&self) -> Option<Retained<UIImageSymbolConfiguration>>;
+        pub unsafe fn preferredSymbolConfiguration(
+            &self,
+        ) -> Option<Retained<UIImageSymbolConfiguration>>;
 
         #[cfg(all(
             feature = "UIImageConfiguration",
             feature = "UIImageSymbolConfiguration"
         ))]
         /// Setter for [`preferredSymbolConfiguration`][Self::preferredSymbolConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPreferredSymbolConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredSymbolConfiguration(
+        pub unsafe fn setPreferredSymbolConfiguration(
             &self,
             preferred_symbol_configuration: Option<&UIImageSymbolConfiguration>,
         );
@@ -66,13 +66,13 @@ impl UIListContentImageProperties {
         /// The tintColor to apply to the image view. Nil will use the image view's normal inherited tintColor.
         #[unsafe(method(tintColor))]
         #[unsafe(method_family = none)]
-        pub fn tintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn tintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`tintColor`][Self::tintColor].
         #[unsafe(method(setTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setTintColor(&self, tint_color: Option<&UIColor>);
+        pub unsafe fn setTintColor(&self, tint_color: Option<&UIColor>);
 
         #[cfg(all(
             feature = "UIColor",
@@ -80,10 +80,6 @@ impl UIListContentImageProperties {
             feature = "block2"
         ))]
         /// Optional color transformer that is used to resolve the tint color. A nil value means the `tintColor` is used as-is.
-        ///
-        /// # Safety
-        ///
-        /// The returned block's argument must be a valid pointer.
         #[unsafe(method(tintColorTransformer))]
         #[unsafe(method_family = none)]
         pub unsafe fn tintColorTransformer(&self) -> UIConfigurationColorTransformer;
@@ -94,12 +90,6 @@ impl UIListContentImageProperties {
             feature = "block2"
         ))]
         /// Setter for [`tintColorTransformer`][Self::tintColorTransformer].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `tint_color_transformer` must be a valid pointer or null.
         #[unsafe(method(setTintColorTransformer:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTintColorTransformer(
@@ -111,7 +101,10 @@ impl UIListContentImageProperties {
         /// Returns the resolved image tint color for the specified tint color of the view, based on the `tintColor` and `tintColorTransformer`.
         #[unsafe(method(resolvedTintColorForTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn resolvedTintColorForTintColor(&self, tint_color: &UIColor) -> Retained<UIColor>;
+        pub unsafe fn resolvedTintColorForTintColor(
+            &self,
+            tint_color: &UIColor,
+        ) -> Retained<UIColor>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The preferred corner radius (using a continuous corner curve) for the image.
@@ -119,13 +112,13 @@ impl UIListContentImageProperties {
         /// and radius will be adjusted to fit.
         #[unsafe(method(cornerRadius))]
         #[unsafe(method_family = none)]
-        pub fn cornerRadius(&self) -> CGFloat;
+        pub unsafe fn cornerRadius(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`cornerRadius`][Self::cornerRadius].
         #[unsafe(method(setCornerRadius:))]
         #[unsafe(method_family = none)]
-        pub fn setCornerRadius(&self, corner_radius: CGFloat);
+        pub unsafe fn setCornerRadius(&self, corner_radius: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Enforces a maximum size for the image. The default value is CGSizeZero. A zero width or
@@ -133,13 +126,13 @@ impl UIListContentImageProperties {
         /// on either dimension, its size will be reduced proportionately (maintaining aspect ratio).
         #[unsafe(method(maximumSize))]
         #[unsafe(method_family = none)]
-        pub fn maximumSize(&self) -> CGSize;
+        pub unsafe fn maximumSize(&self) -> CGSize;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`maximumSize`][Self::maximumSize].
         #[unsafe(method(setMaximumSize:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumSize(&self, maximum_size: CGSize);
+        pub unsafe fn setMaximumSize(&self, maximum_size: CGSize);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The layout size that is reserved for the image, inside which the image will be centered.
@@ -163,23 +156,23 @@ impl UIListContentImageProperties {
         /// Dynamic Type layout where text wraps around the image.
         #[unsafe(method(reservedLayoutSize))]
         #[unsafe(method_family = none)]
-        pub fn reservedLayoutSize(&self) -> CGSize;
+        pub unsafe fn reservedLayoutSize(&self) -> CGSize;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`reservedLayoutSize`][Self::reservedLayoutSize].
         #[unsafe(method(setReservedLayoutSize:))]
         #[unsafe(method_family = none)]
-        pub fn setReservedLayoutSize(&self, reserved_layout_size: CGSize);
+        pub unsafe fn setReservedLayoutSize(&self, reserved_layout_size: CGSize);
 
         /// Prevents the image from inverting its colors when the accessibility setting is enabled.
         #[unsafe(method(accessibilityIgnoresInvertColors))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityIgnoresInvertColors(&self) -> bool;
+        pub unsafe fn accessibilityIgnoresInvertColors(&self) -> bool;
 
         /// Setter for [`accessibilityIgnoresInvertColors`][Self::accessibilityIgnoresInvertColors].
         #[unsafe(method(setAccessibilityIgnoresInvertColors:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessibilityIgnoresInvertColors(
+        pub unsafe fn setAccessibilityIgnoresInvertColors(
             &self,
             accessibility_ignores_invert_colors: bool,
         );
@@ -188,25 +181,25 @@ impl UIListContentImageProperties {
         /// The width of the stroke to draw around the image. Default is `0.0`.
         #[unsafe(method(strokeWidth))]
         #[unsafe(method_family = none)]
-        pub fn strokeWidth(&self) -> CGFloat;
+        pub unsafe fn strokeWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`strokeWidth`][Self::strokeWidth].
         #[unsafe(method(setStrokeWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setStrokeWidth(&self, stroke_width: CGFloat);
+        pub unsafe fn setStrokeWidth(&self, stroke_width: CGFloat);
 
         #[cfg(feature = "UIColor")]
         /// Configures the color of the stroke. A nil value uses the view's tint color; use `clearColor` for no color (transparent).
         #[unsafe(method(strokeColor))]
         #[unsafe(method_family = none)]
-        pub fn strokeColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn strokeColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`strokeColor`][Self::strokeColor].
         #[unsafe(method(setStrokeColor:))]
         #[unsafe(method_family = none)]
-        pub fn setStrokeColor(&self, stroke_color: Option<&UIColor>);
+        pub unsafe fn setStrokeColor(&self, stroke_color: Option<&UIColor>);
 
         #[cfg(all(
             feature = "UIColor",
@@ -214,10 +207,6 @@ impl UIListContentImageProperties {
             feature = "block2"
         ))]
         /// Optional color transformer that is used to resolve the stroke color. A nil value means the `strokeColor` is used as-is.
-        ///
-        /// # Safety
-        ///
-        /// The returned block's argument must be a valid pointer.
         #[unsafe(method(strokeColorTransformer))]
         #[unsafe(method_family = none)]
         pub unsafe fn strokeColorTransformer(&self) -> UIConfigurationColorTransformer;
@@ -228,12 +217,6 @@ impl UIListContentImageProperties {
             feature = "block2"
         ))]
         /// Setter for [`strokeColorTransformer`][Self::strokeColorTransformer].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `stroke_color_transformer` must be a valid pointer or null.
         #[unsafe(method(setStrokeColorTransformer:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setStrokeColorTransformer(
@@ -245,7 +228,10 @@ impl UIListContentImageProperties {
         /// Returns the resolved stroke color for the specified tint color, based on the `strokeColor` and `strokeColorTransformer`.
         #[unsafe(method(resolvedStrokeColorForTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn resolvedStrokeColorForTintColor(&self, tint_color: &UIColor) -> Retained<UIColor>;
+        pub unsafe fn resolvedStrokeColorForTintColor(
+            &self,
+            tint_color: &UIColor,
+        ) -> Retained<UIColor>;
     );
 }
 
@@ -254,11 +240,11 @@ impl UIListContentImageProperties {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 

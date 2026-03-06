@@ -20,7 +20,7 @@ extern_protocol!(
         /// Returns a new instance with the specified trait collection.
         #[unsafe(method(initWithTraitCollection:))]
         #[unsafe(method_family = init)]
-        fn initWithTraitCollection(
+        unsafe fn initWithTraitCollection(
             this: Allocated<Self>,
             trait_collection: &UITraitCollection,
         ) -> Retained<Self>;
@@ -28,27 +28,23 @@ extern_protocol!(
         #[cfg(feature = "UITraitCollection")]
         #[unsafe(method(traitCollection))]
         #[unsafe(method_family = none)]
-        fn traitCollection(&self) -> Retained<UITraitCollection>;
+        unsafe fn traitCollection(&self) -> Retained<UITraitCollection>;
 
         #[cfg(feature = "UITraitCollection")]
         /// Setter for [`traitCollection`][Self::traitCollection].
         #[unsafe(method(setTraitCollection:))]
         #[unsafe(method_family = none)]
-        fn setTraitCollection(&self, trait_collection: &UITraitCollection);
+        unsafe fn setTraitCollection(&self, trait_collection: &UITraitCollection);
 
         /// Returns the custom state for the specified key.
         #[unsafe(method(customStateForKey:))]
         #[unsafe(method_family = none)]
-        fn customStateForKey(
+        unsafe fn customStateForKey(
             &self,
             key: &UIConfigurationStateCustomKey,
         ) -> Option<Retained<AnyObject>>;
 
         /// Sets the custom state for the specified key.
-        ///
-        /// # Safety
-        ///
-        /// `custom_state` should be of the correct type.
         #[unsafe(method(setCustomState:forKey:))]
         #[unsafe(method_family = none)]
         unsafe fn setCustomState_forKey(
@@ -59,14 +55,11 @@ extern_protocol!(
 
         #[unsafe(method(objectForKeyedSubscript:))]
         #[unsafe(method_family = none)]
-        fn objectForKeyedSubscript(
+        unsafe fn objectForKeyedSubscript(
             &self,
             key: &UIConfigurationStateCustomKey,
         ) -> Option<Retained<AnyObject>>;
 
-        /// # Safety
-        ///
-        /// `obj` should be of the correct type.
         #[unsafe(method(setObject:forKeyedSubscript:))]
         #[unsafe(method_family = none)]
         unsafe fn setObject_forKeyedSubscript(

@@ -15,6 +15,7 @@
 #![allow(clippy::doc_lazy_continuation)]
 #![allow(rustdoc::broken_intra_doc_links)]
 #![allow(rustdoc::bare_urls)]
+#![allow(rustdoc::unportable_markdown)]
 #![allow(rustdoc::invalid_html_tags)]
 
 #[link(name = "CoreImage", kind = "framework")]
@@ -114,8 +115,6 @@ pub use self::__CIColor::CIColor;
 #[cfg(feature = "CIContext")]
 pub use self::__CIContext::kCIContextAllowLowPower;
 #[cfg(feature = "CIContext")]
-pub use self::__CIContext::kCIContextCVMetalTextureCache;
-#[cfg(feature = "CIContext")]
 pub use self::__CIContext::kCIContextCacheIntermediates;
 #[cfg(feature = "CIContext")]
 pub use self::__CIContext::kCIContextHighQualityDownsample;
@@ -145,8 +144,6 @@ pub use self::__CIContext::kCIImageRepresentationAVSemanticSegmentationMattes;
 pub use self::__CIContext::kCIImageRepresentationDepthImage;
 #[cfg(feature = "CIContext")]
 pub use self::__CIContext::kCIImageRepresentationDisparityImage;
-#[cfg(feature = "CIContext")]
-pub use self::__CIContext::kCIImageRepresentationHDRGainMapAsRGB;
 #[cfg(feature = "CIContext")]
 pub use self::__CIContext::kCIImageRepresentationHDRGainMapImage;
 #[cfg(feature = "CIContext")]
@@ -340,12 +337,6 @@ pub use self::__CIFilter::kCICategoryTransition;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCICategoryVideo;
 #[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIDynamicRangeConstrainedHigh;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIDynamicRangeHigh;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIDynamicRangeStandard;
-#[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputAmountKey;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputAngleKey;
@@ -354,27 +345,15 @@ pub use self::__CIFilter::kCIInputAspectRatioKey;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputBackgroundImageKey;
 #[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputBacksideImageKey;
-#[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputBiasKey;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputBiasVectorKey;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputBrightnessKey;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputCenterKey;
 #[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputColor0Key;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputColor1Key;
-#[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputColorKey;
 #[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputColorSpaceKey;
-#[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputContrastKey;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputCountKey;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputDepthImageKey;
 #[cfg(feature = "CIFilter")]
@@ -383,8 +362,6 @@ pub use self::__CIFilter::kCIInputDisparityImageKey;
 pub use self::__CIFilter::kCIInputEVKey;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputExtentKey;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputExtrapolateKey;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputGradientImageKey;
 #[cfg(feature = "CIFilter")]
@@ -395,18 +372,6 @@ pub use self::__CIFilter::kCIInputIntensityKey;
 pub use self::__CIFilter::kCIInputMaskImageKey;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputMatteImageKey;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputPaletteImageKey;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputPerceptualKey;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputPoint0Key;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputPoint1Key;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputRadius0Key;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputRadius1Key;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputRadiusKey;
 #[cfg(feature = "CIFilter")]
@@ -421,8 +386,6 @@ pub use self::__CIFilter::kCIInputShadingImageKey;
 pub use self::__CIFilter::kCIInputSharpnessKey;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputTargetImageKey;
-#[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::kCIInputThresholdKey;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIInputTimeKey;
 #[cfg(feature = "CIFilter")]
@@ -446,8 +409,6 @@ pub use self::__CIFilter::kCIUISetDevelopment;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::kCIUISetIntermediate;
 #[cfg(feature = "CIFilter")]
-pub use self::__CIFilter::CIDynamicRangeOption;
-#[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::CIFilter;
 #[cfg(feature = "CIFilter")]
 pub use self::__CIFilter::CIFilterProtocol;
@@ -459,8 +420,6 @@ pub use self::__CIFilterBuiltins::CIAffineClamp;
 pub use self::__CIFilterBuiltins::CIAffineTile;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CIAreaAverage;
-#[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
-pub use self::__CIFilterBuiltins::CIAreaAverageMaximumRed;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CIAreaBoundsRed;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
@@ -497,8 +456,6 @@ pub use self::__CIFilterBuiltins::CIBlendWithMask;
 pub use self::__CIFilterBuiltins::CIBloom;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CIBlurredRectangleGenerator;
-#[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
-pub use self::__CIFilterBuiltins::CIBlurredRoundedRectangleGenerator;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CIBokehBlur;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
@@ -583,8 +540,6 @@ pub use self::__CIFilterBuiltins::CIDisparityToDepth;
 pub use self::__CIFilterBuiltins::CIDisplacementDistortion;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CIDissolveTransition;
-#[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
-pub use self::__CIFilterBuiltins::CIDistanceGradientFromRedMask;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CIDither;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
@@ -752,8 +707,6 @@ pub use self::__CIFilterBuiltins::CIRandomGenerator;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CIRippleTransition;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
-pub use self::__CIFilterBuiltins::CIRoundedQRCodeGenerator;
-#[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CIRoundedRectangleGenerator;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CIRoundedRectangleStrokeGenerator;
@@ -769,8 +722,6 @@ pub use self::__CIFilterBuiltins::CISepiaTone;
 pub use self::__CIFilterBuiltins::CIShadedMaterial;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CISharpenLuminance;
-#[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
-pub use self::__CIFilterBuiltins::CISignedDistanceGradientFromRedMask;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CISixfoldReflectedTile;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
@@ -795,8 +746,6 @@ pub use self::__CIFilterBuiltins::CIStripesGenerator;
 pub use self::__CIFilterBuiltins::CISunbeamsGenerator;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CISwipeTransition;
-#[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
-pub use self::__CIFilterBuiltins::CISystemToneMap;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
 pub use self::__CIFilterBuiltins::CITemperatureAndTint;
 #[cfg(all(feature = "CIFilter", feature = "CIFilterBuiltins"))]
@@ -898,8 +847,6 @@ pub use self::__CIImage::kCIFormatRGBAh;
 #[cfg(feature = "CIImage")]
 pub use self::__CIImage::kCIFormatRGBX16;
 #[cfg(feature = "CIImage")]
-pub use self::__CIImage::kCIFormatRGBX8;
-#[cfg(feature = "CIImage")]
 pub use self::__CIImage::kCIFormatRGBXf;
 #[cfg(feature = "CIImage")]
 pub use self::__CIImage::kCIFormatRGBXh;
@@ -911,8 +858,6 @@ pub use self::__CIImage::kCIFormatRGh;
 pub use self::__CIImage::kCIFormatRf;
 #[cfg(feature = "CIImage")]
 pub use self::__CIImage::kCIFormatRh;
-#[cfg(feature = "CIImage")]
-pub use self::__CIImage::kCIImageApplyCleanAperture;
 #[cfg(feature = "CIImage")]
 pub use self::__CIImage::kCIImageApplyOrientationProperty;
 #[cfg(feature = "CIImage")]
@@ -947,8 +892,6 @@ pub use self::__CIImage::kCIImageAuxiliarySemanticSegmentationTeethMatte;
 pub use self::__CIImage::kCIImageCacheImmediately;
 #[cfg(feature = "CIImage")]
 pub use self::__CIImage::kCIImageColorSpace;
-#[cfg(feature = "CIImage")]
-pub use self::__CIImage::kCIImageContentAverageLightLevel;
 #[cfg(feature = "CIImage")]
 pub use self::__CIImage::kCIImageContentHeadroom;
 #[cfg(feature = "CIImage")]
@@ -1017,10 +960,6 @@ pub use self::__CIRAWFilter::CIRAWDecoderVersion7DNG;
 pub use self::__CIRAWFilter::CIRAWDecoderVersion8;
 #[cfg(feature = "CIRAWFilter")]
 pub use self::__CIRAWFilter::CIRAWDecoderVersion8DNG;
-#[cfg(feature = "CIRAWFilter")]
-pub use self::__CIRAWFilter::CIRAWDecoderVersion9;
-#[cfg(feature = "CIRAWFilter")]
-pub use self::__CIRAWFilter::CIRAWDecoderVersion9DNG;
 #[cfg(feature = "CIRAWFilter")]
 pub use self::__CIRAWFilter::CIRAWDecoderVersionNone;
 #[cfg(all(feature = "CIFilter", feature = "CIRAWFilter"))]

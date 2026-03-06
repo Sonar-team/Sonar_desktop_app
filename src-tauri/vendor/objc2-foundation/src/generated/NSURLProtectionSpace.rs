@@ -26,7 +26,6 @@ extern "C" {
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/foundation/nsurlprotectionspaceftp?language=objc)
     #[cfg(feature = "NSString")]
-    #[deprecated = "FTP is deprecated and only supported in the classic loading mode"]
     pub static NSURLProtectionSpaceFTP: &'static NSString;
 }
 
@@ -51,7 +50,6 @@ extern "C" {
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/foundation/nsurlprotectionspaceftpproxy?language=objc)
     #[cfg(feature = "NSString")]
-    #[deprecated = "FTP is deprecated and only supported in the classic loading mode"]
     pub static NSURLProtectionSpaceFTPProxy: &'static NSString;
 }
 
@@ -189,7 +187,7 @@ impl NSURLProtectionSpace {
         /// Returns: The initialized object.
         #[unsafe(method(initWithHost:port:protocol:realm:authenticationMethod:))]
         #[unsafe(method_family = init)]
-        pub fn initWithHost_port_protocol_realm_authenticationMethod(
+        pub unsafe fn initWithHost_port_protocol_realm_authenticationMethod(
             this: Allocated<Self>,
             host: &NSString,
             port: NSInteger,
@@ -220,7 +218,7 @@ impl NSURLProtectionSpace {
         /// Returns: The initialized object.
         #[unsafe(method(initWithProxyHost:port:type:realm:authenticationMethod:))]
         #[unsafe(method_family = init)]
-        pub fn initWithProxyHost_port_type_realm_authenticationMethod(
+        pub unsafe fn initWithProxyHost_port_type_realm_authenticationMethod(
             this: Allocated<Self>,
             host: &NSString,
             port: NSInteger,
@@ -239,21 +237,21 @@ impl NSURLProtectionSpace {
         /// Returns: The realm string
         #[unsafe(method(realm))]
         #[unsafe(method_family = none)]
-        pub fn realm(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn realm(&self) -> Option<Retained<NSString>>;
 
         /// Determine if the password for this protection space can be sent securely
         ///
         /// Returns: YES if a secure authentication method or protocol will be used, NO otherwise
         #[unsafe(method(receivesCredentialSecurely))]
         #[unsafe(method_family = none)]
-        pub fn receivesCredentialSecurely(&self) -> bool;
+        pub unsafe fn receivesCredentialSecurely(&self) -> bool;
 
         /// Determine if this authenticating protection space is a proxy server
         ///
         /// Returns: YES if a proxy, NO otherwise
         #[unsafe(method(isProxy))]
         #[unsafe(method_family = none)]
-        pub fn isProxy(&self) -> bool;
+        pub unsafe fn isProxy(&self) -> bool;
 
         #[cfg(feature = "NSString")]
         /// Get the proxy host if this is a proxy authentication, or the host from the URL.
@@ -261,14 +259,14 @@ impl NSURLProtectionSpace {
         /// Returns: The host for this protection space.
         #[unsafe(method(host))]
         #[unsafe(method_family = none)]
-        pub fn host(&self) -> Retained<NSString>;
+        pub unsafe fn host(&self) -> Retained<NSString>;
 
         /// Get the proxy port if this is a proxy authentication, or the port from the URL.
         ///
         /// Returns: The port for this protection space, or 0 if not set.
         #[unsafe(method(port))]
         #[unsafe(method_family = none)]
-        pub fn port(&self) -> NSInteger;
+        pub unsafe fn port(&self) -> NSInteger;
 
         #[cfg(feature = "NSString")]
         /// Get the type of this protection space, if a proxy
@@ -276,7 +274,7 @@ impl NSURLProtectionSpace {
         /// Returns: The type string, or nil if not a proxy.
         #[unsafe(method(proxyType))]
         #[unsafe(method_family = none)]
-        pub fn proxyType(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn proxyType(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Get the protocol of this protection space, if not a proxy
@@ -284,7 +282,7 @@ impl NSURLProtectionSpace {
         /// Returns: The type string, or nil if a proxy.
         #[unsafe(method(protocol))]
         #[unsafe(method_family = none)]
-        pub fn protocol(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn protocol(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Get the authentication method to be used for this protection space
@@ -292,7 +290,7 @@ impl NSURLProtectionSpace {
         /// Returns: The authentication method
         #[unsafe(method(authenticationMethod))]
         #[unsafe(method_family = none)]
-        pub fn authenticationMethod(&self) -> Retained<NSString>;
+        pub unsafe fn authenticationMethod(&self) -> Retained<NSString>;
     );
 }
 
@@ -301,23 +299,15 @@ impl NSURLProtectionSpace {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
 }
 
-impl DefaultRetained for NSURLProtectionSpace {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
-}
-
 /// NSClientCertificateSpace.
-///
 /// This category supplies additional information for use when a client certificate is required by the server in order to complete authentication.
 impl NSURLProtectionSpace {
     extern_methods!(
@@ -327,12 +317,11 @@ impl NSURLProtectionSpace {
         /// Returns: An array of NSData objects.  (Nil if the authenticationMethod is not NSURLAuthenticationMethodClientCertificate)
         #[unsafe(method(distinguishedNames))]
         #[unsafe(method_family = none)]
-        pub fn distinguishedNames(&self) -> Option<Retained<NSArray<NSData>>>;
+        pub unsafe fn distinguishedNames(&self) -> Option<Retained<NSArray<NSData>>>;
     );
 }
 
 /// NSServerTrustValidationSpace.
-///
 /// This category supplies additional information for use by the client to evaluate whether to trust a given server during a security handshake.
 impl NSURLProtectionSpace {
     extern_methods!();

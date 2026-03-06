@@ -10,7 +10,6 @@ extern "C" {
     /// The pasteboard type constant used when adding or accessing a WebArchive on the pasteboard.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/webkit/webarchivepboardtype?language=objc)
-    #[deprecated]
     pub static WebArchivePboardType: Option<&'static NSString>;
 }
 
@@ -55,14 +54,6 @@ impl WebArchive {
         /// Parameter `subframeArchives`: The archives representing the subframes of the archive (can be nil).
         ///
         /// Returns: An initialized WebArchive.
-        ///
-        /// # Safety
-        ///
-        /// - `main_resource` might not allow `None`.
-        /// - `subresources` generic should be of the correct type.
-        /// - `subresources` might not allow `None`.
-        /// - `subframe_archives` generic should be of the correct type.
-        /// - `subframe_archives` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initWithMainResource:subresources:subframeArchives:))]
         #[unsafe(method_family = init)]
@@ -78,10 +69,6 @@ impl WebArchive {
         /// Parameter `data`: The data representing the archive. This can be obtained using WebArchive's data method.
         ///
         /// Returns: An initialized WebArchive.
-        ///
-        /// # Safety
-        ///
-        /// `data` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initWithData:))]
         #[unsafe(method_family = init)]

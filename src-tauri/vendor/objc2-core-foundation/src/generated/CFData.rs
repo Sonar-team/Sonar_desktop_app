@@ -10,9 +10,6 @@ use objc2::__framework_prelude::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfdata?language=objc)
-///
-/// This is toll-free bridged with `NSData`.
-#[doc(alias = "CFDataRef")]
 #[repr(C)]
 pub struct CFData {
     inner: [u8; 0],
@@ -28,9 +25,6 @@ cf_objc2_type!(
 );
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfmutabledata?language=objc)
-///
-/// This is toll-free bridged with `NSMutableData`.
-#[doc(alias = "CFMutableDataRef")]
 #[repr(C)]
 pub struct CFMutableData {
     inner: [u8; 0],
@@ -57,10 +51,6 @@ unsafe impl ConcreteType for CFData {
 }
 
 impl CFData {
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `bytes` must be a valid pointer.
     #[doc(alias = "CFDataCreate")]
     #[inline]
     pub unsafe fn new(
@@ -79,11 +69,6 @@ impl CFData {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `bytes` must be a valid pointer.
-    /// - `bytes_deallocator` might not allow `None`.
     #[doc(alias = "CFDataCreateWithBytesNoCopy")]
     #[inline]
     pub unsafe fn with_bytes_no_copy(
@@ -139,10 +124,6 @@ impl CFMutableData {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `the_data` might not allow `None`.
     #[doc(alias = "CFDataCreateMutableCopy")]
     #[inline]
     pub unsafe fn new_copy(
@@ -165,7 +146,7 @@ impl CFMutableData {
 impl CFData {
     #[doc(alias = "CFDataGetLength")]
     #[inline]
-    pub fn length(&self) -> CFIndex {
+    pub fn length(self: &CFData) -> CFIndex {
         extern "C-unwind" {
             fn CFDataGetLength(the_data: &CFData) -> CFIndex;
         }
@@ -174,7 +155,7 @@ impl CFData {
 
     #[doc(alias = "CFDataGetBytePtr")]
     #[inline]
-    pub fn byte_ptr(&self) -> *const u8 {
+    pub fn byte_ptr(self: &CFData) -> *const u8 {
         extern "C-unwind" {
             fn CFDataGetBytePtr(the_data: &CFData) -> *const u8;
         }
@@ -194,12 +175,9 @@ impl CFMutableData {
 }
 
 impl CFData {
-    /// # Safety
-    ///
-    /// `buffer` must be a valid pointer.
     #[doc(alias = "CFDataGetBytes")]
     #[inline]
-    pub unsafe fn bytes(&self, range: CFRange, buffer: *mut u8) {
+    pub unsafe fn bytes(self: &CFData, range: CFRange, buffer: *mut u8) {
         extern "C-unwind" {
             fn CFDataGetBytes(the_data: &CFData, range: CFRange, buffer: *mut u8);
         }
@@ -226,10 +204,6 @@ impl CFMutableData {
         unsafe { CFDataIncreaseLength(the_data, extra_length) }
     }
 
-    /// # Safety
-    ///
-    /// - `the_data` might not allow `None`.
-    /// - `bytes` must be a valid pointer.
     #[doc(alias = "CFDataAppendBytes")]
     #[inline]
     pub unsafe fn append_bytes(
@@ -247,10 +221,6 @@ impl CFMutableData {
         unsafe { CFDataAppendBytes(the_data, bytes, length) }
     }
 
-    /// # Safety
-    ///
-    /// - `the_data` might not allow `None`.
-    /// - `new_bytes` must be a valid pointer.
     #[doc(alias = "CFDataReplaceBytes")]
     #[inline]
     pub unsafe fn replace_bytes(
@@ -305,13 +275,10 @@ unsafe impl RefEncode for CFDataSearchFlags {
 }
 
 impl CFData {
-    /// # Safety
-    ///
-    /// `data_to_find` might not allow `None`.
     #[doc(alias = "CFDataFind")]
     #[inline]
     pub unsafe fn find(
-        &self,
+        self: &CFData,
         data_to_find: Option<&CFData>,
         search_range: CFRange,
         compare_options: CFDataSearchFlags,

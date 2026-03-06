@@ -23,7 +23,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceCreate")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn new(state_id: CGEventSourceStateID) -> Option<CFRetained<CGEventSource>> {
+    pub unsafe fn new(state_id: CGEventSourceStateID) -> Option<CFRetained<CGEventSource>> {
         extern "C-unwind" {
             fn CGEventSourceCreate(
                 state_id: CGEventSourceStateID,
@@ -36,7 +36,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceGetKeyboardType")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn keyboard_type(source: Option<&CGEventSource>) -> CGEventSourceKeyboardType {
+    pub unsafe fn keyboard_type(source: Option<&CGEventSource>) -> CGEventSourceKeyboardType {
         extern "C-unwind" {
             fn CGEventSourceGetKeyboardType(
                 source: Option<&CGEventSource>,
@@ -48,7 +48,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceSetKeyboardType")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn set_keyboard_type(
+    pub unsafe fn set_keyboard_type(
         source: Option<&CGEventSource>,
         keyboard_type: CGEventSourceKeyboardType,
     ) {
@@ -64,7 +64,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceGetPixelsPerLine")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn pixels_per_line(source: Option<&CGEventSource>) -> c_double {
+    pub unsafe fn pixels_per_line(source: Option<&CGEventSource>) -> c_double {
         extern "C-unwind" {
             fn CGEventSourceGetPixelsPerLine(source: Option<&CGEventSource>) -> c_double;
         }
@@ -74,7 +74,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceSetPixelsPerLine")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn set_pixels_per_line(source: Option<&CGEventSource>, pixels_per_line: c_double) {
+    pub unsafe fn set_pixels_per_line(source: Option<&CGEventSource>, pixels_per_line: c_double) {
         extern "C-unwind" {
             fn CGEventSourceSetPixelsPerLine(
                 source: Option<&CGEventSource>,
@@ -87,7 +87,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceGetSourceStateID")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn source_state_id(source: Option<&CGEventSource>) -> CGEventSourceStateID {
+    pub unsafe fn source_state_id(source: Option<&CGEventSource>) -> CGEventSourceStateID {
         extern "C-unwind" {
             fn CGEventSourceGetSourceStateID(
                 source: Option<&CGEventSource>,
@@ -99,7 +99,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceButtonState")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn button_state(state_id: CGEventSourceStateID, button: CGMouseButton) -> bool {
+    pub unsafe fn button_state(state_id: CGEventSourceStateID, button: CGMouseButton) -> bool {
         extern "C-unwind" {
             fn CGEventSourceButtonState(
                 state_id: CGEventSourceStateID,
@@ -112,7 +112,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceKeyState")]
     #[cfg(all(feature = "CGEventTypes", feature = "CGRemoteOperation"))]
     #[inline]
-    pub fn key_state(state_id: CGEventSourceStateID, key: CGKeyCode) -> bool {
+    pub unsafe fn key_state(state_id: CGEventSourceStateID, key: CGKeyCode) -> bool {
         extern "C-unwind" {
             fn CGEventSourceKeyState(state_id: CGEventSourceStateID, key: CGKeyCode) -> bool;
         }
@@ -122,7 +122,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceFlagsState")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn flags_state(state_id: CGEventSourceStateID) -> CGEventFlags {
+    pub unsafe fn flags_state(state_id: CGEventSourceStateID) -> CGEventFlags {
         extern "C-unwind" {
             fn CGEventSourceFlagsState(state_id: CGEventSourceStateID) -> CGEventFlags;
         }
@@ -132,7 +132,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceSecondsSinceLastEventType")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn seconds_since_last_event_type(
+    pub unsafe fn seconds_since_last_event_type(
         state_id: CGEventSourceStateID,
         event_type: CGEventType,
     ) -> CFTimeInterval {
@@ -148,7 +148,10 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceCounterForEventType")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn counter_for_event_type(state_id: CGEventSourceStateID, event_type: CGEventType) -> u32 {
+    pub unsafe fn counter_for_event_type(
+        state_id: CGEventSourceStateID,
+        event_type: CGEventType,
+    ) -> u32 {
         extern "C-unwind" {
             fn CGEventSourceCounterForEventType(
                 state_id: CGEventSourceStateID,
@@ -161,7 +164,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceSetUserData")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn set_user_data(source: Option<&CGEventSource>, user_data: i64) {
+    pub unsafe fn set_user_data(source: Option<&CGEventSource>, user_data: i64) {
         extern "C-unwind" {
             fn CGEventSourceSetUserData(source: Option<&CGEventSource>, user_data: i64);
         }
@@ -171,7 +174,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceGetUserData")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn user_data(source: Option<&CGEventSource>) -> i64 {
+    pub unsafe fn user_data(source: Option<&CGEventSource>) -> i64 {
         extern "C-unwind" {
             fn CGEventSourceGetUserData(source: Option<&CGEventSource>) -> i64;
         }
@@ -181,7 +184,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceSetLocalEventsFilterDuringSuppressionState")]
     #[cfg(all(feature = "CGEventTypes", feature = "CGRemoteOperation"))]
     #[inline]
-    pub fn set_local_events_filter_during_suppression_state(
+    pub unsafe fn set_local_events_filter_during_suppression_state(
         source: Option<&CGEventSource>,
         filter: CGEventFilterMask,
         state: CGEventSuppressionState,
@@ -199,7 +202,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceGetLocalEventsFilterDuringSuppressionState")]
     #[cfg(all(feature = "CGEventTypes", feature = "CGRemoteOperation"))]
     #[inline]
-    pub fn local_events_filter_during_suppression_state(
+    pub unsafe fn local_events_filter_during_suppression_state(
         source: Option<&CGEventSource>,
         state: CGEventSuppressionState,
     ) -> CGEventFilterMask {
@@ -215,7 +218,7 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceSetLocalEventsSuppressionInterval")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn set_local_events_suppression_interval(
+    pub unsafe fn set_local_events_suppression_interval(
         source: Option<&CGEventSource>,
         seconds: CFTimeInterval,
     ) {
@@ -231,7 +234,9 @@ impl CGEventSource {
     #[doc(alias = "CGEventSourceGetLocalEventsSuppressionInterval")]
     #[cfg(feature = "CGEventTypes")]
     #[inline]
-    pub fn local_events_suppression_interval(source: Option<&CGEventSource>) -> CFTimeInterval {
+    pub unsafe fn local_events_suppression_interval(
+        source: Option<&CGEventSource>,
+    ) -> CFTimeInterval {
         extern "C-unwind" {
             fn CGEventSourceGetLocalEventsSuppressionInterval(
                 source: Option<&CGEventSource>,
@@ -244,7 +249,7 @@ impl CGEventSource {
 #[cfg(feature = "CGEventTypes")]
 #[deprecated = "renamed to `CGEventSource::new`"]
 #[inline]
-pub extern "C-unwind" fn CGEventSourceCreate(
+pub unsafe extern "C-unwind" fn CGEventSourceCreate(
     state_id: CGEventSourceStateID,
 ) -> Option<CFRetained<CGEventSource>> {
     extern "C-unwind" {
@@ -254,219 +259,121 @@ pub extern "C-unwind" fn CGEventSourceCreate(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::keyboard_type`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceGetKeyboardType(
-    source: Option<&CGEventSource>,
-) -> CGEventSourceKeyboardType {
-    extern "C-unwind" {
-        fn CGEventSourceGetKeyboardType(
-            source: Option<&CGEventSource>,
-        ) -> CGEventSourceKeyboardType;
-    }
-    unsafe { CGEventSourceGetKeyboardType(source) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::keyboard_type`"]
+    pub fn CGEventSourceGetKeyboardType(
+        source: Option<&CGEventSource>,
+    ) -> CGEventSourceKeyboardType;
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::set_keyboard_type`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceSetKeyboardType(
-    source: Option<&CGEventSource>,
-    keyboard_type: CGEventSourceKeyboardType,
-) {
-    extern "C-unwind" {
-        fn CGEventSourceSetKeyboardType(
-            source: Option<&CGEventSource>,
-            keyboard_type: CGEventSourceKeyboardType,
-        );
-    }
-    unsafe { CGEventSourceSetKeyboardType(source, keyboard_type) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::set_keyboard_type`"]
+    pub fn CGEventSourceSetKeyboardType(
+        source: Option<&CGEventSource>,
+        keyboard_type: CGEventSourceKeyboardType,
+    );
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::pixels_per_line`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceGetPixelsPerLine(source: Option<&CGEventSource>) -> c_double {
-    extern "C-unwind" {
-        fn CGEventSourceGetPixelsPerLine(source: Option<&CGEventSource>) -> c_double;
-    }
-    unsafe { CGEventSourceGetPixelsPerLine(source) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::pixels_per_line`"]
+    pub fn CGEventSourceGetPixelsPerLine(source: Option<&CGEventSource>) -> c_double;
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::set_pixels_per_line`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceSetPixelsPerLine(
-    source: Option<&CGEventSource>,
-    pixels_per_line: c_double,
-) {
-    extern "C-unwind" {
-        fn CGEventSourceSetPixelsPerLine(source: Option<&CGEventSource>, pixels_per_line: c_double);
-    }
-    unsafe { CGEventSourceSetPixelsPerLine(source, pixels_per_line) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::set_pixels_per_line`"]
+    pub fn CGEventSourceSetPixelsPerLine(source: Option<&CGEventSource>, pixels_per_line: c_double);
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::source_state_id`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceGetSourceStateID(
-    source: Option<&CGEventSource>,
-) -> CGEventSourceStateID {
-    extern "C-unwind" {
-        fn CGEventSourceGetSourceStateID(source: Option<&CGEventSource>) -> CGEventSourceStateID;
-    }
-    unsafe { CGEventSourceGetSourceStateID(source) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::source_state_id`"]
+    pub fn CGEventSourceGetSourceStateID(source: Option<&CGEventSource>) -> CGEventSourceStateID;
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::button_state`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceButtonState(
-    state_id: CGEventSourceStateID,
-    button: CGMouseButton,
-) -> bool {
-    extern "C-unwind" {
-        fn CGEventSourceButtonState(state_id: CGEventSourceStateID, button: CGMouseButton) -> bool;
-    }
-    unsafe { CGEventSourceButtonState(state_id, button) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::button_state`"]
+    pub fn CGEventSourceButtonState(state_id: CGEventSourceStateID, button: CGMouseButton) -> bool;
 }
 
-#[cfg(all(feature = "CGEventTypes", feature = "CGRemoteOperation"))]
-#[deprecated = "renamed to `CGEventSource::key_state`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceKeyState(
-    state_id: CGEventSourceStateID,
-    key: CGKeyCode,
-) -> bool {
-    extern "C-unwind" {
-        fn CGEventSourceKeyState(state_id: CGEventSourceStateID, key: CGKeyCode) -> bool;
-    }
-    unsafe { CGEventSourceKeyState(state_id, key) }
+extern "C-unwind" {
+    #[cfg(all(feature = "CGEventTypes", feature = "CGRemoteOperation"))]
+    #[deprecated = "renamed to `CGEventSource::key_state`"]
+    pub fn CGEventSourceKeyState(state_id: CGEventSourceStateID, key: CGKeyCode) -> bool;
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::flags_state`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceFlagsState(state_id: CGEventSourceStateID) -> CGEventFlags {
-    extern "C-unwind" {
-        fn CGEventSourceFlagsState(state_id: CGEventSourceStateID) -> CGEventFlags;
-    }
-    unsafe { CGEventSourceFlagsState(state_id) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::flags_state`"]
+    pub fn CGEventSourceFlagsState(state_id: CGEventSourceStateID) -> CGEventFlags;
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::seconds_since_last_event_type`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceSecondsSinceLastEventType(
-    state_id: CGEventSourceStateID,
-    event_type: CGEventType,
-) -> CFTimeInterval {
-    extern "C-unwind" {
-        fn CGEventSourceSecondsSinceLastEventType(
-            state_id: CGEventSourceStateID,
-            event_type: CGEventType,
-        ) -> CFTimeInterval;
-    }
-    unsafe { CGEventSourceSecondsSinceLastEventType(state_id, event_type) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::seconds_since_last_event_type`"]
+    pub fn CGEventSourceSecondsSinceLastEventType(
+        state_id: CGEventSourceStateID,
+        event_type: CGEventType,
+    ) -> CFTimeInterval;
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::counter_for_event_type`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceCounterForEventType(
-    state_id: CGEventSourceStateID,
-    event_type: CGEventType,
-) -> u32 {
-    extern "C-unwind" {
-        fn CGEventSourceCounterForEventType(
-            state_id: CGEventSourceStateID,
-            event_type: CGEventType,
-        ) -> u32;
-    }
-    unsafe { CGEventSourceCounterForEventType(state_id, event_type) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::counter_for_event_type`"]
+    pub fn CGEventSourceCounterForEventType(
+        state_id: CGEventSourceStateID,
+        event_type: CGEventType,
+    ) -> u32;
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::set_user_data`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceSetUserData(source: Option<&CGEventSource>, user_data: i64) {
-    extern "C-unwind" {
-        fn CGEventSourceSetUserData(source: Option<&CGEventSource>, user_data: i64);
-    }
-    unsafe { CGEventSourceSetUserData(source, user_data) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::set_user_data`"]
+    pub fn CGEventSourceSetUserData(source: Option<&CGEventSource>, user_data: i64);
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::user_data`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceGetUserData(source: Option<&CGEventSource>) -> i64 {
-    extern "C-unwind" {
-        fn CGEventSourceGetUserData(source: Option<&CGEventSource>) -> i64;
-    }
-    unsafe { CGEventSourceGetUserData(source) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::user_data`"]
+    pub fn CGEventSourceGetUserData(source: Option<&CGEventSource>) -> i64;
 }
 
-#[cfg(all(feature = "CGEventTypes", feature = "CGRemoteOperation"))]
-#[deprecated = "renamed to `CGEventSource::set_local_events_filter_during_suppression_state`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceSetLocalEventsFilterDuringSuppressionState(
-    source: Option<&CGEventSource>,
-    filter: CGEventFilterMask,
-    state: CGEventSuppressionState,
-) {
-    extern "C-unwind" {
-        fn CGEventSourceSetLocalEventsFilterDuringSuppressionState(
-            source: Option<&CGEventSource>,
-            filter: CGEventFilterMask,
-            state: CGEventSuppressionState,
-        );
-    }
-    unsafe { CGEventSourceSetLocalEventsFilterDuringSuppressionState(source, filter, state) }
+extern "C-unwind" {
+    #[cfg(all(feature = "CGEventTypes", feature = "CGRemoteOperation"))]
+    #[deprecated = "renamed to `CGEventSource::set_local_events_filter_during_suppression_state`"]
+    pub fn CGEventSourceSetLocalEventsFilterDuringSuppressionState(
+        source: Option<&CGEventSource>,
+        filter: CGEventFilterMask,
+        state: CGEventSuppressionState,
+    );
 }
 
-#[cfg(all(feature = "CGEventTypes", feature = "CGRemoteOperation"))]
-#[deprecated = "renamed to `CGEventSource::local_events_filter_during_suppression_state`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceGetLocalEventsFilterDuringSuppressionState(
-    source: Option<&CGEventSource>,
-    state: CGEventSuppressionState,
-) -> CGEventFilterMask {
-    extern "C-unwind" {
-        fn CGEventSourceGetLocalEventsFilterDuringSuppressionState(
-            source: Option<&CGEventSource>,
-            state: CGEventSuppressionState,
-        ) -> CGEventFilterMask;
-    }
-    unsafe { CGEventSourceGetLocalEventsFilterDuringSuppressionState(source, state) }
+extern "C-unwind" {
+    #[cfg(all(feature = "CGEventTypes", feature = "CGRemoteOperation"))]
+    #[deprecated = "renamed to `CGEventSource::local_events_filter_during_suppression_state`"]
+    pub fn CGEventSourceGetLocalEventsFilterDuringSuppressionState(
+        source: Option<&CGEventSource>,
+        state: CGEventSuppressionState,
+    ) -> CGEventFilterMask;
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::set_local_events_suppression_interval`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceSetLocalEventsSuppressionInterval(
-    source: Option<&CGEventSource>,
-    seconds: CFTimeInterval,
-) {
-    extern "C-unwind" {
-        fn CGEventSourceSetLocalEventsSuppressionInterval(
-            source: Option<&CGEventSource>,
-            seconds: CFTimeInterval,
-        );
-    }
-    unsafe { CGEventSourceSetLocalEventsSuppressionInterval(source, seconds) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::set_local_events_suppression_interval`"]
+    pub fn CGEventSourceSetLocalEventsSuppressionInterval(
+        source: Option<&CGEventSource>,
+        seconds: CFTimeInterval,
+    );
 }
 
-#[cfg(feature = "CGEventTypes")]
-#[deprecated = "renamed to `CGEventSource::local_events_suppression_interval`"]
-#[inline]
-pub extern "C-unwind" fn CGEventSourceGetLocalEventsSuppressionInterval(
-    source: Option<&CGEventSource>,
-) -> CFTimeInterval {
-    extern "C-unwind" {
-        fn CGEventSourceGetLocalEventsSuppressionInterval(
-            source: Option<&CGEventSource>,
-        ) -> CFTimeInterval;
-    }
-    unsafe { CGEventSourceGetLocalEventsSuppressionInterval(source) }
+extern "C-unwind" {
+    #[cfg(feature = "CGEventTypes")]
+    #[deprecated = "renamed to `CGEventSource::local_events_suppression_interval`"]
+    pub fn CGEventSourceGetLocalEventsSuppressionInterval(
+        source: Option<&CGEventSource>,
+    ) -> CFTimeInterval;
 }

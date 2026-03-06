@@ -30,10 +30,6 @@ impl NSMigrationManager {
         ) -> Retained<Self>;
 
         #[cfg(feature = "NSMappingModel")]
-        /// # Safety
-        ///
-        /// - `s_options` generic should be of the correct type.
-        /// - `d_options` generic should be of the correct type.
         #[unsafe(method(migrateStoreFromURL:type:options:withMappingModel:toDestinationURL:destinationType:destinationOptions:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn migrateStoreFromURL_type_options_withMappingModel_toDestinationURL_destinationType_destinationOptions_error(
@@ -146,10 +142,6 @@ impl NSMigrationManager {
         pub unsafe fn userInfo(&self) -> Option<Retained<NSDictionary>>;
 
         /// Setter for [`userInfo`][Self::userInfo].
-        ///
-        /// # Safety
-        ///
-        /// `user_info` generic should be of the correct type.
         #[unsafe(method(setUserInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUserInfo(&self, user_info: Option<&NSDictionary>);

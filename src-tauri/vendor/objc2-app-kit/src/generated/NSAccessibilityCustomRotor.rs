@@ -114,7 +114,7 @@ impl NSAccessibilityCustomRotor {
         /// initializer for custom rotors that are not one of the common types.
         #[unsafe(method(initWithLabel:itemSearchDelegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithLabel_itemSearchDelegate(
+        pub unsafe fn initWithLabel_itemSearchDelegate(
             this: Allocated<Self>,
             label: &NSString,
             item_search_delegate: &ProtocolObject<dyn NSAccessibilityCustomRotorItemSearchDelegate>,
@@ -124,7 +124,7 @@ impl NSAccessibilityCustomRotor {
         /// such as links, headings, etc. A default label will be provided.
         #[unsafe(method(initWithRotorType:itemSearchDelegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithRotorType_itemSearchDelegate(
+        pub unsafe fn initWithRotorType_itemSearchDelegate(
             this: Allocated<Self>,
             rotor_type: NSAccessibilityCustomRotorType,
             item_search_delegate: &ProtocolObject<dyn NSAccessibilityCustomRotorItemSearchDelegate>,
@@ -136,12 +136,12 @@ impl NSAccessibilityCustomRotor {
         /// the rotor type was specified in the initializer.
         #[unsafe(method(type))]
         #[unsafe(method_family = none)]
-        pub fn r#type(&self) -> NSAccessibilityCustomRotorType;
+        pub unsafe fn r#type(&self) -> NSAccessibilityCustomRotorType;
 
         /// Setter for [`type`][Self::type].
         #[unsafe(method(setType:))]
         #[unsafe(method_family = none)]
-        pub fn setType(&self, r#type: NSAccessibilityCustomRotorType);
+        pub unsafe fn setType(&self, r#type: NSAccessibilityCustomRotorType);
 
         /// The localized label assistive technologies will use to describe
         /// the custom rotor.
@@ -151,29 +151,26 @@ impl NSAccessibilityCustomRotor {
         /// for all other types.
         #[unsafe(method(label))]
         #[unsafe(method_family = none)]
-        pub fn label(&self) -> Retained<NSString>;
+        pub unsafe fn label(&self) -> Retained<NSString>;
 
         /// Setter for [`label`][Self::label].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setLabel:))]
         #[unsafe(method_family = none)]
-        pub fn setLabel(&self, label: &NSString);
+        pub unsafe fn setLabel(&self, label: &NSString);
 
         /// The itemSearchDelegate will be asked to find the next item result
         /// after performing a search with the given search parameters.
         #[unsafe(method(itemSearchDelegate))]
         #[unsafe(method_family = none)]
-        pub fn itemSearchDelegate(
+        pub unsafe fn itemSearchDelegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn NSAccessibilityCustomRotorItemSearchDelegate>>>;
 
-        /// Setter for [`itemSearchDelegate`][Self::itemSearchDelegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`itemSearchDelegate`][Self::itemSearchDelegate].
         #[unsafe(method(setItemSearchDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setItemSearchDelegate(
+        pub unsafe fn setItemSearchDelegate(
             &self,
             item_search_delegate: Option<
                 &ProtocolObject<dyn NSAccessibilityCustomRotorItemSearchDelegate>,
@@ -188,17 +185,16 @@ impl NSAccessibilityCustomRotor {
         /// item result's token to determine which item to return.
         #[unsafe(method(itemLoadingDelegate))]
         #[unsafe(method_family = none)]
-        pub fn itemLoadingDelegate(
+        pub unsafe fn itemLoadingDelegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn NSAccessibilityElementLoading>>>;
 
         #[cfg(feature = "NSAccessibilityProtocols")]
-        /// Setter for [`itemLoadingDelegate`][Self::itemLoadingDelegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`itemLoadingDelegate`][Self::itemLoadingDelegate].
         #[unsafe(method(setItemLoadingDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setItemLoadingDelegate(
+        pub unsafe fn setItemLoadingDelegate(
             &self,
             item_loading_delegate: Option<&ProtocolObject<dyn NSAccessibilityElementLoading>>,
         );
@@ -210,19 +206,12 @@ impl NSAccessibilityCustomRotor {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSAccessibilityCustomRotor {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -248,23 +237,26 @@ impl NSAccessibilityCustomRotorSearchParameters {
         /// next will return the first item and previous will return the last item).
         #[unsafe(method(currentItem))]
         #[unsafe(method_family = none)]
-        pub fn currentItem(&self) -> Option<Retained<NSAccessibilityCustomRotorItemResult>>;
+        pub unsafe fn currentItem(&self) -> Option<Retained<NSAccessibilityCustomRotorItemResult>>;
 
         /// Setter for [`currentItem`][Self::currentItem].
         #[unsafe(method(setCurrentItem:))]
         #[unsafe(method_family = none)]
-        pub fn setCurrentItem(&self, current_item: Option<&NSAccessibilityCustomRotorItemResult>);
+        pub unsafe fn setCurrentItem(
+            &self,
+            current_item: Option<&NSAccessibilityCustomRotorItemResult>,
+        );
 
         /// Either NSAccessibilityCustomRotorSearchDirectionPrevious or
         /// NSAccessibilityCustomRotorSearchDirectionNext.
         #[unsafe(method(searchDirection))]
         #[unsafe(method_family = none)]
-        pub fn searchDirection(&self) -> NSAccessibilityCustomRotorSearchDirection;
+        pub unsafe fn searchDirection(&self) -> NSAccessibilityCustomRotorSearchDirection;
 
         /// Setter for [`searchDirection`][Self::searchDirection].
         #[unsafe(method(setSearchDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setSearchDirection(
+        pub unsafe fn setSearchDirection(
             &self,
             search_direction: NSAccessibilityCustomRotorSearchDirection,
         );
@@ -274,14 +266,12 @@ impl NSAccessibilityCustomRotorSearchParameters {
         /// text "Re", color item "Red" would be returned as a result.
         #[unsafe(method(filterString))]
         #[unsafe(method_family = none)]
-        pub fn filterString(&self) -> Retained<NSString>;
+        pub unsafe fn filterString(&self) -> Retained<NSString>;
 
         /// Setter for [`filterString`][Self::filterString].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFilterString:))]
         #[unsafe(method_family = none)]
-        pub fn setFilterString(&self, filter_string: &NSString);
+        pub unsafe fn setFilterString(&self, filter_string: &NSString);
     );
 }
 
@@ -290,19 +280,12 @@ impl NSAccessibilityCustomRotorSearchParameters {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSAccessibilityCustomRotorSearchParameters {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -334,7 +317,7 @@ impl NSAccessibilityCustomRotorItemResult {
         /// technologies may try to set accessibility focus on the element.
         #[unsafe(method(initWithTargetElement:))]
         #[unsafe(method_family = init)]
-        pub fn initWithTargetElement(
+        pub unsafe fn initWithTargetElement(
             this: Allocated<Self>,
             target_element: &ProtocolObject<dyn NSAccessibilityElementProtocol>,
         ) -> Retained<Self>;
@@ -343,10 +326,6 @@ impl NSAccessibilityCustomRotorItemResult {
         /// Creates an item result with a given item load token and custom label.
         /// Use this initializer if the application has not yet loaded the element
         /// backing the item result.
-        ///
-        /// # Safety
-        ///
-        /// `item_loading_token` should be of the correct type.
         #[unsafe(method(initWithItemLoadingToken:customLabel:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithItemLoadingToken_customLabel(
@@ -361,7 +340,7 @@ impl NSAccessibilityCustomRotorItemResult {
         /// may try to set accessibility focus on it.
         #[unsafe(method(targetElement))]
         #[unsafe(method_family = none)]
-        pub fn targetElement(
+        pub unsafe fn targetElement(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn NSAccessibilityElementProtocol>>>;
 
@@ -371,7 +350,7 @@ impl NSAccessibilityCustomRotorItemResult {
         /// to determine which item to return.
         #[unsafe(method(itemLoadingToken))]
         #[unsafe(method_family = none)]
-        pub fn itemLoadingToken(&self) -> Option<Retained<NSAccessibilityLoadingToken>>;
+        pub unsafe fn itemLoadingToken(&self) -> Option<Retained<NSAccessibilityLoadingToken>>;
 
         /// For text-based elements such as an NSTextView, this is an NSRange
         /// that specifies the area of interest. If the target range has NSNotFound
@@ -379,12 +358,12 @@ impl NSAccessibilityCustomRotorItemResult {
         /// of the text element, depending on the search direction.
         #[unsafe(method(targetRange))]
         #[unsafe(method_family = none)]
-        pub fn targetRange(&self) -> NSRange;
+        pub unsafe fn targetRange(&self) -> NSRange;
 
         /// Setter for [`targetRange`][Self::targetRange].
         #[unsafe(method(setTargetRange:))]
         #[unsafe(method_family = none)]
-        pub fn setTargetRange(&self, target_range: NSRange);
+        pub unsafe fn setTargetRange(&self, target_range: NSRange);
 
         /// A localized label that can be used instead of the default item
         /// label to describe the item result.
@@ -392,14 +371,12 @@ impl NSAccessibilityCustomRotorItemResult {
         /// Required if using the loader-based initializer. Optional otherwise.
         #[unsafe(method(customLabel))]
         #[unsafe(method_family = none)]
-        pub fn customLabel(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn customLabel(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`customLabel`][Self::customLabel].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCustomLabel:))]
         #[unsafe(method_family = none)]
-        pub fn setCustomLabel(&self, custom_label: Option<&NSString>);
+        pub unsafe fn setCustomLabel(&self, custom_label: Option<&NSString>);
     );
 }
 
@@ -410,7 +387,7 @@ extern_protocol!(
         /// performing a search with the given search parameters.
         #[unsafe(method(rotor:resultForSearchParameters:))]
         #[unsafe(method_family = none)]
-        fn rotor_resultForSearchParameters(
+        unsafe fn rotor_resultForSearchParameters(
             &self,
             rotor: &NSAccessibilityCustomRotor,
             search_parameters: &NSAccessibilityCustomRotorSearchParameters,

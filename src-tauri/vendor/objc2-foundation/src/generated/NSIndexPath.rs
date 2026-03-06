@@ -41,11 +41,8 @@ impl NSIndexPath {
     extern_methods!(
         #[unsafe(method(indexPathWithIndex:))]
         #[unsafe(method_family = none)]
-        pub fn indexPathWithIndex(index: NSUInteger) -> Retained<Self>;
+        pub unsafe fn indexPathWithIndex(index: NSUInteger) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `indexes` must be a valid pointer or null.
         #[unsafe(method(indexPathWithIndexes:length:))]
         #[unsafe(method_family = none)]
         pub unsafe fn indexPathWithIndexes_length(
@@ -53,9 +50,6 @@ impl NSIndexPath {
             length: NSUInteger,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `indexes` must be a valid pointer or null.
         #[unsafe(method(initWithIndexes:length:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithIndexes_length(
@@ -66,23 +60,23 @@ impl NSIndexPath {
 
         #[unsafe(method(initWithIndex:))]
         #[unsafe(method_family = init)]
-        pub fn initWithIndex(this: Allocated<Self>, index: NSUInteger) -> Retained<Self>;
+        pub unsafe fn initWithIndex(this: Allocated<Self>, index: NSUInteger) -> Retained<Self>;
 
         #[unsafe(method(indexPathByAddingIndex:))]
         #[unsafe(method_family = none)]
-        pub fn indexPathByAddingIndex(&self, index: NSUInteger) -> Retained<NSIndexPath>;
+        pub unsafe fn indexPathByAddingIndex(&self, index: NSUInteger) -> Retained<NSIndexPath>;
 
         #[unsafe(method(indexPathByRemovingLastIndex))]
         #[unsafe(method_family = none)]
-        pub fn indexPathByRemovingLastIndex(&self) -> Retained<NSIndexPath>;
+        pub unsafe fn indexPathByRemovingLastIndex(&self) -> Retained<NSIndexPath>;
 
         #[unsafe(method(indexAtPosition:))]
         #[unsafe(method_family = none)]
-        pub fn indexAtPosition(&self, position: NSUInteger) -> NSUInteger;
+        pub unsafe fn indexAtPosition(&self, position: NSUInteger) -> NSUInteger;
 
         #[unsafe(method(length))]
         #[unsafe(method_family = none)]
-        pub fn length(&self) -> NSUInteger;
+        pub unsafe fn length(&self) -> NSUInteger;
 
         #[cfg(feature = "NSRange")]
         /// Copies the indexes stored in this index path from the positions specified by positionRange into indexes.
@@ -92,10 +86,6 @@ impl NSIndexPath {
         /// Parameter `positionRange`: A range of valid positions within this index path.  If the location plus the length of positionRange is greater than the length of this index path, this method raises an NSRangeException.
         ///
         /// It is the developer’s responsibility to allocate the memory for the C array.
-        ///
-        /// # Safety
-        ///
-        /// `indexes` must be a valid pointer.
         #[unsafe(method(getIndexes:range:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getIndexes_range(
@@ -107,7 +97,7 @@ impl NSIndexPath {
         #[cfg(feature = "NSObjCRuntime")]
         #[unsafe(method(compare:))]
         #[unsafe(method_family = none)]
-        pub fn compare(&self, other_object: &NSIndexPath) -> NSComparisonResult;
+        pub unsafe fn compare(&self, other_object: &NSIndexPath) -> NSComparisonResult;
     );
 }
 
@@ -116,29 +106,18 @@ impl NSIndexPath {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSIndexPath {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSDeprecated.
 impl NSIndexPath {
     extern_methods!(
         /// This method is unsafe because it could potentially cause buffer overruns. You should use -getIndexes:range: instead.
-        ///
-        /// # Safety
-        ///
-        /// `indexes` must be a valid pointer.
         #[deprecated]
         #[unsafe(method(getIndexes:))]
         #[unsafe(method_family = none)]

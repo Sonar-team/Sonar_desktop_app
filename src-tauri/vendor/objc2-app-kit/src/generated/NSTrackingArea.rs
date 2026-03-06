@@ -69,11 +69,6 @@ extern_conformance!(
 
 impl NSTrackingArea {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `owner` should be of the correct type.
-        /// - `user_info` generic should be of the correct type.
-        /// - `user_info` generic should be of the correct type.
         #[unsafe(method(initWithRect:options:owner:userInfo:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithRect_options_owner_userInfo(
@@ -86,19 +81,19 @@ impl NSTrackingArea {
 
         #[unsafe(method(rect))]
         #[unsafe(method_family = none)]
-        pub fn rect(&self) -> NSRect;
+        pub unsafe fn rect(&self) -> NSRect;
 
         #[unsafe(method(options))]
         #[unsafe(method_family = none)]
-        pub fn options(&self) -> NSTrackingAreaOptions;
+        pub unsafe fn options(&self) -> NSTrackingAreaOptions;
 
         #[unsafe(method(owner))]
         #[unsafe(method_family = none)]
-        pub fn owner(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn owner(&self) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(userInfo))]
         #[unsafe(method_family = none)]
-        pub fn userInfo(&self) -> Option<Retained<NSDictionary<AnyObject, AnyObject>>>;
+        pub unsafe fn userInfo(&self) -> Option<Retained<NSDictionary<AnyObject, AnyObject>>>;
     );
 }
 
@@ -107,17 +102,10 @@ impl NSTrackingArea {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSTrackingArea {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

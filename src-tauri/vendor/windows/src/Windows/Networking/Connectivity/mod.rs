@@ -269,7 +269,6 @@ impl ConnectionProfile {
             (windows_core::Interface::vtable(this).NetworkAdapter)(windows_core::Interface::as_raw(this), &mut result__).and_then(|| windows_core::Type::from_abi(result__))
         }
     }
-    #[cfg(feature = "deprecated")]
     pub fn GetLocalUsage(&self, starttime: super::super::Foundation::DateTime, endtime: super::super::Foundation::DateTime) -> windows_core::Result<DataUsage> {
         let this = self;
         unsafe {
@@ -277,7 +276,6 @@ impl ConnectionProfile {
             (windows_core::Interface::vtable(this).GetLocalUsage)(windows_core::Interface::as_raw(this), starttime, endtime, &mut result__).and_then(|| windows_core::Type::from_abi(result__))
         }
     }
-    #[cfg(feature = "deprecated")]
     pub fn GetLocalUsagePerRoamingStates(&self, starttime: super::super::Foundation::DateTime, endtime: super::super::Foundation::DateTime, states: RoamingStates) -> windows_core::Result<DataUsage> {
         let this = self;
         unsafe {
@@ -750,13 +748,10 @@ impl windows_core::RuntimeName for DataPlanUsage {
 }
 unsafe impl Send for DataPlanUsage {}
 unsafe impl Sync for DataPlanUsage {}
-#[cfg(feature = "deprecated")]
 #[repr(transparent)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DataUsage(windows_core::IUnknown);
-#[cfg(feature = "deprecated")]
 windows_core::imp::interface_hierarchy!(DataUsage, windows_core::IUnknown, windows_core::IInspectable);
-#[cfg(feature = "deprecated")]
 impl DataUsage {
     pub fn BytesSent(&self) -> windows_core::Result<u64> {
         let this = self;
@@ -773,22 +768,17 @@ impl DataUsage {
         }
     }
 }
-#[cfg(feature = "deprecated")]
 impl windows_core::RuntimeType for DataUsage {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_class::<Self, IDataUsage>();
 }
-#[cfg(feature = "deprecated")]
 unsafe impl windows_core::Interface for DataUsage {
     type Vtable = <IDataUsage as windows_core::Interface>::Vtable;
     const IID: windows_core::GUID = <IDataUsage as windows_core::Interface>::IID;
 }
-#[cfg(feature = "deprecated")]
 impl windows_core::RuntimeName for DataUsage {
     const NAME: &'static str = "Windows.Networking.Connectivity.DataUsage";
 }
-#[cfg(feature = "deprecated")]
 unsafe impl Send for DataUsage {}
-#[cfg(feature = "deprecated")]
 unsafe impl Sync for DataUsage {}
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -919,14 +909,8 @@ pub struct IConnectionProfile_Vtbl {
     pub GetConnectionCost: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
     pub GetDataPlanStatus: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
     pub NetworkAdapter: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(feature = "deprecated")]
     pub GetLocalUsage: unsafe extern "system" fn(*mut core::ffi::c_void, super::super::Foundation::DateTime, super::super::Foundation::DateTime, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    GetLocalUsage: usize,
-    #[cfg(feature = "deprecated")]
     pub GetLocalUsagePerRoamingStates: unsafe extern "system" fn(*mut core::ffi::c_void, super::super::Foundation::DateTime, super::super::Foundation::DateTime, RoamingStates, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    GetLocalUsagePerRoamingStates: usize,
     pub NetworkSecuritySettings: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 windows_core::imp::define_interface!(IConnectionProfile2, IConnectionProfile2_Vtbl, 0xe2045145_4c9f_400c_9150_7ec7d6e2888a);
@@ -1096,13 +1080,10 @@ pub struct IDataPlanUsage_Vtbl {
     pub MegabytesUsed: unsafe extern "system" fn(*mut core::ffi::c_void, *mut u32) -> windows_core::HRESULT,
     pub LastSyncTime: unsafe extern "system" fn(*mut core::ffi::c_void, *mut super::super::Foundation::DateTime) -> windows_core::HRESULT,
 }
-#[cfg(feature = "deprecated")]
 windows_core::imp::define_interface!(IDataUsage, IDataUsage_Vtbl, 0xc1431dd3_b146_4d39_b959_0c69b096c512);
-#[cfg(feature = "deprecated")]
 impl windows_core::RuntimeType for IDataUsage {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
-#[cfg(feature = "deprecated")]
 #[repr(C)]
 #[doc(hidden)]
 pub struct IDataUsage_Vtbl {
@@ -1787,7 +1768,7 @@ impl windows_core::RuntimeType for NetworkStatusChangedEventHandler {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
 impl NetworkStatusChangedEventHandler {
-    pub fn new<F: FnMut(windows_core::Ref<'_, windows_core::IInspectable>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
+    pub fn new<F: Fn(windows_core::Ref<windows_core::IInspectable>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
         let com = NetworkStatusChangedEventHandlerBox { vtable: &NetworkStatusChangedEventHandlerBox::<F>::VTABLE, count: windows_core::imp::RefCount::new(1), invoke };
         unsafe { core::mem::transmute(windows_core::imp::Box::new(com)) }
     }
@@ -1806,12 +1787,12 @@ pub struct NetworkStatusChangedEventHandler_Vtbl {
     Invoke: unsafe extern "system" fn(this: *mut core::ffi::c_void, sender: *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 #[repr(C)]
-struct NetworkStatusChangedEventHandlerBox<F: FnMut(windows_core::Ref<'_, windows_core::IInspectable>) -> windows_core::Result<()> + Send + 'static> {
+struct NetworkStatusChangedEventHandlerBox<F: Fn(windows_core::Ref<windows_core::IInspectable>) -> windows_core::Result<()> + Send + 'static> {
     vtable: *const NetworkStatusChangedEventHandler_Vtbl,
     invoke: F,
     count: windows_core::imp::RefCount,
 }
-impl<F: FnMut(windows_core::Ref<'_, windows_core::IInspectable>) -> windows_core::Result<()> + Send + 'static> NetworkStatusChangedEventHandlerBox<F> {
+impl<F: Fn(windows_core::Ref<windows_core::IInspectable>) -> windows_core::Result<()> + Send + 'static> NetworkStatusChangedEventHandlerBox<F> {
     const VTABLE: NetworkStatusChangedEventHandler_Vtbl = NetworkStatusChangedEventHandler_Vtbl { base__: windows_core::IUnknown_Vtbl { QueryInterface: Self::QueryInterface, AddRef: Self::AddRef, Release: Self::Release }, Invoke: Self::Invoke };
     unsafe extern "system" fn QueryInterface(this: *mut core::ffi::c_void, iid: *const windows_core::GUID, interface: *mut *mut core::ffi::c_void) -> windows_core::HRESULT {
         unsafe {

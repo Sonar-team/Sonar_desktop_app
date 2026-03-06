@@ -190,7 +190,7 @@ impl UIWritingToolsCoordinator {
         /// ready to process Writing Tools requests.
         #[unsafe(method(isWritingToolsAvailable))]
         #[unsafe(method_family = none)]
-        pub fn isWritingToolsAvailable(mtm: MainThreadMarker) -> bool;
+        pub unsafe fn isWritingToolsAvailable(mtm: MainThreadMarker) -> bool;
 
         /// Creates a writing tools coordinator and assigns the specified
         /// delegate object to it.
@@ -205,7 +205,7 @@ impl UIWritingToolsCoordinator {
         /// method to add the object to your view.
         #[unsafe(method(initWithDelegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDelegate(
+        pub unsafe fn initWithDelegate(
             this: Allocated<Self>,
             delegate: Option<&ProtocolObject<dyn UIWritingToolsCoordinatorDelegate>>,
         ) -> Retained<Self>;
@@ -218,7 +218,7 @@ impl UIWritingToolsCoordinator {
         /// refreshing the view’s layout and appearance.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIWritingToolsCoordinatorDelegate>>>;
 
@@ -239,15 +239,14 @@ impl UIWritingToolsCoordinator {
         /// method to request multiple previews.
         #[unsafe(method(effectContainerView))]
         #[unsafe(method_family = none)]
-        pub fn effectContainerView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn effectContainerView(&self) -> Option<Retained<UIView>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
-        /// Setter for [`effectContainerView`][Self::effectContainerView].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`effectContainerView`][Self::effectContainerView].
         #[unsafe(method(setEffectContainerView:))]
         #[unsafe(method_family = none)]
-        pub fn setEffectContainerView(&self, effect_container_view: Option<&UIView>);
+        pub unsafe fn setEffectContainerView(&self, effect_container_view: Option<&UIView>);
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         /// The view that Writing Tools uses to display background decorations
@@ -268,15 +267,14 @@ impl UIWritingToolsCoordinator {
         /// methods to provide separate decoration views for each container.
         #[unsafe(method(decorationContainerView))]
         #[unsafe(method_family = none)]
-        pub fn decorationContainerView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn decorationContainerView(&self) -> Option<Retained<UIView>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
-        /// Setter for [`decorationContainerView`][Self::decorationContainerView].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`decorationContainerView`][Self::decorationContainerView].
         #[unsafe(method(setDecorationContainerView:))]
         #[unsafe(method_family = none)]
-        pub fn setDecorationContainerView(&self, decoration_container_view: Option<&UIView>);
+        pub unsafe fn setDecorationContainerView(&self, decoration_container_view: Option<&UIView>);
 
         /// The current level of Writing Tools activity in your view.
         ///
@@ -287,7 +285,7 @@ impl UIWritingToolsCoordinator {
         /// method and updates this property accordingly.
         #[unsafe(method(state))]
         #[unsafe(method_family = none)]
-        pub fn state(&self) -> UIWritingToolsCoordinatorState;
+        pub unsafe fn state(&self) -> UIWritingToolsCoordinatorState;
 
         /// Stops the current Writing Tools operation and dismisses the system UI.
         ///
@@ -297,7 +295,7 @@ impl UIWritingToolsCoordinator {
         /// Writing Tools already made to your view’s content.
         #[unsafe(method(stopWritingTools))]
         #[unsafe(method_family = none)]
-        pub fn stopWritingTools(&self);
+        pub unsafe fn stopWritingTools(&self);
 
         #[cfg(feature = "UITextInputTraits")]
         /// The level of Writing Tools support you want the system to provide
@@ -308,13 +306,13 @@ impl UIWritingToolsCoordinator {
         /// value of this property is ``UIWritingToolsBehavior/default``.
         #[unsafe(method(preferredBehavior))]
         #[unsafe(method_family = none)]
-        pub fn preferredBehavior(&self) -> UIWritingToolsBehavior;
+        pub unsafe fn preferredBehavior(&self) -> UIWritingToolsBehavior;
 
         #[cfg(feature = "UITextInputTraits")]
         /// Setter for [`preferredBehavior`][Self::preferredBehavior].
         #[unsafe(method(setPreferredBehavior:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredBehavior(&self, preferred_behavior: UIWritingToolsBehavior);
+        pub unsafe fn setPreferredBehavior(&self, preferred_behavior: UIWritingToolsBehavior);
 
         #[cfg(feature = "UITextInputTraits")]
         /// The actual level of Writing Tools support the system provides for your view.
@@ -326,7 +324,7 @@ impl UIWritingToolsCoordinator {
         /// ``UIWritingToolsBehavior/limited``, or ``UIWritingToolsBehavior/complete``.
         #[unsafe(method(behavior))]
         #[unsafe(method_family = none)]
-        pub fn behavior(&self) -> UIWritingToolsBehavior;
+        pub unsafe fn behavior(&self) -> UIWritingToolsBehavior;
 
         #[cfg(feature = "UITextInputTraits")]
         /// The type of content you allow Writing Tools to generate for your custom
@@ -339,25 +337,16 @@ impl UIWritingToolsCoordinator {
         /// which lets the system determine the type of content to generate.
         #[unsafe(method(preferredResultOptions))]
         #[unsafe(method_family = none)]
-        pub fn preferredResultOptions(&self) -> UIWritingToolsResultOptions;
+        pub unsafe fn preferredResultOptions(&self) -> UIWritingToolsResultOptions;
 
         #[cfg(feature = "UITextInputTraits")]
         /// Setter for [`preferredResultOptions`][Self::preferredResultOptions].
         #[unsafe(method(setPreferredResultOptions:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredResultOptions(
+        pub unsafe fn setPreferredResultOptions(
             &self,
             preferred_result_options: UIWritingToolsResultOptions,
         );
-
-        #[unsafe(method(includesTextListMarkers))]
-        #[unsafe(method_family = none)]
-        pub fn includesTextListMarkers(&self) -> bool;
-
-        /// Setter for [`includesTextListMarkers`][Self::includesTextListMarkers].
-        #[unsafe(method(setIncludesTextListMarkers:))]
-        #[unsafe(method_family = none)]
-        pub fn setIncludesTextListMarkers(&self, includes_text_list_markers: bool);
 
         #[cfg(feature = "UITextInputTraits")]
         /// The type of content the system generates for your custom text view.
@@ -368,7 +357,7 @@ impl UIWritingToolsCoordinator {
         /// consideration when determining this value.
         #[unsafe(method(resultOptions))]
         #[unsafe(method_family = none)]
-        pub fn resultOptions(&self) -> UIWritingToolsResultOptions;
+        pub unsafe fn resultOptions(&self) -> UIWritingToolsResultOptions;
 
         /// Informs the coordinator about changes your app made to the text
         /// in the specified context object.
@@ -411,7 +400,7 @@ impl UIWritingToolsCoordinator {
         /// to deliver inaccurate information to your delegate and lead to data loss.
         #[unsafe(method(updateRange:withText:reason:forContextWithIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn updateRange_withText_reason_forContextWithIdentifier(
+        pub unsafe fn updateRange_withText_reason_forContextWithIdentifier(
             &self,
             range: NSRange,
             replacement_text: &NSAttributedString,
@@ -440,7 +429,7 @@ impl UIWritingToolsCoordinator {
         /// that change instead.
         #[unsafe(method(updateForReflowedTextInContextWithIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn updateForReflowedTextInContextWithIdentifier(&self, context_id: &NSUUID);
+        pub unsafe fn updateForReflowedTextInContextWithIdentifier(&self, context_id: &NSUUID);
     );
 }
 
@@ -449,11 +438,11 @@ impl UIWritingToolsCoordinator {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -603,7 +592,9 @@ unsafe impl RefEncode for UIWritingToolsCoordinatorTextAnimation {
 impl UIWritingToolsCoordinatorTextAnimation {
     #[doc(alias = "UIWritingToolsCoordinatorTextAnimationDebugDescription")]
     #[inline]
-    pub fn debug_description(self) -> Retained<NSString> {
+    pub unsafe fn debug_description(
+        self: UIWritingToolsCoordinatorTextAnimation,
+    ) -> Retained<NSString> {
         extern "C-unwind" {
             fn UIWritingToolsCoordinatorTextAnimationDebugDescription(
                 animation_type: UIWritingToolsCoordinatorTextAnimation,
@@ -683,7 +674,7 @@ extern_protocol!(
         /// handler before proceeding with the operation.
         #[unsafe(method(writingToolsCoordinator:requestsContextsForScope:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_requestsContextsForScope_completion(
+        unsafe fn writingToolsCoordinator_requestsContextsForScope_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             scope: UIWritingToolsCoordinatorContextScope,
@@ -752,7 +743,7 @@ extern_protocol!(
         /// to create additional animations to run at the same time as the system-provided animations.
         #[unsafe(method(writingToolsCoordinator:replaceRange:inContext:proposedText:reason:animationParameters:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_replaceRange_inContext_proposedText_reason_animationParameters_completion(
+        unsafe fn writingToolsCoordinator_replaceRange_inContext_proposedText_reason_animationParameters_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             range: NSRange,
@@ -788,7 +779,7 @@ extern_protocol!(
         /// changes, call the provided completion block to let Writing Tools know you’re finished.
         #[unsafe(method(writingToolsCoordinator:selectRanges:inContext:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_selectRanges_inContext_completion(
+        unsafe fn writingToolsCoordinator_selectRanges_inContext_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             ranges: &NSArray<NSValue>,
@@ -842,7 +833,7 @@ extern_protocol!(
         /// property. Pass the resulting paths to the completion handler.
         #[unsafe(method(writingToolsCoordinator:requestsBoundingBezierPathsForRange:inContext:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_requestsBoundingBezierPathsForRange_inContext_completion(
+        unsafe fn writingToolsCoordinator_requestsBoundingBezierPathsForRange_inContext_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             range: NSRange,
@@ -895,7 +886,7 @@ extern_protocol!(
         /// bottom of the rectangle.
         #[unsafe(method(writingToolsCoordinator:requestsUnderlinePathsForRange:inContext:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_requestsUnderlinePathsForRange_inContext_completion(
+        unsafe fn writingToolsCoordinator_requestsUnderlinePathsForRange_inContext_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             range: NSRange,
@@ -949,7 +940,7 @@ extern_protocol!(
         /// `textAnimation` and `range` parameters to differentiate sequences.
         #[unsafe(method(writingToolsCoordinator:prepareForTextAnimation:forRange:inContext:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_prepareForTextAnimation_forRange_inContext_completion(
+        unsafe fn writingToolsCoordinator_prepareForTextAnimation_forRange_inContext_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             text_animation: UIWritingToolsCoordinatorTextAnimation,
@@ -1014,7 +1005,7 @@ extern_protocol!(
         /// check the `textAnimation` parameter to differentiate sequences.
         #[unsafe(method(writingToolsCoordinator:requestsPreviewForTextAnimation:ofRange:inContext:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_requestsPreviewForTextAnimation_ofRange_inContext_completion(
+        unsafe fn writingToolsCoordinator_requestsPreviewForTextAnimation_ofRange_inContext_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             text_animation: UIWritingToolsCoordinatorTextAnimation,
@@ -1058,7 +1049,7 @@ extern_protocol!(
         /// take don’t interfere with other in-flight animations.
         #[unsafe(method(writingToolsCoordinator:finishTextAnimation:forRange:inContext:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_finishTextAnimation_forRange_inContext_completion(
+        unsafe fn writingToolsCoordinator_finishTextAnimation_forRange_inContext_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             text_animation: UIWritingToolsCoordinatorTextAnimation,
@@ -1119,7 +1110,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(writingToolsCoordinator:requestsSingleContainerSubrangesOfRange:inContext:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_requestsSingleContainerSubrangesOfRange_inContext_completion(
+        unsafe fn writingToolsCoordinator_requestsSingleContainerSubrangesOfRange_inContext_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             range: NSRange,
@@ -1167,7 +1158,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(writingToolsCoordinator:requestsDecorationContainerViewForRange:inContext:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_requestsDecorationContainerViewForRange_inContext_completion(
+        unsafe fn writingToolsCoordinator_requestsDecorationContainerViewForRange_inContext_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             range: NSRange,
@@ -1201,7 +1192,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(writingToolsCoordinator:willChangeToState:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_willChangeToState_completion(
+        unsafe fn writingToolsCoordinator_willChangeToState_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             new_state: UIWritingToolsCoordinatorState,
@@ -1255,7 +1246,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(writingToolsCoordinator:requestsRangeInContextWithIdentifierForPoint:completion:))]
         #[unsafe(method_family = none)]
-        fn writingToolsCoordinator_requestsRangeInContextWithIdentifierForPoint_completion(
+        unsafe fn writingToolsCoordinator_requestsRangeInContextWithIdentifierForPoint_completion(
             &self,
             writing_tools_coordinator: &UIWritingToolsCoordinator,
             point: CGPoint,
@@ -1266,7 +1257,7 @@ extern_protocol!(
 
 #[deprecated = "renamed to `UIWritingToolsCoordinatorTextAnimation::debug_description`"]
 #[inline]
-pub extern "C-unwind" fn UIWritingToolsCoordinatorTextAnimationDebugDescription(
+pub unsafe extern "C-unwind" fn UIWritingToolsCoordinatorTextAnimationDebugDescription(
     animation_type: UIWritingToolsCoordinatorTextAnimation,
 ) -> Retained<NSString> {
     extern "C-unwind" {

@@ -4863,7 +4863,7 @@ impl windows_core::RuntimeName for IContactInstantMessageFieldFactory {
 pub trait IContactInstantMessageFieldFactory_Impl: windows_core::IUnknownImpl {
     fn CreateInstantMessage_Default(&self, userName: &windows_core::HSTRING) -> windows_core::Result<ContactInstantMessageField>;
     fn CreateInstantMessage_Category(&self, userName: &windows_core::HSTRING, category: ContactFieldCategory) -> windows_core::Result<ContactInstantMessageField>;
-    fn CreateInstantMessage_All(&self, userName: &windows_core::HSTRING, category: ContactFieldCategory, service: &windows_core::HSTRING, displayText: &windows_core::HSTRING, verb: windows_core::Ref<'_, super::super::Foundation::Uri>) -> windows_core::Result<ContactInstantMessageField>;
+    fn CreateInstantMessage_All(&self, userName: &windows_core::HSTRING, category: ContactFieldCategory, service: &windows_core::HSTRING, displayText: &windows_core::HSTRING, verb: windows_core::Ref<super::super::Foundation::Uri>) -> windows_core::Result<ContactInstantMessageField>;
 }
 impl IContactInstantMessageFieldFactory_Vtbl {
     pub const fn new<Identity: IContactInstantMessageFieldFactory_Impl, const OFFSET: isize>() -> Self {
@@ -5691,13 +5691,10 @@ pub struct IFullContactCardOptions_Vtbl {
     #[cfg(not(feature = "UI_ViewManagement"))]
     SetDesiredRemainingView: usize,
 }
-#[cfg(feature = "deprecated")]
 windows_core::imp::define_interface!(IKnownContactFieldStatics, IKnownContactFieldStatics_Vtbl, 0x2e0e1b12_d627_4fca_bad4_1faf168c7d14);
-#[cfg(feature = "deprecated")]
 impl windows_core::RuntimeType for IKnownContactFieldStatics {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
-#[cfg(feature = "deprecated")]
 #[repr(C)]
 #[doc(hidden)]
 pub struct IKnownContactFieldStatics_Vtbl {
@@ -5754,9 +5751,7 @@ pub struct IPinnedContactManagerStatics_Vtbl {
     GetForUser: usize,
     pub IsSupported: unsafe extern "system" fn(*mut core::ffi::c_void, *mut bool) -> windows_core::HRESULT,
 }
-#[cfg(feature = "deprecated")]
 pub struct KnownContactField;
-#[cfg(feature = "deprecated")]
 impl KnownContactField {
     pub fn Email() -> windows_core::Result<windows_core::HSTRING> {
         Self::IKnownContactFieldStatics(|this| unsafe {
@@ -5799,7 +5794,6 @@ impl KnownContactField {
         SHARED.call(callback)
     }
 }
-#[cfg(feature = "deprecated")]
 impl windows_core::RuntimeName for KnownContactField {
     const NAME: &'static str = "Windows.ApplicationModel.Contacts.KnownContactField";
 }

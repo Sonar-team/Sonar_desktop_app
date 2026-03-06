@@ -91,43 +91,41 @@ impl NSISO8601DateFormatter {
         #[cfg(feature = "NSTimeZone")]
         #[unsafe(method(timeZone))]
         #[unsafe(method_family = none)]
-        pub fn timeZone(&self) -> Retained<NSTimeZone>;
+        pub unsafe fn timeZone(&self) -> Retained<NSTimeZone>;
 
         #[cfg(feature = "NSTimeZone")]
         /// Setter for [`timeZone`][Self::timeZone].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setTimeZone:))]
         #[unsafe(method_family = none)]
-        pub fn setTimeZone(&self, time_zone: Option<&NSTimeZone>);
+        pub unsafe fn setTimeZone(&self, time_zone: Option<&NSTimeZone>);
 
         #[unsafe(method(formatOptions))]
         #[unsafe(method_family = none)]
-        pub fn formatOptions(&self) -> NSISO8601DateFormatOptions;
+        pub unsafe fn formatOptions(&self) -> NSISO8601DateFormatOptions;
 
         /// Setter for [`formatOptions`][Self::formatOptions].
         #[unsafe(method(setFormatOptions:))]
         #[unsafe(method_family = none)]
-        pub fn setFormatOptions(&self, format_options: NSISO8601DateFormatOptions);
+        pub unsafe fn setFormatOptions(&self, format_options: NSISO8601DateFormatOptions);
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[cfg(all(feature = "NSDate", feature = "NSString"))]
         #[unsafe(method(stringFromDate:))]
         #[unsafe(method_family = none)]
-        pub fn stringFromDate(&self, date: &NSDate) -> Retained<NSString>;
+        pub unsafe fn stringFromDate(&self, date: &NSDate) -> Retained<NSString>;
 
         #[cfg(all(feature = "NSDate", feature = "NSString"))]
         #[unsafe(method(dateFromString:))]
         #[unsafe(method_family = none)]
-        pub fn dateFromString(&self, string: &NSString) -> Option<Retained<NSDate>>;
+        pub unsafe fn dateFromString(&self, string: &NSString) -> Option<Retained<NSDate>>;
 
         #[cfg(all(feature = "NSDate", feature = "NSString", feature = "NSTimeZone"))]
         #[unsafe(method(stringFromDate:timeZone:formatOptions:))]
         #[unsafe(method_family = none)]
-        pub fn stringFromDate_timeZone_formatOptions(
+        pub unsafe fn stringFromDate_timeZone_formatOptions(
             date: &NSDate,
             time_zone: &NSTimeZone,
             format_options: NSISO8601DateFormatOptions,
@@ -141,14 +139,6 @@ impl NSISO8601DateFormatter {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSFormatter")]
-impl DefaultRetained for NSISO8601DateFormatter {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

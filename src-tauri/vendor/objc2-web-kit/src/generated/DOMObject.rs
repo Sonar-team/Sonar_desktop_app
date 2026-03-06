@@ -55,7 +55,6 @@ impl DOMObject {
 }
 
 /// DOMLinkStyle.
-#[deprecated]
 #[cfg(feature = "WebScriptObject")]
 impl DOMObject {
     extern_methods!(

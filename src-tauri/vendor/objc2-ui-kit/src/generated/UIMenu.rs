@@ -106,47 +106,48 @@ impl UIMenu {
         /// Unique identifier.
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Retained<UIMenuIdentifier>;
+        pub unsafe fn identifier(&self) -> Retained<UIMenuIdentifier>;
 
         /// Options.
         #[unsafe(method(options))]
         #[unsafe(method_family = none)]
-        pub fn options(&self) -> UIMenuOptions;
+        pub unsafe fn options(&self) -> UIMenuOptions;
 
         /// Size of this menu's child elements. This property has no effect on Mac Catalyst.
         #[unsafe(method(preferredElementSize))]
         #[unsafe(method_family = none)]
-        pub fn preferredElementSize(&self) -> UIMenuElementSize;
+        pub unsafe fn preferredElementSize(&self) -> UIMenuElementSize;
 
         /// Setter for [`preferredElementSize`][Self::preferredElementSize].
         #[unsafe(method(setPreferredElementSize:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredElementSize(&self, preferred_element_size: UIMenuElementSize);
+        pub unsafe fn setPreferredElementSize(&self, preferred_element_size: UIMenuElementSize);
 
         /// The menu's sub-elements and sub-menus. On iOS 14.0, elements of your own menus are mutable, -copying a menu will produce mutable elements, and UIKit will take immutable copies of menus it receives. Prior to iOS 14.0, menus are always fully immutable.
         #[unsafe(method(children))]
         #[unsafe(method_family = none)]
-        pub fn children(&self) -> Retained<NSArray<UIMenuElement>>;
+        pub unsafe fn children(&self) -> Retained<NSArray<UIMenuElement>>;
 
         /// The element(s) in the menu and sub-menus that have an "on" menu item state.
         #[unsafe(method(selectedElements))]
         #[unsafe(method_family = none)]
-        pub fn selectedElements(&self) -> Retained<NSArray<UIMenuElement>>;
+        pub unsafe fn selectedElements(&self) -> Retained<NSArray<UIMenuElement>>;
 
         #[cfg(feature = "UIMenuDisplayPreferences")]
         /// Display preferences for this menu's immediate children. Preferences are not inherited by sub menus,
         /// and may be ignored or overridden by the system in certain element sizes or menu layouts.
         #[unsafe(method(displayPreferences))]
         #[unsafe(method_family = none)]
-        pub fn displayPreferences(&self) -> Option<Retained<UIMenuDisplayPreferences>>;
+        pub unsafe fn displayPreferences(&self) -> Option<Retained<UIMenuDisplayPreferences>>;
 
         #[cfg(feature = "UIMenuDisplayPreferences")]
         /// Setter for [`displayPreferences`][Self::displayPreferences].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDisplayPreferences:))]
         #[unsafe(method_family = none)]
-        pub fn setDisplayPreferences(&self, display_preferences: Option<&UIMenuDisplayPreferences>);
+        pub unsafe fn setDisplayPreferences(
+            &self,
+            display_preferences: Option<&UIMenuDisplayPreferences>,
+        );
 
         /// Creates a UIMenu with an empty title, nil image, automatically generated identifier, and default options.
         ///
@@ -157,7 +158,7 @@ impl UIMenu {
         /// Returns: A new UIMenu.
         #[unsafe(method(menuWithChildren:))]
         #[unsafe(method_family = none)]
-        pub fn menuWithChildren(
+        pub unsafe fn menuWithChildren(
             children: &NSArray<UIMenuElement>,
             mtm: MainThreadMarker,
         ) -> Retained<UIMenu>;
@@ -173,7 +174,7 @@ impl UIMenu {
         /// Returns: A new UIMenu.
         #[unsafe(method(menuWithTitle:children:))]
         #[unsafe(method_family = none)]
-        pub fn menuWithTitle_children(
+        pub unsafe fn menuWithTitle_children(
             title: &NSString,
             children: &NSArray<UIMenuElement>,
             mtm: MainThreadMarker,
@@ -197,7 +198,7 @@ impl UIMenu {
         /// Returns: A new UIMenu.
         #[unsafe(method(menuWithTitle:image:identifier:options:children:))]
         #[unsafe(method_family = none)]
-        pub fn menuWithTitle_image_identifier_options_children(
+        pub unsafe fn menuWithTitle_image_identifier_options_children(
             title: &NSString,
             image: Option<&UIImage>,
             identifier: Option<&UIMenuIdentifier>,
@@ -206,9 +207,6 @@ impl UIMenu {
             mtm: MainThreadMarker,
         ) -> Retained<UIMenu>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -233,7 +231,7 @@ impl UIMenu {
         /// Returns: A copy of this menu with updated children.
         #[unsafe(method(menuByReplacingChildren:))]
         #[unsafe(method_family = none)]
-        pub fn menuByReplacingChildren(
+        pub unsafe fn menuByReplacingChildren(
             &self,
             new_children: &NSArray<UIMenuElement>,
         ) -> Retained<UIMenu>;
@@ -318,17 +316,9 @@ extern "C" {
 }
 
 extern "C" {
-    /// New item menu
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenunewitem?language=objc)
-    pub static UIMenuNewItem: &'static UIMenuIdentifier;
-}
-
-extern "C" {
     /// New scene menu
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenunewscene?language=objc)
-    #[deprecated]
     pub static UIMenuNewScene: &'static UIMenuIdentifier;
 }
 
@@ -382,17 +372,10 @@ extern "C" {
 }
 
 extern "C" {
-    /// Find menu, containing Find Panel items and other finding operations like Use Selection for Find
+    /// Find menu; empty in the default menubar configuration. Applications should use this when adding their own Find-related menu items.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenufind?language=objc)
     pub static UIMenuFind: &'static UIMenuIdentifier;
-}
-
-extern "C" {
-    /// Find panel menu (Find, Find and Replace, Find Next, Find Previous)
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenufindpanel?language=objc)
-    pub static UIMenuFindPanel: &'static UIMenuIdentifier;
 }
 
 extern "C" {

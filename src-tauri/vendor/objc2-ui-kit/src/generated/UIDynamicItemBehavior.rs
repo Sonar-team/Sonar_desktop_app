@@ -28,77 +28,77 @@ impl UIDynamicItemBehavior {
     extern_methods!(
         #[unsafe(method(initWithItems:))]
         #[unsafe(method_family = init)]
-        pub fn initWithItems(
+        pub unsafe fn initWithItems(
             this: Allocated<Self>,
             items: &NSArray<ProtocolObject<dyn UIDynamicItem>>,
         ) -> Retained<Self>;
 
         #[unsafe(method(addItem:))]
         #[unsafe(method_family = none)]
-        pub fn addItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
+        pub unsafe fn addItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
 
         #[unsafe(method(removeItem:))]
         #[unsafe(method_family = none)]
-        pub fn removeItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
+        pub unsafe fn removeItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
 
         #[unsafe(method(items))]
         #[unsafe(method_family = none)]
-        pub fn items(&self) -> Retained<NSArray<ProtocolObject<dyn UIDynamicItem>>>;
+        pub unsafe fn items(&self) -> Retained<NSArray<ProtocolObject<dyn UIDynamicItem>>>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(elasticity))]
         #[unsafe(method_family = none)]
-        pub fn elasticity(&self) -> CGFloat;
+        pub unsafe fn elasticity(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`elasticity`][Self::elasticity].
         #[unsafe(method(setElasticity:))]
         #[unsafe(method_family = none)]
-        pub fn setElasticity(&self, elasticity: CGFloat);
+        pub unsafe fn setElasticity(&self, elasticity: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(friction))]
         #[unsafe(method_family = none)]
-        pub fn friction(&self) -> CGFloat;
+        pub unsafe fn friction(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`friction`][Self::friction].
         #[unsafe(method(setFriction:))]
         #[unsafe(method_family = none)]
-        pub fn setFriction(&self, friction: CGFloat);
+        pub unsafe fn setFriction(&self, friction: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(density))]
         #[unsafe(method_family = none)]
-        pub fn density(&self) -> CGFloat;
+        pub unsafe fn density(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`density`][Self::density].
         #[unsafe(method(setDensity:))]
         #[unsafe(method_family = none)]
-        pub fn setDensity(&self, density: CGFloat);
+        pub unsafe fn setDensity(&self, density: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(resistance))]
         #[unsafe(method_family = none)]
-        pub fn resistance(&self) -> CGFloat;
+        pub unsafe fn resistance(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`resistance`][Self::resistance].
         #[unsafe(method(setResistance:))]
         #[unsafe(method_family = none)]
-        pub fn setResistance(&self, resistance: CGFloat);
+        pub unsafe fn setResistance(&self, resistance: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(angularResistance))]
         #[unsafe(method_family = none)]
-        pub fn angularResistance(&self) -> CGFloat;
+        pub unsafe fn angularResistance(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`angularResistance`][Self::angularResistance].
         #[unsafe(method(setAngularResistance:))]
         #[unsafe(method_family = none)]
-        pub fn setAngularResistance(&self, angular_resistance: CGFloat);
+        pub unsafe fn setAngularResistance(&self, angular_resistance: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Specifies the charge associated with the item behavior. Charge determines the degree to which a dynamic item is affected by
@@ -106,39 +106,39 @@ impl UIDynamicItemBehavior {
         /// set charge and field strength appropriately. Defaults to 0.0
         #[unsafe(method(charge))]
         #[unsafe(method_family = none)]
-        pub fn charge(&self) -> CGFloat;
+        pub unsafe fn charge(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`charge`][Self::charge].
         #[unsafe(method(setCharge:))]
         #[unsafe(method_family = none)]
-        pub fn setCharge(&self, charge: CGFloat);
+        pub unsafe fn setCharge(&self, charge: CGFloat);
 
         /// If an item is anchored, it can participate in collisions, but will not exhibit
         /// any dynamic response. i.e. The item will behave more like a collision boundary.
         /// The default is NO
         #[unsafe(method(isAnchored))]
         #[unsafe(method_family = none)]
-        pub fn isAnchored(&self) -> bool;
+        pub unsafe fn isAnchored(&self) -> bool;
 
         /// Setter for [`isAnchored`][Self::isAnchored].
         #[unsafe(method(setAnchored:))]
         #[unsafe(method_family = none)]
-        pub fn setAnchored(&self, anchored: bool);
+        pub unsafe fn setAnchored(&self, anchored: bool);
 
         #[unsafe(method(allowsRotation))]
         #[unsafe(method_family = none)]
-        pub fn allowsRotation(&self) -> bool;
+        pub unsafe fn allowsRotation(&self) -> bool;
 
         /// Setter for [`allowsRotation`][Self::allowsRotation].
         #[unsafe(method(setAllowsRotation:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsRotation(&self, allows_rotation: bool);
+        pub unsafe fn setAllowsRotation(&self, allows_rotation: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(addLinearVelocity:forItem:))]
         #[unsafe(method_family = none)]
-        pub fn addLinearVelocity_forItem(
+        pub unsafe fn addLinearVelocity_forItem(
             &self,
             velocity: CGPoint,
             item: &ProtocolObject<dyn UIDynamicItem>,
@@ -147,12 +147,15 @@ impl UIDynamicItemBehavior {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(linearVelocityForItem:))]
         #[unsafe(method_family = none)]
-        pub fn linearVelocityForItem(&self, item: &ProtocolObject<dyn UIDynamicItem>) -> CGPoint;
+        pub unsafe fn linearVelocityForItem(
+            &self,
+            item: &ProtocolObject<dyn UIDynamicItem>,
+        ) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(addAngularVelocity:forItem:))]
         #[unsafe(method_family = none)]
-        pub fn addAngularVelocity_forItem(
+        pub unsafe fn addAngularVelocity_forItem(
             &self,
             velocity: CGFloat,
             item: &ProtocolObject<dyn UIDynamicItem>,
@@ -161,7 +164,10 @@ impl UIDynamicItemBehavior {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(angularVelocityForItem:))]
         #[unsafe(method_family = none)]
-        pub fn angularVelocityForItem(&self, item: &ProtocolObject<dyn UIDynamicItem>) -> CGFloat;
+        pub unsafe fn angularVelocityForItem(
+            &self,
+            item: &ProtocolObject<dyn UIDynamicItem>,
+        ) -> CGFloat;
     );
 }
 
@@ -171,10 +177,10 @@ impl UIDynamicItemBehavior {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

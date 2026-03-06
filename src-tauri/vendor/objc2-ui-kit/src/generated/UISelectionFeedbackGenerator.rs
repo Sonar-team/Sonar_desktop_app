@@ -28,14 +28,14 @@ impl UISelectionFeedbackGenerator {
         /// call when the selection changes (not on initial selection)
         #[unsafe(method(selectionChanged))]
         #[unsafe(method_family = none)]
-        pub fn selectionChanged(&self);
+        pub unsafe fn selectionChanged(&self);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// call when the selection changes (not on initial selection)
         /// provide the location in the `view` the change occured at
         #[unsafe(method(selectionChangedAtLocation:))]
         #[unsafe(method_family = none)]
-        pub fn selectionChangedAtLocation(&self, location: CGPoint);
+        pub unsafe fn selectionChangedAtLocation(&self, location: CGPoint);
     );
 }
 
@@ -47,12 +47,12 @@ impl UISelectionFeedbackGenerator {
         /// initalize the generator with a view to attach it to the provided view as an interaction.
         #[unsafe(method(feedbackGeneratorForView:))]
         #[unsafe(method_family = none)]
-        pub fn feedbackGeneratorForView(view: &UIView) -> Retained<Self>;
+        pub unsafe fn feedbackGeneratorForView(view: &UIView) -> Retained<Self>;
 
         #[deprecated]
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -62,6 +62,6 @@ impl UISelectionFeedbackGenerator {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

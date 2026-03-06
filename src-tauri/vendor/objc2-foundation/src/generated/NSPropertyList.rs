@@ -70,9 +70,6 @@ extern_conformance!(
 
 impl NSPropertyListSerialization {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `plist` should be of the correct type.
         #[unsafe(method(propertyList:isValidForFormat:))]
         #[unsafe(method_family = none)]
         pub unsafe fn propertyList_isValidForFormat(
@@ -81,9 +78,6 @@ impl NSPropertyListSerialization {
         ) -> bool;
 
         #[cfg(all(feature = "NSData", feature = "NSError"))]
-        /// # Safety
-        ///
-        /// `plist` should be of the correct type.
         #[unsafe(method(dataWithPropertyList:format:options:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn dataWithPropertyList_format_options_error(
@@ -93,9 +87,6 @@ impl NSPropertyListSerialization {
         ) -> Result<Retained<NSData>, Retained<NSError>>;
 
         #[cfg(all(feature = "NSData", feature = "NSError"))]
-        /// # Safety
-        ///
-        /// `format` must be a valid pointer or null.
         #[unsafe(method(propertyListWithData:options:format:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn propertyListWithData_options_format_error(
@@ -105,9 +96,6 @@ impl NSPropertyListSerialization {
         ) -> Result<Retained<AnyObject>, Retained<NSError>>;
 
         #[cfg(all(feature = "NSError", feature = "NSStream"))]
-        /// # Safety
-        ///
-        /// `format` must be a valid pointer or null.
         #[unsafe(method(propertyListWithStream:options:format:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn propertyListWithStream_options_format_error(
@@ -117,10 +105,6 @@ impl NSPropertyListSerialization {
         ) -> Result<Retained<AnyObject>, Retained<NSError>>;
 
         #[cfg(all(feature = "NSData", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// - `plist` should be of the correct type.
-        /// - `error_string` must be a valid pointer or null.
         #[deprecated = "Use dataWithPropertyList:format:options:error: instead."]
         #[unsafe(method(dataFromPropertyList:format:errorDescription:))]
         #[unsafe(method_family = none)]
@@ -131,10 +115,6 @@ impl NSPropertyListSerialization {
         ) -> Option<Retained<NSData>>;
 
         #[cfg(all(feature = "NSData", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// - `format` must be a valid pointer or null.
-        /// - `error_string` must be a valid pointer or null.
         #[deprecated = "Use propertyListWithData:options:format:error: instead."]
         #[unsafe(method(propertyListFromData:mutabilityOption:format:errorDescription:))]
         #[unsafe(method_family = none)]
@@ -152,17 +132,10 @@ impl NSPropertyListSerialization {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSPropertyListSerialization {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

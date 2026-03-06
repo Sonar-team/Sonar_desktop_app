@@ -43,22 +43,22 @@ impl NSPageLayout {
     extern_methods!(
         #[unsafe(method(pageLayout))]
         #[unsafe(method_family = none)]
-        pub fn pageLayout(mtm: MainThreadMarker) -> Retained<NSPageLayout>;
+        pub unsafe fn pageLayout(mtm: MainThreadMarker) -> Retained<NSPageLayout>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSViewController"))]
         #[unsafe(method(addAccessoryController:))]
         #[unsafe(method_family = none)]
-        pub fn addAccessoryController(&self, accessory_controller: &NSViewController);
+        pub unsafe fn addAccessoryController(&self, accessory_controller: &NSViewController);
 
         #[cfg(all(feature = "NSResponder", feature = "NSViewController"))]
         #[unsafe(method(removeAccessoryController:))]
         #[unsafe(method_family = none)]
-        pub fn removeAccessoryController(&self, accessory_controller: &NSViewController);
+        pub unsafe fn removeAccessoryController(&self, accessory_controller: &NSViewController);
 
         #[cfg(all(feature = "NSResponder", feature = "NSViewController"))]
         #[unsafe(method(accessoryControllers))]
         #[unsafe(method_family = none)]
-        pub fn accessoryControllers(&self) -> Retained<NSArray<NSViewController>>;
+        pub unsafe fn accessoryControllers(&self) -> Retained<NSArray<NSViewController>>;
 
         #[cfg(all(
             feature = "NSPrintInfo",
@@ -68,7 +68,7 @@ impl NSPageLayout {
         ))]
         #[unsafe(method(beginSheetUsingPrintInfo:onWindow:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn beginSheetUsingPrintInfo_onWindow_completionHandler(
+        pub unsafe fn beginSheetUsingPrintInfo_onWindow_completionHandler(
             &self,
             print_info: &NSPrintInfo,
             parent_window: &NSWindow,
@@ -76,11 +76,6 @@ impl NSPageLayout {
         );
 
         #[cfg(all(feature = "NSPrintInfo", feature = "NSResponder", feature = "NSWindow"))]
-        /// # Safety
-        ///
-        /// - `delegate` should be of the correct type.
-        /// - `did_end_selector` must be a valid selector.
-        /// - `context_info` must be a valid pointer or null.
         #[deprecated]
         #[unsafe(method(beginSheetWithPrintInfo:modalForWindow:delegate:didEndSelector:contextInfo:))]
         #[unsafe(method_family = none)]
@@ -96,16 +91,16 @@ impl NSPageLayout {
         #[cfg(feature = "NSPrintInfo")]
         #[unsafe(method(runModalWithPrintInfo:))]
         #[unsafe(method_family = none)]
-        pub fn runModalWithPrintInfo(&self, print_info: &NSPrintInfo) -> NSInteger;
+        pub unsafe fn runModalWithPrintInfo(&self, print_info: &NSPrintInfo) -> NSInteger;
 
         #[unsafe(method(runModal))]
         #[unsafe(method_family = none)]
-        pub fn runModal(&self) -> NSInteger;
+        pub unsafe fn runModal(&self) -> NSInteger;
 
         #[cfg(feature = "NSPrintInfo")]
         #[unsafe(method(printInfo))]
         #[unsafe(method_family = none)]
-        pub fn printInfo(&self) -> Option<Retained<NSPrintInfo>>;
+        pub unsafe fn printInfo(&self) -> Option<Retained<NSPrintInfo>>;
     );
 }
 
@@ -114,11 +109,11 @@ impl NSPageLayout {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -126,9 +121,6 @@ impl NSPageLayout {
 impl NSPageLayout {
     extern_methods!(
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
-        /// # Safety
-        ///
-        /// `accessory_view` might not allow `None`.
         #[deprecated]
         #[unsafe(method(setAccessoryView:))]
         #[unsafe(method_family = none)]
@@ -138,17 +130,17 @@ impl NSPageLayout {
         #[deprecated]
         #[unsafe(method(accessoryView))]
         #[unsafe(method_family = none)]
-        pub fn accessoryView(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn accessoryView(&self) -> Option<Retained<NSView>>;
 
         #[deprecated]
         #[unsafe(method(readPrintInfo))]
         #[unsafe(method_family = none)]
-        pub fn readPrintInfo(&self);
+        pub unsafe fn readPrintInfo(&self);
 
         #[deprecated]
         #[unsafe(method(writePrintInfo))]
         #[unsafe(method_family = none)]
-        pub fn writePrintInfo(&self);
+        pub unsafe fn writePrintInfo(&self);
     );
 }
 
@@ -156,9 +148,6 @@ impl NSPageLayout {
 #[cfg(all(feature = "NSApplication", feature = "NSResponder"))]
 impl NSApplication {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(runPageLayout:))]
         #[unsafe(method_family = none)]
         pub unsafe fn runPageLayout(&self, sender: Option<&AnyObject>);

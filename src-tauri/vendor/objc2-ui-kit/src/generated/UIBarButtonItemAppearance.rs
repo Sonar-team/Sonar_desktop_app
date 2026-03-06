@@ -32,17 +32,11 @@ impl UIBarButtonItemStateAppearance {
         /// Text attributes to be used for rendering title text. If the font or color are unspecified, appropriate defaults are supplied.
         #[unsafe(method(titleTextAttributes))]
         #[unsafe(method_family = none)]
-        pub fn titleTextAttributes(
+        pub unsafe fn titleTextAttributes(
             &self,
         ) -> Retained<NSDictionary<NSAttributedStringKey, AnyObject>>;
 
         /// Setter for [`titleTextAttributes`][Self::titleTextAttributes].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `title_text_attributes` generic should be of the correct type.
         #[unsafe(method(setTitleTextAttributes:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTitleTextAttributes(
@@ -54,37 +48,37 @@ impl UIBarButtonItemStateAppearance {
         /// An offset to apply to the button's title position
         #[unsafe(method(titlePositionAdjustment))]
         #[unsafe(method_family = none)]
-        pub fn titlePositionAdjustment(&self) -> UIOffset;
+        pub unsafe fn titlePositionAdjustment(&self) -> UIOffset;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Setter for [`titlePositionAdjustment`][Self::titlePositionAdjustment].
         #[unsafe(method(setTitlePositionAdjustment:))]
         #[unsafe(method_family = none)]
-        pub fn setTitlePositionAdjustment(&self, title_position_adjustment: UIOffset);
+        pub unsafe fn setTitlePositionAdjustment(&self, title_position_adjustment: UIOffset);
 
         #[cfg(feature = "UIImage")]
         /// A background image to display around the button
         #[unsafe(method(backgroundImage))]
         #[unsafe(method_family = none)]
-        pub fn backgroundImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn backgroundImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`backgroundImage`][Self::backgroundImage].
         #[unsafe(method(setBackgroundImage:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundImage(&self, background_image: Option<&UIImage>);
+        pub unsafe fn setBackgroundImage(&self, background_image: Option<&UIImage>);
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// An offset to apply to the backgroundImage.
         #[unsafe(method(backgroundImagePositionAdjustment))]
         #[unsafe(method_family = none)]
-        pub fn backgroundImagePositionAdjustment(&self) -> UIOffset;
+        pub unsafe fn backgroundImagePositionAdjustment(&self) -> UIOffset;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Setter for [`backgroundImagePositionAdjustment`][Self::backgroundImagePositionAdjustment].
         #[unsafe(method(setBackgroundImagePositionAdjustment:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundImagePositionAdjustment(
+        pub unsafe fn setBackgroundImagePositionAdjustment(
             &self,
             background_image_position_adjustment: UIOffset,
         );
@@ -124,50 +118,50 @@ impl UIBarButtonItemAppearance {
         /// Construct an appearance for the UIBarButtonItemStylePlain style.
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[cfg(feature = "UIBarButtonItem")]
         /// Construct an appearance with default values for the given style.
         #[unsafe(method(initWithStyle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithStyle(this: Allocated<Self>, style: UIBarButtonItemStyle) -> Retained<Self>;
+        pub unsafe fn initWithStyle(
+            this: Allocated<Self>,
+            style: UIBarButtonItemStyle,
+        ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
 
         #[unsafe(method(copy))]
         #[unsafe(method_family = copy)]
-        pub fn copy(&self) -> Retained<Self>;
+        pub unsafe fn copy(&self) -> Retained<Self>;
 
         #[cfg(feature = "UIBarButtonItem")]
         /// Reset this appearance to that of a given style.
         #[unsafe(method(configureWithDefaultForStyle:))]
         #[unsafe(method_family = none)]
-        pub fn configureWithDefaultForStyle(&self, style: UIBarButtonItemStyle);
+        pub unsafe fn configureWithDefaultForStyle(&self, style: UIBarButtonItemStyle);
 
         /// The appearance when the bar button item is in the normal control state.
         #[unsafe(method(normal))]
         #[unsafe(method_family = none)]
-        pub fn normal(&self) -> Retained<UIBarButtonItemStateAppearance>;
+        pub unsafe fn normal(&self) -> Retained<UIBarButtonItemStateAppearance>;
 
         /// The appearance when the bar button item is in the highlighted control state. If unspecified, then synthesized from the normal state.
         #[unsafe(method(highlighted))]
         #[unsafe(method_family = none)]
-        pub fn highlighted(&self) -> Retained<UIBarButtonItemStateAppearance>;
+        pub unsafe fn highlighted(&self) -> Retained<UIBarButtonItemStateAppearance>;
 
         /// The appearance when the bar button item is in the disabled control state. If unspecified, then synthesized from the normal state.
         #[unsafe(method(disabled))]
         #[unsafe(method_family = none)]
-        pub fn disabled(&self) -> Retained<UIBarButtonItemStateAppearance>;
+        pub unsafe fn disabled(&self) -> Retained<UIBarButtonItemStateAppearance>;
 
         /// The appearance when the bar button item is in the focused control state. If unspecified, then synthesized from the highlighted state.
         #[unsafe(method(focused))]
         #[unsafe(method_family = none)]
-        pub fn focused(&self) -> Retained<UIBarButtonItemStateAppearance>;
+        pub unsafe fn focused(&self) -> Retained<UIBarButtonItemStateAppearance>;
     );
 }
 
@@ -176,6 +170,6 @@ impl UIBarButtonItemAppearance {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

@@ -40,12 +40,12 @@ impl UIMenuDisplayPreferences {
         /// Maximum number of title and subtitle lines displayed for this menu's elements. Defaults to NSNotFound, indicating no preference.
         #[unsafe(method(maximumNumberOfTitleLines))]
         #[unsafe(method_family = none)]
-        pub fn maximumNumberOfTitleLines(&self) -> NSInteger;
+        pub unsafe fn maximumNumberOfTitleLines(&self) -> NSInteger;
 
         /// Setter for [`maximumNumberOfTitleLines`][Self::maximumNumberOfTitleLines].
         #[unsafe(method(setMaximumNumberOfTitleLines:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumNumberOfTitleLines(&self, maximum_number_of_title_lines: NSInteger);
+        pub unsafe fn setMaximumNumberOfTitleLines(&self, maximum_number_of_title_lines: NSInteger);
     );
 }
 
@@ -54,10 +54,10 @@ impl UIMenuDisplayPreferences {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

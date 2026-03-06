@@ -36,14 +36,10 @@ impl CKSyncEngineRecordZoneChangeBatch {
         ///
         /// This will iterate over the pending changes in order and add them to the batch until it reaches the max batch size.
         ///
-        /// When it sees a pending save, it will ask the record provider for the actual ``CKRecord`` to send to the server.
+        /// When it sees a pending save, it will ask the record provider for the actual `CKRecord` to send to the server.
         /// If you return `nil` from the record provider, this will skip to the next pending change.
         ///
         /// This will return `nil` if there are no pending changes to send.
-        ///
-        /// # Safety
-        ///
-        /// `record_provider` block must be sendable.
         #[unsafe(method(initWithPendingChanges:recordProvider:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithPendingChanges_recordProvider(
@@ -61,7 +57,7 @@ impl CKSyncEngineRecordZoneChangeBatch {
         ///
         /// When creating your own batches, you need to consider batch size limitations.
         /// There is a maximum count and size of records that can be sent to the server in a single batch.
-        /// If you supply too many changes, or if the total size of the records is too large, then you might get a ``CKError/limitExceeded``.
+        /// If you supply too many changes, or if the total size of the records is too large, then you might get a ``CKErrorLimitExceeded``.
         ///
         /// > Tip: These batch size limitations are handled automatically by the ``initWithPendingChanges:recordProvider:`` initializer.
         #[unsafe(method(initWithRecordsToSave:recordIDsToDelete:atomicByZone:))]
@@ -95,7 +91,7 @@ impl CKSyncEngineRecordZoneChangeBatch {
 
         /// If set to true, the sync engine will modify these records atomically by zone.
         ///
-        /// If this is true, and if any record change fails, then any other changes from that zone in this batch will also fail with ``CKError/batchRequestFailed``.
+        /// If this is true, and if any record change fails, then any other changes from that zone in this batch will also fail with ``CKErrorBatchRequestFailed``.
         ///
         /// Records that exist in different zones will not be modified together atomically.
         #[unsafe(method(atomicByZone))]

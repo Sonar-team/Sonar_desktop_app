@@ -12,9 +12,6 @@ use objc2::__framework_prelude::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfmessageport?language=objc)
-///
-/// This is toll-free bridged with `NSMessagePort`.
-#[doc(alias = "CFMessagePortRef")]
 #[repr(C)]
 pub struct CFMessagePort {
     inner: [u8; 0],
@@ -44,7 +41,6 @@ pub const kCFMessagePortBecameInvalidError: i32 = -5;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfmessageportcontext?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CFMessagePortContext {
     pub version: CFIndex,
@@ -100,13 +96,6 @@ unsafe impl ConcreteType for CFMessagePort {
 }
 
 impl CFMessagePort {
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `name` might not allow `None`.
-    /// - `callout` must be implemented correctly.
-    /// - `context` must be a valid pointer.
-    /// - `should_free_info` must be a valid pointer.
     #[doc(alias = "CFMessagePortCreateLocal")]
     #[cfg(feature = "CFData")]
     #[inline]
@@ -150,7 +139,7 @@ impl CFMessagePort {
 
     #[doc(alias = "CFMessagePortIsRemote")]
     #[inline]
-    pub fn is_remote(&self) -> bool {
+    pub fn is_remote(self: &CFMessagePort) -> bool {
         extern "C-unwind" {
             fn CFMessagePortIsRemote(ms: &CFMessagePort) -> Boolean;
         }
@@ -160,7 +149,7 @@ impl CFMessagePort {
 
     #[doc(alias = "CFMessagePortGetName")]
     #[inline]
-    pub fn name(&self) -> Option<CFRetained<CFString>> {
+    pub fn name(self: &CFMessagePort) -> Option<CFRetained<CFString>> {
         extern "C-unwind" {
             fn CFMessagePortGetName(ms: &CFMessagePort) -> Option<NonNull<CFString>>;
         }
@@ -170,7 +159,7 @@ impl CFMessagePort {
 
     #[doc(alias = "CFMessagePortSetName")]
     #[inline]
-    pub fn set_name(&self, new_name: Option<&CFString>) -> bool {
+    pub fn set_name(self: &CFMessagePort, new_name: Option<&CFString>) -> bool {
         extern "C-unwind" {
             fn CFMessagePortSetName(ms: &CFMessagePort, new_name: Option<&CFString>) -> Boolean;
         }
@@ -178,12 +167,9 @@ impl CFMessagePort {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// `context` must be a valid pointer.
     #[doc(alias = "CFMessagePortGetContext")]
     #[inline]
-    pub unsafe fn context(&self, context: *mut CFMessagePortContext) {
+    pub unsafe fn context(self: &CFMessagePort, context: *mut CFMessagePortContext) {
         extern "C-unwind" {
             fn CFMessagePortGetContext(ms: &CFMessagePort, context: *mut CFMessagePortContext);
         }
@@ -192,7 +178,7 @@ impl CFMessagePort {
 
     #[doc(alias = "CFMessagePortInvalidate")]
     #[inline]
-    pub fn invalidate(&self) {
+    pub fn invalidate(self: &CFMessagePort) {
         extern "C-unwind" {
             fn CFMessagePortInvalidate(ms: &CFMessagePort);
         }
@@ -201,7 +187,7 @@ impl CFMessagePort {
 
     #[doc(alias = "CFMessagePortIsValid")]
     #[inline]
-    pub fn is_valid(&self) -> bool {
+    pub fn is_valid(self: &CFMessagePort) -> bool {
         extern "C-unwind" {
             fn CFMessagePortIsValid(ms: &CFMessagePort) -> Boolean;
         }
@@ -211,7 +197,7 @@ impl CFMessagePort {
 
     #[doc(alias = "CFMessagePortGetInvalidationCallBack")]
     #[inline]
-    pub fn invalidation_call_back(&self) -> CFMessagePortInvalidationCallBack {
+    pub fn invalidation_call_back(self: &CFMessagePort) -> CFMessagePortInvalidationCallBack {
         extern "C-unwind" {
             fn CFMessagePortGetInvalidationCallBack(
                 ms: &CFMessagePort,
@@ -220,12 +206,12 @@ impl CFMessagePort {
         unsafe { CFMessagePortGetInvalidationCallBack(self) }
     }
 
-    /// # Safety
-    ///
-    /// `callout` must be implemented correctly.
     #[doc(alias = "CFMessagePortSetInvalidationCallBack")]
     #[inline]
-    pub unsafe fn set_invalidation_call_back(&self, callout: CFMessagePortInvalidationCallBack) {
+    pub unsafe fn set_invalidation_call_back(
+        self: &CFMessagePort,
+        callout: CFMessagePortInvalidationCallBack,
+    ) {
         extern "C-unwind" {
             fn CFMessagePortSetInvalidationCallBack(
                 ms: &CFMessagePort,
@@ -235,16 +221,11 @@ impl CFMessagePort {
         unsafe { CFMessagePortSetInvalidationCallBack(self, callout) }
     }
 
-    /// # Safety
-    ///
-    /// - `data` might not allow `None`.
-    /// - `reply_mode` might not allow `None`.
-    /// - `return_data` must be a valid pointer.
     #[doc(alias = "CFMessagePortSendRequest")]
     #[cfg(all(feature = "CFData", feature = "CFDate"))]
     #[inline]
     pub unsafe fn send_request(
-        &self,
+        self: &CFMessagePort,
         msgid: i32,
         data: Option<&CFData>,
         send_timeout: CFTimeInterval,
@@ -295,14 +276,10 @@ impl CFMessagePort {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `queue` possibly has additional threading requirements.
-    /// - `queue` might not allow `None`.
     #[doc(alias = "CFMessagePortSetDispatchQueue")]
     #[cfg(feature = "dispatch2")]
     #[inline]
-    pub unsafe fn set_dispatch_queue(&self, queue: Option<&DispatchQueue>) {
+    pub unsafe fn set_dispatch_queue(self: &CFMessagePort, queue: Option<&DispatchQueue>) {
         extern "C-unwind" {
             fn CFMessagePortSetDispatchQueue(ms: &CFMessagePort, queue: Option<&DispatchQueue>);
         }

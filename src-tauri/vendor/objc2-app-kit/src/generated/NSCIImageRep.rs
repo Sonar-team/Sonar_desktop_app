@@ -47,19 +47,19 @@ impl NSCIImageRep {
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(imageRepWithCIImage:))]
         #[unsafe(method_family = none)]
-        pub fn imageRepWithCIImage(image: &CIImage) -> Retained<Self>;
+        pub unsafe fn imageRepWithCIImage(image: &CIImage) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-image")]
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(initWithCIImage:))]
         #[unsafe(method_family = init)]
-        pub fn initWithCIImage(this: Allocated<Self>, image: &CIImage) -> Retained<Self>;
+        pub unsafe fn initWithCIImage(this: Allocated<Self>, image: &CIImage) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-image")]
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(CIImage))]
         #[unsafe(method_family = none)]
-        pub fn CIImage(&self) -> Retained<CIImage>;
+        pub unsafe fn CIImage(&self) -> Retained<CIImage>;
     );
 }
 
@@ -69,11 +69,8 @@ impl NSCIImageRep {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -89,16 +86,8 @@ impl NSCIImageRep {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSImageRep")]
-impl DefaultRetained for NSCIImageRep {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 mod private_CIImageNSAppKitAdditions {
@@ -114,7 +103,7 @@ pub unsafe trait CIImageNSAppKitAdditions:
         #[cfg(all(feature = "NSBitmapImageRep", feature = "NSImageRep"))]
         #[unsafe(method(initWithBitmapImageRep:))]
         #[unsafe(method_family = init)]
-        fn initWithBitmapImageRep(
+        unsafe fn initWithBitmapImageRep(
             this: Allocated<Self>,
             bitmap_image_rep: &NSBitmapImageRep,
         ) -> Option<Retained<Self>>;
@@ -122,7 +111,7 @@ pub unsafe trait CIImageNSAppKitAdditions:
         #[cfg(all(feature = "NSGraphics", feature = "objc2-core-foundation"))]
         #[unsafe(method(drawInRect:fromRect:operation:fraction:))]
         #[unsafe(method_family = none)]
-        fn drawInRect_fromRect_operation_fraction(
+        unsafe fn drawInRect_fromRect_operation_fraction(
             &self,
             rect: NSRect,
             from_rect: NSRect,
@@ -133,7 +122,7 @@ pub unsafe trait CIImageNSAppKitAdditions:
         #[cfg(all(feature = "NSGraphics", feature = "objc2-core-foundation"))]
         #[unsafe(method(drawAtPoint:fromRect:operation:fraction:))]
         #[unsafe(method_family = none)]
-        fn drawAtPoint_fromRect_operation_fraction(
+        unsafe fn drawAtPoint_fromRect_operation_fraction(
             &self,
             point: NSPoint,
             from_rect: NSRect,

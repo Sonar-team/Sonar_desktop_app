@@ -30,7 +30,6 @@ pub type CFBagHashCallBack = Option<unsafe extern "C-unwind" fn(*const c_void) -
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfbagcallbacks?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CFBagCallBacks {
     pub version: CFIndex,
@@ -75,7 +74,6 @@ extern "C" {
 pub type CFBagApplierFunction = Option<unsafe extern "C-unwind" fn(*const c_void, *mut c_void)>;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfbag?language=objc)
-#[doc(alias = "CFBagRef")]
 #[repr(C)]
 pub struct CFBag<T: ?Sized = Opaque> {
     inner: [u8; 0],
@@ -91,26 +89,7 @@ cf_objc2_type!(
     unsafe impl<T: ?Sized> RefEncode<"__CFBag"> for CFBag<T> {}
 );
 
-impl<T: ?Sized> CFBag<T> {
-    /// Unchecked conversion of the generic parameter.
-    ///
-    /// # Safety
-    ///
-    /// The generic must be valid to reinterpret as the given type.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewT: ?Sized>(&self) -> &CFBag<NewT> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-
-    /// Convert to the opaque/untyped variant.
-    #[inline]
-    pub fn as_opaque(&self) -> &CFBag {
-        unsafe { self.cast_unchecked() }
-    }
-}
-
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfmutablebag?language=objc)
-#[doc(alias = "CFMutableBagRef")]
 #[repr(C)]
 pub struct CFMutableBag<T: ?Sized = Opaque> {
     inner: [u8; 0],
@@ -126,24 +105,6 @@ cf_objc2_type!(
     unsafe impl<T: ?Sized> RefEncode<"__CFBag"> for CFMutableBag<T> {}
 );
 
-impl<T: ?Sized> CFMutableBag<T> {
-    /// Unchecked conversion of the generic parameter.
-    ///
-    /// # Safety
-    ///
-    /// The generic must be valid to reinterpret as the given type.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewT: ?Sized>(&self) -> &CFMutableBag<NewT> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-
-    /// Convert to the opaque/untyped variant.
-    #[inline]
-    pub fn as_opaque(&self) -> &CFMutableBag {
-        unsafe { self.cast_unchecked() }
-    }
-}
-
 unsafe impl ConcreteType for CFBag {
     #[doc(alias = "CFBagGetTypeID")]
     #[inline]
@@ -156,11 +117,6 @@ unsafe impl ConcreteType for CFBag {
 }
 
 impl CFBag {
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `values` must be a valid pointer.
-    /// - `call_backs` must be a valid pointer.
     #[doc(alias = "CFBagCreate")]
     #[inline]
     pub unsafe fn new(
@@ -181,11 +137,6 @@ impl CFBag {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `the_bag` generic must be of the correct type.
-    /// - `the_bag` might not allow `None`.
     #[doc(alias = "CFBagCreateCopy")]
     #[inline]
     pub unsafe fn new_copy(
@@ -204,11 +155,6 @@ impl CFBag {
 }
 
 impl CFMutableBag {
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `call_backs` must be a valid pointer.
-    /// - The returned generic must be of the correct type.
     #[doc(alias = "CFBagCreateMutable")]
     #[inline]
     pub unsafe fn new(
@@ -227,12 +173,6 @@ impl CFMutableBag {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `the_bag` generic must be of the correct type.
-    /// - `the_bag` might not allow `None`.
-    /// - The returned generic must be of the correct type.
     #[doc(alias = "CFBagCreateMutableCopy")]
     #[inline]
     pub unsafe fn new_copy(
@@ -253,38 +193,27 @@ impl CFMutableBag {
 }
 
 impl CFBag {
-    /// # Safety
-    ///
-    /// `the_bag` generic must be of the correct type.
     #[doc(alias = "CFBagGetCount")]
     #[inline]
-    pub unsafe fn count(&self) -> CFIndex {
+    pub unsafe fn count(self: &CFBag) -> CFIndex {
         extern "C-unwind" {
             fn CFBagGetCount(the_bag: &CFBag) -> CFIndex;
         }
         unsafe { CFBagGetCount(self) }
     }
 
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBagGetCountOfValue")]
     #[inline]
-    pub unsafe fn count_of_value(&self, value: *const c_void) -> CFIndex {
+    pub unsafe fn count_of_value(self: &CFBag, value: *const c_void) -> CFIndex {
         extern "C-unwind" {
             fn CFBagGetCountOfValue(the_bag: &CFBag, value: *const c_void) -> CFIndex;
         }
         unsafe { CFBagGetCountOfValue(self, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBagContainsValue")]
     #[inline]
-    pub unsafe fn contains_value(&self, value: *const c_void) -> bool {
+    pub unsafe fn contains_value(self: &CFBag, value: *const c_void) -> bool {
         extern "C-unwind" {
             fn CFBagContainsValue(the_bag: &CFBag, value: *const c_void) -> Boolean;
         }
@@ -292,28 +221,19 @@ impl CFBag {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBagGetValue")]
     #[inline]
-    pub unsafe fn value(&self, value: *const c_void) -> *const c_void {
+    pub unsafe fn value(self: &CFBag, value: *const c_void) -> *const c_void {
         extern "C-unwind" {
             fn CFBagGetValue(the_bag: &CFBag, value: *const c_void) -> *const c_void;
         }
         unsafe { CFBagGetValue(self, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `candidate` must be a valid pointer.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBagGetValueIfPresent")]
     #[inline]
     pub unsafe fn value_if_present(
-        &self,
+        self: &CFBag,
         candidate: *const c_void,
         value: *mut *const c_void,
     ) -> bool {
@@ -328,27 +248,22 @@ impl CFBag {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `values` must be a valid pointer.
     #[doc(alias = "CFBagGetValues")]
     #[inline]
-    pub unsafe fn values(&self, values: *mut *const c_void) {
+    pub unsafe fn values(self: &CFBag, values: *mut *const c_void) {
         extern "C-unwind" {
             fn CFBagGetValues(the_bag: &CFBag, values: *mut *const c_void);
         }
         unsafe { CFBagGetValues(self, values) }
     }
 
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `applier` must be implemented correctly.
-    /// - `context` must be a valid pointer.
     #[doc(alias = "CFBagApplyFunction")]
     #[inline]
-    pub unsafe fn apply_function(&self, applier: CFBagApplierFunction, context: *mut c_void) {
+    pub unsafe fn apply_function(
+        self: &CFBag,
+        applier: CFBagApplierFunction,
+        context: *mut c_void,
+    ) {
         extern "C-unwind" {
             fn CFBagApplyFunction(
                 the_bag: &CFBag,
@@ -361,11 +276,6 @@ impl CFBag {
 }
 
 impl CFMutableBag {
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `the_bag` might not allow `None`.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBagAddValue")]
     #[inline]
     pub unsafe fn add_value(the_bag: Option<&CFMutableBag>, value: *const c_void) {
@@ -375,11 +285,6 @@ impl CFMutableBag {
         unsafe { CFBagAddValue(the_bag, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `the_bag` might not allow `None`.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBagReplaceValue")]
     #[inline]
     pub unsafe fn replace_value(the_bag: Option<&CFMutableBag>, value: *const c_void) {
@@ -389,11 +294,6 @@ impl CFMutableBag {
         unsafe { CFBagReplaceValue(the_bag, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `the_bag` might not allow `None`.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBagSetValue")]
     #[inline]
     pub unsafe fn set_value(the_bag: Option<&CFMutableBag>, value: *const c_void) {
@@ -403,11 +303,6 @@ impl CFMutableBag {
         unsafe { CFBagSetValue(the_bag, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `the_bag` might not allow `None`.
-    /// - `value` must be a valid pointer.
     #[doc(alias = "CFBagRemoveValue")]
     #[inline]
     pub unsafe fn remove_value(the_bag: Option<&CFMutableBag>, value: *const c_void) {
@@ -417,10 +312,6 @@ impl CFMutableBag {
         unsafe { CFBagRemoveValue(the_bag, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `the_bag` generic must be of the correct type.
-    /// - `the_bag` might not allow `None`.
     #[doc(alias = "CFBagRemoveAllValues")]
     #[inline]
     pub unsafe fn remove_all_values(the_bag: Option<&CFMutableBag>) {

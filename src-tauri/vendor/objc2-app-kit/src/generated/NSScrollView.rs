@@ -101,11 +101,8 @@ impl NSScrollView {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -114,10 +111,6 @@ impl NSScrollView {
         ) -> Option<Retained<Self>>;
 
         #[cfg(all(feature = "NSCell", feature = "NSScroller"))]
-        /// # Safety
-        ///
-        /// - `horizontal_scroller_class` probably has further requirements.
-        /// - `vertical_scroller_class` probably has further requirements.
         #[unsafe(method(frameSizeForContentSize:horizontalScrollerClass:verticalScrollerClass:borderType:controlSize:scrollerStyle:))]
         #[unsafe(method_family = none)]
         pub unsafe fn frameSizeForContentSize_horizontalScrollerClass_verticalScrollerClass_borderType_controlSize_scrollerStyle(
@@ -131,10 +124,6 @@ impl NSScrollView {
         ) -> NSSize;
 
         #[cfg(all(feature = "NSCell", feature = "NSScroller"))]
-        /// # Safety
-        ///
-        /// - `horizontal_scroller_class` probably has further requirements.
-        /// - `vertical_scroller_class` probably has further requirements.
         #[unsafe(method(contentSizeForFrameSize:horizontalScrollerClass:verticalScrollerClass:borderType:controlSize:scrollerStyle:))]
         #[unsafe(method_family = none)]
         pub unsafe fn contentSizeForFrameSize_horizontalScrollerClass_verticalScrollerClass_borderType_controlSize_scrollerStyle(
@@ -150,7 +139,7 @@ impl NSScrollView {
         #[deprecated = "Use +frameSizeForContentSize:horizontalScrollerClass:verticalScrollerClass:borderType:controlSize:scrollerStyle: instead"]
         #[unsafe(method(frameSizeForContentSize:hasHorizontalScroller:hasVerticalScroller:borderType:))]
         #[unsafe(method_family = none)]
-        pub fn frameSizeForContentSize_hasHorizontalScroller_hasVerticalScroller_borderType(
+        pub unsafe fn frameSizeForContentSize_hasHorizontalScroller_hasVerticalScroller_borderType(
             c_size: NSSize,
             h_flag: bool,
             v_flag: bool,
@@ -161,7 +150,7 @@ impl NSScrollView {
         #[deprecated = "+contentSizeForFrameSize:horizontalScrollerClass:verticalScrollerClass:borderType:controlSize:scrollerStyle: instead"]
         #[unsafe(method(contentSizeForFrameSize:hasHorizontalScroller:hasVerticalScroller:borderType:))]
         #[unsafe(method_family = none)]
-        pub fn contentSizeForFrameSize_hasHorizontalScroller_hasVerticalScroller_borderType(
+        pub unsafe fn contentSizeForFrameSize_hasHorizontalScroller_hasVerticalScroller_borderType(
             f_size: NSSize,
             h_flag: bool,
             v_flag: bool,
@@ -171,353 +160,358 @@ impl NSScrollView {
 
         #[unsafe(method(documentVisibleRect))]
         #[unsafe(method_family = none)]
-        pub fn documentVisibleRect(&self) -> NSRect;
+        pub unsafe fn documentVisibleRect(&self) -> NSRect;
 
         #[unsafe(method(contentSize))]
         #[unsafe(method_family = none)]
-        pub fn contentSize(&self) -> NSSize;
+        pub unsafe fn contentSize(&self) -> NSSize;
 
         #[unsafe(method(documentView))]
         #[unsafe(method_family = none)]
-        pub fn documentView(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn documentView(&self) -> Option<Retained<NSView>>;
 
         /// Setter for [`documentView`][Self::documentView].
         #[unsafe(method(setDocumentView:))]
         #[unsafe(method_family = none)]
-        pub fn setDocumentView(&self, document_view: Option<&NSView>);
+        pub unsafe fn setDocumentView(&self, document_view: Option<&NSView>);
 
         #[cfg(feature = "NSClipView")]
         #[unsafe(method(contentView))]
         #[unsafe(method_family = none)]
-        pub fn contentView(&self) -> Retained<NSClipView>;
+        pub unsafe fn contentView(&self) -> Retained<NSClipView>;
 
         #[cfg(feature = "NSClipView")]
         /// Setter for [`contentView`][Self::contentView].
         #[unsafe(method(setContentView:))]
         #[unsafe(method_family = none)]
-        pub fn setContentView(&self, content_view: &NSClipView);
+        pub unsafe fn setContentView(&self, content_view: &NSClipView);
 
         #[cfg(feature = "NSCursor")]
         #[unsafe(method(documentCursor))]
         #[unsafe(method_family = none)]
-        pub fn documentCursor(&self) -> Option<Retained<NSCursor>>;
+        pub unsafe fn documentCursor(&self) -> Option<Retained<NSCursor>>;
 
         #[cfg(feature = "NSCursor")]
         /// Setter for [`documentCursor`][Self::documentCursor].
         #[unsafe(method(setDocumentCursor:))]
         #[unsafe(method_family = none)]
-        pub fn setDocumentCursor(&self, document_cursor: Option<&NSCursor>);
+        pub unsafe fn setDocumentCursor(&self, document_cursor: Option<&NSCursor>);
 
         #[unsafe(method(borderType))]
         #[unsafe(method_family = none)]
-        pub fn borderType(&self) -> NSBorderType;
+        pub unsafe fn borderType(&self) -> NSBorderType;
 
         /// Setter for [`borderType`][Self::borderType].
         #[unsafe(method(setBorderType:))]
         #[unsafe(method_family = none)]
-        pub fn setBorderType(&self, border_type: NSBorderType);
+        pub unsafe fn setBorderType(&self, border_type: NSBorderType);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(backgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn backgroundColor(&self) -> Retained<NSColor>;
+        pub unsafe fn backgroundColor(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`backgroundColor`][Self::backgroundColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundColor(&self, background_color: &NSColor);
+        pub unsafe fn setBackgroundColor(&self, background_color: &NSColor);
 
         #[unsafe(method(drawsBackground))]
         #[unsafe(method_family = none)]
-        pub fn drawsBackground(&self) -> bool;
+        pub unsafe fn drawsBackground(&self) -> bool;
 
         /// Setter for [`drawsBackground`][Self::drawsBackground].
         #[unsafe(method(setDrawsBackground:))]
         #[unsafe(method_family = none)]
-        pub fn setDrawsBackground(&self, draws_background: bool);
+        pub unsafe fn setDrawsBackground(&self, draws_background: bool);
 
         #[unsafe(method(hasVerticalScroller))]
         #[unsafe(method_family = none)]
-        pub fn hasVerticalScroller(&self) -> bool;
+        pub unsafe fn hasVerticalScroller(&self) -> bool;
 
         /// Setter for [`hasVerticalScroller`][Self::hasVerticalScroller].
         #[unsafe(method(setHasVerticalScroller:))]
         #[unsafe(method_family = none)]
-        pub fn setHasVerticalScroller(&self, has_vertical_scroller: bool);
+        pub unsafe fn setHasVerticalScroller(&self, has_vertical_scroller: bool);
 
         #[unsafe(method(hasHorizontalScroller))]
         #[unsafe(method_family = none)]
-        pub fn hasHorizontalScroller(&self) -> bool;
+        pub unsafe fn hasHorizontalScroller(&self) -> bool;
 
         /// Setter for [`hasHorizontalScroller`][Self::hasHorizontalScroller].
         #[unsafe(method(setHasHorizontalScroller:))]
         #[unsafe(method_family = none)]
-        pub fn setHasHorizontalScroller(&self, has_horizontal_scroller: bool);
+        pub unsafe fn setHasHorizontalScroller(&self, has_horizontal_scroller: bool);
 
         #[cfg(all(feature = "NSControl", feature = "NSScroller"))]
         #[unsafe(method(verticalScroller))]
         #[unsafe(method_family = none)]
-        pub fn verticalScroller(&self) -> Option<Retained<NSScroller>>;
+        pub unsafe fn verticalScroller(&self) -> Option<Retained<NSScroller>>;
 
         #[cfg(all(feature = "NSControl", feature = "NSScroller"))]
         /// Setter for [`verticalScroller`][Self::verticalScroller].
         #[unsafe(method(setVerticalScroller:))]
         #[unsafe(method_family = none)]
-        pub fn setVerticalScroller(&self, vertical_scroller: Option<&NSScroller>);
+        pub unsafe fn setVerticalScroller(&self, vertical_scroller: Option<&NSScroller>);
 
         #[cfg(all(feature = "NSControl", feature = "NSScroller"))]
         #[unsafe(method(horizontalScroller))]
         #[unsafe(method_family = none)]
-        pub fn horizontalScroller(&self) -> Option<Retained<NSScroller>>;
+        pub unsafe fn horizontalScroller(&self) -> Option<Retained<NSScroller>>;
 
         #[cfg(all(feature = "NSControl", feature = "NSScroller"))]
         /// Setter for [`horizontalScroller`][Self::horizontalScroller].
         #[unsafe(method(setHorizontalScroller:))]
         #[unsafe(method_family = none)]
-        pub fn setHorizontalScroller(&self, horizontal_scroller: Option<&NSScroller>);
+        pub unsafe fn setHorizontalScroller(&self, horizontal_scroller: Option<&NSScroller>);
 
         #[unsafe(method(autohidesScrollers))]
         #[unsafe(method_family = none)]
-        pub fn autohidesScrollers(&self) -> bool;
+        pub unsafe fn autohidesScrollers(&self) -> bool;
 
         /// Setter for [`autohidesScrollers`][Self::autohidesScrollers].
         #[unsafe(method(setAutohidesScrollers:))]
         #[unsafe(method_family = none)]
-        pub fn setAutohidesScrollers(&self, autohides_scrollers: bool);
+        pub unsafe fn setAutohidesScrollers(&self, autohides_scrollers: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(horizontalLineScroll))]
         #[unsafe(method_family = none)]
-        pub fn horizontalLineScroll(&self) -> CGFloat;
+        pub unsafe fn horizontalLineScroll(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`horizontalLineScroll`][Self::horizontalLineScroll].
         #[unsafe(method(setHorizontalLineScroll:))]
         #[unsafe(method_family = none)]
-        pub fn setHorizontalLineScroll(&self, horizontal_line_scroll: CGFloat);
+        pub unsafe fn setHorizontalLineScroll(&self, horizontal_line_scroll: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(verticalLineScroll))]
         #[unsafe(method_family = none)]
-        pub fn verticalLineScroll(&self) -> CGFloat;
+        pub unsafe fn verticalLineScroll(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`verticalLineScroll`][Self::verticalLineScroll].
         #[unsafe(method(setVerticalLineScroll:))]
         #[unsafe(method_family = none)]
-        pub fn setVerticalLineScroll(&self, vertical_line_scroll: CGFloat);
+        pub unsafe fn setVerticalLineScroll(&self, vertical_line_scroll: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(lineScroll))]
         #[unsafe(method_family = none)]
-        pub fn lineScroll(&self) -> CGFloat;
+        pub unsafe fn lineScroll(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`lineScroll`][Self::lineScroll].
         #[unsafe(method(setLineScroll:))]
         #[unsafe(method_family = none)]
-        pub fn setLineScroll(&self, line_scroll: CGFloat);
+        pub unsafe fn setLineScroll(&self, line_scroll: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(horizontalPageScroll))]
         #[unsafe(method_family = none)]
-        pub fn horizontalPageScroll(&self) -> CGFloat;
+        pub unsafe fn horizontalPageScroll(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`horizontalPageScroll`][Self::horizontalPageScroll].
         #[unsafe(method(setHorizontalPageScroll:))]
         #[unsafe(method_family = none)]
-        pub fn setHorizontalPageScroll(&self, horizontal_page_scroll: CGFloat);
+        pub unsafe fn setHorizontalPageScroll(&self, horizontal_page_scroll: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(verticalPageScroll))]
         #[unsafe(method_family = none)]
-        pub fn verticalPageScroll(&self) -> CGFloat;
+        pub unsafe fn verticalPageScroll(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`verticalPageScroll`][Self::verticalPageScroll].
         #[unsafe(method(setVerticalPageScroll:))]
         #[unsafe(method_family = none)]
-        pub fn setVerticalPageScroll(&self, vertical_page_scroll: CGFloat);
+        pub unsafe fn setVerticalPageScroll(&self, vertical_page_scroll: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(pageScroll))]
         #[unsafe(method_family = none)]
-        pub fn pageScroll(&self) -> CGFloat;
+        pub unsafe fn pageScroll(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`pageScroll`][Self::pageScroll].
         #[unsafe(method(setPageScroll:))]
         #[unsafe(method_family = none)]
-        pub fn setPageScroll(&self, page_scroll: CGFloat);
+        pub unsafe fn setPageScroll(&self, page_scroll: CGFloat);
 
         #[unsafe(method(scrollsDynamically))]
         #[unsafe(method_family = none)]
-        pub fn scrollsDynamically(&self) -> bool;
+        pub unsafe fn scrollsDynamically(&self) -> bool;
 
         /// Setter for [`scrollsDynamically`][Self::scrollsDynamically].
         #[unsafe(method(setScrollsDynamically:))]
         #[unsafe(method_family = none)]
-        pub fn setScrollsDynamically(&self, scrolls_dynamically: bool);
+        pub unsafe fn setScrollsDynamically(&self, scrolls_dynamically: bool);
 
         #[unsafe(method(tile))]
         #[unsafe(method_family = none)]
-        pub fn tile(&self);
+        pub unsafe fn tile(&self);
 
         #[cfg(feature = "NSClipView")]
         #[unsafe(method(reflectScrolledClipView:))]
         #[unsafe(method_family = none)]
-        pub fn reflectScrolledClipView(&self, c_view: &NSClipView);
+        pub unsafe fn reflectScrolledClipView(&self, c_view: &NSClipView);
 
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(scrollWheel:))]
         #[unsafe(method_family = none)]
-        pub fn scrollWheel(&self, event: &NSEvent);
+        pub unsafe fn scrollWheel(&self, event: &NSEvent);
 
         #[cfg(feature = "NSScroller")]
         #[unsafe(method(scrollerStyle))]
         #[unsafe(method_family = none)]
-        pub fn scrollerStyle(&self) -> NSScrollerStyle;
+        pub unsafe fn scrollerStyle(&self) -> NSScrollerStyle;
 
         #[cfg(feature = "NSScroller")]
         /// Setter for [`scrollerStyle`][Self::scrollerStyle].
         #[unsafe(method(setScrollerStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setScrollerStyle(&self, scroller_style: NSScrollerStyle);
+        pub unsafe fn setScrollerStyle(&self, scroller_style: NSScrollerStyle);
 
         #[cfg(feature = "NSScroller")]
         #[unsafe(method(scrollerKnobStyle))]
         #[unsafe(method_family = none)]
-        pub fn scrollerKnobStyle(&self) -> NSScrollerKnobStyle;
+        pub unsafe fn scrollerKnobStyle(&self) -> NSScrollerKnobStyle;
 
         #[cfg(feature = "NSScroller")]
         /// Setter for [`scrollerKnobStyle`][Self::scrollerKnobStyle].
         #[unsafe(method(setScrollerKnobStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setScrollerKnobStyle(&self, scroller_knob_style: NSScrollerKnobStyle);
+        pub unsafe fn setScrollerKnobStyle(&self, scroller_knob_style: NSScrollerKnobStyle);
 
         #[unsafe(method(flashScrollers))]
         #[unsafe(method_family = none)]
-        pub fn flashScrollers(&self);
+        pub unsafe fn flashScrollers(&self);
 
         #[unsafe(method(horizontalScrollElasticity))]
         #[unsafe(method_family = none)]
-        pub fn horizontalScrollElasticity(&self) -> NSScrollElasticity;
+        pub unsafe fn horizontalScrollElasticity(&self) -> NSScrollElasticity;
 
         /// Setter for [`horizontalScrollElasticity`][Self::horizontalScrollElasticity].
         #[unsafe(method(setHorizontalScrollElasticity:))]
         #[unsafe(method_family = none)]
-        pub fn setHorizontalScrollElasticity(
+        pub unsafe fn setHorizontalScrollElasticity(
             &self,
             horizontal_scroll_elasticity: NSScrollElasticity,
         );
 
         #[unsafe(method(verticalScrollElasticity))]
         #[unsafe(method_family = none)]
-        pub fn verticalScrollElasticity(&self) -> NSScrollElasticity;
+        pub unsafe fn verticalScrollElasticity(&self) -> NSScrollElasticity;
 
         /// Setter for [`verticalScrollElasticity`][Self::verticalScrollElasticity].
         #[unsafe(method(setVerticalScrollElasticity:))]
         #[unsafe(method_family = none)]
-        pub fn setVerticalScrollElasticity(&self, vertical_scroll_elasticity: NSScrollElasticity);
+        pub unsafe fn setVerticalScrollElasticity(
+            &self,
+            vertical_scroll_elasticity: NSScrollElasticity,
+        );
 
         #[unsafe(method(usesPredominantAxisScrolling))]
         #[unsafe(method_family = none)]
-        pub fn usesPredominantAxisScrolling(&self) -> bool;
+        pub unsafe fn usesPredominantAxisScrolling(&self) -> bool;
 
         /// Setter for [`usesPredominantAxisScrolling`][Self::usesPredominantAxisScrolling].
         #[unsafe(method(setUsesPredominantAxisScrolling:))]
         #[unsafe(method_family = none)]
-        pub fn setUsesPredominantAxisScrolling(&self, uses_predominant_axis_scrolling: bool);
+        pub unsafe fn setUsesPredominantAxisScrolling(&self, uses_predominant_axis_scrolling: bool);
 
         #[unsafe(method(allowsMagnification))]
         #[unsafe(method_family = none)]
-        pub fn allowsMagnification(&self) -> bool;
+        pub unsafe fn allowsMagnification(&self) -> bool;
 
         /// Setter for [`allowsMagnification`][Self::allowsMagnification].
         #[unsafe(method(setAllowsMagnification:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsMagnification(&self, allows_magnification: bool);
+        pub unsafe fn setAllowsMagnification(&self, allows_magnification: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(magnification))]
         #[unsafe(method_family = none)]
-        pub fn magnification(&self) -> CGFloat;
+        pub unsafe fn magnification(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`magnification`][Self::magnification].
         #[unsafe(method(setMagnification:))]
         #[unsafe(method_family = none)]
-        pub fn setMagnification(&self, magnification: CGFloat);
+        pub unsafe fn setMagnification(&self, magnification: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(maxMagnification))]
         #[unsafe(method_family = none)]
-        pub fn maxMagnification(&self) -> CGFloat;
+        pub unsafe fn maxMagnification(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`maxMagnification`][Self::maxMagnification].
         #[unsafe(method(setMaxMagnification:))]
         #[unsafe(method_family = none)]
-        pub fn setMaxMagnification(&self, max_magnification: CGFloat);
+        pub unsafe fn setMaxMagnification(&self, max_magnification: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(minMagnification))]
         #[unsafe(method_family = none)]
-        pub fn minMagnification(&self) -> CGFloat;
+        pub unsafe fn minMagnification(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`minMagnification`][Self::minMagnification].
         #[unsafe(method(setMinMagnification:))]
         #[unsafe(method_family = none)]
-        pub fn setMinMagnification(&self, min_magnification: CGFloat);
+        pub unsafe fn setMinMagnification(&self, min_magnification: CGFloat);
 
         #[unsafe(method(magnifyToFitRect:))]
         #[unsafe(method_family = none)]
-        pub fn magnifyToFitRect(&self, rect: NSRect);
+        pub unsafe fn magnifyToFitRect(&self, rect: NSRect);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(setMagnification:centeredAtPoint:))]
         #[unsafe(method_family = none)]
-        pub fn setMagnification_centeredAtPoint(&self, magnification: CGFloat, point: NSPoint);
+        pub unsafe fn setMagnification_centeredAtPoint(
+            &self,
+            magnification: CGFloat,
+            point: NSPoint,
+        );
 
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(addFloatingSubview:forAxis:))]
         #[unsafe(method_family = none)]
-        pub fn addFloatingSubview_forAxis(&self, view: &NSView, axis: NSEventGestureAxis);
+        pub unsafe fn addFloatingSubview_forAxis(&self, view: &NSView, axis: NSEventGestureAxis);
 
         #[unsafe(method(automaticallyAdjustsContentInsets))]
         #[unsafe(method_family = none)]
-        pub fn automaticallyAdjustsContentInsets(&self) -> bool;
+        pub unsafe fn automaticallyAdjustsContentInsets(&self) -> bool;
 
         /// Setter for [`automaticallyAdjustsContentInsets`][Self::automaticallyAdjustsContentInsets].
         #[unsafe(method(setAutomaticallyAdjustsContentInsets:))]
         #[unsafe(method_family = none)]
-        pub fn setAutomaticallyAdjustsContentInsets(
+        pub unsafe fn setAutomaticallyAdjustsContentInsets(
             &self,
             automatically_adjusts_content_insets: bool,
         );
 
         #[unsafe(method(contentInsets))]
         #[unsafe(method_family = none)]
-        pub fn contentInsets(&self) -> NSEdgeInsets;
+        pub unsafe fn contentInsets(&self) -> NSEdgeInsets;
 
         /// Setter for [`contentInsets`][Self::contentInsets].
         #[unsafe(method(setContentInsets:))]
         #[unsafe(method_family = none)]
-        pub fn setContentInsets(&self, content_insets: NSEdgeInsets);
+        pub unsafe fn setContentInsets(&self, content_insets: NSEdgeInsets);
 
         #[unsafe(method(scrollerInsets))]
         #[unsafe(method_family = none)]
-        pub fn scrollerInsets(&self) -> NSEdgeInsets;
+        pub unsafe fn scrollerInsets(&self) -> NSEdgeInsets;
 
         /// Setter for [`scrollerInsets`][Self::scrollerInsets].
         #[unsafe(method(setScrollerInsets:))]
         #[unsafe(method_family = none)]
-        pub fn setScrollerInsets(&self, scroller_insets: NSEdgeInsets);
+        pub unsafe fn setScrollerInsets(&self, scroller_insets: NSEdgeInsets);
     );
 }
 
@@ -527,7 +521,7 @@ impl NSScrollView {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -537,7 +531,7 @@ impl NSScrollView {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -572,66 +566,61 @@ impl NSScrollView {
     extern_methods!(
         #[unsafe(method(rulerViewClass))]
         #[unsafe(method_family = none)]
-        pub fn rulerViewClass(mtm: MainThreadMarker) -> Option<&'static AnyClass>;
+        pub unsafe fn rulerViewClass(mtm: MainThreadMarker) -> Option<&'static AnyClass>;
 
         /// Setter for [`rulerViewClass`][Self::rulerViewClass].
-        ///
-        /// # Safety
-        ///
-        /// - `ruler_view_class` probably has further requirements.
-        /// - `ruler_view_class` might not allow `None`.
         #[unsafe(method(setRulerViewClass:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRulerViewClass(ruler_view_class: Option<&AnyClass>, mtm: MainThreadMarker);
 
         #[unsafe(method(rulersVisible))]
         #[unsafe(method_family = none)]
-        pub fn rulersVisible(&self) -> bool;
+        pub unsafe fn rulersVisible(&self) -> bool;
 
         /// Setter for [`rulersVisible`][Self::rulersVisible].
         #[unsafe(method(setRulersVisible:))]
         #[unsafe(method_family = none)]
-        pub fn setRulersVisible(&self, rulers_visible: bool);
+        pub unsafe fn setRulersVisible(&self, rulers_visible: bool);
 
         #[unsafe(method(hasHorizontalRuler))]
         #[unsafe(method_family = none)]
-        pub fn hasHorizontalRuler(&self) -> bool;
+        pub unsafe fn hasHorizontalRuler(&self) -> bool;
 
         /// Setter for [`hasHorizontalRuler`][Self::hasHorizontalRuler].
         #[unsafe(method(setHasHorizontalRuler:))]
         #[unsafe(method_family = none)]
-        pub fn setHasHorizontalRuler(&self, has_horizontal_ruler: bool);
+        pub unsafe fn setHasHorizontalRuler(&self, has_horizontal_ruler: bool);
 
         #[unsafe(method(hasVerticalRuler))]
         #[unsafe(method_family = none)]
-        pub fn hasVerticalRuler(&self) -> bool;
+        pub unsafe fn hasVerticalRuler(&self) -> bool;
 
         /// Setter for [`hasVerticalRuler`][Self::hasVerticalRuler].
         #[unsafe(method(setHasVerticalRuler:))]
         #[unsafe(method_family = none)]
-        pub fn setHasVerticalRuler(&self, has_vertical_ruler: bool);
+        pub unsafe fn setHasVerticalRuler(&self, has_vertical_ruler: bool);
 
         #[cfg(feature = "NSRulerView")]
         #[unsafe(method(horizontalRulerView))]
         #[unsafe(method_family = none)]
-        pub fn horizontalRulerView(&self) -> Option<Retained<NSRulerView>>;
+        pub unsafe fn horizontalRulerView(&self) -> Option<Retained<NSRulerView>>;
 
         #[cfg(feature = "NSRulerView")]
         /// Setter for [`horizontalRulerView`][Self::horizontalRulerView].
         #[unsafe(method(setHorizontalRulerView:))]
         #[unsafe(method_family = none)]
-        pub fn setHorizontalRulerView(&self, horizontal_ruler_view: Option<&NSRulerView>);
+        pub unsafe fn setHorizontalRulerView(&self, horizontal_ruler_view: Option<&NSRulerView>);
 
         #[cfg(feature = "NSRulerView")]
         #[unsafe(method(verticalRulerView))]
         #[unsafe(method_family = none)]
-        pub fn verticalRulerView(&self) -> Option<Retained<NSRulerView>>;
+        pub unsafe fn verticalRulerView(&self) -> Option<Retained<NSRulerView>>;
 
         #[cfg(feature = "NSRulerView")]
         /// Setter for [`verticalRulerView`][Self::verticalRulerView].
         #[unsafe(method(setVerticalRulerView:))]
         #[unsafe(method_family = none)]
-        pub fn setVerticalRulerView(&self, vertical_ruler_view: Option<&NSRulerView>);
+        pub unsafe fn setVerticalRulerView(&self, vertical_ruler_view: Option<&NSRulerView>);
     );
 }
 
@@ -663,11 +652,11 @@ impl NSScrollView {
     extern_methods!(
         #[unsafe(method(findBarPosition))]
         #[unsafe(method_family = none)]
-        pub fn findBarPosition(&self) -> NSScrollViewFindBarPosition;
+        pub unsafe fn findBarPosition(&self) -> NSScrollViewFindBarPosition;
 
         /// Setter for [`findBarPosition`][Self::findBarPosition].
         #[unsafe(method(setFindBarPosition:))]
         #[unsafe(method_family = none)]
-        pub fn setFindBarPosition(&self, find_bar_position: NSScrollViewFindBarPosition);
+        pub unsafe fn setFindBarPosition(&self, find_bar_position: NSScrollViewFindBarPosition);
     );
 }

@@ -50,29 +50,29 @@ impl NSStatusItem {
         #[cfg(feature = "NSStatusBar")]
         #[unsafe(method(statusBar))]
         #[unsafe(method_family = none)]
-        pub fn statusBar(&self) -> Option<Retained<NSStatusBar>>;
+        pub unsafe fn statusBar(&self) -> Option<Retained<NSStatusBar>>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(length))]
         #[unsafe(method_family = none)]
-        pub fn length(&self) -> CGFloat;
+        pub unsafe fn length(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`length`][Self::length].
         #[unsafe(method(setLength:))]
         #[unsafe(method_family = none)]
-        pub fn setLength(&self, length: CGFloat);
+        pub unsafe fn setLength(&self, length: CGFloat);
 
         #[cfg(feature = "NSMenu")]
         #[unsafe(method(menu))]
         #[unsafe(method_family = none)]
-        pub fn menu(&self, mtm: MainThreadMarker) -> Option<Retained<NSMenu>>;
+        pub unsafe fn menu(&self, mtm: MainThreadMarker) -> Option<Retained<NSMenu>>;
 
         #[cfg(feature = "NSMenu")]
         /// Setter for [`menu`][Self::menu].
         #[unsafe(method(setMenu:))]
         #[unsafe(method_family = none)]
-        pub fn setMenu(&self, menu: Option<&NSMenu>);
+        pub unsafe fn setMenu(&self, menu: Option<&NSMenu>);
 
         #[cfg(all(
             feature = "NSButton",
@@ -83,36 +83,34 @@ impl NSStatusItem {
         ))]
         #[unsafe(method(button))]
         #[unsafe(method_family = none)]
-        pub fn button(&self, mtm: MainThreadMarker) -> Option<Retained<NSStatusBarButton>>;
+        pub unsafe fn button(&self, mtm: MainThreadMarker) -> Option<Retained<NSStatusBarButton>>;
 
         #[unsafe(method(behavior))]
         #[unsafe(method_family = none)]
-        pub fn behavior(&self) -> NSStatusItemBehavior;
+        pub unsafe fn behavior(&self) -> NSStatusItemBehavior;
 
         /// Setter for [`behavior`][Self::behavior].
         #[unsafe(method(setBehavior:))]
         #[unsafe(method_family = none)]
-        pub fn setBehavior(&self, behavior: NSStatusItemBehavior);
+        pub unsafe fn setBehavior(&self, behavior: NSStatusItemBehavior);
 
         #[unsafe(method(isVisible))]
         #[unsafe(method_family = none)]
-        pub fn isVisible(&self) -> bool;
+        pub unsafe fn isVisible(&self) -> bool;
 
         /// Setter for [`isVisible`][Self::isVisible].
         #[unsafe(method(setVisible:))]
         #[unsafe(method_family = none)]
-        pub fn setVisible(&self, visible: bool);
+        pub unsafe fn setVisible(&self, visible: bool);
 
         #[unsafe(method(autosaveName))]
         #[unsafe(method_family = none)]
-        pub fn autosaveName(&self) -> Retained<NSStatusItemAutosaveName>;
+        pub unsafe fn autosaveName(&self) -> Retained<NSStatusItemAutosaveName>;
 
         /// Setter for [`autosaveName`][Self::autosaveName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAutosaveName:))]
         #[unsafe(method_family = none)]
-        pub fn setAutosaveName(&self, autosave_name: Option<&NSStatusItemAutosaveName>);
+        pub unsafe fn setAutosaveName(&self, autosave_name: Option<&NSStatusItemAutosaveName>);
     );
 }
 
@@ -121,19 +119,12 @@ impl NSStatusItem {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSStatusItem {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSStatusItemDeprecated.
@@ -142,13 +133,9 @@ impl NSStatusItem {
         #[deprecated = "Use the receiver's button.action instead"]
         #[unsafe(method(action))]
         #[unsafe(method_family = none)]
-        pub fn action(&self) -> Option<Sel>;
+        pub unsafe fn action(&self) -> Option<Sel>;
 
         /// Setter for [`action`][Self::action].
-        ///
-        /// # Safety
-        ///
-        /// `action` must be a valid selector.
         #[deprecated = "Use the receiver's button.action instead"]
         #[unsafe(method(setAction:))]
         #[unsafe(method_family = none)]
@@ -157,13 +144,9 @@ impl NSStatusItem {
         #[deprecated = "Use the receiver's button.doubleAction instead"]
         #[unsafe(method(doubleAction))]
         #[unsafe(method_family = none)]
-        pub fn doubleAction(&self) -> Option<Sel>;
+        pub unsafe fn doubleAction(&self) -> Option<Sel>;
 
         /// Setter for [`doubleAction`][Self::doubleAction].
-        ///
-        /// # Safety
-        ///
-        /// `double_action` must be a valid selector.
         #[deprecated = "Use the receiver's button.doubleAction instead"]
         #[unsafe(method(setDoubleAction:))]
         #[unsafe(method_family = none)]
@@ -172,15 +155,10 @@ impl NSStatusItem {
         #[deprecated = "Use the receiver's button.target instead"]
         #[unsafe(method(target))]
         #[unsafe(method_family = none)]
-        pub fn target(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn target(&self) -> Option<Retained<AnyObject>>;
 
-        /// Setter for [`target`][Self::target].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
+        /// Setter for [`target`][Self::target].
         #[deprecated = "Use the receiver's button.target instead"]
         #[unsafe(method(setTarget:))]
         #[unsafe(method_family = none)]
@@ -189,118 +167,116 @@ impl NSStatusItem {
         #[deprecated = "Use the receiver's button.title instead"]
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn title(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated = "Use the receiver's button.title instead"]
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: Option<&NSString>);
+        pub unsafe fn setTitle(&self, title: Option<&NSString>);
 
         #[deprecated = "Use the receiver's button.attributedTitle instead"]
         #[unsafe(method(attributedTitle))]
         #[unsafe(method_family = none)]
-        pub fn attributedTitle(&self) -> Option<Retained<NSAttributedString>>;
+        pub unsafe fn attributedTitle(&self) -> Option<Retained<NSAttributedString>>;
 
         /// Setter for [`attributedTitle`][Self::attributedTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated = "Use the receiver's button.attributedTitle instead"]
         #[unsafe(method(setAttributedTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributedTitle(&self, attributed_title: Option<&NSAttributedString>);
+        pub unsafe fn setAttributedTitle(&self, attributed_title: Option<&NSAttributedString>);
 
         #[cfg(feature = "NSImage")]
         #[deprecated = "Use the receiver's button.image instead"]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`image`][Self::image].
         #[deprecated = "Use the receiver's button.image instead"]
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&NSImage>);
+        pub unsafe fn setImage(&self, image: Option<&NSImage>);
 
         #[cfg(feature = "NSImage")]
         #[deprecated = "Use the receiver's button.alternateImage instead"]
         #[unsafe(method(alternateImage))]
         #[unsafe(method_family = none)]
-        pub fn alternateImage(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn alternateImage(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`alternateImage`][Self::alternateImage].
         #[deprecated = "Use the receiver's button.alternateImage instead"]
         #[unsafe(method(setAlternateImage:))]
         #[unsafe(method_family = none)]
-        pub fn setAlternateImage(&self, alternate_image: Option<&NSImage>);
+        pub unsafe fn setAlternateImage(&self, alternate_image: Option<&NSImage>);
 
         #[deprecated = "Use the receiver's button.enabled instead"]
         #[unsafe(method(isEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isEnabled(&self) -> bool;
+        pub unsafe fn isEnabled(&self) -> bool;
 
         /// Setter for [`isEnabled`][Self::isEnabled].
         #[deprecated = "Use the receiver's button.enabled instead"]
         #[unsafe(method(setEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setEnabled(&self, enabled: bool);
+        pub unsafe fn setEnabled(&self, enabled: bool);
 
         #[deprecated = "Use the receiver's button.cell.highlightsBy instead"]
         #[unsafe(method(highlightMode))]
         #[unsafe(method_family = none)]
-        pub fn highlightMode(&self) -> bool;
+        pub unsafe fn highlightMode(&self) -> bool;
 
         /// Setter for [`highlightMode`][Self::highlightMode].
         #[deprecated = "Use the receiver's button.cell.highlightsBy instead"]
         #[unsafe(method(setHighlightMode:))]
         #[unsafe(method_family = none)]
-        pub fn setHighlightMode(&self, highlight_mode: bool);
+        pub unsafe fn setHighlightMode(&self, highlight_mode: bool);
 
         #[deprecated = "Use the receiver's button.toolTip instead"]
         #[unsafe(method(toolTip))]
         #[unsafe(method_family = none)]
-        pub fn toolTip(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn toolTip(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`toolTip`][Self::toolTip].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated = "Use the receiver's button.toolTip instead"]
         #[unsafe(method(setToolTip:))]
         #[unsafe(method_family = none)]
-        pub fn setToolTip(&self, tool_tip: Option<&NSString>);
+        pub unsafe fn setToolTip(&self, tool_tip: Option<&NSString>);
 
         #[cfg(feature = "NSEvent")]
         #[deprecated = "Use the receiver's button's -sendActionOn: instead"]
         #[unsafe(method(sendActionOn:))]
         #[unsafe(method_family = none)]
-        pub fn sendActionOn(&self, mask: NSEventMask) -> NSInteger;
+        pub unsafe fn sendActionOn(&self, mask: NSEventMask) -> NSInteger;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[deprecated = "Use the standard button property instead"]
         #[unsafe(method(view))]
         #[unsafe(method_family = none)]
-        pub fn view(&self, mtm: MainThreadMarker) -> Option<Retained<NSView>>;
+        pub unsafe fn view(&self, mtm: MainThreadMarker) -> Option<Retained<NSView>>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         /// Setter for [`view`][Self::view].
         #[deprecated = "Use the standard button property instead"]
         #[unsafe(method(setView:))]
         #[unsafe(method_family = none)]
-        pub fn setView(&self, view: Option<&NSView>);
+        pub unsafe fn setView(&self, view: Option<&NSView>);
 
         #[deprecated = "Use the standard button instead which handles highlight drawing, making this method obsolete"]
         #[unsafe(method(drawStatusBarBackgroundInRect:withHighlight:))]
         #[unsafe(method_family = none)]
-        pub fn drawStatusBarBackgroundInRect_withHighlight(&self, rect: NSRect, highlight: bool);
+        pub unsafe fn drawStatusBarBackgroundInRect_withHighlight(
+            &self,
+            rect: NSRect,
+            highlight: bool,
+        );
 
         #[cfg(feature = "NSMenu")]
         #[deprecated = "Use the menu property instead"]
         #[unsafe(method(popUpStatusItemMenu:))]
         #[unsafe(method_family = none)]
-        pub fn popUpStatusItemMenu(&self, menu: &NSMenu);
+        pub unsafe fn popUpStatusItemMenu(&self, menu: &NSMenu);
     );
 }

@@ -45,20 +45,16 @@ impl NSBindingSelectionMarker {
 
         #[unsafe(method(multipleValuesSelectionMarker))]
         #[unsafe(method_family = none)]
-        pub fn multipleValuesSelectionMarker() -> Retained<NSBindingSelectionMarker>;
+        pub unsafe fn multipleValuesSelectionMarker() -> Retained<NSBindingSelectionMarker>;
 
         #[unsafe(method(noSelectionMarker))]
         #[unsafe(method_family = none)]
-        pub fn noSelectionMarker() -> Retained<NSBindingSelectionMarker>;
+        pub unsafe fn noSelectionMarker() -> Retained<NSBindingSelectionMarker>;
 
         #[unsafe(method(notApplicableSelectionMarker))]
         #[unsafe(method_family = none)]
-        pub fn notApplicableSelectionMarker() -> Retained<NSBindingSelectionMarker>;
+        pub unsafe fn notApplicableSelectionMarker() -> Retained<NSBindingSelectionMarker>;
 
-        /// # Safety
-        ///
-        /// - `placeholder` should be of the correct type.
-        /// - `object_class` probably has further requirements.
         #[unsafe(method(setDefaultPlaceholder:forMarker:onClass:withBinding:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDefaultPlaceholder_forMarker_onClass_withBinding(
@@ -68,9 +64,6 @@ impl NSBindingSelectionMarker {
             binding: &NSBindingName,
         );
 
-        /// # Safety
-        ///
-        /// `object_class` probably has further requirements.
         #[unsafe(method(defaultPlaceholderForMarker:onClass:withBinding:))]
         #[unsafe(method_family = none)]
         pub unsafe fn defaultPlaceholderForMarker_onClass_withBinding(
@@ -92,25 +85,19 @@ impl NSBindingSelectionMarker {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmultiplevaluesmarker?language=objc)
-    #[deprecated]
     pub static NSMultipleValuesMarker: &'static AnyObject;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsnoselectionmarker?language=objc)
-    #[deprecated]
     pub static NSNoSelectionMarker: &'static AnyObject;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsnotapplicablemarker?language=objc)
-    #[deprecated]
     pub static NSNotApplicableMarker: &'static AnyObject;
 }
 
-/// # Safety
-///
-/// `object` should be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn NSIsControllerMarker(object: Option<&AnyObject>) -> bool {
     extern "C-unwind" {
@@ -150,20 +137,17 @@ pub unsafe trait NSObjectNSKeyValueBindingCreation:
     extern_methods!(
         #[unsafe(method(exposeBinding:))]
         #[unsafe(method_family = none)]
-        fn exposeBinding(binding: &NSBindingName);
+        unsafe fn exposeBinding(binding: &NSBindingName);
 
         #[unsafe(method(exposedBindings))]
         #[unsafe(method_family = none)]
-        fn exposedBindings(&self) -> Retained<NSArray<NSBindingName>>;
+        unsafe fn exposedBindings(&self) -> Retained<NSArray<NSBindingName>>;
 
         #[unsafe(method(valueClassForBinding:))]
         #[unsafe(method_family = none)]
-        fn valueClassForBinding(&self, binding: &NSBindingName) -> Option<&'static AnyClass>;
+        unsafe fn valueClassForBinding(&self, binding: &NSBindingName)
+            -> Option<&'static AnyClass>;
 
-        /// # Safety
-        ///
-        /// - `observable` should be of the correct type.
-        /// - `options` generic should be of the correct type.
         #[unsafe(method(bind:toObject:withKeyPath:options:))]
         #[unsafe(method_family = none)]
         unsafe fn bind_toObject_withKeyPath_options(
@@ -176,11 +160,11 @@ pub unsafe trait NSObjectNSKeyValueBindingCreation:
 
         #[unsafe(method(unbind:))]
         #[unsafe(method_family = none)]
-        fn unbind(&self, binding: &NSBindingName);
+        unsafe fn unbind(&self, binding: &NSBindingName);
 
         #[unsafe(method(infoForBinding:))]
         #[unsafe(method_family = none)]
-        fn infoForBinding(
+        unsafe fn infoForBinding(
             &self,
             binding: &NSBindingName,
         ) -> Option<Retained<NSDictionary<NSBindingInfoKey, AnyObject>>>;
@@ -189,7 +173,7 @@ pub unsafe trait NSObjectNSKeyValueBindingCreation:
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(optionDescriptionsForBinding:))]
         #[unsafe(method_family = none)]
-        fn optionDescriptionsForBinding(
+        unsafe fn optionDescriptionsForBinding(
             &self,
             binding: &NSBindingName,
         ) -> Retained<NSArray<NSAttributeDescription>>;
@@ -204,17 +188,12 @@ extern_protocol!(
     pub unsafe trait NSEditor: NSObjectProtocol + MainThreadOnly {
         #[unsafe(method(discardEditing))]
         #[unsafe(method_family = none)]
-        fn discardEditing(&self);
+        unsafe fn discardEditing(&self);
 
         #[unsafe(method(commitEditing))]
         #[unsafe(method_family = none)]
-        fn commitEditing(&self) -> bool;
+        unsafe fn commitEditing(&self) -> bool;
 
-        /// # Safety
-        ///
-        /// - `delegate` should be of the correct type.
-        /// - `did_commit_selector` must be a valid selector.
-        /// - `context_info` must be a valid pointer or null.
         #[unsafe(method(commitEditingWithDelegate:didCommitSelector:contextInfo:))]
         #[unsafe(method_family = none)]
         unsafe fn commitEditingWithDelegate_didCommitSelector_contextInfo(
@@ -226,7 +205,7 @@ extern_protocol!(
 
         #[unsafe(method(commitEditingAndReturnError:_))]
         #[unsafe(method_family = none)]
-        fn commitEditingAndReturnError(&self) -> Result<(), Retained<NSError>>;
+        unsafe fn commitEditingAndReturnError(&self) -> Result<(), Retained<NSError>>;
     }
 );
 
@@ -236,12 +215,12 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(objectDidBeginEditing:))]
         #[unsafe(method_family = none)]
-        fn objectDidBeginEditing(&self, editor: &ProtocolObject<dyn NSEditor>);
+        unsafe fn objectDidBeginEditing(&self, editor: &ProtocolObject<dyn NSEditor>);
 
         #[optional]
         #[unsafe(method(objectDidEndEditing:))]
         #[unsafe(method_family = none)]
-        fn objectDidEndEditing(&self, editor: &ProtocolObject<dyn NSEditor>);
+        unsafe fn objectDidEndEditing(&self, editor: &ProtocolObject<dyn NSEditor>);
     }
 );
 

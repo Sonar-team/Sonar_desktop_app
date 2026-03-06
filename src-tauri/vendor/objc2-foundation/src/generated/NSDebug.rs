@@ -22,10 +22,6 @@ extern "C" {
     pub static NSDeallocateZombies: Bool;
 }
 
-/// # Safety
-///
-/// - `an_object` should be of the correct type.
-/// - `an_object` might not allow `None`.
 #[inline]
 pub unsafe extern "C-unwind" fn NSIsFreedObject(an_object: Option<&AnyObject>) -> bool {
     extern "C-unwind" {
@@ -34,29 +30,17 @@ pub unsafe extern "C-unwind" fn NSIsFreedObject(an_object: Option<&AnyObject>) -
     unsafe { NSIsFreedObject(an_object) }.as_bool()
 }
 
-/// **************    Stack processing    ***************
-#[inline]
-pub extern "C-unwind" fn NSFrameAddress(frame: NSUInteger) -> *mut c_void {
-    extern "C-unwind" {
-        fn NSFrameAddress(frame: NSUInteger) -> *mut c_void;
-    }
-    unsafe { NSFrameAddress(frame) }
+extern "C-unwind" {
+    /// **************    Stack processing    ***************
+    pub fn NSFrameAddress(frame: NSUInteger) -> *mut c_void;
 }
 
-#[inline]
-pub extern "C-unwind" fn NSReturnAddress(frame: NSUInteger) -> *mut c_void {
-    extern "C-unwind" {
-        fn NSReturnAddress(frame: NSUInteger) -> *mut c_void;
-    }
-    unsafe { NSReturnAddress(frame) }
+extern "C-unwind" {
+    pub fn NSReturnAddress(frame: NSUInteger) -> *mut c_void;
 }
 
-#[inline]
-pub extern "C-unwind" fn NSCountFrames() -> NSUInteger {
-    extern "C-unwind" {
-        fn NSCountFrames() -> NSUInteger;
-    }
-    unsafe { NSCountFrames() }
+extern "C-unwind" {
+    pub fn NSCountFrames() -> NSUInteger;
 }
 
 /// NSAutoreleasePoolDebugging.
@@ -75,9 +59,5 @@ extern "C" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `object` should be of the correct type.
-    /// - `object` might not allow `None`.
     pub fn NSRecordAllocationEvent(event_type: c_int, object: Option<&AnyObject>);
 }

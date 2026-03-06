@@ -47,14 +47,6 @@ impl WebResource {
         /// Parameter `frameName`: The frame name of the resource if the resource represents the contents of an entire HTML frame (can be nil).
         ///
         /// Returns: An initialized WebResource.
-        ///
-        /// # Safety
-        ///
-        /// - `data` might not allow `None`.
-        /// - `url` might not allow `None`.
-        /// - `mime_type` might not allow `None`.
-        /// - `text_encoding_name` might not allow `None`.
-        /// - `frame_name` might not allow `None`.
         #[unsafe(method(initWithData:URL:MIMEType:textEncodingName:frameName:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithData_URL_MIMEType_textEncodingName_frameName(

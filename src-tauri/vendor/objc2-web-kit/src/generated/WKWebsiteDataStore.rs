@@ -125,24 +125,6 @@ impl WKWebsiteDataStore {
         #[unsafe(method_family = none)]
         pub unsafe fn identifier(&self) -> Option<Retained<NSUUID>>;
 
-        #[cfg(feature = "block2")]
-        #[unsafe(method(fetchDataOfTypes:completionHandler:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn fetchDataOfTypes_completionHandler(
-            &self,
-            data_types: &NSSet<NSString>,
-            completion_handler: &block2::DynBlock<dyn Fn(*mut NSData, *mut NSError)>,
-        );
-
-        #[cfg(feature = "block2")]
-        #[unsafe(method(restoreData:completionHandler:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn restoreData_completionHandler(
-            &self,
-            data: &NSData,
-            completion_handler: &block2::DynBlock<dyn Fn(*mut NSError)>,
-        );
-
         /// Get a persistent data store.
         ///
         /// Parameter `identifier`: An identifier that is used to uniquely identify the data store.

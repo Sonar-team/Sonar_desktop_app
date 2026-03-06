@@ -17,7 +17,7 @@ extern_protocol!(
         ))]
         #[unsafe(method(frameInView:))]
         #[unsafe(method_family = none)]
-        fn frameInView(&self, reference_view: &UIView) -> CGRect;
+        unsafe fn frameInView(&self, reference_view: &UIView) -> CGRect;
     }
 );
 

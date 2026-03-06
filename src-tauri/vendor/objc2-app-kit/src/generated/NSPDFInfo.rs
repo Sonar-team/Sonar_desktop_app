@@ -34,59 +34,52 @@ impl NSPDFInfo {
     extern_methods!(
         #[unsafe(method(URL))]
         #[unsafe(method_family = none)]
-        pub fn URL(&self) -> Option<Retained<NSURL>>;
+        pub unsafe fn URL(&self) -> Option<Retained<NSURL>>;
 
         /// Setter for [`URL`][Self::URL].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setURL:))]
         #[unsafe(method_family = none)]
-        pub fn setURL(&self, url: Option<&NSURL>);
+        pub unsafe fn setURL(&self, url: Option<&NSURL>);
 
         #[unsafe(method(isFileExtensionHidden))]
         #[unsafe(method_family = none)]
-        pub fn isFileExtensionHidden(&self) -> bool;
+        pub unsafe fn isFileExtensionHidden(&self) -> bool;
 
         /// Setter for [`isFileExtensionHidden`][Self::isFileExtensionHidden].
         #[unsafe(method(setFileExtensionHidden:))]
         #[unsafe(method_family = none)]
-        pub fn setFileExtensionHidden(&self, file_extension_hidden: bool);
+        pub unsafe fn setFileExtensionHidden(&self, file_extension_hidden: bool);
 
         #[unsafe(method(tagNames))]
         #[unsafe(method_family = none)]
-        pub fn tagNames(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn tagNames(&self) -> Retained<NSArray<NSString>>;
 
         /// Setter for [`tagNames`][Self::tagNames].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTagNames:))]
         #[unsafe(method_family = none)]
-        pub fn setTagNames(&self, tag_names: &NSArray<NSString>);
+        pub unsafe fn setTagNames(&self, tag_names: &NSArray<NSString>);
 
         #[cfg(feature = "NSPrintInfo")]
         #[unsafe(method(orientation))]
         #[unsafe(method_family = none)]
-        pub fn orientation(&self) -> NSPaperOrientation;
+        pub unsafe fn orientation(&self) -> NSPaperOrientation;
 
         #[cfg(feature = "NSPrintInfo")]
         /// Setter for [`orientation`][Self::orientation].
         #[unsafe(method(setOrientation:))]
         #[unsafe(method_family = none)]
-        pub fn setOrientation(&self, orientation: NSPaperOrientation);
+        pub unsafe fn setOrientation(&self, orientation: NSPaperOrientation);
 
         #[unsafe(method(paperSize))]
         #[unsafe(method_family = none)]
-        pub fn paperSize(&self) -> NSSize;
+        pub unsafe fn paperSize(&self) -> NSSize;
 
         /// Setter for [`paperSize`][Self::paperSize].
         #[unsafe(method(setPaperSize:))]
         #[unsafe(method_family = none)]
-        pub fn setPaperSize(&self, paper_size: NSSize);
+        pub unsafe fn setPaperSize(&self, paper_size: NSSize);
 
         #[cfg(feature = "NSPrintInfo")]
-        /// # Safety
-        ///
-        /// The returned generic should be of the correct type.
         #[unsafe(method(attributes))]
         #[unsafe(method_family = none)]
         pub unsafe fn attributes(
@@ -100,17 +93,10 @@ impl NSPDFInfo {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSPDFInfo {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

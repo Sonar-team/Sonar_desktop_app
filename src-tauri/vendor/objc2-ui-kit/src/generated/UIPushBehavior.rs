@@ -48,7 +48,7 @@ impl UIPushBehavior {
     extern_methods!(
         #[unsafe(method(initWithItems:mode:))]
         #[unsafe(method_family = init)]
-        pub fn initWithItems_mode(
+        pub unsafe fn initWithItems_mode(
             this: Allocated<Self>,
             items: &NSArray<ProtocolObject<dyn UIDynamicItem>>,
             mode: UIPushBehaviorMode,
@@ -56,20 +56,20 @@ impl UIPushBehavior {
 
         #[unsafe(method(addItem:))]
         #[unsafe(method_family = none)]
-        pub fn addItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
+        pub unsafe fn addItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
 
         #[unsafe(method(removeItem:))]
         #[unsafe(method_family = none)]
-        pub fn removeItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
+        pub unsafe fn removeItem(&self, item: &ProtocolObject<dyn UIDynamicItem>);
 
         #[unsafe(method(items))]
         #[unsafe(method_family = none)]
-        pub fn items(&self) -> Retained<NSArray<ProtocolObject<dyn UIDynamicItem>>>;
+        pub unsafe fn items(&self) -> Retained<NSArray<ProtocolObject<dyn UIDynamicItem>>>;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         #[unsafe(method(targetOffsetFromCenterForItem:))]
         #[unsafe(method_family = none)]
-        pub fn targetOffsetFromCenterForItem(
+        pub unsafe fn targetOffsetFromCenterForItem(
             &self,
             item: &ProtocolObject<dyn UIDynamicItem>,
         ) -> UIOffset;
@@ -77,7 +77,7 @@ impl UIPushBehavior {
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         #[unsafe(method(setTargetOffsetFromCenter:forItem:))]
         #[unsafe(method_family = none)]
-        pub fn setTargetOffsetFromCenter_forItem(
+        pub unsafe fn setTargetOffsetFromCenter_forItem(
             &self,
             o: UIOffset,
             item: &ProtocolObject<dyn UIDynamicItem>,
@@ -85,54 +85,54 @@ impl UIPushBehavior {
 
         #[unsafe(method(mode))]
         #[unsafe(method_family = none)]
-        pub fn mode(&self) -> UIPushBehaviorMode;
+        pub unsafe fn mode(&self) -> UIPushBehaviorMode;
 
         #[unsafe(method(active))]
         #[unsafe(method_family = none)]
-        pub fn active(&self) -> bool;
+        pub unsafe fn active(&self) -> bool;
 
         /// Setter for [`active`][Self::active].
         #[unsafe(method(setActive:))]
         #[unsafe(method_family = none)]
-        pub fn setActive(&self, active: bool);
+        pub unsafe fn setActive(&self, active: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
-        pub fn angle(&self) -> CGFloat;
+        pub unsafe fn angle(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`angle`][Self::angle].
         #[unsafe(method(setAngle:))]
         #[unsafe(method_family = none)]
-        pub fn setAngle(&self, angle: CGFloat);
+        pub unsafe fn setAngle(&self, angle: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(magnitude))]
         #[unsafe(method_family = none)]
-        pub fn magnitude(&self) -> CGFloat;
+        pub unsafe fn magnitude(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`magnitude`][Self::magnitude].
         #[unsafe(method(setMagnitude:))]
         #[unsafe(method_family = none)]
-        pub fn setMagnitude(&self, magnitude: CGFloat);
+        pub unsafe fn setMagnitude(&self, magnitude: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(pushDirection))]
         #[unsafe(method_family = none)]
-        pub fn pushDirection(&self) -> CGVector;
+        pub unsafe fn pushDirection(&self) -> CGVector;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`pushDirection`][Self::pushDirection].
         #[unsafe(method(setPushDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setPushDirection(&self, push_direction: CGVector);
+        pub unsafe fn setPushDirection(&self, push_direction: CGVector);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(setAngle:magnitude:))]
         #[unsafe(method_family = none)]
-        pub fn setAngle_magnitude(&self, angle: CGFloat, magnitude: CGFloat);
+        pub unsafe fn setAngle_magnitude(&self, angle: CGFloat, magnitude: CGFloat);
     );
 }
 
@@ -142,10 +142,10 @@ impl UIPushBehavior {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

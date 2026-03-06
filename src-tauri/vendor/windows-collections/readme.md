@@ -10,7 +10,7 @@ Start by adding the following to your Cargo.toml file:
 
 ```toml
 [dependencies.windows-collections]
-version = "0.2"
+version = "0.3"
 ```
 
 Use the Windows collection types as needed:
@@ -29,23 +29,18 @@ Naturally, the Windows collection types work with other Windows crates:
 
 ```rust
 use windows_collections::*;
-use windows_result::*;
 use windows_strings::*;
 
-fn main() -> Result<()> {
-    let greetings =
-        IVectorView::<HSTRING>::from(vec![HSTRING::from("hello"), HSTRING::from("world")]);
+let greetings =
+    IVectorView::<HSTRING>::from(vec![HSTRING::from("hello"), HSTRING::from("world")]);
 
-    for value in greetings {
-        println!("{value}");
-    }
-
-    let map = std::collections::BTreeMap::from([("one".into(), 1), ("two".into(), 2)]);
-    let map = IMapView::<HSTRING, i32>::from(map);
-
-    assert_eq!(map.Lookup(h!("one"))?, 1);
-    assert_eq!(map.Lookup(h!("two"))?, 2);
-
-    Ok(())
+for value in greetings {
+    println!("{value}");
 }
+
+let map = std::collections::BTreeMap::from([("one".into(), 1), ("two".into(), 2)]);
+let map = IMapView::<HSTRING, i32>::from(map);
+
+assert_eq!(map.Lookup(h!("one")).unwrap(), 1);
+assert_eq!(map.Lookup(h!("two")).unwrap(), 2);
 ```

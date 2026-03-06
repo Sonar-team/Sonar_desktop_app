@@ -19,19 +19,16 @@ pub unsafe trait NSObjectUIAccessibilityContainer:
     extern_methods!(
         #[unsafe(method(accessibilityElementCount))]
         #[unsafe(method_family = none)]
-        fn accessibilityElementCount(&self, mtm: MainThreadMarker) -> NSInteger;
+        unsafe fn accessibilityElementCount(&self, mtm: MainThreadMarker) -> NSInteger;
 
         #[unsafe(method(accessibilityElementAtIndex:))]
         #[unsafe(method_family = none)]
-        fn accessibilityElementAtIndex(
+        unsafe fn accessibilityElementAtIndex(
             &self,
             index: NSInteger,
             mtm: MainThreadMarker,
         ) -> Option<Retained<AnyObject>>;
 
-        /// # Safety
-        ///
-        /// `element` should be of the correct type.
         #[unsafe(method(indexOfAccessibilityElement:))]
         #[unsafe(method_family = none)]
         unsafe fn indexOfAccessibilityElement(
@@ -42,13 +39,9 @@ pub unsafe trait NSObjectUIAccessibilityContainer:
 
         #[unsafe(method(accessibilityElements))]
         #[unsafe(method_family = none)]
-        fn accessibilityElements(&self, mtm: MainThreadMarker) -> Option<Retained<NSArray>>;
+        unsafe fn accessibilityElements(&self, mtm: MainThreadMarker) -> Option<Retained<NSArray>>;
 
         /// Setter for [`accessibilityElements`][Self::accessibilityElements].
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_elements` generic should be of the correct type.
         #[unsafe(method(setAccessibilityElements:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityElements(
@@ -60,14 +53,16 @@ pub unsafe trait NSObjectUIAccessibilityContainer:
         #[cfg(feature = "UIAccessibilityConstants")]
         #[unsafe(method(accessibilityContainerType))]
         #[unsafe(method_family = none)]
-        fn accessibilityContainerType(&self, mtm: MainThreadMarker)
-            -> UIAccessibilityContainerType;
+        unsafe fn accessibilityContainerType(
+            &self,
+            mtm: MainThreadMarker,
+        ) -> UIAccessibilityContainerType;
 
         #[cfg(feature = "UIAccessibilityConstants")]
         /// Setter for [`accessibilityContainerType`][Self::accessibilityContainerType].
         #[unsafe(method(setAccessibilityContainerType:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityContainerType(
+        unsafe fn setAccessibilityContainerType(
             &self,
             accessibility_container_type: UIAccessibilityContainerType,
             mtm: MainThreadMarker,
@@ -75,13 +70,9 @@ pub unsafe trait NSObjectUIAccessibilityContainer:
 
         #[unsafe(method(automationElements))]
         #[unsafe(method_family = none)]
-        fn automationElements(&self, mtm: MainThreadMarker) -> Option<Retained<NSArray>>;
+        unsafe fn automationElements(&self, mtm: MainThreadMarker) -> Option<Retained<NSArray>>;
 
         /// Setter for [`automationElements`][Self::automationElements].
-        ///
-        /// # Safety
-        ///
-        /// `automation_elements` generic should be of the correct type.
         #[unsafe(method(setAutomationElements:))]
         #[unsafe(method_family = none)]
         unsafe fn setAutomationElements(
@@ -102,11 +93,11 @@ extern_protocol!(
     {
         #[unsafe(method(accessibilityRowRange))]
         #[unsafe(method_family = none)]
-        fn accessibilityRowRange(&self) -> NSRange;
+        unsafe fn accessibilityRowRange(&self) -> NSRange;
 
         #[unsafe(method(accessibilityColumnRange))]
         #[unsafe(method_family = none)]
-        fn accessibilityColumnRange(&self) -> NSRange;
+        unsafe fn accessibilityColumnRange(&self) -> NSRange;
     }
 );
 
@@ -117,7 +108,7 @@ extern_protocol!(
     {
         #[unsafe(method(accessibilityDataTableCellElementForRow:column:))]
         #[unsafe(method_family = none)]
-        fn accessibilityDataTableCellElementForRow_column(
+        unsafe fn accessibilityDataTableCellElementForRow_column(
             &self,
             row: NSUInteger,
             column: NSUInteger,
@@ -125,16 +116,16 @@ extern_protocol!(
 
         #[unsafe(method(accessibilityRowCount))]
         #[unsafe(method_family = none)]
-        fn accessibilityRowCount(&self) -> NSUInteger;
+        unsafe fn accessibilityRowCount(&self) -> NSUInteger;
 
         #[unsafe(method(accessibilityColumnCount))]
         #[unsafe(method_family = none)]
-        fn accessibilityColumnCount(&self) -> NSUInteger;
+        unsafe fn accessibilityColumnCount(&self) -> NSUInteger;
 
         #[optional]
         #[unsafe(method(accessibilityHeaderElementsForRow:))]
         #[unsafe(method_family = none)]
-        fn accessibilityHeaderElementsForRow(
+        unsafe fn accessibilityHeaderElementsForRow(
             &self,
             row: NSUInteger,
         ) -> Option<Retained<NSArray<ProtocolObject<dyn UIAccessibilityContainerDataTableCell>>>>;
@@ -142,7 +133,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(accessibilityHeaderElementsForColumn:))]
         #[unsafe(method_family = none)]
-        fn accessibilityHeaderElementsForColumn(
+        unsafe fn accessibilityHeaderElementsForColumn(
             &self,
             column: NSUInteger,
         ) -> Option<Retained<NSArray<ProtocolObject<dyn UIAccessibilityContainerDataTableCell>>>>;

@@ -51,10 +51,6 @@ impl NSMappingModel {
 
         #[cfg(feature = "NSEntityMapping")]
         /// Setter for [`entityMappings`][Self::entityMappings].
-        ///
-        /// # Safety
-        ///
-        /// `entity_mappings` might not allow `None`.
         #[unsafe(method(setEntityMappings:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setEntityMappings(&self, entity_mappings: Option<&NSArray<NSEntityMapping>>);

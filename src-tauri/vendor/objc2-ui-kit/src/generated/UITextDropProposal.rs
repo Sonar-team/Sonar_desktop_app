@@ -98,39 +98,39 @@ impl UITextDropProposal {
     extern_methods!(
         #[unsafe(method(dropAction))]
         #[unsafe(method_family = none)]
-        pub fn dropAction(&self) -> UITextDropAction;
+        pub unsafe fn dropAction(&self) -> UITextDropAction;
 
         /// Setter for [`dropAction`][Self::dropAction].
         #[unsafe(method(setDropAction:))]
         #[unsafe(method_family = none)]
-        pub fn setDropAction(&self, drop_action: UITextDropAction);
+        pub unsafe fn setDropAction(&self, drop_action: UITextDropAction);
 
         #[unsafe(method(dropProgressMode))]
         #[unsafe(method_family = none)]
-        pub fn dropProgressMode(&self) -> UITextDropProgressMode;
+        pub unsafe fn dropProgressMode(&self) -> UITextDropProgressMode;
 
         /// Setter for [`dropProgressMode`][Self::dropProgressMode].
         #[unsafe(method(setDropProgressMode:))]
         #[unsafe(method_family = none)]
-        pub fn setDropProgressMode(&self, drop_progress_mode: UITextDropProgressMode);
+        pub unsafe fn setDropProgressMode(&self, drop_progress_mode: UITextDropProgressMode);
 
         #[unsafe(method(useFastSameViewOperations))]
         #[unsafe(method_family = none)]
-        pub fn useFastSameViewOperations(&self) -> bool;
+        pub unsafe fn useFastSameViewOperations(&self) -> bool;
 
         /// Setter for [`useFastSameViewOperations`][Self::useFastSameViewOperations].
         #[unsafe(method(setUseFastSameViewOperations:))]
         #[unsafe(method_family = none)]
-        pub fn setUseFastSameViewOperations(&self, use_fast_same_view_operations: bool);
+        pub unsafe fn setUseFastSameViewOperations(&self, use_fast_same_view_operations: bool);
 
         #[unsafe(method(dropPerformer))]
         #[unsafe(method_family = none)]
-        pub fn dropPerformer(&self) -> UITextDropPerformer;
+        pub unsafe fn dropPerformer(&self) -> UITextDropPerformer;
 
         /// Setter for [`dropPerformer`][Self::dropPerformer].
         #[unsafe(method(setDropPerformer:))]
         #[unsafe(method_family = none)]
-        pub fn setDropPerformer(&self, drop_performer: UITextDropPerformer);
+        pub unsafe fn setDropPerformer(&self, drop_performer: UITextDropPerformer);
     );
 }
 
@@ -140,7 +140,7 @@ impl UITextDropProposal {
     extern_methods!(
         #[unsafe(method(initWithDropOperation:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDropOperation(
+        pub unsafe fn initWithDropOperation(
             this: Allocated<Self>,
             operation: UIDropOperation,
         ) -> Retained<Self>;

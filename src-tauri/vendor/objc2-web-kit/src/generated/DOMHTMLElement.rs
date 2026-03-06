@@ -76,8 +76,6 @@ impl DOMHTMLElement {
         pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
@@ -89,8 +87,6 @@ impl DOMHTMLElement {
         pub unsafe fn lang(&self) -> Retained<NSString>;
 
         /// Setter for [`lang`][Self::lang].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setLang:))]
         #[unsafe(method_family = none)]
@@ -102,8 +98,6 @@ impl DOMHTMLElement {
         pub unsafe fn dir(&self) -> Retained<NSString>;
 
         /// Setter for [`dir`][Self::dir].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setDir:))]
         #[unsafe(method_family = none)]
@@ -125,8 +119,6 @@ impl DOMHTMLElement {
         pub unsafe fn accessKey(&self) -> Retained<NSString>;
 
         /// Setter for [`accessKey`][Self::accessKey].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAccessKey(&self, access_key: Option<&NSString>);
@@ -137,8 +129,6 @@ impl DOMHTMLElement {
         pub unsafe fn innerText(&self) -> Retained<NSString>;
 
         /// Setter for [`innerText`][Self::innerText].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setInnerText:))]
         #[unsafe(method_family = none)]
@@ -150,8 +140,6 @@ impl DOMHTMLElement {
         pub unsafe fn outerText(&self) -> Retained<NSString>;
 
         /// Setter for [`outerText`][Self::outerText].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setOuterText:))]
         #[unsafe(method_family = none)]
@@ -163,8 +151,6 @@ impl DOMHTMLElement {
         pub unsafe fn contentEditable(&self) -> Retained<NSString>;
 
         /// Setter for [`contentEditable`][Self::contentEditable].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setContentEditable:))]
         #[unsafe(method_family = none)]
@@ -181,8 +167,6 @@ impl DOMHTMLElement {
         pub unsafe fn idName(&self) -> Retained<NSString>;
 
         /// Setter for [`idName`][Self::idName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setIdName:))]
         #[unsafe(method_family = none)]

@@ -80,8 +80,6 @@ impl DOMAttr {
         pub unsafe fn value(&self) -> Retained<NSString>;
 
         /// Setter for [`value`][Self::value].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setValue:))]
         #[unsafe(method_family = none)]

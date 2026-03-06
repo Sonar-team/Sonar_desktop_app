@@ -106,8 +106,6 @@ impl DOMHTMLOptionElement {
         pub unsafe fn label(&self) -> Retained<NSString>;
 
         /// Setter for [`label`][Self::label].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setLabel:))]
         #[unsafe(method_family = none)]
@@ -141,8 +139,6 @@ impl DOMHTMLOptionElement {
         pub unsafe fn value(&self) -> Retained<NSString>;
 
         /// Setter for [`value`][Self::value].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setValue:))]
         #[unsafe(method_family = none)]

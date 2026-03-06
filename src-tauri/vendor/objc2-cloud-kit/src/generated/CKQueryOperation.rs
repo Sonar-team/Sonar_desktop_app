@@ -88,43 +88,21 @@ impl CKQueryOperation {
         ) -> Retained<Self>;
 
         #[cfg(feature = "CKQuery")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(query))]
         #[unsafe(method_family = none)]
         pub unsafe fn query(&self) -> Option<Retained<CKQuery>>;
 
         #[cfg(feature = "CKQuery")]
         /// Setter for [`query`][Self::query].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setQuery:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setQuery(&self, query: Option<&CKQuery>);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(cursor))]
         #[unsafe(method_family = none)]
         pub unsafe fn cursor(&self) -> Option<Retained<CKQueryCursor>>;
 
         /// Setter for [`cursor`][Self::cursor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setCursor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setCursor(&self, cursor: Option<&CKQueryCursor>);
@@ -136,24 +114,12 @@ impl CKQueryOperation {
         /// For query operations constructed using a cursor, this property is ignored and instead will be evaluated in the record zone in which the cursor was originally created.
         /// Queries that do not specify a
         /// `zoneID`will perform a query across all zones in the database.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(zoneID))]
         #[unsafe(method_family = none)]
         pub unsafe fn zoneID(&self) -> Option<Retained<CKRecordZoneID>>;
 
         #[cfg(feature = "CKRecordZoneID")]
         /// Setter for [`zoneID`][Self::zoneID].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setZoneID:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setZoneID(&self, zone_id: Option<&CKRecordZoneID>);
@@ -166,21 +132,11 @@ impl CKQueryOperation {
         /// - During the process of querying and fetching the results, some records were deleted, or became un-readable by the current user.
         /// When determining if there are more records to fetch, always check for the presence of a cursor in
         /// `queryCompletionBlock.`
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(resultsLimit))]
         #[unsafe(method_family = none)]
         pub unsafe fn resultsLimit(&self) -> NSUInteger;
 
         /// Setter for [`resultsLimit`][Self::resultsLimit].
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setResultsLimit:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setResultsLimit(&self, results_limit: NSUInteger);
@@ -192,24 +148,12 @@ impl CKQueryOperation {
         /// If nil, declares the entire record should be downloaded. If set to an empty array, declares that no user fields should be downloaded.
         /// Defaults to
         /// `nil.`
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(desiredKeys))]
         #[unsafe(method_family = none)]
         pub unsafe fn desiredKeys(&self) -> Option<Retained<NSArray<CKRecordFieldKey>>>;
 
         #[cfg(feature = "CKRecord")]
         /// Setter for [`desiredKeys`][Self::desiredKeys].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setDesiredKeys:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDesiredKeys(&self, desired_keys: Option<&NSArray<CKRecordFieldKey>>);
@@ -225,13 +169,6 @@ impl CKQueryOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument must be a valid pointer.
-        /// - This might not be thread-safe.
         #[deprecated = "Use recordMatchedBlock instead, which surfaces per-record errors"]
         #[unsafe(method(recordFetchedBlock))]
         #[unsafe(method_family = none)]
@@ -240,12 +177,6 @@ impl CKQueryOperation {
 
         #[cfg(all(feature = "CKRecord", feature = "block2"))]
         /// Setter for [`recordFetchedBlock`][Self::recordFetchedBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[deprecated = "Use recordMatchedBlock instead, which surfaces per-record errors"]
         #[unsafe(method(setRecordFetchedBlock:))]
         #[unsafe(method_family = none)]
@@ -264,15 +195,6 @@ impl CKQueryOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - The returned block's argument 3 must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[unsafe(method(recordMatchedBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn recordMatchedBlock(
@@ -281,12 +203,6 @@ impl CKQueryOperation {
 
         #[cfg(all(feature = "CKRecord", feature = "CKRecordID", feature = "block2"))]
         /// Setter for [`recordMatchedBlock`][Self::recordMatchedBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setRecordMatchedBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRecordMatchedBlock(
@@ -315,14 +231,6 @@ impl CKQueryOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer or null.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[unsafe(method(queryCompletionBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn queryCompletionBlock(
@@ -331,12 +239,6 @@ impl CKQueryOperation {
 
         #[cfg(feature = "block2")]
         /// Setter for [`queryCompletionBlock`][Self::queryCompletionBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setQueryCompletionBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setQueryCompletionBlock(

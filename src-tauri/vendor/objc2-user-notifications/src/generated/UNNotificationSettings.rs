@@ -129,63 +129,63 @@ impl UNNotificationSettings {
     extern_methods!(
         #[unsafe(method(authorizationStatus))]
         #[unsafe(method_family = none)]
-        pub fn authorizationStatus(&self) -> UNAuthorizationStatus;
+        pub unsafe fn authorizationStatus(&self) -> UNAuthorizationStatus;
 
         #[unsafe(method(soundSetting))]
         #[unsafe(method_family = none)]
-        pub fn soundSetting(&self) -> UNNotificationSetting;
+        pub unsafe fn soundSetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(badgeSetting))]
         #[unsafe(method_family = none)]
-        pub fn badgeSetting(&self) -> UNNotificationSetting;
+        pub unsafe fn badgeSetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(alertSetting))]
         #[unsafe(method_family = none)]
-        pub fn alertSetting(&self) -> UNNotificationSetting;
+        pub unsafe fn alertSetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(notificationCenterSetting))]
         #[unsafe(method_family = none)]
-        pub fn notificationCenterSetting(&self) -> UNNotificationSetting;
+        pub unsafe fn notificationCenterSetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(lockScreenSetting))]
         #[unsafe(method_family = none)]
-        pub fn lockScreenSetting(&self) -> UNNotificationSetting;
+        pub unsafe fn lockScreenSetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(carPlaySetting))]
         #[unsafe(method_family = none)]
-        pub fn carPlaySetting(&self) -> UNNotificationSetting;
+        pub unsafe fn carPlaySetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(alertStyle))]
         #[unsafe(method_family = none)]
-        pub fn alertStyle(&self) -> UNAlertStyle;
+        pub unsafe fn alertStyle(&self) -> UNAlertStyle;
 
         #[unsafe(method(showPreviewsSetting))]
         #[unsafe(method_family = none)]
-        pub fn showPreviewsSetting(&self) -> UNShowPreviewsSetting;
+        pub unsafe fn showPreviewsSetting(&self) -> UNShowPreviewsSetting;
 
         #[unsafe(method(criticalAlertSetting))]
         #[unsafe(method_family = none)]
-        pub fn criticalAlertSetting(&self) -> UNNotificationSetting;
+        pub unsafe fn criticalAlertSetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(providesAppNotificationSettings))]
         #[unsafe(method_family = none)]
-        pub fn providesAppNotificationSettings(&self) -> bool;
+        pub unsafe fn providesAppNotificationSettings(&self) -> bool;
 
         #[unsafe(method(announcementSetting))]
         #[unsafe(method_family = none)]
-        pub fn announcementSetting(&self) -> UNNotificationSetting;
+        pub unsafe fn announcementSetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(timeSensitiveSetting))]
         #[unsafe(method_family = none)]
-        pub fn timeSensitiveSetting(&self) -> UNNotificationSetting;
+        pub unsafe fn timeSensitiveSetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(scheduledDeliverySetting))]
         #[unsafe(method_family = none)]
-        pub fn scheduledDeliverySetting(&self) -> UNNotificationSetting;
+        pub unsafe fn scheduledDeliverySetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(directMessagesSetting))]
         #[unsafe(method_family = none)]
-        pub fn directMessagesSetting(&self) -> UNNotificationSetting;
+        pub unsafe fn directMessagesSetting(&self) -> UNNotificationSetting;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

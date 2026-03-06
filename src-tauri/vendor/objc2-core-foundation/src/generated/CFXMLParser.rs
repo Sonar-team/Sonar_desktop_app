@@ -10,7 +10,6 @@ use objc2::__framework_prelude::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfxmlparser?language=objc)
-#[doc(alias = "CFXMLParserRef")]
 #[repr(C)]
 pub struct CFXMLParser {
     inner: [u8; 0],
@@ -149,7 +148,6 @@ pub type CFXMLParserHandleErrorCallBack = Option<
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfxmlparsercallbacks?language=objc)
 #[cfg(all(feature = "CFData", feature = "CFURL", feature = "CFXMLNode"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CFXMLParserCallBacks {
     pub version: CFIndex,
@@ -203,7 +201,6 @@ pub type CFXMLParserCopyDescriptionCallBack =
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfxmlparsercontext?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CFXMLParserContext {
     pub version: CFIndex,
@@ -244,13 +241,6 @@ unsafe impl ConcreteType for CFXMLParser {
 }
 
 impl CFXMLParser {
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `xml_data` might not allow `None`.
-    /// - `data_source` might not allow `None`.
-    /// - `call_backs` must be a valid pointer.
-    /// - `context` must be a valid pointer.
     #[doc(alias = "CFXMLParserCreate")]
     #[cfg(all(feature = "CFData", feature = "CFURL", feature = "CFXMLNode"))]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
@@ -289,12 +279,6 @@ impl CFXMLParser {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `data_source` might not allow `None`.
-    /// - `call_backs` must be a valid pointer.
-    /// - `context` must be a valid pointer.
     #[doc(alias = "CFXMLParserCreateWithDataFromURL")]
     #[cfg(all(feature = "CFData", feature = "CFURL", feature = "CFXMLNode"))]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
@@ -330,27 +314,21 @@ impl CFXMLParser {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `context` must be a valid pointer.
     #[doc(alias = "CFXMLParserGetContext")]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
     #[inline]
-    pub unsafe fn context(&self, context: *mut CFXMLParserContext) {
+    pub unsafe fn context(self: &CFXMLParser, context: *mut CFXMLParserContext) {
         extern "C-unwind" {
             fn CFXMLParserGetContext(parser: &CFXMLParser, context: *mut CFXMLParserContext);
         }
         unsafe { CFXMLParserGetContext(self, context) }
     }
 
-    /// # Safety
-    ///
-    /// `call_backs` must be a valid pointer.
     #[doc(alias = "CFXMLParserGetCallBacks")]
     #[cfg(all(feature = "CFData", feature = "CFURL", feature = "CFXMLNode"))]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
     #[inline]
-    pub unsafe fn call_backs(&self, call_backs: *mut CFXMLParserCallBacks) {
+    pub unsafe fn call_backs(self: &CFXMLParser, call_backs: *mut CFXMLParserCallBacks) {
         extern "C-unwind" {
             fn CFXMLParserGetCallBacks(parser: &CFXMLParser, call_backs: *mut CFXMLParserCallBacks);
         }
@@ -361,7 +339,7 @@ impl CFXMLParser {
     #[cfg(feature = "CFURL")]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
     #[inline]
-    pub fn source_url(&self) -> Option<CFRetained<CFURL>> {
+    pub unsafe fn source_url(self: &CFXMLParser) -> Option<CFRetained<CFURL>> {
         extern "C-unwind" {
             fn CFXMLParserGetSourceURL(parser: &CFXMLParser) -> Option<NonNull<CFURL>>;
         }
@@ -372,7 +350,7 @@ impl CFXMLParser {
     #[doc(alias = "CFXMLParserGetLocation")]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
     #[inline]
-    pub fn location(&self) -> CFIndex {
+    pub unsafe fn location(self: &CFXMLParser) -> CFIndex {
         extern "C-unwind" {
             fn CFXMLParserGetLocation(parser: &CFXMLParser) -> CFIndex;
         }
@@ -382,7 +360,7 @@ impl CFXMLParser {
     #[doc(alias = "CFXMLParserGetLineNumber")]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
     #[inline]
-    pub fn line_number(&self) -> CFIndex {
+    pub unsafe fn line_number(self: &CFXMLParser) -> CFIndex {
         extern "C-unwind" {
             fn CFXMLParserGetLineNumber(parser: &CFXMLParser) -> CFIndex;
         }
@@ -392,7 +370,7 @@ impl CFXMLParser {
     #[doc(alias = "CFXMLParserGetDocument")]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
     #[inline]
-    pub fn document(&self) -> *mut c_void {
+    pub unsafe fn document(self: &CFXMLParser) -> *mut c_void {
         extern "C-unwind" {
             fn CFXMLParserGetDocument(parser: &CFXMLParser) -> *mut c_void;
         }
@@ -402,7 +380,7 @@ impl CFXMLParser {
     #[doc(alias = "CFXMLParserGetStatusCode")]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
     #[inline]
-    pub fn status_code(&self) -> CFXMLParserStatusCode {
+    pub unsafe fn status_code(self: &CFXMLParser) -> CFXMLParserStatusCode {
         extern "C-unwind" {
             fn CFXMLParserGetStatusCode(parser: &CFXMLParser) -> CFXMLParserStatusCode;
         }
@@ -412,7 +390,7 @@ impl CFXMLParser {
     #[doc(alias = "CFXMLParserCopyErrorDescription")]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
     #[inline]
-    pub fn error_description(&self) -> Option<CFRetained<CFString>> {
+    pub unsafe fn error_description(self: &CFXMLParser) -> Option<CFRetained<CFString>> {
         extern "C-unwind" {
             fn CFXMLParserCopyErrorDescription(parser: &CFXMLParser) -> Option<NonNull<CFString>>;
         }
@@ -420,14 +398,11 @@ impl CFXMLParser {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `error_description` might not allow `None`.
     #[doc(alias = "CFXMLParserAbort")]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
     #[inline]
     pub unsafe fn abort(
-        &self,
+        self: &CFXMLParser,
         error_code: CFXMLParserStatusCode,
         error_description: Option<&CFString>,
     ) {
@@ -444,7 +419,7 @@ impl CFXMLParser {
     #[doc(alias = "CFXMLParserParse")]
     #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
     #[inline]
-    pub fn parse(&self) -> bool {
+    pub unsafe fn parse(self: &CFXMLParser) -> bool {
         extern "C-unwind" {
             fn CFXMLParserParse(parser: &CFXMLParser) -> Boolean;
         }
@@ -453,11 +428,6 @@ impl CFXMLParser {
     }
 }
 
-/// # Safety
-///
-/// - `allocator` might not allow `None`.
-/// - `xml_data` might not allow `None`.
-/// - `data_source` might not allow `None`.
 #[cfg(all(
     feature = "CFData",
     feature = "CFTree",
@@ -494,12 +464,6 @@ pub unsafe extern "C-unwind" fn CFXMLTreeCreateFromData(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `allocator` might not allow `None`.
-/// - `xml_data` might not allow `None`.
-/// - `data_source` might not allow `None`.
-/// - `error_dict` must be a valid pointer.
 #[cfg(all(
     feature = "CFData",
     feature = "CFDictionary",
@@ -540,10 +504,6 @@ pub unsafe extern "C-unwind" fn CFXMLTreeCreateFromDataWithError(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `allocator` might not allow `None`.
-/// - `data_source` might not allow `None`.
 #[cfg(all(feature = "CFTree", feature = "CFURL", feature = "CFXMLNode"))]
 #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
 #[inline]
@@ -567,10 +527,6 @@ pub unsafe extern "C-unwind" fn CFXMLTreeCreateWithDataFromURL(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `allocator` might not allow `None`.
-/// - `xml_tree` might not allow `None`.
 #[cfg(all(feature = "CFData", feature = "CFTree", feature = "CFXMLNode"))]
 #[deprecated = "CFXMLParser is deprecated, use NSXMLParser, NSXMLDocument or libxml2 library instead"]
 #[inline]
@@ -588,12 +544,6 @@ pub unsafe extern "C-unwind" fn CFXMLTreeCreateXMLData(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `allocator` might not allow `None`.
-/// - `string` might not allow `None`.
-/// - `entities_dictionary` generics must be of the correct type.
-/// - `entities_dictionary` might not allow `None`.
 #[cfg(feature = "CFDictionary")]
 #[inline]
 pub unsafe extern "C-unwind" fn CFXMLCreateStringByEscapingEntities(
@@ -613,12 +563,6 @@ pub unsafe extern "C-unwind" fn CFXMLCreateStringByEscapingEntities(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `allocator` might not allow `None`.
-/// - `string` might not allow `None`.
-/// - `entities_dictionary` generics must be of the correct type.
-/// - `entities_dictionary` might not allow `None`.
 #[cfg(feature = "CFDictionary")]
 #[inline]
 pub unsafe extern "C-unwind" fn CFXMLCreateStringByUnescapingEntities(
@@ -743,7 +687,7 @@ extern "C-unwind" {
 #[cfg(feature = "CFURL")]
 #[deprecated = "renamed to `CFXMLParser::source_url`"]
 #[inline]
-pub extern "C-unwind" fn CFXMLParserGetSourceURL(
+pub unsafe extern "C-unwind" fn CFXMLParserGetSourceURL(
     parser: &CFXMLParser,
 ) -> Option<CFRetained<CFURL>> {
     extern "C-unwind" {
@@ -753,45 +697,29 @@ pub extern "C-unwind" fn CFXMLParserGetSourceURL(
     ret.map(|ret| unsafe { CFRetained::retain(ret) })
 }
 
-#[deprecated = "renamed to `CFXMLParser::location`"]
-#[inline]
-pub extern "C-unwind" fn CFXMLParserGetLocation(parser: &CFXMLParser) -> CFIndex {
-    extern "C-unwind" {
-        fn CFXMLParserGetLocation(parser: &CFXMLParser) -> CFIndex;
-    }
-    unsafe { CFXMLParserGetLocation(parser) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CFXMLParser::location`"]
+    pub fn CFXMLParserGetLocation(parser: &CFXMLParser) -> CFIndex;
 }
 
-#[deprecated = "renamed to `CFXMLParser::line_number`"]
-#[inline]
-pub extern "C-unwind" fn CFXMLParserGetLineNumber(parser: &CFXMLParser) -> CFIndex {
-    extern "C-unwind" {
-        fn CFXMLParserGetLineNumber(parser: &CFXMLParser) -> CFIndex;
-    }
-    unsafe { CFXMLParserGetLineNumber(parser) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CFXMLParser::line_number`"]
+    pub fn CFXMLParserGetLineNumber(parser: &CFXMLParser) -> CFIndex;
 }
 
-#[deprecated = "renamed to `CFXMLParser::document`"]
-#[inline]
-pub extern "C-unwind" fn CFXMLParserGetDocument(parser: &CFXMLParser) -> *mut c_void {
-    extern "C-unwind" {
-        fn CFXMLParserGetDocument(parser: &CFXMLParser) -> *mut c_void;
-    }
-    unsafe { CFXMLParserGetDocument(parser) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CFXMLParser::document`"]
+    pub fn CFXMLParserGetDocument(parser: &CFXMLParser) -> *mut c_void;
 }
 
-#[deprecated = "renamed to `CFXMLParser::status_code`"]
-#[inline]
-pub extern "C-unwind" fn CFXMLParserGetStatusCode(parser: &CFXMLParser) -> CFXMLParserStatusCode {
-    extern "C-unwind" {
-        fn CFXMLParserGetStatusCode(parser: &CFXMLParser) -> CFXMLParserStatusCode;
-    }
-    unsafe { CFXMLParserGetStatusCode(parser) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CFXMLParser::status_code`"]
+    pub fn CFXMLParserGetStatusCode(parser: &CFXMLParser) -> CFXMLParserStatusCode;
 }
 
 #[deprecated = "renamed to `CFXMLParser::error_description`"]
 #[inline]
-pub extern "C-unwind" fn CFXMLParserCopyErrorDescription(
+pub unsafe extern "C-unwind" fn CFXMLParserCopyErrorDescription(
     parser: &CFXMLParser,
 ) -> Option<CFRetained<CFString>> {
     extern "C-unwind" {
@@ -812,7 +740,7 @@ extern "C-unwind" {
 
 #[deprecated = "renamed to `CFXMLParser::parse`"]
 #[inline]
-pub extern "C-unwind" fn CFXMLParserParse(parser: &CFXMLParser) -> bool {
+pub unsafe extern "C-unwind" fn CFXMLParserParse(parser: &CFXMLParser) -> bool {
     extern "C-unwind" {
         fn CFXMLParserParse(parser: &CFXMLParser) -> Boolean;
     }

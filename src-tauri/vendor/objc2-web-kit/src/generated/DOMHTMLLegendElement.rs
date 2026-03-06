@@ -95,8 +95,6 @@ impl DOMHTMLLegendElement {
         pub unsafe fn align(&self) -> Retained<NSString>;
 
         /// Setter for [`align`][Self::align].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAlign:))]
         #[unsafe(method_family = none)]
@@ -108,8 +106,6 @@ impl DOMHTMLLegendElement {
         pub unsafe fn accessKey(&self) -> Retained<NSString>;
 
         /// Setter for [`accessKey`][Self::accessKey].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAccessKey:))]
         #[unsafe(method_family = none)]

@@ -33,9 +33,6 @@ extern_conformance!(
 impl NSPropertyDescription {
     extern_methods!(
         #[cfg(feature = "NSEntityDescription")]
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(entity))]
         #[unsafe(method_family = none)]
         pub unsafe fn entity(&self) -> Retained<NSEntityDescription>;
@@ -45,8 +42,6 @@ impl NSPropertyDescription {
         pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setName(&self, name: &NSString);
@@ -90,10 +85,6 @@ impl NSPropertyDescription {
         pub unsafe fn userInfo(&self) -> Option<Retained<NSDictionary>>;
 
         /// Setter for [`userInfo`][Self::userInfo].
-        ///
-        /// # Safety
-        ///
-        /// `user_info` generic should be of the correct type.
         #[unsafe(method(setUserInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUserInfo(&self, user_info: Option<&NSDictionary>);
@@ -118,8 +109,6 @@ impl NSPropertyDescription {
         pub unsafe fn versionHashModifier(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`versionHashModifier`][Self::versionHashModifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setVersionHashModifier:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setVersionHashModifier(&self, version_hash_modifier: Option<&NSString>);
@@ -149,8 +138,6 @@ impl NSPropertyDescription {
         pub unsafe fn renamingIdentifier(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`renamingIdentifier`][Self::renamingIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setRenamingIdentifier:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRenamingIdentifier(&self, renaming_identifier: Option<&NSString>);

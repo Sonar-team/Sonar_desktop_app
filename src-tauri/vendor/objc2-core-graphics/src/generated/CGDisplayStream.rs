@@ -22,7 +22,6 @@ use crate::*;
 /// at either a traditional CFRunLoop, or at a dispatch queue.
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgdisplaystream?language=objc)
-#[doc(alias = "CGDisplayStreamRef")]
 #[repr(C)]
 pub struct CGDisplayStream {
     inner: [u8; 0],
@@ -45,7 +44,6 @@ cf_objc2_type!(
 /// where apps need to coalesce the values because they decided to skip processing for one or more frames.
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgdisplaystreamupdate?language=objc)
-#[doc(alias = "CGDisplayStreamUpdateRef")]
 #[repr(C)]
 pub struct CGDisplayStreamUpdate {
     inner: [u8; 0],
@@ -146,10 +144,6 @@ impl CGDisplayStreamUpdate {
     /// Parameter `rectCount`: A pointer to where the count of the number of rectangles in the array is to be returned. Must not be NULL.
     ///
     /// Returns: A pointer to the array of CGRectangles.  This array should not be freed by the caller.
-    ///
-    /// # Safety
-    ///
-    /// `rect_count` must be a valid pointer.
     #[doc(alias = "CGDisplayStreamUpdateGetRects")]
     #[deprecated = "Please use ScreenCaptureKit instead."]
     #[inline]
@@ -184,7 +178,7 @@ impl CGDisplayStreamUpdate {
     #[doc(alias = "CGDisplayStreamUpdateCreateMergedUpdate")]
     #[deprecated = "Please use ScreenCaptureKit instead."]
     #[inline]
-    pub fn new_merged_update(
+    pub unsafe fn new_merged_update(
         first_update: Option<&CGDisplayStreamUpdate>,
         second_update: Option<&CGDisplayStreamUpdate>,
     ) -> Option<CFRetained<CGDisplayStreamUpdate>> {
@@ -207,11 +201,6 @@ impl CGDisplayStreamUpdate {
     /// Parameter `dy`: A pointer to a CGFloat to store the y component of the movement delta
     ///
     /// The delta values describe the offset from the moved rectangles back to the source location.
-    ///
-    /// # Safety
-    ///
-    /// - `dx` must be a valid pointer.
-    /// - `dy` must be a valid pointer.
     #[doc(alias = "CGDisplayStreamUpdateGetMovedRectsDelta")]
     #[deprecated = "Please use ScreenCaptureKit instead."]
     #[inline]
@@ -241,7 +230,7 @@ impl CGDisplayStreamUpdate {
     #[doc(alias = "CGDisplayStreamUpdateGetDropCount")]
     #[deprecated = "Please use ScreenCaptureKit instead."]
     #[inline]
-    pub fn drop_count(update_ref: Option<&CGDisplayStreamUpdate>) -> usize {
+    pub unsafe fn drop_count(update_ref: Option<&CGDisplayStreamUpdate>) -> usize {
         extern "C-unwind" {
             fn CGDisplayStreamUpdateGetDropCount(
                 update_ref: Option<&CGDisplayStreamUpdate>,
@@ -258,7 +247,6 @@ extern "C" {
     /// HiDPI displays.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coregraphics/kcgdisplaystreamsourcerect?language=objc)
-    #[deprecated = "Please use ScreenCaptureKit instead."]
     pub static kCGDisplayStreamSourceRect: &'static CFString;
 }
 
@@ -269,7 +257,6 @@ extern "C" {
     /// specified in terms of pixels.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coregraphics/kcgdisplaystreamdestinationrect?language=objc)
-    #[deprecated = "Please use ScreenCaptureKit instead."]
     pub static kCGDisplayStreamDestinationRect: &'static CFString;
 }
 
@@ -280,7 +267,6 @@ extern "C" {
     /// in order to preserve the source aspect ratio.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coregraphics/kcgdisplaystreampreserveaspectratio?language=objc)
-    #[deprecated = "Please use ScreenCaptureKit instead."]
     pub static kCGDisplayStreamPreserveAspectRatio: &'static CFString;
 }
 
@@ -288,7 +274,6 @@ extern "C" {
     /// Set the desired CGColorSpace of the output frames.  By default the color space will be that of the display.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coregraphics/kcgdisplaystreamcolorspace?language=objc)
-    #[deprecated = "Please use ScreenCaptureKit instead."]
     pub static kCGDisplayStreamColorSpace: &'static CFString;
 }
 
@@ -296,7 +281,6 @@ extern "C" {
     /// Request that the delta between frame updates be at least as much specified by this value.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coregraphics/kcgdisplaystreamminimumframetime?language=objc)
-    #[deprecated = "Please use ScreenCaptureKit instead."]
     pub static kCGDisplayStreamMinimumFrameTime: &'static CFString;
 }
 
@@ -304,7 +288,6 @@ extern "C" {
     /// Controls whether the cursor is embedded within the provided buffers or not.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coregraphics/kcgdisplaystreamshowcursor?language=objc)
-    #[deprecated = "Please use ScreenCaptureKit instead."]
     pub static kCGDisplayStreamShowCursor: &'static CFString;
 }
 
@@ -312,7 +295,6 @@ extern "C" {
     /// Controls how many frames deep the frame queue will be.  Defaults to N.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coregraphics/kcgdisplaystreamqueuedepth?language=objc)
-    #[deprecated = "Please use ScreenCaptureKit instead."]
     pub static kCGDisplayStreamQueueDepth: &'static CFString;
 }
 
@@ -321,7 +303,6 @@ extern "C" {
     /// The value should be one of the three kCGDisplayStreamYCbCrMatrix values specified below.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/coregraphics/kcgdisplaystreamycbcrmatrix?language=objc)
-    #[deprecated = "Please use ScreenCaptureKit instead."]
     pub static kCGDisplayStreamYCbCrMatrix: &'static CFString;
 }
 
@@ -380,11 +361,6 @@ impl CGDisplayStream {
     /// Parameter `handler`: A block that will be called for frame deliver.
     ///
     /// Returns: The new CGDisplayStream object.
-    ///
-    /// # Safety
-    ///
-    /// - `properties` generics must be of the correct type.
-    /// - `handler` must be a valid pointer or null.
     #[doc(alias = "CGDisplayStreamCreate")]
     #[cfg(all(
         feature = "CGDirectDisplay",
@@ -445,12 +421,6 @@ impl CGDisplayStream {
     /// Parameter `handler`: A block that will be called for frame deliver.
     ///
     /// Returns: The new CGDisplayStream object.
-    ///
-    /// # Safety
-    ///
-    /// - `properties` generics must be of the correct type.
-    /// - `queue` possibly has additional threading requirements.
-    /// - `handler` must be a valid pointer or null.
     #[doc(alias = "CGDisplayStreamCreateWithDispatchQueue")]
     #[cfg(all(
         feature = "CGDirectDisplay",
@@ -504,7 +474,7 @@ impl CGDisplayStream {
     #[cfg(feature = "CGError")]
     #[deprecated = "Please use ScreenCaptureKit instead."]
     #[inline]
-    pub fn start(display_stream: Option<&CGDisplayStream>) -> CGError {
+    pub unsafe fn start(display_stream: Option<&CGDisplayStream>) -> CGError {
         extern "C-unwind" {
             fn CGDisplayStreamStart(display_stream: Option<&CGDisplayStream>) -> CGError;
         }
@@ -524,7 +494,7 @@ impl CGDisplayStream {
     #[cfg(feature = "CGError")]
     #[deprecated = "Please use ScreenCaptureKit instead."]
     #[inline]
-    pub fn stop(display_stream: Option<&CGDisplayStream>) -> CGError {
+    pub unsafe fn stop(display_stream: Option<&CGDisplayStream>) -> CGError {
         extern "C-unwind" {
             fn CGDisplayStreamStop(display_stream: Option<&CGDisplayStream>) -> CGError;
         }
@@ -564,7 +534,7 @@ extern "C-unwind" {
 
 #[deprecated = "renamed to `CGDisplayStreamUpdate::new_merged_update`"]
 #[inline]
-pub extern "C-unwind" fn CGDisplayStreamUpdateCreateMergedUpdate(
+pub unsafe extern "C-unwind" fn CGDisplayStreamUpdateCreateMergedUpdate(
     first_update: Option<&CGDisplayStreamUpdate>,
     second_update: Option<&CGDisplayStreamUpdate>,
 ) -> Option<CFRetained<CGDisplayStreamUpdate>> {
@@ -587,15 +557,9 @@ extern "C-unwind" {
     );
 }
 
-#[deprecated = "renamed to `CGDisplayStreamUpdate::drop_count`"]
-#[inline]
-pub extern "C-unwind" fn CGDisplayStreamUpdateGetDropCount(
-    update_ref: Option<&CGDisplayStreamUpdate>,
-) -> usize {
-    extern "C-unwind" {
-        fn CGDisplayStreamUpdateGetDropCount(update_ref: Option<&CGDisplayStreamUpdate>) -> usize;
-    }
-    unsafe { CGDisplayStreamUpdateGetDropCount(update_ref) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGDisplayStreamUpdate::drop_count`"]
+    pub fn CGDisplayStreamUpdateGetDropCount(update_ref: Option<&CGDisplayStreamUpdate>) -> usize;
 }
 
 #[cfg(all(
@@ -680,24 +644,16 @@ pub unsafe extern "C-unwind" fn CGDisplayStreamCreateWithDispatchQueue(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-#[cfg(feature = "CGError")]
-#[deprecated = "renamed to `CGDisplayStream::start`"]
-#[inline]
-pub extern "C-unwind" fn CGDisplayStreamStart(display_stream: Option<&CGDisplayStream>) -> CGError {
-    extern "C-unwind" {
-        fn CGDisplayStreamStart(display_stream: Option<&CGDisplayStream>) -> CGError;
-    }
-    unsafe { CGDisplayStreamStart(display_stream) }
+extern "C-unwind" {
+    #[cfg(feature = "CGError")]
+    #[deprecated = "renamed to `CGDisplayStream::start`"]
+    pub fn CGDisplayStreamStart(display_stream: Option<&CGDisplayStream>) -> CGError;
 }
 
-#[cfg(feature = "CGError")]
-#[deprecated = "renamed to `CGDisplayStream::stop`"]
-#[inline]
-pub extern "C-unwind" fn CGDisplayStreamStop(display_stream: Option<&CGDisplayStream>) -> CGError {
-    extern "C-unwind" {
-        fn CGDisplayStreamStop(display_stream: Option<&CGDisplayStream>) -> CGError;
-    }
-    unsafe { CGDisplayStreamStop(display_stream) }
+extern "C-unwind" {
+    #[cfg(feature = "CGError")]
+    #[deprecated = "renamed to `CGDisplayStream::stop`"]
+    pub fn CGDisplayStreamStop(display_stream: Option<&CGDisplayStream>) -> CGError;
 }
 
 #[deprecated = "renamed to `CGDisplayStream::run_loop_source`"]

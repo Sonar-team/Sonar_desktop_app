@@ -31,7 +31,7 @@ impl UISmartReplySuggestion {
         /// Use this as a signal of the user’s intention when you generate long form text based on the option the user selected.
         #[unsafe(method(smartReply))]
         #[unsafe(method_family = none)]
-        pub fn smartReply(&self) -> Retained<NSString>;
+        pub unsafe fn smartReply(&self) -> Retained<NSString>;
     );
 }
 
@@ -41,18 +41,10 @@ impl UISmartReplySuggestion {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "UIInputSuggestion")]
-impl DefaultRetained for UISmartReplySuggestion {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

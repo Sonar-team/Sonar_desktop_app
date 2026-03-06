@@ -74,17 +74,17 @@ impl UICommandAlternate {
         /// Short display title.
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Action to take on choosing this command alternate.
         #[unsafe(method(action))]
         #[unsafe(method_family = none)]
-        pub fn action(&self) -> Sel;
+        pub unsafe fn action(&self) -> Sel;
 
         /// Bitmask of modifier flags to choose this command alternate.
         #[unsafe(method(modifierFlags))]
         #[unsafe(method_family = none)]
-        pub fn modifierFlags(&self) -> UIKeyModifierFlags;
+        pub unsafe fn modifierFlags(&self) -> UIKeyModifierFlags;
 
         /// Initialize an alternate action to take for a command.
         ///
@@ -96,10 +96,6 @@ impl UICommandAlternate {
         /// Parameter `modifierFlags`: Bitmask of modifier flags to choose this command alternate.
         ///
         /// Returns: A new command alternate.
-        ///
-        /// # Safety
-        ///
-        /// `action` must be a valid selector.
         #[unsafe(method(alternateWithTitle:action:modifierFlags:))]
         #[unsafe(method_family = none)]
         pub unsafe fn alternateWithTitle_action_modifierFlags(
@@ -117,9 +113,6 @@ impl UICommandAlternate {
         #[unsafe(method_family = init)]
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -176,40 +169,34 @@ impl UICommand {
         /// Short display title.
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: &NSString);
+        pub unsafe fn setTitle(&self, title: &NSString);
 
         #[cfg(feature = "UIImage")]
         /// Image that can appear next to this command
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`image`][Self::image].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&UIImage>);
+        pub unsafe fn setImage(&self, image: Option<&UIImage>);
 
         /// Elaborated title used in keyboard shortcut overlay.
         #[unsafe(method(discoverabilityTitle))]
         #[unsafe(method_family = none)]
-        pub fn discoverabilityTitle(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn discoverabilityTitle(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`discoverabilityTitle`][Self::discoverabilityTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDiscoverabilityTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setDiscoverabilityTitle(&self, discoverability_title: Option<&NSString>);
+        pub unsafe fn setDiscoverabilityTitle(&self, discoverability_title: Option<&NSString>);
 
         /// Action to take on choosing this command.
         #[unsafe(method(action))]
@@ -219,32 +206,32 @@ impl UICommand {
         /// Property list object to distinguish commands, if needed.
         #[unsafe(method(propertyList))]
         #[unsafe(method_family = none)]
-        pub fn propertyList(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn propertyList(&self) -> Option<Retained<AnyObject>>;
 
         /// Command attributes.
         #[unsafe(method(attributes))]
         #[unsafe(method_family = none)]
-        pub fn attributes(&self) -> UIMenuElementAttributes;
+        pub unsafe fn attributes(&self) -> UIMenuElementAttributes;
 
         /// Setter for [`attributes`][Self::attributes].
         #[unsafe(method(setAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributes(&self, attributes: UIMenuElementAttributes);
+        pub unsafe fn setAttributes(&self, attributes: UIMenuElementAttributes);
 
         /// State that can appear next to the command.
         #[unsafe(method(state))]
         #[unsafe(method_family = none)]
-        pub fn state(&self) -> UIMenuElementState;
+        pub unsafe fn state(&self) -> UIMenuElementState;
 
         /// Setter for [`state`][Self::state].
         #[unsafe(method(setState:))]
         #[unsafe(method_family = none)]
-        pub fn setState(&self, state: UIMenuElementState);
+        pub unsafe fn setState(&self, state: UIMenuElementState);
 
         /// Alternates that differ in modifier flags, if any.
         #[unsafe(method(alternates))]
         #[unsafe(method_family = none)]
-        pub fn alternates(&self) -> Retained<NSArray<UICommandAlternate>>;
+        pub unsafe fn alternates(&self) -> Retained<NSArray<UICommandAlternate>>;
 
         #[cfg(feature = "UIImage")]
         /// Initializes a keyless command.
@@ -259,11 +246,6 @@ impl UICommand {
         /// Parameter `propertyList`: Property list object to distinguish commands, if needed.
         ///
         /// Returns: A new keyless command.
-        ///
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `property_list` should be of the correct type.
         #[unsafe(method(commandWithTitle:image:action:propertyList:))]
         #[unsafe(method_family = none)]
         pub unsafe fn commandWithTitle_image_action_propertyList(
@@ -289,11 +271,6 @@ impl UICommand {
         /// Parameter `alternates`: Alternates that differ in modifier flags.
         ///
         /// Returns: A new keyless command with alternates.
-        ///
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `property_list` should be of the correct type.
         #[unsafe(method(commandWithTitle:image:action:propertyList:alternates:))]
         #[unsafe(method_family = none)]
         pub unsafe fn commandWithTitle_image_action_propertyList_alternates(
@@ -313,9 +290,6 @@ impl UICommand {
         #[unsafe(method_family = init)]
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(

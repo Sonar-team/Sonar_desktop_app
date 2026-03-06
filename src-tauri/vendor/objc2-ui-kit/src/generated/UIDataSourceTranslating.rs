@@ -12,28 +12,28 @@ extern_protocol!(
     pub unsafe trait UIDataSourceTranslating: NSObjectProtocol + MainThreadOnly {
         #[unsafe(method(presentationSectionIndexForDataSourceSectionIndex:))]
         #[unsafe(method_family = none)]
-        fn presentationSectionIndexForDataSourceSectionIndex(
+        unsafe fn presentationSectionIndexForDataSourceSectionIndex(
             &self,
             data_source_section_index: NSInteger,
         ) -> NSInteger;
 
         #[unsafe(method(dataSourceSectionIndexForPresentationSectionIndex:))]
         #[unsafe(method_family = none)]
-        fn dataSourceSectionIndexForPresentationSectionIndex(
+        unsafe fn dataSourceSectionIndexForPresentationSectionIndex(
             &self,
             presentation_section_index: NSInteger,
         ) -> NSInteger;
 
         #[unsafe(method(presentationIndexPathForDataSourceIndexPath:))]
         #[unsafe(method_family = none)]
-        fn presentationIndexPathForDataSourceIndexPath(
+        unsafe fn presentationIndexPathForDataSourceIndexPath(
             &self,
             data_source_index_path: Option<&NSIndexPath>,
         ) -> Option<Retained<NSIndexPath>>;
 
         #[unsafe(method(dataSourceIndexPathForPresentationIndexPath:))]
         #[unsafe(method_family = none)]
-        fn dataSourceIndexPathForPresentationIndexPath(
+        unsafe fn dataSourceIndexPathForPresentationIndexPath(
             &self,
             presentation_index_path: Option<&NSIndexPath>,
         ) -> Option<Retained<NSIndexPath>>;
@@ -41,7 +41,7 @@ extern_protocol!(
         #[cfg(feature = "block2")]
         #[unsafe(method(performUsingPresentationValues:))]
         #[unsafe(method_family = none)]
-        fn performUsingPresentationValues(
+        unsafe fn performUsingPresentationValues(
             &self,
             actions_to_translate: &block2::DynBlock<dyn Fn() + '_>,
         );

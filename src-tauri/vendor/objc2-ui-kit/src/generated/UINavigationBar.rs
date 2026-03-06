@@ -129,45 +129,49 @@ impl UINavigationBar {
         #[cfg(feature = "UIInterface")]
         #[unsafe(method(barStyle))]
         #[unsafe(method_family = none)]
-        pub fn barStyle(&self) -> UIBarStyle;
+        pub unsafe fn barStyle(&self) -> UIBarStyle;
 
         #[cfg(feature = "UIInterface")]
         /// Setter for [`barStyle`][Self::barStyle].
         #[unsafe(method(setBarStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setBarStyle(&self, bar_style: UIBarStyle);
+        pub unsafe fn setBarStyle(&self, bar_style: UIBarStyle);
 
         #[cfg(feature = "UIBarCommon")]
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UINavigationBarDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn UINavigationBarDelegate>>>;
 
         #[cfg(feature = "UIBarCommon")]
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn UINavigationBarDelegate>>);
+        pub unsafe fn setDelegate(
+            &self,
+            delegate: Option<&ProtocolObject<dyn UINavigationBarDelegate>>,
+        );
 
         #[unsafe(method(isTranslucent))]
         #[unsafe(method_family = none)]
-        pub fn isTranslucent(&self) -> bool;
+        pub unsafe fn isTranslucent(&self) -> bool;
 
         /// Setter for [`isTranslucent`][Self::isTranslucent].
         #[unsafe(method(setTranslucent:))]
         #[unsafe(method_family = none)]
-        pub fn setTranslucent(&self, translucent: bool);
+        pub unsafe fn setTranslucent(&self, translucent: bool);
 
         #[cfg(feature = "UINavigationItem")]
         #[unsafe(method(pushNavigationItem:animated:))]
         #[unsafe(method_family = none)]
-        pub fn pushNavigationItem_animated(&self, item: &UINavigationItem, animated: bool);
+        pub unsafe fn pushNavigationItem_animated(&self, item: &UINavigationItem, animated: bool);
 
         #[cfg(feature = "UINavigationItem")]
         #[unsafe(method(popNavigationItemAnimated:))]
         #[unsafe(method_family = none)]
-        pub fn popNavigationItemAnimated(
+        pub unsafe fn popNavigationItemAnimated(
             &self,
             animated: bool,
         ) -> Option<Retained<UINavigationItem>>;
@@ -175,75 +179,76 @@ impl UINavigationBar {
         #[cfg(feature = "UINavigationItem")]
         #[unsafe(method(topItem))]
         #[unsafe(method_family = none)]
-        pub fn topItem(&self) -> Option<Retained<UINavigationItem>>;
+        pub unsafe fn topItem(&self) -> Option<Retained<UINavigationItem>>;
 
         #[cfg(feature = "UINavigationItem")]
         #[unsafe(method(backItem))]
         #[unsafe(method_family = none)]
-        pub fn backItem(&self) -> Option<Retained<UINavigationItem>>;
+        pub unsafe fn backItem(&self) -> Option<Retained<UINavigationItem>>;
 
         #[cfg(feature = "UINavigationItem")]
         #[unsafe(method(items))]
         #[unsafe(method_family = none)]
-        pub fn items(&self) -> Option<Retained<NSArray<UINavigationItem>>>;
+        pub unsafe fn items(&self) -> Option<Retained<NSArray<UINavigationItem>>>;
 
         #[cfg(feature = "UINavigationItem")]
         /// Setter for [`items`][Self::items].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setItems:))]
         #[unsafe(method_family = none)]
-        pub fn setItems(&self, items: Option<&NSArray<UINavigationItem>>);
+        pub unsafe fn setItems(&self, items: Option<&NSArray<UINavigationItem>>);
 
         #[cfg(feature = "UINavigationItem")]
         #[unsafe(method(setItems:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setItems_animated(&self, items: Option<&NSArray<UINavigationItem>>, animated: bool);
+        pub unsafe fn setItems_animated(
+            &self,
+            items: Option<&NSArray<UINavigationItem>>,
+            animated: bool,
+        );
 
         /// When set to YES, the navigation bar will use a larger out-of-line title view when requested by the current navigation item. To specify when the large out-of-line title view appears, see UINavigationItem.largeTitleDisplayMode. Defaults to NO.
         #[unsafe(method(prefersLargeTitles))]
         #[unsafe(method_family = none)]
-        pub fn prefersLargeTitles(&self) -> bool;
+        pub unsafe fn prefersLargeTitles(&self) -> bool;
 
         /// Setter for [`prefersLargeTitles`][Self::prefersLargeTitles].
         #[unsafe(method(setPrefersLargeTitles:))]
         #[unsafe(method_family = none)]
-        pub fn setPrefersLargeTitles(&self, prefers_large_titles: bool);
+        pub unsafe fn setPrefersLargeTitles(&self, prefers_large_titles: bool);
 
         /// The toolbar section that this navigation bar is currently using.
         #[unsafe(method(currentNSToolbarSection))]
         #[unsafe(method_family = none)]
-        pub fn currentNSToolbarSection(&self) -> UINavigationBarNSToolbarSection;
+        pub unsafe fn currentNSToolbarSection(&self) -> UINavigationBarNSToolbarSection;
 
         #[cfg(feature = "UIBehavioralStyle")]
         /// The concrete behavioral style chosen for the navigation bar. When this resolves to .mac, the navigation bar's contents are placed in the NSToolbar.
         #[unsafe(method(behavioralStyle))]
         #[unsafe(method_family = none)]
-        pub fn behavioralStyle(&self) -> UIBehavioralStyle;
+        pub unsafe fn behavioralStyle(&self) -> UIBehavioralStyle;
 
         #[cfg(feature = "UIBehavioralStyle")]
         /// The requested behavioral style for the navigation bar.
         #[unsafe(method(preferredBehavioralStyle))]
         #[unsafe(method_family = none)]
-        pub fn preferredBehavioralStyle(&self) -> UIBehavioralStyle;
+        pub unsafe fn preferredBehavioralStyle(&self) -> UIBehavioralStyle;
 
         #[cfg(feature = "UIBehavioralStyle")]
         /// Setter for [`preferredBehavioralStyle`][Self::preferredBehavioralStyle].
         #[unsafe(method(setPreferredBehavioralStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredBehavioralStyle(&self, preferred_behavioral_style: UIBehavioralStyle);
+        pub unsafe fn setPreferredBehavioralStyle(
+            &self,
+            preferred_behavioral_style: UIBehavioralStyle,
+        );
 
         #[cfg(feature = "UIColor")]
         #[unsafe(method(tintColor))]
         #[unsafe(method_family = none)]
-        pub fn tintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn tintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`tintColor`][Self::tintColor].
-        ///
-        /// # Safety
-        ///
-        /// `tint_color` might not allow `None`.
         #[unsafe(method(setTintColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTintColor(&self, tint_color: Option<&UIColor>);
@@ -251,18 +256,18 @@ impl UINavigationBar {
         #[cfg(feature = "UIColor")]
         #[unsafe(method(barTintColor))]
         #[unsafe(method_family = none)]
-        pub fn barTintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn barTintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`barTintColor`][Self::barTintColor].
         #[unsafe(method(setBarTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBarTintColor(&self, bar_tint_color: Option<&UIColor>);
+        pub unsafe fn setBarTintColor(&self, bar_tint_color: Option<&UIColor>);
 
         #[cfg(all(feature = "UIBarCommon", feature = "UIImage"))]
         #[unsafe(method(setBackgroundImage:forBarPosition:barMetrics:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundImage_forBarPosition_barMetrics(
+        pub unsafe fn setBackgroundImage_forBarPosition_barMetrics(
             &self,
             background_image: Option<&UIImage>,
             bar_position: UIBarPosition,
@@ -272,7 +277,7 @@ impl UINavigationBar {
         #[cfg(all(feature = "UIBarCommon", feature = "UIImage"))]
         #[unsafe(method(backgroundImageForBarPosition:barMetrics:))]
         #[unsafe(method_family = none)]
-        pub fn backgroundImageForBarPosition_barMetrics(
+        pub unsafe fn backgroundImageForBarPosition_barMetrics(
             &self,
             bar_position: UIBarPosition,
             bar_metrics: UIBarMetrics,
@@ -281,7 +286,7 @@ impl UINavigationBar {
         #[cfg(all(feature = "UIBarCommon", feature = "UIImage"))]
         #[unsafe(method(setBackgroundImage:forBarMetrics:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundImage_forBarMetrics(
+        pub unsafe fn setBackgroundImage_forBarMetrics(
             &self,
             background_image: Option<&UIImage>,
             bar_metrics: UIBarMetrics,
@@ -290,7 +295,7 @@ impl UINavigationBar {
         #[cfg(all(feature = "UIBarCommon", feature = "UIImage"))]
         #[unsafe(method(backgroundImageForBarMetrics:))]
         #[unsafe(method_family = none)]
-        pub fn backgroundImageForBarMetrics(
+        pub unsafe fn backgroundImageForBarMetrics(
             &self,
             bar_metrics: UIBarMetrics,
         ) -> Option<Retained<UIImage>>;
@@ -298,27 +303,21 @@ impl UINavigationBar {
         #[cfg(feature = "UIImage")]
         #[unsafe(method(shadowImage))]
         #[unsafe(method_family = none)]
-        pub fn shadowImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn shadowImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`shadowImage`][Self::shadowImage].
         #[unsafe(method(setShadowImage:))]
         #[unsafe(method_family = none)]
-        pub fn setShadowImage(&self, shadow_image: Option<&UIImage>);
+        pub unsafe fn setShadowImage(&self, shadow_image: Option<&UIImage>);
 
         #[unsafe(method(titleTextAttributes))]
         #[unsafe(method_family = none)]
-        pub fn titleTextAttributes(
+        pub unsafe fn titleTextAttributes(
             &self,
         ) -> Option<Retained<NSDictionary<NSAttributedStringKey, AnyObject>>>;
 
         /// Setter for [`titleTextAttributes`][Self::titleTextAttributes].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `title_text_attributes` generic should be of the correct type.
         #[unsafe(method(setTitleTextAttributes:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTitleTextAttributes(
@@ -328,17 +327,11 @@ impl UINavigationBar {
 
         #[unsafe(method(largeTitleTextAttributes))]
         #[unsafe(method_family = none)]
-        pub fn largeTitleTextAttributes(
+        pub unsafe fn largeTitleTextAttributes(
             &self,
         ) -> Option<Retained<NSDictionary<NSAttributedStringKey, AnyObject>>>;
 
         /// Setter for [`largeTitleTextAttributes`][Self::largeTitleTextAttributes].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `large_title_text_attributes` generic should be of the correct type.
         #[unsafe(method(setLargeTitleTextAttributes:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setLargeTitleTextAttributes(
@@ -349,7 +342,7 @@ impl UINavigationBar {
         #[cfg(all(feature = "UIBarCommon", feature = "objc2-core-foundation"))]
         #[unsafe(method(setTitleVerticalPositionAdjustment:forBarMetrics:))]
         #[unsafe(method_family = none)]
-        pub fn setTitleVerticalPositionAdjustment_forBarMetrics(
+        pub unsafe fn setTitleVerticalPositionAdjustment_forBarMetrics(
             &self,
             adjustment: CGFloat,
             bar_metrics: UIBarMetrics,
@@ -358,7 +351,7 @@ impl UINavigationBar {
         #[cfg(all(feature = "UIBarCommon", feature = "objc2-core-foundation"))]
         #[unsafe(method(titleVerticalPositionAdjustmentForBarMetrics:))]
         #[unsafe(method_family = none)]
-        pub fn titleVerticalPositionAdjustmentForBarMetrics(
+        pub unsafe fn titleVerticalPositionAdjustmentForBarMetrics(
             &self,
             bar_metrics: UIBarMetrics,
         ) -> CGFloat;
@@ -366,24 +359,24 @@ impl UINavigationBar {
         #[cfg(feature = "UIImage")]
         #[unsafe(method(backIndicatorImage))]
         #[unsafe(method_family = none)]
-        pub fn backIndicatorImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn backIndicatorImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`backIndicatorImage`][Self::backIndicatorImage].
         #[unsafe(method(setBackIndicatorImage:))]
         #[unsafe(method_family = none)]
-        pub fn setBackIndicatorImage(&self, back_indicator_image: Option<&UIImage>);
+        pub unsafe fn setBackIndicatorImage(&self, back_indicator_image: Option<&UIImage>);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(backIndicatorTransitionMaskImage))]
         #[unsafe(method_family = none)]
-        pub fn backIndicatorTransitionMaskImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn backIndicatorTransitionMaskImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`backIndicatorTransitionMaskImage`][Self::backIndicatorTransitionMaskImage].
         #[unsafe(method(setBackIndicatorTransitionMaskImage:))]
         #[unsafe(method_family = none)]
-        pub fn setBackIndicatorTransitionMaskImage(
+        pub unsafe fn setBackIndicatorTransitionMaskImage(
             &self,
             back_indicator_transition_mask_image: Option<&UIImage>,
         );
@@ -392,43 +385,40 @@ impl UINavigationBar {
         /// Describes the appearance attributes for the navigation bar to use when it is displayed with its standard height.
         #[unsafe(method(standardAppearance))]
         #[unsafe(method_family = none)]
-        pub fn standardAppearance(&self) -> Retained<UINavigationBarAppearance>;
+        pub unsafe fn standardAppearance(&self) -> Retained<UINavigationBarAppearance>;
 
         #[cfg(all(feature = "UIBarAppearance", feature = "UINavigationBarAppearance"))]
         /// Setter for [`standardAppearance`][Self::standardAppearance].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setStandardAppearance:))]
         #[unsafe(method_family = none)]
-        pub fn setStandardAppearance(&self, standard_appearance: &UINavigationBarAppearance);
+        pub unsafe fn setStandardAppearance(&self, standard_appearance: &UINavigationBarAppearance);
 
         #[cfg(all(feature = "UIBarAppearance", feature = "UINavigationBarAppearance"))]
         /// Describes the appearance attributes for the navigation bar to use when it is displayed with its compact height. If not set, the standardAppearance will be used instead.
         #[unsafe(method(compactAppearance))]
         #[unsafe(method_family = none)]
-        pub fn compactAppearance(&self) -> Option<Retained<UINavigationBarAppearance>>;
+        pub unsafe fn compactAppearance(&self) -> Option<Retained<UINavigationBarAppearance>>;
 
         #[cfg(all(feature = "UIBarAppearance", feature = "UINavigationBarAppearance"))]
         /// Setter for [`compactAppearance`][Self::compactAppearance].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCompactAppearance:))]
         #[unsafe(method_family = none)]
-        pub fn setCompactAppearance(&self, compact_appearance: Option<&UINavigationBarAppearance>);
+        pub unsafe fn setCompactAppearance(
+            &self,
+            compact_appearance: Option<&UINavigationBarAppearance>,
+        );
 
         #[cfg(all(feature = "UIBarAppearance", feature = "UINavigationBarAppearance"))]
         /// Describes the appearance attributes for the navigation bar to use when an associated UIScrollView has reached the edge abutting the bar (the top edge for the navigation bar). If not set, a modified standardAppearance will be used instead.
         #[unsafe(method(scrollEdgeAppearance))]
         #[unsafe(method_family = none)]
-        pub fn scrollEdgeAppearance(&self) -> Option<Retained<UINavigationBarAppearance>>;
+        pub unsafe fn scrollEdgeAppearance(&self) -> Option<Retained<UINavigationBarAppearance>>;
 
         #[cfg(all(feature = "UIBarAppearance", feature = "UINavigationBarAppearance"))]
         /// Setter for [`scrollEdgeAppearance`][Self::scrollEdgeAppearance].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setScrollEdgeAppearance:))]
         #[unsafe(method_family = none)]
-        pub fn setScrollEdgeAppearance(
+        pub unsafe fn setScrollEdgeAppearance(
             &self,
             scroll_edge_appearance: Option<&UINavigationBarAppearance>,
         );
@@ -437,15 +427,15 @@ impl UINavigationBar {
         /// Describes the appearance attributes for the navigation bar to use when it is displayed with its compact heights, and an associated UIScrollView has reached the edge abutting the bar. If not set, first the scrollEdgeAppearance will be tried, and if that is nil then compactAppearance followed by a modified standardAppearance.
         #[unsafe(method(compactScrollEdgeAppearance))]
         #[unsafe(method_family = none)]
-        pub fn compactScrollEdgeAppearance(&self) -> Option<Retained<UINavigationBarAppearance>>;
+        pub unsafe fn compactScrollEdgeAppearance(
+            &self,
+        ) -> Option<Retained<UINavigationBarAppearance>>;
 
         #[cfg(all(feature = "UIBarAppearance", feature = "UINavigationBarAppearance"))]
         /// Setter for [`compactScrollEdgeAppearance`][Self::compactScrollEdgeAppearance].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCompactScrollEdgeAppearance:))]
         #[unsafe(method_family = none)]
-        pub fn setCompactScrollEdgeAppearance(
+        pub unsafe fn setCompactScrollEdgeAppearance(
             &self,
             compact_scroll_edge_appearance: Option<&UINavigationBarAppearance>,
         );
@@ -459,21 +449,14 @@ impl UINavigationBar {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
             this: Allocated<Self>,
             coder: &NSCoder,
         ) -> Option<Retained<Self>>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -481,9 +464,13 @@ impl UINavigationBar {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UINavigationBar {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -501,7 +488,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(navigationBar:shouldPushItem:))]
         #[unsafe(method_family = none)]
-        fn navigationBar_shouldPushItem(
+        unsafe fn navigationBar_shouldPushItem(
             &self,
             navigation_bar: &UINavigationBar,
             item: &UINavigationItem,
@@ -515,7 +502,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(navigationBar:didPushItem:))]
         #[unsafe(method_family = none)]
-        fn navigationBar_didPushItem(
+        unsafe fn navigationBar_didPushItem(
             &self,
             navigation_bar: &UINavigationBar,
             item: &UINavigationItem,
@@ -529,7 +516,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(navigationBar:shouldPopItem:))]
         #[unsafe(method_family = none)]
-        fn navigationBar_shouldPopItem(
+        unsafe fn navigationBar_shouldPopItem(
             &self,
             navigation_bar: &UINavigationBar,
             item: &UINavigationItem,
@@ -543,7 +530,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(navigationBar:didPopItem:))]
         #[unsafe(method_family = none)]
-        fn navigationBar_didPopItem(
+        unsafe fn navigationBar_didPopItem(
             &self,
             navigation_bar: &UINavigationBar,
             item: &UINavigationItem,
@@ -554,7 +541,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(navigationBarNSToolbarSection:))]
         #[unsafe(method_family = none)]
-        fn navigationBarNSToolbarSection(
+        unsafe fn navigationBarNSToolbarSection(
             &self,
             navigation_bar: &UINavigationBar,
         ) -> UINavigationBarNSToolbarSection;

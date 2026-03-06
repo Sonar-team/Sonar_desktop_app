@@ -89,8 +89,6 @@ impl DOMHTMLMetaElement {
         pub unsafe fn content(&self) -> Retained<NSString>;
 
         /// Setter for [`content`][Self::content].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setContent:))]
         #[unsafe(method_family = none)]
@@ -102,8 +100,6 @@ impl DOMHTMLMetaElement {
         pub unsafe fn httpEquiv(&self) -> Retained<NSString>;
 
         /// Setter for [`httpEquiv`][Self::httpEquiv].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setHttpEquiv:))]
         #[unsafe(method_family = none)]
@@ -115,8 +111,6 @@ impl DOMHTMLMetaElement {
         pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
@@ -128,8 +122,6 @@ impl DOMHTMLMetaElement {
         pub unsafe fn scheme(&self) -> Retained<NSString>;
 
         /// Setter for [`scheme`][Self::scheme].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setScheme:))]
         #[unsafe(method_family = none)]

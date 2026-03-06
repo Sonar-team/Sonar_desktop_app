@@ -12,7 +12,7 @@ extern_protocol!(
     pub unsafe trait NSUserActivityRestoring: NSObjectProtocol + MainThreadOnly {
         #[unsafe(method(restoreUserActivityState:))]
         #[unsafe(method_family = none)]
-        fn restoreUserActivityState(&self, user_activity: &NSUserActivity);
+        unsafe fn restoreUserActivityState(&self, user_activity: &NSUserActivity);
     }
 );
 
@@ -22,16 +22,16 @@ impl NSResponder {
     extern_methods!(
         #[unsafe(method(userActivity))]
         #[unsafe(method_family = none)]
-        pub fn userActivity(&self) -> Option<Retained<NSUserActivity>>;
+        pub unsafe fn userActivity(&self) -> Option<Retained<NSUserActivity>>;
 
         /// Setter for [`userActivity`][Self::userActivity].
         #[unsafe(method(setUserActivity:))]
         #[unsafe(method_family = none)]
-        pub fn setUserActivity(&self, user_activity: Option<&NSUserActivity>);
+        pub unsafe fn setUserActivity(&self, user_activity: Option<&NSUserActivity>);
 
         #[unsafe(method(updateUserActivityState:))]
         #[unsafe(method_family = none)]
-        pub fn updateUserActivityState(&self, user_activity: &NSUserActivity);
+        pub unsafe fn updateUserActivityState(&self, user_activity: &NSUserActivity);
     );
 }
 
@@ -46,16 +46,16 @@ impl NSDocument {
     extern_methods!(
         #[unsafe(method(userActivity))]
         #[unsafe(method_family = none)]
-        pub fn userActivity(&self) -> Option<Retained<NSUserActivity>>;
+        pub unsafe fn userActivity(&self) -> Option<Retained<NSUserActivity>>;
 
         /// Setter for [`userActivity`][Self::userActivity].
         #[unsafe(method(setUserActivity:))]
         #[unsafe(method_family = none)]
-        pub fn setUserActivity(&self, user_activity: Option<&NSUserActivity>);
+        pub unsafe fn setUserActivity(&self, user_activity: Option<&NSUserActivity>);
 
         #[unsafe(method(updateUserActivityState:))]
         #[unsafe(method_family = none)]
-        pub fn updateUserActivityState(&self, activity: &NSUserActivity);
+        pub unsafe fn updateUserActivityState(&self, activity: &NSUserActivity);
     );
 }
 

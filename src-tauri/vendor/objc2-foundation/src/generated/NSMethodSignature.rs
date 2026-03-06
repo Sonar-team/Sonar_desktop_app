@@ -19,9 +19,6 @@ extern_conformance!(
 
 impl NSMethodSignature {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `types` must be a valid pointer.
         #[unsafe(method(signatureWithObjCTypes:))]
         #[unsafe(method_family = none)]
         pub unsafe fn signatureWithObjCTypes(
@@ -30,27 +27,27 @@ impl NSMethodSignature {
 
         #[unsafe(method(numberOfArguments))]
         #[unsafe(method_family = none)]
-        pub fn numberOfArguments(&self) -> NSUInteger;
+        pub unsafe fn numberOfArguments(&self) -> NSUInteger;
 
         #[unsafe(method(getArgumentTypeAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn getArgumentTypeAtIndex(&self, idx: NSUInteger) -> NonNull<c_char>;
+        pub unsafe fn getArgumentTypeAtIndex(&self, idx: NSUInteger) -> NonNull<c_char>;
 
         #[unsafe(method(frameLength))]
         #[unsafe(method_family = none)]
-        pub fn frameLength(&self) -> NSUInteger;
+        pub unsafe fn frameLength(&self) -> NSUInteger;
 
         #[unsafe(method(isOneway))]
         #[unsafe(method_family = none)]
-        pub fn isOneway(&self) -> bool;
+        pub unsafe fn isOneway(&self) -> bool;
 
         #[unsafe(method(methodReturnType))]
         #[unsafe(method_family = none)]
-        pub fn methodReturnType(&self) -> NonNull<c_char>;
+        pub unsafe fn methodReturnType(&self) -> NonNull<c_char>;
 
         #[unsafe(method(methodReturnLength))]
         #[unsafe(method_family = none)]
-        pub fn methodReturnLength(&self) -> NSUInteger;
+        pub unsafe fn methodReturnLength(&self) -> NSUInteger;
     );
 }
 
@@ -59,17 +56,10 @@ impl NSMethodSignature {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSMethodSignature {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

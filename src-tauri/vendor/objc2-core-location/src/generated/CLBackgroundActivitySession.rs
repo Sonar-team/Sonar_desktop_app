@@ -90,9 +90,6 @@ impl CLBackgroundActivitySession {
         pub unsafe fn backgroundActivitySession() -> Retained<Self>;
 
         #[cfg(all(feature = "block2", feature = "dispatch2"))]
-        /// # Safety
-        ///
-        /// `queue` possibly has additional threading requirements.
         #[unsafe(method(backgroundActivitySessionWithQueue:handler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn backgroundActivitySessionWithQueue_handler(

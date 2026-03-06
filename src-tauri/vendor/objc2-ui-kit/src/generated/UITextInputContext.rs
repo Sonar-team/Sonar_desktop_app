@@ -21,30 +21,33 @@ impl UITextInputContext {
     extern_methods!(
         #[unsafe(method(isPencilInputExpected))]
         #[unsafe(method_family = none)]
-        pub fn isPencilInputExpected(&self) -> bool;
+        pub unsafe fn isPencilInputExpected(&self) -> bool;
 
         /// Setter for [`isPencilInputExpected`][Self::isPencilInputExpected].
         #[unsafe(method(setPencilInputExpected:))]
         #[unsafe(method_family = none)]
-        pub fn setPencilInputExpected(&self, pencil_input_expected: bool);
+        pub unsafe fn setPencilInputExpected(&self, pencil_input_expected: bool);
 
         #[unsafe(method(isDictationInputExpected))]
         #[unsafe(method_family = none)]
-        pub fn isDictationInputExpected(&self) -> bool;
+        pub unsafe fn isDictationInputExpected(&self) -> bool;
 
         /// Setter for [`isDictationInputExpected`][Self::isDictationInputExpected].
         #[unsafe(method(setDictationInputExpected:))]
         #[unsafe(method_family = none)]
-        pub fn setDictationInputExpected(&self, dictation_input_expected: bool);
+        pub unsafe fn setDictationInputExpected(&self, dictation_input_expected: bool);
 
         #[unsafe(method(isHardwareKeyboardInputExpected))]
         #[unsafe(method_family = none)]
-        pub fn isHardwareKeyboardInputExpected(&self) -> bool;
+        pub unsafe fn isHardwareKeyboardInputExpected(&self) -> bool;
 
         /// Setter for [`isHardwareKeyboardInputExpected`][Self::isHardwareKeyboardInputExpected].
         #[unsafe(method(setHardwareKeyboardInputExpected:))]
         #[unsafe(method_family = none)]
-        pub fn setHardwareKeyboardInputExpected(&self, hardware_keyboard_input_expected: bool);
+        pub unsafe fn setHardwareKeyboardInputExpected(
+            &self,
+            hardware_keyboard_input_expected: bool,
+        );
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -56,6 +59,6 @@ impl UITextInputContext {
 
         #[unsafe(method(current))]
         #[unsafe(method_family = none)]
-        pub fn current() -> Option<Retained<UITextInputContext>>;
+        pub unsafe fn current() -> Option<Retained<UITextInputContext>>;
     );
 }

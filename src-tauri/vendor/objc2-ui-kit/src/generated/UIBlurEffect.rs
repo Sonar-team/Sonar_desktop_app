@@ -103,7 +103,7 @@ impl UIBlurEffect {
     extern_methods!(
         #[unsafe(method(effectWithStyle:))]
         #[unsafe(method_family = none)]
-        pub fn effectWithStyle(
+        pub unsafe fn effectWithStyle(
             style: UIBlurEffectStyle,
             mtm: MainThreadMarker,
         ) -> Retained<UIBlurEffect>;
@@ -116,10 +116,10 @@ impl UIBlurEffect {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

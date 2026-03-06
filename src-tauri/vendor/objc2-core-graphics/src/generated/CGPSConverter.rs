@@ -11,7 +11,6 @@ use objc2_core_foundation::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgpsconverter?language=objc)
-#[doc(alias = "CGPSConverterRef")]
 #[repr(C)]
 pub struct CGPSConverter {
     inner: [u8; 0],
@@ -52,7 +51,6 @@ pub type CGPSConverterReleaseInfoCallback = Option<unsafe extern "C-unwind" fn(*
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgpsconvertercallbacks?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CGPSConverterCallbacks {
     pub version: c_uint,
@@ -88,11 +86,6 @@ unsafe impl RefEncode for CGPSConverterCallbacks {
 }
 
 impl CGPSConverter {
-    /// # Safety
-    ///
-    /// - `info` must be a valid pointer or null.
-    /// - `callbacks` must be a valid pointer.
-    /// - `options` generics must be of the correct type.
     #[doc(alias = "CGPSConverterCreate")]
     #[inline]
     pub unsafe fn new(
@@ -111,14 +104,11 @@ impl CGPSConverter {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `options` generics must be of the correct type.
     #[doc(alias = "CGPSConverterConvert")]
     #[cfg(all(feature = "CGDataConsumer", feature = "CGDataProvider"))]
     #[inline]
     pub unsafe fn convert(
-        &self,
+        self: &CGPSConverter,
         provider: &CGDataProvider,
         consumer: &CGDataConsumer,
         options: Option<&CFDictionary>,
@@ -136,7 +126,7 @@ impl CGPSConverter {
 
     #[doc(alias = "CGPSConverterAbort")]
     #[inline]
-    pub fn abort(&self) -> bool {
+    pub unsafe fn abort(self: &CGPSConverter) -> bool {
         extern "C-unwind" {
             fn CGPSConverterAbort(converter: &CGPSConverter) -> bool;
         }
@@ -145,7 +135,7 @@ impl CGPSConverter {
 
     #[doc(alias = "CGPSConverterIsConverting")]
     #[inline]
-    pub fn is_converting(&self) -> bool {
+    pub unsafe fn is_converting(self: &CGPSConverter) -> bool {
         extern "C-unwind" {
             fn CGPSConverterIsConverting(converter: &CGPSConverter) -> bool;
         }
@@ -193,20 +183,12 @@ extern "C-unwind" {
     ) -> bool;
 }
 
-#[deprecated = "renamed to `CGPSConverter::abort`"]
-#[inline]
-pub extern "C-unwind" fn CGPSConverterAbort(converter: &CGPSConverter) -> bool {
-    extern "C-unwind" {
-        fn CGPSConverterAbort(converter: &CGPSConverter) -> bool;
-    }
-    unsafe { CGPSConverterAbort(converter) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGPSConverter::abort`"]
+    pub fn CGPSConverterAbort(converter: &CGPSConverter) -> bool;
 }
 
-#[deprecated = "renamed to `CGPSConverter::is_converting`"]
-#[inline]
-pub extern "C-unwind" fn CGPSConverterIsConverting(converter: &CGPSConverter) -> bool {
-    extern "C-unwind" {
-        fn CGPSConverterIsConverting(converter: &CGPSConverter) -> bool;
-    }
-    unsafe { CGPSConverterIsConverting(converter) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGPSConverter::is_converting`"]
+    pub fn CGPSConverterIsConverting(converter: &CGPSConverter) -> bool;
 }

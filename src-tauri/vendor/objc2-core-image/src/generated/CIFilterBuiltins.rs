@@ -14,47 +14,10 @@ use objc2_foundation::*;
 use crate::*;
 
 extern_protocol!(
-    /// The protocol for the Distance Gradient From Red Mask filter.
-    ///
-    /// Produces an infinite image where the red channel contains the distance in pixels from each pixel to the mask.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidistancegradientfromredmask?language=objc)
-    #[cfg(feature = "CIFilter")]
-    pub unsafe trait CIDistanceGradientFromRedMask: CIFilterProtocol {
-        #[cfg(feature = "CIImage")]
-        /// The input image whose red channel defines a mask. If the red channel pixel value is greater than 0.5 then the point is considered in the mask and output pixel will be zero. Otherwise the output pixel will be a value between zero and one.
-        #[unsafe(method(inputImage))]
-        #[unsafe(method_family = none)]
-        unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
-
-        #[cfg(feature = "CIImage")]
-        /// Setter for [`inputImage`][Self::inputImage].
-        #[unsafe(method(setInputImage:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
-
-        /// Determines the maximum distance to the mask that can be measured. Distances between zero and the maximum will be normalized to zero and one.
-        #[unsafe(method(maximumDistance))]
-        #[unsafe(method_family = none)]
-        unsafe fn maximumDistance(&self) -> c_float;
-
-        /// Setter for [`maximumDistance`][Self::maximumDistance].
-        #[unsafe(method(setMaximumDistance:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setMaximumDistance(&self, maximum_distance: c_float);
-    }
-);
-
-extern_protocol!(
-    /// The protocol for the Gaussian Gradient filter.
-    ///
-    /// Generates a gradient that varies from one color to another using a Gaussian distribution.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cigaussiangradient?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cigaussiangradient?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIGaussianGradient: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -66,7 +29,6 @@ extern_protocol!(
         unsafe fn setCenter(&self, center: CGPoint);
 
         #[cfg(feature = "CIColor")]
-        /// The first color to use in the gradient.
         #[unsafe(method(color0))]
         #[unsafe(method_family = none)]
         unsafe fn color0(&self) -> Retained<CIColor>;
@@ -78,7 +40,6 @@ extern_protocol!(
         unsafe fn setColor0(&self, color0: &CIColor);
 
         #[cfg(feature = "CIColor")]
-        /// The second color to use in the gradient.
         #[unsafe(method(color1))]
         #[unsafe(method_family = none)]
         unsafe fn color1(&self) -> Retained<CIColor>;
@@ -89,7 +50,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor1(&self, color1: &CIColor);
 
-        /// The radius of the Gaussian distribution.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -102,14 +62,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Hue/Saturation/Value Gradient filter.
-    ///
-    /// Generates a color wheel that shows hues and saturations for a specified value.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihuesaturationvaluegradient?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihuesaturationvaluegradient?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIHueSaturationValueGradient: CIFilterProtocol {
-        /// The color value used to generate the color wheel.
         #[unsafe(method(value))]
         #[unsafe(method_family = none)]
         unsafe fn value(&self) -> c_float;
@@ -119,7 +74,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setValue(&self, value: c_float);
 
-        /// The radius of the color wheel in pixels.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -129,7 +83,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The amount to smooth the hue angle to make it appear more continuous.
         #[unsafe(method(softness))]
         #[unsafe(method_family = none)]
         unsafe fn softness(&self) -> c_float;
@@ -139,7 +92,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSoftness(&self, softness: c_float);
 
-        /// The amount of dithered noise to add to the color wheel to avoid banding artifacts.
         #[unsafe(method(dither))]
         #[unsafe(method_family = none)]
         unsafe fn dither(&self) -> c_float;
@@ -150,7 +102,6 @@ extern_protocol!(
         unsafe fn setDither(&self, dither: c_float);
 
         #[cfg(feature = "objc2-core-graphics")]
-        /// The CGColorSpaceRef that the color wheel should be generated in.
         #[unsafe(method(colorSpace))]
         #[unsafe(method_family = none)]
         unsafe fn colorSpace(&self) -> Option<Retained<CGColorSpace>>;
@@ -164,15 +115,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Linear Gradient filter.
-    ///
-    /// Generates a gradient that varies along a linear axis between two defined endpoints.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilineargradient?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilineargradient?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CILinearGradient: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The starting position of the gradient -- where the first color begins.
         #[unsafe(method(point0))]
         #[unsafe(method_family = none)]
         unsafe fn point0(&self) -> CGPoint;
@@ -184,7 +130,6 @@ extern_protocol!(
         unsafe fn setPoint0(&self, point0: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The ending position of the gradient -- where the second color begins.
         #[unsafe(method(point1))]
         #[unsafe(method_family = none)]
         unsafe fn point1(&self) -> CGPoint;
@@ -196,7 +141,6 @@ extern_protocol!(
         unsafe fn setPoint1(&self, point1: CGPoint);
 
         #[cfg(feature = "CIColor")]
-        /// The first color to use in the gradient.
         #[unsafe(method(color0))]
         #[unsafe(method_family = none)]
         unsafe fn color0(&self) -> Retained<CIColor>;
@@ -208,7 +152,6 @@ extern_protocol!(
         unsafe fn setColor0(&self, color0: &CIColor);
 
         #[cfg(feature = "CIColor")]
-        /// The second color to use in the gradient.
         #[unsafe(method(color1))]
         #[unsafe(method_family = none)]
         unsafe fn color1(&self) -> Retained<CIColor>;
@@ -222,15 +165,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Radial Gradient filter.
-    ///
-    /// Generates a gradient that varies radially between two circles having the same center. It is valid for one of the two circles to have a radius of 0.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciradialgradient?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciradialgradient?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIRadialGradient: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -241,7 +179,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The radius of the starting circle to use in the gradient.
         #[unsafe(method(radius0))]
         #[unsafe(method_family = none)]
         unsafe fn radius0(&self) -> c_float;
@@ -251,7 +188,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius0(&self, radius0: c_float);
 
-        /// The radius of the ending circle to use in the gradient.
         #[unsafe(method(radius1))]
         #[unsafe(method_family = none)]
         unsafe fn radius1(&self) -> c_float;
@@ -262,7 +198,6 @@ extern_protocol!(
         unsafe fn setRadius1(&self, radius1: c_float);
 
         #[cfg(feature = "CIColor")]
-        /// The first color to use in the gradient.
         #[unsafe(method(color0))]
         #[unsafe(method_family = none)]
         unsafe fn color0(&self) -> Retained<CIColor>;
@@ -274,7 +209,6 @@ extern_protocol!(
         unsafe fn setColor0(&self, color0: &CIColor);
 
         #[cfg(feature = "CIColor")]
-        /// The second color to use in the gradient.
         #[unsafe(method(color1))]
         #[unsafe(method_family = none)]
         unsafe fn color1(&self) -> Retained<CIColor>;
@@ -288,47 +222,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Signed Distance Gradient From Red Mask filter.
-    ///
-    /// Produces an infinite image where the red channel contains the distance in pixels from each pixel to the mask.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisigneddistancegradientfromredmask?language=objc)
-    #[cfg(feature = "CIFilter")]
-    pub unsafe trait CISignedDistanceGradientFromRedMask: CIFilterProtocol {
-        #[cfg(feature = "CIImage")]
-        /// The input image whose red channel defines a mask. If the red channel pixel value is greater than 0.5 then the point is considered in the mask and output pixel will be a value between zero and negative one. Otherwise the output pixel will be a value between zero and one.
-        #[unsafe(method(inputImage))]
-        #[unsafe(method_family = none)]
-        unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
-
-        #[cfg(feature = "CIImage")]
-        /// Setter for [`inputImage`][Self::inputImage].
-        #[unsafe(method(setInputImage:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
-
-        /// Determines the maximum distance to the mask that can be measured. Distances between zero and the maximum will be normalized to negative one and one.
-        #[unsafe(method(maximumDistance))]
-        #[unsafe(method_family = none)]
-        unsafe fn maximumDistance(&self) -> c_float;
-
-        /// Setter for [`maximumDistance`][Self::maximumDistance].
-        #[unsafe(method(setMaximumDistance:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setMaximumDistance(&self, maximum_distance: c_float);
-    }
-);
-
-extern_protocol!(
-    /// The protocol for the Smooth Linear Gradient filter.
-    ///
-    /// Generates a gradient that varies along a linear axis between two defined endpoints.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cismoothlineargradient?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cismoothlineargradient?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISmoothLinearGradient: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The starting position of the gradient -- where the first color begins.
         #[unsafe(method(point0))]
         #[unsafe(method_family = none)]
         unsafe fn point0(&self) -> CGPoint;
@@ -340,7 +237,6 @@ extern_protocol!(
         unsafe fn setPoint0(&self, point0: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The ending position of the gradient -- where the second color begins.
         #[unsafe(method(point1))]
         #[unsafe(method_family = none)]
         unsafe fn point1(&self) -> CGPoint;
@@ -352,7 +248,6 @@ extern_protocol!(
         unsafe fn setPoint1(&self, point1: CGPoint);
 
         #[cfg(feature = "CIColor")]
-        /// The first color to use in the gradient.
         #[unsafe(method(color0))]
         #[unsafe(method_family = none)]
         unsafe fn color0(&self) -> Retained<CIColor>;
@@ -364,7 +259,6 @@ extern_protocol!(
         unsafe fn setColor0(&self, color0: &CIColor);
 
         #[cfg(feature = "CIColor")]
-        /// The second color to use in the gradient.
         #[unsafe(method(color1))]
         #[unsafe(method_family = none)]
         unsafe fn color1(&self) -> Retained<CIColor>;
@@ -378,15 +272,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Sharpen Luminance filter.
-    ///
-    /// Increases image detail by sharpening. It operates on the luminance of the image; the chrominance of the pixels remains unaffected.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisharpenluminance?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisharpenluminance?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISharpenLuminance: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -397,7 +286,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The amount of sharpening to apply. Larger values are sharper.
         #[unsafe(method(sharpness))]
         #[unsafe(method_family = none)]
         unsafe fn sharpness(&self) -> c_float;
@@ -407,7 +295,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSharpness(&self, sharpness: c_float);
 
-        /// The distance from the center of the effect.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -420,15 +307,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Unsharp Mask filter.
-    ///
-    /// Increases the contrast of the edges between pixels of different colors in an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciunsharpmask?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciunsharpmask?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIUnsharpMask: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -439,7 +321,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The radius around a given pixel to apply the unsharp mask. The larger the radius, the more of the image is affected.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -449,7 +330,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The intensity of the effect. The larger the value, the more contrast in the affected area.
         #[unsafe(method(intensity))]
         #[unsafe(method_family = none)]
         unsafe fn intensity(&self) -> c_float;
@@ -462,15 +342,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Circular Screen filter.
-    ///
-    /// Simulates a circular-shaped halftone screen.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicircularscreen?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicircularscreen?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICircularScreen: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -482,7 +357,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -493,7 +367,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The distance between each circle in the pattern.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -503,7 +376,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The sharpness of the circles. The larger the value, the sharper the circles.
         #[unsafe(method(sharpness))]
         #[unsafe(method_family = none)]
         unsafe fn sharpness(&self) -> c_float;
@@ -516,15 +388,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the CMYK Halftone filter.
-    ///
-    /// Creates a color, halftoned rendition of the source image, using cyan, magenta, yellow, and black inks over a white page.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicmykhalftone?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicmykhalftone?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICMYKHalftone: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -536,7 +403,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -547,7 +413,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The distance between dots in the pattern.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -557,7 +422,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The angle in radians of the pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -567,7 +431,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The sharpness of the pattern. The larger the value, the sharper the pattern.
         #[unsafe(method(sharpness))]
         #[unsafe(method_family = none)]
         unsafe fn sharpness(&self) -> c_float;
@@ -577,7 +440,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSharpness(&self, sharpness: c_float);
 
-        /// The gray component replacement value. The value can vary from 0.0 (none) to 1.0.
         #[unsafe(method(grayComponentReplacement))]
         #[unsafe(method_family = none)]
         unsafe fn grayComponentReplacement(&self) -> c_float;
@@ -587,7 +449,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setGrayComponentReplacement(&self, gray_component_replacement: c_float);
 
-        /// The under color removal value. The value can vary from 0.0 to 1.0.
         #[unsafe(method(underColorRemoval))]
         #[unsafe(method_family = none)]
         unsafe fn underColorRemoval(&self) -> c_float;
@@ -600,15 +461,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Dot Screen filter.
-    ///
-    /// Simulates the dot patterns of a halftone screen.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidotscreen?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidotscreen?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDotScreen: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -620,7 +476,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -631,7 +486,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -641,7 +495,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The distance between dots in the pattern.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -651,7 +504,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The sharpness of the pattern. The larger the value, the sharper the pattern.
         #[unsafe(method(sharpness))]
         #[unsafe(method_family = none)]
         unsafe fn sharpness(&self) -> c_float;
@@ -664,15 +516,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Hatched Screen filter.
-    ///
-    /// Simulates the hatched pattern of a halftone screen.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihatchedscreen?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihatchedscreen?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIHatchedScreen: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -684,7 +531,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -695,7 +541,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -705,7 +550,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The distance between lines in the pattern.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -715,7 +559,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The amount of sharpening to apply.
         #[unsafe(method(sharpness))]
         #[unsafe(method_family = none)]
         unsafe fn sharpness(&self) -> c_float;
@@ -728,15 +571,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Line Screen filter.
-    ///
-    /// Simulates the line pattern of a halftone screen.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilinescreen?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilinescreen?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CILineScreen: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -748,7 +586,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -759,7 +596,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -769,7 +605,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The distance between lines in the pattern.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -779,7 +614,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The sharpness of the pattern. The larger the value, the sharper the pattern.
         #[unsafe(method(sharpness))]
         #[unsafe(method_family = none)]
         unsafe fn sharpness(&self) -> c_float;
@@ -792,14 +626,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// A protocol for filters that adjust the geometry of an image
-    /// given four control points in the coordinate space of the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cifourcoordinategeometryfilter?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cifourcoordinategeometryfilter?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIFourCoordinateGeometryFilter: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as the input for the geometry adjustment filter.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -811,7 +641,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The top left point in the coordinate space of the image.
         #[unsafe(method(topLeft))]
         #[unsafe(method_family = none)]
         unsafe fn topLeft(&self) -> CGPoint;
@@ -823,7 +652,6 @@ extern_protocol!(
         unsafe fn setTopLeft(&self, top_left: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The top right point in the coordinate space of the image.
         #[unsafe(method(topRight))]
         #[unsafe(method_family = none)]
         unsafe fn topRight(&self) -> CGPoint;
@@ -835,7 +663,6 @@ extern_protocol!(
         unsafe fn setTopRight(&self, top_right: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The bottom right point in the coordinate space of the image.
         #[unsafe(method(bottomRight))]
         #[unsafe(method_family = none)]
         unsafe fn bottomRight(&self) -> CGPoint;
@@ -847,7 +674,6 @@ extern_protocol!(
         unsafe fn setBottomRight(&self, bottom_right: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The bottom left point in the coordinate space of the image.
         #[unsafe(method(bottomLeft))]
         #[unsafe(method_family = none)]
         unsafe fn bottomLeft(&self) -> CGPoint;
@@ -861,15 +687,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Bicubic Scale Transform filter.
-    ///
-    /// Produces a high-quality, scaled version of a source image. The parameters of B and C for this filter determine the sharpness or softness of the resampling. The most commonly used B and C values are 0.0 and 0.75, respectively.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibicubicscaletransform?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibicubicscaletransform?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIBicubicScaleTransform: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -880,7 +701,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The scaling factor to use on the image. Values less than 1.0 scale down the images. Values greater than 1.0 scale up the image.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -890,7 +710,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setScale(&self, scale: c_float);
 
-        /// The additional horizontal scaling factor to use on the image.
         #[unsafe(method(aspectRatio))]
         #[unsafe(method_family = none)]
         unsafe fn aspectRatio(&self) -> c_float;
@@ -900,7 +719,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAspectRatio(&self, aspect_ratio: c_float);
 
-        /// Specifies the value of B to use for the cubic resampling function.
         #[unsafe(method(parameterB))]
         #[unsafe(method_family = none)]
         unsafe fn parameterB(&self) -> c_float;
@@ -910,7 +728,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setParameterB(&self, parameter_b: c_float);
 
-        /// Specifies the value of C to use for the cubic resampling function.
         #[unsafe(method(parameterC))]
         #[unsafe(method_family = none)]
         unsafe fn parameterC(&self) -> c_float;
@@ -923,15 +740,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Edge Preserve Upsample Filter filter.
-    ///
-    /// Upsamples a small image to the size of the input image using the luminance of the input image as a guide to preserve detail.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciedgepreserveupsample?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciedgepreserveupsample?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIEdgePreserveUpsample: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as a guide to upsample the small image.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -943,7 +755,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The image that the filter upsamples.
         #[unsafe(method(smallImage))]
         #[unsafe(method_family = none)]
         unsafe fn smallImage(&self) -> Option<Retained<CIImage>>;
@@ -954,7 +765,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSmallImage(&self, small_image: Option<&CIImage>);
 
-        /// A value that specifies the influence of the input image’s spatial information on the upsampling operation.
         #[unsafe(method(spatialSigma))]
         #[unsafe(method_family = none)]
         unsafe fn spatialSigma(&self) -> c_float;
@@ -964,7 +774,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSpatialSigma(&self, spatial_sigma: c_float);
 
-        /// A value that specifies the influence of the input image’s luma information on the upsampling operation.
         #[unsafe(method(lumaSigma))]
         #[unsafe(method_family = none)]
         unsafe fn lumaSigma(&self) -> c_float;
@@ -977,14 +786,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Combined Keystone Correction filter.
-    ///
-    /// Apply keystone correction to an image with combined horizontal and vertical guides.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cikeystonecorrectioncombined?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cikeystonecorrectioncombined?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIKeystoneCorrectionCombined: CIFourCoordinateGeometryFilter {
-        /// 35mm equivalent focal length of the input image.
         #[unsafe(method(focalLength))]
         #[unsafe(method_family = none)]
         unsafe fn focalLength(&self) -> c_float;
@@ -997,14 +801,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Horizontal Keystone Correction filter.
-    ///
-    /// Apply horizontal keystone correction to an image with guides.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cikeystonecorrectionhorizontal?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cikeystonecorrectionhorizontal?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIKeystoneCorrectionHorizontal: CIFourCoordinateGeometryFilter {
-        /// 35mm equivalent focal length of the input image.
         #[unsafe(method(focalLength))]
         #[unsafe(method_family = none)]
         unsafe fn focalLength(&self) -> c_float;
@@ -1017,14 +816,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Vertical Keystone Correction filter.
-    ///
-    /// Apply vertical keystone correction to an image with guides.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cikeystonecorrectionvertical?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cikeystonecorrectionvertical?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIKeystoneCorrectionVertical: CIFourCoordinateGeometryFilter {
-        /// 35mm equivalent focal length of the input image.
         #[unsafe(method(focalLength))]
         #[unsafe(method_family = none)]
         unsafe fn focalLength(&self) -> c_float;
@@ -1037,15 +831,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Lanczos Scale Transform filter.
-    ///
-    /// Produces a high-quality, scaled version of a source image. You typically use this filter to scale down an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilanczosscaletransform?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilanczosscaletransform?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CILanczosScaleTransform: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -1056,7 +845,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The scaling factor to use on the image. Values less than 1.0 scale down the images. Values greater than 1.0 scale up the image.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -1066,7 +854,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setScale(&self, scale: c_float);
 
-        /// The additional horizontal scaling factor to use on the image.
         #[unsafe(method(aspectRatio))]
         #[unsafe(method_family = none)]
         unsafe fn aspectRatio(&self) -> c_float;
@@ -1079,15 +866,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Maximum Scale Transform filter.
-    ///
-    /// Produces a scaled version of a source image that uses the maximum of neighboring pixels instead of linear averaging.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimaximumscaletransform?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimaximumscaletransform?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMaximumScaleTransform: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -1098,7 +880,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The scaling factor to use on the image. Values less than 1.0 scale down the images. Values greater than 1.0 scale up the image.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -1108,7 +889,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setScale(&self, scale: c_float);
 
-        /// The additional horizontal scaling factor to use on the image.
         #[unsafe(method(aspectRatio))]
         #[unsafe(method_family = none)]
         unsafe fn aspectRatio(&self) -> c_float;
@@ -1121,14 +901,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Perspective Correction filter.
-    ///
-    /// Apply a perspective correction to an image. This geometry maps four control points in the input image to a rectangle.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciperspectivecorrection?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciperspectivecorrection?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPerspectiveCorrection: CIFourCoordinateGeometryFilter {
-        /// If true then the filter crops the output image to the rectangle that the points map to. If false, then pixels from outside the four control points remain in the output image
         #[unsafe(method(crop))]
         #[unsafe(method_family = none)]
         unsafe fn crop(&self) -> bool;
@@ -1141,15 +916,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Perspective Rotate filter.
-    ///
-    /// Apply a homogenous rotation transform to an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciperspectiverotate?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciperspectiverotate?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPerspectiveRotate: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to process.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -1160,7 +930,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// 35mm equivalent focal length of the input image.
         #[unsafe(method(focalLength))]
         #[unsafe(method_family = none)]
         unsafe fn focalLength(&self) -> c_float;
@@ -1170,7 +939,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setFocalLength(&self, focal_length: c_float);
 
-        /// Pitch angle in radians.
         #[unsafe(method(pitch))]
         #[unsafe(method_family = none)]
         unsafe fn pitch(&self) -> c_float;
@@ -1180,7 +948,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setPitch(&self, pitch: c_float);
 
-        /// Yaw angle in radians.
         #[unsafe(method(yaw))]
         #[unsafe(method_family = none)]
         unsafe fn yaw(&self) -> c_float;
@@ -1190,7 +957,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setYaw(&self, yaw: c_float);
 
-        /// Roll angle in radians.
         #[unsafe(method(roll))]
         #[unsafe(method_family = none)]
         unsafe fn roll(&self) -> c_float;
@@ -1203,27 +969,18 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Perspective Transform filter.
-    ///
-    /// Alters the geometry of an image to simulate the observer changing viewing position. You can use the perspective filter to skew an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciperspectivetransform?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciperspectivetransform?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPerspectiveTransform: CIFourCoordinateGeometryFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Perspective Transform with Extent filter.
-    ///
-    /// Alters the geometry of an image to simulate the observer changing viewing position. You can use the perspective filter to skew an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciperspectivetransformwithextent?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciperspectivetransformwithextent?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPerspectiveTransformWithExtent:
         CIFourCoordinateGeometryFilter
     {
         #[cfg(feature = "objc2-core-foundation")]
-        /// A rectangle that defines the extent of the effect.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -1237,15 +994,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Straighten filter.
-    ///
-    /// Rotates a source image by the specified angle in radians. The image is then scaled and cropped so that the rotated image fits the extent of the input image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cistraighten?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cistraighten?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIStraighten: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -1256,7 +1008,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The angle in radians of the effect.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -1269,13 +1020,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// A protocol for filters that perform an animatable transition between two images.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/citransitionfilter?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/citransitionfilter?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CITransitionFilter: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use at the start of the transition.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -1287,7 +1035,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The image to use at the end of the transition.
         #[unsafe(method(targetImage))]
         #[unsafe(method_family = none)]
         unsafe fn targetImage(&self) -> Option<Retained<CIImage>>;
@@ -1298,7 +1045,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setTargetImage(&self, target_image: Option<&CIImage>);
 
-        /// The parametric time of the transition between `0` and `1`.
         #[unsafe(method(time))]
         #[unsafe(method_family = none)]
         unsafe fn time(&self) -> c_float;
@@ -1311,14 +1057,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Accordion Fold Transition filter.
-    ///
-    /// Transitions from one image to another of a differing dimensions by unfolding.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciaccordionfoldtransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciaccordionfoldtransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAccordionFoldTransition: CITransitionFilter {
-        /// The height in pixels from the bottom of the image to the bottom of the folded part of the transition.
         #[unsafe(method(bottomHeight))]
         #[unsafe(method_family = none)]
         unsafe fn bottomHeight(&self) -> c_float;
@@ -1328,7 +1069,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setBottomHeight(&self, bottom_height: c_float);
 
-        /// The number of folds used in the transition.
         #[unsafe(method(numberOfFolds))]
         #[unsafe(method_family = none)]
         unsafe fn numberOfFolds(&self) -> c_float;
@@ -1338,7 +1078,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setNumberOfFolds(&self, number_of_folds: c_float);
 
-        /// A value that specifies the intensity of the shadow in the transition.
         #[unsafe(method(foldShadowAmount))]
         #[unsafe(method_family = none)]
         unsafe fn foldShadowAmount(&self) -> c_float;
@@ -1351,14 +1090,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Bars Swipe Transition filter.
-    ///
-    /// Transitions from one image to another by swiping rectangular portions of the foreground image to disclose the target image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibarsswipetransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibarsswipetransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIBarsSwipeTransition: CITransitionFilter {
-        /// The angle in radians of the bars.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -1368,7 +1102,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of each bar.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -1378,7 +1111,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The offset of one bar with respect to another.
         #[unsafe(method(barOffset))]
         #[unsafe(method_family = none)]
         unsafe fn barOffset(&self) -> c_float;
@@ -1391,15 +1123,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Copy Machine filter.
-    ///
-    /// Transitions from one image to another by simulating the effect of a copy machine.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicopymachinetransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicopymachinetransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICopyMachineTransition: CITransitionFilter {
         #[cfg(feature = "objc2-core-foundation")]
-        /// A rectangle that defines the extent of the effect.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -1411,7 +1138,6 @@ extern_protocol!(
         unsafe fn setExtent(&self, extent: CGRect);
 
         #[cfg(feature = "CIColor")]
-        /// The color of the copier light.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -1422,7 +1148,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor(&self, color: &CIColor);
 
-        /// The angle in radians of the copier light.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -1432,7 +1157,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of the copier light.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -1442,7 +1166,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The opacity of the copier light. A value of 0.0 is transparent. A value of 1.0 is opaque.
         #[unsafe(method(opacity))]
         #[unsafe(method_family = none)]
         unsafe fn opacity(&self) -> c_float;
@@ -1455,15 +1178,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Disintegrate With Mask filter.
-    ///
-    /// Transitions from one image to another using the shape defined by a mask.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidisintegratewithmasktransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidisintegratewithmasktransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDisintegrateWithMaskTransition: CITransitionFilter {
         #[cfg(feature = "CIImage")]
-        /// An image that defines the shape to use when disintegrating from the source to the target image.
         #[unsafe(method(maskImage))]
         #[unsafe(method_family = none)]
         unsafe fn maskImage(&self) -> Option<Retained<CIImage>>;
@@ -1474,7 +1192,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMaskImage(&self, mask_image: Option<&CIImage>);
 
-        /// The radius of the shadow created by the mask.
         #[unsafe(method(shadowRadius))]
         #[unsafe(method_family = none)]
         unsafe fn shadowRadius(&self) -> c_float;
@@ -1484,7 +1201,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setShadowRadius(&self, shadow_radius: c_float);
 
-        /// The density of the shadow created by the mask.
         #[unsafe(method(shadowDensity))]
         #[unsafe(method_family = none)]
         unsafe fn shadowDensity(&self) -> c_float;
@@ -1495,7 +1211,6 @@ extern_protocol!(
         unsafe fn setShadowDensity(&self, shadow_density: c_float);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The offset of the shadow created by the mask.
         #[unsafe(method(shadowOffset))]
         #[unsafe(method_family = none)]
         unsafe fn shadowOffset(&self) -> CGPoint;
@@ -1509,25 +1224,16 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Dissolve filter.
-    ///
-    /// Uses a dissolve to transition from one image to another.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidissolvetransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidissolvetransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDissolveTransition: CITransitionFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Flash filter.
-    ///
-    /// Transitions from one image to another by creating a flash. The flash originates from a point you specify. Small at first, it rapidly expands until the image frame is completely filled with the flash color. As the color fades, the target image begins to appear.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciflashtransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciflashtransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIFlashTransition: CITransitionFilter {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -1539,7 +1245,6 @@ extern_protocol!(
         unsafe fn setCenter(&self, center: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The extent of the flash.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -1551,7 +1256,6 @@ extern_protocol!(
         unsafe fn setExtent(&self, extent: CGRect);
 
         #[cfg(feature = "CIColor")]
-        /// The color of the light rays emanating from the flash.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -1562,7 +1266,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor(&self, color: &CIColor);
 
-        /// The radius of the light rays emanating from the flash.
         #[unsafe(method(maxStriationRadius))]
         #[unsafe(method_family = none)]
         unsafe fn maxStriationRadius(&self) -> c_float;
@@ -1572,7 +1275,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMaxStriationRadius(&self, max_striation_radius: c_float);
 
-        /// The strength of the light rays emanating from the flash.
         #[unsafe(method(striationStrength))]
         #[unsafe(method_family = none)]
         unsafe fn striationStrength(&self) -> c_float;
@@ -1582,7 +1284,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setStriationStrength(&self, striation_strength: c_float);
 
-        /// The contrast of the light rays emanating from the flash.
         #[unsafe(method(striationContrast))]
         #[unsafe(method_family = none)]
         unsafe fn striationContrast(&self) -> c_float;
@@ -1592,7 +1293,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setStriationContrast(&self, striation_contrast: c_float);
 
-        /// The amount of fade between the flash and the target image. The higher the value, the more flash time and the less fade time.
         #[unsafe(method(fadeThreshold))]
         #[unsafe(method_family = none)]
         unsafe fn fadeThreshold(&self) -> c_float;
@@ -1605,15 +1305,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Mod filter.
-    ///
-    /// Transitions from one image to another by revealing the target image through irregularly shaped holes.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimodtransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimodtransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIModTransition: CITransitionFilter {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -1624,7 +1319,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the mod hole pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -1634,7 +1328,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The radius of the undistorted holes in the pattern.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -1644,7 +1337,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The amount of stretching applied to the mod hole pattern. Holes in the center are not distorted as much as those at the edge of the image.
         #[unsafe(method(compression))]
         #[unsafe(method_family = none)]
         unsafe fn compression(&self) -> c_float;
@@ -1657,15 +1349,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Page Curl filter.
-    ///
-    /// Transitions from one image to another by simulating a curling page, revealing the new image as the page curls.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipagecurltransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipagecurltransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPageCurlTransition: CITransitionFilter {
         #[cfg(feature = "CIImage")]
-        /// The image that appears on the back of the source image, as the page curls to reveal the target image.
         #[unsafe(method(backsideImage))]
         #[unsafe(method_family = none)]
         unsafe fn backsideImage(&self) -> Option<Retained<CIImage>>;
@@ -1677,7 +1364,6 @@ extern_protocol!(
         unsafe fn setBacksideImage(&self, backside_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// An image that looks like a shaded sphere enclosed in a square image.
         #[unsafe(method(shadingImage))]
         #[unsafe(method_family = none)]
         unsafe fn shadingImage(&self) -> Option<Retained<CIImage>>;
@@ -1689,7 +1375,6 @@ extern_protocol!(
         unsafe fn setShadingImage(&self, shading_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The extent of the effect.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -1700,7 +1385,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setExtent(&self, extent: CGRect);
 
-        /// The angle in radians of the curling page.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -1710,7 +1394,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The radius of the curl.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -1723,15 +1406,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Page Curl With Shadow filter.
-    ///
-    /// Transitions from one image to another by simulating a curling page, revealing the new image as the page curls.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipagecurlwithshadowtransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipagecurlwithshadowtransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPageCurlWithShadowTransition: CITransitionFilter {
         #[cfg(feature = "CIImage")]
-        /// The image that appears on the back of the source image, as the page curls to reveal the target image.
         #[unsafe(method(backsideImage))]
         #[unsafe(method_family = none)]
         unsafe fn backsideImage(&self) -> Option<Retained<CIImage>>;
@@ -1743,7 +1421,6 @@ extern_protocol!(
         unsafe fn setBacksideImage(&self, backside_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The extent of the effect.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -1754,7 +1431,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setExtent(&self, extent: CGRect);
 
-        /// The angle in radians of the curling page.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -1764,7 +1440,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The radius of the curl.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -1774,7 +1449,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The maximum size in pixels of the shadow.
         #[unsafe(method(shadowSize))]
         #[unsafe(method_family = none)]
         unsafe fn shadowSize(&self) -> c_float;
@@ -1784,7 +1458,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setShadowSize(&self, shadow_size: c_float);
 
-        /// The strength of the shadow.
         #[unsafe(method(shadowAmount))]
         #[unsafe(method_family = none)]
         unsafe fn shadowAmount(&self) -> c_float;
@@ -1795,7 +1468,6 @@ extern_protocol!(
         unsafe fn setShadowAmount(&self, shadow_amount: c_float);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The rectangular portion of input image that will cast a shadow.
         #[unsafe(method(shadowExtent))]
         #[unsafe(method_family = none)]
         unsafe fn shadowExtent(&self) -> CGRect;
@@ -1809,15 +1481,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Ripple filter.
-    ///
-    /// Transitions from one image to another by creating a circular wave that expands from the center point, revealing the new image in the wake of the wave.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cirippletransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cirippletransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIRippleTransition: CITransitionFilter {
         #[cfg(feature = "CIImage")]
-        /// An image that looks like a shaded sphere enclosed in a square image.
         #[unsafe(method(shadingImage))]
         #[unsafe(method_family = none)]
         unsafe fn shadingImage(&self) -> Option<Retained<CIImage>>;
@@ -1829,7 +1496,6 @@ extern_protocol!(
         unsafe fn setShadingImage(&self, shading_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -1841,7 +1507,6 @@ extern_protocol!(
         unsafe fn setCenter(&self, center: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// A rectangle that defines the extent of the effect.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -1852,7 +1517,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setExtent(&self, extent: CGRect);
 
-        /// The width of the ripple.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -1862,7 +1526,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// A value that determines whether the ripple starts as a bulge (higher value) or a dimple (lower value).
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -1875,15 +1538,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Swipe filter.
-    ///
-    /// Transitions from one image to another by simulating a swiping action.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciswipetransition?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciswipetransition?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISwipeTransition: CITransitionFilter {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The extent of the effect.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -1895,7 +1553,6 @@ extern_protocol!(
         unsafe fn setExtent(&self, extent: CGRect);
 
         #[cfg(feature = "CIColor")]
-        /// The color of the swipe.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -1906,7 +1563,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor(&self, color: &CIColor);
 
-        /// The angle in radians of the swipe.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -1916,7 +1572,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of the swipe.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -1926,7 +1581,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The opacity of the swipe.
         #[unsafe(method(opacity))]
         #[unsafe(method_family = none)]
         unsafe fn opacity(&self) -> c_float;
@@ -1939,15 +1593,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Addition filter.
-    ///
-    /// Adds color components to achieve a brightening effect. This filter is typically used to add highlights and lens flare effects.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicompositeoperation?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicompositeoperation?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICompositeOperation: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as a foreground image.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -1959,7 +1608,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The image to use as a background image.
         #[unsafe(method(backgroundImage))]
         #[unsafe(method_family = none)]
         unsafe fn backgroundImage(&self) -> Option<Retained<CIImage>>;
@@ -1973,15 +1621,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Absolute Difference filter.
-    ///
-    /// Produces an image that is the absolute value of the color difference between two images. The alpha channel of the result will be the product of the two image alpha channels.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorabsolutedifference?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorabsolutedifference?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorAbsoluteDifference: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The first input image for differencing.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -1993,7 +1636,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The second input image for differencing.
         #[unsafe(method(inputImage2))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage2(&self) -> Option<Retained<CIImage>>;
@@ -2007,15 +1649,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Clamp filter.
-    ///
-    /// Clamp color to a certain range.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorclamp?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorclamp?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorClamp: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2027,7 +1664,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIVector")]
-        /// Lower clamping values.
         #[unsafe(method(minComponents))]
         #[unsafe(method_family = none)]
         unsafe fn minComponents(&self) -> Retained<CIVector>;
@@ -2039,7 +1675,6 @@ extern_protocol!(
         unsafe fn setMinComponents(&self, min_components: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// Higher clamping values.
         #[unsafe(method(maxComponents))]
         #[unsafe(method_family = none)]
         unsafe fn maxComponents(&self) -> Retained<CIVector>;
@@ -2053,15 +1688,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Controls filter.
-    ///
-    /// Adjusts saturation, brightness, and contrast values.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcontrols?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcontrols?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorControls: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2072,7 +1702,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The amount of saturation to apply. The larger the value, the more saturated the result.
         #[unsafe(method(saturation))]
         #[unsafe(method_family = none)]
         unsafe fn saturation(&self) -> c_float;
@@ -2082,7 +1711,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSaturation(&self, saturation: c_float);
 
-        /// The amount of brightness to apply. The larger the value, the brighter the result.
         #[unsafe(method(brightness))]
         #[unsafe(method_family = none)]
         unsafe fn brightness(&self) -> c_float;
@@ -2092,7 +1720,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setBrightness(&self, brightness: c_float);
 
-        /// The amount of contrast to apply. The larger the value, the more contrast in the resulting image.
         #[unsafe(method(contrast))]
         #[unsafe(method_family = none)]
         unsafe fn contrast(&self) -> c_float;
@@ -2105,15 +1732,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Matrix filter.
-    ///
-    /// Multiplies source color values and adds a bias factor to each color component.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolormatrix?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolormatrix?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorMatrix: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2125,7 +1747,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIVector")]
-        /// The amount of red to multiply the source color values by.
         #[unsafe(method(RVector))]
         #[unsafe(method_family = none)]
         unsafe fn RVector(&self) -> Retained<CIVector>;
@@ -2137,7 +1758,6 @@ extern_protocol!(
         unsafe fn setRVector(&self, r_vector: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// The amount of green to multiply the source color values by.
         #[unsafe(method(GVector))]
         #[unsafe(method_family = none)]
         unsafe fn GVector(&self) -> Retained<CIVector>;
@@ -2149,7 +1769,6 @@ extern_protocol!(
         unsafe fn setGVector(&self, g_vector: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// The amount of blue to multiply the source color values by.
         #[unsafe(method(BVector))]
         #[unsafe(method_family = none)]
         unsafe fn BVector(&self) -> Retained<CIVector>;
@@ -2161,7 +1780,6 @@ extern_protocol!(
         unsafe fn setBVector(&self, b_vector: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// The amount of alpha to multiply the source color values by.
         #[unsafe(method(AVector))]
         #[unsafe(method_family = none)]
         unsafe fn AVector(&self) -> Retained<CIVector>;
@@ -2173,7 +1791,6 @@ extern_protocol!(
         unsafe fn setAVector(&self, a_vector: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// A vector that’s added to each color component.
         #[unsafe(method(biasVector))]
         #[unsafe(method_family = none)]
         unsafe fn biasVector(&self) -> Retained<CIVector>;
@@ -2187,15 +1804,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Polynomial filter.
-    ///
-    /// Adjusts the color of an image with polynomials.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorpolynomial?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorpolynomial?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorPolynomial: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2207,7 +1819,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIVector")]
-        /// Polynomial coefficients for red channel.
         #[unsafe(method(redCoefficients))]
         #[unsafe(method_family = none)]
         unsafe fn redCoefficients(&self) -> Retained<CIVector>;
@@ -2219,7 +1830,6 @@ extern_protocol!(
         unsafe fn setRedCoefficients(&self, red_coefficients: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// Polynomial coefficients for green channel.
         #[unsafe(method(greenCoefficients))]
         #[unsafe(method_family = none)]
         unsafe fn greenCoefficients(&self) -> Retained<CIVector>;
@@ -2231,7 +1841,6 @@ extern_protocol!(
         unsafe fn setGreenCoefficients(&self, green_coefficients: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// Polynomial coefficients for blue channel.
         #[unsafe(method(blueCoefficients))]
         #[unsafe(method_family = none)]
         unsafe fn blueCoefficients(&self) -> Retained<CIVector>;
@@ -2243,7 +1852,6 @@ extern_protocol!(
         unsafe fn setBlueCoefficients(&self, blue_coefficients: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// Polynomial coefficients for alpha channel.
         #[unsafe(method(alphaCoefficients))]
         #[unsafe(method_family = none)]
         unsafe fn alphaCoefficients(&self) -> Retained<CIVector>;
@@ -2257,15 +1865,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Threshold filter.
-    ///
-    /// Produces a binarized image from an image and a threshold value. The red, green and blue channels of the resulting image will be one if its value is greater than the threshold and zero otherwise.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorthreshold?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorthreshold?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorThreshold: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2276,7 +1879,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The threshold value that governs if the RGB channels of the resulting image will be zero or one.
         #[unsafe(method(threshold))]
         #[unsafe(method_family = none)]
         unsafe fn threshold(&self) -> c_float;
@@ -2289,15 +1891,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Threshold Otsu filter.
-    ///
-    /// Produces a binarized image from an image with finite extent. The threshold is calculated from the image histogram using Otsu’s method. The red, green and blue channels of the resulting image will be one if its value is greater than the threshold and zero otherwise.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorthresholdotsu?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorthresholdotsu?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorThresholdOtsu: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2311,15 +1908,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Depth To Disparity filter.
-    ///
-    /// Convert a depth data image to disparity data.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidepthtodisparity?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidepthtodisparity?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDepthToDisparity: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The input depth data image to convert to disparity data.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2333,15 +1925,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Disparity To Depth filter.
-    ///
-    /// Convert a disparity data image to depth data.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidisparitytodepth?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidisparitytodepth?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDisparityToDepth: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The input disparity data image to convert to depth data.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2355,15 +1942,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Exposure Adjust filter.
-    ///
-    /// Adjusts the exposure setting for an image similar to the way you control exposure for a camera when you change the F-stop.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciexposureadjust?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciexposureadjust?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIExposureAdjust: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2374,7 +1956,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The amount to adjust the exposure of the image by. The larger the value, the brighter the exposure.
         #[unsafe(method(EV))]
         #[unsafe(method_family = none)]
         unsafe fn EV(&self) -> c_float;
@@ -2387,15 +1968,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Gamma Adjust filter.
-    ///
-    /// Adjusts midtone brightness. This filter is typically used to compensate for nonlinear effects of displays. Adjusting the gamma effectively changes the slope of the transition between black and white.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cigammaadjust?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cigammaadjust?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIGammaAdjust: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2406,7 +1982,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// A gamma value to use to correct image brightness. The larger the value, the darker the result.
         #[unsafe(method(power))]
         #[unsafe(method_family = none)]
         unsafe fn power(&self) -> c_float;
@@ -2419,15 +1994,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Hue Adjust filter.
-    ///
-    /// Changes the overall hue, or tint, of the source pixels.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihueadjust?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihueadjust?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIHueAdjust: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2438,7 +2008,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// An angle in radians to use to correct the hue of an image.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -2451,15 +2020,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Linear to sRGB Tone Curve filter.
-    ///
-    /// Converts an image in linear space to sRGB space.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilineartosrgbtonecurve?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilineartosrgbtonecurve?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CILinearToSRGBToneCurve: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2473,15 +2037,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the sRGB Tone Curve to Linear filter.
-    ///
-    /// Converts an image in sRGB space to linear space.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisrgbtonecurvetolinear?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisrgbtonecurvetolinear?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISRGBToneCurveToLinear: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2495,60 +2054,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the System Tone Map filter.
-    ///
-    /// Apply a global tone curve to an image that reduces colors of the input image to a desired dynamic range consistent with other frameworks.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisystemtonemap?language=objc)
-    #[cfg(feature = "CIFilter")]
-    pub unsafe trait CISystemToneMap: CIFilterProtocol {
-        #[cfg(feature = "CIImage")]
-        /// Specifies input image with content headroom and average light level properties.
-        #[unsafe(method(inputImage))]
-        #[unsafe(method_family = none)]
-        unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
-
-        #[cfg(feature = "CIImage")]
-        /// Setter for [`inputImage`][Self::inputImage].
-        #[unsafe(method(setInputImage:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
-
-        /// Specifies the current headroom of the intended display.
-        #[unsafe(method(displayHeadroom))]
-        #[unsafe(method_family = none)]
-        unsafe fn displayHeadroom(&self) -> c_float;
-
-        /// Setter for [`displayHeadroom`][Self::displayHeadroom].
-        #[unsafe(method(setDisplayHeadroom:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setDisplayHeadroom(&self, display_headroom: c_float);
-
-        /// Specifies the preferred dynamic range behavior of the tone mapping. The value should be kCIDynamicRangeStandard, kCIDynamicRangeConstrainedHigh, kCIDynamicRangeHigh or nil.  If nil then it will behave as kCIDynamicRangeHigh.
-        #[unsafe(method(preferredDynamicRange))]
-        #[unsafe(method_family = none)]
-        unsafe fn preferredDynamicRange(&self) -> Option<Retained<CIDynamicRangeOption>>;
-
-        /// Setter for [`preferredDynamicRange`][Self::preferredDynamicRange].
-        #[unsafe(method(setPreferredDynamicRange:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setPreferredDynamicRange(
-            &self,
-            preferred_dynamic_range: Option<&CIDynamicRangeOption>,
-        );
-    }
-);
-
-extern_protocol!(
-    /// The protocol for the Temperature and Tint filter.
-    ///
-    /// Adapt the reference white point for an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/citemperatureandtint?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/citemperatureandtint?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CITemperatureAndTint: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2560,7 +2069,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIVector")]
-        /// A vector containing the source white point defined by color temperature and tint or chromaticity (x,y).
         #[unsafe(method(neutral))]
         #[unsafe(method_family = none)]
         unsafe fn neutral(&self) -> Retained<CIVector>;
@@ -2572,7 +2080,6 @@ extern_protocol!(
         unsafe fn setNeutral(&self, neutral: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// A vector containing the desired white point defined by color temperature and tint or chromaticity (x,y).
         #[unsafe(method(targetNeutral))]
         #[unsafe(method_family = none)]
         unsafe fn targetNeutral(&self) -> Retained<CIVector>;
@@ -2586,15 +2093,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Tone Curve filter.
-    ///
-    /// Adjusts tone response of the R, G, and B channels of an image. The input points are five x,y values that are interpolated using a spline curve. The curve is applied in a perceptual (gamma 2) version of the working space.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/citonecurve?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/citonecurve?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIToneCurve: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2606,7 +2108,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// A vector containing the position of the first point of the tone curve.
         #[unsafe(method(point0))]
         #[unsafe(method_family = none)]
         unsafe fn point0(&self) -> CGPoint;
@@ -2618,7 +2119,6 @@ extern_protocol!(
         unsafe fn setPoint0(&self, point0: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// A vector containing the position of the second point of the tone curve.
         #[unsafe(method(point1))]
         #[unsafe(method_family = none)]
         unsafe fn point1(&self) -> CGPoint;
@@ -2630,7 +2130,6 @@ extern_protocol!(
         unsafe fn setPoint1(&self, point1: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// A vector containing the position of the third point of the tone curve.
         #[unsafe(method(point2))]
         #[unsafe(method_family = none)]
         unsafe fn point2(&self) -> CGPoint;
@@ -2642,7 +2141,6 @@ extern_protocol!(
         unsafe fn setPoint2(&self, point2: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// A vector containing the position of the fourth point of the tone curve.
         #[unsafe(method(point3))]
         #[unsafe(method_family = none)]
         unsafe fn point3(&self) -> CGPoint;
@@ -2654,7 +2152,6 @@ extern_protocol!(
         unsafe fn setPoint3(&self, point3: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// A vector containing the position of the fifth point of the tone curve.
         #[unsafe(method(point4))]
         #[unsafe(method_family = none)]
         unsafe fn point4(&self) -> CGPoint;
@@ -2664,29 +2161,14 @@ extern_protocol!(
         #[unsafe(method(setPoint4:))]
         #[unsafe(method_family = none)]
         unsafe fn setPoint4(&self, point4: CGPoint);
-
-        /// If true, then the color effect will be extrapolated if the input image contains RGB component values outside the range 0.0 to 1.0.
-        #[unsafe(method(extrapolate))]
-        #[unsafe(method_family = none)]
-        unsafe fn extrapolate(&self) -> bool;
-
-        /// Setter for [`extrapolate`][Self::extrapolate].
-        #[unsafe(method(setExtrapolate:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setExtrapolate(&self, extrapolate: bool);
     }
 );
 
 extern_protocol!(
-    /// The protocol for the Tone Map Headroom filter.
-    ///
-    /// Apply a global tone curve to an image that reduces colors from a source headroom value to a target headroom value.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/citonemapheadroom?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/citonemapheadroom?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIToneMapHeadroom: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// Specifies input image with an optional content headroom property.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2697,7 +2179,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// If non-nil, this overrides the headroom property of the input image.
         #[unsafe(method(sourceHeadroom))]
         #[unsafe(method_family = none)]
         unsafe fn sourceHeadroom(&self) -> c_float;
@@ -2707,7 +2188,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSourceHeadroom(&self, source_headroom: c_float);
 
-        /// Specifies the target headroom of the output image.
         #[unsafe(method(targetHeadroom))]
         #[unsafe(method_family = none)]
         unsafe fn targetHeadroom(&self) -> c_float;
@@ -2720,15 +2200,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Vibrance filter.
-    ///
-    /// Adjusts the saturation of an image while keeping pleasing skin tones.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/civibrance?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/civibrance?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIVibrance: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2739,7 +2214,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The amount to adjust the saturation.
         #[unsafe(method(amount))]
         #[unsafe(method_family = none)]
         unsafe fn amount(&self) -> c_float;
@@ -2752,15 +2226,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the White Point Adjust filter.
-    ///
-    /// Adjusts the reference white point for an image and maps all colors in the source using the new reference.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciwhitepointadjust?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciwhitepointadjust?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIWhitePointAdjust: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2772,7 +2241,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIColor")]
-        /// A color to use as the white point.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -2786,15 +2254,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Cross Polynomial filter.
-    ///
-    /// Adjusts the color of an image with polynomials.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcrosspolynomial?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcrosspolynomial?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorCrossPolynomial: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2806,7 +2269,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIVector")]
-        /// Polynomial coefficients for red channel.
         #[unsafe(method(redCoefficients))]
         #[unsafe(method_family = none)]
         unsafe fn redCoefficients(&self) -> Retained<CIVector>;
@@ -2818,7 +2280,6 @@ extern_protocol!(
         unsafe fn setRedCoefficients(&self, red_coefficients: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// Polynomial coefficients for green channel.
         #[unsafe(method(greenCoefficients))]
         #[unsafe(method_family = none)]
         unsafe fn greenCoefficients(&self) -> Retained<CIVector>;
@@ -2830,7 +2291,6 @@ extern_protocol!(
         unsafe fn setGreenCoefficients(&self, green_coefficients: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// Polynomial coefficients for blue channel.
         #[unsafe(method(blueCoefficients))]
         #[unsafe(method_family = none)]
         unsafe fn blueCoefficients(&self) -> Retained<CIVector>;
@@ -2844,15 +2304,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Cube filter.
-    ///
-    /// Uses a three-dimensional color table to transform the source image pixels.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcube?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcube?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorCube: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2863,7 +2318,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The dimension of the color cube.
         #[unsafe(method(cubeDimension))]
         #[unsafe(method_family = none)]
         unsafe fn cubeDimension(&self) -> c_float;
@@ -2873,7 +2327,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCubeDimension(&self, cube_dimension: c_float);
 
-        /// Data containing a 3-dimensional color table of floating-point premultiplied RGBA values. The cells are organized in a standard ordering. The columns and rows of the data are indexed by red and green, respectively. Each data plane is followed by the next higher plane in the data, with planes indexed by blue.
         #[unsafe(method(cubeData))]
         #[unsafe(method_family = none)]
         unsafe fn cubeData(&self) -> Retained<NSData>;
@@ -2883,7 +2336,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCubeData(&self, cube_data: &NSData);
 
-        /// If true, then the color cube will be extrapolated if the input image contains RGB component values outside the range 0.0 to 1.0.
         #[unsafe(method(extrapolate))]
         #[unsafe(method_family = none)]
         unsafe fn extrapolate(&self) -> bool;
@@ -2896,15 +2348,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Cubes Mixed With Mask filter.
-    ///
-    /// Uses two three-dimensional color tables in a specified colorspace to transform the source image pixels. The mask image is used as an interpolant to mix the output of the two cubes.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcubesmixedwithmask?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcubesmixedwithmask?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorCubesMixedWithMask: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -2916,7 +2363,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// A masking image.
         #[unsafe(method(maskImage))]
         #[unsafe(method_family = none)]
         unsafe fn maskImage(&self) -> Option<Retained<CIImage>>;
@@ -2927,7 +2373,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMaskImage(&self, mask_image: Option<&CIImage>);
 
-        /// The dimension of the color cubes.
         #[unsafe(method(cubeDimension))]
         #[unsafe(method_family = none)]
         unsafe fn cubeDimension(&self) -> c_float;
@@ -2937,7 +2382,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCubeDimension(&self, cube_dimension: c_float);
 
-        /// Data containing a 3-dimensional color table of floating-point premultiplied RGBA values. The cells are organized in a standard ordering. The columns and rows of the data are indexed by red and green, respectively. Each data plane is followed by the next higher plane in the data, with planes indexed by blue.
         #[unsafe(method(cube0Data))]
         #[unsafe(method_family = none)]
         unsafe fn cube0Data(&self) -> Retained<NSData>;
@@ -2947,7 +2391,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCube0Data(&self, cube0_data: &NSData);
 
-        /// Data containing a 3-dimensional color table of floating-point premultiplied RGBA values. The cells are organized in a standard ordering. The columns and rows of the data are indexed by red and green, respectively. Each data plane is followed by the next higher plane in the data, with planes indexed by blue.
         #[unsafe(method(cube1Data))]
         #[unsafe(method_family = none)]
         unsafe fn cube1Data(&self) -> Retained<NSData>;
@@ -2958,7 +2401,6 @@ extern_protocol!(
         unsafe fn setCube1Data(&self, cube1_data: &NSData);
 
         #[cfg(feature = "objc2-core-graphics")]
-        /// The CGColorSpace that defines the RGB values in the color table.
         #[unsafe(method(colorSpace))]
         #[unsafe(method_family = none)]
         unsafe fn colorSpace(&self) -> Option<Retained<CGColorSpace>>;
@@ -2969,7 +2411,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColorSpace(&self, color_space: Option<&CGColorSpace>);
 
-        /// If true, then the color cube will be extrapolated if the input image contains RGB component values outside the range 0 to 1.
         #[unsafe(method(extrapolate))]
         #[unsafe(method_family = none)]
         unsafe fn extrapolate(&self) -> bool;
@@ -2982,15 +2423,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Cube with ColorSpace filter.
-    ///
-    /// Uses a three-dimensional color table in a specified colorspace to transform the source image pixels.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcubewithcolorspace?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcubewithcolorspace?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorCubeWithColorSpace: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3001,7 +2437,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The dimension of the color cube.
         #[unsafe(method(cubeDimension))]
         #[unsafe(method_family = none)]
         unsafe fn cubeDimension(&self) -> c_float;
@@ -3011,7 +2446,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCubeDimension(&self, cube_dimension: c_float);
 
-        /// Data containing a 3-dimensional color table of floating-point premultiplied RGBA values. The cells are organized in a standard ordering. The columns and rows of the data are indexed by red and green, respectively. Each data plane is followed by the next higher plane in the data, with planes indexed by blue.
         #[unsafe(method(cubeData))]
         #[unsafe(method_family = none)]
         unsafe fn cubeData(&self) -> Retained<NSData>;
@@ -3021,18 +2455,7 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCubeData(&self, cube_data: &NSData);
 
-        /// If true, then the color cube will be extrapolated if the input image contains RGB component values outside the range 0.0 to 1.0.
-        #[unsafe(method(extrapolate))]
-        #[unsafe(method_family = none)]
-        unsafe fn extrapolate(&self) -> bool;
-
-        /// Setter for [`extrapolate`][Self::extrapolate].
-        #[unsafe(method(setExtrapolate:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setExtrapolate(&self, extrapolate: bool);
-
         #[cfg(feature = "objc2-core-graphics")]
-        /// The CGColorSpace that defines the RGB values in the color table.
         #[unsafe(method(colorSpace))]
         #[unsafe(method_family = none)]
         unsafe fn colorSpace(&self) -> Option<Retained<CGColorSpace>>;
@@ -3042,19 +2465,23 @@ extern_protocol!(
         #[unsafe(method(setColorSpace:))]
         #[unsafe(method_family = none)]
         unsafe fn setColorSpace(&self, color_space: Option<&CGColorSpace>);
+
+        #[unsafe(method(extrapolate))]
+        #[unsafe(method_family = none)]
+        unsafe fn extrapolate(&self) -> bool;
+
+        /// Setter for [`extrapolate`][Self::extrapolate].
+        #[unsafe(method(setExtrapolate:))]
+        #[unsafe(method_family = none)]
+        unsafe fn setExtrapolate(&self, extrapolate: bool);
     }
 );
 
 extern_protocol!(
-    /// The protocol for the Color Curves filter.
-    ///
-    /// Uses a three-channel one-dimensional color table to transform the source image pixels.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcurves?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorcurves?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorCurves: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3065,7 +2492,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// Data containing a color table of floating-point RGB values.
         #[unsafe(method(curvesData))]
         #[unsafe(method_family = none)]
         unsafe fn curvesData(&self) -> Retained<NSData>;
@@ -3076,7 +2502,6 @@ extern_protocol!(
         unsafe fn setCurvesData(&self, curves_data: &NSData);
 
         #[cfg(feature = "CIVector")]
-        /// A two-element vector that defines the minimum and maximum RGB component values that are used to look up result values from the color table.
         #[unsafe(method(curvesDomain))]
         #[unsafe(method_family = none)]
         unsafe fn curvesDomain(&self) -> Retained<CIVector>;
@@ -3088,7 +2513,6 @@ extern_protocol!(
         unsafe fn setCurvesDomain(&self, curves_domain: &CIVector);
 
         #[cfg(feature = "objc2-core-graphics")]
-        /// The CGColorSpace that defines the RGB values in the color table.
         #[unsafe(method(colorSpace))]
         #[unsafe(method_family = none)]
         unsafe fn colorSpace(&self) -> Option<Retained<CGColorSpace>>;
@@ -3102,15 +2526,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Invert filter.
-    ///
-    /// Inverts the colors in an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorinvert?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorinvert?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorInvert: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3124,15 +2543,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Map filter.
-    ///
-    /// Performs a nonlinear transformation of source color values using mapping values provided in a table.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolormap?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolormap?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorMap: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3144,7 +2558,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The image data from this image transforms the source image values.
         #[unsafe(method(gradientImage))]
         #[unsafe(method_family = none)]
         unsafe fn gradientImage(&self) -> Option<Retained<CIImage>>;
@@ -3158,15 +2571,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Monochrome filter.
-    ///
-    /// Remaps colors so they fall within shades of a single color.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolormonochrome?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolormonochrome?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorMonochrome: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3178,7 +2586,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIColor")]
-        /// The monochrome color to apply to the image.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -3189,7 +2596,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor(&self, color: &CIColor);
 
-        /// The intensity of the monochrome effect. A value of 1.0 creates a monochrome image using the supplied color. A value of 0.0 has no effect on the image.
         #[unsafe(method(intensity))]
         #[unsafe(method_family = none)]
         unsafe fn intensity(&self) -> c_float;
@@ -3202,15 +2608,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Color Posterize filter.
-    ///
-    /// Remaps red, green, and blue color components to the number of brightness values you specify for each color component. This filter flattens colors to achieve a look similar to that of a silk-screened poster.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorposterize?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolorposterize?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColorPosterize: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3221,7 +2622,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The number of brightness levels to use for each color component. Lower values result in a more extreme poster effect.
         #[unsafe(method(levels))]
         #[unsafe(method_family = none)]
         unsafe fn levels(&self) -> c_float;
@@ -3234,13 +2634,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// A protocol for filters that convert an image between CIELAB color space and the Core Image RGB working space.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciconvertlab?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciconvertlab?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIConvertLab: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to convert.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3251,9 +2648,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The normalize Boolean defines the range of values in CIELAB space.
-        /// * false: L is in the range `0...100` and A,B are in the range `-128...128`.
-        /// * true:  L,A,B are in the range `0...1`.
         #[unsafe(method(normalize))]
         #[unsafe(method_family = none)]
         unsafe fn normalize(&self) -> bool;
@@ -3266,15 +2660,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Dither filter.
-    ///
-    /// Apply dithering to an image. This operation is usually performed in a perceptual color space.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidither?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidither?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDither: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3285,7 +2674,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The intensity of the effect.
         #[unsafe(method(intensity))]
         #[unsafe(method_family = none)]
         unsafe fn intensity(&self) -> c_float;
@@ -3298,15 +2686,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Document Enhancer filter.
-    ///
-    /// Enhance a document image by removing unwanted shadows, whitening the background, and enhancing contrast.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidocumentenhancer?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidocumentenhancer?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDocumentEnhancer: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3317,7 +2700,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The amount of enhancement.
         #[unsafe(method(amount))]
         #[unsafe(method_family = none)]
         unsafe fn amount(&self) -> c_float;
@@ -3330,15 +2712,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the False Color filter.
-    ///
-    /// Maps luminance to a color ramp of two colors. False color is often used to process astronomical and other scientific data, such as ultraviolet and X-ray images.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cifalsecolor?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cifalsecolor?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIFalseColor: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3350,7 +2727,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIColor")]
-        /// The first color to use for the color ramp.
         #[unsafe(method(color0))]
         #[unsafe(method_family = none)]
         unsafe fn color0(&self) -> Retained<CIColor>;
@@ -3362,7 +2738,6 @@ extern_protocol!(
         unsafe fn setColor0(&self, color0: &CIColor);
 
         #[cfg(feature = "CIColor")]
-        /// The second color to use for the color ramp.
         #[unsafe(method(color1))]
         #[unsafe(method_family = none)]
         unsafe fn color1(&self) -> Retained<CIColor>;
@@ -3376,15 +2751,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Lab ∆E filter.
-    ///
-    /// Produces an image with the Lab ∆E difference values between two images. The result image will contain ∆E 1994 values between 0.0 and 100.0 where 2.0 is considered a just noticeable difference.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilabdeltae?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilabdeltae?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CILabDeltaE: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The first input image for comparison.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3396,7 +2766,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The second input image for comparison.
         #[unsafe(method(image2))]
         #[unsafe(method_family = none)]
         unsafe fn image2(&self) -> Option<Retained<CIImage>>;
@@ -3410,15 +2779,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Mask to Alpha filter.
-    ///
-    /// Converts a grayscale image to a white image that is masked by alpha. The white values from the source image produce the inside of the mask; the black values become completely transparent.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimasktoalpha?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimasktoalpha?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMaskToAlpha: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3432,15 +2796,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Maximum Component filter.
-    ///
-    /// Converts an image to grayscale using the maximum of the three color components.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimaximumcomponent?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimaximumcomponent?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMaximumComponent: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to process.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3454,15 +2813,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Minimum Component filter.
-    ///
-    /// Converts an image to grayscale using the minimum of the three color components.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciminimumcomponent?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciminimumcomponent?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMinimumComponent: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to process.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3476,15 +2830,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Palette Centroid filter.
-    ///
-    /// Calculate the mean (x,y) image coordinates of a color palette.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipalettecentroid?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipalettecentroid?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPaletteCentroid: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3496,7 +2845,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The input color palette, obtained using “CIKMeans“ filter.
         #[unsafe(method(paletteImage))]
         #[unsafe(method_family = none)]
         unsafe fn paletteImage(&self) -> Option<Retained<CIImage>>;
@@ -3507,7 +2855,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setPaletteImage(&self, palette_image: Option<&CIImage>);
 
-        /// Specifies whether the color palette should be applied in a perceptual color space.
         #[unsafe(method(perceptual))]
         #[unsafe(method_family = none)]
         unsafe fn perceptual(&self) -> bool;
@@ -3520,15 +2867,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Palettize filter.
-    ///
-    /// Paint an image from a color palette obtained using “CIKMeans“.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipalettize?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipalettize?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPalettize: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3540,7 +2882,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The input color palette, obtained using “CIKMeans“ filter.
         #[unsafe(method(paletteImage))]
         #[unsafe(method_family = none)]
         unsafe fn paletteImage(&self) -> Option<Retained<CIImage>>;
@@ -3551,7 +2892,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setPaletteImage(&self, palette_image: Option<&CIImage>);
 
-        /// Specifies whether the color palette should be applied in a perceptual color space.
         #[unsafe(method(perceptual))]
         #[unsafe(method_family = none)]
         unsafe fn perceptual(&self) -> bool;
@@ -3564,15 +2904,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Photo Effect Chrome filter.
-    ///
-    /// Apply a “Chrome” style effect to an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciphotoeffect?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciphotoeffect?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPhotoEffect: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3583,7 +2918,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// If true, then the color effect will be extrapolated if the input image contains RGB component values outside the range 0.0 to 1.0.
         #[unsafe(method(extrapolate))]
         #[unsafe(method_family = none)]
         unsafe fn extrapolate(&self) -> bool;
@@ -3596,15 +2930,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Sepia Tone filter.
-    ///
-    /// Maps the colors of an image to various shades of brown.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisepiatone?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisepiatone?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISepiaTone: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3615,7 +2944,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The intensity of the sepia effect. A value of 1.0 creates a monochrome sepia image. A value of 0.0 has no effect on the image.
         #[unsafe(method(intensity))]
         #[unsafe(method_family = none)]
         unsafe fn intensity(&self) -> c_float;
@@ -3628,15 +2956,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Thermal filter.
-    ///
-    /// Apply a “Thermal” style effect to an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cithermal?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cithermal?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIThermal: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3650,15 +2973,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Vignette filter.
-    ///
-    /// Applies a vignette shading to the corners of an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/civignette?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/civignette?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIVignette: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3669,7 +2987,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The intensity of the effect.
         #[unsafe(method(intensity))]
         #[unsafe(method_family = none)]
         unsafe fn intensity(&self) -> c_float;
@@ -3679,7 +2996,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setIntensity(&self, intensity: c_float);
 
-        /// The distance from the center of the effect.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -3692,15 +3008,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Vignette Effect filter.
-    ///
-    /// Applies a vignette shading to the corners of an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/civignetteeffect?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/civignetteeffect?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIVignetteEffect: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3712,7 +3023,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -3723,7 +3033,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The distance from the center of the effect.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -3733,7 +3042,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The intensity of the effect.
         #[unsafe(method(intensity))]
         #[unsafe(method_family = none)]
         unsafe fn intensity(&self) -> c_float;
@@ -3743,7 +3051,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setIntensity(&self, intensity: c_float);
 
-        /// The falloff of the effect.
         #[unsafe(method(falloff))]
         #[unsafe(method_family = none)]
         unsafe fn falloff(&self) -> c_float;
@@ -3756,15 +3063,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the X-Ray filter.
-    ///
-    /// Apply an “XRay” style effect to an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cixray?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cixray?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIXRay: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3778,15 +3080,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Bump Distortion filter.
-    ///
-    /// Creates a concave or convex bump that originates at a specified point in the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibumpdistortion?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibumpdistortion?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIBumpDistortion: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3798,7 +3095,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -3809,7 +3105,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The radius determines how many pixels are used to create the distortion. The larger the radius, the wider the extent of the distortion.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -3819,7 +3114,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The scale of the effect determines the curvature of the bump. A value of 0.0 has no effect. Positive values create an outward bump; negative values create an inward bump.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -3832,15 +3126,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Bump Distortion Linear filter.
-    ///
-    /// Creates a bump that originates from a linear portion of the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibumpdistortionlinear?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibumpdistortionlinear?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIBumpDistortionLinear: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3852,7 +3141,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -3863,7 +3151,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The radius determines how many pixels are used to create the distortion. The larger the radius, the wider the extent of the distortion.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -3873,7 +3160,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The angle in radians of the line around which the distortion occurs.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -3883,7 +3169,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The scale of the effect.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -3896,15 +3181,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Circle Splash Distortion filter.
-    ///
-    /// Distorts the pixels starting at the circumference of a circle and emanating outward.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicirclesplashdistortion?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicirclesplashdistortion?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICircleSplashDistortion: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3916,7 +3196,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -3927,7 +3206,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The radius determines how many pixels are used to create the distortion. The larger the radius, the wider the extent of the distortion.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -3940,15 +3218,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Circular Wrap Distortion filter.
-    ///
-    /// Wraps an image around a transparent circle. The distortion of the image increases with the distance from the center of the circle.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicircularwrap?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicircularwrap?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICircularWrap: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -3960,7 +3233,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -3971,7 +3243,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The radius determines how many pixels are used to create the distortion. The larger the radius, the wider the extent of the distortion.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -3981,7 +3252,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The angle in radians of the effect.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -3994,15 +3264,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Displacement Distortion filter.
-    ///
-    /// Applies the grayscale values of the second image to the first image. The output image has a texture defined by the grayscale values.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidisplacementdistortion?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidisplacementdistortion?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDisplacementDistortion: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4014,7 +3279,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// An image whose grayscale values will be applied to the source image.
         #[unsafe(method(displacementImage))]
         #[unsafe(method_family = none)]
         unsafe fn displacementImage(&self) -> Option<Retained<CIImage>>;
@@ -4025,7 +3289,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setDisplacementImage(&self, displacement_image: Option<&CIImage>);
 
-        /// The amount of texturing of the resulting image. The larger the value, the greater the texturing.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -4038,15 +3301,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Droste filter.
-    ///
-    /// The Droste effect produces an infinite image by distorting an image into a spiral of the image within itself.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidroste?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidroste?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDroste: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4058,7 +3316,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The first of two points that define the rectangular frame of the effect.
         #[unsafe(method(insetPoint0))]
         #[unsafe(method_family = none)]
         unsafe fn insetPoint0(&self) -> CGPoint;
@@ -4070,7 +3327,6 @@ extern_protocol!(
         unsafe fn setInsetPoint0(&self, inset_point0: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The second of two points that define the rectangular frame of the effect.
         #[unsafe(method(insetPoint1))]
         #[unsafe(method_family = none)]
         unsafe fn insetPoint1(&self) -> CGPoint;
@@ -4081,7 +3337,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInsetPoint1(&self, inset_point1: CGPoint);
 
-        /// An integer number representing the amount of strands in the effect.
         #[unsafe(method(strands))]
         #[unsafe(method_family = none)]
         unsafe fn strands(&self) -> c_float;
@@ -4091,7 +3346,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setStrands(&self, strands: c_float);
 
-        /// An integer number representing the amount of intervals in the effect.
         #[unsafe(method(periodicity))]
         #[unsafe(method_family = none)]
         unsafe fn periodicity(&self) -> c_float;
@@ -4101,7 +3355,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setPeriodicity(&self, periodicity: c_float);
 
-        /// A float number representing the angle of the rotation in radians.
         #[unsafe(method(rotation))]
         #[unsafe(method_family = none)]
         unsafe fn rotation(&self) -> c_float;
@@ -4111,7 +3364,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRotation(&self, rotation: c_float);
 
-        /// A float number representing the zoom of the effect.
         #[unsafe(method(zoom))]
         #[unsafe(method_family = none)]
         unsafe fn zoom(&self) -> c_float;
@@ -4124,15 +3376,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Glass Distortion filter.
-    ///
-    /// Distorts an image by applying a glass-like texture. The raised portions of the output image are the result of applying a texture map.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciglassdistortion?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciglassdistortion?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIGlassDistortion: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4144,7 +3391,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// A texture to apply to the source image.
         #[unsafe(method(textureImage))]
         #[unsafe(method_family = none)]
         unsafe fn textureImage(&self) -> Option<Retained<CIImage>>;
@@ -4156,7 +3402,6 @@ extern_protocol!(
         unsafe fn setTextureImage(&self, texture_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -4167,7 +3412,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The amount of texturing of the resulting image. The larger the value, the greater the texturing.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -4180,15 +3424,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Glass Lozenge filter.
-    ///
-    /// Creates a lozenge-shaped lens and distorts the portion of the image over which the lens is placed.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciglasslozenge?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciglasslozenge?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIGlassLozenge: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4200,7 +3439,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The x and y position that defines the center of the circle at one end of the lozenge.
         #[unsafe(method(point0))]
         #[unsafe(method_family = none)]
         unsafe fn point0(&self) -> CGPoint;
@@ -4212,7 +3450,6 @@ extern_protocol!(
         unsafe fn setPoint0(&self, point0: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The x and y position that defines the center of the circle at the other end of the lozenge.
         #[unsafe(method(point1))]
         #[unsafe(method_family = none)]
         unsafe fn point1(&self) -> CGPoint;
@@ -4223,7 +3460,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setPoint1(&self, point1: CGPoint);
 
-        /// The radius of the lozenge. The larger the radius, the wider the extent of the distortion.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -4233,7 +3469,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The refraction of the glass.
         #[unsafe(method(refraction))]
         #[unsafe(method_family = none)]
         unsafe fn refraction(&self) -> c_float;
@@ -4246,15 +3481,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Hole Distortion filter.
-    ///
-    /// Creates a circular area that pushes the image pixels outward, distorting those pixels closest to the circle the most.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciholedistortion?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciholedistortion?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIHoleDistortion: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4266,7 +3496,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -4277,7 +3506,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The radius determines how many pixels are used to create the distortion. The larger the radius, the wider the extent of the distortion.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -4290,15 +3518,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Light Tunnel Distortion filter.
-    ///
-    /// Light tunnel distortion.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilighttunnel?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilighttunnel?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CILightTunnel: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to process.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4310,7 +3533,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -4321,7 +3543,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// Rotation angle in radians of the light tunnel.
         #[unsafe(method(rotation))]
         #[unsafe(method_family = none)]
         unsafe fn rotation(&self) -> c_float;
@@ -4331,7 +3552,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRotation(&self, rotation: c_float);
 
-        /// Center radius of the light tunnel.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -4344,15 +3564,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Nine Part Stretched filter.
-    ///
-    /// Distorts an image by stretching an image based on two input breakpoints.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cininepartstretched?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cininepartstretched?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CINinePartStretched: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4364,7 +3579,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// Lower left corner of image to retain before stretching begins.
         #[unsafe(method(breakpoint0))]
         #[unsafe(method_family = none)]
         unsafe fn breakpoint0(&self) -> CGPoint;
@@ -4376,7 +3590,6 @@ extern_protocol!(
         unsafe fn setBreakpoint0(&self, breakpoint0: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// Upper right corner of image to retain after stretching ends.
         #[unsafe(method(breakpoint1))]
         #[unsafe(method_family = none)]
         unsafe fn breakpoint1(&self) -> CGPoint;
@@ -4388,7 +3601,6 @@ extern_protocol!(
         unsafe fn setBreakpoint1(&self, breakpoint1: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// Vector indicating how much image should grow in pixels in both dimensions.
         #[unsafe(method(growAmount))]
         #[unsafe(method_family = none)]
         unsafe fn growAmount(&self) -> CGPoint;
@@ -4402,15 +3614,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Nine Part Tiled filter.
-    ///
-    /// Distorts an image by tiling an image based on two input breakpoints.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cinineparttiled?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cinineparttiled?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CINinePartTiled: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4422,7 +3629,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// Lower left corner of image to retain before tiling begins.
         #[unsafe(method(breakpoint0))]
         #[unsafe(method_family = none)]
         unsafe fn breakpoint0(&self) -> CGPoint;
@@ -4434,7 +3640,6 @@ extern_protocol!(
         unsafe fn setBreakpoint0(&self, breakpoint0: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// Upper right corner of image to retain after tiling ends.
         #[unsafe(method(breakpoint1))]
         #[unsafe(method_family = none)]
         unsafe fn breakpoint1(&self) -> CGPoint;
@@ -4446,7 +3651,6 @@ extern_protocol!(
         unsafe fn setBreakpoint1(&self, breakpoint1: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// Vector indicating how much image should grow in pixels in both dimensions.
         #[unsafe(method(growAmount))]
         #[unsafe(method_family = none)]
         unsafe fn growAmount(&self) -> CGPoint;
@@ -4457,7 +3661,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setGrowAmount(&self, grow_amount: CGPoint);
 
-        /// Indicates that Y-Axis flip should occur.
         #[unsafe(method(flipYTiles))]
         #[unsafe(method_family = none)]
         unsafe fn flipYTiles(&self) -> bool;
@@ -4470,15 +3673,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Pinch Distortion filter.
-    ///
-    /// Creates a rectangular-shaped area that pinches source pixels inward, distorting those pixels closest to the rectangle the most.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipinchdistortion?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipinchdistortion?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPinchDistortion: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4490,7 +3688,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -4501,7 +3698,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The radius determines how many pixels are used to create the distortion. The larger the radius, the wider the extent of the distortion.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -4511,7 +3707,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The amount of pinching. A value of 0.0 has no effect. A value of 1.0 is the maximum pinch.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -4524,15 +3719,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Stretch Crop filter.
-    ///
-    /// Distorts an image by stretching and or cropping to fit a target size.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cistretchcrop?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cistretchcrop?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIStretchCrop: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4544,7 +3734,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The size in pixels of the output image.
         #[unsafe(method(size))]
         #[unsafe(method_family = none)]
         unsafe fn size(&self) -> CGPoint;
@@ -4555,7 +3744,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSize(&self, size: CGPoint);
 
-        /// Determines if and how much cropping should be used to achieve the target size. If value is 0 then only stretching is used. If 1 then only cropping is used.
         #[unsafe(method(cropAmount))]
         #[unsafe(method_family = none)]
         unsafe fn cropAmount(&self) -> c_float;
@@ -4565,7 +3753,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCropAmount(&self, crop_amount: c_float);
 
-        /// Determine how much the center of the image is stretched if stretching is used. If value is 0 then the center of the image maintains the original aspect ratio. If 1 then the image is stretched uniformly.
         #[unsafe(method(centerStretchAmount))]
         #[unsafe(method_family = none)]
         unsafe fn centerStretchAmount(&self) -> c_float;
@@ -4578,15 +3765,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Torus Lens Distortion filter.
-    ///
-    /// Creates a torus-shaped lens and distorts the portion of the image over which the lens is placed.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/citoruslensdistortion?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/citoruslensdistortion?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CITorusLensDistortion: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4598,7 +3780,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -4609,7 +3790,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The outer radius of the torus.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -4619,7 +3799,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The width of the ring.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -4629,7 +3808,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The refraction of the glass.
         #[unsafe(method(refraction))]
         #[unsafe(method_family = none)]
         unsafe fn refraction(&self) -> c_float;
@@ -4642,15 +3820,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Twirl Distortion filter.
-    ///
-    /// Rotates pixels around a point to give a twirling effect. You can specify the number of rotations as well as the center and radius of the effect.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/citwirldistortion?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/citwirldistortion?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CITwirlDistortion: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4662,7 +3835,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -4673,7 +3845,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The radius determines how many pixels are used to create the distortion. The larger the radius, the wider the extent of the distortion.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -4683,7 +3854,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The angle in radians of the twirl. Values can be positive or negative.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -4696,15 +3866,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Vortex Distortion filter.
-    ///
-    /// Rotates pixels around a point to simulate a vortex. You can specify the number of rotations as well the center and radius of the effect.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/civortexdistortion?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/civortexdistortion?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIVortexDistortion: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4716,7 +3881,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -4727,7 +3891,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The radius determines how many pixels are used to create the distortion. The larger the radius, the wider the extent of the distortion.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -4737,7 +3900,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The angle in radians of the effect.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -4750,15 +3912,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Affine Clamp filter.
-    ///
-    /// Performs an affine transformation on a source image and then clamps the pixels at the edge of the transformed image, extending them outwards. This filter performs similarly to the “Affine Transform” filter except that it produces an image with infinite extent. You can use this filter when you need to blur an image but you want to avoid a soft, black fringe along the edges.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciaffineclamp?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciaffineclamp?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAffineClamp: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4770,7 +3927,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The transform to apply to the image.
         #[unsafe(method(transform))]
         #[unsafe(method_family = none)]
         unsafe fn transform(&self) -> CGAffineTransform;
@@ -4784,15 +3940,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Affine Tile filter.
-    ///
-    /// Applies an affine transformation to an image and then tiles the transformed image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciaffinetile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciaffinetile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAffineTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4804,7 +3955,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The transform to apply to the image.
         #[unsafe(method(transform))]
         #[unsafe(method_family = none)]
         unsafe fn transform(&self) -> CGAffineTransform;
@@ -4818,15 +3968,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Eightfold Reflected Tile filter.
-    ///
-    /// Produces a tiled image from a source image by applying an 8-way reflected symmetry.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cieightfoldreflectedtile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cieightfoldreflectedtile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIEightfoldReflectedTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4838,7 +3983,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -4849,7 +3993,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the tiled pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -4859,7 +4002,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -4872,15 +4014,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Fourfold Reflected Tile filter.
-    ///
-    /// Produces a tiled image from a source image by applying a 4-way reflected symmetry.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cifourfoldreflectedtile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cifourfoldreflectedtile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIFourfoldReflectedTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4892,7 +4029,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -4903,7 +4039,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the tiled pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -4913,7 +4048,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -4923,7 +4057,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The primary angle for the repeating reflected tile. Small values create thin diamond tiles, and higher values create fatter reflected tiles.
         #[unsafe(method(acuteAngle))]
         #[unsafe(method_family = none)]
         unsafe fn acuteAngle(&self) -> c_float;
@@ -4936,15 +4069,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Fourfold Rotated Tile filter.
-    ///
-    /// Produces a tiled image from a source image by rotating the source at increments of 90 degrees.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cifourfoldrotatedtile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cifourfoldrotatedtile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIFourfoldRotatedTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -4956,7 +4084,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -4967,7 +4094,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the tiled pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -4977,7 +4103,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -4990,15 +4115,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Fourfold Translated Tile filter.
-    ///
-    /// Produces a tiled image from a source image by applying 4 translation operations.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cifourfoldtranslatedtile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cifourfoldtranslatedtile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIFourfoldTranslatedTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5010,7 +4130,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5021,7 +4140,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the tiled pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -5031,7 +4149,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -5041,7 +4158,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The primary angle for the repeating translated tile. Small values create thin diamond tiles, and higher values create fatter translated tiles.
         #[unsafe(method(acuteAngle))]
         #[unsafe(method_family = none)]
         unsafe fn acuteAngle(&self) -> c_float;
@@ -5054,15 +4170,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Glide Reflected Tile filter.
-    ///
-    /// Produces a tiled image from a source image by translating and smearing the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciglidereflectedtile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciglidereflectedtile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIGlideReflectedTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5074,7 +4185,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5085,7 +4195,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the tiled pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -5095,7 +4204,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -5108,15 +4216,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Kaleidoscope filter.
-    ///
-    /// Produces a kaleidoscopic image from a source image by applying 12-way symmetry.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cikaleidoscope?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cikaleidoscope?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIKaleidoscope: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5127,7 +4230,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The number of reflections in the pattern.
         #[unsafe(method(count))]
         #[unsafe(method_family = none)]
         unsafe fn count(&self) -> NSInteger;
@@ -5138,7 +4240,6 @@ extern_protocol!(
         unsafe fn setCount(&self, count: NSInteger);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5149,7 +4250,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of reflection.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -5162,15 +4262,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Op Tile filter.
-    ///
-    /// Segments an image, applying any specified scaling and rotation, and then assembles the image again to give an op art appearance.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cioptile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cioptile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIOpTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5182,7 +4277,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5193,7 +4287,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The scale determines the number of tiles in the effect.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -5203,7 +4296,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setScale(&self, scale: c_float);
 
-        /// The angle in radians of a tile.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -5213,7 +4305,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -5226,15 +4317,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Parallelogram Tile filter.
-    ///
-    /// Warps an image by reflecting it in a parallelogram, and then tiles the result.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciparallelogramtile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciparallelogramtile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIParallelogramTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5246,7 +4332,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5257,7 +4342,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the tiled pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -5267,7 +4351,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The primary angle for the repeating parallelogram tile. Small values create thin diamond tiles, and higher values create fatter parallelogram tiles.
         #[unsafe(method(acuteAngle))]
         #[unsafe(method_family = none)]
         unsafe fn acuteAngle(&self) -> c_float;
@@ -5277,7 +4360,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAcuteAngle(&self, acute_angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -5290,15 +4372,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Perspective Tile filter.
-    ///
-    /// Applies a perspective transform to an image and then tiles the result.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciperspectivetile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciperspectivetile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPerspectiveTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5310,7 +4387,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The top left coordinate of a tile.
         #[unsafe(method(topLeft))]
         #[unsafe(method_family = none)]
         unsafe fn topLeft(&self) -> CGPoint;
@@ -5322,7 +4398,6 @@ extern_protocol!(
         unsafe fn setTopLeft(&self, top_left: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The top right coordinate of a tile.
         #[unsafe(method(topRight))]
         #[unsafe(method_family = none)]
         unsafe fn topRight(&self) -> CGPoint;
@@ -5334,7 +4409,6 @@ extern_protocol!(
         unsafe fn setTopRight(&self, top_right: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The bottom right coordinate of a tile.
         #[unsafe(method(bottomRight))]
         #[unsafe(method_family = none)]
         unsafe fn bottomRight(&self) -> CGPoint;
@@ -5346,7 +4420,6 @@ extern_protocol!(
         unsafe fn setBottomRight(&self, bottom_right: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The bottom left coordinate of a tile.
         #[unsafe(method(bottomLeft))]
         #[unsafe(method_family = none)]
         unsafe fn bottomLeft(&self) -> CGPoint;
@@ -5360,15 +4433,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Sixfold Reflected Tile filter.
-    ///
-    /// Produces a tiled image from a source image by applying a 6-way reflected symmetry.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisixfoldreflectedtile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisixfoldreflectedtile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISixfoldReflectedTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5380,7 +4448,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5391,7 +4458,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the tiled pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -5401,7 +4467,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -5414,15 +4479,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Sixfold Rotated Tile filter.
-    ///
-    /// Produces a tiled image from a source image by rotating the source at increments of 60 degrees.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisixfoldrotatedtile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisixfoldrotatedtile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISixfoldRotatedTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5434,7 +4494,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5445,7 +4504,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the tiled pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -5455,7 +4513,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -5468,15 +4525,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Triangle Kaleidoscope filter.
-    ///
-    /// Maps a triangular portion of image to a triangular area and then generates a kaleidoscope effect.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/citrianglekaleidoscope?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/citrianglekaleidoscope?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CITriangleKaleidoscope: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// Input image to generate kaleidoscope effect from.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5488,7 +4540,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The x and y position to use as the center of the triangular area in the input image.
         #[unsafe(method(point))]
         #[unsafe(method_family = none)]
         unsafe fn point(&self) -> CGPoint;
@@ -5499,7 +4550,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setPoint(&self, point: CGPoint);
 
-        /// The size in pixels of the triangle.
         #[unsafe(method(size))]
         #[unsafe(method_family = none)]
         unsafe fn size(&self) -> c_float;
@@ -5509,7 +4559,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSize(&self, size: c_float);
 
-        /// Rotation angle in radians of the triangle.
         #[unsafe(method(rotation))]
         #[unsafe(method_family = none)]
         unsafe fn rotation(&self) -> c_float;
@@ -5519,7 +4568,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRotation(&self, rotation: c_float);
 
-        /// The decay determines how fast the color fades from the center triangle.
         #[unsafe(method(decay))]
         #[unsafe(method_family = none)]
         unsafe fn decay(&self) -> c_float;
@@ -5532,15 +4580,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Triangle Tile filter.
-    ///
-    /// Maps a triangular portion of image to a triangular area and then tiles the result.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/citriangletile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/citriangletile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CITriangleTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5552,7 +4595,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5563,7 +4605,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the tiled pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -5573,7 +4614,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -5586,15 +4626,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Twelvefold Reflected Tile filter.
-    ///
-    /// Produces a tiled image from a source image by applying a 12-way reflected symmetry.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/citwelvefoldreflectedtile?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/citwelvefoldreflectedtile?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CITwelvefoldReflectedTile: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -5606,7 +4641,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5617,7 +4651,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The angle in radians of the tiled pattern.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -5627,7 +4660,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setAngle(&self, angle: c_float);
 
-        /// The width of a tile.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -5640,14 +4672,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Attributed Text Image Generator filter.
-    ///
-    /// Generate an image attributed string.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciattributedtextimagegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciattributedtextimagegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAttributedTextImageGenerator: CIFilterProtocol {
-        /// The attributed text to render.
         #[unsafe(method(text))]
         #[unsafe(method_family = none)]
         unsafe fn text(&self) -> Retained<NSAttributedString>;
@@ -5657,7 +4684,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setText(&self, text: &NSAttributedString);
 
-        /// The scale of the font to use for the generated text.
         #[unsafe(method(scaleFactor))]
         #[unsafe(method_family = none)]
         unsafe fn scaleFactor(&self) -> c_float;
@@ -5667,7 +4693,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setScaleFactor(&self, scale_factor: c_float);
 
-        /// A value for an additional number of pixels to pad around the text’s bounding box.
         #[unsafe(method(padding))]
         #[unsafe(method_family = none)]
         unsafe fn padding(&self) -> c_float;
@@ -5680,14 +4705,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Aztec Code Generator filter.
-    ///
-    /// Generate an Aztec barcode image for message data.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciazteccodegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciazteccodegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAztecCodeGenerator: CIFilterProtocol {
-        /// The message to encode in the Aztec Barcode
         #[unsafe(method(message))]
         #[unsafe(method_family = none)]
         unsafe fn message(&self) -> Retained<NSData>;
@@ -5697,7 +4717,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMessage(&self, message: &NSData);
 
-        /// Aztec error correction value between 5 and 95
         #[unsafe(method(correctionLevel))]
         #[unsafe(method_family = none)]
         unsafe fn correctionLevel(&self) -> c_float;
@@ -5707,7 +4726,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCorrectionLevel(&self, correction_level: c_float);
 
-        /// Aztec layers value between 1 and 32. Set to nil for automatic.
         #[unsafe(method(layers))]
         #[unsafe(method_family = none)]
         unsafe fn layers(&self) -> c_float;
@@ -5717,7 +4735,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setLayers(&self, layers: c_float);
 
-        /// Force a compact style Aztec code to true or false. Set to nil for automatic.
         #[unsafe(method(compactStyle))]
         #[unsafe(method_family = none)]
         unsafe fn compactStyle(&self) -> c_float;
@@ -5730,15 +4747,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Barcode Generator filter.
-    ///
-    /// Generate a barcode image from a CIBarcodeDescriptor.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibarcodegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibarcodegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIBarcodeGenerator: CIFilterProtocol {
         #[cfg(feature = "CIBarcodeDescriptor")]
-        /// The CIBarcodeDescription object to generate an image for.
         #[unsafe(method(barcodeDescriptor))]
         #[unsafe(method_family = none)]
         unsafe fn barcodeDescriptor(&self) -> Retained<CIBarcodeDescriptor>;
@@ -5752,15 +4764,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Blurred Rectangle Generator filter.
-    ///
-    /// Generates a blurred rectangle image with the specified extent, blur sigma, and color.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciblurredrectanglegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciblurredrectanglegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIBlurredRectangleGenerator: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// A rectangle that defines the extent of the effect.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -5771,7 +4778,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setExtent(&self, extent: CGRect);
 
-        /// The sigma for a gaussian blur.
         #[unsafe(method(sigma))]
         #[unsafe(method_family = none)]
         unsafe fn sigma(&self) -> c_float;
@@ -5782,7 +4788,6 @@ extern_protocol!(
         unsafe fn setSigma(&self, sigma: c_float);
 
         #[cfg(feature = "CIColor")]
-        /// A color.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -5796,79 +4801,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Blurred Rounded Rectangle Generator filter.
-    ///
-    /// Generates a blurred rounded rectangle image with the specified extent, corner radius, blur sigma, and color.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciblurredroundedrectanglegenerator?language=objc)
-    #[cfg(feature = "CIFilter")]
-    pub unsafe trait CIBlurredRoundedRectangleGenerator: CIFilterProtocol {
-        #[cfg(feature = "objc2-core-foundation")]
-        /// A rectangle that defines the extent of the effect.
-        #[unsafe(method(extent))]
-        #[unsafe(method_family = none)]
-        unsafe fn extent(&self) -> CGRect;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// Setter for [`extent`][Self::extent].
-        #[unsafe(method(setExtent:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setExtent(&self, extent: CGRect);
-
-        /// The distance from the center of the effect.
-        #[unsafe(method(radius))]
-        #[unsafe(method_family = none)]
-        unsafe fn radius(&self) -> c_float;
-
-        /// Setter for [`radius`][Self::radius].
-        #[unsafe(method(setRadius:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setRadius(&self, radius: c_float);
-
-        /// A value to control the smoothness of the transition between the curved and linear edges of the shape.
-        #[unsafe(method(smoothness))]
-        #[unsafe(method_family = none)]
-        unsafe fn smoothness(&self) -> c_float;
-
-        /// Setter for [`smoothness`][Self::smoothness].
-        #[unsafe(method(setSmoothness:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setSmoothness(&self, smoothness: c_float);
-
-        /// The sigma for a gaussian blur.
-        #[unsafe(method(sigma))]
-        #[unsafe(method_family = none)]
-        unsafe fn sigma(&self) -> c_float;
-
-        /// Setter for [`sigma`][Self::sigma].
-        #[unsafe(method(setSigma:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setSigma(&self, sigma: c_float);
-
-        #[cfg(feature = "CIColor")]
-        /// A color.
-        #[unsafe(method(color))]
-        #[unsafe(method_family = none)]
-        unsafe fn color(&self) -> Retained<CIColor>;
-
-        #[cfg(feature = "CIColor")]
-        /// Setter for [`color`][Self::color].
-        #[unsafe(method(setColor:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setColor(&self, color: &CIColor);
-    }
-);
-
-extern_protocol!(
-    /// The protocol for the Checkerboard filter.
-    ///
-    /// Generates a pattern of squares of alternating colors. You can specify the size, colors, and the sharpness of the pattern.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicheckerboardgenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicheckerboardgenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICheckerboardGenerator: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5880,7 +4816,6 @@ extern_protocol!(
         unsafe fn setCenter(&self, center: CGPoint);
 
         #[cfg(feature = "CIColor")]
-        /// A color to use for the first set of squares.
         #[unsafe(method(color0))]
         #[unsafe(method_family = none)]
         unsafe fn color0(&self) -> Retained<CIColor>;
@@ -5892,7 +4827,6 @@ extern_protocol!(
         unsafe fn setColor0(&self, color0: &CIColor);
 
         #[cfg(feature = "CIColor")]
-        /// A color to use for the second set of squares.
         #[unsafe(method(color1))]
         #[unsafe(method_family = none)]
         unsafe fn color1(&self) -> Retained<CIColor>;
@@ -5903,7 +4837,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor1(&self, color1: &CIColor);
 
-        /// The width of the squares in the pattern.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -5913,7 +4846,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The sharpness of the edges in pattern. The smaller the value, the more blurry the pattern. Values range from 0.0 to 1.0.
         #[unsafe(method(sharpness))]
         #[unsafe(method_family = none)]
         unsafe fn sharpness(&self) -> c_float;
@@ -5926,14 +4858,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Code 128 Barcode Generator filter.
-    ///
-    /// Generate a Code 128 barcode image for message data.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicode128barcodegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicode128barcodegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICode128BarcodeGenerator: CIFilterProtocol {
-        /// The message to encode in the Code 128 Barcode
         #[unsafe(method(message))]
         #[unsafe(method_family = none)]
         unsafe fn message(&self) -> Retained<NSData>;
@@ -5943,7 +4870,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMessage(&self, message: &NSData);
 
-        /// The number of empty white pixels that should surround the barcode.
         #[unsafe(method(quietSpace))]
         #[unsafe(method_family = none)]
         unsafe fn quietSpace(&self) -> c_float;
@@ -5953,7 +4879,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setQuietSpace(&self, quiet_space: c_float);
 
-        /// The height of the generated barcode in pixels.
         #[unsafe(method(barcodeHeight))]
         #[unsafe(method_family = none)]
         unsafe fn barcodeHeight(&self) -> c_float;
@@ -5966,15 +4891,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Lenticular Halo filter.
-    ///
-    /// Simulates a halo that is generated by the diffraction associated with the spread of a lens. This filter is typically applied to another image to simulate lens flares and similar effects.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilenticularhalogenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilenticularhalogenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CILenticularHaloGenerator: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -5986,7 +4906,6 @@ extern_protocol!(
         unsafe fn setCenter(&self, center: CGPoint);
 
         #[cfg(feature = "CIColor")]
-        /// A color.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -5997,7 +4916,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor(&self, color: &CIColor);
 
-        /// The radius of the halo.
         #[unsafe(method(haloRadius))]
         #[unsafe(method_family = none)]
         unsafe fn haloRadius(&self) -> c_float;
@@ -6007,7 +4925,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setHaloRadius(&self, halo_radius: c_float);
 
-        /// The width of the halo, from its inner radius to its outer radius.
         #[unsafe(method(haloWidth))]
         #[unsafe(method_family = none)]
         unsafe fn haloWidth(&self) -> c_float;
@@ -6026,7 +4943,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setHaloOverlap(&self, halo_overlap: c_float);
 
-        /// The intensity of the halo colors. Larger values are more intense.
         #[unsafe(method(striationStrength))]
         #[unsafe(method_family = none)]
         unsafe fn striationStrength(&self) -> c_float;
@@ -6036,7 +4952,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setStriationStrength(&self, striation_strength: c_float);
 
-        /// The contrast of the halo colors. Larger values are higher contrast.
         #[unsafe(method(striationContrast))]
         #[unsafe(method_family = none)]
         unsafe fn striationContrast(&self) -> c_float;
@@ -6046,7 +4961,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setStriationContrast(&self, striation_contrast: c_float);
 
-        /// The duration of the effect.
         #[unsafe(method(time))]
         #[unsafe(method_family = none)]
         unsafe fn time(&self) -> c_float;
@@ -6059,14 +4973,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Mesh Generator filter.
-    ///
-    /// Generates a mesh from an array of line segments.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimeshgenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimeshgenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMeshGenerator: CIFilterProtocol {
-        /// The width in pixels of the effect.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -6077,7 +4986,6 @@ extern_protocol!(
         unsafe fn setWidth(&self, width: c_float);
 
         #[cfg(feature = "CIColor")]
-        /// A color.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -6088,16 +4996,11 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor(&self, color: &CIColor);
 
-        /// An array of line segments stored as an array of CIVectors each containing a start point and end point.
         #[unsafe(method(mesh))]
         #[unsafe(method_family = none)]
         unsafe fn mesh(&self) -> Retained<NSArray>;
 
         /// Setter for [`mesh`][Self::mesh].
-        ///
-        /// # Safety
-        ///
-        /// `mesh` generic should be of the correct type.
         #[unsafe(method(setMesh:))]
         #[unsafe(method_family = none)]
         unsafe fn setMesh(&self, mesh: &NSArray);
@@ -6105,14 +5008,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the PDF417 Barcode Generator filter.
-    ///
-    /// Generate a PDF417 barcode image for message data.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipdf417barcodegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipdf417barcodegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPDF417BarcodeGenerator: CIFilterProtocol {
-        /// The message to encode in the PDF417 Barcode
         #[unsafe(method(message))]
         #[unsafe(method_family = none)]
         unsafe fn message(&self) -> Retained<NSData>;
@@ -6122,7 +5020,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMessage(&self, message: &NSData);
 
-        /// The minimum width of the generated barcode in pixels.
         #[unsafe(method(minWidth))]
         #[unsafe(method_family = none)]
         unsafe fn minWidth(&self) -> c_float;
@@ -6132,7 +5029,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMinWidth(&self, min_width: c_float);
 
-        /// The maximum width of the generated barcode in pixels.
         #[unsafe(method(maxWidth))]
         #[unsafe(method_family = none)]
         unsafe fn maxWidth(&self) -> c_float;
@@ -6142,7 +5038,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMaxWidth(&self, max_width: c_float);
 
-        /// The minimum height of the generated barcode in pixels.
         #[unsafe(method(minHeight))]
         #[unsafe(method_family = none)]
         unsafe fn minHeight(&self) -> c_float;
@@ -6152,7 +5047,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMinHeight(&self, min_height: c_float);
 
-        /// The maximum height of the generated barcode in pixels.
         #[unsafe(method(maxHeight))]
         #[unsafe(method_family = none)]
         unsafe fn maxHeight(&self) -> c_float;
@@ -6162,7 +5056,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMaxHeight(&self, max_height: c_float);
 
-        /// The number of data columns in the generated barcode
         #[unsafe(method(dataColumns))]
         #[unsafe(method_family = none)]
         unsafe fn dataColumns(&self) -> c_float;
@@ -6172,7 +5065,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setDataColumns(&self, data_columns: c_float);
 
-        /// The number of rows in the generated barcode
         #[unsafe(method(rows))]
         #[unsafe(method_family = none)]
         unsafe fn rows(&self) -> c_float;
@@ -6182,7 +5074,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRows(&self, rows: c_float);
 
-        /// The preferred aspect ratio of the generated barcode
         #[unsafe(method(preferredAspectRatio))]
         #[unsafe(method_family = none)]
         unsafe fn preferredAspectRatio(&self) -> c_float;
@@ -6192,7 +5083,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setPreferredAspectRatio(&self, preferred_aspect_ratio: c_float);
 
-        /// The compaction mode of the generated barcode.
         #[unsafe(method(compactionMode))]
         #[unsafe(method_family = none)]
         unsafe fn compactionMode(&self) -> c_float;
@@ -6202,7 +5092,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCompactionMode(&self, compaction_mode: c_float);
 
-        /// Force a compact style Aztec code to true or false. Set to nil for automatic.
         #[unsafe(method(compactStyle))]
         #[unsafe(method_family = none)]
         unsafe fn compactStyle(&self) -> c_float;
@@ -6212,7 +5101,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCompactStyle(&self, compact_style: c_float);
 
-        /// The correction level ratio of the generated barcode
         #[unsafe(method(correctionLevel))]
         #[unsafe(method_family = none)]
         unsafe fn correctionLevel(&self) -> c_float;
@@ -6222,7 +5110,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCorrectionLevel(&self, correction_level: c_float);
 
-        /// Force compaction style to true or false. Set to nil for automatic.
         #[unsafe(method(alwaysSpecifyCompaction))]
         #[unsafe(method_family = none)]
         unsafe fn alwaysSpecifyCompaction(&self) -> c_float;
@@ -6235,14 +5122,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the QR Code Generator filter.
-    ///
-    /// Generate a QR Code image for message data.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciqrcodegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciqrcodegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIQRCodeGenerator: CIFilterProtocol {
-        /// The message to encode in the QR Code
         #[unsafe(method(message))]
         #[unsafe(method_family = none)]
         unsafe fn message(&self) -> Retained<NSData>;
@@ -6252,7 +5134,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMessage(&self, message: &NSData);
 
-        /// QR Code correction level L, M, Q, or H.
         #[unsafe(method(correctionLevel))]
         #[unsafe(method_family = none)]
         unsafe fn correctionLevel(&self) -> Retained<NSString>;
@@ -6265,119 +5146,16 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Random Generator filter.
-    ///
-    /// Generates an image of infinite extent whose pixel values are made up of four independent, uniformly-distributed random numbers in the 0 to 1 range.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cirandomgenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cirandomgenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIRandomGenerator: CIFilterProtocol {}
 );
 
 extern_protocol!(
-    /// The protocol for the Rounded QR Code Generator filter.
-    ///
-    /// Generate a QR Code image for message data.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciroundedqrcodegenerator?language=objc)
-    #[cfg(feature = "CIFilter")]
-    pub unsafe trait CIRoundedQRCodeGenerator: CIFilterProtocol {
-        /// The message to encode in the QR Code
-        #[unsafe(method(message))]
-        #[unsafe(method_family = none)]
-        unsafe fn message(&self) -> Retained<NSData>;
-
-        /// Setter for [`message`][Self::message].
-        #[unsafe(method(setMessage:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setMessage(&self, message: &NSData);
-
-        /// QR Code correction level L, M, Q, or H.
-        #[unsafe(method(correctionLevel))]
-        #[unsafe(method_family = none)]
-        unsafe fn correctionLevel(&self) -> Retained<NSString>;
-
-        /// Setter for [`correctionLevel`][Self::correctionLevel].
-        #[unsafe(method(setCorrectionLevel:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setCorrectionLevel(&self, correction_level: &NSString);
-
-        /// The scale factor to enlarge the QRCode by.
-        #[unsafe(method(scale))]
-        #[unsafe(method_family = none)]
-        unsafe fn scale(&self) -> c_float;
-
-        /// Setter for [`scale`][Self::scale].
-        #[unsafe(method(setScale:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setScale(&self, scale: c_float);
-
-        /// If 1, then the Finder Patterns in the QRCode should have a rounded appearance. If 2, then the Alignment Patterns will also be rounded
-        #[unsafe(method(roundedMarkers))]
-        #[unsafe(method_family = none)]
-        unsafe fn roundedMarkers(&self) -> NSInteger;
-
-        /// Setter for [`roundedMarkers`][Self::roundedMarkers].
-        #[unsafe(method(setRoundedMarkers:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setRoundedMarkers(&self, rounded_markers: NSInteger);
-
-        /// If true then the data points in the QRCode should have a rounded appearance.
-        #[unsafe(method(roundedData))]
-        #[unsafe(method_family = none)]
-        unsafe fn roundedData(&self) -> bool;
-
-        /// Setter for [`roundedData`][Self::roundedData].
-        #[unsafe(method(setRoundedData:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setRoundedData(&self, rounded_data: bool);
-
-        /// The fraction of the center space of the QRCode to fill with Color 1. If the size is 0.0 or the Correction Level is L or M, the center of the QRCode will be unaltered. The size will be limited to 0.25 if the Correction Level is Q. The size will be limited to 0.33 if the Correction Level is H.
-        #[unsafe(method(centerSpaceSize))]
-        #[unsafe(method_family = none)]
-        unsafe fn centerSpaceSize(&self) -> c_float;
-
-        /// Setter for [`centerSpaceSize`][Self::centerSpaceSize].
-        #[unsafe(method(setCenterSpaceSize:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setCenterSpaceSize(&self, center_space_size: c_float);
-
-        #[cfg(feature = "CIColor")]
-        /// The background color for the QRCode
-        #[unsafe(method(color0))]
-        #[unsafe(method_family = none)]
-        unsafe fn color0(&self) -> Retained<CIColor>;
-
-        #[cfg(feature = "CIColor")]
-        /// Setter for [`color0`][Self::color0].
-        #[unsafe(method(setColor0:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setColor0(&self, color0: &CIColor);
-
-        #[cfg(feature = "CIColor")]
-        /// The foreground color for the QRCode
-        #[unsafe(method(color1))]
-        #[unsafe(method_family = none)]
-        unsafe fn color1(&self) -> Retained<CIColor>;
-
-        #[cfg(feature = "CIColor")]
-        /// Setter for [`color1`][Self::color1].
-        #[unsafe(method(setColor1:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setColor1(&self, color1: &CIColor);
-    }
-);
-
-extern_protocol!(
-    /// The protocol for the Rounded Rectangle Generator filter.
-    ///
-    /// Generates a rounded rectangle image with the specified extent, corner radius, and color.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciroundedrectanglegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciroundedrectanglegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIRoundedRectangleGenerator: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// A rectangle that defines the extent of the effect.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -6388,7 +5166,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setExtent(&self, extent: CGRect);
 
-        /// The distance from the center of the effect.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -6398,18 +5175,7 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// A value to control the smoothness of the transition between the curved and linear edges of the shape.
-        #[unsafe(method(smoothness))]
-        #[unsafe(method_family = none)]
-        unsafe fn smoothness(&self) -> c_float;
-
-        /// Setter for [`smoothness`][Self::smoothness].
-        #[unsafe(method(setSmoothness:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setSmoothness(&self, smoothness: c_float);
-
         #[cfg(feature = "CIColor")]
-        /// A color.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -6423,15 +5189,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Rounded Rectangle Stroke Generator filter.
-    ///
-    /// Generates a rounded rectangle stroke image with the specified extent, corner radius, stroke width, and color.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciroundedrectanglestrokegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciroundedrectanglestrokegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIRoundedRectangleStrokeGenerator: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// A rectangle that defines the extent of the effect.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -6442,7 +5203,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setExtent(&self, extent: CGRect);
 
-        /// The distance from the center of the effect.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -6452,29 +5212,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// A value to control the smoothness of the transition between the curved and linear edges of the shape.
-        #[unsafe(method(smoothness))]
-        #[unsafe(method_family = none)]
-        unsafe fn smoothness(&self) -> c_float;
-
-        /// Setter for [`smoothness`][Self::smoothness].
-        #[unsafe(method(setSmoothness:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setSmoothness(&self, smoothness: c_float);
-
-        #[cfg(feature = "CIColor")]
-        /// A color.
-        #[unsafe(method(color))]
-        #[unsafe(method_family = none)]
-        unsafe fn color(&self) -> Retained<CIColor>;
-
-        #[cfg(feature = "CIColor")]
-        /// Setter for [`color`][Self::color].
-        #[unsafe(method(setColor:))]
-        #[unsafe(method_family = none)]
-        unsafe fn setColor(&self, color: &CIColor);
-
-        /// The width in pixels of the effect.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -6483,19 +5220,25 @@ extern_protocol!(
         #[unsafe(method(setWidth:))]
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
+
+        #[cfg(feature = "CIColor")]
+        #[unsafe(method(color))]
+        #[unsafe(method_family = none)]
+        unsafe fn color(&self) -> Retained<CIColor>;
+
+        #[cfg(feature = "CIColor")]
+        /// Setter for [`color`][Self::color].
+        #[unsafe(method(setColor:))]
+        #[unsafe(method_family = none)]
+        unsafe fn setColor(&self, color: &CIColor);
     }
 );
 
 extern_protocol!(
-    /// The protocol for the Star Shine filter.
-    ///
-    /// Generates a starburst pattern. The output image is typically used as input to another filter.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cistarshinegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cistarshinegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIStarShineGenerator: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -6507,7 +5250,6 @@ extern_protocol!(
         unsafe fn setCenter(&self, center: CGPoint);
 
         #[cfg(feature = "CIColor")]
-        /// The color to use for the outer shell of the circular star.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -6518,7 +5260,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor(&self, color: &CIColor);
 
-        /// The radius of the star.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -6528,7 +5269,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The size of the cross pattern.
         #[unsafe(method(crossScale))]
         #[unsafe(method_family = none)]
         unsafe fn crossScale(&self) -> c_float;
@@ -6538,7 +5278,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCrossScale(&self, cross_scale: c_float);
 
-        /// The angle in radians of the cross pattern.
         #[unsafe(method(crossAngle))]
         #[unsafe(method_family = none)]
         unsafe fn crossAngle(&self) -> c_float;
@@ -6548,7 +5287,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCrossAngle(&self, cross_angle: c_float);
 
-        /// The opacity of the cross pattern.
         #[unsafe(method(crossOpacity))]
         #[unsafe(method_family = none)]
         unsafe fn crossOpacity(&self) -> c_float;
@@ -6558,7 +5296,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCrossOpacity(&self, cross_opacity: c_float);
 
-        /// The width of the cross pattern.
         #[unsafe(method(crossWidth))]
         #[unsafe(method_family = none)]
         unsafe fn crossWidth(&self) -> c_float;
@@ -6568,7 +5305,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCrossWidth(&self, cross_width: c_float);
 
-        /// The length of the cross spikes.
         #[unsafe(method(epsilon))]
         #[unsafe(method_family = none)]
         unsafe fn epsilon(&self) -> c_float;
@@ -6581,15 +5317,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Stripes filter.
-    ///
-    /// Generates a stripe pattern. You can control the color of the stripes, the spacing, and the contrast.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cistripesgenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cistripesgenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIStripesGenerator: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -6601,7 +5332,6 @@ extern_protocol!(
         unsafe fn setCenter(&self, center: CGPoint);
 
         #[cfg(feature = "CIColor")]
-        /// A color to use for the odd stripes.
         #[unsafe(method(color0))]
         #[unsafe(method_family = none)]
         unsafe fn color0(&self) -> Retained<CIColor>;
@@ -6613,7 +5343,6 @@ extern_protocol!(
         unsafe fn setColor0(&self, color0: &CIColor);
 
         #[cfg(feature = "CIColor")]
-        /// A color to use for the even stripes.
         #[unsafe(method(color1))]
         #[unsafe(method_family = none)]
         unsafe fn color1(&self) -> Retained<CIColor>;
@@ -6624,7 +5353,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor1(&self, color1: &CIColor);
 
-        /// The width of a stripe.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -6634,7 +5362,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The sharpness of the stripe pattern. The smaller the value, the more blurry the pattern. Values range from 0.0 to 1.0.
         #[unsafe(method(sharpness))]
         #[unsafe(method_family = none)]
         unsafe fn sharpness(&self) -> c_float;
@@ -6647,15 +5374,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Sunbeams filter.
-    ///
-    /// Generates a sun effect. You typically use the output of the sunbeams filter as input to a composite filter.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisunbeamsgenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisunbeamsgenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISunbeamsGenerator: CIFilterProtocol {
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -6667,7 +5389,6 @@ extern_protocol!(
         unsafe fn setCenter(&self, center: CGPoint);
 
         #[cfg(feature = "CIColor")]
-        /// The color of the sun.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -6678,7 +5399,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setColor(&self, color: &CIColor);
 
-        /// The radius of the sun.
         #[unsafe(method(sunRadius))]
         #[unsafe(method_family = none)]
         unsafe fn sunRadius(&self) -> c_float;
@@ -6688,7 +5408,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSunRadius(&self, sun_radius: c_float);
 
-        /// The radius of the sunbeams.
         #[unsafe(method(maxStriationRadius))]
         #[unsafe(method_family = none)]
         unsafe fn maxStriationRadius(&self) -> c_float;
@@ -6698,7 +5417,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMaxStriationRadius(&self, max_striation_radius: c_float);
 
-        /// The intensity of the sunbeams. Higher values result in more intensity.
         #[unsafe(method(striationStrength))]
         #[unsafe(method_family = none)]
         unsafe fn striationStrength(&self) -> c_float;
@@ -6708,7 +5426,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setStriationStrength(&self, striation_strength: c_float);
 
-        /// The contrast of the sunbeams. Higher values result in more contrast.
         #[unsafe(method(striationContrast))]
         #[unsafe(method_family = none)]
         unsafe fn striationContrast(&self) -> c_float;
@@ -6718,7 +5435,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setStriationContrast(&self, striation_contrast: c_float);
 
-        /// The duration of the effect.
         #[unsafe(method(time))]
         #[unsafe(method_family = none)]
         unsafe fn time(&self) -> c_float;
@@ -6731,14 +5447,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Text Image Generator filter.
-    ///
-    /// Generate an image from a string and font information.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/citextimagegenerator?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/citextimagegenerator?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CITextImageGenerator: CIFilterProtocol {
-        /// The text to render.
         #[unsafe(method(text))]
         #[unsafe(method_family = none)]
         unsafe fn text(&self) -> Retained<NSString>;
@@ -6748,7 +5459,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setText(&self, text: &NSString);
 
-        /// The name of the font to use for the generated text.
         #[unsafe(method(fontName))]
         #[unsafe(method_family = none)]
         unsafe fn fontName(&self) -> Retained<NSString>;
@@ -6758,7 +5468,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setFontName(&self, font_name: &NSString);
 
-        /// The size of the font to use for the generated text.
         #[unsafe(method(fontSize))]
         #[unsafe(method_family = none)]
         unsafe fn fontSize(&self) -> c_float;
@@ -6768,7 +5477,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setFontSize(&self, font_size: c_float);
 
-        /// The scale of the font to use for the generated text.
         #[unsafe(method(scaleFactor))]
         #[unsafe(method_family = none)]
         unsafe fn scaleFactor(&self) -> c_float;
@@ -6778,7 +5486,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setScaleFactor(&self, scale_factor: c_float);
 
-        /// The number of additional pixels to pad around the text’s bounding box.
         #[unsafe(method(padding))]
         #[unsafe(method_family = none)]
         unsafe fn padding(&self) -> c_float;
@@ -6791,15 +5498,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Blend With Alpha Mask filter.
-    ///
-    /// Uses values from a mask image to interpolate between an image and the background. When a mask alpha value is 0.0, the result is the background. When the mask alpha value is 1.0, the result is the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciblendwithmask?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciblendwithmask?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIBlendWithMask: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as a foreground image.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -6811,7 +5513,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The image to use as a background image.
         #[unsafe(method(backgroundImage))]
         #[unsafe(method_family = none)]
         unsafe fn backgroundImage(&self) -> Option<Retained<CIImage>>;
@@ -6823,7 +5524,6 @@ extern_protocol!(
         unsafe fn setBackgroundImage(&self, background_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// A masking image.
         #[unsafe(method(maskImage))]
         #[unsafe(method_family = none)]
         unsafe fn maskImage(&self) -> Option<Retained<CIImage>>;
@@ -6837,15 +5537,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Bloom filter.
-    ///
-    /// Softens edges and applies a pleasant glow to an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibloom?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibloom?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIBloom: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -6856,7 +5551,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The radius determines how many pixels are used to create the effect. The larger the radius, the greater the effect.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -6866,7 +5560,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The intensity of the effect. A value of 0.0 is no effect. A value of 1.0 is the maximum effect.
         #[unsafe(method(intensity))]
         #[unsafe(method_family = none)]
         unsafe fn intensity(&self) -> c_float;
@@ -6879,15 +5572,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Canny Edge Detector filter.
-    ///
-    /// Applies the Canny Edge Detection algorithm to an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicannyedgedetector?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicannyedgedetector?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICannyEdgeDetector: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -6898,7 +5586,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The gaussian sigma of blur to apply to the image to reduce high-frequency noise.
         #[unsafe(method(gaussianSigma))]
         #[unsafe(method_family = none)]
         unsafe fn gaussianSigma(&self) -> c_float;
@@ -6908,7 +5595,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setGaussianSigma(&self, gaussian_sigma: c_float);
 
-        /// Specifies whether the edge thresholds should be computed in a perceptual color space.
         #[unsafe(method(perceptual))]
         #[unsafe(method_family = none)]
         unsafe fn perceptual(&self) -> bool;
@@ -6918,7 +5604,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setPerceptual(&self, perceptual: bool);
 
-        /// The threshold that determines if gradient magnitude is a strong edge.
         #[unsafe(method(thresholdHigh))]
         #[unsafe(method_family = none)]
         unsafe fn thresholdHigh(&self) -> c_float;
@@ -6928,7 +5613,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setThresholdHigh(&self, threshold_high: c_float);
 
-        /// The threshold that determines if gradient magnitude is a weak edge.
         #[unsafe(method(thresholdLow))]
         #[unsafe(method_family = none)]
         unsafe fn thresholdLow(&self) -> c_float;
@@ -6938,7 +5622,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setThresholdLow(&self, threshold_low: c_float);
 
-        /// The number of hysteresis passes to apply to promote weak edge pixels.
         #[unsafe(method(hysteresisPasses))]
         #[unsafe(method_family = none)]
         unsafe fn hysteresisPasses(&self) -> NSInteger;
@@ -6951,15 +5634,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Comic Effect filter.
-    ///
-    /// Simulates a comic book drawing by outlining edges and applying a color halftone effect.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicomiceffect?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicomiceffect?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIComicEffect: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -6973,15 +5651,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the 3 by 3 Convolution filter.
-    ///
-    /// Convolution with 3 by 3 matrix.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciconvolution?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciconvolution?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIConvolution: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -6993,7 +5666,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIVector")]
-        /// A vector containing the 9 weights of the convolution kernel.
         #[unsafe(method(weights))]
         #[unsafe(method_family = none)]
         unsafe fn weights(&self) -> Retained<CIVector>;
@@ -7004,7 +5676,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWeights(&self, weights: &CIVector);
 
-        /// A value that is added to the RGBA components of the output pixel.
         #[unsafe(method(bias))]
         #[unsafe(method_family = none)]
         unsafe fn bias(&self) -> c_float;
@@ -7017,15 +5688,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the CoreML Model Filter filter.
-    ///
-    /// Generates output image by applying input CoreML model to the input image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicoremlmodel?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicoremlmodel?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICoreMLModel: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7037,7 +5703,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-ml")]
-        /// The CoreML model to be used for applying effect on the image.
         #[unsafe(method(model))]
         #[unsafe(method_family = none)]
         unsafe fn model(&self) -> Retained<MLModel>;
@@ -7048,7 +5713,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setModel(&self, model: &MLModel);
 
-        /// A number to specify which output of a multi-head CoreML model should be used for applying effect on the image.
         #[unsafe(method(headIndex))]
         #[unsafe(method_family = none)]
         unsafe fn headIndex(&self) -> c_float;
@@ -7058,7 +5722,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setHeadIndex(&self, head_index: c_float);
 
-        /// A boolean value to specify that Softmax normalization should be applied to the output of the model.
         #[unsafe(method(softmaxNormalization))]
         #[unsafe(method_family = none)]
         unsafe fn softmaxNormalization(&self) -> bool;
@@ -7071,15 +5734,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Crystallize filter.
-    ///
-    /// Creates polygon-shaped color blocks by aggregating source pixel-color values.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicrystallize?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicrystallize?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CICrystallize: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7090,7 +5748,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The radius determines how many pixels are used to create the effect. The larger the radius, the larger the resulting crystals.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -7101,7 +5758,6 @@ extern_protocol!(
         unsafe fn setRadius(&self, radius: c_float);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -7115,17 +5771,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Depth of Field filter.
-    ///
-    /// Simulates miniaturization effect created by Tilt
-    /// &
-    /// Shift lens by performing depth of field effects.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidepthoffield?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidepthoffield?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDepthOfField: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7137,7 +5786,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The first of two points defining a line in the image that should remain in focus
         #[unsafe(method(point0))]
         #[unsafe(method_family = none)]
         unsafe fn point0(&self) -> CGPoint;
@@ -7149,7 +5797,6 @@ extern_protocol!(
         unsafe fn setPoint0(&self, point0: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The second of two points defining a line in the image that should remain in focus
         #[unsafe(method(point1))]
         #[unsafe(method_family = none)]
         unsafe fn point1(&self) -> CGPoint;
@@ -7160,7 +5807,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setPoint1(&self, point1: CGPoint);
 
-        /// The amount to adjust the saturation.
         #[unsafe(method(saturation))]
         #[unsafe(method_family = none)]
         unsafe fn saturation(&self) -> c_float;
@@ -7170,7 +5816,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setSaturation(&self, saturation: c_float);
 
-        /// A float number representing the radius of the unsharpened mask effect applied to the in-focus area of effect.
         #[unsafe(method(unsharpMaskRadius))]
         #[unsafe(method_family = none)]
         unsafe fn unsharpMaskRadius(&self) -> c_float;
@@ -7180,7 +5825,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setUnsharpMaskRadius(&self, unsharp_mask_radius: c_float);
 
-        /// A float number representing the intensity of the unsharp mask effect applied to the in-focus area of effect.
         #[unsafe(method(unsharpMaskIntensity))]
         #[unsafe(method_family = none)]
         unsafe fn unsharpMaskIntensity(&self) -> c_float;
@@ -7190,7 +5834,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setUnsharpMaskIntensity(&self, unsharp_mask_intensity: c_float);
 
-        /// A float representing how much to blur the portion of the image that is not near the focus line.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -7203,15 +5846,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Edges filter.
-    ///
-    /// Finds all edges in an image and displays them in color.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciedges?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciedges?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIEdges: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7222,7 +5860,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The intensity of the edges. The larger the value, the higher the intensity.
         #[unsafe(method(intensity))]
         #[unsafe(method_family = none)]
         unsafe fn intensity(&self) -> c_float;
@@ -7235,15 +5872,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Edge Work filter.
-    ///
-    /// Produces a stylized black-and-white rendition of an image that looks similar to a woodblock cutout.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciedgework?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciedgework?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIEdgeWork: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7254,7 +5886,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The thickness of the edges. The larger the value, the thicker the edges.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -7267,15 +5898,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Gabor Gradients filter.
-    ///
-    /// Applies multichannel 5 by 5 Gabor gradient filter to an image. The resulting image has maximum horizontal gradient in the red channel and the maximum vertical gradient in the green channel. The gradient values can be positive or negative.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cigaborgradients?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cigaborgradients?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIGaborGradients: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7289,15 +5915,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Gloom filter.
-    ///
-    /// Dulls the highlights of an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cigloom?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cigloom?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIGloom: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7308,7 +5929,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The radius determines how many pixels are used to create the effect. The larger the radius, the greater the effect.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -7318,7 +5938,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The intensity of the effect. A value of 0.0 is no effect. A value of 1.0 is the maximum effect.
         #[unsafe(method(intensity))]
         #[unsafe(method_family = none)]
         unsafe fn intensity(&self) -> c_float;
@@ -7331,15 +5950,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Height Field From Mask filter.
-    ///
-    /// Produces a continuous three-dimensional, loft-shaped height field from a grayscale mask. The white values of the mask define those pixels that are inside the height field while the black values define those pixels that are outside. The field varies smoothly and continuously inside the mask, reaching the value 0 at the edge of the mask. You can use this filter with the Shaded Material filter to produce extremely realistic shaded objects.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciheightfieldfrommask?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciheightfieldfrommask?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIHeightFieldFromMask: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The white values of the mask define those pixels that are inside the height field while the black values define those pixels that are outside. The field varies smoothly and continuously inside the mask, reaching the value 0 at the edge of the mask.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7350,7 +5964,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The distance from the edge of the mask for the smooth transition is proportional to the input radius. Larger values make the transition smoother and more pronounced. Smaller values make the transition approximate a fillet radius.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -7363,15 +5976,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Hexagonal Pixelate filter.
-    ///
-    /// Displays an image as colored hexagons whose color is an average of the pixels they replace.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihexagonalpixellate?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihexagonalpixellate?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIHexagonalPixellate: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7383,7 +5991,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -7394,7 +6001,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The scale determines the size of the hexagons. Larger values result in larger hexagons.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -7407,15 +6013,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Highlight and Shadow Adjust filter.
-    ///
-    /// Adjust the tonal mapping of an image while preserving spatial detail.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihighlightshadowadjust?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihighlightshadowadjust?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIHighlightShadowAdjust: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7426,7 +6027,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// Shadow Highlight Radius.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -7436,7 +6036,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The amount of adjustment to the shadows of the image.
         #[unsafe(method(shadowAmount))]
         #[unsafe(method_family = none)]
         unsafe fn shadowAmount(&self) -> c_float;
@@ -7446,7 +6045,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setShadowAmount(&self, shadow_amount: c_float);
 
-        /// The amount of adjustment to the highlights of the image.
         #[unsafe(method(highlightAmount))]
         #[unsafe(method_family = none)]
         unsafe fn highlightAmount(&self) -> c_float;
@@ -7459,15 +6057,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Line Overlay filter.
-    ///
-    /// Creates a sketch that outlines the edges of an image in black, leaving the non-outlined portions of the image transparent. The result has alpha and is rendered in black, so it won’t look like much until you render it over another image using source over compositing.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilineoverlay?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cilineoverlay?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CILineOverlay: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7478,7 +6071,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The noise level of the image (used with camera data) that gets removed before tracing the edges of the image. Increasing the noise level helps to clean up the traced edges of the image.
         #[unsafe(method(NRNoiseLevel))]
         #[unsafe(method_family = none)]
         unsafe fn NRNoiseLevel(&self) -> c_float;
@@ -7488,7 +6080,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setNRNoiseLevel(&self, nr_noise_level: c_float);
 
-        /// The amount of sharpening done when removing noise in the image before tracing the edges of the image. This improves the edge acquisition.
         #[unsafe(method(NRSharpness))]
         #[unsafe(method_family = none)]
         unsafe fn NRSharpness(&self) -> c_float;
@@ -7498,7 +6089,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setNRSharpness(&self, nr_sharpness: c_float);
 
-        /// The accentuation factor of the Sobel gradient information when tracing the edges of the image. Higher values find more edges, although typically a low value (such as 1.0) is used.
         #[unsafe(method(edgeIntensity))]
         #[unsafe(method_family = none)]
         unsafe fn edgeIntensity(&self) -> c_float;
@@ -7508,7 +6098,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setEdgeIntensity(&self, edge_intensity: c_float);
 
-        /// This value determines edge visibility. Larger values thin out the edges.
         #[unsafe(method(threshold))]
         #[unsafe(method_family = none)]
         unsafe fn threshold(&self) -> c_float;
@@ -7518,7 +6107,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setThreshold(&self, threshold: c_float);
 
-        /// The amount of anti-aliasing to use on the edges produced by this filter. Higher values produce higher contrast edges (they are less anti-aliased).
         #[unsafe(method(contrast))]
         #[unsafe(method_family = none)]
         unsafe fn contrast(&self) -> c_float;
@@ -7531,15 +6119,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Mix filter.
-    ///
-    /// Uses an amount parameter to interpolate between an image and a background image. When value is 0.0 or less, the result is the background image. When the value is 1.0 or more, the result is the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimix?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimix?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMix: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as a foreground image.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7551,7 +6134,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The image to use as a background image.
         #[unsafe(method(backgroundImage))]
         #[unsafe(method_family = none)]
         unsafe fn backgroundImage(&self) -> Option<Retained<CIImage>>;
@@ -7562,7 +6144,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setBackgroundImage(&self, background_image: Option<&CIImage>);
 
-        /// The amount of the effect.
         #[unsafe(method(amount))]
         #[unsafe(method_family = none)]
         unsafe fn amount(&self) -> c_float;
@@ -7575,15 +6156,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Person Segmentation filter.
-    ///
-    /// Returns a segmentation mask that is red in the portions of an image that are likely to be persons. The returned image may have a different size and aspect ratio from the input image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipersonsegmentation?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipersonsegmentation?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPersonSegmentation: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7594,7 +6170,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// Determines the size and quality of the resulting segmentation mask. The value can be a number where 0 is accurate, 1 is balanced, and 2 is fast.
         #[unsafe(method(qualityLevel))]
         #[unsafe(method_family = none)]
         unsafe fn qualityLevel(&self) -> NSUInteger;
@@ -7607,15 +6182,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Pixelate filter.
-    ///
-    /// Makes an image blocky.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipixellate?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipixellate?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPixellate: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7627,7 +6197,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -7638,7 +6207,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The scale determines the size of the squares. Larger values result in larger squares.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -7651,15 +6219,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Pointillize filter.
-    ///
-    /// Renders the source image in a pointillistic style.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipointillize?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cipointillize?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIPointillize: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7670,7 +6233,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The radius of the circles in the resulting pattern.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -7681,7 +6243,6 @@ extern_protocol!(
         unsafe fn setRadius(&self, radius: c_float);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -7695,15 +6256,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Saliency Map Filter filter.
-    ///
-    /// Generates output image as a saliency map of the input image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisaliencymap?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisaliencymap?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISaliencyMap: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7717,15 +6273,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Shaded Material filter.
-    ///
-    /// Produces a shaded image from a height field. The height field is defined to have greater heights with lighter shades, and lesser heights (lower areas) with darker shades. You can combine this filter with the “Height Field From Mask” filter to produce quick shadings of masks, such as text.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cishadedmaterial?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cishadedmaterial?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIShadedMaterial: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7737,7 +6288,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The image to use as the height field. The resulting image has greater heights with lighter shades, and lesser heights (lower areas) with darker shades.
         #[unsafe(method(shadingImage))]
         #[unsafe(method_family = none)]
         unsafe fn shadingImage(&self) -> Option<Retained<CIImage>>;
@@ -7748,7 +6298,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setShadingImage(&self, shading_image: Option<&CIImage>);
 
-        /// The scale of the effect. The higher the value, the more dramatic the effect.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -7761,15 +6310,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Sobel Gradients filter.
-    ///
-    /// Applies multichannel 3 by 3 Sobel gradient filter to an image. The resulting image has maximum horizontal gradient in the red channel and the maximum vertical gradient in the green channel. The gradient values can be positive or negative.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisobelgradients?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cisobelgradients?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISobelGradients: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7783,15 +6327,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Spot Color filter.
-    ///
-    /// Replaces one or more color ranges with spot colors.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cispotcolor?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cispotcolor?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISpotColor: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7803,7 +6342,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIColor")]
-        /// The center value of the first color range to replace.
         #[unsafe(method(centerColor1))]
         #[unsafe(method_family = none)]
         unsafe fn centerColor1(&self) -> Retained<CIColor>;
@@ -7815,7 +6353,6 @@ extern_protocol!(
         unsafe fn setCenterColor1(&self, center_color1: &CIColor);
 
         #[cfg(feature = "CIColor")]
-        /// A replacement color for the first color range.
         #[unsafe(method(replacementColor1))]
         #[unsafe(method_family = none)]
         unsafe fn replacementColor1(&self) -> Retained<CIColor>;
@@ -7826,7 +6363,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setReplacementColor1(&self, replacement_color1: &CIColor);
 
-        /// A value that indicates how close the first color must match before it is replaced.
         #[unsafe(method(closeness1))]
         #[unsafe(method_family = none)]
         unsafe fn closeness1(&self) -> c_float;
@@ -7836,7 +6372,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCloseness1(&self, closeness1: c_float);
 
-        /// The contrast of the first replacement color.
         #[unsafe(method(contrast1))]
         #[unsafe(method_family = none)]
         unsafe fn contrast1(&self) -> c_float;
@@ -7847,7 +6382,6 @@ extern_protocol!(
         unsafe fn setContrast1(&self, contrast1: c_float);
 
         #[cfg(feature = "CIColor")]
-        /// The center value of the second color range to replace.
         #[unsafe(method(centerColor2))]
         #[unsafe(method_family = none)]
         unsafe fn centerColor2(&self) -> Retained<CIColor>;
@@ -7859,7 +6393,6 @@ extern_protocol!(
         unsafe fn setCenterColor2(&self, center_color2: &CIColor);
 
         #[cfg(feature = "CIColor")]
-        /// A replacement color for the second color range.
         #[unsafe(method(replacementColor2))]
         #[unsafe(method_family = none)]
         unsafe fn replacementColor2(&self) -> Retained<CIColor>;
@@ -7870,7 +6403,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setReplacementColor2(&self, replacement_color2: &CIColor);
 
-        /// A value that indicates how close the second color must match before it is replaced.
         #[unsafe(method(closeness2))]
         #[unsafe(method_family = none)]
         unsafe fn closeness2(&self) -> c_float;
@@ -7880,7 +6412,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCloseness2(&self, closeness2: c_float);
 
-        /// The contrast of the second replacement color.
         #[unsafe(method(contrast2))]
         #[unsafe(method_family = none)]
         unsafe fn contrast2(&self) -> c_float;
@@ -7891,7 +6422,6 @@ extern_protocol!(
         unsafe fn setContrast2(&self, contrast2: c_float);
 
         #[cfg(feature = "CIColor")]
-        /// The center value of the third color range to replace.
         #[unsafe(method(centerColor3))]
         #[unsafe(method_family = none)]
         unsafe fn centerColor3(&self) -> Retained<CIColor>;
@@ -7903,7 +6433,6 @@ extern_protocol!(
         unsafe fn setCenterColor3(&self, center_color3: &CIColor);
 
         #[cfg(feature = "CIColor")]
-        /// A replacement color for the third color range.
         #[unsafe(method(replacementColor3))]
         #[unsafe(method_family = none)]
         unsafe fn replacementColor3(&self) -> Retained<CIColor>;
@@ -7914,7 +6443,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setReplacementColor3(&self, replacement_color3: &CIColor);
 
-        /// A value that indicates how close the third color must match before it is replaced.
         #[unsafe(method(closeness3))]
         #[unsafe(method_family = none)]
         unsafe fn closeness3(&self) -> c_float;
@@ -7924,7 +6452,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCloseness3(&self, closeness3: c_float);
 
-        /// The contrast of the third replacement color.
         #[unsafe(method(contrast3))]
         #[unsafe(method_family = none)]
         unsafe fn contrast3(&self) -> c_float;
@@ -7937,15 +6464,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Spot Light filter.
-    ///
-    /// Applies a directional spotlight effect to an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cispotlight?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cispotlight?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CISpotLight: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -7957,7 +6479,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIVector")]
-        /// The x and y position of the spotlight.
         #[unsafe(method(lightPosition))]
         #[unsafe(method_family = none)]
         unsafe fn lightPosition(&self) -> Retained<CIVector>;
@@ -7969,7 +6490,6 @@ extern_protocol!(
         unsafe fn setLightPosition(&self, light_position: &CIVector);
 
         #[cfg(feature = "CIVector")]
-        /// The x and y position that the spotlight points at.
         #[unsafe(method(lightPointsAt))]
         #[unsafe(method_family = none)]
         unsafe fn lightPointsAt(&self) -> Retained<CIVector>;
@@ -7980,7 +6500,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setLightPointsAt(&self, light_points_at: &CIVector);
 
-        /// The brightness of the spotlight.
         #[unsafe(method(brightness))]
         #[unsafe(method_family = none)]
         unsafe fn brightness(&self) -> c_float;
@@ -7990,7 +6509,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setBrightness(&self, brightness: c_float);
 
-        /// The spotlight size. The smaller the value, the more tightly focused the light beam.
         #[unsafe(method(concentration))]
         #[unsafe(method_family = none)]
         unsafe fn concentration(&self) -> c_float;
@@ -8001,7 +6519,6 @@ extern_protocol!(
         unsafe fn setConcentration(&self, concentration: c_float);
 
         #[cfg(feature = "CIColor")]
-        /// The color of the spotlight.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         unsafe fn color(&self) -> Retained<CIColor>;
@@ -8015,15 +6532,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Bokeh Blur filter.
-    ///
-    /// Smooths an image using a disc-shaped convolution kernel.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibokehblur?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cibokehblur?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIBokehBlur: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8034,7 +6546,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The radius determines how many pixels are used to create the blur. The larger the radius, the blurrier the result.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -8044,7 +6555,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The amount of extra emphasis at the ring of the bokeh.
         #[unsafe(method(ringAmount))]
         #[unsafe(method_family = none)]
         unsafe fn ringAmount(&self) -> c_float;
@@ -8054,7 +6564,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRingAmount(&self, ring_amount: c_float);
 
-        /// The size of extra emphasis at the ring of the bokeh.
         #[unsafe(method(ringSize))]
         #[unsafe(method_family = none)]
         unsafe fn ringSize(&self) -> c_float;
@@ -8064,7 +6573,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRingSize(&self, ring_size: c_float);
 
-        /// The softness of the bokeh effect.
         #[unsafe(method(softness))]
         #[unsafe(method_family = none)]
         unsafe fn softness(&self) -> c_float;
@@ -8077,15 +6585,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Box Blur filter.
-    ///
-    /// Smooths or sharpens an image using a box-shaped convolution kernel.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciboxblur?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciboxblur?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIBoxBlur: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8096,7 +6599,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The radius determines how many pixels are used to create the blur. The larger the radius, the blurrier the result.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -8109,15 +6611,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Disc Blur filter.
-    ///
-    /// Smooths an image using a disc-shaped convolution kernel.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidiscblur?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cidiscblur?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIDiscBlur: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8128,7 +6625,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The radius determines how many pixels are used to create the blur. The larger the radius, the blurrier the result.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -8141,15 +6637,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Gaussian Blur filter.
-    ///
-    /// Spreads source pixels by an amount specified by a Gaussian distribution.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cigaussianblur?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cigaussianblur?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIGaussianBlur: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8160,7 +6651,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The radius determines how many pixels are used to create the blur. The larger the radius, the blurrier the result.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -8173,15 +6663,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Masked Variable Blur filter.
-    ///
-    /// Blurs an image according to the brightness levels in a mask image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimaskedvariableblur?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimaskedvariableblur?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMaskedVariableBlur: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8193,7 +6678,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "CIImage")]
-        /// The mask image that determines how much to blur the image. The mask’s green channel value from 0.0 to 1.0 determines if the image is not blurred or blurred by the full radius.
         #[unsafe(method(mask))]
         #[unsafe(method_family = none)]
         unsafe fn mask(&self) -> Option<Retained<CIImage>>;
@@ -8204,7 +6688,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMask(&self, mask: Option<&CIImage>);
 
-        /// A value that governs the maximum blur radius to apply.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -8217,15 +6700,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Median filter.
-    ///
-    /// Computes the median value for a group of neighboring pixels and replaces each pixel value with the median. The effect is to reduce noise.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimedian?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimedian?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMedian: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8239,15 +6717,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Morphology Gradient filter.
-    ///
-    /// Finds the edges of an image by returning the difference between the morphological minimum and maximum operations to the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimorphologygradient?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimorphologygradient?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMorphologyGradient: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8258,7 +6731,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The desired radius of the circular morphological operation to the image.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -8271,15 +6743,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Morphology Maximum filter.
-    ///
-    /// Lightens areas of an image by applying a circular morphological maximum operation to the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimorphologymaximum?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimorphologymaximum?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMorphologyMaximum: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8290,7 +6757,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The desired radius of the circular morphological operation to the image.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -8303,15 +6769,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Morphology Minimum filter.
-    ///
-    /// Darkens areas of an image by applying a circular morphological maximum operation to the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimorphologyminimum?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimorphologyminimum?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMorphologyMinimum: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8322,7 +6783,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The desired radius of the circular morphological operation to the image.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -8335,15 +6795,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Morphology Rectangle Maximum filter.
-    ///
-    /// Lightens areas of an image by applying a rectangular morphological maximum operation to the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimorphologyrectanglemaximum?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimorphologyrectanglemaximum?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMorphologyRectangleMaximum: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8354,7 +6809,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The width in pixels of the morphological operation. The value will be rounded to the nearest odd integer.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -8364,7 +6818,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The height in pixels of the morphological operation. The value will be rounded to the nearest odd integer.
         #[unsafe(method(height))]
         #[unsafe(method_family = none)]
         unsafe fn height(&self) -> c_float;
@@ -8377,15 +6830,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Morphology Rectangle Minimum filter.
-    ///
-    /// Darkens areas of an image by applying a rectangular morphological maximum operation to the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimorphologyrectangleminimum?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimorphologyrectangleminimum?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMorphologyRectangleMinimum: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8396,7 +6844,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The width in pixels of the morphological operation. The value will be rounded to the nearest odd integer.
         #[unsafe(method(width))]
         #[unsafe(method_family = none)]
         unsafe fn width(&self) -> c_float;
@@ -8406,7 +6853,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setWidth(&self, width: c_float);
 
-        /// The height in pixels of the morphological operation. The value will be rounded to the nearest odd integer.
         #[unsafe(method(height))]
         #[unsafe(method_family = none)]
         unsafe fn height(&self) -> c_float;
@@ -8419,15 +6865,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Motion Blur filter.
-    ///
-    /// Blurs an image to simulate the effect of using a camera that moves a specified angle and distance while capturing the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimotionblur?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cimotionblur?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIMotionBlur: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8438,7 +6879,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The radius determines how many pixels are used to create the blur. The larger the radius, the blurrier the result.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
         unsafe fn radius(&self) -> c_float;
@@ -8448,7 +6888,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setRadius(&self, radius: c_float);
 
-        /// The angle in radians of the motion determines which direction the blur smears.
         #[unsafe(method(angle))]
         #[unsafe(method_family = none)]
         unsafe fn angle(&self) -> c_float;
@@ -8461,15 +6900,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Noise Reduction filter.
-    ///
-    /// Reduces noise using a threshold value to define what is considered noise. Small changes in luminance below that value are considered noise and get a noise reduction treatment, which is a local blur. Changes above the threshold value are considered edges, so they are sharpened.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cinoisereduction?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cinoisereduction?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CINoiseReduction: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8480,7 +6914,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The amount of noise reduction. The larger the value, the more noise reduction.
         #[unsafe(method(noiseLevel))]
         #[unsafe(method_family = none)]
         unsafe fn noiseLevel(&self) -> c_float;
@@ -8490,7 +6923,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setNoiseLevel(&self, noise_level: c_float);
 
-        /// The sharpness of the final image. The larger the value, the sharper the result.
         #[unsafe(method(sharpness))]
         #[unsafe(method_family = none)]
         unsafe fn sharpness(&self) -> c_float;
@@ -8503,15 +6935,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Zoom Blur filter.
-    ///
-    /// Simulates the effect of zooming the camera while capturing the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cizoomblur?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cizoomblur?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIZoomBlur: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8523,7 +6950,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// The center of the effect as x and y pixel coordinates.
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
         unsafe fn center(&self) -> CGPoint;
@@ -8534,7 +6960,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCenter(&self, center: CGPoint);
 
-        /// The zoom-in amount. Larger values result in more zooming in.
         #[unsafe(method(amount))]
         #[unsafe(method_family = none)]
         unsafe fn amount(&self) -> c_float;
@@ -8547,13 +6972,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// A protocol for filters that perform a reduction calculation on an image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareareductionfilter?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareareductionfilter?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaReductionFilter: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as the input for the reduction filter.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8565,8 +6987,6 @@ extern_protocol!(
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// A rectangle that, when intersected with the input image extent,
-        /// defines the extent of the reduction calculation.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         unsafe fn extent(&self) -> CGRect;
@@ -8580,44 +7000,21 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Area Average filter.
-    ///
-    /// Calculates the average color for the specified area in an image, returning the result in a pixel.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaaverage?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaaverage?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaAverage: CIAreaReductionFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Area Average and Maximum Red filter.
-    ///
-    /// Calculates the average and maximum red component value for the specified area in an image. The result is returned in the red and green channels of a one pixel image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaaveragemaximumred?language=objc)
-    #[cfg(feature = "CIFilter")]
-    pub unsafe trait CIAreaAverageMaximumRed: CIAreaReductionFilter {}
-);
-
-extern_protocol!(
-    /// The protocol for the Area Bounds Red filter.
-    ///
-    /// Calculates the approximate bounding box of pixels within the specified area of an image where the red component values are non-zero. The result is 1x1 pixel image where the RGBA values contain the normalized X,Y,W,H dimensions of the bounding box.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaboundsred?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaboundsred?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaBoundsRed: CIAreaReductionFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Area Histogram filter.
-    ///
-    /// Calculates histograms of the R, G, B, and A channels of the specified area of an image. The output image is a one pixel tall image containing the histogram data for all four channels.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareahistogram?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareahistogram?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaHistogram: CIAreaReductionFilter {
-        /// The scale value to use for the histogram values. If the scale is 1.0, then the bins in the resulting image will add up to 1.0.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -8627,7 +7024,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setScale(&self, scale: c_float);
 
-        /// The number of bins for the histogram. This value will determine the width of the output image.
         #[unsafe(method(count))]
         #[unsafe(method_family = none)]
         unsafe fn count(&self) -> NSInteger;
@@ -8640,14 +7036,9 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Area Logarithmic Histogram filter.
-    ///
-    /// Calculates histogram of the R, G, B, and A channels of the specified area of an image. Before binning, the R, G, and B channel values are transformed by the log base two function. The output image is a one pixel tall image containing the histogram data for all four channels.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciarealogarithmichistogram?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciarealogarithmichistogram?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaLogarithmicHistogram: CIAreaReductionFilter {
-        /// The amount of the effect.
         #[unsafe(method(scale))]
         #[unsafe(method_family = none)]
         unsafe fn scale(&self) -> c_float;
@@ -8657,7 +7048,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setScale(&self, scale: c_float);
 
-        /// The number of bins for the histogram. This value will determine the width of the output image.
         #[unsafe(method(count))]
         #[unsafe(method_family = none)]
         unsafe fn count(&self) -> NSInteger;
@@ -8667,7 +7057,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCount(&self, count: NSInteger);
 
-        /// The minimum of the range of color channel values to be in the logarithmic histogram image.
         #[unsafe(method(minimumStop))]
         #[unsafe(method_family = none)]
         unsafe fn minimumStop(&self) -> c_float;
@@ -8677,7 +7066,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setMinimumStop(&self, minimum_stop: c_float);
 
-        /// The maximum of the range of color channel values to be in the logarithmic histogram image.
         #[unsafe(method(maximumStop))]
         #[unsafe(method_family = none)]
         unsafe fn maximumStop(&self) -> c_float;
@@ -8690,85 +7078,52 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Area Maximum filter.
-    ///
-    /// Calculates the maximum component values for the specified area in an image, returning the result in a pixel.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareamaximum?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareamaximum?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaMaximum: CIAreaReductionFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Area Maximum Alpha filter.
-    ///
-    /// Finds and returns the pixel with the maximum alpha value.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareamaximumalpha?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareamaximumalpha?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaMaximumAlpha: CIAreaReductionFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Area Minimum filter.
-    ///
-    /// Calculates the minimum component values for the specified area in an image, returning the result in a pixel.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaminimum?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaminimum?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaMinimum: CIAreaReductionFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Area Minimum Alpha filter.
-    ///
-    /// Finds and returns the pixel with the minimum alpha value.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaminimumalpha?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaminimumalpha?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaMinimumAlpha: CIAreaReductionFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Area Min and Max filter.
-    ///
-    /// Calculates the per-component minimum and maximum value for the specified area in an image. The result is returned in a 2x1 image where the component minimum values are stored in the pixel on the left.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaminmax?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaminmax?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaMinMax: CIAreaReductionFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Area Min and Max Red filter.
-    ///
-    /// Calculates the minimum and maximum red component value for the specified area in an image. The result is returned in the red and green channels of a one pixel image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaminmaxred?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/ciareaminmaxred?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIAreaMinMaxRed: CIAreaReductionFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Column Average filter.
-    ///
-    /// Calculates the average color for each column of the specified area in an image, returning the result in a 1D image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolumnaverage?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cicolumnaverage?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIColumnAverage: CIAreaReductionFilter {}
 );
 
 extern_protocol!(
-    /// The protocol for the Histogram Display filter.
-    ///
-    /// Generates a displayable histogram image from the output of the “Area Histogram” filter.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihistogramdisplay?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cihistogramdisplay?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIHistogramDisplay: CIFilterProtocol {
         #[cfg(feature = "CIImage")]
-        /// The image to use as an input for the effect.
         #[unsafe(method(inputImage))]
         #[unsafe(method_family = none)]
         unsafe fn inputImage(&self) -> Option<Retained<CIImage>>;
@@ -8779,7 +7134,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputImage(&self, input_image: Option<&CIImage>);
 
-        /// The height of the displayable histogram image.
         #[unsafe(method(height))]
         #[unsafe(method_family = none)]
         unsafe fn height(&self) -> c_float;
@@ -8789,7 +7143,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setHeight(&self, height: c_float);
 
-        /// The fraction of the right portion of the histogram image to make lighter.
         #[unsafe(method(highLimit))]
         #[unsafe(method_family = none)]
         unsafe fn highLimit(&self) -> c_float;
@@ -8799,7 +7152,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setHighLimit(&self, high_limit: c_float);
 
-        /// The fraction of the left portion of the histogram image to make darker.
         #[unsafe(method(lowLimit))]
         #[unsafe(method_family = none)]
         unsafe fn lowLimit(&self) -> c_float;
@@ -8812,15 +7164,10 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the KMeans filter.
-    ///
-    /// Create a palette of the most common colors found in the image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cikmeans?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cikmeans?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIKMeans: CIAreaReductionFilter {
         #[cfg(feature = "CIImage")]
-        /// Specifies the color seeds to use for k-means clustering, either passed as an image or an array of colors.
         #[unsafe(method(inputMeans))]
         #[unsafe(method_family = none)]
         unsafe fn inputMeans(&self) -> Option<Retained<CIImage>>;
@@ -8831,7 +7178,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setInputMeans(&self, input_means: Option<&CIImage>);
 
-        /// Specifies how many k-means color clusters should be used.
         #[unsafe(method(count))]
         #[unsafe(method_family = none)]
         unsafe fn count(&self) -> NSInteger;
@@ -8841,7 +7187,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setCount(&self, count: NSInteger);
 
-        /// Specifies how many k-means passes should be performed.
         #[unsafe(method(passes))]
         #[unsafe(method_family = none)]
         unsafe fn passes(&self) -> c_float;
@@ -8851,7 +7196,6 @@ extern_protocol!(
         #[unsafe(method_family = none)]
         unsafe fn setPasses(&self, passes: c_float);
 
-        /// Specifies whether the k-means color palette should be computed in a perceptual color space.
         #[unsafe(method(perceptual))]
         #[unsafe(method_family = none)]
         unsafe fn perceptual(&self) -> bool;
@@ -8864,11 +7208,7 @@ extern_protocol!(
 );
 
 extern_protocol!(
-    /// The protocol for the Row Average filter.
-    ///
-    /// Calculates the average color for each row of the specified area in an image, returning the result in a 1D image.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/cirowaverage?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cirowaverage?language=objc)
     #[cfg(feature = "CIFilter")]
     pub unsafe trait CIRowAverage: CIAreaReductionFilter {}
 );
@@ -8877,10 +7217,6 @@ extern_protocol!(
 #[cfg(feature = "CIFilter")]
 impl CIFilter {
     extern_methods!(
-        #[unsafe(method(distanceGradientFromRedMaskFilter))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn distanceGradientFromRedMaskFilter() -> Retained<CIFilter>;
-
         #[unsafe(method(gaussianGradientFilter))]
         #[unsafe(method_family = none)]
         pub unsafe fn gaussianGradientFilter() -> Retained<CIFilter>;
@@ -8896,10 +7232,6 @@ impl CIFilter {
         #[unsafe(method(radialGradientFilter))]
         #[unsafe(method_family = none)]
         pub unsafe fn radialGradientFilter() -> Retained<CIFilter>;
-
-        #[unsafe(method(signedDistanceGradientFromRedMaskFilter))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn signedDistanceGradientFromRedMaskFilter() -> Retained<CIFilter>;
 
         #[unsafe(method(smoothLinearGradientFilter))]
         #[unsafe(method_family = none)]
@@ -9202,10 +7534,6 @@ impl CIFilter {
         #[unsafe(method_family = none)]
         pub unsafe fn sRGBToneCurveToLinearFilter() -> Retained<CIFilter>;
 
-        #[unsafe(method(systemToneMapFilter))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn systemToneMapFilter() -> Retained<CIFilter>;
-
         #[unsafe(method(temperatureAndTintFilter))]
         #[unsafe(method_family = none)]
         pub unsafe fn temperatureAndTintFilter() -> Retained<CIFilter>;
@@ -9506,10 +7834,6 @@ impl CIFilter {
         #[unsafe(method_family = none)]
         pub unsafe fn blurredRectangleGeneratorFilter() -> Retained<CIFilter>;
 
-        #[unsafe(method(blurredRoundedRectangleGeneratorFilter))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn blurredRoundedRectangleGeneratorFilter() -> Retained<CIFilter>;
-
         #[unsafe(method(checkerboardGeneratorFilter))]
         #[unsafe(method_family = none)]
         pub unsafe fn checkerboardGeneratorFilter() -> Retained<CIFilter>;
@@ -9537,10 +7861,6 @@ impl CIFilter {
         #[unsafe(method(randomGeneratorFilter))]
         #[unsafe(method_family = none)]
         pub unsafe fn randomGeneratorFilter() -> Retained<CIFilter>;
-
-        #[unsafe(method(roundedQRCodeGeneratorFilter))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn roundedQRCodeGeneratorFilter() -> Retained<CIFilter>;
 
         #[unsafe(method(roundedRectangleGeneratorFilter))]
         #[unsafe(method_family = none)]
@@ -9777,10 +8097,6 @@ impl CIFilter {
         #[unsafe(method(areaAverageFilter))]
         #[unsafe(method_family = none)]
         pub unsafe fn areaAverageFilter() -> Retained<CIFilter>;
-
-        #[unsafe(method(areaAverageMaximumRedFilter))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn areaAverageMaximumRedFilter() -> Retained<CIFilter>;
 
         #[unsafe(method(areaBoundsRedFilter))]
         #[unsafe(method_family = none)]

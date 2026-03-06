@@ -9,37 +9,31 @@ use crate::*;
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webhistoryitemsaddednotification?language=objc)
-    #[deprecated]
     pub static WebHistoryItemsAddedNotification: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webhistoryitemsremovednotification?language=objc)
-    #[deprecated]
     pub static WebHistoryItemsRemovedNotification: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webhistoryallitemsremovednotification?language=objc)
-    #[deprecated]
     pub static WebHistoryAllItemsRemovedNotification: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webhistoryloadednotification?language=objc)
-    #[deprecated]
     pub static WebHistoryLoadedNotification: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webhistorysavednotification?language=objc)
-    #[deprecated]
     pub static WebHistorySavedNotification: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webhistoryitemskey?language=objc)
-    #[deprecated]
     pub static WebHistoryItemsKey: Option<&'static NSString>;
 }
 
@@ -69,74 +63,18 @@ impl WebHistory {
         pub unsafe fn optionalSharedHistory() -> Option<Retained<WebHistory>>;
 
         /// Parameter `history`: The history to use for the global WebHistory.
-        ///
-        /// # Safety
-        ///
-        /// `history` might not allow `None`.
         #[deprecated]
         #[unsafe(method(setOptionalSharedHistory:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setOptionalSharedHistory(history: Option<&WebHistory>);
 
-        /// Parameter `URL`: The URL to use to initialize the WebHistory.
-        ///
-        /// Parameter `error`: Set to nil or an NSError instance if an error occurred.
-        ///
-        /// The designated initializer for WebHistory.
-        ///
-        /// Returns: Returns YES if successful, NO otherwise.
-        ///
-        /// # Safety
-        ///
-        /// - `url` might not allow `None`.
-        /// - `error` might not allow `None`.
-        #[deprecated]
-        #[unsafe(method(loadFromURL:error:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn loadFromURL_error(
-            &self,
-            url: Option<&NSURL>,
-            error: Option<&mut Option<Retained<NSError>>>,
-        ) -> bool;
-
-        /// Save history to URL. It is the client's responsibility to call this at appropriate times.
-        ///
-        /// Parameter `URL`: The URL to use to save the WebHistory.
-        ///
-        /// Parameter `error`: Set to nil or an NSError instance if an error occurred.
-        ///
-        /// Returns: Returns YES if successful, NO otherwise.
-        ///
-        /// # Safety
-        ///
-        /// - `url` might not allow `None`.
-        /// - `error` might not allow `None`.
-        #[deprecated]
-        #[unsafe(method(saveToURL:error:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn saveToURL_error(
-            &self,
-            url: Option<&NSURL>,
-            error: Option<&mut Option<Retained<NSError>>>,
-        ) -> bool;
-
         /// Parameter `newItems`: An array of WebHistoryItems to add to the WebHistory.
-        ///
-        /// # Safety
-        ///
-        /// - `new_items` generic should be of the correct type.
-        /// - `new_items` might not allow `None`.
         #[deprecated]
         #[unsafe(method(addItems:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addItems(&self, new_items: Option<&NSArray>);
 
         /// Parameter `items`: An array of WebHistoryItems to remove from the WebHistory.
-        ///
-        /// # Safety
-        ///
-        /// - `items` generic should be of the correct type.
-        /// - `items` might not allow `None`.
         #[deprecated]
         #[unsafe(method(removeItems:))]
         #[unsafe(method_family = none)]
@@ -156,9 +94,6 @@ impl WebHistory {
         #[unsafe(method_family = none)]
         pub unsafe fn orderedLastVisitedDays(&self) -> Retained<NSArray>;
 
-        /// # Safety
-        ///
-        /// `calendar_date` might not allow `None`.
         #[deprecated]
         #[unsafe(method(orderedItemsLastVisitedOnDay:))]
         #[unsafe(method_family = none)]
@@ -173,10 +108,6 @@ impl WebHistory {
         /// Parameter `URL`: The URL of the history item to search for
         ///
         /// Returns: Returns an item matching the URL
-        ///
-        /// # Safety
-        ///
-        /// `url` might not allow `None`.
         #[deprecated]
         #[unsafe(method(itemForURL:))]
         #[unsafe(method_family = none)]

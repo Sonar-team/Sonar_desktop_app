@@ -36,7 +36,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(interactionShouldBegin:atPoint:))]
         #[unsafe(method_family = none)]
-        fn interactionShouldBegin_atPoint(
+        unsafe fn interactionShouldBegin_atPoint(
             &self,
             interaction: &UITextInteraction,
             point: CGPoint,
@@ -45,12 +45,12 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(interactionWillBegin:))]
         #[unsafe(method_family = none)]
-        fn interactionWillBegin(&self, interaction: &UITextInteraction);
+        unsafe fn interactionWillBegin(&self, interaction: &UITextInteraction);
 
         #[optional]
         #[unsafe(method(interactionDidEnd:))]
         #[unsafe(method_family = none)]
-        fn interactionDidEnd(&self, interaction: &UITextInteraction);
+        unsafe fn interactionDidEnd(&self, interaction: &UITextInteraction);
     }
 );
 
@@ -75,14 +75,18 @@ impl UITextInteraction {
     extern_methods!(
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UITextInteractionDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn UITextInteractionDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn UITextInteractionDelegate>>);
+        pub unsafe fn setDelegate(
+            &self,
+            delegate: Option<&ProtocolObject<dyn UITextInteractionDelegate>>,
+        );
 
         #[cfg(all(
             feature = "UIResponder",
@@ -91,36 +95,33 @@ impl UITextInteraction {
         ))]
         #[unsafe(method(textInput))]
         #[unsafe(method_family = none)]
-        pub fn textInput(&self) -> Option<Retained<UIResponder>>;
+        pub unsafe fn textInput(&self) -> Option<Retained<UIResponder>>;
 
         #[cfg(all(
             feature = "UIResponder",
             feature = "UITextInput",
             feature = "UITextInputTraits"
         ))]
-        /// Setter for [`textInput`][Self::textInput].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `text_input` must implement UITextInput.
+        /// Setter for [`textInput`][Self::textInput].
         #[unsafe(method(setTextInput:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTextInput(&self, text_input: Option<&UIResponder>);
 
         #[unsafe(method(textInteractionMode))]
         #[unsafe(method_family = none)]
-        pub fn textInteractionMode(&self) -> UITextInteractionMode;
+        pub unsafe fn textInteractionMode(&self) -> UITextInteractionMode;
 
         #[cfg(feature = "UIGestureRecognizer")]
         #[unsafe(method(gesturesForFailureRequirements))]
         #[unsafe(method_family = none)]
-        pub fn gesturesForFailureRequirements(&self) -> Retained<NSArray<UIGestureRecognizer>>;
+        pub unsafe fn gesturesForFailureRequirements(
+            &self,
+        ) -> Retained<NSArray<UIGestureRecognizer>>;
 
         #[unsafe(method(textInteractionForMode:))]
         #[unsafe(method_family = none)]
-        pub fn textInteractionForMode(
+        pub unsafe fn textInteractionForMode(
             mode: UITextInteractionMode,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -132,10 +133,10 @@ impl UITextInteraction {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

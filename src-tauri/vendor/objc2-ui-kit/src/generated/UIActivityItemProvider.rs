@@ -18,7 +18,7 @@ extern_protocol!(
         ))]
         #[unsafe(method(activityViewControllerPlaceholderItem:))]
         #[unsafe(method_family = none)]
-        fn activityViewControllerPlaceholderItem(
+        unsafe fn activityViewControllerPlaceholderItem(
             &self,
             activity_view_controller: &UIActivityViewController,
         ) -> Retained<AnyObject>;
@@ -31,7 +31,7 @@ extern_protocol!(
         ))]
         #[unsafe(method(activityViewController:itemForActivityType:))]
         #[unsafe(method_family = none)]
-        fn activityViewController_itemForActivityType(
+        unsafe fn activityViewController_itemForActivityType(
             &self,
             activity_view_controller: &UIActivityViewController,
             activity_type: Option<&UIActivityType>,
@@ -46,7 +46,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(activityViewController:subjectForActivityType:))]
         #[unsafe(method_family = none)]
-        fn activityViewController_subjectForActivityType(
+        unsafe fn activityViewController_subjectForActivityType(
             &self,
             activity_view_controller: &UIActivityViewController,
             activity_type: Option<&UIActivityType>,
@@ -61,7 +61,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(activityViewController:dataTypeIdentifierForActivityType:))]
         #[unsafe(method_family = none)]
-        fn activityViewController_dataTypeIdentifierForActivityType(
+        unsafe fn activityViewController_dataTypeIdentifierForActivityType(
             &self,
             activity_view_controller: &UIActivityViewController,
             activity_type: Option<&UIActivityType>,
@@ -78,7 +78,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(activityViewController:thumbnailImageForActivityType:suggestedSize:))]
         #[unsafe(method_family = none)]
-        fn activityViewController_thumbnailImageForActivityType_suggestedSize(
+        unsafe fn activityViewController_thumbnailImageForActivityType_suggestedSize(
             &self,
             activity_view_controller: &UIActivityViewController,
             activity_type: Option<&UIActivityType>,
@@ -108,9 +108,6 @@ impl UIActivityItemProvider {
         #[unsafe(method_family = init)]
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `placeholder_item` should be of the correct type.
         #[unsafe(method(initWithPlaceholderItem:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithPlaceholderItem(
@@ -118,30 +115,15 @@ impl UIActivityItemProvider {
             placeholder_item: &AnyObject,
         ) -> Retained<Self>;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(placeholderItem))]
         #[unsafe(method_family = none)]
         pub unsafe fn placeholderItem(&self) -> Option<Retained<AnyObject>>;
 
         #[cfg(feature = "UIActivity")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(activityType))]
         #[unsafe(method_family = none)]
         pub unsafe fn activityType(&self) -> Option<Retained<UIActivityType>>;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(item))]
         #[unsafe(method_family = none)]
         pub unsafe fn item(&self) -> Retained<AnyObject>;

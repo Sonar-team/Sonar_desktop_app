@@ -1496,7 +1496,6 @@ pub type IOBlitterPtr = Option<
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/iographicsacceleratorinterfacestruct?language=objc)
 #[cfg(feature = "libc")]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOGraphicsAcceleratorInterfaceStruct {
     pub(crate) _reserved: *mut c_void,
@@ -1631,10 +1630,6 @@ unsafe impl RefEncode for IOGraphicsAcceleratorInterfaceStruct {
 pub type IOGraphicsAcceleratorInterface = IOGraphicsAcceleratorInterfaceStruct;
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `p_accelerator` must be a valid pointer.
-    /// - `p_framebuffer_index` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOAccelFindAccelerator(
         framebuffer: io_service_t,
@@ -2426,7 +2421,7 @@ pub const kIODynamicRangeTraditionalGammaHDR: c_uint = 0x0010;
 pub const kIODynamicRangeTraditionalGammaSDR: c_uint = 0x0020;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/iofbdisplaymodedescription?language=objc)
-#[repr(C, packed(4))]
+#[repr(C)]
 #[derive(Clone, Copy)]
 pub struct IOFBDisplayModeDescription {
     pub info: IODisplayModeInformation,
@@ -3120,8 +3115,6 @@ pub const kConnectionEnable: c_uint = 0x656e6162;
 pub const kConnectionCheckEnable: c_uint = 0x63656e61;
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kconnectionprobe?language=objc)
 pub const kConnectionProbe: c_uint = 0x70726f62;
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kconnectionignore?language=objc)
-pub const kConnectionIgnore: c_uint = 0x00696772;
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kconnectionchanged?language=objc)
 pub const kConnectionChanged: c_uint = 0x63686e67;
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kconnectionpower?language=objc)
@@ -3158,12 +3151,6 @@ pub const kConnectionColorMode: c_uint = 0x63797576;
 pub const kConnectionColorModesSupported: c_uint = 0x636f6c72;
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kconnectioncolordepthssupported?language=objc)
 pub const kConnectionColorDepthsSupported: c_uint = 0x20627063;
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kconnectioncontrollerdepthssupported?language=objc)
-pub const kConnectionControllerDepthsSupported: c_uint = 0x00677264;
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kconnectioncontrollercolordepth?language=objc)
-pub const kConnectionControllerColorDepth: c_uint = 0x00647064;
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kconnectioncontrollerdithercontrol?language=objc)
-pub const kConnectionControllerDitherControl: c_uint = 0x00676463;
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kconnectiondisplayflags?language=objc)
 pub const kConnectionDisplayFlags: c_uint = 0x64666c67;
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kconnectionenableaudio?language=objc)
@@ -3827,10 +3814,6 @@ extern "C-unwind" {
     /// A connection to a graphics IOService must be made before these functions are called. A connection is made with the IOServiceOpen() function described in IOKitLib.h. An io_connect_t handle is returned by IOServiceOpen(), which must be passed to the IOGraphicsLib functions. The appropriate connection type from IOGraphicsTypes.h must be specified in the call to IOServiceOpen(). All of the IOFramebuffer functions can only be called from a kIOFBServerConnectType connection. Except as specified below, functions whose names begin with IOFB are IOFramebuffer functions. Functions whose names begin with IOPS are IOAccelerator functions and must be called from connections of type kIOFBEngineControllerConnectType or kIOFBEngineConnectType.
     /// <br>
     /// The functions in IOGraphicsLib use a number of special types. The display mode is the screen's resolution and refresh rate. The known display modes are referred to by an index of type IODisplayModeID. The display depth is the number of significant color bits used in representing each pixel. Depths are also referred to by an index value that is 0 for 8 bits, 1 for 15 bits, and 2 for 24 bits. A combination of display mode and depth may have a number of supported pixel formats. The pixel aperture is an index of supported pixel formats for a display mode and depth. This index is of type IOPixelAperture. All of these graphics specific types are defined in IOGraphicsTypes.h.
-    ///
-    /// # Safety
-    ///
-    /// `connect` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOFramebufferOpen(
         service: io_service_t,
@@ -3858,7 +3841,7 @@ pub const kIODisplayNoProductName: c_uint = 0x00000400;
 /// Returns: The returned CFDictionary that should be released by the caller with CFRelease().
 #[cfg(feature = "libc")]
 #[inline]
-pub extern "C-unwind" fn IODisplayCreateInfoDictionary(
+pub unsafe extern "C-unwind" fn IODisplayCreateInfoDictionary(
     framebuffer: io_service_t,
     options: IOOptionBits,
 ) -> Option<CFRetained<CFDictionary>> {
@@ -3884,13 +3867,6 @@ extern "C-unwind" {
     /// Parameter `options`: No options are currently defined.
     ///
     /// Returns: Returns FALSE if the two displays are not equivalent or TRUE if they are.
-    ///
-    /// # Safety
-    ///
-    /// - `matching1` generics must be of the correct type.
-    /// - `matching1` might not allow `None`.
-    /// - `matching2` generics must be of the correct type.
-    /// - `matching2` might not allow `None`.
     pub fn IODisplayMatchDictionaries(
         matching1: Option<&CFDictionary>,
         matching2: Option<&CFDictionary>,
@@ -3898,26 +3874,15 @@ extern "C-unwind" {
     ) -> i32;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IODisplayForFramebuffer(
-    framebuffer: io_service_t,
-    options: IOOptionBits,
-) -> io_service_t {
-    extern "C-unwind" {
-        fn IODisplayForFramebuffer(
-            framebuffer: io_service_t,
-            options: IOOptionBits,
-        ) -> io_service_t;
-    }
-    unsafe { IODisplayForFramebuffer(framebuffer, options) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IODisplayForFramebuffer(
+        framebuffer: io_service_t,
+        options: IOOptionBits,
+    ) -> io_service_t;
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `params` generics must be of the correct type.
-    /// - `params` might not allow `None`.
     #[cfg(feature = "libc")]
     pub fn IODisplaySetParameters(
         service: io_service_t,
@@ -3927,9 +3892,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `parameter_name` might not allow `None`.
     #[cfg(feature = "libc")]
     pub fn IODisplaySetFloatParameter(
         service: io_service_t,
@@ -3940,9 +3902,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `parameter_name` might not allow `None`.
     #[cfg(feature = "libc")]
     pub fn IODisplaySetIntegerParameter(
         service: io_service_t,
@@ -3953,9 +3912,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `params` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IODisplayCopyParameters(
         service: io_service_t,
@@ -3965,9 +3921,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `params` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IODisplayCopyFloatParameters(
         service: io_service_t,
@@ -3977,10 +3930,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `parameter_name` might not allow `None`.
-    /// - `value` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IODisplayGetFloatParameter(
         service: io_service_t,
@@ -3991,12 +3940,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `parameter_name` might not allow `None`.
-    /// - `value` must be a valid pointer.
-    /// - `min` must be a valid pointer.
-    /// - `max` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IODisplayGetIntegerRangeParameter(
         service: io_service_t,
@@ -4008,14 +3951,7 @@ extern "C-unwind" {
     ) -> IOReturn;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IODisplayCommitParameters(
-    service: io_service_t,
-    options: IOOptionBits,
-) -> IOReturn {
-    extern "C-unwind" {
-        fn IODisplayCommitParameters(service: io_service_t, options: IOOptionBits) -> IOReturn;
-    }
-    unsafe { IODisplayCommitParameters(service, options) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IODisplayCommitParameters(service: io_service_t, options: IOOptionBits) -> IOReturn;
 }

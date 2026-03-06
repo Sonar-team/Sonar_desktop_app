@@ -47,38 +47,39 @@ impl NSPDFPanel {
     extern_methods!(
         #[unsafe(method(panel))]
         #[unsafe(method_family = none)]
-        pub fn panel(mtm: MainThreadMarker) -> Retained<NSPDFPanel>;
+        pub unsafe fn panel(mtm: MainThreadMarker) -> Retained<NSPDFPanel>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSViewController"))]
         #[unsafe(method(accessoryController))]
         #[unsafe(method_family = none)]
-        pub fn accessoryController(&self) -> Option<Retained<NSViewController>>;
+        pub unsafe fn accessoryController(&self) -> Option<Retained<NSViewController>>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSViewController"))]
         /// Setter for [`accessoryController`][Self::accessoryController].
         #[unsafe(method(setAccessoryController:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessoryController(&self, accessory_controller: Option<&NSViewController>);
+        pub unsafe fn setAccessoryController(
+            &self,
+            accessory_controller: Option<&NSViewController>,
+        );
 
         #[unsafe(method(options))]
         #[unsafe(method_family = none)]
-        pub fn options(&self) -> NSPDFPanelOptions;
+        pub unsafe fn options(&self) -> NSPDFPanelOptions;
 
         /// Setter for [`options`][Self::options].
         #[unsafe(method(setOptions:))]
         #[unsafe(method_family = none)]
-        pub fn setOptions(&self, options: NSPDFPanelOptions);
+        pub unsafe fn setOptions(&self, options: NSPDFPanelOptions);
 
         #[unsafe(method(defaultFileName))]
         #[unsafe(method_family = none)]
-        pub fn defaultFileName(&self) -> Retained<NSString>;
+        pub unsafe fn defaultFileName(&self) -> Retained<NSString>;
 
         /// Setter for [`defaultFileName`][Self::defaultFileName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDefaultFileName:))]
         #[unsafe(method_family = none)]
-        pub fn setDefaultFileName(&self, default_file_name: &NSString);
+        pub unsafe fn setDefaultFileName(&self, default_file_name: &NSString);
 
         #[cfg(all(
             feature = "NSPDFInfo",
@@ -88,7 +89,7 @@ impl NSPDFPanel {
         ))]
         #[unsafe(method(beginSheetWithPDFInfo:modalForWindow:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn beginSheetWithPDFInfo_modalForWindow_completionHandler(
+        pub unsafe fn beginSheetWithPDFInfo_modalForWindow_completionHandler(
             &self,
             pdf_info: &NSPDFInfo,
             doc_window: Option<&NSWindow>,
@@ -102,10 +103,10 @@ impl NSPDFPanel {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

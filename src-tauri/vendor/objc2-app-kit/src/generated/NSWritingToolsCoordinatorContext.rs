@@ -100,7 +100,7 @@ impl NSWritingToolsCoordinatorContext {
         /// location of the text in your view’s text storage.
         #[unsafe(method(initWithAttributedString:range:))]
         #[unsafe(method_family = init)]
-        pub fn initWithAttributedString_range(
+        pub unsafe fn initWithAttributedString_range(
             this: Allocated<Self>,
             attributed_string: &NSAttributedString,
             range: NSRange,
@@ -126,7 +126,7 @@ impl NSWritingToolsCoordinatorContext {
         /// in your text storage.
         #[unsafe(method(attributedString))]
         #[unsafe(method_family = none)]
-        pub fn attributedString(&self) -> Retained<NSAttributedString>;
+        pub unsafe fn attributedString(&self) -> Retained<NSAttributedString>;
 
         /// The unique identifier of the context object.
         ///
@@ -134,7 +134,7 @@ impl NSWritingToolsCoordinatorContext {
         /// at creation time. Use this value to identify the context object within your app.
         #[unsafe(method(range))]
         #[unsafe(method_family = none)]
-        pub fn range(&self) -> NSRange;
+        pub unsafe fn range(&self) -> NSRange;
 
         /// The unique identifier of the context object.
         ///
@@ -143,7 +143,7 @@ impl NSWritingToolsCoordinatorContext {
         /// context object within your app.
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Retained<NSUUID>;
+        pub unsafe fn identifier(&self) -> Retained<NSUUID>;
 
         /// The actual range of text that Writing Tools might change, which can
         /// be different than the range of text you supplied.
@@ -163,7 +163,7 @@ impl NSWritingToolsCoordinatorContext {
         /// don’t let someone edit the text in this range directly until Writing Tools finishes.
         #[unsafe(method(resolvedRange))]
         #[unsafe(method_family = none)]
-        pub fn resolvedRange(&self) -> NSRange;
+        pub unsafe fn resolvedRange(&self) -> NSRange;
     );
 }
 

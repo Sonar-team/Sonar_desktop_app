@@ -11,10 +11,10 @@ impl UIScene {
     extern_methods!(
         #[unsafe(method(extendStateRestoration))]
         #[unsafe(method_family = none)]
-        pub fn extendStateRestoration(&self);
+        pub unsafe fn extendStateRestoration(&self);
 
         #[unsafe(method(completeStateRestoration))]
         #[unsafe(method_family = none)]
-        pub fn completeStateRestoration(&self);
+        pub unsafe fn completeStateRestoration(&self);
     );
 }

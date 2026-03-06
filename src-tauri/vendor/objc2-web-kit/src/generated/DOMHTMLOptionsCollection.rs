@@ -55,9 +55,6 @@ impl DOMHTMLOptionsCollection {
         pub unsafe fn setLength(&self, length: c_uint);
 
         #[cfg(feature = "DOMNode")]
-        /// # Safety
-        ///
-        /// `name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(namedItem:))]
         #[unsafe(method_family = none)]
@@ -69,9 +66,6 @@ impl DOMHTMLOptionsCollection {
             feature = "DOMHTMLOptionElement",
             feature = "DOMNode"
         ))]
-        /// # Safety
-        ///
-        /// `option` might not allow `None`.
         #[unsafe(method(add:index:))]
         #[unsafe(method_family = none)]
         pub unsafe fn add_index(&self, option: Option<&DOMHTMLOptionElement>, index: c_uint);

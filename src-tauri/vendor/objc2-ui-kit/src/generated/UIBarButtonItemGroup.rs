@@ -29,15 +29,12 @@ impl UIBarButtonItemGroup {
         /// Create a new bar button item group with the given items. When bar button item layout is done, either the group's barButtonItems or its representativeItem is displayed (if it exists).
         #[unsafe(method(initWithBarButtonItems:representativeItem:))]
         #[unsafe(method_family = init)]
-        pub fn initWithBarButtonItems_representativeItem(
+        pub unsafe fn initWithBarButtonItems_representativeItem(
             this: Allocated<Self>,
             bar_button_items: &NSArray<UIBarButtonItem>,
             representative_item: Option<&UIBarButtonItem>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -49,7 +46,7 @@ impl UIBarButtonItemGroup {
         /// Construct a UIBarButtonItemGroup that cannot be moved or removed under UINavigationBar customization.
         #[unsafe(method(fixedGroupWithRepresentativeItem:items:))]
         #[unsafe(method_family = none)]
-        pub fn fixedGroupWithRepresentativeItem_items(
+        pub unsafe fn fixedGroupWithRepresentativeItem_items(
             representative_item: Option<&UIBarButtonItem>,
             items: &NSArray<UIBarButtonItem>,
             mtm: MainThreadMarker,
@@ -59,7 +56,7 @@ impl UIBarButtonItemGroup {
         /// Construct a UIBarButtonItemGroup that can be moved but cannot be removed under UINavigationBar customization.
         #[unsafe(method(movableGroupWithCustomizationIdentifier:representativeItem:items:))]
         #[unsafe(method_family = none)]
-        pub fn movableGroupWithCustomizationIdentifier_representativeItem_items(
+        pub unsafe fn movableGroupWithCustomizationIdentifier_representativeItem_items(
             customization_identifier: &NSString,
             representative_item: Option<&UIBarButtonItem>,
             items: &NSArray<UIBarButtonItem>,
@@ -70,7 +67,7 @@ impl UIBarButtonItemGroup {
         /// Construct a UIBarButtonItemGroup that can be moved or added/removed under UINavigationBar customization.
         #[unsafe(method(optionalGroupWithCustomizationIdentifier:inDefaultCustomization:representativeItem:items:))]
         #[unsafe(method_family = none)]
-        pub fn optionalGroupWithCustomizationIdentifier_inDefaultCustomization_representativeItem_items(
+        pub unsafe fn optionalGroupWithCustomizationIdentifier_inDefaultCustomization_representativeItem_items(
             customization_identifier: &NSString,
             in_default_customization: bool,
             representative_item: Option<&UIBarButtonItem>,
@@ -78,27 +75,17 @@ impl UIBarButtonItemGroup {
             mtm: MainThreadMarker,
         ) -> Retained<UIBarButtonItemGroup>;
 
-        /// Returns a new group that contains a single zero-width fixed space item inside it.
-        ///
-        /// If you specify a group with a single zero-width fixed space,
-        /// the navigation bar to visually separate the following groups.
-        #[unsafe(method(groupWithFixedSpace))]
-        #[unsafe(method_family = none)]
-        pub fn groupWithFixedSpace(mtm: MainThreadMarker) -> Retained<UIBarButtonItemGroup>;
-
         #[cfg(all(feature = "UIBarButtonItem", feature = "UIBarItem"))]
         /// The bar button items associated with this group. Changing these items will affect the bar displaying these items without needing to re-set the groups that are in that bar. Any UIBarButtonItems that are already in group will be removed from that group.
         #[unsafe(method(barButtonItems))]
         #[unsafe(method_family = none)]
-        pub fn barButtonItems(&self) -> Retained<NSArray<UIBarButtonItem>>;
+        pub unsafe fn barButtonItems(&self) -> Retained<NSArray<UIBarButtonItem>>;
 
         #[cfg(all(feature = "UIBarButtonItem", feature = "UIBarItem"))]
         /// Setter for [`barButtonItems`][Self::barButtonItems].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBarButtonItems:))]
         #[unsafe(method_family = none)]
-        pub fn setBarButtonItems(&self, bar_button_items: &NSArray<UIBarButtonItem>);
+        pub unsafe fn setBarButtonItems(&self, bar_button_items: &NSArray<UIBarButtonItem>);
 
         #[cfg(all(feature = "UIBarButtonItem", feature = "UIBarItem"))]
         /// In order to display as many items as possible, bars that support UIBarButtonItemGroup may choose to collapse items associated with groups to the representativeItem specified by the group.
@@ -107,52 +94,50 @@ impl UIBarButtonItemGroup {
         /// If the representativeItem has an action, then that action will be invoked, otherwise the bar will present a standard UI to allow selection of the barButtonItems in the representedItem's group.
         #[unsafe(method(representativeItem))]
         #[unsafe(method_family = none)]
-        pub fn representativeItem(&self) -> Option<Retained<UIBarButtonItem>>;
+        pub unsafe fn representativeItem(&self) -> Option<Retained<UIBarButtonItem>>;
 
         #[cfg(all(feature = "UIBarButtonItem", feature = "UIBarItem"))]
         /// Setter for [`representativeItem`][Self::representativeItem].
         #[unsafe(method(setRepresentativeItem:))]
         #[unsafe(method_family = none)]
-        pub fn setRepresentativeItem(&self, representative_item: Option<&UIBarButtonItem>);
+        pub unsafe fn setRepresentativeItem(&self, representative_item: Option<&UIBarButtonItem>);
 
         /// Returns YES if the representativeItem of this group is currently being displayed, rather than its barButtonItems.
         #[unsafe(method(isDisplayingRepresentativeItem))]
         #[unsafe(method_family = none)]
-        pub fn isDisplayingRepresentativeItem(&self) -> bool;
+        pub unsafe fn isDisplayingRepresentativeItem(&self) -> bool;
 
         /// Instructs UIKit to ensure that the functionality in this group is made available to the user regardless of customization status. On iPhone and iPad idioms, UIKit currently places these items in the overflow menu; this property has no effect on macOS idiom.
         #[unsafe(method(alwaysAvailable))]
         #[unsafe(method_family = none)]
-        pub fn alwaysAvailable(&self) -> bool;
+        pub unsafe fn alwaysAvailable(&self) -> bool;
 
         /// Setter for [`alwaysAvailable`][Self::alwaysAvailable].
         #[unsafe(method(setAlwaysAvailable:))]
         #[unsafe(method_family = none)]
-        pub fn setAlwaysAvailable(&self, always_available: bool);
+        pub unsafe fn setAlwaysAvailable(&self, always_available: bool);
 
         #[cfg(feature = "UIMenuElement")]
         /// A UIMenuElement that should substitute for the UIBarButtonItemGroup when displayed in a menu.
         #[unsafe(method(menuRepresentation))]
         #[unsafe(method_family = none)]
-        pub fn menuRepresentation(&self) -> Option<Retained<UIMenuElement>>;
+        pub unsafe fn menuRepresentation(&self) -> Option<Retained<UIMenuElement>>;
 
         #[cfg(feature = "UIMenuElement")]
         /// Setter for [`menuRepresentation`][Self::menuRepresentation].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setMenuRepresentation:))]
         #[unsafe(method_family = none)]
-        pub fn setMenuRepresentation(&self, menu_representation: Option<&UIMenuElement>);
+        pub unsafe fn setMenuRepresentation(&self, menu_representation: Option<&UIMenuElement>);
 
         /// If the group should be hidden from display.
         #[unsafe(method(isHidden))]
         #[unsafe(method_family = none)]
-        pub fn isHidden(&self) -> bool;
+        pub unsafe fn isHidden(&self) -> bool;
 
         /// Setter for [`isHidden`][Self::isHidden].
         #[unsafe(method(setHidden:))]
         #[unsafe(method_family = none)]
-        pub fn setHidden(&self, hidden: bool);
+        pub unsafe fn setHidden(&self, hidden: bool);
     );
 }
 
@@ -161,11 +146,11 @@ impl UIBarButtonItemGroup {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -176,6 +161,6 @@ impl UIBarButtonItem {
         /// The group that the UIBarButtonItem is currently associated with, either as a member of the barButtonItems array or as that group's representativeItem.
         #[unsafe(method(buttonGroup))]
         #[unsafe(method_family = none)]
-        pub fn buttonGroup(&self) -> Option<Retained<UIBarButtonItemGroup>>;
+        pub unsafe fn buttonGroup(&self) -> Option<Retained<UIBarButtonItemGroup>>;
     );
 }

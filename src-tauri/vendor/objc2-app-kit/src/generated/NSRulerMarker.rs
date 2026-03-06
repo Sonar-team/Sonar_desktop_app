@@ -44,7 +44,7 @@ impl NSRulerMarker {
         /// ************************** Initialization ***************************
         #[unsafe(method(initWithRulerView:markerLocation:image:imageOrigin:))]
         #[unsafe(method_family = init)]
-        pub fn initWithRulerView_markerLocation_image_imageOrigin(
+        pub unsafe fn initWithRulerView_markerLocation_image_imageOrigin(
             this: Allocated<Self>,
             ruler: &NSRulerView,
             location: CGFloat,
@@ -52,9 +52,6 @@ impl NSRulerMarker {
             image_origin: NSPoint,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -67,70 +64,66 @@ impl NSRulerMarker {
         /// ********************* Query/Set basic attributes **********************
         #[unsafe(method(ruler))]
         #[unsafe(method_family = none)]
-        pub fn ruler(&self, mtm: MainThreadMarker) -> Option<Retained<NSRulerView>>;
+        pub unsafe fn ruler(&self, mtm: MainThreadMarker) -> Option<Retained<NSRulerView>>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(markerLocation))]
         #[unsafe(method_family = none)]
-        pub fn markerLocation(&self) -> CGFloat;
+        pub unsafe fn markerLocation(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`markerLocation`][Self::markerLocation].
         #[unsafe(method(setMarkerLocation:))]
         #[unsafe(method_family = none)]
-        pub fn setMarkerLocation(&self, marker_location: CGFloat);
+        pub unsafe fn setMarkerLocation(&self, marker_location: CGFloat);
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Retained<NSImage>;
+        pub unsafe fn image(&self) -> Retained<NSImage>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`image`][Self::image].
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: &NSImage);
+        pub unsafe fn setImage(&self, image: &NSImage);
 
         #[unsafe(method(imageOrigin))]
         #[unsafe(method_family = none)]
-        pub fn imageOrigin(&self) -> NSPoint;
+        pub unsafe fn imageOrigin(&self) -> NSPoint;
 
         /// Setter for [`imageOrigin`][Self::imageOrigin].
         #[unsafe(method(setImageOrigin:))]
         #[unsafe(method_family = none)]
-        pub fn setImageOrigin(&self, image_origin: NSPoint);
+        pub unsafe fn setImageOrigin(&self, image_origin: NSPoint);
 
         #[unsafe(method(isMovable))]
         #[unsafe(method_family = none)]
-        pub fn isMovable(&self) -> bool;
+        pub unsafe fn isMovable(&self) -> bool;
 
         /// Setter for [`isMovable`][Self::isMovable].
         #[unsafe(method(setMovable:))]
         #[unsafe(method_family = none)]
-        pub fn setMovable(&self, movable: bool);
+        pub unsafe fn setMovable(&self, movable: bool);
 
         #[unsafe(method(isRemovable))]
         #[unsafe(method_family = none)]
-        pub fn isRemovable(&self) -> bool;
+        pub unsafe fn isRemovable(&self) -> bool;
 
         /// Setter for [`isRemovable`][Self::isRemovable].
         #[unsafe(method(setRemovable:))]
         #[unsafe(method_family = none)]
-        pub fn setRemovable(&self, removable: bool);
+        pub unsafe fn setRemovable(&self, removable: bool);
 
         #[unsafe(method(isDragging))]
         #[unsafe(method_family = none)]
-        pub fn isDragging(&self) -> bool;
+        pub unsafe fn isDragging(&self) -> bool;
 
         #[unsafe(method(representedObject))]
         #[unsafe(method_family = none)]
-        pub fn representedObject(&self) -> Option<Retained<ProtocolObject<dyn NSCopying>>>;
+        pub unsafe fn representedObject(&self) -> Option<Retained<ProtocolObject<dyn NSCopying>>>;
 
         /// Setter for [`representedObject`][Self::representedObject].
-        ///
-        /// # Safety
-        ///
-        /// `represented_object` should be of the correct type.
         #[unsafe(method(setRepresentedObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRepresentedObject(
@@ -141,21 +134,22 @@ impl NSRulerMarker {
         /// ************************ Ruler facilities *************************
         #[unsafe(method(imageRectInRuler))]
         #[unsafe(method_family = none)]
-        pub fn imageRectInRuler(&self) -> NSRect;
+        pub unsafe fn imageRectInRuler(&self) -> NSRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(thicknessRequiredInRuler))]
         #[unsafe(method_family = none)]
-        pub fn thicknessRequiredInRuler(&self) -> CGFloat;
+        pub unsafe fn thicknessRequiredInRuler(&self) -> CGFloat;
 
         #[unsafe(method(drawRect:))]
         #[unsafe(method_family = none)]
-        pub fn drawRect(&self, rect: NSRect);
+        pub unsafe fn drawRect(&self, rect: NSRect);
 
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(trackMouse:adding:))]
         #[unsafe(method_family = none)]
-        pub fn trackMouse_adding(&self, mouse_down_event: &NSEvent, is_adding: bool) -> bool;
+        pub unsafe fn trackMouse_adding(&self, mouse_down_event: &NSEvent, is_adding: bool)
+            -> bool;
     );
 }
 

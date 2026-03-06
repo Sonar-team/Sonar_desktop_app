@@ -12,7 +12,6 @@ mod private_NSObjectNSAccessibility {
 }
 
 /// Category "NSAccessibility" on [`NSObject`].
-///
 /// * Accessibility Informal Protocol **
 #[doc(alias = "NSAccessibility")]
 pub unsafe trait NSObjectNSAccessibility:
@@ -23,13 +22,15 @@ pub unsafe trait NSObjectNSAccessibility:
         #[deprecated = "Use the NSAccessibility protocol methods instead (see NSAccessibilityProtocols.h)"]
         #[unsafe(method(accessibilityAttributeNames))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributeNames(&self) -> Retained<NSArray<NSAccessibilityAttributeName>>;
+        unsafe fn accessibilityAttributeNames(
+            &self,
+        ) -> Retained<NSArray<NSAccessibilityAttributeName>>;
 
         #[cfg(feature = "NSAccessibilityConstants")]
         #[deprecated = "Use the NSAccessibility protocol methods instead (see NSAccessibilityProtocols.h)"]
         #[unsafe(method(accessibilityAttributeValue:))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributeValue(
+        unsafe fn accessibilityAttributeValue(
             &self,
             attribute: &NSAccessibilityAttributeName,
         ) -> Option<Retained<AnyObject>>;
@@ -38,15 +39,12 @@ pub unsafe trait NSObjectNSAccessibility:
         #[deprecated = "Use the NSAccessibility protocol methods instead (see NSAccessibilityProtocols.h)"]
         #[unsafe(method(accessibilityIsAttributeSettable:))]
         #[unsafe(method_family = none)]
-        fn accessibilityIsAttributeSettable(
+        unsafe fn accessibilityIsAttributeSettable(
             &self,
             attribute: &NSAccessibilityAttributeName,
         ) -> bool;
 
         #[cfg(feature = "NSAccessibilityConstants")]
-        /// # Safety
-        ///
-        /// `value` should be of the correct type.
         #[deprecated = "Use the NSAccessibility protocol methods instead (see NSAccessibilityProtocols.h)"]
         #[unsafe(method(accessibilitySetValue:forAttribute:))]
         #[unsafe(method_family = none)]
@@ -60,14 +58,11 @@ pub unsafe trait NSObjectNSAccessibility:
         #[deprecated = "Use the NSAccessibility protocol methods instead (see NSAccessibilityProtocols.h)"]
         #[unsafe(method(accessibilityParameterizedAttributeNames))]
         #[unsafe(method_family = none)]
-        fn accessibilityParameterizedAttributeNames(
+        unsafe fn accessibilityParameterizedAttributeNames(
             &self,
         ) -> Retained<NSArray<NSAccessibilityParameterizedAttributeName>>;
 
         #[cfg(feature = "NSAccessibilityConstants")]
-        /// # Safety
-        ///
-        /// `parameter` should be of the correct type.
         #[deprecated = "Use the NSAccessibility protocol methods instead (see NSAccessibilityProtocols.h)"]
         #[unsafe(method(accessibilityAttributeValue:forParameter:))]
         #[unsafe(method_family = none)]
@@ -81,13 +76,13 @@ pub unsafe trait NSObjectNSAccessibility:
         #[deprecated = "Use the NSAccessibility protocol methods instead (see NSAccessibilityProtocols.h)"]
         #[unsafe(method(accessibilityActionNames))]
         #[unsafe(method_family = none)]
-        fn accessibilityActionNames(&self) -> Retained<NSArray<NSAccessibilityActionName>>;
+        unsafe fn accessibilityActionNames(&self) -> Retained<NSArray<NSAccessibilityActionName>>;
 
         #[cfg(feature = "NSAccessibilityConstants")]
         #[deprecated = "Use the NSAccessibility protocol methods instead (see NSAccessibilityProtocols.h)"]
         #[unsafe(method(accessibilityActionDescription:))]
         #[unsafe(method_family = none)]
-        fn accessibilityActionDescription(
+        unsafe fn accessibilityActionDescription(
             &self,
             action: &NSAccessibilityActionName,
         ) -> Option<Retained<NSString>>;
@@ -96,24 +91,21 @@ pub unsafe trait NSObjectNSAccessibility:
         #[deprecated = "Use the NSAccessibility protocol methods instead (see NSAccessibilityProtocols.h)"]
         #[unsafe(method(accessibilityPerformAction:))]
         #[unsafe(method_family = none)]
-        fn accessibilityPerformAction(&self, action: &NSAccessibilityActionName);
+        unsafe fn accessibilityPerformAction(&self, action: &NSAccessibilityActionName);
 
         #[deprecated = "Use isAccessibilityElement instead"]
         #[unsafe(method(accessibilityIsIgnored))]
         #[unsafe(method_family = none)]
-        fn accessibilityIsIgnored(&self) -> bool;
+        unsafe fn accessibilityIsIgnored(&self) -> bool;
 
         #[unsafe(method(accessibilityHitTest:))]
         #[unsafe(method_family = none)]
-        fn accessibilityHitTest(&self, point: NSPoint) -> Option<Retained<AnyObject>>;
+        unsafe fn accessibilityHitTest(&self, point: NSPoint) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(accessibilityFocusedUIElement))]
         #[unsafe(method_family = none)]
-        fn accessibilityFocusedUIElement(&self) -> Option<Retained<AnyObject>>;
+        unsafe fn accessibilityFocusedUIElement(&self) -> Option<Retained<AnyObject>>;
 
-        /// # Safety
-        ///
-        /// `child` should be of the correct type.
         #[unsafe(method(accessibilityIndexOfChild:))]
         #[unsafe(method_family = none)]
         unsafe fn accessibilityIndexOfChild(&self, child: &AnyObject) -> NSUInteger;
@@ -121,7 +113,7 @@ pub unsafe trait NSObjectNSAccessibility:
         #[cfg(feature = "NSAccessibilityConstants")]
         #[unsafe(method(accessibilityArrayAttributeCount:))]
         #[unsafe(method_family = none)]
-        fn accessibilityArrayAttributeCount(
+        unsafe fn accessibilityArrayAttributeCount(
             &self,
             attribute: &NSAccessibilityAttributeName,
         ) -> NSUInteger;
@@ -129,7 +121,7 @@ pub unsafe trait NSObjectNSAccessibility:
         #[cfg(feature = "NSAccessibilityConstants")]
         #[unsafe(method(accessibilityArrayAttributeValues:index:maxCount:))]
         #[unsafe(method_family = none)]
-        fn accessibilityArrayAttributeValues_index_maxCount(
+        unsafe fn accessibilityArrayAttributeValues_index_maxCount(
             &self,
             attribute: &NSAccessibilityAttributeName,
             index: NSUInteger,
@@ -138,7 +130,7 @@ pub unsafe trait NSObjectNSAccessibility:
 
         #[unsafe(method(accessibilityNotifiesWhenDestroyed))]
         #[unsafe(method_family = none)]
-        fn accessibilityNotifiesWhenDestroyed(&self) -> bool;
+        unsafe fn accessibilityNotifiesWhenDestroyed(&self) -> bool;
     );
 }
 
@@ -151,23 +143,23 @@ impl NSWorkspace {
     extern_methods!(
         #[unsafe(method(accessibilityDisplayShouldIncreaseContrast))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityDisplayShouldIncreaseContrast(&self) -> bool;
+        pub unsafe fn accessibilityDisplayShouldIncreaseContrast(&self) -> bool;
 
         #[unsafe(method(accessibilityDisplayShouldDifferentiateWithoutColor))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityDisplayShouldDifferentiateWithoutColor(&self) -> bool;
+        pub unsafe fn accessibilityDisplayShouldDifferentiateWithoutColor(&self) -> bool;
 
         #[unsafe(method(accessibilityDisplayShouldReduceTransparency))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityDisplayShouldReduceTransparency(&self) -> bool;
+        pub unsafe fn accessibilityDisplayShouldReduceTransparency(&self) -> bool;
 
         #[unsafe(method(accessibilityDisplayShouldReduceMotion))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityDisplayShouldReduceMotion(&self) -> bool;
+        pub unsafe fn accessibilityDisplayShouldReduceMotion(&self) -> bool;
 
         #[unsafe(method(accessibilityDisplayShouldInvertColors))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityDisplayShouldInvertColors(&self) -> bool;
+        pub unsafe fn accessibilityDisplayShouldInvertColors(&self) -> bool;
     );
 }
 
@@ -177,11 +169,11 @@ impl NSWorkspace {
     extern_methods!(
         #[unsafe(method(isVoiceOverEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isVoiceOverEnabled(&self) -> bool;
+        pub unsafe fn isVoiceOverEnabled(&self) -> bool;
 
         #[unsafe(method(isSwitchControlEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isSwitchControlEnabled(&self) -> bool;
+        pub unsafe fn isSwitchControlEnabled(&self) -> bool;
     );
 }
 
@@ -191,29 +183,18 @@ extern "C" {
         &'static NSNotificationName;
 }
 
-#[cfg(all(feature = "NSResponder", feature = "NSView"))]
-#[inline]
-pub extern "C-unwind" fn NSAccessibilityFrameInView(parent_view: &NSView, frame: NSRect) -> NSRect {
-    extern "C-unwind" {
-        fn NSAccessibilityFrameInView(parent_view: &NSView, frame: NSRect) -> NSRect;
-    }
-    unsafe { NSAccessibilityFrameInView(parent_view, frame) }
+extern "C-unwind" {
+    #[cfg(all(feature = "NSResponder", feature = "NSView"))]
+    pub fn NSAccessibilityFrameInView(parent_view: &NSView, frame: NSRect) -> NSRect;
 }
 
-#[cfg(all(feature = "NSResponder", feature = "NSView"))]
-#[inline]
-pub extern "C-unwind" fn NSAccessibilityPointInView(
-    parent_view: &NSView,
-    point: NSPoint,
-) -> NSPoint {
-    extern "C-unwind" {
-        fn NSAccessibilityPointInView(parent_view: &NSView, point: NSPoint) -> NSPoint;
-    }
-    unsafe { NSAccessibilityPointInView(parent_view, point) }
+extern "C-unwind" {
+    #[cfg(all(feature = "NSResponder", feature = "NSView"))]
+    pub fn NSAccessibilityPointInView(parent_view: &NSView, point: NSPoint) -> NSPoint;
 }
 
 #[inline]
-pub extern "C-unwind" fn NSAccessibilitySetMayContainProtectedContent(flag: bool) -> bool {
+pub unsafe extern "C-unwind" fn NSAccessibilitySetMayContainProtectedContent(flag: bool) -> bool {
     extern "C-unwind" {
         fn NSAccessibilitySetMayContainProtectedContent(flag: Bool) -> Bool;
     }
@@ -222,7 +203,7 @@ pub extern "C-unwind" fn NSAccessibilitySetMayContainProtectedContent(flag: bool
 
 #[cfg(feature = "NSAccessibilityConstants")]
 #[inline]
-pub extern "C-unwind" fn NSAccessibilityRoleDescription(
+pub unsafe extern "C-unwind" fn NSAccessibilityRoleDescription(
     role: &NSAccessibilityRole,
     subrole: Option<&NSAccessibilitySubrole>,
 ) -> Option<Retained<NSString>> {
@@ -236,9 +217,6 @@ pub extern "C-unwind" fn NSAccessibilityRoleDescription(
     unsafe { Retained::retain_autoreleased(ret) }
 }
 
-/// # Safety
-///
-/// `element` should be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn NSAccessibilityRoleDescriptionForUIElement(
     element: &AnyObject,
@@ -252,7 +230,7 @@ pub unsafe extern "C-unwind" fn NSAccessibilityRoleDescriptionForUIElement(
 
 #[cfg(feature = "NSAccessibilityConstants")]
 #[inline]
-pub extern "C-unwind" fn NSAccessibilityActionDescription(
+pub unsafe extern "C-unwind" fn NSAccessibilityActionDescription(
     action: &NSAccessibilityActionName,
 ) -> Option<Retained<NSString>> {
     extern "C-unwind" {
@@ -263,13 +241,6 @@ pub extern "C-unwind" fn NSAccessibilityActionDescription(
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `element` should be of the correct type.
-    /// - `element` might not allow `None`.
-    /// - `attribute` might not allow `None`.
-    /// - `value` should be of the correct type.
-    /// - `value` might not allow `None`.
     #[cfg(feature = "NSAccessibilityConstants")]
     #[deprecated = "Exceptions are no longer appropriate for indicating errors in accessibility API. Unexpected values should be handled through appropriate type checking."]
     pub fn NSAccessibilityRaiseBadArgumentException(
@@ -280,10 +251,6 @@ extern "C-unwind" {
 }
 
 /// * Ignored UIElements Utilities **
-///
-/// # Safety
-///
-/// `element` should be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn NSAccessibilityUnignoredAncestor(
     element: &AnyObject,
@@ -295,9 +262,6 @@ pub unsafe extern "C-unwind" fn NSAccessibilityUnignoredAncestor(
     unsafe { Retained::retain_autoreleased(ret) }
 }
 
-/// # Safety
-///
-/// `element` should be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn NSAccessibilityUnignoredDescendant(
     element: &AnyObject,
@@ -309,9 +273,6 @@ pub unsafe extern "C-unwind" fn NSAccessibilityUnignoredDescendant(
     unsafe { Retained::retain_autoreleased(ret) }
 }
 
-/// # Safety
-///
-/// `original_children` generic should be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn NSAccessibilityUnignoredChildren(
     original_children: &NSArray,
@@ -324,9 +285,6 @@ pub unsafe extern "C-unwind" fn NSAccessibilityUnignoredChildren(
         .expect("function was marked as returning non-null, but actually returned NULL")
 }
 
-/// # Safety
-///
-/// `original_child` should be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn NSAccessibilityUnignoredChildrenForOnlyChild(
     original_child: &AnyObject,
@@ -342,10 +300,6 @@ pub unsafe extern "C-unwind" fn NSAccessibilityUnignoredChildrenForOnlyChild(
 
 extern "C-unwind" {
     /// * Posting Notifications **
-    ///
-    /// # Safety
-    ///
-    /// `element` should be of the correct type.
     #[cfg(feature = "NSAccessibilityConstants")]
     pub fn NSAccessibilityPostNotification(
         element: &AnyObject,

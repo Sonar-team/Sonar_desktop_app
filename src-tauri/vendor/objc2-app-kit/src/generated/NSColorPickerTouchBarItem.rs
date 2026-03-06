@@ -31,7 +31,7 @@ impl NSColorPickerTouchBarItem {
         /// Creates a bar item containing a button with the standard color picker icon that invokes the color picker.
         #[unsafe(method(colorPickerWithIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn colorPickerWithIdentifier(
+        pub unsafe fn colorPickerWithIdentifier(
             identifier: &NSTouchBarItemIdentifier,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -39,7 +39,7 @@ impl NSColorPickerTouchBarItem {
         /// Creates a bar item containing a button with the standard text color picker icon that invokes the color picker. Should be used when the item is used for picking text colors.
         #[unsafe(method(textColorPickerWithIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn textColorPickerWithIdentifier(
+        pub unsafe fn textColorPickerWithIdentifier(
             identifier: &NSTouchBarItemIdentifier,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -47,7 +47,7 @@ impl NSColorPickerTouchBarItem {
         /// Creates a bar item containing a button with the standard stroke color picker icon that invokes the color picker. Should be used when the item is used for picking stroke colors.
         #[unsafe(method(strokeColorPickerWithIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn strokeColorPickerWithIdentifier(
+        pub unsafe fn strokeColorPickerWithIdentifier(
             identifier: &NSTouchBarItemIdentifier,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -55,7 +55,7 @@ impl NSColorPickerTouchBarItem {
         #[cfg(feature = "NSImage")]
         #[unsafe(method(colorPickerWithIdentifier:buttonImage:))]
         #[unsafe(method_family = none)]
-        pub fn colorPickerWithIdentifier_buttonImage(
+        pub unsafe fn colorPickerWithIdentifier_buttonImage(
             identifier: &NSTouchBarItemIdentifier,
             image: &NSImage,
             mtm: MainThreadMarker,
@@ -64,52 +64,47 @@ impl NSColorPickerTouchBarItem {
         #[cfg(feature = "NSColor")]
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
-        pub fn color(&self) -> Retained<NSColor>;
+        pub unsafe fn color(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`color`][Self::color].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setColor:))]
         #[unsafe(method_family = none)]
-        pub fn setColor(&self, color: &NSColor);
+        pub unsafe fn setColor(&self, color: &NSColor);
 
         /// Whether or not the picker should allow picking a color with non-1.0 alpha. Defaults to `!NSColor.ignoresAlpha`.
         #[unsafe(method(showsAlpha))]
         #[unsafe(method_family = none)]
-        pub fn showsAlpha(&self) -> bool;
+        pub unsafe fn showsAlpha(&self) -> bool;
 
         /// Setter for [`showsAlpha`][Self::showsAlpha].
         #[unsafe(method(setShowsAlpha:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsAlpha(&self, shows_alpha: bool);
+        pub unsafe fn setShowsAlpha(&self, shows_alpha: bool);
 
         #[cfg(feature = "NSColorSpace")]
         /// Controls the color spaces that the receiver is able to produce. If a color outside of the allowed spaces are displayed or selected, it will first be converted to the first color space in the array. `nil` signifies any color space is allowed. Empty array is an invalid value and will raise an exception if set. Defaults to `nil`.
         #[unsafe(method(allowedColorSpaces))]
         #[unsafe(method_family = none)]
-        pub fn allowedColorSpaces(&self) -> Option<Retained<NSArray<NSColorSpace>>>;
+        pub unsafe fn allowedColorSpaces(&self) -> Option<Retained<NSArray<NSColorSpace>>>;
 
         #[cfg(feature = "NSColorSpace")]
         /// Setter for [`allowedColorSpaces`][Self::allowedColorSpaces].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAllowedColorSpaces:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowedColorSpaces(&self, allowed_color_spaces: Option<&NSArray<NSColorSpace>>);
+        pub unsafe fn setAllowedColorSpaces(
+            &self,
+            allowed_color_spaces: Option<&NSArray<NSColorSpace>>,
+        );
 
         #[cfg(feature = "NSColorList")]
         /// The color list displayed in the list color picker. Defaults to the standard system color list. Setting a custom color list will disable the additional tints/shades that appear on long-press.
         #[unsafe(method(colorList))]
         #[unsafe(method_family = none)]
-        pub fn colorList(&self) -> Option<Retained<NSColorList>>;
+        pub unsafe fn colorList(&self) -> Option<Retained<NSColorList>>;
 
         #[cfg(feature = "NSColorList")]
         /// Setter for [`colorList`][Self::colorList].
-        ///
-        /// # Safety
-        ///
-        /// `color_list` might not allow `None`.
         #[unsafe(method(setColorList:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setColorList(&self, color_list: Option<&NSColorList>);
@@ -117,39 +112,28 @@ impl NSColorPickerTouchBarItem {
         /// The localized string labelling this item during user customization. The default value is the localized string of "Color Picker".
         #[unsafe(method(customizationLabel))]
         #[unsafe(method_family = none)]
-        pub fn customizationLabel(&self) -> Retained<NSString>;
+        pub unsafe fn customizationLabel(&self) -> Retained<NSString>;
 
         /// Setter for [`customizationLabel`][Self::customizationLabel].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCustomizationLabel:))]
         #[unsafe(method_family = none)]
-        pub fn setCustomizationLabel(&self, customization_label: Option<&NSString>);
+        pub unsafe fn setCustomizationLabel(&self, customization_label: Option<&NSString>);
 
         #[unsafe(method(target))]
         #[unsafe(method_family = none)]
-        pub fn target(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn target(&self) -> Option<Retained<AnyObject>>;
 
-        /// Setter for [`target`][Self::target].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
+        /// Setter for [`target`][Self::target].
         #[unsafe(method(setTarget:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTarget(&self, target: Option<&AnyObject>);
 
         #[unsafe(method(action))]
         #[unsafe(method_family = none)]
-        pub fn action(&self) -> Option<Sel>;
+        pub unsafe fn action(&self) -> Option<Sel>;
 
         /// Setter for [`action`][Self::action].
-        ///
-        /// # Safety
-        ///
-        /// `action` must be a valid selector.
         #[unsafe(method(setAction:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAction(&self, action: Option<Sel>);
@@ -157,12 +141,12 @@ impl NSColorPickerTouchBarItem {
         /// Enables or disabled the color picker. If it is currently being shown in a popover, it will be dismissed.
         #[unsafe(method(isEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isEnabled(&self) -> bool;
+        pub unsafe fn isEnabled(&self) -> bool;
 
         /// Setter for [`isEnabled`][Self::isEnabled].
         #[unsafe(method(setEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setEnabled(&self, enabled: bool);
+        pub unsafe fn setEnabled(&self, enabled: bool);
     );
 }
 
@@ -172,14 +156,11 @@ impl NSColorPickerTouchBarItem {
     extern_methods!(
         #[unsafe(method(initWithIdentifier:))]
         #[unsafe(method_family = init)]
-        pub fn initWithIdentifier(
+        pub unsafe fn initWithIdentifier(
             this: Allocated<Self>,
             identifier: &NSTouchBarItemIdentifier,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(

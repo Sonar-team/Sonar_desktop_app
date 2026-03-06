@@ -26,9 +26,6 @@ extern_conformance!(
 impl NSAccessibilityElement {
     extern_methods!(
         #[cfg(feature = "NSAccessibilityConstants")]
-        /// # Safety
-        ///
-        /// `parent` should be of the correct type.
         #[unsafe(method(accessibilityElementWithRole:frame:label:parent:))]
         #[unsafe(method_family = none)]
         pub unsafe fn accessibilityElementWithRole_frame_label_parent(
@@ -40,16 +37,16 @@ impl NSAccessibilityElement {
 
         #[unsafe(method(accessibilityAddChildElement:))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityAddChildElement(&self, child_element: &NSAccessibilityElement);
+        pub unsafe fn accessibilityAddChildElement(&self, child_element: &NSAccessibilityElement);
 
         #[unsafe(method(accessibilityFrameInParentSpace))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityFrameInParentSpace(&self) -> NSRect;
+        pub unsafe fn accessibilityFrameInParentSpace(&self) -> NSRect;
 
         /// Setter for [`accessibilityFrameInParentSpace`][Self::accessibilityFrameInParentSpace].
         #[unsafe(method(setAccessibilityFrameInParentSpace:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessibilityFrameInParentSpace(
+        pub unsafe fn setAccessibilityFrameInParentSpace(
             &self,
             accessibility_frame_in_parent_space: NSRect,
         );
@@ -61,17 +58,10 @@ impl NSAccessibilityElement {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSAccessibilityElement {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

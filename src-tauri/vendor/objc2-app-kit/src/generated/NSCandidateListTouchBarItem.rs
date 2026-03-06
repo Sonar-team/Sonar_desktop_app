@@ -16,21 +16,6 @@ extern_class!(
 );
 
 #[cfg(feature = "NSTouchBarItem")]
-impl<CandidateType: ?Sized + Message> NSCandidateListTouchBarItem<CandidateType> {
-    /// Unchecked conversion of the generic parameter.
-    ///
-    /// # Safety
-    ///
-    /// The generic must be valid to reinterpret as the given type.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewCandidateType: ?Sized + Message>(
-        &self,
-    ) -> &NSCandidateListTouchBarItem<NewCandidateType> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
-#[cfg(feature = "NSTouchBarItem")]
 extern_conformance!(
     unsafe impl<CandidateType: ?Sized + NSCoding> NSCoding
         for NSCandidateListTouchBarItem<CandidateType>
@@ -53,82 +38,73 @@ impl<CandidateType: Message> NSCandidateListTouchBarItem<CandidateType> {
         ))]
         #[unsafe(method(client))]
         #[unsafe(method_family = none)]
-        pub fn client(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn client(&self) -> Option<Retained<NSView>>;
 
         #[cfg(all(
             feature = "NSResponder",
             feature = "NSTextInputClient",
             feature = "NSView"
         ))]
-        /// Setter for [`client`][Self::client].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `client` must implement NSTextInputClient.
+        /// Setter for [`client`][Self::client].
         #[unsafe(method(setClient:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setClient(&self, client: Option<&NSView>);
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn NSCandidateListTouchBarItemDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(
+        pub unsafe fn setDelegate(
             &self,
             delegate: Option<&ProtocolObject<dyn NSCandidateListTouchBarItemDelegate>>,
         );
 
         #[unsafe(method(isCollapsed))]
         #[unsafe(method_family = none)]
-        pub fn isCollapsed(&self) -> bool;
+        pub unsafe fn isCollapsed(&self) -> bool;
 
         /// Setter for [`isCollapsed`][Self::isCollapsed].
         #[unsafe(method(setCollapsed:))]
         #[unsafe(method_family = none)]
-        pub fn setCollapsed(&self, collapsed: bool);
+        pub unsafe fn setCollapsed(&self, collapsed: bool);
 
         #[unsafe(method(allowsCollapsing))]
         #[unsafe(method_family = none)]
-        pub fn allowsCollapsing(&self) -> bool;
+        pub unsafe fn allowsCollapsing(&self) -> bool;
 
         /// Setter for [`allowsCollapsing`][Self::allowsCollapsing].
         #[unsafe(method(setAllowsCollapsing:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsCollapsing(&self, allows_collapsing: bool);
+        pub unsafe fn setAllowsCollapsing(&self, allows_collapsing: bool);
 
         #[unsafe(method(isCandidateListVisible))]
         #[unsafe(method_family = none)]
-        pub fn isCandidateListVisible(&self) -> bool;
+        pub unsafe fn isCandidateListVisible(&self) -> bool;
 
         #[unsafe(method(updateWithInsertionPointVisibility:))]
         #[unsafe(method_family = none)]
-        pub fn updateWithInsertionPointVisibility(&self, is_visible: bool);
+        pub unsafe fn updateWithInsertionPointVisibility(&self, is_visible: bool);
 
         #[unsafe(method(allowsTextInputContextCandidates))]
         #[unsafe(method_family = none)]
-        pub fn allowsTextInputContextCandidates(&self) -> bool;
+        pub unsafe fn allowsTextInputContextCandidates(&self) -> bool;
 
         /// Setter for [`allowsTextInputContextCandidates`][Self::allowsTextInputContextCandidates].
         #[unsafe(method(setAllowsTextInputContextCandidates:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsTextInputContextCandidates(
+        pub unsafe fn setAllowsTextInputContextCandidates(
             &self,
             allows_text_input_context_candidates: bool,
         );
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// The returned block's argument 1 must be a valid pointer.
         #[unsafe(method(attributedStringForCandidate))]
         #[unsafe(method_family = none)]
         pub unsafe fn attributedStringForCandidate(
@@ -139,12 +115,6 @@ impl<CandidateType: Message> NSCandidateListTouchBarItem<CandidateType> {
 
         #[cfg(feature = "block2")]
         /// Setter for [`attributedStringForCandidate`][Self::attributedStringForCandidate].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `attributed_string_for_candidate` block's return must be a valid pointer.
         #[unsafe(method(setAttributedStringForCandidate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAttributedStringForCandidate(
@@ -158,11 +128,11 @@ impl<CandidateType: Message> NSCandidateListTouchBarItem<CandidateType> {
 
         #[unsafe(method(candidates))]
         #[unsafe(method_family = none)]
-        pub fn candidates(&self) -> Retained<NSArray<CandidateType>>;
+        pub unsafe fn candidates(&self) -> Retained<NSArray<CandidateType>>;
 
         #[unsafe(method(setCandidates:forSelectedRange:inString:))]
         #[unsafe(method_family = none)]
-        pub fn setCandidates_forSelectedRange_inString(
+        pub unsafe fn setCandidates_forSelectedRange_inString(
             &self,
             candidates: &NSArray<CandidateType>,
             selected_range: NSRange,
@@ -171,14 +141,12 @@ impl<CandidateType: Message> NSCandidateListTouchBarItem<CandidateType> {
 
         #[unsafe(method(customizationLabel))]
         #[unsafe(method_family = none)]
-        pub fn customizationLabel(&self) -> Retained<NSString>;
+        pub unsafe fn customizationLabel(&self) -> Retained<NSString>;
 
         /// Setter for [`customizationLabel`][Self::customizationLabel].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCustomizationLabel:))]
         #[unsafe(method_family = none)]
-        pub fn setCustomizationLabel(&self, customization_label: Option<&NSString>);
+        pub unsafe fn setCustomizationLabel(&self, customization_label: Option<&NSString>);
     );
 }
 
@@ -188,14 +156,11 @@ impl<CandidateType: Message> NSCandidateListTouchBarItem<CandidateType> {
     extern_methods!(
         #[unsafe(method(initWithIdentifier:))]
         #[unsafe(method_family = init)]
-        pub fn initWithIdentifier(
+        pub unsafe fn initWithIdentifier(
             this: Allocated<Self>,
             identifier: &NSTouchBarItemIdentifier,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -225,9 +190,6 @@ extern_protocol!(
         NSObjectProtocol + MainThreadOnly
     {
         #[cfg(feature = "NSTouchBarItem")]
-        /// # Safety
-        ///
-        /// `an_item` generic should be of the correct type.
         #[optional]
         #[unsafe(method(candidateListTouchBarItem:beginSelectingCandidateAtIndex:))]
         #[unsafe(method_family = none)]
@@ -238,9 +200,6 @@ extern_protocol!(
         );
 
         #[cfg(feature = "NSTouchBarItem")]
-        /// # Safety
-        ///
-        /// `an_item` generic should be of the correct type.
         #[optional]
         #[unsafe(method(candidateListTouchBarItem:changeSelectionFromCandidateAtIndex:toIndex:))]
         #[unsafe(method_family = none)]
@@ -252,9 +211,6 @@ extern_protocol!(
         );
 
         #[cfg(feature = "NSTouchBarItem")]
-        /// # Safety
-        ///
-        /// `an_item` generic should be of the correct type.
         #[optional]
         #[unsafe(method(candidateListTouchBarItem:endSelectingCandidateAtIndex:))]
         #[unsafe(method_family = none)]
@@ -265,9 +221,6 @@ extern_protocol!(
         );
 
         #[cfg(feature = "NSTouchBarItem")]
-        /// # Safety
-        ///
-        /// `an_item` generic should be of the correct type.
         #[optional]
         #[unsafe(method(candidateListTouchBarItem:changedCandidateListVisibility:))]
         #[unsafe(method_family = none)]
@@ -286,7 +239,9 @@ impl NSView {
         #[cfg(feature = "NSTouchBarItem")]
         #[unsafe(method(candidateListTouchBarItem))]
         #[unsafe(method_family = none)]
-        pub fn candidateListTouchBarItem(&self) -> Option<Retained<NSCandidateListTouchBarItem>>;
+        pub unsafe fn candidateListTouchBarItem(
+            &self,
+        ) -> Option<Retained<NSCandidateListTouchBarItem>>;
     );
 }
 

@@ -100,8 +100,6 @@ impl DOMHTMLStyleElement {
         pub unsafe fn media(&self) -> Retained<NSString>;
 
         /// Setter for [`media`][Self::media].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setMedia:))]
         #[unsafe(method_family = none)]
@@ -113,8 +111,6 @@ impl DOMHTMLStyleElement {
         pub unsafe fn r#type(&self) -> Retained<NSString>;
 
         /// Setter for [`type`][Self::type].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setType:))]
         #[unsafe(method_family = none)]

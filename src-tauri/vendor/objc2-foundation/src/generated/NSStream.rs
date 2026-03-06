@@ -3,8 +3,6 @@
 use core::ffi::*;
 use core::ptr::NonNull;
 use objc2::__framework_prelude::*;
-#[cfg(feature = "objc2-core-foundation")]
-use objc2_core_foundation::*;
 
 use crate::*;
 
@@ -90,24 +88,17 @@ impl NSStream {
     extern_methods!(
         #[unsafe(method(open))]
         #[unsafe(method_family = none)]
-        pub fn open(&self);
+        pub unsafe fn open(&self);
 
         #[unsafe(method(close))]
         #[unsafe(method_family = none)]
-        pub fn close(&self);
+        pub unsafe fn close(&self);
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
         pub unsafe fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSStreamDelegate>>>;
 
         /// Setter for [`delegate`][Self::delegate].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSStreamDelegate>>);
@@ -115,12 +106,12 @@ impl NSStream {
         #[cfg(feature = "NSString")]
         #[unsafe(method(propertyForKey:))]
         #[unsafe(method_family = none)]
-        pub fn propertyForKey(&self, key: &NSStreamPropertyKey) -> Option<Retained<AnyObject>>;
+        pub unsafe fn propertyForKey(
+            &self,
+            key: &NSStreamPropertyKey,
+        ) -> Option<Retained<AnyObject>>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `property` should be of the correct type.
         #[unsafe(method(setProperty:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setProperty_forKey(
@@ -130,9 +121,6 @@ impl NSStream {
         ) -> bool;
 
         #[cfg(all(feature = "NSObjCRuntime", feature = "NSRunLoop", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `a_run_loop` possibly has additional threading requirements.
         #[unsafe(method(scheduleInRunLoop:forMode:))]
         #[unsafe(method_family = none)]
         pub unsafe fn scheduleInRunLoop_forMode(
@@ -142,9 +130,6 @@ impl NSStream {
         );
 
         #[cfg(all(feature = "NSObjCRuntime", feature = "NSRunLoop", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `a_run_loop` possibly has additional threading requirements.
         #[unsafe(method(removeFromRunLoop:forMode:))]
         #[unsafe(method_family = none)]
         pub unsafe fn removeFromRunLoop_forMode(
@@ -155,12 +140,12 @@ impl NSStream {
 
         #[unsafe(method(streamStatus))]
         #[unsafe(method_family = none)]
-        pub fn streamStatus(&self) -> NSStreamStatus;
+        pub unsafe fn streamStatus(&self) -> NSStreamStatus;
 
         #[cfg(feature = "NSError")]
         #[unsafe(method(streamError))]
         #[unsafe(method_family = none)]
-        pub fn streamError(&self) -> Option<Retained<NSError>>;
+        pub unsafe fn streamError(&self) -> Option<Retained<NSError>>;
     );
 }
 
@@ -169,19 +154,12 @@ impl NSStream {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSStream {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -191,39 +169,16 @@ extern_class!(
     pub struct NSInputStream;
 );
 
-#[cfg(feature = "objc2-core-foundation")]
-impl AsRef<NSInputStream> for CFReadStream {
-    #[inline]
-    fn as_ref(&self) -> &NSInputStream {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
-#[cfg(feature = "objc2-core-foundation")]
-impl AsRef<CFReadStream> for NSInputStream {
-    #[inline]
-    fn as_ref(&self) -> &CFReadStream {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
 extern_conformance!(
     unsafe impl NSObjectProtocol for NSInputStream {}
 );
 
 impl NSInputStream {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `buffer` must be a valid pointer.
         #[unsafe(method(read:maxLength:))]
         #[unsafe(method_family = none)]
         pub unsafe fn read_maxLength(&self, buffer: NonNull<u8>, len: NSUInteger) -> NSInteger;
 
-        /// # Safety
-        ///
-        /// - `buffer` must be a valid pointer.
-        /// - `len` must be a valid pointer.
         #[unsafe(method(getBuffer:length:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getBuffer_length(
@@ -234,17 +189,17 @@ impl NSInputStream {
 
         #[unsafe(method(hasBytesAvailable))]
         #[unsafe(method_family = none)]
-        pub fn hasBytesAvailable(&self) -> bool;
+        pub unsafe fn hasBytesAvailable(&self) -> bool;
 
         #[cfg(feature = "NSData")]
         #[unsafe(method(initWithData:))]
         #[unsafe(method_family = init)]
-        pub fn initWithData(this: Allocated<Self>, data: &NSData) -> Retained<Self>;
+        pub unsafe fn initWithData(this: Allocated<Self>, data: &NSData) -> Retained<Self>;
 
         #[cfg(feature = "NSURL")]
         #[unsafe(method(initWithURL:))]
         #[unsafe(method_family = init)]
-        pub fn initWithURL(this: Allocated<Self>, url: &NSURL) -> Option<Retained<Self>>;
+        pub unsafe fn initWithURL(this: Allocated<Self>, url: &NSURL) -> Option<Retained<Self>>;
     );
 }
 
@@ -253,19 +208,12 @@ impl NSInputStream {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSInputStream {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -275,46 +223,24 @@ extern_class!(
     pub struct NSOutputStream;
 );
 
-#[cfg(feature = "objc2-core-foundation")]
-impl AsRef<NSOutputStream> for CFWriteStream {
-    #[inline]
-    fn as_ref(&self) -> &NSOutputStream {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
-#[cfg(feature = "objc2-core-foundation")]
-impl AsRef<CFWriteStream> for NSOutputStream {
-    #[inline]
-    fn as_ref(&self) -> &CFWriteStream {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
 extern_conformance!(
     unsafe impl NSObjectProtocol for NSOutputStream {}
 );
 
 impl NSOutputStream {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `buffer` must be a valid pointer.
         #[unsafe(method(write:maxLength:))]
         #[unsafe(method_family = none)]
         pub unsafe fn write_maxLength(&self, buffer: NonNull<u8>, len: NSUInteger) -> NSInteger;
 
         #[unsafe(method(hasSpaceAvailable))]
         #[unsafe(method_family = none)]
-        pub fn hasSpaceAvailable(&self) -> bool;
+        pub unsafe fn hasSpaceAvailable(&self) -> bool;
 
         #[unsafe(method(initToMemory))]
         #[unsafe(method_family = init)]
-        pub fn initToMemory(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn initToMemory(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `buffer` must be a valid pointer.
         #[unsafe(method(initToBuffer:capacity:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initToBuffer_capacity(
@@ -326,7 +252,7 @@ impl NSOutputStream {
         #[cfg(feature = "NSURL")]
         #[unsafe(method(initWithURL:append:))]
         #[unsafe(method_family = init)]
-        pub fn initWithURL_append(
+        pub unsafe fn initWithURL_append(
             this: Allocated<Self>,
             url: &NSURL,
             should_append: bool,
@@ -339,19 +265,12 @@ impl NSOutputStream {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSOutputStream {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSSocketStreamCreationExtensions.
@@ -361,7 +280,7 @@ impl NSStream {
         #[deprecated = "Use nw_connection_t in Network framework instead"]
         #[unsafe(method(getStreamsToHostWithName:port:inputStream:outputStream:))]
         #[unsafe(method_family = none)]
-        pub fn getStreamsToHostWithName_port_inputStream_outputStream(
+        pub unsafe fn getStreamsToHostWithName_port_inputStream_outputStream(
             hostname: &NSString,
             port: NSInteger,
             input_stream: Option<&mut Option<Retained<NSInputStream>>>,
@@ -372,7 +291,7 @@ impl NSStream {
         #[deprecated = "Use nw_connection_t in Network framework instead"]
         #[unsafe(method(getStreamsToHost:port:inputStream:outputStream:))]
         #[unsafe(method_family = none)]
-        pub fn getStreamsToHost_port_inputStream_outputStream(
+        pub unsafe fn getStreamsToHost_port_inputStream_outputStream(
             host: &NSHost,
             port: NSInteger,
             input_stream: Option<&mut Option<Retained<NSInputStream>>>,
@@ -386,7 +305,7 @@ impl NSStream {
     extern_methods!(
         #[unsafe(method(getBoundStreamsWithBufferSize:inputStream:outputStream:))]
         #[unsafe(method_family = none)]
-        pub fn getBoundStreamsWithBufferSize_inputStream_outputStream(
+        pub unsafe fn getBoundStreamsWithBufferSize_inputStream_outputStream(
             buffer_size: NSUInteger,
             input_stream: Option<&mut Option<Retained<NSInputStream>>>,
             output_stream: Option<&mut Option<Retained<NSOutputStream>>>,
@@ -400,23 +319,25 @@ impl NSInputStream {
         #[cfg(feature = "NSString")]
         #[unsafe(method(initWithFileAtPath:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFileAtPath(this: Allocated<Self>, path: &NSString)
-            -> Option<Retained<Self>>;
+        pub unsafe fn initWithFileAtPath(
+            this: Allocated<Self>,
+            path: &NSString,
+        ) -> Option<Retained<Self>>;
 
         #[cfg(feature = "NSData")]
         #[unsafe(method(inputStreamWithData:))]
         #[unsafe(method_family = none)]
-        pub fn inputStreamWithData(data: &NSData) -> Option<Retained<Self>>;
+        pub unsafe fn inputStreamWithData(data: &NSData) -> Option<Retained<Self>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(inputStreamWithFileAtPath:))]
         #[unsafe(method_family = none)]
-        pub fn inputStreamWithFileAtPath(path: &NSString) -> Option<Retained<Self>>;
+        pub unsafe fn inputStreamWithFileAtPath(path: &NSString) -> Option<Retained<Self>>;
 
         #[cfg(feature = "NSURL")]
         #[unsafe(method(inputStreamWithURL:))]
         #[unsafe(method_family = none)]
-        pub fn inputStreamWithURL(url: &NSURL) -> Option<Retained<Self>>;
+        pub unsafe fn inputStreamWithURL(url: &NSURL) -> Option<Retained<Self>>;
     );
 }
 
@@ -426,7 +347,7 @@ impl NSOutputStream {
         #[cfg(feature = "NSString")]
         #[unsafe(method(initToFileAtPath:append:))]
         #[unsafe(method_family = init)]
-        pub fn initToFileAtPath_append(
+        pub unsafe fn initToFileAtPath_append(
             this: Allocated<Self>,
             path: &NSString,
             should_append: bool,
@@ -434,11 +355,8 @@ impl NSOutputStream {
 
         #[unsafe(method(outputStreamToMemory))]
         #[unsafe(method_family = none)]
-        pub fn outputStreamToMemory() -> Retained<Self>;
+        pub unsafe fn outputStreamToMemory() -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `buffer` must be a valid pointer.
         #[unsafe(method(outputStreamToBuffer:capacity:))]
         #[unsafe(method_family = none)]
         pub unsafe fn outputStreamToBuffer_capacity(
@@ -449,7 +367,7 @@ impl NSOutputStream {
         #[cfg(feature = "NSString")]
         #[unsafe(method(outputStreamToFileAtPath:append:))]
         #[unsafe(method_family = none)]
-        pub fn outputStreamToFileAtPath_append(
+        pub unsafe fn outputStreamToFileAtPath_append(
             path: &NSString,
             should_append: bool,
         ) -> Retained<Self>;
@@ -457,7 +375,7 @@ impl NSOutputStream {
         #[cfg(feature = "NSURL")]
         #[unsafe(method(outputStreamWithURL:append:))]
         #[unsafe(method_family = none)]
-        pub fn outputStreamWithURL_append(
+        pub unsafe fn outputStreamWithURL_append(
             url: &NSURL,
             should_append: bool,
         ) -> Option<Retained<Self>>;
@@ -470,7 +388,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(stream:handleEvent:))]
         #[unsafe(method_family = none)]
-        fn stream_handleEvent(&self, a_stream: &NSStream, event_code: NSStreamEvent);
+        unsafe fn stream_handleEvent(&self, a_stream: &NSStream, event_code: NSStreamEvent);
     }
 );
 

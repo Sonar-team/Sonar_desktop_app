@@ -11,10 +11,6 @@ extern_protocol!(
     #[deprecated]
     pub unsafe trait DOMEventTarget: NSObjectProtocol + NSCopying {
         #[cfg(feature = "DOMEventListener")]
-        /// # Safety
-        ///
-        /// - `type` might not allow `None`.
-        /// - `listener` might not allow `None`.
         #[unsafe(method(addEventListener:listener:useCapture:))]
         #[unsafe(method_family = none)]
         unsafe fn addEventListener_listener_useCapture(
@@ -25,10 +21,6 @@ extern_protocol!(
         );
 
         #[cfg(feature = "DOMEventListener")]
-        /// # Safety
-        ///
-        /// - `type` might not allow `None`.
-        /// - `listener` might not allow `None`.
         #[unsafe(method(removeEventListener:listener:useCapture:))]
         #[unsafe(method_family = none)]
         unsafe fn removeEventListener_listener_useCapture(
@@ -43,19 +35,12 @@ extern_protocol!(
             feature = "DOMObject",
             feature = "WebScriptObject"
         ))]
-        /// # Safety
-        ///
-        /// `event` might not allow `None`.
         #[deprecated]
         #[unsafe(method(dispatchEvent:))]
         #[unsafe(method_family = none)]
         unsafe fn dispatchEvent(&self, event: Option<&DOMEvent>) -> bool;
 
         #[cfg(feature = "DOMEventListener")]
-        /// # Safety
-        ///
-        /// - `type` might not allow `None`.
-        /// - `listener` might not allow `None`.
         #[deprecated]
         #[unsafe(method(addEventListener:::))]
         #[unsafe(method_family = none)]
@@ -67,10 +52,6 @@ extern_protocol!(
         );
 
         #[cfg(feature = "DOMEventListener")]
-        /// # Safety
-        ///
-        /// - `type` might not allow `None`.
-        /// - `listener` might not allow `None`.
         #[deprecated]
         #[unsafe(method(removeEventListener:::))]
         #[unsafe(method_family = none)]

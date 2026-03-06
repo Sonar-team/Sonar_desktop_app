@@ -177,19 +177,12 @@ extern_conformance!(
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UIWebView {
     extern_methods!(
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
         pub unsafe fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UIWebViewDelegate>>>;
 
         /// Setter for [`delegate`][Self::delegate].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
@@ -198,22 +191,22 @@ impl UIWebView {
         #[cfg(feature = "UIScrollView")]
         #[unsafe(method(scrollView))]
         #[unsafe(method_family = none)]
-        pub fn scrollView(&self) -> Retained<UIScrollView>;
+        pub unsafe fn scrollView(&self) -> Retained<UIScrollView>;
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(loadRequest:))]
         #[unsafe(method_family = none)]
-        pub fn loadRequest(&self, request: &NSURLRequest);
+        pub unsafe fn loadRequest(&self, request: &NSURLRequest);
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(loadHTMLString:baseURL:))]
         #[unsafe(method_family = none)]
-        pub fn loadHTMLString_baseURL(&self, string: &NSString, base_url: Option<&NSURL>);
+        pub unsafe fn loadHTMLString_baseURL(&self, string: &NSString, base_url: Option<&NSURL>);
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(loadData:MIMEType:textEncodingName:baseURL:))]
         #[unsafe(method_family = none)]
-        pub fn loadData_MIMEType_textEncodingName_baseURL(
+        pub unsafe fn loadData_MIMEType_textEncodingName_baseURL(
             &self,
             data: &NSData,
             mime_type: &NSString,
@@ -224,47 +217,47 @@ impl UIWebView {
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(request))]
         #[unsafe(method_family = none)]
-        pub fn request(&self) -> Option<Retained<NSURLRequest>>;
+        pub unsafe fn request(&self) -> Option<Retained<NSURLRequest>>;
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(reload))]
         #[unsafe(method_family = none)]
-        pub fn reload(&self);
+        pub unsafe fn reload(&self);
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(stopLoading))]
         #[unsafe(method_family = none)]
-        pub fn stopLoading(&self);
+        pub unsafe fn stopLoading(&self);
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(goBack))]
         #[unsafe(method_family = none)]
-        pub fn goBack(&self);
+        pub unsafe fn goBack(&self);
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(goForward))]
         #[unsafe(method_family = none)]
-        pub fn goForward(&self);
+        pub unsafe fn goForward(&self);
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(canGoBack))]
         #[unsafe(method_family = none)]
-        pub fn canGoBack(&self) -> bool;
+        pub unsafe fn canGoBack(&self) -> bool;
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(canGoForward))]
         #[unsafe(method_family = none)]
-        pub fn canGoForward(&self) -> bool;
+        pub unsafe fn canGoForward(&self) -> bool;
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(isLoading))]
         #[unsafe(method_family = none)]
-        pub fn isLoading(&self) -> bool;
+        pub unsafe fn isLoading(&self) -> bool;
 
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(stringByEvaluatingJavaScriptFromString:))]
         #[unsafe(method_family = none)]
-        pub fn stringByEvaluatingJavaScriptFromString(
+        pub unsafe fn stringByEvaluatingJavaScriptFromString(
             &self,
             script: &NSString,
         ) -> Option<Retained<NSString>>;
@@ -272,101 +265,107 @@ impl UIWebView {
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(scalesPageToFit))]
         #[unsafe(method_family = none)]
-        pub fn scalesPageToFit(&self) -> bool;
+        pub unsafe fn scalesPageToFit(&self) -> bool;
 
         /// Setter for [`scalesPageToFit`][Self::scalesPageToFit].
         #[deprecated = "No longer supported; please adopt WKWebView."]
         #[unsafe(method(setScalesPageToFit:))]
         #[unsafe(method_family = none)]
-        pub fn setScalesPageToFit(&self, scales_page_to_fit: bool);
+        pub unsafe fn setScalesPageToFit(&self, scales_page_to_fit: bool);
 
         #[deprecated]
         #[unsafe(method(detectsPhoneNumbers))]
         #[unsafe(method_family = none)]
-        pub fn detectsPhoneNumbers(&self) -> bool;
+        pub unsafe fn detectsPhoneNumbers(&self) -> bool;
 
         /// Setter for [`detectsPhoneNumbers`][Self::detectsPhoneNumbers].
         #[deprecated]
         #[unsafe(method(setDetectsPhoneNumbers:))]
         #[unsafe(method_family = none)]
-        pub fn setDetectsPhoneNumbers(&self, detects_phone_numbers: bool);
+        pub unsafe fn setDetectsPhoneNumbers(&self, detects_phone_numbers: bool);
 
         #[cfg(feature = "UIDataDetectors")]
         #[unsafe(method(dataDetectorTypes))]
         #[unsafe(method_family = none)]
-        pub fn dataDetectorTypes(&self) -> UIDataDetectorTypes;
+        pub unsafe fn dataDetectorTypes(&self) -> UIDataDetectorTypes;
 
         #[cfg(feature = "UIDataDetectors")]
         /// Setter for [`dataDetectorTypes`][Self::dataDetectorTypes].
         #[unsafe(method(setDataDetectorTypes:))]
         #[unsafe(method_family = none)]
-        pub fn setDataDetectorTypes(&self, data_detector_types: UIDataDetectorTypes);
+        pub unsafe fn setDataDetectorTypes(&self, data_detector_types: UIDataDetectorTypes);
 
         #[unsafe(method(allowsInlineMediaPlayback))]
         #[unsafe(method_family = none)]
-        pub fn allowsInlineMediaPlayback(&self) -> bool;
+        pub unsafe fn allowsInlineMediaPlayback(&self) -> bool;
 
         /// Setter for [`allowsInlineMediaPlayback`][Self::allowsInlineMediaPlayback].
         #[unsafe(method(setAllowsInlineMediaPlayback:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsInlineMediaPlayback(&self, allows_inline_media_playback: bool);
+        pub unsafe fn setAllowsInlineMediaPlayback(&self, allows_inline_media_playback: bool);
 
         #[unsafe(method(mediaPlaybackRequiresUserAction))]
         #[unsafe(method_family = none)]
-        pub fn mediaPlaybackRequiresUserAction(&self) -> bool;
+        pub unsafe fn mediaPlaybackRequiresUserAction(&self) -> bool;
 
         /// Setter for [`mediaPlaybackRequiresUserAction`][Self::mediaPlaybackRequiresUserAction].
         #[unsafe(method(setMediaPlaybackRequiresUserAction:))]
         #[unsafe(method_family = none)]
-        pub fn setMediaPlaybackRequiresUserAction(&self, media_playback_requires_user_action: bool);
+        pub unsafe fn setMediaPlaybackRequiresUserAction(
+            &self,
+            media_playback_requires_user_action: bool,
+        );
 
         #[unsafe(method(mediaPlaybackAllowsAirPlay))]
         #[unsafe(method_family = none)]
-        pub fn mediaPlaybackAllowsAirPlay(&self) -> bool;
+        pub unsafe fn mediaPlaybackAllowsAirPlay(&self) -> bool;
 
         /// Setter for [`mediaPlaybackAllowsAirPlay`][Self::mediaPlaybackAllowsAirPlay].
         #[unsafe(method(setMediaPlaybackAllowsAirPlay:))]
         #[unsafe(method_family = none)]
-        pub fn setMediaPlaybackAllowsAirPlay(&self, media_playback_allows_air_play: bool);
+        pub unsafe fn setMediaPlaybackAllowsAirPlay(&self, media_playback_allows_air_play: bool);
 
         #[unsafe(method(suppressesIncrementalRendering))]
         #[unsafe(method_family = none)]
-        pub fn suppressesIncrementalRendering(&self) -> bool;
+        pub unsafe fn suppressesIncrementalRendering(&self) -> bool;
 
         /// Setter for [`suppressesIncrementalRendering`][Self::suppressesIncrementalRendering].
         #[unsafe(method(setSuppressesIncrementalRendering:))]
         #[unsafe(method_family = none)]
-        pub fn setSuppressesIncrementalRendering(&self, suppresses_incremental_rendering: bool);
+        pub unsafe fn setSuppressesIncrementalRendering(
+            &self,
+            suppresses_incremental_rendering: bool,
+        );
 
         #[unsafe(method(keyboardDisplayRequiresUserAction))]
         #[unsafe(method_family = none)]
-        pub fn keyboardDisplayRequiresUserAction(&self) -> bool;
+        pub unsafe fn keyboardDisplayRequiresUserAction(&self) -> bool;
 
         /// Setter for [`keyboardDisplayRequiresUserAction`][Self::keyboardDisplayRequiresUserAction].
         #[unsafe(method(setKeyboardDisplayRequiresUserAction:))]
         #[unsafe(method_family = none)]
-        pub fn setKeyboardDisplayRequiresUserAction(
+        pub unsafe fn setKeyboardDisplayRequiresUserAction(
             &self,
             keyboard_display_requires_user_action: bool,
         );
 
         #[unsafe(method(paginationMode))]
         #[unsafe(method_family = none)]
-        pub fn paginationMode(&self) -> UIWebPaginationMode;
+        pub unsafe fn paginationMode(&self) -> UIWebPaginationMode;
 
         /// Setter for [`paginationMode`][Self::paginationMode].
         #[unsafe(method(setPaginationMode:))]
         #[unsafe(method_family = none)]
-        pub fn setPaginationMode(&self, pagination_mode: UIWebPaginationMode);
+        pub unsafe fn setPaginationMode(&self, pagination_mode: UIWebPaginationMode);
 
         #[unsafe(method(paginationBreakingMode))]
         #[unsafe(method_family = none)]
-        pub fn paginationBreakingMode(&self) -> UIWebPaginationBreakingMode;
+        pub unsafe fn paginationBreakingMode(&self) -> UIWebPaginationBreakingMode;
 
         /// Setter for [`paginationBreakingMode`][Self::paginationBreakingMode].
         #[unsafe(method(setPaginationBreakingMode:))]
         #[unsafe(method_family = none)]
-        pub fn setPaginationBreakingMode(
+        pub unsafe fn setPaginationBreakingMode(
             &self,
             pagination_breaking_mode: UIWebPaginationBreakingMode,
         );
@@ -374,49 +373,49 @@ impl UIWebView {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(pageLength))]
         #[unsafe(method_family = none)]
-        pub fn pageLength(&self) -> CGFloat;
+        pub unsafe fn pageLength(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`pageLength`][Self::pageLength].
         #[unsafe(method(setPageLength:))]
         #[unsafe(method_family = none)]
-        pub fn setPageLength(&self, page_length: CGFloat);
+        pub unsafe fn setPageLength(&self, page_length: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(gapBetweenPages))]
         #[unsafe(method_family = none)]
-        pub fn gapBetweenPages(&self) -> CGFloat;
+        pub unsafe fn gapBetweenPages(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`gapBetweenPages`][Self::gapBetweenPages].
         #[unsafe(method(setGapBetweenPages:))]
         #[unsafe(method_family = none)]
-        pub fn setGapBetweenPages(&self, gap_between_pages: CGFloat);
+        pub unsafe fn setGapBetweenPages(&self, gap_between_pages: CGFloat);
 
         #[unsafe(method(pageCount))]
         #[unsafe(method_family = none)]
-        pub fn pageCount(&self) -> NSUInteger;
+        pub unsafe fn pageCount(&self) -> NSUInteger;
 
         #[unsafe(method(allowsPictureInPictureMediaPlayback))]
         #[unsafe(method_family = none)]
-        pub fn allowsPictureInPictureMediaPlayback(&self) -> bool;
+        pub unsafe fn allowsPictureInPictureMediaPlayback(&self) -> bool;
 
         /// Setter for [`allowsPictureInPictureMediaPlayback`][Self::allowsPictureInPictureMediaPlayback].
         #[unsafe(method(setAllowsPictureInPictureMediaPlayback:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsPictureInPictureMediaPlayback(
+        pub unsafe fn setAllowsPictureInPictureMediaPlayback(
             &self,
             allows_picture_in_picture_media_playback: bool,
         );
 
         #[unsafe(method(allowsLinkPreview))]
         #[unsafe(method_family = none)]
-        pub fn allowsLinkPreview(&self) -> bool;
+        pub unsafe fn allowsLinkPreview(&self) -> bool;
 
         /// Setter for [`allowsLinkPreview`][Self::allowsLinkPreview].
         #[unsafe(method(setAllowsLinkPreview:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsLinkPreview(&self, allows_link_preview: bool);
+        pub unsafe fn setAllowsLinkPreview(&self, allows_link_preview: bool);
     );
 }
 
@@ -427,21 +426,14 @@ impl UIWebView {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
             this: Allocated<Self>,
             coder: &NSCoder,
         ) -> Option<Retained<Self>>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -449,9 +441,13 @@ impl UIWebView {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UIWebView {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -463,7 +459,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(webView:shouldStartLoadWithRequest:navigationType:))]
         #[unsafe(method_family = none)]
-        fn webView_shouldStartLoadWithRequest_navigationType(
+        unsafe fn webView_shouldStartLoadWithRequest_navigationType(
             &self,
             web_view: &UIWebView,
             request: &NSURLRequest,
@@ -475,20 +471,20 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(webViewDidStartLoad:))]
         #[unsafe(method_family = none)]
-        fn webViewDidStartLoad(&self, web_view: &UIWebView);
+        unsafe fn webViewDidStartLoad(&self, web_view: &UIWebView);
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[deprecated = "No longer supported."]
         #[optional]
         #[unsafe(method(webViewDidFinishLoad:))]
         #[unsafe(method_family = none)]
-        fn webViewDidFinishLoad(&self, web_view: &UIWebView);
+        unsafe fn webViewDidFinishLoad(&self, web_view: &UIWebView);
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[deprecated = "No longer supported."]
         #[optional]
         #[unsafe(method(webView:didFailLoadWithError:))]
         #[unsafe(method_family = none)]
-        fn webView_didFailLoadWithError(&self, web_view: &UIWebView, error: &NSError);
+        unsafe fn webView_didFailLoadWithError(&self, web_view: &UIWebView, error: &NSError);
     }
 );

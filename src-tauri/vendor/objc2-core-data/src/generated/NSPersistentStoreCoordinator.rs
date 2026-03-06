@@ -144,61 +144,51 @@ extern "C" {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsxmlexternalrecordtype?language=objc)
-    #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
     pub static NSXMLExternalRecordType: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsbinaryexternalrecordtype?language=objc)
-    #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
     pub static NSBinaryExternalRecordType: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsexternalrecordsfileformatoption?language=objc)
-    #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
     pub static NSExternalRecordsFileFormatOption: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsexternalrecordsdirectoryoption?language=objc)
-    #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
     pub static NSExternalRecordsDirectoryOption: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsexternalrecordextensionoption?language=objc)
-    #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
     pub static NSExternalRecordExtensionOption: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsentitynameinpathkey?language=objc)
-    #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
     pub static NSEntityNameInPathKey: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsstoreuuidinpathkey?language=objc)
-    #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
     pub static NSStoreUUIDInPathKey: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsstorepathkey?language=objc)
-    #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
     pub static NSStorePathKey: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsmodelpathkey?language=objc)
-    #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
     pub static NSModelPathKey: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsobjecturikey?language=objc)
-    #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
     pub static NSObjectURIKey: &'static NSString;
 }
 
@@ -301,8 +291,6 @@ impl NSPersistentStoreCoordinator {
         pub unsafe fn name(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setName(&self, name: Option<&NSString>);
@@ -330,9 +318,6 @@ impl NSPersistentStoreCoordinator {
         ) -> bool;
 
         #[cfg(feature = "NSPersistentStore")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(addPersistentStoreWithType:configuration:URL:options:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn addPersistentStoreWithType_configuration_URL_options_error(
@@ -361,9 +346,6 @@ impl NSPersistentStoreCoordinator {
         ) -> Result<(), Retained<NSError>>;
 
         #[cfg(feature = "NSPersistentStore")]
-        /// # Safety
-        ///
-        /// `metadata` generic should be of the correct type.
         #[unsafe(method(setMetadata:forPersistentStore:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setMetadata_forPersistentStore(
@@ -404,9 +386,6 @@ impl NSPersistentStoreCoordinator {
         #[unsafe(method_family = none)]
         pub unsafe fn registeredStoreTypes() -> Retained<NSDictionary<NSString, NSValue>>;
 
-        /// # Safety
-        ///
-        /// `store_class` probably has further requirements.
         #[unsafe(method(registerStoreClass:forStoreType:))]
         #[unsafe(method_family = none)]
         pub unsafe fn registerStoreClass_forStoreType(
@@ -414,9 +393,6 @@ impl NSPersistentStoreCoordinator {
             store_type: &NSString,
         );
 
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(metadataForPersistentStoreOfType:URL:options:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn metadataForPersistentStoreOfType_URL_options_error(
@@ -425,10 +401,6 @@ impl NSPersistentStoreCoordinator {
             options: Option<&NSDictionary>,
         ) -> Result<Retained<NSDictionary<NSString, AnyObject>>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// - `metadata` generic should be of the correct type.
-        /// - `options` generic should be of the correct type.
         #[unsafe(method(setMetadata:forPersistentStoreOfType:URL:options:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn setMetadata_forPersistentStoreOfType_URL_options_error(
@@ -446,9 +418,6 @@ impl NSPersistentStoreCoordinator {
         ) -> Retained<NSDictionary>;
 
         #[cfg(feature = "NSPersistentStore")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[deprecated = "Spotlight integration is deprecated. Use CoreSpotlight integration instead."]
         #[unsafe(method(importStoreWithIdentifier:fromExternalRecordsDirectory:toURL:options:withType:error:_))]
         #[unsafe(method_family = none)]
@@ -462,9 +431,6 @@ impl NSPersistentStoreCoordinator {
         ) -> Result<Retained<NSPersistentStore>, Retained<NSError>>;
 
         #[cfg(feature = "NSPersistentStore")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(migratePersistentStore:toURL:options:withType:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn migratePersistentStore_toURL_options_withType_error(
@@ -475,9 +441,6 @@ impl NSPersistentStoreCoordinator {
             store_type: &NSString,
         ) -> Result<Retained<NSPersistentStore>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(destroyPersistentStoreAtURL:withType:options:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn destroyPersistentStoreAtURL_withType_options_error(
@@ -487,10 +450,6 @@ impl NSPersistentStoreCoordinator {
             options: Option<&NSDictionary>,
         ) -> Result<(), Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// - `destination_options` generic should be of the correct type.
-        /// - `source_options` generic should be of the correct type.
         #[unsafe(method(replacePersistentStoreAtURL:destinationOptions:withPersistentStoreFromURL:sourceOptions:storeType:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn replacePersistentStoreAtURL_destinationOptions_withPersistentStoreFromURL_sourceOptions_storeType_error(
@@ -503,25 +462,16 @@ impl NSPersistentStoreCoordinator {
         ) -> Result<(), Retained<NSError>>;
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `block` block must be sendable.
         #[unsafe(method(performBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn performBlock(&self, block: &block2::DynBlock<dyn Fn()>);
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `block` block must be sendable.
         #[unsafe(method(performBlockAndWait:))]
         #[unsafe(method_family = none)]
         pub unsafe fn performBlockAndWait(&self, block: &block2::DynBlock<dyn Fn() + '_>);
 
         #[cfg(feature = "NSPersistentHistoryToken")]
-        /// # Safety
-        ///
-        /// `stores` generic should be of the correct type.
         #[unsafe(method(currentPersistentHistoryTokenFromStores:))]
         #[unsafe(method_family = none)]
         pub unsafe fn currentPersistentHistoryTokenFromStores(
@@ -540,9 +490,6 @@ impl NSPersistentStoreCoordinator {
         ) -> Result<(), Retained<NSError>>;
 
         #[cfg(feature = "NSManagedObjectID")]
-        /// # Safety
-        ///
-        /// `utf8string` must be a valid pointer.
         #[unsafe(method(managedObjectIDFromUTF8String:length:))]
         #[unsafe(method_family = none)]
         pub unsafe fn managedObjectIDFromUTF8String_length(
@@ -581,9 +528,6 @@ impl NSPersistentStoreCoordinator {
             url: &NSURL,
         ) -> Result<Retained<NSDictionary<NSString, AnyObject>>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// `metadata` generic should be of the correct type.
         #[deprecated = "Use  -setMetadata:forPersistentStoreOfType:URL:options:error: and pass in an options dictionary matching addPersistentStoreWithType"]
         #[unsafe(method(setMetadata:forPersistentStoreOfType:URL:error:_))]
         #[unsafe(method_family = none)]
@@ -593,9 +537,6 @@ impl NSPersistentStoreCoordinator {
             url: &NSURL,
         ) -> Result<(), Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[deprecated = "Please see the release notes and Core Data documentation."]
         #[unsafe(method(removeUbiquitousContentAndPersistentStoreAtURL:options:error:_))]
         #[unsafe(method_family = none)]
@@ -650,48 +591,40 @@ unsafe impl RefEncode for NSPersistentStoreUbiquitousTransitionType {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nspersistentstoreubiquitouscontentnamekey?language=objc)
-    #[deprecated = "Please see the release notes and Core Data documentation."]
     pub static NSPersistentStoreUbiquitousContentNameKey: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nspersistentstoreubiquitouscontenturlkey?language=objc)
-    #[deprecated = "Please see the release notes and Core Data documentation."]
     pub static NSPersistentStoreUbiquitousContentURLKey: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nspersistentstoredidimportubiquitouscontentchangesnotification?language=objc)
-    #[deprecated = "Please see the release notes and Core Data documentation."]
     pub static NSPersistentStoreDidImportUbiquitousContentChangesNotification: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nspersistentstoreubiquitoustransitiontypekey?language=objc)
-    #[deprecated = "Please see the release notes and Core Data documentation."]
     pub static NSPersistentStoreUbiquitousTransitionTypeKey: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nspersistentstoreubiquitouspeertokenoption?language=objc)
-    #[deprecated = "Please see the release notes and Core Data documentation."]
     pub static NSPersistentStoreUbiquitousPeerTokenOption: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nspersistentstoreremoveubiquitousmetadataoption?language=objc)
-    #[deprecated = "Please see the release notes and Core Data documentation."]
     pub static NSPersistentStoreRemoveUbiquitousMetadataOption: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nspersistentstoreubiquitouscontaineridentifierkey?language=objc)
-    #[deprecated = "Please see the release notes and Core Data documentation."]
     pub static NSPersistentStoreUbiquitousContainerIdentifierKey: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nspersistentstorerebuildfromubiquitouscontentoption?language=objc)
-    #[deprecated = "Please see the release notes and Core Data documentation."]
     pub static NSPersistentStoreRebuildFromUbiquitousContentOption: &'static NSString;
 }

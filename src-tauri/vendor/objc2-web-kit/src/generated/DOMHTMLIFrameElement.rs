@@ -89,8 +89,6 @@ impl DOMHTMLIFrameElement {
         pub unsafe fn align(&self) -> Retained<NSString>;
 
         /// Setter for [`align`][Self::align].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAlign:))]
         #[unsafe(method_family = none)]
@@ -102,8 +100,6 @@ impl DOMHTMLIFrameElement {
         pub unsafe fn frameBorder(&self) -> Retained<NSString>;
 
         /// Setter for [`frameBorder`][Self::frameBorder].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setFrameBorder:))]
         #[unsafe(method_family = none)]
@@ -115,8 +111,6 @@ impl DOMHTMLIFrameElement {
         pub unsafe fn height(&self) -> Retained<NSString>;
 
         /// Setter for [`height`][Self::height].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setHeight:))]
         #[unsafe(method_family = none)]
@@ -128,8 +122,6 @@ impl DOMHTMLIFrameElement {
         pub unsafe fn longDesc(&self) -> Retained<NSString>;
 
         /// Setter for [`longDesc`][Self::longDesc].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setLongDesc:))]
         #[unsafe(method_family = none)]
@@ -141,8 +133,6 @@ impl DOMHTMLIFrameElement {
         pub unsafe fn marginHeight(&self) -> Retained<NSString>;
 
         /// Setter for [`marginHeight`][Self::marginHeight].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setMarginHeight:))]
         #[unsafe(method_family = none)]
@@ -154,8 +144,6 @@ impl DOMHTMLIFrameElement {
         pub unsafe fn marginWidth(&self) -> Retained<NSString>;
 
         /// Setter for [`marginWidth`][Self::marginWidth].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setMarginWidth:))]
         #[unsafe(method_family = none)]
@@ -167,8 +155,6 @@ impl DOMHTMLIFrameElement {
         pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
@@ -180,8 +166,6 @@ impl DOMHTMLIFrameElement {
         pub unsafe fn scrolling(&self) -> Retained<NSString>;
 
         /// Setter for [`scrolling`][Self::scrolling].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setScrolling:))]
         #[unsafe(method_family = none)]
@@ -193,8 +177,6 @@ impl DOMHTMLIFrameElement {
         pub unsafe fn src(&self) -> Retained<NSString>;
 
         /// Setter for [`src`][Self::src].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setSrc:))]
         #[unsafe(method_family = none)]
@@ -206,8 +188,6 @@ impl DOMHTMLIFrameElement {
         pub unsafe fn width(&self) -> Retained<NSString>;
 
         /// Setter for [`width`][Self::width].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setWidth:))]
         #[unsafe(method_family = none)]

@@ -32,7 +32,7 @@ impl NSGroupTouchBarItem {
     extern_methods!(
         #[unsafe(method(groupItemWithIdentifier:items:))]
         #[unsafe(method_family = none)]
-        pub fn groupItemWithIdentifier_items(
+        pub unsafe fn groupItemWithIdentifier_items(
             identifier: &NSTouchBarItemIdentifier,
             items: &NSArray<NSTouchBarItem>,
             mtm: MainThreadMarker,
@@ -41,7 +41,7 @@ impl NSGroupTouchBarItem {
         #[cfg(feature = "NSUserInterfaceCompression")]
         #[unsafe(method(groupItemWithIdentifier:items:allowedCompressionOptions:))]
         #[unsafe(method_family = none)]
-        pub fn groupItemWithIdentifier_items_allowedCompressionOptions(
+        pub unsafe fn groupItemWithIdentifier_items_allowedCompressionOptions(
             identifier: &NSTouchBarItemIdentifier,
             items: &NSArray<NSTouchBarItem>,
             allowed_compression_options: &NSUserInterfaceCompressionOptions,
@@ -50,7 +50,7 @@ impl NSGroupTouchBarItem {
 
         #[unsafe(method(alertStyleGroupItemWithIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn alertStyleGroupItemWithIdentifier(
+        pub unsafe fn alertStyleGroupItemWithIdentifier(
             identifier: &NSTouchBarItemIdentifier,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -58,78 +58,76 @@ impl NSGroupTouchBarItem {
         #[cfg(feature = "NSTouchBar")]
         #[unsafe(method(groupTouchBar))]
         #[unsafe(method_family = none)]
-        pub fn groupTouchBar(&self) -> Retained<NSTouchBar>;
+        pub unsafe fn groupTouchBar(&self) -> Retained<NSTouchBar>;
 
         #[cfg(feature = "NSTouchBar")]
         /// Setter for [`groupTouchBar`][Self::groupTouchBar].
         #[unsafe(method(setGroupTouchBar:))]
         #[unsafe(method_family = none)]
-        pub fn setGroupTouchBar(&self, group_touch_bar: &NSTouchBar);
+        pub unsafe fn setGroupTouchBar(&self, group_touch_bar: &NSTouchBar);
 
         #[unsafe(method(customizationLabel))]
         #[unsafe(method_family = none)]
-        pub fn customizationLabel(&self) -> Retained<NSString>;
+        pub unsafe fn customizationLabel(&self) -> Retained<NSString>;
 
         /// Setter for [`customizationLabel`][Self::customizationLabel].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCustomizationLabel:))]
         #[unsafe(method_family = none)]
-        pub fn setCustomizationLabel(&self, customization_label: Option<&NSString>);
+        pub unsafe fn setCustomizationLabel(&self, customization_label: Option<&NSString>);
 
         #[cfg(feature = "NSUserInterfaceLayout")]
         #[unsafe(method(groupUserInterfaceLayoutDirection))]
         #[unsafe(method_family = none)]
-        pub fn groupUserInterfaceLayoutDirection(&self) -> NSUserInterfaceLayoutDirection;
+        pub unsafe fn groupUserInterfaceLayoutDirection(&self) -> NSUserInterfaceLayoutDirection;
 
         #[cfg(feature = "NSUserInterfaceLayout")]
         /// Setter for [`groupUserInterfaceLayoutDirection`][Self::groupUserInterfaceLayoutDirection].
         #[unsafe(method(setGroupUserInterfaceLayoutDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setGroupUserInterfaceLayoutDirection(
+        pub unsafe fn setGroupUserInterfaceLayoutDirection(
             &self,
             group_user_interface_layout_direction: NSUserInterfaceLayoutDirection,
         );
 
         #[unsafe(method(prefersEqualWidths))]
         #[unsafe(method_family = none)]
-        pub fn prefersEqualWidths(&self) -> bool;
+        pub unsafe fn prefersEqualWidths(&self) -> bool;
 
         /// Setter for [`prefersEqualWidths`][Self::prefersEqualWidths].
         #[unsafe(method(setPrefersEqualWidths:))]
         #[unsafe(method_family = none)]
-        pub fn setPrefersEqualWidths(&self, prefers_equal_widths: bool);
+        pub unsafe fn setPrefersEqualWidths(&self, prefers_equal_widths: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(preferredItemWidth))]
         #[unsafe(method_family = none)]
-        pub fn preferredItemWidth(&self) -> CGFloat;
+        pub unsafe fn preferredItemWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`preferredItemWidth`][Self::preferredItemWidth].
         #[unsafe(method(setPreferredItemWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredItemWidth(&self, preferred_item_width: CGFloat);
+        pub unsafe fn setPreferredItemWidth(&self, preferred_item_width: CGFloat);
 
         #[cfg(feature = "NSUserInterfaceCompression")]
         #[unsafe(method(effectiveCompressionOptions))]
         #[unsafe(method_family = none)]
-        pub fn effectiveCompressionOptions(&self) -> Retained<NSUserInterfaceCompressionOptions>;
+        pub unsafe fn effectiveCompressionOptions(
+            &self,
+        ) -> Retained<NSUserInterfaceCompressionOptions>;
 
         #[cfg(feature = "NSUserInterfaceCompression")]
         #[unsafe(method(prioritizedCompressionOptions))]
         #[unsafe(method_family = none)]
-        pub fn prioritizedCompressionOptions(
+        pub unsafe fn prioritizedCompressionOptions(
             &self,
         ) -> Retained<NSArray<NSUserInterfaceCompressionOptions>>;
 
         #[cfg(feature = "NSUserInterfaceCompression")]
         /// Setter for [`prioritizedCompressionOptions`][Self::prioritizedCompressionOptions].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPrioritizedCompressionOptions:))]
         #[unsafe(method_family = none)]
-        pub fn setPrioritizedCompressionOptions(
+        pub unsafe fn setPrioritizedCompressionOptions(
             &self,
             prioritized_compression_options: &NSArray<NSUserInterfaceCompressionOptions>,
         );
@@ -142,14 +140,11 @@ impl NSGroupTouchBarItem {
     extern_methods!(
         #[unsafe(method(initWithIdentifier:))]
         #[unsafe(method_family = init)]
-        pub fn initWithIdentifier(
+        pub unsafe fn initWithIdentifier(
             this: Allocated<Self>,
             identifier: &NSTouchBarItemIdentifier,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(

@@ -26,12 +26,12 @@ impl UIFontMetrics {
     extern_methods!(
         #[unsafe(method(defaultMetrics))]
         #[unsafe(method_family = none)]
-        pub fn defaultMetrics() -> Retained<UIFontMetrics>;
+        pub unsafe fn defaultMetrics() -> Retained<UIFontMetrics>;
 
         #[cfg(feature = "UIFontDescriptor")]
         #[unsafe(method(metricsForTextStyle:))]
         #[unsafe(method_family = none)]
-        pub fn metricsForTextStyle(text_style: &UIFontTextStyle) -> Retained<Self>;
+        pub unsafe fn metricsForTextStyle(text_style: &UIFontTextStyle) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -40,7 +40,7 @@ impl UIFontMetrics {
         #[cfg(feature = "UIFontDescriptor")]
         #[unsafe(method(initForTextStyle:))]
         #[unsafe(method_family = init)]
-        pub fn initForTextStyle(
+        pub unsafe fn initForTextStyle(
             this: Allocated<Self>,
             text_style: &UIFontTextStyle,
         ) -> Retained<Self>;
@@ -48,12 +48,12 @@ impl UIFontMetrics {
         #[cfg(feature = "UIFont")]
         #[unsafe(method(scaledFontForFont:))]
         #[unsafe(method_family = none)]
-        pub fn scaledFontForFont(&self, font: &UIFont) -> Retained<UIFont>;
+        pub unsafe fn scaledFontForFont(&self, font: &UIFont) -> Retained<UIFont>;
 
         #[cfg(all(feature = "UIFont", feature = "objc2-core-foundation"))]
         #[unsafe(method(scaledFontForFont:maximumPointSize:))]
         #[unsafe(method_family = none)]
-        pub fn scaledFontForFont_maximumPointSize(
+        pub unsafe fn scaledFontForFont_maximumPointSize(
             &self,
             font: &UIFont,
             maximum_point_size: CGFloat,
@@ -62,7 +62,7 @@ impl UIFontMetrics {
         #[cfg(all(feature = "UIFont", feature = "UITraitCollection"))]
         #[unsafe(method(scaledFontForFont:compatibleWithTraitCollection:))]
         #[unsafe(method_family = none)]
-        pub fn scaledFontForFont_compatibleWithTraitCollection(
+        pub unsafe fn scaledFontForFont_compatibleWithTraitCollection(
             &self,
             font: &UIFont,
             trait_collection: Option<&UITraitCollection>,
@@ -75,7 +75,7 @@ impl UIFontMetrics {
         ))]
         #[unsafe(method(scaledFontForFont:maximumPointSize:compatibleWithTraitCollection:))]
         #[unsafe(method_family = none)]
-        pub fn scaledFontForFont_maximumPointSize_compatibleWithTraitCollection(
+        pub unsafe fn scaledFontForFont_maximumPointSize_compatibleWithTraitCollection(
             &self,
             font: &UIFont,
             maximum_point_size: CGFloat,
@@ -85,12 +85,12 @@ impl UIFontMetrics {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(scaledValueForValue:))]
         #[unsafe(method_family = none)]
-        pub fn scaledValueForValue(&self, value: CGFloat) -> CGFloat;
+        pub unsafe fn scaledValueForValue(&self, value: CGFloat) -> CGFloat;
 
         #[cfg(all(feature = "UITraitCollection", feature = "objc2-core-foundation"))]
         #[unsafe(method(scaledValueForValue:compatibleWithTraitCollection:))]
         #[unsafe(method_family = none)]
-        pub fn scaledValueForValue_compatibleWithTraitCollection(
+        pub unsafe fn scaledValueForValue_compatibleWithTraitCollection(
             &self,
             value: CGFloat,
             trait_collection: Option<&UITraitCollection>,

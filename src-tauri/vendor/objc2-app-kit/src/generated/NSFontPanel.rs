@@ -54,13 +54,13 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(changeFont:))]
         #[unsafe(method_family = none)]
-        fn changeFont(&self, sender: Option<&NSFontManager>);
+        unsafe fn changeFont(&self, sender: Option<&NSFontManager>);
 
         #[cfg(all(feature = "NSPanel", feature = "NSResponder", feature = "NSWindow"))]
         #[optional]
         #[unsafe(method(validModesForFontPanel:))]
         #[unsafe(method_family = none)]
-        fn validModesForFontPanel(&self, font_panel: &NSFontPanel) -> NSFontPanelModeMask;
+        unsafe fn validModesForFontPanel(&self, font_panel: &NSFontPanel) -> NSFontPanelModeMask;
     }
 );
 
@@ -157,54 +157,54 @@ impl NSFontPanel {
     extern_methods!(
         #[unsafe(method(sharedFontPanel))]
         #[unsafe(method_family = none)]
-        pub fn sharedFontPanel(mtm: MainThreadMarker) -> Retained<NSFontPanel>;
+        pub unsafe fn sharedFontPanel(mtm: MainThreadMarker) -> Retained<NSFontPanel>;
 
         #[unsafe(method(sharedFontPanelExists))]
         #[unsafe(method_family = none)]
-        pub fn sharedFontPanelExists(mtm: MainThreadMarker) -> bool;
+        pub unsafe fn sharedFontPanelExists(mtm: MainThreadMarker) -> bool;
 
         #[cfg(feature = "NSView")]
         #[unsafe(method(accessoryView))]
         #[unsafe(method_family = none)]
-        pub fn accessoryView(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn accessoryView(&self) -> Option<Retained<NSView>>;
 
         #[cfg(feature = "NSView")]
         /// Setter for [`accessoryView`][Self::accessoryView].
         #[unsafe(method(setAccessoryView:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessoryView(&self, accessory_view: Option<&NSView>);
+        pub unsafe fn setAccessoryView(&self, accessory_view: Option<&NSView>);
 
         #[cfg(feature = "NSFont")]
         #[unsafe(method(setPanelFont:isMultiple:))]
         #[unsafe(method_family = none)]
-        pub fn setPanelFont_isMultiple(&self, font_obj: &NSFont, flag: bool);
+        pub unsafe fn setPanelFont_isMultiple(&self, font_obj: &NSFont, flag: bool);
 
         #[cfg(feature = "NSFont")]
         #[unsafe(method(panelConvertFont:))]
         #[unsafe(method_family = none)]
-        pub fn panelConvertFont(&self, font_obj: &NSFont) -> Retained<NSFont>;
+        pub unsafe fn panelConvertFont(&self, font_obj: &NSFont) -> Retained<NSFont>;
 
         #[unsafe(method(worksWhenModal))]
         #[unsafe(method_family = none)]
-        pub fn worksWhenModal(&self) -> bool;
+        pub unsafe fn worksWhenModal(&self) -> bool;
 
         /// Setter for [`worksWhenModal`][Self::worksWhenModal].
         #[unsafe(method(setWorksWhenModal:))]
         #[unsafe(method_family = none)]
-        pub fn setWorksWhenModal(&self, works_when_modal: bool);
+        pub unsafe fn setWorksWhenModal(&self, works_when_modal: bool);
 
         #[unsafe(method(isEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isEnabled(&self) -> bool;
+        pub unsafe fn isEnabled(&self) -> bool;
 
         /// Setter for [`isEnabled`][Self::isEnabled].
         #[unsafe(method(setEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setEnabled(&self, enabled: bool);
+        pub unsafe fn setEnabled(&self, enabled: bool);
 
         #[unsafe(method(reloadDefaultFontFamilies))]
         #[unsafe(method_family = none)]
-        pub fn reloadDefaultFontFamilies(&self);
+        pub unsafe fn reloadDefaultFontFamilies(&self);
     );
 }
 
@@ -235,9 +235,6 @@ impl NSFontPanel {
             screen: Option<&NSScreen>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -246,7 +243,7 @@ impl NSFontPanel {
         /// Convenience method for creating an autoreleased titled window with the given contentViewController. A basic NSWindow with the following attributes is made: titled, closable, resizable, miniaturizable. The window's title is automatically bound to the contentViewController's title. The size of the window can easily be controlled by utilizing autolayout and applying size constraints to the view (or its subviews). The window has isReleasedWhenClosed set to NO, and it must be explicitly retained to keep the window instance alive. To have it automatically be freed when it is closed, do the following: [window retain] and [window setReleasedWhenClosed:YES].
         #[unsafe(method(windowWithContentViewController:))]
         #[unsafe(method_family = none)]
-        pub fn windowWithContentViewController(
+        pub unsafe fn windowWithContentViewController(
             content_view_controller: &NSViewController,
         ) -> Retained<Self>;
     );
@@ -258,7 +255,7 @@ impl NSFontPanel {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -268,7 +265,7 @@ impl NSFontPanel {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -296,23 +293,16 @@ pub const NSFontPanelStandardModesMask: c_uint = 0xFFFF;
 pub const NSFontPanelAllModesMask: c_uint = 0xFFFFFFFF;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfppreviewbutton?language=objc)
-#[deprecated]
 pub const NSFPPreviewButton: c_uint = 131;
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfprevertbutton?language=objc)
-#[deprecated]
 pub const NSFPRevertButton: c_uint = 130;
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfpsetbutton?language=objc)
-#[deprecated]
 pub const NSFPSetButton: c_uint = 132;
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfppreviewfield?language=objc)
-#[deprecated]
 pub const NSFPPreviewField: c_uint = 128;
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfpsizefield?language=objc)
-#[deprecated]
 pub const NSFPSizeField: c_uint = 129;
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfpsizetitle?language=objc)
-#[deprecated]
 pub const NSFPSizeTitle: c_uint = 133;
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfpcurrentfield?language=objc)
-#[deprecated]
 pub const NSFPCurrentField: c_uint = 134;

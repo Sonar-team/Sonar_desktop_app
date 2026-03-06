@@ -71,9 +71,6 @@ impl DOMCSSStyleSheet {
         #[unsafe(method_family = none)]
         pub unsafe fn rules(&self) -> Option<Retained<DOMCSSRuleList>>;
 
-        /// # Safety
-        ///
-        /// `rule` might not allow `None`.
         #[unsafe(method(insertRule:index:))]
         #[unsafe(method_family = none)]
         pub unsafe fn insertRule_index(&self, rule: Option<&NSString>, index: c_uint) -> c_uint;
@@ -83,10 +80,6 @@ impl DOMCSSStyleSheet {
         #[unsafe(method_family = none)]
         pub unsafe fn deleteRule(&self, index: c_uint);
 
-        /// # Safety
-        ///
-        /// - `selector` might not allow `None`.
-        /// - `style` might not allow `None`.
         #[unsafe(method(addRule:style:index:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addRule_style_index(
@@ -132,7 +125,6 @@ impl DOMCSSStyleSheet {
 }
 
 /// DOMCSSStyleSheetDeprecated.
-#[deprecated]
 #[cfg(all(
     feature = "DOMObject",
     feature = "DOMStyleSheet",
@@ -140,9 +132,6 @@ impl DOMCSSStyleSheet {
 ))]
 impl DOMCSSStyleSheet {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `rule` might not allow `None`.
         #[deprecated]
         #[unsafe(method(insertRule::))]
         #[unsafe(method_family = none)]

@@ -52,15 +52,9 @@ impl CATextLayer {
     extern_methods!(
         #[unsafe(method(string))]
         #[unsafe(method_family = none)]
-        pub fn string(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn string(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`string`][Self::string].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `string` should be of the correct type.
         #[unsafe(method(setString:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setString(&self, string: Option<&AnyObject>);
@@ -68,14 +62,10 @@ impl CATextLayer {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(font))]
         #[unsafe(method_family = none)]
-        pub fn font(&self) -> Option<Retained<CFType>>;
+        pub unsafe fn font(&self) -> Option<Retained<CFType>>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`font`][Self::font].
-        ///
-        /// # Safety
-        ///
-        /// `font` should be of the correct type.
         #[unsafe(method(setFont:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setFont(&self, font: Option<&CFType>);
@@ -83,64 +73,63 @@ impl CATextLayer {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(fontSize))]
         #[unsafe(method_family = none)]
-        pub fn fontSize(&self) -> CGFloat;
+        pub unsafe fn fontSize(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`fontSize`][Self::fontSize].
         #[unsafe(method(setFontSize:))]
         #[unsafe(method_family = none)]
-        pub fn setFontSize(&self, font_size: CGFloat);
+        pub unsafe fn setFontSize(&self, font_size: CGFloat);
 
         #[cfg(feature = "objc2-core-graphics")]
         #[unsafe(method(foregroundColor))]
         #[unsafe(method_family = none)]
-        pub fn foregroundColor(&self) -> Option<Retained<CGColor>>;
+        pub unsafe fn foregroundColor(&self) -> Option<Retained<CGColor>>;
 
         #[cfg(feature = "objc2-core-graphics")]
         /// Setter for [`foregroundColor`][Self::foregroundColor].
         #[unsafe(method(setForegroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setForegroundColor(&self, foreground_color: Option<&CGColor>);
+        pub unsafe fn setForegroundColor(&self, foreground_color: Option<&CGColor>);
 
         #[unsafe(method(isWrapped))]
         #[unsafe(method_family = none)]
-        pub fn isWrapped(&self) -> bool;
+        pub unsafe fn isWrapped(&self) -> bool;
 
         /// Setter for [`isWrapped`][Self::isWrapped].
         #[unsafe(method(setWrapped:))]
         #[unsafe(method_family = none)]
-        pub fn setWrapped(&self, wrapped: bool);
+        pub unsafe fn setWrapped(&self, wrapped: bool);
 
         #[unsafe(method(truncationMode))]
         #[unsafe(method_family = none)]
-        pub fn truncationMode(&self) -> Retained<CATextLayerTruncationMode>;
+        pub unsafe fn truncationMode(&self) -> Retained<CATextLayerTruncationMode>;
 
         /// Setter for [`truncationMode`][Self::truncationMode].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTruncationMode:))]
         #[unsafe(method_family = none)]
-        pub fn setTruncationMode(&self, truncation_mode: &CATextLayerTruncationMode);
+        pub unsafe fn setTruncationMode(&self, truncation_mode: &CATextLayerTruncationMode);
 
         #[unsafe(method(alignmentMode))]
         #[unsafe(method_family = none)]
-        pub fn alignmentMode(&self) -> Retained<CATextLayerAlignmentMode>;
+        pub unsafe fn alignmentMode(&self) -> Retained<CATextLayerAlignmentMode>;
 
         /// Setter for [`alignmentMode`][Self::alignmentMode].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAlignmentMode:))]
         #[unsafe(method_family = none)]
-        pub fn setAlignmentMode(&self, alignment_mode: &CATextLayerAlignmentMode);
+        pub unsafe fn setAlignmentMode(&self, alignment_mode: &CATextLayerAlignmentMode);
 
         #[unsafe(method(allowsFontSubpixelQuantization))]
         #[unsafe(method_family = none)]
-        pub fn allowsFontSubpixelQuantization(&self) -> bool;
+        pub unsafe fn allowsFontSubpixelQuantization(&self) -> bool;
 
         /// Setter for [`allowsFontSubpixelQuantization`][Self::allowsFontSubpixelQuantization].
         #[unsafe(method(setAllowsFontSubpixelQuantization:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsFontSubpixelQuantization(&self, allows_font_subpixel_quantization: bool);
+        pub unsafe fn setAllowsFontSubpixelQuantization(
+            &self,
+            allows_font_subpixel_quantization: bool,
+        );
     );
 }
 
@@ -151,15 +140,12 @@ impl CATextLayer {
         /// Layer creation and initialization. *
         #[unsafe(method(layer))]
         #[unsafe(method_family = none)]
-        pub fn layer() -> Retained<Self>;
+        pub unsafe fn layer() -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `layer` should be of the correct type.
         #[unsafe(method(initWithLayer:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithLayer(this: Allocated<Self>, layer: &AnyObject) -> Retained<Self>;
@@ -172,16 +158,8 @@ impl CATextLayer {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "CALayer")]
-impl DefaultRetained for CATextLayer {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern "C" {

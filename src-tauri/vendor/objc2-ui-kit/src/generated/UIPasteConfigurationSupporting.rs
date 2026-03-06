@@ -15,24 +15,22 @@ extern_protocol!(
         #[cfg(feature = "UIPasteConfiguration")]
         #[unsafe(method(pasteConfiguration))]
         #[unsafe(method_family = none)]
-        fn pasteConfiguration(&self) -> Option<Retained<UIPasteConfiguration>>;
+        unsafe fn pasteConfiguration(&self) -> Option<Retained<UIPasteConfiguration>>;
 
         #[cfg(feature = "UIPasteConfiguration")]
         /// Setter for [`pasteConfiguration`][Self::pasteConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPasteConfiguration:))]
         #[unsafe(method_family = none)]
-        fn setPasteConfiguration(&self, paste_configuration: Option<&UIPasteConfiguration>);
+        unsafe fn setPasteConfiguration(&self, paste_configuration: Option<&UIPasteConfiguration>);
 
         #[optional]
         #[unsafe(method(pasteItemProviders:))]
         #[unsafe(method_family = none)]
-        fn pasteItemProviders(&self, item_providers: &NSArray<NSItemProvider>);
+        unsafe fn pasteItemProviders(&self, item_providers: &NSArray<NSItemProvider>);
 
         #[optional]
         #[unsafe(method(canPasteItemProviders:))]
         #[unsafe(method_family = none)]
-        fn canPasteItemProviders(&self, item_providers: &NSArray<NSItemProvider>) -> bool;
+        unsafe fn canPasteItemProviders(&self, item_providers: &NSArray<NSItemProvider>) -> bool;
     }
 );

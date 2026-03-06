@@ -228,17 +228,5 @@ impl WKPreferences {
         #[unsafe(method(setJavaScriptEnabled:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setJavaScriptEnabled(&self, java_script_enabled: bool);
-
-        /// A Boolean value indicating whether LookToScroll is enabled.
-        ///
-        /// The default value is `NO`.
-        #[unsafe(method(isLookToScrollEnabled))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn isLookToScrollEnabled(&self) -> bool;
-
-        /// Setter for [`isLookToScrollEnabled`][Self::isLookToScrollEnabled].
-        #[unsafe(method(setIsLookToScrollEnabled:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn setIsLookToScrollEnabled(&self, is_look_to_scroll_enabled: bool);
     );
 }

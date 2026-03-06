@@ -122,10 +122,6 @@ extern_class!(
     pub struct NSManagedObjectContext;
 );
 
-unsafe impl Send for NSManagedObjectContext {}
-
-unsafe impl Sync for NSManagedObjectContext {}
-
 extern_conformance!(
     unsafe impl NSCoding for NSManagedObjectContext {}
 );
@@ -158,17 +154,11 @@ impl NSManagedObjectContext {
         ) -> Retained<Self>;
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `block` block must be sendable.
         #[unsafe(method(performBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn performBlock(&self, block: &block2::DynBlock<dyn Fn()>);
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `block` block must be sendable.
         #[unsafe(method(performBlockAndWait:))]
         #[unsafe(method_family = none)]
         pub unsafe fn performBlockAndWait(&self, block: &block2::DynBlock<dyn Fn() + '_>);
@@ -203,45 +193,23 @@ impl NSManagedObjectContext {
         pub unsafe fn name(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setName(&self, name: Option<&NSString>);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(undoManager))]
         #[unsafe(method_family = none)]
-        pub unsafe fn undoManager(&self, mtm: MainThreadMarker) -> Option<Retained<NSUndoManager>>;
+        pub unsafe fn undoManager(&self) -> Option<Retained<NSUndoManager>>;
 
         /// Setter for [`undoManager`][Self::undoManager].
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setUndoManager:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUndoManager(&self, undo_manager: Option<&NSUndoManager>);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(hasChanges))]
         #[unsafe(method_family = none)]
         pub unsafe fn hasChanges(&self) -> bool;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned generic should be of the correct type.
-        /// - This might not be thread-safe.
         #[unsafe(method(userInfo))]
         #[unsafe(method_family = none)]
         pub unsafe fn userInfo(&self) -> Retained<NSMutableDictionary>;
@@ -275,9 +243,6 @@ impl NSManagedObjectContext {
         ) -> Result<Retained<NSManagedObject>, Retained<NSError>>;
 
         #[cfg(all(feature = "NSFetchRequest", feature = "NSPersistentStoreRequest"))]
-        /// # Safety
-        ///
-        /// `request` generic should be bound by `NSFetchRequestResult`.
         #[unsafe(method(executeFetchRequest:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn executeFetchRequest_error(
@@ -316,11 +281,6 @@ impl NSManagedObjectContext {
         #[unsafe(method_family = none)]
         pub unsafe fn detectConflictsForObject(&self, object: &NSManagedObject);
 
-        /// # Safety
-        ///
-        /// - `object` should be of the correct type.
-        /// - `change` generic should be of the correct type.
-        /// - `context` must be a valid pointer or null.
         #[unsafe(method(observeValueForKeyPath:ofObject:change:context:))]
         #[unsafe(method_family = none)]
         pub unsafe fn observeValueForKeyPath_ofObject_change_context(
@@ -336,9 +296,6 @@ impl NSManagedObjectContext {
         pub unsafe fn processPendingChanges(&self);
 
         #[cfg(feature = "NSPersistentStore")]
-        /// # Safety
-        ///
-        /// `object` should be of the correct type.
         #[unsafe(method(assignObject:toPersistentStore:))]
         #[unsafe(method_family = none)]
         pub unsafe fn assignObject_toPersistentStore(
@@ -348,41 +305,21 @@ impl NSManagedObjectContext {
         );
 
         #[cfg(feature = "NSManagedObject")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(insertedObjects))]
         #[unsafe(method_family = none)]
         pub unsafe fn insertedObjects(&self) -> Retained<NSSet<NSManagedObject>>;
 
         #[cfg(feature = "NSManagedObject")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(updatedObjects))]
         #[unsafe(method_family = none)]
         pub unsafe fn updatedObjects(&self) -> Retained<NSSet<NSManagedObject>>;
 
         #[cfg(feature = "NSManagedObject")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(deletedObjects))]
         #[unsafe(method_family = none)]
         pub unsafe fn deletedObjects(&self) -> Retained<NSSet<NSManagedObject>>;
 
         #[cfg(feature = "NSManagedObject")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(registeredObjects))]
         #[unsafe(method_family = none)]
         pub unsafe fn registeredObjects(&self) -> Retained<NSSet<NSManagedObject>>;
@@ -426,20 +363,11 @@ impl NSManagedObjectContext {
         #[unsafe(method_family = none)]
         pub unsafe fn tryLock(&self) -> bool;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(propagatesDeletesAtEndOfEvent))]
         #[unsafe(method_family = none)]
         pub unsafe fn propagatesDeletesAtEndOfEvent(&self) -> bool;
 
         /// Setter for [`propagatesDeletesAtEndOfEvent`][Self::propagatesDeletesAtEndOfEvent].
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setPropagatesDeletesAtEndOfEvent:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPropagatesDeletesAtEndOfEvent(
@@ -447,20 +375,11 @@ impl NSManagedObjectContext {
             propagates_deletes_at_end_of_event: bool,
         );
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(retainsRegisteredObjects))]
         #[unsafe(method_family = none)]
         pub unsafe fn retainsRegisteredObjects(&self) -> bool;
 
         /// Setter for [`retainsRegisteredObjects`][Self::retainsRegisteredObjects].
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setRetainsRegisteredObjects:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRetainsRegisteredObjects(&self, retains_registered_objects: bool);
@@ -505,10 +424,6 @@ impl NSManagedObjectContext {
         pub unsafe fn mergePolicy(&self) -> Retained<AnyObject>;
 
         /// Setter for [`mergePolicy`][Self::mergePolicy].
-        ///
-        /// # Safety
-        ///
-        /// `merge_policy` should be of the correct type.
         #[unsafe(method(setMergePolicy:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setMergePolicy(&self, merge_policy: &AnyObject);
@@ -528,9 +443,6 @@ impl NSManagedObjectContext {
             notification: &NSNotification,
         );
 
-        /// # Safety
-        ///
-        /// `change_notification_data` generic should be of the correct type.
         #[unsafe(method(mergeChangesFromRemoteContextSave:intoContexts:))]
         #[unsafe(method_family = none)]
         pub unsafe fn mergeChangesFromRemoteContextSave_intoContexts(
@@ -539,11 +451,6 @@ impl NSManagedObjectContext {
         );
 
         #[cfg(feature = "NSQueryGenerationToken")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(queryGenerationToken))]
         #[unsafe(method_family = none)]
         pub unsafe fn queryGenerationToken(&self) -> Option<Retained<NSQueryGenerationToken>>;
@@ -556,20 +463,11 @@ impl NSManagedObjectContext {
             generation: Option<&NSQueryGenerationToken>,
         ) -> Result<(), Retained<NSError>>;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(automaticallyMergesChangesFromParent))]
         #[unsafe(method_family = none)]
         pub unsafe fn automaticallyMergesChangesFromParent(&self) -> bool;
 
         /// Setter for [`automaticallyMergesChangesFromParent`][Self::automaticallyMergesChangesFromParent].
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setAutomaticallyMergesChangesFromParent:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAutomaticallyMergesChangesFromParent(
@@ -582,8 +480,6 @@ impl NSManagedObjectContext {
         pub unsafe fn transactionAuthor(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`transactionAuthor`][Self::transactionAuthor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTransactionAuthor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTransactionAuthor(&self, transaction_author: Option<&NSString>);

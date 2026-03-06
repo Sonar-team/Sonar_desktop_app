@@ -59,11 +59,6 @@ impl CKDatabase {
         #[unsafe(method_family = none)]
         pub unsafe fn addOperation(&self, operation: &CKDatabaseOperation);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(databaseScope))]
         #[unsafe(method_family = none)]
         pub unsafe fn databaseScope(&self) -> CKDatabaseScope;
@@ -71,7 +66,6 @@ impl CKDatabase {
 }
 
 /// ConvenienceMethods.
-///
 /// Convenience APIs
 ///
 ///
@@ -85,10 +79,6 @@ impl CKDatabase {
         /// `CKFetchRecordsOperation`and
         /// `CKModifyRecordsOperation`are the more configurable,
         /// `CKOperation`-based alternatives to these methods
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchRecordWithID:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchRecordWithID_completionHandler(
@@ -98,9 +88,6 @@ impl CKDatabase {
         );
 
         #[cfg(all(feature = "CKRecord", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(saveRecord:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn saveRecord_completionHandler(
@@ -110,9 +97,6 @@ impl CKDatabase {
         );
 
         #[cfg(all(feature = "CKRecordID", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(deleteRecordWithID:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn deleteRecordWithID_completionHandler(
@@ -138,10 +122,6 @@ impl CKDatabase {
         /// `zoneID.`Cross-zone queries are not supported in a
         /// `sharedCloudDatabase`Queries that do not specify a
         /// `zoneID`will perform a query across all zones in the database.
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(performQuery:inZoneWithID:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn performQuery_inZoneWithID_completionHandler(
@@ -155,10 +135,6 @@ impl CKDatabase {
         /// `CKFetchRecordZonesOperation`and
         /// `CKModifyRecordZonesOperation`are the more configurable,
         /// `CKOperation`-based alternatives to these methods
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchAllRecordZonesWithCompletionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchAllRecordZonesWithCompletionHandler(
@@ -171,9 +147,6 @@ impl CKDatabase {
             feature = "CKRecordZoneID",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchRecordZoneWithID:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchRecordZoneWithID_completionHandler(
@@ -183,9 +156,6 @@ impl CKDatabase {
         );
 
         #[cfg(all(feature = "CKRecordZone", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(saveRecordZone:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn saveRecordZone_completionHandler(
@@ -195,9 +165,6 @@ impl CKDatabase {
         );
 
         #[cfg(all(feature = "CKRecordZoneID", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(deleteRecordZoneWithID:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn deleteRecordZoneWithID_completionHandler(
@@ -210,10 +177,6 @@ impl CKDatabase {
         /// `CKFetchSubscriptionsOperation`and
         /// `CKModifySubscriptionsOperation`are the more configurable,
         /// `CKOperation`-based alternative to these methods
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchSubscriptionWithID:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchSubscriptionWithID_completionHandler(
@@ -223,9 +186,6 @@ impl CKDatabase {
         );
 
         #[cfg(all(feature = "CKSubscription", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchAllSubscriptionsWithCompletionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchAllSubscriptionsWithCompletionHandler(
@@ -236,9 +196,6 @@ impl CKDatabase {
         );
 
         #[cfg(all(feature = "CKSubscription", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(saveSubscription:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn saveSubscription_completionHandler(
@@ -248,9 +205,6 @@ impl CKDatabase {
         );
 
         #[cfg(all(feature = "CKSubscription", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(deleteSubscriptionWithID:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn deleteSubscriptionWithID_completionHandler(

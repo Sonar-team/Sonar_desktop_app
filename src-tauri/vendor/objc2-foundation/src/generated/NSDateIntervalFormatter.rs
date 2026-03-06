@@ -72,77 +72,69 @@ impl NSDateIntervalFormatter {
         #[cfg(feature = "NSLocale")]
         #[unsafe(method(locale))]
         #[unsafe(method_family = none)]
-        pub fn locale(&self) -> Retained<NSLocale>;
+        pub unsafe fn locale(&self) -> Retained<NSLocale>;
 
         #[cfg(feature = "NSLocale")]
         /// Setter for [`locale`][Self::locale].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setLocale:))]
         #[unsafe(method_family = none)]
-        pub fn setLocale(&self, locale: Option<&NSLocale>);
+        pub unsafe fn setLocale(&self, locale: Option<&NSLocale>);
 
         #[cfg(feature = "NSCalendar")]
         #[unsafe(method(calendar))]
         #[unsafe(method_family = none)]
-        pub fn calendar(&self) -> Retained<NSCalendar>;
+        pub unsafe fn calendar(&self) -> Retained<NSCalendar>;
 
         #[cfg(feature = "NSCalendar")]
         /// Setter for [`calendar`][Self::calendar].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setCalendar:))]
         #[unsafe(method_family = none)]
-        pub fn setCalendar(&self, calendar: Option<&NSCalendar>);
+        pub unsafe fn setCalendar(&self, calendar: Option<&NSCalendar>);
 
         #[cfg(feature = "NSTimeZone")]
         #[unsafe(method(timeZone))]
         #[unsafe(method_family = none)]
-        pub fn timeZone(&self) -> Retained<NSTimeZone>;
+        pub unsafe fn timeZone(&self) -> Retained<NSTimeZone>;
 
         #[cfg(feature = "NSTimeZone")]
         /// Setter for [`timeZone`][Self::timeZone].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setTimeZone:))]
         #[unsafe(method_family = none)]
-        pub fn setTimeZone(&self, time_zone: Option<&NSTimeZone>);
+        pub unsafe fn setTimeZone(&self, time_zone: Option<&NSTimeZone>);
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(dateTemplate))]
         #[unsafe(method_family = none)]
-        pub fn dateTemplate(&self) -> Retained<NSString>;
+        pub unsafe fn dateTemplate(&self) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         /// Setter for [`dateTemplate`][Self::dateTemplate].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setDateTemplate:))]
         #[unsafe(method_family = none)]
-        pub fn setDateTemplate(&self, date_template: Option<&NSString>);
+        pub unsafe fn setDateTemplate(&self, date_template: Option<&NSString>);
 
         #[unsafe(method(dateStyle))]
         #[unsafe(method_family = none)]
-        pub fn dateStyle(&self) -> NSDateIntervalFormatterStyle;
+        pub unsafe fn dateStyle(&self) -> NSDateIntervalFormatterStyle;
 
         /// Setter for [`dateStyle`][Self::dateStyle].
         #[unsafe(method(setDateStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setDateStyle(&self, date_style: NSDateIntervalFormatterStyle);
+        pub unsafe fn setDateStyle(&self, date_style: NSDateIntervalFormatterStyle);
 
         #[unsafe(method(timeStyle))]
         #[unsafe(method_family = none)]
-        pub fn timeStyle(&self) -> NSDateIntervalFormatterStyle;
+        pub unsafe fn timeStyle(&self) -> NSDateIntervalFormatterStyle;
 
         /// Setter for [`timeStyle`][Self::timeStyle].
         #[unsafe(method(setTimeStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setTimeStyle(&self, time_style: NSDateIntervalFormatterStyle);
+        pub unsafe fn setTimeStyle(&self, time_style: NSDateIntervalFormatterStyle);
 
         #[cfg(all(feature = "NSDate", feature = "NSString"))]
         #[unsafe(method(stringFromDate:toDate:))]
         #[unsafe(method_family = none)]
-        pub fn stringFromDate_toDate(
+        pub unsafe fn stringFromDate_toDate(
             &self,
             from_date: &NSDate,
             to_date: &NSDate,
@@ -151,7 +143,7 @@ impl NSDateIntervalFormatter {
         #[cfg(all(feature = "NSDateInterval", feature = "NSString"))]
         #[unsafe(method(stringFromDateInterval:))]
         #[unsafe(method_family = none)]
-        pub fn stringFromDateInterval(
+        pub unsafe fn stringFromDateInterval(
             &self,
             date_interval: &NSDateInterval,
         ) -> Option<Retained<NSString>>;
@@ -164,18 +156,10 @@ impl NSDateIntervalFormatter {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSFormatter")]
-impl DefaultRetained for NSDateIntervalFormatter {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

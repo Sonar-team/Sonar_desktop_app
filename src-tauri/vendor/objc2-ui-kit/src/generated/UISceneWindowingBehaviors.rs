@@ -30,20 +30,20 @@ impl UISceneWindowingBehaviors {
 
         #[unsafe(method(isClosable))]
         #[unsafe(method_family = none)]
-        pub fn isClosable(&self) -> bool;
+        pub unsafe fn isClosable(&self) -> bool;
 
         /// Setter for [`isClosable`][Self::isClosable].
         #[unsafe(method(setClosable:))]
         #[unsafe(method_family = none)]
-        pub fn setClosable(&self, closable: bool);
+        pub unsafe fn setClosable(&self, closable: bool);
 
         #[unsafe(method(isMiniaturizable))]
         #[unsafe(method_family = none)]
-        pub fn isMiniaturizable(&self) -> bool;
+        pub unsafe fn isMiniaturizable(&self) -> bool;
 
         /// Setter for [`isMiniaturizable`][Self::isMiniaturizable].
         #[unsafe(method(setMiniaturizable:))]
         #[unsafe(method_family = none)]
-        pub fn setMiniaturizable(&self, miniaturizable: bool);
+        pub unsafe fn setMiniaturizable(&self, miniaturizable: bool);
     );
 }

@@ -8,8 +8,6 @@ use objc2_core_foundation::*;
 #[cfg(feature = "objc2-core-video")]
 use objc2_core_video::*;
 use objc2_foundation::*;
-#[cfg(feature = "objc2-image-io")]
-use objc2_image_io::*;
 
 use crate::*;
 
@@ -20,16 +18,6 @@ pub type CIRAWDecoderVersion = NSString;
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cirawdecoderversionnone?language=objc)
     pub static CIRAWDecoderVersionNone: &'static CIRAWDecoderVersion;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cirawdecoderversion9?language=objc)
-    pub static CIRAWDecoderVersion9: &'static CIRAWDecoderVersion;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/cirawdecoderversion9dng?language=objc)
-    pub static CIRAWDecoderVersion9DNG: &'static CIRAWDecoderVersion;
 }
 
 extern "C" {
@@ -115,17 +103,6 @@ impl CIRAWFilter {
         #[unsafe(method_family = none)]
         pub unsafe fn properties(&self) -> Retained<NSDictionary>;
 
-        #[cfg(feature = "objc2-image-io")]
-        #[unsafe(method(orientation))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn orientation(&self) -> CGImagePropertyOrientation;
-
-        #[cfg(feature = "objc2-image-io")]
-        /// Setter for [`orientation`][Self::orientation].
-        #[unsafe(method(setOrientation:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn setOrientation(&self, orientation: CGImagePropertyOrientation);
-
         #[unsafe(method(isDraftModeEnabled))]
         #[unsafe(method_family = none)]
         pub unsafe fn isDraftModeEnabled(&self) -> bool;
@@ -197,19 +174,6 @@ impl CIRAWFilter {
         #[unsafe(method(setBoostShadowAmount:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setBoostShadowAmount(&self, boost_shadow_amount: c_float);
-
-        #[unsafe(method(isHighlightRecoverySupported))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn isHighlightRecoverySupported(&self) -> bool;
-
-        #[unsafe(method(isHighlightRecoveryEnabled))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn isHighlightRecoveryEnabled(&self) -> bool;
-
-        /// Setter for [`isHighlightRecoveryEnabled`][Self::isHighlightRecoveryEnabled].
-        #[unsafe(method(setHighlightRecoveryEnabled:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn setHighlightRecoveryEnabled(&self, highlight_recovery_enabled: bool);
 
         #[unsafe(method(isGamutMappingEnabled))]
         #[unsafe(method_family = none)]
@@ -432,9 +396,6 @@ impl CIRAWFilter {
         ) -> Option<Retained<Self>>;
 
         #[cfg(feature = "objc2-core-video")]
-        /// # Safety
-        ///
-        /// `properties` generic should be of the correct type.
         #[unsafe(method(filterWithCVPixelBuffer:properties:))]
         #[unsafe(method_family = none)]
         pub unsafe fn filterWithCVPixelBuffer_properties(

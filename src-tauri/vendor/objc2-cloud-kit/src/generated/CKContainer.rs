@@ -16,7 +16,6 @@ extern "C" {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/cloudkit/ckownerdefaultname?language=objc)
-    #[deprecated]
     pub static CKOwnerDefaultName: &'static NSString;
 }
 
@@ -78,11 +77,6 @@ impl CKContainer {
             container_identifier: &NSString,
         ) -> Retained<CKContainer>;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(containerIdentifier))]
         #[unsafe(method_family = none)]
         pub unsafe fn containerIdentifier(&self) -> Option<Retained<NSString>>;
@@ -95,7 +89,6 @@ impl CKContainer {
 }
 
 /// Database.
-///
 /// Database properties:
 /// Records in a public database
 /// - By default are world readable, owner writable.
@@ -113,31 +106,16 @@ impl CKContainer {
 impl CKContainer {
     extern_methods!(
         #[cfg(feature = "CKDatabase")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(privateCloudDatabase))]
         #[unsafe(method_family = none)]
         pub unsafe fn privateCloudDatabase(&self) -> Retained<CKDatabase>;
 
         #[cfg(feature = "CKDatabase")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(publicCloudDatabase))]
         #[unsafe(method_family = none)]
         pub unsafe fn publicCloudDatabase(&self) -> Retained<CKDatabase>;
 
         #[cfg(feature = "CKDatabase")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(sharedCloudDatabase))]
         #[unsafe(method_family = none)]
         pub unsafe fn sharedCloudDatabase(&self) -> Retained<CKDatabase>;
@@ -199,9 +177,6 @@ extern "C" {
 impl CKContainer {
     extern_methods!(
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(accountStatusWithCompletionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn accountStatusWithCompletionHandler(
@@ -263,7 +238,6 @@ unsafe impl RefEncode for CKApplicationPermissionStatus {
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/cloudkit/ckapplicationpermissionblock?language=objc)
-#[deprecated = "No longer supported. Please see Sharing CloudKit Data with Other iCloud Users."]
 #[cfg(feature = "block2")]
 pub type CKApplicationPermissionBlock =
     *mut block2::DynBlock<dyn Fn(CKApplicationPermissionStatus, *mut NSError)>;
@@ -272,9 +246,6 @@ pub type CKApplicationPermissionBlock =
 impl CKContainer {
     extern_methods!(
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `completion_handler` must be a valid pointer.
         #[deprecated = "No longer supported. Please see Sharing CloudKit Data with Other iCloud Users."]
         #[unsafe(method(statusForApplicationPermission:completionHandler:))]
         #[unsafe(method_family = none)]
@@ -285,9 +256,6 @@ impl CKContainer {
         );
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `completion_handler` must be a valid pointer.
         #[deprecated = "No longer supported. Please see Sharing CloudKit Data with Other iCloud Users."]
         #[unsafe(method(requestApplicationPermission:completionHandler:))]
         #[unsafe(method_family = none)]
@@ -308,10 +276,6 @@ impl CKContainer {
         ///
         /// This work is treated as having
         /// `NSQualityOfServiceUserInitiated`quality of service.
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchUserRecordIDWithCompletionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchUserRecordIDWithCompletionHandler(
@@ -325,10 +289,6 @@ impl CKContainer {
         ///
         /// `CKDiscoverAllUserIdentitiesOperation`is the more configurable,
         /// `CKOperation`-based alternative to this methods
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[deprecated = "No longer supported. Please see Sharing CloudKit Data with Other iCloud Users."]
         #[unsafe(method(discoverAllIdentitiesWithCompletionHandler:))]
         #[unsafe(method_family = none)]
@@ -346,10 +306,6 @@ impl CKContainer {
         /// Only users who have opted-in to user discoverability will have their identities returned by this method.  If a user with the inputted email exists in iCloud, but has not opted-in to user discoverability, this method completes with a nil
         /// `userInfo.``CKDiscoverUserIdentitiesOperation`is the more configurable,
         /// `CKOperation`-based alternative to this method
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[deprecated = "No longer supported. Please see Sharing CloudKit Data with Other iCloud Users."]
         #[unsafe(method(discoverUserIdentityWithEmailAddress:completionHandler:))]
         #[unsafe(method_family = none)]
@@ -366,10 +322,6 @@ impl CKContainer {
         /// Only users who have opted-in to user discoverability will have their identities returned by this method.  If a user with the inputted phone number exists in iCloud, but has not opted-in to user discoverability, this method completes with a nil
         /// `userInfo.``CKDiscoverUserIdentitiesOperation`is the more configurable,
         /// `CKOperation`-based alternative to this method
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[deprecated = "No longer supported. Please see Sharing CloudKit Data with Other iCloud Users."]
         #[unsafe(method(discoverUserIdentityWithPhoneNumber:completionHandler:))]
         #[unsafe(method_family = none)]
@@ -386,10 +338,6 @@ impl CKContainer {
         /// Only users who have opted-in to user discoverability will have their identities returned by this method.  If a user has not opted-in to user discoverability, this method completes with a nil
         /// `userInfo.``CKDiscoverUserIdentitiesOperation`is the more configurable,
         /// `CKOperation`-based alternative to this method
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[deprecated = "No longer supported. Please see Sharing CloudKit Data with Other iCloud Users."]
         #[unsafe(method(discoverUserIdentityWithUserRecordID:completionHandler:))]
         #[unsafe(method_family = none)]
@@ -410,10 +358,6 @@ impl CKContainer {
         ///
         /// `CKFetchShareParticipantsOperation`is the more configurable,
         /// `CKOperation`-based alternative to these methods.
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchShareParticipantWithEmailAddress:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchShareParticipantWithEmailAddress_completionHandler(
@@ -423,9 +367,6 @@ impl CKContainer {
         );
 
         #[cfg(all(feature = "CKShareParticipant", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchShareParticipantWithPhoneNumber:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchShareParticipantWithPhoneNumber_completionHandler(
@@ -439,9 +380,6 @@ impl CKContainer {
             feature = "CKShareParticipant",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchShareParticipantWithUserRecordID:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchShareParticipantWithUserRecordID_completionHandler(
@@ -451,9 +389,6 @@ impl CKContainer {
         );
 
         #[cfg(all(feature = "CKShareMetadata", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchShareMetadataWithURL:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchShareMetadataWithURL_completionHandler(
@@ -468,9 +403,6 @@ impl CKContainer {
             feature = "CKShareMetadata",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(acceptShareMetadata:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn acceptShareMetadata_completionHandler(
@@ -489,10 +421,6 @@ impl CKContainer {
         /// Remember to set the callback blocks before starting the operation.
         /// If an operation has already completed against the server, and is subsequently resumed, that operation will replay all of its callbacks from the start of the operation, but the request will not be re-sent to the server.
         /// If a long lived operation is cancelled or finishes completely it is no longer returned by these calls.
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchAllLongLivedOperationIDsWithCompletionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchAllLongLivedOperationIDsWithCompletionHandler(
@@ -503,9 +431,6 @@ impl CKContainer {
         );
 
         #[cfg(all(feature = "CKOperation", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(fetchLongLivedOperationWithID:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchLongLivedOperationWithID_completionHandler(

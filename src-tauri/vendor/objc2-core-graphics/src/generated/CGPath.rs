@@ -11,7 +11,6 @@ use objc2_core_foundation::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgmutablepath?language=objc)
-#[doc(alias = "CGMutablePathRef")]
 #[repr(C)]
 pub struct CGMutablePath {
     inner: [u8; 0],
@@ -27,7 +26,6 @@ cf_objc2_type!(
 );
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgpath?language=objc)
-#[doc(alias = "CGPathRef")]
 #[repr(C)]
 pub struct CGPath {
     inner: [u8; 0],
@@ -104,7 +102,7 @@ unsafe impl ConcreteType for CGPath {
 impl CGMutablePath {
     #[doc(alias = "CGPathCreateMutable")]
     #[inline]
-    pub fn new() -> CFRetained<CGMutablePath> {
+    pub unsafe fn new() -> CFRetained<CGMutablePath> {
         extern "C-unwind" {
             fn CGPathCreateMutable() -> Option<NonNull<CGMutablePath>>;
         }
@@ -118,7 +116,7 @@ impl CGMutablePath {
 impl CGPath {
     #[doc(alias = "CGPathCreateCopy")]
     #[inline]
-    pub fn new_copy(path: Option<&CGPath>) -> Option<CFRetained<CGPath>> {
+    pub unsafe fn new_copy(path: Option<&CGPath>) -> Option<CFRetained<CGPath>> {
         extern "C-unwind" {
             fn CGPathCreateCopy(path: Option<&CGPath>) -> Option<NonNull<CGPath>>;
         }
@@ -126,9 +124,6 @@ impl CGPath {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `transform` must be a valid pointer or null.
     #[doc(alias = "CGPathCreateCopyByTransformingPath")]
     #[inline]
     pub unsafe fn new_copy_by_transforming_path(
@@ -149,7 +144,7 @@ impl CGPath {
 impl CGMutablePath {
     #[doc(alias = "CGPathCreateMutableCopy")]
     #[inline]
-    pub fn new_copy(path: Option<&CGPath>) -> Option<CFRetained<CGMutablePath>> {
+    pub unsafe fn new_copy(path: Option<&CGPath>) -> Option<CFRetained<CGMutablePath>> {
         extern "C-unwind" {
             fn CGPathCreateMutableCopy(path: Option<&CGPath>) -> Option<NonNull<CGMutablePath>>;
         }
@@ -157,9 +152,6 @@ impl CGMutablePath {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `transform` must be a valid pointer or null.
     #[doc(alias = "CGPathCreateMutableCopyByTransformingPath")]
     #[inline]
     pub unsafe fn new_copy_by_transforming_path(
@@ -178,9 +170,6 @@ impl CGMutablePath {
 }
 
 impl CGPath {
-    /// # Safety
-    ///
-    /// `transform` must be a valid pointer or null.
     #[doc(alias = "CGPathCreateWithRect")]
     #[inline]
     pub unsafe fn with_rect(
@@ -199,9 +188,6 @@ impl CGPath {
         unsafe { CFRetained::from_raw(ret) }
     }
 
-    /// # Safety
-    ///
-    /// `transform` must be a valid pointer or null.
     #[doc(alias = "CGPathCreateWithEllipseInRect")]
     #[inline]
     pub unsafe fn with_ellipse_in_rect(
@@ -220,9 +206,6 @@ impl CGPath {
         unsafe { CFRetained::from_raw(ret) }
     }
 
-    /// # Safety
-    ///
-    /// `transform` must be a valid pointer or null.
     #[doc(alias = "CGPathCreateWithRoundedRect")]
     #[inline]
     pub unsafe fn with_rounded_rect(
@@ -248,9 +231,6 @@ impl CGPath {
 }
 
 impl CGMutablePath {
-    /// # Safety
-    ///
-    /// `transform` must be a valid pointer or null.
     #[doc(alias = "CGPathAddRoundedRect")]
     #[inline]
     pub unsafe fn add_rounded_rect(
@@ -274,10 +254,6 @@ impl CGMutablePath {
 }
 
 impl CGPath {
-    /// # Safety
-    ///
-    /// - `transform` must be a valid pointer or null.
-    /// - `lengths` must be a valid pointer or null.
     #[doc(alias = "CGPathCreateCopyByDashingPath")]
     #[inline]
     pub unsafe fn new_copy_by_dashing_path(
@@ -300,9 +276,6 @@ impl CGPath {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `transform` must be a valid pointer or null.
     #[doc(alias = "CGPathCreateCopyByStrokingPath")]
     #[inline]
     pub unsafe fn new_copy_by_stroking_path(
@@ -338,7 +311,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathEqualToPath")]
     #[inline]
-    pub fn equal_to_path(path1: Option<&CGPath>, path2: Option<&CGPath>) -> bool {
+    pub unsafe fn equal_to_path(path1: Option<&CGPath>, path2: Option<&CGPath>) -> bool {
         extern "C-unwind" {
             fn CGPathEqualToPath(path1: Option<&CGPath>, path2: Option<&CGPath>) -> bool;
         }
@@ -348,10 +321,6 @@ impl CGPath {
 
 impl CGMutablePath {
     /// * Path construction functions. **
-    ///
-    /// # Safety
-    ///
-    /// `m` must be a valid pointer or null.
     #[doc(alias = "CGPathMoveToPoint")]
     #[inline]
     pub unsafe fn move_to_point(
@@ -371,9 +340,6 @@ impl CGMutablePath {
         unsafe { CGPathMoveToPoint(path, m, x, y) }
     }
 
-    /// # Safety
-    ///
-    /// `m` must be a valid pointer or null.
     #[doc(alias = "CGPathAddLineToPoint")]
     #[inline]
     pub unsafe fn add_line_to_point(
@@ -393,9 +359,6 @@ impl CGMutablePath {
         unsafe { CGPathAddLineToPoint(path, m, x, y) }
     }
 
-    /// # Safety
-    ///
-    /// `m` must be a valid pointer or null.
     #[doc(alias = "CGPathAddQuadCurveToPoint")]
     #[inline]
     pub unsafe fn add_quad_curve_to_point(
@@ -419,9 +382,6 @@ impl CGMutablePath {
         unsafe { CGPathAddQuadCurveToPoint(path, m, cpx, cpy, x, y) }
     }
 
-    /// # Safety
-    ///
-    /// `m` must be a valid pointer or null.
     #[doc(alias = "CGPathAddCurveToPoint")]
     #[inline]
     pub unsafe fn add_curve_to_point(
@@ -451,7 +411,7 @@ impl CGMutablePath {
 
     #[doc(alias = "CGPathCloseSubpath")]
     #[inline]
-    pub fn close_subpath(path: Option<&CGMutablePath>) {
+    pub unsafe fn close_subpath(path: Option<&CGMutablePath>) {
         extern "C-unwind" {
             fn CGPathCloseSubpath(path: Option<&CGMutablePath>);
         }
@@ -459,10 +419,6 @@ impl CGMutablePath {
     }
 
     /// * Path construction convenience functions. **
-    ///
-    /// # Safety
-    ///
-    /// `m` must be a valid pointer or null.
     #[doc(alias = "CGPathAddRect")]
     #[inline]
     pub unsafe fn add_rect(
@@ -480,10 +436,6 @@ impl CGMutablePath {
         unsafe { CGPathAddRect(path, m, rect) }
     }
 
-    /// # Safety
-    ///
-    /// - `m` must be a valid pointer or null.
-    /// - `rects` must be a valid pointer or null.
     #[doc(alias = "CGPathAddRects")]
     #[inline]
     pub unsafe fn add_rects(
@@ -503,10 +455,6 @@ impl CGMutablePath {
         unsafe { CGPathAddRects(path, m, rects, count) }
     }
 
-    /// # Safety
-    ///
-    /// - `m` must be a valid pointer or null.
-    /// - `points` must be a valid pointer or null.
     #[doc(alias = "CGPathAddLines")]
     #[inline]
     pub unsafe fn add_lines(
@@ -526,9 +474,6 @@ impl CGMutablePath {
         unsafe { CGPathAddLines(path, m, points, count) }
     }
 
-    /// # Safety
-    ///
-    /// `m` must be a valid pointer or null.
     #[doc(alias = "CGPathAddEllipseInRect")]
     #[inline]
     pub unsafe fn add_ellipse_in_rect(
@@ -546,9 +491,6 @@ impl CGMutablePath {
         unsafe { CGPathAddEllipseInRect(path, m, rect) }
     }
 
-    /// # Safety
-    ///
-    /// `matrix` must be a valid pointer or null.
     #[doc(alias = "CGPathAddRelativeArc")]
     #[inline]
     pub unsafe fn add_relative_arc(
@@ -574,9 +516,6 @@ impl CGMutablePath {
         unsafe { CGPathAddRelativeArc(path, matrix, x, y, radius, start_angle, delta) }
     }
 
-    /// # Safety
-    ///
-    /// `m` must be a valid pointer or null.
     #[doc(alias = "CGPathAddArc")]
     #[inline]
     pub unsafe fn add_arc(
@@ -604,9 +543,6 @@ impl CGMutablePath {
         unsafe { CGPathAddArc(path, m, x, y, radius, start_angle, end_angle, clockwise) }
     }
 
-    /// # Safety
-    ///
-    /// `m` must be a valid pointer or null.
     #[doc(alias = "CGPathAddArcToPoint")]
     #[inline]
     pub unsafe fn add_arc_to_point(
@@ -632,9 +568,6 @@ impl CGMutablePath {
         unsafe { CGPathAddArcToPoint(path, m, x1, y1, x2, y2, radius) }
     }
 
-    /// # Safety
-    ///
-    /// `m` must be a valid pointer or null.
     #[doc(alias = "CGPathAddPath")]
     #[inline]
     pub unsafe fn add_path(
@@ -657,16 +590,13 @@ impl CGPath {
     /// * Path information functions. **
     #[doc(alias = "CGPathIsEmpty")]
     #[inline]
-    pub fn is_empty(path: Option<&CGPath>) -> bool {
+    pub unsafe fn is_empty(path: Option<&CGPath>) -> bool {
         extern "C-unwind" {
             fn CGPathIsEmpty(path: Option<&CGPath>) -> bool;
         }
         unsafe { CGPathIsEmpty(path) }
     }
 
-    /// # Safety
-    ///
-    /// `rect` must be a valid pointer or null.
     #[doc(alias = "CGPathIsRect")]
     #[inline]
     pub unsafe fn is_rect(path: Option<&CGPath>, rect: *mut CGRect) -> bool {
@@ -678,7 +608,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathGetCurrentPoint")]
     #[inline]
-    pub fn current_point(path: Option<&CGPath>) -> CGPoint {
+    pub unsafe fn current_point(path: Option<&CGPath>) -> CGPoint {
         extern "C-unwind" {
             fn CGPathGetCurrentPoint(path: Option<&CGPath>) -> CGPoint;
         }
@@ -687,7 +617,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathGetBoundingBox")]
     #[inline]
-    pub fn bounding_box(path: Option<&CGPath>) -> CGRect {
+    pub unsafe fn bounding_box(path: Option<&CGPath>) -> CGRect {
         extern "C-unwind" {
             fn CGPathGetBoundingBox(path: Option<&CGPath>) -> CGRect;
         }
@@ -696,16 +626,13 @@ impl CGPath {
 
     #[doc(alias = "CGPathGetPathBoundingBox")]
     #[inline]
-    pub fn path_bounding_box(path: Option<&CGPath>) -> CGRect {
+    pub unsafe fn path_bounding_box(path: Option<&CGPath>) -> CGRect {
         extern "C-unwind" {
             fn CGPathGetPathBoundingBox(path: Option<&CGPath>) -> CGRect;
         }
         unsafe { CGPathGetPathBoundingBox(path) }
     }
 
-    /// # Safety
-    ///
-    /// `m` must be a valid pointer or null.
     #[doc(alias = "CGPathContainsPoint")]
     #[inline]
     pub unsafe fn contains_point(
@@ -780,10 +707,6 @@ pub type CGPathApplierFunction =
     Option<unsafe extern "C-unwind" fn(*mut c_void, NonNull<CGPathElement>)>;
 
 impl CGPath {
-    /// # Safety
-    ///
-    /// - `info` must be a valid pointer or null.
-    /// - `function` must be implemented correctly.
     #[doc(alias = "CGPathApply")]
     #[inline]
     pub unsafe fn apply(path: Option<&CGPath>, info: *mut c_void, function: CGPathApplierFunction) {
@@ -803,13 +726,10 @@ impl CGPath {
 pub type CGPathApplyBlock = *mut block2::DynBlock<dyn Fn(NonNull<CGPathElement>)>;
 
 impl CGPath {
-    /// # Safety
-    ///
-    /// `block` must be a valid pointer.
     #[doc(alias = "CGPathApplyWithBlock")]
     #[cfg(feature = "block2")]
     #[inline]
-    pub unsafe fn apply_with_block(&self, block: CGPathApplyBlock) {
+    pub unsafe fn apply_with_block(self: &CGPath, block: CGPathApplyBlock) {
         extern "C-unwind" {
             fn CGPathApplyWithBlock(path: &CGPath, block: CGPathApplyBlock);
         }
@@ -818,7 +738,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathCreateCopyByNormalizing")]
     #[inline]
-    pub fn new_copy_by_normalizing(
+    pub unsafe fn new_copy_by_normalizing(
         path: Option<&CGPath>,
         even_odd_fill_rule: bool,
     ) -> Option<CFRetained<CGPath>> {
@@ -834,7 +754,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathCreateCopyByUnioningPath")]
     #[inline]
-    pub fn new_copy_by_unioning_path(
+    pub unsafe fn new_copy_by_unioning_path(
         path: Option<&CGPath>,
         mask_path: Option<&CGPath>,
         even_odd_fill_rule: bool,
@@ -852,7 +772,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathCreateCopyByIntersectingPath")]
     #[inline]
-    pub fn new_copy_by_intersecting_path(
+    pub unsafe fn new_copy_by_intersecting_path(
         path: Option<&CGPath>,
         mask_path: Option<&CGPath>,
         even_odd_fill_rule: bool,
@@ -871,7 +791,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathCreateCopyBySubtractingPath")]
     #[inline]
-    pub fn new_copy_by_subtracting_path(
+    pub unsafe fn new_copy_by_subtracting_path(
         path: Option<&CGPath>,
         mask_path: Option<&CGPath>,
         even_odd_fill_rule: bool,
@@ -889,7 +809,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathCreateCopyBySymmetricDifferenceOfPath")]
     #[inline]
-    pub fn new_copy_by_symmetric_difference_of_path(
+    pub unsafe fn new_copy_by_symmetric_difference_of_path(
         path: Option<&CGPath>,
         mask_path: Option<&CGPath>,
         even_odd_fill_rule: bool,
@@ -909,7 +829,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathCreateCopyOfLineBySubtractingPath")]
     #[inline]
-    pub fn new_copy_of_line_by_subtracting_path(
+    pub unsafe fn new_copy_of_line_by_subtracting_path(
         path: Option<&CGPath>,
         mask_path: Option<&CGPath>,
         even_odd_fill_rule: bool,
@@ -928,7 +848,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathCreateCopyOfLineByIntersectingPath")]
     #[inline]
-    pub fn new_copy_of_line_by_intersecting_path(
+    pub unsafe fn new_copy_of_line_by_intersecting_path(
         path: Option<&CGPath>,
         mask_path: Option<&CGPath>,
         even_odd_fill_rule: bool,
@@ -948,7 +868,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathCreateSeparateComponents")]
     #[inline]
-    pub fn new_separate_components(
+    pub unsafe fn new_separate_components(
         path: Option<&CGPath>,
         even_odd_fill_rule: bool,
     ) -> Option<CFRetained<CFArray>> {
@@ -964,7 +884,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathCreateCopyByFlattening")]
     #[inline]
-    pub fn new_copy_by_flattening(
+    pub unsafe fn new_copy_by_flattening(
         path: Option<&CGPath>,
         flattening_threshold: CGFloat,
     ) -> Option<CFRetained<CGPath>> {
@@ -980,7 +900,7 @@ impl CGPath {
 
     #[doc(alias = "CGPathIntersectsPath")]
     #[inline]
-    pub fn intersects_path(
+    pub unsafe fn intersects_path(
         path1: Option<&CGPath>,
         path2: Option<&CGPath>,
         even_odd_fill_rule: bool,
@@ -998,7 +918,7 @@ impl CGPath {
 
 #[deprecated = "renamed to `CGMutablePath::new`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateMutable() -> CFRetained<CGMutablePath> {
+pub unsafe extern "C-unwind" fn CGPathCreateMutable() -> CFRetained<CGMutablePath> {
     extern "C-unwind" {
         fn CGPathCreateMutable() -> Option<NonNull<CGMutablePath>>;
     }
@@ -1009,7 +929,9 @@ pub extern "C-unwind" fn CGPathCreateMutable() -> CFRetained<CGMutablePath> {
 
 #[deprecated = "renamed to `CGPath::new_copy`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateCopy(path: Option<&CGPath>) -> Option<CFRetained<CGPath>> {
+pub unsafe extern "C-unwind" fn CGPathCreateCopy(
+    path: Option<&CGPath>,
+) -> Option<CFRetained<CGPath>> {
     extern "C-unwind" {
         fn CGPathCreateCopy(path: Option<&CGPath>) -> Option<NonNull<CGPath>>;
     }
@@ -1035,7 +957,7 @@ pub unsafe extern "C-unwind" fn CGPathCreateCopyByTransformingPath(
 
 #[deprecated = "renamed to `CGMutablePath::new_copy`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateMutableCopy(
+pub unsafe extern "C-unwind" fn CGPathCreateMutableCopy(
     path: Option<&CGPath>,
 ) -> Option<CFRetained<CGMutablePath>> {
     extern "C-unwind" {
@@ -1182,13 +1104,9 @@ pub unsafe extern "C-unwind" fn CGPathCreateCopyByStrokingPath(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-#[deprecated = "renamed to `CGPath::equal_to_path`"]
-#[inline]
-pub extern "C-unwind" fn CGPathEqualToPath(path1: Option<&CGPath>, path2: Option<&CGPath>) -> bool {
-    extern "C-unwind" {
-        fn CGPathEqualToPath(path1: Option<&CGPath>, path2: Option<&CGPath>) -> bool;
-    }
-    unsafe { CGPathEqualToPath(path1, path2) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGPath::equal_to_path`"]
+    pub fn CGPathEqualToPath(path1: Option<&CGPath>, path2: Option<&CGPath>) -> bool;
 }
 
 extern "C-unwind" {
@@ -1237,13 +1155,9 @@ extern "C-unwind" {
     );
 }
 
-#[deprecated = "renamed to `CGMutablePath::close_subpath`"]
-#[inline]
-pub extern "C-unwind" fn CGPathCloseSubpath(path: Option<&CGMutablePath>) {
-    extern "C-unwind" {
-        fn CGPathCloseSubpath(path: Option<&CGMutablePath>);
-    }
-    unsafe { CGPathCloseSubpath(path) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGMutablePath::close_subpath`"]
+    pub fn CGPathCloseSubpath(path: Option<&CGMutablePath>);
 }
 
 extern "C-unwind" {
@@ -1329,13 +1243,9 @@ extern "C-unwind" {
     );
 }
 
-#[deprecated = "renamed to `CGPath::is_empty`"]
-#[inline]
-pub extern "C-unwind" fn CGPathIsEmpty(path: Option<&CGPath>) -> bool {
-    extern "C-unwind" {
-        fn CGPathIsEmpty(path: Option<&CGPath>) -> bool;
-    }
-    unsafe { CGPathIsEmpty(path) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGPath::is_empty`"]
+    pub fn CGPathIsEmpty(path: Option<&CGPath>) -> bool;
 }
 
 extern "C-unwind" {
@@ -1343,31 +1253,19 @@ extern "C-unwind" {
     pub fn CGPathIsRect(path: Option<&CGPath>, rect: *mut CGRect) -> bool;
 }
 
-#[deprecated = "renamed to `CGPath::current_point`"]
-#[inline]
-pub extern "C-unwind" fn CGPathGetCurrentPoint(path: Option<&CGPath>) -> CGPoint {
-    extern "C-unwind" {
-        fn CGPathGetCurrentPoint(path: Option<&CGPath>) -> CGPoint;
-    }
-    unsafe { CGPathGetCurrentPoint(path) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGPath::current_point`"]
+    pub fn CGPathGetCurrentPoint(path: Option<&CGPath>) -> CGPoint;
 }
 
-#[deprecated = "renamed to `CGPath::bounding_box`"]
-#[inline]
-pub extern "C-unwind" fn CGPathGetBoundingBox(path: Option<&CGPath>) -> CGRect {
-    extern "C-unwind" {
-        fn CGPathGetBoundingBox(path: Option<&CGPath>) -> CGRect;
-    }
-    unsafe { CGPathGetBoundingBox(path) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGPath::bounding_box`"]
+    pub fn CGPathGetBoundingBox(path: Option<&CGPath>) -> CGRect;
 }
 
-#[deprecated = "renamed to `CGPath::path_bounding_box`"]
-#[inline]
-pub extern "C-unwind" fn CGPathGetPathBoundingBox(path: Option<&CGPath>) -> CGRect {
-    extern "C-unwind" {
-        fn CGPathGetPathBoundingBox(path: Option<&CGPath>) -> CGRect;
-    }
-    unsafe { CGPathGetPathBoundingBox(path) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGPath::path_bounding_box`"]
+    pub fn CGPathGetPathBoundingBox(path: Option<&CGPath>) -> CGRect;
 }
 
 extern "C-unwind" {
@@ -1393,7 +1291,7 @@ extern "C-unwind" {
 
 #[deprecated = "renamed to `CGPath::new_copy_by_normalizing`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateCopyByNormalizing(
+pub unsafe extern "C-unwind" fn CGPathCreateCopyByNormalizing(
     path: Option<&CGPath>,
     even_odd_fill_rule: bool,
 ) -> Option<CFRetained<CGPath>> {
@@ -1409,7 +1307,7 @@ pub extern "C-unwind" fn CGPathCreateCopyByNormalizing(
 
 #[deprecated = "renamed to `CGPath::new_copy_by_unioning_path`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateCopyByUnioningPath(
+pub unsafe extern "C-unwind" fn CGPathCreateCopyByUnioningPath(
     path: Option<&CGPath>,
     mask_path: Option<&CGPath>,
     even_odd_fill_rule: bool,
@@ -1427,7 +1325,7 @@ pub extern "C-unwind" fn CGPathCreateCopyByUnioningPath(
 
 #[deprecated = "renamed to `CGPath::new_copy_by_intersecting_path`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateCopyByIntersectingPath(
+pub unsafe extern "C-unwind" fn CGPathCreateCopyByIntersectingPath(
     path: Option<&CGPath>,
     mask_path: Option<&CGPath>,
     even_odd_fill_rule: bool,
@@ -1445,7 +1343,7 @@ pub extern "C-unwind" fn CGPathCreateCopyByIntersectingPath(
 
 #[deprecated = "renamed to `CGPath::new_copy_by_subtracting_path`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateCopyBySubtractingPath(
+pub unsafe extern "C-unwind" fn CGPathCreateCopyBySubtractingPath(
     path: Option<&CGPath>,
     mask_path: Option<&CGPath>,
     even_odd_fill_rule: bool,
@@ -1463,7 +1361,7 @@ pub extern "C-unwind" fn CGPathCreateCopyBySubtractingPath(
 
 #[deprecated = "renamed to `CGPath::new_copy_by_symmetric_difference_of_path`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateCopyBySymmetricDifferenceOfPath(
+pub unsafe extern "C-unwind" fn CGPathCreateCopyBySymmetricDifferenceOfPath(
     path: Option<&CGPath>,
     mask_path: Option<&CGPath>,
     even_odd_fill_rule: bool,
@@ -1482,7 +1380,7 @@ pub extern "C-unwind" fn CGPathCreateCopyBySymmetricDifferenceOfPath(
 
 #[deprecated = "renamed to `CGPath::new_copy_of_line_by_subtracting_path`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateCopyOfLineBySubtractingPath(
+pub unsafe extern "C-unwind" fn CGPathCreateCopyOfLineBySubtractingPath(
     path: Option<&CGPath>,
     mask_path: Option<&CGPath>,
     even_odd_fill_rule: bool,
@@ -1501,7 +1399,7 @@ pub extern "C-unwind" fn CGPathCreateCopyOfLineBySubtractingPath(
 
 #[deprecated = "renamed to `CGPath::new_copy_of_line_by_intersecting_path`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateCopyOfLineByIntersectingPath(
+pub unsafe extern "C-unwind" fn CGPathCreateCopyOfLineByIntersectingPath(
     path: Option<&CGPath>,
     mask_path: Option<&CGPath>,
     even_odd_fill_rule: bool,
@@ -1520,7 +1418,7 @@ pub extern "C-unwind" fn CGPathCreateCopyOfLineByIntersectingPath(
 
 #[deprecated = "renamed to `CGPath::new_separate_components`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateSeparateComponents(
+pub unsafe extern "C-unwind" fn CGPathCreateSeparateComponents(
     path: Option<&CGPath>,
     even_odd_fill_rule: bool,
 ) -> Option<CFRetained<CFArray>> {
@@ -1536,7 +1434,7 @@ pub extern "C-unwind" fn CGPathCreateSeparateComponents(
 
 #[deprecated = "renamed to `CGPath::new_copy_by_flattening`"]
 #[inline]
-pub extern "C-unwind" fn CGPathCreateCopyByFlattening(
+pub unsafe extern "C-unwind" fn CGPathCreateCopyByFlattening(
     path: Option<&CGPath>,
     flattening_threshold: CGFloat,
 ) -> Option<CFRetained<CGPath>> {
@@ -1550,19 +1448,11 @@ pub extern "C-unwind" fn CGPathCreateCopyByFlattening(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-#[deprecated = "renamed to `CGPath::intersects_path`"]
-#[inline]
-pub extern "C-unwind" fn CGPathIntersectsPath(
-    path1: Option<&CGPath>,
-    path2: Option<&CGPath>,
-    even_odd_fill_rule: bool,
-) -> bool {
-    extern "C-unwind" {
-        fn CGPathIntersectsPath(
-            path1: Option<&CGPath>,
-            path2: Option<&CGPath>,
-            even_odd_fill_rule: bool,
-        ) -> bool;
-    }
-    unsafe { CGPathIntersectsPath(path1, path2, even_odd_fill_rule) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGPath::intersects_path`"]
+    pub fn CGPathIntersectsPath(
+        path1: Option<&CGPath>,
+        path2: Option<&CGPath>,
+        even_odd_fill_rule: bool,
+    ) -> bool;
 }

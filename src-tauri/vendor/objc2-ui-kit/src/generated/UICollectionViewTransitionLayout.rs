@@ -34,33 +34,30 @@ impl UICollectionViewTransitionLayout {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(transitionProgress))]
         #[unsafe(method_family = none)]
-        pub fn transitionProgress(&self) -> CGFloat;
+        pub unsafe fn transitionProgress(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`transitionProgress`][Self::transitionProgress].
         #[unsafe(method(setTransitionProgress:))]
         #[unsafe(method_family = none)]
-        pub fn setTransitionProgress(&self, transition_progress: CGFloat);
+        pub unsafe fn setTransitionProgress(&self, transition_progress: CGFloat);
 
         #[unsafe(method(currentLayout))]
         #[unsafe(method_family = none)]
-        pub fn currentLayout(&self) -> Retained<UICollectionViewLayout>;
+        pub unsafe fn currentLayout(&self) -> Retained<UICollectionViewLayout>;
 
         #[unsafe(method(nextLayout))]
         #[unsafe(method_family = none)]
-        pub fn nextLayout(&self) -> Retained<UICollectionViewLayout>;
+        pub unsafe fn nextLayout(&self) -> Retained<UICollectionViewLayout>;
 
         #[unsafe(method(initWithCurrentLayout:nextLayout:))]
         #[unsafe(method_family = init)]
-        pub fn initWithCurrentLayout_nextLayout(
+        pub unsafe fn initWithCurrentLayout_nextLayout(
             this: Allocated<Self>,
             current_layout: &UICollectionViewLayout,
             new_layout: &UICollectionViewLayout,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -75,12 +72,12 @@ impl UICollectionViewTransitionLayout {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(updateValue:forAnimatedKey:))]
         #[unsafe(method_family = none)]
-        pub fn updateValue_forAnimatedKey(&self, value: CGFloat, key: &NSString);
+        pub unsafe fn updateValue_forAnimatedKey(&self, value: CGFloat, key: &NSString);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(valueForAnimatedKey:))]
         #[unsafe(method_family = none)]
-        pub fn valueForAnimatedKey(&self, key: &NSString) -> CGFloat;
+        pub unsafe fn valueForAnimatedKey(&self, key: &NSString) -> CGFloat;
     );
 }
 

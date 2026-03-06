@@ -36,9 +36,6 @@ extern_conformance!(
 #[cfg(feature = "UIResponder")]
 impl UIAccessibilityElement {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `container` should be of the correct type.
         #[unsafe(method(initWithAccessibilityContainer:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithAccessibilityContainer(
@@ -48,87 +45,82 @@ impl UIAccessibilityElement {
 
         #[unsafe(method(accessibilityContainer))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityContainer(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn accessibilityContainer(&self) -> Option<Retained<AnyObject>>;
 
-        /// Setter for [`accessibilityContainer`][Self::accessibilityContainer].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_container` should be of the correct type.
+        /// Setter for [`accessibilityContainer`][Self::accessibilityContainer].
         #[unsafe(method(setAccessibilityContainer:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAccessibilityContainer(&self, accessibility_container: Option<&AnyObject>);
 
         #[unsafe(method(isAccessibilityElement))]
         #[unsafe(method_family = none)]
-        pub fn isAccessibilityElement(&self) -> bool;
+        pub unsafe fn isAccessibilityElement(&self) -> bool;
 
         /// Setter for [`isAccessibilityElement`][Self::isAccessibilityElement].
         #[unsafe(method(setIsAccessibilityElement:))]
         #[unsafe(method_family = none)]
-        pub fn setIsAccessibilityElement(&self, is_accessibility_element: bool);
+        pub unsafe fn setIsAccessibilityElement(&self, is_accessibility_element: bool);
 
         #[unsafe(method(accessibilityLabel))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`accessibilityLabel`][Self::accessibilityLabel].
         #[unsafe(method(setAccessibilityLabel:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessibilityLabel(&self, accessibility_label: Option<&NSString>);
+        pub unsafe fn setAccessibilityLabel(&self, accessibility_label: Option<&NSString>);
 
         #[unsafe(method(accessibilityHint))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityHint(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn accessibilityHint(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`accessibilityHint`][Self::accessibilityHint].
         #[unsafe(method(setAccessibilityHint:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessibilityHint(&self, accessibility_hint: Option<&NSString>);
+        pub unsafe fn setAccessibilityHint(&self, accessibility_hint: Option<&NSString>);
 
         #[unsafe(method(accessibilityValue))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityValue(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn accessibilityValue(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`accessibilityValue`][Self::accessibilityValue].
         #[unsafe(method(setAccessibilityValue:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessibilityValue(&self, accessibility_value: Option<&NSString>);
+        pub unsafe fn setAccessibilityValue(&self, accessibility_value: Option<&NSString>);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(accessibilityFrame))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityFrame(&self) -> CGRect;
+        pub unsafe fn accessibilityFrame(&self) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`accessibilityFrame`][Self::accessibilityFrame].
         #[unsafe(method(setAccessibilityFrame:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessibilityFrame(&self, accessibility_frame: CGRect);
+        pub unsafe fn setAccessibilityFrame(&self, accessibility_frame: CGRect);
 
         #[cfg(feature = "UIAccessibilityConstants")]
         #[unsafe(method(accessibilityTraits))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityTraits(&self) -> UIAccessibilityTraits;
+        pub unsafe fn accessibilityTraits(&self) -> UIAccessibilityTraits;
 
         #[cfg(feature = "UIAccessibilityConstants")]
         /// Setter for [`accessibilityTraits`][Self::accessibilityTraits].
         #[unsafe(method(setAccessibilityTraits:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessibilityTraits(&self, accessibility_traits: UIAccessibilityTraits);
+        pub unsafe fn setAccessibilityTraits(&self, accessibility_traits: UIAccessibilityTraits);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(accessibilityFrameInContainerSpace))]
         #[unsafe(method_family = none)]
-        pub fn accessibilityFrameInContainerSpace(&self) -> CGRect;
+        pub unsafe fn accessibilityFrameInContainerSpace(&self) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`accessibilityFrameInContainerSpace`][Self::accessibilityFrameInContainerSpace].
         #[unsafe(method(setAccessibilityFrameInContainerSpace:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessibilityFrameInContainerSpace(
+        pub unsafe fn setAccessibilityFrameInContainerSpace(
             &self,
             accessibility_frame_in_container_space: CGRect,
         );
@@ -141,10 +133,10 @@ impl UIAccessibilityElement {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

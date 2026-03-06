@@ -15,6 +15,7 @@
 #![allow(clippy::doc_lazy_continuation)]
 #![allow(rustdoc::broken_intra_doc_links)]
 #![allow(rustdoc::bare_urls)]
+#![allow(rustdoc::unportable_markdown)]
 #![allow(rustdoc::invalid_html_tags)]
 
 #[link(name = "CoreGraphics", kind = "framework")]
@@ -149,9 +150,6 @@ mod __CGPattern;
 #[cfg(feature = "CGRemoteOperation")]
 #[path = "CGRemoteOperation.rs"]
 mod __CGRemoteOperation;
-#[cfg(feature = "CGRenderingBufferProvider")]
-#[path = "CGRenderingBufferProvider.rs"]
-mod __CGRenderingBufferProvider;
 #[cfg(feature = "CGSession")]
 #[path = "CGSession.rs"]
 mod __CGSession;
@@ -202,23 +200,24 @@ pub use self::__CGAffineTransform::CGPointApplyAffineTransform;
 pub use self::__CGAffineTransform::CGRectApplyAffineTransform;
 #[cfg(feature = "CGAffineTransform")]
 pub use self::__CGAffineTransform::CGSizeApplyAffineTransform;
-#[cfg(feature = "CGBitmapContext")]
-pub use self::__CGBitmapContext::kCGAdaptiveMaximumBitDepth;
 #[cfg(all(
     feature = "CGBitmapContext",
     feature = "CGColorSpace",
-    feature = "CGContext",
-    feature = "CGImage",
-    feature = "CGRenderingBufferProvider",
-    feature = "block2"
+    feature = "CGContext"
 ))]
-pub use self::__CGBitmapContext::CGBitmapContextCreateAdaptive;
+pub use self::__CGBitmapContext::CGBitmapContextCreate;
 #[cfg(all(
     feature = "CGBitmapContext",
     feature = "CGContext",
     feature = "CGImage"
 ))]
 pub use self::__CGBitmapContext::CGBitmapContextCreateImage;
+#[cfg(all(
+    feature = "CGBitmapContext",
+    feature = "CGColorSpace",
+    feature = "CGContext"
+))]
+pub use self::__CGBitmapContext::CGBitmapContextCreateWithData;
 #[cfg(all(
     feature = "CGBitmapContext",
     feature = "CGContext",
@@ -251,20 +250,6 @@ pub use self::__CGBitmapContext::CGBitmapContextGetHeight;
 pub use self::__CGBitmapContext::CGBitmapContextGetWidth;
 #[cfg(feature = "CGBitmapContext")]
 pub use self::__CGBitmapContext::CGBitmapContextReleaseDataCallback;
-#[cfg(feature = "CGBitmapContext")]
-pub use self::__CGBitmapContext::CGBitmapLayout;
-#[cfg(all(
-    feature = "CGBitmapContext",
-    feature = "CGColorSpace",
-    feature = "CGImage"
-))]
-pub use self::__CGBitmapContext::CGBitmapParameters;
-#[cfg(feature = "CGBitmapContext")]
-pub use self::__CGBitmapContext::CGColorModel;
-#[cfg(feature = "CGBitmapContext")]
-pub use self::__CGBitmapContext::CGComponent;
-#[cfg(feature = "CGBitmapContext")]
-pub use self::__CGBitmapContext::CGContentInfo;
 #[cfg(feature = "CGColor")]
 pub use self::__CGColor::kCGColorBlack;
 #[cfg(feature = "CGColor")]
@@ -291,8 +276,6 @@ pub use self::__CGColor::CGColorCreateGenericGrayGamma2_2;
 pub use self::__CGColor::CGColorCreateGenericRGB;
 #[cfg(feature = "CGColor")]
 pub use self::__CGColor::CGColorCreateSRGB;
-#[cfg(all(feature = "CGColor", feature = "CGColorSpace"))]
-pub use self::__CGColor::CGColorCreateWithContentHeadroom;
 #[cfg(all(feature = "CGColor", feature = "CGColorSpace", feature = "CGPattern"))]
 pub use self::__CGColor::CGColorCreateWithPattern;
 #[cfg(feature = "CGColor")]
@@ -305,8 +288,6 @@ pub use self::__CGColor::CGColorGetColorSpace;
 pub use self::__CGColor::CGColorGetComponents;
 #[cfg(feature = "CGColor")]
 pub use self::__CGColor::CGColorGetConstantColor;
-#[cfg(feature = "CGColor")]
-pub use self::__CGColor::CGColorGetContentHeadroom;
 #[cfg(feature = "CGColor")]
 pub use self::__CGColor::CGColorGetNumberOfComponents;
 #[cfg(all(feature = "CGColor", feature = "CGPattern"))]
@@ -587,8 +568,6 @@ pub use self::__CGContext::CGContextFlush;
 pub use self::__CGContext::CGContextGetCTM;
 #[cfg(feature = "CGContext")]
 pub use self::__CGContext::CGContextGetClipBoundingBox;
-#[cfg(all(feature = "CGContext", feature = "CGToneMapping"))]
-pub use self::__CGContext::CGContextGetContentToneMappingInfo;
 #[cfg(feature = "CGContext")]
 pub use self::__CGContext::CGContextGetEDRTargetHeadroom;
 #[cfg(feature = "CGContext")]
@@ -641,8 +620,6 @@ pub use self::__CGContext::CGContextSetCMYKFillColor;
 pub use self::__CGContext::CGContextSetCMYKStrokeColor;
 #[cfg(feature = "CGContext")]
 pub use self::__CGContext::CGContextSetCharacterSpacing;
-#[cfg(all(feature = "CGContext", feature = "CGToneMapping"))]
-pub use self::__CGContext::CGContextSetContentToneMappingInfo;
 #[cfg(feature = "CGContext")]
 pub use self::__CGContext::CGContextSetEDRTargetHeadroom;
 #[cfg(feature = "CGContext")]
@@ -733,8 +710,6 @@ pub use self::__CGContext::CGContextStrokeRect;
 pub use self::__CGContext::CGContextStrokeRectWithWidth;
 #[cfg(feature = "CGContext")]
 pub use self::__CGContext::CGContextSynchronize;
-#[cfg(feature = "CGContext")]
-pub use self::__CGContext::CGContextSynchronizeAttributes;
 #[cfg(feature = "CGContext")]
 pub use self::__CGContext::CGContextTranslateCTM;
 #[cfg(feature = "CGContext")]
@@ -1197,8 +1172,6 @@ pub use self::__CGEXRToneMappingGamma::kCGEXRToneMappingGammaExposure;
 pub use self::__CGEXRToneMappingGamma::kCGEXRToneMappingGammaKneeHigh;
 #[cfg(feature = "CGEXRToneMappingGamma")]
 pub use self::__CGEXRToneMappingGamma::kCGEXRToneMappingGammaKneeLow;
-#[cfg(feature = "CGEXRToneMappingGamma")]
-pub use self::__CGEXRToneMappingGamma::CGEXRToneMappingGammaGetDefaultOptions;
 #[cfg(feature = "CGError")]
 pub use self::__CGError::CGError;
 #[cfg(feature = "CGError")]
@@ -1337,12 +1310,6 @@ pub use self::__CGEventSource::CGEventSourceSetPixelsPerLine;
 #[cfg(all(feature = "CGEventSource", feature = "CGEventTypes"))]
 pub use self::__CGEventSource::CGEventSourceSetUserData;
 #[cfg(feature = "CGEventTypes")]
-pub use self::__CGEventTypes::kCGEventMaskForAllEvents;
-#[cfg(feature = "CGEventTypes")]
-pub use self::__CGEventTypes::kCGNotifyEventTapAdded;
-#[cfg(feature = "CGEventTypes")]
-pub use self::__CGEventTypes::kCGNotifyEventTapRemoved;
-#[cfg(feature = "CGEventTypes")]
 pub use self::__CGEventTypes::CGEvent;
 #[cfg(feature = "CGEventTypes")]
 pub use self::__CGEventTypes::CGEventField;
@@ -1386,6 +1353,12 @@ pub use self::__CGEventTypes::CGScrollEventUnit;
 pub use self::__CGEventTypes::CGScrollPhase;
 #[cfg(feature = "CGEventTypes")]
 pub(crate) use self::__CGEventTypes::__CGEventTapProxy;
+#[cfg(feature = "CGEventTypes")]
+pub use self::__CGEventTypes::kCGEventMaskForAllEvents;
+#[cfg(feature = "CGEventTypes")]
+pub use self::__CGEventTypes::kCGNotifyEventTapAdded;
+#[cfg(feature = "CGEventTypes")]
+pub use self::__CGEventTypes::kCGNotifyEventTapRemoved;
 #[cfg(feature = "CGFont")]
 pub use self::__CGFont::kCGFontIndexInvalid;
 #[cfg(feature = "CGFont")]
@@ -1546,12 +1519,8 @@ pub use self::__CGGradient::CGGradient;
 pub use self::__CGGradient::CGGradientCreateWithColorComponents;
 #[cfg(all(feature = "CGColorSpace", feature = "CGGradient"))]
 pub use self::__CGGradient::CGGradientCreateWithColors;
-#[cfg(all(feature = "CGColorSpace", feature = "CGGradient"))]
-pub use self::__CGGradient::CGGradientCreateWithContentHeadroom;
 #[cfg(feature = "CGGradient")]
 pub use self::__CGGradient::CGGradientDrawingOptions;
-#[cfg(feature = "CGGradient")]
-pub use self::__CGGradient::CGGradientGetContentHeadroom;
 #[cfg(feature = "CGITUToneMapping")]
 pub use self::__CGITUToneMapping::kCGSkipBoostToHDR;
 #[cfg(feature = "CGITUToneMapping")]
@@ -1571,12 +1540,6 @@ pub use self::__CGImage::CGImageAlphaInfo;
 #[cfg(feature = "CGImage")]
 pub use self::__CGImage::CGImageByteOrderInfo;
 #[cfg(feature = "CGImage")]
-pub use self::__CGImage::CGImageCalculateContentAverageLightLevel;
-#[cfg(feature = "CGImage")]
-pub use self::__CGImage::CGImageCalculateContentHeadroom;
-#[cfg(feature = "CGImage")]
-pub use self::__CGImage::CGImageComponentInfo;
-#[cfg(feature = "CGImage")]
 pub use self::__CGImage::CGImageContainsImageSpecificToneMappingMetadata;
 #[cfg(all(
     feature = "CGColorSpace",
@@ -1586,12 +1549,8 @@ pub use self::__CGImage::CGImageContainsImageSpecificToneMappingMetadata;
 pub use self::__CGImage::CGImageCreate;
 #[cfg(feature = "CGImage")]
 pub use self::__CGImage::CGImageCreateCopy;
-#[cfg(feature = "CGImage")]
-pub use self::__CGImage::CGImageCreateCopyWithCalculatedHDRStats;
 #[cfg(all(feature = "CGColorSpace", feature = "CGImage"))]
 pub use self::__CGImage::CGImageCreateCopyWithColorSpace;
-#[cfg(feature = "CGImage")]
-pub use self::__CGImage::CGImageCreateCopyWithContentAverageLightLevel;
 #[cfg(feature = "CGImage")]
 pub use self::__CGImage::CGImageCreateCopyWithContentHeadroom;
 #[cfg(all(
@@ -1632,8 +1591,6 @@ pub use self::__CGImage::CGImageGetByteOrderInfo;
 pub use self::__CGImage::CGImageGetBytesPerRow;
 #[cfg(all(feature = "CGColorSpace", feature = "CGImage"))]
 pub use self::__CGImage::CGImageGetColorSpace;
-#[cfg(feature = "CGImage")]
-pub use self::__CGImage::CGImageGetContentAverageLightLevel;
 #[cfg(feature = "CGImage")]
 pub use self::__CGImage::CGImageGetContentHeadroom;
 #[cfg(all(feature = "CGDataProvider", feature = "CGImage"))]
@@ -2244,18 +2201,6 @@ pub use self::__CGRemoteOperation::CGWheelCount;
 pub use self::__CGRemoteOperation::CGWindowServerCFMachPort;
 #[cfg(feature = "CGRemoteOperation")]
 pub use self::__CGRemoteOperation::CGWindowServerCreateServerPort;
-#[cfg(feature = "CGRenderingBufferProvider")]
-pub use self::__CGRenderingBufferProvider::CGRenderingBufferLockBytePtr;
-#[cfg(feature = "CGRenderingBufferProvider")]
-pub use self::__CGRenderingBufferProvider::CGRenderingBufferProvider;
-#[cfg(all(feature = "CGRenderingBufferProvider", feature = "block2"))]
-pub use self::__CGRenderingBufferProvider::CGRenderingBufferProviderCreate;
-#[cfg(feature = "CGRenderingBufferProvider")]
-pub use self::__CGRenderingBufferProvider::CGRenderingBufferProviderCreateWithCFData;
-#[cfg(feature = "CGRenderingBufferProvider")]
-pub use self::__CGRenderingBufferProvider::CGRenderingBufferProviderGetSize;
-#[cfg(feature = "CGRenderingBufferProvider")]
-pub use self::__CGRenderingBufferProvider::CGRenderingBufferUnlockBytePtr;
 #[cfg(feature = "CGSession")]
 pub use self::__CGSession::kCGNotifyGUIConsoleSessionChanged;
 #[cfg(feature = "CGSession")]
@@ -2275,35 +2220,7 @@ pub use self::__CGShading::CGShadingCreateAxial;
     feature = "CGFunction",
     feature = "CGShading"
 ))]
-pub use self::__CGShading::CGShadingCreateAxialWithContentHeadroom;
-#[cfg(all(
-    feature = "CGColorSpace",
-    feature = "CGFunction",
-    feature = "CGShading"
-))]
 pub use self::__CGShading::CGShadingCreateRadial;
-#[cfg(all(
-    feature = "CGColorSpace",
-    feature = "CGFunction",
-    feature = "CGShading"
-))]
-pub use self::__CGShading::CGShadingCreateRadialWithContentHeadroom;
-#[cfg(feature = "CGShading")]
-pub use self::__CGShading::CGShadingGetContentHeadroom;
-#[cfg(feature = "CGToneMapping")]
-pub use self::__CGToneMapping::kCGContentAverageLightLevel;
-#[cfg(feature = "CGToneMapping")]
-pub use self::__CGToneMapping::kCGContentAverageLightLevelNits;
-#[cfg(feature = "CGToneMapping")]
-pub use self::__CGToneMapping::kCGDynamicRangeConstrained;
-#[cfg(feature = "CGToneMapping")]
-pub use self::__CGToneMapping::kCGDynamicRangeHigh;
-#[cfg(feature = "CGToneMapping")]
-pub use self::__CGToneMapping::kCGDynamicRangeStandard;
-#[cfg(feature = "CGToneMapping")]
-pub use self::__CGToneMapping::kCGPreferredDynamicRange;
-#[cfg(feature = "CGToneMapping")]
-pub use self::__CGToneMapping::CGContentToneMappingInfo;
 #[cfg(feature = "CGToneMapping")]
 pub use self::__CGToneMapping::CGToneMapping;
 #[cfg(feature = "CGWindow")]

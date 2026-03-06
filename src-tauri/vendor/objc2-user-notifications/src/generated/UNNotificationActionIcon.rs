@@ -37,11 +37,11 @@ impl UNNotificationActionIcon {
     extern_methods!(
         #[unsafe(method(iconWithTemplateImageName:))]
         #[unsafe(method_family = none)]
-        pub fn iconWithTemplateImageName(template_image_name: &NSString) -> Retained<Self>;
+        pub unsafe fn iconWithTemplateImageName(template_image_name: &NSString) -> Retained<Self>;
 
         #[unsafe(method(iconWithSystemImageName:))]
         #[unsafe(method_family = none)]
-        pub fn iconWithSystemImageName(system_image_name: &NSString) -> Retained<Self>;
+        pub unsafe fn iconWithSystemImageName(system_image_name: &NSString) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

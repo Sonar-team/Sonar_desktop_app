@@ -39,19 +39,11 @@ impl NSInvocation {
         #[unsafe(method_family = none)]
         pub unsafe fn argumentsRetained(&self) -> bool;
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(target))]
         #[unsafe(method_family = none)]
         pub unsafe fn target(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`target`][Self::target].
-        ///
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setTarget:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTarget(&self, target: Option<&AnyObject>);
@@ -61,31 +53,18 @@ impl NSInvocation {
         pub unsafe fn selector(&self) -> Sel;
 
         /// Setter for [`selector`][Self::selector].
-        ///
-        /// # Safety
-        ///
-        /// `selector` must be a valid selector.
         #[unsafe(method(setSelector:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSelector(&self, selector: Sel);
 
-        /// # Safety
-        ///
-        /// `ret_loc` must be a valid pointer.
         #[unsafe(method(getReturnValue:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getReturnValue(&self, ret_loc: NonNull<c_void>);
 
-        /// # Safety
-        ///
-        /// `ret_loc` must be a valid pointer.
         #[unsafe(method(setReturnValue:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setReturnValue(&self, ret_loc: NonNull<c_void>);
 
-        /// # Safety
-        ///
-        /// `argument_location` must be a valid pointer.
         #[unsafe(method(getArgument:atIndex:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getArgument_atIndex(
@@ -94,9 +73,6 @@ impl NSInvocation {
             idx: NSInteger,
         );
 
-        /// # Safety
-        ///
-        /// `argument_location` must be a valid pointer.
         #[unsafe(method(setArgument:atIndex:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setArgument_atIndex(
@@ -109,16 +85,10 @@ impl NSInvocation {
         #[unsafe(method_family = none)]
         pub unsafe fn invoke(&self);
 
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
         #[unsafe(method(invokeWithTarget:))]
         #[unsafe(method_family = none)]
         pub unsafe fn invokeWithTarget(&self, target: &AnyObject);
 
-        /// # Safety
-        ///
-        /// `imp` must be a valid IMP.
         #[unsafe(method(invokeUsingIMP:))]
         #[unsafe(method_family = none)]
         pub unsafe fn invokeUsingIMP(&self, imp: Option<Imp>);

@@ -36,13 +36,13 @@ impl NSDraggingImageComponent {
     extern_methods!(
         #[unsafe(method(draggingImageComponentWithKey:))]
         #[unsafe(method_family = none)]
-        pub fn draggingImageComponentWithKey(
+        pub unsafe fn draggingImageComponentWithKey(
             key: &NSDraggingImageComponentKey,
         ) -> Retained<NSDraggingImageComponent>;
 
         #[unsafe(method(initWithKey:))]
         #[unsafe(method_family = init)]
-        pub fn initWithKey(
+        pub unsafe fn initWithKey(
             this: Allocated<Self>,
             key: &NSDraggingImageComponentKey,
         ) -> Retained<Self>;
@@ -53,36 +53,30 @@ impl NSDraggingImageComponent {
 
         #[unsafe(method(key))]
         #[unsafe(method_family = none)]
-        pub fn key(&self) -> Retained<NSDraggingImageComponentKey>;
+        pub unsafe fn key(&self) -> Retained<NSDraggingImageComponentKey>;
 
         /// Setter for [`key`][Self::key].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setKey:))]
         #[unsafe(method_family = none)]
-        pub fn setKey(&self, key: &NSDraggingImageComponentKey);
+        pub unsafe fn setKey(&self, key: &NSDraggingImageComponentKey);
 
         #[unsafe(method(contents))]
         #[unsafe(method_family = none)]
-        pub fn contents(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn contents(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`contents`][Self::contents].
-        ///
-        /// # Safety
-        ///
-        /// `contents` should be of the correct type.
         #[unsafe(method(setContents:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setContents(&self, contents: Option<&AnyObject>);
 
         #[unsafe(method(frame))]
         #[unsafe(method_family = none)]
-        pub fn frame(&self) -> NSRect;
+        pub unsafe fn frame(&self) -> NSRect;
 
         /// Setter for [`frame`][Self::frame].
         #[unsafe(method(setFrame:))]
         #[unsafe(method_family = none)]
-        pub fn setFrame(&self, frame: NSRect);
+        pub unsafe fn setFrame(&self, frame: NSRect);
     );
 }
 
@@ -111,7 +105,7 @@ impl NSDraggingItem {
         #[cfg(feature = "NSPasteboard")]
         #[unsafe(method(initWithPasteboardWriter:))]
         #[unsafe(method_family = init)]
-        pub fn initWithPasteboardWriter(
+        pub unsafe fn initWithPasteboardWriter(
             this: Allocated<Self>,
             pasteboard_writer: &ProtocolObject<dyn NSPasteboardWriting>,
         ) -> Retained<Self>;
@@ -122,32 +116,26 @@ impl NSDraggingItem {
 
         #[unsafe(method(item))]
         #[unsafe(method_family = none)]
-        pub fn item(&self) -> Retained<AnyObject>;
+        pub unsafe fn item(&self) -> Retained<AnyObject>;
 
         #[unsafe(method(draggingFrame))]
         #[unsafe(method_family = none)]
-        pub fn draggingFrame(&self) -> NSRect;
+        pub unsafe fn draggingFrame(&self) -> NSRect;
 
         /// Setter for [`draggingFrame`][Self::draggingFrame].
         #[unsafe(method(setDraggingFrame:))]
         #[unsafe(method_family = none)]
-        pub fn setDraggingFrame(&self, dragging_frame: NSRect);
+        pub unsafe fn setDraggingFrame(&self, dragging_frame: NSRect);
 
         #[cfg(feature = "block2")]
         #[unsafe(method(imageComponentsProvider))]
         #[unsafe(method_family = none)]
-        pub fn imageComponentsProvider(
+        pub unsafe fn imageComponentsProvider(
             &self,
         ) -> *mut block2::DynBlock<dyn Fn() -> NonNull<NSArray<NSDraggingImageComponent>>>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`imageComponentsProvider`][Self::imageComponentsProvider].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `image_components_provider` block's return must be a valid pointer.
         #[unsafe(method(setImageComponentsProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setImageComponentsProvider(
@@ -157,16 +145,14 @@ impl NSDraggingItem {
             >,
         );
 
-        /// # Safety
-        ///
-        /// `contents` should be of the correct type.
         #[unsafe(method(setDraggingFrame:contents:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDraggingFrame_contents(&self, frame: NSRect, contents: Option<&AnyObject>);
 
         #[unsafe(method(imageComponents))]
         #[unsafe(method_family = none)]
-        pub fn imageComponents(&self) -> Option<Retained<NSArray<NSDraggingImageComponent>>>;
+        pub unsafe fn imageComponents(&self)
+            -> Option<Retained<NSArray<NSDraggingImageComponent>>>;
     );
 }
 

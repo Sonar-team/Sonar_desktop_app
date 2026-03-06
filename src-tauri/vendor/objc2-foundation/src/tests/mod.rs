@@ -8,7 +8,6 @@ mod dictionary;
 mod error;
 mod exception;
 mod lock;
-mod measurement;
 mod mutable_array;
 mod mutable_data;
 mod mutable_dictionary;

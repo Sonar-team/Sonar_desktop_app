@@ -17,7 +17,7 @@ pub unsafe trait NSAppleScriptNSExtensions:
     extern_methods!(
         #[unsafe(method(richTextSource))]
         #[unsafe(method_family = none)]
-        fn richTextSource(&self) -> Option<Retained<NSAttributedString>>;
+        unsafe fn richTextSource(&self) -> Option<Retained<NSAttributedString>>;
     );
 }
 

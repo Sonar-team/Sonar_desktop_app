@@ -32,14 +32,12 @@ extern "C" {
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nsunarchivefromdatatransformername?language=objc)
     #[cfg(feature = "NSString")]
-    #[deprecated]
     pub static NSUnarchiveFromDataTransformerName: &'static NSValueTransformerName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nskeyedunarchivefromdatatransformername?language=objc)
     #[cfg(feature = "NSString")]
-    #[deprecated]
     pub static NSKeyedUnarchiveFromDataTransformerName: &'static NSValueTransformerName;
 }
 
@@ -65,7 +63,7 @@ impl NSValueTransformer {
         #[cfg(feature = "NSString")]
         #[unsafe(method(setValueTransformer:forName:))]
         #[unsafe(method_family = none)]
-        pub fn setValueTransformer_forName(
+        pub unsafe fn setValueTransformer_forName(
             transformer: Option<&NSValueTransformer>,
             name: &NSValueTransformerName,
         );
@@ -73,26 +71,23 @@ impl NSValueTransformer {
         #[cfg(feature = "NSString")]
         #[unsafe(method(valueTransformerForName:))]
         #[unsafe(method_family = none)]
-        pub fn valueTransformerForName(
+        pub unsafe fn valueTransformerForName(
             name: &NSValueTransformerName,
         ) -> Option<Retained<NSValueTransformer>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         #[unsafe(method(valueTransformerNames))]
         #[unsafe(method_family = none)]
-        pub fn valueTransformerNames() -> Retained<NSArray<NSValueTransformerName>>;
+        pub unsafe fn valueTransformerNames() -> Retained<NSArray<NSValueTransformerName>>;
 
         #[unsafe(method(transformedValueClass))]
         #[unsafe(method_family = none)]
-        pub fn transformedValueClass() -> &'static AnyClass;
+        pub unsafe fn transformedValueClass() -> &'static AnyClass;
 
         #[unsafe(method(allowsReverseTransformation))]
         #[unsafe(method_family = none)]
-        pub fn allowsReverseTransformation() -> bool;
+        pub unsafe fn allowsReverseTransformation() -> bool;
 
-        /// # Safety
-        ///
-        /// `value` should be of the correct type.
         #[unsafe(method(transformedValue:))]
         #[unsafe(method_family = none)]
         pub unsafe fn transformedValue(
@@ -100,9 +95,6 @@ impl NSValueTransformer {
             value: Option<&AnyObject>,
         ) -> Option<Retained<AnyObject>>;
 
-        /// # Safety
-        ///
-        /// `value` should be of the correct type.
         #[unsafe(method(reverseTransformedValue:))]
         #[unsafe(method_family = none)]
         pub unsafe fn reverseTransformedValue(
@@ -117,19 +109,12 @@ impl NSValueTransformer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSValueTransformer {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -159,7 +144,7 @@ impl NSSecureUnarchiveFromDataTransformer {
         /// Can be overridden by subclasses to provide an expanded or different set of allowed transformation classes.
         #[unsafe(method(allowedTopLevelClasses))]
         #[unsafe(method_family = none)]
-        pub fn allowedTopLevelClasses() -> Retained<NSArray<AnyClass>>;
+        pub unsafe fn allowedTopLevelClasses() -> Retained<NSArray<AnyClass>>;
     );
 }
 
@@ -168,17 +153,10 @@ impl NSSecureUnarchiveFromDataTransformer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSSecureUnarchiveFromDataTransformer {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

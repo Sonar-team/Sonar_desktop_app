@@ -145,12 +145,6 @@ pub const kUSBHostDevicePropertyContainerID: &CStr =
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostdevicepropertyfailedrequestedpower?language=objc)
 pub const kUSBHostDevicePropertyFailedRequestedPower: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"kUSBFailedRequestedPower\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostdevicepropertyusb3preferred?language=objc)
-pub const kUSBHostDevicePropertyUSB3Preferred: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"Usb3LinkPreferred\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostdevicepropertyusb3required?language=objc)
-pub const kUSBHostDevicePropertyUSB3Required: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"Usb3LinkRequired\0") };
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostdevicepropertyresumerecoverytime?language=objc)
 pub const kUSBHostDevicePropertyResumeRecoveryTime: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"kUSBResumeRecoveryTime\0") };
@@ -221,36 +215,6 @@ pub const kUSBHostDevicePropertyTunnel: &CStr =
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostdevicepropertypowersinkcapability?language=objc)
 pub const kUSBHostDevicePropertyPowerSinkCapability: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbPowerSinkCapability\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostdevicepropertypowersinkallocation?language=objc)
-pub const kUSBHostDevicePropertyPowerSinkAllocation: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbPowerSinkAllocation\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostdevicepropertyidlepolicy?language=objc)
-pub const kUSBHostDevicePropertyIdlePolicy: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbIdlePolicy\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostbillboarddevicepropertyversion?language=objc)
-pub const kUSBHostBillboardDevicePropertyVersion: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbBillboardVersion\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostbillboarddevicepropertypreferredmode?language=objc)
-pub const kUSBHostBillboardDevicePropertyPreferredMode: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbBillboardPreferredMode\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostbillboarddevicepropertycurrentmode?language=objc)
-pub const kUSBHostBillboardDevicePropertyCurrentMode: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbBillboardCurrentMode\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostbillboarddevicepropertymodevalueusb4?language=objc)
-pub const kUSBHostBillboardDevicePropertyModeValueUSB4: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"USB4\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostbillboarddevicepropertymodevaluethunderbolt?language=objc)
-pub const kUSBHostBillboardDevicePropertyModeValueThunderbolt: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"Thunderbolt\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostbillboarddevicepropertymodevaluedisplayport?language=objc)
-pub const kUSBHostBillboardDevicePropertyModeValueDisplayPort: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"DisplayPort\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostbillboarddevicepropertyaltmodefailed?language=objc)
-pub const kUSBHostBillboardDevicePropertyAltModeFailed: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbBillboardAltModeFailed\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostbillboarddevicepropertyaltmodepowerfailed?language=objc)
-pub const kUSBHostBillboardDevicePropertyAltModePowerFailed: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbBillboardAltModePowerFailed\0") };
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostbillboarddevicepropertynumberofalternatemodes?language=objc)
 pub const kUSBHostBillboardDevicePropertyNumberOfAlternateModes: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"bNumberOfAlternateModes\0") };
@@ -301,7 +265,7 @@ pub const kUSBHostPortPropertyOvercurrent: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbHostPortOvercurrent\0") };
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertyportnumber?language=objc)
 pub const kUSBHostPortPropertyPortNumber: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"usb-port-number\0") };
+    unsafe { CStr::from_bytes_with_nul_unchecked(b"port\0") };
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertyremovable?language=objc)
 pub const kUSBHostPortPropertyRemovable: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"removable\0") };
@@ -326,6 +290,9 @@ pub const kUSBHostPortPropertyConnectable: &CStr =
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertyconnectortype?language=objc)
 pub const kUSBHostPortPropertyConnectorType: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbConnector\0") };
+/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertymux?language=objc)
+pub const kUSBHostPortPropertyMux: &CStr =
+    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbMux\0") };
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertycompanionindex?language=objc)
 pub const kUSBHostPortPropertyCompanionIndex: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"kUSBCompanionIndex\0") };
@@ -360,27 +327,6 @@ pub const kUSBHostPortPropertyCardReaderValidateDescriptors: &CStr = unsafe {
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertylinkspeedlimit?language=objc)
 pub const kUSBHostPortPropertyLinkSpeedLimit: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbHostPortLinkSpeedLimit\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertyioportservicepath?language=objc)
-pub const kUSBHostPortPropertyIOPortServicePath: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbIOPort\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertyprotocolcompanionrevision1?language=objc)
-pub const kUSBHostPortPropertyProtocolCompanionRevision1: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbProtocolCompanion (1.x)\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertyprotocolcompanionrevision2?language=objc)
-pub const kUSBHostPortPropertyProtocolCompanionRevision2: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbProtocolCompanion (2.0)\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertyprotocolcompanionrevision3?language=objc)
-pub const kUSBHostPortPropertyProtocolCompanionRevision3: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbProtocolCompanion (3.x)\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertyprotocolrevision1?language=objc)
-pub const kUSBHostPortPropertyProtocolRevision1: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbProtocol (1.x)\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertyprotocolrevision2?language=objc)
-pub const kUSBHostPortPropertyProtocolRevision2: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbProtocol (2.0)\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostportpropertyprotocolrevision3?language=objc)
-pub const kUSBHostPortPropertyProtocolRevision3: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbProtocol (3.x)\0") };
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhosthubpropertypowersupply?language=objc)
 pub const kUSBHostHubPropertyPowerSupply: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"kUSBHubPowerSupply\0") };
@@ -405,6 +351,9 @@ pub const kUSBHostControllerPropertySleepSupported: &CStr =
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostcontrollerpropertyrtd3supported?language=objc)
 pub const kUSBHostControllerPropertyRTD3Supported: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbRTD3Supported\0") };
+/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostcontrollerpropertymuxenabled?language=objc)
+pub const kUSBHostControllerPropertyMuxEnabled: &CStr =
+    unsafe { CStr::from_bytes_with_nul_unchecked(b"kUSBMuxEnabled\0") };
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostcontrollerpropertycompanion?language=objc)
 pub const kUSBHostControllerPropertyCompanion: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"kUSBCompanion\0") };
@@ -420,9 +369,9 @@ pub const kUSBHostControllerPropertyHighSpeedCompanion: &CStr =
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostcontrollerpropertysuperspeedcompanion?language=objc)
 pub const kUSBHostControllerPropertySuperSpeedCompanion: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"kUSBSuperSpeedCompanion\0") };
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostcontrollerpropertyprotocolrevision?language=objc)
-pub const kUSBHostControllerPropertyProtocolRevision: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbHostControllerProtocolRevision\0") };
+/// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostcontrollerpropertyrevision?language=objc)
+pub const kUSBHostControllerPropertyRevision: &CStr =
+    unsafe { CStr::from_bytes_with_nul_unchecked(b"Revision\0") };
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kusbhostcontrollerpropertycompanioncontrollername?language=objc)
 pub const kUSBHostControllerPropertyCompanionControllerName: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"UsbCompanionControllerName\0") };
@@ -568,10 +517,8 @@ impl tIOUSBHostPortType {
     pub const IOUSBHostPortTypeAccessory: Self = Self(3);
     #[doc(alias = "kIOUSBHostPortTypeExpressCard")]
     pub const IOUSBHostPortTypeExpressCard: Self = Self(4);
-    #[doc(alias = "kIOUSBHostPortTypeC")]
-    pub const IOUSBHostPortTypeC: Self = Self(5);
-    #[doc(alias = "kIOUSBHostPortTypeUnknown")]
-    pub const IOUSBHostPortTypeUnknown: Self = Self(6);
+    #[doc(alias = "kIOUSBHostPortTypeCount")]
+    pub const IOUSBHostPortTypeCount: Self = Self(5);
 }
 
 #[cfg(feature = "objc2")]

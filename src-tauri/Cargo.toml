@@ -1,6 +1,6 @@
 [package]
 name = "sonar"
-version = "3.10.10"
+version = "3.11.0"
 description = "A Tauri network analyzer App"
 authors = ["Cyprien Avico <avicocyprien@yahoo.com>"]
 edition = "2024"
@@ -30,7 +30,7 @@ tauri-plugin-log = "2.8.0"
 tauri-plugin-process = "2.3.1"
 
 pcap = "2.4.0"
-packet_parser = "1.0.1"
+packet_parser = "1.1.0"
 
 thiserror = "2.0.18"
 crossbeam = "0.8.4"
@@ -50,7 +50,7 @@ dirs = "6.0.0"
 
 colored = "3.1.1"
 tauri-plugin-os = "2"
-sysinfo = "0.37.2"
+sysinfo = "0.38.3"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-cli = "2"

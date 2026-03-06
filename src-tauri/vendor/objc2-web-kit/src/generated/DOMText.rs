@@ -79,9 +79,6 @@ impl DOMText {
         #[unsafe(method_family = none)]
         pub unsafe fn splitText(&self, offset: c_uint) -> Option<Retained<DOMText>>;
 
-        /// # Safety
-        ///
-        /// `content` might not allow `None`.
         #[unsafe(method(replaceWholeText:))]
         #[unsafe(method_family = none)]
         pub unsafe fn replaceWholeText(

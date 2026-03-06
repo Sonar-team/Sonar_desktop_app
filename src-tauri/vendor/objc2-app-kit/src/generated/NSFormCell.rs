@@ -69,11 +69,11 @@ impl NSFormCell {
     extern_methods!(
         #[unsafe(method(initTextCell:))]
         #[unsafe(method_family = init)]
-        pub fn initTextCell(this: Allocated<Self>, string: Option<&NSString>) -> Retained<Self>;
+        pub unsafe fn initTextCell(
+            this: Allocated<Self>,
+            string: Option<&NSString>,
+        ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -89,66 +89,60 @@ impl NSFormCell {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(titleWidth:))]
         #[unsafe(method_family = none)]
-        pub fn titleWidth_(&self, size: NSSize) -> CGFloat;
+        pub unsafe fn titleWidth_(&self, size: NSSize) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(titleWidth))]
         #[unsafe(method_family = none)]
-        pub fn titleWidth(&self) -> CGFloat;
+        pub unsafe fn titleWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`titleWidth`][Self::titleWidth].
         #[unsafe(method(setTitleWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setTitleWidth(&self, title_width: CGFloat);
+        pub unsafe fn setTitleWidth(&self, title_width: CGFloat);
 
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: &NSString);
+        pub unsafe fn setTitle(&self, title: &NSString);
 
         #[cfg(feature = "NSFont")]
         #[unsafe(method(titleFont))]
         #[unsafe(method_family = none)]
-        pub fn titleFont(&self) -> Retained<NSFont>;
+        pub unsafe fn titleFont(&self) -> Retained<NSFont>;
 
         #[cfg(feature = "NSFont")]
         /// Setter for [`titleFont`][Self::titleFont].
         #[unsafe(method(setTitleFont:))]
         #[unsafe(method_family = none)]
-        pub fn setTitleFont(&self, title_font: &NSFont);
+        pub unsafe fn setTitleFont(&self, title_font: &NSFont);
 
         #[unsafe(method(isOpaque))]
         #[unsafe(method_family = none)]
-        pub fn isOpaque(&self) -> bool;
+        pub unsafe fn isOpaque(&self) -> bool;
 
         #[unsafe(method(placeholderString))]
         #[unsafe(method_family = none)]
-        pub fn placeholderString(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn placeholderString(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`placeholderString`][Self::placeholderString].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPlaceholderString:))]
         #[unsafe(method_family = none)]
-        pub fn setPlaceholderString(&self, placeholder_string: Option<&NSString>);
+        pub unsafe fn setPlaceholderString(&self, placeholder_string: Option<&NSString>);
 
         #[unsafe(method(placeholderAttributedString))]
         #[unsafe(method_family = none)]
-        pub fn placeholderAttributedString(&self) -> Option<Retained<NSAttributedString>>;
+        pub unsafe fn placeholderAttributedString(&self) -> Option<Retained<NSAttributedString>>;
 
         /// Setter for [`placeholderAttributedString`][Self::placeholderAttributedString].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPlaceholderAttributedString:))]
         #[unsafe(method_family = none)]
-        pub fn setPlaceholderAttributedString(
+        pub unsafe fn setPlaceholderAttributedString(
             &self,
             placeholder_attributed_string: Option<&NSAttributedString>,
         );
@@ -156,24 +150,24 @@ impl NSFormCell {
         #[cfg(feature = "NSText")]
         #[unsafe(method(titleAlignment))]
         #[unsafe(method_family = none)]
-        pub fn titleAlignment(&self) -> NSTextAlignment;
+        pub unsafe fn titleAlignment(&self) -> NSTextAlignment;
 
         #[cfg(feature = "NSText")]
         /// Setter for [`titleAlignment`][Self::titleAlignment].
         #[unsafe(method(setTitleAlignment:))]
         #[unsafe(method_family = none)]
-        pub fn setTitleAlignment(&self, title_alignment: NSTextAlignment);
+        pub unsafe fn setTitleAlignment(&self, title_alignment: NSTextAlignment);
 
         #[cfg(feature = "NSText")]
         #[unsafe(method(titleBaseWritingDirection))]
         #[unsafe(method_family = none)]
-        pub fn titleBaseWritingDirection(&self) -> NSWritingDirection;
+        pub unsafe fn titleBaseWritingDirection(&self) -> NSWritingDirection;
 
         #[cfg(feature = "NSText")]
         /// Setter for [`titleBaseWritingDirection`][Self::titleBaseWritingDirection].
         #[unsafe(method(setTitleBaseWritingDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setTitleBaseWritingDirection(
+        pub unsafe fn setTitleBaseWritingDirection(
             &self,
             title_base_writing_direction: NSWritingDirection,
         );
@@ -181,13 +175,13 @@ impl NSFormCell {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(preferredTextFieldWidth))]
         #[unsafe(method_family = none)]
-        pub fn preferredTextFieldWidth(&self) -> CGFloat;
+        pub unsafe fn preferredTextFieldWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`preferredTextFieldWidth`][Self::preferredTextFieldWidth].
         #[unsafe(method(setPreferredTextFieldWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredTextFieldWidth(&self, preferred_text_field_width: CGFloat);
+        pub unsafe fn setPreferredTextFieldWidth(&self, preferred_text_field_width: CGFloat);
     );
 }
 
@@ -197,7 +191,7 @@ impl NSFormCell {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -207,7 +201,7 @@ impl NSFormCell {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -215,9 +209,6 @@ impl NSFormCell {
 #[cfg(all(feature = "NSActionCell", feature = "NSCell"))]
 impl NSFormCell {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `string_with_ampersand` might not allow `None`.
         #[deprecated]
         #[unsafe(method(setTitleWithMnemonic:))]
         #[unsafe(method_family = none)]
@@ -231,13 +222,11 @@ impl NSFormCell {
     extern_methods!(
         #[unsafe(method(attributedTitle))]
         #[unsafe(method_family = none)]
-        pub fn attributedTitle(&self) -> Retained<NSAttributedString>;
+        pub unsafe fn attributedTitle(&self) -> Retained<NSAttributedString>;
 
         /// Setter for [`attributedTitle`][Self::attributedTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAttributedTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributedTitle(&self, attributed_title: &NSAttributedString);
+        pub unsafe fn setAttributedTitle(&self, attributed_title: &NSAttributedString);
     );
 }

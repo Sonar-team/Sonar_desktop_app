@@ -39,12 +39,6 @@ extern_protocol!(
         ///
         /// Returns: An identifier that will be passed back to the implementor for each callback.
         /// The identifier will be retained.
-        ///
-        /// # Safety
-        ///
-        /// - `sender` might not allow `None`.
-        /// - `request` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:identifierForInitialRequest:fromDataSource:))]
@@ -79,15 +73,6 @@ extern_protocol!(
         ///
         /// Returns: Returns the request, which may be mutated by the implementor, although typically
         /// will be request.
-        ///
-        /// # Safety
-        ///
-        /// - `sender` might not allow `None`.
-        /// - `identifier` should be of the correct type.
-        /// - `identifier` might not allow `None`.
-        /// - `request` might not allow `None`.
-        /// - `redirect_response` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:resource:willSendRequest:redirectResponse:fromDataSource:))]
@@ -116,14 +101,6 @@ extern_protocol!(
         ///
         /// If you do not implement this delegate method, WebKit will handle authentication
         /// automatically by prompting with a sheet on the window that the WebView is associated with.
-        ///
-        /// # Safety
-        ///
-        /// - `sender` might not allow `None`.
-        /// - `identifier` should be of the correct type.
-        /// - `identifier` might not allow `None`.
-        /// - `challenge` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:resource:didReceiveAuthenticationChallenge:fromDataSource:))]
@@ -145,14 +122,6 @@ extern_protocol!(
         /// Cancel authentication for a given request
         ///
         /// Parameter `challenge`: The NSURLAuthenticationChallenge for which to cancel authentication
-        ///
-        /// # Safety
-        ///
-        /// - `sender` might not allow `None`.
-        /// - `identifier` should be of the correct type.
-        /// - `identifier` might not allow `None`.
-        /// - `challenge` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:resource:didCancelAuthenticationChallenge:fromDataSource:))]
@@ -186,14 +155,6 @@ extern_protocol!(
         /// This occurs with multipart/x-mixed-replace, or "server push". In this case, the client
         /// should assume that each new response resets progress so far for the resource back to 0,
         /// and should check the new response for the expected content length.
-        ///
-        /// # Safety
-        ///
-        /// - `sender` might not allow `None`.
-        /// - `identifier` should be of the correct type.
-        /// - `identifier` might not allow `None`.
-        /// - `response` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:resource:didReceiveResponse:fromDataSource:))]
@@ -222,13 +183,6 @@ extern_protocol!(
         /// Parameter `length`: The amount of new data received.  This is not the total amount, just the new amount received.
         ///
         /// Parameter `dataSource`: The dataSource that initiated the load.
-        ///
-        /// # Safety
-        ///
-        /// - `sender` might not allow `None`.
-        /// - `identifier` should be of the correct type.
-        /// - `identifier` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:resource:didReceiveContentLength:fromDataSource:))]
@@ -255,13 +209,6 @@ extern_protocol!(
         /// multiple call backs.
         ///
         /// Parameter `dataSource`: The dataSource that initiated the load.
-        ///
-        /// # Safety
-        ///
-        /// - `sender` might not allow `None`.
-        /// - `identifier` should be of the correct type.
-        /// - `identifier` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:resource:didFinishLoadingFromDataSource:))]
@@ -289,14 +236,6 @@ extern_protocol!(
         /// Parameter `error`: The error associated with this load.
         ///
         /// Parameter `dataSource`: The dataSource that initiated the load.
-        ///
-        /// # Safety
-        ///
-        /// - `sender` might not allow `None`.
-        /// - `identifier` should be of the correct type.
-        /// - `identifier` might not allow `None`.
-        /// - `error` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:resource:didFailLoadingWithError:fromDataSource:))]
@@ -327,12 +266,6 @@ extern_protocol!(
         /// when none are present.
         ///
         /// Parameter `dataSource`: The dataSource that contains the plug-in.
-        ///
-        /// # Safety
-        ///
-        /// - `sender` might not allow `None`.
-        /// - `error` might not allow `None`.
-        /// - `data_source` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(webView:plugInFailedWithError:dataSource:))]

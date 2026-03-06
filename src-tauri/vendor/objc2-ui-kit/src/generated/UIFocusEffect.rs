@@ -36,7 +36,7 @@ impl UIFocusEffect {
         /// Creates a default system effect using metrics inferred from the focus item.
         #[unsafe(method(effect))]
         #[unsafe(method_family = none)]
-        pub fn effect() -> Retained<Self>;
+        pub unsafe fn effect() -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -98,14 +98,14 @@ impl UIFocusHaloEffect {
         /// Creates a rectangular halo.
         #[unsafe(method(effectWithRect:))]
         #[unsafe(method_family = none)]
-        pub fn effectWithRect(rect: CGRect) -> Retained<Self>;
+        pub unsafe fn effectWithRect(rect: CGRect) -> Retained<Self>;
 
         #[cfg(all(feature = "objc2-core-foundation", feature = "objc2-quartz-core"))]
         #[cfg(not(target_os = "watchos"))]
         /// Creates a rounded rect halo using the specified corner radius and corner curve.
         #[unsafe(method(effectWithRoundedRect:cornerRadius:curve:))]
         #[unsafe(method_family = none)]
-        pub fn effectWithRoundedRect_cornerRadius_curve(
+        pub unsafe fn effectWithRoundedRect_cornerRadius_curve(
             rect: CGRect,
             corner_radius: CGFloat,
             curve: &CALayerCornerCurve,
@@ -115,7 +115,7 @@ impl UIFocusHaloEffect {
         /// Creates a halo with the given bezier path.
         #[unsafe(method(effectWithPath:))]
         #[unsafe(method_family = none)]
-        pub fn effectWithPath(bezier_path: &UIBezierPath) -> Retained<Self>;
+        pub unsafe fn effectWithPath(bezier_path: &UIBezierPath) -> Retained<Self>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         /// Container view in which to place the effect. When not set, the container is determined automatically
@@ -123,15 +123,14 @@ impl UIFocusHaloEffect {
         /// `referenceView`(if present).
         #[unsafe(method(containerView))]
         #[unsafe(method_family = none)]
-        pub fn containerView(&self, mtm: MainThreadMarker) -> Option<Retained<UIView>>;
+        pub unsafe fn containerView(&self, mtm: MainThreadMarker) -> Option<Retained<UIView>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
-        /// Setter for [`containerView`][Self::containerView].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`containerView`][Self::containerView].
         #[unsafe(method(setContainerView:))]
         #[unsafe(method_family = none)]
-        pub fn setContainerView(&self, container_view: Option<&UIView>);
+        pub unsafe fn setContainerView(&self, container_view: Option<&UIView>);
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         /// When set, the halo is placed above this view. If a
@@ -142,26 +141,25 @@ impl UIFocusHaloEffect {
         /// `referenceView.`
         #[unsafe(method(referenceView))]
         #[unsafe(method_family = none)]
-        pub fn referenceView(&self, mtm: MainThreadMarker) -> Option<Retained<UIView>>;
+        pub unsafe fn referenceView(&self, mtm: MainThreadMarker) -> Option<Retained<UIView>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
-        /// Setter for [`referenceView`][Self::referenceView].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`referenceView`][Self::referenceView].
         #[unsafe(method(setReferenceView:))]
         #[unsafe(method_family = none)]
-        pub fn setReferenceView(&self, reference_view: Option<&UIView>);
+        pub unsafe fn setReferenceView(&self, reference_view: Option<&UIView>);
 
         /// Position of the halo relative to the specified shape. Defaults to
         /// `UIFocusHaloEffectPositionAutomatic.`
         #[unsafe(method(position))]
         #[unsafe(method_family = none)]
-        pub fn position(&self) -> UIFocusHaloEffectPosition;
+        pub unsafe fn position(&self) -> UIFocusHaloEffectPosition;
 
         /// Setter for [`position`][Self::position].
         #[unsafe(method(setPosition:))]
         #[unsafe(method_family = none)]
-        pub fn setPosition(&self, position: UIFocusHaloEffectPosition);
+        pub unsafe fn setPosition(&self, position: UIFocusHaloEffectPosition);
     );
 }
 
@@ -171,7 +169,7 @@ impl UIFocusHaloEffect {
         /// Creates a default system effect using metrics inferred from the focus item.
         #[unsafe(method(effect))]
         #[unsafe(method_family = none)]
-        pub fn effect() -> Retained<Self>;
+        pub unsafe fn effect() -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

@@ -41,10 +41,6 @@ extern_conformance!(
 
 impl NSCoder {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `type` must be a valid pointer.
-        /// - `addr` must be a valid pointer.
         #[unsafe(method(encodeValueOfObjCType:at:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeValueOfObjCType_at(
@@ -63,10 +59,6 @@ impl NSCoder {
         #[unsafe(method_family = none)]
         pub unsafe fn decodeDataObject(&self) -> Option<Retained<NSData>>;
 
-        /// # Safety
-        ///
-        /// - `type` must be a valid pointer.
-        /// - `data` must be a valid pointer.
         #[unsafe(method(decodeValueOfObjCType:at:size:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeValueOfObjCType_at_size(
@@ -99,45 +91,26 @@ impl NSCoder {
 /// NSExtendedCoder.
 impl NSCoder {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `object` should be of the correct type.
         #[unsafe(method(encodeObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeObject(&self, object: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `root_object` should be of the correct type.
         #[unsafe(method(encodeRootObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeRootObject(&self, root_object: &AnyObject);
 
-        /// # Safety
-        ///
-        /// `an_object` should be of the correct type.
         #[unsafe(method(encodeBycopyObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeBycopyObject(&self, an_object: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `an_object` should be of the correct type.
         #[unsafe(method(encodeByrefObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeByrefObject(&self, an_object: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `object` should be of the correct type.
         #[unsafe(method(encodeConditionalObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeConditionalObject(&self, object: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// - `type` must be a valid pointer.
-        /// - `array` must be a valid pointer.
         #[unsafe(method(encodeArrayOfObjCType:count:at:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeArrayOfObjCType_count_at(
@@ -147,9 +120,6 @@ impl NSCoder {
             array: NonNull<c_void>,
         );
 
-        /// # Safety
-        ///
-        /// `byteaddr` must be a valid pointer or null.
         #[unsafe(method(encodeBytes:length:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeBytes_length(&self, byteaddr: *const c_void, length: NSUInteger);
@@ -165,10 +135,6 @@ impl NSCoder {
             &self,
         ) -> Result<Retained<AnyObject>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// - `item_type` must be a valid pointer.
-        /// - `array` must be a valid pointer.
         #[unsafe(method(decodeArrayOfObjCType:count:at:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeArrayOfObjCType_count_at(
@@ -178,9 +144,6 @@ impl NSCoder {
             array: NonNull<c_void>,
         );
 
-        /// # Safety
-        ///
-        /// `lengthp` must be a valid pointer.
         #[unsafe(method(decodeBytesWithReturnedLength:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeBytesWithReturnedLength(
@@ -188,9 +151,6 @@ impl NSCoder {
             lengthp: NonNull<NSUInteger>,
         ) -> *mut c_void;
 
-        /// # Safety
-        ///
-        /// `a_property_list` should be of the correct type.
         #[unsafe(method(encodePropertyList:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodePropertyList(&self, a_property_list: &AnyObject);
@@ -200,9 +160,6 @@ impl NSCoder {
         pub unsafe fn decodePropertyList(&self) -> Option<Retained<AnyObject>>;
 
         #[cfg(feature = "NSZone")]
-        /// # Safety
-        ///
-        /// `zone` must be a valid pointer or null.
         #[unsafe(method(setObjectZone:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setObjectZone(&self, zone: *mut NSZone);
@@ -221,17 +178,11 @@ impl NSCoder {
         pub unsafe fn allowsKeyedCoding(&self) -> bool;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `object` should be of the correct type.
         #[unsafe(method(encodeObject:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeObject_forKey(&self, object: Option<&AnyObject>, key: &NSString);
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `object` should be of the correct type.
         #[unsafe(method(encodeConditionalObject:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeConditionalObject_forKey(
@@ -271,9 +222,6 @@ impl NSCoder {
         pub unsafe fn encodeDouble_forKey(&self, value: c_double, key: &NSString);
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `bytes` must be a valid pointer or null.
         #[unsafe(method(encodeBytes:length:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeBytes_length_forKey(
@@ -332,9 +280,6 @@ impl NSCoder {
         pub unsafe fn decodeDoubleForKey(&self, key: &NSString) -> c_double;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `lengthp` must be a valid pointer or null.
         #[unsafe(method(decodeBytesForKey:returnedLength:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeBytesForKey_returnedLength(
@@ -375,9 +320,6 @@ impl NSCoder {
         pub unsafe fn requiresSecureCoding(&self) -> bool;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `a_class` probably has further requirements.
         #[unsafe(method(decodeObjectOfClass:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeObjectOfClass_forKey(
@@ -387,9 +329,6 @@ impl NSCoder {
         ) -> Option<Retained<AnyObject>>;
 
         #[cfg(all(feature = "NSError", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `a_class` probably has further requirements.
         #[unsafe(method(decodeTopLevelObjectOfClass:forKey:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeTopLevelObjectOfClass_forKey_error(
@@ -412,10 +351,6 @@ impl NSCoder {
         /// `nil`if the object for
         /// `key`is not of the expected types, or cannot be decoded, and sets the
         /// `error`on the decoder.
-        ///
-        /// # Safety
-        ///
-        /// `cls` probably has further requirements.
         #[unsafe(method(decodeArrayOfObjectsOfClass:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeArrayOfObjectsOfClass_forKey(
@@ -440,11 +375,6 @@ impl NSCoder {
         /// `nil`if the object for
         /// `key`is not of the expected types, or cannot be decoded, and sets the
         /// `error`on the decoder.
-        ///
-        /// # Safety
-        ///
-        /// - `key_cls` probably has further requirements.
-        /// - `object_cls` probably has further requirements.
         #[unsafe(method(decodeDictionaryWithKeysOfClass:objectsOfClass:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeDictionaryWithKeysOfClass_objectsOfClass_forKey(
@@ -455,9 +385,6 @@ impl NSCoder {
         ) -> Option<Retained<NSDictionary>>;
 
         #[cfg(all(feature = "NSSet", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `classes` generic probably has further requirements.
         #[unsafe(method(decodeObjectOfClasses:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeObjectOfClasses_forKey(
@@ -467,9 +394,6 @@ impl NSCoder {
         ) -> Option<Retained<AnyObject>>;
 
         #[cfg(all(feature = "NSError", feature = "NSSet", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `classes` generic probably has further requirements.
         #[unsafe(method(decodeTopLevelObjectOfClasses:forKey:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeTopLevelObjectOfClasses_forKey_error(
@@ -492,10 +416,6 @@ impl NSCoder {
         /// `nil`if the object for
         /// `key`is not of the expected types, or cannot be decoded, and sets the
         /// `error`on the decoder.
-        ///
-        /// # Safety
-        ///
-        /// `classes` generic probably has further requirements.
         #[unsafe(method(decodeArrayOfObjectsOfClasses:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeArrayOfObjectsOfClasses_forKey(
@@ -520,11 +440,6 @@ impl NSCoder {
         /// `nil`if the object for
         /// `key`is not of the expected types, or cannot be decoded, and sets the
         /// `error`on the decoder.
-        ///
-        /// # Safety
-        ///
-        /// - `key_classes` generic probably has further requirements.
-        /// - `object_classes` generic probably has further requirements.
         #[unsafe(method(decodeDictionaryWithKeysOfClasses:objectsOfClasses:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeDictionaryWithKeysOfClasses_objectsOfClasses_forKey(
@@ -604,9 +519,6 @@ impl NSCoder {
     );
 }
 
-/// # Safety
-///
-/// `decoder` possibly has further requirements.
 #[deprecated = "Not supported"]
 #[inline]
 pub unsafe extern "C-unwind" fn NXReadNSObjectFromCoder(
@@ -622,9 +534,6 @@ pub unsafe extern "C-unwind" fn NXReadNSObjectFromCoder(
 /// NSTypedstreamCompatibility.
 impl NSCoder {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `object` should be of the correct type.
         #[deprecated = "Not supported"]
         #[unsafe(method(encodeNXObject:))]
         #[unsafe(method_family = none)]
@@ -640,10 +549,6 @@ impl NSCoder {
 /// NSDeprecated.
 impl NSCoder {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `type` must be a valid pointer.
-        /// - `data` must be a valid pointer.
         #[deprecated]
         #[unsafe(method(decodeValueOfObjCType:at:))]
         #[unsafe(method_family = none)]

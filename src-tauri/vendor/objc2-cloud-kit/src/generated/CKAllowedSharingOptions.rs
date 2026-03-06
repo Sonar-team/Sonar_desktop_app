@@ -124,21 +124,6 @@ impl CKAllowedSharingOptions {
             allowed_participant_access_options: CKSharingParticipantAccessOption,
         );
 
-        /// Default value is `NO`. If set, the system sharing UI will allow the user to choose whether added participants can invite others to the share.
-        /// Shares with ``CloudKit/CKShareParticipantRole/CKShareParticipantRoleAdministrator`` participants will be returned as read-only to devices running OS versions prior to this role being introduced.
-        /// Administrator participants on these read-only shares will be returned as ``CloudKit/CKShareParticipantRole/CKShareParticipantRolePrivateUser``.
-        #[unsafe(method(allowsParticipantsToInviteOthers))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn allowsParticipantsToInviteOthers(&self) -> bool;
-
-        /// Setter for [`allowsParticipantsToInviteOthers`][Self::allowsParticipantsToInviteOthers].
-        #[unsafe(method(setAllowsParticipantsToInviteOthers:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn setAllowsParticipantsToInviteOthers(
-            &self,
-            allows_participants_to_invite_others: bool,
-        );
-
         /// Standard allowed options are most permissive i.e.
         /// `allowedParticipantPermissionOptions`=
         /// `CKSharingParticipantPermissionOptionAny`and
@@ -147,16 +132,6 @@ impl CKAllowedSharingOptions {
         #[unsafe(method(standardOptions))]
         #[unsafe(method_family = none)]
         pub unsafe fn standardOptions() -> Retained<CKAllowedSharingOptions>;
-
-        /// Default value is `NO`. If set, the system sharing UI will allow the user to configure whether access requests are enabled on the share.
-        #[unsafe(method(allowsAccessRequests))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn allowsAccessRequests(&self) -> bool;
-
-        /// Setter for [`allowsAccessRequests`][Self::allowsAccessRequests].
-        #[unsafe(method(setAllowsAccessRequests:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn setAllowsAccessRequests(&self, allows_access_requests: bool);
     );
 }
 

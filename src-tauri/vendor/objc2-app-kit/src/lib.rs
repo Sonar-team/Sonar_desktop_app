@@ -18,11 +18,25 @@
 //! controller; in those cases you're _required_ to call
 //! `window.releasedWhenClosed(false)` to get correct memory management, which
 //! is also why the creation methods for `NSWindow` are `unsafe`.
+//!
+//!
+//! ## Examples
+//!
+//! Implementing `NSApplicationDelegate` for a custom class.
+//!
+//! ```ignore
+#![doc = include_str!("../examples/delegate.rs")]
+//! ```
+//!
+//! An example showing basic and a bit more advanced usage of `NSPasteboard`.
+//!
+//! ```ignore
+#![doc = include_str!("../examples/nspasteboard.rs")]
+//! ```
 #![no_std]
-#![cfg_attr(feature = "unstable-darwin-objc", feature(darwin_objc))]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 // Update in Cargo.toml as well.
-#![doc(html_root_url = "https://docs.rs/objc2-app-kit/0.3.2")]
+#![doc(html_root_url = "https://docs.rs/objc2-app-kit/0.3.1")]
 #![recursion_limit = "512"]
 #![allow(non_snake_case)]
 #![allow(unused_imports)]
@@ -37,19 +51,19 @@ extern crate std;
 #[cfg_attr(feature = "gnustep-1-7", link(name = "gnustep-gui", kind = "dylib"))]
 extern "C" {}
 
+/// (!TARGET_CPU_X86_64 || (TARGET_OS_IPHONE && !TARGET_OS_MACCATALYST))
+///
+/// <https://github.com/xamarin/xamarin-macios/issues/12111>
+// TODO: Make this work with mac catalyst
+#[allow(dead_code)]
+pub(crate) const TARGET_ABI_USES_IOS_VALUES: bool =
+    !cfg!(any(target_arch = "x86", target_arch = "x86_64")) || cfg!(not(target_os = "macos"));
+
 #[cfg(feature = "NSApplication")]
 mod application;
-#[cfg(feature = "NSEvent")]
-mod event;
 mod generated;
-#[cfg(feature = "NSGestureRecognizer")]
-mod gesture_recognizer;
 #[cfg(feature = "NSImage")]
 mod image;
-#[cfg(feature = "NSSlider")]
-mod slider;
-#[cfg(feature = "NSSliderCell")]
-mod slider_cell;
 #[cfg(feature = "NSText")]
 mod text;
 
@@ -57,30 +71,14 @@ mod text;
 #[cfg(feature = "NSResponder")]
 pub use self::application::*;
 pub use self::generated::*;
-
-/// (!TARGET_CPU_X86_64 || (TARGET_OS_IPHONE && !TARGET_OS_MACCATALYST))
-///
-/// <https://github.com/xamarin/xamarin-macios/issues/12111>
-#[allow(unused)]
-#[allow(unexpected_cfgs)]
-pub(crate) const TARGET_ABI_USES_IOS_VALUES: bool = !cfg!(target_arch = "x86_64")
-    || (cfg!(all(target_vendor = "apple", not(target_os = "macos")))
-        && !cfg!(target_env = "macabi"));
+#[cfg(feature = "NSImage")]
+pub use self::image::*;
+#[cfg(feature = "NSText")]
+pub use self::text::*;
 
 // MacTypes.h
 #[allow(unused)]
 pub(crate) type UTF32Char = u32; // Or maybe Rust's char?
-
-// OpenGL/gltypes.h
-// Not re-exported by objc2-open-gl.
-#[allow(unused)]
-pub(crate) type GLbitfield = u32;
-#[allow(unused)]
-pub(crate) type GLenum = u32;
-#[allow(unused)]
-pub(crate) type GLint = i32;
-#[allow(unused)]
-pub(crate) type GLsizei = i32;
 
 // TODO: Send + Sync for NSColor. Documentation says:
 // > Color objects are immutable and thread-safe

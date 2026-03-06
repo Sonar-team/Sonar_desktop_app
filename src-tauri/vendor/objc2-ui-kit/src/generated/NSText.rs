@@ -25,30 +25,3 @@ unsafe impl Encode for NSWritingDirection {
 unsafe impl RefEncode for NSWritingDirection {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
-
-/// [Apple's documentation](https://developer.apple.com/documentation/uikit/nstextalignment?language=objc)
-// NS_ENUM
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct NSTextAlignment(pub NSInteger);
-impl NSTextAlignment {
-    #[doc(alias = "NSTextAlignmentLeft")]
-    pub const Left: Self = Self(0);
-    #[doc(alias = "NSTextAlignmentJustified")]
-    pub const Justified: Self = Self(3);
-    /// Resolved to either ``left`` or ``right`` based on the natural alignment resolution type active in the associated component.
-    ///
-    /// There are two types of natural alignment resolution behavior. The natural alignment is resolved based on either the UI language or the base writing direction.
-    /// The behavior is selected by the ``resolvesNaturalAlignmentWithBaseWritingDirection`` property for ``NSTextLayoutManager``.
-    /// ``NSStringDrawingOptions.resolvesNaturalAlignmentWithBaseWritingDirection`` specifies the base writing direction based resolution for ``NSStringDrawing``.
-    #[doc(alias = "NSTextAlignmentNatural")]
-    pub const Natural: Self = Self(4);
-}
-
-unsafe impl Encode for NSTextAlignment {
-    const ENCODING: Encoding = NSInteger::ENCODING;
-}
-
-unsafe impl RefEncode for NSTextAlignment {
-    const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
-}

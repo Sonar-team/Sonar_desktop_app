@@ -213,6 +213,7 @@ impl TryFrom<&[u8]> for QuicPacket {
 
         // 1) Octet 0 : Long Header bits
         let b0 = cur.take_u8()?;
+
         let header_form_long = (b0 & 0b1000_0000) != 0;
         if !header_form_long {
             return Err(err(
@@ -239,6 +240,10 @@ impl TryFrom<&[u8]> for QuicPacket {
         // 2) Version
         let ver_bytes = cur.take(4)?;
         let version = u32::from_be_bytes([ver_bytes[0], ver_bytes[1], ver_bytes[2], ver_bytes[3]]);
+        // Guard : ce parseur ne supporte que QUIC v1
+        if version != 1 {
+            return Err(err(format!("Unsupported QUIC version: {}", version)));
+        }
 
         // 3) DCID / SCID
         let dcid = read_cid(&mut cur)?;
@@ -277,10 +282,14 @@ impl TryFrom<&[u8]> for QuicPacket {
                 header.packet_number = Some(pn);
 
                 // Payload (length_field inclut PN + payload)
-                let remaining_for_payload = length_field as usize - (header.pn_length as usize);
+                let remaining_for_payload = (length_field as usize)
+                    .checked_sub(header.pn_length as usize)
+                    .ok_or_else(|| err("Invalid QUIC length_field: smaller than pn_length"))?;
+
                 if cur.left() < remaining_for_payload {
-                    return Err(err("Truncated payload for Initial packet"));
+                    return Err(err("Truncated payload for Handshake packet"));
                 }
+
                 let payload_bytes = cur.take(remaining_for_payload)?.to_vec();
 
                 Ok(QuicPacket::Initial {
@@ -304,10 +313,14 @@ impl TryFrom<&[u8]> for QuicPacket {
                 header.packet_number = Some(pn);
 
                 // Payload
-                let remaining_for_payload = length_field as usize - (header.pn_length as usize);
+                let remaining_for_payload = (length_field as usize)
+                    .checked_sub(header.pn_length as usize)
+                    .ok_or_else(|| err("Invalid QUIC length_field: smaller than pn_length"))?;
+
                 if cur.left() < remaining_for_payload {
                     return Err(err("Truncated payload for Handshake packet"));
                 }
+
                 let payload_bytes = cur.take(remaining_for_payload)?.to_vec();
 
                 Ok(QuicPacket::Handshake {
@@ -328,10 +341,15 @@ impl TryFrom<&[u8]> for QuicPacket {
                 }
                 header.packet_number = Some(pn);
 
-                let remaining_for_payload = length_field as usize - (header.pn_length as usize);
+                // Payload
+                let remaining_for_payload = (length_field as usize)
+                    .checked_sub(header.pn_length as usize)
+                    .ok_or_else(|| err("Invalid QUIC length_field: smaller than pn_length"))?;
+
                 if cur.left() < remaining_for_payload {
-                    return Err(err("Truncated payload for 0-RTT packet"));
+                    return Err(err("Truncated payload for Handshake packet"));
                 }
+
                 let payload_bytes = cur.take(remaining_for_payload)?.to_vec();
 
                 Ok(QuicPacket::OtherLong {
@@ -350,7 +368,7 @@ impl TryFrom<&[u8]> for QuicPacket {
                 })
             }
 
-            QuicPacketType::Unknown(t) => {
+            QuicPacketType::Unknown(_t) => {
                 // Tentative générique: Length (varint) si possible, sinon tout en brut
                 let mut snapshot = cur.clone();
                 let length_field = match read_varint(&mut cur) {
@@ -377,13 +395,15 @@ impl TryFrom<&[u8]> for QuicPacket {
                 }
                 header.packet_number = Some(pn);
 
-                let remaining_for_payload = length_field as usize - (header.pn_length as usize);
+                // Payload
+                let remaining_for_payload = (length_field as usize)
+                    .checked_sub(header.pn_length as usize)
+                    .ok_or_else(|| err("Invalid QUIC length_field: smaller than pn_length"))?;
+
                 if cur.left() < remaining_for_payload {
-                    return Err(err(format!(
-                        "Truncated payload for unknown long type {}",
-                        t
-                    )));
+                    return Err(err("Truncated payload for Handshake packet"));
                 }
+
                 let payload_bytes = cur.take(remaining_for_payload)?.to_vec();
 
                 Ok(QuicPacket::OtherLong {
@@ -499,5 +519,60 @@ mod tests {
             res,
             Err(crate::parse::application::ApplicationError::QuicParseError)
         ));
+    }
+
+    #[test]
+    fn test_initial_pkn_1_ack() {
+        let bytes = hex::decode(
+            "c4000000010008f409517248c4ab52004016dae7c01a42788f5049396532534a03ae8ebd63bf94e4",
+        )
+        .expect("Invalid hex string");
+
+        let parsed = QuicPacket::try_from(bytes.as_slice()).expect("must parse");
+
+        match parsed {
+            QuicPacket::Initial {
+                header,
+                token,
+                payload,
+            } => {
+                // Header bits
+                assert_eq!(header.header_form_long, true);
+                assert_eq!(header.fixed_bit, true);
+
+                // Type / version
+                assert!(matches!(header.packet_type, QuicPacketType::Initial));
+                assert_eq!(header.version, 1);
+
+                // DCID / SCID
+                assert_eq!(header.dcid.len, 0);
+                assert!(header.dcid.bytes.is_empty());
+
+                assert_eq!(header.scid.len, 8);
+                assert_eq!(header.scid.bytes, hex::decode("f409517248c4ab52").unwrap());
+
+                // Token
+                assert!(token.is_empty());
+
+                // Length field (PN + payload chiffré)
+                assert_eq!(header.length_field, 22);
+                assert_eq!(header.pn_length, 1);
+
+                // IMPORTANT: ici tu lis le PN "protégé" (pas celui affiché par Wireshark)
+                assert_eq!(header.packet_number, Some(0xDA));
+
+                // Payload (22 - 1 = 21 bytes)
+                match payload {
+                    QuicPayload::EncryptedPayload(v) => {
+                        assert_eq!(
+                            v,
+                            hex::decode("e7c01a42788f5049396532534a03ae8ebd63bf94e4").unwrap()
+                        );
+                    }
+                    _ => panic!("expected EncryptedPayload"),
+                }
+            }
+            _ => panic!("expected Initial"),
+        }
     }
 }

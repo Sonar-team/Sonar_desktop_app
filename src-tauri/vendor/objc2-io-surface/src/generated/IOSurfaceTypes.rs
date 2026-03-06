@@ -33,10 +33,6 @@ unsafe impl RefEncode for IOSurfaceLockOptions {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-unsafe impl Send for IOSurfaceLockOptions {}
-
-unsafe impl Sync for IOSurfaceLockOptions {}
-
 /// [Apple's documentation](https://developer.apple.com/documentation/iosurface/iosurfacepurgeabilitystate?language=objc)
 // NS_OPTIONS
 #[repr(transparent)]
@@ -64,10 +60,6 @@ unsafe impl Encode for IOSurfacePurgeabilityState {
 unsafe impl RefEncode for IOSurfacePurgeabilityState {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
-
-unsafe impl Send for IOSurfacePurgeabilityState {}
-
-unsafe impl Sync for IOSurfacePurgeabilityState {}
 
 /// [Apple's documentation](https://developer.apple.com/documentation/iosurface/kiosurfacedefaultcache?language=objc)
 pub const kIOSurfaceDefaultCache: c_uint = 0;

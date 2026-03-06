@@ -136,9 +136,6 @@ impl NSException {
             feature = "NSObjCRuntime",
             feature = "NSString"
         ))]
-        /// # Safety
-        ///
-        /// `user_info` generic should be of the correct type.
         #[unsafe(method(exceptionWithName:reason:userInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn exceptionWithName_reason_userInfo(
@@ -152,9 +149,6 @@ impl NSException {
             feature = "NSObjCRuntime",
             feature = "NSString"
         ))]
-        /// # Safety
-        ///
-        /// `a_user_info` generic should be of the correct type.
         #[unsafe(method(initWithName:reason:userInfo:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithName_reason_userInfo(
@@ -182,12 +176,12 @@ impl NSException {
         #[cfg(all(feature = "NSArray", feature = "NSValue"))]
         #[unsafe(method(callStackReturnAddresses))]
         #[unsafe(method_family = none)]
-        pub fn callStackReturnAddresses(&self) -> Retained<NSArray<NSNumber>>;
+        pub unsafe fn callStackReturnAddresses(&self) -> Retained<NSArray<NSNumber>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         #[unsafe(method(callStackSymbols))]
         #[unsafe(method_family = none)]
-        pub fn callStackSymbols(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn callStackSymbols(&self) -> Retained<NSArray<NSString>>;
     );
 }
 
@@ -196,7 +190,7 @@ impl NSException {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -208,18 +202,11 @@ impl NSException {
 /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nsuncaughtexceptionhandler?language=objc)
 pub type NSUncaughtExceptionHandler = core::ffi::c_void;
 
-#[inline]
-pub extern "C-unwind" fn NSGetUncaughtExceptionHandler() -> *mut NSUncaughtExceptionHandler {
-    extern "C-unwind" {
-        fn NSGetUncaughtExceptionHandler() -> *mut NSUncaughtExceptionHandler;
-    }
-    unsafe { NSGetUncaughtExceptionHandler() }
+extern "C-unwind" {
+    pub fn NSGetUncaughtExceptionHandler() -> *mut NSUncaughtExceptionHandler;
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `_` must be a valid pointer or null.
     pub fn NSSetUncaughtExceptionHandler(param1: *mut NSUncaughtExceptionHandler);
 }
 
@@ -244,7 +231,7 @@ impl NSAssertionHandler {
     extern_methods!(
         #[unsafe(method(currentHandler))]
         #[unsafe(method_family = none)]
-        pub fn currentHandler() -> Retained<NSAssertionHandler>;
+        pub unsafe fn currentHandler() -> Retained<NSAssertionHandler>;
     );
 }
 
@@ -253,17 +240,10 @@ impl NSAssertionHandler {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSAssertionHandler {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

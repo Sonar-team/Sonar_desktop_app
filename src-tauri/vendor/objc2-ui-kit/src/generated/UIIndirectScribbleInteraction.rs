@@ -43,7 +43,7 @@ impl UIIndirectScribbleInteraction {
 
         #[unsafe(method(initWithDelegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDelegate(
+        pub unsafe fn initWithDelegate(
             this: Allocated<Self>,
             delegate: &ProtocolObject<dyn UIIndirectScribbleInteractionDelegate>,
         ) -> Retained<Self>;
@@ -51,14 +51,14 @@ impl UIIndirectScribbleInteraction {
         /// The delegate for the interaction, to supply and customize writable elements in the interaction's view.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIIndirectScribbleInteractionDelegate>>>;
 
         /// : Indicates if the user is actively writing. It will be set to YES in between calls to -indirectScribbleInteraction:willBeginWritingInElement: and -indirectScribbleInteraction:didFinishWritingInElement: calls.
         #[unsafe(method(isHandlingWriting))]
         #[unsafe(method_family = none)]
-        pub fn isHandlingWriting(&self) -> bool;
+        pub unsafe fn isHandlingWriting(&self) -> bool;
     );
 }
 
@@ -84,7 +84,7 @@ extern_protocol!(
         /// Parameter `completion`: You must call the completion handler, synchronously or asynchronously, with an array of identifiers of the available elements, or an empty array if no elements are available.
         #[unsafe(method(indirectScribbleInteraction:requestElementsInRect:completion:))]
         #[unsafe(method_family = none)]
-        fn indirectScribbleInteraction_requestElementsInRect_completion(
+        unsafe fn indirectScribbleInteraction_requestElementsInRect_completion(
             &self,
             interaction: &UIIndirectScribbleInteraction,
             rect: CGRect,
@@ -98,10 +98,6 @@ extern_protocol!(
         /// Parameter `elementIdentifier`: The identifier of the element the interaction is asking about.
         ///
         /// Returns: Return YES if the element is the one currently focused.
-        ///
-        /// # Safety
-        ///
-        /// `element_identifier` should be of the correct type.
         #[unsafe(method(indirectScribbleInteraction:isElementFocused:))]
         #[unsafe(method_family = none)]
         unsafe fn indirectScribbleInteraction_isElementFocused(
@@ -118,10 +114,6 @@ extern_protocol!(
         /// Parameter `elementIdentifier`: The identifier of the element the interaction is asking about.
         ///
         /// Returns: Frame for the element, in the interactions's view coordinate system.
-        ///
-        /// # Safety
-        ///
-        /// `element_identifier` should be of the correct type.
         #[unsafe(method(indirectScribbleInteraction:frameForElement:))]
         #[unsafe(method_family = none)]
         unsafe fn indirectScribbleInteraction_frameForElement(
@@ -146,10 +138,6 @@ extern_protocol!(
         /// Parameter `elementIdentifier`: The identifier of the element that should be focused.
         ///
         /// Parameter `completion`: You must always call the completion handler, either synchronously or asynchronously. On success, the first parameter should be the text input that became first responder and that will handle text operations for this element. On failure, call the completion with a nil parameter.
-        ///
-        /// # Safety
-        ///
-        /// `element_identifier` should be of the correct type.
         #[unsafe(method(indirectScribbleInteraction:focusElementIfNeeded:referencePoint:completion:))]
         #[unsafe(method_family = none)]
         unsafe fn indirectScribbleInteraction_focusElementIfNeeded_referencePoint_completion(
@@ -168,10 +156,6 @@ extern_protocol!(
         /// Parameter `elementIdentifier`: The identifier of the element the interaction is asking about.
         ///
         /// Returns: Return YES to delay focusing the element.
-        ///
-        /// # Safety
-        ///
-        /// `element_identifier` should be of the correct type.
         #[optional]
         #[unsafe(method(indirectScribbleInteraction:shouldDelayFocusForElement:))]
         #[unsafe(method_family = none)]
@@ -186,10 +170,6 @@ extern_protocol!(
         /// Parameter `interaction`: The interaction notifying about writing state changes.
         ///
         /// Parameter `elementIdentifier`: The identifier of the element the user is writing into.
-        ///
-        /// # Safety
-        ///
-        /// `element_identifier` should be of the correct type.
         #[optional]
         #[unsafe(method(indirectScribbleInteraction:willBeginWritingInElement:))]
         #[unsafe(method_family = none)]
@@ -204,10 +184,6 @@ extern_protocol!(
         /// Parameter `interaction`: The interaction notifying about writing state changes.
         ///
         /// Parameter `elementIdentifier`: The identifier of the element the user finished writing into.
-        ///
-        /// # Safety
-        ///
-        /// `element_identifier` should be of the correct type.
         #[optional]
         #[unsafe(method(indirectScribbleInteraction:didFinishWritingInElement:))]
         #[unsafe(method_family = none)]

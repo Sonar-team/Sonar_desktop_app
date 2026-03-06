@@ -12,7 +12,6 @@ use drm::Device;
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle, RawDisplayHandle, RawWindowHandle};
 
 use std::collections::HashSet;
-use std::fmt;
 use std::marker::PhantomData;
 use std::num::NonZeroU32;
 use std::os::unix::io::{AsFd, BorrowedFd};
@@ -44,15 +43,16 @@ impl<D: HasDisplayHandle + ?Sized> ContextInterface<D> for Arc<KmsDisplayImpl<D>
     where
         D: Sized,
     {
-        let RawDisplayHandle::Drm(drm) = display.display_handle()?.as_raw() else {
-            return Err(InitError::Unsupported(display));
+        let fd = match display.display_handle()?.as_raw() {
+            RawDisplayHandle::Drm(drm) => drm.fd,
+            _ => return Err(InitError::Unsupported(display)),
         };
-        if drm.fd == -1 {
+        if fd == -1 {
             return Err(SoftBufferError::IncompleteDisplayHandle.into());
         }
 
         // SAFETY: Invariants guaranteed by the user.
-        let fd = unsafe { BorrowedFd::borrow_raw(drm.fd) };
+        let fd = unsafe { BorrowedFd::borrow_raw(fd) };
 
         Ok(Arc::new(KmsDisplayImpl {
             fd,
@@ -119,13 +119,6 @@ pub(crate) struct BufferImpl<'a, D: ?Sized, W: ?Sized> {
     _window: PhantomData<&'a mut W>,
 }
 
-impl<D: ?Sized + fmt::Debug, W: ?Sized + fmt::Debug> fmt::Debug for BufferImpl<'_, D, W> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // FIXME: Derive instead once `DumbMapping` impls `Debug`.
-        f.debug_struct("BufferImpl").finish_non_exhaustive()
-    }
-}
-
 /// The combined frame buffer and dumb buffer.
 #[derive(Debug)]
 struct SharedBuffer {
@@ -141,20 +134,18 @@ struct SharedBuffer {
 
 impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> for KmsImpl<D, W> {
     type Context = Arc<KmsDisplayImpl<D>>;
-    type Buffer<'a>
-        = BufferImpl<'a, D, W>
-    where
-        Self: 'a;
+    type Buffer<'a> = BufferImpl<'a, D, W> where Self: 'a;
 
     /// Create a new KMS backend.
     fn new(window: W, display: &Arc<KmsDisplayImpl<D>>) -> Result<Self, InitError<W>> {
         // Make sure that the window handle is valid.
-        let RawWindowHandle::Drm(drm) = window.window_handle()?.as_raw() else {
-            return Err(InitError::Unsupported(window));
+        let plane_handle = match window.window_handle()?.as_raw() {
+            RawWindowHandle::Drm(drm) => match NonZeroU32::new(drm.plane) {
+                Some(handle) => plane::Handle::from(handle),
+                None => return Err(SoftBufferError::IncompleteWindowHandle.into()),
+            },
+            _ => return Err(InitError::Unsupported(window)),
         };
-        let plane_handle =
-            NonZeroU32::new(drm.plane).ok_or(SoftBufferError::IncompleteWindowHandle)?;
-        let plane_handle = plane::Handle::from(plane_handle);
 
         let plane_info = display
             .get_plane(plane_handle)
@@ -168,7 +159,7 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> fo
             let handle = match plane_info.crtc() {
                 Some(crtc) => crtc,
                 None => {
-                    tracing::warn!("no CRTC attached to plane, falling back to primary CRTC");
+                    log::warn!("no CRTC attached to plane, falling back to primary CRTC");
                     handles
                         .filter_crtcs(plane_info.possible_crtcs())
                         .first()
@@ -200,7 +191,7 @@ impl<D: HasDisplayHandle + ?Sized, W: HasWindowHandle> SurfaceInterface<D, W> fo
             .filter(|connector| {
                 connector
                     .current_encoder()
-                    .is_some_and(|encoder| encoders.contains(&encoder))
+                    .map_or(false, |encoder| encoders.contains(&encoder))
             })
             .map(|info| info.handle())
             .collect::<Vec<_>>();
@@ -301,14 +292,6 @@ impl<D: ?Sized, W: ?Sized> Drop for KmsImpl<D, W> {
 }
 
 impl<D: ?Sized, W: ?Sized> BufferInterface for BufferImpl<'_, D, W> {
-    fn width(&self) -> NonZeroU32 {
-        self.size.0
-    }
-
-    fn height(&self) -> NonZeroU32 {
-        self.size.1
-    }
-
     #[inline]
     fn pixels(&self) -> &[u32] {
         bytemuck::cast_slice(self.mapping.as_ref())

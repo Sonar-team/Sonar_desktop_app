@@ -98,7 +98,7 @@ impl NSToolbar {
         /// Toolbars with the same identifier are implicitly synchronized so that they maintain the same state.
         #[unsafe(method(initWithIdentifier:))]
         #[unsafe(method_family = init)]
-        pub fn initWithIdentifier(
+        pub unsafe fn initWithIdentifier(
             this: Allocated<Self>,
             identifier: &NSToolbarIdentifier,
         ) -> Retained<Self>;
@@ -107,14 +107,14 @@ impl NSToolbar {
         /// Customizable toolbars should use `-initWithIdentifier:` with a unique identifier instead.
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         /// Inserts an item with the specified identifier in the receiving toolbar at the specified index.
         ///
         /// Any change made will be propagated immediately to all other toolbars with the same identifier.
         #[unsafe(method(insertItemWithItemIdentifier:atIndex:))]
         #[unsafe(method_family = none)]
-        pub fn insertItemWithItemIdentifier_atIndex(
+        pub unsafe fn insertItemWithItemIdentifier_atIndex(
             &self,
             item_identifier: &NSToolbarItemIdentifier,
             index: NSInteger,
@@ -125,46 +125,44 @@ impl NSToolbar {
         /// Any change made will be propagated immediately to all other toolbars with the same identifier.
         #[unsafe(method(removeItemAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn removeItemAtIndex(&self, index: NSInteger);
+        pub unsafe fn removeItemAtIndex(&self, index: NSInteger);
 
         /// Removes the item with matching `itemIdentifier` in the receiving toolbar. If multiple items share the same identifier (as is the case with space items) all matching items will be removed. To remove only a single space item, use `-removeItemAtIndex:` instead.
         ///
         /// Any change made will be propagated immediately to all other toolbars with the same identifier.
         #[unsafe(method(removeItemWithItemIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn removeItemWithItemIdentifier(&self, item_identifier: &NSToolbarItemIdentifier);
+        pub unsafe fn removeItemWithItemIdentifier(
+            &self,
+            item_identifier: &NSToolbarItemIdentifier,
+        );
 
         /// Customizable toolbars must have a delegate, and must implement the required `NSToolbarDelegate` methods.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSToolbarDelegate>>>;
+        pub unsafe fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSToolbarDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSToolbarDelegate>>);
+        pub unsafe fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSToolbarDelegate>>);
 
         /// Toggles the visibility of the toolbar.
         /// This property may be modified by the user in toolbars with `allowsUserCustomization` enabled.
         /// This property is key value observable on macOS 14.0 and higher.
         #[unsafe(method(isVisible))]
         #[unsafe(method_family = none)]
-        pub fn isVisible(&self) -> bool;
+        pub unsafe fn isVisible(&self) -> bool;
 
         /// Setter for [`isVisible`][Self::isVisible].
         #[unsafe(method(setVisible:))]
         #[unsafe(method_family = none)]
-        pub fn setVisible(&self, visible: bool);
+        pub unsafe fn setVisible(&self, visible: bool);
 
         /// Customizable toolbars (those with delegates) can show a palette which allows users to populate the toolbar with individual items or to reset the toolbar to some default set of items.
         /// The items and item sets in the palette are specified by the delegate (`-toolbarAllowedItemIdentifiers:` and `-toolbarDefaultItemIdentifiers:`).
         /// When the user is done configuring, they will dismiss the palette.
-        ///
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(runCustomizationPalette:))]
         #[unsafe(method_family = none)]
         pub unsafe fn runCustomizationPalette(&self, sender: Option<&AnyObject>);
@@ -173,19 +171,19 @@ impl NSToolbar {
         /// On macOS 15.0 and above this property is key value observable.
         #[unsafe(method(customizationPaletteIsRunning))]
         #[unsafe(method_family = none)]
-        pub fn customizationPaletteIsRunning(&self) -> bool;
+        pub unsafe fn customizationPaletteIsRunning(&self) -> bool;
 
         /// The current display mode of items in the toolbar.
         /// In toolbars with `allowsDisplayModeCustomization` enabled this is a user modifiable property.
         /// This property is key value observable.
         #[unsafe(method(displayMode))]
         #[unsafe(method_family = none)]
-        pub fn displayMode(&self) -> NSToolbarDisplayMode;
+        pub unsafe fn displayMode(&self) -> NSToolbarDisplayMode;
 
         /// Setter for [`displayMode`][Self::displayMode].
         #[unsafe(method(setDisplayMode:))]
         #[unsafe(method_family = none)]
-        pub fn setDisplayMode(&self, display_mode: NSToolbarDisplayMode);
+        pub unsafe fn setDisplayMode(&self, display_mode: NSToolbarDisplayMode);
 
         /// Sets the toolbar's selected item by identifier.
         /// Use this to force an item identifier to be selected.
@@ -195,14 +193,12 @@ impl NSToolbar {
         /// This property is key value observable.
         #[unsafe(method(selectedItemIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn selectedItemIdentifier(&self) -> Option<Retained<NSToolbarItemIdentifier>>;
+        pub unsafe fn selectedItemIdentifier(&self) -> Option<Retained<NSToolbarItemIdentifier>>;
 
         /// Setter for [`selectedItemIdentifier`][Self::selectedItemIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSelectedItemIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectedItemIdentifier(
+        pub unsafe fn setSelectedItemIdentifier(
             &self,
             selected_item_identifier: Option<&NSToolbarItemIdentifier>,
         );
@@ -212,12 +208,12 @@ impl NSToolbar {
         /// For instance, a developer may not want users to be able to edit the toolbar while some event is being processed.
         #[unsafe(method(allowsUserCustomization))]
         #[unsafe(method_family = none)]
-        pub fn allowsUserCustomization(&self) -> bool;
+        pub unsafe fn allowsUserCustomization(&self) -> bool;
 
         /// Setter for [`allowsUserCustomization`][Self::allowsUserCustomization].
         #[unsafe(method(setAllowsUserCustomization:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsUserCustomization(&self, allows_user_customization: bool);
+        pub unsafe fn setAllowsUserCustomization(&self, allows_user_customization: bool);
 
         /// Whether or not the user is allowed to change display modes at run time.
         /// This functionality is independent of customizing the order of the items themselves.
@@ -226,30 +222,33 @@ impl NSToolbar {
         /// The default is YES for apps linked on macOS 15.0 and above.
         #[unsafe(method(allowsDisplayModeCustomization))]
         #[unsafe(method_family = none)]
-        pub fn allowsDisplayModeCustomization(&self) -> bool;
+        pub unsafe fn allowsDisplayModeCustomization(&self) -> bool;
 
         /// Setter for [`allowsDisplayModeCustomization`][Self::allowsDisplayModeCustomization].
         #[unsafe(method(setAllowsDisplayModeCustomization:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsDisplayModeCustomization(&self, allows_display_mode_customization: bool);
+        pub unsafe fn setAllowsDisplayModeCustomization(
+            &self,
+            allows_display_mode_customization: bool,
+        );
 
         /// All toolbars with the same name will share the same display attributes, and item order.
         /// If a toolbar autosaves its configuration, the item identifier will be used as the autosave name.
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Retained<NSToolbarIdentifier>;
+        pub unsafe fn identifier(&self) -> Retained<NSToolbarIdentifier>;
 
         #[cfg(feature = "NSToolbarItem")]
         /// Allows you to access all current items in the toolbar.
         #[unsafe(method(items))]
         #[unsafe(method_family = none)]
-        pub fn items(&self) -> Retained<NSArray<NSToolbarItem>>;
+        pub unsafe fn items(&self) -> Retained<NSArray<NSToolbarItem>>;
 
         #[cfg(feature = "NSToolbarItem")]
         /// Allows you to access the current visible items (non clipped).
         #[unsafe(method(visibleItems))]
         #[unsafe(method_family = none)]
-        pub fn visibleItems(&self) -> Option<Retained<NSArray<NSToolbarItem>>>;
+        pub unsafe fn visibleItems(&self) -> Option<Retained<NSArray<NSToolbarItem>>>;
 
         /// An array of itemIdentifiers that represent the current items in the toolbar.
         /// Setting this property will set the current items in the toolbar by diffing against items that already exist.
@@ -257,14 +256,15 @@ impl NSToolbar {
         /// This property is key value observable.
         #[unsafe(method(itemIdentifiers))]
         #[unsafe(method_family = none)]
-        pub fn itemIdentifiers(&self) -> Retained<NSArray<NSToolbarItemIdentifier>>;
+        pub unsafe fn itemIdentifiers(&self) -> Retained<NSArray<NSToolbarItemIdentifier>>;
 
         /// Setter for [`itemIdentifiers`][Self::itemIdentifiers].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setItemIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn setItemIdentifiers(&self, item_identifiers: &NSArray<NSToolbarItemIdentifier>);
+        pub unsafe fn setItemIdentifiers(
+            &self,
+            item_identifiers: &NSArray<NSToolbarItemIdentifier>,
+        );
 
         /// Items with centered identifiers will be centered together in the Toolbar relative to the window assuming space allows.
         /// The order of items is initially defined by the default set of identifiers, but may be customized by the user.
@@ -272,14 +272,12 @@ impl NSToolbar {
         /// This property is archived.
         #[unsafe(method(centeredItemIdentifiers))]
         #[unsafe(method_family = none)]
-        pub fn centeredItemIdentifiers(&self) -> Retained<NSSet<NSToolbarItemIdentifier>>;
+        pub unsafe fn centeredItemIdentifiers(&self) -> Retained<NSSet<NSToolbarItemIdentifier>>;
 
         /// Setter for [`centeredItemIdentifiers`][Self::centeredItemIdentifiers].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCenteredItemIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn setCenteredItemIdentifiers(
+        pub unsafe fn setCenteredItemIdentifiers(
             &self,
             centered_item_identifiers: &NSSet<NSToolbarItemIdentifier>,
         );
@@ -290,12 +288,12 @@ impl NSToolbar {
         /// Default is NO.
         #[unsafe(method(autosavesConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn autosavesConfiguration(&self) -> bool;
+        pub unsafe fn autosavesConfiguration(&self) -> bool;
 
         /// Setter for [`autosavesConfiguration`][Self::autosavesConfiguration].
         #[unsafe(method(setAutosavesConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setAutosavesConfiguration(&self, autosaves_configuration: bool);
+        pub unsafe fn setAutosavesConfiguration(&self, autosaves_configuration: bool);
 
         /// Typically you should not invoke this method.
         /// This method is called on window updates with the purpose of validating each of the visible items.
@@ -303,19 +301,19 @@ impl NSToolbar {
         /// If this method is invoked directly, all visible items including those with `autovalidates` disabled will get a `-validate` message.
         #[unsafe(method(validateVisibleItems))]
         #[unsafe(method_family = none)]
-        pub fn validateVisibleItems(&self);
+        pub unsafe fn validateVisibleItems(&self);
 
         /// When YES, the receiver can dynamically create toolbar items for Action extensions in the toolbar configuration panel.
         /// To be included, an extension needs to declare NSExtensionServiceAllowsToolbarItem=YES in its Info.plist.
         /// The default value is NO.
         #[unsafe(method(allowsExtensionItems))]
         #[unsafe(method_family = none)]
-        pub fn allowsExtensionItems(&self) -> bool;
+        pub unsafe fn allowsExtensionItems(&self) -> bool;
 
         /// Setter for [`allowsExtensionItems`][Self::allowsExtensionItems].
         #[unsafe(method(setAllowsExtensionItems:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsExtensionItems(&self, allows_extension_items: bool);
+        pub unsafe fn setAllowsExtensionItems(&self, allows_extension_items: bool);
     );
 }
 
@@ -324,7 +322,7 @@ impl NSToolbar {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -341,7 +339,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:))]
         #[unsafe(method_family = none)]
-        fn toolbar_itemForItemIdentifier_willBeInsertedIntoToolbar(
+        unsafe fn toolbar_itemForItemIdentifier_willBeInsertedIntoToolbar(
             &self,
             toolbar: &NSToolbar,
             item_identifier: &NSToolbarItemIdentifier,
@@ -353,7 +351,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(toolbarDefaultItemIdentifiers:))]
         #[unsafe(method_family = none)]
-        fn toolbarDefaultItemIdentifiers(
+        unsafe fn toolbarDefaultItemIdentifiers(
             &self,
             toolbar: &NSToolbar,
         ) -> Retained<NSArray<NSToolbarItemIdentifier>>;
@@ -366,7 +364,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(toolbarAllowedItemIdentifiers:))]
         #[unsafe(method_family = none)]
-        fn toolbarAllowedItemIdentifiers(
+        unsafe fn toolbarAllowedItemIdentifiers(
             &self,
             toolbar: &NSToolbar,
         ) -> Retained<NSArray<NSToolbarItemIdentifier>>;
@@ -380,7 +378,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(toolbarSelectableItemIdentifiers:))]
         #[unsafe(method_family = none)]
-        fn toolbarSelectableItemIdentifiers(
+        unsafe fn toolbarSelectableItemIdentifiers(
             &self,
             toolbar: &NSToolbar,
         ) -> Retained<NSArray<NSToolbarItemIdentifier>>;
@@ -389,7 +387,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(toolbarImmovableItemIdentifiers:))]
         #[unsafe(method_family = none)]
-        fn toolbarImmovableItemIdentifiers(
+        unsafe fn toolbarImmovableItemIdentifiers(
             &self,
             toolbar: &NSToolbar,
         ) -> Retained<NSSet<NSToolbarItemIdentifier>>;
@@ -400,7 +398,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(toolbar:itemIdentifier:canBeInsertedAtIndex:))]
         #[unsafe(method_family = none)]
-        fn toolbar_itemIdentifier_canBeInsertedAtIndex(
+        unsafe fn toolbar_itemIdentifier_canBeInsertedAtIndex(
             &self,
             toolbar: &NSToolbar,
             item_identifier: &NSToolbarItemIdentifier,
@@ -415,7 +413,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(toolbarWillAddItem:))]
         #[unsafe(method_family = none)]
-        fn toolbarWillAddItem(&self, notification: &NSNotification);
+        unsafe fn toolbarWillAddItem(&self, notification: &NSNotification);
 
         /// After an item is removed from a toolbar the notification is sent.
         /// This allows the chance to tear down information related to the item that may have been cached.
@@ -424,7 +422,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(toolbarDidRemoveItem:))]
         #[unsafe(method_family = none)]
-        fn toolbarDidRemoveItem(&self, notification: &NSNotification);
+        unsafe fn toolbarDidRemoveItem(&self, notification: &NSNotification);
     }
 );
 
@@ -446,26 +444,24 @@ impl NSToolbar {
         #[deprecated = "NSToolbarSizeMode is no longer recommended and will be ignored in the future"]
         #[unsafe(method(sizeMode))]
         #[unsafe(method_family = none)]
-        pub fn sizeMode(&self) -> NSToolbarSizeMode;
+        pub unsafe fn sizeMode(&self) -> NSToolbarSizeMode;
 
         /// Setter for [`sizeMode`][Self::sizeMode].
         #[deprecated = "NSToolbarSizeMode is no longer recommended and will be ignored in the future"]
         #[unsafe(method(setSizeMode:))]
         #[unsafe(method_family = none)]
-        pub fn setSizeMode(&self, size_mode: NSToolbarSizeMode);
+        pub unsafe fn setSizeMode(&self, size_mode: NSToolbarSizeMode);
 
         #[deprecated = "Use the centeredItemIdentifiers property instead"]
         #[unsafe(method(centeredItemIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn centeredItemIdentifier(&self) -> Option<Retained<NSToolbarItemIdentifier>>;
+        pub unsafe fn centeredItemIdentifier(&self) -> Option<Retained<NSToolbarItemIdentifier>>;
 
         /// Setter for [`centeredItemIdentifier`][Self::centeredItemIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated = "Use the centeredItemIdentifiers property instead"]
         #[unsafe(method(setCenteredItemIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setCenteredItemIdentifier(
+        pub unsafe fn setCenteredItemIdentifier(
             &self,
             centered_item_identifier: Option<&NSToolbarItemIdentifier>,
         );
@@ -474,27 +470,30 @@ impl NSToolbar {
         #[deprecated = "Use NSTitlebarAccessoryViewController with NSWindow instead"]
         #[unsafe(method(fullScreenAccessoryView))]
         #[unsafe(method_family = none)]
-        pub fn fullScreenAccessoryView(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn fullScreenAccessoryView(&self) -> Option<Retained<NSView>>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         /// Setter for [`fullScreenAccessoryView`][Self::fullScreenAccessoryView].
         #[deprecated = "Use NSTitlebarAccessoryViewController with NSWindow instead"]
         #[unsafe(method(setFullScreenAccessoryView:))]
         #[unsafe(method_family = none)]
-        pub fn setFullScreenAccessoryView(&self, full_screen_accessory_view: Option<&NSView>);
+        pub unsafe fn setFullScreenAccessoryView(
+            &self,
+            full_screen_accessory_view: Option<&NSView>,
+        );
 
         #[cfg(feature = "objc2-core-foundation")]
         #[deprecated = "Use NSTitlebarAccessoryViewController and its fullScreenMinHeight property with NSWindow instead."]
         #[unsafe(method(fullScreenAccessoryViewMinHeight))]
         #[unsafe(method_family = none)]
-        pub fn fullScreenAccessoryViewMinHeight(&self) -> CGFloat;
+        pub unsafe fn fullScreenAccessoryViewMinHeight(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`fullScreenAccessoryViewMinHeight`][Self::fullScreenAccessoryViewMinHeight].
         #[deprecated = "Use NSTitlebarAccessoryViewController and its fullScreenMinHeight property with NSWindow instead."]
         #[unsafe(method(setFullScreenAccessoryViewMinHeight:))]
         #[unsafe(method_family = none)]
-        pub fn setFullScreenAccessoryViewMinHeight(
+        pub unsafe fn setFullScreenAccessoryViewMinHeight(
             &self,
             full_screen_accessory_view_min_height: CGFloat,
         );
@@ -503,14 +502,14 @@ impl NSToolbar {
         #[deprecated = "Use NSTitlebarAccessoryViewController with NSWindow instead. The max height of a titlebar accessory is implied by its view's height."]
         #[unsafe(method(fullScreenAccessoryViewMaxHeight))]
         #[unsafe(method_family = none)]
-        pub fn fullScreenAccessoryViewMaxHeight(&self) -> CGFloat;
+        pub unsafe fn fullScreenAccessoryViewMaxHeight(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`fullScreenAccessoryViewMaxHeight`][Self::fullScreenAccessoryViewMaxHeight].
         #[deprecated = "Use NSTitlebarAccessoryViewController with NSWindow instead. The max height of a titlebar accessory is implied by its view's height."]
         #[unsafe(method(setFullScreenAccessoryViewMaxHeight:))]
         #[unsafe(method_family = none)]
-        pub fn setFullScreenAccessoryViewMaxHeight(
+        pub unsafe fn setFullScreenAccessoryViewMaxHeight(
             &self,
             full_screen_accessory_view_max_height: CGFloat,
         );
@@ -518,22 +517,20 @@ impl NSToolbar {
         #[deprecated = "No longer supported"]
         #[unsafe(method(showsBaselineSeparator))]
         #[unsafe(method_family = none)]
-        pub fn showsBaselineSeparator(&self) -> bool;
+        pub unsafe fn showsBaselineSeparator(&self) -> bool;
 
         /// Setter for [`showsBaselineSeparator`][Self::showsBaselineSeparator].
         #[deprecated = "No longer supported"]
         #[unsafe(method(setShowsBaselineSeparator:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsBaselineSeparator(&self, shows_baseline_separator: bool);
+        pub unsafe fn setShowsBaselineSeparator(&self, shows_baseline_separator: bool);
 
         #[deprecated = "Use -itemIdentifiers and -displayMode instead."]
         #[unsafe(method(configurationDictionary))]
         #[unsafe(method_family = none)]
-        pub fn configurationDictionary(&self) -> Retained<NSDictionary<NSString, AnyObject>>;
+        pub unsafe fn configurationDictionary(&self)
+            -> Retained<NSDictionary<NSString, AnyObject>>;
 
-        /// # Safety
-        ///
-        /// `config_dict` generic should be of the correct type.
         #[deprecated = "Use -setItemIdentifiers: and -setDisplayMode: instead."]
         #[unsafe(method(setConfigurationFromDictionary:))]
         #[unsafe(method_family = none)]

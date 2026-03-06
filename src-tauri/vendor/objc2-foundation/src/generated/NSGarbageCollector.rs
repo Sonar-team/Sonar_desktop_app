@@ -55,17 +55,11 @@ impl NSGarbageCollector {
         #[unsafe(method_family = none)]
         pub unsafe fn collectExhaustively(&self);
 
-        /// # Safety
-        ///
-        /// `ptr` must be a valid pointer.
         #[deprecated = "Building Garbage Collected apps is no longer supported."]
         #[unsafe(method(disableCollectorForPointer:))]
         #[unsafe(method_family = none)]
         pub unsafe fn disableCollectorForPointer(&self, ptr: NonNull<c_void>);
 
-        /// # Safety
-        ///
-        /// `ptr` must be a valid pointer.
         #[deprecated = "Building Garbage Collected apps is no longer supported."]
         #[unsafe(method(enableCollectorForPointer:))]
         #[unsafe(method_family = none)]

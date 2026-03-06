@@ -23,7 +23,7 @@ impl NSTextElement {
         #[cfg(feature = "NSTextContentManager")]
         #[unsafe(method(initWithTextContentManager:))]
         #[unsafe(method_family = init)]
-        pub fn initWithTextContentManager(
+        pub unsafe fn initWithTextContentManager(
             this: Allocated<Self>,
             text_content_manager: Option<&NSTextContentManager>,
         ) -> Retained<Self>;
@@ -31,38 +31,40 @@ impl NSTextElement {
         #[cfg(feature = "NSTextContentManager")]
         #[unsafe(method(textContentManager))]
         #[unsafe(method_family = none)]
-        pub fn textContentManager(&self) -> Option<Retained<NSTextContentManager>>;
+        pub unsafe fn textContentManager(&self) -> Option<Retained<NSTextContentManager>>;
 
         #[cfg(feature = "NSTextContentManager")]
-        /// Setter for [`textContentManager`][Self::textContentManager].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`textContentManager`][Self::textContentManager].
         #[unsafe(method(setTextContentManager:))]
         #[unsafe(method_family = none)]
-        pub fn setTextContentManager(&self, text_content_manager: Option<&NSTextContentManager>);
+        pub unsafe fn setTextContentManager(
+            &self,
+            text_content_manager: Option<&NSTextContentManager>,
+        );
 
         #[cfg(feature = "NSTextRange")]
         #[unsafe(method(elementRange))]
         #[unsafe(method_family = none)]
-        pub fn elementRange(&self) -> Option<Retained<NSTextRange>>;
+        pub unsafe fn elementRange(&self) -> Option<Retained<NSTextRange>>;
 
         #[cfg(feature = "NSTextRange")]
         /// Setter for [`elementRange`][Self::elementRange].
         #[unsafe(method(setElementRange:))]
         #[unsafe(method_family = none)]
-        pub fn setElementRange(&self, element_range: Option<&NSTextRange>);
+        pub unsafe fn setElementRange(&self, element_range: Option<&NSTextRange>);
 
         #[unsafe(method(childElements))]
         #[unsafe(method_family = none)]
-        pub fn childElements(&self) -> Retained<NSArray<NSTextElement>>;
+        pub unsafe fn childElements(&self) -> Retained<NSArray<NSTextElement>>;
 
         #[unsafe(method(parentElement))]
         #[unsafe(method_family = none)]
-        pub fn parentElement(&self) -> Option<Retained<NSTextElement>>;
+        pub unsafe fn parentElement(&self) -> Option<Retained<NSTextElement>>;
 
         #[unsafe(method(isRepresentedElement))]
         #[unsafe(method_family = none)]
-        pub fn isRepresentedElement(&self) -> bool;
+        pub unsafe fn isRepresentedElement(&self) -> bool;
     );
 }
 
@@ -71,19 +73,12 @@ impl NSTextElement {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSTextElement {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -101,24 +96,24 @@ impl NSTextParagraph {
     extern_methods!(
         #[unsafe(method(initWithAttributedString:))]
         #[unsafe(method_family = init)]
-        pub fn initWithAttributedString(
+        pub unsafe fn initWithAttributedString(
             this: Allocated<Self>,
             attributed_string: Option<&NSAttributedString>,
         ) -> Retained<Self>;
 
         #[unsafe(method(attributedString))]
         #[unsafe(method_family = none)]
-        pub fn attributedString(&self) -> Retained<NSAttributedString>;
+        pub unsafe fn attributedString(&self) -> Retained<NSAttributedString>;
 
         #[cfg(feature = "NSTextRange")]
         #[unsafe(method(paragraphContentRange))]
         #[unsafe(method_family = none)]
-        pub fn paragraphContentRange(&self) -> Option<Retained<NSTextRange>>;
+        pub unsafe fn paragraphContentRange(&self) -> Option<Retained<NSTextRange>>;
 
         #[cfg(feature = "NSTextRange")]
         #[unsafe(method(paragraphSeparatorRange))]
         #[unsafe(method_family = none)]
-        pub fn paragraphSeparatorRange(&self) -> Option<Retained<NSTextRange>>;
+        pub unsafe fn paragraphSeparatorRange(&self) -> Option<Retained<NSTextRange>>;
     );
 }
 
@@ -128,7 +123,7 @@ impl NSTextParagraph {
         #[cfg(feature = "NSTextContentManager")]
         #[unsafe(method(initWithTextContentManager:))]
         #[unsafe(method_family = init)]
-        pub fn initWithTextContentManager(
+        pub unsafe fn initWithTextContentManager(
             this: Allocated<Self>,
             text_content_manager: Option<&NSTextContentManager>,
         ) -> Retained<Self>;
@@ -140,17 +135,10 @@ impl NSTextParagraph {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSTextParagraph {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

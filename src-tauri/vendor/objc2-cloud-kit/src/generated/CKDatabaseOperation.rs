@@ -35,22 +35,12 @@ impl CKDatabaseOperation {
         ///
         /// is used.
         /// This will also set the container property of the operation's configuration to match the container of the passed-in database.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(database))]
         #[unsafe(method_family = none)]
         pub unsafe fn database(&self) -> Option<Retained<CKDatabase>>;
 
         #[cfg(feature = "CKDatabase")]
         /// Setter for [`database`][Self::database].
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setDatabase:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDatabase(&self, database: Option<&CKDatabase>);

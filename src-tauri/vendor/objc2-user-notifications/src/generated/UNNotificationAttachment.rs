@@ -37,19 +37,16 @@ impl UNNotificationAttachment {
     extern_methods!(
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Retained<NSString>;
+        pub unsafe fn identifier(&self) -> Retained<NSString>;
 
         #[unsafe(method(URL))]
         #[unsafe(method_family = none)]
-        pub fn URL(&self) -> Retained<NSURL>;
+        pub unsafe fn URL(&self) -> Retained<NSURL>;
 
         #[unsafe(method(type))]
         #[unsafe(method_family = none)]
-        pub fn r#type(&self) -> Retained<NSString>;
+        pub unsafe fn r#type(&self) -> Retained<NSString>;
 
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(attachmentWithIdentifier:URL:options:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn attachmentWithIdentifier_URL_options_error(

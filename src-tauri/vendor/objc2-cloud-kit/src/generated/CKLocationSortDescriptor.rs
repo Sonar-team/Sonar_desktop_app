@@ -54,9 +54,6 @@ impl CKLocationSortDescriptor {
             relative_location: &CLLocation,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `a_decoder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, a_decoder: &NSCoder) -> Retained<Self>;
@@ -78,9 +75,6 @@ impl CKLocationSortDescriptor {
             ascending: bool,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `selector` must be a valid selector.
         #[unsafe(method(sortDescriptorWithKey:ascending:selector:))]
         #[unsafe(method_family = none)]
         pub unsafe fn sortDescriptorWithKey_ascending_selector(
@@ -97,9 +91,6 @@ impl CKLocationSortDescriptor {
             ascending: bool,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `selector` must be a valid selector.
         #[unsafe(method(initWithKey:ascending:selector:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithKey_ascending_selector(
@@ -109,9 +100,6 @@ impl CKLocationSortDescriptor {
             selector: Option<Sel>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `cmptr` must be a valid pointer.
         #[unsafe(method(sortDescriptorWithKey:ascending:comparator:))]
         #[unsafe(method_family = none)]
         pub unsafe fn sortDescriptorWithKey_ascending_comparator(
@@ -120,9 +108,6 @@ impl CKLocationSortDescriptor {
             cmptr: NSComparator,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `cmptr` must be a valid pointer.
         #[unsafe(method(initWithKey:ascending:comparator:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithKey_ascending_comparator(

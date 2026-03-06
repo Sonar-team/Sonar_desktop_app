@@ -6,6 +6,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void* CSystem;
 typedef const void* CProcess;
 typedef const char* RString;
@@ -40,6 +44,9 @@ size_t      sysinfo_used_memory(CSystem system);
 size_t      sysinfo_total_swap(CSystem system);
 size_t      sysinfo_free_swap(CSystem system);
 size_t      sysinfo_used_swap(CSystem system);
+
+bool        sysinfo_cgroup_limits(CSystem system, size_t *total_memory,
+                                 size_t *free_memory, size_t *free_swap, size_t *rss);
 
 void        sysinfo_cpus_usage(CSystem system, unsigned int *length, float **cpus);
 
@@ -84,3 +91,7 @@ RString     sysinfo_product_version();
 RString     sysinfo_product_vendor_name();
 
 void        sysinfo_rstring_free(RString str);
+
+#ifdef __cplusplus
+}
+#endif

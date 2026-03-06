@@ -33,24 +33,24 @@ impl NSRotationGestureRecognizer {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(rotation))]
         #[unsafe(method_family = none)]
-        pub fn rotation(&self) -> CGFloat;
+        pub unsafe fn rotation(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`rotation`][Self::rotation].
         #[unsafe(method(setRotation:))]
         #[unsafe(method_family = none)]
-        pub fn setRotation(&self, rotation: CGFloat);
+        pub unsafe fn setRotation(&self, rotation: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(rotationInDegrees))]
         #[unsafe(method_family = none)]
-        pub fn rotationInDegrees(&self) -> CGFloat;
+        pub unsafe fn rotationInDegrees(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`rotationInDegrees`][Self::rotationInDegrees].
         #[unsafe(method(setRotationInDegrees:))]
         #[unsafe(method_family = none)]
-        pub fn setRotationInDegrees(&self, rotation_in_degrees: CGFloat);
+        pub unsafe fn setRotationInDegrees(&self, rotation_in_degrees: CGFloat);
     );
 }
 
@@ -58,10 +58,6 @@ impl NSRotationGestureRecognizer {
 #[cfg(feature = "NSGestureRecognizer")]
 impl NSRotationGestureRecognizer {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `action` must be a valid selector.
         #[unsafe(method(initWithTarget:action:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTarget_action(
@@ -70,9 +66,6 @@ impl NSRotationGestureRecognizer {
             action: Option<Sel>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -88,10 +81,10 @@ impl NSRotationGestureRecognizer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

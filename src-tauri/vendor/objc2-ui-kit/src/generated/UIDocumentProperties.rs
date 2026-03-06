@@ -32,16 +32,12 @@ impl UIDocumentProperties {
         /// When initializing with a url, UIKit will automatically lookup metadata based on the data at that url.
         #[unsafe(method(initWithURL:))]
         #[unsafe(method_family = init)]
-        pub fn initWithURL(this: Allocated<Self>, url: &NSURL) -> Retained<Self>;
+        pub unsafe fn initWithURL(this: Allocated<Self>, url: &NSURL) -> Retained<Self>;
 
         #[cfg(all(feature = "UIDragItem", feature = "UIDragSession", feature = "block2"))]
         /// To support drag
         /// &
         /// drop, assign a closure to return an array of drag items corresponding to the represented document.
-        ///
-        /// # Safety
-        ///
-        /// The returned block's argument must be a valid pointer.
         #[unsafe(method(dragItemsProvider))]
         #[unsafe(method_family = none)]
         pub unsafe fn dragItemsProvider(
@@ -52,12 +48,6 @@ impl UIDocumentProperties {
 
         #[cfg(all(feature = "UIDragItem", feature = "UIDragSession", feature = "block2"))]
         /// Setter for [`dragItemsProvider`][Self::dragItemsProvider].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `drag_items_provider` block's return must be a valid pointer.
         #[unsafe(method(setDragItemsProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDragItemsProvider(
@@ -80,7 +70,7 @@ impl UIDocumentProperties {
         /// To support sharing, assign a closure to return a UIActivityViewController configured to share the represented document.
         #[unsafe(method(activityViewControllerProvider))]
         #[unsafe(method_family = none)]
-        pub fn activityViewControllerProvider(
+        pub unsafe fn activityViewControllerProvider(
             &self,
         ) -> *mut block2::DynBlock<dyn Fn() -> NonNull<UIActivityViewController>>;
 
@@ -91,12 +81,6 @@ impl UIDocumentProperties {
             feature = "block2"
         ))]
         /// Setter for [`activityViewControllerProvider`][Self::activityViewControllerProvider].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `activity_view_controller_provider` block's return must be a valid pointer.
         #[unsafe(method(setActivityViewControllerProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setActivityViewControllerProvider(
@@ -109,11 +93,11 @@ impl UIDocumentProperties {
         /// If enabled, shows an icon representation of the document in the navigation bar.
         #[unsafe(method(wantsIconRepresentation))]
         #[unsafe(method_family = none)]
-        pub fn wantsIconRepresentation(&self) -> bool;
+        pub unsafe fn wantsIconRepresentation(&self) -> bool;
 
         /// Setter for [`wantsIconRepresentation`][Self::wantsIconRepresentation].
         #[unsafe(method(setWantsIconRepresentation:))]
         #[unsafe(method_family = none)]
-        pub fn setWantsIconRepresentation(&self, wants_icon_representation: bool);
+        pub unsafe fn setWantsIconRepresentation(&self, wants_icon_representation: bool);
     );
 }

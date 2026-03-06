@@ -37,7 +37,7 @@ impl UIWindowSceneProminentPlacement {
         /// Creates a prominent placement.
         #[unsafe(method(prominentPlacement))]
         #[unsafe(method_family = none)]
-        pub fn prominentPlacement() -> Retained<Self>;
+        pub unsafe fn prominentPlacement() -> Retained<Self>;
     );
 }
 

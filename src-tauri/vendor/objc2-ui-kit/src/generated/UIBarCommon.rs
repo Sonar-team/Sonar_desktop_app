@@ -64,7 +64,7 @@ extern_protocol!(
     pub unsafe trait UIBarPositioning: NSObjectProtocol + MainThreadOnly {
         #[unsafe(method(barPosition))]
         #[unsafe(method_family = none)]
-        fn barPosition(&self) -> UIBarPosition;
+        unsafe fn barPosition(&self) -> UIBarPosition;
     }
 );
 
@@ -74,6 +74,9 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(positionForBar:))]
         #[unsafe(method_family = none)]
-        fn positionForBar(&self, bar: &ProtocolObject<dyn UIBarPositioning>) -> UIBarPosition;
+        unsafe fn positionForBar(
+            &self,
+            bar: &ProtocolObject<dyn UIBarPositioning>,
+        ) -> UIBarPosition;
     }
 );

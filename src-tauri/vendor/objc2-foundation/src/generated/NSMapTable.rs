@@ -15,7 +15,6 @@ pub static NSMapTableStrongMemory: NSPointerFunctionsOptions =
 
 /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nsmaptablezeroingweakmemory?language=objc)
 #[cfg(feature = "NSPointerFunctions")]
-#[deprecated = "GC no longer supported"]
 pub static NSMapTableZeroingWeakMemory: NSPointerFunctionsOptions =
     NSPointerFunctionsOptions(NSPointerFunctionsOptions::ZeroingWeakMemory.0);
 
@@ -43,20 +42,6 @@ extern_class!(
     #[derive(Debug, PartialEq, Eq, Hash)]
     pub struct NSMapTable<KeyType: ?Sized = AnyObject, ObjectType: ?Sized = AnyObject>;
 );
-
-impl<KeyType: ?Sized + Message, ObjectType: ?Sized + Message> NSMapTable<KeyType, ObjectType> {
-    /// Unchecked conversion of the generic parameters.
-    ///
-    /// # Safety
-    ///
-    /// The generics must be valid to reinterpret as the given types.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewKeyType: ?Sized + Message, NewObjectType: ?Sized + Message>(
-        &self,
-    ) -> &NSMapTable<NewKeyType, NewObjectType> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
 
 #[cfg(feature = "NSObject")]
 extern_conformance!(
@@ -106,7 +91,7 @@ impl<KeyType: Message, ObjectType: Message> NSMapTable<KeyType, ObjectType> {
         #[cfg(feature = "NSPointerFunctions")]
         #[unsafe(method(initWithKeyOptions:valueOptions:capacity:))]
         #[unsafe(method_family = init)]
-        pub fn initWithKeyOptions_valueOptions_capacity(
+        pub unsafe fn initWithKeyOptions_valueOptions_capacity(
             this: Allocated<Self>,
             key_options: NSPointerFunctionsOptions,
             value_options: NSPointerFunctionsOptions,
@@ -116,7 +101,7 @@ impl<KeyType: Message, ObjectType: Message> NSMapTable<KeyType, ObjectType> {
         #[cfg(feature = "NSPointerFunctions")]
         #[unsafe(method(initWithKeyPointerFunctions:valuePointerFunctions:capacity:))]
         #[unsafe(method_family = init)]
-        pub fn initWithKeyPointerFunctions_valuePointerFunctions_capacity(
+        pub unsafe fn initWithKeyPointerFunctions_valuePointerFunctions_capacity(
             this: Allocated<Self>,
             key_functions: &NSPointerFunctions,
             value_functions: &NSPointerFunctions,
@@ -126,7 +111,7 @@ impl<KeyType: Message, ObjectType: Message> NSMapTable<KeyType, ObjectType> {
         #[cfg(feature = "NSPointerFunctions")]
         #[unsafe(method(mapTableWithKeyOptions:valueOptions:))]
         #[unsafe(method_family = none)]
-        pub fn mapTableWithKeyOptions_valueOptions(
+        pub unsafe fn mapTableWithKeyOptions_valueOptions(
             key_options: NSPointerFunctionsOptions,
             value_options: NSPointerFunctionsOptions,
         ) -> Retained<NSMapTable<KeyType, ObjectType>>;
@@ -134,89 +119,89 @@ impl<KeyType: Message, ObjectType: Message> NSMapTable<KeyType, ObjectType> {
         #[deprecated = "GC no longer supported"]
         #[unsafe(method(mapTableWithStrongToStrongObjects))]
         #[unsafe(method_family = none)]
-        pub fn mapTableWithStrongToStrongObjects() -> Retained<AnyObject>;
+        pub unsafe fn mapTableWithStrongToStrongObjects() -> Retained<AnyObject>;
 
         #[deprecated = "GC no longer supported"]
         #[unsafe(method(mapTableWithWeakToStrongObjects))]
         #[unsafe(method_family = none)]
-        pub fn mapTableWithWeakToStrongObjects() -> Retained<AnyObject>;
+        pub unsafe fn mapTableWithWeakToStrongObjects() -> Retained<AnyObject>;
 
         #[deprecated = "GC no longer supported"]
         #[unsafe(method(mapTableWithStrongToWeakObjects))]
         #[unsafe(method_family = none)]
-        pub fn mapTableWithStrongToWeakObjects() -> Retained<AnyObject>;
+        pub unsafe fn mapTableWithStrongToWeakObjects() -> Retained<AnyObject>;
 
         #[deprecated = "GC no longer supported"]
         #[unsafe(method(mapTableWithWeakToWeakObjects))]
         #[unsafe(method_family = none)]
-        pub fn mapTableWithWeakToWeakObjects() -> Retained<AnyObject>;
+        pub unsafe fn mapTableWithWeakToWeakObjects() -> Retained<AnyObject>;
 
         #[unsafe(method(strongToStrongObjectsMapTable))]
         #[unsafe(method_family = none)]
-        pub fn strongToStrongObjectsMapTable() -> Retained<NSMapTable<KeyType, ObjectType>>;
+        pub unsafe fn strongToStrongObjectsMapTable() -> Retained<NSMapTable<KeyType, ObjectType>>;
 
         #[unsafe(method(weakToStrongObjectsMapTable))]
         #[unsafe(method_family = none)]
-        pub fn weakToStrongObjectsMapTable() -> Retained<NSMapTable<KeyType, ObjectType>>;
+        pub unsafe fn weakToStrongObjectsMapTable() -> Retained<NSMapTable<KeyType, ObjectType>>;
 
         #[unsafe(method(strongToWeakObjectsMapTable))]
         #[unsafe(method_family = none)]
-        pub fn strongToWeakObjectsMapTable() -> Retained<NSMapTable<KeyType, ObjectType>>;
+        pub unsafe fn strongToWeakObjectsMapTable() -> Retained<NSMapTable<KeyType, ObjectType>>;
 
         #[unsafe(method(weakToWeakObjectsMapTable))]
         #[unsafe(method_family = none)]
-        pub fn weakToWeakObjectsMapTable() -> Retained<NSMapTable<KeyType, ObjectType>>;
+        pub unsafe fn weakToWeakObjectsMapTable() -> Retained<NSMapTable<KeyType, ObjectType>>;
 
         #[cfg(feature = "NSPointerFunctions")]
         #[unsafe(method(keyPointerFunctions))]
         #[unsafe(method_family = none)]
-        pub fn keyPointerFunctions(&self) -> Retained<NSPointerFunctions>;
+        pub unsafe fn keyPointerFunctions(&self) -> Retained<NSPointerFunctions>;
 
         #[cfg(feature = "NSPointerFunctions")]
         #[unsafe(method(valuePointerFunctions))]
         #[unsafe(method_family = none)]
-        pub fn valuePointerFunctions(&self) -> Retained<NSPointerFunctions>;
+        pub unsafe fn valuePointerFunctions(&self) -> Retained<NSPointerFunctions>;
 
         #[unsafe(method(objectForKey:))]
         #[unsafe(method_family = none)]
-        pub fn objectForKey(&self, a_key: Option<&KeyType>) -> Option<Retained<ObjectType>>;
+        pub unsafe fn objectForKey(&self, a_key: Option<&KeyType>) -> Option<Retained<ObjectType>>;
 
         #[unsafe(method(removeObjectForKey:))]
         #[unsafe(method_family = none)]
-        pub fn removeObjectForKey(&self, a_key: Option<&KeyType>);
+        pub unsafe fn removeObjectForKey(&self, a_key: Option<&KeyType>);
 
         #[unsafe(method(setObject:forKey:))]
         #[unsafe(method_family = none)]
-        pub fn setObject_forKey(&self, an_object: Option<&ObjectType>, a_key: Option<&KeyType>);
+        pub unsafe fn setObject_forKey(
+            &self,
+            an_object: Option<&ObjectType>,
+            a_key: Option<&KeyType>,
+        );
 
         #[unsafe(method(count))]
         #[unsafe(method_family = none)]
-        pub fn count(&self) -> NSUInteger;
+        pub unsafe fn count(&self) -> NSUInteger;
 
         #[cfg(feature = "NSEnumerator")]
-        /// # Safety
-        ///
-        /// The returned enumerator's underlying collection should not be mutated while in use.
         #[unsafe(method(keyEnumerator))]
         #[unsafe(method_family = none)]
         pub unsafe fn keyEnumerator(&self) -> Retained<NSEnumerator<KeyType>>;
 
         #[cfg(feature = "NSEnumerator")]
-        /// # Safety
-        ///
-        /// The returned enumerator's underlying collection should not be mutated while in use.
         #[unsafe(method(objectEnumerator))]
         #[unsafe(method_family = none)]
         pub unsafe fn objectEnumerator(&self) -> Option<Retained<NSEnumerator<ObjectType>>>;
 
         #[unsafe(method(removeAllObjects))]
         #[unsafe(method_family = none)]
-        pub fn removeAllObjects(&self);
+        pub unsafe fn removeAllObjects(&self);
 
         #[cfg(feature = "NSDictionary")]
         #[unsafe(method(dictionaryRepresentation))]
         #[unsafe(method_family = none)]
-        pub fn dictionaryRepresentation(&self) -> Retained<NSDictionary<KeyType, ObjectType>>;
+        pub unsafe fn dictionaryRepresentation(
+            &self,
+        ) -> Retained<NSDictionary<KeyType, ObjectType>>;
     );
 }
 
@@ -225,19 +210,12 @@ impl<KeyType: Message, ObjectType: Message> NSMapTable<KeyType, ObjectType> {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl<KeyType: Message, ObjectType: Message> DefaultRetained for NSMapTable<KeyType, ObjectType> {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// **************    void * Map table operations    ***************
@@ -267,16 +245,9 @@ unsafe impl RefEncode for NSMapEnumerator {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `table` generic should be of the correct type.
     pub fn NSResetMapTable(table: &NSMapTable);
 }
 
-/// # Safety
-///
-/// - `table1` generic should be of the correct type.
-/// - `table2` generic should be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn NSCompareMapTables(
     table1: &NSMapTable,
@@ -288,10 +259,6 @@ pub unsafe extern "C-unwind" fn NSCompareMapTables(
     unsafe { NSCompareMapTables(table1, table2) }.as_bool()
 }
 
-/// # Safety
-///
-/// - `table` generic should be of the correct type.
-/// - `zone` must be a valid pointer or null.
 #[cfg(feature = "NSZone")]
 #[inline]
 pub unsafe extern "C-unwind" fn NSCopyMapTableWithZone(
@@ -306,12 +273,6 @@ pub unsafe extern "C-unwind" fn NSCopyMapTableWithZone(
         .expect("function was marked as returning non-null, but actually returned NULL")
 }
 
-/// # Safety
-///
-/// - `table` generic should be of the correct type.
-/// - `key` must be a valid pointer.
-/// - `original_key` must be a valid pointer or null.
-/// - `value` must be a valid pointer or null.
 #[inline]
 pub unsafe extern "C-unwind" fn NSMapMember(
     table: &NSMapTable,
@@ -331,37 +292,18 @@ pub unsafe extern "C-unwind" fn NSMapMember(
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `table` generic should be of the correct type.
-    /// - `key` must be a valid pointer or null.
     pub fn NSMapGet(table: &NSMapTable, key: *const c_void) -> *mut c_void;
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `table` generic should be of the correct type.
-    /// - `key` must be a valid pointer or null.
-    /// - `value` must be a valid pointer or null.
     pub fn NSMapInsert(table: &NSMapTable, key: *const c_void, value: *const c_void);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `table` generic should be of the correct type.
-    /// - `key` must be a valid pointer or null.
-    /// - `value` must be a valid pointer or null.
     pub fn NSMapInsertKnownAbsent(table: &NSMapTable, key: *const c_void, value: *const c_void);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `table` generic should be of the correct type.
-    /// - `key` must be a valid pointer or null.
-    /// - `value` must be a valid pointer or null.
     pub fn NSMapInsertIfAbsent(
         table: &NSMapTable,
         key: *const c_void,
@@ -370,25 +312,13 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `table` generic should be of the correct type.
-    /// - `key` must be a valid pointer or null.
     pub fn NSMapRemove(table: &NSMapTable, key: *const c_void);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `table` generic should be of the correct type.
     pub fn NSEnumerateMapTable(table: &NSMapTable) -> NSMapEnumerator;
 }
 
-/// # Safety
-///
-/// - `enumerator` must be a valid pointer.
-/// - `key` must be a valid pointer or null.
-/// - `value` must be a valid pointer or null.
 #[inline]
 pub unsafe extern "C-unwind" fn NSNextMapEnumeratorPair(
     enumerator: NonNull<NSMapEnumerator>,
@@ -406,24 +336,15 @@ pub unsafe extern "C-unwind" fn NSNextMapEnumeratorPair(
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `enumerator` must be a valid pointer.
     pub fn NSEndMapTableEnumeration(enumerator: NonNull<NSMapEnumerator>);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `table` generic should be of the correct type.
     pub fn NSCountMapTable(table: &NSMapTable) -> NSUInteger;
 }
 
 #[cfg(feature = "NSString")]
 impl NSString {
-    /// # Safety
-    ///
-    /// `table` generic should be of the correct type.
     #[doc(alias = "NSStringFromMapTable")]
     #[cfg(feature = "NSString")]
     #[inline]
@@ -437,9 +358,6 @@ impl NSString {
     }
 }
 
-/// # Safety
-///
-/// `table` generic should be of the correct type.
 #[cfg(feature = "NSArray")]
 #[inline]
 pub unsafe extern "C-unwind" fn NSAllMapTableKeys(table: &NSMapTable) -> Retained<NSArray> {
@@ -451,9 +369,6 @@ pub unsafe extern "C-unwind" fn NSAllMapTableKeys(table: &NSMapTable) -> Retaine
         .expect("function was marked as returning non-null, but actually returned NULL")
 }
 
-/// # Safety
-///
-/// `table` generic should be of the correct type.
 #[cfg(feature = "NSArray")]
 #[inline]
 pub unsafe extern "C-unwind" fn NSAllMapTableValues(table: &NSMapTable) -> Retained<NSArray> {
@@ -470,7 +385,6 @@ pub unsafe extern "C-unwind" fn NSAllMapTableValues(table: &NSMapTable) -> Retai
 /// See also [Apple's documentation](https://developer.apple.com/documentation/foundation/nsmaptablekeycallbacks?language=objc)
 #[cfg(feature = "NSString")]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct NSMapTableKeyCallBacks {
     pub hash:
@@ -505,7 +419,6 @@ unsafe impl RefEncode for NSMapTableKeyCallBacks {
 /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nsmaptablevaluecallbacks?language=objc)
 #[cfg(feature = "NSString")]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct NSMapTableValueCallBacks {
     pub retain: Option<unsafe extern "C-unwind" fn(NonNull<NSMapTable>, NonNull<c_void>)>,
@@ -533,18 +446,6 @@ unsafe impl RefEncode for NSMapTableValueCallBacks {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-/// # Safety
-///
-/// - `key_call_backs` struct field 1 must be implemented correctly.
-/// - `key_call_backs` struct field 2 must be implemented correctly.
-/// - `key_call_backs` struct field 3 must be implemented correctly.
-/// - `key_call_backs` struct field 4 must be implemented correctly.
-/// - `key_call_backs` struct field 5 must be implemented correctly.
-/// - `key_call_backs` struct field 6 must be a valid pointer or null.
-/// - `value_call_backs` struct field 1 must be implemented correctly.
-/// - `value_call_backs` struct field 2 must be implemented correctly.
-/// - `value_call_backs` struct field 3 must be implemented correctly.
-/// - `zone` must be a valid pointer or null.
 #[cfg(all(feature = "NSString", feature = "NSZone"))]
 #[inline]
 pub unsafe extern "C-unwind" fn NSCreateMapTableWithZone(
@@ -566,17 +467,6 @@ pub unsafe extern "C-unwind" fn NSCreateMapTableWithZone(
         .expect("function was marked as returning non-null, but actually returned NULL")
 }
 
-/// # Safety
-///
-/// - `key_call_backs` struct field 1 must be implemented correctly.
-/// - `key_call_backs` struct field 2 must be implemented correctly.
-/// - `key_call_backs` struct field 3 must be implemented correctly.
-/// - `key_call_backs` struct field 4 must be implemented correctly.
-/// - `key_call_backs` struct field 5 must be implemented correctly.
-/// - `key_call_backs` struct field 6 must be a valid pointer or null.
-/// - `value_call_backs` struct field 1 must be implemented correctly.
-/// - `value_call_backs` struct field 2 must be implemented correctly.
-/// - `value_call_backs` struct field 3 must be implemented correctly.
 #[cfg(feature = "NSString")]
 #[inline]
 pub unsafe extern "C-unwind" fn NSCreateMapTable(
@@ -637,7 +527,6 @@ extern "C" {
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nsintmapkeycallbacks?language=objc)
     #[cfg(feature = "NSString")]
-    #[deprecated = "Not supported"]
     pub static NSIntMapKeyCallBacks: NSMapTableKeyCallBacks;
 }
 
@@ -676,7 +565,6 @@ extern "C" {
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nsintmapvaluecallbacks?language=objc)
     #[cfg(feature = "NSString")]
-    #[deprecated = "Not supported"]
     pub static NSIntMapValueCallBacks: NSMapTableValueCallBacks;
 }
 

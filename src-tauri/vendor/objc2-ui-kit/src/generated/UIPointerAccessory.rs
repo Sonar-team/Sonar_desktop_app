@@ -115,24 +115,24 @@ impl UIPointerAccessory {
         /// This accessory's shape.
         #[unsafe(method(shape))]
         #[unsafe(method_family = none)]
-        pub fn shape(&self) -> Retained<UIPointerShape>;
+        pub unsafe fn shape(&self) -> Retained<UIPointerShape>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// This accessory shape's position relative to the pointer.
         #[unsafe(method(position))]
         #[unsafe(method_family = none)]
-        pub fn position(&self) -> UIPointerAccessoryPosition;
+        pub unsafe fn position(&self) -> UIPointerAccessoryPosition;
 
         /// Indicates whether the accessory is rotated to match its angle.
         /// This is false by default for custom accessories, but varies for system vended ones.
         #[unsafe(method(orientationMatchesAngle))]
         #[unsafe(method_family = none)]
-        pub fn orientationMatchesAngle(&self) -> bool;
+        pub unsafe fn orientationMatchesAngle(&self) -> bool;
 
         /// Setter for [`orientationMatchesAngle`][Self::orientationMatchesAngle].
         #[unsafe(method(setOrientationMatchesAngle:))]
         #[unsafe(method_family = none)]
-        pub fn setOrientationMatchesAngle(&self, orientation_matches_angle: bool);
+        pub unsafe fn setOrientationMatchesAngle(&self, orientation_matches_angle: bool);
 
         #[cfg(all(feature = "UIPointerStyle", feature = "objc2-core-foundation"))]
         /// Creates an accessory with the given pointer shape and position.
@@ -143,7 +143,7 @@ impl UIPointerAccessory {
         /// Parameter `position`: The desired accessory position.
         #[unsafe(method(accessoryWithShape:position:))]
         #[unsafe(method_family = none)]
-        pub fn accessoryWithShape_position(
+        pub unsafe fn accessoryWithShape_position(
             shape: &UIPointerShape,
             position: UIPointerAccessoryPosition,
         ) -> Retained<Self>;
@@ -152,7 +152,7 @@ impl UIPointerAccessory {
         /// Returns an arrow shaped accessory with the given position.
         #[unsafe(method(arrowAccessoryWithPosition:))]
         #[unsafe(method_family = none)]
-        pub fn arrowAccessoryWithPosition(
+        pub unsafe fn arrowAccessoryWithPosition(
             position: UIPointerAccessoryPosition,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;

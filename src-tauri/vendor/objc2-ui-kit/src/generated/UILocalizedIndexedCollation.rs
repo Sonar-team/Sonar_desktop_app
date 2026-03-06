@@ -22,25 +22,23 @@ impl UILocalizedIndexedCollation {
     extern_methods!(
         #[unsafe(method(currentCollation))]
         #[unsafe(method_family = none)]
-        pub fn currentCollation(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn currentCollation(mtm: MainThreadMarker) -> Retained<Self>;
 
         #[unsafe(method(sectionTitles))]
         #[unsafe(method_family = none)]
-        pub fn sectionTitles(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn sectionTitles(&self) -> Retained<NSArray<NSString>>;
 
         #[unsafe(method(sectionIndexTitles))]
         #[unsafe(method_family = none)]
-        pub fn sectionIndexTitles(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn sectionIndexTitles(&self) -> Retained<NSArray<NSString>>;
 
         #[unsafe(method(sectionForSectionIndexTitleAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn sectionForSectionIndexTitleAtIndex(&self, index_title_index: NSInteger)
-            -> NSInteger;
+        pub unsafe fn sectionForSectionIndexTitleAtIndex(
+            &self,
+            index_title_index: NSInteger,
+        ) -> NSInteger;
 
-        /// # Safety
-        ///
-        /// - `object` should be of the correct type.
-        /// - `selector` must be a valid selector.
         #[unsafe(method(sectionForObject:collationStringSelector:))]
         #[unsafe(method_family = none)]
         pub unsafe fn sectionForObject_collationStringSelector(
@@ -49,10 +47,6 @@ impl UILocalizedIndexedCollation {
             selector: Sel,
         ) -> NSInteger;
 
-        /// # Safety
-        ///
-        /// - `array` generic should be of the correct type.
-        /// - `selector` must be a valid selector.
         #[unsafe(method(sortedArrayFromArray:collationStringSelector:))]
         #[unsafe(method_family = none)]
         pub unsafe fn sortedArrayFromArray_collationStringSelector(
@@ -68,10 +62,10 @@ impl UILocalizedIndexedCollation {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

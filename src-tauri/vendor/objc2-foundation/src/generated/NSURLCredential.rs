@@ -81,7 +81,7 @@ impl NSURLCredential {
         /// Returns: A value indicating whether this credential is stored permanently, per session or not at all.
         #[unsafe(method(persistence))]
         #[unsafe(method_family = none)]
-        pub fn persistence(&self) -> NSURLCredentialPersistence;
+        pub unsafe fn persistence(&self) -> NSURLCredentialPersistence;
     );
 }
 
@@ -90,23 +90,15 @@ impl NSURLCredential {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
 }
 
-impl DefaultRetained for NSURLCredential {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
-}
-
 /// NSInternetPassword.
-///
 /// This category defines the methods available to an NSURLCredential created to represent an internet password credential.  These are most commonly used for resources that require a username and password combination.
 impl NSURLCredential {
     extern_methods!(
@@ -122,7 +114,7 @@ impl NSURLCredential {
         /// Returns: The initialized NSURLCredential
         #[unsafe(method(initWithUser:password:persistence:))]
         #[unsafe(method_family = init)]
-        pub fn initWithUser_password_persistence(
+        pub unsafe fn initWithUser_password_persistence(
             this: Allocated<Self>,
             user: &NSString,
             password: &NSString,
@@ -141,7 +133,7 @@ impl NSURLCredential {
         /// Returns: The new autoreleased NSURLCredential
         #[unsafe(method(credentialWithUser:password:persistence:))]
         #[unsafe(method_family = none)]
-        pub fn credentialWithUser_password_persistence(
+        pub unsafe fn credentialWithUser_password_persistence(
             user: &NSString,
             password: &NSString,
             persistence: NSURLCredentialPersistence,
@@ -153,7 +145,7 @@ impl NSURLCredential {
         /// Returns: The user string
         #[unsafe(method(user))]
         #[unsafe(method_family = none)]
-        pub fn user(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn user(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Get the password
@@ -165,7 +157,7 @@ impl NSURLCredential {
         /// so do not call it unless needed.
         #[unsafe(method(password))]
         #[unsafe(method_family = none)]
-        pub fn password(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn password(&self) -> Option<Retained<NSString>>;
 
         /// Find out if this credential has a password, without trying to get it
         ///
@@ -177,12 +169,11 @@ impl NSURLCredential {
         /// user may refuse access.
         #[unsafe(method(hasPassword))]
         #[unsafe(method_family = none)]
-        pub fn hasPassword(&self) -> bool;
+        pub unsafe fn hasPassword(&self) -> bool;
     );
 }
 
 /// NSClientCertificate.
-///
 /// This category defines the methods available to an NSURLCredential created to represent a client certificate credential.  Client certificates are commonly stored on the users computer in the keychain and must be presented to the server during a handshake.
 impl NSURLCredential {
     extern_methods!(
@@ -192,7 +183,7 @@ impl NSURLCredential {
         /// Returns: an NSArray of SecCertificateRef or NULL if this is a username/password credential
         #[unsafe(method(certificates))]
         #[unsafe(method_family = none)]
-        pub fn certificates(&self) -> Retained<NSArray>;
+        pub unsafe fn certificates(&self) -> Retained<NSArray>;
     );
 }
 

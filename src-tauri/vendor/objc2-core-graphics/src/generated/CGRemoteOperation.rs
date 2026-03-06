@@ -44,10 +44,6 @@ pub type CGScreenRefreshCallback =
     Option<unsafe extern "C-unwind" fn(u32, NonNull<CGRect>, *mut c_void)>;
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `callback` must be implemented correctly.
-    /// - `user_info` must be a valid pointer or null.
     #[cfg(feature = "CGError")]
     #[deprecated = "No longer supported"]
     pub fn CGRegisterScreenRefreshCallback(
@@ -57,10 +53,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `callback` must be implemented correctly.
-    /// - `user_info` must be a valid pointer or null.
     #[deprecated = "No longer supported"]
     pub fn CGUnregisterScreenRefreshCallback(
         callback: CGScreenRefreshCallback,
@@ -69,10 +61,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `rects` must be a valid pointer or null.
-    /// - `count` must be a valid pointer or null.
     #[cfg(feature = "CGError")]
     #[deprecated = "No longer supported"]
     pub fn CGWaitForScreenRefreshRects(rects: *mut *mut CGRect, count: *mut u32) -> CGError;
@@ -131,10 +119,6 @@ pub type CGScreenUpdateMoveCallback = Option<
 >;
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `callback` must be implemented correctly.
-    /// - `user_info` must be a valid pointer or null.
     #[cfg(feature = "CGError")]
     #[deprecated = "No longer supported"]
     pub fn CGScreenRegisterMoveCallback(
@@ -144,10 +128,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `callback` must be implemented correctly.
-    /// - `user_info` must be a valid pointer or null.
     #[deprecated = "No longer supported"]
     pub fn CGScreenUnregisterMoveCallback(
         callback: CGScreenUpdateMoveCallback,
@@ -156,12 +136,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `current_operation` must be a valid pointer or null.
-    /// - `rects` must be a valid pointer or null.
-    /// - `rect_count` must be a valid pointer or null.
-    /// - `delta` must be a valid pointer or null.
     #[cfg(feature = "CGError")]
     #[deprecated = "No longer supported"]
     pub fn CGWaitForScreenUpdateRects(
@@ -174,9 +148,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `rects` must be a valid pointer or null.
     #[deprecated = "No longer supported"]
     pub fn CGReleaseScreenRefreshRects(rects: *mut CGRect);
 }
@@ -184,7 +155,7 @@ extern "C-unwind" {
 #[cfg(feature = "libc")]
 #[deprecated = "No longer supported"]
 #[inline]
-pub extern "C-unwind" fn CGCursorIsVisible() -> bool {
+pub unsafe extern "C-unwind" fn CGCursorIsVisible() -> bool {
     extern "C-unwind" {
         fn CGCursorIsVisible() -> libc::boolean_t;
     }
@@ -195,7 +166,7 @@ pub extern "C-unwind" fn CGCursorIsVisible() -> bool {
 #[cfg(feature = "libc")]
 #[deprecated = "No longer supported"]
 #[inline]
-pub extern "C-unwind" fn CGCursorIsDrawnInFramebuffer() -> bool {
+pub unsafe extern "C-unwind" fn CGCursorIsDrawnInFramebuffer() -> bool {
     extern "C-unwind" {
         fn CGCursorIsDrawnInFramebuffer() -> libc::boolean_t;
     }
@@ -203,18 +174,14 @@ pub extern "C-unwind" fn CGCursorIsDrawnInFramebuffer() -> bool {
     ret != 0
 }
 
-#[cfg(feature = "CGError")]
-#[inline]
-pub extern "C-unwind" fn CGWarpMouseCursorPosition(new_cursor_position: CGPoint) -> CGError {
-    extern "C-unwind" {
-        fn CGWarpMouseCursorPosition(new_cursor_position: CGPoint) -> CGError;
-    }
-    unsafe { CGWarpMouseCursorPosition(new_cursor_position) }
+extern "C-unwind" {
+    #[cfg(feature = "CGError")]
+    pub fn CGWarpMouseCursorPosition(new_cursor_position: CGPoint) -> CGError;
 }
 
 #[cfg(all(feature = "CGError", feature = "libc"))]
 #[inline]
-pub extern "C-unwind" fn CGAssociateMouseAndMouseCursorPosition(connected: bool) -> CGError {
+pub unsafe extern "C-unwind" fn CGAssociateMouseAndMouseCursorPosition(connected: bool) -> CGError {
     extern "C-unwind" {
         fn CGAssociateMouseAndMouseCursorPosition(connected: libc::boolean_t) -> CGError;
     }
@@ -222,7 +189,7 @@ pub extern "C-unwind" fn CGAssociateMouseAndMouseCursorPosition(connected: bool)
 }
 
 #[inline]
-pub extern "C-unwind" fn CGWindowServerCreateServerPort() -> Option<CFRetained<CFMachPort>> {
+pub unsafe extern "C-unwind" fn CGWindowServerCreateServerPort() -> Option<CFRetained<CFMachPort>> {
     extern "C-unwind" {
         fn CGWindowServerCreateServerPort() -> Option<NonNull<CFMachPort>>;
     }
@@ -233,7 +200,7 @@ pub extern "C-unwind" fn CGWindowServerCreateServerPort() -> Option<CFRetained<C
 #[cfg(all(feature = "CGError", feature = "libc"))]
 #[deprecated = "No longer supported"]
 #[inline]
-pub extern "C-unwind" fn CGEnableEventStateCombining(combine_state: bool) -> CGError {
+pub unsafe extern "C-unwind" fn CGEnableEventStateCombining(combine_state: bool) -> CGError {
     extern "C-unwind" {
         fn CGEnableEventStateCombining(combine_state: libc::boolean_t) -> CGError;
     }
@@ -243,7 +210,7 @@ pub extern "C-unwind" fn CGEnableEventStateCombining(combine_state: bool) -> CGE
 #[cfg(all(feature = "CGError", feature = "libc"))]
 #[deprecated = "No longer supported"]
 #[inline]
-pub extern "C-unwind" fn CGInhibitLocalEvents(inhibit: bool) -> CGError {
+pub unsafe extern "C-unwind" fn CGInhibitLocalEvents(inhibit: bool) -> CGError {
     extern "C-unwind" {
         fn CGInhibitLocalEvents(inhibit: libc::boolean_t) -> CGError;
     }
@@ -253,7 +220,7 @@ pub extern "C-unwind" fn CGInhibitLocalEvents(inhibit: bool) -> CGError {
 #[cfg(all(feature = "CGError", feature = "libc"))]
 #[deprecated = "No longer supported"]
 #[inline]
-pub extern "C-unwind" fn CGPostKeyboardEvent(
+pub unsafe extern "C-unwind" fn CGPostKeyboardEvent(
     key_char: CGCharCode,
     virtual_key: CGKeyCode,
     key_down: bool,
@@ -318,35 +285,24 @@ unsafe impl RefEncode for CGEventSuppressionState {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-#[cfg(feature = "CGError")]
-#[deprecated = "No longer supported"]
-#[inline]
-pub extern "C-unwind" fn CGSetLocalEventsFilterDuringSuppressionState(
-    filter: CGEventFilterMask,
-    state: CGEventSuppressionState,
-) -> CGError {
-    extern "C-unwind" {
-        fn CGSetLocalEventsFilterDuringSuppressionState(
-            filter: CGEventFilterMask,
-            state: CGEventSuppressionState,
-        ) -> CGError;
-    }
-    unsafe { CGSetLocalEventsFilterDuringSuppressionState(filter, state) }
+extern "C-unwind" {
+    #[cfg(feature = "CGError")]
+    #[deprecated = "No longer supported"]
+    pub fn CGSetLocalEventsFilterDuringSuppressionState(
+        filter: CGEventFilterMask,
+        state: CGEventSuppressionState,
+    ) -> CGError;
 }
 
-#[cfg(feature = "CGError")]
-#[deprecated = "No longer supported"]
-#[inline]
-pub extern "C-unwind" fn CGSetLocalEventsSuppressionInterval(seconds: CFTimeInterval) -> CGError {
-    extern "C-unwind" {
-        fn CGSetLocalEventsSuppressionInterval(seconds: CFTimeInterval) -> CGError;
-    }
-    unsafe { CGSetLocalEventsSuppressionInterval(seconds) }
+extern "C-unwind" {
+    #[cfg(feature = "CGError")]
+    #[deprecated = "No longer supported"]
+    pub fn CGSetLocalEventsSuppressionInterval(seconds: CFTimeInterval) -> CGError;
 }
 
 #[deprecated = "No longer supported"]
 #[inline]
-pub extern "C-unwind" fn CGWindowServerCFMachPort() -> Option<CFRetained<CFMachPort>> {
+pub unsafe extern "C-unwind" fn CGWindowServerCFMachPort() -> Option<CFRetained<CFMachPort>> {
     extern "C-unwind" {
         fn CGWindowServerCFMachPort() -> Option<NonNull<CFMachPort>>;
     }

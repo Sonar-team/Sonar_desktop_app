@@ -113,157 +113,151 @@ impl NSLevelIndicator {
         #[cfg(feature = "NSLevelIndicatorCell")]
         #[unsafe(method(levelIndicatorStyle))]
         #[unsafe(method_family = none)]
-        pub fn levelIndicatorStyle(&self) -> NSLevelIndicatorStyle;
+        pub unsafe fn levelIndicatorStyle(&self) -> NSLevelIndicatorStyle;
 
         #[cfg(feature = "NSLevelIndicatorCell")]
         /// Setter for [`levelIndicatorStyle`][Self::levelIndicatorStyle].
         #[unsafe(method(setLevelIndicatorStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setLevelIndicatorStyle(&self, level_indicator_style: NSLevelIndicatorStyle);
+        pub unsafe fn setLevelIndicatorStyle(&self, level_indicator_style: NSLevelIndicatorStyle);
 
         #[unsafe(method(isEditable))]
         #[unsafe(method_family = none)]
-        pub fn isEditable(&self) -> bool;
+        pub unsafe fn isEditable(&self) -> bool;
 
         /// Setter for [`isEditable`][Self::isEditable].
         #[unsafe(method(setEditable:))]
         #[unsafe(method_family = none)]
-        pub fn setEditable(&self, editable: bool);
+        pub unsafe fn setEditable(&self, editable: bool);
 
         #[unsafe(method(minValue))]
         #[unsafe(method_family = none)]
-        pub fn minValue(&self) -> c_double;
+        pub unsafe fn minValue(&self) -> c_double;
 
         /// Setter for [`minValue`][Self::minValue].
         #[unsafe(method(setMinValue:))]
         #[unsafe(method_family = none)]
-        pub fn setMinValue(&self, min_value: c_double);
+        pub unsafe fn setMinValue(&self, min_value: c_double);
 
         #[unsafe(method(maxValue))]
         #[unsafe(method_family = none)]
-        pub fn maxValue(&self) -> c_double;
+        pub unsafe fn maxValue(&self) -> c_double;
 
         /// Setter for [`maxValue`][Self::maxValue].
         #[unsafe(method(setMaxValue:))]
         #[unsafe(method_family = none)]
-        pub fn setMaxValue(&self, max_value: c_double);
+        pub unsafe fn setMaxValue(&self, max_value: c_double);
 
         #[unsafe(method(warningValue))]
         #[unsafe(method_family = none)]
-        pub fn warningValue(&self) -> c_double;
+        pub unsafe fn warningValue(&self) -> c_double;
 
         /// Setter for [`warningValue`][Self::warningValue].
         #[unsafe(method(setWarningValue:))]
         #[unsafe(method_family = none)]
-        pub fn setWarningValue(&self, warning_value: c_double);
+        pub unsafe fn setWarningValue(&self, warning_value: c_double);
 
         #[unsafe(method(criticalValue))]
         #[unsafe(method_family = none)]
-        pub fn criticalValue(&self) -> c_double;
+        pub unsafe fn criticalValue(&self) -> c_double;
 
         /// Setter for [`criticalValue`][Self::criticalValue].
         #[unsafe(method(setCriticalValue:))]
         #[unsafe(method_family = none)]
-        pub fn setCriticalValue(&self, critical_value: c_double);
+        pub unsafe fn setCriticalValue(&self, critical_value: c_double);
 
         #[cfg(feature = "NSSliderCell")]
         #[unsafe(method(tickMarkPosition))]
         #[unsafe(method_family = none)]
-        pub fn tickMarkPosition(&self) -> NSTickMarkPosition;
+        pub unsafe fn tickMarkPosition(&self) -> NSTickMarkPosition;
 
         #[cfg(feature = "NSSliderCell")]
         /// Setter for [`tickMarkPosition`][Self::tickMarkPosition].
         #[unsafe(method(setTickMarkPosition:))]
         #[unsafe(method_family = none)]
-        pub fn setTickMarkPosition(&self, tick_mark_position: NSTickMarkPosition);
+        pub unsafe fn setTickMarkPosition(&self, tick_mark_position: NSTickMarkPosition);
 
         #[unsafe(method(numberOfTickMarks))]
         #[unsafe(method_family = none)]
-        pub fn numberOfTickMarks(&self) -> NSInteger;
+        pub unsafe fn numberOfTickMarks(&self) -> NSInteger;
 
         /// Setter for [`numberOfTickMarks`][Self::numberOfTickMarks].
         #[unsafe(method(setNumberOfTickMarks:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberOfTickMarks(&self, number_of_tick_marks: NSInteger);
+        pub unsafe fn setNumberOfTickMarks(&self, number_of_tick_marks: NSInteger);
 
         #[unsafe(method(numberOfMajorTickMarks))]
         #[unsafe(method_family = none)]
-        pub fn numberOfMajorTickMarks(&self) -> NSInteger;
+        pub unsafe fn numberOfMajorTickMarks(&self) -> NSInteger;
 
         /// Setter for [`numberOfMajorTickMarks`][Self::numberOfMajorTickMarks].
         #[unsafe(method(setNumberOfMajorTickMarks:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberOfMajorTickMarks(&self, number_of_major_tick_marks: NSInteger);
+        pub unsafe fn setNumberOfMajorTickMarks(&self, number_of_major_tick_marks: NSInteger);
 
         #[unsafe(method(tickMarkValueAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn tickMarkValueAtIndex(&self, index: NSInteger) -> c_double;
+        pub unsafe fn tickMarkValueAtIndex(&self, index: NSInteger) -> c_double;
 
         #[unsafe(method(rectOfTickMarkAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn rectOfTickMarkAtIndex(&self, index: NSInteger) -> NSRect;
+        pub unsafe fn rectOfTickMarkAtIndex(&self, index: NSInteger) -> NSRect;
 
         #[cfg(feature = "NSColor")]
         /// Sets the fill color used by Continuous and Discrete Capacity indicators when drawing the "normal" state, and by the Rating indicator when drawing stars. The default value is a system-defined color which may vary between level indicator styles and OS releases.
         #[unsafe(method(fillColor))]
         #[unsafe(method_family = none)]
-        pub fn fillColor(&self) -> Retained<NSColor>;
+        pub unsafe fn fillColor(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`fillColor`][Self::fillColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFillColor:))]
         #[unsafe(method_family = none)]
-        pub fn setFillColor(&self, fill_color: Option<&NSColor>);
+        pub unsafe fn setFillColor(&self, fill_color: Option<&NSColor>);
 
         #[cfg(feature = "NSColor")]
         /// Sets the fill color used by Continuous and Discrete Capacity indicators when drawing values above the "warning" threshold. The default value is a system-defined color which may vary between level indicator styles and OS releases.
         #[unsafe(method(warningFillColor))]
         #[unsafe(method_family = none)]
-        pub fn warningFillColor(&self) -> Retained<NSColor>;
+        pub unsafe fn warningFillColor(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`warningFillColor`][Self::warningFillColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setWarningFillColor:))]
         #[unsafe(method_family = none)]
-        pub fn setWarningFillColor(&self, warning_fill_color: Option<&NSColor>);
+        pub unsafe fn setWarningFillColor(&self, warning_fill_color: Option<&NSColor>);
 
         #[cfg(feature = "NSColor")]
         /// Sets the fill color used by Continuous and Discrete Capacity indicators when drawing values above the "critical" threshold. The default value is a system-defined color which may vary between level indicator styles and OS releases.
         #[unsafe(method(criticalFillColor))]
         #[unsafe(method_family = none)]
-        pub fn criticalFillColor(&self) -> Retained<NSColor>;
+        pub unsafe fn criticalFillColor(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`criticalFillColor`][Self::criticalFillColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCriticalFillColor:))]
         #[unsafe(method_family = none)]
-        pub fn setCriticalFillColor(&self, critical_fill_color: Option<&NSColor>);
+        pub unsafe fn setCriticalFillColor(&self, critical_fill_color: Option<&NSColor>);
 
         #[unsafe(method(drawsTieredCapacityLevels))]
         #[unsafe(method_family = none)]
-        pub fn drawsTieredCapacityLevels(&self) -> bool;
+        pub unsafe fn drawsTieredCapacityLevels(&self) -> bool;
 
         /// Setter for [`drawsTieredCapacityLevels`][Self::drawsTieredCapacityLevels].
         #[unsafe(method(setDrawsTieredCapacityLevels:))]
         #[unsafe(method_family = none)]
-        pub fn setDrawsTieredCapacityLevels(&self, draws_tiered_capacity_levels: bool);
+        pub unsafe fn setDrawsTieredCapacityLevels(&self, draws_tiered_capacity_levels: bool);
 
         /// For a Rating-style indicator, sets the conditions under which Rating placeholders are displayed. This property currently has no effect for other indicator styles. The default value is
         /// `NSLevelIndicatorPlaceholderVisibilityAutomatic.`
         #[unsafe(method(placeholderVisibility))]
         #[unsafe(method_family = none)]
-        pub fn placeholderVisibility(&self) -> NSLevelIndicatorPlaceholderVisibility;
+        pub unsafe fn placeholderVisibility(&self) -> NSLevelIndicatorPlaceholderVisibility;
 
         /// Setter for [`placeholderVisibility`][Self::placeholderVisibility].
         #[unsafe(method(setPlaceholderVisibility:))]
         #[unsafe(method_family = none)]
-        pub fn setPlaceholderVisibility(
+        pub unsafe fn setPlaceholderVisibility(
             &self,
             placeholder_visibility: NSLevelIndicatorPlaceholderVisibility,
         );
@@ -272,13 +266,13 @@ impl NSLevelIndicator {
         /// If non-nil, sets the image used by the Rating indicator style in place of the default star image. The default value is nil.
         #[unsafe(method(ratingImage))]
         #[unsafe(method_family = none)]
-        pub fn ratingImage(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn ratingImage(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`ratingImage`][Self::ratingImage].
         #[unsafe(method(setRatingImage:))]
         #[unsafe(method_family = none)]
-        pub fn setRatingImage(&self, rating_image: Option<&NSImage>);
+        pub unsafe fn setRatingImage(&self, rating_image: Option<&NSImage>);
 
         #[cfg(feature = "NSImage")]
         /// If non-nil, sets the image used by the Rating indicator style in place of the default faded placeholder image. The default value is nil.
@@ -288,13 +282,13 @@ impl NSLevelIndicator {
         /// If both a ratingImage and ratingPlaceholderImage are set, each rating position is sized such that either image will fit without scaling (i.e. sized to the maximum width and height of both images).
         #[unsafe(method(ratingPlaceholderImage))]
         #[unsafe(method_family = none)]
-        pub fn ratingPlaceholderImage(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn ratingPlaceholderImage(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`ratingPlaceholderImage`][Self::ratingPlaceholderImage].
         #[unsafe(method(setRatingPlaceholderImage:))]
         #[unsafe(method_family = none)]
-        pub fn setRatingPlaceholderImage(&self, rating_placeholder_image: Option<&NSImage>);
+        pub unsafe fn setRatingPlaceholderImage(&self, rating_placeholder_image: Option<&NSImage>);
     );
 }
 
@@ -304,11 +298,8 @@ impl NSLevelIndicator {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -324,7 +315,7 @@ impl NSLevelIndicator {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -334,6 +325,6 @@ impl NSLevelIndicator {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

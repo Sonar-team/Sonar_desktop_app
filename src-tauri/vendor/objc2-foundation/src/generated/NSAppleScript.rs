@@ -59,9 +59,6 @@ extern_conformance!(
 impl NSAppleScript {
     extern_methods!(
         #[cfg(all(feature = "NSDictionary", feature = "NSString", feature = "NSURL"))]
-        /// # Safety
-        ///
-        /// `error_info` generic should be of the correct type.
         #[unsafe(method(initWithContentsOfURL:error:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithContentsOfURL_error(
@@ -73,21 +70,21 @@ impl NSAppleScript {
         #[cfg(feature = "NSString")]
         #[unsafe(method(initWithSource:))]
         #[unsafe(method_family = init)]
-        pub fn initWithSource(this: Allocated<Self>, source: &NSString) -> Option<Retained<Self>>;
+        pub unsafe fn initWithSource(
+            this: Allocated<Self>,
+            source: &NSString,
+        ) -> Option<Retained<Self>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(source))]
         #[unsafe(method_family = none)]
-        pub fn source(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn source(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(isCompiled))]
         #[unsafe(method_family = none)]
-        pub fn isCompiled(&self) -> bool;
+        pub unsafe fn isCompiled(&self) -> bool;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `error_info` generic should be of the correct type.
         #[unsafe(method(compileAndReturnError:))]
         #[unsafe(method_family = none)]
         pub unsafe fn compileAndReturnError(
@@ -100,9 +97,6 @@ impl NSAppleScript {
             feature = "NSDictionary",
             feature = "NSString"
         ))]
-        /// # Safety
-        ///
-        /// `error_info` generic should be of the correct type.
         #[unsafe(method(executeAndReturnError:))]
         #[unsafe(method_family = none)]
         pub unsafe fn executeAndReturnError(
@@ -115,9 +109,6 @@ impl NSAppleScript {
             feature = "NSDictionary",
             feature = "NSString"
         ))]
-        /// # Safety
-        ///
-        /// `error_info` generic should be of the correct type.
         #[unsafe(method(executeAppleEvent:error:))]
         #[unsafe(method_family = none)]
         pub unsafe fn executeAppleEvent_error(
@@ -133,17 +124,10 @@ impl NSAppleScript {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSAppleScript {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

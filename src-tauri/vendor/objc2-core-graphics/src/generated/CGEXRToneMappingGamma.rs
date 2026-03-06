@@ -24,13 +24,3 @@ extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/kcgexrtonemappinggammakneehigh?language=objc)
     pub static kCGEXRToneMappingGammaKneeHigh: &'static CFString;
 }
-
-#[inline]
-pub extern "C-unwind" fn CGEXRToneMappingGammaGetDefaultOptions() -> CFRetained<CFDictionary> {
-    extern "C-unwind" {
-        fn CGEXRToneMappingGammaGetDefaultOptions() -> Option<NonNull<CFDictionary>>;
-    }
-    let ret = unsafe { CGEXRToneMappingGammaGetDefaultOptions() };
-    let ret = ret.expect("function was marked as returning non-null, but actually returned NULL");
-    unsafe { CFRetained::retain(ret) }
-}

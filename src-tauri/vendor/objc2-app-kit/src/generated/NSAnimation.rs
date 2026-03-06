@@ -93,15 +93,12 @@ impl NSAnimation {
     extern_methods!(
         #[unsafe(method(initWithDuration:animationCurve:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDuration_animationCurve(
+        pub unsafe fn initWithDuration_animationCurve(
             this: Allocated<Self>,
             duration: NSTimeInterval,
             animation_curve: NSAnimationCurve,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -111,37 +108,37 @@ impl NSAnimation {
 
         #[unsafe(method(startAnimation))]
         #[unsafe(method_family = none)]
-        pub fn startAnimation(&self);
+        pub unsafe fn startAnimation(&self);
 
         #[unsafe(method(stopAnimation))]
         #[unsafe(method_family = none)]
-        pub fn stopAnimation(&self);
+        pub unsafe fn stopAnimation(&self);
 
         #[unsafe(method(isAnimating))]
         #[unsafe(method_family = none)]
-        pub fn isAnimating(&self) -> bool;
+        pub unsafe fn isAnimating(&self) -> bool;
 
         #[unsafe(method(currentProgress))]
         #[unsafe(method_family = none)]
-        pub fn currentProgress(&self) -> NSAnimationProgress;
+        pub unsafe fn currentProgress(&self) -> NSAnimationProgress;
 
         /// Setter for [`currentProgress`][Self::currentProgress].
         #[unsafe(method(setCurrentProgress:))]
         #[unsafe(method_family = none)]
-        pub fn setCurrentProgress(&self, current_progress: NSAnimationProgress);
+        pub unsafe fn setCurrentProgress(&self, current_progress: NSAnimationProgress);
 
         #[unsafe(method(duration))]
         #[unsafe(method_family = none)]
-        pub fn duration(&self) -> NSTimeInterval;
+        pub unsafe fn duration(&self) -> NSTimeInterval;
 
         /// Setter for [`duration`][Self::duration].
         #[unsafe(method(setDuration:))]
         #[unsafe(method_family = none)]
-        pub fn setDuration(&self, duration: NSTimeInterval);
+        pub unsafe fn setDuration(&self, duration: NSTimeInterval);
 
         #[unsafe(method(animationBlockingMode))]
         #[unsafe(method_family = none)]
-        pub fn animationBlockingMode(&self) -> NSAnimationBlockingMode;
+        pub unsafe fn animationBlockingMode(&self) -> NSAnimationBlockingMode;
 
         /// Setter for [`animationBlockingMode`][Self::animationBlockingMode].
         #[unsafe(method(setAnimationBlockingMode:))]
@@ -153,59 +150,59 @@ impl NSAnimation {
 
         #[unsafe(method(frameRate))]
         #[unsafe(method_family = none)]
-        pub fn frameRate(&self) -> c_float;
+        pub unsafe fn frameRate(&self) -> c_float;
 
         /// Setter for [`frameRate`][Self::frameRate].
         #[unsafe(method(setFrameRate:))]
         #[unsafe(method_family = none)]
-        pub fn setFrameRate(&self, frame_rate: c_float);
+        pub unsafe fn setFrameRate(&self, frame_rate: c_float);
 
         #[unsafe(method(animationCurve))]
         #[unsafe(method_family = none)]
-        pub fn animationCurve(&self) -> NSAnimationCurve;
+        pub unsafe fn animationCurve(&self) -> NSAnimationCurve;
 
         /// Setter for [`animationCurve`][Self::animationCurve].
         #[unsafe(method(setAnimationCurve:))]
         #[unsafe(method_family = none)]
-        pub fn setAnimationCurve(&self, animation_curve: NSAnimationCurve);
+        pub unsafe fn setAnimationCurve(&self, animation_curve: NSAnimationCurve);
 
         #[unsafe(method(currentValue))]
         #[unsafe(method_family = none)]
-        pub fn currentValue(&self) -> c_float;
+        pub unsafe fn currentValue(&self) -> c_float;
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSAnimationDelegate>>>;
+        pub unsafe fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSAnimationDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSAnimationDelegate>>);
+        pub unsafe fn setDelegate(
+            &self,
+            delegate: Option<&ProtocolObject<dyn NSAnimationDelegate>>,
+        );
 
         #[unsafe(method(progressMarks))]
         #[unsafe(method_family = none)]
-        pub fn progressMarks(&self) -> Retained<NSArray<NSNumber>>;
+        pub unsafe fn progressMarks(&self) -> Retained<NSArray<NSNumber>>;
 
         /// Setter for [`progressMarks`][Self::progressMarks].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setProgressMarks:))]
         #[unsafe(method_family = none)]
-        pub fn setProgressMarks(&self, progress_marks: &NSArray<NSNumber>);
+        pub unsafe fn setProgressMarks(&self, progress_marks: &NSArray<NSNumber>);
 
         #[unsafe(method(addProgressMark:))]
         #[unsafe(method_family = none)]
-        pub fn addProgressMark(&self, progress_mark: NSAnimationProgress);
+        pub unsafe fn addProgressMark(&self, progress_mark: NSAnimationProgress);
 
         #[unsafe(method(removeProgressMark:))]
         #[unsafe(method_family = none)]
-        pub fn removeProgressMark(&self, progress_mark: NSAnimationProgress);
+        pub unsafe fn removeProgressMark(&self, progress_mark: NSAnimationProgress);
 
         #[unsafe(method(startWhenAnimation:reachesProgress:))]
         #[unsafe(method_family = none)]
-        pub fn startWhenAnimation_reachesProgress(
+        pub unsafe fn startWhenAnimation_reachesProgress(
             &self,
             animation: &NSAnimation,
             start_progress: NSAnimationProgress,
@@ -213,7 +210,7 @@ impl NSAnimation {
 
         #[unsafe(method(stopWhenAnimation:reachesProgress:))]
         #[unsafe(method_family = none)]
-        pub fn stopWhenAnimation_reachesProgress(
+        pub unsafe fn stopWhenAnimation_reachesProgress(
             &self,
             animation: &NSAnimation,
             stop_progress: NSAnimationProgress,
@@ -221,15 +218,15 @@ impl NSAnimation {
 
         #[unsafe(method(clearStartAnimation))]
         #[unsafe(method_family = none)]
-        pub fn clearStartAnimation(&self);
+        pub unsafe fn clearStartAnimation(&self);
 
         #[unsafe(method(clearStopAnimation))]
         #[unsafe(method_family = none)]
-        pub fn clearStopAnimation(&self);
+        pub unsafe fn clearStopAnimation(&self);
 
         #[unsafe(method(runLoopModesForAnimating))]
         #[unsafe(method_family = none)]
-        pub fn runLoopModesForAnimating(&self) -> Option<Retained<NSArray<NSRunLoopMode>>>;
+        pub unsafe fn runLoopModesForAnimating(&self) -> Option<Retained<NSArray<NSRunLoopMode>>>;
     );
 }
 
@@ -238,19 +235,12 @@ impl NSAnimation {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSAnimation {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_protocol!(
@@ -259,22 +249,22 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(animationShouldStart:))]
         #[unsafe(method_family = none)]
-        fn animationShouldStart(&self, animation: &NSAnimation) -> bool;
+        unsafe fn animationShouldStart(&self, animation: &NSAnimation) -> bool;
 
         #[optional]
         #[unsafe(method(animationDidStop:))]
         #[unsafe(method_family = none)]
-        fn animationDidStop(&self, animation: &NSAnimation);
+        unsafe fn animationDidStop(&self, animation: &NSAnimation);
 
         #[optional]
         #[unsafe(method(animationDidEnd:))]
         #[unsafe(method_family = none)]
-        fn animationDidEnd(&self, animation: &NSAnimation);
+        unsafe fn animationDidEnd(&self, animation: &NSAnimation);
 
         #[optional]
         #[unsafe(method(animation:valueForProgress:))]
         #[unsafe(method_family = none)]
-        fn animation_valueForProgress(
+        unsafe fn animation_valueForProgress(
             &self,
             animation: &NSAnimation,
             progress: NSAnimationProgress,
@@ -283,7 +273,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(animation:didReachProgressMark:))]
         #[unsafe(method_family = none)]
-        fn animation_didReachProgressMark(
+        unsafe fn animation_didReachProgressMark(
             &self,
             animation: &NSAnimation,
             progress: NSAnimationProgress,
@@ -354,9 +344,6 @@ extern_conformance!(
 
 impl NSViewAnimation {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `view_animations` generic generic should be of the correct type.
         #[unsafe(method(initWithViewAnimations:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithViewAnimations(
@@ -366,17 +353,11 @@ impl NSViewAnimation {
 
         #[unsafe(method(viewAnimations))]
         #[unsafe(method_family = none)]
-        pub fn viewAnimations(
+        pub unsafe fn viewAnimations(
             &self,
         ) -> Retained<NSArray<NSDictionary<NSViewAnimationKey, AnyObject>>>;
 
         /// Setter for [`viewAnimations`][Self::viewAnimations].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `view_animations` generic generic should be of the correct type.
         #[unsafe(method(setViewAnimations:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setViewAnimations(
@@ -391,15 +372,12 @@ impl NSViewAnimation {
     extern_methods!(
         #[unsafe(method(initWithDuration:animationCurve:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDuration_animationCurve(
+        pub unsafe fn initWithDuration_animationCurve(
             this: Allocated<Self>,
             duration: NSTimeInterval,
             animation_curve: NSAnimationCurve,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -414,19 +392,12 @@ impl NSViewAnimation {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSViewAnimation {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsanimatablepropertykey?language=objc)
@@ -437,19 +408,13 @@ extern_protocol!(
     pub unsafe trait NSAnimatablePropertyContainer {
         #[unsafe(method(animator))]
         #[unsafe(method_family = none)]
-        fn animator(&self) -> Retained<Self>;
+        unsafe fn animator(&self) -> Retained<Self>;
 
         #[unsafe(method(animations))]
         #[unsafe(method_family = none)]
-        fn animations(&self) -> Retained<NSDictionary<NSAnimatablePropertyKey, AnyObject>>;
+        unsafe fn animations(&self) -> Retained<NSDictionary<NSAnimatablePropertyKey, AnyObject>>;
 
         /// Setter for [`animations`][Self::animations].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `animations` generic should be of the correct type.
         #[unsafe(method(setAnimations:))]
         #[unsafe(method_family = none)]
         unsafe fn setAnimations(
@@ -459,11 +424,16 @@ extern_protocol!(
 
         #[unsafe(method(animationForKey:))]
         #[unsafe(method_family = none)]
-        fn animationForKey(&self, key: &NSAnimatablePropertyKey) -> Option<Retained<AnyObject>>;
+        unsafe fn animationForKey(
+            &self,
+            key: &NSAnimatablePropertyKey,
+        ) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(defaultAnimationForKey:))]
         #[unsafe(method_family = none)]
-        fn defaultAnimationForKey(key: &NSAnimatablePropertyKey) -> Option<Retained<AnyObject>>;
+        unsafe fn defaultAnimationForKey(
+            key: &NSAnimatablePropertyKey,
+        ) -> Option<Retained<AnyObject>>;
     }
 );
 

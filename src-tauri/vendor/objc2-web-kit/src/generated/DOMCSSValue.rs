@@ -53,8 +53,6 @@ impl DOMCSSValue {
         pub unsafe fn cssText(&self) -> Retained<NSString>;
 
         /// Setter for [`cssText`][Self::cssText].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setCssText:))]
         #[unsafe(method_family = none)]

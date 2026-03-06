@@ -29,7 +29,7 @@ impl UIStoryboardPopoverSegue {
         #[deprecated = "Access destinationViewController.popoverPresentationController from your segue's performHandler or override of -perform"]
         #[unsafe(method(popoverController))]
         #[unsafe(method_family = none)]
-        pub fn popoverController(&self) -> Retained<UIPopoverController>;
+        pub unsafe fn popoverController(&self) -> Retained<UIPopoverController>;
     );
 }
 
@@ -44,7 +44,7 @@ impl UIStoryboardPopoverSegue {
         ))]
         #[unsafe(method(segueWithIdentifier:source:destination:performHandler:))]
         #[unsafe(method_family = none)]
-        pub fn segueWithIdentifier_source_destination_performHandler(
+        pub unsafe fn segueWithIdentifier_source_destination_performHandler(
             identifier: Option<&NSString>,
             source: &UIViewController,
             destination: &UIViewController,
@@ -55,7 +55,7 @@ impl UIStoryboardPopoverSegue {
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(initWithIdentifier:source:destination:))]
         #[unsafe(method_family = init)]
-        pub fn initWithIdentifier_source_destination(
+        pub unsafe fn initWithIdentifier_source_destination(
             this: Allocated<Self>,
             identifier: Option<&NSString>,
             source: &UIViewController,

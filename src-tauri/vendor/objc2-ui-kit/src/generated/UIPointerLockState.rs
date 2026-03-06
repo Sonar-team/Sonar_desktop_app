@@ -33,7 +33,7 @@ impl UIPointerLockState {
         /// This property is key-value observable and UIPointerLockState.didChangeNotification is posted when it changes.
         #[unsafe(method(isLocked))]
         #[unsafe(method_family = none)]
-        pub fn isLocked(&self) -> bool;
+        pub unsafe fn isLocked(&self) -> bool;
     );
 }
 
@@ -43,7 +43,7 @@ impl UIScene {
     extern_methods!(
         #[unsafe(method(pointerLockState))]
         #[unsafe(method_family = none)]
-        pub fn pointerLockState(&self) -> Option<Retained<UIPointerLockState>>;
+        pub unsafe fn pointerLockState(&self) -> Option<Retained<UIPointerLockState>>;
     );
 }
 

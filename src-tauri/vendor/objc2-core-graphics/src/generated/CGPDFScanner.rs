@@ -25,11 +25,6 @@ unsafe impl RefEncode for CGPDFScanner {
 pub type CGPDFScannerRef = *mut CGPDFScanner;
 
 impl CGPDFScanner {
-    /// # Safety
-    ///
-    /// - `cs` must be a valid pointer.
-    /// - `table` must be a valid pointer or null.
-    /// - `info` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerCreate")]
     #[cfg(all(feature = "CGPDFContentStream", feature = "CGPDFOperatorTable"))]
     #[inline]
@@ -48,9 +43,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerCreate(cs, table, info) }
     }
 
-    /// # Safety
-    ///
-    /// `scanner` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerRetain")]
     #[inline]
     pub unsafe fn retain(scanner: CGPDFScannerRef) -> CGPDFScannerRef {
@@ -60,9 +52,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerRetain(scanner) }
     }
 
-    /// # Safety
-    ///
-    /// `scanner` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerRelease")]
     #[inline]
     pub unsafe fn release(scanner: CGPDFScannerRef) {
@@ -72,9 +61,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerRelease(scanner) }
     }
 
-    /// # Safety
-    ///
-    /// `scanner` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerScan")]
     #[inline]
     pub unsafe fn scan(scanner: CGPDFScannerRef) -> bool {
@@ -84,9 +70,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerScan(scanner) }
     }
 
-    /// # Safety
-    ///
-    /// `scanner` must be a valid pointer.
     #[doc(alias = "CGPDFScannerGetContentStream")]
     #[cfg(feature = "CGPDFContentStream")]
     #[inline]
@@ -97,10 +80,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerGetContentStream(scanner) }
     }
 
-    /// # Safety
-    ///
-    /// - `scanner` must be a valid pointer.
-    /// - `value` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerPopObject")]
     #[cfg(feature = "CGPDFObject")]
     #[inline]
@@ -111,10 +90,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerPopObject(scanner, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `scanner` must be a valid pointer.
-    /// - `value` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerPopBoolean")]
     #[cfg(feature = "CGPDFObject")]
     #[inline]
@@ -125,10 +100,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerPopBoolean(scanner, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `scanner` must be a valid pointer.
-    /// - `value` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerPopInteger")]
     #[cfg(feature = "CGPDFObject")]
     #[inline]
@@ -139,10 +110,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerPopInteger(scanner, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `scanner` must be a valid pointer.
-    /// - `value` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerPopNumber")]
     #[cfg(feature = "CGPDFObject")]
     #[inline]
@@ -153,10 +120,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerPopNumber(scanner, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `scanner` must be a valid pointer.
-    /// - `value` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerPopName")]
     #[inline]
     pub unsafe fn pop_name(scanner: CGPDFScannerRef, value: *mut *const c_char) -> bool {
@@ -166,10 +129,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerPopName(scanner, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `scanner` must be a valid pointer.
-    /// - `value` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerPopString")]
     #[cfg(feature = "CGPDFString")]
     #[inline]
@@ -180,10 +139,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerPopString(scanner, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `scanner` must be a valid pointer.
-    /// - `value` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerPopArray")]
     #[cfg(feature = "CGPDFArray")]
     #[inline]
@@ -194,10 +149,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerPopArray(scanner, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `scanner` must be a valid pointer.
-    /// - `value` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerPopDictionary")]
     #[cfg(feature = "CGPDFDictionary")]
     #[inline]
@@ -211,10 +162,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerPopDictionary(scanner, value) }
     }
 
-    /// # Safety
-    ///
-    /// - `scanner` must be a valid pointer.
-    /// - `value` must be a valid pointer or null.
     #[doc(alias = "CGPDFScannerPopStream")]
     #[cfg(feature = "CGPDFStream")]
     #[inline]
@@ -225,9 +172,6 @@ impl CGPDFScanner {
         unsafe { CGPDFScannerPopStream(scanner, value) }
     }
 
-    /// # Safety
-    ///
-    /// `s` must be a valid pointer.
     #[doc(alias = "CGPDFScannerStop")]
     #[inline]
     pub unsafe fn stop(s: CGPDFScannerRef) {

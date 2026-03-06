@@ -51,7 +51,7 @@ impl NSSearchToolbarItem {
         /// When set to nil, will reset to a search field with the default configuration.
         #[unsafe(method(searchField))]
         #[unsafe(method_family = none)]
-        pub fn searchField(&self) -> Retained<NSSearchField>;
+        pub unsafe fn searchField(&self) -> Retained<NSSearchField>;
 
         #[cfg(all(
             feature = "NSControl",
@@ -63,7 +63,7 @@ impl NSSearchToolbarItem {
         /// Setter for [`searchField`][Self::searchField].
         #[unsafe(method(setSearchField:))]
         #[unsafe(method_family = none)]
-        pub fn setSearchField(&self, search_field: &NSSearchField);
+        pub unsafe fn setSearchField(&self, search_field: &NSSearchField);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         /// The base view property is owned by the toolbar item and not available for customization.
@@ -81,12 +81,15 @@ impl NSSearchToolbarItem {
         /// The default is YES.
         #[unsafe(method(resignsFirstResponderWithCancel))]
         #[unsafe(method_family = none)]
-        pub fn resignsFirstResponderWithCancel(&self) -> bool;
+        pub unsafe fn resignsFirstResponderWithCancel(&self) -> bool;
 
         /// Setter for [`resignsFirstResponderWithCancel`][Self::resignsFirstResponderWithCancel].
         #[unsafe(method(setResignsFirstResponderWithCancel:))]
         #[unsafe(method_family = none)]
-        pub fn setResignsFirstResponderWithCancel(&self, resigns_first_responder_with_cancel: bool);
+        pub unsafe fn setResignsFirstResponderWithCancel(
+            &self,
+            resigns_first_responder_with_cancel: bool,
+        );
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The preferred width for the search field.
@@ -94,26 +97,29 @@ impl NSSearchToolbarItem {
         /// If specifying custom width constraints to the search field, they should not conflict with this value.
         #[unsafe(method(preferredWidthForSearchField))]
         #[unsafe(method_family = none)]
-        pub fn preferredWidthForSearchField(&self) -> CGFloat;
+        pub unsafe fn preferredWidthForSearchField(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`preferredWidthForSearchField`][Self::preferredWidthForSearchField].
         #[unsafe(method(setPreferredWidthForSearchField:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredWidthForSearchField(&self, preferred_width_for_search_field: CGFloat);
+        pub unsafe fn setPreferredWidthForSearchField(
+            &self,
+            preferred_width_for_search_field: CGFloat,
+        );
 
         /// Starts a search interaction.
         /// If necessary, expands to the preferred width and moves the keyboard focus to the search field.
         #[unsafe(method(beginSearchInteraction))]
         #[unsafe(method_family = none)]
-        pub fn beginSearchInteraction(&self);
+        pub unsafe fn beginSearchInteraction(&self);
 
         /// Ends a search interaction.
         /// Gives up the first responder by calling `-endEditing:` to the search field.
         /// Adjusts to the natural available width for the toolbar item if necessary.
         #[unsafe(method(endSearchInteraction))]
         #[unsafe(method_family = none)]
-        pub fn endSearchInteraction(&self);
+        pub unsafe fn endSearchInteraction(&self);
     );
 }
 
@@ -125,7 +131,7 @@ impl NSSearchToolbarItem {
         /// Initialize the toolbar item with an identifier which is a development language string used by the toolbar and its delegate for identification purposes.
         #[unsafe(method(initWithItemIdentifier:))]
         #[unsafe(method_family = init)]
-        pub fn initWithItemIdentifier(
+        pub unsafe fn initWithItemIdentifier(
             this: Allocated<Self>,
             item_identifier: &NSToolbarItemIdentifier,
         ) -> Retained<Self>;
@@ -138,10 +144,10 @@ impl NSSearchToolbarItem {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

@@ -31,92 +31,89 @@ impl NSLayoutGuide {
     extern_methods!(
         #[unsafe(method(frame))]
         #[unsafe(method_family = none)]
-        pub fn frame(&self) -> NSRect;
+        pub unsafe fn frame(&self) -> NSRect;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(owningView))]
         #[unsafe(method_family = none)]
-        pub fn owningView(&self, mtm: MainThreadMarker) -> Option<Retained<NSView>>;
+        pub unsafe fn owningView(&self, mtm: MainThreadMarker) -> Option<Retained<NSView>>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
-        /// Setter for [`owningView`][Self::owningView].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`owningView`][Self::owningView].
         #[unsafe(method(setOwningView:))]
         #[unsafe(method_family = none)]
-        pub fn setOwningView(&self, owning_view: Option<&NSView>);
+        pub unsafe fn setOwningView(&self, owning_view: Option<&NSView>);
 
         #[cfg(feature = "NSUserInterfaceItemIdentification")]
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Retained<NSUserInterfaceItemIdentifier>;
+        pub unsafe fn identifier(&self) -> Retained<NSUserInterfaceItemIdentifier>;
 
         #[cfg(feature = "NSUserInterfaceItemIdentification")]
         /// Setter for [`identifier`][Self::identifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setIdentifier(&self, identifier: &NSUserInterfaceItemIdentifier);
+        pub unsafe fn setIdentifier(&self, identifier: &NSUserInterfaceItemIdentifier);
 
         #[cfg(feature = "NSLayoutAnchor")]
         #[unsafe(method(leadingAnchor))]
         #[unsafe(method_family = none)]
-        pub fn leadingAnchor(&self) -> Retained<NSLayoutXAxisAnchor>;
+        pub unsafe fn leadingAnchor(&self) -> Retained<NSLayoutXAxisAnchor>;
 
         #[cfg(feature = "NSLayoutAnchor")]
         #[unsafe(method(trailingAnchor))]
         #[unsafe(method_family = none)]
-        pub fn trailingAnchor(&self) -> Retained<NSLayoutXAxisAnchor>;
+        pub unsafe fn trailingAnchor(&self) -> Retained<NSLayoutXAxisAnchor>;
 
         #[cfg(feature = "NSLayoutAnchor")]
         #[unsafe(method(leftAnchor))]
         #[unsafe(method_family = none)]
-        pub fn leftAnchor(&self) -> Retained<NSLayoutXAxisAnchor>;
+        pub unsafe fn leftAnchor(&self) -> Retained<NSLayoutXAxisAnchor>;
 
         #[cfg(feature = "NSLayoutAnchor")]
         #[unsafe(method(rightAnchor))]
         #[unsafe(method_family = none)]
-        pub fn rightAnchor(&self) -> Retained<NSLayoutXAxisAnchor>;
+        pub unsafe fn rightAnchor(&self) -> Retained<NSLayoutXAxisAnchor>;
 
         #[cfg(feature = "NSLayoutAnchor")]
         #[unsafe(method(topAnchor))]
         #[unsafe(method_family = none)]
-        pub fn topAnchor(&self) -> Retained<NSLayoutYAxisAnchor>;
+        pub unsafe fn topAnchor(&self) -> Retained<NSLayoutYAxisAnchor>;
 
         #[cfg(feature = "NSLayoutAnchor")]
         #[unsafe(method(bottomAnchor))]
         #[unsafe(method_family = none)]
-        pub fn bottomAnchor(&self) -> Retained<NSLayoutYAxisAnchor>;
+        pub unsafe fn bottomAnchor(&self) -> Retained<NSLayoutYAxisAnchor>;
 
         #[cfg(feature = "NSLayoutAnchor")]
         #[unsafe(method(widthAnchor))]
         #[unsafe(method_family = none)]
-        pub fn widthAnchor(&self) -> Retained<NSLayoutDimension>;
+        pub unsafe fn widthAnchor(&self) -> Retained<NSLayoutDimension>;
 
         #[cfg(feature = "NSLayoutAnchor")]
         #[unsafe(method(heightAnchor))]
         #[unsafe(method_family = none)]
-        pub fn heightAnchor(&self) -> Retained<NSLayoutDimension>;
+        pub unsafe fn heightAnchor(&self) -> Retained<NSLayoutDimension>;
 
         #[cfg(feature = "NSLayoutAnchor")]
         #[unsafe(method(centerXAnchor))]
         #[unsafe(method_family = none)]
-        pub fn centerXAnchor(&self) -> Retained<NSLayoutXAxisAnchor>;
+        pub unsafe fn centerXAnchor(&self) -> Retained<NSLayoutXAxisAnchor>;
 
         #[cfg(feature = "NSLayoutAnchor")]
         #[unsafe(method(centerYAnchor))]
         #[unsafe(method_family = none)]
-        pub fn centerYAnchor(&self) -> Retained<NSLayoutYAxisAnchor>;
+        pub unsafe fn centerYAnchor(&self) -> Retained<NSLayoutYAxisAnchor>;
 
         #[unsafe(method(hasAmbiguousLayout))]
         #[unsafe(method_family = none)]
-        pub fn hasAmbiguousLayout(&self) -> bool;
+        pub unsafe fn hasAmbiguousLayout(&self) -> bool;
 
         #[cfg(feature = "NSLayoutConstraint")]
         #[unsafe(method(constraintsAffectingLayoutForOrientation:))]
         #[unsafe(method_family = none)]
-        pub fn constraintsAffectingLayoutForOrientation(
+        pub unsafe fn constraintsAffectingLayoutForOrientation(
             &self,
             orientation: NSLayoutConstraintOrientation,
         ) -> Retained<NSArray<NSLayoutConstraint>>;
@@ -128,19 +125,12 @@ impl NSLayoutGuide {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSLayoutGuide {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSLayoutGuideSupport.
@@ -149,14 +139,14 @@ impl NSView {
     extern_methods!(
         #[unsafe(method(addLayoutGuide:))]
         #[unsafe(method_family = none)]
-        pub fn addLayoutGuide(&self, guide: &NSLayoutGuide);
+        pub unsafe fn addLayoutGuide(&self, guide: &NSLayoutGuide);
 
         #[unsafe(method(removeLayoutGuide:))]
         #[unsafe(method_family = none)]
-        pub fn removeLayoutGuide(&self, guide: &NSLayoutGuide);
+        pub unsafe fn removeLayoutGuide(&self, guide: &NSLayoutGuide);
 
         #[unsafe(method(layoutGuides))]
         #[unsafe(method_family = none)]
-        pub fn layoutGuides(&self) -> Retained<NSArray<NSLayoutGuide>>;
+        pub unsafe fn layoutGuides(&self) -> Retained<NSArray<NSLayoutGuide>>;
     );
 }

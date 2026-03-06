@@ -26,7 +26,7 @@ impl NSDistributedLock {
         #[cfg(feature = "NSString")]
         #[unsafe(method(lockWithPath:))]
         #[unsafe(method_family = none)]
-        pub fn lockWithPath(path: &NSString) -> Option<Retained<NSDistributedLock>>;
+        pub unsafe fn lockWithPath(path: &NSString) -> Option<Retained<NSDistributedLock>>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -35,24 +35,27 @@ impl NSDistributedLock {
         #[cfg(feature = "NSString")]
         #[unsafe(method(initWithPath:))]
         #[unsafe(method_family = init)]
-        pub fn initWithPath(this: Allocated<Self>, path: &NSString) -> Option<Retained<Self>>;
+        pub unsafe fn initWithPath(
+            this: Allocated<Self>,
+            path: &NSString,
+        ) -> Option<Retained<Self>>;
 
         #[unsafe(method(tryLock))]
         #[unsafe(method_family = none)]
-        pub fn tryLock(&self) -> bool;
+        pub unsafe fn tryLock(&self) -> bool;
 
         #[unsafe(method(unlock))]
         #[unsafe(method_family = none)]
-        pub fn unlock(&self);
+        pub unsafe fn unlock(&self);
 
         #[unsafe(method(breakLock))]
         #[unsafe(method_family = none)]
-        pub fn breakLock(&self);
+        pub unsafe fn breakLock(&self);
 
         #[cfg(feature = "NSDate")]
         #[unsafe(method(lockDate))]
         #[unsafe(method_family = none)]
-        pub fn lockDate(&self) -> Retained<NSDate>;
+        pub unsafe fn lockDate(&self) -> Retained<NSDate>;
     );
 }
 

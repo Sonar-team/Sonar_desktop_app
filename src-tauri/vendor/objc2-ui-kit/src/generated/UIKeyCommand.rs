@@ -55,11 +55,8 @@ impl UIKeyCommand {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -70,40 +67,34 @@ impl UIKeyCommand {
         /// Short display title.
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: &NSString);
+        pub unsafe fn setTitle(&self, title: &NSString);
 
         #[cfg(feature = "UIImage")]
         /// Image that can appear next to this command.
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`image`][Self::image].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&UIImage>);
+        pub unsafe fn setImage(&self, image: Option<&UIImage>);
 
         /// Elaborated title, if any.
         #[unsafe(method(discoverabilityTitle))]
         #[unsafe(method_family = none)]
-        pub fn discoverabilityTitle(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn discoverabilityTitle(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`discoverabilityTitle`][Self::discoverabilityTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDiscoverabilityTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setDiscoverabilityTitle(&self, discoverability_title: Option<&NSString>);
+        pub unsafe fn setDiscoverabilityTitle(&self, discoverability_title: Option<&NSString>);
 
         /// Action to take on choosing this command.
         #[unsafe(method(action))]
@@ -112,74 +103,77 @@ impl UIKeyCommand {
 
         #[unsafe(method(input))]
         #[unsafe(method_family = none)]
-        pub fn input(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn input(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(modifierFlags))]
         #[unsafe(method_family = none)]
-        pub fn modifierFlags(&self) -> UIKeyModifierFlags;
+        pub unsafe fn modifierFlags(&self) -> UIKeyModifierFlags;
 
         /// Property list object to distinguish commands, if needed.
         #[unsafe(method(propertyList))]
         #[unsafe(method_family = none)]
-        pub fn propertyList(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn propertyList(&self) -> Option<Retained<AnyObject>>;
 
         /// Command attributes.
         #[unsafe(method(attributes))]
         #[unsafe(method_family = none)]
-        pub fn attributes(&self) -> UIMenuElementAttributes;
+        pub unsafe fn attributes(&self) -> UIMenuElementAttributes;
 
         /// Setter for [`attributes`][Self::attributes].
         #[unsafe(method(setAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributes(&self, attributes: UIMenuElementAttributes);
+        pub unsafe fn setAttributes(&self, attributes: UIMenuElementAttributes);
 
         /// State that can appear next to this command.
         #[unsafe(method(state))]
         #[unsafe(method_family = none)]
-        pub fn state(&self) -> UIMenuElementState;
+        pub unsafe fn state(&self) -> UIMenuElementState;
 
         /// Setter for [`state`][Self::state].
         #[unsafe(method(setState:))]
         #[unsafe(method_family = none)]
-        pub fn setState(&self, state: UIMenuElementState);
+        pub unsafe fn setState(&self, state: UIMenuElementState);
 
         /// Alternates that differ in modifier flags, if any.
         #[unsafe(method(alternates))]
         #[unsafe(method_family = none)]
-        pub fn alternates(&self) -> Retained<NSArray<UICommandAlternate>>;
+        pub unsafe fn alternates(&self) -> Retained<NSArray<UICommandAlternate>>;
 
         /// Indicates whether the key command should execute if it conflicts with focus or text-editing system commands, defaults to
         /// `NO`
         #[unsafe(method(wantsPriorityOverSystemBehavior))]
         #[unsafe(method_family = none)]
-        pub fn wantsPriorityOverSystemBehavior(&self) -> bool;
+        pub unsafe fn wantsPriorityOverSystemBehavior(&self) -> bool;
 
         /// Setter for [`wantsPriorityOverSystemBehavior`][Self::wantsPriorityOverSystemBehavior].
         #[unsafe(method(setWantsPriorityOverSystemBehavior:))]
         #[unsafe(method_family = none)]
-        pub fn setWantsPriorityOverSystemBehavior(&self, wants_priority_over_system_behavior: bool);
+        pub unsafe fn setWantsPriorityOverSystemBehavior(
+            &self,
+            wants_priority_over_system_behavior: bool,
+        );
 
         /// Suppose the system detects a given key command that is not reachable in the current keyboard layout; it will localize the key command to something reachable. By setting this property to NO, you will opt-out this menu item from the system-provided localization. YES by default for apps linked against 15.0 and later SDK.
         #[unsafe(method(allowsAutomaticLocalization))]
         #[unsafe(method_family = none)]
-        pub fn allowsAutomaticLocalization(&self) -> bool;
+        pub unsafe fn allowsAutomaticLocalization(&self) -> bool;
 
         /// Setter for [`allowsAutomaticLocalization`][Self::allowsAutomaticLocalization].
         #[unsafe(method(setAllowsAutomaticLocalization:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsAutomaticLocalization(&self, allows_automatic_localization: bool);
+        pub unsafe fn setAllowsAutomaticLocalization(&self, allows_automatic_localization: bool);
 
         /// Suppose the system detects a given key command with the following input string [ ] { } ( )
         /// <
         /// > ← → in a right-to-left user interface environment (UIUserInterfaceLayoutDirectionRightToLeft); in that case, the system will automatically mirror the key command. For example, a pair of key commands with input { and } will be localized to } and { in a right-to-left user interface. By setting this property to NO, you will opt-out this key command of automatically mirroring in RTL. It would be best only to do this if your action will result in some sort of directional change in the UI, e.g. a segmented control for text alignment or a D-pad in a game. YES by default for apps linked against 15.0 and later SDK.
         #[unsafe(method(allowsAutomaticMirroring))]
         #[unsafe(method_family = none)]
-        pub fn allowsAutomaticMirroring(&self) -> bool;
+        pub unsafe fn allowsAutomaticMirroring(&self) -> bool;
 
         /// Setter for [`allowsAutomaticMirroring`][Self::allowsAutomaticMirroring].
         #[unsafe(method(setAllowsAutomaticMirroring:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsAutomaticMirroring(&self, allows_automatic_mirroring: bool);
+        pub unsafe fn setAllowsAutomaticMirroring(&self, allows_automatic_mirroring: bool);
 
         #[cfg(feature = "UIImage")]
         /// Initializes a key command.
@@ -198,11 +192,6 @@ impl UIKeyCommand {
         /// Parameter `propertyList`: Property list object to distinguish commands, if needed.
         ///
         /// Returns: A new key command.
-        ///
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `property_list` should be of the correct type.
         #[unsafe(method(commandWithTitle:image:action:input:modifierFlags:propertyList:))]
         #[unsafe(method_family = none)]
         pub unsafe fn commandWithTitle_image_action_input_modifierFlags_propertyList(
@@ -234,11 +223,6 @@ impl UIKeyCommand {
         /// Parameter `alternates`: Alternates that differ in modifier flags.
         ///
         /// Returns: A new key command.
-        ///
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `property_list` should be of the correct type.
         #[unsafe(method(commandWithTitle:image:action:input:modifierFlags:propertyList:alternates:))]
         #[unsafe(method_family = none)]
         pub unsafe fn commandWithTitle_image_action_input_modifierFlags_propertyList_alternates(
@@ -252,9 +236,6 @@ impl UIKeyCommand {
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `action` must be a valid selector.
         #[unsafe(method(keyCommandWithInput:modifierFlags:action:))]
         #[unsafe(method_family = none)]
         pub unsafe fn keyCommandWithInput_modifierFlags_action(
@@ -264,9 +245,6 @@ impl UIKeyCommand {
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `action` must be a valid selector.
         #[deprecated]
         #[unsafe(method(keyCommandWithInput:modifierFlags:action:discoverabilityTitle:))]
         #[unsafe(method_family = none)]
@@ -279,10 +257,6 @@ impl UIKeyCommand {
         ) -> Retained<Self>;
 
         #[cfg(feature = "UIImage")]
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `property_list` should be of the correct type.
         #[unsafe(method(commandWithTitle:image:action:propertyList:))]
         #[unsafe(method_family = none)]
         pub unsafe fn commandWithTitle_image_action_propertyList(
@@ -294,10 +268,6 @@ impl UIKeyCommand {
         ) -> Retained<Self>;
 
         #[cfg(feature = "UIImage")]
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `property_list` should be of the correct type.
         #[unsafe(method(commandWithTitle:image:action:propertyList:alternates:))]
         #[unsafe(method_family = none)]
         pub unsafe fn commandWithTitle_image_action_propertyList_alternates(

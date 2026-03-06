@@ -89,8 +89,6 @@ impl DOMHTMLBRElement {
         pub unsafe fn clear(&self) -> Retained<NSString>;
 
         /// Setter for [`clear`][Self::clear].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setClear:))]
         #[unsafe(method_family = none)]

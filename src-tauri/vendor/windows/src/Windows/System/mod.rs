@@ -1202,7 +1202,7 @@ impl windows_core::RuntimeType for DispatcherQueueHandler {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
 impl DispatcherQueueHandler {
-    pub fn new<F: FnMut() -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
+    pub fn new<F: Fn() -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
         let com = DispatcherQueueHandlerBox { vtable: &DispatcherQueueHandlerBox::<F>::VTABLE, count: windows_core::imp::RefCount::new(1), invoke };
         unsafe { core::mem::transmute(windows_core::imp::Box::new(com)) }
     }
@@ -1218,12 +1218,12 @@ pub struct DispatcherQueueHandler_Vtbl {
     Invoke: unsafe extern "system" fn(this: *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 #[repr(C)]
-struct DispatcherQueueHandlerBox<F: FnMut() -> windows_core::Result<()> + Send + 'static> {
+struct DispatcherQueueHandlerBox<F: Fn() -> windows_core::Result<()> + Send + 'static> {
     vtable: *const DispatcherQueueHandler_Vtbl,
     invoke: F,
     count: windows_core::imp::RefCount,
 }
-impl<F: FnMut() -> windows_core::Result<()> + Send + 'static> DispatcherQueueHandlerBox<F> {
+impl<F: Fn() -> windows_core::Result<()> + Send + 'static> DispatcherQueueHandlerBox<F> {
     const VTABLE: DispatcherQueueHandler_Vtbl = DispatcherQueueHandler_Vtbl { base__: windows_core::IUnknown_Vtbl { QueryInterface: Self::QueryInterface, AddRef: Self::AddRef, Release: Self::Release }, Invoke: Self::Invoke };
     unsafe extern "system" fn QueryInterface(this: *mut core::ffi::c_void, iid: *const windows_core::GUID, interface: *mut *mut core::ffi::c_void) -> windows_core::HRESULT {
         unsafe {
@@ -2541,14 +2541,8 @@ pub struct IUserStatics_Vtbl {
     pub base__: windows_core::IInspectable_Vtbl,
     pub CreateWatcher: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
     pub FindAllAsync: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(feature = "deprecated")]
     pub FindAllAsyncByType: unsafe extern "system" fn(*mut core::ffi::c_void, UserType, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    FindAllAsyncByType: usize,
-    #[cfg(feature = "deprecated")]
     pub FindAllAsyncByTypeAndStatus: unsafe extern "system" fn(*mut core::ffi::c_void, UserType, UserAuthenticationStatus, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    FindAllAsyncByTypeAndStatus: usize,
     pub GetFromId: unsafe extern "system" fn(*mut core::ffi::c_void, *mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 windows_core::imp::define_interface!(IUserStatics2, IUserStatics2_Vtbl, 0x74a37e11_2eb5_4487_b0d5_2c6790e013e9);
@@ -3868,14 +3862,12 @@ impl User {
             (windows_core::Interface::vtable(this).FindAllAsync)(windows_core::Interface::as_raw(this), &mut result__).and_then(|| windows_core::Type::from_abi(result__))
         })
     }
-    #[cfg(feature = "deprecated")]
     pub fn FindAllAsyncByType(r#type: UserType) -> windows_core::Result<windows_future::IAsyncOperation<windows_collections::IVectorView<User>>> {
         Self::IUserStatics(|this| unsafe {
             let mut result__ = core::mem::zeroed();
             (windows_core::Interface::vtable(this).FindAllAsyncByType)(windows_core::Interface::as_raw(this), r#type, &mut result__).and_then(|| windows_core::Type::from_abi(result__))
         })
     }
-    #[cfg(feature = "deprecated")]
     pub fn FindAllAsyncByTypeAndStatus(r#type: UserType, status: UserAuthenticationStatus) -> windows_core::Result<windows_future::IAsyncOperation<windows_collections::IVectorView<User>>> {
         Self::IUserStatics(|this| unsafe {
             let mut result__ = core::mem::zeroed();

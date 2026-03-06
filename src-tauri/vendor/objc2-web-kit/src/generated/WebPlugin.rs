@@ -11,7 +11,6 @@ mod private_NSObjectWebPlugIn {
 }
 
 /// Category "WebPlugIn" on [`NSObject`].
-///
 /// WebPlugIn is an informal protocol that enables interaction between an application
 /// and web related plug-ins it may contain.
 #[doc(alias = "WebPlugIn")]
@@ -80,10 +79,6 @@ pub unsafe trait NSObjectWebPlugIn:
         ///
         /// This method is only sent to the plug-in if the
         /// WebPlugInShouldLoadMainResourceKey argument passed to the plug-in was NO.
-        ///
-        /// # Safety
-        ///
-        /// `response` might not allow `None`.
         #[unsafe(method(webPlugInMainResourceDidReceiveResponse:))]
         #[unsafe(method_family = none)]
         unsafe fn webPlugInMainResourceDidReceiveResponse(&self, response: Option<&NSURLResponse>);
@@ -93,10 +88,6 @@ pub unsafe trait NSObjectWebPlugIn:
         ///
         /// This method is only sent to the plug-in if the
         /// WebPlugInShouldLoadMainResourceKey argument passed to the plug-in was NO.
-        ///
-        /// # Safety
-        ///
-        /// `data` might not allow `None`.
         #[unsafe(method(webPlugInMainResourceDidReceiveData:))]
         #[unsafe(method_family = none)]
         unsafe fn webPlugInMainResourceDidReceiveData(&self, data: Option<&NSData>);
@@ -106,10 +97,6 @@ pub unsafe trait NSObjectWebPlugIn:
         ///
         /// This method is only sent to the plug-in if the
         /// WebPlugInShouldLoadMainResourceKey argument passed to the plug-in was NO.
-        ///
-        /// # Safety
-        ///
-        /// `error` might not allow `None`.
         #[unsafe(method(webPlugInMainResourceDidFailWithError:))]
         #[unsafe(method_family = none)]
         unsafe fn webPlugInMainResourceDidFailWithError(&self, error: Option<&NSError>);

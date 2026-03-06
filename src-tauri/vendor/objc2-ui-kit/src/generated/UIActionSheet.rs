@@ -133,118 +133,128 @@ impl UIActionSheet {
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UIActionSheetDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn UIActionSheetDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn UIActionSheetDelegate>>);
+        pub unsafe fn setDelegate(
+            &self,
+            delegate: Option<&ProtocolObject<dyn UIActionSheetDelegate>>,
+        );
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: &NSString);
+        pub unsafe fn setTitle(&self, title: &NSString);
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(actionSheetStyle))]
         #[unsafe(method_family = none)]
-        pub fn actionSheetStyle(&self) -> UIActionSheetStyle;
+        pub unsafe fn actionSheetStyle(&self) -> UIActionSheetStyle;
 
         /// Setter for [`actionSheetStyle`][Self::actionSheetStyle].
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(setActionSheetStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setActionSheetStyle(&self, action_sheet_style: UIActionSheetStyle);
+        pub unsafe fn setActionSheetStyle(&self, action_sheet_style: UIActionSheetStyle);
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(addButtonWithTitle:))]
         #[unsafe(method_family = none)]
-        pub fn addButtonWithTitle(&self, title: Option<&NSString>) -> NSInteger;
+        pub unsafe fn addButtonWithTitle(&self, title: Option<&NSString>) -> NSInteger;
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(buttonTitleAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn buttonTitleAtIndex(&self, button_index: NSInteger) -> Option<Retained<NSString>>;
+        pub unsafe fn buttonTitleAtIndex(
+            &self,
+            button_index: NSInteger,
+        ) -> Option<Retained<NSString>>;
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(numberOfButtons))]
         #[unsafe(method_family = none)]
-        pub fn numberOfButtons(&self) -> NSInteger;
+        pub unsafe fn numberOfButtons(&self) -> NSInteger;
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(cancelButtonIndex))]
         #[unsafe(method_family = none)]
-        pub fn cancelButtonIndex(&self) -> NSInteger;
+        pub unsafe fn cancelButtonIndex(&self) -> NSInteger;
 
         /// Setter for [`cancelButtonIndex`][Self::cancelButtonIndex].
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(setCancelButtonIndex:))]
         #[unsafe(method_family = none)]
-        pub fn setCancelButtonIndex(&self, cancel_button_index: NSInteger);
+        pub unsafe fn setCancelButtonIndex(&self, cancel_button_index: NSInteger);
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(destructiveButtonIndex))]
         #[unsafe(method_family = none)]
-        pub fn destructiveButtonIndex(&self) -> NSInteger;
+        pub unsafe fn destructiveButtonIndex(&self) -> NSInteger;
 
         /// Setter for [`destructiveButtonIndex`][Self::destructiveButtonIndex].
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(setDestructiveButtonIndex:))]
         #[unsafe(method_family = none)]
-        pub fn setDestructiveButtonIndex(&self, destructive_button_index: NSInteger);
+        pub unsafe fn setDestructiveButtonIndex(&self, destructive_button_index: NSInteger);
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(firstOtherButtonIndex))]
         #[unsafe(method_family = none)]
-        pub fn firstOtherButtonIndex(&self) -> NSInteger;
+        pub unsafe fn firstOtherButtonIndex(&self) -> NSInteger;
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(isVisible))]
         #[unsafe(method_family = none)]
-        pub fn isVisible(&self) -> bool;
+        pub unsafe fn isVisible(&self) -> bool;
 
         #[cfg(feature = "UIToolbar")]
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(showFromToolbar:))]
         #[unsafe(method_family = none)]
-        pub fn showFromToolbar(&self, view: &UIToolbar);
+        pub unsafe fn showFromToolbar(&self, view: &UIToolbar);
 
         #[cfg(feature = "UITabBar")]
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(showFromTabBar:))]
         #[unsafe(method_family = none)]
-        pub fn showFromTabBar(&self, view: &UITabBar);
+        pub unsafe fn showFromTabBar(&self, view: &UITabBar);
 
         #[cfg(all(feature = "UIBarButtonItem", feature = "UIBarItem"))]
         #[unsafe(method(showFromBarButtonItem:animated:))]
         #[unsafe(method_family = none)]
-        pub fn showFromBarButtonItem_animated(&self, item: &UIBarButtonItem, animated: bool);
+        pub unsafe fn showFromBarButtonItem_animated(&self, item: &UIBarButtonItem, animated: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(showFromRect:inView:animated:))]
         #[unsafe(method_family = none)]
-        pub fn showFromRect_inView_animated(&self, rect: CGRect, view: &UIView, animated: bool);
+        pub unsafe fn showFromRect_inView_animated(
+            &self,
+            rect: CGRect,
+            view: &UIView,
+            animated: bool,
+        );
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(showInView:))]
         #[unsafe(method_family = none)]
-        pub fn showInView(&self, view: &UIView);
+        pub unsafe fn showInView(&self, view: &UIView);
 
         #[deprecated = "UIActionSheet is deprecated. Use UIAlertController with a preferredStyle of UIAlertControllerStyleActionSheet instead"]
         #[unsafe(method(dismissWithClickedButtonIndex:animated:))]
         #[unsafe(method_family = none)]
-        pub fn dismissWithClickedButtonIndex_animated(
+        pub unsafe fn dismissWithClickedButtonIndex_animated(
             &self,
             button_index: NSInteger,
             animated: bool,
@@ -259,21 +269,14 @@ impl UIActionSheet {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
             this: Allocated<Self>,
             coder: &NSCoder,
         ) -> Option<Retained<Self>>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -281,9 +284,13 @@ impl UIActionSheet {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UIActionSheet {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -295,7 +302,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(actionSheet:clickedButtonAtIndex:))]
         #[unsafe(method_family = none)]
-        fn actionSheet_clickedButtonAtIndex(
+        unsafe fn actionSheet_clickedButtonAtIndex(
             &self,
             action_sheet: &UIActionSheet,
             button_index: NSInteger,
@@ -306,28 +313,28 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(actionSheetCancel:))]
         #[unsafe(method_family = none)]
-        fn actionSheetCancel(&self, action_sheet: &UIActionSheet);
+        unsafe fn actionSheetCancel(&self, action_sheet: &UIActionSheet);
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[deprecated = "Use UIAlertController instead."]
         #[optional]
         #[unsafe(method(willPresentActionSheet:))]
         #[unsafe(method_family = none)]
-        fn willPresentActionSheet(&self, action_sheet: &UIActionSheet);
+        unsafe fn willPresentActionSheet(&self, action_sheet: &UIActionSheet);
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[deprecated = "Use UIAlertController instead."]
         #[optional]
         #[unsafe(method(didPresentActionSheet:))]
         #[unsafe(method_family = none)]
-        fn didPresentActionSheet(&self, action_sheet: &UIActionSheet);
+        unsafe fn didPresentActionSheet(&self, action_sheet: &UIActionSheet);
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[deprecated = "Use UIAlertController instead."]
         #[optional]
         #[unsafe(method(actionSheet:willDismissWithButtonIndex:))]
         #[unsafe(method_family = none)]
-        fn actionSheet_willDismissWithButtonIndex(
+        unsafe fn actionSheet_willDismissWithButtonIndex(
             &self,
             action_sheet: &UIActionSheet,
             button_index: NSInteger,
@@ -338,7 +345,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(actionSheet:didDismissWithButtonIndex:))]
         #[unsafe(method_family = none)]
-        fn actionSheet_didDismissWithButtonIndex(
+        unsafe fn actionSheet_didDismissWithButtonIndex(
             &self,
             action_sheet: &UIActionSheet,
             button_index: NSInteger,

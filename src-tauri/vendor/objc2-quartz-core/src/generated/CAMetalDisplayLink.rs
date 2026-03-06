@@ -25,17 +25,17 @@ impl CAMetalDisplayLinkUpdate {
         #[cfg(all(feature = "CAMetalLayer", feature = "objc2-metal"))]
         #[unsafe(method(drawable))]
         #[unsafe(method_family = none)]
-        pub fn drawable(&self) -> Retained<ProtocolObject<dyn CAMetalDrawable>>;
+        pub unsafe fn drawable(&self) -> Retained<ProtocolObject<dyn CAMetalDrawable>>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(targetTimestamp))]
         #[unsafe(method_family = none)]
-        pub fn targetTimestamp(&self) -> CFTimeInterval;
+        pub unsafe fn targetTimestamp(&self) -> CFTimeInterval;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(targetPresentationTimestamp))]
         #[unsafe(method_family = none)]
-        pub fn targetPresentationTimestamp(&self) -> CFTimeInterval;
+        pub unsafe fn targetPresentationTimestamp(&self) -> CFTimeInterval;
     );
 }
 
@@ -44,19 +44,12 @@ impl CAMetalDisplayLinkUpdate {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for CAMetalDisplayLinkUpdate {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_protocol!(
@@ -64,7 +57,7 @@ extern_protocol!(
     pub unsafe trait CAMetalDisplayLinkDelegate {
         #[unsafe(method(metalDisplayLink:needsUpdate:))]
         #[unsafe(method_family = none)]
-        fn metalDisplayLink_needsUpdate(
+        unsafe fn metalDisplayLink_needsUpdate(
             &self,
             link: &CAMetalDisplayLink,
             update: &CAMetalDisplayLinkUpdate,
@@ -88,68 +81,69 @@ impl CAMetalDisplayLink {
         #[cfg(all(feature = "CALayer", feature = "CAMetalLayer"))]
         #[unsafe(method(initWithMetalLayer:))]
         #[unsafe(method_family = init)]
-        pub fn initWithMetalLayer(this: Allocated<Self>, layer: &CAMetalLayer) -> Retained<Self>;
+        pub unsafe fn initWithMetalLayer(
+            this: Allocated<Self>,
+            layer: &CAMetalLayer,
+        ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `runloop` possibly has additional threading requirements.
         #[unsafe(method(addToRunLoop:forMode:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addToRunLoop_forMode(&self, runloop: &NSRunLoop, mode: &NSRunLoopMode);
 
-        /// # Safety
-        ///
-        /// `runloop` possibly has additional threading requirements.
         #[unsafe(method(removeFromRunLoop:forMode:))]
         #[unsafe(method_family = none)]
         pub unsafe fn removeFromRunLoop_forMode(&self, runloop: &NSRunLoop, mode: &NSRunLoopMode);
 
         #[unsafe(method(invalidate))]
         #[unsafe(method_family = none)]
-        pub fn invalidate(&self);
+        pub unsafe fn invalidate(&self);
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn CAMetalDisplayLinkDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn CAMetalDisplayLinkDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(
+        pub unsafe fn setDelegate(
             &self,
             delegate: Option<&ProtocolObject<dyn CAMetalDisplayLinkDelegate>>,
         );
 
         #[unsafe(method(preferredFrameLatency))]
         #[unsafe(method_family = none)]
-        pub fn preferredFrameLatency(&self) -> c_float;
+        pub unsafe fn preferredFrameLatency(&self) -> c_float;
 
         /// Setter for [`preferredFrameLatency`][Self::preferredFrameLatency].
         #[unsafe(method(setPreferredFrameLatency:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredFrameLatency(&self, preferred_frame_latency: c_float);
+        pub unsafe fn setPreferredFrameLatency(&self, preferred_frame_latency: c_float);
 
         #[cfg(feature = "CAFrameRateRange")]
         #[unsafe(method(preferredFrameRateRange))]
         #[unsafe(method_family = none)]
-        pub fn preferredFrameRateRange(&self) -> CAFrameRateRange;
+        pub unsafe fn preferredFrameRateRange(&self) -> CAFrameRateRange;
 
         #[cfg(feature = "CAFrameRateRange")]
         /// Setter for [`preferredFrameRateRange`][Self::preferredFrameRateRange].
         #[unsafe(method(setPreferredFrameRateRange:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredFrameRateRange(&self, preferred_frame_rate_range: CAFrameRateRange);
+        pub unsafe fn setPreferredFrameRateRange(
+            &self,
+            preferred_frame_rate_range: CAFrameRateRange,
+        );
 
         #[unsafe(method(isPaused))]
         #[unsafe(method_family = none)]
-        pub fn isPaused(&self) -> bool;
+        pub unsafe fn isPaused(&self) -> bool;
 
         /// Setter for [`isPaused`][Self::isPaused].
         #[unsafe(method(setPaused:))]
         #[unsafe(method_family = none)]
-        pub fn setPaused(&self, paused: bool);
+        pub unsafe fn setPaused(&self, paused: bool);
     );
 }
 
@@ -158,17 +152,10 @@ impl CAMetalDisplayLink {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for CAMetalDisplayLink {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

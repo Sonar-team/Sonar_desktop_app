@@ -39,14 +39,14 @@ impl UIUpdateInfo {
         ))]
         #[unsafe(method(currentUpdateInfoForWindowScene:))]
         #[unsafe(method_family = none)]
-        pub fn currentUpdateInfoForWindowScene(
+        pub unsafe fn currentUpdateInfoForWindowScene(
             window_scene: &UIWindowScene,
         ) -> Option<Retained<Self>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(currentUpdateInfoForView:))]
         #[unsafe(method_family = none)]
-        pub fn currentUpdateInfoForView(view: &UIView) -> Option<Retained<Self>>;
+        pub unsafe fn currentUpdateInfoForView(view: &UIView) -> Option<Retained<Self>>;
 
         /// Reference time that is suitable for driving time based model changes, like animations or physics. Use it as "now"
         /// time for the UI update. It's designed to maintain constant latency between model changes and their on screen
@@ -55,20 +55,20 @@ impl UIUpdateInfo {
         /// parameters.
         #[unsafe(method(modelTime))]
         #[unsafe(method_family = none)]
-        pub fn modelTime(&self) -> NSTimeInterval;
+        pub unsafe fn modelTime(&self) -> NSTimeInterval;
 
         /// Time by which application has to be done submitting changes to the render server. Missing this completion deadline
         /// will result in a presentation delay. Single miss will look like a frame drop, missing repeatedly will look like
         /// judder.
         #[unsafe(method(completionDeadlineTime))]
         #[unsafe(method_family = none)]
-        pub fn completionDeadlineTime(&self) -> NSTimeInterval;
+        pub unsafe fn completionDeadlineTime(&self) -> NSTimeInterval;
 
         /// Estimated time when UI update changes will become visible on screen. Actual time when pixels change color may
         /// differ.
         #[unsafe(method(estimatedPresentationTime))]
         #[unsafe(method_family = none)]
-        pub fn estimatedPresentationTime(&self) -> NSTimeInterval;
+        pub unsafe fn estimatedPresentationTime(&self) -> NSTimeInterval;
 
         /// `YES` for UI updates that are expected to present immediately upon completion. Use it to minimize amount of work
         /// performed during the UI update. Any processing that is not critical for the frame being presented should be deferred
@@ -84,7 +84,7 @@ impl UIUpdateInfo {
         /// noticeable improvement to user experience. Returned value can change during the UI update.
         #[unsafe(method(isImmediatePresentationExpected))]
         #[unsafe(method_family = none)]
-        pub fn isImmediatePresentationExpected(&self) -> bool;
+        pub unsafe fn isImmediatePresentationExpected(&self) -> bool;
 
         /// `YES` when it's guaranteed that low-latency event dispatch will happen during the UI update. When `YES` is returned,
         /// you can rely on low-latency UI update phases to run for this UI update. Use it to avoid doing the same work more
@@ -96,7 +96,7 @@ impl UIUpdateInfo {
         /// unnecessarily as a side effect - call it only when there's an intention to act on returned value.
         #[unsafe(method(isLowLatencyEventDispatchConfirmed))]
         #[unsafe(method_family = none)]
-        pub fn isLowLatencyEventDispatchConfirmed(&self) -> bool;
+        pub unsafe fn isLowLatencyEventDispatchConfirmed(&self) -> bool;
 
         /// `YES` when executing low-latency part of the UI update (specifically between `LowLatencyEventDispatch` and
         /// `LowLatencyCATransactionCommit` UI update phases). Work in this part of the UI update should be as minimal as
@@ -105,6 +105,6 @@ impl UIUpdateInfo {
         /// deferral as arbitrary delayed work will potentially interfere with following UI updates.
         #[unsafe(method(isPerformingLowLatencyPhases))]
         #[unsafe(method_family = none)]
-        pub fn isPerformingLowLatencyPhases(&self) -> bool;
+        pub unsafe fn isPerformingLowLatencyPhases(&self) -> bool;
     );
 }

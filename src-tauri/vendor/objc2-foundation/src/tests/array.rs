@@ -5,7 +5,7 @@ use alloc::format;
 use alloc::vec::Vec;
 use core::ptr;
 
-use crate::{NSArray, NSNumber, NSObject, NSValue};
+use crate::{NSArray, NSNumber, NSObject};
 use objc2::extern_protocol;
 use objc2::rc::Retained;
 use objc2::runtime::{AnyObject, ProtocolObject};
@@ -186,33 +186,4 @@ fn test_access_anyobject() {
     for _ in array.iter() {}
     for _ in unsafe { array.iter_unchecked() } {}
     for _ in array {}
-}
-
-#[test]
-fn test_cast() {
-    let array = NSArray::from_retained_slice(&[NSNumber::new_i64(42)]);
-    // SAFETY: NSNumber is a subclass of NSValue.
-    let array = unsafe { array.cast_unchecked::<NSValue>() };
-    let value = array.objectAtIndex(0);
-    // SAFETY: We put an i64 into the NSNumber.
-    assert_eq!(unsafe { value.get::<i64>() }, 42);
-}
-
-#[test]
-#[cfg(feature = "objc2-core-foundation")]
-#[cfg(not(feature = "gnustep-1-7"))]
-fn toll_free_bridging() {
-    use objc2_core_foundation::{CFArray, CFRetained};
-
-    let array = NSArray::from_retained_slice(&[NSNumber::new_bool(true)]);
-
-    let cf_array: &CFArray<NSNumber> = array.as_ref();
-    assert_eq!(cf_array.retain_count(), 1);
-    let _: &NSArray<NSNumber> = cf_array.as_ref();
-
-    let cf_array: Retained<CFArray<NSNumber>> = (&array).into();
-    assert_eq!(cf_array.retain_count(), 2);
-    let _: Retained<NSArray<NSNumber>> = (&cf_array).into();
-
-    let _: CFRetained<CFArray<NSNumber>> = (&array).into();
 }

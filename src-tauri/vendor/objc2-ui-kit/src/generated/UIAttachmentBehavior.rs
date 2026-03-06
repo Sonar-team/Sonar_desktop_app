@@ -71,7 +71,7 @@ impl UIFloatRange {
     #[doc(alias = "UIFloatRangeIsInfinite")]
     #[cfg(feature = "objc2-core-foundation")]
     #[inline]
-    pub fn is_infinite(self) -> bool {
+    pub unsafe fn is_infinite(self: UIFloatRange) -> bool {
         extern "C-unwind" {
             fn UIFloatRangeIsInfinite(range: UIFloatRange) -> Bool;
         }
@@ -103,7 +103,7 @@ impl UIAttachmentBehavior {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithItem:attachedToAnchor:))]
         #[unsafe(method_family = init)]
-        pub fn initWithItem_attachedToAnchor(
+        pub unsafe fn initWithItem_attachedToAnchor(
             this: Allocated<Self>,
             item: &ProtocolObject<dyn UIDynamicItem>,
             point: CGPoint,
@@ -112,7 +112,7 @@ impl UIAttachmentBehavior {
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         #[unsafe(method(initWithItem:offsetFromCenter:attachedToAnchor:))]
         #[unsafe(method_family = init)]
-        pub fn initWithItem_offsetFromCenter_attachedToAnchor(
+        pub unsafe fn initWithItem_offsetFromCenter_attachedToAnchor(
             this: Allocated<Self>,
             item: &ProtocolObject<dyn UIDynamicItem>,
             offset: UIOffset,
@@ -121,7 +121,7 @@ impl UIAttachmentBehavior {
 
         #[unsafe(method(initWithItem:attachedToItem:))]
         #[unsafe(method_family = init)]
-        pub fn initWithItem_attachedToItem(
+        pub unsafe fn initWithItem_attachedToItem(
             this: Allocated<Self>,
             item1: &ProtocolObject<dyn UIDynamicItem>,
             item2: &ProtocolObject<dyn UIDynamicItem>,
@@ -130,7 +130,7 @@ impl UIAttachmentBehavior {
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         #[unsafe(method(initWithItem:offsetFromCenter:attachedToItem:offsetFromCenter:))]
         #[unsafe(method_family = init)]
-        pub fn initWithItem_offsetFromCenter_attachedToItem_offsetFromCenter(
+        pub unsafe fn initWithItem_offsetFromCenter_attachedToItem_offsetFromCenter(
             this: Allocated<Self>,
             item1: &ProtocolObject<dyn UIDynamicItem>,
             offset1: UIOffset,
@@ -153,7 +153,7 @@ impl UIAttachmentBehavior {
         /// See: attachmentRange, Represents the slidable range of the attachment with respect to the anchor point along the specified axis, this range must include 0
         #[unsafe(method(slidingAttachmentWithItem:attachedToItem:attachmentAnchor:axisOfTranslation:))]
         #[unsafe(method_family = none)]
-        pub fn slidingAttachmentWithItem_attachedToItem_attachmentAnchor_axisOfTranslation(
+        pub unsafe fn slidingAttachmentWithItem_attachedToItem_attachmentAnchor_axisOfTranslation(
             item1: &ProtocolObject<dyn UIDynamicItem>,
             item2: &ProtocolObject<dyn UIDynamicItem>,
             point: CGPoint,
@@ -173,7 +173,7 @@ impl UIAttachmentBehavior {
         /// See: attachmentRange, Represents the slidable range of the attachment with respect to the anchor point along the specified axis, this range must include 0
         #[unsafe(method(slidingAttachmentWithItem:attachmentAnchor:axisOfTranslation:))]
         #[unsafe(method_family = none)]
-        pub fn slidingAttachmentWithItem_attachmentAnchor_axisOfTranslation(
+        pub unsafe fn slidingAttachmentWithItem_attachmentAnchor_axisOfTranslation(
             item: &ProtocolObject<dyn UIDynamicItem>,
             point: CGPoint,
             axis: CGVector,
@@ -193,7 +193,7 @@ impl UIAttachmentBehavior {
         /// See: length
         #[unsafe(method(limitAttachmentWithItem:offsetFromCenter:attachedToItem:offsetFromCenter:))]
         #[unsafe(method_family = none)]
-        pub fn limitAttachmentWithItem_offsetFromCenter_attachedToItem_offsetFromCenter(
+        pub unsafe fn limitAttachmentWithItem_offsetFromCenter_attachedToItem_offsetFromCenter(
             item1: &ProtocolObject<dyn UIDynamicItem>,
             offset1: UIOffset,
             item2: &ProtocolObject<dyn UIDynamicItem>,
@@ -211,7 +211,7 @@ impl UIAttachmentBehavior {
         /// Parameter `point`: The point for which each item will be attached. The anchor point will be converted to each items local coordinate system.
         #[unsafe(method(fixedAttachmentWithItem:attachedToItem:attachmentAnchor:))]
         #[unsafe(method_family = none)]
-        pub fn fixedAttachmentWithItem_attachedToItem_attachmentAnchor(
+        pub unsafe fn fixedAttachmentWithItem_attachedToItem_attachmentAnchor(
             item1: &ProtocolObject<dyn UIDynamicItem>,
             item2: &ProtocolObject<dyn UIDynamicItem>,
             point: CGPoint,
@@ -230,7 +230,7 @@ impl UIAttachmentBehavior {
         /// See: frictionTorque, resistance to rotation
         #[unsafe(method(pinAttachmentWithItem:attachedToItem:attachmentAnchor:))]
         #[unsafe(method_family = none)]
-        pub fn pinAttachmentWithItem_attachedToItem_attachmentAnchor(
+        pub unsafe fn pinAttachmentWithItem_attachedToItem_attachmentAnchor(
             item1: &ProtocolObject<dyn UIDynamicItem>,
             item2: &ProtocolObject<dyn UIDynamicItem>,
             point: CGPoint,
@@ -238,77 +238,77 @@ impl UIAttachmentBehavior {
 
         #[unsafe(method(items))]
         #[unsafe(method_family = none)]
-        pub fn items(&self) -> Retained<NSArray<ProtocolObject<dyn UIDynamicItem>>>;
+        pub unsafe fn items(&self) -> Retained<NSArray<ProtocolObject<dyn UIDynamicItem>>>;
 
         #[unsafe(method(attachedBehaviorType))]
         #[unsafe(method_family = none)]
-        pub fn attachedBehaviorType(&self) -> UIAttachmentBehaviorType;
+        pub unsafe fn attachedBehaviorType(&self) -> UIAttachmentBehaviorType;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(anchorPoint))]
         #[unsafe(method_family = none)]
-        pub fn anchorPoint(&self) -> CGPoint;
+        pub unsafe fn anchorPoint(&self) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`anchorPoint`][Self::anchorPoint].
         #[unsafe(method(setAnchorPoint:))]
         #[unsafe(method_family = none)]
-        pub fn setAnchorPoint(&self, anchor_point: CGPoint);
+        pub unsafe fn setAnchorPoint(&self, anchor_point: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(length))]
         #[unsafe(method_family = none)]
-        pub fn length(&self) -> CGFloat;
+        pub unsafe fn length(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`length`][Self::length].
         #[unsafe(method(setLength:))]
         #[unsafe(method_family = none)]
-        pub fn setLength(&self, length: CGFloat);
+        pub unsafe fn setLength(&self, length: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(damping))]
         #[unsafe(method_family = none)]
-        pub fn damping(&self) -> CGFloat;
+        pub unsafe fn damping(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`damping`][Self::damping].
         #[unsafe(method(setDamping:))]
         #[unsafe(method_family = none)]
-        pub fn setDamping(&self, damping: CGFloat);
+        pub unsafe fn setDamping(&self, damping: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(frequency))]
         #[unsafe(method_family = none)]
-        pub fn frequency(&self) -> CGFloat;
+        pub unsafe fn frequency(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`frequency`][Self::frequency].
         #[unsafe(method(setFrequency:))]
         #[unsafe(method_family = none)]
-        pub fn setFrequency(&self, frequency: CGFloat);
+        pub unsafe fn setFrequency(&self, frequency: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(frictionTorque))]
         #[unsafe(method_family = none)]
-        pub fn frictionTorque(&self) -> CGFloat;
+        pub unsafe fn frictionTorque(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`frictionTorque`][Self::frictionTorque].
         #[unsafe(method(setFrictionTorque:))]
         #[unsafe(method_family = none)]
-        pub fn setFrictionTorque(&self, friction_torque: CGFloat);
+        pub unsafe fn setFrictionTorque(&self, friction_torque: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(attachmentRange))]
         #[unsafe(method_family = none)]
-        pub fn attachmentRange(&self) -> UIFloatRange;
+        pub unsafe fn attachmentRange(&self) -> UIFloatRange;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`attachmentRange`][Self::attachmentRange].
         #[unsafe(method(setAttachmentRange:))]
         #[unsafe(method_family = none)]
-        pub fn setAttachmentRange(&self, attachment_range: UIFloatRange);
+        pub unsafe fn setAttachmentRange(&self, attachment_range: UIFloatRange);
     );
 }
 
@@ -318,18 +318,18 @@ impl UIAttachmentBehavior {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
 #[cfg(feature = "objc2-core-foundation")]
 #[deprecated = "renamed to `UIFloatRange::is_infinite`"]
 #[inline]
-pub extern "C-unwind" fn UIFloatRangeIsInfinite(range: UIFloatRange) -> bool {
+pub unsafe extern "C-unwind" fn UIFloatRangeIsInfinite(range: UIFloatRange) -> bool {
     extern "C-unwind" {
         fn UIFloatRangeIsInfinite(range: UIFloatRange) -> Bool;
     }

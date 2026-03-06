@@ -95,24 +95,22 @@ impl NSPathComponentCell {
         #[cfg(feature = "NSImage")]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`image`][Self::image].
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&NSImage>);
+        pub unsafe fn setImage(&self, image: Option<&NSImage>);
 
         #[unsafe(method(URL))]
         #[unsafe(method_family = none)]
-        pub fn URL(&self) -> Option<Retained<NSURL>>;
+        pub unsafe fn URL(&self) -> Option<Retained<NSURL>>;
 
         /// Setter for [`URL`][Self::URL].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setURL:))]
         #[unsafe(method_family = none)]
-        pub fn setURL(&self, url: Option<&NSURL>);
+        pub unsafe fn setURL(&self, url: Option<&NSURL>);
     );
 }
 
@@ -126,11 +124,8 @@ impl NSPathComponentCell {
     extern_methods!(
         #[unsafe(method(initTextCell:))]
         #[unsafe(method_family = init)]
-        pub fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
+        pub unsafe fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -155,7 +150,7 @@ impl NSPathComponentCell {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -169,6 +164,6 @@ impl NSPathComponentCell {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

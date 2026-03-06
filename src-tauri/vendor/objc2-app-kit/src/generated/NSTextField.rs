@@ -132,25 +132,21 @@ impl NSTextField {
     extern_methods!(
         #[unsafe(method(placeholderString))]
         #[unsafe(method_family = none)]
-        pub fn placeholderString(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn placeholderString(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`placeholderString`][Self::placeholderString].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPlaceholderString:))]
         #[unsafe(method_family = none)]
-        pub fn setPlaceholderString(&self, placeholder_string: Option<&NSString>);
+        pub unsafe fn setPlaceholderString(&self, placeholder_string: Option<&NSString>);
 
         #[unsafe(method(placeholderAttributedString))]
         #[unsafe(method_family = none)]
-        pub fn placeholderAttributedString(&self) -> Option<Retained<NSAttributedString>>;
+        pub unsafe fn placeholderAttributedString(&self) -> Option<Retained<NSAttributedString>>;
 
         /// Setter for [`placeholderAttributedString`][Self::placeholderAttributedString].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPlaceholderAttributedString:))]
         #[unsafe(method_family = none)]
-        pub fn setPlaceholderAttributedString(
+        pub unsafe fn setPlaceholderAttributedString(
             &self,
             placeholder_attributed_string: Option<&NSAttributedString>,
         );
@@ -158,88 +154,80 @@ impl NSTextField {
         #[cfg(feature = "NSColor")]
         #[unsafe(method(backgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn backgroundColor(&self) -> Option<Retained<NSColor>>;
+        pub unsafe fn backgroundColor(&self) -> Option<Retained<NSColor>>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`backgroundColor`][Self::backgroundColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundColor(&self, background_color: Option<&NSColor>);
+        pub unsafe fn setBackgroundColor(&self, background_color: Option<&NSColor>);
 
         #[unsafe(method(drawsBackground))]
         #[unsafe(method_family = none)]
-        pub fn drawsBackground(&self) -> bool;
+        pub unsafe fn drawsBackground(&self) -> bool;
 
         /// Setter for [`drawsBackground`][Self::drawsBackground].
         #[unsafe(method(setDrawsBackground:))]
         #[unsafe(method_family = none)]
-        pub fn setDrawsBackground(&self, draws_background: bool);
+        pub unsafe fn setDrawsBackground(&self, draws_background: bool);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(textColor))]
         #[unsafe(method_family = none)]
-        pub fn textColor(&self) -> Option<Retained<NSColor>>;
+        pub unsafe fn textColor(&self) -> Option<Retained<NSColor>>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`textColor`][Self::textColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTextColor:))]
         #[unsafe(method_family = none)]
-        pub fn setTextColor(&self, text_color: Option<&NSColor>);
+        pub unsafe fn setTextColor(&self, text_color: Option<&NSColor>);
 
         #[unsafe(method(isBordered))]
         #[unsafe(method_family = none)]
-        pub fn isBordered(&self) -> bool;
+        pub unsafe fn isBordered(&self) -> bool;
 
         /// Setter for [`isBordered`][Self::isBordered].
         #[unsafe(method(setBordered:))]
         #[unsafe(method_family = none)]
-        pub fn setBordered(&self, bordered: bool);
+        pub unsafe fn setBordered(&self, bordered: bool);
 
         #[unsafe(method(isBezeled))]
         #[unsafe(method_family = none)]
-        pub fn isBezeled(&self) -> bool;
+        pub unsafe fn isBezeled(&self) -> bool;
 
         /// Setter for [`isBezeled`][Self::isBezeled].
         #[unsafe(method(setBezeled:))]
         #[unsafe(method_family = none)]
-        pub fn setBezeled(&self, bezeled: bool);
+        pub unsafe fn setBezeled(&self, bezeled: bool);
 
         #[unsafe(method(isEditable))]
         #[unsafe(method_family = none)]
-        pub fn isEditable(&self) -> bool;
+        pub unsafe fn isEditable(&self) -> bool;
 
         /// Setter for [`isEditable`][Self::isEditable].
         #[unsafe(method(setEditable:))]
         #[unsafe(method_family = none)]
-        pub fn setEditable(&self, editable: bool);
+        pub unsafe fn setEditable(&self, editable: bool);
 
         #[unsafe(method(isSelectable))]
         #[unsafe(method_family = none)]
-        pub fn isSelectable(&self) -> bool;
+        pub unsafe fn isSelectable(&self) -> bool;
 
         /// Setter for [`isSelectable`][Self::isSelectable].
         #[unsafe(method(setSelectable:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectable(&self, selectable: bool);
+        pub unsafe fn setSelectable(&self, selectable: bool);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(selectText:))]
         #[unsafe(method_family = none)]
         pub unsafe fn selectText(&self, sender: Option<&AnyObject>);
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSTextFieldDelegate>>>;
+        pub unsafe fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSTextFieldDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(
@@ -250,68 +238,68 @@ impl NSTextField {
         #[cfg(feature = "NSText")]
         #[unsafe(method(textShouldBeginEditing:))]
         #[unsafe(method_family = none)]
-        pub fn textShouldBeginEditing(&self, text_object: &NSText) -> bool;
+        pub unsafe fn textShouldBeginEditing(&self, text_object: &NSText) -> bool;
 
         #[cfg(feature = "NSText")]
         #[unsafe(method(textShouldEndEditing:))]
         #[unsafe(method_family = none)]
-        pub fn textShouldEndEditing(&self, text_object: &NSText) -> bool;
+        pub unsafe fn textShouldEndEditing(&self, text_object: &NSText) -> bool;
 
         #[unsafe(method(textDidBeginEditing:))]
         #[unsafe(method_family = none)]
-        pub fn textDidBeginEditing(&self, notification: &NSNotification);
+        pub unsafe fn textDidBeginEditing(&self, notification: &NSNotification);
 
         #[unsafe(method(textDidEndEditing:))]
         #[unsafe(method_family = none)]
-        pub fn textDidEndEditing(&self, notification: &NSNotification);
+        pub unsafe fn textDidEndEditing(&self, notification: &NSNotification);
 
         #[unsafe(method(textDidChange:))]
         #[unsafe(method_family = none)]
-        pub fn textDidChange(&self, notification: &NSNotification);
+        pub unsafe fn textDidChange(&self, notification: &NSNotification);
 
         #[unsafe(method(acceptsFirstResponder))]
         #[unsafe(method_family = none)]
-        pub fn acceptsFirstResponder(&self) -> bool;
+        pub unsafe fn acceptsFirstResponder(&self) -> bool;
 
         #[cfg(feature = "NSTextFieldCell")]
         #[unsafe(method(bezelStyle))]
         #[unsafe(method_family = none)]
-        pub fn bezelStyle(&self) -> NSTextFieldBezelStyle;
+        pub unsafe fn bezelStyle(&self) -> NSTextFieldBezelStyle;
 
         #[cfg(feature = "NSTextFieldCell")]
         /// Setter for [`bezelStyle`][Self::bezelStyle].
         #[unsafe(method(setBezelStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setBezelStyle(&self, bezel_style: NSTextFieldBezelStyle);
+        pub unsafe fn setBezelStyle(&self, bezel_style: NSTextFieldBezelStyle);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(preferredMaxLayoutWidth))]
         #[unsafe(method_family = none)]
-        pub fn preferredMaxLayoutWidth(&self) -> CGFloat;
+        pub unsafe fn preferredMaxLayoutWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`preferredMaxLayoutWidth`][Self::preferredMaxLayoutWidth].
         #[unsafe(method(setPreferredMaxLayoutWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredMaxLayoutWidth(&self, preferred_max_layout_width: CGFloat);
+        pub unsafe fn setPreferredMaxLayoutWidth(&self, preferred_max_layout_width: CGFloat);
 
         #[unsafe(method(maximumNumberOfLines))]
         #[unsafe(method_family = none)]
-        pub fn maximumNumberOfLines(&self) -> NSInteger;
+        pub unsafe fn maximumNumberOfLines(&self) -> NSInteger;
 
         /// Setter for [`maximumNumberOfLines`][Self::maximumNumberOfLines].
         #[unsafe(method(setMaximumNumberOfLines:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumNumberOfLines(&self, maximum_number_of_lines: NSInteger);
+        pub unsafe fn setMaximumNumberOfLines(&self, maximum_number_of_lines: NSInteger);
 
         #[unsafe(method(allowsDefaultTighteningForTruncation))]
         #[unsafe(method_family = none)]
-        pub fn allowsDefaultTighteningForTruncation(&self) -> bool;
+        pub unsafe fn allowsDefaultTighteningForTruncation(&self) -> bool;
 
         /// Setter for [`allowsDefaultTighteningForTruncation`][Self::allowsDefaultTighteningForTruncation].
         #[unsafe(method(setAllowsDefaultTighteningForTruncation:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsDefaultTighteningForTruncation(
+        pub unsafe fn setAllowsDefaultTighteningForTruncation(
             &self,
             allows_default_tightening_for_truncation: bool,
         );
@@ -319,72 +307,31 @@ impl NSTextField {
         #[cfg(feature = "NSParagraphStyle")]
         #[unsafe(method(lineBreakStrategy))]
         #[unsafe(method_family = none)]
-        pub fn lineBreakStrategy(&self) -> NSLineBreakStrategy;
+        pub unsafe fn lineBreakStrategy(&self) -> NSLineBreakStrategy;
 
         #[cfg(feature = "NSParagraphStyle")]
         /// Setter for [`lineBreakStrategy`][Self::lineBreakStrategy].
         #[unsafe(method(setLineBreakStrategy:))]
         #[unsafe(method_family = none)]
-        pub fn setLineBreakStrategy(&self, line_break_strategy: NSLineBreakStrategy);
+        pub unsafe fn setLineBreakStrategy(&self, line_break_strategy: NSLineBreakStrategy);
 
         #[unsafe(method(allowsWritingTools))]
         #[unsafe(method_family = none)]
-        pub fn allowsWritingTools(&self) -> bool;
+        pub unsafe fn allowsWritingTools(&self) -> bool;
 
         /// Setter for [`allowsWritingTools`][Self::allowsWritingTools].
         #[unsafe(method(setAllowsWritingTools:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsWritingTools(&self, allows_writing_tools: bool);
+        pub unsafe fn setAllowsWritingTools(&self, allows_writing_tools: bool);
 
         #[unsafe(method(allowsWritingToolsAffordance))]
         #[unsafe(method_family = none)]
-        pub fn allowsWritingToolsAffordance(&self) -> bool;
+        pub unsafe fn allowsWritingToolsAffordance(&self) -> bool;
 
         /// Setter for [`allowsWritingToolsAffordance`][Self::allowsWritingToolsAffordance].
         #[unsafe(method(setAllowsWritingToolsAffordance:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsWritingToolsAffordance(&self, allows_writing_tools_affordance: bool);
-
-        #[unsafe(method(placeholderStrings))]
-        #[unsafe(method_family = none)]
-        pub fn placeholderStrings(&self) -> Retained<NSArray<NSString>>;
-
-        /// Setter for [`placeholderStrings`][Self::placeholderStrings].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        #[unsafe(method(setPlaceholderStrings:))]
-        #[unsafe(method_family = none)]
-        pub fn setPlaceholderStrings(&self, placeholder_strings: &NSArray<NSString>);
-
-        #[unsafe(method(placeholderAttributedStrings))]
-        #[unsafe(method_family = none)]
-        pub fn placeholderAttributedStrings(&self) -> Retained<NSArray<NSAttributedString>>;
-
-        /// Setter for [`placeholderAttributedStrings`][Self::placeholderAttributedStrings].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        #[unsafe(method(setPlaceholderAttributedStrings:))]
-        #[unsafe(method_family = none)]
-        pub fn setPlaceholderAttributedStrings(
-            &self,
-            placeholder_attributed_strings: &NSArray<NSAttributedString>,
-        );
-
-        /// Specifies the behavior for resolving ``NSTextAlignment.natural`` to the visual alignment.
-        ///
-        /// When set to ``true``, the resolved visual alignment is determined by the resolved base writing direction; otherwise, it is using the user’s preferred language.
-        /// The default value is ``false``.
-        #[unsafe(method(resolvesNaturalAlignmentWithBaseWritingDirection))]
-        #[unsafe(method_family = none)]
-        pub fn resolvesNaturalAlignmentWithBaseWritingDirection(&self) -> bool;
-
-        /// Setter for [`resolvesNaturalAlignmentWithBaseWritingDirection`][Self::resolvesNaturalAlignmentWithBaseWritingDirection].
-        #[unsafe(method(setResolvesNaturalAlignmentWithBaseWritingDirection:))]
-        #[unsafe(method_family = none)]
-        pub fn setResolvesNaturalAlignmentWithBaseWritingDirection(
-            &self,
-            resolves_natural_alignment_with_base_writing_direction: bool,
-        );
+        pub unsafe fn setAllowsWritingToolsAffordance(&self, allows_writing_tools_affordance: bool);
     );
 }
 
@@ -394,11 +341,8 @@ impl NSTextField {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -414,7 +358,7 @@ impl NSTextField {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -424,7 +368,7 @@ impl NSTextField {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -434,21 +378,24 @@ impl NSTextField {
     extern_methods!(
         #[unsafe(method(isAutomaticTextCompletionEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isAutomaticTextCompletionEnabled(&self) -> bool;
+        pub unsafe fn isAutomaticTextCompletionEnabled(&self) -> bool;
 
         /// Setter for [`isAutomaticTextCompletionEnabled`][Self::isAutomaticTextCompletionEnabled].
         #[unsafe(method(setAutomaticTextCompletionEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setAutomaticTextCompletionEnabled(&self, automatic_text_completion_enabled: bool);
+        pub unsafe fn setAutomaticTextCompletionEnabled(
+            &self,
+            automatic_text_completion_enabled: bool,
+        );
 
         #[unsafe(method(allowsCharacterPickerTouchBarItem))]
         #[unsafe(method_family = none)]
-        pub fn allowsCharacterPickerTouchBarItem(&self) -> bool;
+        pub unsafe fn allowsCharacterPickerTouchBarItem(&self) -> bool;
 
         /// Setter for [`allowsCharacterPickerTouchBarItem`][Self::allowsCharacterPickerTouchBarItem].
         #[unsafe(method(setAllowsCharacterPickerTouchBarItem:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsCharacterPickerTouchBarItem(
+        pub unsafe fn setAllowsCharacterPickerTouchBarItem(
             &self,
             allows_character_picker_touch_bar_item: bool,
         );
@@ -466,7 +413,10 @@ impl NSTextField {
         /// Returns: An initialized text field object.
         #[unsafe(method(labelWithString:))]
         #[unsafe(method_family = none)]
-        pub fn labelWithString(string_value: &NSString, mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn labelWithString(
+            string_value: &NSString,
+            mtm: MainThreadMarker,
+        ) -> Retained<Self>;
 
         /// Creates a wrapping, non-editable, selectable text field that displays text in the default system font.
         ///
@@ -475,7 +425,7 @@ impl NSTextField {
         /// Returns: An initialized text field object.
         #[unsafe(method(wrappingLabelWithString:))]
         #[unsafe(method_family = none)]
-        pub fn wrappingLabelWithString(
+        pub unsafe fn wrappingLabelWithString(
             string_value: &NSString,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -488,7 +438,7 @@ impl NSTextField {
         /// Returns: An initialized text field object.
         #[unsafe(method(labelWithAttributedString:))]
         #[unsafe(method_family = none)]
-        pub fn labelWithAttributedString(
+        pub unsafe fn labelWithAttributedString(
             attributed_string_value: &NSAttributedString,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -500,7 +450,7 @@ impl NSTextField {
         /// Returns: An initialized text field object.
         #[unsafe(method(textFieldWithString:))]
         #[unsafe(method_family = none)]
-        pub fn textFieldWithString(
+        pub unsafe fn textFieldWithString(
             string_value: &NSString,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
@@ -513,21 +463,21 @@ impl NSTextField {
     extern_methods!(
         #[unsafe(method(allowsEditingTextAttributes))]
         #[unsafe(method_family = none)]
-        pub fn allowsEditingTextAttributes(&self) -> bool;
+        pub unsafe fn allowsEditingTextAttributes(&self) -> bool;
 
         /// Setter for [`allowsEditingTextAttributes`][Self::allowsEditingTextAttributes].
         #[unsafe(method(setAllowsEditingTextAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsEditingTextAttributes(&self, allows_editing_text_attributes: bool);
+        pub unsafe fn setAllowsEditingTextAttributes(&self, allows_editing_text_attributes: bool);
 
         #[unsafe(method(importsGraphics))]
         #[unsafe(method_family = none)]
-        pub fn importsGraphics(&self) -> bool;
+        pub unsafe fn importsGraphics(&self) -> bool;
 
         /// Setter for [`importsGraphics`][Self::importsGraphics].
         #[unsafe(method(setImportsGraphics:))]
         #[unsafe(method_family = none)]
-        pub fn setImportsGraphics(&self, imports_graphics: bool);
+        pub unsafe fn setImportsGraphics(&self, imports_graphics: bool);
     );
 }
 
@@ -548,7 +498,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(textField:textView:candidatesForSelectedRange:))]
         #[unsafe(method_family = none)]
-        fn textField_textView_candidatesForSelectedRange(
+        unsafe fn textField_textView_candidatesForSelectedRange(
             &self,
             text_field: &NSTextField,
             text_view: &NSTextView,
@@ -566,7 +516,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(textField:textView:candidates:forSelectedRange:))]
         #[unsafe(method_family = none)]
-        fn textField_textView_candidates_forSelectedRange(
+        unsafe fn textField_textView_candidates_forSelectedRange(
             &self,
             text_field: &NSTextField,
             text_view: &NSTextView,
@@ -589,7 +539,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(textField:textView:shouldSelectCandidateAtIndex:))]
         #[unsafe(method_family = none)]
-        fn textField_textView_shouldSelectCandidateAtIndex(
+        unsafe fn textField_textView_shouldSelectCandidateAtIndex(
             &self,
             text_field: &NSTextField,
             text_view: &NSTextView,
@@ -602,9 +552,6 @@ extern_protocol!(
 #[cfg(all(feature = "NSControl", feature = "NSResponder", feature = "NSView"))]
 impl NSTextField {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `string_with_ampersand` might not allow `None`.
         #[deprecated = "Use `-setTitle:` instead"]
         #[unsafe(method(setTitleWithMnemonic:))]
         #[unsafe(method_family = none)]

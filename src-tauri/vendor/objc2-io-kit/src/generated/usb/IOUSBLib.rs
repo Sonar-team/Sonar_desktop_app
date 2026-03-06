@@ -23,7 +23,6 @@ pub const kIOUSBInterfaceClassName: &CStr =
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct100?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct100 {
     pub(crate) _reserved: *mut c_void,
@@ -410,7 +409,6 @@ pub type IOUSBDeviceInterface100 = IOUSBDeviceStruct100;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct182?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct182 {
     pub(crate) _reserved: *mut c_void,
@@ -665,7 +663,6 @@ pub type IOUSBDeviceInterface182 = IOUSBDeviceStruct182;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct187?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct187 {
     pub(crate) _reserved: *mut c_void,
@@ -850,7 +847,6 @@ pub type IOUSBDeviceInterface187 = IOUSBDeviceStruct187;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct197?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct197 {
     pub(crate) _reserved: *mut c_void,
@@ -1049,7 +1045,6 @@ pub type IOUSBDeviceInterface197 = IOUSBDeviceStruct197;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct245?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct245 {
     pub(crate) _reserved: *mut c_void,
@@ -1220,7 +1215,6 @@ pub type IOUSBDeviceInterface245 = IOUSBDeviceStruct245;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct300?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct300 {
     pub(crate) _reserved: *mut c_void,
@@ -1405,7 +1399,6 @@ pub type IOUSBDeviceInterface300 = IOUSBDeviceStruct300;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct320?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct320 {
     pub(crate) _reserved: *mut c_void,
@@ -1635,7 +1628,6 @@ pub type IOUSBDeviceInterface320 = IOUSBDeviceStruct320;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct400?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct400 {
     pub(crate) _reserved: *mut c_void,
@@ -1815,7 +1807,6 @@ pub type IOUSBDeviceInterface400 = IOUSBDeviceStruct400;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct500?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct500 {
     pub(crate) _reserved: *mut c_void,
@@ -2011,7 +2002,6 @@ pub type IOUSBDeviceInterface500 = IOUSBDeviceStruct500;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct650?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct650 {
     pub(crate) _reserved: *mut c_void,
@@ -2272,7 +2262,6 @@ pub type IOUSBDeviceInterface650 = IOUSBDeviceStruct650;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicestruct942?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceStruct942 {
     pub(crate) _reserved: *mut c_void,
@@ -2486,7 +2475,6 @@ pub type IOUSBDeviceInterface = IOUSBDeviceInterface942;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct100?language=objc)
 #[cfg(all(feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct100 {
     pub(crate) _reserved: *mut c_void,
@@ -3148,7 +3136,6 @@ pub type IOUSBInterfaceInterface100 = IOUSBInterfaceStruct100;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct182?language=objc)
 #[cfg(all(feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct182 {
     pub(crate) _reserved: *mut c_void,
@@ -3608,7 +3595,6 @@ pub type IOUSBInterfaceInterface182 = IOUSBInterfaceStruct182;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct183?language=objc)
 #[cfg(all(feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct183 {
     pub(crate) _reserved: *mut c_void,
@@ -3857,7 +3843,6 @@ pub type IOUSBInterfaceInterface183 = IOUSBInterfaceStruct183;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct190?language=objc)
 #[cfg(all(feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct190 {
     pub(crate) _reserved: *mut c_void,
@@ -4200,7 +4185,6 @@ pub type IOUSBInterfaceInterface190 = IOUSBInterfaceStruct190;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct192?language=objc)
 #[cfg(all(feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct192 {
     pub(crate) _reserved: *mut c_void,
@@ -4706,7 +4690,6 @@ pub type IOUSBInterfaceInterface192 = IOUSBInterfaceStruct192;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct197?language=objc)
 #[cfg(all(feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct197 {
     pub(crate) _reserved: *mut c_void,
@@ -5045,7 +5028,6 @@ pub type IOUSBInterfaceInterface197 = IOUSBInterfaceStruct197;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct220?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct220 {
     pub(crate) _reserved: *mut c_void,
@@ -5387,7 +5369,6 @@ pub type IOUSBInterfaceInterface220 = IOUSBInterfaceStruct220;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct245?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct245 {
     pub(crate) _reserved: *mut c_void,
@@ -5708,7 +5689,6 @@ pub type IOUSBInterfaceInterface245 = IOUSBInterfaceStruct245;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct300?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct300 {
     pub(crate) _reserved: *mut c_void,
@@ -6040,7 +6020,6 @@ pub type IOUSBInterfaceInterface300 = IOUSBInterfaceStruct300;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct398?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct398 {
     pub(crate) _reserved: *mut c_void,
@@ -6356,7 +6335,6 @@ pub type IOUSBInterfaceInterface398 = IOUSBInterfaceStruct398;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct400?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct400 {
     pub(crate) _reserved: *mut c_void,
@@ -6673,7 +6651,6 @@ pub type IOUSBInterfaceInterface400 = IOUSBInterfaceStruct400;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct500?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct500 {
     pub(crate) _reserved: *mut c_void,
@@ -7007,7 +6984,6 @@ pub type IOUSBInterfaceInterface500 = IOUSBInterfaceStruct500;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct550?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct550 {
     pub(crate) _reserved: *mut c_void,
@@ -7677,7 +7653,6 @@ pub type IOUSBInterfaceInterface550 = IOUSBInterfaceStruct550;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct650?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct650 {
     pub(crate) _reserved: *mut c_void,
@@ -8129,7 +8104,6 @@ pub type IOUSBInterfaceInterface650 = IOUSBInterfaceStruct650;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct700?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct700 {
     pub(crate) _reserved: *mut c_void,
@@ -8549,7 +8523,6 @@ pub type IOUSBInterfaceInterface700 = IOUSBInterfaceStruct700;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct800?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct800 {
     pub(crate) _reserved: *mut c_void,
@@ -8986,7 +8959,6 @@ pub type IOUSBInterfaceInterface800 = IOUSBInterfaceStruct800;
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacestruct942?language=objc)
 #[cfg(all(feature = "AppleUSBDefinitions", feature = "USB", feature = "libc"))]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceStruct942 {
     pub(crate) _reserved: *mut c_void,

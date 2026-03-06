@@ -14,7 +14,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(pageControlProgress:initialProgressForPage:))]
         #[unsafe(method_family = none)]
-        fn pageControlProgress_initialProgressForPage(
+        unsafe fn pageControlProgress_initialProgressForPage(
             &self,
             progress: &UIPageControlProgress,
             page: NSInteger,
@@ -40,7 +40,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(pageControlProgressVisibilityDidChange:))]
         #[unsafe(method_family = none)]
-        fn pageControlProgressVisibilityDidChange(&self, progress: &UIPageControlProgress);
+        unsafe fn pageControlProgressVisibilityDidChange(&self, progress: &UIPageControlProgress);
     }
 );
 
@@ -60,13 +60,12 @@ impl UIPageControlProgress {
         /// An object that defines the delegate of the page control progress.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIPageControlProgressDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(
@@ -78,18 +77,18 @@ impl UIPageControlProgress {
         /// Values outside of [0...1] will be clamped.
         #[unsafe(method(currentProgress))]
         #[unsafe(method_family = none)]
-        pub fn currentProgress(&self) -> c_float;
+        pub unsafe fn currentProgress(&self) -> c_float;
 
         /// Setter for [`currentProgress`][Self::currentProgress].
         #[unsafe(method(setCurrentProgress:))]
         #[unsafe(method_family = none)]
-        pub fn setCurrentProgress(&self, current_progress: c_float);
+        pub unsafe fn setCurrentProgress(&self, current_progress: c_float);
 
         /// Returns `YES` if the progress indicator is visible. The progress indicator is hidden when
         /// the user is actively interacting with the `UIPageControl`.
         #[unsafe(method(isProgressVisible))]
         #[unsafe(method_family = none)]
-        pub fn isProgressVisible(&self) -> bool;
+        pub unsafe fn isProgressVisible(&self) -> bool;
     );
 }
 
@@ -98,19 +97,12 @@ impl UIPageControlProgress {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for UIPageControlProgress {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_protocol!(
@@ -122,14 +114,14 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(pageControlTimerProgressDidChange:))]
         #[unsafe(method_family = none)]
-        fn pageControlTimerProgressDidChange(&self, progress: &UIPageControlTimerProgress);
+        unsafe fn pageControlTimerProgressDidChange(&self, progress: &UIPageControlTimerProgress);
 
         /// Determines if the time interval progress should advance to the next page upon progress completion of
         /// the current page's duration. Default is YES.
         #[optional]
         #[unsafe(method(pageControlTimerProgress:shouldAdvanceToPage:))]
         #[unsafe(method_family = none)]
-        fn pageControlTimerProgress_shouldAdvanceToPage(
+        unsafe fn pageControlTimerProgress_shouldAdvanceToPage(
             &self,
             progress: &UIPageControlTimerProgress,
             page: NSInteger,
@@ -153,7 +145,7 @@ impl UIPageControlTimerProgress {
         /// Creates a time interval progress with a specified preferred duration.
         #[unsafe(method(initWithPreferredDuration:))]
         #[unsafe(method_family = init)]
-        pub fn initWithPreferredDuration(
+        pub unsafe fn initWithPreferredDuration(
             this: Allocated<Self>,
             preferred_duration: NSTimeInterval,
         ) -> Retained<Self>;
@@ -161,13 +153,12 @@ impl UIPageControlTimerProgress {
         /// An object that defines the delegate of the page control progress.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIPageControlTimerProgressDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(
@@ -178,49 +169,49 @@ impl UIPageControlTimerProgress {
         /// Determines if the page control should loop back to page 0 after the last page. Default is NO.
         #[unsafe(method(resetsToInitialPageAfterEnd))]
         #[unsafe(method_family = none)]
-        pub fn resetsToInitialPageAfterEnd(&self) -> bool;
+        pub unsafe fn resetsToInitialPageAfterEnd(&self) -> bool;
 
         /// Setter for [`resetsToInitialPageAfterEnd`][Self::resetsToInitialPageAfterEnd].
         #[unsafe(method(setResetsToInitialPageAfterEnd:))]
         #[unsafe(method_family = none)]
-        pub fn setResetsToInitialPageAfterEnd(&self, resets_to_initial_page_after_end: bool);
+        pub unsafe fn setResetsToInitialPageAfterEnd(&self, resets_to_initial_page_after_end: bool);
 
         /// Returns YES if the timer is currently active.
         #[unsafe(method(isRunning))]
         #[unsafe(method_family = none)]
-        pub fn isRunning(&self) -> bool;
+        pub unsafe fn isRunning(&self) -> bool;
 
         /// Resume the timer if it is not currently active.
         #[unsafe(method(resumeTimer))]
         #[unsafe(method_family = none)]
-        pub fn resumeTimer(&self);
+        pub unsafe fn resumeTimer(&self);
 
         /// Pause the timer if it is active.
         #[unsafe(method(pauseTimer))]
         #[unsafe(method_family = none)]
-        pub fn pauseTimer(&self);
+        pub unsafe fn pauseTimer(&self);
 
         /// The preferred duration for the time interval progress, used when there is no custom page duration set for the current page.
         /// The preferred duration must be greater than 0.0
         #[unsafe(method(preferredDuration))]
         #[unsafe(method_family = none)]
-        pub fn preferredDuration(&self) -> NSTimeInterval;
+        pub unsafe fn preferredDuration(&self) -> NSTimeInterval;
 
         /// Setter for [`preferredDuration`][Self::preferredDuration].
         #[unsafe(method(setPreferredDuration:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredDuration(&self, preferred_duration: NSTimeInterval);
+        pub unsafe fn setPreferredDuration(&self, preferred_duration: NSTimeInterval);
 
         /// Sets a custom duration for the specified page. Set 0.0 to remove the custom duration for the specified page.
         #[unsafe(method(setDuration:forPage:))]
         #[unsafe(method_family = none)]
-        pub fn setDuration_forPage(&self, duration: NSTimeInterval, page: NSInteger);
+        pub unsafe fn setDuration_forPage(&self, duration: NSTimeInterval, page: NSInteger);
 
         /// Returns the duration for the specified page, and `preferredDuration` when there is no custom duration set
         /// for the specified page.
         #[unsafe(method(durationForPage:))]
         #[unsafe(method_family = none)]
-        pub fn durationForPage(&self, page: NSInteger) -> NSTimeInterval;
+        pub unsafe fn durationForPage(&self, page: NSInteger) -> NSTimeInterval;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

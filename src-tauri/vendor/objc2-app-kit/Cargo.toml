@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "objc2-app-kit"
-version = "0.3.2"
+version = "0.3.1"
 build = false
 autolib = false
 autobins = false
@@ -39,6 +39,7 @@ repository = "https://github.com/madsmtm/objc2"
 
 [package.metadata.docs.rs]
 default-target = "aarch64-apple-darwin"
+features = ["objc2-uniform-type-identifiers"]
 rustc-args = [
     "--cfg",
     "docsrs",
@@ -49,10 +50,6 @@ targets = [
     "aarch64-apple-ios-macabi",
     "x86_64-unknown-linux-gnu",
     "i686-unknown-linux-gnu",
-]
-features = [
-    "objc2-open-gl",
-    "objc2-uniform-type-identifiers",
 ]
 
 [features]
@@ -185,12 +182,6 @@ NSAttributedString = [
     "objc2-foundation/NSRange",
     "objc2-foundation/NSString",
     "objc2-foundation/NSURL",
-]
-NSBackgroundExtensionView = [
-    "objc2-foundation/NSCoder",
-    "objc2-foundation/NSGeometry",
-    "objc2-foundation/NSObject",
-    "objc2-foundation/objc2-core-foundation",
 ]
 NSBezierPath = [
     "objc2-foundation/NSAffineTransform",
@@ -675,13 +666,6 @@ NSGestureRecognizer = [
     "objc2-foundation/NSCoder",
     "objc2-foundation/NSGeometry",
     "objc2-foundation/NSObject",
-    "objc2-foundation/NSString",
-    "objc2-foundation/objc2-core-foundation",
-]
-NSGlassEffectView = [
-    "objc2-foundation/NSCoder",
-    "objc2-foundation/NSGeometry",
-    "objc2-foundation/NSObject",
     "objc2-foundation/objc2-core-foundation",
 ]
 NSGlyphGenerator = ["objc2-foundation/NSAttributedString"]
@@ -783,7 +767,6 @@ NSInputServer = [
     "objc2-foundation/objc2-core-foundation",
 ]
 NSInterfaceStyle = ["objc2-foundation/NSString"]
-NSItemBadge = ["objc2-foundation/NSString"]
 NSItemProvider = [
     "objc2-foundation/NSGeometry",
     "objc2-foundation/NSItemProvider",
@@ -923,18 +906,9 @@ NSObjectController = [
     "objc2-foundation/NSPredicate",
     "objc2-foundation/NSString",
 ]
-NSOpenGL = [
-    "objc2-foundation/NSData",
-    "objc2-foundation/NSLock",
-    "objc2-foundation/NSObject",
-]
-NSOpenGLLayer = ["objc2-foundation/NSObject"]
-NSOpenGLView = [
-    "objc2-foundation/NSCoder",
-    "objc2-foundation/NSGeometry",
-    "objc2-foundation/NSObject",
-    "objc2-foundation/objc2-core-foundation",
-]
+NSOpenGL = []
+NSOpenGLLayer = []
+NSOpenGLView = []
 NSOpenPanel = [
     "objc2-foundation/NSArray",
     "objc2-foundation/NSCoder",
@@ -1422,16 +1396,7 @@ NSSplitViewController = [
     "objc2-foundation/NSString",
     "objc2-foundation/objc2-core-foundation",
 ]
-NSSplitViewItem = [
-    "objc2-foundation/NSArray",
-    "objc2-foundation/NSObject",
-]
-NSSplitViewItemAccessoryViewController = [
-    "objc2-foundation/NSBundle",
-    "objc2-foundation/NSCoder",
-    "objc2-foundation/NSObject",
-    "objc2-foundation/NSString",
-]
+NSSplitViewItem = ["objc2-foundation/NSObject"]
 NSStackView = [
     "objc2-foundation/NSArray",
     "objc2-foundation/NSCoder",
@@ -1776,7 +1741,6 @@ NSTextView = [
 ]
 NSTextViewportLayoutController = []
 NSTintConfiguration = ["objc2-foundation/NSObject"]
-NSTintProminence = []
 NSTitlebarAccessoryViewController = [
     "objc2-foundation/NSBundle",
     "objc2-foundation/NSCoder",
@@ -1927,10 +1891,6 @@ NSViewController = [
     "objc2-foundation/NSString",
     "objc2-foundation/objc2-core-foundation",
 ]
-NSViewLayoutRegion = [
-    "objc2-foundation/NSGeometry",
-    "objc2-foundation/objc2-core-foundation",
-]
 NSVisualEffectView = [
     "objc2-foundation/NSCoder",
     "objc2-foundation/NSGeometry",
@@ -2039,7 +1999,6 @@ default = [
     "NSApplicationScripting",
     "NSArrayController",
     "NSAttributedString",
-    "NSBackgroundExtensionView",
     "NSBezierPath",
     "NSBitmapImageRep",
     "NSBox",
@@ -2106,7 +2065,6 @@ default = [
     "NSForm",
     "NSFormCell",
     "NSGestureRecognizer",
-    "NSGlassEffectView",
     "NSGlyphGenerator",
     "NSGlyphInfo",
     "NSGradient",
@@ -2123,7 +2081,6 @@ default = [
     "NSInputManager",
     "NSInputServer",
     "NSInterfaceStyle",
-    "NSItemBadge",
     "NSItemProvider",
     "NSKeyValueBinding",
     "NSLayoutAnchor",
@@ -2220,7 +2177,6 @@ default = [
     "NSSplitView",
     "NSSplitViewController",
     "NSSplitViewItem",
-    "NSSplitViewItemAccessoryViewController",
     "NSStackView",
     "NSStatusBar",
     "NSStatusBarButton",
@@ -2273,7 +2229,6 @@ default = [
     "NSTextView",
     "NSTextViewportLayoutController",
     "NSTintConfiguration",
-    "NSTintProminence",
     "NSTitlebarAccessoryViewController",
     "NSTokenField",
     "NSTokenFieldCell",
@@ -2297,7 +2252,6 @@ default = [
     "NSUserInterfaceValidation",
     "NSView",
     "NSViewController",
-    "NSViewLayoutRegion",
     "NSVisualEffectView",
     "NSWindow",
     "NSWindowController",
@@ -2317,8 +2271,6 @@ default = [
     "objc2-core-foundation",
     "objc2-core-graphics",
     "objc2-core-image",
-    "objc2-core-text",
-    "objc2-core-video",
     "objc2-quartz-core",
 ]
 gnustep-1-7 = [
@@ -2366,17 +2318,36 @@ objc2-core-data = ["dep:objc2-core-data"]
 objc2-core-foundation = ["dep:objc2-core-foundation"]
 objc2-core-graphics = ["dep:objc2-core-graphics"]
 objc2-core-image = ["dep:objc2-core-image"]
-objc2-core-text = ["dep:objc2-core-text"]
-objc2-core-video = ["dep:objc2-core-video"]
-objc2-open-gl = ["dep:objc2-open-gl"]
 objc2-quartz-core = ["dep:objc2-quartz-core"]
 objc2-uniform-type-identifiers = ["dep:objc2-uniform-type-identifiers"]
 std = ["alloc"]
-unstable-darwin-objc = []
 
 [lib]
 name = "objc2_app_kit"
 path = "src/lib.rs"
+
+[[example]]
+name = "delegate"
+path = "examples/delegate.rs"
+required-features = [
+    "objc2-foundation/NSNotification",
+    "objc2-foundation/NSString",
+    "objc2-foundation/NSObject",
+    "objc2-foundation/NSThread",
+    "NSResponder",
+    "NSApplication",
+    "NSRunningApplication",
+]
+
+[[example]]
+name = "nspasteboard"
+path = "examples/nspasteboard.rs"
+required-features = [
+    "objc2-foundation/NSArray",
+    "objc2-foundation/NSString",
+    "objc2-foundation/NSObject",
+    "NSPasteboard",
+]
 
 [dependencies.bitflags]
 version = "2.5.0"
@@ -2396,27 +2367,26 @@ optional = true
 default-features = false
 
 [dependencies.objc2]
-version = ">=0.6.2, <0.8.0"
+version = ">=0.6.1, <0.8.0"
 features = ["std"]
 default-features = false
 
 [dependencies.objc2-core-foundation]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "CFCGTypes",
-    "CFDate",
     "objc2",
 ]
 optional = true
 default-features = false
 
 [dependencies.objc2-foundation]
-version = "0.3.2"
+version = "0.3.1"
 features = ["alloc"]
 default-features = false
 
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2-cloud-kit]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "CKContainer",
     "CKRecord",
@@ -2427,7 +2397,7 @@ optional = true
 default-features = false
 
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2-core-data]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "NSAttributeDescription",
     "NSEntityDescription",
@@ -2441,12 +2411,11 @@ optional = true
 default-features = false
 
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2-core-graphics]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "CGColor",
     "CGColorSpace",
     "CGContext",
-    "CGDirectDisplay",
     "CGEventTypes",
     "CGFont",
     "CGImage",
@@ -2457,7 +2426,7 @@ optional = true
 default-features = false
 
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2-core-image]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "CIColor",
     "CIContext",
@@ -2467,47 +2436,18 @@ features = [
 optional = true
 default-features = false
 
-[target.'cfg(target_vendor = "apple")'.dependencies.objc2-core-text]
-version = "0.3.2"
-features = [
-    "CTFont",
-    "CTFontCollection",
-    "CTFontDescriptor",
-    "CTGlyphInfo",
-    "objc2",
-]
-optional = true
-default-features = false
-
-[target.'cfg(target_vendor = "apple")'.dependencies.objc2-core-video]
-version = "0.3.2"
-features = [
-    "CVBase",
-    "objc2",
-]
-optional = true
-default-features = false
-
-[target.'cfg(target_vendor = "apple")'.dependencies.objc2-open-gl]
-version = "0.3.2"
-features = ["CGLTypes"]
-optional = true
-default-features = false
-
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2-quartz-core]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "CADisplayLink",
     "CALayer",
-    "CAMediaTiming",
     "CAMediaTimingFunction",
-    "CAOpenGLLayer",
 ]
 optional = true
 default-features = false
 
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2-uniform-type-identifiers]
-version = "0.3.2"
+version = "0.3.1"
 features = ["UTType"]
 optional = true
 default-features = false

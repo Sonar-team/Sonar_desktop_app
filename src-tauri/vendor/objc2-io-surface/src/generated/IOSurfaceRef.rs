@@ -132,7 +132,6 @@ extern "C" {
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/iosurface/kiosurfaceisglobal?language=objc)
     #[cfg(feature = "objc2-core-foundation")]
-    #[deprecated = "Global surfaces are insecure"]
     pub static kIOSurfaceIsGlobal: &'static CFString;
 }
 
@@ -200,10 +199,6 @@ unsafe impl RefEncode for IOSurfaceComponentName {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-unsafe impl Send for IOSurfaceComponentName {}
-
-unsafe impl Sync for IOSurfaceComponentName {}
-
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/iosurface/kiosurfaceplanecomponentnames?language=objc)
     #[cfg(feature = "objc2-core-foundation")]
@@ -238,10 +233,6 @@ unsafe impl RefEncode for IOSurfaceComponentType {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-unsafe impl Send for IOSurfaceComponentType {}
-
-unsafe impl Sync for IOSurfaceComponentType {}
-
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/iosurface/kiosurfaceplanecomponenttypes?language=objc)
     #[cfg(feature = "objc2-core-foundation")]
@@ -273,10 +264,6 @@ unsafe impl Encode for IOSurfaceComponentRange {
 unsafe impl RefEncode for IOSurfaceComponentRange {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
-
-unsafe impl Send for IOSurfaceComponentRange {}
-
-unsafe impl Sync for IOSurfaceComponentRange {}
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/iosurface/kiosurfaceplanecomponentranges?language=objc)
@@ -312,10 +299,6 @@ unsafe impl RefEncode for IOSurfaceSubsampling {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-unsafe impl Send for IOSurfaceSubsampling {}
-
-unsafe impl Sync for IOSurfaceSubsampling {}
-
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/iosurface/kiosurfacesubsampling?language=objc)
     #[cfg(feature = "objc2-core-foundation")]
@@ -335,9 +318,6 @@ unsafe impl ConcreteType for IOSurfaceRef {
 }
 
 impl IOSurfaceRef {
-    /// # Safety
-    ///
-    /// `properties` generics must be of the correct type.
     #[doc(alias = "IOSurfaceCreate")]
     #[cfg(feature = "objc2-core-foundation")]
     #[inline]
@@ -363,21 +343,18 @@ impl IOSurfaceRef {
     #[doc(alias = "IOSurfaceGetID")]
     #[cfg(feature = "IOSurfaceTypes")]
     #[inline]
-    pub fn id(&self) -> IOSurfaceID {
+    pub fn id(self: &IOSurfaceRef) -> IOSurfaceID {
         extern "C-unwind" {
             fn IOSurfaceGetID(buffer: &IOSurfaceRef) -> IOSurfaceID;
         }
         unsafe { IOSurfaceGetID(self) }
     }
 
-    /// # Safety
-    ///
-    /// `seed` must be a valid pointer or null.
     #[doc(alias = "IOSurfaceLock")]
     #[cfg(all(feature = "IOSurfaceTypes", feature = "libc"))]
     #[inline]
     pub unsafe fn lock(
-        &self,
+        self: &IOSurfaceRef,
         options: IOSurfaceLockOptions,
         seed: *mut u32,
     ) -> libc::kern_return_t {
@@ -391,14 +368,11 @@ impl IOSurfaceRef {
         unsafe { IOSurfaceLock(self, options, seed) }
     }
 
-    /// # Safety
-    ///
-    /// `seed` must be a valid pointer or null.
     #[doc(alias = "IOSurfaceUnlock")]
     #[cfg(all(feature = "IOSurfaceTypes", feature = "libc"))]
     #[inline]
     pub unsafe fn unlock(
-        &self,
+        self: &IOSurfaceRef,
         options: IOSurfaceLockOptions,
         seed: *mut u32,
     ) -> libc::kern_return_t {
@@ -414,7 +388,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetAllocSize")]
     #[inline]
-    pub fn alloc_size(&self) -> usize {
+    pub fn alloc_size(self: &IOSurfaceRef) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetAllocSize(buffer: &IOSurfaceRef) -> usize;
         }
@@ -423,7 +397,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetWidth")]
     #[inline]
-    pub fn width(&self) -> usize {
+    pub fn width(self: &IOSurfaceRef) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetWidth(buffer: &IOSurfaceRef) -> usize;
         }
@@ -432,7 +406,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetHeight")]
     #[inline]
-    pub fn height(&self) -> usize {
+    pub fn height(self: &IOSurfaceRef) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetHeight(buffer: &IOSurfaceRef) -> usize;
         }
@@ -441,7 +415,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetBytesPerElement")]
     #[inline]
-    pub fn bytes_per_element(&self) -> usize {
+    pub fn bytes_per_element(self: &IOSurfaceRef) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetBytesPerElement(buffer: &IOSurfaceRef) -> usize;
         }
@@ -450,7 +424,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetBytesPerRow")]
     #[inline]
-    pub fn bytes_per_row(&self) -> usize {
+    pub fn bytes_per_row(self: &IOSurfaceRef) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetBytesPerRow(buffer: &IOSurfaceRef) -> usize;
         }
@@ -459,7 +433,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetBaseAddress")]
     #[inline]
-    pub fn base_address(&self) -> NonNull<c_void> {
+    pub fn base_address(self: &IOSurfaceRef) -> NonNull<c_void> {
         extern "C-unwind" {
             fn IOSurfaceGetBaseAddress(buffer: &IOSurfaceRef) -> Option<NonNull<c_void>>;
         }
@@ -469,7 +443,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetElementWidth")]
     #[inline]
-    pub fn element_width(&self) -> usize {
+    pub fn element_width(self: &IOSurfaceRef) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetElementWidth(buffer: &IOSurfaceRef) -> usize;
         }
@@ -478,7 +452,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetElementHeight")]
     #[inline]
-    pub fn element_height(&self) -> usize {
+    pub fn element_height(self: &IOSurfaceRef) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetElementHeight(buffer: &IOSurfaceRef) -> usize;
         }
@@ -487,7 +461,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetPixelFormat")]
     #[inline]
-    pub fn pixel_format(&self) -> OSType {
+    pub fn pixel_format(self: &IOSurfaceRef) -> OSType {
         extern "C-unwind" {
             fn IOSurfaceGetPixelFormat(buffer: &IOSurfaceRef) -> OSType;
         }
@@ -496,7 +470,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetSeed")]
     #[inline]
-    pub fn seed(&self) -> u32 {
+    pub fn seed(self: &IOSurfaceRef) -> u32 {
         extern "C-unwind" {
             fn IOSurfaceGetSeed(buffer: &IOSurfaceRef) -> u32;
         }
@@ -505,7 +479,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetPlaneCount")]
     #[inline]
-    pub fn plane_count(&self) -> usize {
+    pub fn plane_count(self: &IOSurfaceRef) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetPlaneCount(buffer: &IOSurfaceRef) -> usize;
         }
@@ -514,7 +488,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetWidthOfPlane")]
     #[inline]
-    pub fn width_of_plane(&self, plane_index: usize) -> usize {
+    pub fn width_of_plane(self: &IOSurfaceRef, plane_index: usize) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetWidthOfPlane(buffer: &IOSurfaceRef, plane_index: usize) -> usize;
         }
@@ -523,7 +497,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetHeightOfPlane")]
     #[inline]
-    pub fn height_of_plane(&self, plane_index: usize) -> usize {
+    pub fn height_of_plane(self: &IOSurfaceRef, plane_index: usize) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetHeightOfPlane(buffer: &IOSurfaceRef, plane_index: usize) -> usize;
         }
@@ -532,7 +506,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetBytesPerElementOfPlane")]
     #[inline]
-    pub fn bytes_per_element_of_plane(&self, plane_index: usize) -> usize {
+    pub fn bytes_per_element_of_plane(self: &IOSurfaceRef, plane_index: usize) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetBytesPerElementOfPlane(
                 buffer: &IOSurfaceRef,
@@ -544,7 +518,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetBytesPerRowOfPlane")]
     #[inline]
-    pub fn bytes_per_row_of_plane(&self, plane_index: usize) -> usize {
+    pub fn bytes_per_row_of_plane(self: &IOSurfaceRef, plane_index: usize) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetBytesPerRowOfPlane(buffer: &IOSurfaceRef, plane_index: usize) -> usize;
         }
@@ -553,7 +527,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetBaseAddressOfPlane")]
     #[inline]
-    pub fn base_address_of_plane(&self, plane_index: usize) -> NonNull<c_void> {
+    pub fn base_address_of_plane(self: &IOSurfaceRef, plane_index: usize) -> NonNull<c_void> {
         extern "C-unwind" {
             fn IOSurfaceGetBaseAddressOfPlane(
                 buffer: &IOSurfaceRef,
@@ -566,7 +540,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetElementWidthOfPlane")]
     #[inline]
-    pub fn element_width_of_plane(&self, plane_index: usize) -> usize {
+    pub fn element_width_of_plane(self: &IOSurfaceRef, plane_index: usize) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetElementWidthOfPlane(buffer: &IOSurfaceRef, plane_index: usize) -> usize;
         }
@@ -575,7 +549,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetElementHeightOfPlane")]
     #[inline]
-    pub fn element_height_of_plane(&self, plane_index: usize) -> usize {
+    pub fn element_height_of_plane(self: &IOSurfaceRef, plane_index: usize) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetElementHeightOfPlane(buffer: &IOSurfaceRef, plane_index: usize)
                 -> usize;
@@ -585,7 +559,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetNumberOfComponentsOfPlane")]
     #[inline]
-    pub fn number_of_components_of_plane(&self, plane_index: usize) -> usize {
+    pub fn number_of_components_of_plane(self: &IOSurfaceRef, plane_index: usize) -> usize {
         extern "C-unwind" {
             fn IOSurfaceGetNumberOfComponentsOfPlane(
                 buffer: &IOSurfaceRef,
@@ -598,7 +572,7 @@ impl IOSurfaceRef {
     #[doc(alias = "IOSurfaceGetNameOfComponentOfPlane")]
     #[inline]
     pub fn name_of_component_of_plane(
-        &self,
+        self: &IOSurfaceRef,
         plane_index: usize,
         component_index: usize,
     ) -> IOSurfaceComponentName {
@@ -615,7 +589,7 @@ impl IOSurfaceRef {
     #[doc(alias = "IOSurfaceGetTypeOfComponentOfPlane")]
     #[inline]
     pub fn type_of_component_of_plane(
-        &self,
+        self: &IOSurfaceRef,
         plane_index: usize,
         component_index: usize,
     ) -> IOSurfaceComponentType {
@@ -632,7 +606,7 @@ impl IOSurfaceRef {
     #[doc(alias = "IOSurfaceGetRangeOfComponentOfPlane")]
     #[inline]
     pub fn range_of_component_of_plane(
-        &self,
+        self: &IOSurfaceRef,
         plane_index: usize,
         component_index: usize,
     ) -> IOSurfaceComponentRange {
@@ -649,7 +623,7 @@ impl IOSurfaceRef {
     #[doc(alias = "IOSurfaceGetBitDepthOfComponentOfPlane")]
     #[inline]
     pub fn bit_depth_of_component_of_plane(
-        &self,
+        self: &IOSurfaceRef,
         plane_index: usize,
         component_index: usize,
     ) -> usize {
@@ -666,7 +640,7 @@ impl IOSurfaceRef {
     #[doc(alias = "IOSurfaceGetBitOffsetOfComponentOfPlane")]
     #[inline]
     pub fn bit_offset_of_component_of_plane(
-        &self,
+        self: &IOSurfaceRef,
         plane_index: usize,
         component_index: usize,
     ) -> usize {
@@ -682,7 +656,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetSubsampling")]
     #[inline]
-    pub fn subsampling(&self) -> IOSurfaceSubsampling {
+    pub fn subsampling(self: &IOSurfaceRef) -> IOSurfaceSubsampling {
         extern "C-unwind" {
             fn IOSurfaceGetSubsampling(buffer: &IOSurfaceRef) -> IOSurfaceSubsampling;
         }
@@ -709,13 +683,10 @@ extern "C" {
 }
 
 impl IOSurfaceRef {
-    /// # Safety
-    ///
-    /// `value` should be of the correct type.
     #[doc(alias = "IOSurfaceSetValue")]
     #[cfg(feature = "objc2-core-foundation")]
     #[inline]
-    pub unsafe fn set_value(&self, key: &CFString, value: &CFType) {
+    pub unsafe fn set_value(self: &IOSurfaceRef, key: &CFString, value: &CFType) {
         extern "C-unwind" {
             fn IOSurfaceSetValue(buffer: &IOSurfaceRef, key: &CFString, value: &CFType);
         }
@@ -725,7 +696,7 @@ impl IOSurfaceRef {
     #[doc(alias = "IOSurfaceCopyValue")]
     #[cfg(feature = "objc2-core-foundation")]
     #[inline]
-    pub fn value(&self, key: &CFString) -> Option<CFRetained<CFType>> {
+    pub fn value(self: &IOSurfaceRef, key: &CFString) -> Option<CFRetained<CFType>> {
         extern "C-unwind" {
             fn IOSurfaceCopyValue(buffer: &IOSurfaceRef, key: &CFString)
                 -> Option<NonNull<CFType>>;
@@ -737,20 +708,17 @@ impl IOSurfaceRef {
     #[doc(alias = "IOSurfaceRemoveValue")]
     #[cfg(feature = "objc2-core-foundation")]
     #[inline]
-    pub fn remove_value(&self, key: &CFString) {
+    pub fn remove_value(self: &IOSurfaceRef, key: &CFString) {
         extern "C-unwind" {
             fn IOSurfaceRemoveValue(buffer: &IOSurfaceRef, key: &CFString);
         }
         unsafe { IOSurfaceRemoveValue(self, key) }
     }
 
-    /// # Safety
-    ///
-    /// `keys_and_values` generics must be of the correct type.
     #[doc(alias = "IOSurfaceSetValues")]
     #[cfg(feature = "objc2-core-foundation")]
     #[inline]
-    pub unsafe fn set_values(&self, keys_and_values: &CFDictionary) {
+    pub unsafe fn set_values(self: &IOSurfaceRef, keys_and_values: &CFDictionary) {
         extern "C-unwind" {
             fn IOSurfaceSetValues(buffer: &IOSurfaceRef, keys_and_values: &CFDictionary);
         }
@@ -760,7 +728,7 @@ impl IOSurfaceRef {
     #[doc(alias = "IOSurfaceCopyAllValues")]
     #[cfg(feature = "objc2-core-foundation")]
     #[inline]
-    pub fn all_values(&self) -> Option<CFRetained<CFDictionary>> {
+    pub fn all_values(self: &IOSurfaceRef) -> Option<CFRetained<CFDictionary>> {
         extern "C-unwind" {
             fn IOSurfaceCopyAllValues(buffer: &IOSurfaceRef) -> Option<NonNull<CFDictionary>>;
         }
@@ -770,7 +738,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceRemoveAllValues")]
     #[inline]
-    pub fn remove_all_values(&self) {
+    pub fn remove_all_values(self: &IOSurfaceRef) {
         extern "C-unwind" {
             fn IOSurfaceRemoveAllValues(buffer: &IOSurfaceRef);
         }
@@ -780,7 +748,7 @@ impl IOSurfaceRef {
     #[doc(alias = "IOSurfaceCreateMachPort")]
     #[cfg(feature = "libc")]
     #[inline]
-    pub fn create_mach_port(&self) -> libc::mach_port_t {
+    pub fn create_mach_port(self: &IOSurfaceRef) -> libc::mach_port_t {
         extern "C-unwind" {
             fn IOSurfaceCreateMachPort(buffer: &IOSurfaceRef) -> libc::mach_port_t;
         }
@@ -832,7 +800,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceIncrementUseCount")]
     #[inline]
-    pub fn increment_use_count(&self) {
+    pub fn increment_use_count(self: &IOSurfaceRef) {
         extern "C-unwind" {
             fn IOSurfaceIncrementUseCount(buffer: &IOSurfaceRef);
         }
@@ -841,7 +809,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceDecrementUseCount")]
     #[inline]
-    pub fn decrement_use_count(&self) {
+    pub fn decrement_use_count(self: &IOSurfaceRef) {
         extern "C-unwind" {
             fn IOSurfaceDecrementUseCount(buffer: &IOSurfaceRef);
         }
@@ -850,7 +818,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceGetUseCount")]
     #[inline]
-    pub fn use_count(&self) -> i32 {
+    pub fn use_count(self: &IOSurfaceRef) -> i32 {
         extern "C-unwind" {
             fn IOSurfaceGetUseCount(buffer: &IOSurfaceRef) -> i32;
         }
@@ -859,7 +827,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceIsInUse")]
     #[inline]
-    pub fn is_in_use(&self) -> bool {
+    pub fn is_in_use(self: &IOSurfaceRef) -> bool {
         extern "C-unwind" {
             fn IOSurfaceIsInUse(buffer: &IOSurfaceRef) -> Boolean;
         }
@@ -869,7 +837,7 @@ impl IOSurfaceRef {
 
     #[doc(alias = "IOSurfaceAllowsPixelSizeCasting")]
     #[inline]
-    pub fn allows_pixel_size_casting(&self) -> bool {
+    pub fn allows_pixel_size_casting(self: &IOSurfaceRef) -> bool {
         extern "C-unwind" {
             fn IOSurfaceAllowsPixelSizeCasting(buffer: &IOSurfaceRef) -> Boolean;
         }
@@ -877,13 +845,14 @@ impl IOSurfaceRef {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// `old_state` must be a valid pointer or null.
     #[doc(alias = "IOSurfaceSetPurgeable")]
     #[cfg(feature = "libc")]
     #[inline]
-    pub unsafe fn set_purgeable(&self, new_state: u32, old_state: *mut u32) -> libc::kern_return_t {
+    pub unsafe fn set_purgeable(
+        self: &IOSurfaceRef,
+        new_state: u32,
+        old_state: *mut u32,
+    ) -> libc::kern_return_t {
         extern "C-unwind" {
             fn IOSurfaceSetPurgeable(
                 buffer: &IOSurfaceRef,
@@ -923,10 +892,6 @@ unsafe impl RefEncode for IOSurfaceMemoryLedgerTags {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-unsafe impl Send for IOSurfaceMemoryLedgerTags {}
-
-unsafe impl Sync for IOSurfaceMemoryLedgerTags {}
-
 /// [Apple's documentation](https://developer.apple.com/documentation/iosurface/iosurfacememoryledgerflags?language=objc)
 // NS_OPTIONS
 #[repr(transparent)]
@@ -948,10 +913,6 @@ unsafe impl Encode for IOSurfaceMemoryLedgerFlags {
 unsafe impl RefEncode for IOSurfaceMemoryLedgerFlags {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
-
-unsafe impl Send for IOSurfaceMemoryLedgerFlags {}
-
-unsafe impl Sync for IOSurfaceMemoryLedgerFlags {}
 
 #[cfg(feature = "objc2-core-foundation")]
 #[deprecated = "renamed to `IOSurfaceRef::new`"]

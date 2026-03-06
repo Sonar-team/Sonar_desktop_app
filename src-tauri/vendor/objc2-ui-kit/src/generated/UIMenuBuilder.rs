@@ -16,7 +16,7 @@ extern_protocol!(
         /// Which system we are building for.
         #[unsafe(method(system))]
         #[unsafe(method_family = none)]
-        fn system(&self) -> Retained<UIMenuSystem>;
+        unsafe fn system(&self) -> Retained<UIMenuSystem>;
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
         /// Fetch the identified menu.
@@ -27,7 +27,10 @@ extern_protocol!(
         /// Returns: The menu with the given identifier, or `nil` if no such menu.
         #[unsafe(method(menuForIdentifier:))]
         #[unsafe(method_family = none)]
-        fn menuForIdentifier(&self, identifier: &UIMenuIdentifier) -> Option<Retained<UIMenu>>;
+        unsafe fn menuForIdentifier(
+            &self,
+            identifier: &UIMenuIdentifier,
+        ) -> Option<Retained<UIMenu>>;
 
         #[cfg(all(feature = "UIAction", feature = "UIMenuElement"))]
         /// Fetch the identified action.
@@ -38,7 +41,7 @@ extern_protocol!(
         /// Returns: The action with the given identifier, or `nil` if no such action.
         #[unsafe(method(actionForIdentifier:))]
         #[unsafe(method_family = none)]
-        fn actionForIdentifier(
+        unsafe fn actionForIdentifier(
             &self,
             identifier: &UIActionIdentifier,
         ) -> Option<Retained<UIAction>>;
@@ -52,11 +55,6 @@ extern_protocol!(
         /// Parameter `propertyList`: Property list object to distinguish commands, if needed.
         ///
         /// Returns: The command with the given action and property list, or `nil` if no such command.
-        ///
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `property_list` should be of the correct type.
         #[unsafe(method(commandForAction:propertyList:))]
         #[unsafe(method_family = none)]
         unsafe fn commandForAction_propertyList(
@@ -74,7 +72,7 @@ extern_protocol!(
         /// Parameter `replacementGroup`: The replacement menu.
         #[unsafe(method(replaceMenuForIdentifier:withMenu:))]
         #[unsafe(method_family = none)]
-        fn replaceMenuForIdentifier_withMenu(
+        unsafe fn replaceMenuForIdentifier_withMenu(
             &self,
             replaced_identifier: &UIMenuIdentifier,
             replacement_menu: &UIMenu,
@@ -87,10 +85,6 @@ extern_protocol!(
         /// Parameter `parentIdentifier`: The identifier of the parent menu.
         ///
         /// Parameter `childrenBlock`: A block that returns the new children, given the old children.
-        ///
-        /// # Safety
-        ///
-        /// `children_block` block's return must be a valid pointer.
         #[unsafe(method(replaceChildrenOfMenuForIdentifier:fromChildrenBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn replaceChildrenOfMenuForIdentifier_fromChildrenBlock(
@@ -102,59 +96,6 @@ extern_protocol!(
         );
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
-        /// Replace an identified menu with menu elements.
-        ///
-        ///
-        /// Parameter `replacedIdentifier`: The identifier of the menu to be replaced.
-        ///
-        /// Parameter `replacementElements`: The replacement elements.
-        #[unsafe(method(replaceMenuForIdentifier:withElements:))]
-        #[unsafe(method_family = none)]
-        fn replaceMenuForIdentifier_withElements(
-            &self,
-            replaced_identifier: &UIMenuIdentifier,
-            replacement_elements: &NSArray<UIMenuElement>,
-        );
-
-        #[cfg(all(feature = "UIAction", feature = "UIMenuElement"))]
-        /// Replace an identified action with menu elements.
-        ///
-        ///
-        /// Parameter `replacedIdentifier`: The identifier of the action to be replaced.
-        ///
-        /// Parameter `replacementElements`: The replacement elements.
-        #[unsafe(method(replaceActionForIdentifier:withElements:))]
-        #[unsafe(method_family = none)]
-        fn replaceActionForIdentifier_withElements(
-            &self,
-            replaced_identifier: &UIActionIdentifier,
-            replacement_elements: &NSArray<UIMenuElement>,
-        );
-
-        #[cfg(feature = "UIMenuElement")]
-        /// Replace an identified command with menu elements.
-        ///
-        ///
-        /// Parameter `replacedAction`: The action of the command to be replaced.
-        ///
-        /// Parameter `replacedPropertyList`: Property list object to distinguish commands, if needed.
-        ///
-        /// Parameter `replacementElements`: The replacement elements.
-        ///
-        /// # Safety
-        ///
-        /// - `replaced_action` must be a valid selector.
-        /// - `replaced_property_list` should be of the correct type.
-        #[unsafe(method(replaceCommandForAction:propertyList:withElements:))]
-        #[unsafe(method_family = none)]
-        unsafe fn replaceCommandForAction_propertyList_withElements(
-            &self,
-            replaced_action: Sel,
-            replaced_property_list: Option<&AnyObject>,
-            replacement_elements: &NSArray<UIMenuElement>,
-        );
-
-        #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
         /// Insert a sibling menu before an identified sibling menu.
         ///
         ///
@@ -163,39 +104,9 @@ extern_protocol!(
         /// Parameter `siblingIdentifier`: The identifier of the sibling menu to insert before.
         #[unsafe(method(insertSiblingMenu:beforeMenuForIdentifier:))]
         #[unsafe(method_family = none)]
-        fn insertSiblingMenu_beforeMenuForIdentifier(
+        unsafe fn insertSiblingMenu_beforeMenuForIdentifier(
             &self,
             sibling_menu: &UIMenu,
-            sibling_identifier: &UIMenuIdentifier,
-        );
-
-        #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
-        /// Insert elements before an identified menu.
-        ///
-        ///
-        /// Parameter `insertedElements`: The elements to insert.
-        ///
-        /// Parameter `siblingIdentifier`: The identifier of the menu to insert elements before.
-        #[unsafe(method(insertElements:beforeMenuForIdentifier:))]
-        #[unsafe(method_family = none)]
-        fn insertElements_beforeMenuForIdentifier(
-            &self,
-            inserted_elements: &NSArray<UIMenuElement>,
-            sibling_identifier: &UIMenuIdentifier,
-        );
-
-        #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
-        /// Insert elements after an identified menu.
-        ///
-        ///
-        /// Parameter `insertedElements`: The elements to insert.
-        ///
-        /// Parameter `siblingIdentifier`: The identifier of the menu to insert elements after.
-        #[unsafe(method(insertElements:afterMenuForIdentifier:))]
-        #[unsafe(method_family = none)]
-        fn insertElements_afterMenuForIdentifier(
-            &self,
-            inserted_elements: &NSArray<UIMenuElement>,
             sibling_identifier: &UIMenuIdentifier,
         );
 
@@ -208,7 +119,7 @@ extern_protocol!(
         /// Parameter `siblingIdentifier`: The identifier of the sibling menu to insert after.
         #[unsafe(method(insertSiblingMenu:afterMenuForIdentifier:))]
         #[unsafe(method_family = none)]
-        fn insertSiblingMenu_afterMenuForIdentifier(
+        unsafe fn insertSiblingMenu_afterMenuForIdentifier(
             &self,
             sibling_menu: &UIMenu,
             sibling_identifier: &UIMenuIdentifier,
@@ -223,100 +134,9 @@ extern_protocol!(
         /// Parameter `parentIdentifier`: The identifier of the parent menu to insert at the start of.
         #[unsafe(method(insertChildMenu:atStartOfMenuForIdentifier:))]
         #[unsafe(method_family = none)]
-        fn insertChildMenu_atStartOfMenuForIdentifier(
+        unsafe fn insertChildMenu_atStartOfMenuForIdentifier(
             &self,
             child_menu: &UIMenu,
-            parent_identifier: &UIMenuIdentifier,
-        );
-
-        #[cfg(all(feature = "UIAction", feature = "UIMenuElement"))]
-        /// Insert elements before an identified action.
-        ///
-        ///
-        /// Parameter `insertedElements`: The elements to insert.
-        ///
-        /// Parameter `siblingIdentifier`: The identifier of the action to insert elements before.
-        #[unsafe(method(insertElements:beforeActionForIdentifier:))]
-        #[unsafe(method_family = none)]
-        fn insertElements_beforeActionForIdentifier(
-            &self,
-            inserted_elements: &NSArray<UIMenuElement>,
-            sibling_identifier: &UIActionIdentifier,
-        );
-
-        #[cfg(all(feature = "UIAction", feature = "UIMenuElement"))]
-        /// Insert elements after an identified action.
-        ///
-        ///
-        /// Parameter `insertedElements`: The elements to insert.
-        ///
-        /// Parameter `siblingIdentifier`: The identifier of the action to insert elements after.
-        #[unsafe(method(insertElements:afterActionForIdentifier:))]
-        #[unsafe(method_family = none)]
-        fn insertElements_afterActionForIdentifier(
-            &self,
-            inserted_elements: &NSArray<UIMenuElement>,
-            sibling_identifier: &UIActionIdentifier,
-        );
-
-        #[cfg(feature = "UIMenuElement")]
-        /// Insert elements before an identified command.
-        ///
-        ///
-        /// Parameter `insertedElements`: The elements to insert.
-        ///
-        /// Parameter `siblingAction`: The action of the command to insert elements before.
-        ///
-        /// Parameter `siblingPropertyList`: Property list object to distinguish commands, if needed.
-        ///
-        /// # Safety
-        ///
-        /// - `sibling_action` must be a valid selector.
-        /// - `sibling_property_list` should be of the correct type.
-        #[unsafe(method(insertElements:beforeCommandForAction:propertyList:))]
-        #[unsafe(method_family = none)]
-        unsafe fn insertElements_beforeCommandForAction_propertyList(
-            &self,
-            inserted_elements: &NSArray<UIMenuElement>,
-            sibling_action: Sel,
-            sibling_property_list: Option<&AnyObject>,
-        );
-
-        #[cfg(feature = "UIMenuElement")]
-        /// Insert elements after an identified command.
-        ///
-        ///
-        /// Parameter `insertedElements`: The elements to insert.
-        ///
-        /// Parameter `siblingAction`: The action of the command to insert elements after.
-        ///
-        /// Parameter `siblingPropertyList`: Property list object to distinguish commands, if needed.
-        ///
-        /// # Safety
-        ///
-        /// - `sibling_action` must be a valid selector.
-        /// - `sibling_property_list` should be of the correct type.
-        #[unsafe(method(insertElements:afterCommandForAction:propertyList:))]
-        #[unsafe(method_family = none)]
-        unsafe fn insertElements_afterCommandForAction_propertyList(
-            &self,
-            inserted_elements: &NSArray<UIMenuElement>,
-            sibling_action: Sel,
-            sibling_property_list: Option<&AnyObject>,
-        );
-
-        #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
-        /// Insert elements at the start of an identified parent menu.
-        ///
-        ///
-        /// Parameter `childElements`: The child elements to insert.
-        ///
-        /// Parameter `parentIdentifier`: The identifier of the parent menu to insert elements at the start of.
-        #[unsafe(method(insertElements:atStartOfMenuForIdentifier:))]
-        #[unsafe(method_family = none)]
-        fn insertElements_atStartOfMenuForIdentifier(
-            &self,
-            child_elements: &NSArray<UIMenuElement>,
             parent_identifier: &UIMenuIdentifier,
         );
 
@@ -329,24 +149,9 @@ extern_protocol!(
         /// Parameter `parentIdentifier`: The identifier of the parent menu to insert at the end of.
         #[unsafe(method(insertChildMenu:atEndOfMenuForIdentifier:))]
         #[unsafe(method_family = none)]
-        fn insertChildMenu_atEndOfMenuForIdentifier(
+        unsafe fn insertChildMenu_atEndOfMenuForIdentifier(
             &self,
             child_menu: &UIMenu,
-            parent_identifier: &UIMenuIdentifier,
-        );
-
-        #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
-        /// Insert elements at the end of an identified parent menu.
-        ///
-        ///
-        /// Parameter `childElements`: The child elements to insert.
-        ///
-        /// Parameter `parentIdentifier`: The identifier of the parent menu to insert elements at the end of.
-        #[unsafe(method(insertElements:atEndOfMenuForIdentifier:))]
-        #[unsafe(method_family = none)]
-        fn insertElements_atEndOfMenuForIdentifier(
-            &self,
-            child_elements: &NSArray<UIMenuElement>,
             parent_identifier: &UIMenuIdentifier,
         );
 
@@ -357,34 +162,6 @@ extern_protocol!(
         /// Parameter `removedIdentifier`: The menu to remove.
         #[unsafe(method(removeMenuForIdentifier:))]
         #[unsafe(method_family = none)]
-        fn removeMenuForIdentifier(&self, removed_identifier: &UIMenuIdentifier);
-
-        #[cfg(feature = "UIAction")]
-        /// Remove an identified action.
-        ///
-        ///
-        /// Parameter `removedIdentifier`: The identifier of the action to remove.
-        #[unsafe(method(removeActionForIdentifier:))]
-        #[unsafe(method_family = none)]
-        fn removeActionForIdentifier(&self, removed_identifier: &UIActionIdentifier);
-
-        /// Remove an identified command.
-        ///
-        ///
-        /// Parameter `removedAction`: The action of the command to remove.
-        ///
-        /// Parameter `removedPropertyList`: Property list object to distinguish commands, if needed.
-        ///
-        /// # Safety
-        ///
-        /// - `removed_action` must be a valid selector.
-        /// - `removed_property_list` should be of the correct type.
-        #[unsafe(method(removeCommandForAction:propertyList:))]
-        #[unsafe(method_family = none)]
-        unsafe fn removeCommandForAction_propertyList(
-            &self,
-            removed_action: Sel,
-            removed_property_list: Option<&AnyObject>,
-        );
+        unsafe fn removeMenuForIdentifier(&self, removed_identifier: &UIMenuIdentifier);
     }
 );

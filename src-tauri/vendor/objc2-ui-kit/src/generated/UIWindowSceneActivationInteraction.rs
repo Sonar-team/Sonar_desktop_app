@@ -64,10 +64,6 @@ impl UIWindowSceneActivationInteraction {
         /// `UIWindowSceneActivationConfiguration`whose user activity will be used to request scene activation.
         ///
         /// Parameter `errorHandler`: Called when the activation request fails.
-        ///
-        /// # Safety
-        ///
-        /// `configuration_provider` must be a valid pointer.
         #[unsafe(method(initWithConfigurationProvider:errorHandler:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithConfigurationProvider_errorHandler(

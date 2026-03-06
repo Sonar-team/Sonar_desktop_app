@@ -89,8 +89,6 @@ impl DOMHTMLModElement {
         pub unsafe fn cite(&self) -> Retained<NSString>;
 
         /// Setter for [`cite`][Self::cite].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setCite:))]
         #[unsafe(method_family = none)]
@@ -102,8 +100,6 @@ impl DOMHTMLModElement {
         pub unsafe fn dateTime(&self) -> Retained<NSString>;
 
         /// Setter for [`dateTime`][Self::dateTime].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setDateTime:))]
         #[unsafe(method_family = none)]

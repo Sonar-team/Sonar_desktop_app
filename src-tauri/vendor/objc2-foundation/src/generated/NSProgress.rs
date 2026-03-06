@@ -49,28 +49,25 @@ impl NSProgress {
     extern_methods!(
         #[unsafe(method(currentProgress))]
         #[unsafe(method_family = none)]
-        pub fn currentProgress() -> Option<Retained<NSProgress>>;
+        pub unsafe fn currentProgress() -> Option<Retained<NSProgress>>;
 
         #[unsafe(method(progressWithTotalUnitCount:))]
         #[unsafe(method_family = none)]
-        pub fn progressWithTotalUnitCount(unit_count: i64) -> Retained<NSProgress>;
+        pub unsafe fn progressWithTotalUnitCount(unit_count: i64) -> Retained<NSProgress>;
 
         #[unsafe(method(discreteProgressWithTotalUnitCount:))]
         #[unsafe(method_family = none)]
-        pub fn discreteProgressWithTotalUnitCount(unit_count: i64) -> Retained<NSProgress>;
+        pub unsafe fn discreteProgressWithTotalUnitCount(unit_count: i64) -> Retained<NSProgress>;
 
         #[unsafe(method(progressWithTotalUnitCount:parent:pendingUnitCount:))]
         #[unsafe(method_family = none)]
-        pub fn progressWithTotalUnitCount_parent_pendingUnitCount(
+        pub unsafe fn progressWithTotalUnitCount_parent_pendingUnitCount(
             unit_count: i64,
             parent: &NSProgress,
             portion_of_parent_total_unit_count: i64,
         ) -> Retained<NSProgress>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `user_info_or_nil` generic should be of the correct type.
         #[unsafe(method(initWithParent:userInfo:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithParent_userInfo(
@@ -81,12 +78,12 @@ impl NSProgress {
 
         #[unsafe(method(becomeCurrentWithPendingUnitCount:))]
         #[unsafe(method_family = none)]
-        pub fn becomeCurrentWithPendingUnitCount(&self, unit_count: i64);
+        pub unsafe fn becomeCurrentWithPendingUnitCount(&self, unit_count: i64);
 
         #[cfg(feature = "block2")]
         #[unsafe(method(performAsCurrentWithPendingUnitCount:usingBlock:))]
         #[unsafe(method_family = none)]
-        pub fn performAsCurrentWithPendingUnitCount_usingBlock(
+        pub unsafe fn performAsCurrentWithPendingUnitCount_usingBlock(
             &self,
             unit_count: i64,
             work: &block2::DynBlock<dyn Fn() + '_>,
@@ -94,101 +91,88 @@ impl NSProgress {
 
         #[unsafe(method(resignCurrent))]
         #[unsafe(method_family = none)]
-        pub fn resignCurrent(&self);
+        pub unsafe fn resignCurrent(&self);
 
         #[unsafe(method(addChild:withPendingUnitCount:))]
         #[unsafe(method_family = none)]
-        pub fn addChild_withPendingUnitCount(&self, child: &NSProgress, in_unit_count: i64);
+        pub unsafe fn addChild_withPendingUnitCount(&self, child: &NSProgress, in_unit_count: i64);
 
         #[unsafe(method(totalUnitCount))]
         #[unsafe(method_family = none)]
-        pub fn totalUnitCount(&self) -> i64;
+        pub unsafe fn totalUnitCount(&self) -> i64;
 
         /// Setter for [`totalUnitCount`][Self::totalUnitCount].
         #[unsafe(method(setTotalUnitCount:))]
         #[unsafe(method_family = none)]
-        pub fn setTotalUnitCount(&self, total_unit_count: i64);
+        pub unsafe fn setTotalUnitCount(&self, total_unit_count: i64);
 
         #[unsafe(method(completedUnitCount))]
         #[unsafe(method_family = none)]
-        pub fn completedUnitCount(&self) -> i64;
+        pub unsafe fn completedUnitCount(&self) -> i64;
 
         /// Setter for [`completedUnitCount`][Self::completedUnitCount].
         #[unsafe(method(setCompletedUnitCount:))]
         #[unsafe(method_family = none)]
-        pub fn setCompletedUnitCount(&self, completed_unit_count: i64);
+        pub unsafe fn setCompletedUnitCount(&self, completed_unit_count: i64);
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(localizedDescription))]
         #[unsafe(method_family = none)]
-        pub fn localizedDescription(&self) -> Retained<NSString>;
+        pub unsafe fn localizedDescription(&self) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         /// Setter for [`localizedDescription`][Self::localizedDescription].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setLocalizedDescription:))]
         #[unsafe(method_family = none)]
-        pub fn setLocalizedDescription(&self, localized_description: Option<&NSString>);
+        pub unsafe fn setLocalizedDescription(&self, localized_description: Option<&NSString>);
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(localizedAdditionalDescription))]
         #[unsafe(method_family = none)]
-        pub fn localizedAdditionalDescription(&self) -> Retained<NSString>;
+        pub unsafe fn localizedAdditionalDescription(&self) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         /// Setter for [`localizedAdditionalDescription`][Self::localizedAdditionalDescription].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setLocalizedAdditionalDescription:))]
         #[unsafe(method_family = none)]
-        pub fn setLocalizedAdditionalDescription(
+        pub unsafe fn setLocalizedAdditionalDescription(
             &self,
             localized_additional_description: Option<&NSString>,
         );
 
         #[unsafe(method(isCancellable))]
         #[unsafe(method_family = none)]
-        pub fn isCancellable(&self) -> bool;
+        pub unsafe fn isCancellable(&self) -> bool;
 
         /// Setter for [`isCancellable`][Self::isCancellable].
         #[unsafe(method(setCancellable:))]
         #[unsafe(method_family = none)]
-        pub fn setCancellable(&self, cancellable: bool);
+        pub unsafe fn setCancellable(&self, cancellable: bool);
 
         #[unsafe(method(isPausable))]
         #[unsafe(method_family = none)]
-        pub fn isPausable(&self) -> bool;
+        pub unsafe fn isPausable(&self) -> bool;
 
         /// Setter for [`isPausable`][Self::isPausable].
         #[unsafe(method(setPausable:))]
         #[unsafe(method_family = none)]
-        pub fn setPausable(&self, pausable: bool);
+        pub unsafe fn setPausable(&self, pausable: bool);
 
         #[unsafe(method(isCancelled))]
         #[unsafe(method_family = none)]
-        pub fn isCancelled(&self) -> bool;
+        pub unsafe fn isCancelled(&self) -> bool;
 
         #[unsafe(method(isPaused))]
         #[unsafe(method_family = none)]
-        pub fn isPaused(&self) -> bool;
+        pub unsafe fn isPaused(&self) -> bool;
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// The returned block must be sendable.
         #[unsafe(method(cancellationHandler))]
         #[unsafe(method_family = none)]
         pub unsafe fn cancellationHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`cancellationHandler`][Self::cancellationHandler].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `cancellation_handler` block must be sendable.
         #[unsafe(method(setCancellationHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setCancellationHandler(
@@ -197,21 +181,12 @@ impl NSProgress {
         );
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// The returned block must be sendable.
         #[unsafe(method(pausingHandler))]
         #[unsafe(method_family = none)]
         pub unsafe fn pausingHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`pausingHandler`][Self::pausingHandler].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `pausing_handler` block must be sendable.
         #[unsafe(method(setPausingHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPausingHandler(
@@ -220,21 +195,12 @@ impl NSProgress {
         );
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// The returned block must be sendable.
         #[unsafe(method(resumingHandler))]
         #[unsafe(method_family = none)]
         pub unsafe fn resumingHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`resumingHandler`][Self::resumingHandler].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `resuming_handler` block must be sendable.
         #[unsafe(method(setResumingHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setResumingHandler(
@@ -243,9 +209,6 @@ impl NSProgress {
         );
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `object_or_nil` should be of the correct type.
         #[unsafe(method(setUserInfoObject:forKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUserInfoObject_forKey(
@@ -256,84 +219,76 @@ impl NSProgress {
 
         #[unsafe(method(isIndeterminate))]
         #[unsafe(method_family = none)]
-        pub fn isIndeterminate(&self) -> bool;
+        pub unsafe fn isIndeterminate(&self) -> bool;
 
         #[unsafe(method(fractionCompleted))]
         #[unsafe(method_family = none)]
-        pub fn fractionCompleted(&self) -> c_double;
+        pub unsafe fn fractionCompleted(&self) -> c_double;
 
         #[unsafe(method(isFinished))]
         #[unsafe(method_family = none)]
-        pub fn isFinished(&self) -> bool;
+        pub unsafe fn isFinished(&self) -> bool;
 
         #[unsafe(method(cancel))]
         #[unsafe(method_family = none)]
-        pub fn cancel(&self);
+        pub unsafe fn cancel(&self);
 
         #[unsafe(method(pause))]
         #[unsafe(method_family = none)]
-        pub fn pause(&self);
+        pub unsafe fn pause(&self);
 
         #[unsafe(method(resume))]
         #[unsafe(method_family = none)]
-        pub fn resume(&self);
+        pub unsafe fn resume(&self);
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
         #[unsafe(method(userInfo))]
         #[unsafe(method_family = none)]
-        pub fn userInfo(&self) -> Retained<NSDictionary<NSProgressUserInfoKey, AnyObject>>;
+        pub unsafe fn userInfo(&self) -> Retained<NSDictionary<NSProgressUserInfoKey, AnyObject>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(kind))]
         #[unsafe(method_family = none)]
-        pub fn kind(&self) -> Option<Retained<NSProgressKind>>;
+        pub unsafe fn kind(&self) -> Option<Retained<NSProgressKind>>;
 
         #[cfg(feature = "NSString")]
         /// Setter for [`kind`][Self::kind].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setKind:))]
         #[unsafe(method_family = none)]
-        pub fn setKind(&self, kind: Option<&NSProgressKind>);
+        pub unsafe fn setKind(&self, kind: Option<&NSProgressKind>);
 
         #[cfg(feature = "NSValue")]
         #[unsafe(method(estimatedTimeRemaining))]
         #[unsafe(method_family = none)]
-        pub fn estimatedTimeRemaining(&self) -> Option<Retained<NSNumber>>;
+        pub unsafe fn estimatedTimeRemaining(&self) -> Option<Retained<NSNumber>>;
 
         #[cfg(feature = "NSValue")]
         /// Setter for [`estimatedTimeRemaining`][Self::estimatedTimeRemaining].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setEstimatedTimeRemaining:))]
         #[unsafe(method_family = none)]
-        pub fn setEstimatedTimeRemaining(&self, estimated_time_remaining: Option<&NSNumber>);
+        pub unsafe fn setEstimatedTimeRemaining(&self, estimated_time_remaining: Option<&NSNumber>);
 
         #[cfg(feature = "NSValue")]
         #[unsafe(method(throughput))]
         #[unsafe(method_family = none)]
-        pub fn throughput(&self) -> Option<Retained<NSNumber>>;
+        pub unsafe fn throughput(&self) -> Option<Retained<NSNumber>>;
 
         #[cfg(feature = "NSValue")]
         /// Setter for [`throughput`][Self::throughput].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setThroughput:))]
         #[unsafe(method_family = none)]
-        pub fn setThroughput(&self, throughput: Option<&NSNumber>);
+        pub unsafe fn setThroughput(&self, throughput: Option<&NSNumber>);
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(fileOperationKind))]
         #[unsafe(method_family = none)]
-        pub fn fileOperationKind(&self) -> Option<Retained<NSProgressFileOperationKind>>;
+        pub unsafe fn fileOperationKind(&self) -> Option<Retained<NSProgressFileOperationKind>>;
 
         #[cfg(feature = "NSString")]
         /// Setter for [`fileOperationKind`][Self::fileOperationKind].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setFileOperationKind:))]
         #[unsafe(method_family = none)]
-        pub fn setFileOperationKind(
+        pub unsafe fn setFileOperationKind(
             &self,
             file_operation_kind: Option<&NSProgressFileOperationKind>,
         );
@@ -341,54 +296,45 @@ impl NSProgress {
         #[cfg(feature = "NSURL")]
         #[unsafe(method(fileURL))]
         #[unsafe(method_family = none)]
-        pub fn fileURL(&self) -> Option<Retained<NSURL>>;
+        pub unsafe fn fileURL(&self) -> Option<Retained<NSURL>>;
 
         #[cfg(feature = "NSURL")]
         /// Setter for [`fileURL`][Self::fileURL].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setFileURL:))]
         #[unsafe(method_family = none)]
-        pub fn setFileURL(&self, file_url: Option<&NSURL>);
+        pub unsafe fn setFileURL(&self, file_url: Option<&NSURL>);
 
         #[cfg(feature = "NSValue")]
         #[unsafe(method(fileTotalCount))]
         #[unsafe(method_family = none)]
-        pub fn fileTotalCount(&self) -> Option<Retained<NSNumber>>;
+        pub unsafe fn fileTotalCount(&self) -> Option<Retained<NSNumber>>;
 
         #[cfg(feature = "NSValue")]
         /// Setter for [`fileTotalCount`][Self::fileTotalCount].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setFileTotalCount:))]
         #[unsafe(method_family = none)]
-        pub fn setFileTotalCount(&self, file_total_count: Option<&NSNumber>);
+        pub unsafe fn setFileTotalCount(&self, file_total_count: Option<&NSNumber>);
 
         #[cfg(feature = "NSValue")]
         #[unsafe(method(fileCompletedCount))]
         #[unsafe(method_family = none)]
-        pub fn fileCompletedCount(&self) -> Option<Retained<NSNumber>>;
+        pub unsafe fn fileCompletedCount(&self) -> Option<Retained<NSNumber>>;
 
         #[cfg(feature = "NSValue")]
         /// Setter for [`fileCompletedCount`][Self::fileCompletedCount].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setFileCompletedCount:))]
         #[unsafe(method_family = none)]
-        pub fn setFileCompletedCount(&self, file_completed_count: Option<&NSNumber>);
+        pub unsafe fn setFileCompletedCount(&self, file_completed_count: Option<&NSNumber>);
 
         #[unsafe(method(publish))]
         #[unsafe(method_family = none)]
-        pub fn publish(&self);
+        pub unsafe fn publish(&self);
 
         #[unsafe(method(unpublish))]
         #[unsafe(method_family = none)]
-        pub fn unpublish(&self);
+        pub unsafe fn unpublish(&self);
 
         #[cfg(all(feature = "NSURL", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `publishing_handler` must be a valid pointer.
         #[unsafe(method(addSubscriberForFileURL:withPublishingHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addSubscriberForFileURL_withPublishingHandler(
@@ -396,16 +342,13 @@ impl NSProgress {
             publishing_handler: NSProgressPublishingHandler,
         ) -> Retained<AnyObject>;
 
-        /// # Safety
-        ///
-        /// `subscriber` should be of the correct type.
         #[unsafe(method(removeSubscriber:))]
         #[unsafe(method_family = none)]
         pub unsafe fn removeSubscriber(subscriber: &AnyObject);
 
         #[unsafe(method(isOld))]
         #[unsafe(method_family = none)]
-        pub fn isOld(&self) -> bool;
+        pub unsafe fn isOld(&self) -> bool;
     );
 }
 
@@ -414,19 +357,12 @@ impl NSProgress {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSProgress {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_protocol!(
@@ -434,7 +370,7 @@ extern_protocol!(
     pub unsafe trait NSProgressReporting: NSObjectProtocol {
         #[unsafe(method(progress))]
         #[unsafe(method_family = none)]
-        fn progress(&self) -> Retained<NSProgress>;
+        unsafe fn progress(&self) -> Retained<NSProgress>;
     }
 );
 

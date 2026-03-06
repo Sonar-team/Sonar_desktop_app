@@ -78,23 +78,23 @@ impl UICellAccessory {
         /// The state(s) for which the accessory should be displayed.
         #[unsafe(method(displayedState))]
         #[unsafe(method_family = none)]
-        pub fn displayedState(&self) -> UICellAccessoryDisplayedState;
+        pub unsafe fn displayedState(&self) -> UICellAccessoryDisplayedState;
 
         /// Setter for [`displayedState`][Self::displayedState].
         #[unsafe(method(setDisplayedState:))]
         #[unsafe(method_family = none)]
-        pub fn setDisplayedState(&self, displayed_state: UICellAccessoryDisplayedState);
+        pub unsafe fn setDisplayedState(&self, displayed_state: UICellAccessoryDisplayedState);
 
         /// Hidden accessories take up space in the layout, but are not visible and do not provide any behaviors.
         /// Use this property to achieve a consistent layout across cells when some show the accessory and others do not.
         #[unsafe(method(isHidden))]
         #[unsafe(method_family = none)]
-        pub fn isHidden(&self) -> bool;
+        pub unsafe fn isHidden(&self) -> bool;
 
         /// Setter for [`isHidden`][Self::isHidden].
         #[unsafe(method(setHidden:))]
         #[unsafe(method_family = none)]
-        pub fn setHidden(&self, hidden: bool);
+        pub unsafe fn setHidden(&self, hidden: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The layout width that is reserved for the accessory, inside which the accessory will be centered.
@@ -103,29 +103,26 @@ impl UICellAccessory {
         /// accessory will be used. Use UICellAccessoryStandardDimension to request the standard width.
         #[unsafe(method(reservedLayoutWidth))]
         #[unsafe(method_family = none)]
-        pub fn reservedLayoutWidth(&self) -> CGFloat;
+        pub unsafe fn reservedLayoutWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`reservedLayoutWidth`][Self::reservedLayoutWidth].
         #[unsafe(method(setReservedLayoutWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setReservedLayoutWidth(&self, reserved_layout_width: CGFloat);
+        pub unsafe fn setReservedLayoutWidth(&self, reserved_layout_width: CGFloat);
 
         #[cfg(feature = "UIColor")]
         /// The tint color to apply to the accessory. Default value is nil, which uses the system default.
         #[unsafe(method(tintColor))]
         #[unsafe(method_family = none)]
-        pub fn tintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn tintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`tintColor`][Self::tintColor].
         #[unsafe(method(setTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setTintColor(&self, tint_color: Option<&UIColor>);
+        pub unsafe fn setTintColor(&self, tint_color: Option<&UIColor>);
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -135,7 +132,7 @@ impl UICellAccessory {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -144,7 +141,7 @@ impl UICellAccessory {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -185,9 +182,6 @@ impl UICellAccessoryDisclosureIndicator {
 /// Methods declared on superclass `UICellAccessory`.
 impl UICellAccessoryDisclosureIndicator {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -197,7 +191,7 @@ impl UICellAccessoryDisclosureIndicator {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -206,7 +200,7 @@ impl UICellAccessoryDisclosureIndicator {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -246,24 +240,19 @@ impl UICellAccessoryDetail {
         /// An optional handler to call when the detail accessory is tapped. If nil, taps on the accessory are ignored.
         #[unsafe(method(actionHandler))]
         #[unsafe(method_family = none)]
-        pub fn actionHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
+        pub unsafe fn actionHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`actionHandler`][Self::actionHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setActionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn setActionHandler(&self, action_handler: Option<&block2::DynBlock<dyn Fn()>>);
+        pub unsafe fn setActionHandler(&self, action_handler: Option<&block2::DynBlock<dyn Fn()>>);
     );
 }
 
 /// Methods declared on superclass `UICellAccessory`.
 impl UICellAccessoryDetail {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -273,7 +262,7 @@ impl UICellAccessoryDetail {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -282,7 +271,7 @@ impl UICellAccessoryDetail {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -323,9 +312,6 @@ impl UICellAccessoryCheckmark {
 /// Methods declared on superclass `UICellAccessory`.
 impl UICellAccessoryCheckmark {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -335,7 +321,7 @@ impl UICellAccessoryCheckmark {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -344,7 +330,7 @@ impl UICellAccessoryCheckmark {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -384,36 +370,31 @@ impl UICellAccessoryDelete {
         /// The background color to apply to the accessory. Default value is nil, which uses the system default.
         #[unsafe(method(backgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn backgroundColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn backgroundColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`backgroundColor`][Self::backgroundColor].
         #[unsafe(method(setBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundColor(&self, background_color: Option<&UIColor>);
+        pub unsafe fn setBackgroundColor(&self, background_color: Option<&UIColor>);
 
         #[cfg(feature = "block2")]
         /// An optional handler to call when the delete accessory is tapped. If nil, a tap will reveal any trailing swipe actions for the cell.
         #[unsafe(method(actionHandler))]
         #[unsafe(method_family = none)]
-        pub fn actionHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
+        pub unsafe fn actionHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`actionHandler`][Self::actionHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setActionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn setActionHandler(&self, action_handler: Option<&block2::DynBlock<dyn Fn()>>);
+        pub unsafe fn setActionHandler(&self, action_handler: Option<&block2::DynBlock<dyn Fn()>>);
     );
 }
 
 /// Methods declared on superclass `UICellAccessory`.
 impl UICellAccessoryDelete {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -423,7 +404,7 @@ impl UICellAccessoryDelete {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -432,7 +413,7 @@ impl UICellAccessoryDelete {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -472,36 +453,31 @@ impl UICellAccessoryInsert {
         /// The background color to apply to the accessory. Default value is nil, which uses the system default.
         #[unsafe(method(backgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn backgroundColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn backgroundColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`backgroundColor`][Self::backgroundColor].
         #[unsafe(method(setBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundColor(&self, background_color: Option<&UIColor>);
+        pub unsafe fn setBackgroundColor(&self, background_color: Option<&UIColor>);
 
         #[cfg(feature = "block2")]
         /// An optional handler to call when the insert accessory is tapped. If nil, taps on the accessory are ignored.
         #[unsafe(method(actionHandler))]
         #[unsafe(method_family = none)]
-        pub fn actionHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
+        pub unsafe fn actionHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`actionHandler`][Self::actionHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setActionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn setActionHandler(&self, action_handler: Option<&block2::DynBlock<dyn Fn()>>);
+        pub unsafe fn setActionHandler(&self, action_handler: Option<&block2::DynBlock<dyn Fn()>>);
     );
 }
 
 /// Methods declared on superclass `UICellAccessory`.
 impl UICellAccessoryInsert {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -511,7 +487,7 @@ impl UICellAccessoryInsert {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -520,7 +496,7 @@ impl UICellAccessoryInsert {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -560,21 +536,18 @@ impl UICellAccessoryReorder {
         /// Whether a vertical separator is displayed before the accessory when it is placed after another accessory. Default is YES.
         #[unsafe(method(showsVerticalSeparator))]
         #[unsafe(method_family = none)]
-        pub fn showsVerticalSeparator(&self) -> bool;
+        pub unsafe fn showsVerticalSeparator(&self) -> bool;
 
         /// Setter for [`showsVerticalSeparator`][Self::showsVerticalSeparator].
         #[unsafe(method(setShowsVerticalSeparator:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsVerticalSeparator(&self, shows_vertical_separator: bool);
+        pub unsafe fn setShowsVerticalSeparator(&self, shows_vertical_separator: bool);
     );
 }
 
 /// Methods declared on superclass `UICellAccessory`.
 impl UICellAccessoryReorder {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -584,7 +557,7 @@ impl UICellAccessoryReorder {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -593,7 +566,7 @@ impl UICellAccessoryReorder {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -634,22 +607,19 @@ impl UICellAccessoryMultiselect {
         /// The background color to apply to the accessory. Default value is nil, which uses the system default.
         #[unsafe(method(backgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn backgroundColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn backgroundColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`backgroundColor`][Self::backgroundColor].
         #[unsafe(method(setBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundColor(&self, background_color: Option<&UIColor>);
+        pub unsafe fn setBackgroundColor(&self, background_color: Option<&UIColor>);
     );
 }
 
 /// Methods declared on superclass `UICellAccessory`.
 impl UICellAccessoryMultiselect {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -659,7 +629,7 @@ impl UICellAccessoryMultiselect {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -668,7 +638,7 @@ impl UICellAccessoryMultiselect {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -734,36 +704,31 @@ impl UICellAccessoryOutlineDisclosure {
         /// The style of the outline disclosure accessory. Default is automatic.
         #[unsafe(method(style))]
         #[unsafe(method_family = none)]
-        pub fn style(&self) -> UICellAccessoryOutlineDisclosureStyle;
+        pub unsafe fn style(&self) -> UICellAccessoryOutlineDisclosureStyle;
 
         /// Setter for [`style`][Self::style].
         #[unsafe(method(setStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setStyle(&self, style: UICellAccessoryOutlineDisclosureStyle);
+        pub unsafe fn setStyle(&self, style: UICellAccessoryOutlineDisclosureStyle);
 
         #[cfg(feature = "block2")]
         /// An optional handler to call when the outline disclosure accessory is tapped. If nil, the default behavior when using
         /// a NSDiffableDataSourceSectionSnapshot is to toggle the expand/collapse state of the item in the section snapshot.
         #[unsafe(method(actionHandler))]
         #[unsafe(method_family = none)]
-        pub fn actionHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
+        pub unsafe fn actionHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`actionHandler`][Self::actionHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setActionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn setActionHandler(&self, action_handler: Option<&block2::DynBlock<dyn Fn()>>);
+        pub unsafe fn setActionHandler(&self, action_handler: Option<&block2::DynBlock<dyn Fn()>>);
     );
 }
 
 /// Methods declared on superclass `UICellAccessory`.
 impl UICellAccessoryOutlineDisclosure {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -773,7 +738,7 @@ impl UICellAccessoryOutlineDisclosure {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -782,7 +747,7 @@ impl UICellAccessoryOutlineDisclosure {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -822,19 +787,15 @@ impl UICellAccessoryPopUpMenu {
         /// Creates a new pop-up menu accessory using the provided menu.
         #[unsafe(method(initWithMenu:))]
         #[unsafe(method_family = init)]
-        pub fn initWithMenu(this: Allocated<Self>, menu: &UIMenu) -> Retained<Self>;
+        pub unsafe fn initWithMenu(this: Allocated<Self>, menu: &UIMenu) -> Retained<Self>;
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
         #[unsafe(method(menu))]
         #[unsafe(method_family = none)]
-        pub fn menu(&self) -> Retained<UIMenu>;
+        pub unsafe fn menu(&self) -> Retained<UIMenu>;
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement", feature = "block2"))]
         /// An optional handler to call when the selected element in the menu changes.
-        ///
-        /// # Safety
-        ///
-        /// The returned block's argument must be a valid pointer.
         #[unsafe(method(selectedElementDidChangeHandler))]
         #[unsafe(method_family = none)]
         pub unsafe fn selectedElementDidChangeHandler(
@@ -843,18 +804,13 @@ impl UICellAccessoryPopUpMenu {
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement", feature = "block2"))]
         /// Setter for [`selectedElementDidChangeHandler`][Self::selectedElementDidChangeHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSelectedElementDidChangeHandler:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectedElementDidChangeHandler(
+        pub unsafe fn setSelectedElementDidChangeHandler(
             &self,
             selected_element_did_change_handler: Option<&block2::DynBlock<dyn Fn(NonNull<UIMenu>)>>,
         );
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -907,40 +863,37 @@ impl UICellAccessoryLabel {
         /// Creates a new label accessory using the provided text.
         #[unsafe(method(initWithText:))]
         #[unsafe(method_family = init)]
-        pub fn initWithText(this: Allocated<Self>, text: &NSString) -> Retained<Self>;
+        pub unsafe fn initWithText(this: Allocated<Self>, text: &NSString) -> Retained<Self>;
 
         #[unsafe(method(text))]
         #[unsafe(method_family = none)]
-        pub fn text(&self) -> Retained<NSString>;
+        pub unsafe fn text(&self) -> Retained<NSString>;
 
         #[cfg(feature = "UIFont")]
         /// The font used for the label. Default is the preferred font for UIFontTextStyleBody.
         #[unsafe(method(font))]
         #[unsafe(method_family = none)]
-        pub fn font(&self) -> Retained<UIFont>;
+        pub unsafe fn font(&self) -> Retained<UIFont>;
 
         #[cfg(feature = "UIFont")]
         /// Setter for [`font`][Self::font].
         #[unsafe(method(setFont:))]
         #[unsafe(method_family = none)]
-        pub fn setFont(&self, font: &UIFont);
+        pub unsafe fn setFont(&self, font: &UIFont);
 
         /// Whether the label automatically adjusts its font based on the content size category. Default is YES.
         #[unsafe(method(adjustsFontForContentSizeCategory))]
         #[unsafe(method_family = none)]
-        pub fn adjustsFontForContentSizeCategory(&self) -> bool;
+        pub unsafe fn adjustsFontForContentSizeCategory(&self) -> bool;
 
         /// Setter for [`adjustsFontForContentSizeCategory`][Self::adjustsFontForContentSizeCategory].
         #[unsafe(method(setAdjustsFontForContentSizeCategory:))]
         #[unsafe(method_family = none)]
-        pub fn setAdjustsFontForContentSizeCategory(
+        pub unsafe fn setAdjustsFontForContentSizeCategory(
             &self,
             adjusts_font_for_content_size_category: bool,
         );
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -989,11 +942,6 @@ pub type UICellAccessoryPosition =
 
 impl UICellAccessory {
     /// Positions the accessory before the accessory matching the class specified, or at the beginning if not found.
-    ///
-    /// # Safety
-    ///
-    /// - `accessory_class` probably has further requirements.
-    /// - The returned block's argument must be a valid pointer.
     #[doc(alias = "UICellAccessoryPositionBeforeAccessoryOfClass")]
     #[cfg(feature = "block2")]
     #[inline]
@@ -1009,11 +957,6 @@ impl UICellAccessory {
     }
 
     /// Positions the accessory after the accessory matching the class specified, or at the end if not found.
-    ///
-    /// # Safety
-    ///
-    /// - `accessory_class` probably has further requirements.
-    /// - The returned block's argument must be a valid pointer.
     #[doc(alias = "UICellAccessoryPositionAfterAccessoryOfClass")]
     #[cfg(feature = "block2")]
     #[inline]
@@ -1066,7 +1009,7 @@ impl UICellAccessoryCustomView {
         /// enabled, but may use auto layout constraints internally for layout of subviews and/or to indicate its preferred size.
         #[unsafe(method(initWithCustomView:placement:))]
         #[unsafe(method_family = init)]
-        pub fn initWithCustomView_placement(
+        pub unsafe fn initWithCustomView_placement(
             this: Allocated<Self>,
             custom_view: &UIView,
             placement: UICellAccessoryPlacement,
@@ -1075,48 +1018,35 @@ impl UICellAccessoryCustomView {
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(customView))]
         #[unsafe(method_family = none)]
-        pub fn customView(&self) -> Retained<UIView>;
+        pub unsafe fn customView(&self) -> Retained<UIView>;
 
         #[unsafe(method(placement))]
         #[unsafe(method_family = none)]
-        pub fn placement(&self) -> UICellAccessoryPlacement;
+        pub unsafe fn placement(&self) -> UICellAccessoryPlacement;
 
         /// Whether the current frame size of the view is preserved (YES), or whether it is sized during layout of accessories (NO). Default is NO.
         #[unsafe(method(maintainsFixedSize))]
         #[unsafe(method_family = none)]
-        pub fn maintainsFixedSize(&self) -> bool;
+        pub unsafe fn maintainsFixedSize(&self) -> bool;
 
         /// Setter for [`maintainsFixedSize`][Self::maintainsFixedSize].
         #[unsafe(method(setMaintainsFixedSize:))]
         #[unsafe(method_family = none)]
-        pub fn setMaintainsFixedSize(&self, maintains_fixed_size: bool);
+        pub unsafe fn setMaintainsFixedSize(&self, maintains_fixed_size: bool);
 
         #[cfg(feature = "block2")]
         /// Allows customizing the relative position of the accessory amongst any other accessories displayed on the same edge.
         /// The default is to insert the accessory at a position closest to the inside of the cell.
-        ///
-        /// # Safety
-        ///
-        /// The returned block's argument must be a valid pointer.
         #[unsafe(method(position))]
         #[unsafe(method_family = none)]
         pub unsafe fn position(&self) -> UICellAccessoryPosition;
 
         #[cfg(feature = "block2")]
         /// Setter for [`position`][Self::position].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `position` must be a valid pointer.
         #[unsafe(method(setPosition:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPosition(&self, position: UICellAccessoryPosition);
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(

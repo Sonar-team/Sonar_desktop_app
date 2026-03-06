@@ -25,7 +25,7 @@ pub unsafe trait NSObjectNSScriptKeyValueCoding:
         #[cfg(feature = "NSString")]
         #[unsafe(method(valueAtIndex:inPropertyWithKey:))]
         #[unsafe(method_family = none)]
-        fn valueAtIndex_inPropertyWithKey(
+        unsafe fn valueAtIndex_inPropertyWithKey(
             &self,
             index: NSUInteger,
             key: &NSString,
@@ -34,16 +34,13 @@ pub unsafe trait NSObjectNSScriptKeyValueCoding:
         #[cfg(feature = "NSString")]
         #[unsafe(method(valueWithName:inPropertyWithKey:))]
         #[unsafe(method_family = none)]
-        fn valueWithName_inPropertyWithKey(
+        unsafe fn valueWithName_inPropertyWithKey(
             &self,
             name: &NSString,
             key: &NSString,
         ) -> Option<Retained<AnyObject>>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `unique_id` should be of the correct type.
         #[unsafe(method(valueWithUniqueID:inPropertyWithKey:))]
         #[unsafe(method_family = none)]
         unsafe fn valueWithUniqueID_inPropertyWithKey(
@@ -53,9 +50,6 @@ pub unsafe trait NSObjectNSScriptKeyValueCoding:
         ) -> Option<Retained<AnyObject>>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `value` should be of the correct type.
         #[unsafe(method(insertValue:atIndex:inPropertyWithKey:))]
         #[unsafe(method_family = none)]
         unsafe fn insertValue_atIndex_inPropertyWithKey(
@@ -68,12 +62,9 @@ pub unsafe trait NSObjectNSScriptKeyValueCoding:
         #[cfg(feature = "NSString")]
         #[unsafe(method(removeValueAtIndex:fromPropertyWithKey:))]
         #[unsafe(method_family = none)]
-        fn removeValueAtIndex_fromPropertyWithKey(&self, index: NSUInteger, key: &NSString);
+        unsafe fn removeValueAtIndex_fromPropertyWithKey(&self, index: NSUInteger, key: &NSString);
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `value` should be of the correct type.
         #[unsafe(method(replaceValueAtIndex:inPropertyWithKey:withValue:))]
         #[unsafe(method_family = none)]
         unsafe fn replaceValueAtIndex_inPropertyWithKey_withValue(
@@ -84,17 +75,11 @@ pub unsafe trait NSObjectNSScriptKeyValueCoding:
         );
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `value` should be of the correct type.
         #[unsafe(method(insertValue:inPropertyWithKey:))]
         #[unsafe(method_family = none)]
         unsafe fn insertValue_inPropertyWithKey(&self, value: &AnyObject, key: &NSString);
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `value` should be of the correct type.
         #[unsafe(method(coerceValue:forKey:))]
         #[unsafe(method_family = none)]
         unsafe fn coerceValue_forKey(

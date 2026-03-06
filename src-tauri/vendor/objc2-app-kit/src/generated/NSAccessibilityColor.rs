@@ -12,7 +12,7 @@ extern_protocol!(
         /// Returns a localized description of the color for use in accessibility attributes.
         #[unsafe(method(accessibilityName))]
         #[unsafe(method_family = none)]
-        fn accessibilityName(&self) -> Retained<NSString>;
+        unsafe fn accessibilityName(&self) -> Retained<NSString>;
     }
 );
 

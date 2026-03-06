@@ -50,9 +50,6 @@ unsafe impl RefEncode for CGPDFDataFormat {
 }
 
 impl CGPDFStream {
-    /// # Safety
-    ///
-    /// `stream` must be a valid pointer or null.
     #[doc(alias = "CGPDFStreamGetDictionary")]
     #[cfg(feature = "CGPDFDictionary")]
     #[inline]
@@ -63,10 +60,6 @@ impl CGPDFStream {
         unsafe { CGPDFStreamGetDictionary(stream) }
     }
 
-    /// # Safety
-    ///
-    /// - `stream` must be a valid pointer or null.
-    /// - `format` must be a valid pointer or null.
     #[doc(alias = "CGPDFStreamCopyData")]
     #[inline]
     pub unsafe fn data(

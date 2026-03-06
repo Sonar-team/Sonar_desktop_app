@@ -200,9 +200,6 @@ impl CKErrorCode {
     /// The current account is in a state that may need user intervention to recover from. The user should be directed to check the Settings app. Listen for CKAccountChangedNotifications to know when to re-check account status and retry.
     #[doc(alias = "CKErrorAccountTemporarilyUnavailable")]
     pub const AccountTemporarilyUnavailable: Self = Self(36);
-    /// The user is already an invited participant on this share. They must accept the existing share invitation before continuing.
-    #[doc(alias = "CKErrorParticipantAlreadyInvited")]
-    pub const ParticipantAlreadyInvited: Self = Self(37);
 }
 
 unsafe impl Encode for CKErrorCode {

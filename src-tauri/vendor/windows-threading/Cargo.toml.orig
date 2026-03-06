@@ -1,14 +1,13 @@
 [package]
 name = "windows-threading"
-version = "0.1.0"
-authors = ["Microsoft"]
+version = "0.2.1"
 edition = "2021"
-rust-version = "1.74"
+rust-version = "1.82"
 license = "MIT OR Apache-2.0"
 description = "Windows threading"
 repository = "https://github.com/microsoft/windows-rs"
-readme = "readme.md"
 categories = ["os::windows-apis"]
+readme = "readme.md"
 
 [dependencies]
 windows-link = { workspace = true }
@@ -16,3 +15,6 @@ windows-link = { workspace = true }
 [package.metadata.docs.rs]
 default-target = "x86_64-pc-windows-msvc"
 targets = []
+
+[lints]
+workspace = true

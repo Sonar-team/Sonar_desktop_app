@@ -23,7 +23,7 @@ impl UITextChecker {
     extern_methods!(
         #[unsafe(method(rangeOfMisspelledWordInString:range:startingAt:wrap:language:))]
         #[unsafe(method_family = none)]
-        pub fn rangeOfMisspelledWordInString_range_startingAt_wrap_language(
+        pub unsafe fn rangeOfMisspelledWordInString_range_startingAt_wrap_language(
             &self,
             string_to_check: &NSString,
             range: NSRange,
@@ -34,7 +34,7 @@ impl UITextChecker {
 
         #[unsafe(method(guessesForWordRange:inString:language:))]
         #[unsafe(method_family = none)]
-        pub fn guessesForWordRange_inString_language(
+        pub unsafe fn guessesForWordRange_inString_language(
             &self,
             range: NSRange,
             string: &NSString,
@@ -43,7 +43,7 @@ impl UITextChecker {
 
         #[unsafe(method(completionsForPartialWordRange:inString:language:))]
         #[unsafe(method_family = none)]
-        pub fn completionsForPartialWordRange_inString_language(
+        pub unsafe fn completionsForPartialWordRange_inString_language(
             &self,
             range: NSRange,
             string: &NSString,
@@ -52,32 +52,32 @@ impl UITextChecker {
 
         #[unsafe(method(ignoreWord:))]
         #[unsafe(method_family = none)]
-        pub fn ignoreWord(&self, word_to_ignore: &NSString);
+        pub unsafe fn ignoreWord(&self, word_to_ignore: &NSString);
 
         #[unsafe(method(ignoredWords))]
         #[unsafe(method_family = none)]
-        pub fn ignoredWords(&self) -> Option<Retained<NSArray<NSString>>>;
+        pub unsafe fn ignoredWords(&self) -> Option<Retained<NSArray<NSString>>>;
 
         /// Setter for [`ignoredWords`][Self::ignoredWords].
         #[unsafe(method(setIgnoredWords:))]
         #[unsafe(method_family = none)]
-        pub fn setIgnoredWords(&self, ignored_words: Option<&NSArray<NSString>>);
+        pub unsafe fn setIgnoredWords(&self, ignored_words: Option<&NSArray<NSString>>);
 
         #[unsafe(method(learnWord:))]
         #[unsafe(method_family = none)]
-        pub fn learnWord(word: &NSString, mtm: MainThreadMarker);
+        pub unsafe fn learnWord(word: &NSString, mtm: MainThreadMarker);
 
         #[unsafe(method(hasLearnedWord:))]
         #[unsafe(method_family = none)]
-        pub fn hasLearnedWord(word: &NSString, mtm: MainThreadMarker) -> bool;
+        pub unsafe fn hasLearnedWord(word: &NSString, mtm: MainThreadMarker) -> bool;
 
         #[unsafe(method(unlearnWord:))]
         #[unsafe(method_family = none)]
-        pub fn unlearnWord(word: &NSString, mtm: MainThreadMarker);
+        pub unsafe fn unlearnWord(word: &NSString, mtm: MainThreadMarker);
 
         #[unsafe(method(availableLanguages))]
         #[unsafe(method_family = none)]
-        pub fn availableLanguages(mtm: MainThreadMarker) -> Retained<NSArray<NSString>>;
+        pub unsafe fn availableLanguages(mtm: MainThreadMarker) -> Retained<NSArray<NSString>>;
     );
 }
 
@@ -86,10 +86,10 @@ impl UITextChecker {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

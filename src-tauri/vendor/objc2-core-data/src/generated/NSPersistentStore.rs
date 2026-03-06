@@ -26,9 +26,6 @@ impl NSPersistentStore {
             url: &NSURL,
         ) -> Result<Retained<NSDictionary<NSString, AnyObject>>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// `metadata` generic should be of the correct type.
         #[unsafe(method(setMetadata:forPersistentStoreWithURL:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn setMetadata_forPersistentStoreWithURL_error(
@@ -41,9 +38,6 @@ impl NSPersistentStore {
         pub unsafe fn migrationManagerClass() -> &'static AnyClass;
 
         #[cfg(feature = "NSPersistentStoreCoordinator")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(initWithPersistentStoreCoordinator:configurationName:URL:options:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithPersistentStoreCoordinator_configurationName_URL_options(
@@ -91,8 +85,6 @@ impl NSPersistentStore {
         pub unsafe fn identifier(&self) -> Retained<NSString>;
 
         /// Setter for [`identifier`][Self::identifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setIdentifier:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setIdentifier(&self, identifier: Option<&NSString>);
@@ -115,11 +107,6 @@ impl NSPersistentStore {
         pub unsafe fn metadata(&self) -> Option<Retained<NSDictionary<NSString, AnyObject>>>;
 
         /// Setter for [`metadata`][Self::metadata].
-        ///
-        /// # Safety
-        ///
-        /// - `metadata` generic should be of the correct type.
-        /// - `metadata` might not allow `None`.
         #[unsafe(method(setMetadata:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setMetadata(&self, metadata: Option<&NSDictionary<NSString, AnyObject>>);

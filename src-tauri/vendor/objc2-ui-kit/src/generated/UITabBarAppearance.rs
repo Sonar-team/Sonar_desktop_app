@@ -34,17 +34,11 @@ impl UITabBarItemStateAppearance {
         /// Text attributes to be used for rendering title text. If the font or color are unspecified, appropriate defaults are supplied.
         #[unsafe(method(titleTextAttributes))]
         #[unsafe(method_family = none)]
-        pub fn titleTextAttributes(
+        pub unsafe fn titleTextAttributes(
             &self,
         ) -> Retained<NSDictionary<NSAttributedStringKey, AnyObject>>;
 
         /// Setter for [`titleTextAttributes`][Self::titleTextAttributes].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `title_text_attributes` generic should be of the correct type.
         #[unsafe(method(setTitleTextAttributes:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTitleTextAttributes(
@@ -56,68 +50,58 @@ impl UITabBarItemStateAppearance {
         /// An offset to apply to the UITabBarItem's title position
         #[unsafe(method(titlePositionAdjustment))]
         #[unsafe(method_family = none)]
-        pub fn titlePositionAdjustment(&self) -> UIOffset;
+        pub unsafe fn titlePositionAdjustment(&self) -> UIOffset;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Setter for [`titlePositionAdjustment`][Self::titlePositionAdjustment].
         #[unsafe(method(setTitlePositionAdjustment:))]
         #[unsafe(method_family = none)]
-        pub fn setTitlePositionAdjustment(&self, title_position_adjustment: UIOffset);
+        pub unsafe fn setTitlePositionAdjustment(&self, title_position_adjustment: UIOffset);
 
         #[cfg(feature = "UIColor")]
         /// The color to use for item icons. If not specified, a suitable color will be derived.
         #[unsafe(method(iconColor))]
         #[unsafe(method_family = none)]
-        pub fn iconColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn iconColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`iconColor`][Self::iconColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setIconColor:))]
         #[unsafe(method_family = none)]
-        pub fn setIconColor(&self, icon_color: Option<&UIColor>);
+        pub unsafe fn setIconColor(&self, icon_color: Option<&UIColor>);
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// An offset to apply to the badge's position
         #[unsafe(method(badgePositionAdjustment))]
         #[unsafe(method_family = none)]
-        pub fn badgePositionAdjustment(&self) -> UIOffset;
+        pub unsafe fn badgePositionAdjustment(&self) -> UIOffset;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Setter for [`badgePositionAdjustment`][Self::badgePositionAdjustment].
         #[unsafe(method(setBadgePositionAdjustment:))]
         #[unsafe(method_family = none)]
-        pub fn setBadgePositionAdjustment(&self, badge_position_adjustment: UIOffset);
+        pub unsafe fn setBadgePositionAdjustment(&self, badge_position_adjustment: UIOffset);
 
         #[cfg(feature = "UIColor")]
         /// The color to use for the badge background
         #[unsafe(method(badgeBackgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn badgeBackgroundColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn badgeBackgroundColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`badgeBackgroundColor`][Self::badgeBackgroundColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBadgeBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBadgeBackgroundColor(&self, badge_background_color: Option<&UIColor>);
+        pub unsafe fn setBadgeBackgroundColor(&self, badge_background_color: Option<&UIColor>);
 
         /// Text attributes to be used for rendering badge text. If the font and color are unspecified, appropriate defaults are supplied.
         #[unsafe(method(badgeTextAttributes))]
         #[unsafe(method_family = none)]
-        pub fn badgeTextAttributes(
+        pub unsafe fn badgeTextAttributes(
             &self,
         ) -> Retained<NSDictionary<NSAttributedStringKey, AnyObject>>;
 
         /// Setter for [`badgeTextAttributes`][Self::badgeTextAttributes].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `badge_text_attributes` generic should be of the correct type.
         #[unsafe(method(setBadgeTextAttributes:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setBadgeTextAttributes(
@@ -129,13 +113,16 @@ impl UITabBarItemStateAppearance {
         /// An offset to apply to the badge's title position
         #[unsafe(method(badgeTitlePositionAdjustment))]
         #[unsafe(method_family = none)]
-        pub fn badgeTitlePositionAdjustment(&self) -> UIOffset;
+        pub unsafe fn badgeTitlePositionAdjustment(&self) -> UIOffset;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Setter for [`badgeTitlePositionAdjustment`][Self::badgeTitlePositionAdjustment].
         #[unsafe(method(setBadgeTitlePositionAdjustment:))]
         #[unsafe(method_family = none)]
-        pub fn setBadgeTitlePositionAdjustment(&self, badge_title_position_adjustment: UIOffset);
+        pub unsafe fn setBadgeTitlePositionAdjustment(
+            &self,
+            badge_title_position_adjustment: UIOffset,
+        );
     );
 }
 
@@ -194,51 +181,48 @@ impl UITabBarItemAppearance {
         /// Construct an appearance with default values for the stacked layout.
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         /// Construct an appearance with default values for the given layout.
         #[unsafe(method(initWithStyle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithStyle(
+        pub unsafe fn initWithStyle(
             this: Allocated<Self>,
             style: UITabBarItemAppearanceStyle,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
 
         #[unsafe(method(copy))]
         #[unsafe(method_family = copy)]
-        pub fn copy(&self) -> Retained<Self>;
+        pub unsafe fn copy(&self) -> Retained<Self>;
 
         /// Reset this appearance to that of the given layout.
         #[unsafe(method(configureWithDefaultForStyle:))]
         #[unsafe(method_family = none)]
-        pub fn configureWithDefaultForStyle(&self, style: UITabBarItemAppearanceStyle);
+        pub unsafe fn configureWithDefaultForStyle(&self, style: UITabBarItemAppearanceStyle);
 
         /// The appearance when the tab bar item is in the normal state
         #[unsafe(method(normal))]
         #[unsafe(method_family = none)]
-        pub fn normal(&self) -> Retained<UITabBarItemStateAppearance>;
+        pub unsafe fn normal(&self) -> Retained<UITabBarItemStateAppearance>;
 
         /// The appearance when the tab bar item is in the selected state
         #[unsafe(method(selected))]
         #[unsafe(method_family = none)]
-        pub fn selected(&self) -> Retained<UITabBarItemStateAppearance>;
+        pub unsafe fn selected(&self) -> Retained<UITabBarItemStateAppearance>;
 
         /// The appearance when the tab bar item is in the disabled state
         #[unsafe(method(disabled))]
         #[unsafe(method_family = none)]
-        pub fn disabled(&self) -> Retained<UITabBarItemStateAppearance>;
+        pub unsafe fn disabled(&self) -> Retained<UITabBarItemStateAppearance>;
 
         /// The appearance when the tab bar item is in the focused state
         #[unsafe(method(focused))]
         #[unsafe(method_family = none)]
-        pub fn focused(&self) -> Retained<UITabBarItemStateAppearance>;
+        pub unsafe fn focused(&self) -> Retained<UITabBarItemStateAppearance>;
     );
 }
 
@@ -247,7 +231,7 @@ impl UITabBarItemAppearance {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -291,14 +275,12 @@ impl UITabBarAppearance {
         /// The appearance for the stacked tab bar item layout
         #[unsafe(method(stackedLayoutAppearance))]
         #[unsafe(method_family = none)]
-        pub fn stackedLayoutAppearance(&self) -> Retained<UITabBarItemAppearance>;
+        pub unsafe fn stackedLayoutAppearance(&self) -> Retained<UITabBarItemAppearance>;
 
         /// Setter for [`stackedLayoutAppearance`][Self::stackedLayoutAppearance].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setStackedLayoutAppearance:))]
         #[unsafe(method_family = none)]
-        pub fn setStackedLayoutAppearance(
+        pub unsafe fn setStackedLayoutAppearance(
             &self,
             stacked_layout_appearance: &UITabBarItemAppearance,
         );
@@ -306,26 +288,25 @@ impl UITabBarAppearance {
         /// The appearance for the inline tab bar item layout
         #[unsafe(method(inlineLayoutAppearance))]
         #[unsafe(method_family = none)]
-        pub fn inlineLayoutAppearance(&self) -> Retained<UITabBarItemAppearance>;
+        pub unsafe fn inlineLayoutAppearance(&self) -> Retained<UITabBarItemAppearance>;
 
         /// Setter for [`inlineLayoutAppearance`][Self::inlineLayoutAppearance].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setInlineLayoutAppearance:))]
         #[unsafe(method_family = none)]
-        pub fn setInlineLayoutAppearance(&self, inline_layout_appearance: &UITabBarItemAppearance);
+        pub unsafe fn setInlineLayoutAppearance(
+            &self,
+            inline_layout_appearance: &UITabBarItemAppearance,
+        );
 
         /// The appearance for the compact inline tab bar item layout
         #[unsafe(method(compactInlineLayoutAppearance))]
         #[unsafe(method_family = none)]
-        pub fn compactInlineLayoutAppearance(&self) -> Retained<UITabBarItemAppearance>;
+        pub unsafe fn compactInlineLayoutAppearance(&self) -> Retained<UITabBarItemAppearance>;
 
         /// Setter for [`compactInlineLayoutAppearance`][Self::compactInlineLayoutAppearance].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCompactInlineLayoutAppearance:))]
         #[unsafe(method_family = none)]
-        pub fn setCompactInlineLayoutAppearance(
+        pub unsafe fn setCompactInlineLayoutAppearance(
             &self,
             compact_inline_layout_appearance: &UITabBarItemAppearance,
         );
@@ -334,15 +315,13 @@ impl UITabBarAppearance {
         /// A color to use for the selectionIndicator, its specific behavior depends on the value of selectionIndicatorImage. If selectionIndicatorImage is nil, then the selectionIndicatorTintColor is used to color the UITabBar's default selection indicator; a nil or clearColor selectionIndicatorTintColor will result in no indicator. If selectionIndicatorImage is a template image, then the selectionIndicatorTintColor is used to tint the image; a nil or clearColor selectionIndicatorTintColor will also result in no indicator. If the selectionIndicatorImage is not a template image, then it will be rendered without respect to the value of selectionIndicatorTintColor.
         #[unsafe(method(selectionIndicatorTintColor))]
         #[unsafe(method_family = none)]
-        pub fn selectionIndicatorTintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn selectionIndicatorTintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`selectionIndicatorTintColor`][Self::selectionIndicatorTintColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSelectionIndicatorTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectionIndicatorTintColor(
+        pub unsafe fn setSelectionIndicatorTintColor(
             &self,
             selection_indicator_tint_color: Option<&UIColor>,
         );
@@ -351,47 +330,53 @@ impl UITabBarAppearance {
         /// An image that is rendered behind the selected UITabBarItem and above the tab bar's background. Modified by selectionIndicatorTintColor when appropriate.
         #[unsafe(method(selectionIndicatorImage))]
         #[unsafe(method_family = none)]
-        pub fn selectionIndicatorImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn selectionIndicatorImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`selectionIndicatorImage`][Self::selectionIndicatorImage].
         #[unsafe(method(setSelectionIndicatorImage:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectionIndicatorImage(&self, selection_indicator_image: Option<&UIImage>);
+        pub unsafe fn setSelectionIndicatorImage(
+            &self,
+            selection_indicator_image: Option<&UIImage>,
+        );
 
         #[cfg(feature = "UITabBar")]
         /// Determines how items in the tab bar lay out in the stacked item layout
         #[unsafe(method(stackedItemPositioning))]
         #[unsafe(method_family = none)]
-        pub fn stackedItemPositioning(&self) -> UITabBarItemPositioning;
+        pub unsafe fn stackedItemPositioning(&self) -> UITabBarItemPositioning;
 
         #[cfg(feature = "UITabBar")]
         /// Setter for [`stackedItemPositioning`][Self::stackedItemPositioning].
         #[unsafe(method(setStackedItemPositioning:))]
         #[unsafe(method_family = none)]
-        pub fn setStackedItemPositioning(&self, stacked_item_positioning: UITabBarItemPositioning);
+        pub unsafe fn setStackedItemPositioning(
+            &self,
+            stacked_item_positioning: UITabBarItemPositioning,
+        );
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(stackedItemWidth))]
         #[unsafe(method_family = none)]
-        pub fn stackedItemWidth(&self) -> CGFloat;
+        pub unsafe fn stackedItemWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`stackedItemWidth`][Self::stackedItemWidth].
         #[unsafe(method(setStackedItemWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setStackedItemWidth(&self, stacked_item_width: CGFloat);
+        pub unsafe fn setStackedItemWidth(&self, stacked_item_width: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(stackedItemSpacing))]
         #[unsafe(method_family = none)]
-        pub fn stackedItemSpacing(&self) -> CGFloat;
+        pub unsafe fn stackedItemSpacing(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`stackedItemSpacing`][Self::stackedItemSpacing].
         #[unsafe(method(setStackedItemSpacing:))]
         #[unsafe(method_family = none)]
-        pub fn setStackedItemSpacing(&self, stacked_item_spacing: CGFloat);
+        pub unsafe fn setStackedItemSpacing(&self, stacked_item_spacing: CGFloat);
     );
 }
 
@@ -402,25 +387,25 @@ impl UITabBarAppearance {
         /// Constructs a new bar appearance, configured with default values and targeting the device idiom.
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[cfg(feature = "UIDevice")]
         /// Constructs a new bar appearance, targeting the passed-in idiom as a hint. Not all platforms support all available idioms. See the idiom property to determine the resolved idiom.
         #[unsafe(method(initWithIdiom:))]
         #[unsafe(method_family = init)]
-        pub fn initWithIdiom(this: Allocated<Self>, idiom: UIUserInterfaceIdiom) -> Retained<Self>;
+        pub unsafe fn initWithIdiom(
+            this: Allocated<Self>,
+            idiom: UIUserInterfaceIdiom,
+        ) -> Retained<Self>;
 
         /// Constructs a new bar appearance, copying all relevant properties from the given appearance object. This initializer is useful for migrating configuration between UIBarAppearance subclasses. For example, you can initialize a UINavigationBarAppearance with a UIToolbarAppearance instance, and shared attributes will be identical between the two.
         #[unsafe(method(initWithBarAppearance:))]
         #[unsafe(method_family = init)]
-        pub fn initWithBarAppearance(
+        pub unsafe fn initWithBarAppearance(
             this: Allocated<Self>,
             bar_appearance: &UIBarAppearance,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -433,6 +418,6 @@ impl UITabBarAppearance {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

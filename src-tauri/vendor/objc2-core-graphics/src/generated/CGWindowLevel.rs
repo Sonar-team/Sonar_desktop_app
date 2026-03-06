@@ -106,10 +106,6 @@ unsafe impl RefEncode for CGWindowLevelKey {
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgwindowlevel?language=objc)
 pub type CGWindowLevel = i32;
 
-#[inline]
-pub extern "C-unwind" fn CGWindowLevelForKey(key: CGWindowLevelKey) -> CGWindowLevel {
-    extern "C-unwind" {
-        fn CGWindowLevelForKey(key: CGWindowLevelKey) -> CGWindowLevel;
-    }
-    unsafe { CGWindowLevelForKey(key) }
+extern "C-unwind" {
+    pub fn CGWindowLevelForKey(key: CGWindowLevelKey) -> CGWindowLevel;
 }

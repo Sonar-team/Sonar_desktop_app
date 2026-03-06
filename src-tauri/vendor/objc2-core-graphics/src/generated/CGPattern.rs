@@ -11,7 +11,6 @@ use objc2_core_foundation::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgpattern?language=objc)
-#[doc(alias = "CGPatternRef")]
 #[repr(C)]
 pub struct CGPattern {
     inner: [u8; 0],
@@ -61,7 +60,6 @@ pub type CGPatternReleaseInfoCallback = Option<unsafe extern "C-unwind" fn(*mut 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgpatterncallbacks?language=objc)
 #[cfg(feature = "CGContext")]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CGPatternCallbacks {
     pub version: c_uint,
@@ -98,10 +96,6 @@ unsafe impl ConcreteType for CGPattern {
 }
 
 impl CGPattern {
-    /// # Safety
-    ///
-    /// - `info` must be a valid pointer or null.
-    /// - `callbacks` must be a valid pointer or null.
     #[doc(alias = "CGPatternCreate")]
     #[cfg(feature = "CGContext")]
     #[inline]

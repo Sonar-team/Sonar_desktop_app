@@ -106,42 +106,29 @@ impl NSTextFinder {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(client))]
         #[unsafe(method_family = none)]
         pub unsafe fn client(&self) -> Option<Retained<ProtocolObject<dyn NSTextFinderClient>>>;
 
         /// Setter for [`client`][Self::client].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setClient:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setClient(&self, client: Option<&ProtocolObject<dyn NSTextFinderClient>>);
 
         #[unsafe(method(performAction:))]
         #[unsafe(method_family = none)]
-        pub fn performAction(&self, op: NSTextFinderAction);
+        pub unsafe fn performAction(&self, op: NSTextFinderAction);
 
         #[unsafe(method(validateAction:))]
         #[unsafe(method_family = none)]
-        pub fn validateAction(&self, op: NSTextFinderAction) -> bool;
+        pub unsafe fn validateAction(&self, op: NSTextFinderAction) -> bool;
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(findBarContainer))]
         #[unsafe(method_family = none)]
         pub unsafe fn findBarContainer(
@@ -149,10 +136,6 @@ impl NSTextFinder {
         ) -> Option<Retained<ProtocolObject<dyn NSTextFinderBarContainer>>>;
 
         /// Setter for [`findBarContainer`][Self::findBarContainer].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setFindBarContainer:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setFindBarContainer(
@@ -162,49 +145,49 @@ impl NSTextFinder {
 
         #[unsafe(method(cancelFindIndicator))]
         #[unsafe(method_family = none)]
-        pub fn cancelFindIndicator(&self);
+        pub unsafe fn cancelFindIndicator(&self);
 
         #[unsafe(method(findIndicatorNeedsUpdate))]
         #[unsafe(method_family = none)]
-        pub fn findIndicatorNeedsUpdate(&self) -> bool;
+        pub unsafe fn findIndicatorNeedsUpdate(&self) -> bool;
 
         /// Setter for [`findIndicatorNeedsUpdate`][Self::findIndicatorNeedsUpdate].
         #[unsafe(method(setFindIndicatorNeedsUpdate:))]
         #[unsafe(method_family = none)]
-        pub fn setFindIndicatorNeedsUpdate(&self, find_indicator_needs_update: bool);
+        pub unsafe fn setFindIndicatorNeedsUpdate(&self, find_indicator_needs_update: bool);
 
         #[unsafe(method(isIncrementalSearchingEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isIncrementalSearchingEnabled(&self) -> bool;
+        pub unsafe fn isIncrementalSearchingEnabled(&self) -> bool;
 
         /// Setter for [`isIncrementalSearchingEnabled`][Self::isIncrementalSearchingEnabled].
         #[unsafe(method(setIncrementalSearchingEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setIncrementalSearchingEnabled(&self, incremental_searching_enabled: bool);
+        pub unsafe fn setIncrementalSearchingEnabled(&self, incremental_searching_enabled: bool);
 
         #[unsafe(method(incrementalSearchingShouldDimContentView))]
         #[unsafe(method_family = none)]
-        pub fn incrementalSearchingShouldDimContentView(&self) -> bool;
+        pub unsafe fn incrementalSearchingShouldDimContentView(&self) -> bool;
 
         /// Setter for [`incrementalSearchingShouldDimContentView`][Self::incrementalSearchingShouldDimContentView].
         #[unsafe(method(setIncrementalSearchingShouldDimContentView:))]
         #[unsafe(method_family = none)]
-        pub fn setIncrementalSearchingShouldDimContentView(
+        pub unsafe fn setIncrementalSearchingShouldDimContentView(
             &self,
             incremental_searching_should_dim_content_view: bool,
         );
 
         #[unsafe(method(incrementalMatchRanges))]
         #[unsafe(method_family = none)]
-        pub fn incrementalMatchRanges(&self) -> Retained<NSArray<NSValue>>;
+        pub unsafe fn incrementalMatchRanges(&self) -> Retained<NSArray<NSValue>>;
 
         #[unsafe(method(drawIncrementalMatchHighlightInRect:))]
         #[unsafe(method_family = none)]
-        pub fn drawIncrementalMatchHighlightInRect(rect: NSRect);
+        pub unsafe fn drawIncrementalMatchHighlightInRect(rect: NSRect);
 
         #[unsafe(method(noteClientStringWillChange))]
         #[unsafe(method_family = none)]
-        pub fn noteClientStringWillChange(&self);
+        pub unsafe fn noteClientStringWillChange(&self);
     );
 }
 
@@ -213,15 +196,8 @@ impl NSTextFinder {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSTextFinder {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_protocol!(
@@ -230,27 +206,23 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(isSelectable))]
         #[unsafe(method_family = none)]
-        fn isSelectable(&self) -> bool;
+        unsafe fn isSelectable(&self) -> bool;
 
         #[optional]
         #[unsafe(method(allowsMultipleSelection))]
         #[unsafe(method_family = none)]
-        fn allowsMultipleSelection(&self) -> bool;
+        unsafe fn allowsMultipleSelection(&self) -> bool;
 
         #[optional]
         #[unsafe(method(isEditable))]
         #[unsafe(method_family = none)]
-        fn isEditable(&self) -> bool;
+        unsafe fn isEditable(&self) -> bool;
 
         #[optional]
         #[unsafe(method(string))]
         #[unsafe(method_family = none)]
-        fn string(&self) -> Retained<NSString>;
+        unsafe fn string(&self) -> Retained<NSString>;
 
-        /// # Safety
-        ///
-        /// - `out_range` must be a valid pointer.
-        /// - `out_flag` must be a valid pointer.
         #[optional]
         #[unsafe(method(stringAtIndex:effectiveRange:endsWithSearchBoundary:))]
         #[unsafe(method_family = none)]
@@ -264,35 +236,33 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(stringLength))]
         #[unsafe(method_family = none)]
-        fn stringLength(&self) -> NSUInteger;
+        unsafe fn stringLength(&self) -> NSUInteger;
 
         #[optional]
         #[unsafe(method(firstSelectedRange))]
         #[unsafe(method_family = none)]
-        fn firstSelectedRange(&self) -> NSRange;
+        unsafe fn firstSelectedRange(&self) -> NSRange;
 
         #[optional]
         #[unsafe(method(selectedRanges))]
         #[unsafe(method_family = none)]
-        fn selectedRanges(&self) -> Retained<NSArray<NSValue>>;
+        unsafe fn selectedRanges(&self) -> Retained<NSArray<NSValue>>;
 
         /// Setter for [`selectedRanges`][Self::selectedRanges].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[optional]
         #[unsafe(method(setSelectedRanges:))]
         #[unsafe(method_family = none)]
-        fn setSelectedRanges(&self, selected_ranges: &NSArray<NSValue>);
+        unsafe fn setSelectedRanges(&self, selected_ranges: &NSArray<NSValue>);
 
         #[optional]
         #[unsafe(method(scrollRangeToVisible:))]
         #[unsafe(method_family = none)]
-        fn scrollRangeToVisible(&self, range: NSRange);
+        unsafe fn scrollRangeToVisible(&self, range: NSRange);
 
         #[optional]
         #[unsafe(method(shouldReplaceCharactersInRanges:withStrings:))]
         #[unsafe(method_family = none)]
-        fn shouldReplaceCharactersInRanges_withStrings(
+        unsafe fn shouldReplaceCharactersInRanges_withStrings(
             &self,
             ranges: &NSArray<NSValue>,
             strings: &NSArray<NSString>,
@@ -301,17 +271,14 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(replaceCharactersInRange:withString:))]
         #[unsafe(method_family = none)]
-        fn replaceCharactersInRange_withString(&self, range: NSRange, string: &NSString);
+        unsafe fn replaceCharactersInRange_withString(&self, range: NSRange, string: &NSString);
 
         #[optional]
         #[unsafe(method(didReplaceCharacters))]
         #[unsafe(method_family = none)]
-        fn didReplaceCharacters(&self);
+        unsafe fn didReplaceCharacters(&self);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
-        /// # Safety
-        ///
-        /// `out_range` must be a valid pointer.
         #[optional]
         #[unsafe(method(contentViewAtIndex:effectiveCharacterRange:))]
         #[unsafe(method_family = none)]
@@ -325,18 +292,21 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(rectsForCharacterRange:))]
         #[unsafe(method_family = none)]
-        fn rectsForCharacterRange(&self, range: NSRange) -> Option<Retained<NSArray<NSValue>>>;
+        unsafe fn rectsForCharacterRange(
+            &self,
+            range: NSRange,
+        ) -> Option<Retained<NSArray<NSValue>>>;
 
         #[optional]
         #[unsafe(method(visibleCharacterRanges))]
         #[unsafe(method_family = none)]
-        fn visibleCharacterRanges(&self) -> Retained<NSArray<NSValue>>;
+        unsafe fn visibleCharacterRanges(&self) -> Retained<NSArray<NSValue>>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[optional]
         #[unsafe(method(drawCharactersInRange:forContentView:))]
         #[unsafe(method_family = none)]
-        fn drawCharactersInRange_forContentView(&self, range: NSRange, view: &NSView);
+        unsafe fn drawCharactersInRange_forContentView(&self, range: NSRange, view: &NSView);
     }
 );
 
@@ -346,31 +316,31 @@ extern_protocol!(
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(findBarView))]
         #[unsafe(method_family = none)]
-        fn findBarView(&self, mtm: MainThreadMarker) -> Option<Retained<NSView>>;
+        unsafe fn findBarView(&self, mtm: MainThreadMarker) -> Option<Retained<NSView>>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         /// Setter for [`findBarView`][Self::findBarView].
         #[unsafe(method(setFindBarView:))]
         #[unsafe(method_family = none)]
-        fn setFindBarView(&self, find_bar_view: Option<&NSView>);
+        unsafe fn setFindBarView(&self, find_bar_view: Option<&NSView>);
 
         #[unsafe(method(isFindBarVisible))]
         #[unsafe(method_family = none)]
-        fn isFindBarVisible(&self) -> bool;
+        unsafe fn isFindBarVisible(&self) -> bool;
 
         /// Setter for [`isFindBarVisible`][Self::isFindBarVisible].
         #[unsafe(method(setFindBarVisible:))]
         #[unsafe(method_family = none)]
-        fn setFindBarVisible(&self, find_bar_visible: bool);
+        unsafe fn setFindBarVisible(&self, find_bar_visible: bool);
 
         #[unsafe(method(findBarViewDidChangeHeight))]
         #[unsafe(method_family = none)]
-        fn findBarViewDidChangeHeight(&self);
+        unsafe fn findBarViewDidChangeHeight(&self);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[optional]
         #[unsafe(method(contentView))]
         #[unsafe(method_family = none)]
-        fn contentView(&self, mtm: MainThreadMarker) -> Option<Retained<NSView>>;
+        unsafe fn contentView(&self, mtm: MainThreadMarker) -> Option<Retained<NSView>>;
     }
 );

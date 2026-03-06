@@ -28,36 +28,32 @@ impl UIMailConversationContext {
         /// A string that contains the subject line of an intended response.
         #[unsafe(method(responseSubject))]
         #[unsafe(method_family = none)]
-        pub fn responseSubject(&self) -> Retained<NSString>;
+        pub unsafe fn responseSubject(&self) -> Retained<NSString>;
 
         /// Setter for [`responseSubject`][Self::responseSubject].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setResponseSubject:))]
         #[unsafe(method_family = none)]
-        pub fn setResponseSubject(&self, response_subject: &NSString);
+        pub unsafe fn setResponseSubject(&self, response_subject: &NSString);
 
         /// A Boolean value that indicates whether the intended response contains a custom signature.
         #[unsafe(method(responseHasCustomSignature))]
         #[unsafe(method_family = none)]
-        pub fn responseHasCustomSignature(&self) -> bool;
+        pub unsafe fn responseHasCustomSignature(&self) -> bool;
 
         /// Setter for [`responseHasCustomSignature`][Self::responseHasCustomSignature].
         #[unsafe(method(setResponseHasCustomSignature:))]
         #[unsafe(method_family = none)]
-        pub fn setResponseHasCustomSignature(&self, response_has_custom_signature: bool);
+        pub unsafe fn setResponseHasCustomSignature(&self, response_has_custom_signature: bool);
 
         /// A set of strings that identifies the secondary recipients of the message, such as those in CC or BCC messages.
         #[unsafe(method(responseSecondaryRecipientIdentifiers))]
         #[unsafe(method_family = none)]
-        pub fn responseSecondaryRecipientIdentifiers(&self) -> Retained<NSSet<NSString>>;
+        pub unsafe fn responseSecondaryRecipientIdentifiers(&self) -> Retained<NSSet<NSString>>;
 
         /// Setter for [`responseSecondaryRecipientIdentifiers`][Self::responseSecondaryRecipientIdentifiers].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setResponseSecondaryRecipientIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn setResponseSecondaryRecipientIdentifiers(
+        pub unsafe fn setResponseSecondaryRecipientIdentifiers(
             &self,
             response_secondary_recipient_identifiers: &NSSet<NSString>,
         );
@@ -70,18 +66,10 @@ impl UIMailConversationContext {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "UIConversationContext")]
-impl DefaultRetained for UIMailConversationContext {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

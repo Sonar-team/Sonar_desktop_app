@@ -21,12 +21,8 @@ impl NSScriptCoercionHandler {
     extern_methods!(
         #[unsafe(method(sharedCoercionHandler))]
         #[unsafe(method_family = none)]
-        pub fn sharedCoercionHandler() -> Retained<NSScriptCoercionHandler>;
+        pub unsafe fn sharedCoercionHandler() -> Retained<NSScriptCoercionHandler>;
 
-        /// # Safety
-        ///
-        /// - `value` should be of the correct type.
-        /// - `to_class` probably has further requirements.
         #[unsafe(method(coerceValue:toClass:))]
         #[unsafe(method_family = none)]
         pub unsafe fn coerceValue_toClass(
@@ -35,12 +31,6 @@ impl NSScriptCoercionHandler {
             to_class: &AnyClass,
         ) -> Option<Retained<AnyObject>>;
 
-        /// # Safety
-        ///
-        /// - `coercer` should be of the correct type.
-        /// - `selector` must be a valid selector.
-        /// - `from_class` probably has further requirements.
-        /// - `to_class` probably has further requirements.
         #[unsafe(method(registerCoercer:selector:toConvertFromClass:toClass:))]
         #[unsafe(method_family = none)]
         pub unsafe fn registerCoercer_selector_toConvertFromClass_toClass(
@@ -58,17 +48,10 @@ impl NSScriptCoercionHandler {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSScriptCoercionHandler {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

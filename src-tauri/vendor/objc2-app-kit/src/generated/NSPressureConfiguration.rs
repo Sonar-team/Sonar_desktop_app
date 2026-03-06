@@ -22,19 +22,19 @@ impl NSPressureConfiguration {
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(pressureBehavior))]
         #[unsafe(method_family = none)]
-        pub fn pressureBehavior(&self) -> NSPressureBehavior;
+        pub unsafe fn pressureBehavior(&self) -> NSPressureBehavior;
 
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(initWithPressureBehavior:))]
         #[unsafe(method_family = init)]
-        pub fn initWithPressureBehavior(
+        pub unsafe fn initWithPressureBehavior(
             this: Allocated<Self>,
             pressure_behavior: NSPressureBehavior,
         ) -> Retained<Self>;
 
         #[unsafe(method(set))]
         #[unsafe(method_family = none)]
-        pub fn set(&self);
+        pub unsafe fn set(&self);
     );
 }
 
@@ -43,19 +43,12 @@ impl NSPressureConfiguration {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSPressureConfiguration {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSPressureConfiguration.
@@ -64,12 +57,12 @@ impl NSView {
     extern_methods!(
         #[unsafe(method(pressureConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn pressureConfiguration(&self) -> Option<Retained<NSPressureConfiguration>>;
+        pub unsafe fn pressureConfiguration(&self) -> Option<Retained<NSPressureConfiguration>>;
 
         /// Setter for [`pressureConfiguration`][Self::pressureConfiguration].
         #[unsafe(method(setPressureConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setPressureConfiguration(
+        pub unsafe fn setPressureConfiguration(
             &self,
             pressure_configuration: Option<&NSPressureConfiguration>,
         );

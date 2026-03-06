@@ -33,7 +33,7 @@ impl UIAccessibilityLocationDescriptor {
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(initWithName:view:))]
         #[unsafe(method_family = init)]
-        pub fn initWithName_view(
+        pub unsafe fn initWithName_view(
             this: Allocated<Self>,
             name: &NSString,
             view: &UIView,
@@ -46,7 +46,7 @@ impl UIAccessibilityLocationDescriptor {
         ))]
         #[unsafe(method(initWithName:point:inView:))]
         #[unsafe(method_family = init)]
-        pub fn initWithName_point_inView(
+        pub unsafe fn initWithName_point_inView(
             this: Allocated<Self>,
             name: &NSString,
             point: CGPoint,
@@ -60,7 +60,7 @@ impl UIAccessibilityLocationDescriptor {
         ))]
         #[unsafe(method(initWithAttributedName:point:inView:))]
         #[unsafe(method_family = init)]
-        pub fn initWithAttributedName_point_inView(
+        pub unsafe fn initWithAttributedName_point_inView(
             this: Allocated<Self>,
             attributed_name: &NSAttributedString,
             point: CGPoint,
@@ -70,19 +70,19 @@ impl UIAccessibilityLocationDescriptor {
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(view))]
         #[unsafe(method_family = none)]
-        pub fn view(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn view(&self) -> Option<Retained<UIView>>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(point))]
         #[unsafe(method_family = none)]
-        pub fn point(&self) -> CGPoint;
+        pub unsafe fn point(&self) -> CGPoint;
 
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
-        pub fn name(&self) -> Retained<NSString>;
+        pub unsafe fn name(&self) -> Retained<NSString>;
 
         #[unsafe(method(attributedName))]
         #[unsafe(method_family = none)]
-        pub fn attributedName(&self) -> Retained<NSAttributedString>;
+        pub unsafe fn attributedName(&self) -> Retained<NSAttributedString>;
     );
 }

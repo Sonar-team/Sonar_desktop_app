@@ -8,9 +8,6 @@ use crate::*;
 extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nschangespelling?language=objc)
     pub unsafe trait NSChangeSpelling {
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(changeSpelling:))]
         #[unsafe(method_family = none)]
         unsafe fn changeSpelling(&self, sender: Option<&AnyObject>);
@@ -20,9 +17,6 @@ extern_protocol!(
 extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsignoremisspelledwords?language=objc)
     pub unsafe trait NSIgnoreMisspelledWords {
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(ignoreSpelling:))]
         #[unsafe(method_family = none)]
         unsafe fn ignoreSpelling(&self, sender: Option<&AnyObject>);

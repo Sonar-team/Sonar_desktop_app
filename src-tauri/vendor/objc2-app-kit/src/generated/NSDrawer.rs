@@ -71,26 +71,19 @@ impl NSDrawer {
     extern_methods!(
         #[unsafe(method(initWithContentSize:preferredEdge:))]
         #[unsafe(method_family = init)]
-        pub fn initWithContentSize_preferredEdge(
+        pub unsafe fn initWithContentSize_preferredEdge(
             this: Allocated<Self>,
             content_size: NSSize,
             edge: NSRectEdge,
         ) -> Retained<Self>;
 
         #[cfg(feature = "NSWindow")]
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(parentWindow))]
         #[unsafe(method_family = none)]
         pub unsafe fn parentWindow(&self) -> Option<Retained<NSWindow>>;
 
         #[cfg(feature = "NSWindow")]
         /// Setter for [`parentWindow`][Self::parentWindow].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setParentWindow:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setParentWindow(&self, parent_window: Option<&NSWindow>);
@@ -98,128 +91,112 @@ impl NSDrawer {
         #[cfg(feature = "NSView")]
         #[unsafe(method(contentView))]
         #[unsafe(method_family = none)]
-        pub fn contentView(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn contentView(&self) -> Option<Retained<NSView>>;
 
         #[cfg(feature = "NSView")]
         /// Setter for [`contentView`][Self::contentView].
         #[unsafe(method(setContentView:))]
         #[unsafe(method_family = none)]
-        pub fn setContentView(&self, content_view: Option<&NSView>);
+        pub unsafe fn setContentView(&self, content_view: Option<&NSView>);
 
         #[unsafe(method(preferredEdge))]
         #[unsafe(method_family = none)]
-        pub fn preferredEdge(&self) -> NSRectEdge;
+        pub unsafe fn preferredEdge(&self) -> NSRectEdge;
 
         /// Setter for [`preferredEdge`][Self::preferredEdge].
         #[unsafe(method(setPreferredEdge:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredEdge(&self, preferred_edge: NSRectEdge);
+        pub unsafe fn setPreferredEdge(&self, preferred_edge: NSRectEdge);
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
         pub unsafe fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSDrawerDelegate>>>;
 
         /// Setter for [`delegate`][Self::delegate].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSDrawerDelegate>>);
 
         #[unsafe(method(open))]
         #[unsafe(method_family = none)]
-        pub fn open(&self);
+        pub unsafe fn open(&self);
 
         #[unsafe(method(openOnEdge:))]
         #[unsafe(method_family = none)]
-        pub fn openOnEdge(&self, edge: NSRectEdge);
+        pub unsafe fn openOnEdge(&self, edge: NSRectEdge);
 
         #[unsafe(method(close))]
         #[unsafe(method_family = none)]
-        pub fn close(&self);
+        pub unsafe fn close(&self);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(open:))]
         #[unsafe(method_family = none)]
         pub unsafe fn open_(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(close:))]
         #[unsafe(method_family = none)]
         pub unsafe fn close_(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(toggle:))]
         #[unsafe(method_family = none)]
         pub unsafe fn toggle(&self, sender: Option<&AnyObject>);
 
         #[unsafe(method(state))]
         #[unsafe(method_family = none)]
-        pub fn state(&self) -> NSInteger;
+        pub unsafe fn state(&self) -> NSInteger;
 
         #[unsafe(method(edge))]
         #[unsafe(method_family = none)]
-        pub fn edge(&self) -> NSRectEdge;
+        pub unsafe fn edge(&self) -> NSRectEdge;
 
         #[unsafe(method(contentSize))]
         #[unsafe(method_family = none)]
-        pub fn contentSize(&self) -> NSSize;
+        pub unsafe fn contentSize(&self) -> NSSize;
 
         /// Setter for [`contentSize`][Self::contentSize].
         #[unsafe(method(setContentSize:))]
         #[unsafe(method_family = none)]
-        pub fn setContentSize(&self, content_size: NSSize);
+        pub unsafe fn setContentSize(&self, content_size: NSSize);
 
         #[unsafe(method(minContentSize))]
         #[unsafe(method_family = none)]
-        pub fn minContentSize(&self) -> NSSize;
+        pub unsafe fn minContentSize(&self) -> NSSize;
 
         /// Setter for [`minContentSize`][Self::minContentSize].
         #[unsafe(method(setMinContentSize:))]
         #[unsafe(method_family = none)]
-        pub fn setMinContentSize(&self, min_content_size: NSSize);
+        pub unsafe fn setMinContentSize(&self, min_content_size: NSSize);
 
         #[unsafe(method(maxContentSize))]
         #[unsafe(method_family = none)]
-        pub fn maxContentSize(&self) -> NSSize;
+        pub unsafe fn maxContentSize(&self) -> NSSize;
 
         /// Setter for [`maxContentSize`][Self::maxContentSize].
         #[unsafe(method(setMaxContentSize:))]
         #[unsafe(method_family = none)]
-        pub fn setMaxContentSize(&self, max_content_size: NSSize);
+        pub unsafe fn setMaxContentSize(&self, max_content_size: NSSize);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(leadingOffset))]
         #[unsafe(method_family = none)]
-        pub fn leadingOffset(&self) -> CGFloat;
+        pub unsafe fn leadingOffset(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`leadingOffset`][Self::leadingOffset].
         #[unsafe(method(setLeadingOffset:))]
         #[unsafe(method_family = none)]
-        pub fn setLeadingOffset(&self, leading_offset: CGFloat);
+        pub unsafe fn setLeadingOffset(&self, leading_offset: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(trailingOffset))]
         #[unsafe(method_family = none)]
-        pub fn trailingOffset(&self) -> CGFloat;
+        pub unsafe fn trailingOffset(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`trailingOffset`][Self::trailingOffset].
         #[unsafe(method(setTrailingOffset:))]
         #[unsafe(method_family = none)]
-        pub fn setTrailingOffset(&self, trailing_offset: CGFloat);
+        pub unsafe fn setTrailingOffset(&self, trailing_offset: CGFloat);
     );
 }
 
@@ -229,11 +206,8 @@ impl NSDrawer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -249,7 +223,7 @@ impl NSDrawer {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -260,7 +234,7 @@ impl NSWindow {
         #[deprecated = "Drawers are deprecated; consider using NSSplitViewController"]
         #[unsafe(method(drawers))]
         #[unsafe(method_family = none)]
-        pub fn drawers(&self) -> Option<Retained<NSArray<NSDrawer>>>;
+        pub unsafe fn drawers(&self) -> Option<Retained<NSArray<NSDrawer>>>;
     );
 }
 
@@ -272,21 +246,21 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(drawerShouldOpen:))]
         #[unsafe(method_family = none)]
-        fn drawerShouldOpen(&self, sender: &NSDrawer) -> bool;
+        unsafe fn drawerShouldOpen(&self, sender: &NSDrawer) -> bool;
 
         #[cfg(feature = "NSResponder")]
         #[deprecated = "Drawers are deprecated; consider using NSSplitViewController"]
         #[optional]
         #[unsafe(method(drawerShouldClose:))]
         #[unsafe(method_family = none)]
-        fn drawerShouldClose(&self, sender: &NSDrawer) -> bool;
+        unsafe fn drawerShouldClose(&self, sender: &NSDrawer) -> bool;
 
         #[cfg(feature = "NSResponder")]
         #[deprecated = "Drawers are deprecated; consider using NSSplitViewController"]
         #[optional]
         #[unsafe(method(drawerWillResizeContents:toSize:))]
         #[unsafe(method_family = none)]
-        fn drawerWillResizeContents_toSize(
+        unsafe fn drawerWillResizeContents_toSize(
             &self,
             sender: &NSDrawer,
             content_size: NSSize,
@@ -296,48 +270,44 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(drawerWillOpen:))]
         #[unsafe(method_family = none)]
-        fn drawerWillOpen(&self, notification: &NSNotification);
+        unsafe fn drawerWillOpen(&self, notification: &NSNotification);
 
         #[deprecated = "Drawers are deprecated; consider using NSSplitViewController"]
         #[optional]
         #[unsafe(method(drawerDidOpen:))]
         #[unsafe(method_family = none)]
-        fn drawerDidOpen(&self, notification: &NSNotification);
+        unsafe fn drawerDidOpen(&self, notification: &NSNotification);
 
         #[deprecated = "Drawers are deprecated; consider using NSSplitViewController"]
         #[optional]
         #[unsafe(method(drawerWillClose:))]
         #[unsafe(method_family = none)]
-        fn drawerWillClose(&self, notification: &NSNotification);
+        unsafe fn drawerWillClose(&self, notification: &NSNotification);
 
         #[deprecated = "Drawers are deprecated; consider using NSSplitViewController"]
         #[optional]
         #[unsafe(method(drawerDidClose:))]
         #[unsafe(method_family = none)]
-        fn drawerDidClose(&self, notification: &NSNotification);
+        unsafe fn drawerDidClose(&self, notification: &NSNotification);
     }
 );
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsdrawerwillopennotification?language=objc)
-    #[deprecated = "Drawers are deprecated; consider using NSSplitViewController"]
     pub static NSDrawerWillOpenNotification: &'static NSNotificationName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsdrawerdidopennotification?language=objc)
-    #[deprecated = "Drawers are deprecated; consider using NSSplitViewController"]
     pub static NSDrawerDidOpenNotification: &'static NSNotificationName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsdrawerwillclosenotification?language=objc)
-    #[deprecated = "Drawers are deprecated; consider using NSSplitViewController"]
     pub static NSDrawerWillCloseNotification: &'static NSNotificationName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsdrawerdidclosenotification?language=objc)
-    #[deprecated = "Drawers are deprecated; consider using NSSplitViewController"]
     pub static NSDrawerDidCloseNotification: &'static NSNotificationName;
 }

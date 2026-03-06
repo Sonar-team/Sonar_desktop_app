@@ -12,7 +12,6 @@ use crate::*;
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webhistoryitemchangednotification?language=objc)
-    #[deprecated]
     pub static WebHistoryItemChangedNotification: Option<&'static NSString>;
 }
 
@@ -57,11 +56,6 @@ impl WebHistoryItem {
         /// You may use this method to prepopulate a WebBackForwardList, or create
         /// 'artificial' items to add to a WebBackForwardList.  When first initialized
         /// the URLString and originalURLString will be the same.
-        ///
-        /// # Safety
-        ///
-        /// - `url_string` might not allow `None`.
-        /// - `title` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initWithURLString:title:lastVisitedTimeInterval:))]
         #[unsafe(method_family = init)]
@@ -111,8 +105,6 @@ impl WebHistoryItem {
         pub unsafe fn alternateTitle(&self) -> Retained<NSString>;
 
         /// Setter for [`alternateTitle`][Self::alternateTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAlternateTitle:))]
         #[unsafe(method_family = none)]

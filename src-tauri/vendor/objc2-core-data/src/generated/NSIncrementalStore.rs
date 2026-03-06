@@ -96,9 +96,6 @@ impl NSIncrementalStore {
         );
 
         #[cfg(all(feature = "NSEntityDescription", feature = "NSManagedObjectID"))]
-        /// # Safety
-        ///
-        /// `data` should be of the correct type.
         #[unsafe(method(newObjectIDForEntity:referenceObject:))]
         #[unsafe(method_family = new)]
         pub unsafe fn newObjectIDForEntity_referenceObject(
@@ -122,9 +119,6 @@ impl NSIncrementalStore {
 impl NSIncrementalStore {
     extern_methods!(
         #[cfg(feature = "NSPersistentStoreCoordinator")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(initWithPersistentStoreCoordinator:configurationName:URL:options:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithPersistentStoreCoordinator_configurationName_URL_options(

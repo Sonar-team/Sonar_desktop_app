@@ -80,7 +80,7 @@ impl NSFileAccessIntent {
         #[cfg(feature = "NSURL")]
         #[unsafe(method(readingIntentWithURL:options:))]
         #[unsafe(method_family = none)]
-        pub fn readingIntentWithURL_options(
+        pub unsafe fn readingIntentWithURL_options(
             url: &NSURL,
             options: NSFileCoordinatorReadingOptions,
         ) -> Retained<Self>;
@@ -88,7 +88,7 @@ impl NSFileAccessIntent {
         #[cfg(feature = "NSURL")]
         #[unsafe(method(writingIntentWithURL:options:))]
         #[unsafe(method_family = none)]
-        pub fn writingIntentWithURL_options(
+        pub unsafe fn writingIntentWithURL_options(
             url: &NSURL,
             options: NSFileCoordinatorWritingOptions,
         ) -> Retained<Self>;
@@ -96,7 +96,7 @@ impl NSFileAccessIntent {
         #[cfg(feature = "NSURL")]
         #[unsafe(method(URL))]
         #[unsafe(method_family = none)]
-        pub fn URL(&self) -> Retained<NSURL>;
+        pub unsafe fn URL(&self) -> Retained<NSURL>;
     );
 }
 
@@ -105,19 +105,12 @@ impl NSFileAccessIntent {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSFileAccessIntent {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -136,22 +129,22 @@ impl NSFileCoordinator {
         #[cfg(feature = "NSFilePresenter")]
         #[unsafe(method(addFilePresenter:))]
         #[unsafe(method_family = none)]
-        pub fn addFilePresenter(file_presenter: &ProtocolObject<dyn NSFilePresenter>);
+        pub unsafe fn addFilePresenter(file_presenter: &ProtocolObject<dyn NSFilePresenter>);
 
         #[cfg(feature = "NSFilePresenter")]
         #[unsafe(method(removeFilePresenter:))]
         #[unsafe(method_family = none)]
-        pub fn removeFilePresenter(file_presenter: &ProtocolObject<dyn NSFilePresenter>);
+        pub unsafe fn removeFilePresenter(file_presenter: &ProtocolObject<dyn NSFilePresenter>);
 
         #[cfg(all(feature = "NSArray", feature = "NSFilePresenter"))]
         #[unsafe(method(filePresenters))]
         #[unsafe(method_family = none)]
-        pub fn filePresenters() -> Retained<NSArray<ProtocolObject<dyn NSFilePresenter>>>;
+        pub unsafe fn filePresenters() -> Retained<NSArray<ProtocolObject<dyn NSFilePresenter>>>;
 
         #[cfg(feature = "NSFilePresenter")]
         #[unsafe(method(initWithFilePresenter:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFilePresenter(
+        pub unsafe fn initWithFilePresenter(
             this: Allocated<Self>,
             file_presenter_or_nil: Option<&ProtocolObject<dyn NSFilePresenter>>,
         ) -> Retained<Self>;
@@ -159,15 +152,13 @@ impl NSFileCoordinator {
         #[cfg(feature = "NSString")]
         #[unsafe(method(purposeIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn purposeIdentifier(&self) -> Retained<NSString>;
+        pub unsafe fn purposeIdentifier(&self) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         /// Setter for [`purposeIdentifier`][Self::purposeIdentifier].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setPurposeIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setPurposeIdentifier(&self, purpose_identifier: &NSString);
+        pub unsafe fn setPurposeIdentifier(&self, purpose_identifier: &NSString);
 
         #[cfg(all(
             feature = "NSArray",
@@ -175,10 +166,6 @@ impl NSFileCoordinator {
             feature = "NSOperation",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// - `queue` possibly has additional threading requirements.
-        /// - `accessor` block must be sendable.
         #[unsafe(method(coordinateAccessWithIntents:queue:byAccessor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn coordinateAccessWithIntents_queue_byAccessor(
@@ -191,7 +178,7 @@ impl NSFileCoordinator {
         #[cfg(all(feature = "NSError", feature = "NSURL", feature = "block2"))]
         #[unsafe(method(coordinateReadingItemAtURL:options:error:byAccessor:))]
         #[unsafe(method_family = none)]
-        pub fn coordinateReadingItemAtURL_options_error_byAccessor(
+        pub unsafe fn coordinateReadingItemAtURL_options_error_byAccessor(
             &self,
             url: &NSURL,
             options: NSFileCoordinatorReadingOptions,
@@ -202,7 +189,7 @@ impl NSFileCoordinator {
         #[cfg(all(feature = "NSError", feature = "NSURL", feature = "block2"))]
         #[unsafe(method(coordinateWritingItemAtURL:options:error:byAccessor:))]
         #[unsafe(method_family = none)]
-        pub fn coordinateWritingItemAtURL_options_error_byAccessor(
+        pub unsafe fn coordinateWritingItemAtURL_options_error_byAccessor(
             &self,
             url: &NSURL,
             options: NSFileCoordinatorWritingOptions,
@@ -213,7 +200,7 @@ impl NSFileCoordinator {
         #[cfg(all(feature = "NSError", feature = "NSURL", feature = "block2"))]
         #[unsafe(method(coordinateReadingItemAtURL:options:writingItemAtURL:options:error:byAccessor:))]
         #[unsafe(method_family = none)]
-        pub fn coordinateReadingItemAtURL_options_writingItemAtURL_options_error_byAccessor(
+        pub unsafe fn coordinateReadingItemAtURL_options_writingItemAtURL_options_error_byAccessor(
             &self,
             reading_url: &NSURL,
             reading_options: NSFileCoordinatorReadingOptions,
@@ -226,7 +213,7 @@ impl NSFileCoordinator {
         #[cfg(all(feature = "NSError", feature = "NSURL", feature = "block2"))]
         #[unsafe(method(coordinateWritingItemAtURL:options:writingItemAtURL:options:error:byAccessor:))]
         #[unsafe(method_family = none)]
-        pub fn coordinateWritingItemAtURL_options_writingItemAtURL_options_error_byAccessor(
+        pub unsafe fn coordinateWritingItemAtURL_options_writingItemAtURL_options_error_byAccessor(
             &self,
             url1: &NSURL,
             options1: NSFileCoordinatorWritingOptions,
@@ -242,9 +229,6 @@ impl NSFileCoordinator {
             feature = "NSURL",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// `batch_accessor` block's argument block must be sendable.
         #[unsafe(method(prepareForReadingItemsAtURLs:options:writingItemsAtURLs:options:error:byAccessor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn prepareForReadingItemsAtURLs_options_writingItemsAtURLs_options_error_byAccessor(
@@ -260,17 +244,17 @@ impl NSFileCoordinator {
         #[cfg(feature = "NSURL")]
         #[unsafe(method(itemAtURL:willMoveToURL:))]
         #[unsafe(method_family = none)]
-        pub fn itemAtURL_willMoveToURL(&self, old_url: &NSURL, new_url: &NSURL);
+        pub unsafe fn itemAtURL_willMoveToURL(&self, old_url: &NSURL, new_url: &NSURL);
 
         #[cfg(feature = "NSURL")]
         #[unsafe(method(itemAtURL:didMoveToURL:))]
         #[unsafe(method_family = none)]
-        pub fn itemAtURL_didMoveToURL(&self, old_url: &NSURL, new_url: &NSURL);
+        pub unsafe fn itemAtURL_didMoveToURL(&self, old_url: &NSURL, new_url: &NSURL);
 
         #[cfg(all(feature = "NSSet", feature = "NSString", feature = "NSURL"))]
         #[unsafe(method(itemAtURL:didChangeUbiquityAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn itemAtURL_didChangeUbiquityAttributes(
+        pub unsafe fn itemAtURL_didChangeUbiquityAttributes(
             &self,
             url: &NSURL,
             attributes: &NSSet<NSURLResourceKey>,
@@ -278,7 +262,7 @@ impl NSFileCoordinator {
 
         #[unsafe(method(cancel))]
         #[unsafe(method_family = none)]
-        pub fn cancel(&self);
+        pub unsafe fn cancel(&self);
     );
 }
 
@@ -287,17 +271,10 @@ impl NSFileCoordinator {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSFileCoordinator {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

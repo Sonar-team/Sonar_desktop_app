@@ -15,7 +15,7 @@ extern_protocol!(
         /// The duration of the main animations in seconds.
         #[unsafe(method(duration))]
         #[unsafe(method_family = none)]
-        fn duration(&self) -> NSTimeInterval;
+        unsafe fn duration(&self) -> NSTimeInterval;
     }
 );
 
@@ -44,7 +44,7 @@ impl UIFocusAnimationCoordinator {
         /// It is perfectly legitimate to only specify a completion block.
         #[unsafe(method(addCoordinatedAnimations:completion:))]
         #[unsafe(method_family = none)]
-        pub fn addCoordinatedAnimations_completion(
+        pub unsafe fn addCoordinatedAnimations_completion(
             &self,
             animations: Option<&block2::DynBlock<dyn Fn()>>,
             completion: Option<&block2::DynBlock<dyn Fn()>>,
@@ -60,7 +60,7 @@ impl UIFocusAnimationCoordinator {
         /// A context object is provided in the animation block with details of the UIKit-defined animations being run for the focusing item.
         #[unsafe(method(addCoordinatedFocusingAnimations:completion:))]
         #[unsafe(method_family = none)]
-        pub fn addCoordinatedFocusingAnimations_completion(
+        pub unsafe fn addCoordinatedFocusingAnimations_completion(
             &self,
             animations: Option<
                 &block2::DynBlock<dyn Fn(NonNull<ProtocolObject<dyn UIFocusAnimationContext>>)>,
@@ -78,7 +78,7 @@ impl UIFocusAnimationCoordinator {
         /// A context object is provided in the animation block with details of the UIKit-defined animations being run for the un-focusing item.
         #[unsafe(method(addCoordinatedUnfocusingAnimations:completion:))]
         #[unsafe(method_family = none)]
-        pub fn addCoordinatedUnfocusingAnimations_completion(
+        pub unsafe fn addCoordinatedUnfocusingAnimations_completion(
             &self,
             animations: Option<
                 &block2::DynBlock<dyn Fn(NonNull<ProtocolObject<dyn UIFocusAnimationContext>>)>,
@@ -93,10 +93,10 @@ impl UIFocusAnimationCoordinator {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

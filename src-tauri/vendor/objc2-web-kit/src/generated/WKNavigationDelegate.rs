@@ -168,10 +168,6 @@ extern_protocol!(
         /// Parameter `webView`: The web view invoking the delegate method.
         ///
         /// Parameter `navigation`: The navigation.
-        ///
-        /// # Safety
-        ///
-        /// `navigation` might not allow `None`.
         #[optional]
         #[unsafe(method(webView:didStartProvisionalNavigation:))]
         #[unsafe(method_family = none)]
@@ -193,10 +189,6 @@ extern_protocol!(
         /// Parameter `webView`: The web view invoking the delegate method.
         ///
         /// Parameter `navigation`: The navigation.
-        ///
-        /// # Safety
-        ///
-        /// `navigation` might not allow `None`.
         #[optional]
         #[unsafe(method(webView:didReceiveServerRedirectForProvisionalNavigation:))]
         #[unsafe(method_family = none)]
@@ -220,10 +212,6 @@ extern_protocol!(
         /// Parameter `navigation`: The navigation.
         ///
         /// Parameter `error`: The error that occurred.
-        ///
-        /// # Safety
-        ///
-        /// `navigation` might not allow `None`.
         #[optional]
         #[unsafe(method(webView:didFailProvisionalNavigation:withError:))]
         #[unsafe(method_family = none)]
@@ -245,10 +233,6 @@ extern_protocol!(
         /// Parameter `webView`: The web view invoking the delegate method.
         ///
         /// Parameter `navigation`: The navigation.
-        ///
-        /// # Safety
-        ///
-        /// `navigation` might not allow `None`.
         #[optional]
         #[unsafe(method(webView:didCommitNavigation:))]
         #[unsafe(method_family = none)]
@@ -269,10 +253,6 @@ extern_protocol!(
         /// Parameter `webView`: The web view invoking the delegate method.
         ///
         /// Parameter `navigation`: The navigation.
-        ///
-        /// # Safety
-        ///
-        /// `navigation` might not allow `None`.
         #[optional]
         #[unsafe(method(webView:didFinishNavigation:))]
         #[unsafe(method_family = none)]
@@ -296,10 +276,6 @@ extern_protocol!(
         /// Parameter `navigation`: The navigation.
         ///
         /// Parameter `error`: The error that occurred.
-        ///
-        /// # Safety
-        ///
-        /// `navigation` might not allow `None`.
         #[optional]
         #[unsafe(method(webView:didFailNavigation:withError:))]
         #[unsafe(method_family = none)]

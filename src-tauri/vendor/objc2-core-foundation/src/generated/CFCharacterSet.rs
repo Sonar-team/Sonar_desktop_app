@@ -11,10 +11,7 @@ use crate::*;
 
 /// This is the type of a reference to immutable CFCharacterSets.
 ///
-/// This is toll-free bridged with `NSCharacterSet`.
-///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfcharacterset?language=objc)
-#[doc(alias = "CFCharacterSetRef")]
 #[repr(C)]
 pub struct CFCharacterSet {
     inner: [u8; 0],
@@ -31,10 +28,7 @@ cf_objc2_type!(
 
 /// This is the type of a reference to mutable CFMutableCharacterSets.
 ///
-/// This is toll-free bridged with `NSMutableCharacterSet`.
-///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfmutablecharacterset?language=objc)
-#[doc(alias = "CFMutableCharacterSetRef")]
 #[repr(C)]
 pub struct CFMutableCharacterSet {
     inner: [u8; 0],
@@ -123,7 +117,7 @@ impl CFCharacterSet {
     /// This instance is owned by CF.
     #[doc(alias = "CFCharacterSetGetPredefined")]
     #[inline]
-    pub fn predefined(
+    pub unsafe fn predefined(
         the_set_identifier: CFCharacterSetPredefinedSet,
     ) -> Option<CFRetained<CFCharacterSet>> {
         extern "C-unwind" {
@@ -151,10 +145,6 @@ impl CFCharacterSet {
     /// point, the behavior is undefined.
     ///
     /// Returns: A reference to the new immutable CFCharacterSet.
-    ///
-    /// # Safety
-    ///
-    /// `alloc` might not allow `None`.
     #[doc(alias = "CFCharacterSetCreateWithCharactersInRange")]
     #[inline]
     pub unsafe fn with_characters_in_range(
@@ -185,11 +175,6 @@ impl CFCharacterSet {
     /// is undefined.
     ///
     /// Returns: A reference to the new immutable CFCharacterSet.
-    ///
-    /// # Safety
-    ///
-    /// - `alloc` might not allow `None`.
-    /// - `the_string` might not allow `None`.
     #[doc(alias = "CFCharacterSetCreateWithCharactersInString")]
     #[inline]
     pub unsafe fn with_characters_in_string(
@@ -231,11 +216,6 @@ impl CFCharacterSet {
     /// (1 to 16), the behavior is undefined.
     ///
     /// Returns: A reference to the new immutable CFCharacterSet.
-    ///
-    /// # Safety
-    ///
-    /// - `alloc` might not allow `None`.
-    /// - `the_data` might not allow `None`.
     #[doc(alias = "CFCharacterSetCreateWithBitmapRepresentation")]
     #[cfg(feature = "CFData")]
     #[inline]
@@ -266,11 +246,6 @@ impl CFCharacterSet {
     /// undefined.
     ///
     /// Returns: A reference to the new immutable CFCharacterSet.
-    ///
-    /// # Safety
-    ///
-    /// - `alloc` might not allow `None`.
-    /// - `the_set` might not allow `None`.
     #[doc(alias = "CFCharacterSetCreateInvertedSet")]
     #[inline]
     pub unsafe fn new_inverted_set(
@@ -294,13 +269,12 @@ impl CFCharacterSet {
     ///
     /// Parameter `theOtherset`: The character set to be checked whether or not it is a subset of theSet.
     /// If this parameter is not a valid CFCharacterSet, the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `the_otherset` might not allow `None`.
     #[doc(alias = "CFCharacterSetIsSupersetOfSet")]
     #[inline]
-    pub unsafe fn is_superset_of_set(&self, the_otherset: Option<&CFCharacterSet>) -> bool {
+    pub unsafe fn is_superset_of_set(
+        self: &CFCharacterSet,
+        the_otherset: Option<&CFCharacterSet>,
+    ) -> bool {
         extern "C-unwind" {
             fn CFCharacterSetIsSupersetOfSet(
                 the_set: &CFCharacterSet,
@@ -321,7 +295,7 @@ impl CFCharacterSet {
     /// plane number range, the behavior is undefined.
     #[doc(alias = "CFCharacterSetHasMemberInPlane")]
     #[inline]
-    pub unsafe fn has_member_in_plane(&self, the_plane: CFIndex) -> bool {
+    pub unsafe fn has_member_in_plane(self: &CFCharacterSet, the_plane: CFIndex) -> bool {
         extern "C-unwind" {
             fn CFCharacterSetHasMemberInPlane(
                 the_set: &CFCharacterSet,
@@ -343,10 +317,6 @@ impl CFMutableCharacterSet {
     /// CFAllocator, the behavior is undefined.
     ///
     /// Returns: A reference to the new mutable CFCharacterSet.
-    ///
-    /// # Safety
-    ///
-    /// `alloc` might not allow `None`.
     #[doc(alias = "CFCharacterSetCreateMutable")]
     #[inline]
     pub unsafe fn new(alloc: Option<&CFAllocator>) -> Option<CFRetained<CFMutableCharacterSet>> {
@@ -374,11 +344,6 @@ impl CFCharacterSet {
     /// undefined.
     ///
     /// Returns: A reference to the new CFCharacterSet.
-    ///
-    /// # Safety
-    ///
-    /// - `alloc` might not allow `None`.
-    /// - `the_set` might not allow `None`.
     #[doc(alias = "CFCharacterSetCreateCopy")]
     #[inline]
     pub unsafe fn new_copy(
@@ -410,11 +375,6 @@ impl CFMutableCharacterSet {
     /// undefined.
     ///
     /// Returns: A reference to the new mutable CFCharacterSet.
-    ///
-    /// # Safety
-    ///
-    /// - `alloc` might not allow `None`.
-    /// - `the_set` might not allow `None`.
     #[doc(alias = "CFCharacterSetCreateMutableCopy")]
     #[inline]
     pub unsafe fn new_copy(
@@ -446,7 +406,7 @@ impl CFCharacterSet {
     /// Returns: true, if the value is in the character set, otherwise false.
     #[doc(alias = "CFCharacterSetIsCharacterMember")]
     #[inline]
-    pub fn is_character_member(&self, the_char: UniChar) -> bool {
+    pub unsafe fn is_character_member(self: &CFCharacterSet, the_char: UniChar) -> bool {
         extern "C-unwind" {
             fn CFCharacterSetIsCharacterMember(
                 the_set: &CFCharacterSet,
@@ -468,7 +428,7 @@ impl CFCharacterSet {
     /// Returns: true, if the value is in the character set, otherwise false.
     #[doc(alias = "CFCharacterSetIsLongCharacterMember")]
     #[inline]
-    pub fn is_long_character_member(&self, the_char: UTF32Char) -> bool {
+    pub unsafe fn is_long_character_member(self: &CFCharacterSet, the_char: UTF32Char) -> bool {
         extern "C-unwind" {
             fn CFCharacterSetIsLongCharacterMember(
                 the_set: &CFCharacterSet,
@@ -495,11 +455,6 @@ impl CFCharacterSet {
     /// behavior is undefined.
     ///
     /// Returns: A reference to the new immutable CFData.
-    ///
-    /// # Safety
-    ///
-    /// - `alloc` might not allow `None`.
-    /// - `the_set` might not allow `None`.
     #[doc(alias = "CFCharacterSetCreateBitmapRepresentation")]
     #[cfg(feature = "CFData")]
     #[inline]
@@ -530,10 +485,6 @@ impl CFMutableCharacterSet {
     /// character point range is from 0x00000 to 0x10FFFF.  If the
     /// range is outside of the valid Unicode character point,
     /// the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `the_set` might not allow `None`.
     #[doc(alias = "CFCharacterSetAddCharactersInRange")]
     #[inline]
     pub unsafe fn add_characters_in_range(
@@ -560,10 +511,6 @@ impl CFMutableCharacterSet {
     /// The valid character point range is from 0x00000 to 0x10FFFF.
     /// If the range is outside of the valid Unicode character point,
     /// the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `the_set` might not allow `None`.
     #[doc(alias = "CFCharacterSetRemoveCharactersInRange")]
     #[inline]
     pub unsafe fn remove_characters_in_range(
@@ -588,11 +535,6 @@ impl CFMutableCharacterSet {
     /// Parameter `theString`: The string to add to the character set.
     /// If this parameter is not a valid CFString, the behavior
     /// is undefined.
-    ///
-    /// # Safety
-    ///
-    /// - `the_set` might not allow `None`.
-    /// - `the_string` might not allow `None`.
     #[doc(alias = "CFCharacterSetAddCharactersInString")]
     #[inline]
     pub unsafe fn add_characters_in_string(
@@ -617,11 +559,6 @@ impl CFMutableCharacterSet {
     /// Parameter `theString`: The string to remove from the character set.
     /// If this parameter is not a valid CFString, the behavior
     /// is undefined.
-    ///
-    /// # Safety
-    ///
-    /// - `the_set` might not allow `None`.
-    /// - `the_string` might not allow `None`.
     #[doc(alias = "CFCharacterSetRemoveCharactersInString")]
     #[inline]
     pub unsafe fn remove_characters_in_string(
@@ -647,11 +584,6 @@ impl CFMutableCharacterSet {
     /// Parameter `theOtherSet`: The character set with which the union is
     /// formed.  If this parameter is not a valid CFCharacterSet,
     /// the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// - `the_set` might not allow `None`.
-    /// - `the_other_set` might not allow `None`.
     #[doc(alias = "CFCharacterSetUnion")]
     #[inline]
     pub unsafe fn union(
@@ -677,11 +609,6 @@ impl CFMutableCharacterSet {
     /// Parameter `theOtherSet`: The character set with which the intersection
     /// is formed.  If this parameter is not a valid CFCharacterSet,
     /// the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// - `the_set` might not allow `None`.
-    /// - `the_other_set` might not allow `None`.
     #[doc(alias = "CFCharacterSetIntersect")]
     #[inline]
     pub unsafe fn intersect(
@@ -702,10 +629,6 @@ impl CFMutableCharacterSet {
     /// Parameter `theSet`: The character set to be inverted.
     /// If this parameter is not a valid mutable CFCharacterSet,
     /// the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `the_set` might not allow `None`.
     #[doc(alias = "CFCharacterSetInvert")]
     #[inline]
     pub unsafe fn invert(the_set: Option<&CFMutableCharacterSet>) {
@@ -718,7 +641,7 @@ impl CFMutableCharacterSet {
 
 #[deprecated = "renamed to `CFCharacterSet::predefined`"]
 #[inline]
-pub extern "C-unwind" fn CFCharacterSetGetPredefined(
+pub unsafe extern "C-unwind" fn CFCharacterSetGetPredefined(
     the_set_identifier: CFCharacterSetPredefinedSet,
 ) -> Option<CFRetained<CFCharacterSet>> {
     extern "C-unwind" {
@@ -872,7 +795,7 @@ pub unsafe extern "C-unwind" fn CFCharacterSetCreateMutableCopy(
 
 #[deprecated = "renamed to `CFCharacterSet::is_character_member`"]
 #[inline]
-pub extern "C-unwind" fn CFCharacterSetIsCharacterMember(
+pub unsafe extern "C-unwind" fn CFCharacterSetIsCharacterMember(
     the_set: &CFCharacterSet,
     the_char: UniChar,
 ) -> bool {
@@ -885,7 +808,7 @@ pub extern "C-unwind" fn CFCharacterSetIsCharacterMember(
 
 #[deprecated = "renamed to `CFCharacterSet::is_long_character_member`"]
 #[inline]
-pub extern "C-unwind" fn CFCharacterSetIsLongCharacterMember(
+pub unsafe extern "C-unwind" fn CFCharacterSetIsLongCharacterMember(
     the_set: &CFCharacterSet,
     the_char: UTF32Char,
 ) -> bool {

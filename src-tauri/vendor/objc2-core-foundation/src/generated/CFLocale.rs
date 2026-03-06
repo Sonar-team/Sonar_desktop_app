@@ -17,9 +17,6 @@ pub type CFLocaleIdentifier = CFString;
 pub type CFLocaleKey = CFString;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cflocale?language=objc)
-///
-/// This is toll-free bridged with `NSLocale`.
-#[doc(alias = "CFLocaleRef")]
 #[repr(C)]
 pub struct CFLocale {
     inner: [u8; 0],
@@ -288,11 +285,6 @@ impl CFLocale {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `dictionary` generics must be of the correct type.
-    /// - `dictionary` might not allow `None`.
     #[doc(alias = "CFLocaleCreateLocaleIdentifierFromComponents")]
     #[cfg(feature = "CFDictionary")]
     #[inline]
@@ -344,7 +336,7 @@ impl CFLocale {
 
     #[doc(alias = "CFLocaleGetIdentifier")]
     #[inline]
-    pub fn identifier(&self) -> Option<CFRetained<CFLocaleIdentifier>> {
+    pub fn identifier(self: &CFLocale) -> Option<CFRetained<CFLocaleIdentifier>> {
         extern "C-unwind" {
             fn CFLocaleGetIdentifier(locale: &CFLocale) -> Option<NonNull<CFLocaleIdentifier>>;
         }
@@ -354,7 +346,7 @@ impl CFLocale {
 
     #[doc(alias = "CFLocaleGetValue")]
     #[inline]
-    pub fn value(&self, key: Option<&CFLocaleKey>) -> Option<CFRetained<CFType>> {
+    pub fn value(self: &CFLocale, key: Option<&CFLocaleKey>) -> Option<CFRetained<CFType>> {
         extern "C-unwind" {
             fn CFLocaleGetValue(
                 locale: &CFLocale,
@@ -368,7 +360,7 @@ impl CFLocale {
     #[doc(alias = "CFLocaleCopyDisplayNameForPropertyValue")]
     #[inline]
     pub fn display_name_for_property_value(
-        &self,
+        self: &CFLocale,
         key: Option<&CFLocaleKey>,
         value: Option<&CFString>,
     ) -> Option<CFRetained<CFString>> {
@@ -557,61 +549,6 @@ extern "C" {
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfislamicummalquracalendar?language=objc)
     pub static kCFIslamicUmmAlQuraCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfbanglacalendar?language=objc)
-    pub static kCFBanglaCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfgujaraticalendar?language=objc)
-    pub static kCFGujaratiCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfkannadacalendar?language=objc)
-    pub static kCFKannadaCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfmalayalamcalendar?language=objc)
-    pub static kCFMalayalamCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfmarathicalendar?language=objc)
-    pub static kCFMarathiCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfodiacalendar?language=objc)
-    pub static kCFOdiaCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcftamilcalendar?language=objc)
-    pub static kCFTamilCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcftelugucalendar?language=objc)
-    pub static kCFTeluguCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfvikramcalendar?language=objc)
-    pub static kCFVikramCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfdangicalendar?language=objc)
-    pub static kCFDangiCalendar: Option<&'static CFCalendarIdentifier>;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfvietnamesecalendar?language=objc)
-    pub static kCFVietnameseCalendar: Option<&'static CFCalendarIdentifier>;
 }
 
 #[deprecated = "renamed to `CFLocale::system`"]

@@ -89,8 +89,6 @@ impl DOMHTMLImageElement {
         pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
@@ -102,8 +100,6 @@ impl DOMHTMLImageElement {
         pub unsafe fn align(&self) -> Retained<NSString>;
 
         /// Setter for [`align`][Self::align].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAlign:))]
         #[unsafe(method_family = none)]
@@ -115,8 +111,6 @@ impl DOMHTMLImageElement {
         pub unsafe fn alt(&self) -> Retained<NSString>;
 
         /// Setter for [`alt`][Self::alt].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAlt:))]
         #[unsafe(method_family = none)]
@@ -128,8 +122,6 @@ impl DOMHTMLImageElement {
         pub unsafe fn border(&self) -> Retained<NSString>;
 
         /// Setter for [`border`][Self::border].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setBorder:))]
         #[unsafe(method_family = none)]
@@ -174,8 +166,6 @@ impl DOMHTMLImageElement {
         pub unsafe fn longDesc(&self) -> Retained<NSString>;
 
         /// Setter for [`longDesc`][Self::longDesc].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setLongDesc:))]
         #[unsafe(method_family = none)]
@@ -187,8 +177,6 @@ impl DOMHTMLImageElement {
         pub unsafe fn src(&self) -> Retained<NSString>;
 
         /// Setter for [`src`][Self::src].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setSrc:))]
         #[unsafe(method_family = none)]
@@ -200,8 +188,6 @@ impl DOMHTMLImageElement {
         pub unsafe fn useMap(&self) -> Retained<NSString>;
 
         /// Setter for [`useMap`][Self::useMap].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setUseMap:))]
         #[unsafe(method_family = none)]
@@ -238,8 +224,6 @@ impl DOMHTMLImageElement {
         pub unsafe fn lowsrc(&self) -> Retained<NSString>;
 
         /// Setter for [`lowsrc`][Self::lowsrc].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setLowsrc:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setLowsrc(&self, lowsrc: Option<&NSString>);

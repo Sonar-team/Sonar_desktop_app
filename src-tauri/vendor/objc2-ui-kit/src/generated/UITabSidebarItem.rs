@@ -33,13 +33,13 @@ impl UITabSidebarItem {
         /// The tab that the receiver represents. Only one of `tab` or `action` will be valid for an item.
         #[unsafe(method(tab))]
         #[unsafe(method_family = none)]
-        pub fn tab(&self) -> Option<Retained<UITab>>;
+        pub unsafe fn tab(&self) -> Option<Retained<UITab>>;
 
         #[cfg(all(feature = "UIAction", feature = "UIMenuElement"))]
         /// The action that the receiver represents. Only one of `tab` or `action` will be valid for an item.
         #[unsafe(method(action))]
         #[unsafe(method_family = none)]
-        pub fn action(&self) -> Option<Retained<UIAction>>;
+        pub unsafe fn action(&self) -> Option<Retained<UIAction>>;
 
         #[cfg(all(
             feature = "UICellConfigurationState",
@@ -48,21 +48,21 @@ impl UITabSidebarItem {
         /// The current configuration state of the sidebar item.
         #[unsafe(method(configurationState))]
         #[unsafe(method_family = none)]
-        pub fn configurationState(&self) -> Retained<UICellConfigurationState>;
+        pub unsafe fn configurationState(&self) -> Retained<UICellConfigurationState>;
 
         #[cfg(feature = "UIContentConfiguration")]
-        /// The content configuration to use when displaying this item.
+        /// The content coinfiguration to use when displaying this item.
         #[unsafe(method(contentConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn contentConfiguration(&self) -> Retained<ProtocolObject<dyn UIContentConfiguration>>;
+        pub unsafe fn contentConfiguration(
+            &self,
+        ) -> Retained<ProtocolObject<dyn UIContentConfiguration>>;
 
         #[cfg(feature = "UIContentConfiguration")]
         /// Setter for [`contentConfiguration`][Self::contentConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setContentConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setContentConfiguration(
+        pub unsafe fn setContentConfiguration(
             &self,
             content_configuration: &ProtocolObject<dyn UIContentConfiguration>,
         );
@@ -71,15 +71,13 @@ impl UITabSidebarItem {
         /// The background configuration to use when displaying this item.
         #[unsafe(method(backgroundConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn backgroundConfiguration(&self) -> Retained<UIBackgroundConfiguration>;
+        pub unsafe fn backgroundConfiguration(&self) -> Retained<UIBackgroundConfiguration>;
 
         #[cfg(feature = "UIBackgroundConfiguration")]
         /// Setter for [`backgroundConfiguration`][Self::backgroundConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBackgroundConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundConfiguration(
+        pub unsafe fn setBackgroundConfiguration(
             &self,
             background_configuration: &UIBackgroundConfiguration,
         );
@@ -88,32 +86,30 @@ impl UITabSidebarItem {
         /// Cell accessories to use when displaying this item. Some accessories may not be shown if it conflicts with system default accessories.
         #[unsafe(method(accessories))]
         #[unsafe(method_family = none)]
-        pub fn accessories(&self) -> Retained<NSArray<UICellAccessory>>;
+        pub unsafe fn accessories(&self) -> Retained<NSArray<UICellAccessory>>;
 
         #[cfg(feature = "UICellAccessory")]
         /// Setter for [`accessories`][Self::accessories].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessories:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessories(&self, accessories: &NSArray<UICellAccessory>);
+        pub unsafe fn setAccessories(&self, accessories: &NSArray<UICellAccessory>);
 
         #[cfg(feature = "UIListContentConfiguration")]
         /// Returns the default content configuration for this item and the configuration state.
         #[unsafe(method(defaultContentConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn defaultContentConfiguration(&self) -> Retained<UIListContentConfiguration>;
+        pub unsafe fn defaultContentConfiguration(&self) -> Retained<UIListContentConfiguration>;
 
         #[cfg(feature = "UIBackgroundConfiguration")]
         /// Returns the default background configuration for this item and the configuration state.
         #[unsafe(method(defaultBackgroundConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn defaultBackgroundConfiguration(&self) -> Retained<UIBackgroundConfiguration>;
+        pub unsafe fn defaultBackgroundConfiguration(&self) -> Retained<UIBackgroundConfiguration>;
 
         /// Creates a sidebar item from the specified request. The sidebar item will be preconfigured with the appropriate defaults for its content.
         #[unsafe(method(itemFromRequest:))]
         #[unsafe(method_family = none)]
-        pub fn itemFromRequest(request: &UITabSidebarItemRequest) -> Retained<Self>;
+        pub unsafe fn itemFromRequest(request: &UITabSidebarItemRequest) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -143,13 +139,13 @@ impl UITabSidebarItemRequest {
         /// The tab that the receiver represents. Only one of `tab` or `action` will be valid for an item.
         #[unsafe(method(tab))]
         #[unsafe(method_family = none)]
-        pub fn tab(&self) -> Option<Retained<UITab>>;
+        pub unsafe fn tab(&self) -> Option<Retained<UITab>>;
 
         #[cfg(all(feature = "UIAction", feature = "UIMenuElement"))]
         /// The action that the receiver represents. Only one of `tab` or `action` will be valid for an item.
         #[unsafe(method(action))]
         #[unsafe(method_family = none)]
-        pub fn action(&self) -> Option<Retained<UIAction>>;
+        pub unsafe fn action(&self) -> Option<Retained<UIAction>>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

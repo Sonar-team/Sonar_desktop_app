@@ -27,21 +27,17 @@ impl NSFilePromiseReceiver {
     extern_methods!(
         #[unsafe(method(readableDraggedTypes))]
         #[unsafe(method_family = none)]
-        pub fn readableDraggedTypes() -> Retained<NSArray<NSString>>;
+        pub unsafe fn readableDraggedTypes() -> Retained<NSArray<NSString>>;
 
         #[unsafe(method(fileTypes))]
         #[unsafe(method_family = none)]
-        pub fn fileTypes(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn fileTypes(&self) -> Retained<NSArray<NSString>>;
 
         #[unsafe(method(fileNames))]
         #[unsafe(method_family = none)]
-        pub fn fileNames(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn fileNames(&self) -> Retained<NSArray<NSString>>;
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// - `options` generic should be of the correct type.
-        /// - `operation_queue` possibly has additional threading requirements.
         #[unsafe(method(receivePromisedFilesAtDestination:options:operationQueue:reader:))]
         #[unsafe(method_family = none)]
         pub unsafe fn receivePromisedFilesAtDestination_options_operationQueue_reader(
@@ -59,17 +55,10 @@ impl NSFilePromiseReceiver {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSFilePromiseReceiver {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

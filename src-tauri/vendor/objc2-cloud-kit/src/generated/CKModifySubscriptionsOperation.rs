@@ -37,23 +37,12 @@ impl CKModifySubscriptionsOperation {
         ) -> Retained<Self>;
 
         #[cfg(feature = "CKSubscription")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(subscriptionsToSave))]
         #[unsafe(method_family = none)]
         pub unsafe fn subscriptionsToSave(&self) -> Option<Retained<NSArray<CKSubscription>>>;
 
         #[cfg(feature = "CKSubscription")]
         /// Setter for [`subscriptionsToSave`][Self::subscriptionsToSave].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setSubscriptionsToSave:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSubscriptionsToSave(
@@ -62,11 +51,6 @@ impl CKModifySubscriptionsOperation {
         );
 
         #[cfg(feature = "CKSubscription")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(subscriptionIDsToDelete))]
         #[unsafe(method_family = none)]
         pub unsafe fn subscriptionIDsToDelete(&self)
@@ -74,12 +58,6 @@ impl CKModifySubscriptionsOperation {
 
         #[cfg(feature = "CKSubscription")]
         /// Setter for [`subscriptionIDsToDelete`][Self::subscriptionIDsToDelete].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setSubscriptionIDsToDelete:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSubscriptionIDsToDelete(
@@ -95,15 +73,6 @@ impl CKModifySubscriptionsOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - The returned block's argument 3 must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[unsafe(method(perSubscriptionSaveBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn perSubscriptionSaveBlock(
@@ -114,12 +83,6 @@ impl CKModifySubscriptionsOperation {
 
         #[cfg(all(feature = "CKSubscription", feature = "block2"))]
         /// Setter for [`perSubscriptionSaveBlock`][Self::perSubscriptionSaveBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setPerSubscriptionSaveBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPerSubscriptionSaveBlock(
@@ -139,14 +102,6 @@ impl CKModifySubscriptionsOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[unsafe(method(perSubscriptionDeleteBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn perSubscriptionDeleteBlock(
@@ -155,12 +110,6 @@ impl CKModifySubscriptionsOperation {
 
         #[cfg(all(feature = "CKSubscription", feature = "block2"))]
         /// Setter for [`perSubscriptionDeleteBlock`][Self::perSubscriptionDeleteBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setPerSubscriptionDeleteBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPerSubscriptionDeleteBlock(
@@ -191,15 +140,6 @@ impl CKModifySubscriptionsOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer or null.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - The returned block's argument 3 must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[unsafe(method(modifySubscriptionsCompletionBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn modifySubscriptionsCompletionBlock(
@@ -210,12 +150,6 @@ impl CKModifySubscriptionsOperation {
 
         #[cfg(all(feature = "CKSubscription", feature = "block2"))]
         /// Setter for [`modifySubscriptionsCompletionBlock`][Self::modifySubscriptionsCompletionBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setModifySubscriptionsCompletionBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setModifySubscriptionsCompletionBlock(

@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "objc2-web-kit"
-version = "0.3.2"
+version = "0.3.1"
 build = false
 autolib = false
 autobins = false
@@ -624,7 +624,6 @@ WKWebExtensionWindowConfiguration = [
     "objc2-foundation/NSURL",
 ]
 WKWebView = [
-    "bitflags",
     "objc2-foundation/NSArray",
     "objc2-foundation/NSCoder",
     "objc2-foundation/NSData",
@@ -650,7 +649,6 @@ WKWebsiteDataRecord = [
 ]
 WKWebsiteDataStore = [
     "objc2-foundation/NSArray",
-    "objc2-foundation/NSData",
     "objc2-foundation/NSDate",
     "objc2-foundation/NSError",
     "objc2-foundation/NSObject",
@@ -718,7 +716,6 @@ WebHistory = [
     "objc2-foundation/NSArray",
     "objc2-foundation/NSCalendarDate",
     "objc2-foundation/NSDate",
-    "objc2-foundation/NSError",
     "objc2-foundation/NSString",
     "objc2-foundation/NSURL",
 ]
@@ -1023,11 +1020,45 @@ objc2-core-foundation = ["dep:objc2-core-foundation"]
 objc2-javascript-core = ["dep:objc2-javascript-core"]
 objc2-security = ["dep:objc2-security"]
 std = ["alloc"]
-unstable-darwin-objc = []
 
 [lib]
 name = "objc2_web_kit"
 path = "src/lib.rs"
+
+[[example]]
+name = "browser"
+path = "examples/browser.rs"
+required-features = [
+    "objc2-app-kit",
+    "objc2-app-kit/NSResponder",
+    "objc2-app-kit/NSView",
+    "objc2-app-kit/NSColor",
+    "objc2-app-kit/NSButton",
+    "objc2-app-kit/NSButtonCell",
+    "objc2-app-kit/NSMenu",
+    "objc2-app-kit/NSMenuItem",
+    "objc2-app-kit/NSStackView",
+    "objc2-app-kit/NSText",
+    "objc2-app-kit/NSTextField",
+    "objc2-app-kit/NSTextView",
+    "objc2-app-kit/NSWindow",
+    "objc2-app-kit/NSControl",
+    "objc2-app-kit/NSApplication",
+    "objc2-app-kit/NSRunningApplication",
+    "objc2-app-kit/NSGraphics",
+    "objc2-app-kit/NSLayoutConstraint",
+    "objc2-app-kit/NSUserInterfaceLayout",
+    "objc2-core-foundation",
+    "objc2-foundation/NSString",
+    "objc2-foundation/NSGeometry",
+    "objc2-foundation/NSNotification",
+    "objc2-foundation/NSURL",
+    "objc2-foundation/NSURLRequest",
+    "objc2-foundation/NSThread",
+    "WKNavigation",
+    "WKNavigationDelegate",
+    "WKWebView",
+]
 
 [dependencies.bitflags]
 version = "2.5.0"
@@ -1042,12 +1073,12 @@ optional = true
 default-features = false
 
 [dependencies.objc2]
-version = ">=0.6.2, <0.8.0"
+version = ">=0.6.1, <0.8.0"
 features = ["std"]
 default-features = false
 
 [dependencies.objc2-core-foundation]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "CFCGTypes",
     "objc2",
@@ -1056,12 +1087,12 @@ optional = true
 default-features = false
 
 [dependencies.objc2-foundation]
-version = "0.3.2"
+version = "0.3.1"
 features = ["alloc"]
 default-features = false
 
 [dependencies.objc2-javascript-core]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "JSBase",
     "JSContext",
@@ -1072,7 +1103,7 @@ optional = true
 default-features = false
 
 [dependencies.objc2-security]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "SecTrust",
     "objc2",
@@ -1081,7 +1112,7 @@ optional = true
 default-features = false
 
 [target.'cfg(target_os = "macos")'.dependencies.objc2-app-kit]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "NSAccessibilityProtocols",
     "NSAnimation",
@@ -1097,6 +1128,7 @@ features = [
     "NSPrintInfo",
     "NSPrintOperation",
     "NSResponder",
+    "NSTextCheckingClient",
     "NSTextFinder",
     "NSTextView",
     "NSUserInterfaceItemIdentification",

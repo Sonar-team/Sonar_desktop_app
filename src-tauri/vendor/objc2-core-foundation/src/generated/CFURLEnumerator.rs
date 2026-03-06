@@ -10,7 +10,6 @@ use objc2::__framework_prelude::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfurlenumerator?language=objc)
-#[doc(alias = "CFURLEnumeratorRef")]
 #[repr(C)]
 pub struct CFURLEnumerator {
     inner: [u8; 0],
@@ -73,12 +72,6 @@ unsafe impl RefEncode for CFURLEnumeratorOptions {
 }
 
 impl CFURLEnumerator {
-    /// # Safety
-    ///
-    /// - `alloc` might not allow `None`.
-    /// - `directory_url` might not allow `None`.
-    /// - `property_keys` generic must be of the correct type.
-    /// - `property_keys` might not allow `None`.
     #[doc(alias = "CFURLEnumeratorCreateForDirectoryURL")]
     #[cfg(all(feature = "CFArray", feature = "CFURL"))]
     #[inline]
@@ -102,11 +95,6 @@ impl CFURLEnumerator {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `alloc` might not allow `None`.
-    /// - `property_keys` generic must be of the correct type.
-    /// - `property_keys` might not allow `None`.
     #[doc(alias = "CFURLEnumeratorCreateForMountedVolumes")]
     #[cfg(feature = "CFArray")]
     #[inline]
@@ -154,15 +142,11 @@ unsafe impl RefEncode for CFURLEnumeratorResult {
 }
 
 impl CFURLEnumerator {
-    /// # Safety
-    ///
-    /// - `url` must be a valid pointer.
-    /// - `error` must be a valid pointer.
     #[doc(alias = "CFURLEnumeratorGetNextURL")]
     #[cfg(all(feature = "CFError", feature = "CFURL"))]
     #[inline]
     pub unsafe fn next_url(
-        &self,
+        self: &CFURLEnumerator,
         url: *mut *const CFURL,
         error: *mut *mut CFError,
     ) -> CFURLEnumeratorResult {
@@ -178,7 +162,7 @@ impl CFURLEnumerator {
 
     #[doc(alias = "CFURLEnumeratorSkipDescendents")]
     #[inline]
-    pub fn skip_descendents(&self) {
+    pub unsafe fn skip_descendents(self: &CFURLEnumerator) {
         extern "C-unwind" {
             fn CFURLEnumeratorSkipDescendents(enumerator: &CFURLEnumerator);
         }
@@ -187,7 +171,7 @@ impl CFURLEnumerator {
 
     #[doc(alias = "CFURLEnumeratorGetDescendentLevel")]
     #[inline]
-    pub fn descendent_level(&self) -> CFIndex {
+    pub unsafe fn descendent_level(self: &CFURLEnumerator) -> CFIndex {
         extern "C-unwind" {
             fn CFURLEnumeratorGetDescendentLevel(enumerator: &CFURLEnumerator) -> CFIndex;
         }
@@ -197,7 +181,7 @@ impl CFURLEnumerator {
     #[doc(alias = "CFURLEnumeratorGetSourceDidChange")]
     #[deprecated = "Use File System Events API instead"]
     #[inline]
-    pub fn source_did_change(&self) -> bool {
+    pub unsafe fn source_did_change(self: &CFURLEnumerator) -> bool {
         extern "C-unwind" {
             fn CFURLEnumeratorGetSourceDidChange(enumerator: &CFURLEnumerator) -> Boolean;
         }
@@ -258,29 +242,21 @@ extern "C-unwind" {
     ) -> CFURLEnumeratorResult;
 }
 
-#[deprecated = "renamed to `CFURLEnumerator::skip_descendents`"]
-#[inline]
-pub extern "C-unwind" fn CFURLEnumeratorSkipDescendents(enumerator: &CFURLEnumerator) {
-    extern "C-unwind" {
-        fn CFURLEnumeratorSkipDescendents(enumerator: &CFURLEnumerator);
-    }
-    unsafe { CFURLEnumeratorSkipDescendents(enumerator) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CFURLEnumerator::skip_descendents`"]
+    pub fn CFURLEnumeratorSkipDescendents(enumerator: &CFURLEnumerator);
 }
 
-#[deprecated = "renamed to `CFURLEnumerator::descendent_level`"]
-#[inline]
-pub extern "C-unwind" fn CFURLEnumeratorGetDescendentLevel(
-    enumerator: &CFURLEnumerator,
-) -> CFIndex {
-    extern "C-unwind" {
-        fn CFURLEnumeratorGetDescendentLevel(enumerator: &CFURLEnumerator) -> CFIndex;
-    }
-    unsafe { CFURLEnumeratorGetDescendentLevel(enumerator) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CFURLEnumerator::descendent_level`"]
+    pub fn CFURLEnumeratorGetDescendentLevel(enumerator: &CFURLEnumerator) -> CFIndex;
 }
 
 #[deprecated = "renamed to `CFURLEnumerator::source_did_change`"]
 #[inline]
-pub extern "C-unwind" fn CFURLEnumeratorGetSourceDidChange(enumerator: &CFURLEnumerator) -> bool {
+pub unsafe extern "C-unwind" fn CFURLEnumeratorGetSourceDidChange(
+    enumerator: &CFURLEnumerator,
+) -> bool {
     extern "C-unwind" {
         fn CFURLEnumeratorGetSourceDidChange(enumerator: &CFURLEnumerator) -> Boolean;
     }

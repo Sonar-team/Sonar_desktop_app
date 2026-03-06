@@ -33,11 +33,6 @@ extern "C" {
     pub static UIActionPasteAndSearch: &'static UIActionIdentifier;
 }
 
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uiactionnewfrompasteboard?language=objc)
-    pub static UIActionNewFromPasteboard: &'static UIActionIdentifier;
-}
-
 /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uiactionhandler?language=objc)
 #[cfg(all(feature = "UIMenuElement", feature = "block2"))]
 pub type UIActionHandler = *mut block2::DynBlock<dyn Fn(NonNull<UIAction>)>;
@@ -87,70 +82,64 @@ impl UIAction {
         /// Short display title.
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: &NSString);
+        pub unsafe fn setTitle(&self, title: &NSString);
 
         #[cfg(feature = "UIImage")]
         /// Image that can appear next to this action.
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`image`][Self::image].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&UIImage>);
+        pub unsafe fn setImage(&self, image: Option<&UIImage>);
 
         /// Elaborated title used in keyboard shortcut overlay.
         #[unsafe(method(discoverabilityTitle))]
         #[unsafe(method_family = none)]
-        pub fn discoverabilityTitle(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn discoverabilityTitle(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`discoverabilityTitle`][Self::discoverabilityTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDiscoverabilityTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setDiscoverabilityTitle(&self, discoverability_title: Option<&NSString>);
+        pub unsafe fn setDiscoverabilityTitle(&self, discoverability_title: Option<&NSString>);
 
         /// This action's identifier.
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Retained<UIActionIdentifier>;
+        pub unsafe fn identifier(&self) -> Retained<UIActionIdentifier>;
 
         /// This action's style.
         #[unsafe(method(attributes))]
         #[unsafe(method_family = none)]
-        pub fn attributes(&self) -> UIMenuElementAttributes;
+        pub unsafe fn attributes(&self) -> UIMenuElementAttributes;
 
         /// Setter for [`attributes`][Self::attributes].
         #[unsafe(method(setAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributes(&self, attributes: UIMenuElementAttributes);
+        pub unsafe fn setAttributes(&self, attributes: UIMenuElementAttributes);
 
         /// State that can appear next to this action.
         #[unsafe(method(state))]
         #[unsafe(method_family = none)]
-        pub fn state(&self) -> UIMenuElementState;
+        pub unsafe fn state(&self) -> UIMenuElementState;
 
         /// Setter for [`state`][Self::state].
         #[unsafe(method(setState:))]
         #[unsafe(method_family = none)]
-        pub fn setState(&self, state: UIMenuElementState);
+        pub unsafe fn setState(&self, state: UIMenuElementState);
 
         /// If available, the object on behalf of which the actionHandler is called.
         #[unsafe(method(sender))]
         #[unsafe(method_family = none)]
-        pub fn sender(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn sender(&self) -> Option<Retained<AnyObject>>;
 
         #[cfg(feature = "block2")]
         /// Creates a UIAction with an empty title, nil image, and automatically generated identifier
@@ -160,10 +149,6 @@ impl UIAction {
         ///
         ///
         /// Returns: A new UIAction.
-        ///
-        /// # Safety
-        ///
-        /// `handler` must be a valid pointer.
         #[unsafe(method(actionWithHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn actionWithHandler(
@@ -185,10 +170,6 @@ impl UIAction {
         ///
         ///
         /// Returns: A new UIAction.
-        ///
-        /// # Safety
-        ///
-        /// `handler` must be a valid pointer.
         #[unsafe(method(actionWithTitle:image:identifier:handler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn actionWithTitle_image_identifier_handler(
@@ -213,9 +194,6 @@ impl UIAction {
 #[cfg(feature = "UIMenuElement")]
 impl UIAction {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -243,10 +221,6 @@ impl UIAction {
         ///
         ///
         /// Returns: A new UIAction.
-        ///
-        /// # Safety
-        ///
-        /// `responder` must implement UIKeyInput.
         #[unsafe(method(captureTextFromCameraActionForResponder:identifier:))]
         #[unsafe(method_family = none)]
         pub unsafe fn captureTextFromCameraActionForResponder_identifier(

@@ -65,24 +65,24 @@ impl UNNotificationAction {
     extern_methods!(
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Retained<NSString>;
+        pub unsafe fn identifier(&self) -> Retained<NSString>;
 
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         #[unsafe(method(options))]
         #[unsafe(method_family = none)]
-        pub fn options(&self) -> UNNotificationActionOptions;
+        pub unsafe fn options(&self) -> UNNotificationActionOptions;
 
         #[cfg(feature = "UNNotificationActionIcon")]
         #[unsafe(method(icon))]
         #[unsafe(method_family = none)]
-        pub fn icon(&self) -> Option<Retained<UNNotificationActionIcon>>;
+        pub unsafe fn icon(&self) -> Option<Retained<UNNotificationActionIcon>>;
 
         #[unsafe(method(actionWithIdentifier:title:options:))]
         #[unsafe(method_family = none)]
-        pub fn actionWithIdentifier_title_options(
+        pub unsafe fn actionWithIdentifier_title_options(
             identifier: &NSString,
             title: &NSString,
             options: UNNotificationActionOptions,
@@ -91,7 +91,7 @@ impl UNNotificationAction {
         #[cfg(feature = "UNNotificationActionIcon")]
         #[unsafe(method(actionWithIdentifier:title:options:icon:))]
         #[unsafe(method_family = none)]
-        pub fn actionWithIdentifier_title_options_icon(
+        pub unsafe fn actionWithIdentifier_title_options_icon(
             identifier: &NSString,
             title: &NSString,
             options: UNNotificationActionOptions,
@@ -144,7 +144,7 @@ impl UNTextInputNotificationAction {
     extern_methods!(
         #[unsafe(method(actionWithIdentifier:title:options:textInputButtonTitle:textInputPlaceholder:))]
         #[unsafe(method_family = none)]
-        pub fn actionWithIdentifier_title_options_textInputButtonTitle_textInputPlaceholder(
+        pub unsafe fn actionWithIdentifier_title_options_textInputButtonTitle_textInputPlaceholder(
             identifier: &NSString,
             title: &NSString,
             options: UNNotificationActionOptions,
@@ -155,7 +155,7 @@ impl UNTextInputNotificationAction {
         #[cfg(feature = "UNNotificationActionIcon")]
         #[unsafe(method(actionWithIdentifier:title:options:icon:textInputButtonTitle:textInputPlaceholder:))]
         #[unsafe(method_family = none)]
-        pub fn actionWithIdentifier_title_options_icon_textInputButtonTitle_textInputPlaceholder(
+        pub unsafe fn actionWithIdentifier_title_options_icon_textInputButtonTitle_textInputPlaceholder(
             identifier: &NSString,
             title: &NSString,
             options: UNNotificationActionOptions,
@@ -166,11 +166,11 @@ impl UNTextInputNotificationAction {
 
         #[unsafe(method(textInputButtonTitle))]
         #[unsafe(method_family = none)]
-        pub fn textInputButtonTitle(&self) -> Retained<NSString>;
+        pub unsafe fn textInputButtonTitle(&self) -> Retained<NSString>;
 
         #[unsafe(method(textInputPlaceholder))]
         #[unsafe(method_family = none)]
-        pub fn textInputPlaceholder(&self) -> Retained<NSString>;
+        pub unsafe fn textInputPlaceholder(&self) -> Retained<NSString>;
     );
 }
 
@@ -179,7 +179,7 @@ impl UNTextInputNotificationAction {
     extern_methods!(
         #[unsafe(method(actionWithIdentifier:title:options:))]
         #[unsafe(method_family = none)]
-        pub fn actionWithIdentifier_title_options(
+        pub unsafe fn actionWithIdentifier_title_options(
             identifier: &NSString,
             title: &NSString,
             options: UNNotificationActionOptions,
@@ -188,7 +188,7 @@ impl UNTextInputNotificationAction {
         #[cfg(feature = "UNNotificationActionIcon")]
         #[unsafe(method(actionWithIdentifier:title:options:icon:))]
         #[unsafe(method_family = none)]
-        pub fn actionWithIdentifier_title_options_icon(
+        pub unsafe fn actionWithIdentifier_title_options_icon(
             identifier: &NSString,
             title: &NSString,
             options: UNNotificationActionOptions,

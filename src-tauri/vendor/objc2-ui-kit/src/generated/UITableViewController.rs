@@ -97,19 +97,19 @@ impl UITableViewController {
         #[cfg(feature = "UITableView")]
         #[unsafe(method(initWithStyle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithStyle(this: Allocated<Self>, style: UITableViewStyle) -> Retained<Self>;
+        pub unsafe fn initWithStyle(
+            this: Allocated<Self>,
+            style: UITableViewStyle,
+        ) -> Retained<Self>;
 
         #[unsafe(method(initWithNibName:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibName_bundle(
+        pub unsafe fn initWithNibName_bundle(
             this: Allocated<Self>,
             nib_name_or_nil: Option<&NSString>,
             nib_bundle_or_nil: Option<&NSBundle>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -120,26 +120,22 @@ impl UITableViewController {
         #[cfg(all(feature = "UIScrollView", feature = "UITableView", feature = "UIView"))]
         #[unsafe(method(tableView))]
         #[unsafe(method_family = none)]
-        pub fn tableView(&self) -> Option<Retained<UITableView>>;
+        pub unsafe fn tableView(&self) -> Option<Retained<UITableView>>;
 
         #[cfg(all(feature = "UIScrollView", feature = "UITableView", feature = "UIView"))]
         /// Setter for [`tableView`][Self::tableView].
-        ///
-        /// # Safety
-        ///
-        /// `table_view` might not allow `None`.
         #[unsafe(method(setTableView:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTableView(&self, table_view: Option<&UITableView>);
 
         #[unsafe(method(clearsSelectionOnViewWillAppear))]
         #[unsafe(method_family = none)]
-        pub fn clearsSelectionOnViewWillAppear(&self) -> bool;
+        pub unsafe fn clearsSelectionOnViewWillAppear(&self) -> bool;
 
         /// Setter for [`clearsSelectionOnViewWillAppear`][Self::clearsSelectionOnViewWillAppear].
         #[unsafe(method(setClearsSelectionOnViewWillAppear:))]
         #[unsafe(method_family = none)]
-        pub fn setClearsSelectionOnViewWillAppear(
+        pub unsafe fn setClearsSelectionOnViewWillAppear(
             &self,
             clears_selection_on_view_will_appear: bool,
         );
@@ -151,7 +147,7 @@ impl UITableViewController {
         ))]
         #[unsafe(method(refreshControl))]
         #[unsafe(method_family = none)]
-        pub fn refreshControl(&self) -> Option<Retained<UIRefreshControl>>;
+        pub unsafe fn refreshControl(&self) -> Option<Retained<UIRefreshControl>>;
 
         #[cfg(all(
             feature = "UIControl",
@@ -161,7 +157,7 @@ impl UITableViewController {
         /// Setter for [`refreshControl`][Self::refreshControl].
         #[unsafe(method(setRefreshControl:))]
         #[unsafe(method_family = none)]
-        pub fn setRefreshControl(&self, refresh_control: Option<&UIRefreshControl>);
+        pub unsafe fn setRefreshControl(&self, refresh_control: Option<&UIRefreshControl>);
     );
 }
 
@@ -171,10 +167,10 @@ impl UITableViewController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

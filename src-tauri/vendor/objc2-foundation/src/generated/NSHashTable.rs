@@ -13,7 +13,6 @@ pub static NSHashTableStrongMemory: NSPointerFunctionsOptions =
 
 /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nshashtablezeroingweakmemory?language=objc)
 #[cfg(feature = "NSPointerFunctions")]
-#[deprecated = "GC no longer supported"]
 pub static NSHashTableZeroingWeakMemory: NSPointerFunctionsOptions =
     NSPointerFunctionsOptions(NSPointerFunctionsOptions::ZeroingWeakMemory.0);
 
@@ -41,20 +40,6 @@ extern_class!(
     #[derive(Debug, PartialEq, Eq, Hash)]
     pub struct NSHashTable<ObjectType: ?Sized = AnyObject>;
 );
-
-impl<ObjectType: ?Sized + Message> NSHashTable<ObjectType> {
-    /// Unchecked conversion of the generic parameter.
-    ///
-    /// # Safety
-    ///
-    /// The generic must be valid to reinterpret as the given type.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewObjectType: ?Sized + Message>(
-        &self,
-    ) -> &NSHashTable<NewObjectType> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
 
 #[cfg(feature = "NSObject")]
 extern_conformance!(
@@ -90,7 +75,7 @@ impl<ObjectType: Message> NSHashTable<ObjectType> {
         #[cfg(feature = "NSPointerFunctions")]
         #[unsafe(method(initWithOptions:capacity:))]
         #[unsafe(method_family = init)]
-        pub fn initWithOptions_capacity(
+        pub unsafe fn initWithOptions_capacity(
             this: Allocated<Self>,
             options: NSPointerFunctionsOptions,
             initial_capacity: NSUInteger,
@@ -99,7 +84,7 @@ impl<ObjectType: Message> NSHashTable<ObjectType> {
         #[cfg(feature = "NSPointerFunctions")]
         #[unsafe(method(initWithPointerFunctions:capacity:))]
         #[unsafe(method_family = init)]
-        pub fn initWithPointerFunctions_capacity(
+        pub unsafe fn initWithPointerFunctions_capacity(
             this: Allocated<Self>,
             functions: &NSPointerFunctions,
             initial_capacity: NSUInteger,
@@ -108,93 +93,90 @@ impl<ObjectType: Message> NSHashTable<ObjectType> {
         #[cfg(feature = "NSPointerFunctions")]
         #[unsafe(method(hashTableWithOptions:))]
         #[unsafe(method_family = none)]
-        pub fn hashTableWithOptions(
+        pub unsafe fn hashTableWithOptions(
             options: NSPointerFunctionsOptions,
         ) -> Retained<NSHashTable<ObjectType>>;
 
         #[deprecated = "GC no longer supported"]
         #[unsafe(method(hashTableWithWeakObjects))]
         #[unsafe(method_family = none)]
-        pub fn hashTableWithWeakObjects() -> Retained<AnyObject>;
+        pub unsafe fn hashTableWithWeakObjects() -> Retained<AnyObject>;
 
         #[unsafe(method(weakObjectsHashTable))]
         #[unsafe(method_family = none)]
-        pub fn weakObjectsHashTable() -> Retained<NSHashTable<ObjectType>>;
+        pub unsafe fn weakObjectsHashTable() -> Retained<NSHashTable<ObjectType>>;
 
         #[cfg(feature = "NSPointerFunctions")]
         #[unsafe(method(pointerFunctions))]
         #[unsafe(method_family = none)]
-        pub fn pointerFunctions(&self) -> Retained<NSPointerFunctions>;
+        pub unsafe fn pointerFunctions(&self) -> Retained<NSPointerFunctions>;
 
         #[unsafe(method(count))]
         #[unsafe(method_family = none)]
-        pub fn count(&self) -> NSUInteger;
+        pub unsafe fn count(&self) -> NSUInteger;
 
         #[unsafe(method(member:))]
         #[unsafe(method_family = none)]
-        pub fn member(&self, object: Option<&ObjectType>) -> Option<Retained<ObjectType>>;
+        pub unsafe fn member(&self, object: Option<&ObjectType>) -> Option<Retained<ObjectType>>;
 
         #[cfg(feature = "NSEnumerator")]
-        /// # Safety
-        ///
-        /// The returned enumerator's underlying collection should not be mutated while in use.
         #[unsafe(method(objectEnumerator))]
         #[unsafe(method_family = none)]
         pub unsafe fn objectEnumerator(&self) -> Retained<NSEnumerator<ObjectType>>;
 
         #[unsafe(method(addObject:))]
         #[unsafe(method_family = none)]
-        pub fn addObject(&self, object: Option<&ObjectType>);
+        pub unsafe fn addObject(&self, object: Option<&ObjectType>);
 
         #[unsafe(method(removeObject:))]
         #[unsafe(method_family = none)]
-        pub fn removeObject(&self, object: Option<&ObjectType>);
+        pub unsafe fn removeObject(&self, object: Option<&ObjectType>);
 
         #[unsafe(method(removeAllObjects))]
         #[unsafe(method_family = none)]
-        pub fn removeAllObjects(&self);
+        pub unsafe fn removeAllObjects(&self);
 
         #[cfg(feature = "NSArray")]
         #[unsafe(method(allObjects))]
         #[unsafe(method_family = none)]
-        pub fn allObjects(&self) -> Retained<NSArray<ObjectType>>;
+        pub unsafe fn allObjects(&self) -> Retained<NSArray<ObjectType>>;
 
         #[unsafe(method(anyObject))]
         #[unsafe(method_family = none)]
-        pub fn anyObject(&self) -> Option<Retained<ObjectType>>;
+        pub unsafe fn anyObject(&self) -> Option<Retained<ObjectType>>;
 
         #[unsafe(method(containsObject:))]
         #[unsafe(method_family = none)]
-        pub fn containsObject(&self, an_object: Option<&ObjectType>) -> bool;
+        pub unsafe fn containsObject(&self, an_object: Option<&ObjectType>) -> bool;
 
         #[unsafe(method(intersectsHashTable:))]
         #[unsafe(method_family = none)]
-        pub fn intersectsHashTable(&self, other: &NSHashTable<ObjectType>) -> bool;
+        pub unsafe fn intersectsHashTable(&self, other: &NSHashTable<ObjectType>) -> bool;
 
         #[unsafe(method(isEqualToHashTable:))]
         #[unsafe(method_family = none)]
-        pub fn isEqualToHashTable(&self, other: &NSHashTable<ObjectType>) -> bool;
+        pub unsafe fn isEqualToHashTable(&self, other: &NSHashTable<ObjectType>) -> bool;
 
         #[unsafe(method(isSubsetOfHashTable:))]
         #[unsafe(method_family = none)]
-        pub fn isSubsetOfHashTable(&self, other: &NSHashTable<ObjectType>) -> bool;
+        pub unsafe fn isSubsetOfHashTable(&self, other: &NSHashTable<ObjectType>) -> bool;
 
         #[unsafe(method(intersectHashTable:))]
         #[unsafe(method_family = none)]
-        pub fn intersectHashTable(&self, other: &NSHashTable<ObjectType>);
+        pub unsafe fn intersectHashTable(&self, other: &NSHashTable<ObjectType>);
 
         #[unsafe(method(unionHashTable:))]
         #[unsafe(method_family = none)]
-        pub fn unionHashTable(&self, other: &NSHashTable<ObjectType>);
+        pub unsafe fn unionHashTable(&self, other: &NSHashTable<ObjectType>);
 
         #[unsafe(method(minusHashTable:))]
         #[unsafe(method_family = none)]
-        pub fn minusHashTable(&self, other: &NSHashTable<ObjectType>);
+        pub unsafe fn minusHashTable(&self, other: &NSHashTable<ObjectType>);
 
         #[cfg(feature = "NSSet")]
         #[unsafe(method(setRepresentation))]
         #[unsafe(method_family = none)]
-        pub fn setRepresentation(&self) -> Retained<NSSet<ObjectType>>;
+        pub unsafe fn setRepresentation(&self) -> Retained<NSSet<ObjectType>>;
     );
 }
 
@@ -203,19 +185,12 @@ impl<ObjectType: Message> NSHashTable<ObjectType> {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl<ObjectType: Message> DefaultRetained for NSHashTable<ObjectType> {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// **************    (void *) Hash table operations    ***************
@@ -245,23 +220,13 @@ unsafe impl RefEncode for NSHashEnumerator {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `table` generic should be of the correct type.
     pub fn NSFreeHashTable(table: &NSHashTable);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `table` generic should be of the correct type.
     pub fn NSResetHashTable(table: &NSHashTable);
 }
 
-/// # Safety
-///
-/// - `table1` generic should be of the correct type.
-/// - `table2` generic should be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn NSCompareHashTables(
     table1: &NSHashTable,
@@ -273,10 +238,6 @@ pub unsafe extern "C-unwind" fn NSCompareHashTables(
     unsafe { NSCompareHashTables(table1, table2) }.as_bool()
 }
 
-/// # Safety
-///
-/// - `table` generic should be of the correct type.
-/// - `zone` must be a valid pointer or null.
 #[cfg(feature = "NSZone")]
 #[inline]
 pub unsafe extern "C-unwind" fn NSCopyHashTableWithZone(
@@ -291,10 +252,6 @@ pub unsafe extern "C-unwind" fn NSCopyHashTableWithZone(
         .expect("function was marked as returning non-null, but actually returned NULL")
 }
 
-/// # Safety
-///
-/// - `table` generic should be of the correct type.
-/// - `pointer` must be a valid pointer or null.
 #[inline]
 pub unsafe extern "C-unwind" fn NSHashGet(
     table: &NSHashTable,
@@ -308,70 +265,39 @@ pub unsafe extern "C-unwind" fn NSHashGet(
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `table` generic should be of the correct type.
-    /// - `pointer` must be a valid pointer or null.
     pub fn NSHashInsert(table: &NSHashTable, pointer: *const c_void);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `table` generic should be of the correct type.
-    /// - `pointer` must be a valid pointer or null.
     pub fn NSHashInsertKnownAbsent(table: &NSHashTable, pointer: *const c_void);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `table` generic should be of the correct type.
-    /// - `pointer` must be a valid pointer or null.
     pub fn NSHashInsertIfAbsent(table: &NSHashTable, pointer: *const c_void) -> *mut c_void;
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `table` generic should be of the correct type.
-    /// - `pointer` must be a valid pointer or null.
     pub fn NSHashRemove(table: &NSHashTable, pointer: *const c_void);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `table` generic should be of the correct type.
     pub fn NSEnumerateHashTable(table: &NSHashTable) -> NSHashEnumerator;
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `enumerator` must be a valid pointer.
     pub fn NSNextHashEnumeratorItem(enumerator: NonNull<NSHashEnumerator>) -> *mut c_void;
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `enumerator` must be a valid pointer.
     pub fn NSEndHashTableEnumeration(enumerator: NonNull<NSHashEnumerator>);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `table` generic should be of the correct type.
     pub fn NSCountHashTable(table: &NSHashTable) -> NSUInteger;
 }
 
 #[cfg(feature = "NSString")]
 impl NSString {
-    /// # Safety
-    ///
-    /// `table` generic should be of the correct type.
     #[doc(alias = "NSStringFromHashTable")]
     #[cfg(feature = "NSString")]
     #[inline]
@@ -385,9 +311,6 @@ impl NSString {
     }
 }
 
-/// # Safety
-///
-/// `table` generic should be of the correct type.
 #[cfg(feature = "NSArray")]
 #[inline]
 pub unsafe extern "C-unwind" fn NSAllHashTableObjects(table: &NSHashTable) -> Retained<NSArray> {
@@ -404,7 +327,6 @@ pub unsafe extern "C-unwind" fn NSAllHashTableObjects(table: &NSHashTable) -> Re
 /// See also [Apple's documentation](https://developer.apple.com/documentation/foundation/nshashtablecallbacks?language=objc)
 #[cfg(feature = "NSString")]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct NSHashTableCallBacks {
     pub hash:
@@ -447,14 +369,6 @@ unsafe impl RefEncode for NSHashTableCallBacks {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-/// # Safety
-///
-/// - `call_backs` struct field 1 must be implemented correctly.
-/// - `call_backs` struct field 2 must be implemented correctly.
-/// - `call_backs` struct field 3 must be implemented correctly.
-/// - `call_backs` struct field 4 must be implemented correctly.
-/// - `call_backs` struct field 5 must be implemented correctly.
-/// - `zone` must be a valid pointer or null.
 #[cfg(all(feature = "NSString", feature = "NSZone"))]
 #[inline]
 pub unsafe extern "C-unwind" fn NSCreateHashTableWithZone(
@@ -474,13 +388,6 @@ pub unsafe extern "C-unwind" fn NSCreateHashTableWithZone(
         .expect("function was marked as returning non-null, but actually returned NULL")
 }
 
-/// # Safety
-///
-/// - `call_backs` struct field 1 must be implemented correctly.
-/// - `call_backs` struct field 2 must be implemented correctly.
-/// - `call_backs` struct field 3 must be implemented correctly.
-/// - `call_backs` struct field 4 must be implemented correctly.
-/// - `call_backs` struct field 5 must be implemented correctly.
 #[cfg(feature = "NSString")]
 #[inline]
 pub unsafe extern "C-unwind" fn NSCreateHashTable(
@@ -543,7 +450,6 @@ extern "C" {
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nsinthashcallbacks?language=objc)
     #[cfg(feature = "NSString")]
-    #[deprecated = "Not supported"]
     pub static NSIntHashCallBacks: NSHashTableCallBacks;
 }
 

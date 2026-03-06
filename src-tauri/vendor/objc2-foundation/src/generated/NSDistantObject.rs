@@ -29,9 +29,6 @@ extern_conformance!(
 impl NSDistantObject {
     extern_methods!(
         #[cfg(feature = "NSConnection")]
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
         #[deprecated = "Use NSXPCConnection instead"]
         #[unsafe(method(proxyWithTarget:connection:))]
         #[unsafe(method_family = none)]
@@ -41,9 +38,6 @@ impl NSDistantObject {
         ) -> Option<Retained<AnyObject>>;
 
         #[cfg(feature = "NSConnection")]
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
         #[deprecated = "Use NSXPCConnection instead"]
         #[unsafe(method(initWithTarget:connection:))]
         #[unsafe(method_family = init)]
@@ -54,9 +48,6 @@ impl NSDistantObject {
         ) -> Option<Retained<Self>>;
 
         #[cfg(feature = "NSConnection")]
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
         #[deprecated = "Use NSXPCConnection instead"]
         #[unsafe(method(proxyWithLocal:connection:))]
         #[unsafe(method_family = none)]
@@ -66,9 +57,6 @@ impl NSDistantObject {
         ) -> Retained<AnyObject>;
 
         #[cfg(feature = "NSConnection")]
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
         #[deprecated = "Use NSXPCConnection instead"]
         #[unsafe(method(initWithLocal:connection:))]
         #[unsafe(method_family = init)]
@@ -79,9 +67,6 @@ impl NSDistantObject {
         ) -> Retained<Self>;
 
         #[cfg(feature = "NSCoder")]
-        /// # Safety
-        ///
-        /// `in_coder` possibly has further requirements.
         #[deprecated = "Use NSXPCConnection instead"]
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
@@ -90,9 +75,6 @@ impl NSDistantObject {
             in_coder: &NSCoder,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `proto` possibly has further requirements.
         #[deprecated = "Use NSXPCConnection instead"]
         #[unsafe(method(setProtocolForProxy:))]
         #[unsafe(method_family = none)]
@@ -102,6 +84,6 @@ impl NSDistantObject {
         #[deprecated = "Use NSXPCConnection instead"]
         #[unsafe(method(connectionForProxy))]
         #[unsafe(method_family = none)]
-        pub fn connectionForProxy(&self) -> Retained<NSConnection>;
+        pub unsafe fn connectionForProxy(&self) -> Retained<NSConnection>;
     );
 }

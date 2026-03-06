@@ -24,10 +24,6 @@ extern_conformance!(
 
 impl CADisplayLink {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `sel` must be a valid selector.
         #[unsafe(method(displayLinkWithTarget:selector:))]
         #[unsafe(method_family = none)]
         pub unsafe fn displayLinkWithTarget_selector(
@@ -35,80 +31,77 @@ impl CADisplayLink {
             sel: Sel,
         ) -> Retained<CADisplayLink>;
 
-        /// # Safety
-        ///
-        /// `runloop` possibly has additional threading requirements.
         #[unsafe(method(addToRunLoop:forMode:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addToRunLoop_forMode(&self, runloop: &NSRunLoop, mode: &NSRunLoopMode);
 
-        /// # Safety
-        ///
-        /// `runloop` possibly has additional threading requirements.
         #[unsafe(method(removeFromRunLoop:forMode:))]
         #[unsafe(method_family = none)]
         pub unsafe fn removeFromRunLoop_forMode(&self, runloop: &NSRunLoop, mode: &NSRunLoopMode);
 
         #[unsafe(method(invalidate))]
         #[unsafe(method_family = none)]
-        pub fn invalidate(&self);
+        pub unsafe fn invalidate(&self);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(timestamp))]
         #[unsafe(method_family = none)]
-        pub fn timestamp(&self) -> CFTimeInterval;
+        pub unsafe fn timestamp(&self) -> CFTimeInterval;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(duration))]
         #[unsafe(method_family = none)]
-        pub fn duration(&self) -> CFTimeInterval;
+        pub unsafe fn duration(&self) -> CFTimeInterval;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(targetTimestamp))]
         #[unsafe(method_family = none)]
-        pub fn targetTimestamp(&self) -> CFTimeInterval;
+        pub unsafe fn targetTimestamp(&self) -> CFTimeInterval;
 
         #[unsafe(method(isPaused))]
         #[unsafe(method_family = none)]
-        pub fn isPaused(&self) -> bool;
+        pub unsafe fn isPaused(&self) -> bool;
 
         /// Setter for [`isPaused`][Self::isPaused].
         #[unsafe(method(setPaused:))]
         #[unsafe(method_family = none)]
-        pub fn setPaused(&self, paused: bool);
+        pub unsafe fn setPaused(&self, paused: bool);
 
         #[deprecated = "preferredFramesPerSecond"]
         #[unsafe(method(frameInterval))]
         #[unsafe(method_family = none)]
-        pub fn frameInterval(&self) -> NSInteger;
+        pub unsafe fn frameInterval(&self) -> NSInteger;
 
         /// Setter for [`frameInterval`][Self::frameInterval].
         #[deprecated = "preferredFramesPerSecond"]
         #[unsafe(method(setFrameInterval:))]
         #[unsafe(method_family = none)]
-        pub fn setFrameInterval(&self, frame_interval: NSInteger);
+        pub unsafe fn setFrameInterval(&self, frame_interval: NSInteger);
 
         #[deprecated]
         #[unsafe(method(preferredFramesPerSecond))]
         #[unsafe(method_family = none)]
-        pub fn preferredFramesPerSecond(&self) -> NSInteger;
+        pub unsafe fn preferredFramesPerSecond(&self) -> NSInteger;
 
         /// Setter for [`preferredFramesPerSecond`][Self::preferredFramesPerSecond].
         #[deprecated]
         #[unsafe(method(setPreferredFramesPerSecond:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredFramesPerSecond(&self, preferred_frames_per_second: NSInteger);
+        pub unsafe fn setPreferredFramesPerSecond(&self, preferred_frames_per_second: NSInteger);
 
         #[cfg(feature = "CAFrameRateRange")]
         #[unsafe(method(preferredFrameRateRange))]
         #[unsafe(method_family = none)]
-        pub fn preferredFrameRateRange(&self) -> CAFrameRateRange;
+        pub unsafe fn preferredFrameRateRange(&self) -> CAFrameRateRange;
 
         #[cfg(feature = "CAFrameRateRange")]
         /// Setter for [`preferredFrameRateRange`][Self::preferredFrameRateRange].
         #[unsafe(method(setPreferredFrameRateRange:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredFrameRateRange(&self, preferred_frame_rate_range: CAFrameRateRange);
+        pub unsafe fn setPreferredFrameRateRange(
+            &self,
+            preferred_frame_rate_range: CAFrameRateRange,
+        );
     );
 }
 
@@ -117,17 +110,10 @@ impl CADisplayLink {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for CADisplayLink {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

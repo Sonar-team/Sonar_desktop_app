@@ -559,7 +559,6 @@ pub type IOUSBLowLatencyIsocCompletionAction = Option<
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbcompletion?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBCompletion {
     pub target: *mut c_void,
@@ -594,7 +593,6 @@ unsafe impl RefEncode for IOUSBCompletion {
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbcompletionwithtimestamp?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBCompletionWithTimeStamp {
     pub target: *mut c_void,
@@ -629,7 +627,6 @@ unsafe impl RefEncode for IOUSBCompletionWithTimeStamp {
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbisoccompletion?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBIsocCompletion {
     pub target: *mut c_void,
@@ -664,7 +661,6 @@ unsafe impl RefEncode for IOUSBIsocCompletion {
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousblowlatencyisoccompletion?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBLowLatencyIsocCompletion {
     pub target: *mut c_void,

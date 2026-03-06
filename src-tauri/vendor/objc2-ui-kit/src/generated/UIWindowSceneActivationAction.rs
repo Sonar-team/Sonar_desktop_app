@@ -75,14 +75,12 @@ impl UIWindowSceneActivationAction {
         /// The actions title. Set to nil to use the default title.
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: Option<&NSString>);
+        pub unsafe fn setTitle(&self, title: Option<&NSString>);
 
         #[cfg(all(feature = "UIWindowSceneActivationConfiguration", feature = "block2"))]
         /// Returns a new
@@ -94,10 +92,6 @@ impl UIWindowSceneActivationAction {
         ///
         /// Parameter `configurationProvider`: Called when the action has been triggered. It should return a
         /// `UIWindowSceneActivationConfiguration`whose user activity will be used to request scene activation.
-        ///
-        /// # Safety
-        ///
-        /// `configuration_provider` must be a valid pointer.
         #[unsafe(method(actionWithIdentifier:alternateAction:configurationProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn actionWithIdentifier_alternateAction_configurationProvider(
@@ -108,9 +102,6 @@ impl UIWindowSceneActivationAction {
         ) -> Retained<Self>;
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `handler` must be a valid pointer.
         #[unsafe(method(actionWithHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn actionWithHandler(
@@ -119,9 +110,6 @@ impl UIWindowSceneActivationAction {
         ) -> Retained<Self>;
 
         #[cfg(all(feature = "UIImage", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `handler` must be a valid pointer.
         #[unsafe(method(actionWithTitle:image:identifier:handler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn actionWithTitle_image_identifier_handler(
@@ -152,9 +140,6 @@ impl UIWindowSceneActivationAction {
 #[cfg(all(feature = "UIAction", feature = "UIMenuElement"))]
 impl UIWindowSceneActivationAction {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(

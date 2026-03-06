@@ -30,30 +30,30 @@ impl NSClickGestureRecognizer {
     extern_methods!(
         #[unsafe(method(buttonMask))]
         #[unsafe(method_family = none)]
-        pub fn buttonMask(&self) -> NSUInteger;
+        pub unsafe fn buttonMask(&self) -> NSUInteger;
 
         /// Setter for [`buttonMask`][Self::buttonMask].
         #[unsafe(method(setButtonMask:))]
         #[unsafe(method_family = none)]
-        pub fn setButtonMask(&self, button_mask: NSUInteger);
+        pub unsafe fn setButtonMask(&self, button_mask: NSUInteger);
 
         #[unsafe(method(numberOfClicksRequired))]
         #[unsafe(method_family = none)]
-        pub fn numberOfClicksRequired(&self) -> NSInteger;
+        pub unsafe fn numberOfClicksRequired(&self) -> NSInteger;
 
         /// Setter for [`numberOfClicksRequired`][Self::numberOfClicksRequired].
         #[unsafe(method(setNumberOfClicksRequired:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberOfClicksRequired(&self, number_of_clicks_required: NSInteger);
+        pub unsafe fn setNumberOfClicksRequired(&self, number_of_clicks_required: NSInteger);
 
         #[unsafe(method(numberOfTouchesRequired))]
         #[unsafe(method_family = none)]
-        pub fn numberOfTouchesRequired(&self) -> NSInteger;
+        pub unsafe fn numberOfTouchesRequired(&self) -> NSInteger;
 
         /// Setter for [`numberOfTouchesRequired`][Self::numberOfTouchesRequired].
         #[unsafe(method(setNumberOfTouchesRequired:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberOfTouchesRequired(&self, number_of_touches_required: NSInteger);
+        pub unsafe fn setNumberOfTouchesRequired(&self, number_of_touches_required: NSInteger);
     );
 }
 
@@ -61,10 +61,6 @@ impl NSClickGestureRecognizer {
 #[cfg(feature = "NSGestureRecognizer")]
 impl NSClickGestureRecognizer {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `action` must be a valid selector.
         #[unsafe(method(initWithTarget:action:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTarget_action(
@@ -73,9 +69,6 @@ impl NSClickGestureRecognizer {
             action: Option<Sel>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -91,10 +84,10 @@ impl NSClickGestureRecognizer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

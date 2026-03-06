@@ -95,8 +95,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn code(&self) -> Retained<NSString>;
 
         /// Setter for [`code`][Self::code].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setCode:))]
         #[unsafe(method_family = none)]
@@ -108,8 +106,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn align(&self) -> Retained<NSString>;
 
         /// Setter for [`align`][Self::align].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAlign:))]
         #[unsafe(method_family = none)]
@@ -121,8 +117,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn archive(&self) -> Retained<NSString>;
 
         /// Setter for [`archive`][Self::archive].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setArchive:))]
         #[unsafe(method_family = none)]
@@ -134,8 +128,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn border(&self) -> Retained<NSString>;
 
         /// Setter for [`border`][Self::border].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setBorder:))]
         #[unsafe(method_family = none)]
@@ -147,8 +139,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn codeBase(&self) -> Retained<NSString>;
 
         /// Setter for [`codeBase`][Self::codeBase].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setCodeBase:))]
         #[unsafe(method_family = none)]
@@ -160,8 +150,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn codeType(&self) -> Retained<NSString>;
 
         /// Setter for [`codeType`][Self::codeType].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setCodeType:))]
         #[unsafe(method_family = none)]
@@ -173,8 +161,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn data(&self) -> Retained<NSString>;
 
         /// Setter for [`data`][Self::data].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setData:))]
         #[unsafe(method_family = none)]
@@ -197,8 +183,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn height(&self) -> Retained<NSString>;
 
         /// Setter for [`height`][Self::height].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setHeight:))]
         #[unsafe(method_family = none)]
@@ -221,8 +205,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
@@ -234,8 +216,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn standby(&self) -> Retained<NSString>;
 
         /// Setter for [`standby`][Self::standby].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setStandby:))]
         #[unsafe(method_family = none)]
@@ -247,8 +227,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn r#type(&self) -> Retained<NSString>;
 
         /// Setter for [`type`][Self::type].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setType:))]
         #[unsafe(method_family = none)]
@@ -260,8 +238,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn useMap(&self) -> Retained<NSString>;
 
         /// Setter for [`useMap`][Self::useMap].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setUseMap:))]
         #[unsafe(method_family = none)]
@@ -284,8 +260,6 @@ impl DOMHTMLObjectElement {
         pub unsafe fn width(&self) -> Retained<NSString>;
 
         /// Setter for [`width`][Self::width].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setWidth:))]
         #[unsafe(method_family = none)]

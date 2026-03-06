@@ -90,19 +90,15 @@ impl NSDistributedNotificationCenter {
         #[cfg(feature = "NSString")]
         #[unsafe(method(notificationCenterForType:))]
         #[unsafe(method_family = none)]
-        pub fn notificationCenterForType(
+        pub unsafe fn notificationCenterForType(
             notification_center_type: &NSDistributedNotificationCenterType,
         ) -> Retained<NSDistributedNotificationCenter>;
 
         #[unsafe(method(defaultCenter))]
         #[unsafe(method_family = none)]
-        pub fn defaultCenter() -> Retained<NSDistributedNotificationCenter>;
+        pub unsafe fn defaultCenter() -> Retained<NSDistributedNotificationCenter>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// - `observer` should be of the correct type.
-        /// - `selector` must be a valid selector.
         #[unsafe(method(addObserver:selector:name:object:suspensionBehavior:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addObserver_selector_name_object_suspensionBehavior(
@@ -115,9 +111,6 @@ impl NSDistributedNotificationCenter {
         );
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `user_info` generic should be of the correct type.
         #[unsafe(method(postNotificationName:object:userInfo:deliverImmediately:))]
         #[unsafe(method_family = none)]
         pub unsafe fn postNotificationName_object_userInfo_deliverImmediately(
@@ -129,9 +122,6 @@ impl NSDistributedNotificationCenter {
         );
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `user_info` generic should be of the correct type.
         #[unsafe(method(postNotificationName:object:userInfo:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn postNotificationName_object_userInfo_options(
@@ -144,18 +134,14 @@ impl NSDistributedNotificationCenter {
 
         #[unsafe(method(suspended))]
         #[unsafe(method_family = none)]
-        pub fn suspended(&self) -> bool;
+        pub unsafe fn suspended(&self) -> bool;
 
         /// Setter for [`suspended`][Self::suspended].
         #[unsafe(method(setSuspended:))]
         #[unsafe(method_family = none)]
-        pub fn setSuspended(&self, suspended: bool);
+        pub unsafe fn setSuspended(&self, suspended: bool);
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// - `observer` should be of the correct type.
-        /// - `a_selector` must be a valid selector.
         #[unsafe(method(addObserver:selector:name:object:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addObserver_selector_name_object(
@@ -176,9 +162,6 @@ impl NSDistributedNotificationCenter {
         );
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `a_user_info` generic should be of the correct type.
         #[unsafe(method(postNotificationName:object:userInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn postNotificationName_object_userInfo(
@@ -189,9 +172,6 @@ impl NSDistributedNotificationCenter {
         );
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `observer` should be of the correct type.
         #[unsafe(method(removeObserver:name:object:))]
         #[unsafe(method_family = none)]
         pub unsafe fn removeObserver_name_object(
@@ -209,18 +189,10 @@ impl NSDistributedNotificationCenter {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSNotification")]
-impl DefaultRetained for NSDistributedNotificationCenter {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

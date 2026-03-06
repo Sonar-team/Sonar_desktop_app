@@ -11,12 +11,11 @@
 
 [package]
 edition = "2021"
-rust-version = "1.71.0"
+rust-version = "1.70.0"
 name = "softbuffer"
-version = "0.4.8"
-build = false
+version = "0.4.6"
+build = "build.rs"
 exclude = ["examples"]
-autolib = false
 autobins = false
 autoexamples = false
 autotests = false
@@ -40,17 +39,56 @@ repository = "https://github.com/rust-windowing/softbuffer"
 
 [package.metadata.docs.rs]
 all-features = true
+default-target = "x86_64-unknown-linux-gnu"
 rustdoc-args = [
     "--cfg",
     "docsrs",
 ]
-default-target = "x86_64-unknown-linux-gnu"
 targets = [
     "x86_64-pc-windows-msvc",
     "x86_64-apple-darwin",
     "x86_64-unknown-linux-gnu",
     "wasm32-unknown-unknown",
 ]
+
+[lib]
+name = "softbuffer"
+path = "src/lib.rs"
+
+[[bench]]
+name = "buffer_mut"
+path = "benches/buffer_mut.rs"
+harness = false
+
+[dependencies.log]
+version = "0.4.17"
+
+[dependencies.raw_window_handle]
+version = "0.6"
+features = ["std"]
+package = "raw-window-handle"
+
+[dev-dependencies.colorous]
+version = "1.0.12"
+
+[dev-dependencies.criterion]
+version = "0.4.0"
+features = ["cargo_bench_support"]
+default-features = false
+
+[dev-dependencies.image]
+version = "0.25.0"
+features = ["jpeg"]
+default-features = false
+
+[dev-dependencies.web-time]
+version = "1.0.0"
+
+[dev-dependencies.winit]
+version = "0.30.0"
+
+[build-dependencies.cfg_aliases]
+version = "0.2.0"
 
 [features]
 default = [
@@ -87,66 +125,29 @@ x11-dlopen = [
     "x11rb/dl-libxcb",
 ]
 
-[lib]
-name = "softbuffer"
-path = "src/lib.rs"
-
-[[bench]]
-name = "buffer_mut"
-path = "benches/buffer_mut.rs"
-harness = false
-
-[dependencies.raw_window_handle]
-version = "0.6"
-features = ["std"]
-package = "raw-window-handle"
-
-[dependencies.tracing]
-version = "0.1.41"
-default-features = false
-
-[dev-dependencies.colorous]
-version = "1.0.12"
-
-[dev-dependencies.criterion]
-version = "0.8.1"
-features = ["cargo_bench_support"]
-default-features = false
-
-[dev-dependencies.image]
-version = "0.25.0"
-features = ["jpeg"]
-default-features = false
-
-[dev-dependencies.web-time]
-version = "1.0.0"
-
-[dev-dependencies.winit]
-version = "0.30.0"
-
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.as-raw-xcb-connection]
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.as-raw-xcb-connection]
 version = "1.0.0"
 optional = true
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.bytemuck]
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.bytemuck]
 version = "1.12.3"
 optional = true
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.drm]
-version = "0.14.1"
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.drm]
+version = "0.12.0"
 optional = true
 default-features = false
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.fastrand]
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.fastrand]
 version = "2.0.0"
 optional = true
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.memmap2]
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.memmap2]
 version = "0.9.0"
 optional = true
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.rustix]
-version = "1.0.1"
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.rustix]
+version = "0.38.19"
 features = [
     "fs",
     "mm",
@@ -156,24 +157,24 @@ features = [
 optional = true
 default-features = false
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.tiny-xlib]
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.tiny-xlib]
 version = "0.2.1"
 optional = true
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.wayland-backend]
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.wayland-backend]
 version = "0.3.0"
 features = ["client_system"]
 optional = true
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.wayland-client]
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.wayland-client]
 version = "0.31.0"
 optional = true
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.wayland-sys]
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.wayland-sys]
 version = "0.31.0"
 optional = true
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dependencies.x11rb]
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dependencies.x11rb]
 version = "0.13.0"
 features = [
     "allow-unsafe-code",
@@ -181,20 +182,20 @@ features = [
 ]
 optional = true
 
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple", target_os = "redox", target_family = "wasm", target_os = "windows")))'.dev-dependencies.rustix]
-version = "1.0.1"
+[target.'cfg(all(unix, not(any(target_vendor = "apple", target_os = "android", target_os = "redox"))))'.dev-dependencies.rustix]
+version = "0.38.8"
 features = ["event"]
 
-[target.'cfg(not(target_family = "wasm"))'.dev-dependencies.rayon]
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.rayon]
 version = "1.5.1"
 
-[target.'cfg(target_family = "wasm")'.dependencies.js-sys]
+[target.'cfg(target_arch = "wasm32")'.dependencies.js-sys]
 version = "0.3.63"
 
-[target.'cfg(target_family = "wasm")'.dependencies.wasm-bindgen]
+[target.'cfg(target_arch = "wasm32")'.dependencies.wasm-bindgen]
 version = "0.2.86"
 
-[target.'cfg(target_family = "wasm")'.dependencies.web-sys]
+[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
 version = "0.3.55"
 features = [
     "CanvasRenderingContext2d",
@@ -207,27 +208,14 @@ features = [
     "Window",
 ]
 
-[target.'cfg(target_family = "wasm")'.dev-dependencies.wasm-bindgen-test]
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies.wasm-bindgen-test]
 version = "0.3"
-
-[target.'cfg(target_os = "android")'.dependencies.bytemuck]
-version = "1.12.3"
-
-[target.'cfg(target_os = "android")'.dependencies.ndk]
-version = "0.9.0"
-
-[target.'cfg(target_os = "android")'.dev-dependencies.android-activity]
-version = "0.6"
-
-[target.'cfg(target_os = "android")'.dev-dependencies.winit]
-version = "0.30.0"
-features = ["android-native-activity"]
 
 [target.'cfg(target_os = "redox")'.dependencies.redox_syscall]
 version = "0.5"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows-sys]
-version = "0.61.2"
+version = "0.59.0"
 features = [
     "Win32_Graphics_Gdi",
     "Win32_UI_Shell",
@@ -235,33 +223,22 @@ features = [
     "Win32_Foundation",
 ]
 
+[target.'cfg(target_vendor = "apple")'.dependencies.bytemuck]
+version = "1.12.3"
+features = ["extern_crate_alloc"]
+
+[target.'cfg(target_vendor = "apple")'.dependencies.core-graphics]
+version = "0.24.0"
+
+[target.'cfg(target_vendor = "apple")'.dependencies.foreign-types]
+version = "0.5.0"
+
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2]
-version = "0.6.0"
-
-[target.'cfg(target_vendor = "apple")'.dependencies.objc2-core-foundation]
-version = "0.3.2"
-features = [
-    "std",
-    "CFCGTypes",
-]
-default-features = false
-
-[target.'cfg(target_vendor = "apple")'.dependencies.objc2-core-graphics]
-version = "0.3.2"
-features = [
-    "std",
-    "objc2",
-    "CGColorSpace",
-    "CGDataProvider",
-    "CGImage",
-]
-default-features = false
+version = "0.5.2"
 
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2-foundation]
-version = "0.3.2"
+version = "0.2.2"
 features = [
-    "std",
-    "objc2-core-foundation",
     "NSDictionary",
     "NSGeometry",
     "NSKeyValueObserving",
@@ -269,14 +246,10 @@ features = [
     "NSThread",
     "NSValue",
 ]
-default-features = false
 
 [target.'cfg(target_vendor = "apple")'.dependencies.objc2-quartz-core]
-version = "0.3.2"
+version = "0.2.2"
 features = [
-    "std",
-    "objc2-core-foundation",
     "CALayer",
     "CATransaction",
 ]
-default-features = false

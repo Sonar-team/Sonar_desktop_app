@@ -34,7 +34,7 @@ impl CFTimeZone {
 
     #[doc(alias = "CFTimeZoneResetSystem")]
     #[inline]
-    pub fn reset_system() {
+    pub unsafe fn reset_system() {
         extern "C-unwind" {
             fn CFTimeZoneResetSystem();
         }
@@ -55,7 +55,7 @@ impl CFTimeZone {
     #[doc(alias = "CFTimeZoneSetDefault")]
     #[cfg(feature = "CFDate")]
     #[inline]
-    pub fn set_default(&self) {
+    pub fn set_default(self: &CFTimeZone) {
         extern "C-unwind" {
             fn CFTimeZoneSetDefault(tz: &CFTimeZone);
         }
@@ -84,10 +84,6 @@ impl CFTimeZone {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `dict` generics must be of the correct type.
-    /// - `dict` might not allow `None`.
     #[doc(alias = "CFTimeZoneSetAbbreviationDictionary")]
     #[cfg(feature = "CFDictionary")]
     #[inline]
@@ -98,11 +94,6 @@ impl CFTimeZone {
         unsafe { CFTimeZoneSetAbbreviationDictionary(dict) }
     }
 
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `name` might not allow `None`.
-    /// - `data` might not allow `None`.
     #[doc(alias = "CFTimeZoneCreate")]
     #[cfg(all(feature = "CFData", feature = "CFDate"))]
     #[inline]
@@ -161,7 +152,7 @@ impl CFTimeZone {
     #[doc(alias = "CFTimeZoneGetName")]
     #[cfg(feature = "CFDate")]
     #[inline]
-    pub fn name(&self) -> Option<CFRetained<CFString>> {
+    pub fn name(self: &CFTimeZone) -> Option<CFRetained<CFString>> {
         extern "C-unwind" {
             fn CFTimeZoneGetName(tz: &CFTimeZone) -> Option<NonNull<CFString>>;
         }
@@ -172,7 +163,7 @@ impl CFTimeZone {
     #[doc(alias = "CFTimeZoneGetData")]
     #[cfg(all(feature = "CFData", feature = "CFDate"))]
     #[inline]
-    pub fn data(&self) -> Option<CFRetained<CFData>> {
+    pub fn data(self: &CFTimeZone) -> Option<CFRetained<CFData>> {
         extern "C-unwind" {
             fn CFTimeZoneGetData(tz: &CFTimeZone) -> Option<NonNull<CFData>>;
         }
@@ -183,7 +174,7 @@ impl CFTimeZone {
     #[doc(alias = "CFTimeZoneGetSecondsFromGMT")]
     #[cfg(feature = "CFDate")]
     #[inline]
-    pub fn seconds_from_gmt(&self, at: CFAbsoluteTime) -> CFTimeInterval {
+    pub fn seconds_from_gmt(self: &CFTimeZone, at: CFAbsoluteTime) -> CFTimeInterval {
         extern "C-unwind" {
             fn CFTimeZoneGetSecondsFromGMT(tz: &CFTimeZone, at: CFAbsoluteTime) -> CFTimeInterval;
         }
@@ -193,7 +184,7 @@ impl CFTimeZone {
     #[doc(alias = "CFTimeZoneCopyAbbreviation")]
     #[cfg(feature = "CFDate")]
     #[inline]
-    pub fn abbreviation(&self, at: CFAbsoluteTime) -> Option<CFRetained<CFString>> {
+    pub fn abbreviation(self: &CFTimeZone, at: CFAbsoluteTime) -> Option<CFRetained<CFString>> {
         extern "C-unwind" {
             fn CFTimeZoneCopyAbbreviation(
                 tz: &CFTimeZone,
@@ -207,7 +198,7 @@ impl CFTimeZone {
     #[doc(alias = "CFTimeZoneIsDaylightSavingTime")]
     #[cfg(feature = "CFDate")]
     #[inline]
-    pub fn is_daylight_saving_time(&self, at: CFAbsoluteTime) -> bool {
+    pub fn is_daylight_saving_time(self: &CFTimeZone, at: CFAbsoluteTime) -> bool {
         extern "C-unwind" {
             fn CFTimeZoneIsDaylightSavingTime(tz: &CFTimeZone, at: CFAbsoluteTime) -> Boolean;
         }
@@ -218,7 +209,7 @@ impl CFTimeZone {
     #[doc(alias = "CFTimeZoneGetDaylightSavingTimeOffset")]
     #[cfg(feature = "CFDate")]
     #[inline]
-    pub fn daylight_saving_time_offset(&self, at: CFAbsoluteTime) -> CFTimeInterval {
+    pub fn daylight_saving_time_offset(self: &CFTimeZone, at: CFAbsoluteTime) -> CFTimeInterval {
         extern "C-unwind" {
             fn CFTimeZoneGetDaylightSavingTimeOffset(
                 tz: &CFTimeZone,
@@ -231,7 +222,10 @@ impl CFTimeZone {
     #[doc(alias = "CFTimeZoneGetNextDaylightSavingTimeTransition")]
     #[cfg(feature = "CFDate")]
     #[inline]
-    pub fn next_daylight_saving_time_transition(&self, at: CFAbsoluteTime) -> CFAbsoluteTime {
+    pub fn next_daylight_saving_time_transition(
+        self: &CFTimeZone,
+        at: CFAbsoluteTime,
+    ) -> CFAbsoluteTime {
         extern "C-unwind" {
             fn CFTimeZoneGetNextDaylightSavingTimeTransition(
                 tz: &CFTimeZone,
@@ -278,7 +272,7 @@ impl CFTimeZone {
     #[cfg(all(feature = "CFDate", feature = "CFLocale"))]
     #[inline]
     pub fn localized_name(
-        &self,
+        self: &CFTimeZone,
         style: CFTimeZoneNameStyle,
         locale: Option<&CFLocale>,
     ) -> Option<CFRetained<CFString>> {
@@ -311,13 +305,9 @@ pub extern "C-unwind" fn CFTimeZoneCopySystem() -> Option<CFRetained<CFTimeZone>
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-#[deprecated = "renamed to `CFTimeZone::reset_system`"]
-#[inline]
-pub extern "C-unwind" fn CFTimeZoneResetSystem() {
-    extern "C-unwind" {
-        fn CFTimeZoneResetSystem();
-    }
-    unsafe { CFTimeZoneResetSystem() }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CFTimeZone::reset_system`"]
+    pub fn CFTimeZoneResetSystem();
 }
 
 #[cfg(feature = "CFDate")]

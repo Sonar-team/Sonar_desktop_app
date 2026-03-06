@@ -89,8 +89,6 @@ impl DOMHTMLQuoteElement {
         pub unsafe fn cite(&self) -> Retained<NSString>;
 
         /// Setter for [`cite`][Self::cite].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setCite:))]
         #[unsafe(method_family = none)]

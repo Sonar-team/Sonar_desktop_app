@@ -20,7 +20,7 @@ pub struct Ipv6Packet<'a> {
     /// Destination Address
     pub dest_addr: Ipv6Addr,
     /// Extension Headers (if any)
-    pub extension_headers: Vec<u8>,
+    pub extension_headers: &'a [u8],
     /// Payload data
     pub payload: &'a [u8],
 }
@@ -109,7 +109,7 @@ impl<'a> TryFrom<&'a [u8]> for Ipv6Packet<'a> {
 
         // For simplicity, we're not parsing extension headers here
         // In a real implementation, you would parse them based on next_header
-        let extension_headers = Vec::new();
+        let extension_headers = &[0u8];
 
         // Extract payload
         let payload = if payload_length > 0 {

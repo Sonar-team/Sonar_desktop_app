@@ -78,54 +78,54 @@ impl NSTitlebarAccessoryViewController {
         #[cfg(feature = "NSLayoutConstraint")]
         #[unsafe(method(layoutAttribute))]
         #[unsafe(method_family = none)]
-        pub fn layoutAttribute(&self) -> NSLayoutAttribute;
+        pub unsafe fn layoutAttribute(&self) -> NSLayoutAttribute;
 
         #[cfg(feature = "NSLayoutConstraint")]
         /// Setter for [`layoutAttribute`][Self::layoutAttribute].
         #[unsafe(method(setLayoutAttribute:))]
         #[unsafe(method_family = none)]
-        pub fn setLayoutAttribute(&self, layout_attribute: NSLayoutAttribute);
+        pub unsafe fn setLayoutAttribute(&self, layout_attribute: NSLayoutAttribute);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(fullScreenMinHeight))]
         #[unsafe(method_family = none)]
-        pub fn fullScreenMinHeight(&self) -> CGFloat;
+        pub unsafe fn fullScreenMinHeight(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`fullScreenMinHeight`][Self::fullScreenMinHeight].
         #[unsafe(method(setFullScreenMinHeight:))]
         #[unsafe(method_family = none)]
-        pub fn setFullScreenMinHeight(&self, full_screen_min_height: CGFloat);
+        pub unsafe fn setFullScreenMinHeight(&self, full_screen_min_height: CGFloat);
 
         #[unsafe(method(isHidden))]
         #[unsafe(method_family = none)]
-        pub fn isHidden(&self) -> bool;
+        pub unsafe fn isHidden(&self) -> bool;
 
         /// Setter for [`isHidden`][Self::isHidden].
         #[unsafe(method(setHidden:))]
         #[unsafe(method_family = none)]
-        pub fn setHidden(&self, hidden: bool);
+        pub unsafe fn setHidden(&self, hidden: bool);
 
         #[unsafe(method(automaticallyAdjustsSize))]
         #[unsafe(method_family = none)]
-        pub fn automaticallyAdjustsSize(&self) -> bool;
+        pub unsafe fn automaticallyAdjustsSize(&self) -> bool;
 
         /// Setter for [`automaticallyAdjustsSize`][Self::automaticallyAdjustsSize].
         #[unsafe(method(setAutomaticallyAdjustsSize:))]
         #[unsafe(method_family = none)]
-        pub fn setAutomaticallyAdjustsSize(&self, automatically_adjusts_size: bool);
+        pub unsafe fn setAutomaticallyAdjustsSize(&self, automatically_adjusts_size: bool);
 
         #[unsafe(method(viewWillAppear))]
         #[unsafe(method_family = none)]
-        pub fn viewWillAppear(&self);
+        pub unsafe fn viewWillAppear(&self);
 
         #[unsafe(method(viewDidAppear))]
         #[unsafe(method_family = none)]
-        pub fn viewDidAppear(&self);
+        pub unsafe fn viewDidAppear(&self);
 
         #[unsafe(method(viewDidDisappear))]
         #[unsafe(method_family = none)]
-        pub fn viewDidDisappear(&self);
+        pub unsafe fn viewDidDisappear(&self);
     );
 }
 
@@ -136,15 +136,12 @@ impl NSTitlebarAccessoryViewController {
         #[cfg(feature = "NSNib")]
         #[unsafe(method(initWithNibName:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibName_bundle(
+        pub unsafe fn initWithNibName_bundle(
             this: Allocated<Self>,
             nib_name_or_nil: Option<&NSNibName>,
             nib_bundle_or_nil: Option<&NSBundle>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -160,7 +157,7 @@ impl NSTitlebarAccessoryViewController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -170,6 +167,6 @@ impl NSTitlebarAccessoryViewController {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

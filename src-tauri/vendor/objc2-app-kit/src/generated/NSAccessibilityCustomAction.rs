@@ -23,16 +23,12 @@ impl NSAccessibilityCustomAction {
         #[cfg(feature = "block2")]
         #[unsafe(method(initWithName:handler:))]
         #[unsafe(method_family = init)]
-        pub fn initWithName_handler(
+        pub unsafe fn initWithName_handler(
             this: Allocated<Self>,
             name: &NSString,
             handler: Option<&block2::DynBlock<dyn Fn() -> Bool>>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `selector` must be a valid selector.
         #[unsafe(method(initWithName:target:selector:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithName_target_selector(
@@ -44,52 +40,39 @@ impl NSAccessibilityCustomAction {
 
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
-        pub fn name(&self) -> Retained<NSString>;
+        pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
-        pub fn setName(&self, name: &NSString);
+        pub unsafe fn setName(&self, name: &NSString);
 
         #[cfg(feature = "block2")]
         #[unsafe(method(handler))]
         #[unsafe(method_family = none)]
-        pub fn handler(&self) -> *mut block2::DynBlock<dyn Fn() -> Bool>;
+        pub unsafe fn handler(&self) -> *mut block2::DynBlock<dyn Fn() -> Bool>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`handler`][Self::handler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setHandler:))]
         #[unsafe(method_family = none)]
-        pub fn setHandler(&self, handler: Option<&block2::DynBlock<dyn Fn() -> Bool>>);
+        pub unsafe fn setHandler(&self, handler: Option<&block2::DynBlock<dyn Fn() -> Bool>>);
 
         #[unsafe(method(target))]
         #[unsafe(method_family = none)]
-        pub fn target(&self) -> Option<Retained<ProtocolObject<dyn NSObjectProtocol>>>;
+        pub unsafe fn target(&self) -> Option<Retained<ProtocolObject<dyn NSObjectProtocol>>>;
 
-        /// Setter for [`target`][Self::target].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
+        /// Setter for [`target`][Self::target].
         #[unsafe(method(setTarget:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTarget(&self, target: Option<&ProtocolObject<dyn NSObjectProtocol>>);
 
         #[unsafe(method(selector))]
         #[unsafe(method_family = none)]
-        pub fn selector(&self) -> Option<Sel>;
+        pub unsafe fn selector(&self) -> Option<Sel>;
 
         /// Setter for [`selector`][Self::selector].
-        ///
-        /// # Safety
-        ///
-        /// `selector` must be a valid selector.
         #[unsafe(method(setSelector:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSelector(&self, selector: Option<Sel>);
@@ -101,17 +84,10 @@ impl NSAccessibilityCustomAction {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSAccessibilityCustomAction {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

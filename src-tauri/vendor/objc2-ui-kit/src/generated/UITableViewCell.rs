@@ -304,15 +304,12 @@ impl UITableViewCell {
     extern_methods!(
         #[unsafe(method(initWithStyle:reuseIdentifier:))]
         #[unsafe(method_family = init)]
-        pub fn initWithStyle_reuseIdentifier(
+        pub unsafe fn initWithStyle_reuseIdentifier(
             this: Allocated<Self>,
             style: UITableViewCellStyle,
             reuse_identifier: Option<&NSString>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -329,14 +326,14 @@ impl UITableViewCell {
         /// system properties set, then set your own custom states as desired.
         #[unsafe(method(configurationState))]
         #[unsafe(method_family = none)]
-        pub fn configurationState(&self) -> Retained<UICellConfigurationState>;
+        pub unsafe fn configurationState(&self) -> Retained<UICellConfigurationState>;
 
         /// Requests the cell update its configuration for its current state. This method is called automatically
         /// when the cell's `configurationState` may have changed, as well as in other circumstances where an
         /// update may be required. Multiple requests may be coalesced into a single update at the appropriate time.
         #[unsafe(method(setNeedsUpdateConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn setNeedsUpdateConfiguration(&self);
+        pub unsafe fn setNeedsUpdateConfiguration(&self);
 
         #[cfg(all(
             feature = "UICellConfigurationState",
@@ -346,7 +343,7 @@ impl UITableViewCell {
         /// This method should not be called directly, use `setNeedsUpdateConfiguration` to request an update.
         #[unsafe(method(updateConfigurationUsingState:))]
         #[unsafe(method_family = none)]
-        pub fn updateConfigurationUsingState(&self, state: &UICellConfigurationState);
+        pub unsafe fn updateConfigurationUsingState(&self, state: &UICellConfigurationState);
 
         #[cfg(all(
             feature = "UICellConfigurationState",
@@ -355,11 +352,6 @@ impl UITableViewCell {
         ))]
         /// Optional block-based alternative to overriding `-updateConfigurationUsingState:` in a subclass. This handler
         /// is called after `-updateConfigurationUsingState:`. Setting a new handler triggers `setNeedsUpdateConfiguration`.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer.
         #[unsafe(method(configurationUpdateHandler))]
         #[unsafe(method_family = none)]
         pub unsafe fn configurationUpdateHandler(
@@ -372,12 +364,6 @@ impl UITableViewCell {
             feature = "block2"
         ))]
         /// Setter for [`configurationUpdateHandler`][Self::configurationUpdateHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `configuration_update_handler` must be a valid pointer or null.
         #[unsafe(method(setConfigurationUpdateHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setConfigurationUpdateHandler(
@@ -389,7 +375,7 @@ impl UITableViewCell {
         /// Returns a default list content configuration for the cell's style.
         #[unsafe(method(defaultContentConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn defaultContentConfiguration(&self) -> Retained<UIListContentConfiguration>;
+        pub unsafe fn defaultContentConfiguration(&self) -> Retained<UIListContentConfiguration>;
 
         #[cfg(feature = "UIContentConfiguration")]
         /// Setting a content configuration replaces the existing contentView of the cell with a new content view instance from the configuration,
@@ -397,17 +383,15 @@ impl UITableViewCell {
         /// The default value is nil. After a configuration has been set, setting this property to nil will replace the current content view with a new content view.
         #[unsafe(method(contentConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn contentConfiguration(
+        pub unsafe fn contentConfiguration(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIContentConfiguration>>>;
 
         #[cfg(feature = "UIContentConfiguration")]
         /// Setter for [`contentConfiguration`][Self::contentConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setContentConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setContentConfiguration(
+        pub unsafe fn setContentConfiguration(
             &self,
             content_configuration: Option<&ProtocolObject<dyn UIContentConfiguration>>,
         );
@@ -416,58 +400,57 @@ impl UITableViewCell {
         /// configuration state changes, and apply the updated configuration back to the cell. The default value is YES.
         #[unsafe(method(automaticallyUpdatesContentConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn automaticallyUpdatesContentConfiguration(&self) -> bool;
+        pub unsafe fn automaticallyUpdatesContentConfiguration(&self) -> bool;
 
         /// Setter for [`automaticallyUpdatesContentConfiguration`][Self::automaticallyUpdatesContentConfiguration].
         #[unsafe(method(setAutomaticallyUpdatesContentConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setAutomaticallyUpdatesContentConfiguration(
+        pub unsafe fn setAutomaticallyUpdatesContentConfiguration(
             &self,
             automatically_updates_content_configuration: bool,
         );
 
         #[unsafe(method(contentView))]
         #[unsafe(method_family = none)]
-        pub fn contentView(&self) -> Retained<UIView>;
+        pub unsafe fn contentView(&self) -> Retained<UIView>;
 
         #[cfg(feature = "UIImageView")]
         #[deprecated = "Use UIListContentConfiguration instead, this property will be deprecated in a future release."]
         #[unsafe(method(imageView))]
         #[unsafe(method_family = none)]
-        pub fn imageView(&self) -> Option<Retained<UIImageView>>;
+        pub unsafe fn imageView(&self) -> Option<Retained<UIImageView>>;
 
         #[cfg(feature = "UILabel")]
         #[deprecated = "Use UIListContentConfiguration instead, this property will be deprecated in a future release."]
         #[unsafe(method(textLabel))]
         #[unsafe(method_family = none)]
-        pub fn textLabel(&self) -> Option<Retained<UILabel>>;
+        pub unsafe fn textLabel(&self) -> Option<Retained<UILabel>>;
 
         #[cfg(feature = "UILabel")]
         #[deprecated = "Use UIListContentConfiguration instead, this property will be deprecated in a future release."]
         #[unsafe(method(detailTextLabel))]
         #[unsafe(method_family = none)]
-        pub fn detailTextLabel(&self) -> Option<Retained<UILabel>>;
+        pub unsafe fn detailTextLabel(&self) -> Option<Retained<UILabel>>;
 
         #[cfg(feature = "UIBackgroundConfiguration")]
         /// Returns a default background configuration for the cell's style.
         /// This background configuration represents the default appearance that the cell will use.
         #[unsafe(method(defaultBackgroundConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn defaultBackgroundConfiguration(&self) -> Retained<UIBackgroundConfiguration>;
+        pub unsafe fn defaultBackgroundConfiguration(&self) -> Retained<UIBackgroundConfiguration>;
 
         #[cfg(feature = "UIBackgroundConfiguration")]
         /// Setting a background configuration supersedes the cell's backgroundView, selectedBackgroundView, and multipleSelectionBackgroundView. The default value is nil.
         #[unsafe(method(backgroundConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn backgroundConfiguration(&self) -> Option<Retained<UIBackgroundConfiguration>>;
+        pub unsafe fn backgroundConfiguration(&self)
+            -> Option<Retained<UIBackgroundConfiguration>>;
 
         #[cfg(feature = "UIBackgroundConfiguration")]
         /// Setter for [`backgroundConfiguration`][Self::backgroundConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBackgroundConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundConfiguration(
+        pub unsafe fn setBackgroundConfiguration(
             &self,
             background_configuration: Option<&UIBackgroundConfiguration>,
         );
@@ -476,224 +459,227 @@ impl UITableViewCell {
         /// configuration state changes, and apply the updated configuration back to the cell. The default value is YES.
         #[unsafe(method(automaticallyUpdatesBackgroundConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn automaticallyUpdatesBackgroundConfiguration(&self) -> bool;
+        pub unsafe fn automaticallyUpdatesBackgroundConfiguration(&self) -> bool;
 
         /// Setter for [`automaticallyUpdatesBackgroundConfiguration`][Self::automaticallyUpdatesBackgroundConfiguration].
         #[unsafe(method(setAutomaticallyUpdatesBackgroundConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setAutomaticallyUpdatesBackgroundConfiguration(
+        pub unsafe fn setAutomaticallyUpdatesBackgroundConfiguration(
             &self,
             automatically_updates_background_configuration: bool,
         );
 
         #[unsafe(method(backgroundView))]
         #[unsafe(method_family = none)]
-        pub fn backgroundView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn backgroundView(&self) -> Option<Retained<UIView>>;
 
         /// Setter for [`backgroundView`][Self::backgroundView].
         #[unsafe(method(setBackgroundView:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundView(&self, background_view: Option<&UIView>);
+        pub unsafe fn setBackgroundView(&self, background_view: Option<&UIView>);
 
         #[unsafe(method(selectedBackgroundView))]
         #[unsafe(method_family = none)]
-        pub fn selectedBackgroundView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn selectedBackgroundView(&self) -> Option<Retained<UIView>>;
 
         /// Setter for [`selectedBackgroundView`][Self::selectedBackgroundView].
         #[unsafe(method(setSelectedBackgroundView:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectedBackgroundView(&self, selected_background_view: Option<&UIView>);
+        pub unsafe fn setSelectedBackgroundView(&self, selected_background_view: Option<&UIView>);
 
         #[unsafe(method(multipleSelectionBackgroundView))]
         #[unsafe(method_family = none)]
-        pub fn multipleSelectionBackgroundView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn multipleSelectionBackgroundView(&self) -> Option<Retained<UIView>>;
 
         /// Setter for [`multipleSelectionBackgroundView`][Self::multipleSelectionBackgroundView].
         #[unsafe(method(setMultipleSelectionBackgroundView:))]
         #[unsafe(method_family = none)]
-        pub fn setMultipleSelectionBackgroundView(
+        pub unsafe fn setMultipleSelectionBackgroundView(
             &self,
             multiple_selection_background_view: Option<&UIView>,
         );
 
         #[unsafe(method(reuseIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn reuseIdentifier(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn reuseIdentifier(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(prepareForReuse))]
         #[unsafe(method_family = none)]
-        pub fn prepareForReuse(&self);
+        pub unsafe fn prepareForReuse(&self);
 
         #[unsafe(method(selectionStyle))]
         #[unsafe(method_family = none)]
-        pub fn selectionStyle(&self) -> UITableViewCellSelectionStyle;
+        pub unsafe fn selectionStyle(&self) -> UITableViewCellSelectionStyle;
 
         /// Setter for [`selectionStyle`][Self::selectionStyle].
         #[unsafe(method(setSelectionStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectionStyle(&self, selection_style: UITableViewCellSelectionStyle);
+        pub unsafe fn setSelectionStyle(&self, selection_style: UITableViewCellSelectionStyle);
 
         #[unsafe(method(isSelected))]
         #[unsafe(method_family = none)]
-        pub fn isSelected(&self) -> bool;
+        pub unsafe fn isSelected(&self) -> bool;
 
         /// Setter for [`isSelected`][Self::isSelected].
         #[unsafe(method(setSelected:))]
         #[unsafe(method_family = none)]
-        pub fn setSelected(&self, selected: bool);
+        pub unsafe fn setSelected(&self, selected: bool);
 
         #[unsafe(method(isHighlighted))]
         #[unsafe(method_family = none)]
-        pub fn isHighlighted(&self) -> bool;
+        pub unsafe fn isHighlighted(&self) -> bool;
 
         /// Setter for [`isHighlighted`][Self::isHighlighted].
         #[unsafe(method(setHighlighted:))]
         #[unsafe(method_family = none)]
-        pub fn setHighlighted(&self, highlighted: bool);
+        pub unsafe fn setHighlighted(&self, highlighted: bool);
 
         #[unsafe(method(setSelected:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setSelected_animated(&self, selected: bool, animated: bool);
+        pub unsafe fn setSelected_animated(&self, selected: bool, animated: bool);
 
         #[unsafe(method(setHighlighted:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setHighlighted_animated(&self, highlighted: bool, animated: bool);
+        pub unsafe fn setHighlighted_animated(&self, highlighted: bool, animated: bool);
 
         #[unsafe(method(editingStyle))]
         #[unsafe(method_family = none)]
-        pub fn editingStyle(&self) -> UITableViewCellEditingStyle;
+        pub unsafe fn editingStyle(&self) -> UITableViewCellEditingStyle;
 
         #[unsafe(method(showsReorderControl))]
         #[unsafe(method_family = none)]
-        pub fn showsReorderControl(&self) -> bool;
+        pub unsafe fn showsReorderControl(&self) -> bool;
 
         /// Setter for [`showsReorderControl`][Self::showsReorderControl].
         #[unsafe(method(setShowsReorderControl:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsReorderControl(&self, shows_reorder_control: bool);
+        pub unsafe fn setShowsReorderControl(&self, shows_reorder_control: bool);
 
         #[unsafe(method(shouldIndentWhileEditing))]
         #[unsafe(method_family = none)]
-        pub fn shouldIndentWhileEditing(&self) -> bool;
+        pub unsafe fn shouldIndentWhileEditing(&self) -> bool;
 
         /// Setter for [`shouldIndentWhileEditing`][Self::shouldIndentWhileEditing].
         #[unsafe(method(setShouldIndentWhileEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setShouldIndentWhileEditing(&self, should_indent_while_editing: bool);
+        pub unsafe fn setShouldIndentWhileEditing(&self, should_indent_while_editing: bool);
 
         #[unsafe(method(accessoryType))]
         #[unsafe(method_family = none)]
-        pub fn accessoryType(&self) -> UITableViewCellAccessoryType;
+        pub unsafe fn accessoryType(&self) -> UITableViewCellAccessoryType;
 
         /// Setter for [`accessoryType`][Self::accessoryType].
         #[unsafe(method(setAccessoryType:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessoryType(&self, accessory_type: UITableViewCellAccessoryType);
+        pub unsafe fn setAccessoryType(&self, accessory_type: UITableViewCellAccessoryType);
 
         #[unsafe(method(accessoryView))]
         #[unsafe(method_family = none)]
-        pub fn accessoryView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn accessoryView(&self) -> Option<Retained<UIView>>;
 
         /// Setter for [`accessoryView`][Self::accessoryView].
         #[unsafe(method(setAccessoryView:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessoryView(&self, accessory_view: Option<&UIView>);
+        pub unsafe fn setAccessoryView(&self, accessory_view: Option<&UIView>);
 
         #[unsafe(method(editingAccessoryType))]
         #[unsafe(method_family = none)]
-        pub fn editingAccessoryType(&self) -> UITableViewCellAccessoryType;
+        pub unsafe fn editingAccessoryType(&self) -> UITableViewCellAccessoryType;
 
         /// Setter for [`editingAccessoryType`][Self::editingAccessoryType].
         #[unsafe(method(setEditingAccessoryType:))]
         #[unsafe(method_family = none)]
-        pub fn setEditingAccessoryType(&self, editing_accessory_type: UITableViewCellAccessoryType);
+        pub unsafe fn setEditingAccessoryType(
+            &self,
+            editing_accessory_type: UITableViewCellAccessoryType,
+        );
 
         #[unsafe(method(editingAccessoryView))]
         #[unsafe(method_family = none)]
-        pub fn editingAccessoryView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn editingAccessoryView(&self) -> Option<Retained<UIView>>;
 
         /// Setter for [`editingAccessoryView`][Self::editingAccessoryView].
         #[unsafe(method(setEditingAccessoryView:))]
         #[unsafe(method_family = none)]
-        pub fn setEditingAccessoryView(&self, editing_accessory_view: Option<&UIView>);
+        pub unsafe fn setEditingAccessoryView(&self, editing_accessory_view: Option<&UIView>);
 
         #[unsafe(method(indentationLevel))]
         #[unsafe(method_family = none)]
-        pub fn indentationLevel(&self) -> NSInteger;
+        pub unsafe fn indentationLevel(&self) -> NSInteger;
 
         /// Setter for [`indentationLevel`][Self::indentationLevel].
         #[unsafe(method(setIndentationLevel:))]
         #[unsafe(method_family = none)]
-        pub fn setIndentationLevel(&self, indentation_level: NSInteger);
+        pub unsafe fn setIndentationLevel(&self, indentation_level: NSInteger);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(indentationWidth))]
         #[unsafe(method_family = none)]
-        pub fn indentationWidth(&self) -> CGFloat;
+        pub unsafe fn indentationWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`indentationWidth`][Self::indentationWidth].
         #[unsafe(method(setIndentationWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setIndentationWidth(&self, indentation_width: CGFloat);
+        pub unsafe fn setIndentationWidth(&self, indentation_width: CGFloat);
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         #[unsafe(method(separatorInset))]
         #[unsafe(method_family = none)]
-        pub fn separatorInset(&self) -> UIEdgeInsets;
+        pub unsafe fn separatorInset(&self) -> UIEdgeInsets;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Setter for [`separatorInset`][Self::separatorInset].
         #[unsafe(method(setSeparatorInset:))]
         #[unsafe(method_family = none)]
-        pub fn setSeparatorInset(&self, separator_inset: UIEdgeInsets);
+        pub unsafe fn setSeparatorInset(&self, separator_inset: UIEdgeInsets);
 
         #[unsafe(method(isEditing))]
         #[unsafe(method_family = none)]
-        pub fn isEditing(&self) -> bool;
+        pub unsafe fn isEditing(&self) -> bool;
 
         /// Setter for [`isEditing`][Self::isEditing].
         #[unsafe(method(setEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setEditing(&self, editing: bool);
+        pub unsafe fn setEditing(&self, editing: bool);
 
         #[unsafe(method(setEditing:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setEditing_animated(&self, editing: bool, animated: bool);
+        pub unsafe fn setEditing_animated(&self, editing: bool, animated: bool);
 
         #[unsafe(method(showingDeleteConfirmation))]
         #[unsafe(method_family = none)]
-        pub fn showingDeleteConfirmation(&self) -> bool;
+        pub unsafe fn showingDeleteConfirmation(&self) -> bool;
 
         #[unsafe(method(focusStyle))]
         #[unsafe(method_family = none)]
-        pub fn focusStyle(&self) -> UITableViewCellFocusStyle;
+        pub unsafe fn focusStyle(&self) -> UITableViewCellFocusStyle;
 
         /// Setter for [`focusStyle`][Self::focusStyle].
         #[unsafe(method(setFocusStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setFocusStyle(&self, focus_style: UITableViewCellFocusStyle);
+        pub unsafe fn setFocusStyle(&self, focus_style: UITableViewCellFocusStyle);
 
         #[unsafe(method(willTransitionToState:))]
         #[unsafe(method_family = none)]
-        pub fn willTransitionToState(&self, state: UITableViewCellStateMask);
+        pub unsafe fn willTransitionToState(&self, state: UITableViewCellStateMask);
 
         #[unsafe(method(didTransitionToState:))]
         #[unsafe(method_family = none)]
-        pub fn didTransitionToState(&self, state: UITableViewCellStateMask);
+        pub unsafe fn didTransitionToState(&self, state: UITableViewCellStateMask);
 
         #[unsafe(method(dragStateDidChange:))]
         #[unsafe(method_family = none)]
-        pub fn dragStateDidChange(&self, drag_state: UITableViewCellDragState);
+        pub unsafe fn dragStateDidChange(&self, drag_state: UITableViewCellDragState);
 
         #[unsafe(method(userInteractionEnabledWhileDragging))]
         #[unsafe(method_family = none)]
-        pub fn userInteractionEnabledWhileDragging(&self) -> bool;
+        pub unsafe fn userInteractionEnabledWhileDragging(&self) -> bool;
 
         /// Setter for [`userInteractionEnabledWhileDragging`][Self::userInteractionEnabledWhileDragging].
         #[unsafe(method(setUserInteractionEnabledWhileDragging:))]
         #[unsafe(method_family = none)]
-        pub fn setUserInteractionEnabledWhileDragging(
+        pub unsafe fn setUserInteractionEnabledWhileDragging(
             &self,
             user_interaction_enabled_while_dragging: bool,
         );
@@ -707,11 +693,7 @@ impl UITableViewCell {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
     );
 }
 
@@ -719,9 +701,13 @@ impl UITableViewCell {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UITableViewCell {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -733,7 +719,7 @@ impl UITableViewCell {
         #[deprecated]
         #[unsafe(method(initWithFrame:reuseIdentifier:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame_reuseIdentifier(
+        pub unsafe fn initWithFrame_reuseIdentifier(
             this: Allocated<Self>,
             frame: CGRect,
             reuse_identifier: Option<&NSString>,
@@ -742,132 +728,122 @@ impl UITableViewCell {
         #[deprecated]
         #[unsafe(method(text))]
         #[unsafe(method_family = none)]
-        pub fn text(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn text(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`text`][Self::text].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setText:))]
         #[unsafe(method_family = none)]
-        pub fn setText(&self, text: Option<&NSString>);
+        pub unsafe fn setText(&self, text: Option<&NSString>);
 
         #[cfg(feature = "UIFont")]
         #[deprecated]
         #[unsafe(method(font))]
         #[unsafe(method_family = none)]
-        pub fn font(&self) -> Option<Retained<UIFont>>;
+        pub unsafe fn font(&self) -> Option<Retained<UIFont>>;
 
         #[cfg(feature = "UIFont")]
         /// Setter for [`font`][Self::font].
         #[deprecated]
         #[unsafe(method(setFont:))]
         #[unsafe(method_family = none)]
-        pub fn setFont(&self, font: Option<&UIFont>);
+        pub unsafe fn setFont(&self, font: Option<&UIFont>);
 
         #[cfg(feature = "NSText")]
         #[deprecated]
         #[unsafe(method(textAlignment))]
         #[unsafe(method_family = none)]
-        pub fn textAlignment(&self) -> NSTextAlignment;
+        pub unsafe fn textAlignment(&self) -> NSTextAlignment;
 
         #[cfg(feature = "NSText")]
         /// Setter for [`textAlignment`][Self::textAlignment].
         #[deprecated]
         #[unsafe(method(setTextAlignment:))]
         #[unsafe(method_family = none)]
-        pub fn setTextAlignment(&self, text_alignment: NSTextAlignment);
+        pub unsafe fn setTextAlignment(&self, text_alignment: NSTextAlignment);
 
         #[cfg(feature = "NSParagraphStyle")]
         #[deprecated]
         #[unsafe(method(lineBreakMode))]
         #[unsafe(method_family = none)]
-        pub fn lineBreakMode(&self) -> NSLineBreakMode;
+        pub unsafe fn lineBreakMode(&self) -> NSLineBreakMode;
 
         #[cfg(feature = "NSParagraphStyle")]
         /// Setter for [`lineBreakMode`][Self::lineBreakMode].
         #[deprecated]
         #[unsafe(method(setLineBreakMode:))]
         #[unsafe(method_family = none)]
-        pub fn setLineBreakMode(&self, line_break_mode: NSLineBreakMode);
+        pub unsafe fn setLineBreakMode(&self, line_break_mode: NSLineBreakMode);
 
         #[cfg(feature = "UIColor")]
         #[deprecated]
         #[unsafe(method(textColor))]
         #[unsafe(method_family = none)]
-        pub fn textColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn textColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`textColor`][Self::textColor].
         #[deprecated]
         #[unsafe(method(setTextColor:))]
         #[unsafe(method_family = none)]
-        pub fn setTextColor(&self, text_color: Option<&UIColor>);
+        pub unsafe fn setTextColor(&self, text_color: Option<&UIColor>);
 
         #[cfg(feature = "UIColor")]
         #[deprecated]
         #[unsafe(method(selectedTextColor))]
         #[unsafe(method_family = none)]
-        pub fn selectedTextColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn selectedTextColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`selectedTextColor`][Self::selectedTextColor].
         #[deprecated]
         #[unsafe(method(setSelectedTextColor:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectedTextColor(&self, selected_text_color: Option<&UIColor>);
+        pub unsafe fn setSelectedTextColor(&self, selected_text_color: Option<&UIColor>);
 
         #[cfg(feature = "UIImage")]
         #[deprecated]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`image`][Self::image].
         #[deprecated]
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&UIImage>);
+        pub unsafe fn setImage(&self, image: Option<&UIImage>);
 
         #[cfg(feature = "UIImage")]
         #[deprecated]
         #[unsafe(method(selectedImage))]
         #[unsafe(method_family = none)]
-        pub fn selectedImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn selectedImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`selectedImage`][Self::selectedImage].
         #[deprecated]
         #[unsafe(method(setSelectedImage:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectedImage(&self, selected_image: Option<&UIImage>);
+        pub unsafe fn setSelectedImage(&self, selected_image: Option<&UIImage>);
 
         #[deprecated]
         #[unsafe(method(hidesAccessoryWhenEditing))]
         #[unsafe(method_family = none)]
-        pub fn hidesAccessoryWhenEditing(&self) -> bool;
+        pub unsafe fn hidesAccessoryWhenEditing(&self) -> bool;
 
         /// Setter for [`hidesAccessoryWhenEditing`][Self::hidesAccessoryWhenEditing].
         #[deprecated]
         #[unsafe(method(setHidesAccessoryWhenEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setHidesAccessoryWhenEditing(&self, hides_accessory_when_editing: bool);
+        pub unsafe fn setHidesAccessoryWhenEditing(&self, hides_accessory_when_editing: bool);
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[deprecated]
         #[unsafe(method(target))]
         #[unsafe(method_family = none)]
         pub unsafe fn target(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`target`][Self::target].
-        ///
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - This is unretained, you must ensure the object is kept alive while in use.
         #[deprecated]
         #[unsafe(method(setTarget:))]
         #[unsafe(method_family = none)]
@@ -876,13 +852,9 @@ impl UITableViewCell {
         #[deprecated]
         #[unsafe(method(editAction))]
         #[unsafe(method_family = none)]
-        pub fn editAction(&self) -> Option<Sel>;
+        pub unsafe fn editAction(&self) -> Option<Sel>;
 
         /// Setter for [`editAction`][Self::editAction].
-        ///
-        /// # Safety
-        ///
-        /// `edit_action` must be a valid selector.
         #[deprecated]
         #[unsafe(method(setEditAction:))]
         #[unsafe(method_family = none)]
@@ -891,13 +863,9 @@ impl UITableViewCell {
         #[deprecated]
         #[unsafe(method(accessoryAction))]
         #[unsafe(method_family = none)]
-        pub fn accessoryAction(&self) -> Option<Sel>;
+        pub unsafe fn accessoryAction(&self) -> Option<Sel>;
 
         /// Setter for [`accessoryAction`][Self::accessoryAction].
-        ///
-        /// # Safety
-        ///
-        /// `accessory_action` must be a valid selector.
         #[deprecated]
         #[unsafe(method(setAccessoryAction:))]
         #[unsafe(method_family = none)]

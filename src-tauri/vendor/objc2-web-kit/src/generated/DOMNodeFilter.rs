@@ -63,9 +63,6 @@ extern_protocol!(
             feature = "DOMObject",
             feature = "WebScriptObject"
         ))]
-        /// # Safety
-        ///
-        /// `n` might not allow `None`.
         #[deprecated]
         #[unsafe(method(acceptNode:))]
         #[unsafe(method_family = none)]

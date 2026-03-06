@@ -11,9 +11,6 @@ extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/corelocation/cllocationpushserviceextension?language=objc)
     pub unsafe trait CLLocationPushServiceExtension: NSObjectProtocol {
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `payload` generic should be of the correct type.
         #[unsafe(method(didReceiveLocationPushPayload:completion:))]
         #[unsafe(method_family = none)]
         unsafe fn didReceiveLocationPushPayload_completion(

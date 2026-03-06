@@ -111,9 +111,6 @@ impl NSCursor {
             point: NSPoint,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -121,45 +118,45 @@ impl NSCursor {
         #[cfg(feature = "NSImage")]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Retained<NSImage>;
+        pub unsafe fn image(&self) -> Retained<NSImage>;
 
         #[unsafe(method(hotSpot))]
         #[unsafe(method_family = none)]
-        pub fn hotSpot(&self) -> NSPoint;
+        pub unsafe fn hotSpot(&self) -> NSPoint;
 
         #[unsafe(method(hide))]
         #[unsafe(method_family = none)]
-        pub fn hide();
+        pub unsafe fn hide();
 
         #[unsafe(method(unhide))]
         #[unsafe(method_family = none)]
-        pub fn unhide();
+        pub unsafe fn unhide();
 
         #[unsafe(method(setHiddenUntilMouseMoves:))]
         #[unsafe(method_family = none)]
-        pub fn setHiddenUntilMouseMoves(flag: bool);
+        pub unsafe fn setHiddenUntilMouseMoves(flag: bool);
 
         #[unsafe(method(pop))]
         #[unsafe(method_family = none)]
-        pub fn pop_class();
+        pub unsafe fn pop_class();
 
         #[unsafe(method(pop))]
         #[unsafe(method_family = none)]
-        pub fn pop(&self);
+        pub unsafe fn pop(&self);
 
         #[unsafe(method(push))]
         #[unsafe(method_family = none)]
-        pub fn push(&self);
+        pub unsafe fn push(&self);
 
         #[unsafe(method(set))]
         #[unsafe(method_family = none)]
-        pub fn set(&self);
+        pub unsafe fn set(&self);
 
         /// Returns the application’s current cursor.
         /// - Note: This isn’t necessarily the cursor that is currently being displayed, as the system may be showing the cursor for another running application.
         #[unsafe(method(currentCursor))]
         #[unsafe(method_family = none)]
-        pub fn currentCursor() -> Retained<NSCursor>;
+        pub unsafe fn currentCursor() -> Retained<NSCursor>;
 
         /// Returns the default cursor, the arrow cursor.
         /// - Discussion: The default cursor, a slanted arrow with its hot spot at the tip. The arrow cursor is the one you’re used to seeing over buttons, scrollers, and many other objects in the window system.
@@ -215,39 +212,41 @@ impl NSCursor {
         /// - Note: This cursor is used to indicate zooming in on (magnifying) a canvas or object.
         #[unsafe(method(zoomInCursor))]
         #[unsafe(method_family = none)]
-        pub fn zoomInCursor() -> Retained<NSCursor>;
+        pub unsafe fn zoomInCursor() -> Retained<NSCursor>;
 
         /// Returns the zoom-out cursor.
         /// - Note: This cursor is used to indicate zooming out of a canvas or object.
         #[unsafe(method(zoomOutCursor))]
         #[unsafe(method_family = none)]
-        pub fn zoomOutCursor() -> Retained<NSCursor>;
+        pub unsafe fn zoomOutCursor() -> Retained<NSCursor>;
 
         /// Returns the cursor for resizing a column (vertical divider) in either direction.
         #[unsafe(method(columnResizeCursor))]
         #[unsafe(method_family = none)]
-        pub fn columnResizeCursor() -> Retained<NSCursor>;
+        pub unsafe fn columnResizeCursor() -> Retained<NSCursor>;
 
         #[cfg(feature = "NSDirection")]
         /// Returns the cursor for resizing a column (vertical divider) in the specified directions.
         /// - Parameter directions: The direction in which a column can be resized.
         #[unsafe(method(columnResizeCursorInDirections:))]
         #[unsafe(method_family = none)]
-        pub fn columnResizeCursorInDirections(
+        pub unsafe fn columnResizeCursorInDirections(
             directions: NSHorizontalDirections,
         ) -> Retained<NSCursor>;
 
         /// Returns the cursor for resizing a row (horizontal divider) in either direction.
         #[unsafe(method(rowResizeCursor))]
         #[unsafe(method_family = none)]
-        pub fn rowResizeCursor() -> Retained<NSCursor>;
+        pub unsafe fn rowResizeCursor() -> Retained<NSCursor>;
 
         #[cfg(feature = "NSDirection")]
         /// Returns the cursor for resizing a row (horizontal divider) in the specified directions.
         /// - Parameter directions: The direction in which a row can be resized.
         #[unsafe(method(rowResizeCursorInDirections:))]
         #[unsafe(method_family = none)]
-        pub fn rowResizeCursorInDirections(directions: NSVerticalDirections) -> Retained<NSCursor>;
+        pub unsafe fn rowResizeCursorInDirections(
+            directions: NSVerticalDirections,
+        ) -> Retained<NSCursor>;
 
         /// Returns the cursor for resizing a rectangular frame from the specified edge or corner.
         /// - Parameters:
@@ -255,7 +254,7 @@ impl NSCursor {
         /// - directions: The directions in which a rectangular frame can be resized.
         #[unsafe(method(frameResizeCursorFromPosition:inDirections:))]
         #[unsafe(method_family = none)]
-        pub fn frameResizeCursorFromPosition_inDirections(
+        pub unsafe fn frameResizeCursorFromPosition_inDirections(
             position: NSCursorFrameResizePosition,
             directions: NSCursorFrameResizeDirections,
         ) -> Retained<NSCursor>;
@@ -267,19 +266,12 @@ impl NSCursor {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSCursor {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsappkitversionnumberwithcursorsizesupport?language=objc)
@@ -293,7 +285,7 @@ impl NSCursor {
         #[deprecated = "No longer recommended. Use ScreenCaptureKit to capture the screen. Use the `showsCursor` property on `SCStreamConfiguration` to control whether or not to include the cursor in the capture. Or, use `NSCursor.currentCursor` if needing to just get the current cursor for this application."]
         #[unsafe(method(currentSystemCursor))]
         #[unsafe(method_family = none)]
-        pub fn currentSystemCursor() -> Option<Retained<NSCursor>>;
+        pub unsafe fn currentSystemCursor() -> Option<Retained<NSCursor>>;
 
         #[deprecated = "Use either `+[NSCursor columnResizeCursorInDirections:]` or `+[NSCursor frameResizeCursorFromPosition:inDirections:]` instead, depending on whether a divider is being re-positioned or a rectangular frame is being resized."]
         #[unsafe(method(resizeLeftCursor))]
@@ -334,7 +326,7 @@ impl NSCursor {
         #[deprecated = "Color hints are ignored. Use -initWithImage:hotSpot: instead"]
         #[unsafe(method(initWithImage:foregroundColorHint:backgroundColorHint:hotSpot:))]
         #[unsafe(method_family = init)]
-        pub fn initWithImage_foregroundColorHint_backgroundColorHint_hotSpot(
+        pub unsafe fn initWithImage_foregroundColorHint_backgroundColorHint_hotSpot(
             this: Allocated<Self>,
             new_image: &NSImage,
             fg: Option<&NSColor>,
@@ -345,33 +337,33 @@ impl NSCursor {
         #[deprecated = "setOnMouseExited is unused and should not be called"]
         #[unsafe(method(setOnMouseExited:))]
         #[unsafe(method_family = none)]
-        pub fn setOnMouseExited(&self, flag: bool);
+        pub unsafe fn setOnMouseExited(&self, flag: bool);
 
         #[deprecated = "setOnMouseEntered is unused and should not be called"]
         #[unsafe(method(setOnMouseEntered:))]
         #[unsafe(method_family = none)]
-        pub fn setOnMouseEntered(&self, flag: bool);
+        pub unsafe fn setOnMouseEntered(&self, flag: bool);
 
         #[deprecated = "isSetOnMouseExited is unused"]
         #[unsafe(method(isSetOnMouseExited))]
         #[unsafe(method_family = none)]
-        pub fn isSetOnMouseExited(&self) -> bool;
+        pub unsafe fn isSetOnMouseExited(&self) -> bool;
 
         #[deprecated = "isSetOnMouseEntered is unused"]
         #[unsafe(method(isSetOnMouseEntered))]
         #[unsafe(method_family = none)]
-        pub fn isSetOnMouseEntered(&self) -> bool;
+        pub unsafe fn isSetOnMouseEntered(&self) -> bool;
 
         #[cfg(feature = "NSEvent")]
         #[deprecated = "mouseEntered: is unused and should not be called"]
         #[unsafe(method(mouseEntered:))]
         #[unsafe(method_family = none)]
-        pub fn mouseEntered(&self, event: &NSEvent);
+        pub unsafe fn mouseEntered(&self, event: &NSEvent);
 
         #[cfg(feature = "NSEvent")]
         #[deprecated = "mouseExited: is unused and should not be called"]
         #[unsafe(method(mouseExited:))]
         #[unsafe(method_family = none)]
-        pub fn mouseExited(&self, event: &NSEvent);
+        pub unsafe fn mouseExited(&self, event: &NSEvent);
     );
 }

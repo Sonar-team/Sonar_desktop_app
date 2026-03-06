@@ -23,7 +23,7 @@ impl UICalendarSelection {
         /// Called to refresh the selectable dates in the calendar view.
         #[unsafe(method(updateSelectableDates))]
         #[unsafe(method_family = none)]
-        pub fn updateSelectableDates(&self);
+        pub unsafe fn updateSelectableDates(&self);
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

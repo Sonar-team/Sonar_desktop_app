@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "objc2-io-surface"
-version = "0.3.2"
+version = "0.3.1"
 build = false
 autolib = false
 autobins = false
@@ -83,7 +83,6 @@ objc2 = [
 objc2-core-foundation = ["dep:objc2-core-foundation"]
 objc2-foundation = ["dep:objc2-foundation"]
 std = ["alloc"]
-unstable-darwin-objc = []
 
 [lib]
 name = "objc2_io_surface"
@@ -101,19 +100,19 @@ optional = true
 default-features = false
 
 [dependencies.objc2]
-version = ">=0.6.2, <0.8.0"
+version = ">=0.6.1, <0.8.0"
 features = ["std"]
 optional = true
 default-features = false
 
 [dependencies.objc2-core-foundation]
-version = "0.3.2"
+version = "0.3.1"
 features = ["CFDictionary"]
 optional = true
 default-features = false
 
 [dependencies.objc2-foundation]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "NSDictionary",
     "NSObject",

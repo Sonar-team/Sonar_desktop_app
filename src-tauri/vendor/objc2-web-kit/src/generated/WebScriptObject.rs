@@ -36,10 +36,6 @@ pub unsafe trait NSObjectWebScripting:
         ///
         /// Returns: Returns the name to be used to represent the specified selector in the
         /// scripting environment.
-        ///
-        /// # Safety
-        ///
-        /// `selector` must be a valid selector.
         #[unsafe(method(webScriptNameForSelector:))]
         #[unsafe(method_family = none)]
         unsafe fn webScriptNameForSelector(selector: Option<Sel>) -> Option<Retained<NSString>>;
@@ -51,10 +47,6 @@ pub unsafe trait NSObjectWebScripting:
         /// If this method is not implemented on the class no selectors will be exported.
         ///
         /// Returns: Returns YES to hide the selector, NO to export the selector.
-        ///
-        /// # Safety
-        ///
-        /// `selector` must be a valid selector.
         #[unsafe(method(isSelectorExcludedFromWebScript:))]
         #[unsafe(method_family = none)]
         unsafe fn isSelectorExcludedFromWebScript(selector: Option<Sel>) -> bool;
@@ -67,10 +59,6 @@ pub unsafe trait NSObjectWebScripting:
         ///
         /// Returns: Returns the name to be used to represent the specified property in the
         /// scripting environment.
-        ///
-        /// # Safety
-        ///
-        /// `name` must be a valid pointer.
         #[unsafe(method(webScriptNameForKey:))]
         #[unsafe(method_family = none)]
         unsafe fn webScriptNameForKey(name: *const c_char) -> Option<Retained<NSString>>;
@@ -82,10 +70,6 @@ pub unsafe trait NSObjectWebScripting:
         /// Return YES to prevent the property from being exported to the script environment.
         ///
         /// Returns: Returns YES to hide the property, NO to export the property.
-        ///
-        /// # Safety
-        ///
-        /// `name` must be a valid pointer.
         #[unsafe(method(isKeyExcludedFromWebScript:))]
         #[unsafe(method_family = none)]
         unsafe fn isKeyExcludedFromWebScript(name: *const c_char) -> bool;
@@ -99,12 +83,6 @@ pub unsafe trait NSObjectWebScripting:
         ///
         /// Returns: The return value of the invocation. The value will be converted as appropriate
         /// for the script environment.
-        ///
-        /// # Safety
-        ///
-        /// - `name` might not allow `None`.
-        /// - `arguments` generic should be of the correct type.
-        /// - `arguments` might not allow `None`.
         #[unsafe(method(invokeUndefinedMethodFromWebScript:withArguments:))]
         #[unsafe(method_family = none)]
         unsafe fn invokeUndefinedMethodFromWebScript_withArguments(
@@ -120,11 +98,6 @@ pub unsafe trait NSObjectWebScripting:
         ///
         /// Returns: The return value of the call. The value will be converted as appropriate
         /// for the script environment.
-        ///
-        /// # Safety
-        ///
-        /// - `arguments` generic should be of the correct type.
-        /// - `arguments` might not allow `None`.
         #[unsafe(method(invokeDefaultMethodWithArguments:))]
         #[unsafe(method_family = none)]
         unsafe fn invokeDefaultMethodWithArguments(
@@ -184,10 +157,6 @@ impl WebScriptObject {
         /// Throws an exception in the current script execution context.
         ///
         /// Returns: Either NO if an exception could not be raised, YES otherwise.
-        ///
-        /// # Safety
-        ///
-        /// `exception_message` might not allow `None`.
         #[deprecated]
         #[unsafe(method(throwException:))]
         #[unsafe(method_family = none)]
@@ -211,12 +180,6 @@ impl WebScriptObject {
         ///
         /// Returns: Returns the result of calling the script method.
         /// Returns WebUndefined when an exception is thrown in the script environment.
-        ///
-        /// # Safety
-        ///
-        /// - `name` might not allow `None`.
-        /// - `arguments` generic should be of the correct type.
-        /// - `arguments` might not allow `None`.
         #[deprecated]
         #[unsafe(method(callWebScriptMethod:withArguments:))]
         #[unsafe(method_family = none)]
@@ -233,10 +196,6 @@ impl WebScriptObject {
         ///
         /// Returns: Returns the result of evaluating the script in the script environment.
         /// Returns WebUndefined when an exception is thrown in the script environment.
-        ///
-        /// # Safety
-        ///
-        /// `script` might not allow `None`.
         #[deprecated]
         #[unsafe(method(evaluateWebScript:))]
         #[unsafe(method_family = none)]
@@ -248,10 +207,6 @@ impl WebScriptObject {
         /// Parameter `name`: The name of the property to remove.
         ///
         /// Removes the property from the object in the script environment.
-        ///
-        /// # Safety
-        ///
-        /// `name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(removeWebScriptKey:))]
         #[unsafe(method_family = none)]
@@ -282,11 +237,6 @@ impl WebScriptObject {
         /// Parameter `value`: The value of the property to set.
         ///
         /// Sets the property value at the specified index.
-        ///
-        /// # Safety
-        ///
-        /// - `value` should be of the correct type.
-        /// - `value` might not allow `None`.
         #[deprecated]
         #[unsafe(method(setWebScriptValueAtIndex:value:))]
         #[unsafe(method_family = none)]
@@ -300,10 +250,6 @@ impl WebScriptObject {
         ///
         /// Raises an exception in the script environment in the context of the
         /// current object.
-        ///
-        /// # Safety
-        ///
-        /// `description` might not allow `None`.
         #[deprecated]
         #[unsafe(method(setException:))]
         #[unsafe(method_family = none)]

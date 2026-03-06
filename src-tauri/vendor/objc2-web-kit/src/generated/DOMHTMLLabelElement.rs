@@ -95,8 +95,6 @@ impl DOMHTMLLabelElement {
         pub unsafe fn htmlFor(&self) -> Retained<NSString>;
 
         /// Setter for [`htmlFor`][Self::htmlFor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setHtmlFor:))]
         #[unsafe(method_family = none)]
@@ -108,8 +106,6 @@ impl DOMHTMLLabelElement {
         pub unsafe fn accessKey(&self) -> Retained<NSString>;
 
         /// Setter for [`accessKey`][Self::accessKey].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAccessKey:))]
         #[unsafe(method_family = none)]

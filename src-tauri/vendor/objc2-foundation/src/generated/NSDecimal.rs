@@ -62,11 +62,6 @@ impl NSDecimal {
     // TODO: pub fn NSDecimalIsNotANumber(dcm: NonNull<NSDecimal>,) -> Bool;
 
     /// *************    Operations        **********
-    ///
-    /// # Safety
-    ///
-    /// - `destination` must be a valid pointer.
-    /// - `source` must be a valid pointer.
     #[doc(alias = "NSDecimalCopy")]
     #[inline]
     pub unsafe fn copy(destination: NonNull<NSDecimal>, source: NonNull<NSDecimal>) {
@@ -76,9 +71,6 @@ impl NSDecimal {
         unsafe { NSDecimalCopy(destination, source) }
     }
 
-    /// # Safety
-    ///
-    /// `number` must be a valid pointer.
     #[doc(alias = "NSDecimalCompact")]
     #[inline]
     pub unsafe fn compact(number: NonNull<NSDecimal>) {
@@ -88,10 +80,6 @@ impl NSDecimal {
         unsafe { NSDecimalCompact(number) }
     }
 
-    /// # Safety
-    ///
-    /// - `left_operand` must be a valid pointer.
-    /// - `right_operand` must be a valid pointer.
     #[doc(alias = "NSDecimalCompare")]
     #[cfg(feature = "NSObjCRuntime")]
     #[inline]
@@ -108,10 +96,6 @@ impl NSDecimal {
         unsafe { NSDecimalCompare(left_operand, right_operand) }
     }
 
-    /// # Safety
-    ///
-    /// - `result` must be a valid pointer.
-    /// - `number` must be a valid pointer.
     #[doc(alias = "NSDecimalRound")]
     #[inline]
     pub unsafe fn round(
@@ -131,10 +115,6 @@ impl NSDecimal {
         unsafe { NSDecimalRound(result, number, scale, rounding_mode) }
     }
 
-    /// # Safety
-    ///
-    /// - `number1` must be a valid pointer.
-    /// - `number2` must be a valid pointer.
     #[doc(alias = "NSDecimalNormalize")]
     #[inline]
     pub unsafe fn normalize(
@@ -152,11 +132,6 @@ impl NSDecimal {
         unsafe { NSDecimalNormalize(number1, number2, rounding_mode) }
     }
 
-    /// # Safety
-    ///
-    /// - `result` must be a valid pointer.
-    /// - `left_operand` must be a valid pointer.
-    /// - `right_operand` must be a valid pointer.
     #[doc(alias = "NSDecimalAdd")]
     #[inline]
     pub unsafe fn add(
@@ -176,11 +151,6 @@ impl NSDecimal {
         unsafe { NSDecimalAdd(result, left_operand, right_operand, rounding_mode) }
     }
 
-    /// # Safety
-    ///
-    /// - `result` must be a valid pointer.
-    /// - `left_operand` must be a valid pointer.
-    /// - `right_operand` must be a valid pointer.
     #[doc(alias = "NSDecimalSubtract")]
     #[inline]
     pub unsafe fn subtract(
@@ -200,11 +170,6 @@ impl NSDecimal {
         unsafe { NSDecimalSubtract(result, left_operand, right_operand, rounding_mode) }
     }
 
-    /// # Safety
-    ///
-    /// - `result` must be a valid pointer.
-    /// - `left_operand` must be a valid pointer.
-    /// - `right_operand` must be a valid pointer.
     #[doc(alias = "NSDecimalMultiply")]
     #[inline]
     pub unsafe fn multiply(
@@ -224,11 +189,6 @@ impl NSDecimal {
         unsafe { NSDecimalMultiply(result, left_operand, right_operand, rounding_mode) }
     }
 
-    /// # Safety
-    ///
-    /// - `result` must be a valid pointer.
-    /// - `left_operand` must be a valid pointer.
-    /// - `right_operand` must be a valid pointer.
     #[doc(alias = "NSDecimalDivide")]
     #[inline]
     pub unsafe fn divide(
@@ -248,10 +208,6 @@ impl NSDecimal {
         unsafe { NSDecimalDivide(result, left_operand, right_operand, rounding_mode) }
     }
 
-    /// # Safety
-    ///
-    /// - `result` must be a valid pointer.
-    /// - `number` must be a valid pointer.
     #[doc(alias = "NSDecimalPower")]
     #[inline]
     pub unsafe fn power(
@@ -271,10 +227,6 @@ impl NSDecimal {
         unsafe { NSDecimalPower(result, number, power, rounding_mode) }
     }
 
-    /// # Safety
-    ///
-    /// - `result` must be a valid pointer.
-    /// - `number` must be a valid pointer.
     #[doc(alias = "NSDecimalMultiplyByPowerOf10")]
     #[inline]
     pub unsafe fn multiply_by_power_of10(
@@ -294,10 +246,6 @@ impl NSDecimal {
         unsafe { NSDecimalMultiplyByPowerOf10(result, number, power, rounding_mode) }
     }
 
-    /// # Safety
-    ///
-    /// - `dcm` must be a valid pointer.
-    /// - `locale` should be of the correct type.
     #[doc(alias = "NSDecimalString")]
     #[cfg(feature = "NSString")]
     #[inline]

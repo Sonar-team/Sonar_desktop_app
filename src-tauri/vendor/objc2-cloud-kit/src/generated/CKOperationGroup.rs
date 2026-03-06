@@ -67,14 +67,6 @@ extern_conformance!(
 );
 
 extern_conformance!(
-    unsafe impl NSCopying for CKOperationGroup {}
-);
-
-unsafe impl CopyingHelper for CKOperationGroup {
-    type Result = Self;
-}
-
-extern_conformance!(
     unsafe impl NSObjectProtocol for CKOperationGroup {}
 );
 
@@ -88,9 +80,6 @@ impl CKOperationGroup {
         #[unsafe(method_family = init)]
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `a_decoder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, a_decoder: &NSCoder) -> Retained<Self>;
@@ -115,8 +104,6 @@ impl CKOperationGroup {
 
         #[cfg(feature = "CKOperation")]
         /// Setter for [`defaultConfiguration`][Self::defaultConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDefaultConfiguration:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDefaultConfiguration(
@@ -138,8 +125,6 @@ impl CKOperationGroup {
         pub unsafe fn name(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setName(&self, name: Option<&NSString>);

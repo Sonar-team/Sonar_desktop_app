@@ -8,7 +8,6 @@ use crate::*;
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/domrangeexception?language=objc)
-    #[deprecated]
     pub static DOMRangeException: Option<&'static NSString>;
 }
 

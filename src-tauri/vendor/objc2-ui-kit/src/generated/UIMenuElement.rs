@@ -58,33 +58,6 @@ unsafe impl RefEncode for UIMenuElementAttributes {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-/// Possible repeat behaviors for a menu element.
-///
-/// See also [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenuelementrepeatbehavior?language=objc)
-// NS_ENUM
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct UIMenuElementRepeatBehavior(pub NSInteger);
-impl UIMenuElementRepeatBehavior {
-    /// Automatically uses the appropriate repeat behavior for this element.
-    #[doc(alias = "UIMenuElementRepeatBehaviorAutomatic")]
-    pub const Automatic: Self = Self(0);
-    /// The element should be allowed to repeat.
-    #[doc(alias = "UIMenuElementRepeatBehaviorRepeatable")]
-    pub const Repeatable: Self = Self(1);
-    /// The element should not be repeatable.
-    #[doc(alias = "UIMenuElementRepeatBehaviorNonRepeatable")]
-    pub const NonRepeatable: Self = Self(2);
-}
-
-unsafe impl Encode for UIMenuElementRepeatBehavior {
-    const ENCODING: Encoding = NSInteger::ENCODING;
-}
-
-unsafe impl RefEncode for UIMenuElementRepeatBehavior {
-    const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
-}
-
 extern_class!(
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenuelement?language=objc)
     #[unsafe(super(NSObject))]
@@ -118,29 +91,24 @@ impl UIMenuElement {
         /// The element's title.
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// The element's subtitle.
         #[unsafe(method(subtitle))]
         #[unsafe(method_family = none)]
-        pub fn subtitle(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn subtitle(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`subtitle`][Self::subtitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSubtitle:))]
         #[unsafe(method_family = none)]
-        pub fn setSubtitle(&self, subtitle: Option<&NSString>);
+        pub unsafe fn setSubtitle(&self, subtitle: Option<&NSString>);
 
         #[cfg(feature = "UIImage")]
         /// Image to be displayed alongside the element's title.
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(

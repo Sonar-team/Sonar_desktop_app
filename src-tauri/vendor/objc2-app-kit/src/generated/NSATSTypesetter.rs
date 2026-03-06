@@ -27,7 +27,7 @@ impl NSATSTypesetter {
     extern_methods!(
         #[unsafe(method(sharedTypesetter))]
         #[unsafe(method_family = none)]
-        pub fn sharedTypesetter() -> Retained<NSATSTypesetter>;
+        pub unsafe fn sharedTypesetter() -> Retained<NSATSTypesetter>;
     );
 }
 
@@ -37,29 +37,18 @@ impl NSATSTypesetter {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSTypesetter")]
-impl DefaultRetained for NSATSTypesetter {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSPantherCompatibility.
 #[cfg(feature = "NSTypesetter")]
 impl NSATSTypesetter {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `remaining_rect` must be a valid pointer.
         #[deprecated]
         #[unsafe(method(lineFragmentRectForProposedRect:remainingRect:))]
         #[unsafe(method_family = none)]
@@ -77,48 +66,48 @@ impl NSATSTypesetter {
     extern_methods!(
         #[unsafe(method(usesFontLeading))]
         #[unsafe(method_family = none)]
-        pub fn usesFontLeading(&self) -> bool;
+        pub unsafe fn usesFontLeading(&self) -> bool;
 
         /// Setter for [`usesFontLeading`][Self::usesFontLeading].
         #[unsafe(method(setUsesFontLeading:))]
         #[unsafe(method_family = none)]
-        pub fn setUsesFontLeading(&self, uses_font_leading: bool);
+        pub unsafe fn setUsesFontLeading(&self, uses_font_leading: bool);
 
         #[cfg(feature = "NSLayoutManager")]
         #[unsafe(method(typesetterBehavior))]
         #[unsafe(method_family = none)]
-        pub fn typesetterBehavior(&self) -> NSTypesetterBehavior;
+        pub unsafe fn typesetterBehavior(&self) -> NSTypesetterBehavior;
 
         #[cfg(feature = "NSLayoutManager")]
         /// Setter for [`typesetterBehavior`][Self::typesetterBehavior].
         #[unsafe(method(setTypesetterBehavior:))]
         #[unsafe(method_family = none)]
-        pub fn setTypesetterBehavior(&self, typesetter_behavior: NSTypesetterBehavior);
+        pub unsafe fn setTypesetterBehavior(&self, typesetter_behavior: NSTypesetterBehavior);
 
         #[unsafe(method(hyphenationFactor))]
         #[unsafe(method_family = none)]
-        pub fn hyphenationFactor(&self) -> c_float;
+        pub unsafe fn hyphenationFactor(&self) -> c_float;
 
         /// Setter for [`hyphenationFactor`][Self::hyphenationFactor].
         #[unsafe(method(setHyphenationFactor:))]
         #[unsafe(method_family = none)]
-        pub fn setHyphenationFactor(&self, hyphenation_factor: c_float);
+        pub unsafe fn setHyphenationFactor(&self, hyphenation_factor: c_float);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(lineFragmentPadding))]
         #[unsafe(method_family = none)]
-        pub fn lineFragmentPadding(&self) -> CGFloat;
+        pub unsafe fn lineFragmentPadding(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`lineFragmentPadding`][Self::lineFragmentPadding].
         #[unsafe(method(setLineFragmentPadding:))]
         #[unsafe(method_family = none)]
-        pub fn setLineFragmentPadding(&self, line_fragment_padding: CGFloat);
+        pub unsafe fn setLineFragmentPadding(&self, line_fragment_padding: CGFloat);
 
         #[cfg(feature = "NSFont")]
         #[unsafe(method(substituteFontForFont:))]
         #[unsafe(method_family = none)]
-        pub fn substituteFontForFont(&self, original_font: &NSFont) -> Retained<NSFont>;
+        pub unsafe fn substituteFontForFont(&self, original_font: &NSFont) -> Retained<NSFont>;
 
         #[cfg(all(
             feature = "NSParagraphStyle",
@@ -127,7 +116,7 @@ impl NSATSTypesetter {
         ))]
         #[unsafe(method(textTabForGlyphLocation:writingDirection:maxLocation:))]
         #[unsafe(method_family = none)]
-        pub fn textTabForGlyphLocation_writingDirection_maxLocation(
+        pub unsafe fn textTabForGlyphLocation_writingDirection_maxLocation(
             &self,
             glyph_location: CGFloat,
             direction: NSWritingDirection,
@@ -136,32 +125,25 @@ impl NSATSTypesetter {
 
         #[unsafe(method(bidiProcessingEnabled))]
         #[unsafe(method_family = none)]
-        pub fn bidiProcessingEnabled(&self) -> bool;
+        pub unsafe fn bidiProcessingEnabled(&self) -> bool;
 
         /// Setter for [`bidiProcessingEnabled`][Self::bidiProcessingEnabled].
         #[unsafe(method(setBidiProcessingEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setBidiProcessingEnabled(&self, bidi_processing_enabled: bool);
+        pub unsafe fn setBidiProcessingEnabled(&self, bidi_processing_enabled: bool);
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(attributedString))]
         #[unsafe(method_family = none)]
         pub unsafe fn attributedString(&self) -> Option<Retained<NSAttributedString>>;
 
         /// Setter for [`attributedString`][Self::attributedString].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setAttributedString:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAttributedString(&self, attributed_string: Option<&NSAttributedString>);
 
         #[unsafe(method(setParagraphGlyphRange:separatorGlyphRange:))]
         #[unsafe(method_family = none)]
-        pub fn setParagraphGlyphRange_separatorGlyphRange(
+        pub unsafe fn setParagraphGlyphRange_separatorGlyphRange(
             &self,
             paragraph_range: NSRange,
             paragraph_separator_range: NSRange,
@@ -169,15 +151,12 @@ impl NSATSTypesetter {
 
         #[unsafe(method(paragraphGlyphRange))]
         #[unsafe(method_family = none)]
-        pub fn paragraphGlyphRange(&self) -> NSRange;
+        pub unsafe fn paragraphGlyphRange(&self) -> NSRange;
 
         #[unsafe(method(paragraphSeparatorGlyphRange))]
         #[unsafe(method_family = none)]
-        pub fn paragraphSeparatorGlyphRange(&self) -> NSRange;
+        pub unsafe fn paragraphSeparatorGlyphRange(&self) -> NSRange;
 
-        /// # Safety
-        ///
-        /// `line_fragment_origin` must be a valid pointer.
         #[unsafe(method(layoutParagraphAtPoint:))]
         #[unsafe(method_family = none)]
         pub unsafe fn layoutParagraphAtPoint(
@@ -188,7 +167,7 @@ impl NSATSTypesetter {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(lineSpacingAfterGlyphAtIndex:withProposedLineFragmentRect:))]
         #[unsafe(method_family = none)]
-        pub fn lineSpacingAfterGlyphAtIndex_withProposedLineFragmentRect(
+        pub unsafe fn lineSpacingAfterGlyphAtIndex_withProposedLineFragmentRect(
             &self,
             glyph_index: NSUInteger,
             rect: NSRect,
@@ -197,7 +176,7 @@ impl NSATSTypesetter {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(paragraphSpacingBeforeGlyphAtIndex:withProposedLineFragmentRect:))]
         #[unsafe(method_family = none)]
-        pub fn paragraphSpacingBeforeGlyphAtIndex_withProposedLineFragmentRect(
+        pub unsafe fn paragraphSpacingBeforeGlyphAtIndex_withProposedLineFragmentRect(
             &self,
             glyph_index: NSUInteger,
             rect: NSRect,
@@ -206,36 +185,26 @@ impl NSATSTypesetter {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(paragraphSpacingAfterGlyphAtIndex:withProposedLineFragmentRect:))]
         #[unsafe(method_family = none)]
-        pub fn paragraphSpacingAfterGlyphAtIndex_withProposedLineFragmentRect(
+        pub unsafe fn paragraphSpacingAfterGlyphAtIndex_withProposedLineFragmentRect(
             &self,
             glyph_index: NSUInteger,
             rect: NSRect,
         ) -> CGFloat;
 
         #[cfg(feature = "NSLayoutManager")]
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(layoutManager))]
         #[unsafe(method_family = none)]
         pub unsafe fn layoutManager(&self) -> Option<Retained<NSLayoutManager>>;
 
         #[cfg(feature = "NSTextContainer")]
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(currentTextContainer))]
         #[unsafe(method_family = none)]
         pub unsafe fn currentTextContainer(&self) -> Option<Retained<NSTextContainer>>;
 
         #[unsafe(method(setHardInvalidation:forGlyphRange:))]
         #[unsafe(method_family = none)]
-        pub fn setHardInvalidation_forGlyphRange(&self, flag: bool, glyph_range: NSRange);
+        pub unsafe fn setHardInvalidation_forGlyphRange(&self, flag: bool, glyph_range: NSRange);
 
-        /// # Safety
-        ///
-        /// - `line_fragment_rect` must be a valid pointer.
-        /// - `line_fragment_used_rect` must be a valid pointer.
         #[unsafe(method(getLineFragmentRect:usedRect:forParagraphSeparatorGlyphRange:atProposedOrigin:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getLineFragmentRect_usedRect_forParagraphSeparatorGlyphRange_atProposedOrigin(
@@ -253,11 +222,6 @@ impl NSATSTypesetter {
 impl NSATSTypesetter {
     extern_methods!(
         #[cfg(feature = "objc2-core-foundation")]
-        /// # Safety
-        ///
-        /// - `line_rect` must be a valid pointer.
-        /// - `used_rect` must be a valid pointer.
-        /// - `baseline_offset` must be a valid pointer.
         #[unsafe(method(willSetLineFragmentRect:forGlyphRange:usedRect:baselineOffset:))]
         #[unsafe(method_family = none)]
         pub unsafe fn willSetLineFragmentRect_forGlyphRange_usedRect_baselineOffset(
@@ -270,27 +234,30 @@ impl NSATSTypesetter {
 
         #[unsafe(method(shouldBreakLineByWordBeforeCharacterAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn shouldBreakLineByWordBeforeCharacterAtIndex(&self, char_index: NSUInteger) -> bool;
+        pub unsafe fn shouldBreakLineByWordBeforeCharacterAtIndex(
+            &self,
+            char_index: NSUInteger,
+        ) -> bool;
 
         #[unsafe(method(shouldBreakLineByHyphenatingBeforeCharacterAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn shouldBreakLineByHyphenatingBeforeCharacterAtIndex(
+        pub unsafe fn shouldBreakLineByHyphenatingBeforeCharacterAtIndex(
             &self,
             char_index: NSUInteger,
         ) -> bool;
 
         #[unsafe(method(hyphenationFactorForGlyphAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn hyphenationFactorForGlyphAtIndex(&self, glyph_index: NSUInteger) -> c_float;
+        pub unsafe fn hyphenationFactorForGlyphAtIndex(&self, glyph_index: NSUInteger) -> c_float;
 
         #[unsafe(method(hyphenCharacterForGlyphAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn hyphenCharacterForGlyphAtIndex(&self, glyph_index: NSUInteger) -> UTF32Char;
+        pub unsafe fn hyphenCharacterForGlyphAtIndex(&self, glyph_index: NSUInteger) -> UTF32Char;
 
         #[cfg(feature = "NSTextContainer")]
         #[unsafe(method(boundingBoxForControlGlyphAtIndex:forTextContainer:proposedLineFragment:glyphPosition:characterIndex:))]
         #[unsafe(method_family = none)]
-        pub fn boundingBoxForControlGlyphAtIndex_forTextContainer_proposedLineFragment_glyphPosition_characterIndex(
+        pub unsafe fn boundingBoxForControlGlyphAtIndex_forTextContainer_proposedLineFragment_glyphPosition_characterIndex(
             &self,
             glyph_index: NSUInteger,
             text_container: &NSTextContainer,
@@ -306,12 +273,6 @@ impl NSATSTypesetter {
 impl NSATSTypesetter {
     extern_methods!(
         #[cfg(all(feature = "NSFont", feature = "NSLayoutManager"))]
-        /// # Safety
-        ///
-        /// - `glyph_buffer` must be a valid pointer.
-        /// - `char_index_buffer` must be a valid pointer.
-        /// - `inscribe_buffer` must be a valid pointer.
-        /// - `elastic_buffer` must be a valid pointer.
         #[deprecated]
         #[unsafe(method(getGlyphsInRange:glyphs:characterIndexes:glyphInscriptions:elasticBits:))]
         #[unsafe(method_family = none)]

@@ -15,7 +15,7 @@ extern_protocol!(
         /// find session to begin, otherwise return nil to prevent the system find panel from appearing.
         #[unsafe(method(findInteraction:sessionForView:))]
         #[unsafe(method_family = none)]
-        fn findInteraction_sessionForView(
+        unsafe fn findInteraction_sessionForView(
             &self,
             interaction: &UIFindInteraction,
             view: &UIView,
@@ -28,7 +28,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(findInteraction:didBeginFindSession:))]
         #[unsafe(method_family = none)]
-        fn findInteraction_didBeginFindSession(
+        unsafe fn findInteraction_didBeginFindSession(
             &self,
             interaction: &UIFindInteraction,
             session: &UIFindSession,
@@ -41,7 +41,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(findInteraction:didEndFindSession:))]
         #[unsafe(method_family = none)]
-        fn findInteraction_didEndFindSession(
+        unsafe fn findInteraction_didEndFindSession(
             &self,
             interaction: &UIFindInteraction,
             session: &UIFindSession,
@@ -71,46 +71,38 @@ impl UIFindInteraction {
         /// Returns YES if the find navigator panel is currently visible.
         #[unsafe(method(isFindNavigatorVisible))]
         #[unsafe(method_family = none)]
-        pub fn isFindNavigatorVisible(&self) -> bool;
+        pub unsafe fn isFindNavigatorVisible(&self) -> bool;
 
         #[cfg(feature = "UIFindSession")]
         /// If there's a currently active find session (implying isFindNavigatorVisible is true), returns the active find session.
         #[unsafe(method(activeFindSession))]
         #[unsafe(method_family = none)]
-        pub fn activeFindSession(&self) -> Option<Retained<UIFindSession>>;
+        pub unsafe fn activeFindSession(&self) -> Option<Retained<UIFindSession>>;
 
         /// Assign this property to pre-populate the system find panel's search text field with a search query.
         #[unsafe(method(searchText))]
         #[unsafe(method_family = none)]
-        pub fn searchText(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn searchText(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`searchText`][Self::searchText].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSearchText:))]
         #[unsafe(method_family = none)]
-        pub fn setSearchText(&self, search_text: Option<&NSString>);
+        pub unsafe fn setSearchText(&self, search_text: Option<&NSString>);
 
         /// If replacement is supported, assign this property to pre-populate the system find panel's replace text field with a replacement string.
         #[unsafe(method(replacementText))]
         #[unsafe(method_family = none)]
-        pub fn replacementText(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn replacementText(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`replacementText`][Self::replacementText].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setReplacementText:))]
         #[unsafe(method_family = none)]
-        pub fn setReplacementText(&self, replacement_text: Option<&NSString>);
+        pub unsafe fn setReplacementText(&self, replacement_text: Option<&NSString>);
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement", feature = "block2"))]
         /// This provider is consulted when the search options menu is being populated. A default set of search options is provided, representing the options
         /// available in
         /// `UITextSearchOptions,`which can be either modified, augmented, or omitted.
-        ///
-        /// # Safety
-        ///
-        /// The returned block's argument must be a valid pointer.
         #[unsafe(method(optionsMenuProvider))]
         #[unsafe(method_family = none)]
         pub unsafe fn optionsMenuProvider(
@@ -119,12 +111,6 @@ impl UIFindInteraction {
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement", feature = "block2"))]
         /// Setter for [`optionsMenuProvider`][Self::optionsMenuProvider].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `options_menu_provider` block's return must be a valid pointer or null.
         #[unsafe(method(setOptionsMenuProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setOptionsMenuProvider(
@@ -137,12 +123,14 @@ impl UIFindInteraction {
         /// See UIFindInteractionDelegate above.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UIFindInteractionDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn UIFindInteractionDelegate>>>;
 
         /// Creates a find interaction object with the specified delegate.
         #[unsafe(method(initWithSessionDelegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithSessionDelegate(
+        pub unsafe fn initWithSessionDelegate(
             this: Allocated<Self>,
             session_delegate: &ProtocolObject<dyn UIFindInteractionDelegate>,
         ) -> Retained<Self>;
@@ -154,27 +142,27 @@ impl UIFindInteraction {
         /// visible on first appearance.
         #[unsafe(method(presentFindNavigatorShowingReplace:))]
         #[unsafe(method_family = none)]
-        pub fn presentFindNavigatorShowingReplace(&self, showing_replace: bool);
+        pub unsafe fn presentFindNavigatorShowingReplace(&self, showing_replace: bool);
 
         /// Dismisses the find navigator panel.
         #[unsafe(method(dismissFindNavigator))]
         #[unsafe(method_family = none)]
-        pub fn dismissFindNavigator(&self);
+        pub unsafe fn dismissFindNavigator(&self);
 
         /// Jump to the next found result in the document, relative to the currently highlighted result.
         #[unsafe(method(findNext))]
         #[unsafe(method_family = none)]
-        pub fn findNext(&self);
+        pub unsafe fn findNext(&self);
 
         /// Jump to the previous found result in the document, relative to the currently highlighted result.
         #[unsafe(method(findPrevious))]
         #[unsafe(method_family = none)]
-        pub fn findPrevious(&self);
+        pub unsafe fn findPrevious(&self);
 
         /// Calling this triggers an update of the UI to reflect changes to the currently shown result count or result index, as defined by UIFindSession.
         #[unsafe(method(updateResultCount))]
         #[unsafe(method_family = none)]
-        pub fn updateResultCount(&self);
+        pub unsafe fn updateResultCount(&self);
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]

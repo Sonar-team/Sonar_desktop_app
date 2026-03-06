@@ -172,16 +172,16 @@ impl NSColorPanel {
     extern_methods!(
         #[unsafe(method(sharedColorPanel))]
         #[unsafe(method_family = none)]
-        pub fn sharedColorPanel(mtm: MainThreadMarker) -> Retained<NSColorPanel>;
+        pub unsafe fn sharedColorPanel(mtm: MainThreadMarker) -> Retained<NSColorPanel>;
 
         #[unsafe(method(sharedColorPanelExists))]
         #[unsafe(method_family = none)]
-        pub fn sharedColorPanelExists(mtm: MainThreadMarker) -> bool;
+        pub unsafe fn sharedColorPanelExists(mtm: MainThreadMarker) -> bool;
 
         #[cfg(all(feature = "NSColor", feature = "NSEvent", feature = "NSView"))]
         #[unsafe(method(dragColor:withEvent:fromView:))]
         #[unsafe(method_family = none)]
-        pub fn dragColor_withEvent_fromView(
+        pub unsafe fn dragColor_withEvent_fromView(
             color: &NSColor,
             event: &NSEvent,
             source_view: &NSView,
@@ -189,78 +189,70 @@ impl NSColorPanel {
 
         #[unsafe(method(setPickerMask:))]
         #[unsafe(method_family = none)]
-        pub fn setPickerMask(mask: NSColorPanelOptions, mtm: MainThreadMarker);
+        pub unsafe fn setPickerMask(mask: NSColorPanelOptions, mtm: MainThreadMarker);
 
         #[unsafe(method(setPickerMode:))]
         #[unsafe(method_family = none)]
-        pub fn setPickerMode(mode: NSColorPanelMode, mtm: MainThreadMarker);
+        pub unsafe fn setPickerMode(mode: NSColorPanelMode, mtm: MainThreadMarker);
 
         #[cfg(feature = "NSView")]
         #[unsafe(method(accessoryView))]
         #[unsafe(method_family = none)]
-        pub fn accessoryView(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn accessoryView(&self) -> Option<Retained<NSView>>;
 
         #[cfg(feature = "NSView")]
         /// Setter for [`accessoryView`][Self::accessoryView].
         #[unsafe(method(setAccessoryView:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessoryView(&self, accessory_view: Option<&NSView>);
+        pub unsafe fn setAccessoryView(&self, accessory_view: Option<&NSView>);
 
         #[unsafe(method(isContinuous))]
         #[unsafe(method_family = none)]
-        pub fn isContinuous(&self) -> bool;
+        pub unsafe fn isContinuous(&self) -> bool;
 
         /// Setter for [`isContinuous`][Self::isContinuous].
         #[unsafe(method(setContinuous:))]
         #[unsafe(method_family = none)]
-        pub fn setContinuous(&self, continuous: bool);
+        pub unsafe fn setContinuous(&self, continuous: bool);
 
         #[unsafe(method(showsAlpha))]
         #[unsafe(method_family = none)]
-        pub fn showsAlpha(&self) -> bool;
+        pub unsafe fn showsAlpha(&self) -> bool;
 
         /// Setter for [`showsAlpha`][Self::showsAlpha].
         #[unsafe(method(setShowsAlpha:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsAlpha(&self, shows_alpha: bool);
+        pub unsafe fn setShowsAlpha(&self, shows_alpha: bool);
 
         #[unsafe(method(mode))]
         #[unsafe(method_family = none)]
-        pub fn mode(&self) -> NSColorPanelMode;
+        pub unsafe fn mode(&self) -> NSColorPanelMode;
 
         /// Setter for [`mode`][Self::mode].
         #[unsafe(method(setMode:))]
         #[unsafe(method_family = none)]
-        pub fn setMode(&self, mode: NSColorPanelMode);
+        pub unsafe fn setMode(&self, mode: NSColorPanelMode);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
-        pub fn color(&self) -> Retained<NSColor>;
+        pub unsafe fn color(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`color`][Self::color].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setColor:))]
         #[unsafe(method_family = none)]
-        pub fn setColor(&self, color: &NSColor);
+        pub unsafe fn setColor(&self, color: &NSColor);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(alpha))]
         #[unsafe(method_family = none)]
-        pub fn alpha(&self) -> CGFloat;
+        pub unsafe fn alpha(&self) -> CGFloat;
 
-        /// # Safety
-        ///
-        /// `selector` must be a valid selector.
         #[unsafe(method(setAction:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAction(&self, selector: Option<Sel>);
 
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
         #[unsafe(method(setTarget:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTarget(&self, target: Option<&AnyObject>);
@@ -268,24 +260,12 @@ impl NSColorPanel {
         #[cfg(feature = "NSColorList")]
         #[unsafe(method(attachColorList:))]
         #[unsafe(method_family = none)]
-        pub fn attachColorList(&self, color_list: &NSColorList);
+        pub unsafe fn attachColorList(&self, color_list: &NSColorList);
 
         #[cfg(feature = "NSColorList")]
         #[unsafe(method(detachColorList:))]
         #[unsafe(method_family = none)]
-        pub fn detachColorList(&self, color_list: &NSColorList);
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// The maximum linear exposure that can be set on a color picked in the color panel. Defaults to 1 and ignores any value less than 1. If set to a value >= 2, the color picked by the panel may have a linear exposure applied to it.
-        #[unsafe(method(maximumLinearExposure))]
-        #[unsafe(method_family = none)]
-        pub fn maximumLinearExposure(&self) -> CGFloat;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// Setter for [`maximumLinearExposure`][Self::maximumLinearExposure].
-        #[unsafe(method(setMaximumLinearExposure:))]
-        #[unsafe(method_family = none)]
-        pub fn setMaximumLinearExposure(&self, maximum_linear_exposure: CGFloat);
+        pub unsafe fn detachColorList(&self, color_list: &NSColorList);
     );
 }
 
@@ -316,9 +296,6 @@ impl NSColorPanel {
             screen: Option<&NSScreen>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -327,7 +304,7 @@ impl NSColorPanel {
         /// Convenience method for creating an autoreleased titled window with the given contentViewController. A basic NSWindow with the following attributes is made: titled, closable, resizable, miniaturizable. The window's title is automatically bound to the contentViewController's title. The size of the window can easily be controlled by utilizing autolayout and applying size constraints to the view (or its subviews). The window has isReleasedWhenClosed set to NO, and it must be explicitly retained to keep the window instance alive. To have it automatically be freed when it is closed, do the following: [window retain] and [window setReleasedWhenClosed:YES].
         #[unsafe(method(windowWithContentViewController:))]
         #[unsafe(method_family = none)]
-        pub fn windowWithContentViewController(
+        pub unsafe fn windowWithContentViewController(
             content_view_controller: &NSViewController,
         ) -> Retained<Self>;
     );
@@ -339,7 +316,7 @@ impl NSColorPanel {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -349,7 +326,7 @@ impl NSColorPanel {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -357,9 +334,6 @@ impl NSColorPanel {
 #[cfg(all(feature = "NSApplication", feature = "NSResponder"))]
 impl NSApplication {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(orderFrontColorPanel:))]
         #[unsafe(method_family = none)]
         pub unsafe fn orderFrontColorPanel(&self, sender: Option<&AnyObject>);
@@ -372,7 +346,7 @@ extern_protocol!(
         #[cfg(all(feature = "NSPanel", feature = "NSResponder", feature = "NSWindow"))]
         #[unsafe(method(changeColor:))]
         #[unsafe(method_family = none)]
-        fn changeColor(&self, sender: Option<&NSColorPanel>);
+        unsafe fn changeColor(&self, sender: Option<&NSColorPanel>);
     }
 );
 
@@ -382,39 +356,30 @@ extern "C" {
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsnomodecolorpanel?language=objc)
-#[deprecated]
 pub static NSNoModeColorPanel: NSColorPanelMode = NSColorPanelMode(NSColorPanelMode::None.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsgraymodecolorpanel?language=objc)
-#[deprecated]
 pub static NSGrayModeColorPanel: NSColorPanelMode = NSColorPanelMode(NSColorPanelMode::Gray.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsrgbmodecolorpanel?language=objc)
-#[deprecated]
 pub static NSRGBModeColorPanel: NSColorPanelMode = NSColorPanelMode(NSColorPanelMode::RGB.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscmykmodecolorpanel?language=objc)
-#[deprecated]
 pub static NSCMYKModeColorPanel: NSColorPanelMode = NSColorPanelMode(NSColorPanelMode::CMYK.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nshsbmodecolorpanel?language=objc)
-#[deprecated]
 pub static NSHSBModeColorPanel: NSColorPanelMode = NSColorPanelMode(NSColorPanelMode::HSB.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscustompalettemodecolorpanel?language=objc)
-#[deprecated]
 pub static NSCustomPaletteModeColorPanel: NSColorPanelMode =
     NSColorPanelMode(NSColorPanelMode::CustomPalette.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscolorlistmodecolorpanel?language=objc)
-#[deprecated]
 pub static NSColorListModeColorPanel: NSColorPanelMode =
     NSColorPanelMode(NSColorPanelMode::ColorList.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nswheelmodecolorpanel?language=objc)
-#[deprecated]
 pub static NSWheelModeColorPanel: NSColorPanelMode = NSColorPanelMode(NSColorPanelMode::Wheel.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscrayonmodecolorpanel?language=objc)
-#[deprecated]
 pub static NSCrayonModeColorPanel: NSColorPanelMode = NSColorPanelMode(NSColorPanelMode::Crayon.0);

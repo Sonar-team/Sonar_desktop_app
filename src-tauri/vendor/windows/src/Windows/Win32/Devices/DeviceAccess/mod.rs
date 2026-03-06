@@ -3,7 +3,7 @@ pub unsafe fn CreateDeviceAccessInstance<P0>(deviceinterfacepath: P0, desiredacc
 where
     P0: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("deviceaccess.dll" "system" fn CreateDeviceAccessInstance(deviceinterfacepath : windows_core::PCWSTR, desiredaccess : u32, createasync : *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("deviceaccess.dll" "system" fn CreateDeviceAccessInstance(deviceinterfacepath : windows_core::PCWSTR, desiredaccess : u32, createasync : *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe {
         let mut result__ = core::mem::zeroed();
         CreateDeviceAccessInstance(deviceinterfacepath.param().abi(), desiredaccess, &mut result__).and_then(|| windows_core::Type::from_abi(result__))
@@ -166,7 +166,7 @@ pub struct IDeviceIoControl_Vtbl {
 }
 pub trait IDeviceIoControl_Impl: windows_core::IUnknownImpl {
     fn DeviceIoControlSync(&self, iocontrolcode: u32, inputbuffer: *const u8, inputbuffersize: u32, outputbuffer: *mut u8, outputbuffersize: u32, bytesreturned: *mut u32) -> windows_core::Result<()>;
-    fn DeviceIoControlAsync(&self, iocontrolcode: u32, inputbuffer: *const u8, inputbuffersize: u32, outputbuffer: *mut u8, outputbuffersize: u32, requestcompletioncallback: windows_core::Ref<'_, IDeviceRequestCompletionCallback>, cancelcontext: *mut usize) -> windows_core::Result<()>;
+    fn DeviceIoControlAsync(&self, iocontrolcode: u32, inputbuffer: *const u8, inputbuffersize: u32, outputbuffer: *mut u8, outputbuffersize: u32, requestcompletioncallback: windows_core::Ref<IDeviceRequestCompletionCallback>, cancelcontext: *mut usize) -> windows_core::Result<()>;
     fn CancelOperation(&self, cancelcontext: usize) -> windows_core::Result<()>;
 }
 impl IDeviceIoControl_Vtbl {

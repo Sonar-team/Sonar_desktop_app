@@ -24,18 +24,18 @@ impl UIFeedbackGenerator {
         /// initalize the generator with a view to attach it to the provided view as an interaction.
         #[unsafe(method(feedbackGeneratorForView:))]
         #[unsafe(method_family = none)]
-        pub fn feedbackGeneratorForView(view: &UIView) -> Retained<Self>;
+        pub unsafe fn feedbackGeneratorForView(view: &UIView) -> Retained<Self>;
 
         #[deprecated]
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         /// informs self that it will likely receive events soon, so that it can ensure minimal latency for any feedback generated
         /// safe to call more than once before the generator receives an event, if events are still imminently possible
         #[unsafe(method(prepare))]
         #[unsafe(method_family = none)]
-        pub fn prepare(&self);
+        pub unsafe fn prepare(&self);
     );
 }
 
@@ -44,7 +44,7 @@ impl UIFeedbackGenerator {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 

@@ -7,10 +7,6 @@ use objc2_foundation::*;
 
 use crate::*;
 
-/// [Apple's documentation](https://developer.apple.com/documentation/uikit/uideferredmenuelementidentifier?language=objc)
-// NS_TYPED_EXTENSIBLE_ENUM
-pub type UIDeferredMenuElementIdentifier = NSString;
-
 extern_class!(
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uideferredmenuelement?language=objc)
     #[unsafe(super(UIMenuElement, NSObject))]
@@ -48,11 +44,6 @@ extern_conformance!(
 #[cfg(feature = "UIMenuElement")]
 impl UIDeferredMenuElement {
     extern_methods!(
-        /// The identifier of this deferred menu element.
-        #[unsafe(method(identifier))]
-        #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Retained<UIDeferredMenuElementIdentifier>;
-
         #[cfg(feature = "block2")]
         /// Returns a placeholder menu element that is replaced with the result of the block's
         /// completion handler. A loading UI takes the place of the element in the menu
@@ -62,10 +53,6 @@ impl UIDeferredMenuElement {
         ///
         /// Parameter `elementProvider`: Called by the system to request the deferred menu items when the containing menu is presented.
         /// Call this block's completion handler when the menu items are available.
-        ///
-        /// # Safety
-        ///
-        /// `element_provider` block's argument block's argument must be a valid pointer.
         #[unsafe(method(elementWithProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn elementWithProvider(
@@ -85,37 +72,12 @@ impl UIDeferredMenuElement {
         ///
         /// Parameter `elementProvider`: Called by the system to request the deferred menu items when the containing menu is presented.
         /// Call this block's completion handler when the menu items are available.
-        ///
-        /// # Safety
-        ///
-        /// `element_provider` block's argument block's argument must be a valid pointer.
         #[unsafe(method(elementWithUncachedProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn elementWithUncachedProvider(
             element_provider: &block2::DynBlock<
                 dyn Fn(NonNull<block2::DynBlock<dyn Fn(NonNull<NSArray<UIMenuElement>>)>>),
             >,
-            mtm: MainThreadMarker,
-        ) -> Retained<Self>;
-
-        /// Returns a placeholder menu element that is replaced with elements provided from the responder chain.
-        /// A loading UI takes the place of the element in the menu until it is fulfilled. The element may be stored
-        /// and re-used across menus.
-        ///
-        ///
-        /// Parameter `identifier`: An identifier for this deferred element that responders can check to determine which elements
-        /// to provide.
-        ///
-        /// Parameter `shouldCacheItems`: Whether or not the deferred element caches items. Passing in
-        /// `YES`causes this deferred element to
-        /// ask the responder chain for elements only once, when the element is first encountered in a menu.
-        /// Passing in
-        /// `NO`asks the responder chain for elements every time the element is displayed.
-        #[unsafe(method(elementUsingFocusWithIdentifier:shouldCacheItems:))]
-        #[unsafe(method_family = none)]
-        pub fn elementUsingFocusWithIdentifier_shouldCacheItems(
-            identifier: &UIDeferredMenuElementIdentifier,
-            should_cache_items: bool,
             mtm: MainThreadMarker,
         ) -> Retained<Self>;
     );
@@ -125,62 +87,12 @@ impl UIDeferredMenuElement {
 #[cfg(feature = "UIMenuElement")]
 impl UIDeferredMenuElement {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
             this: Allocated<Self>,
             coder: &NSCoder,
         ) -> Option<Retained<Self>>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
-
-        #[unsafe(method(new))]
-        #[unsafe(method_family = new)]
-        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
-    );
-}
-
-extern_class!(
-    /// Represents an element provider for a deferred menu element.
-    /// When the containing menu for a responder-based deferred element is presented, the system asks the
-    /// responder chain for one of these element providers for the deferred element.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/uikit/uideferredmenuelementprovider?language=objc)
-    #[unsafe(super(NSObject))]
-    #[thread_kind = MainThreadOnly]
-    #[derive(Debug, PartialEq, Eq, Hash)]
-    pub struct UIDeferredMenuElementProvider;
-);
-
-extern_conformance!(
-    unsafe impl NSObjectProtocol for UIDeferredMenuElementProvider {}
-);
-
-impl UIDeferredMenuElementProvider {
-    extern_methods!(
-        #[cfg(all(feature = "UIMenuElement", feature = "block2"))]
-        /// Creates a deferred menu element provider with an asynchronous block.
-        ///
-        ///
-        /// Parameter `elementProvider`: An asynchronous element provider block. Call this block's completion handler when the responder's
-        /// menu items are available.
-        ///
-        /// # Safety
-        ///
-        /// `element_provider` block's argument block's argument must be a valid pointer.
-        #[unsafe(method(providerWithElementProvider:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn providerWithElementProvider(
-            element_provider: &block2::DynBlock<
-                dyn Fn(NonNull<block2::DynBlock<dyn Fn(NonNull<NSArray<UIMenuElement>>)>>),
-            >,
-            mtm: MainThreadMarker,
-        ) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

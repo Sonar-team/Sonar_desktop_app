@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "objc2-user-notifications"
-version = "0.3.2"
+version = "0.3.1"
 build = false
 autolib = false
 autobins = false
@@ -148,7 +148,6 @@ default = [
 ]
 objc2-core-location = ["dep:objc2-core-location"]
 std = ["alloc"]
-unstable-darwin-objc = []
 
 [lib]
 name = "objc2_user_notifications"
@@ -167,18 +166,18 @@ optional = true
 default-features = false
 
 [dependencies.objc2]
-version = ">=0.6.2, <0.8.0"
+version = ">=0.6.1, <0.8.0"
 features = ["std"]
 default-features = false
 
 [dependencies.objc2-core-location]
-version = "0.3.2"
+version = "0.3.1"
 features = ["CLRegion"]
 optional = true
 default-features = false
 
 [dependencies.objc2-foundation]
-version = "0.3.2"
+version = "0.3.1"
 features = ["alloc"]
 default-features = false
 

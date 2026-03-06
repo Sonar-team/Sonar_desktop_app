@@ -42,10 +42,6 @@ impl UIViewControllerTransition {
         /// }
         /// present(cityViewController, animated: true)
         /// ```
-        ///
-        /// # Safety
-        ///
-        /// `source_view_provider` block's return must be a valid pointer or null.
         #[unsafe(method(zoomWithOptions:sourceViewProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn zoomWithOptions_sourceViewProvider(
@@ -55,45 +51,25 @@ impl UIViewControllerTransition {
             >,
         ) -> Retained<Self>;
 
-        #[cfg(all(
-            feature = "UIBarButtonItem",
-            feature = "UIBarItem",
-            feature = "UIZoomTransitionOptions",
-            feature = "block2"
-        ))]
-        /// Zoom from the `UIBarButtonItem` provided by the `sourceBarButtonItemProvider` to the presented or pushed view controller's view.
-        ///
-        /// # Safety
-        ///
-        /// `source_bar_button_item_provider` block's return must be a valid pointer or null.
-        #[unsafe(method(zoomWithOptions:sourceBarButtonItemProvider:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn zoomWithOptions_sourceBarButtonItemProvider(
-            options: Option<&UIZoomTransitionOptions>,
-            source_bar_button_item_provider: &block2::DynBlock<
-                dyn Fn(NonNull<UIZoomTransitionSourceViewProviderContext>) -> *mut UIBarButtonItem,
-            >,
-        ) -> Retained<Self>;
-
         /// View slides up from the bottom of the screen. Same as `UIModalTransitionStyle.coverVertical`.
         #[unsafe(method(coverVerticalTransition))]
         #[unsafe(method_family = none)]
-        pub fn coverVerticalTransition() -> Retained<Self>;
+        pub unsafe fn coverVerticalTransition() -> Retained<Self>;
 
         /// View flips horizontally in 3D. Same as `UIModalTransitionStyle.flipHorizontal`.
         #[unsafe(method(flipHorizontalTransition))]
         #[unsafe(method_family = none)]
-        pub fn flipHorizontalTransition() -> Retained<Self>;
+        pub unsafe fn flipHorizontalTransition() -> Retained<Self>;
 
         /// Fades out the current view while fading in the new view. Same as `UIModalTransitionStyle.crossDissolve`.
         #[unsafe(method(crossDissolveTransition))]
         #[unsafe(method_family = none)]
-        pub fn crossDissolveTransition() -> Retained<Self>;
+        pub unsafe fn crossDissolveTransition() -> Retained<Self>;
 
         /// One corner of the current view curls up to reveal the presented view underneath. Same as `UIModalTransitionStyle.partialCurl`.
         #[unsafe(method(partialCurlTransition))]
         #[unsafe(method_family = none)]
-        pub fn partialCurlTransition() -> Retained<Self>;
+        pub unsafe fn partialCurlTransition() -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -122,13 +98,19 @@ impl UIZoomTransitionSourceViewProviderContext {
         /// View controller that is the source of the zoom transition.
         #[unsafe(method(sourceViewController))]
         #[unsafe(method_family = none)]
-        pub fn sourceViewController(&self, mtm: MainThreadMarker) -> Retained<UIViewController>;
+        pub unsafe fn sourceViewController(
+            &self,
+            mtm: MainThreadMarker,
+        ) -> Retained<UIViewController>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
         /// The view controller being zoomed into by the transition.
         #[unsafe(method(zoomedViewController))]
         #[unsafe(method_family = none)]
-        pub fn zoomedViewController(&self, mtm: MainThreadMarker) -> Retained<UIViewController>;
+        pub unsafe fn zoomedViewController(
+            &self,
+            mtm: MainThreadMarker,
+        ) -> Retained<UIViewController>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

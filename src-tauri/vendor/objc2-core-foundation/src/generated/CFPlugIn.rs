@@ -81,7 +81,7 @@ impl CFPlugIn {
     #[doc(alias = "CFPlugInGetBundle")]
     #[cfg(feature = "CFBundle")]
     #[inline]
-    pub fn bundle(&self) -> Option<CFRetained<CFBundle>> {
+    pub fn bundle(self: &CFPlugIn) -> Option<CFRetained<CFBundle>> {
         extern "C-unwind" {
             fn CFPlugInGetBundle(plug_in: &CFPlugIn) -> Option<NonNull<CFBundle>>;
         }
@@ -92,7 +92,7 @@ impl CFPlugIn {
     #[doc(alias = "CFPlugInSetLoadOnDemand")]
     #[cfg(feature = "CFBundle")]
     #[inline]
-    pub fn set_load_on_demand(&self, flag: bool) {
+    pub fn set_load_on_demand(self: &CFPlugIn, flag: bool) {
         extern "C-unwind" {
             fn CFPlugInSetLoadOnDemand(plug_in: &CFPlugIn, flag: Boolean);
         }
@@ -102,7 +102,7 @@ impl CFPlugIn {
     #[doc(alias = "CFPlugInIsLoadOnDemand")]
     #[cfg(feature = "CFBundle")]
     #[inline]
-    pub fn is_load_on_demand(&self) -> bool {
+    pub fn is_load_on_demand(self: &CFPlugIn) -> bool {
         extern "C-unwind" {
             fn CFPlugInIsLoadOnDemand(plug_in: &CFPlugIn) -> Boolean;
         }
@@ -269,7 +269,6 @@ impl CFPlugIn {
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfplugininstance?language=objc)
-#[doc(alias = "CFPlugInInstanceRef")]
 #[repr(C)]
 pub struct CFPlugInInstance {
     inner: [u8; 0],
@@ -298,14 +297,10 @@ pub type CFPlugInInstanceDeallocateInstanceDataFunction =
     Option<unsafe extern "C-unwind" fn(*mut c_void)>;
 
 impl CFPlugInInstance {
-    /// # Safety
-    ///
-    /// - `interface_name` might not allow `None`.
-    /// - `ftbl` must be a valid pointer.
     #[doc(alias = "CFPlugInInstanceGetInterfaceFunctionTable")]
     #[inline]
     pub unsafe fn interface_function_table(
-        &self,
+        self: &CFPlugInInstance,
         interface_name: Option<&CFString>,
         ftbl: *mut *mut c_void,
     ) -> bool {
@@ -322,7 +317,7 @@ impl CFPlugInInstance {
 
     #[doc(alias = "CFPlugInInstanceGetFactoryName")]
     #[inline]
-    pub fn factory_name(&self) -> Option<CFRetained<CFString>> {
+    pub fn factory_name(self: &CFPlugInInstance) -> Option<CFRetained<CFString>> {
         extern "C-unwind" {
             fn CFPlugInInstanceGetFactoryName(
                 instance: &CFPlugInInstance,
@@ -334,7 +329,7 @@ impl CFPlugInInstance {
 
     #[doc(alias = "CFPlugInInstanceGetInstanceData")]
     #[inline]
-    pub fn instance_data(&self) -> *mut c_void {
+    pub fn instance_data(self: &CFPlugInInstance) -> *mut c_void {
         extern "C-unwind" {
             fn CFPlugInInstanceGetInstanceData(instance: &CFPlugInInstance) -> *mut c_void;
         }
@@ -354,12 +349,6 @@ unsafe impl ConcreteType for CFPlugInInstance {
 }
 
 impl CFPlugInInstance {
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `deallocate_instance_function` must be implemented correctly.
-    /// - `factory_name` might not allow `None`.
-    /// - `get_interface_function` must be implemented correctly.
     #[doc(alias = "CFPlugInInstanceCreateWithInstanceDataSize")]
     #[inline]
     pub unsafe fn with_instance_data_size(

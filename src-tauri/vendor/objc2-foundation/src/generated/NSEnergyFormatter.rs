@@ -64,38 +64,36 @@ impl NSEnergyFormatter {
         #[cfg(feature = "NSNumberFormatter")]
         #[unsafe(method(numberFormatter))]
         #[unsafe(method_family = none)]
-        pub fn numberFormatter(&self) -> Retained<NSNumberFormatter>;
+        pub unsafe fn numberFormatter(&self) -> Retained<NSNumberFormatter>;
 
         #[cfg(feature = "NSNumberFormatter")]
         /// Setter for [`numberFormatter`][Self::numberFormatter].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setNumberFormatter:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberFormatter(&self, number_formatter: Option<&NSNumberFormatter>);
+        pub unsafe fn setNumberFormatter(&self, number_formatter: Option<&NSNumberFormatter>);
 
         #[unsafe(method(unitStyle))]
         #[unsafe(method_family = none)]
-        pub fn unitStyle(&self) -> NSFormattingUnitStyle;
+        pub unsafe fn unitStyle(&self) -> NSFormattingUnitStyle;
 
         /// Setter for [`unitStyle`][Self::unitStyle].
         #[unsafe(method(setUnitStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setUnitStyle(&self, unit_style: NSFormattingUnitStyle);
+        pub unsafe fn setUnitStyle(&self, unit_style: NSFormattingUnitStyle);
 
         #[unsafe(method(isForFoodEnergyUse))]
         #[unsafe(method_family = none)]
-        pub fn isForFoodEnergyUse(&self) -> bool;
+        pub unsafe fn isForFoodEnergyUse(&self) -> bool;
 
         /// Setter for [`isForFoodEnergyUse`][Self::isForFoodEnergyUse].
         #[unsafe(method(setForFoodEnergyUse:))]
         #[unsafe(method_family = none)]
-        pub fn setForFoodEnergyUse(&self, for_food_energy_use: bool);
+        pub unsafe fn setForFoodEnergyUse(&self, for_food_energy_use: bool);
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(stringFromValue:unit:))]
         #[unsafe(method_family = none)]
-        pub fn stringFromValue_unit(
+        pub unsafe fn stringFromValue_unit(
             &self,
             value: c_double,
             unit: NSEnergyFormatterUnit,
@@ -104,21 +102,18 @@ impl NSEnergyFormatter {
         #[cfg(feature = "NSString")]
         #[unsafe(method(stringFromJoules:))]
         #[unsafe(method_family = none)]
-        pub fn stringFromJoules(&self, number_in_joules: c_double) -> Retained<NSString>;
+        pub unsafe fn stringFromJoules(&self, number_in_joules: c_double) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(unitStringFromValue:unit:))]
         #[unsafe(method_family = none)]
-        pub fn unitStringFromValue_unit(
+        pub unsafe fn unitStringFromValue_unit(
             &self,
             value: c_double,
             unit: NSEnergyFormatterUnit,
         ) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `unitp` must be a valid pointer or null.
         #[unsafe(method(unitStringFromJoules:usedUnit:))]
         #[unsafe(method_family = none)]
         pub unsafe fn unitStringFromJoules_usedUnit(
@@ -128,9 +123,6 @@ impl NSEnergyFormatter {
         ) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `obj` should be of the correct type.
         #[unsafe(method(getObjectValue:forString:errorDescription:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getObjectValue_forString_errorDescription(
@@ -148,18 +140,10 @@ impl NSEnergyFormatter {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSFormatter")]
-impl DefaultRetained for NSEnergyFormatter {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

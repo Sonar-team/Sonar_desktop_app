@@ -189,12 +189,12 @@ impl NSScroller {
     extern_methods!(
         #[unsafe(method(isCompatibleWithOverlayScrollers))]
         #[unsafe(method_family = none)]
-        pub fn isCompatibleWithOverlayScrollers(mtm: MainThreadMarker) -> bool;
+        pub unsafe fn isCompatibleWithOverlayScrollers(mtm: MainThreadMarker) -> bool;
 
         #[cfg(all(feature = "NSCell", feature = "objc2-core-foundation"))]
         #[unsafe(method(scrollerWidthForControlSize:scrollerStyle:))]
         #[unsafe(method_family = none)]
-        pub fn scrollerWidthForControlSize_scrollerStyle(
+        pub unsafe fn scrollerWidthForControlSize_scrollerStyle(
             control_size: NSControlSize,
             scroller_style: NSScrollerStyle,
             mtm: MainThreadMarker,
@@ -202,80 +202,80 @@ impl NSScroller {
 
         #[unsafe(method(preferredScrollerStyle))]
         #[unsafe(method_family = none)]
-        pub fn preferredScrollerStyle(mtm: MainThreadMarker) -> NSScrollerStyle;
+        pub unsafe fn preferredScrollerStyle(mtm: MainThreadMarker) -> NSScrollerStyle;
 
         #[unsafe(method(scrollerStyle))]
         #[unsafe(method_family = none)]
-        pub fn scrollerStyle(&self) -> NSScrollerStyle;
+        pub unsafe fn scrollerStyle(&self) -> NSScrollerStyle;
 
         /// Setter for [`scrollerStyle`][Self::scrollerStyle].
         #[unsafe(method(setScrollerStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setScrollerStyle(&self, scroller_style: NSScrollerStyle);
+        pub unsafe fn setScrollerStyle(&self, scroller_style: NSScrollerStyle);
 
         #[unsafe(method(knobStyle))]
         #[unsafe(method_family = none)]
-        pub fn knobStyle(&self) -> NSScrollerKnobStyle;
+        pub unsafe fn knobStyle(&self) -> NSScrollerKnobStyle;
 
         /// Setter for [`knobStyle`][Self::knobStyle].
         #[unsafe(method(setKnobStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setKnobStyle(&self, knob_style: NSScrollerKnobStyle);
+        pub unsafe fn setKnobStyle(&self, knob_style: NSScrollerKnobStyle);
 
         #[unsafe(method(rectForPart:))]
         #[unsafe(method_family = none)]
-        pub fn rectForPart(&self, part_code: NSScrollerPart) -> NSRect;
+        pub unsafe fn rectForPart(&self, part_code: NSScrollerPart) -> NSRect;
 
         #[unsafe(method(checkSpaceForParts))]
         #[unsafe(method_family = none)]
-        pub fn checkSpaceForParts(&self);
+        pub unsafe fn checkSpaceForParts(&self);
 
         #[unsafe(method(usableParts))]
         #[unsafe(method_family = none)]
-        pub fn usableParts(&self) -> NSUsableScrollerParts;
+        pub unsafe fn usableParts(&self) -> NSUsableScrollerParts;
 
         #[cfg(feature = "NSCell")]
         #[unsafe(method(controlSize))]
         #[unsafe(method_family = none)]
-        pub fn controlSize(&self) -> NSControlSize;
+        pub unsafe fn controlSize(&self) -> NSControlSize;
 
         #[cfg(feature = "NSCell")]
         /// Setter for [`controlSize`][Self::controlSize].
         #[unsafe(method(setControlSize:))]
         #[unsafe(method_family = none)]
-        pub fn setControlSize(&self, control_size: NSControlSize);
+        pub unsafe fn setControlSize(&self, control_size: NSControlSize);
 
         #[unsafe(method(drawKnob))]
         #[unsafe(method_family = none)]
-        pub fn drawKnob(&self);
+        pub unsafe fn drawKnob(&self);
 
         #[unsafe(method(drawKnobSlotInRect:highlight:))]
         #[unsafe(method_family = none)]
-        pub fn drawKnobSlotInRect_highlight(&self, slot_rect: NSRect, flag: bool);
+        pub unsafe fn drawKnobSlotInRect_highlight(&self, slot_rect: NSRect, flag: bool);
 
         #[unsafe(method(testPart:))]
         #[unsafe(method_family = none)]
-        pub fn testPart(&self, point: NSPoint) -> NSScrollerPart;
+        pub unsafe fn testPart(&self, point: NSPoint) -> NSScrollerPart;
 
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(trackKnob:))]
         #[unsafe(method_family = none)]
-        pub fn trackKnob(&self, event: &NSEvent);
+        pub unsafe fn trackKnob(&self, event: &NSEvent);
 
         #[unsafe(method(hitPart))]
         #[unsafe(method_family = none)]
-        pub fn hitPart(&self) -> NSScrollerPart;
+        pub unsafe fn hitPart(&self) -> NSScrollerPart;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(knobProportion))]
         #[unsafe(method_family = none)]
-        pub fn knobProportion(&self) -> CGFloat;
+        pub unsafe fn knobProportion(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`knobProportion`][Self::knobProportion].
         #[unsafe(method(setKnobProportion:))]
         #[unsafe(method_family = none)]
-        pub fn setKnobProportion(&self, knob_proportion: CGFloat);
+        pub unsafe fn setKnobProportion(&self, knob_proportion: CGFloat);
     );
 }
 
@@ -285,11 +285,8 @@ impl NSScroller {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -305,7 +302,7 @@ impl NSScroller {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -315,7 +312,7 @@ impl NSScroller {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -378,7 +375,7 @@ impl NSScroller {
         #[deprecated = "Use +scrollerWidthForControlSize:scrollerStyle: instead"]
         #[unsafe(method(scrollerWidthForControlSize:))]
         #[unsafe(method_family = none)]
-        pub fn scrollerWidthForControlSize(
+        pub unsafe fn scrollerWidthForControlSize(
             control_size: NSControlSize,
             mtm: MainThreadMarker,
         ) -> CGFloat;
@@ -387,57 +384,57 @@ impl NSScroller {
         #[deprecated = "Use +scrollerWidthForControlSize:scrollerStyle: instead"]
         #[unsafe(method(scrollerWidth))]
         #[unsafe(method_family = none)]
-        pub fn scrollerWidth(mtm: MainThreadMarker) -> CGFloat;
+        pub unsafe fn scrollerWidth(mtm: MainThreadMarker) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[deprecated]
         #[unsafe(method(setFloatValue:knobProportion:))]
         #[unsafe(method_family = none)]
-        pub fn setFloatValue_knobProportion(&self, value: c_float, proportion: CGFloat);
+        pub unsafe fn setFloatValue_knobProportion(&self, value: c_float, proportion: CGFloat);
 
         #[deprecated = "Has had no effect since 10.7"]
         #[unsafe(method(arrowsPosition))]
         #[unsafe(method_family = none)]
-        pub fn arrowsPosition(&self) -> NSScrollArrowPosition;
+        pub unsafe fn arrowsPosition(&self) -> NSScrollArrowPosition;
 
         /// Setter for [`arrowsPosition`][Self::arrowsPosition].
         #[deprecated = "Has had no effect since 10.7"]
         #[unsafe(method(setArrowsPosition:))]
         #[unsafe(method_family = none)]
-        pub fn setArrowsPosition(&self, arrows_position: NSScrollArrowPosition);
+        pub unsafe fn setArrowsPosition(&self, arrows_position: NSScrollArrowPosition);
 
         #[cfg(feature = "NSCell")]
         #[deprecated = "Has had no effect since 10.7"]
         #[unsafe(method(controlTint))]
         #[unsafe(method_family = none)]
-        pub fn controlTint(&self) -> NSControlTint;
+        pub unsafe fn controlTint(&self) -> NSControlTint;
 
         #[cfg(feature = "NSCell")]
         /// Setter for [`controlTint`][Self::controlTint].
         #[deprecated = "Has had no effect since 10.7"]
         #[unsafe(method(setControlTint:))]
         #[unsafe(method_family = none)]
-        pub fn setControlTint(&self, control_tint: NSControlTint);
+        pub unsafe fn setControlTint(&self, control_tint: NSControlTint);
 
         #[deprecated = "Has had no effect since 10.7"]
         #[unsafe(method(highlight:))]
         #[unsafe(method_family = none)]
-        pub fn highlight(&self, flag: bool);
+        pub unsafe fn highlight(&self, flag: bool);
 
         #[cfg(feature = "NSEvent")]
         #[deprecated = "Not invoked since 10.7"]
         #[unsafe(method(trackScrollButtons:))]
         #[unsafe(method_family = none)]
-        pub fn trackScrollButtons(&self, event: &NSEvent);
+        pub unsafe fn trackScrollButtons(&self, event: &NSEvent);
 
         #[deprecated = "Not invoked on any macOS version"]
         #[unsafe(method(drawParts))]
         #[unsafe(method_family = none)]
-        pub fn drawParts(&self);
+        pub unsafe fn drawParts(&self);
 
         #[deprecated = "Scrollers don't have arrows as of 10.7"]
         #[unsafe(method(drawArrow:highlight:))]
         #[unsafe(method_family = none)]
-        pub fn drawArrow_highlight(&self, which_arrow: NSScrollerArrow, flag: bool);
+        pub unsafe fn drawArrow_highlight(&self, which_arrow: NSScrollerArrow, flag: bool);
     );
 }

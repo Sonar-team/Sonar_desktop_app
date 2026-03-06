@@ -16,13 +16,13 @@ extern_protocol!(
         /// Initializes and returns a new instance of the content view using this configuration.
         #[unsafe(method(makeContentView))]
         #[unsafe(method_family = none)]
-        fn makeContentView(&self) -> Retained<UIView>;
+        unsafe fn makeContentView(&self) -> Retained<UIView>;
 
         #[cfg(feature = "UIConfigurationState")]
         /// Returns a copy of the configuration updated for the specified state, by applying the configuration's default values for that state to any properties that have not been customized.
         #[unsafe(method(updatedConfigurationForState:))]
         #[unsafe(method_family = none)]
-        fn updatedConfigurationForState(
+        unsafe fn updatedConfigurationForState(
             &self,
             state: &ProtocolObject<dyn UIConfigurationState>,
         ) -> Retained<Self>;
@@ -35,14 +35,15 @@ extern_protocol!(
         /// Returns the current configuration of the view. Setting this property applies the new configuration to the view.
         #[unsafe(method(configuration))]
         #[unsafe(method_family = none)]
-        fn configuration(&self) -> Retained<ProtocolObject<dyn UIContentConfiguration>>;
+        unsafe fn configuration(&self) -> Retained<ProtocolObject<dyn UIContentConfiguration>>;
 
         /// Setter for [`configuration`][Self::configuration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setConfiguration:))]
         #[unsafe(method_family = none)]
-        fn setConfiguration(&self, configuration: &ProtocolObject<dyn UIContentConfiguration>);
+        unsafe fn setConfiguration(
+            &self,
+            configuration: &ProtocolObject<dyn UIContentConfiguration>,
+        );
 
         /// Whether this view is compatible with the provided configuration, meaning the view supports
         /// it being set to the `configuration` property and is capable of updating itself for the
@@ -51,7 +52,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(supportsConfiguration:))]
         #[unsafe(method_family = none)]
-        fn supportsConfiguration(
+        unsafe fn supportsConfiguration(
             &self,
             configuration: &ProtocolObject<dyn UIContentConfiguration>,
         ) -> bool;

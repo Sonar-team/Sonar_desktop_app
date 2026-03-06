@@ -42,35 +42,35 @@ impl UNNotificationSound {
     extern_methods!(
         #[unsafe(method(defaultSound))]
         #[unsafe(method_family = none)]
-        pub fn defaultSound() -> Retained<UNNotificationSound>;
+        pub unsafe fn defaultSound() -> Retained<UNNotificationSound>;
 
         #[unsafe(method(defaultRingtoneSound))]
         #[unsafe(method_family = none)]
-        pub fn defaultRingtoneSound() -> Retained<UNNotificationSound>;
+        pub unsafe fn defaultRingtoneSound() -> Retained<UNNotificationSound>;
 
         #[unsafe(method(defaultCriticalSound))]
         #[unsafe(method_family = none)]
-        pub fn defaultCriticalSound() -> Retained<UNNotificationSound>;
+        pub unsafe fn defaultCriticalSound() -> Retained<UNNotificationSound>;
 
         #[unsafe(method(defaultCriticalSoundWithAudioVolume:))]
         #[unsafe(method_family = none)]
-        pub fn defaultCriticalSoundWithAudioVolume(volume: c_float) -> Retained<Self>;
+        pub unsafe fn defaultCriticalSoundWithAudioVolume(volume: c_float) -> Retained<Self>;
 
         #[unsafe(method(soundNamed:))]
         #[unsafe(method_family = none)]
-        pub fn soundNamed(name: &UNNotificationSoundName) -> Retained<Self>;
+        pub unsafe fn soundNamed(name: &UNNotificationSoundName) -> Retained<Self>;
 
         #[unsafe(method(ringtoneSoundNamed:))]
         #[unsafe(method_family = none)]
-        pub fn ringtoneSoundNamed(name: &UNNotificationSoundName) -> Retained<Self>;
+        pub unsafe fn ringtoneSoundNamed(name: &UNNotificationSoundName) -> Retained<Self>;
 
         #[unsafe(method(criticalSoundNamed:))]
         #[unsafe(method_family = none)]
-        pub fn criticalSoundNamed(name: &UNNotificationSoundName) -> Retained<Self>;
+        pub unsafe fn criticalSoundNamed(name: &UNNotificationSoundName) -> Retained<Self>;
 
         #[unsafe(method(criticalSoundNamed:withAudioVolume:))]
         #[unsafe(method_family = none)]
-        pub fn criticalSoundNamed_withAudioVolume(
+        pub unsafe fn criticalSoundNamed_withAudioVolume(
             name: &UNNotificationSoundName,
             volume: c_float,
         ) -> Retained<Self>;

@@ -7,25 +7,21 @@ use crate::*;
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webkiterrordomain?language=objc)
-    #[deprecated]
     pub static WebKitErrorDomain: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webkiterrormimetypekey?language=objc)
-    #[deprecated]
     pub static WebKitErrorMIMETypeKey: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webkiterrorpluginnamekey?language=objc)
-    #[deprecated]
     pub static WebKitErrorPlugInNameKey: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/webkiterrorpluginpageurlstringkey?language=objc)
-    #[deprecated]
     pub static WebKitErrorPlugInPageURLStringKey: Option<&'static NSString>;
 }
 

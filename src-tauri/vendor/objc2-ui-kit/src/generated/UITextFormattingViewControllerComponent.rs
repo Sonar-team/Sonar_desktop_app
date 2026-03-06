@@ -154,12 +154,12 @@ impl UITextFormattingViewControllerComponent {
         /// Unique key that identifies text formatting view component.
         #[unsafe(method(componentKey))]
         #[unsafe(method_family = none)]
-        pub fn componentKey(&self) -> Retained<UITextFormattingViewControllerComponentKey>;
+        pub unsafe fn componentKey(&self) -> Retained<UITextFormattingViewControllerComponentKey>;
 
         /// Specifies preferred size of the component in text formatting view.
         #[unsafe(method(preferredSize))]
         #[unsafe(method_family = none)]
-        pub fn preferredSize(&self) -> UITextFormattingViewControllerComponentSize;
+        pub unsafe fn preferredSize(&self) -> UITextFormattingViewControllerComponentSize;
 
         /// Creates a text formatting view component configuration with component key and preferred size.
         ///
@@ -168,7 +168,7 @@ impl UITextFormattingViewControllerComponent {
         /// - preferredSize: Preferred size of component in text formatting view.
         #[unsafe(method(initWithComponentKey:preferredSize:))]
         #[unsafe(method_family = init)]
-        pub fn initWithComponentKey_preferredSize(
+        pub unsafe fn initWithComponentKey_preferredSize(
             this: Allocated<Self>,
             component_key: &UITextFormattingViewControllerComponentKey,
             preferred_size: UITextFormattingViewControllerComponentSize,
@@ -218,13 +218,15 @@ impl UITextFormattingViewControllerComponentGroup {
         /// Components in group.
         #[unsafe(method(components))]
         #[unsafe(method_family = none)]
-        pub fn components(&self) -> Retained<NSArray<UITextFormattingViewControllerComponent>>;
+        pub unsafe fn components(
+            &self,
+        ) -> Retained<NSArray<UITextFormattingViewControllerComponent>>;
 
         /// Creates a group of components.
         /// - Parameter components: Components to be included in the group.
         #[unsafe(method(initWithComponents:))]
         #[unsafe(method_family = init)]
-        pub fn initWithComponents(
+        pub unsafe fn initWithComponents(
             this: Allocated<Self>,
             components: &NSArray<UITextFormattingViewControllerComponent>,
         ) -> Retained<Self>;

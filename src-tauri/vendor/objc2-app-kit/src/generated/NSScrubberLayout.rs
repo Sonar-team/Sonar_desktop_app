@@ -41,36 +41,36 @@ impl NSScrubberLayoutAttributes {
     extern_methods!(
         #[unsafe(method(itemIndex))]
         #[unsafe(method_family = none)]
-        pub fn itemIndex(&self) -> NSInteger;
+        pub unsafe fn itemIndex(&self) -> NSInteger;
 
         /// Setter for [`itemIndex`][Self::itemIndex].
         #[unsafe(method(setItemIndex:))]
         #[unsafe(method_family = none)]
-        pub fn setItemIndex(&self, item_index: NSInteger);
+        pub unsafe fn setItemIndex(&self, item_index: NSInteger);
 
         #[unsafe(method(frame))]
         #[unsafe(method_family = none)]
-        pub fn frame(&self) -> NSRect;
+        pub unsafe fn frame(&self) -> NSRect;
 
         /// Setter for [`frame`][Self::frame].
         #[unsafe(method(setFrame:))]
         #[unsafe(method_family = none)]
-        pub fn setFrame(&self, frame: NSRect);
+        pub unsafe fn setFrame(&self, frame: NSRect);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(alpha))]
         #[unsafe(method_family = none)]
-        pub fn alpha(&self) -> CGFloat;
+        pub unsafe fn alpha(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`alpha`][Self::alpha].
         #[unsafe(method(setAlpha:))]
         #[unsafe(method_family = none)]
-        pub fn setAlpha(&self, alpha: CGFloat);
+        pub unsafe fn setAlpha(&self, alpha: CGFloat);
 
         #[unsafe(method(layoutAttributesForItemAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn layoutAttributesForItemAtIndex(index: NSInteger) -> Retained<Self>;
+        pub unsafe fn layoutAttributesForItemAtIndex(index: NSInteger) -> Retained<Self>;
     );
 }
 
@@ -79,19 +79,12 @@ impl NSScrubberLayoutAttributes {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSScrubberLayoutAttributes {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -120,28 +113,25 @@ impl NSScrubberLayout {
         /// `NSScrubberLayoutAttributes.`
         #[unsafe(method(layoutAttributesClass))]
         #[unsafe(method_family = none)]
-        pub fn layoutAttributesClass(mtm: MainThreadMarker) -> &'static AnyClass;
+        pub unsafe fn layoutAttributesClass(mtm: MainThreadMarker) -> &'static AnyClass;
 
         #[cfg(all(feature = "NSResponder", feature = "NSScrubber", feature = "NSView"))]
         /// The NSScrubber control that this layout is assigned to, or
         /// `nil`if the receiver is not assigned to a scrubber.
         #[unsafe(method(scrubber))]
         #[unsafe(method_family = none)]
-        pub fn scrubber(&self) -> Option<Retained<NSScrubber>>;
+        pub unsafe fn scrubber(&self) -> Option<Retained<NSScrubber>>;
 
         /// The currently visible rectangle, in the coordinate space of the scrubber content. Returns
         /// `NSZeroRect`if the receiver is not assigned to a scrubber.
         #[unsafe(method(visibleRect))]
         #[unsafe(method_family = none)]
-        pub fn visibleRect(&self) -> NSRect;
+        pub unsafe fn visibleRect(&self) -> NSRect;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -149,26 +139,26 @@ impl NSScrubberLayout {
         /// Signals that layout has been invalidated and the NSScrubber should run a fresh layout pass. Subclasses may define more granular invalidation methods suitable for their own data structures, but those methods should always call up to -invalidateLayout.
         #[unsafe(method(invalidateLayout))]
         #[unsafe(method_family = none)]
-        pub fn invalidateLayout(&self);
+        pub unsafe fn invalidateLayout(&self);
 
         /// Following any invalidation in layout,
         /// `NSScrubber`will call
         /// `prepareLayout`on its layout object prior to requesting any other layout information. Subclasses should use this method to perform upfront calculations and caching. The base implementation of this method does nothing.
         #[unsafe(method(prepareLayout))]
         #[unsafe(method_family = none)]
-        pub fn prepareLayout(&self);
+        pub unsafe fn prepareLayout(&self);
 
         /// Returns the content size for all elements within the scrubber. The base implementation returns
         /// `NSZeroSize.`
         #[unsafe(method(scrubberContentSize))]
         #[unsafe(method_family = none)]
-        pub fn scrubberContentSize(&self) -> NSSize;
+        pub unsafe fn scrubberContentSize(&self) -> NSSize;
 
         /// Returns the layout attributes for a single item within the scrubber. The base implementation returns
         /// `nil.`
         #[unsafe(method(layoutAttributesForItemAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn layoutAttributesForItemAtIndex(
+        pub unsafe fn layoutAttributesForItemAtIndex(
             &self,
             index: NSInteger,
         ) -> Option<Retained<NSScrubberLayoutAttributes>>;
@@ -176,7 +166,7 @@ impl NSScrubberLayout {
         /// Returns the set of layout attributes for all items within the provided rectangle. The base implementation returns an empty set.
         #[unsafe(method(layoutAttributesForItemsInRect:))]
         #[unsafe(method_family = none)]
-        pub fn layoutAttributesForItemsInRect(
+        pub unsafe fn layoutAttributesForItemsInRect(
             &self,
             rect: NSRect,
         ) -> Retained<NSSet<NSScrubberLayoutAttributes>>;
@@ -187,7 +177,7 @@ impl NSScrubberLayout {
         /// `YES`if the selection index affects the item layout.
         #[unsafe(method(shouldInvalidateLayoutForSelectionChange))]
         #[unsafe(method_family = none)]
-        pub fn shouldInvalidateLayoutForSelectionChange(&self) -> bool;
+        pub unsafe fn shouldInvalidateLayoutForSelectionChange(&self) -> bool;
 
         /// If
         /// `YES,`the scrubber will invalidate its layout when an item is highlighted. The default value is
@@ -195,7 +185,7 @@ impl NSScrubberLayout {
         /// `YES`if the highlight state affects the item layout.
         #[unsafe(method(shouldInvalidateLayoutForHighlightChange))]
         #[unsafe(method_family = none)]
-        pub fn shouldInvalidateLayoutForHighlightChange(&self) -> bool;
+        pub unsafe fn shouldInvalidateLayoutForHighlightChange(&self) -> bool;
 
         /// If
         /// `YES,`the scrubber will invalidate its layout in response to a change in the visible region. The default value is
@@ -203,7 +193,7 @@ impl NSScrubberLayout {
         /// `YES.`
         #[unsafe(method(shouldInvalidateLayoutForChangeFromVisibleRect:toVisibleRect:))]
         #[unsafe(method_family = none)]
-        pub fn shouldInvalidateLayoutForChangeFromVisibleRect_toVisibleRect(
+        pub unsafe fn shouldInvalidateLayoutForChangeFromVisibleRect_toVisibleRect(
             &self,
             from_visible_rect: NSRect,
             to_visible_rect: NSRect,
@@ -215,7 +205,7 @@ impl NSScrubberLayout {
         /// `NO.`
         #[unsafe(method(automaticallyMirrorsInRightToLeftLayout))]
         #[unsafe(method_family = none)]
-        pub fn automaticallyMirrorsInRightToLeftLayout(&self) -> bool;
+        pub unsafe fn automaticallyMirrorsInRightToLeftLayout(&self) -> bool;
     );
 }
 
@@ -224,7 +214,7 @@ impl NSScrubberLayout {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -236,7 +226,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(scrubber:layout:sizeForItemAtIndex:))]
         #[unsafe(method_family = none)]
-        fn scrubber_layout_sizeForItemAtIndex(
+        unsafe fn scrubber_layout_sizeForItemAtIndex(
             &self,
             scrubber: &NSScrubber,
             layout: &NSScrubberFlowLayout,
@@ -276,27 +266,27 @@ impl NSScrubberFlowLayout {
         /// The amount of horizontal spacing between items in points. The default value is 0.0.
         #[unsafe(method(itemSpacing))]
         #[unsafe(method_family = none)]
-        pub fn itemSpacing(&self) -> CGFloat;
+        pub unsafe fn itemSpacing(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`itemSpacing`][Self::itemSpacing].
         #[unsafe(method(setItemSpacing:))]
         #[unsafe(method_family = none)]
-        pub fn setItemSpacing(&self, item_spacing: CGFloat);
+        pub unsafe fn setItemSpacing(&self, item_spacing: CGFloat);
 
         /// The frame size for each item, if not provided by the scrubber's delegate. The default value is { 50.0, 30.0 }.
         #[unsafe(method(itemSize))]
         #[unsafe(method_family = none)]
-        pub fn itemSize(&self) -> NSSize;
+        pub unsafe fn itemSize(&self) -> NSSize;
 
         /// Setter for [`itemSize`][Self::itemSize].
         #[unsafe(method(setItemSize:))]
         #[unsafe(method_family = none)]
-        pub fn setItemSize(&self, item_size: NSSize);
+        pub unsafe fn setItemSize(&self, item_size: NSSize);
 
         #[unsafe(method(invalidateLayoutForItemsAtIndexes:))]
         #[unsafe(method_family = none)]
-        pub fn invalidateLayoutForItemsAtIndexes(&self, invalid_item_indexes: &NSIndexSet);
+        pub unsafe fn invalidateLayoutForItemsAtIndexes(&self, invalid_item_indexes: &NSIndexSet);
     );
 }
 
@@ -305,11 +295,8 @@ impl NSScrubberFlowLayout {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -321,7 +308,7 @@ impl NSScrubberFlowLayout {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -347,23 +334,20 @@ impl NSScrubberProportionalLayout {
         /// The number of items that should fit within the scrubber's viewport at once.
         #[unsafe(method(numberOfVisibleItems))]
         #[unsafe(method_family = none)]
-        pub fn numberOfVisibleItems(&self) -> NSInteger;
+        pub unsafe fn numberOfVisibleItems(&self) -> NSInteger;
 
         /// Setter for [`numberOfVisibleItems`][Self::numberOfVisibleItems].
         #[unsafe(method(setNumberOfVisibleItems:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberOfVisibleItems(&self, number_of_visible_items: NSInteger);
+        pub unsafe fn setNumberOfVisibleItems(&self, number_of_visible_items: NSInteger);
 
         #[unsafe(method(initWithNumberOfVisibleItems:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNumberOfVisibleItems(
+        pub unsafe fn initWithNumberOfVisibleItems(
             this: Allocated<Self>,
             number_of_visible_items: NSInteger,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -375,7 +359,7 @@ impl NSScrubberProportionalLayout {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -384,6 +368,6 @@ impl NSScrubberProportionalLayout {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

@@ -59,25 +59,6 @@ extern_class!(
     >;
 );
 
-impl<SectionIdentifierType: ?Sized + Message, ItemIdentifierType: ?Sized + Message>
-    NSTableViewDiffableDataSource<SectionIdentifierType, ItemIdentifierType>
-{
-    /// Unchecked conversion of the generic parameters.
-    ///
-    /// # Safety
-    ///
-    /// The generics must be valid to reinterpret as the given types.
-    #[inline]
-    pub unsafe fn cast_unchecked<
-        NewSectionIdentifierType: ?Sized + Message,
-        NewItemIdentifierType: ?Sized + Message,
-    >(
-        &self,
-    ) -> &NSTableViewDiffableDataSource<NewSectionIdentifierType, NewItemIdentifierType> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
 extern_conformance!(
     unsafe impl<SectionIdentifierType: ?Sized, ItemIdentifierType: ?Sized> NSObjectProtocol
         for NSTableViewDiffableDataSource<SectionIdentifierType, ItemIdentifierType>
@@ -105,9 +86,6 @@ impl<SectionIdentifierType: Message, ItemIdentifierType: Message>
             feature = "NSView",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// `cell_provider` must be a valid pointer.
         #[unsafe(method(initWithTableView:cellProvider:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTableView_cellProvider(
@@ -127,14 +105,14 @@ impl<SectionIdentifierType: Message, ItemIdentifierType: Message>
         #[cfg(feature = "NSDiffableDataSource")]
         #[unsafe(method(snapshot))]
         #[unsafe(method_family = none)]
-        pub fn snapshot(
+        pub unsafe fn snapshot(
             &self,
         ) -> Retained<NSDiffableDataSourceSnapshot<SectionIdentifierType, ItemIdentifierType>>;
 
         #[cfg(feature = "NSDiffableDataSource")]
         #[unsafe(method(applySnapshot:animatingDifferences:))]
         #[unsafe(method_family = none)]
-        pub fn applySnapshot_animatingDifferences(
+        pub unsafe fn applySnapshot_animatingDifferences(
             &self,
             snapshot: &NSDiffableDataSourceSnapshot<SectionIdentifierType, ItemIdentifierType>,
             animating_differences: bool,
@@ -143,7 +121,7 @@ impl<SectionIdentifierType: Message, ItemIdentifierType: Message>
         #[cfg(all(feature = "NSDiffableDataSource", feature = "block2"))]
         #[unsafe(method(applySnapshot:animatingDifferences:completion:))]
         #[unsafe(method_family = none)]
-        pub fn applySnapshot_animatingDifferences_completion(
+        pub unsafe fn applySnapshot_animatingDifferences_completion(
             &self,
             snapshot: &NSDiffableDataSourceSnapshot<SectionIdentifierType, ItemIdentifierType>,
             animating_differences: bool,
@@ -152,22 +130,28 @@ impl<SectionIdentifierType: Message, ItemIdentifierType: Message>
 
         #[unsafe(method(itemIdentifierForRow:))]
         #[unsafe(method_family = none)]
-        pub fn itemIdentifierForRow(&self, row: NSInteger) -> Option<Retained<ItemIdentifierType>>;
+        pub unsafe fn itemIdentifierForRow(
+            &self,
+            row: NSInteger,
+        ) -> Option<Retained<ItemIdentifierType>>;
 
         #[unsafe(method(rowForItemIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn rowForItemIdentifier(&self, identifier: &ItemIdentifierType) -> NSInteger;
+        pub unsafe fn rowForItemIdentifier(&self, identifier: &ItemIdentifierType) -> NSInteger;
 
         #[unsafe(method(sectionIdentifierForRow:))]
         #[unsafe(method_family = none)]
-        pub fn sectionIdentifierForRow(
+        pub unsafe fn sectionIdentifierForRow(
             &self,
             row: NSInteger,
         ) -> Option<Retained<SectionIdentifierType>>;
 
         #[unsafe(method(rowForSectionIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn rowForSectionIdentifier(&self, identifier: &SectionIdentifierType) -> NSInteger;
+        pub unsafe fn rowForSectionIdentifier(
+            &self,
+            identifier: &SectionIdentifierType,
+        ) -> NSInteger;
 
         #[cfg(all(
             feature = "NSControl",
@@ -177,10 +161,6 @@ impl<SectionIdentifierType: Message, ItemIdentifierType: Message>
             feature = "NSView",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 3 must be a valid pointer.
         #[unsafe(method(rowViewProvider))]
         #[unsafe(method_family = none)]
         pub unsafe fn rowViewProvider(
@@ -197,12 +177,6 @@ impl<SectionIdentifierType: Message, ItemIdentifierType: Message>
             feature = "block2"
         ))]
         /// Setter for [`rowViewProvider`][Self::rowViewProvider].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `row_view_provider` must be a valid pointer or null.
         #[unsafe(method(setRowViewProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRowViewProvider(
@@ -217,10 +191,6 @@ impl<SectionIdentifierType: Message, ItemIdentifierType: Message>
             feature = "NSView",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 3 must be a valid pointer.
         #[unsafe(method(sectionHeaderViewProvider))]
         #[unsafe(method_family = none)]
         pub unsafe fn sectionHeaderViewProvider(
@@ -236,12 +206,6 @@ impl<SectionIdentifierType: Message, ItemIdentifierType: Message>
             feature = "block2"
         ))]
         /// Setter for [`sectionHeaderViewProvider`][Self::sectionHeaderViewProvider].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `section_header_view_provider` must be a valid pointer or null.
         #[unsafe(method(setSectionHeaderViewProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSectionHeaderViewProvider(
@@ -252,12 +216,15 @@ impl<SectionIdentifierType: Message, ItemIdentifierType: Message>
         #[cfg(feature = "NSTableView")]
         #[unsafe(method(defaultRowAnimation))]
         #[unsafe(method_family = none)]
-        pub fn defaultRowAnimation(&self) -> NSTableViewAnimationOptions;
+        pub unsafe fn defaultRowAnimation(&self) -> NSTableViewAnimationOptions;
 
         #[cfg(feature = "NSTableView")]
         /// Setter for [`defaultRowAnimation`][Self::defaultRowAnimation].
         #[unsafe(method(setDefaultRowAnimation:))]
         #[unsafe(method_family = none)]
-        pub fn setDefaultRowAnimation(&self, default_row_animation: NSTableViewAnimationOptions);
+        pub unsafe fn setDefaultRowAnimation(
+            &self,
+            default_row_animation: NSTableViewAnimationOptions,
+        );
     );
 }

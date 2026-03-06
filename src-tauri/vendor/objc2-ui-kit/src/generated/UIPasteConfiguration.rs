@@ -39,33 +39,34 @@ impl UIPasteConfiguration {
     extern_methods!(
         #[unsafe(method(acceptableTypeIdentifiers))]
         #[unsafe(method_family = none)]
-        pub fn acceptableTypeIdentifiers(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn acceptableTypeIdentifiers(&self) -> Retained<NSArray<NSString>>;
 
         /// Setter for [`acceptableTypeIdentifiers`][Self::acceptableTypeIdentifiers].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAcceptableTypeIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn setAcceptableTypeIdentifiers(&self, acceptable_type_identifiers: &NSArray<NSString>);
+        pub unsafe fn setAcceptableTypeIdentifiers(
+            &self,
+            acceptable_type_identifiers: &NSArray<NSString>,
+        );
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(initWithAcceptableTypeIdentifiers:))]
         #[unsafe(method_family = init)]
-        pub fn initWithAcceptableTypeIdentifiers(
+        pub unsafe fn initWithAcceptableTypeIdentifiers(
             this: Allocated<Self>,
             acceptable_type_identifiers: &NSArray<NSString>,
         ) -> Retained<Self>;
 
         #[unsafe(method(addAcceptableTypeIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn addAcceptableTypeIdentifiers(&self, acceptable_type_identifiers: &NSArray<NSString>);
+        pub unsafe fn addAcceptableTypeIdentifiers(
+            &self,
+            acceptable_type_identifiers: &NSArray<NSString>,
+        );
 
-        /// # Safety
-        ///
-        /// `a_class` must implement NSItemProviderReading.
         #[unsafe(method(initWithTypeIdentifiersForAcceptingClass:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTypeIdentifiersForAcceptingClass(
@@ -73,9 +74,6 @@ impl UIPasteConfiguration {
             a_class: &AnyClass,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `a_class` must implement NSItemProviderReading.
         #[unsafe(method(addTypeIdentifiersForAcceptingClass:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addTypeIdentifiersForAcceptingClass(&self, a_class: &AnyClass);
@@ -87,6 +85,6 @@ impl UIPasteConfiguration {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

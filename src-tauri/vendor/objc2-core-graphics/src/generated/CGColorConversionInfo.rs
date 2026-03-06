@@ -11,7 +11,6 @@ use objc2_core_foundation::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgcolorconversioninfo?language=objc)
-#[doc(alias = "CGColorConversionInfoRef")]
 #[repr(C)]
 pub struct CGColorConversionInfo {
     inner: [u8; 0],
@@ -65,7 +64,7 @@ impl CGColorConversionInfo {
     #[doc(alias = "CGColorConversionInfoCreate")]
     #[cfg(feature = "CGColorSpace")]
     #[inline]
-    pub fn new(
+    pub unsafe fn new(
         src: Option<&CGColorSpace>,
         dst: Option<&CGColorSpace>,
     ) -> Option<CFRetained<CGColorConversionInfo>> {
@@ -79,9 +78,6 @@ impl CGColorConversionInfo {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `options` generics must be of the correct type.
     #[doc(alias = "CGColorConversionInfoCreateWithOptions")]
     #[cfg(feature = "CGColorSpace")]
     #[inline]
@@ -101,10 +97,6 @@ impl CGColorConversionInfo {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `options` generics must be of the correct type.
-    /// - `error` must be a valid pointer or null.
     #[doc(alias = "CGColorConversionInfoCreateForToneMapping")]
     #[cfg(all(feature = "CGColorSpace", feature = "CGToneMapping"))]
     #[inline]
@@ -175,16 +167,11 @@ unsafe impl RefEncode for CGColorBufferFormat {
 }
 
 impl CGColorConversionInfo {
-    /// # Safety
-    ///
-    /// - `dst_data` must be a valid pointer.
-    /// - `src_data` must be a valid pointer.
-    /// - `options` generics must be of the correct type.
     #[doc(alias = "CGColorConversionInfoConvertData")]
     #[cfg(feature = "CGImage")]
     #[inline]
     pub unsafe fn convert_data(
-        &self,
+        self: &CGColorConversionInfo,
         width: usize,
         height: usize,
         dst_data: NonNull<c_void>,
@@ -226,7 +213,7 @@ extern "C" {
 #[cfg(feature = "CGColorSpace")]
 #[deprecated = "renamed to `CGColorConversionInfo::new`"]
 #[inline]
-pub extern "C-unwind" fn CGColorConversionInfoCreate(
+pub unsafe extern "C-unwind" fn CGColorConversionInfoCreate(
     src: Option<&CGColorSpace>,
     dst: Option<&CGColorSpace>,
 ) -> Option<CFRetained<CGColorConversionInfo>> {

@@ -15,6 +15,7 @@
 #![allow(clippy::doc_lazy_continuation)]
 #![allow(rustdoc::broken_intra_doc_links)]
 #![allow(rustdoc::bare_urls)]
+#![allow(rustdoc::unportable_markdown)]
 #![allow(rustdoc::invalid_html_tags)]
 
 #[link(name = "CloudKit", kind = "framework")]
@@ -134,21 +135,12 @@ mod __CKServerChangeToken;
 #[cfg(feature = "CKShare")]
 #[path = "CKShare.rs"]
 mod __CKShare;
-#[cfg(feature = "CKShareAccessRequester")]
-#[path = "CKShareAccessRequester.rs"]
-mod __CKShareAccessRequester;
-#[cfg(feature = "CKShareBlockedIdentity")]
-#[path = "CKShareBlockedIdentity.rs"]
-mod __CKShareBlockedIdentity;
 #[cfg(feature = "CKShareMetadata")]
 #[path = "CKShareMetadata.rs"]
 mod __CKShareMetadata;
 #[cfg(feature = "CKShareParticipant")]
 #[path = "CKShareParticipant.rs"]
 mod __CKShareParticipant;
-#[cfg(feature = "CKShareRequestAccessOperation")]
-#[path = "CKShareRequestAccessOperation.rs"]
-mod __CKShareRequestAccessOperation;
 #[cfg(feature = "CKSubscription")]
 #[path = "CKSubscription.rs"]
 mod __CKSubscription;
@@ -386,8 +378,6 @@ pub use self::__CKRecordZone::CKRecordZone;
 pub use self::__CKRecordZone::CKRecordZoneCapabilities;
 #[cfg(feature = "CKRecordZone")]
 pub use self::__CKRecordZone::CKRecordZoneDefaultName;
-#[cfg(feature = "CKRecordZone")]
-pub use self::__CKRecordZone::CKRecordZoneEncryptionScope;
 #[cfg(feature = "CKRecordZoneID")]
 pub use self::__CKRecordZoneID::CKRecordZoneID;
 #[cfg(feature = "CKReference")]
@@ -408,10 +398,6 @@ pub use self::__CKShare::CKShareThumbnailImageDataKey;
 pub use self::__CKShare::CKShareTitleKey;
 #[cfg(all(feature = "CKRecord", feature = "CKShare"))]
 pub use self::__CKShare::CKShareTypeKey;
-#[cfg(feature = "CKShareAccessRequester")]
-pub use self::__CKShareAccessRequester::CKShareAccessRequester;
-#[cfg(feature = "CKShareBlockedIdentity")]
-pub use self::__CKShareBlockedIdentity::CKShareBlockedIdentity;
 #[cfg(feature = "CKShareMetadata")]
 pub use self::__CKShareMetadata::CKShareMetadata;
 #[cfg(feature = "CKShareParticipant")]
@@ -424,8 +410,6 @@ pub use self::__CKShareParticipant::CKShareParticipantPermission;
 pub use self::__CKShareParticipant::CKShareParticipantRole;
 #[cfg(feature = "CKShareParticipant")]
 pub use self::__CKShareParticipant::CKShareParticipantType;
-#[cfg(all(feature = "CKOperation", feature = "CKShareRequestAccessOperation"))]
-pub use self::__CKShareRequestAccessOperation::CKShareRequestAccessOperation;
 #[cfg(feature = "CKSubscription")]
 pub use self::__CKSubscription::CKDatabaseSubscription;
 #[cfg(feature = "CKSubscription")]

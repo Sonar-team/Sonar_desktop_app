@@ -26,10 +26,6 @@ extern_conformance!(
 
 impl UIAccessibilityCustomAction {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `selector` must be a valid selector.
         #[unsafe(method(initWithName:target:selector:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithName_target_selector(
@@ -39,10 +35,6 @@ impl UIAccessibilityCustomAction {
             selector: Sel,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `selector` must be a valid selector.
         #[unsafe(method(initWithAttributedName:target:selector:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithAttributedName_target_selector(
@@ -53,10 +45,6 @@ impl UIAccessibilityCustomAction {
         ) -> Retained<Self>;
 
         #[cfg(feature = "UIImage")]
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `selector` must be a valid selector.
         #[unsafe(method(initWithName:image:target:selector:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithName_image_target_selector(
@@ -68,10 +56,6 @@ impl UIAccessibilityCustomAction {
         ) -> Retained<Self>;
 
         #[cfg(feature = "UIImage")]
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `selector` must be a valid selector.
         #[unsafe(method(initWithAttributedName:image:target:selector:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithAttributedName_image_target_selector(
@@ -83,9 +67,6 @@ impl UIAccessibilityCustomAction {
         ) -> Retained<Self>;
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `action_handler` must be a valid pointer.
         #[unsafe(method(initWithName:actionHandler:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithName_actionHandler(
@@ -95,9 +76,6 @@ impl UIAccessibilityCustomAction {
         ) -> Retained<Self>;
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `action_handler` must be a valid pointer.
         #[unsafe(method(initWithAttributedName:actionHandler:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithAttributedName_actionHandler(
@@ -107,9 +85,6 @@ impl UIAccessibilityCustomAction {
         ) -> Retained<Self>;
 
         #[cfg(all(feature = "UIImage", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `action_handler` must be a valid pointer.
         #[unsafe(method(initWithName:image:actionHandler:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithName_image_actionHandler(
@@ -120,9 +95,6 @@ impl UIAccessibilityCustomAction {
         ) -> Retained<Self>;
 
         #[cfg(all(feature = "UIImage", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `action_handler` must be a valid pointer.
         #[unsafe(method(initWithAttributedName:image:actionHandler:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithAttributedName_image_actionHandler(
@@ -134,99 +106,71 @@ impl UIAccessibilityCustomAction {
 
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
-        pub fn name(&self) -> Retained<NSString>;
+        pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
-        pub fn setName(&self, name: &NSString);
+        pub unsafe fn setName(&self, name: &NSString);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`image`][Self::image].
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&UIImage>);
+        pub unsafe fn setImage(&self, image: Option<&UIImage>);
 
         #[unsafe(method(attributedName))]
         #[unsafe(method_family = none)]
-        pub fn attributedName(&self) -> Retained<NSAttributedString>;
+        pub unsafe fn attributedName(&self) -> Retained<NSAttributedString>;
 
         /// Setter for [`attributedName`][Self::attributedName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAttributedName:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributedName(&self, attributed_name: &NSAttributedString);
+        pub unsafe fn setAttributedName(&self, attributed_name: &NSAttributedString);
 
         #[unsafe(method(target))]
         #[unsafe(method_family = none)]
-        pub fn target(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn target(&self) -> Option<Retained<AnyObject>>;
 
-        /// Setter for [`target`][Self::target].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
+        /// Setter for [`target`][Self::target].
         #[unsafe(method(setTarget:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTarget(&self, target: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// You must ensure this is still alive.
         #[unsafe(method(selector))]
         #[unsafe(method_family = none)]
         pub unsafe fn selector(&self) -> Sel;
 
         /// Setter for [`selector`][Self::selector].
-        ///
-        /// # Safety
-        ///
-        /// - `selector` must be a valid selector.
-        /// - This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setSelector:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSelector(&self, selector: Sel);
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// The returned block's argument must be a valid pointer.
         #[unsafe(method(actionHandler))]
         #[unsafe(method_family = none)]
         pub unsafe fn actionHandler(&self) -> UIAccessibilityCustomActionHandler;
 
         #[cfg(feature = "block2")]
         /// Setter for [`actionHandler`][Self::actionHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `action_handler` must be a valid pointer or null.
         #[unsafe(method(setActionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setActionHandler(&self, action_handler: UIAccessibilityCustomActionHandler);
 
         #[unsafe(method(category))]
         #[unsafe(method_family = none)]
-        pub fn category(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn category(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`category`][Self::category].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCategory:))]
         #[unsafe(method_family = none)]
-        pub fn setCategory(&self, category: Option<&NSString>);
+        pub unsafe fn setCategory(&self, category: Option<&NSString>);
     );
 }
 
@@ -235,11 +179,11 @@ impl UIAccessibilityCustomAction {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 

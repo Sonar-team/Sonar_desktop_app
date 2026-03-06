@@ -19,16 +19,10 @@ extern_conformance!(
 
 impl NSAutoreleasePool {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `an_object` should be of the correct type.
         #[unsafe(method(addObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addObject_class(an_object: &AnyObject);
 
-        /// # Safety
-        ///
-        /// `an_object` should be of the correct type.
         #[unsafe(method(addObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addObject(&self, an_object: &AnyObject);

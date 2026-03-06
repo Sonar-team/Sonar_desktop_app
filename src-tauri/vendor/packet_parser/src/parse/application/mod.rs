@@ -10,7 +10,8 @@ use serde::Serialize;
 use crate::{
     errors::application::ApplicationError,
     parse::application::protocols::{
-        giop::GiopPacket, modbus_tcp::ModbusTcpPacket, ntp::NtpPacket, srvloc::SrvlocPacket,
+        giop::GiopPacket, modbus_tcp::ModbusTcpPacket, ntp::NtpPacket, quic::QuicPacket,
+        srvloc::SrvlocPacket,
     },
 };
 
@@ -80,11 +81,11 @@ impl TryFrom<&[u8]> for Application {
         //         application_protocol: "COTP".to_string(),
         //     });
         // }
-        // if QuicPacket::try_from(packet).is_ok() {
-        //     return Ok(Application {
-        //         application_protocol: "QUIQ".to_string(),
-        //     });
-        // }
+        if QuicPacket::try_from(packet).is_ok() {
+            return Ok(Application {
+                application_protocol: "QUIQ".to_string(),
+            });
+        }
         // If no parser matches, return a "None" protocol
         Ok(Application {
             application_protocol: "Unknown".to_string(),

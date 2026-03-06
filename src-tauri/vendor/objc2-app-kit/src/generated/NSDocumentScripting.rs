@@ -13,38 +13,36 @@ impl NSDocument {
     extern_methods!(
         #[unsafe(method(lastComponentOfFileName))]
         #[unsafe(method_family = none)]
-        pub fn lastComponentOfFileName(&self) -> Retained<NSString>;
+        pub unsafe fn lastComponentOfFileName(&self) -> Retained<NSString>;
 
         /// Setter for [`lastComponentOfFileName`][Self::lastComponentOfFileName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setLastComponentOfFileName:))]
         #[unsafe(method_family = none)]
-        pub fn setLastComponentOfFileName(&self, last_component_of_file_name: &NSString);
+        pub unsafe fn setLastComponentOfFileName(&self, last_component_of_file_name: &NSString);
 
         #[unsafe(method(handleSaveScriptCommand:))]
         #[unsafe(method_family = none)]
-        pub fn handleSaveScriptCommand(
+        pub unsafe fn handleSaveScriptCommand(
             &self,
             command: &NSScriptCommand,
         ) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(handleCloseScriptCommand:))]
         #[unsafe(method_family = none)]
-        pub fn handleCloseScriptCommand(
+        pub unsafe fn handleCloseScriptCommand(
             &self,
             command: &NSCloseCommand,
         ) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(handlePrintScriptCommand:))]
         #[unsafe(method_family = none)]
-        pub fn handlePrintScriptCommand(
+        pub unsafe fn handlePrintScriptCommand(
             &self,
             command: &NSScriptCommand,
         ) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(objectSpecifier))]
         #[unsafe(method_family = none)]
-        pub fn objectSpecifier(&self) -> Retained<NSScriptObjectSpecifier>;
+        pub unsafe fn objectSpecifier(&self) -> Retained<NSScriptObjectSpecifier>;
     );
 }

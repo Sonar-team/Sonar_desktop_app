@@ -40,11 +40,8 @@ impl NSShadow {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -55,34 +52,30 @@ impl NSShadow {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(shadowOffset))]
         #[unsafe(method_family = none)]
-        pub fn shadowOffset(&self) -> CGSize;
+        pub unsafe fn shadowOffset(&self) -> CGSize;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`shadowOffset`][Self::shadowOffset].
         #[unsafe(method(setShadowOffset:))]
         #[unsafe(method_family = none)]
-        pub fn setShadowOffset(&self, shadow_offset: CGSize);
+        pub unsafe fn setShadowOffset(&self, shadow_offset: CGSize);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(shadowBlurRadius))]
         #[unsafe(method_family = none)]
-        pub fn shadowBlurRadius(&self) -> CGFloat;
+        pub unsafe fn shadowBlurRadius(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`shadowBlurRadius`][Self::shadowBlurRadius].
         #[unsafe(method(setShadowBlurRadius:))]
         #[unsafe(method_family = none)]
-        pub fn setShadowBlurRadius(&self, shadow_blur_radius: CGFloat);
+        pub unsafe fn setShadowBlurRadius(&self, shadow_blur_radius: CGFloat);
 
         #[unsafe(method(shadowColor))]
         #[unsafe(method_family = none)]
-        pub fn shadowColor(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn shadowColor(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`shadowColor`][Self::shadowColor].
-        ///
-        /// # Safety
-        ///
-        /// `shadow_color` should be of the correct type.
         #[unsafe(method(setShadowColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setShadowColor(&self, shadow_color: Option<&AnyObject>);
@@ -94,13 +87,6 @@ impl NSShadow {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSShadow {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

@@ -42,28 +42,24 @@ impl NSExtensionItem {
         #[cfg(feature = "NSAttributedString")]
         #[unsafe(method(attributedTitle))]
         #[unsafe(method_family = none)]
-        pub fn attributedTitle(&self) -> Option<Retained<NSAttributedString>>;
+        pub unsafe fn attributedTitle(&self) -> Option<Retained<NSAttributedString>>;
 
         #[cfg(feature = "NSAttributedString")]
         /// Setter for [`attributedTitle`][Self::attributedTitle].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setAttributedTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributedTitle(&self, attributed_title: Option<&NSAttributedString>);
+        pub unsafe fn setAttributedTitle(&self, attributed_title: Option<&NSAttributedString>);
 
         #[cfg(feature = "NSAttributedString")]
         #[unsafe(method(attributedContentText))]
         #[unsafe(method_family = none)]
-        pub fn attributedContentText(&self) -> Option<Retained<NSAttributedString>>;
+        pub unsafe fn attributedContentText(&self) -> Option<Retained<NSAttributedString>>;
 
         #[cfg(feature = "NSAttributedString")]
         /// Setter for [`attributedContentText`][Self::attributedContentText].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setAttributedContentText:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributedContentText(
+        pub unsafe fn setAttributedContentText(
             &self,
             attributed_content_text: Option<&NSAttributedString>,
         );
@@ -71,29 +67,21 @@ impl NSExtensionItem {
         #[cfg(all(feature = "NSArray", feature = "NSItemProvider"))]
         #[unsafe(method(attachments))]
         #[unsafe(method_family = none)]
-        pub fn attachments(&self) -> Option<Retained<NSArray<NSItemProvider>>>;
+        pub unsafe fn attachments(&self) -> Option<Retained<NSArray<NSItemProvider>>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSItemProvider"))]
         /// Setter for [`attachments`][Self::attachments].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setAttachments:))]
         #[unsafe(method_family = none)]
-        pub fn setAttachments(&self, attachments: Option<&NSArray<NSItemProvider>>);
+        pub unsafe fn setAttachments(&self, attachments: Option<&NSArray<NSItemProvider>>);
 
         #[cfg(feature = "NSDictionary")]
         #[unsafe(method(userInfo))]
         #[unsafe(method_family = none)]
-        pub fn userInfo(&self) -> Option<Retained<NSDictionary>>;
+        pub unsafe fn userInfo(&self) -> Option<Retained<NSDictionary>>;
 
         #[cfg(feature = "NSDictionary")]
         /// Setter for [`userInfo`][Self::userInfo].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `user_info` generic should be of the correct type.
         #[unsafe(method(setUserInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUserInfo(&self, user_info: Option<&NSDictionary>);
@@ -105,19 +93,12 @@ impl NSExtensionItem {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSExtensionItem {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern "C" {

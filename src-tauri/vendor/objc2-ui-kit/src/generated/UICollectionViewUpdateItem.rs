@@ -48,15 +48,15 @@ impl UICollectionViewUpdateItem {
     extern_methods!(
         #[unsafe(method(indexPathBeforeUpdate))]
         #[unsafe(method_family = none)]
-        pub fn indexPathBeforeUpdate(&self) -> Option<Retained<NSIndexPath>>;
+        pub unsafe fn indexPathBeforeUpdate(&self) -> Option<Retained<NSIndexPath>>;
 
         #[unsafe(method(indexPathAfterUpdate))]
         #[unsafe(method_family = none)]
-        pub fn indexPathAfterUpdate(&self) -> Option<Retained<NSIndexPath>>;
+        pub unsafe fn indexPathAfterUpdate(&self) -> Option<Retained<NSIndexPath>>;
 
         #[unsafe(method(updateAction))]
         #[unsafe(method_family = none)]
-        pub fn updateAction(&self) -> UICollectionUpdateAction;
+        pub unsafe fn updateAction(&self) -> UICollectionUpdateAction;
     );
 }
 
@@ -65,10 +65,10 @@ impl UICollectionViewUpdateItem {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

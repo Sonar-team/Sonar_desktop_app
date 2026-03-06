@@ -13,14 +13,12 @@ extern_protocol!(
     {
         #[unsafe(method(accessibilityIdentifier))]
         #[unsafe(method_family = none)]
-        fn accessibilityIdentifier(&self) -> Option<Retained<NSString>>;
+        unsafe fn accessibilityIdentifier(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`accessibilityIdentifier`][Self::accessibilityIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityIdentifier:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityIdentifier(&self, accessibility_identifier: Option<&NSString>);
+        unsafe fn setAccessibilityIdentifier(&self, accessibility_identifier: Option<&NSString>);
     }
 );
 

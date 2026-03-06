@@ -89,8 +89,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn accept(&self) -> Retained<NSString>;
 
         /// Setter for [`accept`][Self::accept].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAccept:))]
         #[unsafe(method_family = none)]
@@ -102,8 +100,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn alt(&self) -> Retained<NSString>;
 
         /// Setter for [`alt`][Self::alt].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAlt:))]
         #[unsafe(method_family = none)]
@@ -164,10 +160,6 @@ impl DOMHTMLInputElement {
 
         #[cfg(feature = "DOMFileList")]
         /// Setter for [`files`][Self::files].
-        ///
-        /// # Safety
-        ///
-        /// `files` might not allow `None`.
         #[unsafe(method(setFiles:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setFiles(&self, files: Option<&DOMFileList>);
@@ -207,8 +199,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
@@ -231,8 +221,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn size(&self) -> Retained<NSString>;
 
         /// Setter for [`size`][Self::size].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setSize:))]
         #[unsafe(method_family = none)]
@@ -244,8 +232,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn src(&self) -> Retained<NSString>;
 
         /// Setter for [`src`][Self::src].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setSrc:))]
         #[unsafe(method_family = none)]
@@ -257,8 +243,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn r#type(&self) -> Retained<NSString>;
 
         /// Setter for [`type`][Self::type].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setType:))]
         #[unsafe(method_family = none)]
@@ -270,8 +254,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn defaultValue(&self) -> Retained<NSString>;
 
         /// Setter for [`defaultValue`][Self::defaultValue].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setDefaultValue:))]
         #[unsafe(method_family = none)]
@@ -283,8 +265,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn value(&self) -> Retained<NSString>;
 
         /// Setter for [`value`][Self::value].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setValue:))]
         #[unsafe(method_family = none)]
@@ -318,8 +298,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn align(&self) -> Retained<NSString>;
 
         /// Setter for [`align`][Self::align].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAlign:))]
         #[unsafe(method_family = none)]
@@ -331,8 +309,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn useMap(&self) -> Retained<NSString>;
 
         /// Setter for [`useMap`][Self::useMap].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setUseMap:))]
         #[unsafe(method_family = none)]
@@ -344,8 +320,6 @@ impl DOMHTMLInputElement {
         pub unsafe fn accessKey(&self) -> Retained<NSString>;
 
         /// Setter for [`accessKey`][Self::accessKey].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAccessKey:))]
         #[unsafe(method_family = none)]

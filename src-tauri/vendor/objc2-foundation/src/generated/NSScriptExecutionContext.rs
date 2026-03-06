@@ -21,43 +21,31 @@ impl NSScriptExecutionContext {
     extern_methods!(
         #[unsafe(method(sharedScriptExecutionContext))]
         #[unsafe(method_family = none)]
-        pub fn sharedScriptExecutionContext() -> Retained<NSScriptExecutionContext>;
+        pub unsafe fn sharedScriptExecutionContext() -> Retained<NSScriptExecutionContext>;
 
         #[unsafe(method(topLevelObject))]
         #[unsafe(method_family = none)]
-        pub fn topLevelObject(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn topLevelObject(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`topLevelObject`][Self::topLevelObject].
-        ///
-        /// # Safety
-        ///
-        /// `top_level_object` should be of the correct type.
         #[unsafe(method(setTopLevelObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTopLevelObject(&self, top_level_object: Option<&AnyObject>);
 
         #[unsafe(method(objectBeingTested))]
         #[unsafe(method_family = none)]
-        pub fn objectBeingTested(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn objectBeingTested(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`objectBeingTested`][Self::objectBeingTested].
-        ///
-        /// # Safety
-        ///
-        /// `object_being_tested` should be of the correct type.
         #[unsafe(method(setObjectBeingTested:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setObjectBeingTested(&self, object_being_tested: Option<&AnyObject>);
 
         #[unsafe(method(rangeContainerObject))]
         #[unsafe(method_family = none)]
-        pub fn rangeContainerObject(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn rangeContainerObject(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`rangeContainerObject`][Self::rangeContainerObject].
-        ///
-        /// # Safety
-        ///
-        /// `range_container_object` should be of the correct type.
         #[unsafe(method(setRangeContainerObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRangeContainerObject(&self, range_container_object: Option<&AnyObject>);
@@ -69,17 +57,10 @@ impl NSScriptExecutionContext {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSScriptExecutionContext {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

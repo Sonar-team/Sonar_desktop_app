@@ -84,26 +84,6 @@ unsafe impl RefEncode for WKFullscreenState {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-/// [Apple's documentation](https://developer.apple.com/documentation/webkit/wkwebviewdatatype?language=objc)
-// NS_OPTIONS
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct WKWebViewDataType(pub NSUInteger);
-bitflags::bitflags! {
-    impl WKWebViewDataType: NSUInteger {
-        #[doc(alias = "WKWebViewDataTypeSessionStorage")]
-        const SessionStorage = 1<<0;
-    }
-}
-
-unsafe impl Encode for WKWebViewDataType {
-    const ENCODING: Encoding = NSUInteger::ENCODING;
-}
-
-unsafe impl RefEncode for WKWebViewDataType {
-    const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
-}
-
 extern_class!(
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/wkwebview?language=objc)
     #[unsafe(super(NSView, NSResponder, NSObject))]
@@ -182,9 +162,8 @@ impl WKWebView {
         ) -> Option<Retained<ProtocolObject<dyn WKNavigationDelegate>>>;
 
         #[cfg(feature = "WKNavigationDelegate")]
-        /// Setter for [`navigationDelegate`][Self::navigationDelegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`navigationDelegate`][Self::navigationDelegate].
         #[unsafe(method(setNavigationDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setNavigationDelegate(
@@ -199,9 +178,8 @@ impl WKWebView {
         pub unsafe fn UIDelegate(&self) -> Option<Retained<ProtocolObject<dyn WKUIDelegate>>>;
 
         #[cfg(feature = "WKUIDelegate")]
-        /// Setter for [`UIDelegate`][Self::UIDelegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`UIDelegate`][Self::UIDelegate].
         #[unsafe(method(setUIDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUIDelegate(&self, ui_delegate: Option<&ProtocolObject<dyn WKUIDelegate>>);
@@ -241,9 +219,6 @@ impl WKWebView {
             configuration: &WKWebViewConfiguration,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -524,9 +499,6 @@ impl WKWebView {
             feature = "WKFrameInfo",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// `arguments` generic should be of the correct type.
         #[unsafe(method(callAsyncJavaScript:arguments:inFrame:inContentWorld:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn callAsyncJavaScript_arguments_inFrame_inContentWorld_completionHandler(
@@ -751,8 +723,6 @@ impl WKWebView {
         pub unsafe fn customUserAgent(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`customUserAgent`][Self::customUserAgent].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCustomUserAgent:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setCustomUserAgent(&self, custom_user_agent: Option<&NSString>);
@@ -851,8 +821,6 @@ impl WKWebView {
         pub unsafe fn mediaType(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`mediaType`][Self::mediaType].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setMediaType:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setMediaType(&self, media_type: Option<&NSString>);
@@ -862,20 +830,9 @@ impl WKWebView {
         pub unsafe fn interactionState(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`interactionState`][Self::interactionState].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `interaction_state` should be of the correct type.
         #[unsafe(method(setInteractionState:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setInteractionState(&self, interaction_state: Option<&AnyObject>);
-
-        /// A Boolean value indicating whether Screen Time blocking has occurred.
-        #[unsafe(method(isBlockedByScreenTime))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn isBlockedByScreenTime(&self) -> bool;
 
         #[cfg(feature = "WKNavigation")]
         /// Sets the webpage contents from the passed data as if it was the
@@ -977,8 +934,6 @@ impl WKWebView {
         pub unsafe fn underPageBackgroundColor(&self) -> Retained<NSColor>;
 
         /// Setter for [`underPageBackgroundColor`][Self::underPageBackgroundColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setUnderPageBackgroundColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUnderPageBackgroundColor(
@@ -1048,33 +1003,6 @@ impl WKWebView {
         #[unsafe(method(isWritingToolsActive))]
         #[unsafe(method_family = none)]
         pub unsafe fn isWritingToolsActive(&self) -> bool;
-
-        #[cfg(feature = "block2")]
-        #[unsafe(method(fetchDataOfTypes:completionHandler:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn fetchDataOfTypes_completionHandler(
-            &self,
-            data_types: WKWebViewDataType,
-            completion_handler: &block2::DynBlock<dyn Fn(*mut NSData, *mut NSError)>,
-        );
-
-        #[cfg(feature = "block2")]
-        #[unsafe(method(restoreData:completionHandler:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn restoreData_completionHandler(
-            &self,
-            data: &NSData,
-            completion_handler: &block2::DynBlock<dyn Fn(*mut NSError)>,
-        );
-
-        #[unsafe(method(obscuredContentInsets))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn obscuredContentInsets(&self) -> NSEdgeInsets;
-
-        /// Setter for [`obscuredContentInsets`][Self::obscuredContentInsets].
-        #[unsafe(method(setObscuredContentInsets:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn setObscuredContentInsets(&self, obscured_content_insets: NSEdgeInsets);
     );
 }
 
@@ -1120,10 +1048,6 @@ impl WKWebView {
         /// back-forward list.
         ///
         /// Parameter `sender`: The object that sent this message.
-        ///
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(goBack:))]
         #[unsafe(method_family = none)]
         pub unsafe fn goBack_(&self, sender: Option<&AnyObject>);
@@ -1132,10 +1056,6 @@ impl WKWebView {
         /// back-forward list.
         ///
         /// Parameter `sender`: The object that sent this message.
-        ///
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(goForward:))]
         #[unsafe(method_family = none)]
         pub unsafe fn goForward_(&self, sender: Option<&AnyObject>);
@@ -1143,10 +1063,6 @@ impl WKWebView {
         /// Action method that reloads the current page.
         ///
         /// Parameter `sender`: The object that sent this message.
-        ///
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(reload:))]
         #[unsafe(method_family = none)]
         pub unsafe fn reload_(&self, sender: Option<&AnyObject>);
@@ -1155,10 +1071,6 @@ impl WKWebView {
         /// end-to-end revalidation using cache-validating conditionals if possible.
         ///
         /// Parameter `sender`: The object that sent this message.
-        ///
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(reloadFromOrigin:))]
         #[unsafe(method_family = none)]
         pub unsafe fn reloadFromOrigin_(&self, sender: Option<&AnyObject>);
@@ -1167,10 +1079,6 @@ impl WKWebView {
         /// page.
         ///
         /// Parameter `sender`: The object that sent this message.
-        ///
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(stopLoading:))]
         #[unsafe(method_family = none)]
         pub unsafe fn stopLoading_(&self, sender: Option<&AnyObject>);

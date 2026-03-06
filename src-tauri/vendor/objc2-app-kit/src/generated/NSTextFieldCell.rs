@@ -87,11 +87,8 @@ impl NSTextFieldCell {
     extern_methods!(
         #[unsafe(method(initTextCell:))]
         #[unsafe(method_family = init)]
-        pub fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
+        pub unsafe fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -107,91 +104,81 @@ impl NSTextFieldCell {
         #[cfg(feature = "NSColor")]
         #[unsafe(method(backgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn backgroundColor(&self) -> Option<Retained<NSColor>>;
+        pub unsafe fn backgroundColor(&self) -> Option<Retained<NSColor>>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`backgroundColor`][Self::backgroundColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundColor(&self, background_color: Option<&NSColor>);
+        pub unsafe fn setBackgroundColor(&self, background_color: Option<&NSColor>);
 
         #[unsafe(method(drawsBackground))]
         #[unsafe(method_family = none)]
-        pub fn drawsBackground(&self) -> bool;
+        pub unsafe fn drawsBackground(&self) -> bool;
 
         /// Setter for [`drawsBackground`][Self::drawsBackground].
         #[unsafe(method(setDrawsBackground:))]
         #[unsafe(method_family = none)]
-        pub fn setDrawsBackground(&self, draws_background: bool);
+        pub unsafe fn setDrawsBackground(&self, draws_background: bool);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(textColor))]
         #[unsafe(method_family = none)]
-        pub fn textColor(&self) -> Option<Retained<NSColor>>;
+        pub unsafe fn textColor(&self) -> Option<Retained<NSColor>>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`textColor`][Self::textColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTextColor:))]
         #[unsafe(method_family = none)]
-        pub fn setTextColor(&self, text_color: Option<&NSColor>);
+        pub unsafe fn setTextColor(&self, text_color: Option<&NSColor>);
 
         #[cfg(all(feature = "NSResponder", feature = "NSText", feature = "NSView"))]
         #[unsafe(method(setUpFieldEditorAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn setUpFieldEditorAttributes(&self, text_obj: &NSText) -> Retained<NSText>;
+        pub unsafe fn setUpFieldEditorAttributes(&self, text_obj: &NSText) -> Retained<NSText>;
 
         #[unsafe(method(bezelStyle))]
         #[unsafe(method_family = none)]
-        pub fn bezelStyle(&self) -> NSTextFieldBezelStyle;
+        pub unsafe fn bezelStyle(&self) -> NSTextFieldBezelStyle;
 
         /// Setter for [`bezelStyle`][Self::bezelStyle].
         #[unsafe(method(setBezelStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setBezelStyle(&self, bezel_style: NSTextFieldBezelStyle);
+        pub unsafe fn setBezelStyle(&self, bezel_style: NSTextFieldBezelStyle);
 
         #[unsafe(method(placeholderString))]
         #[unsafe(method_family = none)]
-        pub fn placeholderString(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn placeholderString(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`placeholderString`][Self::placeholderString].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPlaceholderString:))]
         #[unsafe(method_family = none)]
-        pub fn setPlaceholderString(&self, placeholder_string: Option<&NSString>);
+        pub unsafe fn setPlaceholderString(&self, placeholder_string: Option<&NSString>);
 
         #[unsafe(method(placeholderAttributedString))]
         #[unsafe(method_family = none)]
-        pub fn placeholderAttributedString(&self) -> Option<Retained<NSAttributedString>>;
+        pub unsafe fn placeholderAttributedString(&self) -> Option<Retained<NSAttributedString>>;
 
         /// Setter for [`placeholderAttributedString`][Self::placeholderAttributedString].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPlaceholderAttributedString:))]
         #[unsafe(method_family = none)]
-        pub fn setPlaceholderAttributedString(
+        pub unsafe fn setPlaceholderAttributedString(
             &self,
             placeholder_attributed_string: Option<&NSAttributedString>,
         );
 
         #[unsafe(method(setWantsNotificationForMarkedText:))]
         #[unsafe(method_family = none)]
-        pub fn setWantsNotificationForMarkedText(&self, flag: bool);
+        pub unsafe fn setWantsNotificationForMarkedText(&self, flag: bool);
 
         #[unsafe(method(allowedInputSourceLocales))]
         #[unsafe(method_family = none)]
-        pub fn allowedInputSourceLocales(&self) -> Option<Retained<NSArray<NSString>>>;
+        pub unsafe fn allowedInputSourceLocales(&self) -> Option<Retained<NSArray<NSString>>>;
 
         /// Setter for [`allowedInputSourceLocales`][Self::allowedInputSourceLocales].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAllowedInputSourceLocales:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowedInputSourceLocales(
+        pub unsafe fn setAllowedInputSourceLocales(
             &self,
             allowed_input_source_locales: Option<&NSArray<NSString>>,
         );
@@ -204,7 +191,7 @@ impl NSTextFieldCell {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -214,6 +201,6 @@ impl NSTextFieldCell {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

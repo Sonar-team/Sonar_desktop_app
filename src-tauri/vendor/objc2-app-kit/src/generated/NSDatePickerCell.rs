@@ -139,11 +139,8 @@ impl NSDatePickerCell {
     extern_methods!(
         #[unsafe(method(initTextCell:))]
         #[unsafe(method_family = init)]
-        pub fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
+        pub unsafe fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -158,151 +155,139 @@ impl NSDatePickerCell {
 
         #[unsafe(method(datePickerStyle))]
         #[unsafe(method_family = none)]
-        pub fn datePickerStyle(&self) -> NSDatePickerStyle;
+        pub unsafe fn datePickerStyle(&self) -> NSDatePickerStyle;
 
         /// Setter for [`datePickerStyle`][Self::datePickerStyle].
         #[unsafe(method(setDatePickerStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setDatePickerStyle(&self, date_picker_style: NSDatePickerStyle);
+        pub unsafe fn setDatePickerStyle(&self, date_picker_style: NSDatePickerStyle);
 
         #[unsafe(method(drawsBackground))]
         #[unsafe(method_family = none)]
-        pub fn drawsBackground(&self) -> bool;
+        pub unsafe fn drawsBackground(&self) -> bool;
 
         /// Setter for [`drawsBackground`][Self::drawsBackground].
         #[unsafe(method(setDrawsBackground:))]
         #[unsafe(method_family = none)]
-        pub fn setDrawsBackground(&self, draws_background: bool);
+        pub unsafe fn setDrawsBackground(&self, draws_background: bool);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(backgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn backgroundColor(&self) -> Retained<NSColor>;
+        pub unsafe fn backgroundColor(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`backgroundColor`][Self::backgroundColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundColor(&self, background_color: &NSColor);
+        pub unsafe fn setBackgroundColor(&self, background_color: &NSColor);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(textColor))]
         #[unsafe(method_family = none)]
-        pub fn textColor(&self) -> Retained<NSColor>;
+        pub unsafe fn textColor(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`textColor`][Self::textColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTextColor:))]
         #[unsafe(method_family = none)]
-        pub fn setTextColor(&self, text_color: &NSColor);
+        pub unsafe fn setTextColor(&self, text_color: &NSColor);
 
         #[unsafe(method(datePickerMode))]
         #[unsafe(method_family = none)]
-        pub fn datePickerMode(&self) -> NSDatePickerMode;
+        pub unsafe fn datePickerMode(&self) -> NSDatePickerMode;
 
         /// Setter for [`datePickerMode`][Self::datePickerMode].
         #[unsafe(method(setDatePickerMode:))]
         #[unsafe(method_family = none)]
-        pub fn setDatePickerMode(&self, date_picker_mode: NSDatePickerMode);
+        pub unsafe fn setDatePickerMode(&self, date_picker_mode: NSDatePickerMode);
 
         #[unsafe(method(datePickerElements))]
         #[unsafe(method_family = none)]
-        pub fn datePickerElements(&self) -> NSDatePickerElementFlags;
+        pub unsafe fn datePickerElements(&self) -> NSDatePickerElementFlags;
 
         /// Setter for [`datePickerElements`][Self::datePickerElements].
         #[unsafe(method(setDatePickerElements:))]
         #[unsafe(method_family = none)]
-        pub fn setDatePickerElements(&self, date_picker_elements: NSDatePickerElementFlags);
+        pub unsafe fn setDatePickerElements(&self, date_picker_elements: NSDatePickerElementFlags);
 
         #[unsafe(method(calendar))]
         #[unsafe(method_family = none)]
-        pub fn calendar(&self) -> Option<Retained<NSCalendar>>;
+        pub unsafe fn calendar(&self) -> Option<Retained<NSCalendar>>;
 
         /// Setter for [`calendar`][Self::calendar].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCalendar:))]
         #[unsafe(method_family = none)]
-        pub fn setCalendar(&self, calendar: Option<&NSCalendar>);
+        pub unsafe fn setCalendar(&self, calendar: Option<&NSCalendar>);
 
         #[unsafe(method(locale))]
         #[unsafe(method_family = none)]
-        pub fn locale(&self) -> Option<Retained<NSLocale>>;
+        pub unsafe fn locale(&self) -> Option<Retained<NSLocale>>;
 
         /// Setter for [`locale`][Self::locale].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setLocale:))]
         #[unsafe(method_family = none)]
-        pub fn setLocale(&self, locale: Option<&NSLocale>);
+        pub unsafe fn setLocale(&self, locale: Option<&NSLocale>);
 
         #[unsafe(method(timeZone))]
         #[unsafe(method_family = none)]
-        pub fn timeZone(&self) -> Option<Retained<NSTimeZone>>;
+        pub unsafe fn timeZone(&self) -> Option<Retained<NSTimeZone>>;
 
         /// Setter for [`timeZone`][Self::timeZone].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTimeZone:))]
         #[unsafe(method_family = none)]
-        pub fn setTimeZone(&self, time_zone: Option<&NSTimeZone>);
+        pub unsafe fn setTimeZone(&self, time_zone: Option<&NSTimeZone>);
 
         #[unsafe(method(dateValue))]
         #[unsafe(method_family = none)]
-        pub fn dateValue(&self) -> Retained<NSDate>;
+        pub unsafe fn dateValue(&self) -> Retained<NSDate>;
 
         /// Setter for [`dateValue`][Self::dateValue].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDateValue:))]
         #[unsafe(method_family = none)]
-        pub fn setDateValue(&self, date_value: &NSDate);
+        pub unsafe fn setDateValue(&self, date_value: &NSDate);
 
         #[unsafe(method(timeInterval))]
         #[unsafe(method_family = none)]
-        pub fn timeInterval(&self) -> NSTimeInterval;
+        pub unsafe fn timeInterval(&self) -> NSTimeInterval;
 
         /// Setter for [`timeInterval`][Self::timeInterval].
         #[unsafe(method(setTimeInterval:))]
         #[unsafe(method_family = none)]
-        pub fn setTimeInterval(&self, time_interval: NSTimeInterval);
+        pub unsafe fn setTimeInterval(&self, time_interval: NSTimeInterval);
 
         #[unsafe(method(minDate))]
         #[unsafe(method_family = none)]
-        pub fn minDate(&self) -> Option<Retained<NSDate>>;
+        pub unsafe fn minDate(&self) -> Option<Retained<NSDate>>;
 
         /// Setter for [`minDate`][Self::minDate].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setMinDate:))]
         #[unsafe(method_family = none)]
-        pub fn setMinDate(&self, min_date: Option<&NSDate>);
+        pub unsafe fn setMinDate(&self, min_date: Option<&NSDate>);
 
         #[unsafe(method(maxDate))]
         #[unsafe(method_family = none)]
-        pub fn maxDate(&self) -> Option<Retained<NSDate>>;
+        pub unsafe fn maxDate(&self) -> Option<Retained<NSDate>>;
 
         /// Setter for [`maxDate`][Self::maxDate].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setMaxDate:))]
         #[unsafe(method_family = none)]
-        pub fn setMaxDate(&self, max_date: Option<&NSDate>);
+        pub unsafe fn setMaxDate(&self, max_date: Option<&NSDate>);
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSDatePickerCellDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn NSDatePickerCellDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSDatePickerCellDelegate>>);
+        pub unsafe fn setDelegate(
+            &self,
+            delegate: Option<&ProtocolObject<dyn NSDatePickerCellDelegate>>,
+        );
     );
 }
 
@@ -312,7 +297,7 @@ impl NSDatePickerCell {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -322,7 +307,7 @@ impl NSDatePickerCell {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -330,9 +315,6 @@ extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsdatepickercelldelegate?language=objc)
     pub unsafe trait NSDatePickerCellDelegate: NSObjectProtocol + MainThreadOnly {
         #[cfg(all(feature = "NSActionCell", feature = "NSCell"))]
-        /// # Safety
-        ///
-        /// `proposed_time_interval` must be a valid pointer or null.
         #[optional]
         #[unsafe(method(datePickerCell:validateProposedDateValue:timeInterval:))]
         #[unsafe(method_family = none)]
@@ -346,54 +328,43 @@ extern_protocol!(
 );
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstextfieldandstepperdatepickerstyle?language=objc)
-#[deprecated]
 pub static NSTextFieldAndStepperDatePickerStyle: NSDatePickerStyle =
     NSDatePickerStyle(NSDatePickerStyle::TextFieldAndStepper.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsclockandcalendardatepickerstyle?language=objc)
-#[deprecated]
 pub static NSClockAndCalendarDatePickerStyle: NSDatePickerStyle =
     NSDatePickerStyle(NSDatePickerStyle::ClockAndCalendar.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstextfielddatepickerstyle?language=objc)
-#[deprecated]
 pub static NSTextFieldDatePickerStyle: NSDatePickerStyle =
     NSDatePickerStyle(NSDatePickerStyle::TextField.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nssingledatemode?language=objc)
-#[deprecated]
 pub static NSSingleDateMode: NSDatePickerMode = NSDatePickerMode(NSDatePickerMode::Single.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsrangedatemode?language=objc)
-#[deprecated]
 pub static NSRangeDateMode: NSDatePickerMode = NSDatePickerMode(NSDatePickerMode::Range.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nshourminutedatepickerelementflag?language=objc)
-#[deprecated]
 pub static NSHourMinuteDatePickerElementFlag: NSDatePickerElementFlags =
     NSDatePickerElementFlags(NSDatePickerElementFlags::HourMinute.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nshourminuteseconddatepickerelementflag?language=objc)
-#[deprecated]
 pub static NSHourMinuteSecondDatePickerElementFlag: NSDatePickerElementFlags =
     NSDatePickerElementFlags(NSDatePickerElementFlags::HourMinuteSecond.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstimezonedatepickerelementflag?language=objc)
-#[deprecated]
 pub static NSTimeZoneDatePickerElementFlag: NSDatePickerElementFlags =
     NSDatePickerElementFlags(NSDatePickerElementFlags::TimeZone.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsyearmonthdatepickerelementflag?language=objc)
-#[deprecated]
 pub static NSYearMonthDatePickerElementFlag: NSDatePickerElementFlags =
     NSDatePickerElementFlags(NSDatePickerElementFlags::YearMonth.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsyearmonthdaydatepickerelementflag?language=objc)
-#[deprecated]
 pub static NSYearMonthDayDatePickerElementFlag: NSDatePickerElementFlags =
     NSDatePickerElementFlags(NSDatePickerElementFlags::YearMonthDay.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nseradatepickerelementflag?language=objc)
-#[deprecated]
 pub static NSEraDatePickerElementFlag: NSDatePickerElementFlags =
     NSDatePickerElementFlags(NSDatePickerElementFlags::Era.0);

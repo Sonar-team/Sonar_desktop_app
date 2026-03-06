@@ -3,7 +3,7 @@ pub unsafe fn CLRCreateInstance<T>(clsid: *const windows_core::GUID) -> windows_
 where
     T: windows_core::Interface,
 {
-    windows_link::link!("mscoree.dll" "system" fn CLRCreateInstance(clsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppinterface : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn CLRCreateInstance(clsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppinterface : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
     let mut result__ = core::ptr::null_mut();
     unsafe { CLRCreateInstance(clsid, &T::IID, &mut result__).and_then(|| windows_core::Type::from_abi(result__)) }
 }
@@ -14,7 +14,7 @@ where
     P1: windows_core::Param<windows_core::PCSTR>,
     P4: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn CallFunctionShim(szdllname : windows_core::PCWSTR, szfunctionname : windows_core::PCSTR, lpvargument1 : *mut core::ffi::c_void, lpvargument2 : *mut core::ffi::c_void, szversion : windows_core::PCWSTR, pvreserved : *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn CallFunctionShim(szdllname : windows_core::PCWSTR, szfunctionname : windows_core::PCSTR, lpvargument1 : *mut core::ffi::c_void, lpvargument2 : *mut core::ffi::c_void, szversion : windows_core::PCWSTR, pvreserved : *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { CallFunctionShim(szdllname.param().abi(), szfunctionname.param().abi(), lpvargument1 as _, lpvargument2 as _, szversion.param().abi(), pvreserved as _).ok() }
 }
 #[inline]
@@ -22,7 +22,7 @@ pub unsafe fn ClrCreateManagedInstance<P0>(ptypename: P0, riid: *const windows_c
 where
     P0: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn ClrCreateManagedInstance(ptypename : windows_core::PCWSTR, riid : *const windows_core::GUID, ppobject : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn ClrCreateManagedInstance(ptypename : windows_core::PCWSTR, riid : *const windows_core::GUID, ppobject : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { ClrCreateManagedInstance(ptypename.param().abi(), riid, ppobject as _).ok() }
 }
 #[inline]
@@ -30,7 +30,7 @@ pub unsafe fn CorBindToCurrentRuntime<P0>(pwszfilename: P0, rclsid: *const windo
 where
     P0: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn CorBindToCurrentRuntime(pwszfilename : windows_core::PCWSTR, rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn CorBindToCurrentRuntime(pwszfilename : windows_core::PCWSTR, rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { CorBindToCurrentRuntime(pwszfilename.param().abi(), rclsid, riid, ppv as _).ok() }
 }
 #[inline]
@@ -39,7 +39,7 @@ where
     P0: windows_core::Param<windows_core::PCWSTR>,
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn CorBindToRuntime(pwszversion : windows_core::PCWSTR, pwszbuildflavor : windows_core::PCWSTR, rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn CorBindToRuntime(pwszversion : windows_core::PCWSTR, pwszbuildflavor : windows_core::PCWSTR, rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { CorBindToRuntime(pwszversion.param().abi(), pwszbuildflavor.param().abi(), rclsid, riid, ppv as _).ok() }
 }
 #[cfg(feature = "Win32_System_Com")]
@@ -48,7 +48,7 @@ pub unsafe fn CorBindToRuntimeByCfg<P0>(pcfgstream: P0, reserved: u32, startupfl
 where
     P0: windows_core::Param<super::Com::IStream>,
 {
-    windows_link::link!("mscoree.dll" "system" fn CorBindToRuntimeByCfg(pcfgstream : * mut core::ffi::c_void, reserved : u32, startupflags : u32, rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn CorBindToRuntimeByCfg(pcfgstream : * mut core::ffi::c_void, reserved : u32, startupflags : u32, rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { CorBindToRuntimeByCfg(pcfgstream.param().abi(), reserved, startupflags, rclsid, riid, ppv as _).ok() }
 }
 #[inline]
@@ -57,7 +57,7 @@ where
     P0: windows_core::Param<windows_core::PCWSTR>,
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn CorBindToRuntimeEx(pwszversion : windows_core::PCWSTR, pwszbuildflavor : windows_core::PCWSTR, startupflags : u32, rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn CorBindToRuntimeEx(pwszversion : windows_core::PCWSTR, pwszbuildflavor : windows_core::PCWSTR, startupflags : u32, rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { CorBindToRuntimeEx(pwszversion.param().abi(), pwszbuildflavor.param().abi(), startupflags, rclsid, riid, ppv as _).ok() }
 }
 #[inline]
@@ -67,12 +67,12 @@ where
     P1: windows_core::Param<windows_core::PCWSTR>,
     P2: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn CorBindToRuntimeHost(pwszversion : windows_core::PCWSTR, pwszbuildflavor : windows_core::PCWSTR, pwszhostconfigfile : windows_core::PCWSTR, preserved : *mut core::ffi::c_void, startupflags : u32, rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn CorBindToRuntimeHost(pwszversion : windows_core::PCWSTR, pwszbuildflavor : windows_core::PCWSTR, pwszhostconfigfile : windows_core::PCWSTR, preserved : *mut core::ffi::c_void, startupflags : u32, rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { CorBindToRuntimeHost(pwszversion.param().abi(), pwszbuildflavor.param().abi(), pwszhostconfigfile.param().abi(), preserved as _, startupflags, rclsid, riid, ppv as _).ok() }
 }
 #[inline]
 pub unsafe fn CorExitProcess(exitcode: i32) {
-    windows_link::link!("mscoree.dll" "system" fn CorExitProcess(exitcode : i32));
+    windows_core::link!("mscoree.dll" "system" fn CorExitProcess(exitcode : i32));
     unsafe { CorExitProcess(exitcode) }
 }
 #[cfg(feature = "Win32_System_Threading")]
@@ -81,12 +81,12 @@ pub unsafe fn CorLaunchApplication<P1>(dwclickoncehost: HOST_TYPE, pwzappfullnam
 where
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn CorLaunchApplication(dwclickoncehost : HOST_TYPE, pwzappfullname : windows_core::PCWSTR, dwmanifestpaths : u32, ppwzmanifestpaths : *const windows_core::PCWSTR, dwactivationdata : u32, ppwzactivationdata : *const windows_core::PCWSTR, lpprocessinformation : *mut super::Threading:: PROCESS_INFORMATION) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn CorLaunchApplication(dwclickoncehost : HOST_TYPE, pwzappfullname : windows_core::PCWSTR, dwmanifestpaths : u32, ppwzmanifestpaths : *const windows_core::PCWSTR, dwactivationdata : u32, ppwzactivationdata : *const windows_core::PCWSTR, lpprocessinformation : *mut super::Threading:: PROCESS_INFORMATION) -> windows_core::HRESULT);
     unsafe { CorLaunchApplication(dwclickoncehost, pwzappfullname.param().abi(), dwmanifestpaths, ppwzmanifestpaths, dwactivationdata, ppwzactivationdata, lpprocessinformation as _).ok() }
 }
 #[inline]
 pub unsafe fn CorMarkThreadInThreadPool() {
-    windows_link::link!("mscoree.dll" "system" fn CorMarkThreadInThreadPool());
+    windows_core::link!("mscoree.dll" "system" fn CorMarkThreadInThreadPool());
     unsafe { CorMarkThreadInThreadPool() }
 }
 #[inline]
@@ -94,7 +94,7 @@ pub unsafe fn CreateDebuggingInterfaceFromVersion<P1>(idebuggerversion: i32, szd
 where
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn CreateDebuggingInterfaceFromVersion(idebuggerversion : i32, szdebuggeeversion : windows_core::PCWSTR, ppcordb : *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn CreateDebuggingInterfaceFromVersion(idebuggerversion : i32, szdebuggeeversion : windows_core::PCWSTR, ppcordb : *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe {
         let mut result__ = core::mem::zeroed();
         CreateDebuggingInterfaceFromVersion(idebuggerversion, szdebuggeeversion.param().abi(), &mut result__).and_then(|| windows_core::Type::from_abi(result__))
@@ -102,7 +102,7 @@ where
 }
 #[inline]
 pub unsafe fn GetCLRIdentityManager(riid: *const windows_core::GUID) -> windows_core::Result<windows_core::IUnknown> {
-    windows_link::link!("mscoree.dll" "system" fn GetCLRIdentityManager(riid : *const windows_core::GUID, ppmanager : *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn GetCLRIdentityManager(riid : *const windows_core::GUID, ppmanager : *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe {
         let mut result__ = core::mem::zeroed();
         GetCLRIdentityManager(riid, &mut result__).and_then(|| windows_core::Type::from_abi(result__))
@@ -110,17 +110,17 @@ pub unsafe fn GetCLRIdentityManager(riid: *const windows_core::GUID) -> windows_
 }
 #[inline]
 pub unsafe fn GetCORRequiredVersion(pbuffer: &mut [u16], dwlength: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("mscoree.dll" "system" fn GetCORRequiredVersion(pbuffer : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn GetCORRequiredVersion(pbuffer : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
     unsafe { GetCORRequiredVersion(core::mem::transmute(pbuffer.as_ptr()), pbuffer.len().try_into().unwrap(), dwlength as _).ok() }
 }
 #[inline]
 pub unsafe fn GetCORSystemDirectory(pbuffer: &mut [u16], dwlength: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("mscoree.dll" "system" fn GetCORSystemDirectory(pbuffer : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn GetCORSystemDirectory(pbuffer : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
     unsafe { GetCORSystemDirectory(core::mem::transmute(pbuffer.as_ptr()), pbuffer.len().try_into().unwrap(), dwlength as _).ok() }
 }
 #[inline]
 pub unsafe fn GetCORVersion(pbbuffer: &mut [u16], dwlength: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("mscoree.dll" "system" fn GetCORVersion(pbbuffer : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn GetCORVersion(pbbuffer : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
     unsafe { GetCORVersion(core::mem::transmute(pbbuffer.as_ptr()), pbbuffer.len().try_into().unwrap(), dwlength as _).ok() }
 }
 #[inline]
@@ -128,7 +128,7 @@ pub unsafe fn GetFileVersion<P0>(szfilename: P0, szbuffer: Option<&mut [u16]>, d
 where
     P0: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn GetFileVersion(szfilename : windows_core::PCWSTR, szbuffer : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn GetFileVersion(szfilename : windows_core::PCWSTR, szbuffer : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
     unsafe { GetFileVersion(szfilename.param().abi(), core::mem::transmute(szbuffer.as_deref().map_or(core::ptr::null(), |slice| slice.as_ptr())), szbuffer.as_deref().map_or(0, |slice| slice.len().try_into().unwrap()), dwlength as _).ok() }
 }
 #[inline]
@@ -136,7 +136,7 @@ pub unsafe fn GetRealProcAddress<P0>(pwszprocname: P0, ppv: *mut *mut core::ffi:
 where
     P0: windows_core::Param<windows_core::PCSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn GetRealProcAddress(pwszprocname : windows_core::PCSTR, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn GetRealProcAddress(pwszprocname : windows_core::PCSTR, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { GetRealProcAddress(pwszprocname.param().abi(), ppv as _).ok() }
 }
 #[inline]
@@ -146,7 +146,7 @@ where
     P1: windows_core::Param<windows_core::PCWSTR>,
     P2: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn GetRequestedRuntimeInfo(pexe : windows_core::PCWSTR, pwszversion : windows_core::PCWSTR, pconfigurationfile : windows_core::PCWSTR, startupflags : u32, runtimeinfoflags : u32, pdirectory : windows_core::PWSTR, dwdirectory : u32, dwdirectorylength : *mut u32, pversion : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn GetRequestedRuntimeInfo(pexe : windows_core::PCWSTR, pwszversion : windows_core::PCWSTR, pconfigurationfile : windows_core::PCWSTR, startupflags : u32, runtimeinfoflags : u32, pdirectory : windows_core::PWSTR, dwdirectory : u32, dwdirectorylength : *mut u32, pversion : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
     unsafe {
         GetRequestedRuntimeInfo(
             pexe.param().abi(),
@@ -169,17 +169,17 @@ pub unsafe fn GetRequestedRuntimeVersion<P0>(pexe: P0, pversion: &mut [u16], dwl
 where
     P0: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn GetRequestedRuntimeVersion(pexe : windows_core::PCWSTR, pversion : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn GetRequestedRuntimeVersion(pexe : windows_core::PCWSTR, pversion : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
     unsafe { GetRequestedRuntimeVersion(pexe.param().abi(), core::mem::transmute(pversion.as_ptr()), pversion.len().try_into().unwrap(), dwlength as _).ok() }
 }
 #[inline]
 pub unsafe fn GetRequestedRuntimeVersionForCLSID(rclsid: *const windows_core::GUID, pversion: Option<&mut [u16]>, dwlength: Option<*mut u32>, dwresolutionflags: CLSID_RESOLUTION_FLAGS) -> windows_core::Result<()> {
-    windows_link::link!("mscoree.dll" "system" fn GetRequestedRuntimeVersionForCLSID(rclsid : *const windows_core::GUID, pversion : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32, dwresolutionflags : CLSID_RESOLUTION_FLAGS) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn GetRequestedRuntimeVersionForCLSID(rclsid : *const windows_core::GUID, pversion : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32, dwresolutionflags : CLSID_RESOLUTION_FLAGS) -> windows_core::HRESULT);
     unsafe { GetRequestedRuntimeVersionForCLSID(rclsid, core::mem::transmute(pversion.as_deref().map_or(core::ptr::null(), |slice| slice.as_ptr())), pversion.as_deref().map_or(0, |slice| slice.len().try_into().unwrap()), dwlength.unwrap_or(core::mem::zeroed()) as _, dwresolutionflags).ok() }
 }
 #[inline]
 pub unsafe fn GetVersionFromProcess(hprocess: super::super::Foundation::HANDLE, pversion: &mut [u16], dwlength: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("mscoree.dll" "system" fn GetVersionFromProcess(hprocess : super::super::Foundation:: HANDLE, pversion : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn GetVersionFromProcess(hprocess : super::super::Foundation:: HANDLE, pversion : windows_core::PWSTR, cchbuffer : u32, dwlength : *mut u32) -> windows_core::HRESULT);
     unsafe { GetVersionFromProcess(hprocess, core::mem::transmute(pversion.as_ptr()), pversion.len().try_into().unwrap(), dwlength as _).ok() }
 }
 #[inline]
@@ -188,22 +188,22 @@ where
     P0: windows_core::Param<windows_core::PCWSTR>,
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn LoadLibraryShim(szdllname : windows_core::PCWSTR, szversion : windows_core::PCWSTR, pvreserved : *mut core::ffi::c_void, phmoddll : *mut super::super::Foundation:: HMODULE) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn LoadLibraryShim(szdllname : windows_core::PCWSTR, szversion : windows_core::PCWSTR, pvreserved : *mut core::ffi::c_void, phmoddll : *mut super::super::Foundation:: HMODULE) -> windows_core::HRESULT);
     unsafe { LoadLibraryShim(szdllname.param().abi(), szversion.param().abi(), pvreserved as _, phmoddll as _).ok() }
 }
 #[inline]
 pub unsafe fn LoadStringRC(iresouceid: u32, szbuffer: &mut [u16], bquiet: i32) -> windows_core::Result<()> {
-    windows_link::link!("mscoree.dll" "system" fn LoadStringRC(iresouceid : u32, szbuffer : windows_core::PWSTR, imax : i32, bquiet : i32) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn LoadStringRC(iresouceid : u32, szbuffer : windows_core::PWSTR, imax : i32, bquiet : i32) -> windows_core::HRESULT);
     unsafe { LoadStringRC(iresouceid, core::mem::transmute(szbuffer.as_ptr()), szbuffer.len().try_into().unwrap(), bquiet).ok() }
 }
 #[inline]
 pub unsafe fn LoadStringRCEx(lcid: u32, iresouceid: u32, szbuffer: &mut [u16], bquiet: i32, pcwchused: *mut i32) -> windows_core::Result<()> {
-    windows_link::link!("mscoree.dll" "system" fn LoadStringRCEx(lcid : u32, iresouceid : u32, szbuffer : windows_core::PWSTR, imax : i32, bquiet : i32, pcwchused : *mut i32) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn LoadStringRCEx(lcid : u32, iresouceid : u32, szbuffer : windows_core::PWSTR, imax : i32, bquiet : i32, pcwchused : *mut i32) -> windows_core::HRESULT);
     unsafe { LoadStringRCEx(lcid, iresouceid, core::mem::transmute(szbuffer.as_ptr()), szbuffer.len().try_into().unwrap(), bquiet, pcwchused as _).ok() }
 }
 #[inline]
 pub unsafe fn LockClrVersion(hostcallback: FLockClrVersionCallback, pbeginhostsetup: *mut FLockClrVersionCallback, pendhostsetup: *mut FLockClrVersionCallback) -> windows_core::Result<()> {
-    windows_link::link!("mscoree.dll" "system" fn LockClrVersion(hostcallback : FLockClrVersionCallback, pbeginhostsetup : *mut FLockClrVersionCallback, pendhostsetup : *mut FLockClrVersionCallback) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn LockClrVersion(hostcallback : FLockClrVersionCallback, pbeginhostsetup : *mut FLockClrVersionCallback, pendhostsetup : *mut FLockClrVersionCallback) -> windows_core::HRESULT);
     unsafe { LockClrVersion(hostcallback, pbeginhostsetup as _, pendhostsetup as _).ok() }
 }
 #[inline]
@@ -211,7 +211,7 @@ pub unsafe fn RunDll32ShimW<P2>(hwnd: super::super::Foundation::HWND, hinst: sup
 where
     P2: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("mscoree.dll" "system" fn RunDll32ShimW(hwnd : super::super::Foundation:: HWND, hinst : super::super::Foundation:: HINSTANCE, lpszcmdline : windows_core::PCWSTR, ncmdshow : i32) -> windows_core::HRESULT);
+    windows_core::link!("mscoree.dll" "system" fn RunDll32ShimW(hwnd : super::super::Foundation:: HWND, hinst : super::super::Foundation:: HINSTANCE, lpszcmdline : windows_core::PCWSTR, ncmdshow : i32) -> windows_core::HRESULT);
     unsafe { RunDll32ShimW(hwnd, hinst, lpszcmdline.param().abi(), ncmdshow).ok() }
 }
 pub const APPDOMAIN_FORCE_TRIVIAL_WAIT_OPERATIONS: APPDOMAIN_SECURITY_FLAGS = APPDOMAIN_SECURITY_FLAGS(8i32);
@@ -505,7 +505,7 @@ pub struct IAppDomainBinding_Vtbl {
     pub OnAppDomain: unsafe extern "system" fn(*mut core::ffi::c_void, *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 pub trait IAppDomainBinding_Impl: windows_core::IUnknownImpl {
-    fn OnAppDomain(&self, pappdomain: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn OnAppDomain(&self, pappdomain: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
 }
 impl IAppDomainBinding_Vtbl {
     pub const fn new<Identity: IAppDomainBinding_Impl, const OFFSET: isize>() -> Self {
@@ -664,9 +664,9 @@ pub struct ICLRAssemblyIdentityManager_Vtbl {
 pub trait ICLRAssemblyIdentityManager_Impl: windows_core::IUnknownImpl {
     fn GetCLRAssemblyReferenceList(&self, ppwzassemblyreferences: *const windows_core::PCWSTR, dwnumofreferences: u32) -> windows_core::Result<ICLRAssemblyReferenceList>;
     fn GetBindingIdentityFromFile(&self, pwzfilepath: &windows_core::PCWSTR, dwflags: u32, pwzbuffer: windows_core::PWSTR, pcchbuffersize: *mut u32) -> windows_core::Result<()>;
-    fn GetBindingIdentityFromStream(&self, pstream: windows_core::Ref<'_, super::Com::IStream>, dwflags: u32, pwzbuffer: windows_core::PWSTR, pcchbuffersize: *mut u32) -> windows_core::Result<()>;
-    fn GetReferencedAssembliesFromFile(&self, pwzfilepath: &windows_core::PCWSTR, dwflags: u32, pexcludeassemblieslist: windows_core::Ref<'_, ICLRAssemblyReferenceList>) -> windows_core::Result<ICLRReferenceAssemblyEnum>;
-    fn GetReferencedAssembliesFromStream(&self, pstream: windows_core::Ref<'_, super::Com::IStream>, dwflags: u32, pexcludeassemblieslist: windows_core::Ref<'_, ICLRAssemblyReferenceList>) -> windows_core::Result<ICLRReferenceAssemblyEnum>;
+    fn GetBindingIdentityFromStream(&self, pstream: windows_core::Ref<super::Com::IStream>, dwflags: u32, pwzbuffer: windows_core::PWSTR, pcchbuffersize: *mut u32) -> windows_core::Result<()>;
+    fn GetReferencedAssembliesFromFile(&self, pwzfilepath: &windows_core::PCWSTR, dwflags: u32, pexcludeassemblieslist: windows_core::Ref<ICLRAssemblyReferenceList>) -> windows_core::Result<ICLRReferenceAssemblyEnum>;
+    fn GetReferencedAssembliesFromStream(&self, pstream: windows_core::Ref<super::Com::IStream>, dwflags: u32, pexcludeassemblieslist: windows_core::Ref<ICLRAssemblyReferenceList>) -> windows_core::Result<ICLRReferenceAssemblyEnum>;
     fn GetProbingAssembliesFromReference(&self, dwmachinetype: u32, dwflags: u32, pwzreferenceidentity: &windows_core::PCWSTR) -> windows_core::Result<ICLRProbingAssemblyEnum>;
     fn IsStronglyNamed(&self, pwzassemblyidentity: &windows_core::PCWSTR) -> windows_core::Result<windows_core::BOOL>;
 }
@@ -787,7 +787,7 @@ pub struct ICLRAssemblyReferenceList_Vtbl {
 }
 pub trait ICLRAssemblyReferenceList_Impl: windows_core::IUnknownImpl {
     fn IsStringAssemblyReferenceInList(&self, pwzassemblyname: &windows_core::PCWSTR) -> windows_core::Result<()>;
-    fn IsAssemblyReferenceInList(&self, pname: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn IsAssemblyReferenceInList(&self, pname: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
 }
 impl ICLRAssemblyReferenceList_Vtbl {
     pub const fn new<Identity: ICLRAssemblyReferenceList_Impl, const OFFSET: isize>() -> Self {
@@ -1024,7 +1024,7 @@ pub struct ICLRDebugging_Vtbl {
     pub CanUnloadNow: unsafe extern "system" fn(*mut core::ffi::c_void, super::super::Foundation::HMODULE) -> windows_core::HRESULT,
 }
 pub trait ICLRDebugging_Impl: windows_core::IUnknownImpl {
-    fn OpenVirtualProcess(&self, modulebaseaddress: u64, pdatatarget: windows_core::Ref<'_, windows_core::IUnknown>, plibraryprovider: windows_core::Ref<'_, ICLRDebuggingLibraryProvider>, pmaxdebuggersupportedversion: *const CLR_DEBUGGING_VERSION, riidprocess: *const windows_core::GUID, ppprocess: windows_core::OutRef<'_, windows_core::IUnknown>, pversion: *mut CLR_DEBUGGING_VERSION, pdwflags: *mut CLR_DEBUGGING_PROCESS_FLAGS) -> windows_core::Result<()>;
+    fn OpenVirtualProcess(&self, modulebaseaddress: u64, pdatatarget: windows_core::Ref<windows_core::IUnknown>, plibraryprovider: windows_core::Ref<ICLRDebuggingLibraryProvider>, pmaxdebuggersupportedversion: *const CLR_DEBUGGING_VERSION, riidprocess: *const windows_core::GUID, ppprocess: windows_core::OutRef<windows_core::IUnknown>, pversion: *mut CLR_DEBUGGING_VERSION, pdwflags: *mut CLR_DEBUGGING_PROCESS_FLAGS) -> windows_core::Result<()>;
     fn CanUnloadNow(&self, hmodule: super::super::Foundation::HMODULE) -> windows_core::Result<()>;
 }
 impl ICLRDebugging_Vtbl {
@@ -1631,7 +1631,7 @@ pub struct ICLRMetaHostPolicy_Vtbl {
 }
 #[cfg(feature = "Win32_System_Com")]
 pub trait ICLRMetaHostPolicy_Impl: windows_core::IUnknownImpl {
-    fn GetRequestedRuntime(&self, dwpolicyflags: METAHOST_POLICY_FLAGS, pwzbinary: &windows_core::PCWSTR, pcfgstream: windows_core::Ref<'_, super::Com::IStream>, pwzversion: windows_core::PWSTR, pcchversion: *mut u32, pwzimageversion: windows_core::PWSTR, pcchimageversion: *mut u32, pdwconfigflags: *mut u32, riid: *const windows_core::GUID, ppruntime: *mut *mut core::ffi::c_void) -> windows_core::Result<()>;
+    fn GetRequestedRuntime(&self, dwpolicyflags: METAHOST_POLICY_FLAGS, pwzbinary: &windows_core::PCWSTR, pcfgstream: windows_core::Ref<super::Com::IStream>, pwzversion: windows_core::PWSTR, pcchversion: *mut u32, pwzimageversion: windows_core::PWSTR, pcchimageversion: *mut u32, pdwconfigflags: *mut u32, riid: *const windows_core::GUID, ppruntime: *mut *mut core::ffi::c_void) -> windows_core::Result<()>;
 }
 #[cfg(feature = "Win32_System_Com")]
 impl ICLRMetaHostPolicy_Vtbl {
@@ -1674,8 +1674,8 @@ pub struct ICLROnEventManager_Vtbl {
     pub UnregisterActionOnEvent: unsafe extern "system" fn(*mut core::ffi::c_void, EClrEvent, *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 pub trait ICLROnEventManager_Impl: windows_core::IUnknownImpl {
-    fn RegisterActionOnEvent(&self, event: EClrEvent, paction: windows_core::Ref<'_, IActionOnCLREvent>) -> windows_core::Result<()>;
-    fn UnregisterActionOnEvent(&self, event: EClrEvent, paction: windows_core::Ref<'_, IActionOnCLREvent>) -> windows_core::Result<()>;
+    fn RegisterActionOnEvent(&self, event: EClrEvent, paction: windows_core::Ref<IActionOnCLREvent>) -> windows_core::Result<()>;
+    fn UnregisterActionOnEvent(&self, event: EClrEvent, paction: windows_core::Ref<IActionOnCLREvent>) -> windows_core::Result<()>;
 }
 impl ICLROnEventManager_Vtbl {
     pub const fn new<Identity: ICLROnEventManager_Impl, const OFFSET: isize>() -> Self {
@@ -1964,7 +1964,7 @@ pub struct ICLRRuntimeHost_Vtbl {
 pub trait ICLRRuntimeHost_Impl: windows_core::IUnknownImpl {
     fn Start(&self) -> windows_core::Result<()>;
     fn Stop(&self) -> windows_core::Result<()>;
-    fn SetHostControl(&self, phostcontrol: windows_core::Ref<'_, IHostControl>) -> windows_core::Result<()>;
+    fn SetHostControl(&self, phostcontrol: windows_core::Ref<IHostControl>) -> windows_core::Result<()>;
     fn GetCLRControl(&self) -> windows_core::Result<ICLRControl>;
     fn UnloadAppDomain(&self, dwappdomainid: u32, fwaituntildone: windows_core::BOOL) -> windows_core::Result<()>;
     fn ExecuteInAppDomain(&self, dwappdomainid: u32, pcallback: FExecuteInAppDomainCallback, cookie: *const core::ffi::c_void) -> windows_core::Result<()>;
@@ -3354,9 +3354,9 @@ pub struct ICorConfiguration_Vtbl {
     pub AddDebuggerSpecialThread: unsafe extern "system" fn(*mut core::ffi::c_void, u32) -> windows_core::HRESULT,
 }
 pub trait ICorConfiguration_Impl: windows_core::IUnknownImpl {
-    fn SetGCThreadControl(&self, pgcthreadcontrol: windows_core::Ref<'_, IGCThreadControl>) -> windows_core::Result<()>;
-    fn SetGCHostControl(&self, pgchostcontrol: windows_core::Ref<'_, IGCHostControl>) -> windows_core::Result<()>;
-    fn SetDebuggerThreadControl(&self, pdebuggerthreadcontrol: windows_core::Ref<'_, IDebuggerThreadControl>) -> windows_core::Result<()>;
+    fn SetGCThreadControl(&self, pgcthreadcontrol: windows_core::Ref<IGCThreadControl>) -> windows_core::Result<()>;
+    fn SetGCHostControl(&self, pgchostcontrol: windows_core::Ref<IGCHostControl>) -> windows_core::Result<()>;
+    fn SetDebuggerThreadControl(&self, pdebuggerthreadcontrol: windows_core::Ref<IDebuggerThreadControl>) -> windows_core::Result<()>;
     fn AddDebuggerSpecialThread(&self, dwspecialthreadid: u32) -> windows_core::Result<()>;
 }
 impl ICorConfiguration_Vtbl {
@@ -3538,15 +3538,15 @@ pub trait ICorRuntimeHost_Impl: windows_core::IUnknownImpl {
     fn GetConfiguration(&self) -> windows_core::Result<ICorConfiguration>;
     fn Start(&self) -> windows_core::Result<()>;
     fn Stop(&self) -> windows_core::Result<()>;
-    fn CreateDomain(&self, pwzfriendlyname: &windows_core::PCWSTR, pidentityarray: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<windows_core::IUnknown>;
+    fn CreateDomain(&self, pwzfriendlyname: &windows_core::PCWSTR, pidentityarray: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<windows_core::IUnknown>;
     fn GetDefaultDomain(&self) -> windows_core::Result<windows_core::IUnknown>;
     fn EnumDomains(&self, henum: *mut *mut core::ffi::c_void) -> windows_core::Result<()>;
     fn NextDomain(&self, henum: *const core::ffi::c_void) -> windows_core::Result<windows_core::IUnknown>;
     fn CloseEnum(&self, henum: *const core::ffi::c_void) -> windows_core::Result<()>;
-    fn CreateDomainEx(&self, pwzfriendlyname: &windows_core::PCWSTR, psetup: windows_core::Ref<'_, windows_core::IUnknown>, pevidence: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<windows_core::IUnknown>;
+    fn CreateDomainEx(&self, pwzfriendlyname: &windows_core::PCWSTR, psetup: windows_core::Ref<windows_core::IUnknown>, pevidence: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<windows_core::IUnknown>;
     fn CreateDomainSetup(&self) -> windows_core::Result<windows_core::IUnknown>;
     fn CreateEvidence(&self) -> windows_core::Result<windows_core::IUnknown>;
-    fn UnloadDomain(&self, pappdomain: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn UnloadDomain(&self, pappdomain: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
     fn CurrentDomain(&self) -> windows_core::Result<windows_core::IUnknown>;
 }
 impl ICorRuntimeHost_Vtbl {
@@ -4396,8 +4396,8 @@ pub struct IHostAssemblyStore_Vtbl {
 }
 #[cfg(feature = "Win32_System_Com")]
 pub trait IHostAssemblyStore_Impl: windows_core::IUnknownImpl {
-    fn ProvideAssembly(&self, pbindinfo: *const AssemblyBindInfo, passemblyid: *mut u64, pcontext: *mut u64, ppstmassemblyimage: windows_core::OutRef<'_, super::Com::IStream>, ppstmpdb: windows_core::OutRef<'_, super::Com::IStream>) -> windows_core::Result<()>;
-    fn ProvideModule(&self, pbindinfo: *const ModuleBindInfo, pdwmoduleid: *mut u32, ppstmmoduleimage: windows_core::OutRef<'_, super::Com::IStream>, ppstmpdb: windows_core::OutRef<'_, super::Com::IStream>) -> windows_core::Result<()>;
+    fn ProvideAssembly(&self, pbindinfo: *const AssemblyBindInfo, passemblyid: *mut u64, pcontext: *mut u64, ppstmassemblyimage: windows_core::OutRef<super::Com::IStream>, ppstmpdb: windows_core::OutRef<super::Com::IStream>) -> windows_core::Result<()>;
+    fn ProvideModule(&self, pbindinfo: *const ModuleBindInfo, pdwmoduleid: *mut u32, ppstmmoduleimage: windows_core::OutRef<super::Com::IStream>, ppstmpdb: windows_core::OutRef<super::Com::IStream>) -> windows_core::Result<()>;
 }
 #[cfg(feature = "Win32_System_Com")]
 impl IHostAssemblyStore_Vtbl {
@@ -4490,7 +4490,7 @@ pub struct IHostControl_Vtbl {
 }
 pub trait IHostControl_Impl: windows_core::IUnknownImpl {
     fn GetHostManager(&self, riid: *const windows_core::GUID, ppobject: *mut *mut core::ffi::c_void) -> windows_core::Result<()>;
-    fn SetAppDomainManager(&self, dwappdomainid: u32, punkappdomainmanager: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn SetAppDomainManager(&self, dwappdomainid: u32, punkappdomainmanager: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
 }
 impl IHostControl_Vtbl {
     pub const fn new<Identity: IHostControl_Impl, const OFFSET: isize>() -> Self {
@@ -4732,7 +4732,7 @@ pub trait IHostIoCompletionManager_Impl: windows_core::IUnknownImpl {
     fn GetMaxThreads(&self) -> windows_core::Result<u32>;
     fn GetAvailableThreads(&self) -> windows_core::Result<u32>;
     fn GetHostOverlappedSize(&self) -> windows_core::Result<u32>;
-    fn SetCLRIoCompletionManager(&self, pmanager: windows_core::Ref<'_, ICLRIoCompletionManager>) -> windows_core::Result<()>;
+    fn SetCLRIoCompletionManager(&self, pmanager: windows_core::Ref<ICLRIoCompletionManager>) -> windows_core::Result<()>;
     fn InitializeHostOverlapped(&self, pvoverlapped: *const core::ffi::c_void) -> windows_core::Result<()>;
     fn Bind(&self, hport: super::super::Foundation::HANDLE, hhandle: super::super::Foundation::HANDLE) -> windows_core::Result<()>;
     fn SetMinThreads(&self, dwminiocompletionthreads: u32) -> windows_core::Result<()>;
@@ -5037,7 +5037,7 @@ pub trait IHostMemoryManager_Impl: windows_core::IUnknownImpl {
     fn VirtualQuery(&self, lpaddress: *const core::ffi::c_void, lpbuffer: *mut core::ffi::c_void, dwlength: usize, presult: *mut usize) -> windows_core::Result<()>;
     fn VirtualProtect(&self, lpaddress: *const core::ffi::c_void, dwsize: usize, flnewprotect: u32) -> windows_core::Result<u32>;
     fn GetMemoryLoad(&self, pmemoryload: *mut u32, pavailablebytes: *mut usize) -> windows_core::Result<()>;
-    fn RegisterMemoryNotificationCallback(&self, pcallback: windows_core::Ref<'_, ICLRMemoryNotificationCallback>) -> windows_core::Result<()>;
+    fn RegisterMemoryNotificationCallback(&self, pcallback: windows_core::Ref<ICLRMemoryNotificationCallback>) -> windows_core::Result<()>;
     fn NeedsVirtualAddressSpace(&self, startaddress: *const core::ffi::c_void, size: usize) -> windows_core::Result<()>;
     fn AcquiredVirtualAddressSpace(&self, startaddress: *const core::ffi::c_void, size: usize) -> windows_core::Result<()>;
     fn ReleasedVirtualAddressSpace(&self, startaddress: *const core::ffi::c_void) -> windows_core::Result<()>;
@@ -5281,7 +5281,7 @@ pub trait IHostSecurityManager_Impl: windows_core::IUnknownImpl {
     fn OpenThreadToken(&self, dwdesiredaccess: u32, bopenasself: windows_core::BOOL) -> windows_core::Result<super::super::Foundation::HANDLE>;
     fn SetThreadToken(&self, htoken: super::super::Foundation::HANDLE) -> windows_core::Result<()>;
     fn GetSecurityContext(&self, econtexttype: EContextType) -> windows_core::Result<IHostSecurityContext>;
-    fn SetSecurityContext(&self, econtexttype: EContextType, psecuritycontext: windows_core::Ref<'_, IHostSecurityContext>) -> windows_core::Result<()>;
+    fn SetSecurityContext(&self, econtexttype: EContextType, psecuritycontext: windows_core::Ref<IHostSecurityContext>) -> windows_core::Result<()>;
 }
 impl IHostSecurityManager_Vtbl {
     pub const fn new<Identity: IHostSecurityManager_Impl, const OFFSET: isize>() -> Self {
@@ -5476,7 +5476,7 @@ pub struct IHostSyncManager_Vtbl {
     pub CreateSemaphoreA: unsafe extern "system" fn(*mut core::ffi::c_void, u32, u32, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 pub trait IHostSyncManager_Impl: windows_core::IUnknownImpl {
-    fn SetCLRSyncManager(&self, pmanager: windows_core::Ref<'_, ICLRSyncManager>) -> windows_core::Result<()>;
+    fn SetCLRSyncManager(&self, pmanager: windows_core::Ref<ICLRSyncManager>) -> windows_core::Result<()>;
     fn CreateCrst(&self) -> windows_core::Result<IHostCrst>;
     fn CreateCrstWithSpinCount(&self, dwspincount: u32) -> windows_core::Result<IHostCrst>;
     fn CreateAutoEvent(&self) -> windows_core::Result<IHostAutoEvent>;
@@ -5653,7 +5653,7 @@ pub trait IHostTask_Impl: windows_core::IUnknownImpl {
     fn Join(&self, dwmilliseconds: u32, option: u32) -> windows_core::Result<()>;
     fn SetPriority(&self, newpriority: i32) -> windows_core::Result<()>;
     fn GetPriority(&self) -> windows_core::Result<i32>;
-    fn SetCLRTask(&self, pclrtask: windows_core::Ref<'_, ICLRTask>) -> windows_core::Result<()>;
+    fn SetCLRTask(&self, pclrtask: windows_core::Ref<ICLRTask>) -> windows_core::Result<()>;
 }
 impl IHostTask_Vtbl {
     pub const fn new<Identity: IHostTask_Impl, const OFFSET: isize>() -> Self {
@@ -5833,7 +5833,7 @@ pub trait IHostTaskManager_Impl: windows_core::IUnknownImpl {
     fn EndThreadAffinity(&self) -> windows_core::Result<()>;
     fn SetStackGuarantee(&self, guarantee: u32) -> windows_core::Result<()>;
     fn GetStackGuarantee(&self) -> windows_core::Result<u32>;
-    fn SetCLRTaskManager(&self, ppmanager: windows_core::Ref<'_, ICLRTaskManager>) -> windows_core::Result<()>;
+    fn SetCLRTaskManager(&self, ppmanager: windows_core::Ref<ICLRTaskManager>) -> windows_core::Result<()>;
 }
 #[cfg(feature = "Win32_System_Threading")]
 impl IHostTaskManager_Vtbl {
@@ -6290,7 +6290,7 @@ pub trait ITypeName_Impl: windows_core::IUnknownImpl {
     fn GetNameCount(&self) -> windows_core::Result<u32>;
     fn GetNames(&self, count: u32, rgbsznames: *mut windows_core::BSTR) -> windows_core::Result<u32>;
     fn GetTypeArgumentCount(&self) -> windows_core::Result<u32>;
-    fn GetTypeArguments(&self, count: u32, rgparguments: windows_core::OutRef<'_, ITypeName>) -> windows_core::Result<u32>;
+    fn GetTypeArguments(&self, count: u32, rgparguments: windows_core::OutRef<ITypeName>) -> windows_core::Result<u32>;
     fn GetModifierLength(&self) -> windows_core::Result<u32>;
     fn GetModifiers(&self, count: u32, rgmodifiers: *mut u32) -> windows_core::Result<u32>;
     fn GetAssemblyName(&self) -> windows_core::Result<windows_core::BSTR>;
@@ -6716,7 +6716,7 @@ pub const RUNTIME_INFO_REQUEST_ARM64: RUNTIME_INFO_FLAGS = RUNTIME_INFO_FLAGS(81
 pub const RUNTIME_INFO_REQUEST_IA64: RUNTIME_INFO_FLAGS = RUNTIME_INFO_FLAGS(2i32);
 pub const RUNTIME_INFO_REQUEST_X86: RUNTIME_INFO_FLAGS = RUNTIME_INFO_FLAGS(8i32);
 pub const RUNTIME_INFO_UPGRADE_VERSION: RUNTIME_INFO_FLAGS = RUNTIME_INFO_FLAGS(1i32);
-pub type RuntimeLoadedCallbackFnPtr = Option<unsafe extern "system" fn(pruntimeinfo: windows_core::Ref<'_, ICLRRuntimeInfo>, pfncallbackthreadset: CallbackThreadSetFnPtr, pfncallbackthreadunset: CallbackThreadUnsetFnPtr)>;
+pub type RuntimeLoadedCallbackFnPtr = Option<unsafe extern "system" fn(pruntimeinfo: windows_core::Ref<ICLRRuntimeInfo>, pfncallbackthreadset: CallbackThreadSetFnPtr, pfncallbackthreadunset: CallbackThreadUnsetFnPtr)>;
 pub const SO_ClrEngine: StackOverflowType = StackOverflowType(1i32);
 pub const SO_Managed: StackOverflowType = StackOverflowType(0i32);
 pub const SO_Other: StackOverflowType = StackOverflowType(2i32);

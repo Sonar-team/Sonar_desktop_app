@@ -73,10 +73,6 @@ impl NSMergeConflict {
         pub unsafe fn oldVersionNumber(&self) -> NSUInteger;
 
         #[cfg(feature = "NSManagedObject")]
-        /// # Safety
-        ///
-        /// - `cachesnap` generic should be of the correct type.
-        /// - `persnap` generic should be of the correct type.
         #[unsafe(method(initWithSource:newVersion:oldVersion:cachedSnapshot:persistedSnapshot:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithSource_newVersion_oldVersion_cachedSnapshot_persistedSnapshot(
@@ -145,10 +141,6 @@ impl NSConstraintConflict {
         pub unsafe fn conflictingSnapshots(&self) -> Retained<NSArray<NSDictionary>>;
 
         #[cfg(feature = "NSManagedObject")]
-        /// # Safety
-        ///
-        /// - `database_snapshot` generic should be of the correct type.
-        /// - `conflicting_snapshots` generic should be of the correct type.
         #[unsafe(method(initWithConstraint:databaseObject:databaseSnapshot:conflictingObjects:conflictingSnapshots:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithConstraint_databaseObject_databaseSnapshot_conflictingObjects_conflictingSnapshots(
@@ -223,9 +215,6 @@ impl NSMergePolicy {
         #[unsafe(method_family = init)]
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `list` generic should be of the correct type.
         #[unsafe(method(resolveConflicts:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn resolveConflicts_error(

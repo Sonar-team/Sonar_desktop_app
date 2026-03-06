@@ -64,24 +64,22 @@ impl UIMailConversationEntry {
         /// An item that reflects the category that describes an email.
         #[unsafe(method(kind))]
         #[unsafe(method_family = none)]
-        pub fn kind(&self) -> UIMailConversationEntryKind;
+        pub unsafe fn kind(&self) -> UIMailConversationEntryKind;
 
         /// Setter for [`kind`][Self::kind].
         #[unsafe(method(setKind:))]
         #[unsafe(method_family = none)]
-        pub fn setKind(&self, kind: UIMailConversationEntryKind);
+        pub unsafe fn setKind(&self, kind: UIMailConversationEntryKind);
 
         /// A set of strings that identifies the secondary recipients of the message, such as those in CC or BCC messages.
         #[unsafe(method(responseSecondaryRecipientIdentifiers))]
         #[unsafe(method_family = none)]
-        pub fn responseSecondaryRecipientIdentifiers(&self) -> Retained<NSSet<NSString>>;
+        pub unsafe fn responseSecondaryRecipientIdentifiers(&self) -> Retained<NSSet<NSString>>;
 
         /// Setter for [`responseSecondaryRecipientIdentifiers`][Self::responseSecondaryRecipientIdentifiers].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setResponseSecondaryRecipientIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn setResponseSecondaryRecipientIdentifiers(
+        pub unsafe fn setResponseSecondaryRecipientIdentifiers(
             &self,
             response_secondary_recipient_identifiers: &NSSet<NSString>,
         );
@@ -94,18 +92,10 @@ impl UIMailConversationEntry {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "UIConversationEntry")]
-impl DefaultRetained for UIMailConversationEntry {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

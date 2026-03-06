@@ -37,10 +37,6 @@ impl WebBackForwardList {
         /// If the current position in the list is not at the end of the list, elements in the
         /// forward list will be dropped at this point.  In addition, entries may be dropped to keep
         /// the size of the list within the maximum size.
-        ///
-        /// # Safety
-        ///
-        /// `item` might not allow `None`.
         #[deprecated]
         #[unsafe(method(addItem:))]
         #[unsafe(method_family = none)]
@@ -62,10 +58,6 @@ impl WebBackForwardList {
         /// Move the current pointer to the given entry.
         ///
         /// Parameter `item`: The history item to move the pointer to
-        ///
-        /// # Safety
-        ///
-        /// `item` might not allow `None`.
         #[deprecated]
         #[unsafe(method(goToItem:))]
         #[unsafe(method_family = none)]
@@ -140,10 +132,6 @@ impl WebBackForwardList {
         /// Parameter `item`: The item that will be checked for presence in the WebBackForwardList.
         ///
         /// Returns: Returns YES if the item is in the list.
-        ///
-        /// # Safety
-        ///
-        /// `item` might not allow `None`.
         #[deprecated]
         #[unsafe(method(containsItem:))]
         #[unsafe(method_family = none)]
@@ -176,7 +164,6 @@ impl WebBackForwardList {
 }
 
 /// WebBackForwardListDeprecated.
-#[deprecated]
 impl WebBackForwardList {
     extern_methods!(
         /// The size passed to this method determines whether the WebView

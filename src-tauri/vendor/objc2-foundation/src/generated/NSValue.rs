@@ -39,9 +39,6 @@ extern_conformance!(
 
 impl NSValue {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `value` must be a valid pointer.
         #[unsafe(method(getValue:size:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getValue_size(&self, value: NonNull<c_void>, size: NSUInteger);
@@ -50,10 +47,6 @@ impl NSValue {
         #[unsafe(method_family = none)]
         pub fn objCType(&self) -> NonNull<c_char>;
 
-        /// # Safety
-        ///
-        /// - `value` must be a valid pointer.
-        /// - `type` must be a valid pointer.
         #[unsafe(method(initWithBytes:objCType:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithBytes_objCType(
@@ -63,9 +56,6 @@ impl NSValue {
         ) -> Retained<Self>;
 
         #[cfg(feature = "NSCoder")]
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -78,10 +68,6 @@ impl NSValue {
 /// NSValueCreation.
 impl NSValue {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `value` must be a valid pointer.
-        /// - `type` must be a valid pointer.
         #[unsafe(method(valueWithBytes:objCType:))]
         #[unsafe(method_family = none)]
         pub unsafe fn valueWithBytes_objCType(
@@ -89,10 +75,6 @@ impl NSValue {
             r#type: NonNull<c_char>,
         ) -> Retained<NSValue>;
 
-        /// # Safety
-        ///
-        /// - `value` must be a valid pointer.
-        /// - `type` must be a valid pointer.
         #[unsafe(method(value:withObjCType:))]
         #[unsafe(method_family = none)]
         pub unsafe fn value_withObjCType(
@@ -105,9 +87,6 @@ impl NSValue {
 /// NSValueExtensionMethods.
 impl NSValue {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `an_object` should be of the correct type.
         #[unsafe(method(valueWithNonretainedObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn valueWithNonretainedObject(
@@ -118,9 +97,6 @@ impl NSValue {
         #[unsafe(method_family = none)]
         pub unsafe fn nonretainedObjectValue(&self) -> Option<Retained<AnyObject>>;
 
-        /// # Safety
-        ///
-        /// `pointer` must be a valid pointer or null.
         #[unsafe(method(valueWithPointer:))]
         #[unsafe(method_family = none)]
         pub unsafe fn valueWithPointer(pointer: *const c_void) -> Retained<NSValue>;
@@ -173,9 +149,6 @@ extern_conformance!(
 impl NSNumber {
     extern_methods!(
         #[cfg(feature = "NSCoder")]
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -324,9 +297,6 @@ impl NSNumber {
         pub fn isEqualToNumber(&self, number: &NSNumber) -> bool;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `locale` should be of the correct type.
         #[unsafe(method(descriptionWithLocale:))]
         #[unsafe(method_family = none)]
         pub unsafe fn descriptionWithLocale(
@@ -339,10 +309,6 @@ impl NSNumber {
 /// Methods declared on superclass `NSValue`.
 impl NSNumber {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `value` must be a valid pointer.
-        /// - `type` must be a valid pointer.
         #[unsafe(method(initWithBytes:objCType:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithBytes_objCType(
@@ -421,9 +387,6 @@ impl NSNumber {
 /// NSDeprecated.
 impl NSValue {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `value` must be a valid pointer.
         #[deprecated]
         #[unsafe(method(getValue:))]
         #[unsafe(method_family = none)]

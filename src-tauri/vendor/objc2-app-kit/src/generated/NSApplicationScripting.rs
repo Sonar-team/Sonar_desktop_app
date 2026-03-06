@@ -13,11 +13,11 @@ impl NSApplication {
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(orderedDocuments))]
         #[unsafe(method_family = none)]
-        pub fn orderedDocuments(&self) -> Retained<NSArray<NSDocument>>;
+        pub unsafe fn orderedDocuments(&self) -> Retained<NSArray<NSDocument>>;
 
         #[cfg(feature = "NSWindow")]
         #[unsafe(method(orderedWindows))]
         #[unsafe(method_family = none)]
-        pub fn orderedWindows(&self) -> Retained<NSArray<NSWindow>>;
+        pub unsafe fn orderedWindows(&self) -> Retained<NSArray<NSWindow>>;
     );
 }

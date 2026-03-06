@@ -68,16 +68,16 @@ impl UIReferenceLibraryViewController {
         /// Returns YES if any installed dictionary has a definition for the provided term.
         #[unsafe(method(dictionaryHasDefinitionForTerm:))]
         #[unsafe(method_family = none)]
-        pub fn dictionaryHasDefinitionForTerm(term: &NSString, mtm: MainThreadMarker) -> bool;
+        pub unsafe fn dictionaryHasDefinitionForTerm(
+            term: &NSString,
+            mtm: MainThreadMarker,
+        ) -> bool;
 
         /// Initializes an instance of a UIReferenceLibraryViewController with the term provided.
         #[unsafe(method(initWithTerm:))]
         #[unsafe(method_family = init)]
-        pub fn initWithTerm(this: Allocated<Self>, term: &NSString) -> Retained<Self>;
+        pub unsafe fn initWithTerm(this: Allocated<Self>, term: &NSString) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;

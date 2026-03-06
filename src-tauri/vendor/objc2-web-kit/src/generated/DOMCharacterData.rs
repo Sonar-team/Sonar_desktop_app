@@ -70,8 +70,6 @@ impl DOMCharacterData {
         pub unsafe fn data(&self) -> Retained<NSString>;
 
         /// Setter for [`data`][Self::data].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setData:))]
         #[unsafe(method_family = none)]
@@ -90,17 +88,11 @@ impl DOMCharacterData {
             length: c_uint,
         ) -> Option<Retained<NSString>>;
 
-        /// # Safety
-        ///
-        /// `data` might not allow `None`.
         #[deprecated]
         #[unsafe(method(appendData:))]
         #[unsafe(method_family = none)]
         pub unsafe fn appendData(&self, data: Option<&NSString>);
 
-        /// # Safety
-        ///
-        /// `data` might not allow `None`.
         #[unsafe(method(insertData:data:))]
         #[unsafe(method_family = none)]
         pub unsafe fn insertData_data(&self, offset: c_uint, data: Option<&NSString>);
@@ -109,9 +101,6 @@ impl DOMCharacterData {
         #[unsafe(method_family = none)]
         pub unsafe fn deleteData_length(&self, offset: c_uint, length: c_uint);
 
-        /// # Safety
-        ///
-        /// `data` might not allow `None`.
         #[unsafe(method(replaceData:length:data:))]
         #[unsafe(method_family = none)]
         pub unsafe fn replaceData_length_data(
@@ -153,7 +142,6 @@ impl DOMCharacterData {
 }
 
 /// DOMCharacterDataDeprecated.
-#[deprecated]
 #[cfg(all(
     feature = "DOMNode",
     feature = "DOMObject",
@@ -170,9 +158,6 @@ impl DOMCharacterData {
             length: c_uint,
         ) -> Option<Retained<NSString>>;
 
-        /// # Safety
-        ///
-        /// `data` might not allow `None`.
         #[deprecated]
         #[unsafe(method(insertData::))]
         #[unsafe(method_family = none)]
@@ -183,9 +168,6 @@ impl DOMCharacterData {
         #[unsafe(method_family = none)]
         pub unsafe fn deleteData(&self, offset: c_uint, length: c_uint);
 
-        /// # Safety
-        ///
-        /// `data` might not allow `None`.
         #[deprecated]
         #[unsafe(method(replaceData:::))]
         #[unsafe(method_family = none)]

@@ -1,31 +1,31 @@
 #[inline]
 pub unsafe fn CanSendToFaxRecipient() -> windows_core::BOOL {
-    windows_link::link!("fxsutility.dll" "system" fn CanSendToFaxRecipient() -> windows_core::BOOL);
+    windows_core::link!("fxsutility.dll" "system" fn CanSendToFaxRecipient() -> windows_core::BOOL);
     unsafe { CanSendToFaxRecipient() }
 }
 #[inline]
 pub unsafe fn FaxAbort(faxhandle: super::super::Foundation::HANDLE, jobid: u32) -> windows_core::BOOL {
-    windows_link::link!("winfax.dll" "system" fn FaxAbort(faxhandle : super::super::Foundation:: HANDLE, jobid : u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxAbort(faxhandle : super::super::Foundation:: HANDLE, jobid : u32) -> windows_core::BOOL);
     unsafe { FaxAbort(faxhandle, jobid) }
 }
 #[inline]
 pub unsafe fn FaxAccessCheck(faxhandle: super::super::Foundation::HANDLE, accessmask: u32) -> windows_core::BOOL {
-    windows_link::link!("winfax.dll" "system" fn FaxAccessCheck(faxhandle : super::super::Foundation:: HANDLE, accessmask : u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxAccessCheck(faxhandle : super::super::Foundation:: HANDLE, accessmask : u32) -> windows_core::BOOL);
     unsafe { FaxAccessCheck(faxhandle, accessmask) }
 }
 #[inline]
 pub unsafe fn FaxClose(faxhandle: super::super::Foundation::HANDLE) -> windows_core::BOOL {
-    windows_link::link!("winfax.dll" "system" fn FaxClose(faxhandle : super::super::Foundation:: HANDLE) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxClose(faxhandle : super::super::Foundation:: HANDLE) -> windows_core::BOOL);
     unsafe { FaxClose(faxhandle) }
 }
 #[inline]
 pub unsafe fn FaxCompleteJobParamsA(jobparams: *mut *mut FAX_JOB_PARAMA, coverpageinfo: *mut *mut FAX_COVERPAGE_INFOA) -> windows_core::BOOL {
-    windows_link::link!("winfax.dll" "system" fn FaxCompleteJobParamsA(jobparams : *mut *mut FAX_JOB_PARAMA, coverpageinfo : *mut *mut FAX_COVERPAGE_INFOA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxCompleteJobParamsA(jobparams : *mut *mut FAX_JOB_PARAMA, coverpageinfo : *mut *mut FAX_COVERPAGE_INFOA) -> windows_core::BOOL);
     unsafe { FaxCompleteJobParamsA(jobparams as _, coverpageinfo as _) }
 }
 #[inline]
 pub unsafe fn FaxCompleteJobParamsW(jobparams: *mut *mut FAX_JOB_PARAMW, coverpageinfo: *mut *mut FAX_COVERPAGE_INFOW) -> windows_core::BOOL {
-    windows_link::link!("winfax.dll" "system" fn FaxCompleteJobParamsW(jobparams : *mut *mut FAX_JOB_PARAMW, coverpageinfo : *mut *mut FAX_COVERPAGE_INFOW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxCompleteJobParamsW(jobparams : *mut *mut FAX_JOB_PARAMW, coverpageinfo : *mut *mut FAX_COVERPAGE_INFOW) -> windows_core::BOOL);
     unsafe { FaxCompleteJobParamsW(jobparams as _, coverpageinfo as _) }
 }
 #[inline]
@@ -33,7 +33,7 @@ pub unsafe fn FaxConnectFaxServerA<P0>(machinename: P0, faxhandle: *mut super::s
 where
     P0: windows_core::Param<windows_core::PCSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxConnectFaxServerA(machinename : windows_core::PCSTR, faxhandle : *mut super::super::Foundation:: HANDLE) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxConnectFaxServerA(machinename : windows_core::PCSTR, faxhandle : *mut super::super::Foundation:: HANDLE) -> windows_core::BOOL);
     unsafe { FaxConnectFaxServerA(machinename.param().abi(), faxhandle as _).ok() }
 }
 #[inline]
@@ -41,7 +41,7 @@ pub unsafe fn FaxConnectFaxServerW<P0>(machinename: P0, faxhandle: *mut super::s
 where
     P0: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxConnectFaxServerW(machinename : windows_core::PCWSTR, faxhandle : *mut super::super::Foundation:: HANDLE) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxConnectFaxServerW(machinename : windows_core::PCWSTR, faxhandle : *mut super::super::Foundation:: HANDLE) -> windows_core::BOOL);
     unsafe { FaxConnectFaxServerW(machinename.param().abi(), faxhandle as _).ok() }
 }
 #[inline]
@@ -49,7 +49,7 @@ pub unsafe fn FaxEnableRoutingMethodA<P1>(faxporthandle: super::super::Foundatio
 where
     P1: windows_core::Param<windows_core::PCSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxEnableRoutingMethodA(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCSTR, enabled : windows_core::BOOL) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxEnableRoutingMethodA(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCSTR, enabled : windows_core::BOOL) -> windows_core::BOOL);
     unsafe { FaxEnableRoutingMethodA(faxporthandle, routingguid.param().abi(), enabled.into()).ok() }
 }
 #[inline]
@@ -57,107 +57,107 @@ pub unsafe fn FaxEnableRoutingMethodW<P1>(faxporthandle: super::super::Foundatio
 where
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxEnableRoutingMethodW(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCWSTR, enabled : windows_core::BOOL) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxEnableRoutingMethodW(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCWSTR, enabled : windows_core::BOOL) -> windows_core::BOOL);
     unsafe { FaxEnableRoutingMethodW(faxporthandle, routingguid.param().abi(), enabled.into()).ok() }
 }
 #[inline]
 pub unsafe fn FaxEnumGlobalRoutingInfoA(faxhandle: super::super::Foundation::HANDLE, routinginfo: *mut *mut FAX_GLOBAL_ROUTING_INFOA, methodsreturned: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxEnumGlobalRoutingInfoA(faxhandle : super::super::Foundation:: HANDLE, routinginfo : *mut *mut FAX_GLOBAL_ROUTING_INFOA, methodsreturned : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxEnumGlobalRoutingInfoA(faxhandle : super::super::Foundation:: HANDLE, routinginfo : *mut *mut FAX_GLOBAL_ROUTING_INFOA, methodsreturned : *mut u32) -> windows_core::BOOL);
     unsafe { FaxEnumGlobalRoutingInfoA(faxhandle, routinginfo as _, methodsreturned as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxEnumGlobalRoutingInfoW(faxhandle: super::super::Foundation::HANDLE, routinginfo: *mut *mut FAX_GLOBAL_ROUTING_INFOW, methodsreturned: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxEnumGlobalRoutingInfoW(faxhandle : super::super::Foundation:: HANDLE, routinginfo : *mut *mut FAX_GLOBAL_ROUTING_INFOW, methodsreturned : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxEnumGlobalRoutingInfoW(faxhandle : super::super::Foundation:: HANDLE, routinginfo : *mut *mut FAX_GLOBAL_ROUTING_INFOW, methodsreturned : *mut u32) -> windows_core::BOOL);
     unsafe { FaxEnumGlobalRoutingInfoW(faxhandle, routinginfo as _, methodsreturned as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxEnumJobsA(faxhandle: super::super::Foundation::HANDLE, jobentry: *mut *mut FAX_JOB_ENTRYA, jobsreturned: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxEnumJobsA(faxhandle : super::super::Foundation:: HANDLE, jobentry : *mut *mut FAX_JOB_ENTRYA, jobsreturned : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxEnumJobsA(faxhandle : super::super::Foundation:: HANDLE, jobentry : *mut *mut FAX_JOB_ENTRYA, jobsreturned : *mut u32) -> windows_core::BOOL);
     unsafe { FaxEnumJobsA(faxhandle, jobentry as _, jobsreturned as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxEnumJobsW(faxhandle: super::super::Foundation::HANDLE, jobentry: *mut *mut FAX_JOB_ENTRYW, jobsreturned: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxEnumJobsW(faxhandle : super::super::Foundation:: HANDLE, jobentry : *mut *mut FAX_JOB_ENTRYW, jobsreturned : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxEnumJobsW(faxhandle : super::super::Foundation:: HANDLE, jobentry : *mut *mut FAX_JOB_ENTRYW, jobsreturned : *mut u32) -> windows_core::BOOL);
     unsafe { FaxEnumJobsW(faxhandle, jobentry as _, jobsreturned as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxEnumPortsA(faxhandle: super::super::Foundation::HANDLE, portinfo: *mut *mut FAX_PORT_INFOA, portsreturned: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxEnumPortsA(faxhandle : super::super::Foundation:: HANDLE, portinfo : *mut *mut FAX_PORT_INFOA, portsreturned : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxEnumPortsA(faxhandle : super::super::Foundation:: HANDLE, portinfo : *mut *mut FAX_PORT_INFOA, portsreturned : *mut u32) -> windows_core::BOOL);
     unsafe { FaxEnumPortsA(faxhandle, portinfo as _, portsreturned as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxEnumPortsW(faxhandle: super::super::Foundation::HANDLE, portinfo: *mut *mut FAX_PORT_INFOW, portsreturned: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxEnumPortsW(faxhandle : super::super::Foundation:: HANDLE, portinfo : *mut *mut FAX_PORT_INFOW, portsreturned : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxEnumPortsW(faxhandle : super::super::Foundation:: HANDLE, portinfo : *mut *mut FAX_PORT_INFOW, portsreturned : *mut u32) -> windows_core::BOOL);
     unsafe { FaxEnumPortsW(faxhandle, portinfo as _, portsreturned as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxEnumRoutingMethodsA(faxporthandle: super::super::Foundation::HANDLE, routingmethod: *mut *mut FAX_ROUTING_METHODA, methodsreturned: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxEnumRoutingMethodsA(faxporthandle : super::super::Foundation:: HANDLE, routingmethod : *mut *mut FAX_ROUTING_METHODA, methodsreturned : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxEnumRoutingMethodsA(faxporthandle : super::super::Foundation:: HANDLE, routingmethod : *mut *mut FAX_ROUTING_METHODA, methodsreturned : *mut u32) -> windows_core::BOOL);
     unsafe { FaxEnumRoutingMethodsA(faxporthandle, routingmethod as _, methodsreturned as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxEnumRoutingMethodsW(faxporthandle: super::super::Foundation::HANDLE, routingmethod: *mut *mut FAX_ROUTING_METHODW, methodsreturned: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxEnumRoutingMethodsW(faxporthandle : super::super::Foundation:: HANDLE, routingmethod : *mut *mut FAX_ROUTING_METHODW, methodsreturned : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxEnumRoutingMethodsW(faxporthandle : super::super::Foundation:: HANDLE, routingmethod : *mut *mut FAX_ROUTING_METHODW, methodsreturned : *mut u32) -> windows_core::BOOL);
     unsafe { FaxEnumRoutingMethodsW(faxporthandle, routingmethod as _, methodsreturned as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxFreeBuffer(buffer: *mut core::ffi::c_void) {
-    windows_link::link!("winfax.dll" "system" fn FaxFreeBuffer(buffer : *mut core::ffi::c_void));
+    windows_core::link!("winfax.dll" "system" fn FaxFreeBuffer(buffer : *mut core::ffi::c_void));
     unsafe { FaxFreeBuffer(buffer as _) }
 }
 #[inline]
 pub unsafe fn FaxGetConfigurationA(faxhandle: super::super::Foundation::HANDLE, faxconfig: *mut *mut FAX_CONFIGURATIONA) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxGetConfigurationA(faxhandle : super::super::Foundation:: HANDLE, faxconfig : *mut *mut FAX_CONFIGURATIONA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetConfigurationA(faxhandle : super::super::Foundation:: HANDLE, faxconfig : *mut *mut FAX_CONFIGURATIONA) -> windows_core::BOOL);
     unsafe { FaxGetConfigurationA(faxhandle, faxconfig as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxGetConfigurationW(faxhandle: super::super::Foundation::HANDLE, faxconfig: *mut *mut FAX_CONFIGURATIONW) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxGetConfigurationW(faxhandle : super::super::Foundation:: HANDLE, faxconfig : *mut *mut FAX_CONFIGURATIONW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetConfigurationW(faxhandle : super::super::Foundation:: HANDLE, faxconfig : *mut *mut FAX_CONFIGURATIONW) -> windows_core::BOOL);
     unsafe { FaxGetConfigurationW(faxhandle, faxconfig as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxGetDeviceStatusA(faxporthandle: super::super::Foundation::HANDLE, devicestatus: *mut *mut FAX_DEVICE_STATUSA) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxGetDeviceStatusA(faxporthandle : super::super::Foundation:: HANDLE, devicestatus : *mut *mut FAX_DEVICE_STATUSA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetDeviceStatusA(faxporthandle : super::super::Foundation:: HANDLE, devicestatus : *mut *mut FAX_DEVICE_STATUSA) -> windows_core::BOOL);
     unsafe { FaxGetDeviceStatusA(faxporthandle, devicestatus as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxGetDeviceStatusW(faxporthandle: super::super::Foundation::HANDLE, devicestatus: *mut *mut FAX_DEVICE_STATUSW) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxGetDeviceStatusW(faxporthandle : super::super::Foundation:: HANDLE, devicestatus : *mut *mut FAX_DEVICE_STATUSW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetDeviceStatusW(faxporthandle : super::super::Foundation:: HANDLE, devicestatus : *mut *mut FAX_DEVICE_STATUSW) -> windows_core::BOOL);
     unsafe { FaxGetDeviceStatusW(faxporthandle, devicestatus as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxGetJobA(faxhandle: super::super::Foundation::HANDLE, jobid: u32, jobentry: *mut *mut FAX_JOB_ENTRYA) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxGetJobA(faxhandle : super::super::Foundation:: HANDLE, jobid : u32, jobentry : *mut *mut FAX_JOB_ENTRYA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetJobA(faxhandle : super::super::Foundation:: HANDLE, jobid : u32, jobentry : *mut *mut FAX_JOB_ENTRYA) -> windows_core::BOOL);
     unsafe { FaxGetJobA(faxhandle, jobid, jobentry as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxGetJobW(faxhandle: super::super::Foundation::HANDLE, jobid: u32, jobentry: *mut *mut FAX_JOB_ENTRYW) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxGetJobW(faxhandle : super::super::Foundation:: HANDLE, jobid : u32, jobentry : *mut *mut FAX_JOB_ENTRYW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetJobW(faxhandle : super::super::Foundation:: HANDLE, jobid : u32, jobentry : *mut *mut FAX_JOB_ENTRYW) -> windows_core::BOOL);
     unsafe { FaxGetJobW(faxhandle, jobid, jobentry as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxGetLoggingCategoriesA(faxhandle: super::super::Foundation::HANDLE, categories: *mut *mut FAX_LOG_CATEGORYA, numbercategories: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxGetLoggingCategoriesA(faxhandle : super::super::Foundation:: HANDLE, categories : *mut *mut FAX_LOG_CATEGORYA, numbercategories : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetLoggingCategoriesA(faxhandle : super::super::Foundation:: HANDLE, categories : *mut *mut FAX_LOG_CATEGORYA, numbercategories : *mut u32) -> windows_core::BOOL);
     unsafe { FaxGetLoggingCategoriesA(faxhandle, categories as _, numbercategories as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxGetLoggingCategoriesW(faxhandle: super::super::Foundation::HANDLE, categories: *mut *mut FAX_LOG_CATEGORYW, numbercategories: *mut u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxGetLoggingCategoriesW(faxhandle : super::super::Foundation:: HANDLE, categories : *mut *mut FAX_LOG_CATEGORYW, numbercategories : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetLoggingCategoriesW(faxhandle : super::super::Foundation:: HANDLE, categories : *mut *mut FAX_LOG_CATEGORYW, numbercategories : *mut u32) -> windows_core::BOOL);
     unsafe { FaxGetLoggingCategoriesW(faxhandle, categories as _, numbercategories as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxGetPageData(faxhandle: super::super::Foundation::HANDLE, jobid: u32, buffer: *mut *mut u8, buffersize: *mut u32, imagewidth: *mut u32, imageheight: *mut u32) -> windows_core::BOOL {
-    windows_link::link!("winfax.dll" "system" fn FaxGetPageData(faxhandle : super::super::Foundation:: HANDLE, jobid : u32, buffer : *mut *mut u8, buffersize : *mut u32, imagewidth : *mut u32, imageheight : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetPageData(faxhandle : super::super::Foundation:: HANDLE, jobid : u32, buffer : *mut *mut u8, buffersize : *mut u32, imagewidth : *mut u32, imageheight : *mut u32) -> windows_core::BOOL);
     unsafe { FaxGetPageData(faxhandle, jobid, buffer as _, buffersize as _, imagewidth as _, imageheight as _) }
 }
 #[inline]
 pub unsafe fn FaxGetPortA(faxporthandle: super::super::Foundation::HANDLE, portinfo: *mut *mut FAX_PORT_INFOA) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxGetPortA(faxporthandle : super::super::Foundation:: HANDLE, portinfo : *mut *mut FAX_PORT_INFOA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetPortA(faxporthandle : super::super::Foundation:: HANDLE, portinfo : *mut *mut FAX_PORT_INFOA) -> windows_core::BOOL);
     unsafe { FaxGetPortA(faxporthandle, portinfo as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxGetPortW(faxporthandle: super::super::Foundation::HANDLE, portinfo: *mut *mut FAX_PORT_INFOW) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxGetPortW(faxporthandle : super::super::Foundation:: HANDLE, portinfo : *mut *mut FAX_PORT_INFOW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetPortW(faxporthandle : super::super::Foundation:: HANDLE, portinfo : *mut *mut FAX_PORT_INFOW) -> windows_core::BOOL);
     unsafe { FaxGetPortW(faxporthandle, portinfo as _).ok() }
 }
 #[inline]
@@ -165,7 +165,7 @@ pub unsafe fn FaxGetRoutingInfoA<P1>(faxporthandle: super::super::Foundation::HA
 where
     P1: windows_core::Param<windows_core::PCSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxGetRoutingInfoA(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCSTR, routinginfobuffer : *mut *mut u8, routinginfobuffersize : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetRoutingInfoA(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCSTR, routinginfobuffer : *mut *mut u8, routinginfobuffersize : *mut u32) -> windows_core::BOOL);
     unsafe { FaxGetRoutingInfoA(faxporthandle, routingguid.param().abi(), routinginfobuffer as _, routinginfobuffersize as _).ok() }
 }
 #[inline]
@@ -173,29 +173,29 @@ pub unsafe fn FaxGetRoutingInfoW<P1>(faxporthandle: super::super::Foundation::HA
 where
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxGetRoutingInfoW(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCWSTR, routinginfobuffer : *mut *mut u8, routinginfobuffersize : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxGetRoutingInfoW(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCWSTR, routinginfobuffer : *mut *mut u8, routinginfobuffersize : *mut u32) -> windows_core::BOOL);
     unsafe { FaxGetRoutingInfoW(faxporthandle, routingguid.param().abi(), routinginfobuffer as _, routinginfobuffersize as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxInitializeEventQueue(faxhandle: super::super::Foundation::HANDLE, completionport: super::super::Foundation::HANDLE, completionkey: usize, hwnd: super::super::Foundation::HWND, messagestart: u32) -> windows_core::BOOL {
-    windows_link::link!("winfax.dll" "system" fn FaxInitializeEventQueue(faxhandle : super::super::Foundation:: HANDLE, completionport : super::super::Foundation:: HANDLE, completionkey : usize, hwnd : super::super::Foundation:: HWND, messagestart : u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxInitializeEventQueue(faxhandle : super::super::Foundation:: HANDLE, completionport : super::super::Foundation:: HANDLE, completionkey : usize, hwnd : super::super::Foundation:: HWND, messagestart : u32) -> windows_core::BOOL);
     unsafe { FaxInitializeEventQueue(faxhandle, completionport, completionkey, hwnd, messagestart) }
 }
 #[inline]
 pub unsafe fn FaxOpenPort(faxhandle: super::super::Foundation::HANDLE, deviceid: u32, flags: u32, faxporthandle: *mut super::super::Foundation::HANDLE) -> windows_core::BOOL {
-    windows_link::link!("winfax.dll" "system" fn FaxOpenPort(faxhandle : super::super::Foundation:: HANDLE, deviceid : u32, flags : u32, faxporthandle : *mut super::super::Foundation:: HANDLE) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxOpenPort(faxhandle : super::super::Foundation:: HANDLE, deviceid : u32, flags : u32, faxporthandle : *mut super::super::Foundation:: HANDLE) -> windows_core::BOOL);
     unsafe { FaxOpenPort(faxhandle, deviceid, flags, faxporthandle as _) }
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
 #[inline]
 pub unsafe fn FaxPrintCoverPageA(faxcontextinfo: *const FAX_CONTEXT_INFOA, coverpageinfo: *const FAX_COVERPAGE_INFOA) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxPrintCoverPageA(faxcontextinfo : *const FAX_CONTEXT_INFOA, coverpageinfo : *const FAX_COVERPAGE_INFOA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxPrintCoverPageA(faxcontextinfo : *const FAX_CONTEXT_INFOA, coverpageinfo : *const FAX_COVERPAGE_INFOA) -> windows_core::BOOL);
     unsafe { FaxPrintCoverPageA(faxcontextinfo, coverpageinfo).ok() }
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
 #[inline]
 pub unsafe fn FaxPrintCoverPageW(faxcontextinfo: *const FAX_CONTEXT_INFOW, coverpageinfo: *const FAX_COVERPAGE_INFOW) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxPrintCoverPageW(faxcontextinfo : *const FAX_CONTEXT_INFOW, coverpageinfo : *const FAX_COVERPAGE_INFOW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxPrintCoverPageW(faxcontextinfo : *const FAX_CONTEXT_INFOW, coverpageinfo : *const FAX_COVERPAGE_INFOW) -> windows_core::BOOL);
     unsafe { FaxPrintCoverPageW(faxcontextinfo, coverpageinfo).ok() }
 }
 #[inline]
@@ -205,7 +205,7 @@ where
     P2: windows_core::Param<windows_core::PCWSTR>,
     P3: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxRegisterRoutingExtensionW(faxhandle : super::super::Foundation:: HANDLE, extensionname : windows_core::PCWSTR, friendlyname : windows_core::PCWSTR, imagename : windows_core::PCWSTR, callback : PFAX_ROUTING_INSTALLATION_CALLBACKW, context : *const core::ffi::c_void) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxRegisterRoutingExtensionW(faxhandle : super::super::Foundation:: HANDLE, extensionname : windows_core::PCWSTR, friendlyname : windows_core::PCWSTR, imagename : windows_core::PCWSTR, callback : PFAX_ROUTING_INSTALLATION_CALLBACKW, context : *const core::ffi::c_void) -> windows_core::BOOL);
     unsafe { FaxRegisterRoutingExtensionW(faxhandle, extensionname.param().abi(), friendlyname.param().abi(), imagename.param().abi(), callback, context).ok() }
 }
 #[inline]
@@ -216,7 +216,7 @@ where
     P2: windows_core::Param<windows_core::PCWSTR>,
     P3: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxRegisterServiceProviderW(deviceprovider : windows_core::PCWSTR, friendlyname : windows_core::PCWSTR, imagename : windows_core::PCWSTR, tspname : windows_core::PCWSTR) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxRegisterServiceProviderW(deviceprovider : windows_core::PCWSTR, friendlyname : windows_core::PCWSTR, imagename : windows_core::PCWSTR, tspname : windows_core::PCWSTR) -> windows_core::BOOL);
     unsafe { FaxRegisterServiceProviderW(deviceprovider.param().abi(), friendlyname.param().abi(), imagename.param().abi(), tspname.param().abi()).ok() }
 }
 #[inline]
@@ -224,7 +224,7 @@ pub unsafe fn FaxSendDocumentA<P1>(faxhandle: super::super::Foundation::HANDLE, 
 where
     P1: windows_core::Param<windows_core::PCSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxSendDocumentA(faxhandle : super::super::Foundation:: HANDLE, filename : windows_core::PCSTR, jobparams : *const FAX_JOB_PARAMA, coverpageinfo : *const FAX_COVERPAGE_INFOA, faxjobid : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSendDocumentA(faxhandle : super::super::Foundation:: HANDLE, filename : windows_core::PCSTR, jobparams : *const FAX_JOB_PARAMA, coverpageinfo : *const FAX_COVERPAGE_INFOA, faxjobid : *mut u32) -> windows_core::BOOL);
     unsafe { FaxSendDocumentA(faxhandle, filename.param().abi(), jobparams, coverpageinfo, faxjobid as _).ok() }
 }
 #[inline]
@@ -232,7 +232,7 @@ pub unsafe fn FaxSendDocumentForBroadcastA<P1>(faxhandle: super::super::Foundati
 where
     P1: windows_core::Param<windows_core::PCSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxSendDocumentForBroadcastA(faxhandle : super::super::Foundation:: HANDLE, filename : windows_core::PCSTR, faxjobid : *mut u32, faxrecipientcallback : PFAX_RECIPIENT_CALLBACKA, context : *const core::ffi::c_void) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSendDocumentForBroadcastA(faxhandle : super::super::Foundation:: HANDLE, filename : windows_core::PCSTR, faxjobid : *mut u32, faxrecipientcallback : PFAX_RECIPIENT_CALLBACKA, context : *const core::ffi::c_void) -> windows_core::BOOL);
     unsafe { FaxSendDocumentForBroadcastA(faxhandle, filename.param().abi(), faxjobid as _, faxrecipientcallback, context).ok() }
 }
 #[inline]
@@ -240,7 +240,7 @@ pub unsafe fn FaxSendDocumentForBroadcastW<P1>(faxhandle: super::super::Foundati
 where
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxSendDocumentForBroadcastW(faxhandle : super::super::Foundation:: HANDLE, filename : windows_core::PCWSTR, faxjobid : *mut u32, faxrecipientcallback : PFAX_RECIPIENT_CALLBACKW, context : *const core::ffi::c_void) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSendDocumentForBroadcastW(faxhandle : super::super::Foundation:: HANDLE, filename : windows_core::PCWSTR, faxjobid : *mut u32, faxrecipientcallback : PFAX_RECIPIENT_CALLBACKW, context : *const core::ffi::c_void) -> windows_core::BOOL);
     unsafe { FaxSendDocumentForBroadcastW(faxhandle, filename.param().abi(), faxjobid as _, faxrecipientcallback, context).ok() }
 }
 #[inline]
@@ -248,57 +248,57 @@ pub unsafe fn FaxSendDocumentW<P1>(faxhandle: super::super::Foundation::HANDLE, 
 where
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxSendDocumentW(faxhandle : super::super::Foundation:: HANDLE, filename : windows_core::PCWSTR, jobparams : *const FAX_JOB_PARAMW, coverpageinfo : *const FAX_COVERPAGE_INFOW, faxjobid : *mut u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSendDocumentW(faxhandle : super::super::Foundation:: HANDLE, filename : windows_core::PCWSTR, jobparams : *const FAX_JOB_PARAMW, coverpageinfo : *const FAX_COVERPAGE_INFOW, faxjobid : *mut u32) -> windows_core::BOOL);
     unsafe { FaxSendDocumentW(faxhandle, filename.param().abi(), jobparams, coverpageinfo, faxjobid as _).ok() }
 }
 #[inline]
 pub unsafe fn FaxSetConfigurationA(faxhandle: super::super::Foundation::HANDLE, faxconfig: *const FAX_CONFIGURATIONA) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxSetConfigurationA(faxhandle : super::super::Foundation:: HANDLE, faxconfig : *const FAX_CONFIGURATIONA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetConfigurationA(faxhandle : super::super::Foundation:: HANDLE, faxconfig : *const FAX_CONFIGURATIONA) -> windows_core::BOOL);
     unsafe { FaxSetConfigurationA(faxhandle, faxconfig).ok() }
 }
 #[inline]
 pub unsafe fn FaxSetConfigurationW(faxhandle: super::super::Foundation::HANDLE, faxconfig: *const FAX_CONFIGURATIONW) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxSetConfigurationW(faxhandle : super::super::Foundation:: HANDLE, faxconfig : *const FAX_CONFIGURATIONW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetConfigurationW(faxhandle : super::super::Foundation:: HANDLE, faxconfig : *const FAX_CONFIGURATIONW) -> windows_core::BOOL);
     unsafe { FaxSetConfigurationW(faxhandle, faxconfig).ok() }
 }
 #[inline]
 pub unsafe fn FaxSetGlobalRoutingInfoA(faxhandle: super::super::Foundation::HANDLE, routinginfo: *const FAX_GLOBAL_ROUTING_INFOA) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxSetGlobalRoutingInfoA(faxhandle : super::super::Foundation:: HANDLE, routinginfo : *const FAX_GLOBAL_ROUTING_INFOA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetGlobalRoutingInfoA(faxhandle : super::super::Foundation:: HANDLE, routinginfo : *const FAX_GLOBAL_ROUTING_INFOA) -> windows_core::BOOL);
     unsafe { FaxSetGlobalRoutingInfoA(faxhandle, routinginfo).ok() }
 }
 #[inline]
 pub unsafe fn FaxSetGlobalRoutingInfoW(faxhandle: super::super::Foundation::HANDLE, routinginfo: *const FAX_GLOBAL_ROUTING_INFOW) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxSetGlobalRoutingInfoW(faxhandle : super::super::Foundation:: HANDLE, routinginfo : *const FAX_GLOBAL_ROUTING_INFOW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetGlobalRoutingInfoW(faxhandle : super::super::Foundation:: HANDLE, routinginfo : *const FAX_GLOBAL_ROUTING_INFOW) -> windows_core::BOOL);
     unsafe { FaxSetGlobalRoutingInfoW(faxhandle, routinginfo).ok() }
 }
 #[inline]
 pub unsafe fn FaxSetJobA(faxhandle: super::super::Foundation::HANDLE, jobid: u32, command: u32, jobentry: *const FAX_JOB_ENTRYA) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxSetJobA(faxhandle : super::super::Foundation:: HANDLE, jobid : u32, command : u32, jobentry : *const FAX_JOB_ENTRYA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetJobA(faxhandle : super::super::Foundation:: HANDLE, jobid : u32, command : u32, jobentry : *const FAX_JOB_ENTRYA) -> windows_core::BOOL);
     unsafe { FaxSetJobA(faxhandle, jobid, command, jobentry).ok() }
 }
 #[inline]
 pub unsafe fn FaxSetJobW(faxhandle: super::super::Foundation::HANDLE, jobid: u32, command: u32, jobentry: *const FAX_JOB_ENTRYW) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxSetJobW(faxhandle : super::super::Foundation:: HANDLE, jobid : u32, command : u32, jobentry : *const FAX_JOB_ENTRYW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetJobW(faxhandle : super::super::Foundation:: HANDLE, jobid : u32, command : u32, jobentry : *const FAX_JOB_ENTRYW) -> windows_core::BOOL);
     unsafe { FaxSetJobW(faxhandle, jobid, command, jobentry).ok() }
 }
 #[inline]
 pub unsafe fn FaxSetLoggingCategoriesA(faxhandle: super::super::Foundation::HANDLE, categories: *const FAX_LOG_CATEGORYA, numbercategories: u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxSetLoggingCategoriesA(faxhandle : super::super::Foundation:: HANDLE, categories : *const FAX_LOG_CATEGORYA, numbercategories : u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetLoggingCategoriesA(faxhandle : super::super::Foundation:: HANDLE, categories : *const FAX_LOG_CATEGORYA, numbercategories : u32) -> windows_core::BOOL);
     unsafe { FaxSetLoggingCategoriesA(faxhandle, categories, numbercategories).ok() }
 }
 #[inline]
 pub unsafe fn FaxSetLoggingCategoriesW(faxhandle: super::super::Foundation::HANDLE, categories: *const FAX_LOG_CATEGORYW, numbercategories: u32) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxSetLoggingCategoriesW(faxhandle : super::super::Foundation:: HANDLE, categories : *const FAX_LOG_CATEGORYW, numbercategories : u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetLoggingCategoriesW(faxhandle : super::super::Foundation:: HANDLE, categories : *const FAX_LOG_CATEGORYW, numbercategories : u32) -> windows_core::BOOL);
     unsafe { FaxSetLoggingCategoriesW(faxhandle, categories, numbercategories).ok() }
 }
 #[inline]
 pub unsafe fn FaxSetPortA(faxporthandle: super::super::Foundation::HANDLE, portinfo: *const FAX_PORT_INFOA) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxSetPortA(faxporthandle : super::super::Foundation:: HANDLE, portinfo : *const FAX_PORT_INFOA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetPortA(faxporthandle : super::super::Foundation:: HANDLE, portinfo : *const FAX_PORT_INFOA) -> windows_core::BOOL);
     unsafe { FaxSetPortA(faxporthandle, portinfo).ok() }
 }
 #[inline]
 pub unsafe fn FaxSetPortW(faxporthandle: super::super::Foundation::HANDLE, portinfo: *const FAX_PORT_INFOW) -> windows_core::Result<()> {
-    windows_link::link!("winfax.dll" "system" fn FaxSetPortW(faxporthandle : super::super::Foundation:: HANDLE, portinfo : *const FAX_PORT_INFOW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetPortW(faxporthandle : super::super::Foundation:: HANDLE, portinfo : *const FAX_PORT_INFOW) -> windows_core::BOOL);
     unsafe { FaxSetPortW(faxporthandle, portinfo).ok() }
 }
 #[inline]
@@ -306,7 +306,7 @@ pub unsafe fn FaxSetRoutingInfoA<P1>(faxporthandle: super::super::Foundation::HA
 where
     P1: windows_core::Param<windows_core::PCSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxSetRoutingInfoA(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCSTR, routinginfobuffer : *const u8, routinginfobuffersize : u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetRoutingInfoA(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCSTR, routinginfobuffer : *const u8, routinginfobuffersize : u32) -> windows_core::BOOL);
     unsafe { FaxSetRoutingInfoA(faxporthandle, routingguid.param().abi(), routinginfobuffer, routinginfobuffersize).ok() }
 }
 #[inline]
@@ -314,7 +314,7 @@ pub unsafe fn FaxSetRoutingInfoW<P1>(faxporthandle: super::super::Foundation::HA
 where
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxSetRoutingInfoW(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCWSTR, routinginfobuffer : *const u8, routinginfobuffersize : u32) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxSetRoutingInfoW(faxporthandle : super::super::Foundation:: HANDLE, routingguid : windows_core::PCWSTR, routinginfobuffer : *const u8, routinginfobuffersize : u32) -> windows_core::BOOL);
     unsafe { FaxSetRoutingInfoW(faxporthandle, routingguid.param().abi(), routinginfobuffer, routinginfobuffersize).ok() }
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
@@ -323,7 +323,7 @@ pub unsafe fn FaxStartPrintJobA<P0>(printername: P0, printinfo: *const FAX_PRINT
 where
     P0: windows_core::Param<windows_core::PCSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxStartPrintJobA(printername : windows_core::PCSTR, printinfo : *const FAX_PRINT_INFOA, faxjobid : *mut u32, faxcontextinfo : *mut FAX_CONTEXT_INFOA) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxStartPrintJobA(printername : windows_core::PCSTR, printinfo : *const FAX_PRINT_INFOA, faxjobid : *mut u32, faxcontextinfo : *mut FAX_CONTEXT_INFOA) -> windows_core::BOOL);
     unsafe { FaxStartPrintJobA(printername.param().abi(), printinfo, faxjobid as _, faxcontextinfo as _).ok() }
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
@@ -332,7 +332,7 @@ pub unsafe fn FaxStartPrintJobW<P0>(printername: P0, printinfo: *const FAX_PRINT
 where
     P0: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxStartPrintJobW(printername : windows_core::PCWSTR, printinfo : *const FAX_PRINT_INFOW, faxjobid : *mut u32, faxcontextinfo : *mut FAX_CONTEXT_INFOW) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxStartPrintJobW(printername : windows_core::PCWSTR, printinfo : *const FAX_PRINT_INFOW, faxjobid : *mut u32, faxcontextinfo : *mut FAX_CONTEXT_INFOW) -> windows_core::BOOL);
     unsafe { FaxStartPrintJobW(printername.param().abi(), printinfo, faxjobid as _, faxcontextinfo as _).ok() }
 }
 #[inline]
@@ -340,7 +340,7 @@ pub unsafe fn FaxUnregisterServiceProviderW<P0>(deviceprovider: P0) -> windows_c
 where
     P0: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("winfax.dll" "system" fn FaxUnregisterServiceProviderW(deviceprovider : windows_core::PCWSTR) -> windows_core::BOOL);
+    windows_core::link!("winfax.dll" "system" fn FaxUnregisterServiceProviderW(deviceprovider : windows_core::PCWSTR) -> windows_core::BOOL);
     unsafe { FaxUnregisterServiceProviderW(deviceprovider.param().abi()) }
 }
 #[inline]
@@ -348,7 +348,7 @@ pub unsafe fn SendToFaxRecipient<P1>(sndmode: SendToMode, lpfilename: P1) -> u32
 where
     P1: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("fxsutility.dll" "system" fn SendToFaxRecipient(sndmode : SendToMode, lpfilename : windows_core::PCWSTR) -> u32);
+    windows_core::link!("fxsutility.dll" "system" fn SendToFaxRecipient(sndmode : SendToMode, lpfilename : windows_core::PCWSTR) -> u32);
     unsafe { SendToFaxRecipient(sndmode, lpfilename.param().abi()) }
 }
 #[inline]
@@ -356,7 +356,7 @@ pub unsafe fn StiCreateInstanceW<P3>(hinst: super::super::Foundation::HINSTANCE,
 where
     P3: windows_core::Param<windows_core::IUnknown>,
 {
-    windows_link::link!("sti.dll" "system" fn StiCreateInstanceW(hinst : super::super::Foundation:: HINSTANCE, dwver : u32, ppsti : *mut * mut core::ffi::c_void, punkouter : * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("sti.dll" "system" fn StiCreateInstanceW(hinst : super::super::Foundation:: HINSTANCE, dwver : u32, ppsti : *mut * mut core::ffi::c_void, punkouter : * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { StiCreateInstanceW(hinst, dwver, core::mem::transmute(ppsti), punkouter.param().abi()).ok() }
 }
 pub const CF_MSFAXSRV_DEVICE_ID: windows_core::PCWSTR = windows_core::w!("FAXSRV_DeviceID");
@@ -925,7 +925,7 @@ impl Default for FAX_ROUTE {
     }
 }
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct FAX_ROUTE_CALLBACKROUTINES {
     pub SizeOfStruct: u32,
     pub FaxRouteAddFile: PFAXROUTEADDFILE,
@@ -1672,17 +1672,17 @@ pub struct IFaxAccountNotify_Vtbl {
 }
 #[cfg(all(feature = "Win32_System_Com", feature = "Win32_System_Ole", feature = "Win32_System_Variant"))]
 pub trait IFaxAccountNotify_Impl: super::super::System::Com::IDispatch_Impl {
-    fn OnIncomingJobAdded(&self, pfaxaccount: windows_core::Ref<'_, IFaxAccount>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnIncomingJobRemoved(&self, pfaxaccount: windows_core::Ref<'_, IFaxAccount>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnIncomingJobChanged(&self, pfaxaccount: windows_core::Ref<'_, IFaxAccount>, bstrjobid: &windows_core::BSTR, pjobstatus: windows_core::Ref<'_, IFaxJobStatus>) -> windows_core::Result<()>;
-    fn OnOutgoingJobAdded(&self, pfaxaccount: windows_core::Ref<'_, IFaxAccount>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnOutgoingJobRemoved(&self, pfaxaccount: windows_core::Ref<'_, IFaxAccount>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnOutgoingJobChanged(&self, pfaxaccount: windows_core::Ref<'_, IFaxAccount>, bstrjobid: &windows_core::BSTR, pjobstatus: windows_core::Ref<'_, IFaxJobStatus>) -> windows_core::Result<()>;
-    fn OnIncomingMessageAdded(&self, pfaxaccount: windows_core::Ref<'_, IFaxAccount>, bstrmessageid: &windows_core::BSTR, faddedtoreceivefolder: super::super::Foundation::VARIANT_BOOL) -> windows_core::Result<()>;
-    fn OnIncomingMessageRemoved(&self, pfaxaccount: windows_core::Ref<'_, IFaxAccount>, bstrmessageid: &windows_core::BSTR, fremovedfromreceivefolder: super::super::Foundation::VARIANT_BOOL) -> windows_core::Result<()>;
-    fn OnOutgoingMessageAdded(&self, pfaxaccount: windows_core::Ref<'_, IFaxAccount>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnOutgoingMessageRemoved(&self, pfaxaccount: windows_core::Ref<'_, IFaxAccount>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnServerShutDown(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
+    fn OnIncomingJobAdded(&self, pfaxaccount: windows_core::Ref<IFaxAccount>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnIncomingJobRemoved(&self, pfaxaccount: windows_core::Ref<IFaxAccount>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnIncomingJobChanged(&self, pfaxaccount: windows_core::Ref<IFaxAccount>, bstrjobid: &windows_core::BSTR, pjobstatus: windows_core::Ref<IFaxJobStatus>) -> windows_core::Result<()>;
+    fn OnOutgoingJobAdded(&self, pfaxaccount: windows_core::Ref<IFaxAccount>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnOutgoingJobRemoved(&self, pfaxaccount: windows_core::Ref<IFaxAccount>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnOutgoingJobChanged(&self, pfaxaccount: windows_core::Ref<IFaxAccount>, bstrjobid: &windows_core::BSTR, pjobstatus: windows_core::Ref<IFaxJobStatus>) -> windows_core::Result<()>;
+    fn OnIncomingMessageAdded(&self, pfaxaccount: windows_core::Ref<IFaxAccount>, bstrmessageid: &windows_core::BSTR, faddedtoreceivefolder: super::super::Foundation::VARIANT_BOOL) -> windows_core::Result<()>;
+    fn OnIncomingMessageRemoved(&self, pfaxaccount: windows_core::Ref<IFaxAccount>, bstrmessageid: &windows_core::BSTR, fremovedfromreceivefolder: super::super::Foundation::VARIANT_BOOL) -> windows_core::Result<()>;
+    fn OnOutgoingMessageAdded(&self, pfaxaccount: windows_core::Ref<IFaxAccount>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnOutgoingMessageRemoved(&self, pfaxaccount: windows_core::Ref<IFaxAccount>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnServerShutDown(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
 }
 #[cfg(all(feature = "Win32_System_Com", feature = "Win32_System_Ole", feature = "Win32_System_Variant"))]
 impl IFaxAccountNotify_Vtbl {
@@ -4625,9 +4625,9 @@ pub trait IFaxDocument_Impl: super::super::System::Com::IDispatch_Impl {
     fn Priority(&self) -> windows_core::Result<FAX_PRIORITY_TYPE_ENUM>;
     fn SetPriority(&self, priority: FAX_PRIORITY_TYPE_ENUM) -> windows_core::Result<()>;
     fn TapiConnection(&self) -> windows_core::Result<super::super::System::Com::IDispatch>;
-    fn putref_TapiConnection(&self, ptapiconnection: windows_core::Ref<'_, super::super::System::Com::IDispatch>) -> windows_core::Result<()>;
+    fn putref_TapiConnection(&self, ptapiconnection: windows_core::Ref<super::super::System::Com::IDispatch>) -> windows_core::Result<()>;
     fn Submit(&self, bstrfaxservername: &windows_core::BSTR) -> windows_core::Result<super::super::System::Variant::VARIANT>;
-    fn ConnectedSubmit(&self, pfaxserver: windows_core::Ref<'_, IFaxServer>) -> windows_core::Result<super::super::System::Variant::VARIANT>;
+    fn ConnectedSubmit(&self, pfaxserver: windows_core::Ref<IFaxServer>) -> windows_core::Result<super::super::System::Variant::VARIANT>;
     fn AttachFaxToReceipt(&self) -> windows_core::Result<super::super::Foundation::VARIANT_BOOL>;
     fn SetAttachFaxToReceipt(&self, battachfax: super::super::Foundation::VARIANT_BOOL) -> windows_core::Result<()>;
 }
@@ -5067,7 +5067,7 @@ pub trait IFaxDocument2_Impl: IFaxDocument_Impl {
     fn Bodies(&self) -> windows_core::Result<super::super::System::Variant::VARIANT>;
     fn SetBodies(&self, vbodies: &super::super::System::Variant::VARIANT) -> windows_core::Result<()>;
     fn Submit2(&self, bstrfaxservername: &windows_core::BSTR, pvfaxoutgoingjobids: *mut super::super::System::Variant::VARIANT, plerrorbodyfile: *mut i32) -> windows_core::Result<()>;
-    fn ConnectedSubmit2(&self, pfaxserver: windows_core::Ref<'_, IFaxServer>, pvfaxoutgoingjobids: *mut super::super::System::Variant::VARIANT, plerrorbodyfile: *mut i32) -> windows_core::Result<()>;
+    fn ConnectedSubmit2(&self, pfaxserver: windows_core::Ref<IFaxServer>, pvfaxoutgoingjobids: *mut super::super::System::Variant::VARIANT, plerrorbodyfile: *mut i32) -> windows_core::Result<()>;
 }
 #[cfg(all(feature = "Win32_System_Com", feature = "Win32_System_Ole", feature = "Win32_System_Variant"))]
 impl IFaxDocument2_Vtbl {
@@ -13725,32 +13725,32 @@ pub struct IFaxServerNotify2_Vtbl {
 }
 #[cfg(all(feature = "Win32_System_Com", feature = "Win32_System_Ole", feature = "Win32_System_Variant"))]
 pub trait IFaxServerNotify2_Impl: super::super::System::Com::IDispatch_Impl {
-    fn OnIncomingJobAdded(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnIncomingJobRemoved(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnIncomingJobChanged(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, bstrjobid: &windows_core::BSTR, pjobstatus: windows_core::Ref<'_, IFaxJobStatus>) -> windows_core::Result<()>;
-    fn OnOutgoingJobAdded(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnOutgoingJobRemoved(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnOutgoingJobChanged(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, bstrjobid: &windows_core::BSTR, pjobstatus: windows_core::Ref<'_, IFaxJobStatus>) -> windows_core::Result<()>;
-    fn OnIncomingMessageAdded(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnIncomingMessageRemoved(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnOutgoingMessageAdded(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnOutgoingMessageRemoved(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnReceiptOptionsChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnActivityLoggingConfigChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnSecurityConfigChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnEventLoggingConfigChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnOutgoingQueueConfigChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnOutgoingArchiveConfigChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnIncomingArchiveConfigChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnDevicesConfigChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnOutboundRoutingGroupsConfigChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnOutboundRoutingRulesConfigChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnServerActivityChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, lincomingmessages: i32, lroutingmessages: i32, loutgoingmessages: i32, lqueuedmessages: i32) -> windows_core::Result<()>;
-    fn OnQueuesStatusChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, boutgoingqueueblocked: super::super::Foundation::VARIANT_BOOL, boutgoingqueuepaused: super::super::Foundation::VARIANT_BOOL, bincomingqueueblocked: super::super::Foundation::VARIANT_BOOL) -> windows_core::Result<()>;
-    fn OnNewCall(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, lcallid: i32, ldeviceid: i32, bstrcallerid: &windows_core::BSTR) -> windows_core::Result<()>;
-    fn OnServerShutDown(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
-    fn OnDeviceStatusChange(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>, ldeviceid: i32, bpoweredoff: super::super::Foundation::VARIANT_BOOL, bsending: super::super::Foundation::VARIANT_BOOL, breceiving: super::super::Foundation::VARIANT_BOOL, bringing: super::super::Foundation::VARIANT_BOOL) -> windows_core::Result<()>;
-    fn OnGeneralServerConfigChanged(&self, pfaxserver: windows_core::Ref<'_, IFaxServer2>) -> windows_core::Result<()>;
+    fn OnIncomingJobAdded(&self, pfaxserver: windows_core::Ref<IFaxServer2>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnIncomingJobRemoved(&self, pfaxserver: windows_core::Ref<IFaxServer2>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnIncomingJobChanged(&self, pfaxserver: windows_core::Ref<IFaxServer2>, bstrjobid: &windows_core::BSTR, pjobstatus: windows_core::Ref<IFaxJobStatus>) -> windows_core::Result<()>;
+    fn OnOutgoingJobAdded(&self, pfaxserver: windows_core::Ref<IFaxServer2>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnOutgoingJobRemoved(&self, pfaxserver: windows_core::Ref<IFaxServer2>, bstrjobid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnOutgoingJobChanged(&self, pfaxserver: windows_core::Ref<IFaxServer2>, bstrjobid: &windows_core::BSTR, pjobstatus: windows_core::Ref<IFaxJobStatus>) -> windows_core::Result<()>;
+    fn OnIncomingMessageAdded(&self, pfaxserver: windows_core::Ref<IFaxServer2>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnIncomingMessageRemoved(&self, pfaxserver: windows_core::Ref<IFaxServer2>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnOutgoingMessageAdded(&self, pfaxserver: windows_core::Ref<IFaxServer2>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnOutgoingMessageRemoved(&self, pfaxserver: windows_core::Ref<IFaxServer2>, bstrmessageid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnReceiptOptionsChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnActivityLoggingConfigChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnSecurityConfigChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnEventLoggingConfigChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnOutgoingQueueConfigChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnOutgoingArchiveConfigChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnIncomingArchiveConfigChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnDevicesConfigChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnOutboundRoutingGroupsConfigChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnOutboundRoutingRulesConfigChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnServerActivityChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>, lincomingmessages: i32, lroutingmessages: i32, loutgoingmessages: i32, lqueuedmessages: i32) -> windows_core::Result<()>;
+    fn OnQueuesStatusChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>, boutgoingqueueblocked: super::super::Foundation::VARIANT_BOOL, boutgoingqueuepaused: super::super::Foundation::VARIANT_BOOL, bincomingqueueblocked: super::super::Foundation::VARIANT_BOOL) -> windows_core::Result<()>;
+    fn OnNewCall(&self, pfaxserver: windows_core::Ref<IFaxServer2>, lcallid: i32, ldeviceid: i32, bstrcallerid: &windows_core::BSTR) -> windows_core::Result<()>;
+    fn OnServerShutDown(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
+    fn OnDeviceStatusChange(&self, pfaxserver: windows_core::Ref<IFaxServer2>, ldeviceid: i32, bpoweredoff: super::super::Foundation::VARIANT_BOOL, bsending: super::super::Foundation::VARIANT_BOOL, breceiving: super::super::Foundation::VARIANT_BOOL, bringing: super::super::Foundation::VARIANT_BOOL) -> windows_core::Result<()>;
+    fn OnGeneralServerConfigChanged(&self, pfaxserver: windows_core::Ref<IFaxServer2>) -> windows_core::Result<()>;
 }
 #[cfg(all(feature = "Win32_System_Com", feature = "Win32_System_Ole", feature = "Win32_System_Variant"))]
 impl IFaxServerNotify2_Vtbl {
@@ -14489,7 +14489,7 @@ pub struct IStiUSD_Vtbl {
 }
 #[cfg(all(feature = "Win32_System_IO", feature = "Win32_System_Registry"))]
 pub trait IStiUSD_Impl: windows_core::IUnknownImpl {
-    fn Initialize(&self, pheldcb: windows_core::Ref<'_, IStiDeviceControl>, dwstiversion: u32, hparameterskey: super::super::System::Registry::HKEY) -> windows_core::Result<()>;
+    fn Initialize(&self, pheldcb: windows_core::Ref<IStiDeviceControl>, dwstiversion: u32, hparameterskey: super::super::System::Registry::HKEY) -> windows_core::Result<()>;
     fn GetCapabilities(&self) -> windows_core::Result<STI_USD_CAPS>;
     fn GetStatus(&self, pdevstatus: *mut STI_DEVICE_STATUS) -> windows_core::Result<()>;
     fn DeviceReset(&self) -> windows_core::Result<()>;
@@ -14757,7 +14757,7 @@ pub trait IStillImageW_Impl: windows_core::IUnknownImpl {
     fn Initialize(&self, hinst: super::super::Foundation::HINSTANCE, dwversion: u32) -> windows_core::Result<()>;
     fn GetDeviceList(&self, dwtype: u32, dwflags: u32, pdwitemsreturned: *mut u32, ppbuffer: *mut *mut core::ffi::c_void) -> windows_core::Result<()>;
     fn GetDeviceInfo(&self, pwszdevicename: &windows_core::PCWSTR, ppbuffer: *mut *mut core::ffi::c_void) -> windows_core::Result<()>;
-    fn CreateDevice(&self, pwszdevicename: &windows_core::PCWSTR, dwmode: u32, pdevice: windows_core::OutRef<'_, IStiDevice>, punkouter: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn CreateDevice(&self, pwszdevicename: &windows_core::PCWSTR, dwmode: u32, pdevice: windows_core::OutRef<IStiDevice>, punkouter: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
     fn GetDeviceValue(&self, pwszdevicename: &windows_core::PCWSTR, pvaluename: &windows_core::PCWSTR, ptype: *mut u32, pdata: *mut u8, cbdata: *mut u32) -> windows_core::Result<()>;
     fn SetDeviceValue(&self, pwszdevicename: &windows_core::PCWSTR, pvaluename: &windows_core::PCWSTR, r#type: u32, pdata: *const u8, cbdata: u32) -> windows_core::Result<()>;
     fn GetSTILaunchInformation(&self, pwszdevicename: windows_core::PWSTR, pdweventcode: *mut u32, pwszeventname: windows_core::PWSTR) -> windows_core::Result<()>;

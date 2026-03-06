@@ -34,24 +34,24 @@ impl UIPointerRegion {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(rect))]
         #[unsafe(method_family = none)]
-        pub fn rect(&self) -> CGRect;
+        pub unsafe fn rect(&self) -> CGRect;
 
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Option<Retained<ProtocolObject<dyn NSObjectProtocol>>>;
+        pub unsafe fn identifier(&self) -> Option<Retained<ProtocolObject<dyn NSObjectProtocol>>>;
 
         #[cfg(feature = "UIGeometry")]
         /// Axes along which this region latches when the primary mouse button is pressed.
         /// When set, the UIPointerStyle associated with this region will "lock in" and allow free-form movement along the specified axes.
         #[unsafe(method(latchingAxes))]
         #[unsafe(method_family = none)]
-        pub fn latchingAxes(&self) -> UIAxis;
+        pub unsafe fn latchingAxes(&self) -> UIAxis;
 
         #[cfg(feature = "UIGeometry")]
         /// Setter for [`latchingAxes`][Self::latchingAxes].
         #[unsafe(method(setLatchingAxes:))]
         #[unsafe(method_family = none)]
-        pub fn setLatchingAxes(&self, latching_axes: UIAxis);
+        pub unsafe fn setLatchingAxes(&self, latching_axes: UIAxis);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Creates a UIPointerRegion with the supplied rect and optional identifier.
@@ -60,10 +60,6 @@ impl UIPointerRegion {
         /// Parameter `rect`: This region's rect. Must be in the pointer interaction's view's coordinate space.
         ///
         /// Parameter `identifier`: Optional identifier that may be used to identify this region in subsequent pointer interaction delegate calls.
-        ///
-        /// # Safety
-        ///
-        /// `identifier` should be of the correct type.
         #[unsafe(method(regionWithRect:identifier:))]
         #[unsafe(method_family = none)]
         pub unsafe fn regionWithRect_identifier(

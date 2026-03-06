@@ -114,7 +114,7 @@ impl UIEventButtonMask {
     /// .button(2) == .secondary
     #[doc(alias = "UIEventButtonMaskForButtonNumber")]
     #[inline]
-    pub fn for_button_number(button_number: NSInteger) -> UIEventButtonMask {
+    pub unsafe fn for_button_number(button_number: NSInteger) -> UIEventButtonMask {
         extern "C-unwind" {
             fn UIEventButtonMaskForButtonNumber(button_number: NSInteger) -> UIEventButtonMask;
         }
@@ -138,29 +138,29 @@ impl UIEvent {
     extern_methods!(
         #[unsafe(method(type))]
         #[unsafe(method_family = none)]
-        pub fn r#type(&self) -> UIEventType;
+        pub unsafe fn r#type(&self) -> UIEventType;
 
         #[unsafe(method(subtype))]
         #[unsafe(method_family = none)]
-        pub fn subtype(&self) -> UIEventSubtype;
+        pub unsafe fn subtype(&self) -> UIEventSubtype;
 
         #[unsafe(method(timestamp))]
         #[unsafe(method_family = none)]
-        pub fn timestamp(&self) -> NSTimeInterval;
+        pub unsafe fn timestamp(&self) -> NSTimeInterval;
 
         #[cfg(feature = "UICommand")]
         #[unsafe(method(modifierFlags))]
         #[unsafe(method_family = none)]
-        pub fn modifierFlags(&self) -> UIKeyModifierFlags;
+        pub unsafe fn modifierFlags(&self) -> UIKeyModifierFlags;
 
         #[unsafe(method(buttonMask))]
         #[unsafe(method_family = none)]
-        pub fn buttonMask(&self) -> UIEventButtonMask;
+        pub unsafe fn buttonMask(&self) -> UIEventButtonMask;
 
         #[cfg(feature = "UITouch")]
         #[unsafe(method(allTouches))]
         #[unsafe(method_family = none)]
-        pub fn allTouches(&self) -> Option<Retained<NSSet<UITouch>>>;
+        pub unsafe fn allTouches(&self) -> Option<Retained<NSSet<UITouch>>>;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -170,17 +170,20 @@ impl UIEvent {
         ))]
         #[unsafe(method(touchesForWindow:))]
         #[unsafe(method_family = none)]
-        pub fn touchesForWindow(&self, window: &UIWindow) -> Option<Retained<NSSet<UITouch>>>;
+        pub unsafe fn touchesForWindow(
+            &self,
+            window: &UIWindow,
+        ) -> Option<Retained<NSSet<UITouch>>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UITouch", feature = "UIView"))]
         #[unsafe(method(touchesForView:))]
         #[unsafe(method_family = none)]
-        pub fn touchesForView(&self, view: &UIView) -> Option<Retained<NSSet<UITouch>>>;
+        pub unsafe fn touchesForView(&self, view: &UIView) -> Option<Retained<NSSet<UITouch>>>;
 
         #[cfg(all(feature = "UIGestureRecognizer", feature = "UITouch"))]
         #[unsafe(method(touchesForGestureRecognizer:))]
         #[unsafe(method_family = none)]
-        pub fn touchesForGestureRecognizer(
+        pub unsafe fn touchesForGestureRecognizer(
             &self,
             gesture: &UIGestureRecognizer,
         ) -> Option<Retained<NSSet<UITouch>>>;
@@ -188,7 +191,7 @@ impl UIEvent {
         #[cfg(feature = "UITouch")]
         #[unsafe(method(coalescedTouchesForTouch:))]
         #[unsafe(method_family = none)]
-        pub fn coalescedTouchesForTouch(
+        pub unsafe fn coalescedTouchesForTouch(
             &self,
             touch: &UITouch,
         ) -> Option<Retained<NSArray<UITouch>>>;
@@ -196,7 +199,7 @@ impl UIEvent {
         #[cfg(feature = "UITouch")]
         #[unsafe(method(predictedTouchesForTouch:))]
         #[unsafe(method_family = none)]
-        pub fn predictedTouchesForTouch(
+        pub unsafe fn predictedTouchesForTouch(
             &self,
             touch: &UITouch,
         ) -> Option<Retained<NSArray<UITouch>>>;
@@ -208,21 +211,15 @@ impl UIEvent {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
-#[deprecated = "renamed to `UIEventButtonMask::for_button_number`"]
-#[inline]
-pub extern "C-unwind" fn UIEventButtonMaskForButtonNumber(
-    button_number: NSInteger,
-) -> UIEventButtonMask {
-    extern "C-unwind" {
-        fn UIEventButtonMaskForButtonNumber(button_number: NSInteger) -> UIEventButtonMask;
-    }
-    unsafe { UIEventButtonMaskForButtonNumber(button_number) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `UIEventButtonMask::for_button_number`"]
+    pub fn UIEventButtonMaskForButtonNumber(button_number: NSInteger) -> UIEventButtonMask;
 }

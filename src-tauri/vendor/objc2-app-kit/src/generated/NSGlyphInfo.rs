@@ -5,9 +5,6 @@ use objc2::__framework_prelude::*;
 #[cfg(feature = "objc2-core-graphics")]
 #[cfg(target_vendor = "apple")]
 use objc2_core_graphics::*;
-#[cfg(feature = "objc2-core-text")]
-#[cfg(target_vendor = "apple")]
-use objc2_core_text::*;
 use objc2_foundation::*;
 
 use crate::*;
@@ -18,24 +15,6 @@ extern_class!(
     #[derive(Debug, PartialEq, Eq, Hash)]
     pub struct NSGlyphInfo;
 );
-
-#[cfg(feature = "objc2-core-text")]
-#[cfg(target_vendor = "apple")]
-impl AsRef<NSGlyphInfo> for CTGlyphInfo {
-    #[inline]
-    fn as_ref(&self) -> &NSGlyphInfo {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
-#[cfg(feature = "objc2-core-text")]
-#[cfg(target_vendor = "apple")]
-impl AsRef<CTGlyphInfo> for NSGlyphInfo {
-    #[inline]
-    fn as_ref(&self) -> &CTGlyphInfo {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
 
 extern_conformance!(
     unsafe impl NSCoding for NSGlyphInfo {}
@@ -63,7 +42,7 @@ impl NSGlyphInfo {
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(glyphInfoWithCGGlyph:forFont:baseString:))]
         #[unsafe(method_family = none)]
-        pub fn glyphInfoWithCGGlyph_forFont_baseString(
+        pub unsafe fn glyphInfoWithCGGlyph_forFont_baseString(
             glyph: CGGlyph,
             font: &NSFont,
             string: &NSString,
@@ -73,11 +52,11 @@ impl NSGlyphInfo {
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(glyphID))]
         #[unsafe(method_family = none)]
-        pub fn glyphID(&self) -> CGGlyph;
+        pub unsafe fn glyphID(&self) -> CGGlyph;
 
         #[unsafe(method(baseString))]
         #[unsafe(method_family = none)]
-        pub fn baseString(&self) -> Retained<NSString>;
+        pub unsafe fn baseString(&self) -> Retained<NSString>;
     );
 }
 
@@ -86,19 +65,12 @@ impl NSGlyphInfo {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSGlyphInfo {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscharactercollection?language=objc)
@@ -135,7 +107,7 @@ impl NSGlyphInfo {
         #[cfg(feature = "NSFont")]
         #[unsafe(method(glyphInfoWithGlyphName:forFont:baseString:))]
         #[unsafe(method_family = none)]
-        pub fn glyphInfoWithGlyphName_forFont_baseString(
+        pub unsafe fn glyphInfoWithGlyphName_forFont_baseString(
             glyph_name: &NSString,
             font: &NSFont,
             string: &NSString,
@@ -144,7 +116,7 @@ impl NSGlyphInfo {
         #[cfg(feature = "NSFont")]
         #[unsafe(method(glyphInfoWithGlyph:forFont:baseString:))]
         #[unsafe(method_family = none)]
-        pub fn glyphInfoWithGlyph_forFont_baseString(
+        pub unsafe fn glyphInfoWithGlyph_forFont_baseString(
             glyph: NSGlyph,
             font: &NSFont,
             string: &NSString,
@@ -152,7 +124,7 @@ impl NSGlyphInfo {
 
         #[unsafe(method(glyphInfoWithCharacterIdentifier:collection:baseString:))]
         #[unsafe(method_family = none)]
-        pub fn glyphInfoWithCharacterIdentifier_collection_baseString(
+        pub unsafe fn glyphInfoWithCharacterIdentifier_collection_baseString(
             cid: NSUInteger,
             character_collection: NSCharacterCollection,
             string: &NSString,
@@ -160,14 +132,14 @@ impl NSGlyphInfo {
 
         #[unsafe(method(glyphName))]
         #[unsafe(method_family = none)]
-        pub fn glyphName(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn glyphName(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(characterIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn characterIdentifier(&self) -> NSUInteger;
+        pub unsafe fn characterIdentifier(&self) -> NSUInteger;
 
         #[unsafe(method(characterCollection))]
         #[unsafe(method_family = none)]
-        pub fn characterCollection(&self) -> NSCharacterCollection;
+        pub unsafe fn characterCollection(&self) -> NSCharacterCollection;
     );
 }

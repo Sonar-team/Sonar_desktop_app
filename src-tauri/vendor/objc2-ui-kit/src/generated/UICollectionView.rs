@@ -116,11 +116,11 @@ impl UICollectionViewFocusUpdateContext {
     extern_methods!(
         #[unsafe(method(previouslyFocusedIndexPath))]
         #[unsafe(method_family = none)]
-        pub fn previouslyFocusedIndexPath(&self) -> Option<Retained<NSIndexPath>>;
+        pub unsafe fn previouslyFocusedIndexPath(&self) -> Option<Retained<NSIndexPath>>;
 
         #[unsafe(method(nextFocusedIndexPath))]
         #[unsafe(method_family = none)]
-        pub fn nextFocusedIndexPath(&self) -> Option<Retained<NSIndexPath>>;
+        pub unsafe fn nextFocusedIndexPath(&self) -> Option<Retained<NSIndexPath>>;
     );
 }
 
@@ -130,11 +130,11 @@ impl UICollectionViewFocusUpdateContext {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -144,7 +144,7 @@ extern_protocol!(
         #[cfg(all(feature = "UIResponder", feature = "UIScrollView", feature = "UIView"))]
         #[unsafe(method(collectionView:numberOfItemsInSection:))]
         #[unsafe(method_family = none)]
-        fn collectionView_numberOfItemsInSection(
+        unsafe fn collectionView_numberOfItemsInSection(
             &self,
             collection_view: &UICollectionView,
             section: NSInteger,
@@ -158,7 +158,7 @@ extern_protocol!(
         ))]
         #[unsafe(method(collectionView:cellForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_cellForItemAtIndexPath(
+        unsafe fn collectionView_cellForItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -168,8 +168,10 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(numberOfSectionsInCollectionView:))]
         #[unsafe(method_family = none)]
-        fn numberOfSectionsInCollectionView(&self, collection_view: &UICollectionView)
-            -> NSInteger;
+        unsafe fn numberOfSectionsInCollectionView(
+            &self,
+            collection_view: &UICollectionView,
+        ) -> NSInteger;
 
         #[cfg(all(
             feature = "UICollectionViewCell",
@@ -180,7 +182,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:viewForSupplementaryElementOfKind:atIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_viewForSupplementaryElementOfKind_atIndexPath(
+        unsafe fn collectionView_viewForSupplementaryElementOfKind_atIndexPath(
             &self,
             collection_view: &UICollectionView,
             kind: &NSString,
@@ -191,7 +193,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:canMoveItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_canMoveItemAtIndexPath(
+        unsafe fn collectionView_canMoveItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -201,7 +203,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:moveItemAtIndexPath:toIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_moveItemAtIndexPath_toIndexPath(
+        unsafe fn collectionView_moveItemAtIndexPath_toIndexPath(
             &self,
             collection_view: &UICollectionView,
             source_index_path: &NSIndexPath,
@@ -213,7 +215,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(indexTitlesForCollectionView:))]
         #[unsafe(method_family = none)]
-        fn indexTitlesForCollectionView(
+        unsafe fn indexTitlesForCollectionView(
             &self,
             collection_view: &UICollectionView,
         ) -> Option<Retained<NSArray<NSString>>>;
@@ -224,7 +226,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:indexPathForIndexTitle:atIndex:))]
         #[unsafe(method_family = none)]
-        fn collectionView_indexPathForIndexTitle_atIndex(
+        unsafe fn collectionView_indexPathForIndexTitle_atIndex(
             &self,
             collection_view: &UICollectionView,
             title: &NSString,
@@ -241,7 +243,7 @@ extern_protocol!(
         #[cfg(all(feature = "UIResponder", feature = "UIScrollView", feature = "UIView"))]
         #[unsafe(method(collectionView:prefetchItemsAtIndexPaths:))]
         #[unsafe(method_family = none)]
-        fn collectionView_prefetchItemsAtIndexPaths(
+        unsafe fn collectionView_prefetchItemsAtIndexPaths(
             &self,
             collection_view: &UICollectionView,
             index_paths: &NSArray<NSIndexPath>,
@@ -251,7 +253,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:cancelPrefetchingForItemsAtIndexPaths:))]
         #[unsafe(method_family = none)]
-        fn collectionView_cancelPrefetchingForItemsAtIndexPaths(
+        unsafe fn collectionView_cancelPrefetchingForItemsAtIndexPaths(
             &self,
             collection_view: &UICollectionView,
             index_paths: &NSArray<NSIndexPath>,
@@ -269,7 +271,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:shouldHighlightItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_shouldHighlightItemAtIndexPath(
+        unsafe fn collectionView_shouldHighlightItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -279,7 +281,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:didHighlightItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_didHighlightItemAtIndexPath(
+        unsafe fn collectionView_didHighlightItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -289,7 +291,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:didUnhighlightItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_didUnhighlightItemAtIndexPath(
+        unsafe fn collectionView_didUnhighlightItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -299,7 +301,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:shouldSelectItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_shouldSelectItemAtIndexPath(
+        unsafe fn collectionView_shouldSelectItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -309,7 +311,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:shouldDeselectItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_shouldDeselectItemAtIndexPath(
+        unsafe fn collectionView_shouldDeselectItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -319,7 +321,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:didSelectItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_didSelectItemAtIndexPath(
+        unsafe fn collectionView_didSelectItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -329,7 +331,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:didDeselectItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_didDeselectItemAtIndexPath(
+        unsafe fn collectionView_didDeselectItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -351,7 +353,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:canPerformPrimaryActionForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_canPerformPrimaryActionForItemAtIndexPath(
+        unsafe fn collectionView_canPerformPrimaryActionForItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -379,7 +381,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:performPrimaryActionForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_performPrimaryActionForItemAtIndexPath(
+        unsafe fn collectionView_performPrimaryActionForItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -393,7 +395,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:willDisplayCell:forItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_willDisplayCell_forItemAtIndexPath(
+        unsafe fn collectionView_willDisplayCell_forItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             cell: &UICollectionViewCell,
@@ -408,7 +410,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:willDisplaySupplementaryView:forElementKind:atIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_willDisplaySupplementaryView_forElementKind_atIndexPath(
+        unsafe fn collectionView_willDisplaySupplementaryView_forElementKind_atIndexPath(
             &self,
             collection_view: &UICollectionView,
             view: &UICollectionReusableView,
@@ -424,7 +426,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:didEndDisplayingCell:forItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_didEndDisplayingCell_forItemAtIndexPath(
+        unsafe fn collectionView_didEndDisplayingCell_forItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             cell: &UICollectionViewCell,
@@ -439,7 +441,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:didEndDisplayingSupplementaryView:forElementOfKind:atIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_didEndDisplayingSupplementaryView_forElementOfKind_atIndexPath(
+        unsafe fn collectionView_didEndDisplayingSupplementaryView_forElementOfKind_atIndexPath(
             &self,
             collection_view: &UICollectionView,
             view: &UICollectionReusableView,
@@ -452,17 +454,13 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:shouldShowMenuForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_shouldShowMenuForItemAtIndexPath(
+        unsafe fn collectionView_shouldShowMenuForItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
         ) -> bool;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `sender` should be of the correct type.
         #[deprecated]
         #[optional]
         #[unsafe(method(collectionView:canPerformAction:forItemAtIndexPath:withSender:))]
@@ -476,10 +474,6 @@ extern_protocol!(
         ) -> bool;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `sender` should be of the correct type.
         #[deprecated]
         #[optional]
         #[unsafe(method(collectionView:performAction:forItemAtIndexPath:withSender:))]
@@ -501,7 +495,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:transitionLayoutForOldLayout:newLayout:))]
         #[unsafe(method_family = none)]
-        fn collectionView_transitionLayoutForOldLayout_newLayout(
+        unsafe fn collectionView_transitionLayoutForOldLayout_newLayout(
             &self,
             collection_view: &UICollectionView,
             from_layout: &UICollectionViewLayout,
@@ -512,7 +506,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:canFocusItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_canFocusItemAtIndexPath(
+        unsafe fn collectionView_canFocusItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -522,7 +516,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:shouldUpdateFocusInContext:))]
         #[unsafe(method_family = none)]
-        fn collectionView_shouldUpdateFocusInContext(
+        unsafe fn collectionView_shouldUpdateFocusInContext(
             &self,
             collection_view: &UICollectionView,
             context: &UICollectionViewFocusUpdateContext,
@@ -537,7 +531,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:didUpdateFocusInContext:withAnimationCoordinator:))]
         #[unsafe(method_family = none)]
-        fn collectionView_didUpdateFocusInContext_withAnimationCoordinator(
+        unsafe fn collectionView_didUpdateFocusInContext_withAnimationCoordinator(
             &self,
             collection_view: &UICollectionView,
             context: &UICollectionViewFocusUpdateContext,
@@ -548,7 +542,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(indexPathForPreferredFocusedViewInCollectionView:))]
         #[unsafe(method_family = none)]
-        fn indexPathForPreferredFocusedViewInCollectionView(
+        unsafe fn indexPathForPreferredFocusedViewInCollectionView(
             &self,
             collection_view: &UICollectionView,
         ) -> Option<Retained<NSIndexPath>>;
@@ -559,7 +553,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:selectionFollowsFocusForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_selectionFollowsFocusForItemAtIndexPath(
+        unsafe fn collectionView_selectionFollowsFocusForItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -569,7 +563,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:targetIndexPathForMoveOfItemFromOriginalIndexPath:atCurrentIndexPath:toProposedIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_targetIndexPathForMoveOfItemFromOriginalIndexPath_atCurrentIndexPath_toProposedIndexPath(
+        unsafe fn collectionView_targetIndexPathForMoveOfItemFromOriginalIndexPath_atCurrentIndexPath_toProposedIndexPath(
             &self,
             collection_view: &UICollectionView,
             original_index_path: &NSIndexPath,
@@ -582,7 +576,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:targetIndexPathForMoveFromItemAtIndexPath:toProposedIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_targetIndexPathForMoveFromItemAtIndexPath_toProposedIndexPath(
+        unsafe fn collectionView_targetIndexPathForMoveFromItemAtIndexPath_toProposedIndexPath(
             &self,
             collection_view: &UICollectionView,
             current_index_path: &NSIndexPath,
@@ -597,7 +591,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:targetContentOffsetForProposedContentOffset:))]
         #[unsafe(method_family = none)]
-        fn collectionView_targetContentOffsetForProposedContentOffset(
+        unsafe fn collectionView_targetContentOffsetForProposedContentOffset(
             &self,
             collection_view: &UICollectionView,
             proposed_content_offset: CGPoint,
@@ -607,7 +601,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:canEditItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_canEditItemAtIndexPath(
+        unsafe fn collectionView_canEditItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -621,7 +615,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:shouldSpringLoadItemAtIndexPath:withContext:))]
         #[unsafe(method_family = none)]
-        fn collectionView_shouldSpringLoadItemAtIndexPath_withContext(
+        unsafe fn collectionView_shouldSpringLoadItemAtIndexPath_withContext(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -632,7 +626,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:shouldBeginMultipleSelectionInteractionAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_shouldBeginMultipleSelectionInteractionAtIndexPath(
+        unsafe fn collectionView_shouldBeginMultipleSelectionInteractionAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -642,7 +636,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:didBeginMultipleSelectionInteractionAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_didBeginMultipleSelectionInteractionAtIndexPath(
+        unsafe fn collectionView_didBeginMultipleSelectionInteractionAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -652,7 +646,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionViewDidEndMultipleSelectionInteraction:))]
         #[unsafe(method_family = none)]
-        fn collectionViewDidEndMultipleSelectionInteraction(
+        unsafe fn collectionViewDidEndMultipleSelectionInteraction(
             &self,
             collection_view: &UICollectionView,
         );
@@ -687,7 +681,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:contextMenuConfigurationForItemsAtIndexPaths:point:))]
         #[unsafe(method_family = none)]
-        fn collectionView_contextMenuConfigurationForItemsAtIndexPaths_point(
+        unsafe fn collectionView_contextMenuConfigurationForItemsAtIndexPaths_point(
             &self,
             collection_view: &UICollectionView,
             index_paths: &NSArray<NSIndexPath>,
@@ -713,7 +707,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:contextMenuConfiguration:highlightPreviewForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_contextMenuConfiguration_highlightPreviewForItemAtIndexPath(
+        unsafe fn collectionView_contextMenuConfiguration_highlightPreviewForItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             configuration: &UIContextMenuConfiguration,
@@ -738,7 +732,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:contextMenuConfiguration:dismissalPreviewForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_contextMenuConfiguration_dismissalPreviewForItemAtIndexPath(
+        unsafe fn collectionView_contextMenuConfiguration_dismissalPreviewForItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             configuration: &UIContextMenuConfiguration,
@@ -762,7 +756,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:willPerformPreviewActionForMenuWithConfiguration:animator:))]
         #[unsafe(method_family = none)]
-        fn collectionView_willPerformPreviewActionForMenuWithConfiguration_animator(
+        unsafe fn collectionView_willPerformPreviewActionForMenuWithConfiguration_animator(
             &self,
             collection_view: &UICollectionView,
             configuration: &UIContextMenuConfiguration,
@@ -786,7 +780,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:willDisplayContextMenuWithConfiguration:animator:))]
         #[unsafe(method_family = none)]
-        fn collectionView_willDisplayContextMenuWithConfiguration_animator(
+        unsafe fn collectionView_willDisplayContextMenuWithConfiguration_animator(
             &self,
             collection_view: &UICollectionView,
             configuration: &UIContextMenuConfiguration,
@@ -810,7 +804,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:willEndContextMenuInteractionWithConfiguration:animator:))]
         #[unsafe(method_family = none)]
-        fn collectionView_willEndContextMenuInteractionWithConfiguration_animator(
+        unsafe fn collectionView_willEndContextMenuInteractionWithConfiguration_animator(
             &self,
             collection_view: &UICollectionView,
             configuration: &UIContextMenuConfiguration,
@@ -835,7 +829,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:sceneActivationConfigurationForItemAtIndexPath:point:))]
         #[unsafe(method_family = none)]
-        fn collectionView_sceneActivationConfigurationForItemAtIndexPath_point(
+        unsafe fn collectionView_sceneActivationConfigurationForItemAtIndexPath_point(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -866,7 +860,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:contextMenuConfigurationForItemAtIndexPath:point:))]
         #[unsafe(method_family = none)]
-        fn collectionView_contextMenuConfigurationForItemAtIndexPath_point(
+        unsafe fn collectionView_contextMenuConfigurationForItemAtIndexPath_point(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -890,7 +884,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:previewForHighlightingContextMenuWithConfiguration:))]
         #[unsafe(method_family = none)]
-        fn collectionView_previewForHighlightingContextMenuWithConfiguration(
+        unsafe fn collectionView_previewForHighlightingContextMenuWithConfiguration(
             &self,
             collection_view: &UICollectionView,
             configuration: &UIContextMenuConfiguration,
@@ -914,7 +908,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:previewForDismissingContextMenuWithConfiguration:))]
         #[unsafe(method_family = none)]
-        fn collectionView_previewForDismissingContextMenuWithConfiguration(
+        unsafe fn collectionView_previewForDismissingContextMenuWithConfiguration(
             &self,
             collection_view: &UICollectionView,
             configuration: &UIContextMenuConfiguration,
@@ -1058,15 +1052,12 @@ impl UICollectionView {
         #[cfg(all(feature = "UICollectionViewLayout", feature = "objc2-core-foundation"))]
         #[unsafe(method(initWithFrame:collectionViewLayout:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame_collectionViewLayout(
+        pub unsafe fn initWithFrame_collectionViewLayout(
             this: Allocated<Self>,
             frame: CGRect,
             layout: &UICollectionViewLayout,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -1077,21 +1068,25 @@ impl UICollectionView {
         #[cfg(feature = "UICollectionViewLayout")]
         #[unsafe(method(collectionViewLayout))]
         #[unsafe(method_family = none)]
-        pub fn collectionViewLayout(&self) -> Retained<UICollectionViewLayout>;
+        pub unsafe fn collectionViewLayout(&self) -> Retained<UICollectionViewLayout>;
 
         #[cfg(feature = "UICollectionViewLayout")]
         /// Setter for [`collectionViewLayout`][Self::collectionViewLayout].
         #[unsafe(method(setCollectionViewLayout:))]
         #[unsafe(method_family = none)]
-        pub fn setCollectionViewLayout(&self, collection_view_layout: &UICollectionViewLayout);
+        pub unsafe fn setCollectionViewLayout(
+            &self,
+            collection_view_layout: &UICollectionViewLayout,
+        );
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UICollectionViewDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn UICollectionViewDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(
@@ -1101,32 +1096,30 @@ impl UICollectionView {
 
         #[unsafe(method(dataSource))]
         #[unsafe(method_family = none)]
-        pub fn dataSource(
+        pub unsafe fn dataSource(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UICollectionViewDataSource>>>;
 
-        /// Setter for [`dataSource`][Self::dataSource].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`dataSource`][Self::dataSource].
         #[unsafe(method(setDataSource:))]
         #[unsafe(method_family = none)]
-        pub fn setDataSource(
+        pub unsafe fn setDataSource(
             &self,
             data_source: Option<&ProtocolObject<dyn UICollectionViewDataSource>>,
         );
 
         #[unsafe(method(prefetchDataSource))]
         #[unsafe(method_family = none)]
-        pub fn prefetchDataSource(
+        pub unsafe fn prefetchDataSource(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UICollectionViewDataSourcePrefetching>>>;
 
-        /// Setter for [`prefetchDataSource`][Self::prefetchDataSource].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`prefetchDataSource`][Self::prefetchDataSource].
         #[unsafe(method(setPrefetchDataSource:))]
         #[unsafe(method_family = none)]
-        pub fn setPrefetchDataSource(
+        pub unsafe fn setPrefetchDataSource(
             &self,
             prefetch_data_source: Option<
                 &ProtocolObject<dyn UICollectionViewDataSourcePrefetching>,
@@ -1135,92 +1128,90 @@ impl UICollectionView {
 
         #[unsafe(method(isPrefetchingEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isPrefetchingEnabled(&self) -> bool;
+        pub unsafe fn isPrefetchingEnabled(&self) -> bool;
 
         /// Setter for [`isPrefetchingEnabled`][Self::isPrefetchingEnabled].
         #[unsafe(method(setPrefetchingEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setPrefetchingEnabled(&self, prefetching_enabled: bool);
+        pub unsafe fn setPrefetchingEnabled(&self, prefetching_enabled: bool);
 
         #[unsafe(method(dragDelegate))]
         #[unsafe(method_family = none)]
-        pub fn dragDelegate(
+        pub unsafe fn dragDelegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UICollectionViewDragDelegate>>>;
 
-        /// Setter for [`dragDelegate`][Self::dragDelegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`dragDelegate`][Self::dragDelegate].
         #[unsafe(method(setDragDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDragDelegate(
+        pub unsafe fn setDragDelegate(
             &self,
             drag_delegate: Option<&ProtocolObject<dyn UICollectionViewDragDelegate>>,
         );
 
         #[unsafe(method(dropDelegate))]
         #[unsafe(method_family = none)]
-        pub fn dropDelegate(
+        pub unsafe fn dropDelegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UICollectionViewDropDelegate>>>;
 
-        /// Setter for [`dropDelegate`][Self::dropDelegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`dropDelegate`][Self::dropDelegate].
         #[unsafe(method(setDropDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDropDelegate(
+        pub unsafe fn setDropDelegate(
             &self,
             drop_delegate: Option<&ProtocolObject<dyn UICollectionViewDropDelegate>>,
         );
 
         #[unsafe(method(dragInteractionEnabled))]
         #[unsafe(method_family = none)]
-        pub fn dragInteractionEnabled(&self) -> bool;
+        pub unsafe fn dragInteractionEnabled(&self) -> bool;
 
         /// Setter for [`dragInteractionEnabled`][Self::dragInteractionEnabled].
         #[unsafe(method(setDragInteractionEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setDragInteractionEnabled(&self, drag_interaction_enabled: bool);
+        pub unsafe fn setDragInteractionEnabled(&self, drag_interaction_enabled: bool);
 
         #[cfg(feature = "UIContextMenuInteraction")]
         #[unsafe(method(contextMenuInteraction))]
         #[unsafe(method_family = none)]
-        pub fn contextMenuInteraction(&self) -> Option<Retained<UIContextMenuInteraction>>;
+        pub unsafe fn contextMenuInteraction(&self) -> Option<Retained<UIContextMenuInteraction>>;
 
         #[unsafe(method(reorderingCadence))]
         #[unsafe(method_family = none)]
-        pub fn reorderingCadence(&self) -> UICollectionViewReorderingCadence;
+        pub unsafe fn reorderingCadence(&self) -> UICollectionViewReorderingCadence;
 
         /// Setter for [`reorderingCadence`][Self::reorderingCadence].
         #[unsafe(method(setReorderingCadence:))]
         #[unsafe(method_family = none)]
-        pub fn setReorderingCadence(&self, reordering_cadence: UICollectionViewReorderingCadence);
+        pub unsafe fn setReorderingCadence(
+            &self,
+            reordering_cadence: UICollectionViewReorderingCadence,
+        );
 
         #[unsafe(method(selfSizingInvalidation))]
         #[unsafe(method_family = none)]
-        pub fn selfSizingInvalidation(&self) -> UICollectionViewSelfSizingInvalidation;
+        pub unsafe fn selfSizingInvalidation(&self) -> UICollectionViewSelfSizingInvalidation;
 
         /// Setter for [`selfSizingInvalidation`][Self::selfSizingInvalidation].
         #[unsafe(method(setSelfSizingInvalidation:))]
         #[unsafe(method_family = none)]
-        pub fn setSelfSizingInvalidation(
+        pub unsafe fn setSelfSizingInvalidation(
             &self,
             self_sizing_invalidation: UICollectionViewSelfSizingInvalidation,
         );
 
         #[unsafe(method(backgroundView))]
         #[unsafe(method_family = none)]
-        pub fn backgroundView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn backgroundView(&self) -> Option<Retained<UIView>>;
 
         /// Setter for [`backgroundView`][Self::backgroundView].
         #[unsafe(method(setBackgroundView:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundView(&self, background_view: Option<&UIView>);
+        pub unsafe fn setBackgroundView(&self, background_view: Option<&UIView>);
 
-        /// # Safety
-        ///
-        /// `cell_class` probably has further requirements.
         #[unsafe(method(registerClass:forCellWithReuseIdentifier:))]
         #[unsafe(method_family = none)]
         pub unsafe fn registerClass_forCellWithReuseIdentifier(
@@ -1233,15 +1224,12 @@ impl UICollectionView {
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(registerNib:forCellWithReuseIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn registerNib_forCellWithReuseIdentifier(
+        pub unsafe fn registerNib_forCellWithReuseIdentifier(
             &self,
             nib: Option<&UINib>,
             identifier: &NSString,
         );
 
-        /// # Safety
-        ///
-        /// `view_class` probably has further requirements.
         #[unsafe(method(registerClass:forSupplementaryViewOfKind:withReuseIdentifier:))]
         #[unsafe(method_family = none)]
         pub unsafe fn registerClass_forSupplementaryViewOfKind_withReuseIdentifier(
@@ -1255,7 +1243,7 @@ impl UICollectionView {
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(registerNib:forSupplementaryViewOfKind:withReuseIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn registerNib_forSupplementaryViewOfKind_withReuseIdentifier(
+        pub unsafe fn registerNib_forSupplementaryViewOfKind_withReuseIdentifier(
             &self,
             nib: Option<&UINib>,
             kind: &NSString,
@@ -1265,7 +1253,7 @@ impl UICollectionView {
         #[cfg(feature = "UICollectionViewCell")]
         #[unsafe(method(dequeueReusableCellWithReuseIdentifier:forIndexPath:))]
         #[unsafe(method_family = none)]
-        pub fn dequeueReusableCellWithReuseIdentifier_forIndexPath(
+        pub unsafe fn dequeueReusableCellWithReuseIdentifier_forIndexPath(
             &self,
             identifier: &NSString,
             index_path: &NSIndexPath,
@@ -1274,7 +1262,7 @@ impl UICollectionView {
         #[cfg(feature = "UICollectionViewCell")]
         #[unsafe(method(dequeueReusableSupplementaryViewOfKind:withReuseIdentifier:forIndexPath:))]
         #[unsafe(method_family = none)]
-        pub fn dequeueReusableSupplementaryViewOfKind_withReuseIdentifier_forIndexPath(
+        pub unsafe fn dequeueReusableSupplementaryViewOfKind_withReuseIdentifier_forIndexPath(
             &self,
             element_kind: &NSString,
             identifier: &NSString,
@@ -1285,9 +1273,6 @@ impl UICollectionView {
             feature = "UICollectionViewCell",
             feature = "UICollectionViewItemRegistration"
         ))]
-        /// # Safety
-        ///
-        /// `item` should be of the correct type.
         #[unsafe(method(dequeueConfiguredReusableCellWithRegistration:forIndexPath:item:))]
         #[unsafe(method_family = none)]
         pub unsafe fn dequeueConfiguredReusableCellWithRegistration_forIndexPath_item(
@@ -1303,7 +1288,7 @@ impl UICollectionView {
         ))]
         #[unsafe(method(dequeueConfiguredReusableSupplementaryViewWithRegistration:forIndexPath:))]
         #[unsafe(method_family = none)]
-        pub fn dequeueConfiguredReusableSupplementaryViewWithRegistration_forIndexPath(
+        pub unsafe fn dequeueConfiguredReusableSupplementaryViewWithRegistration_forIndexPath(
             &self,
             registration: &UICollectionViewSupplementaryRegistration,
             index_path: &NSIndexPath,
@@ -1311,29 +1296,29 @@ impl UICollectionView {
 
         #[unsafe(method(allowsSelection))]
         #[unsafe(method_family = none)]
-        pub fn allowsSelection(&self) -> bool;
+        pub unsafe fn allowsSelection(&self) -> bool;
 
         /// Setter for [`allowsSelection`][Self::allowsSelection].
         #[unsafe(method(setAllowsSelection:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsSelection(&self, allows_selection: bool);
+        pub unsafe fn setAllowsSelection(&self, allows_selection: bool);
 
         #[unsafe(method(allowsMultipleSelection))]
         #[unsafe(method_family = none)]
-        pub fn allowsMultipleSelection(&self) -> bool;
+        pub unsafe fn allowsMultipleSelection(&self) -> bool;
 
         /// Setter for [`allowsMultipleSelection`][Self::allowsMultipleSelection].
         #[unsafe(method(setAllowsMultipleSelection:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsMultipleSelection(&self, allows_multiple_selection: bool);
+        pub unsafe fn setAllowsMultipleSelection(&self, allows_multiple_selection: bool);
 
         #[unsafe(method(indexPathsForSelectedItems))]
         #[unsafe(method_family = none)]
-        pub fn indexPathsForSelectedItems(&self) -> Option<Retained<NSArray<NSIndexPath>>>;
+        pub unsafe fn indexPathsForSelectedItems(&self) -> Option<Retained<NSArray<NSIndexPath>>>;
 
         #[unsafe(method(selectItemAtIndexPath:animated:scrollPosition:))]
         #[unsafe(method_family = none)]
-        pub fn selectItemAtIndexPath_animated_scrollPosition(
+        pub unsafe fn selectItemAtIndexPath_animated_scrollPosition(
             &self,
             index_path: Option<&NSIndexPath>,
             animated: bool,
@@ -1342,20 +1327,24 @@ impl UICollectionView {
 
         #[unsafe(method(deselectItemAtIndexPath:animated:))]
         #[unsafe(method_family = none)]
-        pub fn deselectItemAtIndexPath_animated(&self, index_path: &NSIndexPath, animated: bool);
+        pub unsafe fn deselectItemAtIndexPath_animated(
+            &self,
+            index_path: &NSIndexPath,
+            animated: bool,
+        );
 
         #[unsafe(method(hasUncommittedUpdates))]
         #[unsafe(method_family = none)]
-        pub fn hasUncommittedUpdates(&self) -> bool;
+        pub unsafe fn hasUncommittedUpdates(&self) -> bool;
 
         #[unsafe(method(reloadData))]
         #[unsafe(method_family = none)]
-        pub fn reloadData(&self);
+        pub unsafe fn reloadData(&self);
 
         #[cfg(feature = "UICollectionViewLayout")]
         #[unsafe(method(setCollectionViewLayout:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setCollectionViewLayout_animated(
+        pub unsafe fn setCollectionViewLayout_animated(
             &self,
             layout: &UICollectionViewLayout,
             animated: bool,
@@ -1364,7 +1353,7 @@ impl UICollectionView {
         #[cfg(all(feature = "UICollectionViewLayout", feature = "block2"))]
         #[unsafe(method(setCollectionViewLayout:animated:completion:))]
         #[unsafe(method_family = none)]
-        pub fn setCollectionViewLayout_animated_completion(
+        pub unsafe fn setCollectionViewLayout_animated_completion(
             &self,
             layout: &UICollectionViewLayout,
             animated: bool,
@@ -1376,9 +1365,6 @@ impl UICollectionView {
             feature = "UICollectionViewTransitionLayout",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// `completion` must be a valid pointer or null.
         #[unsafe(method(startInteractiveTransitionToCollectionViewLayout:completion:))]
         #[unsafe(method_family = none)]
         pub unsafe fn startInteractiveTransitionToCollectionViewLayout_completion(
@@ -1389,24 +1375,24 @@ impl UICollectionView {
 
         #[unsafe(method(finishInteractiveTransition))]
         #[unsafe(method_family = none)]
-        pub fn finishInteractiveTransition(&self);
+        pub unsafe fn finishInteractiveTransition(&self);
 
         #[unsafe(method(cancelInteractiveTransition))]
         #[unsafe(method_family = none)]
-        pub fn cancelInteractiveTransition(&self);
+        pub unsafe fn cancelInteractiveTransition(&self);
 
         #[unsafe(method(numberOfSections))]
         #[unsafe(method_family = none)]
-        pub fn numberOfSections(&self) -> NSInteger;
+        pub unsafe fn numberOfSections(&self) -> NSInteger;
 
         #[unsafe(method(numberOfItemsInSection:))]
         #[unsafe(method_family = none)]
-        pub fn numberOfItemsInSection(&self, section: NSInteger) -> NSInteger;
+        pub unsafe fn numberOfItemsInSection(&self, section: NSInteger) -> NSInteger;
 
         #[cfg(feature = "UICollectionViewLayout")]
         #[unsafe(method(layoutAttributesForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        pub fn layoutAttributesForItemAtIndexPath(
+        pub unsafe fn layoutAttributesForItemAtIndexPath(
             &self,
             index_path: &NSIndexPath,
         ) -> Option<Retained<UICollectionViewLayoutAttributes>>;
@@ -1414,7 +1400,7 @@ impl UICollectionView {
         #[cfg(feature = "UICollectionViewLayout")]
         #[unsafe(method(layoutAttributesForSupplementaryElementOfKind:atIndexPath:))]
         #[unsafe(method_family = none)]
-        pub fn layoutAttributesForSupplementaryElementOfKind_atIndexPath(
+        pub unsafe fn layoutAttributesForSupplementaryElementOfKind_atIndexPath(
             &self,
             kind: &NSString,
             index_path: &NSIndexPath,
@@ -1423,12 +1409,15 @@ impl UICollectionView {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(indexPathForItemAtPoint:))]
         #[unsafe(method_family = none)]
-        pub fn indexPathForItemAtPoint(&self, point: CGPoint) -> Option<Retained<NSIndexPath>>;
+        pub unsafe fn indexPathForItemAtPoint(
+            &self,
+            point: CGPoint,
+        ) -> Option<Retained<NSIndexPath>>;
 
         #[cfg(feature = "UICollectionViewCell")]
         #[unsafe(method(indexPathForCell:))]
         #[unsafe(method_family = none)]
-        pub fn indexPathForCell(
+        pub unsafe fn indexPathForCell(
             &self,
             cell: &UICollectionViewCell,
         ) -> Option<Retained<NSIndexPath>>;
@@ -1441,7 +1430,7 @@ impl UICollectionView {
         /// Returns: The index path of the specified view if it is in the collection view, else `nil`.
         #[unsafe(method(indexPathForSupplementaryView:))]
         #[unsafe(method_family = none)]
-        pub fn indexPathForSupplementaryView(
+        pub unsafe fn indexPathForSupplementaryView(
             &self,
             supplementary_view: &UICollectionReusableView,
         ) -> Option<Retained<NSIndexPath>>;
@@ -1449,7 +1438,7 @@ impl UICollectionView {
         #[cfg(feature = "UICollectionViewCell")]
         #[unsafe(method(cellForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        pub fn cellForItemAtIndexPath(
+        pub unsafe fn cellForItemAtIndexPath(
             &self,
             index_path: &NSIndexPath,
         ) -> Option<Retained<UICollectionViewCell>>;
@@ -1457,16 +1446,16 @@ impl UICollectionView {
         #[cfg(feature = "UICollectionViewCell")]
         #[unsafe(method(visibleCells))]
         #[unsafe(method_family = none)]
-        pub fn visibleCells(&self) -> Retained<NSArray<UICollectionViewCell>>;
+        pub unsafe fn visibleCells(&self) -> Retained<NSArray<UICollectionViewCell>>;
 
         #[unsafe(method(indexPathsForVisibleItems))]
         #[unsafe(method_family = none)]
-        pub fn indexPathsForVisibleItems(&self) -> Retained<NSArray<NSIndexPath>>;
+        pub unsafe fn indexPathsForVisibleItems(&self) -> Retained<NSArray<NSIndexPath>>;
 
         #[cfg(feature = "UICollectionViewCell")]
         #[unsafe(method(supplementaryViewForElementKind:atIndexPath:))]
         #[unsafe(method_family = none)]
-        pub fn supplementaryViewForElementKind_atIndexPath(
+        pub unsafe fn supplementaryViewForElementKind_atIndexPath(
             &self,
             element_kind: &NSString,
             index_path: &NSIndexPath,
@@ -1475,21 +1464,21 @@ impl UICollectionView {
         #[cfg(feature = "UICollectionViewCell")]
         #[unsafe(method(visibleSupplementaryViewsOfKind:))]
         #[unsafe(method_family = none)]
-        pub fn visibleSupplementaryViewsOfKind(
+        pub unsafe fn visibleSupplementaryViewsOfKind(
             &self,
             element_kind: &NSString,
         ) -> Retained<NSArray<UICollectionReusableView>>;
 
         #[unsafe(method(indexPathsForVisibleSupplementaryElementsOfKind:))]
         #[unsafe(method_family = none)]
-        pub fn indexPathsForVisibleSupplementaryElementsOfKind(
+        pub unsafe fn indexPathsForVisibleSupplementaryElementsOfKind(
             &self,
             element_kind: &NSString,
         ) -> Retained<NSArray<NSIndexPath>>;
 
         #[unsafe(method(scrollToItemAtIndexPath:atScrollPosition:animated:))]
         #[unsafe(method_family = none)]
-        pub fn scrollToItemAtIndexPath_atScrollPosition_animated(
+        pub unsafe fn scrollToItemAtIndexPath_atScrollPosition_animated(
             &self,
             index_path: &NSIndexPath,
             scroll_position: UICollectionViewScrollPosition,
@@ -1498,31 +1487,31 @@ impl UICollectionView {
 
         #[unsafe(method(insertSections:))]
         #[unsafe(method_family = none)]
-        pub fn insertSections(&self, sections: &NSIndexSet);
+        pub unsafe fn insertSections(&self, sections: &NSIndexSet);
 
         #[unsafe(method(deleteSections:))]
         #[unsafe(method_family = none)]
-        pub fn deleteSections(&self, sections: &NSIndexSet);
+        pub unsafe fn deleteSections(&self, sections: &NSIndexSet);
 
         #[unsafe(method(moveSection:toSection:))]
         #[unsafe(method_family = none)]
-        pub fn moveSection_toSection(&self, section: NSInteger, new_section: NSInteger);
+        pub unsafe fn moveSection_toSection(&self, section: NSInteger, new_section: NSInteger);
 
         #[unsafe(method(reloadSections:))]
         #[unsafe(method_family = none)]
-        pub fn reloadSections(&self, sections: &NSIndexSet);
+        pub unsafe fn reloadSections(&self, sections: &NSIndexSet);
 
         #[unsafe(method(insertItemsAtIndexPaths:))]
         #[unsafe(method_family = none)]
-        pub fn insertItemsAtIndexPaths(&self, index_paths: &NSArray<NSIndexPath>);
+        pub unsafe fn insertItemsAtIndexPaths(&self, index_paths: &NSArray<NSIndexPath>);
 
         #[unsafe(method(deleteItemsAtIndexPaths:))]
         #[unsafe(method_family = none)]
-        pub fn deleteItemsAtIndexPaths(&self, index_paths: &NSArray<NSIndexPath>);
+        pub unsafe fn deleteItemsAtIndexPaths(&self, index_paths: &NSArray<NSIndexPath>);
 
         #[unsafe(method(moveItemAtIndexPath:toIndexPath:))]
         #[unsafe(method_family = none)]
-        pub fn moveItemAtIndexPath_toIndexPath(
+        pub unsafe fn moveItemAtIndexPath_toIndexPath(
             &self,
             index_path: &NSIndexPath,
             new_index_path: &NSIndexPath,
@@ -1530,16 +1519,16 @@ impl UICollectionView {
 
         #[unsafe(method(reloadItemsAtIndexPaths:))]
         #[unsafe(method_family = none)]
-        pub fn reloadItemsAtIndexPaths(&self, index_paths: &NSArray<NSIndexPath>);
+        pub unsafe fn reloadItemsAtIndexPaths(&self, index_paths: &NSArray<NSIndexPath>);
 
         #[unsafe(method(reconfigureItemsAtIndexPaths:))]
         #[unsafe(method_family = none)]
-        pub fn reconfigureItemsAtIndexPaths(&self, index_paths: &NSArray<NSIndexPath>);
+        pub unsafe fn reconfigureItemsAtIndexPaths(&self, index_paths: &NSArray<NSIndexPath>);
 
         #[cfg(feature = "block2")]
         #[unsafe(method(performBatchUpdates:completion:))]
         #[unsafe(method_family = none)]
-        pub fn performBatchUpdates_completion(
+        pub unsafe fn performBatchUpdates_completion(
             &self,
             updates: Option<&block2::DynBlock<dyn Fn() + '_>>,
             completion: Option<&block2::DynBlock<dyn Fn(Bool)>>,
@@ -1547,99 +1536,105 @@ impl UICollectionView {
 
         #[unsafe(method(beginInteractiveMovementForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        pub fn beginInteractiveMovementForItemAtIndexPath(&self, index_path: &NSIndexPath) -> bool;
+        pub unsafe fn beginInteractiveMovementForItemAtIndexPath(
+            &self,
+            index_path: &NSIndexPath,
+        ) -> bool;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(updateInteractiveMovementTargetPosition:))]
         #[unsafe(method_family = none)]
-        pub fn updateInteractiveMovementTargetPosition(&self, target_position: CGPoint);
+        pub unsafe fn updateInteractiveMovementTargetPosition(&self, target_position: CGPoint);
 
         #[unsafe(method(endInteractiveMovement))]
         #[unsafe(method_family = none)]
-        pub fn endInteractiveMovement(&self);
+        pub unsafe fn endInteractiveMovement(&self);
 
         #[unsafe(method(cancelInteractiveMovement))]
         #[unsafe(method_family = none)]
-        pub fn cancelInteractiveMovement(&self);
+        pub unsafe fn cancelInteractiveMovement(&self);
 
         #[unsafe(method(remembersLastFocusedIndexPath))]
         #[unsafe(method_family = none)]
-        pub fn remembersLastFocusedIndexPath(&self) -> bool;
+        pub unsafe fn remembersLastFocusedIndexPath(&self) -> bool;
 
         /// Setter for [`remembersLastFocusedIndexPath`][Self::remembersLastFocusedIndexPath].
         #[unsafe(method(setRemembersLastFocusedIndexPath:))]
         #[unsafe(method_family = none)]
-        pub fn setRemembersLastFocusedIndexPath(&self, remembers_last_focused_index_path: bool);
+        pub unsafe fn setRemembersLastFocusedIndexPath(
+            &self,
+            remembers_last_focused_index_path: bool,
+        );
 
         /// When enabled, the collection view ensures that selection is automatically triggered when focus moves to a cell.
         /// Defaults to a system derived value based on platform and other properties of the collection view.
         #[unsafe(method(selectionFollowsFocus))]
         #[unsafe(method_family = none)]
-        pub fn selectionFollowsFocus(&self) -> bool;
+        pub unsafe fn selectionFollowsFocus(&self) -> bool;
 
         /// Setter for [`selectionFollowsFocus`][Self::selectionFollowsFocus].
         #[unsafe(method(setSelectionFollowsFocus:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectionFollowsFocus(&self, selection_follows_focus: bool);
+        pub unsafe fn setSelectionFollowsFocus(&self, selection_follows_focus: bool);
 
         /// Determines if the collection view allows its cells to become focused.
         /// When collectionView:canFocusItemAtIndexPath: is implemented, its return value takes precedence over this method.
         /// Defaults to a system derived value based on platform and other properties of the collection view.
         #[unsafe(method(allowsFocus))]
         #[unsafe(method_family = none)]
-        pub fn allowsFocus(&self) -> bool;
+        pub unsafe fn allowsFocus(&self) -> bool;
 
         /// Setter for [`allowsFocus`][Self::allowsFocus].
         #[unsafe(method(setAllowsFocus:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsFocus(&self, allows_focus: bool);
+        pub unsafe fn setAllowsFocus(&self, allows_focus: bool);
 
         /// Determines if the collection view allows its cells to become focused while editing.
         /// When collectionView:canFocusItemAtIndexPath: is implemented, its return value takes precedence over this method.
         /// Defaults to a system derived value based on platform and other properties of the collection view.
         #[unsafe(method(allowsFocusDuringEditing))]
         #[unsafe(method_family = none)]
-        pub fn allowsFocusDuringEditing(&self) -> bool;
+        pub unsafe fn allowsFocusDuringEditing(&self) -> bool;
 
         /// Setter for [`allowsFocusDuringEditing`][Self::allowsFocusDuringEditing].
         #[unsafe(method(setAllowsFocusDuringEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsFocusDuringEditing(&self, allows_focus_during_editing: bool);
+        pub unsafe fn setAllowsFocusDuringEditing(&self, allows_focus_during_editing: bool);
 
         #[unsafe(method(hasActiveDrag))]
         #[unsafe(method_family = none)]
-        pub fn hasActiveDrag(&self) -> bool;
+        pub unsafe fn hasActiveDrag(&self) -> bool;
 
         #[unsafe(method(hasActiveDrop))]
         #[unsafe(method_family = none)]
-        pub fn hasActiveDrop(&self) -> bool;
+        pub unsafe fn hasActiveDrop(&self) -> bool;
 
         #[unsafe(method(isEditing))]
         #[unsafe(method_family = none)]
-        pub fn isEditing(&self) -> bool;
+        pub unsafe fn isEditing(&self) -> bool;
 
         /// Setter for [`isEditing`][Self::isEditing].
         #[unsafe(method(setEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setEditing(&self, editing: bool);
+        pub unsafe fn setEditing(&self, editing: bool);
 
         #[unsafe(method(allowsSelectionDuringEditing))]
         #[unsafe(method_family = none)]
-        pub fn allowsSelectionDuringEditing(&self) -> bool;
+        pub unsafe fn allowsSelectionDuringEditing(&self) -> bool;
 
         /// Setter for [`allowsSelectionDuringEditing`][Self::allowsSelectionDuringEditing].
         #[unsafe(method(setAllowsSelectionDuringEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsSelectionDuringEditing(&self, allows_selection_during_editing: bool);
+        pub unsafe fn setAllowsSelectionDuringEditing(&self, allows_selection_during_editing: bool);
 
         #[unsafe(method(allowsMultipleSelectionDuringEditing))]
         #[unsafe(method_family = none)]
-        pub fn allowsMultipleSelectionDuringEditing(&self) -> bool;
+        pub unsafe fn allowsMultipleSelectionDuringEditing(&self) -> bool;
 
         /// Setter for [`allowsMultipleSelectionDuringEditing`][Self::allowsMultipleSelectionDuringEditing].
         #[unsafe(method(setAllowsMultipleSelectionDuringEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsMultipleSelectionDuringEditing(
+        pub unsafe fn setAllowsMultipleSelectionDuringEditing(
             &self,
             allows_multiple_selection_during_editing: bool,
         );
@@ -1653,11 +1648,7 @@ impl UICollectionView {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
     );
 }
 
@@ -1665,9 +1656,13 @@ impl UICollectionView {
 #[cfg(all(feature = "UIResponder", feature = "UIScrollView", feature = "UIView"))]
 impl UICollectionView {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -1701,7 +1696,7 @@ extern_protocol!(
         ))]
         #[unsafe(method(collectionView:itemsForBeginningDragSession:atIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_itemsForBeginningDragSession_atIndexPath(
+        unsafe fn collectionView_itemsForBeginningDragSession_atIndexPath(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -1719,7 +1714,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:itemsForAddingToDragSession:atIndexPath:point:))]
         #[unsafe(method_family = none)]
-        fn collectionView_itemsForAddingToDragSession_atIndexPath_point(
+        unsafe fn collectionView_itemsForAddingToDragSession_atIndexPath_point(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -1737,7 +1732,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:dragPreviewParametersForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_dragPreviewParametersForItemAtIndexPath(
+        unsafe fn collectionView_dragPreviewParametersForItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -1752,7 +1747,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:dragSessionWillBegin:))]
         #[unsafe(method_family = none)]
-        fn collectionView_dragSessionWillBegin(
+        unsafe fn collectionView_dragSessionWillBegin(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -1767,7 +1762,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:dragSessionDidEnd:))]
         #[unsafe(method_family = none)]
-        fn collectionView_dragSessionDidEnd(
+        unsafe fn collectionView_dragSessionDidEnd(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -1782,7 +1777,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:dragSessionAllowsMoveOperation:))]
         #[unsafe(method_family = none)]
-        fn collectionView_dragSessionAllowsMoveOperation(
+        unsafe fn collectionView_dragSessionAllowsMoveOperation(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -1797,7 +1792,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:dragSessionIsRestrictedToDraggingApplication:))]
         #[unsafe(method_family = none)]
-        fn collectionView_dragSessionIsRestrictedToDraggingApplication(
+        unsafe fn collectionView_dragSessionIsRestrictedToDraggingApplication(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -1813,7 +1808,7 @@ extern_protocol!(
         #[cfg(all(feature = "UIResponder", feature = "UIScrollView", feature = "UIView"))]
         #[unsafe(method(collectionView:performDropWithCoordinator:))]
         #[unsafe(method_family = none)]
-        fn collectionView_performDropWithCoordinator(
+        unsafe fn collectionView_performDropWithCoordinator(
             &self,
             collection_view: &UICollectionView,
             coordinator: &ProtocolObject<dyn UICollectionViewDropCoordinator>,
@@ -1828,7 +1823,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:canHandleDropSession:))]
         #[unsafe(method_family = none)]
-        fn collectionView_canHandleDropSession(
+        unsafe fn collectionView_canHandleDropSession(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDropSession>,
@@ -1843,7 +1838,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:dropSessionDidEnter:))]
         #[unsafe(method_family = none)]
-        fn collectionView_dropSessionDidEnter(
+        unsafe fn collectionView_dropSessionDidEnter(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDropSession>,
@@ -1859,7 +1854,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:dropSessionDidUpdate:withDestinationIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_dropSessionDidUpdate_withDestinationIndexPath(
+        unsafe fn collectionView_dropSessionDidUpdate_withDestinationIndexPath(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDropSession>,
@@ -1875,7 +1870,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:dropSessionDidExit:))]
         #[unsafe(method_family = none)]
-        fn collectionView_dropSessionDidExit(
+        unsafe fn collectionView_dropSessionDidExit(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDropSession>,
@@ -1890,7 +1885,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:dropSessionDidEnd:))]
         #[unsafe(method_family = none)]
-        fn collectionView_dropSessionDidEnd(
+        unsafe fn collectionView_dropSessionDidEnd(
             &self,
             collection_view: &UICollectionView,
             session: &ProtocolObject<dyn UIDropSession>,
@@ -1906,7 +1901,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(collectionView:dropPreviewParametersForItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn collectionView_dropPreviewParametersForItemAtIndexPath(
+        unsafe fn collectionView_dropPreviewParametersForItemAtIndexPath(
             &self,
             collection_view: &UICollectionView,
             index_path: &NSIndexPath,
@@ -1965,7 +1960,7 @@ impl UICollectionViewDropProposal {
     extern_methods!(
         #[unsafe(method(initWithDropOperation:intent:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDropOperation_intent(
+        pub unsafe fn initWithDropOperation_intent(
             this: Allocated<Self>,
             operation: UIDropOperation,
             intent: UICollectionViewDropIntent,
@@ -1973,7 +1968,7 @@ impl UICollectionViewDropProposal {
 
         #[unsafe(method(intent))]
         #[unsafe(method_family = none)]
-        pub fn intent(&self) -> UICollectionViewDropIntent;
+        pub unsafe fn intent(&self) -> UICollectionViewDropIntent;
     );
 }
 
@@ -1983,7 +1978,7 @@ impl UICollectionViewDropProposal {
     extern_methods!(
         #[unsafe(method(initWithDropOperation:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDropOperation(
+        pub unsafe fn initWithDropOperation(
             this: Allocated<Self>,
             operation: UIDropOperation,
         ) -> Retained<Self>;
@@ -2005,26 +2000,26 @@ extern_protocol!(
     {
         #[unsafe(method(items))]
         #[unsafe(method_family = none)]
-        fn items(&self) -> Retained<NSArray<ProtocolObject<dyn UICollectionViewDropItem>>>;
+        unsafe fn items(&self) -> Retained<NSArray<ProtocolObject<dyn UICollectionViewDropItem>>>;
 
         #[unsafe(method(destinationIndexPath))]
         #[unsafe(method_family = none)]
-        fn destinationIndexPath(&self) -> Option<Retained<NSIndexPath>>;
+        unsafe fn destinationIndexPath(&self) -> Option<Retained<NSIndexPath>>;
 
         #[cfg(feature = "UIDropInteraction")]
         #[unsafe(method(proposal))]
         #[unsafe(method_family = none)]
-        fn proposal(&self) -> Retained<UICollectionViewDropProposal>;
+        unsafe fn proposal(&self) -> Retained<UICollectionViewDropProposal>;
 
         #[cfg(feature = "UIDragSession")]
         #[unsafe(method(session))]
         #[unsafe(method_family = none)]
-        fn session(&self) -> Retained<ProtocolObject<dyn UIDropSession>>;
+        unsafe fn session(&self) -> Retained<ProtocolObject<dyn UIDropSession>>;
 
         #[cfg(all(feature = "UIDragInteraction", feature = "UIDragItem"))]
         #[unsafe(method(dropItem:toPlaceholder:))]
         #[unsafe(method_family = none)]
-        fn dropItem_toPlaceholder(
+        unsafe fn dropItem_toPlaceholder(
             &self,
             drag_item: &UIDragItem,
             placeholder: &UICollectionViewDropPlaceholder,
@@ -2033,7 +2028,7 @@ extern_protocol!(
         #[cfg(all(feature = "UIDragInteraction", feature = "UIDragItem"))]
         #[unsafe(method(dropItem:toItemAtIndexPath:))]
         #[unsafe(method_family = none)]
-        fn dropItem_toItemAtIndexPath(
+        unsafe fn dropItem_toItemAtIndexPath(
             &self,
             drag_item: &UIDragItem,
             index_path: &NSIndexPath,
@@ -2046,7 +2041,7 @@ extern_protocol!(
         ))]
         #[unsafe(method(dropItem:intoItemAtIndexPath:rect:))]
         #[unsafe(method_family = none)]
-        fn dropItem_intoItemAtIndexPath_rect(
+        unsafe fn dropItem_intoItemAtIndexPath_rect(
             &self,
             drag_item: &UIDragItem,
             index_path: &NSIndexPath,
@@ -2061,7 +2056,7 @@ extern_protocol!(
         ))]
         #[unsafe(method(dropItem:toTarget:))]
         #[unsafe(method_family = none)]
-        fn dropItem_toTarget(
+        unsafe fn dropItem_toTarget(
             &self,
             drag_item: &UIDragItem,
             target: &UIDragPreviewTarget,
@@ -2085,7 +2080,7 @@ impl UICollectionViewPlaceholder {
     extern_methods!(
         #[unsafe(method(initWithInsertionIndexPath:reuseIdentifier:))]
         #[unsafe(method_family = init)]
-        pub fn initWithInsertionIndexPath_reuseIdentifier(
+        pub unsafe fn initWithInsertionIndexPath_reuseIdentifier(
             this: Allocated<Self>,
             insertion_index_path: &NSIndexPath,
             reuse_identifier: &NSString,
@@ -2105,9 +2100,6 @@ impl UICollectionViewPlaceholder {
             feature = "UIView",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// The returned block's argument must be a valid pointer.
         #[unsafe(method(cellUpdateHandler))]
         #[unsafe(method_family = none)]
         pub unsafe fn cellUpdateHandler(
@@ -2121,11 +2113,9 @@ impl UICollectionViewPlaceholder {
             feature = "block2"
         ))]
         /// Setter for [`cellUpdateHandler`][Self::cellUpdateHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCellUpdateHandler:))]
         #[unsafe(method_family = none)]
-        pub fn setCellUpdateHandler(
+        pub unsafe fn setCellUpdateHandler(
             &self,
             cell_update_handler: Option<&block2::DynBlock<dyn Fn(NonNull<UICollectionViewCell>)>>,
         );
@@ -2154,9 +2144,6 @@ impl UICollectionViewDropPlaceholder {
             feature = "UIView",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// The returned block's argument must be a valid pointer.
         #[unsafe(method(previewParametersProvider))]
         #[unsafe(method_family = none)]
         pub unsafe fn previewParametersProvider(
@@ -2174,12 +2161,6 @@ impl UICollectionViewDropPlaceholder {
             feature = "block2"
         ))]
         /// Setter for [`previewParametersProvider`][Self::previewParametersProvider].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `preview_parameters_provider` block's return must be a valid pointer or null.
         #[unsafe(method(setPreviewParametersProvider:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPreviewParametersProvider(
@@ -2198,7 +2179,7 @@ impl UICollectionViewDropPlaceholder {
     extern_methods!(
         #[unsafe(method(initWithInsertionIndexPath:reuseIdentifier:))]
         #[unsafe(method_family = init)]
-        pub fn initWithInsertionIndexPath_reuseIdentifier(
+        pub unsafe fn initWithInsertionIndexPath_reuseIdentifier(
             this: Allocated<Self>,
             insertion_index_path: &NSIndexPath,
             reuse_identifier: &NSString,
@@ -2220,16 +2201,16 @@ extern_protocol!(
         #[cfg(feature = "UIDragItem")]
         #[unsafe(method(dragItem))]
         #[unsafe(method_family = none)]
-        fn dragItem(&self) -> Retained<UIDragItem>;
+        unsafe fn dragItem(&self) -> Retained<UIDragItem>;
 
         #[unsafe(method(sourceIndexPath))]
         #[unsafe(method_family = none)]
-        fn sourceIndexPath(&self) -> Option<Retained<NSIndexPath>>;
+        unsafe fn sourceIndexPath(&self) -> Option<Retained<NSIndexPath>>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(previewSize))]
         #[unsafe(method_family = none)]
-        fn previewSize(&self) -> CGSize;
+        unsafe fn previewSize(&self) -> CGSize;
     }
 );
 
@@ -2242,22 +2223,22 @@ extern_protocol!(
         #[cfg(feature = "UIDragItem")]
         #[unsafe(method(dragItem))]
         #[unsafe(method_family = none)]
-        fn dragItem(&self) -> Retained<UIDragItem>;
+        unsafe fn dragItem(&self) -> Retained<UIDragItem>;
 
         #[cfg(feature = "block2")]
         #[unsafe(method(commitInsertionWithDataSourceUpdates:))]
         #[unsafe(method_family = none)]
-        fn commitInsertionWithDataSourceUpdates(
+        unsafe fn commitInsertionWithDataSourceUpdates(
             &self,
             data_source_updates: &block2::DynBlock<dyn Fn(NonNull<NSIndexPath>) + '_>,
         ) -> bool;
 
         #[unsafe(method(deletePlaceholder))]
         #[unsafe(method_family = none)]
-        fn deletePlaceholder(&self) -> bool;
+        unsafe fn deletePlaceholder(&self) -> bool;
 
         #[unsafe(method(setNeedsCellUpdate))]
         #[unsafe(method_family = none)]
-        fn setNeedsCellUpdate(&self);
+        unsafe fn setNeedsCellUpdate(&self);
     }
 );

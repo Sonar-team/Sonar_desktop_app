@@ -40,218 +40,112 @@ extern_protocol!(
     pub unsafe trait UIResponderStandardEditActions:
         NSObjectProtocol + MainThreadOnly
     {
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(cut:))]
         #[unsafe(method_family = none)]
         unsafe fn cut(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(copy:))]
         #[unsafe(method_family = none)]
         unsafe fn copy(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(paste:))]
         #[unsafe(method_family = none)]
         unsafe fn paste(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(pasteAndMatchStyle:))]
         #[unsafe(method_family = none)]
         unsafe fn pasteAndMatchStyle(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(pasteAndGo:))]
         #[unsafe(method_family = none)]
         unsafe fn pasteAndGo(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(pasteAndSearch:))]
         #[unsafe(method_family = none)]
         unsafe fn pasteAndSearch(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
-        #[optional]
-        #[unsafe(method(newFromPasteboard:))]
-        #[unsafe(method_family = none)]
-        unsafe fn newFromPasteboard(&self, sender: Option<&AnyObject>);
-
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(select:))]
         #[unsafe(method_family = none)]
         unsafe fn select(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(selectAll:))]
         #[unsafe(method_family = none)]
         unsafe fn selectAll(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(delete:))]
         #[unsafe(method_family = none)]
         unsafe fn delete(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(makeTextWritingDirectionLeftToRight:))]
         #[unsafe(method_family = none)]
         unsafe fn makeTextWritingDirectionLeftToRight(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(makeTextWritingDirectionRightToLeft:))]
         #[unsafe(method_family = none)]
         unsafe fn makeTextWritingDirectionRightToLeft(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(toggleBoldface:))]
         #[unsafe(method_family = none)]
         unsafe fn toggleBoldface(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(toggleItalics:))]
         #[unsafe(method_family = none)]
         unsafe fn toggleItalics(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(toggleUnderline:))]
         #[unsafe(method_family = none)]
         unsafe fn toggleUnderline(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(increaseSize:))]
         #[unsafe(method_family = none)]
         unsafe fn increaseSize(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(decreaseSize:))]
         #[unsafe(method_family = none)]
         unsafe fn decreaseSize(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
-        #[optional]
-        #[unsafe(method(alignLeft:))]
-        #[unsafe(method_family = none)]
-        unsafe fn alignLeft(&self, sender: Option<&AnyObject>);
-
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
-        #[optional]
-        #[unsafe(method(alignCenter:))]
-        #[unsafe(method_family = none)]
-        unsafe fn alignCenter(&self, sender: Option<&AnyObject>);
-
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
-        #[optional]
-        #[unsafe(method(alignJustified:))]
-        #[unsafe(method_family = none)]
-        unsafe fn alignJustified(&self, sender: Option<&AnyObject>);
-
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
-        #[optional]
-        #[unsafe(method(alignRight:))]
-        #[unsafe(method_family = none)]
-        unsafe fn alignRight(&self, sender: Option<&AnyObject>);
-
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(find:))]
         #[unsafe(method_family = none)]
         unsafe fn find(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(findAndReplace:))]
         #[unsafe(method_family = none)]
         unsafe fn findAndReplace(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(findNext:))]
         #[unsafe(method_family = none)]
         unsafe fn findNext(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(findPrevious:))]
         #[unsafe(method_family = none)]
         unsafe fn findPrevious(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(useSelectionForFind:))]
         #[unsafe(method_family = none)]
         unsafe fn useSelectionForFind(&self, sender: Option<&AnyObject>);
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `conversion_handler` must be a valid pointer.
         #[optional]
         #[unsafe(method(updateTextAttributesWithConversionHandler:))]
         #[unsafe(method_family = none)]
@@ -260,73 +154,31 @@ extern_protocol!(
             conversion_handler: UITextAttributesConversionHandler,
         );
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(print:))]
         #[unsafe(method_family = none)]
         unsafe fn print(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(rename:))]
         #[unsafe(method_family = none)]
         unsafe fn rename(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(duplicate:))]
         #[unsafe(method_family = none)]
         unsafe fn duplicate(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(move:))]
         #[unsafe(method_family = none)]
         unsafe fn r#move(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(export:))]
         #[unsafe(method_family = none)]
         unsafe fn export(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
-        #[optional]
-        #[unsafe(method(toggleSidebar:))]
-        #[unsafe(method_family = none)]
-        unsafe fn toggleSidebar(&self, sender: Option<&AnyObject>);
-
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
-        #[optional]
-        #[unsafe(method(toggleInspector:))]
-        #[unsafe(method_family = none)]
-        unsafe fn toggleInspector(&self, sender: Option<&AnyObject>);
-
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
-        #[optional]
-        #[unsafe(method(performClose:))]
-        #[unsafe(method_family = none)]
-        unsafe fn performClose(&self, sender: Option<&AnyObject>);
-
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(showWritingTools:))]
         #[unsafe(method_family = none)]
@@ -354,57 +206,73 @@ impl UIResponder {
     extern_methods!(
         #[unsafe(method(nextResponder))]
         #[unsafe(method_family = none)]
-        pub fn nextResponder(&self) -> Option<Retained<UIResponder>>;
+        pub unsafe fn nextResponder(&self) -> Option<Retained<UIResponder>>;
 
         #[unsafe(method(canBecomeFirstResponder))]
         #[unsafe(method_family = none)]
-        pub fn canBecomeFirstResponder(&self) -> bool;
+        pub unsafe fn canBecomeFirstResponder(&self) -> bool;
 
         #[unsafe(method(becomeFirstResponder))]
         #[unsafe(method_family = none)]
-        pub fn becomeFirstResponder(&self) -> bool;
+        pub unsafe fn becomeFirstResponder(&self) -> bool;
 
         #[unsafe(method(canResignFirstResponder))]
         #[unsafe(method_family = none)]
-        pub fn canResignFirstResponder(&self) -> bool;
+        pub unsafe fn canResignFirstResponder(&self) -> bool;
 
         #[unsafe(method(resignFirstResponder))]
         #[unsafe(method_family = none)]
-        pub fn resignFirstResponder(&self) -> bool;
+        pub unsafe fn resignFirstResponder(&self) -> bool;
 
         #[unsafe(method(isFirstResponder))]
         #[unsafe(method_family = none)]
-        pub fn isFirstResponder(&self) -> bool;
+        pub unsafe fn isFirstResponder(&self) -> bool;
 
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(touchesBegan:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn touchesBegan_withEvent(&self, touches: &NSSet<UITouch>, event: Option<&UIEvent>);
+        pub unsafe fn touchesBegan_withEvent(
+            &self,
+            touches: &NSSet<UITouch>,
+            event: Option<&UIEvent>,
+        );
 
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(touchesMoved:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn touchesMoved_withEvent(&self, touches: &NSSet<UITouch>, event: Option<&UIEvent>);
+        pub unsafe fn touchesMoved_withEvent(
+            &self,
+            touches: &NSSet<UITouch>,
+            event: Option<&UIEvent>,
+        );
 
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(touchesEnded:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn touchesEnded_withEvent(&self, touches: &NSSet<UITouch>, event: Option<&UIEvent>);
+        pub unsafe fn touchesEnded_withEvent(
+            &self,
+            touches: &NSSet<UITouch>,
+            event: Option<&UIEvent>,
+        );
 
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(touchesCancelled:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn touchesCancelled_withEvent(&self, touches: &NSSet<UITouch>, event: Option<&UIEvent>);
+        pub unsafe fn touchesCancelled_withEvent(
+            &self,
+            touches: &NSSet<UITouch>,
+            event: Option<&UIEvent>,
+        );
 
         #[cfg(feature = "UITouch")]
         #[unsafe(method(touchesEstimatedPropertiesUpdated:))]
         #[unsafe(method_family = none)]
-        pub fn touchesEstimatedPropertiesUpdated(&self, touches: &NSSet<UITouch>);
+        pub unsafe fn touchesEstimatedPropertiesUpdated(&self, touches: &NSSet<UITouch>);
 
         #[cfg(all(feature = "UIEvent", feature = "UIPress", feature = "UIPressesEvent"))]
         #[unsafe(method(pressesBegan:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn pressesBegan_withEvent(
+        pub unsafe fn pressesBegan_withEvent(
             &self,
             presses: &NSSet<UIPress>,
             event: Option<&UIPressesEvent>,
@@ -413,7 +281,7 @@ impl UIResponder {
         #[cfg(all(feature = "UIEvent", feature = "UIPress", feature = "UIPressesEvent"))]
         #[unsafe(method(pressesChanged:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn pressesChanged_withEvent(
+        pub unsafe fn pressesChanged_withEvent(
             &self,
             presses: &NSSet<UIPress>,
             event: Option<&UIPressesEvent>,
@@ -422,7 +290,7 @@ impl UIResponder {
         #[cfg(all(feature = "UIEvent", feature = "UIPress", feature = "UIPressesEvent"))]
         #[unsafe(method(pressesEnded:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn pressesEnded_withEvent(
+        pub unsafe fn pressesEnded_withEvent(
             &self,
             presses: &NSSet<UIPress>,
             event: Option<&UIPressesEvent>,
@@ -431,7 +299,7 @@ impl UIResponder {
         #[cfg(all(feature = "UIEvent", feature = "UIPress", feature = "UIPressesEvent"))]
         #[unsafe(method(pressesCancelled:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn pressesCancelled_withEvent(
+        pub unsafe fn pressesCancelled_withEvent(
             &self,
             presses: &NSSet<UIPress>,
             event: Option<&UIPressesEvent>,
@@ -440,27 +308,27 @@ impl UIResponder {
         #[cfg(feature = "UIEvent")]
         #[unsafe(method(motionBegan:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn motionBegan_withEvent(&self, motion: UIEventSubtype, event: Option<&UIEvent>);
+        pub unsafe fn motionBegan_withEvent(&self, motion: UIEventSubtype, event: Option<&UIEvent>);
 
         #[cfg(feature = "UIEvent")]
         #[unsafe(method(motionEnded:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn motionEnded_withEvent(&self, motion: UIEventSubtype, event: Option<&UIEvent>);
+        pub unsafe fn motionEnded_withEvent(&self, motion: UIEventSubtype, event: Option<&UIEvent>);
 
         #[cfg(feature = "UIEvent")]
         #[unsafe(method(motionCancelled:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn motionCancelled_withEvent(&self, motion: UIEventSubtype, event: Option<&UIEvent>);
+        pub unsafe fn motionCancelled_withEvent(
+            &self,
+            motion: UIEventSubtype,
+            event: Option<&UIEvent>,
+        );
 
         #[cfg(feature = "UIEvent")]
         #[unsafe(method(remoteControlReceivedWithEvent:))]
         #[unsafe(method_family = none)]
-        pub fn remoteControlReceivedWithEvent(&self, event: Option<&UIEvent>);
+        pub unsafe fn remoteControlReceivedWithEvent(&self, event: Option<&UIEvent>);
 
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `sender` should be of the correct type.
         #[unsafe(method(canPerformAction:withSender:))]
         #[unsafe(method_family = none)]
         pub unsafe fn canPerformAction_withSender(
@@ -469,10 +337,6 @@ impl UIResponder {
             sender: Option<&AnyObject>,
         ) -> bool;
 
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `sender` should be of the correct type.
         #[unsafe(method(targetForAction:withSender:))]
         #[unsafe(method_family = none)]
         pub unsafe fn targetForAction_withSender(
@@ -484,32 +348,20 @@ impl UIResponder {
         #[cfg(feature = "UIMenuBuilder")]
         #[unsafe(method(buildMenuWithBuilder:))]
         #[unsafe(method_family = none)]
-        pub fn buildMenuWithBuilder(&self, builder: &ProtocolObject<dyn UIMenuBuilder>);
+        pub unsafe fn buildMenuWithBuilder(&self, builder: &ProtocolObject<dyn UIMenuBuilder>);
 
         #[cfg(all(feature = "UICommand", feature = "UIMenuElement"))]
         #[unsafe(method(validateCommand:))]
         #[unsafe(method_family = none)]
-        pub fn validateCommand(&self, command: &UICommand);
-
-        #[cfg(all(feature = "UIDeferredMenuElement", feature = "UIMenuElement"))]
-        /// Asks the responder for an element provider to fulfill the given focus-based deferred element.
-        /// Check the `identifier` of the deferred element to identify which deferred element this is.
-        /// By default, this returns nil. Return a non-nil `provider` to make this responder responsible for providing
-        /// elements for this fulfillment of the deferred element.
-        #[unsafe(method(providerForDeferredMenuElement:))]
-        #[unsafe(method_family = none)]
-        pub fn providerForDeferredMenuElement(
-            &self,
-            deferred_element: &UIDeferredMenuElement,
-        ) -> Option<Retained<UIDeferredMenuElementProvider>>;
+        pub unsafe fn validateCommand(&self, command: &UICommand);
 
         #[unsafe(method(undoManager))]
         #[unsafe(method_family = none)]
-        pub fn undoManager(&self) -> Option<Retained<NSUndoManager>>;
+        pub unsafe fn undoManager(&self) -> Option<Retained<NSUndoManager>>;
 
         #[unsafe(method(editingInteractionConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn editingInteractionConfiguration(&self) -> UIEditingInteractionConfiguration;
+        pub unsafe fn editingInteractionConfiguration(&self) -> UIEditingInteractionConfiguration;
     );
 }
 
@@ -518,11 +370,11 @@ impl UIResponder {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -536,7 +388,7 @@ impl UIResponder {
         ))]
         #[unsafe(method(keyCommands))]
         #[unsafe(method_family = none)]
-        pub fn keyCommands(&self) -> Option<Retained<NSArray<UIKeyCommand>>>;
+        pub unsafe fn keyCommands(&self) -> Option<Retained<NSArray<UIKeyCommand>>>;
     );
 }
 
@@ -546,12 +398,12 @@ impl UIResponder {
         #[cfg(feature = "UIView")]
         #[unsafe(method(inputView))]
         #[unsafe(method_family = none)]
-        pub fn inputView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn inputView(&self) -> Option<Retained<UIView>>;
 
         #[cfg(feature = "UIView")]
         #[unsafe(method(inputAccessoryView))]
         #[unsafe(method_family = none)]
-        pub fn inputAccessoryView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn inputAccessoryView(&self) -> Option<Retained<UIView>>;
 
         #[cfg(feature = "UITextInput")]
         /// This method is for clients that wish to put buttons on the Shortcuts Bar, shown on top of the keyboard.
@@ -560,34 +412,36 @@ impl UIResponder {
         /// This method should not be overridden. Goes up the responder chain.
         #[unsafe(method(inputAssistantItem))]
         #[unsafe(method_family = none)]
-        pub fn inputAssistantItem(&self) -> Retained<UITextInputAssistantItem>;
+        pub unsafe fn inputAssistantItem(&self) -> Retained<UITextInputAssistantItem>;
 
         #[cfg(all(feature = "UIInputViewController", feature = "UIViewController"))]
         #[unsafe(method(inputViewController))]
         #[unsafe(method_family = none)]
-        pub fn inputViewController(&self) -> Option<Retained<UIInputViewController>>;
+        pub unsafe fn inputViewController(&self) -> Option<Retained<UIInputViewController>>;
 
         #[cfg(all(feature = "UIInputViewController", feature = "UIViewController"))]
         #[unsafe(method(inputAccessoryViewController))]
         #[unsafe(method_family = none)]
-        pub fn inputAccessoryViewController(&self) -> Option<Retained<UIInputViewController>>;
+        pub unsafe fn inputAccessoryViewController(
+            &self,
+        ) -> Option<Retained<UIInputViewController>>;
 
         #[cfg(feature = "UITextInput")]
         #[unsafe(method(textInputMode))]
         #[unsafe(method_family = none)]
-        pub fn textInputMode(&self) -> Option<Retained<UITextInputMode>>;
+        pub unsafe fn textInputMode(&self) -> Option<Retained<UITextInputMode>>;
 
         #[unsafe(method(textInputContextIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn textInputContextIdentifier(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn textInputContextIdentifier(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(clearTextInputContextIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn clearTextInputContextIdentifier(identifier: &NSString, mtm: MainThreadMarker);
+        pub unsafe fn clearTextInputContextIdentifier(identifier: &NSString, mtm: MainThreadMarker);
 
         #[unsafe(method(reloadInputViews))]
         #[unsafe(method_family = none)]
-        pub fn reloadInputViews(&self);
+        pub unsafe fn reloadInputViews(&self);
     );
 }
 
@@ -701,20 +555,20 @@ impl UIResponder {
     extern_methods!(
         #[unsafe(method(userActivity))]
         #[unsafe(method_family = none)]
-        pub fn userActivity(&self) -> Option<Retained<NSUserActivity>>;
+        pub unsafe fn userActivity(&self) -> Option<Retained<NSUserActivity>>;
 
         /// Setter for [`userActivity`][Self::userActivity].
         #[unsafe(method(setUserActivity:))]
         #[unsafe(method_family = none)]
-        pub fn setUserActivity(&self, user_activity: Option<&NSUserActivity>);
+        pub unsafe fn setUserActivity(&self, user_activity: Option<&NSUserActivity>);
 
         #[unsafe(method(updateUserActivityState:))]
         #[unsafe(method_family = none)]
-        pub fn updateUserActivityState(&self, activity: &NSUserActivity);
+        pub unsafe fn updateUserActivityState(&self, activity: &NSUserActivity);
 
         #[unsafe(method(restoreUserActivityState:))]
         #[unsafe(method_family = none)]
-        pub fn restoreUserActivityState(&self, activity: &NSUserActivity);
+        pub unsafe fn restoreUserActivityState(&self, activity: &NSUserActivity);
     );
 }
 
@@ -736,9 +590,6 @@ extern_conformance!(
 /// UICaptureTextFromCameraSupporting.
 impl UIResponder {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(captureTextFromCamera:))]
         #[unsafe(method_family = none)]
         pub unsafe fn captureTextFromCamera(&self, sender: Option<&AnyObject>);

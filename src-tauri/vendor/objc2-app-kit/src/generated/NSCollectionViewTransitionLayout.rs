@@ -36,25 +36,25 @@ impl NSCollectionViewTransitionLayout {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(transitionProgress))]
         #[unsafe(method_family = none)]
-        pub fn transitionProgress(&self) -> CGFloat;
+        pub unsafe fn transitionProgress(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`transitionProgress`][Self::transitionProgress].
         #[unsafe(method(setTransitionProgress:))]
         #[unsafe(method_family = none)]
-        pub fn setTransitionProgress(&self, transition_progress: CGFloat);
+        pub unsafe fn setTransitionProgress(&self, transition_progress: CGFloat);
 
         #[unsafe(method(currentLayout))]
         #[unsafe(method_family = none)]
-        pub fn currentLayout(&self) -> Retained<NSCollectionViewLayout>;
+        pub unsafe fn currentLayout(&self) -> Retained<NSCollectionViewLayout>;
 
         #[unsafe(method(nextLayout))]
         #[unsafe(method_family = none)]
-        pub fn nextLayout(&self) -> Retained<NSCollectionViewLayout>;
+        pub unsafe fn nextLayout(&self) -> Retained<NSCollectionViewLayout>;
 
         #[unsafe(method(initWithCurrentLayout:nextLayout:))]
         #[unsafe(method_family = init)]
-        pub fn initWithCurrentLayout_nextLayout(
+        pub unsafe fn initWithCurrentLayout_nextLayout(
             this: Allocated<Self>,
             current_layout: &NSCollectionViewLayout,
             new_layout: &NSCollectionViewLayout,
@@ -63,7 +63,7 @@ impl NSCollectionViewTransitionLayout {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(updateValue:forAnimatedKey:))]
         #[unsafe(method_family = none)]
-        pub fn updateValue_forAnimatedKey(
+        pub unsafe fn updateValue_forAnimatedKey(
             &self,
             value: CGFloat,
             key: &NSCollectionViewTransitionLayoutAnimatedKey,
@@ -72,7 +72,7 @@ impl NSCollectionViewTransitionLayout {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(valueForAnimatedKey:))]
         #[unsafe(method_family = none)]
-        pub fn valueForAnimatedKey(
+        pub unsafe fn valueForAnimatedKey(
             &self,
             key: &NSCollectionViewTransitionLayoutAnimatedKey,
         ) -> CGFloat;
@@ -85,10 +85,10 @@ impl NSCollectionViewTransitionLayout {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

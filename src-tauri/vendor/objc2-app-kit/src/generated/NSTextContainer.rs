@@ -34,11 +34,8 @@ impl NSTextContainer {
         /// ************************** Initialization ***************************
         #[unsafe(method(initWithSize:))]
         #[unsafe(method_family = init)]
-        pub fn initWithSize(this: Allocated<Self>, size: CGSize) -> Retained<Self>;
+        pub unsafe fn initWithSize(this: Allocated<Self>, size: CGSize) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -46,58 +43,54 @@ impl NSTextContainer {
         #[cfg(feature = "NSTextLayoutManager")]
         #[unsafe(method(textLayoutManager))]
         #[unsafe(method_family = none)]
-        pub fn textLayoutManager(&self) -> Option<Retained<NSTextLayoutManager>>;
+        pub unsafe fn textLayoutManager(&self) -> Option<Retained<NSTextLayoutManager>>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// *********************** Container shape properties ************************
         #[unsafe(method(size))]
         #[unsafe(method_family = none)]
-        pub fn size(&self) -> CGSize;
+        pub unsafe fn size(&self) -> CGSize;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`size`][Self::size].
         #[unsafe(method(setSize:))]
         #[unsafe(method_family = none)]
-        pub fn setSize(&self, size: CGSize);
+        pub unsafe fn setSize(&self, size: CGSize);
 
         #[cfg(feature = "NSParagraphStyle")]
         #[unsafe(method(lineBreakMode))]
         #[unsafe(method_family = none)]
-        pub fn lineBreakMode(&self) -> NSLineBreakMode;
+        pub unsafe fn lineBreakMode(&self) -> NSLineBreakMode;
 
         #[cfg(feature = "NSParagraphStyle")]
         /// Setter for [`lineBreakMode`][Self::lineBreakMode].
         #[unsafe(method(setLineBreakMode:))]
         #[unsafe(method_family = none)]
-        pub fn setLineBreakMode(&self, line_break_mode: NSLineBreakMode);
+        pub unsafe fn setLineBreakMode(&self, line_break_mode: NSLineBreakMode);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// *********************** Layout constraint properties ************************
         #[unsafe(method(lineFragmentPadding))]
         #[unsafe(method_family = none)]
-        pub fn lineFragmentPadding(&self) -> CGFloat;
+        pub unsafe fn lineFragmentPadding(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`lineFragmentPadding`][Self::lineFragmentPadding].
         #[unsafe(method(setLineFragmentPadding:))]
         #[unsafe(method_family = none)]
-        pub fn setLineFragmentPadding(&self, line_fragment_padding: CGFloat);
+        pub unsafe fn setLineFragmentPadding(&self, line_fragment_padding: CGFloat);
 
         #[unsafe(method(maximumNumberOfLines))]
         #[unsafe(method_family = none)]
-        pub fn maximumNumberOfLines(&self) -> NSUInteger;
+        pub unsafe fn maximumNumberOfLines(&self) -> NSUInteger;
 
         /// Setter for [`maximumNumberOfLines`][Self::maximumNumberOfLines].
         #[unsafe(method(setMaximumNumberOfLines:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumNumberOfLines(&self, maximum_number_of_lines: NSUInteger);
+        pub unsafe fn setMaximumNumberOfLines(&self, maximum_number_of_lines: NSUInteger);
 
         #[cfg(all(feature = "NSText", feature = "objc2-core-foundation"))]
         /// ************************** Line fragments ***************************
-        ///
-        /// # Safety
-        ///
-        /// `remaining_rect` must be a valid pointer or null.
         #[unsafe(method(lineFragmentRectForProposedRect:atIndex:writingDirection:remainingRect:))]
         #[unsafe(method_family = none)]
         pub unsafe fn lineFragmentRectForProposedRect_atIndex_writingDirection_remainingRect(
@@ -110,26 +103,26 @@ impl NSTextContainer {
 
         #[unsafe(method(isSimpleRectangularTextContainer))]
         #[unsafe(method_family = none)]
-        pub fn isSimpleRectangularTextContainer(&self) -> bool;
+        pub unsafe fn isSimpleRectangularTextContainer(&self) -> bool;
 
         /// ************************** View synchronization ***************************
         #[unsafe(method(widthTracksTextView))]
         #[unsafe(method_family = none)]
-        pub fn widthTracksTextView(&self) -> bool;
+        pub unsafe fn widthTracksTextView(&self) -> bool;
 
         /// Setter for [`widthTracksTextView`][Self::widthTracksTextView].
         #[unsafe(method(setWidthTracksTextView:))]
         #[unsafe(method_family = none)]
-        pub fn setWidthTracksTextView(&self, width_tracks_text_view: bool);
+        pub unsafe fn setWidthTracksTextView(&self, width_tracks_text_view: bool);
 
         #[unsafe(method(heightTracksTextView))]
         #[unsafe(method_family = none)]
-        pub fn heightTracksTextView(&self) -> bool;
+        pub unsafe fn heightTracksTextView(&self) -> bool;
 
         /// Setter for [`heightTracksTextView`][Self::heightTracksTextView].
         #[unsafe(method(setHeightTracksTextView:))]
         #[unsafe(method_family = none)]
-        pub fn setHeightTracksTextView(&self, height_tracks_text_view: bool);
+        pub unsafe fn setHeightTracksTextView(&self, height_tracks_text_view: bool);
     );
 }
 
@@ -138,37 +131,23 @@ impl NSTextContainer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSTextContainer {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 impl NSTextContainer {
     extern_methods!(
         #[cfg(feature = "NSLayoutManager")]
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(layoutManager))]
         #[unsafe(method_family = none)]
         pub unsafe fn layoutManager(&self) -> Option<Retained<NSLayoutManager>>;
 
         #[cfg(feature = "NSLayoutManager")]
         /// Setter for [`layoutManager`][Self::layoutManager].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setLayoutManager:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setLayoutManager(&self, layout_manager: Option<&NSLayoutManager>);
@@ -176,20 +155,18 @@ impl NSTextContainer {
         #[cfg(feature = "NSLayoutManager")]
         #[unsafe(method(replaceLayoutManager:))]
         #[unsafe(method_family = none)]
-        pub fn replaceLayoutManager(&self, new_layout_manager: &NSLayoutManager);
+        pub unsafe fn replaceLayoutManager(&self, new_layout_manager: &NSLayoutManager);
 
         #[cfg(feature = "NSBezierPath")]
         #[unsafe(method(exclusionPaths))]
         #[unsafe(method_family = none)]
-        pub fn exclusionPaths(&self) -> Retained<NSArray<NSBezierPath>>;
+        pub unsafe fn exclusionPaths(&self) -> Retained<NSArray<NSBezierPath>>;
 
         #[cfg(feature = "NSBezierPath")]
         /// Setter for [`exclusionPaths`][Self::exclusionPaths].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setExclusionPaths:))]
         #[unsafe(method_family = none)]
-        pub fn setExclusionPaths(&self, exclusion_paths: &NSArray<NSBezierPath>);
+        pub unsafe fn setExclusionPaths(&self, exclusion_paths: &NSArray<NSBezierPath>);
 
         #[cfg(all(
             feature = "NSResponder",
@@ -199,7 +176,7 @@ impl NSTextContainer {
         ))]
         #[unsafe(method(textView))]
         #[unsafe(method_family = none)]
-        pub fn textView(&self, mtm: MainThreadMarker) -> Option<Retained<NSTextView>>;
+        pub unsafe fn textView(&self, mtm: MainThreadMarker) -> Option<Retained<NSTextView>>;
 
         #[cfg(all(
             feature = "NSResponder",
@@ -207,12 +184,11 @@ impl NSTextContainer {
             feature = "NSTextView",
             feature = "NSView"
         ))]
-        /// Setter for [`textView`][Self::textView].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`textView`][Self::textView].
         #[unsafe(method(setTextView:))]
         #[unsafe(method_family = none)]
-        pub fn setTextView(&self, text_view: Option<&NSTextView>);
+        pub unsafe fn setTextView(&self, text_view: Option<&NSTextView>);
     );
 }
 
@@ -278,23 +254,20 @@ impl NSTextContainer {
     extern_methods!(
         #[unsafe(method(initWithContainerSize:))]
         #[unsafe(method_family = init)]
-        pub fn initWithContainerSize(
+        pub unsafe fn initWithContainerSize(
             this: Allocated<Self>,
             a_container_size: NSSize,
         ) -> Retained<Self>;
 
         #[unsafe(method(containerSize))]
         #[unsafe(method_family = none)]
-        pub fn containerSize(&self) -> NSSize;
+        pub unsafe fn containerSize(&self) -> NSSize;
 
         /// Setter for [`containerSize`][Self::containerSize].
         #[unsafe(method(setContainerSize:))]
         #[unsafe(method_family = none)]
-        pub fn setContainerSize(&self, container_size: NSSize);
+        pub unsafe fn setContainerSize(&self, container_size: NSSize);
 
-        /// # Safety
-        ///
-        /// `remaining_rect` must be a valid pointer or null.
         #[unsafe(method(lineFragmentRectForProposedRect:sweepDirection:movementDirection:remainingRect:))]
         #[unsafe(method_family = none)]
         pub unsafe fn lineFragmentRectForProposedRect_sweepDirection_movementDirection_remainingRect(
@@ -308,6 +281,6 @@ impl NSTextContainer {
         #[deprecated]
         #[unsafe(method(containsPoint:))]
         #[unsafe(method_family = none)]
-        pub fn containsPoint(&self, point: NSPoint) -> bool;
+        pub unsafe fn containsPoint(&self, point: NSPoint) -> bool;
     );
 }

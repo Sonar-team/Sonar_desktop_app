@@ -11,10 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.74"
+rust-version = "1.82"
 name = "windows-threading"
-version = "0.1.0"
-authors = ["Microsoft"]
+version = "0.2.1"
 build = false
 autolib = false
 autobins = false
@@ -36,5 +35,13 @@ name = "windows_threading"
 path = "src/lib.rs"
 
 [dependencies.windows-link]
-version = "0.1.1"
+version = "0.2.1"
 default-features = false
+
+[lints.rust]
+missing_unsafe_on_extern = "warn"
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+priority = 0
+check-cfg = ["cfg(windows_raw_dylib, windows_slim_errors)"]

@@ -89,8 +89,6 @@ impl DOMHTMLBaseFontElement {
         pub unsafe fn color(&self) -> Retained<NSString>;
 
         /// Setter for [`color`][Self::color].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setColor:))]
         #[unsafe(method_family = none)]
@@ -102,8 +100,6 @@ impl DOMHTMLBaseFontElement {
         pub unsafe fn face(&self) -> Retained<NSString>;
 
         /// Setter for [`face`][Self::face].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setFace:))]
         #[unsafe(method_family = none)]
@@ -115,8 +111,6 @@ impl DOMHTMLBaseFontElement {
         pub unsafe fn size(&self) -> Retained<NSString>;
 
         /// Setter for [`size`][Self::size].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setSize:))]
         #[unsafe(method_family = none)]

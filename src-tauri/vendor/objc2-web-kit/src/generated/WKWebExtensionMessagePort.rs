@@ -76,11 +76,6 @@ impl WKWebExtensionMessagePort {
         /// The block to be executed when a message is received from the web extension.
         ///
         /// An optional block to be invoked when a message is received, taking two parameters: the message and an optional error.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer or null.
-        /// - The returned block's argument 2 must be a valid pointer or null.
         #[unsafe(method(messageHandler))]
         #[unsafe(method_family = none)]
         pub unsafe fn messageHandler(
@@ -89,8 +84,6 @@ impl WKWebExtensionMessagePort {
 
         #[cfg(feature = "block2")]
         /// Setter for [`messageHandler`][Self::messageHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setMessageHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setMessageHandler(
@@ -102,18 +95,12 @@ impl WKWebExtensionMessagePort {
         /// The block to be executed when the port disconnects.
         ///
         /// An optional block to be invoked when the port disconnects, taking an optional error that indicates if the disconnection was caused by an error.
-        ///
-        /// # Safety
-        ///
-        /// The returned block's argument must be a valid pointer or null.
         #[unsafe(method(disconnectHandler))]
         #[unsafe(method_family = none)]
         pub unsafe fn disconnectHandler(&self) -> *mut block2::DynBlock<dyn Fn(*mut NSError)>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`disconnectHandler`][Self::disconnectHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDisconnectHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDisconnectHandler(
@@ -134,10 +121,6 @@ impl WKWebExtensionMessagePort {
         /// Parameter `completionHandler`: An optional block to be invoked after the message is sent, taking an optional error.
         ///
         /// Note: The message must be JSON-serializable according to ``NSJSONSerialization``.
-        ///
-        /// # Safety
-        ///
-        /// `message` should be of the correct type.
         #[unsafe(method(sendMessage:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn sendMessage_completionHandler(

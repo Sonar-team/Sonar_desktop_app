@@ -31,45 +31,43 @@ impl UIFontPickerViewControllerConfiguration {
     extern_methods!(
         #[unsafe(method(includeFaces))]
         #[unsafe(method_family = none)]
-        pub fn includeFaces(&self) -> bool;
+        pub unsafe fn includeFaces(&self) -> bool;
 
         /// Setter for [`includeFaces`][Self::includeFaces].
         #[unsafe(method(setIncludeFaces:))]
         #[unsafe(method_family = none)]
-        pub fn setIncludeFaces(&self, include_faces: bool);
+        pub unsafe fn setIncludeFaces(&self, include_faces: bool);
 
         #[unsafe(method(displayUsingSystemFont))]
         #[unsafe(method_family = none)]
-        pub fn displayUsingSystemFont(&self) -> bool;
+        pub unsafe fn displayUsingSystemFont(&self) -> bool;
 
         /// Setter for [`displayUsingSystemFont`][Self::displayUsingSystemFont].
         #[unsafe(method(setDisplayUsingSystemFont:))]
         #[unsafe(method_family = none)]
-        pub fn setDisplayUsingSystemFont(&self, display_using_system_font: bool);
+        pub unsafe fn setDisplayUsingSystemFont(&self, display_using_system_font: bool);
 
         #[cfg(feature = "UIFontDescriptor")]
         #[unsafe(method(filteredTraits))]
         #[unsafe(method_family = none)]
-        pub fn filteredTraits(&self) -> UIFontDescriptorSymbolicTraits;
+        pub unsafe fn filteredTraits(&self) -> UIFontDescriptorSymbolicTraits;
 
         #[cfg(feature = "UIFontDescriptor")]
         /// Setter for [`filteredTraits`][Self::filteredTraits].
         #[unsafe(method(setFilteredTraits:))]
         #[unsafe(method_family = none)]
-        pub fn setFilteredTraits(&self, filtered_traits: UIFontDescriptorSymbolicTraits);
+        pub unsafe fn setFilteredTraits(&self, filtered_traits: UIFontDescriptorSymbolicTraits);
 
         #[deprecated = "Use languageFilter"]
         #[unsafe(method(filteredLanguagesPredicate))]
         #[unsafe(method_family = none)]
-        pub fn filteredLanguagesPredicate(&self) -> Option<Retained<NSPredicate>>;
+        pub unsafe fn filteredLanguagesPredicate(&self) -> Option<Retained<NSPredicate>>;
 
         /// Setter for [`filteredLanguagesPredicate`][Self::filteredLanguagesPredicate].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated = "Use languageFilter"]
         #[unsafe(method(setFilteredLanguagesPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn setFilteredLanguagesPredicate(
+        pub unsafe fn setFilteredLanguagesPredicate(
             &self,
             filtered_languages_predicate: Option<&NSPredicate>,
         );
@@ -77,7 +75,7 @@ impl UIFontPickerViewControllerConfiguration {
         #[deprecated = "Use languageFilter"]
         #[unsafe(method(filterPredicateForFilteredLanguages:))]
         #[unsafe(method_family = none)]
-        pub fn filterPredicateForFilteredLanguages(
+        pub unsafe fn filterPredicateForFilteredLanguages(
             filtered_languages: &NSArray<NSString>,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSPredicate>>;
@@ -89,10 +87,10 @@ impl UIFontPickerViewControllerConfiguration {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

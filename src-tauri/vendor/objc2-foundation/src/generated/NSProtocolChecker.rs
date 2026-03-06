@@ -23,11 +23,11 @@ impl NSProtocolChecker {
     extern_methods!(
         #[unsafe(method(protocol))]
         #[unsafe(method_family = none)]
-        pub fn protocol(&self) -> Retained<AnyProtocol>;
+        pub unsafe fn protocol(&self) -> Retained<AnyProtocol>;
 
         #[unsafe(method(target))]
         #[unsafe(method_family = none)]
-        pub fn target(&self) -> Option<Retained<NSObject>>;
+        pub unsafe fn target(&self) -> Option<Retained<NSObject>>;
     );
 }
 
@@ -35,10 +35,6 @@ impl NSProtocolChecker {
 #[cfg(feature = "NSProxy")]
 impl NSProtocolChecker {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `an_object` should be of the correct type.
-        /// - `a_protocol` possibly has further requirements.
         #[unsafe(method(protocolCheckerWithTarget:protocol:))]
         #[unsafe(method_family = none)]
         pub unsafe fn protocolCheckerWithTarget_protocol(
@@ -46,10 +42,6 @@ impl NSProtocolChecker {
             a_protocol: &AnyProtocol,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// - `an_object` should be of the correct type.
-        /// - `a_protocol` possibly has further requirements.
         #[unsafe(method(initWithTarget:protocol:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTarget_protocol(

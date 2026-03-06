@@ -58,7 +58,6 @@ pub type CFTreeCopyDescriptionCallBack =
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cftreecontext?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CFTreeContext {
     pub version: CFIndex,
@@ -101,7 +100,6 @@ pub type CFTreeApplierFunction = Option<unsafe extern "C-unwind" fn(*const c_voi
 /// This is the type of a reference to CFTrees.
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cftree?language=objc)
-#[doc(alias = "CFTreeRef")]
 #[repr(C)]
 pub struct CFTree {
     inner: [u8; 0],
@@ -146,11 +144,6 @@ impl CFTree {
     /// version number, the result is undefined.
     ///
     /// Returns: A reference to the new CFTree.
-    ///
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `context` must be a valid pointer.
     #[doc(alias = "CFTreeCreate")]
     #[inline]
     pub unsafe fn new(
@@ -175,7 +168,7 @@ impl CFTree {
     /// Returns: The parent of the tree.
     #[doc(alias = "CFTreeGetParent")]
     #[inline]
-    pub fn parent(&self) -> Option<CFRetained<CFTree>> {
+    pub unsafe fn parent(self: &CFTree) -> Option<CFRetained<CFTree>> {
         extern "C-unwind" {
             fn CFTreeGetParent(tree: &CFTree) -> Option<NonNull<CFTree>>;
         }
@@ -191,7 +184,7 @@ impl CFTree {
     /// Returns: The next sibling of the tree.
     #[doc(alias = "CFTreeGetNextSibling")]
     #[inline]
-    pub fn next_sibling(&self) -> Option<CFRetained<CFTree>> {
+    pub unsafe fn next_sibling(self: &CFTree) -> Option<CFRetained<CFTree>> {
         extern "C-unwind" {
             fn CFTreeGetNextSibling(tree: &CFTree) -> Option<NonNull<CFTree>>;
         }
@@ -207,7 +200,7 @@ impl CFTree {
     /// Returns: The first child of the tree.
     #[doc(alias = "CFTreeGetFirstChild")]
     #[inline]
-    pub fn first_child(&self) -> Option<CFRetained<CFTree>> {
+    pub unsafe fn first_child(self: &CFTree) -> Option<CFRetained<CFTree>> {
         extern "C-unwind" {
             fn CFTreeGetFirstChild(tree: &CFTree) -> Option<NonNull<CFTree>>;
         }
@@ -225,13 +218,9 @@ impl CFTree {
     /// pointer to a CFTreeContext structure-sized block of storage, the
     /// result is undefined.  If the version number of the storage is not
     /// a valid CFTreeContext version number, the result is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `context` must be a valid pointer.
     #[doc(alias = "CFTreeGetContext")]
     #[inline]
-    pub unsafe fn context(&self, context: *mut CFTreeContext) {
+    pub unsafe fn context(self: &CFTree, context: *mut CFTreeContext) {
         extern "C-unwind" {
             fn CFTreeGetContext(tree: &CFTree, context: *mut CFTreeContext);
         }
@@ -246,7 +235,7 @@ impl CFTree {
     /// Returns: The number of children.
     #[doc(alias = "CFTreeGetChildCount")]
     #[inline]
-    pub fn child_count(&self) -> CFIndex {
+    pub unsafe fn child_count(self: &CFTree) -> CFIndex {
         extern "C-unwind" {
             fn CFTreeGetChildCount(tree: &CFTree) -> CFIndex;
         }
@@ -265,7 +254,7 @@ impl CFTree {
     /// Returns: A reference to the specified child tree.
     #[doc(alias = "CFTreeGetChildAtIndex")]
     #[inline]
-    pub fn child_at_index(&self, idx: CFIndex) -> Option<CFRetained<CFTree>> {
+    pub unsafe fn child_at_index(self: &CFTree, idx: CFIndex) -> Option<CFRetained<CFTree>> {
         extern "C-unwind" {
             fn CFTreeGetChildAtIndex(tree: &CFTree, idx: CFIndex) -> Option<NonNull<CFTree>>;
         }
@@ -281,13 +270,9 @@ impl CFTree {
     /// Parameter `children`: A C array of pointer-sized values to be filled with
     /// children from the tree.  If this parameter is not a valid pointer to a
     /// C array of at least CFTreeGetChildCount() pointers, the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `children` must be a valid pointer.
     #[doc(alias = "CFTreeGetChildren")]
     #[inline]
-    pub unsafe fn children(&self, children: *mut *mut CFTree) {
+    pub unsafe fn children(self: &CFTree, children: *mut *mut CFTree) {
         extern "C-unwind" {
             fn CFTreeGetChildren(tree: &CFTree, children: *mut *mut CFTree);
         }
@@ -312,15 +297,10 @@ impl CFTree {
     /// otherwise unused by this function.  If the context is not
     /// what is expected by the applier function, the behavior is
     /// undefined.
-    ///
-    /// # Safety
-    ///
-    /// - `applier` must be implemented correctly.
-    /// - `context` must be a valid pointer.
     #[doc(alias = "CFTreeApplyFunctionToChildren")]
     #[inline]
     pub unsafe fn apply_function_to_children(
-        &self,
+        self: &CFTree,
         applier: CFTreeApplierFunction,
         context: *mut c_void,
     ) {
@@ -342,7 +322,7 @@ impl CFTree {
     /// Returns: A reference to the root of the tree.
     #[doc(alias = "CFTreeFindRoot")]
     #[inline]
-    pub fn find_root(&self) -> Option<CFRetained<CFTree>> {
+    pub unsafe fn find_root(self: &CFTree) -> Option<CFRetained<CFTree>> {
         extern "C-unwind" {
             fn CFTreeFindRoot(tree: &CFTree) -> Option<NonNull<CFTree>>;
         }
@@ -363,13 +343,9 @@ impl CFTree {
     /// structure-sized block of storage, the result is undefined.
     /// If the version number of the storage is not a valid CFTreeContext
     /// version number, the result is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `context` must be a valid pointer.
     #[doc(alias = "CFTreeSetContext")]
     #[inline]
-    pub unsafe fn set_context(&self, context: *const CFTreeContext) {
+    pub unsafe fn set_context(self: &CFTree, context: *const CFTreeContext) {
         extern "C-unwind" {
             fn CFTreeSetContext(tree: &CFTree, context: *const CFTreeContext);
         }
@@ -385,13 +361,9 @@ impl CFTree {
     /// If this parameter is not a valid CFTree, the behavior is undefined.
     /// If this parameter is a tree which is already a child of any tree,
     /// the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `new_child` might not allow `None`.
     #[doc(alias = "CFTreePrependChild")]
     #[inline]
-    pub unsafe fn prepend_child(&self, new_child: Option<&CFTree>) {
+    pub unsafe fn prepend_child(self: &CFTree, new_child: Option<&CFTree>) {
         extern "C-unwind" {
             fn CFTreePrependChild(tree: &CFTree, new_child: Option<&CFTree>);
         }
@@ -407,13 +379,9 @@ impl CFTree {
     /// If this parameter is not a valid CFTree, the behavior is undefined.
     /// If this parameter is a tree which is already a child of any tree,
     /// the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `new_child` might not allow `None`.
     #[doc(alias = "CFTreeAppendChild")]
     #[inline]
-    pub unsafe fn append_child(&self, new_child: Option<&CFTree>) {
+    pub unsafe fn append_child(self: &CFTree, new_child: Option<&CFTree>) {
         extern "C-unwind" {
             fn CFTreeAppendChild(tree: &CFTree, new_child: Option<&CFTree>);
         }
@@ -431,13 +399,9 @@ impl CFTree {
     /// If this parameter is not a valid CFTree, the behavior is undefined.
     /// If this parameter is a tree which is already a child of any tree,
     /// the behavior is undefined.
-    ///
-    /// # Safety
-    ///
-    /// `new_sibling` might not allow `None`.
     #[doc(alias = "CFTreeInsertSibling")]
     #[inline]
-    pub unsafe fn insert_sibling(&self, new_sibling: Option<&CFTree>) {
+    pub unsafe fn insert_sibling(self: &CFTree, new_sibling: Option<&CFTree>) {
         extern "C-unwind" {
             fn CFTreeInsertSibling(tree: &CFTree, new_sibling: Option<&CFTree>);
         }
@@ -450,7 +414,7 @@ impl CFTree {
     /// CFTree, the behavior is undefined.
     #[doc(alias = "CFTreeRemove")]
     #[inline]
-    pub fn remove(&self) {
+    pub unsafe fn remove(self: &CFTree) {
         extern "C-unwind" {
             fn CFTreeRemove(tree: &CFTree);
         }
@@ -463,7 +427,7 @@ impl CFTree {
     /// CFTree, the behavior is undefined.
     #[doc(alias = "CFTreeRemoveAllChildren")]
     #[inline]
-    pub fn remove_all_children(&self) {
+    pub unsafe fn remove_all_children(self: &CFTree) {
         extern "C-unwind" {
             fn CFTreeRemoveAllChildren(tree: &CFTree);
         }
@@ -487,14 +451,13 @@ impl CFTree {
     /// otherwise unused by this function. If the context is not
     /// what is expected by the comparator function, the behavior is
     /// undefined.
-    ///
-    /// # Safety
-    ///
-    /// - `comparator` must be implemented correctly.
-    /// - `context` must be a valid pointer.
     #[doc(alias = "CFTreeSortChildren")]
     #[inline]
-    pub unsafe fn sort_children(&self, comparator: CFComparatorFunction, context: *mut c_void) {
+    pub unsafe fn sort_children(
+        self: &CFTree,
+        comparator: CFComparatorFunction,
+        context: *mut c_void,
+    ) {
         extern "C-unwind" {
             fn CFTreeSortChildren(
                 tree: &CFTree,
@@ -524,7 +487,7 @@ pub unsafe extern "C-unwind" fn CFTreeCreate(
 
 #[deprecated = "renamed to `CFTree::parent`"]
 #[inline]
-pub extern "C-unwind" fn CFTreeGetParent(tree: &CFTree) -> Option<CFRetained<CFTree>> {
+pub unsafe extern "C-unwind" fn CFTreeGetParent(tree: &CFTree) -> Option<CFRetained<CFTree>> {
     extern "C-unwind" {
         fn CFTreeGetParent(tree: &CFTree) -> Option<NonNull<CFTree>>;
     }
@@ -534,7 +497,7 @@ pub extern "C-unwind" fn CFTreeGetParent(tree: &CFTree) -> Option<CFRetained<CFT
 
 #[deprecated = "renamed to `CFTree::next_sibling`"]
 #[inline]
-pub extern "C-unwind" fn CFTreeGetNextSibling(tree: &CFTree) -> Option<CFRetained<CFTree>> {
+pub unsafe extern "C-unwind" fn CFTreeGetNextSibling(tree: &CFTree) -> Option<CFRetained<CFTree>> {
     extern "C-unwind" {
         fn CFTreeGetNextSibling(tree: &CFTree) -> Option<NonNull<CFTree>>;
     }
@@ -544,7 +507,7 @@ pub extern "C-unwind" fn CFTreeGetNextSibling(tree: &CFTree) -> Option<CFRetaine
 
 #[deprecated = "renamed to `CFTree::first_child`"]
 #[inline]
-pub extern "C-unwind" fn CFTreeGetFirstChild(tree: &CFTree) -> Option<CFRetained<CFTree>> {
+pub unsafe extern "C-unwind" fn CFTreeGetFirstChild(tree: &CFTree) -> Option<CFRetained<CFTree>> {
     extern "C-unwind" {
         fn CFTreeGetFirstChild(tree: &CFTree) -> Option<NonNull<CFTree>>;
     }
@@ -557,18 +520,14 @@ extern "C-unwind" {
     pub fn CFTreeGetContext(tree: &CFTree, context: *mut CFTreeContext);
 }
 
-#[deprecated = "renamed to `CFTree::child_count`"]
-#[inline]
-pub extern "C-unwind" fn CFTreeGetChildCount(tree: &CFTree) -> CFIndex {
-    extern "C-unwind" {
-        fn CFTreeGetChildCount(tree: &CFTree) -> CFIndex;
-    }
-    unsafe { CFTreeGetChildCount(tree) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CFTree::child_count`"]
+    pub fn CFTreeGetChildCount(tree: &CFTree) -> CFIndex;
 }
 
 #[deprecated = "renamed to `CFTree::child_at_index`"]
 #[inline]
-pub extern "C-unwind" fn CFTreeGetChildAtIndex(
+pub unsafe extern "C-unwind" fn CFTreeGetChildAtIndex(
     tree: &CFTree,
     idx: CFIndex,
 ) -> Option<CFRetained<CFTree>> {
@@ -595,7 +554,7 @@ extern "C-unwind" {
 
 #[deprecated = "renamed to `CFTree::find_root`"]
 #[inline]
-pub extern "C-unwind" fn CFTreeFindRoot(tree: &CFTree) -> Option<CFRetained<CFTree>> {
+pub unsafe extern "C-unwind" fn CFTreeFindRoot(tree: &CFTree) -> Option<CFRetained<CFTree>> {
     extern "C-unwind" {
         fn CFTreeFindRoot(tree: &CFTree) -> Option<NonNull<CFTree>>;
     }
@@ -623,22 +582,14 @@ extern "C-unwind" {
     pub fn CFTreeInsertSibling(tree: &CFTree, new_sibling: Option<&CFTree>);
 }
 
-#[deprecated = "renamed to `CFTree::remove`"]
-#[inline]
-pub extern "C-unwind" fn CFTreeRemove(tree: &CFTree) {
-    extern "C-unwind" {
-        fn CFTreeRemove(tree: &CFTree);
-    }
-    unsafe { CFTreeRemove(tree) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CFTree::remove`"]
+    pub fn CFTreeRemove(tree: &CFTree);
 }
 
-#[deprecated = "renamed to `CFTree::remove_all_children`"]
-#[inline]
-pub extern "C-unwind" fn CFTreeRemoveAllChildren(tree: &CFTree) {
-    extern "C-unwind" {
-        fn CFTreeRemoveAllChildren(tree: &CFTree);
-    }
-    unsafe { CFTreeRemoveAllChildren(tree) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CFTree::remove_all_children`"]
+    pub fn CFTreeRemoveAllChildren(tree: &CFTree);
 }
 
 extern "C-unwind" {

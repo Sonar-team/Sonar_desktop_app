@@ -171,11 +171,8 @@ impl NSSecureTextField {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -196,7 +193,7 @@ impl NSSecureTextField {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -211,7 +208,7 @@ impl NSSecureTextField {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -302,12 +299,12 @@ impl NSSecureTextFieldCell {
     extern_methods!(
         #[unsafe(method(echosBullets))]
         #[unsafe(method_family = none)]
-        pub fn echosBullets(&self) -> bool;
+        pub unsafe fn echosBullets(&self) -> bool;
 
         /// Setter for [`echosBullets`][Self::echosBullets].
         #[unsafe(method(setEchosBullets:))]
         #[unsafe(method_family = none)]
-        pub fn setEchosBullets(&self, echos_bullets: bool);
+        pub unsafe fn setEchosBullets(&self, echos_bullets: bool);
     );
 }
 
@@ -321,11 +318,8 @@ impl NSSecureTextFieldCell {
     extern_methods!(
         #[unsafe(method(initTextCell:))]
         #[unsafe(method_family = init)]
-        pub fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
+        pub unsafe fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -350,7 +344,7 @@ impl NSSecureTextFieldCell {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -364,6 +358,6 @@ impl NSSecureTextFieldCell {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

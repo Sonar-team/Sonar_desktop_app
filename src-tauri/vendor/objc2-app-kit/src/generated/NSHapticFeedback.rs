@@ -55,7 +55,7 @@ extern_protocol!(
     pub unsafe trait NSHapticFeedbackPerformer: NSObjectProtocol {
         #[unsafe(method(performFeedbackPattern:performanceTime:))]
         #[unsafe(method_family = none)]
-        fn performFeedbackPattern_performanceTime(
+        unsafe fn performFeedbackPattern_performanceTime(
             &self,
             pattern: NSHapticFeedbackPattern,
             performance_time: NSHapticFeedbackPerformanceTime,
@@ -78,7 +78,7 @@ impl NSHapticFeedbackManager {
     extern_methods!(
         #[unsafe(method(defaultPerformer))]
         #[unsafe(method_family = none)]
-        pub fn defaultPerformer() -> Retained<ProtocolObject<dyn NSHapticFeedbackPerformer>>;
+        pub unsafe fn defaultPerformer() -> Retained<ProtocolObject<dyn NSHapticFeedbackPerformer>>;
     );
 }
 
@@ -87,17 +87,10 @@ impl NSHapticFeedbackManager {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSHapticFeedbackManager {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

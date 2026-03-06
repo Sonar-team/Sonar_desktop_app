@@ -19,7 +19,7 @@ pub unsafe trait NSObjectNSScripting:
         #[cfg(feature = "NSScriptObjectSpecifiers")]
         #[unsafe(method(scriptingValueForSpecifier:))]
         #[unsafe(method_family = none)]
-        fn scriptingValueForSpecifier(
+        unsafe fn scriptingValueForSpecifier(
             &self,
             object_specifier: &NSScriptObjectSpecifier,
         ) -> Option<Retained<AnyObject>>;
@@ -27,16 +27,11 @@ pub unsafe trait NSObjectNSScripting:
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
         #[unsafe(method(scriptingProperties))]
         #[unsafe(method_family = none)]
-        fn scriptingProperties(&self) -> Option<Retained<NSDictionary<NSString, AnyObject>>>;
+        unsafe fn scriptingProperties(&self)
+            -> Option<Retained<NSDictionary<NSString, AnyObject>>>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
         /// Setter for [`scriptingProperties`][Self::scriptingProperties].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `scripting_properties` generic should be of the correct type.
         #[unsafe(method(setScriptingProperties:))]
         #[unsafe(method_family = none)]
         unsafe fn setScriptingProperties(
@@ -45,10 +40,6 @@ pub unsafe trait NSObjectNSScripting:
         );
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// - `value` should be of the correct type.
-        /// - `properties` generic should be of the correct type.
         #[unsafe(method(copyScriptingValue:forKey:withProperties:))]
         #[unsafe(method_family = copy)]
         unsafe fn copyScriptingValue_forKey_withProperties(
@@ -59,11 +50,6 @@ pub unsafe trait NSObjectNSScripting:
         ) -> Option<Retained<AnyObject>>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// - `object_class` probably has further requirements.
-        /// - `contents_value` should be of the correct type.
-        /// - `properties` generic should be of the correct type.
         #[unsafe(method(newScriptingObjectOfClass:forValueForKey:withContentsValue:properties:))]
         #[unsafe(method_family = new)]
         unsafe fn newScriptingObjectOfClass_forValueForKey_withContentsValue_properties(

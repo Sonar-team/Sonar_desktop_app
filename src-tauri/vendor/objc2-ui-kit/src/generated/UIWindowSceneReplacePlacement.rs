@@ -44,7 +44,9 @@ impl UIWindowSceneReplacePlacement {
         #[deprecated = "UIWindowSceneReplacePlacement has been replaced with UIWindowScenePushPlacement"]
         #[unsafe(method(placementToReplaceSceneSession:))]
         #[unsafe(method_family = none)]
-        pub fn placementToReplaceSceneSession(scene_session: &UISceneSession) -> Retained<Self>;
+        pub unsafe fn placementToReplaceSceneSession(
+            scene_session: &UISceneSession,
+        ) -> Retained<Self>;
     );
 }
 

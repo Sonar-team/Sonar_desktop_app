@@ -16,20 +16,12 @@ pub type NSRangePointer = *mut NSRange;
 
 // TODO: pub fn NSEqualRanges(range1: NSRange,range2: NSRange,) -> Bool;
 
-#[inline]
-pub extern "C-unwind" fn NSUnionRange(range1: NSRange, range2: NSRange) -> NSRange {
-    extern "C-unwind" {
-        fn NSUnionRange(range1: NSRange, range2: NSRange) -> NSRange;
-    }
-    unsafe { NSUnionRange(range1, range2) }
+extern "C-unwind" {
+    pub fn NSUnionRange(range1: NSRange, range2: NSRange) -> NSRange;
 }
 
-#[inline]
-pub extern "C-unwind" fn NSIntersectionRange(range1: NSRange, range2: NSRange) -> NSRange {
-    extern "C-unwind" {
-        fn NSIntersectionRange(range1: NSRange, range2: NSRange) -> NSRange;
-    }
-    unsafe { NSIntersectionRange(range1, range2) }
+extern "C-unwind" {
+    pub fn NSIntersectionRange(range1: NSRange, range2: NSRange) -> NSRange;
 }
 
 #[cfg(feature = "NSString")]
@@ -37,7 +29,7 @@ impl NSString {
     #[doc(alias = "NSStringFromRange")]
     #[cfg(feature = "NSString")]
     #[inline]
-    pub fn from_range(range: NSRange) -> Retained<NSString> {
+    pub unsafe fn from_range(range: NSRange) -> Retained<NSString> {
         extern "C-unwind" {
             fn NSStringFromRange(range: NSRange) -> *mut NSString;
         }
@@ -47,13 +39,9 @@ impl NSString {
     }
 }
 
-#[cfg(feature = "NSString")]
-#[inline]
-pub extern "C-unwind" fn NSRangeFromString(a_string: &NSString) -> NSRange {
-    extern "C-unwind" {
-        fn NSRangeFromString(a_string: &NSString) -> NSRange;
-    }
-    unsafe { NSRangeFromString(a_string) }
+extern "C-unwind" {
+    #[cfg(feature = "NSString")]
+    pub fn NSRangeFromString(a_string: &NSString) -> NSRange;
 }
 
 /// NSValueRangeExtensions.
@@ -73,7 +61,7 @@ impl NSValue {
 #[cfg(feature = "NSString")]
 #[deprecated = "renamed to `NSString::from_range`"]
 #[inline]
-pub extern "C-unwind" fn NSStringFromRange(range: NSRange) -> Retained<NSString> {
+pub unsafe extern "C-unwind" fn NSStringFromRange(range: NSRange) -> Retained<NSString> {
     extern "C-unwind" {
         fn NSStringFromRange(range: NSRange) -> *mut NSString;
     }

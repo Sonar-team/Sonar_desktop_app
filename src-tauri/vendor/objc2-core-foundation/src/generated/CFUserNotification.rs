@@ -10,7 +10,6 @@ use objc2::__framework_prelude::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfusernotification?language=objc)
-#[doc(alias = "CFUserNotificationRef")]
 #[repr(C)]
 pub struct CFUserNotification {
     inner: [u8; 0],
@@ -41,12 +40,6 @@ unsafe impl ConcreteType for CFUserNotification {
 }
 
 impl CFUserNotification {
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `error` must be a valid pointer.
-    /// - `dictionary` generics must be of the correct type.
-    /// - `dictionary` might not allow `None`.
     #[doc(alias = "CFUserNotificationCreate")]
     #[cfg(all(feature = "CFDate", feature = "CFDictionary"))]
     #[inline]
@@ -70,14 +63,11 @@ impl CFUserNotification {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `response_flags` must be a valid pointer.
     #[doc(alias = "CFUserNotificationReceiveResponse")]
     #[cfg(feature = "CFDate")]
     #[inline]
     pub unsafe fn receive_response(
-        &self,
+        self: &CFUserNotification,
         timeout: CFTimeInterval,
         response_flags: *mut CFOptionFlags,
     ) -> i32 {
@@ -91,13 +81,10 @@ impl CFUserNotification {
         unsafe { CFUserNotificationReceiveResponse(self, timeout, response_flags) }
     }
 
-    /// # Safety
-    ///
-    /// `key` might not allow `None`.
     #[doc(alias = "CFUserNotificationGetResponseValue")]
     #[inline]
     pub unsafe fn response_value(
-        &self,
+        self: &CFUserNotification,
         key: Option<&CFString>,
         idx: CFIndex,
     ) -> Option<CFRetained<CFString>> {
@@ -115,7 +102,7 @@ impl CFUserNotification {
     #[doc(alias = "CFUserNotificationGetResponseDictionary")]
     #[cfg(feature = "CFDictionary")]
     #[inline]
-    pub fn response_dictionary(&self) -> Option<CFRetained<CFDictionary>> {
+    pub fn response_dictionary(self: &CFUserNotification) -> Option<CFRetained<CFDictionary>> {
         extern "C-unwind" {
             fn CFUserNotificationGetResponseDictionary(
                 user_notification: &CFUserNotification,
@@ -125,15 +112,11 @@ impl CFUserNotification {
         ret.map(|ret| unsafe { CFRetained::retain(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `dictionary` generics must be of the correct type.
-    /// - `dictionary` might not allow `None`.
     #[doc(alias = "CFUserNotificationUpdate")]
     #[cfg(all(feature = "CFDate", feature = "CFDictionary"))]
     #[inline]
     pub unsafe fn update(
-        &self,
+        self: &CFUserNotification,
         timeout: CFTimeInterval,
         flags: CFOptionFlags,
         dictionary: Option<&CFDictionary>,
@@ -151,18 +134,13 @@ impl CFUserNotification {
 
     #[doc(alias = "CFUserNotificationCancel")]
     #[inline]
-    pub fn cancel(&self) -> i32 {
+    pub fn cancel(self: &CFUserNotification) -> i32 {
         extern "C-unwind" {
             fn CFUserNotificationCancel(user_notification: &CFUserNotification) -> i32;
         }
         unsafe { CFUserNotificationCancel(self) }
     }
 
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `user_notification` might not allow `None`.
-    /// - `callout` must be implemented correctly.
     #[doc(alias = "CFUserNotificationCreateRunLoopSource")]
     #[cfg(feature = "CFRunLoop")]
     #[inline]
@@ -225,17 +203,6 @@ impl CFUserNotification {
         }
     }
 
-    /// # Safety
-    ///
-    /// - `icon_url` might not allow `None`.
-    /// - `sound_url` might not allow `None`.
-    /// - `localization_url` might not allow `None`.
-    /// - `alert_header` might not allow `None`.
-    /// - `alert_message` might not allow `None`.
-    /// - `default_button_title` might not allow `None`.
-    /// - `alternate_button_title` might not allow `None`.
-    /// - `other_button_title` might not allow `None`.
-    /// - `response_flags` must be a valid pointer.
     #[doc(alias = "CFUserNotificationDisplayAlert")]
     #[cfg(all(feature = "CFDate", feature = "CFURL"))]
     #[inline]

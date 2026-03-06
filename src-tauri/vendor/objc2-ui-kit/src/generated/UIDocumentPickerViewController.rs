@@ -16,7 +16,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(documentPicker:didPickDocumentsAtURLs:))]
         #[unsafe(method_family = none)]
-        fn documentPicker_didPickDocumentsAtURLs(
+        unsafe fn documentPicker_didPickDocumentsAtURLs(
             &self,
             controller: &UIDocumentPickerViewController,
             urls: &NSArray<NSURL>,
@@ -26,14 +26,14 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(documentPickerWasCancelled:))]
         #[unsafe(method_family = none)]
-        fn documentPickerWasCancelled(&self, controller: &UIDocumentPickerViewController);
+        unsafe fn documentPickerWasCancelled(&self, controller: &UIDocumentPickerViewController);
 
         #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
         #[deprecated]
         #[optional]
         #[unsafe(method(documentPicker:didPickDocumentAtURL:))]
         #[unsafe(method_family = none)]
-        fn documentPicker_didPickDocumentAtURL(
+        unsafe fn documentPicker_didPickDocumentAtURL(
             &self,
             controller: &UIDocumentPickerViewController,
             url: &NSURL,
@@ -132,7 +132,7 @@ impl UIDocumentPickerViewController {
         #[deprecated]
         #[unsafe(method(initWithDocumentTypes:inMode:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDocumentTypes_inMode(
+        pub unsafe fn initWithDocumentTypes_inMode(
             this: Allocated<Self>,
             allowed_ut_is: &NSArray<NSString>,
             mode: UIDocumentPickerMode,
@@ -144,7 +144,7 @@ impl UIDocumentPickerViewController {
         /// Parameter `asCopy`: if true, the picker will give you access to a local copy of the document, otherwise you will have access to the original document
         #[unsafe(method(initForOpeningContentTypes:asCopy:))]
         #[unsafe(method_family = init)]
-        pub fn initForOpeningContentTypes_asCopy(
+        pub unsafe fn initForOpeningContentTypes_asCopy(
             this: Allocated<Self>,
             content_types: &NSArray<UTType>,
             as_copy: bool,
@@ -154,14 +154,11 @@ impl UIDocumentPickerViewController {
         /// Initializes the picker instance for selecting a document in a remote location, giving you access to the original document.
         #[unsafe(method(initForOpeningContentTypes:))]
         #[unsafe(method_family = init)]
-        pub fn initForOpeningContentTypes(
+        pub unsafe fn initForOpeningContentTypes(
             this: Allocated<Self>,
             content_types: &NSArray<UTType>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -172,7 +169,7 @@ impl UIDocumentPickerViewController {
         #[deprecated]
         #[unsafe(method(initWithURL:inMode:))]
         #[unsafe(method_family = init)]
-        pub fn initWithURL_inMode(
+        pub unsafe fn initWithURL_inMode(
             this: Allocated<Self>,
             url: &NSURL,
             mode: UIDocumentPickerMode,
@@ -181,7 +178,7 @@ impl UIDocumentPickerViewController {
         #[deprecated]
         #[unsafe(method(initWithURLs:inMode:))]
         #[unsafe(method_family = init)]
-        pub fn initWithURLs_inMode(
+        pub unsafe fn initWithURLs_inMode(
             this: Allocated<Self>,
             urls: &NSArray<NSURL>,
             mode: UIDocumentPickerMode,
@@ -192,7 +189,7 @@ impl UIDocumentPickerViewController {
         /// Parameter `asCopy`: if true, a copy will be exported to the destination, otherwise the original document will be moved to the destination. For performance reasons and to avoid copies, we recommend you set `asCopy` to false.
         #[unsafe(method(initForExportingURLs:asCopy:))]
         #[unsafe(method_family = init)]
-        pub fn initForExportingURLs_asCopy(
+        pub unsafe fn initForExportingURLs_asCopy(
             this: Allocated<Self>,
             urls: &NSArray<NSURL>,
             as_copy: bool,
@@ -201,55 +198,59 @@ impl UIDocumentPickerViewController {
         /// Initializes the picker for exporting local documents to an external location. The new locations will be returned using `didPickDocumentAtURLs:`. The original document will be moved to the destination.
         #[unsafe(method(initForExportingURLs:))]
         #[unsafe(method_family = init)]
-        pub fn initForExportingURLs(this: Allocated<Self>, urls: &NSArray<NSURL>)
-            -> Retained<Self>;
+        pub unsafe fn initForExportingURLs(
+            this: Allocated<Self>,
+            urls: &NSArray<NSURL>,
+        ) -> Retained<Self>;
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UIDocumentPickerDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn UIDocumentPickerDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn UIDocumentPickerDelegate>>);
+        pub unsafe fn setDelegate(
+            &self,
+            delegate: Option<&ProtocolObject<dyn UIDocumentPickerDelegate>>,
+        );
 
         #[deprecated = "Use appropriate initializers instead"]
         #[unsafe(method(documentPickerMode))]
         #[unsafe(method_family = none)]
-        pub fn documentPickerMode(&self) -> UIDocumentPickerMode;
+        pub unsafe fn documentPickerMode(&self) -> UIDocumentPickerMode;
 
         #[unsafe(method(allowsMultipleSelection))]
         #[unsafe(method_family = none)]
-        pub fn allowsMultipleSelection(&self) -> bool;
+        pub unsafe fn allowsMultipleSelection(&self) -> bool;
 
         /// Setter for [`allowsMultipleSelection`][Self::allowsMultipleSelection].
         #[unsafe(method(setAllowsMultipleSelection:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsMultipleSelection(&self, allows_multiple_selection: bool);
+        pub unsafe fn setAllowsMultipleSelection(&self, allows_multiple_selection: bool);
 
         /// Force the display of supported file extensions (default: NO).
         #[unsafe(method(shouldShowFileExtensions))]
         #[unsafe(method_family = none)]
-        pub fn shouldShowFileExtensions(&self) -> bool;
+        pub unsafe fn shouldShowFileExtensions(&self) -> bool;
 
         /// Setter for [`shouldShowFileExtensions`][Self::shouldShowFileExtensions].
         #[unsafe(method(setShouldShowFileExtensions:))]
         #[unsafe(method_family = none)]
-        pub fn setShouldShowFileExtensions(&self, should_show_file_extensions: bool);
+        pub unsafe fn setShouldShowFileExtensions(&self, should_show_file_extensions: bool);
 
         /// Picker will try to display this URL when presented
         #[unsafe(method(directoryURL))]
         #[unsafe(method_family = none)]
-        pub fn directoryURL(&self) -> Option<Retained<NSURL>>;
+        pub unsafe fn directoryURL(&self) -> Option<Retained<NSURL>>;
 
         /// Setter for [`directoryURL`][Self::directoryURL].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDirectoryURL:))]
         #[unsafe(method_family = none)]
-        pub fn setDirectoryURL(&self, directory_url: Option<&NSURL>);
+        pub unsafe fn setDirectoryURL(&self, directory_url: Option<&NSURL>);
     );
 }
 
@@ -259,7 +260,7 @@ impl UIDocumentPickerViewController {
     extern_methods!(
         #[unsafe(method(initWithNibName:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibName_bundle(
+        pub unsafe fn initWithNibName_bundle(
             this: Allocated<Self>,
             nib_name_or_nil: Option<&NSString>,
             nib_bundle_or_nil: Option<&NSBundle>,
@@ -273,10 +274,10 @@ impl UIDocumentPickerViewController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

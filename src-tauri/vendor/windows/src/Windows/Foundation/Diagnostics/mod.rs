@@ -443,11 +443,11 @@ impl windows_core::RuntimeName for IFileLoggingSession {
 #[cfg(feature = "Storage_Streams")]
 pub trait IFileLoggingSession_Impl: super::IClosable_Impl {
     fn Name(&self) -> windows_core::Result<windows_core::HSTRING>;
-    fn AddLoggingChannel(&self, loggingChannel: windows_core::Ref<'_, ILoggingChannel>) -> windows_core::Result<()>;
-    fn AddLoggingChannelWithLevel(&self, loggingChannel: windows_core::Ref<'_, ILoggingChannel>, maxLevel: LoggingLevel) -> windows_core::Result<()>;
-    fn RemoveLoggingChannel(&self, loggingChannel: windows_core::Ref<'_, ILoggingChannel>) -> windows_core::Result<()>;
+    fn AddLoggingChannel(&self, loggingChannel: windows_core::Ref<ILoggingChannel>) -> windows_core::Result<()>;
+    fn AddLoggingChannelWithLevel(&self, loggingChannel: windows_core::Ref<ILoggingChannel>, maxLevel: LoggingLevel) -> windows_core::Result<()>;
+    fn RemoveLoggingChannel(&self, loggingChannel: windows_core::Ref<ILoggingChannel>) -> windows_core::Result<()>;
     fn CloseAndSaveToFileAsync(&self) -> windows_core::Result<windows_future::IAsyncOperation<super::super::Storage::StorageFile>>;
-    fn LogFileGenerated(&self, handler: windows_core::Ref<'_, super::TypedEventHandler<IFileLoggingSession, LogFileGeneratedEventArgs>>) -> windows_core::Result<i64>;
+    fn LogFileGenerated(&self, handler: windows_core::Ref<super::TypedEventHandler<IFileLoggingSession, LogFileGeneratedEventArgs>>) -> windows_core::Result<i64>;
     fn RemoveLogFileGenerated(&self, token: i64) -> windows_core::Result<()>;
 }
 #[cfg(feature = "Storage_Streams")]
@@ -677,7 +677,7 @@ pub trait ILoggingChannel_Impl: super::IClosable_Impl {
     fn LogMessageWithLevel(&self, eventString: &windows_core::HSTRING, level: LoggingLevel) -> windows_core::Result<()>;
     fn LogValuePair(&self, value1: &windows_core::HSTRING, value2: i32) -> windows_core::Result<()>;
     fn LogValuePairWithLevel(&self, value1: &windows_core::HSTRING, value2: i32, level: LoggingLevel) -> windows_core::Result<()>;
-    fn LoggingEnabled(&self, handler: windows_core::Ref<'_, super::TypedEventHandler<ILoggingChannel, windows_core::IInspectable>>) -> windows_core::Result<i64>;
+    fn LoggingEnabled(&self, handler: windows_core::Ref<super::TypedEventHandler<ILoggingChannel, windows_core::IInspectable>>) -> windows_core::Result<i64>;
     fn RemoveLoggingEnabled(&self, token: i64) -> windows_core::Result<()>;
 }
 impl ILoggingChannel_Vtbl {
@@ -810,10 +810,7 @@ impl windows_core::RuntimeType for ILoggingChannelFactory {
 #[doc(hidden)]
 pub struct ILoggingChannelFactory_Vtbl {
     pub base__: windows_core::IInspectable_Vtbl,
-    #[cfg(feature = "deprecated")]
     pub Create: unsafe extern "system" fn(*mut core::ffi::c_void, *mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    Create: usize,
 }
 windows_core::imp::define_interface!(ILoggingChannelFactory2, ILoggingChannelFactory2_Vtbl, 0x4c6ef5dd_3b27_4dc9_99f0_299c6e4603a1);
 impl windows_core::RuntimeType for ILoggingChannelFactory2 {
@@ -1060,10 +1057,10 @@ impl windows_core::RuntimeName for ILoggingSession {
 #[cfg(feature = "Storage_Streams")]
 pub trait ILoggingSession_Impl: super::IClosable_Impl {
     fn Name(&self) -> windows_core::Result<windows_core::HSTRING>;
-    fn SaveToFileAsync(&self, folder: windows_core::Ref<'_, super::super::Storage::IStorageFolder>, fileName: &windows_core::HSTRING) -> windows_core::Result<windows_future::IAsyncOperation<super::super::Storage::StorageFile>>;
-    fn AddLoggingChannel(&self, loggingChannel: windows_core::Ref<'_, ILoggingChannel>) -> windows_core::Result<()>;
-    fn AddLoggingChannelWithLevel(&self, loggingChannel: windows_core::Ref<'_, ILoggingChannel>, maxLevel: LoggingLevel) -> windows_core::Result<()>;
-    fn RemoveLoggingChannel(&self, loggingChannel: windows_core::Ref<'_, ILoggingChannel>) -> windows_core::Result<()>;
+    fn SaveToFileAsync(&self, folder: windows_core::Ref<super::super::Storage::IStorageFolder>, fileName: &windows_core::HSTRING) -> windows_core::Result<windows_future::IAsyncOperation<super::super::Storage::StorageFile>>;
+    fn AddLoggingChannel(&self, loggingChannel: windows_core::Ref<ILoggingChannel>) -> windows_core::Result<()>;
+    fn AddLoggingChannelWithLevel(&self, loggingChannel: windows_core::Ref<ILoggingChannel>, maxLevel: LoggingLevel) -> windows_core::Result<()>;
+    fn RemoveLoggingChannel(&self, loggingChannel: windows_core::Ref<ILoggingChannel>) -> windows_core::Result<()>;
 }
 #[cfg(feature = "Storage_Streams")]
 impl ILoggingSession_Vtbl {
@@ -1248,13 +1245,13 @@ pub trait ILoggingTarget_Impl: windows_core::IUnknownImpl {
     fn IsEnabledWithLevel(&self, level: LoggingLevel) -> windows_core::Result<bool>;
     fn IsEnabledWithLevelAndKeywords(&self, level: LoggingLevel, keywords: i64) -> windows_core::Result<bool>;
     fn LogEvent(&self, eventName: &windows_core::HSTRING) -> windows_core::Result<()>;
-    fn LogEventWithFields(&self, eventName: &windows_core::HSTRING, fields: windows_core::Ref<'_, LoggingFields>) -> windows_core::Result<()>;
-    fn LogEventWithFieldsAndLevel(&self, eventName: &windows_core::HSTRING, fields: windows_core::Ref<'_, LoggingFields>, level: LoggingLevel) -> windows_core::Result<()>;
-    fn LogEventWithFieldsAndOptions(&self, eventName: &windows_core::HSTRING, fields: windows_core::Ref<'_, LoggingFields>, level: LoggingLevel, options: windows_core::Ref<'_, LoggingOptions>) -> windows_core::Result<()>;
+    fn LogEventWithFields(&self, eventName: &windows_core::HSTRING, fields: windows_core::Ref<LoggingFields>) -> windows_core::Result<()>;
+    fn LogEventWithFieldsAndLevel(&self, eventName: &windows_core::HSTRING, fields: windows_core::Ref<LoggingFields>, level: LoggingLevel) -> windows_core::Result<()>;
+    fn LogEventWithFieldsAndOptions(&self, eventName: &windows_core::HSTRING, fields: windows_core::Ref<LoggingFields>, level: LoggingLevel, options: windows_core::Ref<LoggingOptions>) -> windows_core::Result<()>;
     fn StartActivity(&self, startEventName: &windows_core::HSTRING) -> windows_core::Result<LoggingActivity>;
-    fn StartActivityWithFields(&self, startEventName: &windows_core::HSTRING, fields: windows_core::Ref<'_, LoggingFields>) -> windows_core::Result<LoggingActivity>;
-    fn StartActivityWithFieldsAndLevel(&self, startEventName: &windows_core::HSTRING, fields: windows_core::Ref<'_, LoggingFields>, level: LoggingLevel) -> windows_core::Result<LoggingActivity>;
-    fn StartActivityWithFieldsAndOptions(&self, startEventName: &windows_core::HSTRING, fields: windows_core::Ref<'_, LoggingFields>, level: LoggingLevel, options: windows_core::Ref<'_, LoggingOptions>) -> windows_core::Result<LoggingActivity>;
+    fn StartActivityWithFields(&self, startEventName: &windows_core::HSTRING, fields: windows_core::Ref<LoggingFields>) -> windows_core::Result<LoggingActivity>;
+    fn StartActivityWithFieldsAndLevel(&self, startEventName: &windows_core::HSTRING, fields: windows_core::Ref<LoggingFields>, level: LoggingLevel) -> windows_core::Result<LoggingActivity>;
+    fn StartActivityWithFieldsAndOptions(&self, startEventName: &windows_core::HSTRING, fields: windows_core::Ref<LoggingFields>, level: LoggingLevel, options: windows_core::Ref<LoggingOptions>) -> windows_core::Result<LoggingActivity>;
 }
 impl ILoggingTarget_Vtbl {
     pub const fn new<Identity: ILoggingTarget_Impl, const OFFSET: isize>() -> Self {
@@ -1680,7 +1677,6 @@ impl LoggingChannel {
             (windows_core::Interface::vtable(this).Id)(windows_core::Interface::as_raw(this), &mut result__).map(|| result__)
         }
     }
-    #[cfg(feature = "deprecated")]
     pub fn Create(name: &windows_core::HSTRING) -> windows_core::Result<LoggingChannel> {
         Self::ILoggingChannelFactory(|this| unsafe {
             let mut result__ = core::mem::zeroed();

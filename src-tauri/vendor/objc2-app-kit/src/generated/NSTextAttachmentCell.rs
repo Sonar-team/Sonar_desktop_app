@@ -15,7 +15,7 @@ extern_protocol!(
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(drawWithFrame:inView:))]
         #[unsafe(method_family = none)]
-        fn drawWithFrame_inView(
+        unsafe fn drawWithFrame_inView(
             &self,
             cell_frame: NSRect,
             control_view: Option<&NSView>,
@@ -24,12 +24,12 @@ extern_protocol!(
 
         #[unsafe(method(wantsToTrackMouse))]
         #[unsafe(method_family = none)]
-        fn wantsToTrackMouse(&self, mtm: MainThreadMarker) -> bool;
+        unsafe fn wantsToTrackMouse(&self, mtm: MainThreadMarker) -> bool;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(highlight:withFrame:inView:))]
         #[unsafe(method_family = none)]
-        fn highlight_withFrame_inView(
+        unsafe fn highlight_withFrame_inView(
             &self,
             flag: bool,
             cell_frame: NSRect,
@@ -40,7 +40,7 @@ extern_protocol!(
         #[cfg(all(feature = "NSEvent", feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(trackMouse:inRect:ofView:untilMouseUp:))]
         #[unsafe(method_family = none)]
-        fn trackMouse_inRect_ofView_untilMouseUp(
+        unsafe fn trackMouse_inRect_ofView_untilMouseUp(
             &self,
             the_event: &NSEvent,
             cell_frame: NSRect,
@@ -51,26 +51,19 @@ extern_protocol!(
 
         #[unsafe(method(cellSize))]
         #[unsafe(method_family = none)]
-        fn cellSize(&self) -> NSSize;
+        unsafe fn cellSize(&self) -> NSSize;
 
         #[unsafe(method(cellBaselineOffset))]
         #[unsafe(method_family = none)]
-        fn cellBaselineOffset(&self) -> NSPoint;
+        unsafe fn cellBaselineOffset(&self) -> NSPoint;
 
         #[cfg(feature = "NSTextAttachment")]
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(attachment))]
         #[unsafe(method_family = none)]
         unsafe fn attachment(&self) -> Option<Retained<NSTextAttachment>>;
 
         #[cfg(feature = "NSTextAttachment")]
         /// Setter for [`attachment`][Self::attachment].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setAttachment:))]
         #[unsafe(method_family = none)]
         unsafe fn setAttachment(&self, attachment: Option<&NSTextAttachment>);
@@ -78,7 +71,7 @@ extern_protocol!(
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(drawWithFrame:inView:characterIndex:))]
         #[unsafe(method_family = none)]
-        fn drawWithFrame_inView_characterIndex(
+        unsafe fn drawWithFrame_inView_characterIndex(
             &self,
             cell_frame: NSRect,
             control_view: Option<&NSView>,
@@ -93,7 +86,7 @@ extern_protocol!(
         ))]
         #[unsafe(method(drawWithFrame:inView:characterIndex:layoutManager:))]
         #[unsafe(method_family = none)]
-        fn drawWithFrame_inView_characterIndex_layoutManager(
+        unsafe fn drawWithFrame_inView_characterIndex_layoutManager(
             &self,
             cell_frame: NSRect,
             control_view: Option<&NSView>,
@@ -105,7 +98,7 @@ extern_protocol!(
         #[cfg(all(feature = "NSEvent", feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(wantsToTrackMouseForEvent:inRect:ofView:atCharacterIndex:))]
         #[unsafe(method_family = none)]
-        fn wantsToTrackMouseForEvent_inRect_ofView_atCharacterIndex(
+        unsafe fn wantsToTrackMouseForEvent_inRect_ofView_atCharacterIndex(
             &self,
             the_event: &NSEvent,
             cell_frame: NSRect,
@@ -117,7 +110,7 @@ extern_protocol!(
         #[cfg(all(feature = "NSEvent", feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(trackMouse:inRect:ofView:atCharacterIndex:untilMouseUp:))]
         #[unsafe(method_family = none)]
-        fn trackMouse_inRect_ofView_atCharacterIndex_untilMouseUp(
+        unsafe fn trackMouse_inRect_ofView_atCharacterIndex_untilMouseUp(
             &self,
             the_event: &NSEvent,
             cell_frame: NSRect,
@@ -130,7 +123,7 @@ extern_protocol!(
         #[cfg(feature = "NSTextContainer")]
         #[unsafe(method(cellFrameForTextContainer:proposedLineFragment:glyphPosition:characterIndex:))]
         #[unsafe(method_family = none)]
-        fn cellFrameForTextContainer_proposedLineFragment_glyphPosition_characterIndex(
+        unsafe fn cellFrameForTextContainer_proposedLineFragment_glyphPosition_characterIndex(
             &self,
             text_container: &NSTextContainer,
             line_frag: NSRect,
@@ -199,20 +192,20 @@ impl NSTextAttachmentCell {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(initTextCell:))]
         #[unsafe(method_family = init)]
-        pub fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
+        pub unsafe fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(initImageCell:))]
         #[unsafe(method_family = init)]
-        pub fn initImageCell(this: Allocated<Self>, image: Option<&NSImage>) -> Retained<Self>;
+        pub unsafe fn initImageCell(
+            this: Allocated<Self>,
+            image: Option<&NSImage>,
+        ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -225,6 +218,6 @@ impl NSTextAttachmentCell {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

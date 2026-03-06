@@ -149,12 +149,12 @@ impl UITouch {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(majorRadius))]
         #[unsafe(method_family = none)]
-        pub fn majorRadius(&self) -> CGFloat;
+        pub unsafe fn majorRadius(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(majorRadiusTolerance))]
         #[unsafe(method_family = none)]
-        pub fn majorRadiusTolerance(&self) -> CGFloat;
+        pub unsafe fn majorRadiusTolerance(&self) -> CGFloat;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView", feature = "UIWindow"))]
         #[unsafe(method(window))]
@@ -169,7 +169,7 @@ impl UITouch {
         #[cfg(feature = "UIGestureRecognizer")]
         #[unsafe(method(gestureRecognizers))]
         #[unsafe(method_family = none)]
-        pub fn gestureRecognizers(&self) -> Option<Retained<NSArray<UIGestureRecognizer>>>;
+        pub unsafe fn gestureRecognizers(&self) -> Option<Retained<NSArray<UIGestureRecognizer>>>;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -196,7 +196,7 @@ impl UITouch {
         ))]
         #[unsafe(method(preciseLocationInView:))]
         #[unsafe(method_family = none)]
-        pub fn preciseLocationInView(&self, view: Option<&UIView>) -> CGPoint;
+        pub unsafe fn preciseLocationInView(&self, view: Option<&UIView>) -> CGPoint;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -205,7 +205,7 @@ impl UITouch {
         ))]
         #[unsafe(method(precisePreviousLocationInView:))]
         #[unsafe(method_family = none)]
-        pub fn precisePreviousLocationInView(&self, view: Option<&UIView>) -> CGPoint;
+        pub unsafe fn precisePreviousLocationInView(&self, view: Option<&UIView>) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(force))]
@@ -242,15 +242,15 @@ impl UITouch {
 
         #[unsafe(method(estimationUpdateIndex))]
         #[unsafe(method_family = none)]
-        pub fn estimationUpdateIndex(&self) -> Option<Retained<NSNumber>>;
+        pub unsafe fn estimationUpdateIndex(&self) -> Option<Retained<NSNumber>>;
 
         #[unsafe(method(estimatedProperties))]
         #[unsafe(method_family = none)]
-        pub fn estimatedProperties(&self) -> UITouchProperties;
+        pub unsafe fn estimatedProperties(&self) -> UITouchProperties;
 
         #[unsafe(method(estimatedPropertiesExpectingUpdates))]
         #[unsafe(method_family = none)]
-        pub fn estimatedPropertiesExpectingUpdates(&self) -> UITouchProperties;
+        pub unsafe fn estimatedPropertiesExpectingUpdates(&self) -> UITouchProperties;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(rollAngle))]
@@ -264,10 +264,10 @@ impl UITouch {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

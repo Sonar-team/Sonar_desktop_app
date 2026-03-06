@@ -37,15 +37,14 @@ impl NSDocumentController {
     extern_methods!(
         #[unsafe(method(sharedDocumentController))]
         #[unsafe(method_family = none)]
-        pub fn sharedDocumentController(mtm: MainThreadMarker) -> Retained<NSDocumentController>;
+        pub unsafe fn sharedDocumentController(
+            mtm: MainThreadMarker,
+        ) -> Retained<NSDocumentController>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -56,40 +55,37 @@ impl NSDocumentController {
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(documents))]
         #[unsafe(method_family = none)]
-        pub fn documents(&self) -> Retained<NSArray<NSDocument>>;
+        pub unsafe fn documents(&self) -> Retained<NSArray<NSDocument>>;
 
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(currentDocument))]
         #[unsafe(method_family = none)]
-        pub fn currentDocument(&self) -> Option<Retained<NSDocument>>;
+        pub unsafe fn currentDocument(&self) -> Option<Retained<NSDocument>>;
 
         #[unsafe(method(currentDirectory))]
         #[unsafe(method_family = none)]
-        pub fn currentDirectory(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn currentDirectory(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(documentForURL:))]
         #[unsafe(method_family = none)]
-        pub fn documentForURL(&self, url: &NSURL) -> Option<Retained<NSDocument>>;
+        pub unsafe fn documentForURL(&self, url: &NSURL) -> Option<Retained<NSDocument>>;
 
         #[cfg(all(feature = "NSDocument", feature = "NSResponder", feature = "NSWindow"))]
         #[unsafe(method(documentForWindow:))]
         #[unsafe(method_family = none)]
-        pub fn documentForWindow(&self, window: &NSWindow) -> Option<Retained<NSDocument>>;
+        pub unsafe fn documentForWindow(&self, window: &NSWindow) -> Option<Retained<NSDocument>>;
 
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(addDocument:))]
         #[unsafe(method_family = none)]
-        pub fn addDocument(&self, document: &NSDocument);
+        pub unsafe fn addDocument(&self, document: &NSDocument);
 
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(removeDocument:))]
         #[unsafe(method_family = none)]
-        pub fn removeDocument(&self, document: &NSDocument);
+        pub unsafe fn removeDocument(&self, document: &NSDocument);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(newDocument:))]
         #[unsafe(method_family = none)]
         pub unsafe fn newDocument(&self, sender: Option<&AnyObject>);
@@ -97,7 +93,7 @@ impl NSDocumentController {
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(openUntitledDocumentAndDisplay:error:_))]
         #[unsafe(method_family = none)]
-        pub fn openUntitledDocumentAndDisplay_error(
+        pub unsafe fn openUntitledDocumentAndDisplay_error(
             &self,
             display_document: bool,
         ) -> Result<Retained<NSDocument>, Retained<NSError>>;
@@ -105,21 +101,18 @@ impl NSDocumentController {
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(makeUntitledDocumentOfType:error:_))]
         #[unsafe(method_family = none)]
-        pub fn makeUntitledDocumentOfType_error(
+        pub unsafe fn makeUntitledDocumentOfType_error(
             &self,
             type_name: &NSString,
         ) -> Result<Retained<NSDocument>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(openDocument:))]
         #[unsafe(method_family = none)]
         pub unsafe fn openDocument(&self, sender: Option<&AnyObject>);
 
         #[unsafe(method(URLsFromRunningOpenPanel))]
         #[unsafe(method_family = none)]
-        pub fn URLsFromRunningOpenPanel(&self) -> Option<Retained<NSArray<NSURL>>>;
+        pub unsafe fn URLsFromRunningOpenPanel(&self) -> Option<Retained<NSArray<NSURL>>>;
 
         #[cfg(all(
             feature = "NSOpenPanel",
@@ -130,7 +123,7 @@ impl NSDocumentController {
         ))]
         #[unsafe(method(runModalOpenPanel:forTypes:))]
         #[unsafe(method_family = none)]
-        pub fn runModalOpenPanel_forTypes(
+        pub unsafe fn runModalOpenPanel_forTypes(
             &self,
             open_panel: &NSOpenPanel,
             types: Option<&NSArray<NSString>>,
@@ -139,7 +132,7 @@ impl NSDocumentController {
         #[cfg(feature = "block2")]
         #[unsafe(method(beginOpenPanelWithCompletionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn beginOpenPanelWithCompletionHandler(
+        pub unsafe fn beginOpenPanelWithCompletionHandler(
             &self,
             completion_handler: &block2::DynBlock<dyn Fn(*mut NSArray<NSURL>)>,
         );
@@ -154,7 +147,7 @@ impl NSDocumentController {
         ))]
         #[unsafe(method(beginOpenPanel:forTypes:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn beginOpenPanel_forTypes_completionHandler(
+        pub unsafe fn beginOpenPanel_forTypes_completionHandler(
             &self,
             open_panel: &NSOpenPanel,
             in_types: Option<&NSArray<NSString>>,
@@ -164,7 +157,7 @@ impl NSDocumentController {
         #[cfg(all(feature = "NSDocument", feature = "block2"))]
         #[unsafe(method(openDocumentWithContentsOfURL:display:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn openDocumentWithContentsOfURL_display_completionHandler(
+        pub unsafe fn openDocumentWithContentsOfURL_display_completionHandler(
             &self,
             url: &NSURL,
             display_document: bool,
@@ -174,7 +167,7 @@ impl NSDocumentController {
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(makeDocumentWithContentsOfURL:ofType:error:_))]
         #[unsafe(method_family = none)]
-        pub fn makeDocumentWithContentsOfURL_ofType_error(
+        pub unsafe fn makeDocumentWithContentsOfURL_ofType_error(
             &self,
             url: &NSURL,
             type_name: &NSString,
@@ -183,7 +176,7 @@ impl NSDocumentController {
         #[cfg(all(feature = "NSDocument", feature = "block2"))]
         #[unsafe(method(reopenDocumentForURL:withContentsOfURL:display:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn reopenDocumentForURL_withContentsOfURL_display_completionHandler(
+        pub unsafe fn reopenDocumentForURL_withContentsOfURL_display_completionHandler(
             &self,
             url_or_nil: Option<&NSURL>,
             contents_url: &NSURL,
@@ -194,7 +187,7 @@ impl NSDocumentController {
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(makeDocumentForURL:withContentsOfURL:ofType:error:_))]
         #[unsafe(method_family = none)]
-        pub fn makeDocumentForURL_withContentsOfURL_ofType_error(
+        pub unsafe fn makeDocumentForURL_withContentsOfURL_ofType_error(
             &self,
             url_or_nil: Option<&NSURL>,
             contents_url: &NSURL,
@@ -203,29 +196,21 @@ impl NSDocumentController {
 
         #[unsafe(method(autosavingDelay))]
         #[unsafe(method_family = none)]
-        pub fn autosavingDelay(&self) -> NSTimeInterval;
+        pub unsafe fn autosavingDelay(&self) -> NSTimeInterval;
 
         /// Setter for [`autosavingDelay`][Self::autosavingDelay].
         #[unsafe(method(setAutosavingDelay:))]
         #[unsafe(method_family = none)]
-        pub fn setAutosavingDelay(&self, autosaving_delay: NSTimeInterval);
+        pub unsafe fn setAutosavingDelay(&self, autosaving_delay: NSTimeInterval);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(saveAllDocuments:))]
         #[unsafe(method_family = none)]
         pub unsafe fn saveAllDocuments(&self, sender: Option<&AnyObject>);
 
         #[unsafe(method(hasEditedDocuments))]
         #[unsafe(method_family = none)]
-        pub fn hasEditedDocuments(&self) -> bool;
+        pub unsafe fn hasEditedDocuments(&self) -> bool;
 
-        /// # Safety
-        ///
-        /// - `delegate` should be of the correct type.
-        /// - `did_review_all_selector` must be a valid selector.
-        /// - `context_info` must be a valid pointer or null.
         #[unsafe(method(reviewUnsavedDocumentsWithAlertTitle:cancellable:delegate:didReviewAllSelector:contextInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn reviewUnsavedDocumentsWithAlertTitle_cancellable_delegate_didReviewAllSelector_contextInfo(
@@ -237,11 +222,6 @@ impl NSDocumentController {
             context_info: *mut c_void,
         );
 
-        /// # Safety
-        ///
-        /// - `delegate` should be of the correct type.
-        /// - `did_close_all_selector` must be a valid selector.
-        /// - `context_info` must be a valid pointer or null.
         #[unsafe(method(closeAllDocumentsWithDelegate:didCloseAllSelector:contextInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn closeAllDocumentsWithDelegate_didCloseAllSelector_contextInfo(
@@ -254,7 +234,7 @@ impl NSDocumentController {
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(duplicateDocumentWithContentsOfURL:copying:displayName:error:_))]
         #[unsafe(method_family = none)]
-        pub fn duplicateDocumentWithContentsOfURL_copying_displayName_error(
+        pub unsafe fn duplicateDocumentWithContentsOfURL_copying_displayName_error(
             &self,
             url: &NSURL,
             duplicate_by_copying: bool,
@@ -263,19 +243,14 @@ impl NSDocumentController {
 
         #[unsafe(method(allowsAutomaticShareMenu))]
         #[unsafe(method_family = none)]
-        pub fn allowsAutomaticShareMenu(&self) -> bool;
+        pub unsafe fn allowsAutomaticShareMenu(&self) -> bool;
 
         #[cfg(feature = "NSMenuItem")]
         #[unsafe(method(standardShareMenuItem))]
         #[unsafe(method_family = none)]
-        pub fn standardShareMenuItem(&self) -> Retained<NSMenuItem>;
+        pub unsafe fn standardShareMenuItem(&self) -> Retained<NSMenuItem>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSWindow"))]
-        /// # Safety
-        ///
-        /// - `delegate` should be of the correct type.
-        /// - `did_present_selector` must be a valid selector.
-        /// - `context_info` must be a valid pointer or null.
         #[unsafe(method(presentError:modalForWindow:delegate:didPresentSelector:contextInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn presentError_modalForWindow_delegate_didPresentSelector_contextInfo(
@@ -289,19 +264,16 @@ impl NSDocumentController {
 
         #[unsafe(method(presentError:))]
         #[unsafe(method_family = none)]
-        pub fn presentError(&self, error: &NSError) -> bool;
+        pub unsafe fn presentError(&self, error: &NSError) -> bool;
 
         #[unsafe(method(willPresentError:))]
         #[unsafe(method_family = none)]
-        pub fn willPresentError(&self, error: &NSError) -> Retained<NSError>;
+        pub unsafe fn willPresentError(&self, error: &NSError) -> Retained<NSError>;
 
         #[unsafe(method(maximumRecentDocumentCount))]
         #[unsafe(method_family = none)]
-        pub fn maximumRecentDocumentCount(&self) -> NSUInteger;
+        pub unsafe fn maximumRecentDocumentCount(&self) -> NSUInteger;
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(clearRecentDocuments:))]
         #[unsafe(method_family = none)]
         pub unsafe fn clearRecentDocuments(&self, sender: Option<&AnyObject>);
@@ -309,43 +281,47 @@ impl NSDocumentController {
         #[cfg(feature = "NSDocument")]
         #[unsafe(method(noteNewRecentDocument:))]
         #[unsafe(method_family = none)]
-        pub fn noteNewRecentDocument(&self, document: &NSDocument);
+        pub unsafe fn noteNewRecentDocument(&self, document: &NSDocument);
 
         #[unsafe(method(noteNewRecentDocumentURL:))]
         #[unsafe(method_family = none)]
-        pub fn noteNewRecentDocumentURL(&self, url: &NSURL);
+        pub unsafe fn noteNewRecentDocumentURL(&self, url: &NSURL);
 
         #[unsafe(method(recentDocumentURLs))]
         #[unsafe(method_family = none)]
-        pub fn recentDocumentURLs(&self) -> Retained<NSArray<NSURL>>;
+        pub unsafe fn recentDocumentURLs(&self) -> Retained<NSArray<NSURL>>;
 
         #[unsafe(method(defaultType))]
         #[unsafe(method_family = none)]
-        pub fn defaultType(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn defaultType(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(typeForContentsOfURL:error:_))]
         #[unsafe(method_family = none)]
-        pub fn typeForContentsOfURL_error(
+        pub unsafe fn typeForContentsOfURL_error(
             &self,
             url: &NSURL,
         ) -> Result<Retained<NSString>, Retained<NSError>>;
 
         #[unsafe(method(documentClassNames))]
         #[unsafe(method_family = none)]
-        pub fn documentClassNames(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn documentClassNames(&self) -> Retained<NSArray<NSString>>;
 
         #[unsafe(method(documentClassForType:))]
         #[unsafe(method_family = none)]
-        pub fn documentClassForType(&self, type_name: &NSString) -> Option<&'static AnyClass>;
+        pub unsafe fn documentClassForType(
+            &self,
+            type_name: &NSString,
+        ) -> Option<&'static AnyClass>;
 
         #[unsafe(method(displayNameForType:))]
         #[unsafe(method_family = none)]
-        pub fn displayNameForType(&self, type_name: &NSString) -> Option<Retained<NSString>>;
+        pub unsafe fn displayNameForType(&self, type_name: &NSString)
+            -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSUserInterfaceValidation")]
         #[unsafe(method(validateUserInterfaceItem:))]
         #[unsafe(method_family = none)]
-        pub fn validateUserInterfaceItem(
+        pub unsafe fn validateUserInterfaceItem(
             &self,
             item: &ProtocolObject<dyn NSValidatedUserInterfaceItem>,
         ) -> bool;
@@ -357,7 +333,7 @@ impl NSDocumentController {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -367,7 +343,7 @@ impl NSDocumentController {
         #[deprecated = "Use -openDocumentWithContentsOfURL:display:completionHandler: instead"]
         #[unsafe(method(openDocumentWithContentsOfURL:display:error:_))]
         #[unsafe(method_family = none)]
-        pub fn openDocumentWithContentsOfURL_display_error(
+        pub unsafe fn openDocumentWithContentsOfURL_display_error(
             &self,
             url: &NSURL,
             display_document: bool,
@@ -376,7 +352,7 @@ impl NSDocumentController {
         #[deprecated = "Use -reopenDocumentForURL:withContentsOfURL:display:completionHandler: instead"]
         #[unsafe(method(reopenDocumentForURL:withContentsOfURL:error:_))]
         #[unsafe(method_family = none)]
-        pub fn reopenDocumentForURL_withContentsOfURL_error(
+        pub unsafe fn reopenDocumentForURL_withContentsOfURL_error(
             &self,
             url: Option<&NSURL>,
             contents_url: &NSURL,
@@ -385,12 +361,15 @@ impl NSDocumentController {
         #[deprecated]
         #[unsafe(method(fileExtensionsFromType:))]
         #[unsafe(method_family = none)]
-        pub fn fileExtensionsFromType(&self, type_name: &NSString) -> Option<Retained<NSArray>>;
+        pub unsafe fn fileExtensionsFromType(
+            &self,
+            type_name: &NSString,
+        ) -> Option<Retained<NSArray>>;
 
         #[deprecated]
         #[unsafe(method(typeFromFileExtension:))]
         #[unsafe(method_family = none)]
-        pub fn typeFromFileExtension(
+        pub unsafe fn typeFromFileExtension(
             &self,
             file_name_extension_or_hfs_file_type: &NSString,
         ) -> Option<Retained<NSString>>;
@@ -398,25 +377,25 @@ impl NSDocumentController {
         #[deprecated]
         #[unsafe(method(documentForFileName:))]
         #[unsafe(method_family = none)]
-        pub fn documentForFileName(&self, file_name: &NSString) -> Option<Retained<AnyObject>>;
+        pub unsafe fn documentForFileName(
+            &self,
+            file_name: &NSString,
+        ) -> Option<Retained<AnyObject>>;
 
         #[deprecated]
         #[unsafe(method(fileNamesFromRunningOpenPanel))]
         #[unsafe(method_family = none)]
-        pub fn fileNamesFromRunningOpenPanel(&self) -> Option<Retained<NSArray>>;
+        pub unsafe fn fileNamesFromRunningOpenPanel(&self) -> Option<Retained<NSArray>>;
 
         #[deprecated]
         #[unsafe(method(makeDocumentWithContentsOfFile:ofType:))]
         #[unsafe(method_family = none)]
-        pub fn makeDocumentWithContentsOfFile_ofType(
+        pub unsafe fn makeDocumentWithContentsOfFile_ofType(
             &self,
             file_name: &NSString,
             r#type: &NSString,
         ) -> Option<Retained<AnyObject>>;
 
-        /// # Safety
-        ///
-        /// `type` might not allow `None`.
         #[deprecated]
         #[unsafe(method(makeDocumentWithContentsOfURL:ofType:))]
         #[unsafe(method_family = none)]
@@ -429,12 +408,15 @@ impl NSDocumentController {
         #[deprecated]
         #[unsafe(method(makeUntitledDocumentOfType:))]
         #[unsafe(method_family = none)]
-        pub fn makeUntitledDocumentOfType(&self, r#type: &NSString) -> Option<Retained<AnyObject>>;
+        pub unsafe fn makeUntitledDocumentOfType(
+            &self,
+            r#type: &NSString,
+        ) -> Option<Retained<AnyObject>>;
 
         #[deprecated]
         #[unsafe(method(openDocumentWithContentsOfFile:display:))]
         #[unsafe(method_family = none)]
-        pub fn openDocumentWithContentsOfFile_display(
+        pub unsafe fn openDocumentWithContentsOfFile_display(
             &self,
             file_name: &NSString,
             display: bool,
@@ -443,7 +425,7 @@ impl NSDocumentController {
         #[deprecated]
         #[unsafe(method(openDocumentWithContentsOfURL:display:))]
         #[unsafe(method_family = none)]
-        pub fn openDocumentWithContentsOfURL_display(
+        pub unsafe fn openDocumentWithContentsOfURL_display(
             &self,
             url: &NSURL,
             display: bool,
@@ -452,7 +434,7 @@ impl NSDocumentController {
         #[deprecated]
         #[unsafe(method(openUntitledDocumentOfType:display:))]
         #[unsafe(method_family = none)]
-        pub fn openUntitledDocumentOfType_display(
+        pub unsafe fn openUntitledDocumentOfType_display(
             &self,
             r#type: &NSString,
             display: bool,
@@ -461,11 +443,11 @@ impl NSDocumentController {
         #[deprecated]
         #[unsafe(method(setShouldCreateUI:))]
         #[unsafe(method_family = none)]
-        pub fn setShouldCreateUI(&self, flag: bool);
+        pub unsafe fn setShouldCreateUI(&self, flag: bool);
 
         #[deprecated]
         #[unsafe(method(shouldCreateUI))]
         #[unsafe(method_family = none)]
-        pub fn shouldCreateUI(&self) -> bool;
+        pub unsafe fn shouldCreateUI(&self) -> bool;
     );
 }

@@ -323,51 +323,47 @@ impl NSPasteboard {
     extern_methods!(
         #[unsafe(method(generalPasteboard))]
         #[unsafe(method_family = none)]
-        pub fn generalPasteboard() -> Retained<NSPasteboard>;
+        pub unsafe fn generalPasteboard() -> Retained<NSPasteboard>;
 
         #[unsafe(method(pasteboardWithName:))]
         #[unsafe(method_family = none)]
-        pub fn pasteboardWithName(name: &NSPasteboardName) -> Retained<NSPasteboard>;
+        pub unsafe fn pasteboardWithName(name: &NSPasteboardName) -> Retained<NSPasteboard>;
 
         #[unsafe(method(pasteboardWithUniqueName))]
         #[unsafe(method_family = none)]
-        pub fn pasteboardWithUniqueName() -> Retained<NSPasteboard>;
+        pub unsafe fn pasteboardWithUniqueName() -> Retained<NSPasteboard>;
 
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
-        pub fn name(&self) -> Retained<NSPasteboardName>;
+        pub unsafe fn name(&self) -> Retained<NSPasteboardName>;
 
         #[unsafe(method(changeCount))]
         #[unsafe(method_family = none)]
-        pub fn changeCount(&self) -> NSInteger;
+        pub unsafe fn changeCount(&self) -> NSInteger;
 
         /// The current pasteboard access behavior. The user can customize this behavior per-app in System Settings for any app that has triggered a pasteboard access alert in the past.
         #[unsafe(method(accessBehavior))]
         #[unsafe(method_family = none)]
-        pub fn accessBehavior(&self) -> NSPasteboardAccessBehavior;
+        pub unsafe fn accessBehavior(&self) -> NSPasteboardAccessBehavior;
 
         #[unsafe(method(prepareForNewContentsWithOptions:))]
         #[unsafe(method_family = none)]
-        pub fn prepareForNewContentsWithOptions(
+        pub unsafe fn prepareForNewContentsWithOptions(
             &self,
             options: NSPasteboardContentsOptions,
         ) -> NSInteger;
 
         #[unsafe(method(clearContents))]
         #[unsafe(method_family = none)]
-        pub fn clearContents(&self) -> NSInteger;
+        pub unsafe fn clearContents(&self) -> NSInteger;
 
         #[unsafe(method(writeObjects:))]
         #[unsafe(method_family = none)]
-        pub fn writeObjects(
+        pub unsafe fn writeObjects(
             &self,
             objects: &NSArray<ProtocolObject<dyn NSPasteboardWriting>>,
         ) -> bool;
 
-        /// # Safety
-        ///
-        /// - `class_array` generic probably has further requirements.
-        /// - `options` generic should be of the correct type.
         #[unsafe(method(readObjectsForClasses:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn readObjectsForClasses_options(
@@ -379,21 +375,23 @@ impl NSPasteboard {
         #[cfg(feature = "NSPasteboardItem")]
         #[unsafe(method(pasteboardItems))]
         #[unsafe(method_family = none)]
-        pub fn pasteboardItems(&self) -> Option<Retained<NSArray<NSPasteboardItem>>>;
+        pub unsafe fn pasteboardItems(&self) -> Option<Retained<NSArray<NSPasteboardItem>>>;
 
         #[cfg(feature = "NSPasteboardItem")]
         #[unsafe(method(indexOfPasteboardItem:))]
         #[unsafe(method_family = none)]
-        pub fn indexOfPasteboardItem(&self, pasteboard_item: &NSPasteboardItem) -> NSUInteger;
+        pub unsafe fn indexOfPasteboardItem(
+            &self,
+            pasteboard_item: &NSPasteboardItem,
+        ) -> NSUInteger;
 
         #[unsafe(method(canReadItemWithDataConformingToTypes:))]
         #[unsafe(method_family = none)]
-        pub fn canReadItemWithDataConformingToTypes(&self, types: &NSArray<NSString>) -> bool;
+        pub unsafe fn canReadItemWithDataConformingToTypes(
+            &self,
+            types: &NSArray<NSString>,
+        ) -> bool;
 
-        /// # Safety
-        ///
-        /// - `class_array` generic probably has further requirements.
-        /// - `options` generic should be of the correct type.
         #[unsafe(method(canReadObjectForClasses:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn canReadObjectForClasses_options(
@@ -402,9 +400,6 @@ impl NSPasteboard {
             options: Option<&NSDictionary<NSPasteboardReadingOptionKey, AnyObject>>,
         ) -> bool;
 
-        /// # Safety
-        ///
-        /// `new_owner` should be of the correct type.
         #[unsafe(method(declareTypes:owner:))]
         #[unsafe(method_family = none)]
         pub unsafe fn declareTypes_owner(
@@ -413,9 +408,6 @@ impl NSPasteboard {
             new_owner: Option<&AnyObject>,
         ) -> NSInteger;
 
-        /// # Safety
-        ///
-        /// `new_owner` should be of the correct type.
         #[unsafe(method(addTypes:owner:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addTypes_owner(
@@ -426,22 +418,23 @@ impl NSPasteboard {
 
         #[unsafe(method(types))]
         #[unsafe(method_family = none)]
-        pub fn types(&self) -> Option<Retained<NSArray<NSPasteboardType>>>;
+        pub unsafe fn types(&self) -> Option<Retained<NSArray<NSPasteboardType>>>;
 
         #[unsafe(method(availableTypeFromArray:))]
         #[unsafe(method_family = none)]
-        pub fn availableTypeFromArray(
+        pub unsafe fn availableTypeFromArray(
             &self,
             types: &NSArray<NSPasteboardType>,
         ) -> Option<Retained<NSPasteboardType>>;
 
         #[unsafe(method(setData:forType:))]
         #[unsafe(method_family = none)]
-        pub fn setData_forType(&self, data: Option<&NSData>, data_type: &NSPasteboardType) -> bool;
+        pub unsafe fn setData_forType(
+            &self,
+            data: Option<&NSData>,
+            data_type: &NSPasteboardType,
+        ) -> bool;
 
-        /// # Safety
-        ///
-        /// `plist` should be of the correct type.
         #[unsafe(method(setPropertyList:forType:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPropertyList_forType(
@@ -452,11 +445,15 @@ impl NSPasteboard {
 
         #[unsafe(method(setString:forType:))]
         #[unsafe(method_family = none)]
-        pub fn setString_forType(&self, string: &NSString, data_type: &NSPasteboardType) -> bool;
+        pub unsafe fn setString_forType(
+            &self,
+            string: &NSString,
+            data_type: &NSPasteboardType,
+        ) -> bool;
 
         #[unsafe(method(dataForType:))]
         #[unsafe(method_family = none)]
-        pub fn dataForType(&self, data_type: &NSPasteboardType) -> Option<Retained<NSData>>;
+        pub unsafe fn dataForType(&self, data_type: &NSPasteboardType) -> Option<Retained<NSData>>;
 
         #[unsafe(method(propertyListForType:))]
         #[unsafe(method_family = none)]
@@ -467,61 +464,23 @@ impl NSPasteboard {
 
         #[unsafe(method(stringForType:))]
         #[unsafe(method_family = none)]
-        pub fn stringForType(&self, data_type: &NSPasteboardType) -> Option<Retained<NSString>>;
+        pub unsafe fn stringForType(
+            &self,
+            data_type: &NSPasteboardType,
+        ) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "block2")]
-        /// Determines whether the first pasteboard item matches the specified patterns, without notifying the person using the app.
+        /// Determines whether the first pasteboard item matches the specified patterns, without notifying the user.
         ///
-        /// This method only gives an indication of whether the first pasteboard item matches a particular pattern, and doesn’t allow the app to access the item's contents. As a result, the system doesn’t notify the person using the app about reading the contents of the pasteboard.
+        /// Because this method only gives an indication of whether a pasteboard item matches a particular pattern and doesn’t allow the app to access the contents, the system doesn’t notify the user about reading the contents of the pasteboard.
         ///
-        /// The following example shows how to use this method to find email and postal addresses in the first pasteboard item:
         ///
-        /// ```obj-c
-        /// [NSPasteboard.generalPasteboard
-        /// detectPatternsForPatterns:[NSSet setWithArray:
-        /// @
-        /// [NSPasteboardDetectionPatternEmailAddress,
-        /// NSPasteboardDetectionPatternPostalAddress]]
-        /// completionHandler:^(NSSet
-        /// <NSPasteboardDetectionPattern
-        /// > *matchedPatterns, NSError *error) {
-        /// if (error) {
-        /// NSLog(
-        /// "
-        /// Error: %
-        /// "
-        /// , error);
-        /// return;
-        /// }
-        /// BOOL matchedEmail = [matchedPatterns containsObject:NSPasteboardDetectionPatternEmailAddress];
-        /// BOOL matchedPostal = [matchedPatterns containsObject: NSPasteboardDetectionPatternPostalAddress];
-        /// if (matchedEmail) {
-        /// NSLog(
-        /// "
-        /// Email address(es) detected");
-        /// }
-        /// if (matchedPostal) {
-        /// NSLog(
-        /// "
-        /// Postal address(es) detected");
-        /// }
-        /// if (!matchedEmail
-        /// &
-        /// &
-        /// !matchedPostal) {
-        /// NSLog(
-        /// "
-        /// Matched neither email nor postal addresses.");
-        /// }
-        /// }];
-        /// ```
+        /// Parameter `patterns`: The patterns to detect on the pasteboard.
         ///
-        /// - Parameters:
-        /// - patterns: The patterns to detect on the pasteboard.
-        /// - completionHandler: A block the system invokes after detecting patterns on the pasteboard. The block receives either a set with the patterns the system finds on the pasteboard or an error if detection fails.
+        /// Parameter `completionHandler`: A block that the system invokes after detecting patterns on the pasteboard. The block receives either a set with the patterns found on the pasteboard or an error if detection failed.
         #[unsafe(method(detectPatternsForPatterns:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn detectPatternsForPatterns_completionHandler(
+        pub unsafe fn detectPatternsForPatterns_completionHandler(
             &self,
             patterns: &NSSet<NSPasteboardDetectionPattern>,
             completion_handler: &block2::DynBlock<
@@ -532,62 +491,17 @@ impl NSPasteboard {
         #[cfg(feature = "block2")]
         /// Determines whether the first pasteboard item matches the specified patterns, reading the contents if it finds a match.
         ///
-        /// For details about the types returned for each pattern, see ``NSPasteboardDetectionPattern``.
+        /// - Important: Calling this method notifies the user that the app has read the contents of the pasteboard, if a match is found.
         ///
-        /// The following example shows how to use this method to find web URLs and web search terms in the first pasteboard item:
+        /// For details about the types returned for each pattern, see `NSPasteboardDetectionPattern`.
         ///
-        /// ```obj-c
-        /// [NSPasteboard.generalPasteboard
-        /// detectValuesForPatterns:[NSSet setWithArray:
-        /// @
-        /// [NSPasteboardDetectionPatternProbableWebSearch,
-        /// NSPasteboardDetectionPatternProbableWebURL]]
-        /// completionHandler:^(NSDictionary
-        /// <NSPasteboardDetectionPattern
-        /// , id> *patternValues, NSError *error) {
-        /// if (error) {
-        /// NSLog(
-        /// "
-        /// Error: %
-        /// "
-        /// , error);
-        /// return;
-        /// }
-        /// NSString *searchString = (NSString*)patternValues[NSPasteboardDetectionPatternProbableWebSearch];
-        /// NSString *urlString = (NSString*)patternValues[NSPasteboardDetectionPatternProbableWebURL] ;
-        /// if (searchString != nil) {
-        /// NSLog(
-        /// "
-        /// Web search retrieved: %
-        /// "
-        /// , searchString);
-        /// }
-        /// if (urlString != nil) {
-        /// NSLog(
-        /// "
-        /// Web URL retrieved: %
-        /// "
-        /// , urlString);
-        /// }
-        /// if (searchString == nil
-        /// &
-        /// &
-        /// urlString == nil) {
-        /// NSLog(
-        /// "
-        /// No web patterns retrieved.");
-        /// }
-        /// }];
-        /// ```
         ///
-        /// > Important: If the system finds a match when calling this method, the system informs the person using the app that the app is trying to read the contents of the pasteboard. If the person denies access to the pasteboard, the completion handler receives an error.
+        /// Parameter `patterns`: The patterns to detect on the pasteboard.
         ///
-        /// - Parameters:
-        /// - patterns: The patterns to detect on the pasteboard.
-        /// - completionHandler: A block the system invokes after detecting patterns on the pasteboard. The block returns either a dictionary with the patterns the system finds on the pasteboard or an error if detection fails. The dictionary keys specify the matched patterns and the values specify the corresponding content of the pasteboard.
+        /// Parameter `completionHandler`: A block that the system invokes after detecting patterns on the pasteboard. The block returns either dictionary with the patterns found on the pasteboard or an error if detection failed. The dictionary keys specify the matched patterns, and the values specify the corresponding content of the pasteboard.
         #[unsafe(method(detectValuesForPatterns:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn detectValuesForPatterns_completionHandler(
+        pub unsafe fn detectValuesForPatterns_completionHandler(
             &self,
             patterns: &NSSet<NSPasteboardDetectionPattern>,
             completion_handler: &block2::DynBlock<
@@ -596,51 +510,19 @@ impl NSPasteboard {
         );
 
         #[cfg(feature = "block2")]
-        /// Determines available metadata from the specified metadata types for the first pasteboard item, without notifying the person using the app.
+        /// Determines available metadata from the specified metadata types for the first pasteboard item, without notifying the user.
         ///
-        /// This method only gives access to limited types of metadata and doesn’t allow the app to access the contents. As a result, the system doesn’t notify the person using the app about reading the contents of the pasteboard.
+        /// Because this method only gives access to limited types of metadata and doesn’t allow the app to access the contents, the system doesn’t notify the user about reading the contents of the pasteboard.
         ///
-        /// For details about the metadata returned for each type, see ``NSPasteboardMetadataType``.
+        /// For details about the metadata returned for each type, see `NSPasteboardMetadataType`.
         ///
-        /// The following example shows how to use this method to find the content type of a file reference in the first item on the pasteboard:
         ///
-        /// ```obj-c
-        /// [NSPasteboard.generalPasteboard
-        /// detectMetadataForTypes:[NSSet setWithArray:
-        /// @
-        /// [NSPasteboardMetadataTypeContentType]]
-        /// completionHandler:^(NSDictionary
-        /// <NSPasteboardMetadataType
-        /// , id> *metadata, NSError *error) {
-        /// if (error) {
-        /// NSLog(
-        /// "
-        /// Error: %
-        /// "
-        /// , error);
-        /// return;
-        /// }
-        /// UTType *contentType = (UTType*)metadata[NSPasteboardMetadataTypeContentType];
-        /// if (contentType) {
-        /// NSLog(
-        /// "
-        /// Content type is: %
-        /// "
-        /// , contentType.identifier);
-        /// } else {
-        /// NSLog(
-        /// "
-        /// Couldn't get content type");
-        /// }
-        /// }];
-        /// ```
+        /// Parameter `types`: The metadata types to detect on the pasteboard.
         ///
-        /// - Parameters:
-        /// - types: The metadata types to detect on the pasteboard.
-        /// - completionHandler: A block the system invokes after detecting metadata on the pasteboard. The block receives either a dictionary with the metadata types the system finds on the pasteboard or an error if detection fails. The dictionary keys specify the matched metadata types and the values specify the corresponding metadata.
+        /// Parameter `completionHandler`: A block that the system invokes after detecting metadata on the pasteboard. The block receives either a dictionary with the metadata types found on the pasteboard or an error if detection failed. The dictionary keys specify the matched metadata types, and the values specify the corresponding metadata.
         #[unsafe(method(detectMetadataForTypes:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn detectMetadataForTypes_completionHandler(
+        pub unsafe fn detectMetadataForTypes_completionHandler(
             &self,
             types: &NSSet<NSPasteboardMetadataType>,
             completion_handler: &block2::DynBlock<
@@ -655,19 +537,12 @@ impl NSPasteboard {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSPasteboard {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// FilterServices.
@@ -675,22 +550,24 @@ impl NSPasteboard {
     extern_methods!(
         #[unsafe(method(typesFilterableTo:))]
         #[unsafe(method_family = none)]
-        pub fn typesFilterableTo(r#type: &NSPasteboardType) -> Retained<NSArray<NSPasteboardType>>;
+        pub unsafe fn typesFilterableTo(
+            r#type: &NSPasteboardType,
+        ) -> Retained<NSArray<NSPasteboardType>>;
 
         #[unsafe(method(pasteboardByFilteringFile:))]
         #[unsafe(method_family = none)]
-        pub fn pasteboardByFilteringFile(filename: &NSString) -> Retained<NSPasteboard>;
+        pub unsafe fn pasteboardByFilteringFile(filename: &NSString) -> Retained<NSPasteboard>;
 
         #[unsafe(method(pasteboardByFilteringData:ofType:))]
         #[unsafe(method_family = none)]
-        pub fn pasteboardByFilteringData_ofType(
+        pub unsafe fn pasteboardByFilteringData_ofType(
             data: &NSData,
             r#type: &NSPasteboardType,
         ) -> Retained<NSPasteboard>;
 
         #[unsafe(method(pasteboardByFilteringTypesInPasteboard:))]
         #[unsafe(method_family = none)]
-        pub fn pasteboardByFilteringTypesInPasteboard(
+        pub unsafe fn pasteboardByFilteringTypesInPasteboard(
             pboard: &NSPasteboard,
         ) -> Retained<NSPasteboard>;
     );
@@ -701,12 +578,16 @@ extern_protocol!(
     pub unsafe trait NSPasteboardTypeOwner: NSObjectProtocol {
         #[unsafe(method(pasteboard:provideDataForType:))]
         #[unsafe(method_family = none)]
-        fn pasteboard_provideDataForType(&self, sender: &NSPasteboard, r#type: &NSPasteboardType);
+        unsafe fn pasteboard_provideDataForType(
+            &self,
+            sender: &NSPasteboard,
+            r#type: &NSPasteboardType,
+        );
 
         #[optional]
         #[unsafe(method(pasteboardChangedOwner:))]
         #[unsafe(method_family = none)]
-        fn pasteboardChangedOwner(&self, sender: &NSPasteboard);
+        unsafe fn pasteboardChangedOwner(&self, sender: &NSPasteboard);
     }
 );
 
@@ -737,7 +618,7 @@ extern_protocol!(
     pub unsafe trait NSPasteboardWriting: NSObjectProtocol {
         #[unsafe(method(writableTypesForPasteboard:))]
         #[unsafe(method_family = none)]
-        fn writableTypesForPasteboard(
+        unsafe fn writableTypesForPasteboard(
             &self,
             pasteboard: &NSPasteboard,
         ) -> Retained<NSArray<NSPasteboardType>>;
@@ -745,7 +626,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(writingOptionsForType:pasteboard:))]
         #[unsafe(method_family = none)]
-        fn writingOptionsForType_pasteboard(
+        unsafe fn writingOptionsForType_pasteboard(
             &self,
             r#type: &NSPasteboardType,
             pasteboard: &NSPasteboard,
@@ -753,7 +634,7 @@ extern_protocol!(
 
         #[unsafe(method(pasteboardPropertyListForType:))]
         #[unsafe(method_family = none)]
-        fn pasteboardPropertyListForType(
+        unsafe fn pasteboardPropertyListForType(
             &self,
             r#type: &NSPasteboardType,
         ) -> Option<Retained<AnyObject>>;
@@ -791,21 +672,18 @@ extern_protocol!(
     pub unsafe trait NSPasteboardReading: NSObjectProtocol {
         #[unsafe(method(readableTypesForPasteboard:))]
         #[unsafe(method_family = none)]
-        fn readableTypesForPasteboard(
+        unsafe fn readableTypesForPasteboard(
             pasteboard: &NSPasteboard,
         ) -> Retained<NSArray<NSPasteboardType>>;
 
         #[optional]
         #[unsafe(method(readingOptionsForType:pasteboard:))]
         #[unsafe(method_family = none)]
-        fn readingOptionsForType_pasteboard(
+        unsafe fn readingOptionsForType_pasteboard(
             r#type: &NSPasteboardType,
             pasteboard: &NSPasteboard,
         ) -> NSPasteboardReadingOptions;
 
-        /// # Safety
-        ///
-        /// `property_list` should be of the correct type.
         #[optional]
         #[unsafe(method(initWithPasteboardPropertyList:ofType:))]
         #[unsafe(method_family = init)]
@@ -829,11 +707,11 @@ pub unsafe trait NSURLNSPasteboardSupport:
     extern_methods!(
         #[unsafe(method(URLFromPasteboard:))]
         #[unsafe(method_family = none)]
-        fn URLFromPasteboard(paste_board: &NSPasteboard) -> Option<Retained<NSURL>>;
+        unsafe fn URLFromPasteboard(paste_board: &NSPasteboard) -> Option<Retained<NSURL>>;
 
         #[unsafe(method(writeToPasteboard:))]
         #[unsafe(method_family = none)]
-        fn writeToPasteboard(&self, paste_board: &NSPasteboard);
+        unsafe fn writeToPasteboard(&self, paste_board: &NSPasteboard);
     );
 }
 
@@ -857,17 +735,16 @@ extern_conformance!(
 );
 
 /// NSFileContents.
-///
 /// * File Contents **
 impl NSPasteboard {
     extern_methods!(
         #[unsafe(method(writeFileContents:))]
         #[unsafe(method_family = none)]
-        pub fn writeFileContents(&self, filename: &NSString) -> bool;
+        pub unsafe fn writeFileContents(&self, filename: &NSString) -> bool;
 
         #[unsafe(method(readFileContentsType:toFile:))]
         #[unsafe(method_family = none)]
-        pub fn readFileContentsType_toFile(
+        pub unsafe fn readFileContentsType_toFile(
             &self,
             r#type: Option<&NSPasteboardType>,
             filename: &NSString,
@@ -875,11 +752,11 @@ impl NSPasteboard {
 
         #[unsafe(method(writeFileWrapper:))]
         #[unsafe(method_family = none)]
-        pub fn writeFileWrapper(&self, wrapper: &NSFileWrapper) -> bool;
+        pub unsafe fn writeFileWrapper(&self, wrapper: &NSFileWrapper) -> bool;
 
         #[unsafe(method(readFileWrapper))]
         #[unsafe(method_family = none)]
-        pub fn readFileWrapper(&self) -> Option<Retained<NSFileWrapper>>;
+        pub unsafe fn readFileWrapper(&self) -> Option<Retained<NSFileWrapper>>;
     );
 }
 
@@ -889,7 +766,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn NSCreateFilenamePboardType(
+pub unsafe extern "C-unwind" fn NSCreateFilenamePboardType(
     file_type: &NSString,
 ) -> Option<Retained<NSPasteboardType>> {
     extern "C-unwind" {
@@ -900,7 +777,7 @@ pub extern "C-unwind" fn NSCreateFilenamePboardType(
 }
 
 #[inline]
-pub extern "C-unwind" fn NSCreateFileContentsPboardType(
+pub unsafe extern "C-unwind" fn NSCreateFileContentsPboardType(
     file_type: &NSString,
 ) -> Option<Retained<NSPasteboardType>> {
     extern "C-unwind" {
@@ -911,7 +788,7 @@ pub extern "C-unwind" fn NSCreateFileContentsPboardType(
 }
 
 #[inline]
-pub extern "C-unwind" fn NSGetFileType(
+pub unsafe extern "C-unwind" fn NSGetFileType(
     pboard_type: &NSPasteboardType,
 ) -> Option<Retained<NSString>> {
     extern "C-unwind" {
@@ -922,7 +799,7 @@ pub extern "C-unwind" fn NSGetFileType(
 }
 
 #[inline]
-pub extern "C-unwind" fn NSGetFileTypes(
+pub unsafe extern "C-unwind" fn NSGetFileTypes(
     pboard_types: &NSArray<NSPasteboardType>,
 ) -> Option<Retained<NSArray<NSString>>> {
     extern "C-unwind" {
@@ -936,144 +813,120 @@ extern "C" {
     /// * Deprecated **
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/appkit/nsstringpboardtype?language=objc)
-    #[deprecated]
     pub static NSStringPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfilenamespboardtype?language=objc)
-    #[deprecated = "Create multiple pasteboard items with NSPasteboardTypeFileURL or kUTTypeFileURL instead"]
     pub static NSFilenamesPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstiffpboardtype?language=objc)
-    #[deprecated]
     pub static NSTIFFPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsrtfpboardtype?language=objc)
-    #[deprecated]
     pub static NSRTFPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstabulartextpboardtype?language=objc)
-    #[deprecated]
     pub static NSTabularTextPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfontpboardtype?language=objc)
-    #[deprecated]
     pub static NSFontPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsrulerpboardtype?language=objc)
-    #[deprecated]
     pub static NSRulerPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscolorpboardtype?language=objc)
-    #[deprecated]
     pub static NSColorPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsrtfdpboardtype?language=objc)
-    #[deprecated]
     pub static NSRTFDPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nshtmlpboardtype?language=objc)
-    #[deprecated]
     pub static NSHTMLPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsurlpboardtype?language=objc)
-    #[deprecated]
     pub static NSURLPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nspdfpboardtype?language=objc)
-    #[deprecated]
     pub static NSPDFPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmultipletextselectionpboardtype?language=objc)
-    #[deprecated]
     pub static NSMultipleTextSelectionPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nspostscriptpboardtype?language=objc)
-    #[deprecated]
     pub static NSPostScriptPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsvcardpboardtype?language=objc)
-    #[deprecated]
     pub static NSVCardPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsinktextpboardtype?language=objc)
-    #[deprecated]
     pub static NSInkTextPboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfilespromisepboardtype?language=objc)
-    #[deprecated]
     pub static NSFilesPromisePboardType: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nspasteboardtypefindpanelsearchoptions?language=objc)
-    #[deprecated]
     pub static NSPasteboardTypeFindPanelSearchOptions: &'static NSPasteboardType;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsgeneralpboard?language=objc)
-    #[deprecated]
     pub static NSGeneralPboard: &'static NSPasteboardName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfontpboard?language=objc)
-    #[deprecated]
     pub static NSFontPboard: &'static NSPasteboardName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsrulerpboard?language=objc)
-    #[deprecated]
     pub static NSRulerPboard: &'static NSPasteboardName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfindpboard?language=objc)
-    #[deprecated]
     pub static NSFindPboard: &'static NSPasteboardName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsdragpboard?language=objc)
-    #[deprecated]
     pub static NSDragPboard: &'static NSPasteboardName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nspictpboardtype?language=objc)
-    #[deprecated]
     pub static NSPICTPboardType: &'static NSPasteboardType;
 }

@@ -69,48 +69,28 @@ impl UIWindowSceneGeometry {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(systemFrame))]
         #[unsafe(method_family = none)]
-        pub fn systemFrame(&self) -> CGRect;
-
-        #[cfg(feature = "UIView")]
-        /// The coordinate space of the scene
-        #[unsafe(method(coordinateSpace))]
-        #[unsafe(method_family = none)]
-        pub fn coordinateSpace(
-            &self,
-            mtm: MainThreadMarker,
-        ) -> Retained<ProtocolObject<dyn UICoordinateSpace>>;
+        pub unsafe fn systemFrame(&self) -> CGRect;
 
         #[cfg(feature = "UIOrientation")]
-        /// The interface orientation of the scene
         #[unsafe(method(interfaceOrientation))]
         #[unsafe(method_family = none)]
-        pub fn interfaceOrientation(&self) -> UIInterfaceOrientation;
-
-        /// If the scene's interface orientation is locked and preventing changes. To express a preference for this value, override  `UIViewController`'s `prefersInterfaceOrientationLocked`.
-        #[unsafe(method(isInterfaceOrientationLocked))]
-        #[unsafe(method_family = none)]
-        pub fn isInterfaceOrientationLocked(&self) -> bool;
+        pub unsafe fn interfaceOrientation(&self) -> UIInterfaceOrientation;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The current app specified minimumSize. A value of 0,0 is returned if a minimum is not set by the application
         #[unsafe(method(minimumSize))]
         #[unsafe(method_family = none)]
-        pub fn minimumSize(&self) -> CGSize;
+        pub unsafe fn minimumSize(&self) -> CGSize;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The current app specified maximumSize. A value of CGFLOAT_MAX,CGFLOAT_MAX is returned if a maximum is not set by the application
         #[unsafe(method(maximumSize))]
         #[unsafe(method_family = none)]
-        pub fn maximumSize(&self) -> CGSize;
+        pub unsafe fn maximumSize(&self) -> CGSize;
 
         /// The current app specified resizingRestriction. Default value UIWindowSceneResizingRestrictionsUnspecified
         #[unsafe(method(resizingRestrictions))]
         #[unsafe(method_family = none)]
-        pub fn resizingRestrictions(&self) -> UIWindowSceneResizingRestrictions;
-
-        /// Returns true when the scene is being resized interactively, otherwise false.
-        #[unsafe(method(isInteractivelyResizing))]
-        #[unsafe(method_family = none)]
-        pub fn isInteractivelyResizing(&self) -> bool;
+        pub unsafe fn resizingRestrictions(&self) -> UIWindowSceneResizingRestrictions;
     );
 }

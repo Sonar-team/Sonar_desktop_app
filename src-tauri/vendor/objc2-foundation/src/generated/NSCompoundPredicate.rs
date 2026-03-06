@@ -66,16 +66,13 @@ impl NSCompoundPredicate {
         #[cfg(feature = "NSArray")]
         #[unsafe(method(initWithType:subpredicates:))]
         #[unsafe(method_family = init)]
-        pub fn initWithType_subpredicates(
+        pub unsafe fn initWithType_subpredicates(
             this: Allocated<Self>,
             r#type: NSCompoundPredicateType,
             subpredicates: &NSArray<NSPredicate>,
         ) -> Retained<Self>;
 
         #[cfg(feature = "NSCoder")]
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -85,31 +82,31 @@ impl NSCompoundPredicate {
 
         #[unsafe(method(compoundPredicateType))]
         #[unsafe(method_family = none)]
-        pub fn compoundPredicateType(&self) -> NSCompoundPredicateType;
+        pub unsafe fn compoundPredicateType(&self) -> NSCompoundPredicateType;
 
         #[cfg(feature = "NSArray")]
         #[unsafe(method(subpredicates))]
         #[unsafe(method_family = none)]
-        pub fn subpredicates(&self) -> Retained<NSArray>;
+        pub unsafe fn subpredicates(&self) -> Retained<NSArray>;
 
         #[cfg(feature = "NSArray")]
         /// * Convenience Methods **
         #[unsafe(method(andPredicateWithSubpredicates:))]
         #[unsafe(method_family = none)]
-        pub fn andPredicateWithSubpredicates(
+        pub unsafe fn andPredicateWithSubpredicates(
             subpredicates: &NSArray<NSPredicate>,
         ) -> Retained<NSCompoundPredicate>;
 
         #[cfg(feature = "NSArray")]
         #[unsafe(method(orPredicateWithSubpredicates:))]
         #[unsafe(method_family = none)]
-        pub fn orPredicateWithSubpredicates(
+        pub unsafe fn orPredicateWithSubpredicates(
             subpredicates: &NSArray<NSPredicate>,
         ) -> Retained<NSCompoundPredicate>;
 
         #[unsafe(method(notPredicateWithSubpredicate:))]
         #[unsafe(method_family = none)]
-        pub fn notPredicateWithSubpredicate(
+        pub unsafe fn notPredicateWithSubpredicate(
             predicate: &NSPredicate,
         ) -> Retained<NSCompoundPredicate>;
     );
@@ -121,18 +118,10 @@ impl NSCompoundPredicate {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSPredicate")]
-impl DefaultRetained for NSCompoundPredicate {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

@@ -14,46 +14,46 @@ impl UIGestureRecognizer {
         /// Setter for [`state`][Self::state].
         #[unsafe(method(setState:))]
         #[unsafe(method_family = none)]
-        pub fn setState(&self, state: UIGestureRecognizerState);
+        pub unsafe fn setState(&self, state: UIGestureRecognizerState);
 
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(ignoreTouch:forEvent:))]
         #[unsafe(method_family = none)]
-        pub fn ignoreTouch_forEvent(&self, touch: &UITouch, event: &UIEvent);
+        pub unsafe fn ignoreTouch_forEvent(&self, touch: &UITouch, event: &UIEvent);
 
         #[cfg(all(feature = "UIEvent", feature = "UIPress", feature = "UIPressesEvent"))]
         #[unsafe(method(ignorePress:forEvent:))]
         #[unsafe(method_family = none)]
-        pub fn ignorePress_forEvent(&self, button: &UIPress, event: &UIPressesEvent);
+        pub unsafe fn ignorePress_forEvent(&self, button: &UIPress, event: &UIPressesEvent);
 
         #[unsafe(method(reset))]
         #[unsafe(method_family = none)]
-        pub fn reset(&self);
+        pub unsafe fn reset(&self);
 
         #[unsafe(method(canPreventGestureRecognizer:))]
         #[unsafe(method_family = none)]
-        pub fn canPreventGestureRecognizer(
+        pub unsafe fn canPreventGestureRecognizer(
             &self,
             prevented_gesture_recognizer: &UIGestureRecognizer,
         ) -> bool;
 
         #[unsafe(method(canBePreventedByGestureRecognizer:))]
         #[unsafe(method_family = none)]
-        pub fn canBePreventedByGestureRecognizer(
+        pub unsafe fn canBePreventedByGestureRecognizer(
             &self,
             preventing_gesture_recognizer: &UIGestureRecognizer,
         ) -> bool;
 
         #[unsafe(method(shouldRequireFailureOfGestureRecognizer:))]
         #[unsafe(method_family = none)]
-        pub fn shouldRequireFailureOfGestureRecognizer(
+        pub unsafe fn shouldRequireFailureOfGestureRecognizer(
             &self,
             other_gesture_recognizer: &UIGestureRecognizer,
         ) -> bool;
 
         #[unsafe(method(shouldBeRequiredToFailByGestureRecognizer:))]
         #[unsafe(method_family = none)]
-        pub fn shouldBeRequiredToFailByGestureRecognizer(
+        pub unsafe fn shouldBeRequiredToFailByGestureRecognizer(
             &self,
             other_gesture_recognizer: &UIGestureRecognizer,
         ) -> bool;
@@ -61,51 +61,67 @@ impl UIGestureRecognizer {
         #[cfg(feature = "UIEvent")]
         #[unsafe(method(shouldReceiveEvent:))]
         #[unsafe(method_family = none)]
-        pub fn shouldReceiveEvent(&self, event: &UIEvent) -> bool;
+        pub unsafe fn shouldReceiveEvent(&self, event: &UIEvent) -> bool;
 
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(touchesBegan:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn touchesBegan_withEvent(&self, touches: &NSSet<UITouch>, event: &UIEvent);
+        pub unsafe fn touchesBegan_withEvent(&self, touches: &NSSet<UITouch>, event: &UIEvent);
 
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(touchesMoved:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn touchesMoved_withEvent(&self, touches: &NSSet<UITouch>, event: &UIEvent);
+        pub unsafe fn touchesMoved_withEvent(&self, touches: &NSSet<UITouch>, event: &UIEvent);
 
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(touchesEnded:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn touchesEnded_withEvent(&self, touches: &NSSet<UITouch>, event: &UIEvent);
+        pub unsafe fn touchesEnded_withEvent(&self, touches: &NSSet<UITouch>, event: &UIEvent);
 
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(touchesCancelled:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn touchesCancelled_withEvent(&self, touches: &NSSet<UITouch>, event: &UIEvent);
+        pub unsafe fn touchesCancelled_withEvent(&self, touches: &NSSet<UITouch>, event: &UIEvent);
 
         #[cfg(feature = "UITouch")]
         #[unsafe(method(touchesEstimatedPropertiesUpdated:))]
         #[unsafe(method_family = none)]
-        pub fn touchesEstimatedPropertiesUpdated(&self, touches: &NSSet<UITouch>);
+        pub unsafe fn touchesEstimatedPropertiesUpdated(&self, touches: &NSSet<UITouch>);
 
         #[cfg(all(feature = "UIEvent", feature = "UIPress", feature = "UIPressesEvent"))]
         #[unsafe(method(pressesBegan:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn pressesBegan_withEvent(&self, presses: &NSSet<UIPress>, event: &UIPressesEvent);
+        pub unsafe fn pressesBegan_withEvent(
+            &self,
+            presses: &NSSet<UIPress>,
+            event: &UIPressesEvent,
+        );
 
         #[cfg(all(feature = "UIEvent", feature = "UIPress", feature = "UIPressesEvent"))]
         #[unsafe(method(pressesChanged:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn pressesChanged_withEvent(&self, presses: &NSSet<UIPress>, event: &UIPressesEvent);
+        pub unsafe fn pressesChanged_withEvent(
+            &self,
+            presses: &NSSet<UIPress>,
+            event: &UIPressesEvent,
+        );
 
         #[cfg(all(feature = "UIEvent", feature = "UIPress", feature = "UIPressesEvent"))]
         #[unsafe(method(pressesEnded:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn pressesEnded_withEvent(&self, presses: &NSSet<UIPress>, event: &UIPressesEvent);
+        pub unsafe fn pressesEnded_withEvent(
+            &self,
+            presses: &NSSet<UIPress>,
+            event: &UIPressesEvent,
+        );
 
         #[cfg(all(feature = "UIEvent", feature = "UIPress", feature = "UIPressesEvent"))]
         #[unsafe(method(pressesCancelled:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn pressesCancelled_withEvent(&self, presses: &NSSet<UIPress>, event: &UIPressesEvent);
+        pub unsafe fn pressesCancelled_withEvent(
+            &self,
+            presses: &NSSet<UIPress>,
+            event: &UIPressesEvent,
+        );
     );
 }

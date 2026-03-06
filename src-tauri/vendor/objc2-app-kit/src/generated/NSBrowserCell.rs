@@ -55,16 +55,16 @@ impl NSBrowserCell {
     extern_methods!(
         #[unsafe(method(initTextCell:))]
         #[unsafe(method_family = init)]
-        pub fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
+        pub unsafe fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(initImageCell:))]
         #[unsafe(method_family = init)]
-        pub fn initImageCell(this: Allocated<Self>, image: Option<&NSImage>) -> Retained<Self>;
+        pub unsafe fn initImageCell(
+            this: Allocated<Self>,
+            image: Option<&NSImage>,
+        ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -72,65 +72,68 @@ impl NSBrowserCell {
         #[cfg(feature = "NSImage")]
         #[unsafe(method(branchImage))]
         #[unsafe(method_family = none)]
-        pub fn branchImage(mtm: MainThreadMarker) -> Option<Retained<NSImage>>;
+        pub unsafe fn branchImage(mtm: MainThreadMarker) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(highlightedBranchImage))]
         #[unsafe(method_family = none)]
-        pub fn highlightedBranchImage(mtm: MainThreadMarker) -> Option<Retained<NSImage>>;
+        pub unsafe fn highlightedBranchImage(mtm: MainThreadMarker) -> Option<Retained<NSImage>>;
 
         #[cfg(all(feature = "NSColor", feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(highlightColorInView:))]
         #[unsafe(method_family = none)]
-        pub fn highlightColorInView(&self, control_view: &NSView) -> Option<Retained<NSColor>>;
+        pub unsafe fn highlightColorInView(
+            &self,
+            control_view: &NSView,
+        ) -> Option<Retained<NSColor>>;
 
         #[unsafe(method(isLeaf))]
         #[unsafe(method_family = none)]
-        pub fn isLeaf(&self) -> bool;
+        pub unsafe fn isLeaf(&self) -> bool;
 
         /// Setter for [`isLeaf`][Self::isLeaf].
         #[unsafe(method(setLeaf:))]
         #[unsafe(method_family = none)]
-        pub fn setLeaf(&self, leaf: bool);
+        pub unsafe fn setLeaf(&self, leaf: bool);
 
         #[unsafe(method(isLoaded))]
         #[unsafe(method_family = none)]
-        pub fn isLoaded(&self) -> bool;
+        pub unsafe fn isLoaded(&self) -> bool;
 
         /// Setter for [`isLoaded`][Self::isLoaded].
         #[unsafe(method(setLoaded:))]
         #[unsafe(method_family = none)]
-        pub fn setLoaded(&self, loaded: bool);
+        pub unsafe fn setLoaded(&self, loaded: bool);
 
         #[unsafe(method(reset))]
         #[unsafe(method_family = none)]
-        pub fn reset(&self);
+        pub unsafe fn reset(&self);
 
         #[unsafe(method(set))]
         #[unsafe(method_family = none)]
-        pub fn set(&self);
+        pub unsafe fn set(&self);
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`image`][Self::image].
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&NSImage>);
+        pub unsafe fn setImage(&self, image: Option<&NSImage>);
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(alternateImage))]
         #[unsafe(method_family = none)]
-        pub fn alternateImage(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn alternateImage(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`alternateImage`][Self::alternateImage].
         #[unsafe(method(setAlternateImage:))]
         #[unsafe(method_family = none)]
-        pub fn setAlternateImage(&self, alternate_image: Option<&NSImage>);
+        pub unsafe fn setAlternateImage(&self, alternate_image: Option<&NSImage>);
     );
 }
 
@@ -140,7 +143,7 @@ impl NSBrowserCell {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -150,6 +153,6 @@ impl NSBrowserCell {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

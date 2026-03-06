@@ -42,23 +42,23 @@ impl UITextFormattingViewControllerConfiguration {
         /// Component groups displayed by text formatting view.
         #[unsafe(method(groups))]
         #[unsafe(method_family = none)]
-        pub fn groups(&self) -> Retained<NSArray<UITextFormattingViewControllerComponentGroup>>;
+        pub unsafe fn groups(
+            &self,
+        ) -> Retained<NSArray<UITextFormattingViewControllerComponentGroup>>;
 
         #[cfg(feature = "UITextFormattingViewControllerFormattingStyle")]
         /// Configurations of formatting styles available in text formatting view.
         #[unsafe(method(formattingStyles))]
         #[unsafe(method_family = none)]
-        pub fn formattingStyles(
+        pub unsafe fn formattingStyles(
             &self,
         ) -> Option<Retained<NSArray<UITextFormattingViewControllerFormattingStyle>>>;
 
         #[cfg(feature = "UITextFormattingViewControllerFormattingStyle")]
         /// Setter for [`formattingStyles`][Self::formattingStyles].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFormattingStyles:))]
         #[unsafe(method_family = none)]
-        pub fn setFormattingStyles(
+        pub unsafe fn setFormattingStyles(
             &self,
             formatting_styles: Option<&NSArray<UITextFormattingViewControllerFormattingStyle>>,
         );
@@ -67,18 +67,16 @@ impl UITextFormattingViewControllerConfiguration {
         /// Configuration object that will be used to customize `UIFontPickerViewController` if presented by `UITextFormattingViewController`.
         #[unsafe(method(fontPickerConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn fontPickerConfiguration(
+        pub unsafe fn fontPickerConfiguration(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<UIFontPickerViewControllerConfiguration>>;
 
         #[cfg(feature = "UIFontPickerViewControllerConfiguration")]
         /// Setter for [`fontPickerConfiguration`][Self::fontPickerConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFontPickerConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setFontPickerConfiguration(
+        pub unsafe fn setFontPickerConfiguration(
             &self,
             font_picker_configuration: Option<&UIFontPickerViewControllerConfiguration>,
         );
@@ -86,14 +84,14 @@ impl UITextFormattingViewControllerConfiguration {
         /// Creates a default configuration with most common text formatting options.
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[cfg(feature = "UITextFormattingViewControllerComponent")]
         /// Creates a configuration object with provided component groups.
         /// - Parameter groups: Component groups displayed in text formatting view.
         #[unsafe(method(initWithGroups:))]
         #[unsafe(method_family = init)]
-        pub fn initWithGroups(
+        pub unsafe fn initWithGroups(
             this: Allocated<Self>,
             groups: &NSArray<UITextFormattingViewControllerComponentGroup>,
         ) -> Retained<Self>;
@@ -105,13 +103,6 @@ impl UITextFormattingViewControllerConfiguration {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for UITextFormattingViewControllerConfiguration {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

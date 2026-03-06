@@ -100,9 +100,6 @@ impl DOMWheelEvent {
         pub unsafe fn isHorizontal(&self) -> bool;
 
         #[cfg(feature = "DOMAbstractView")]
-        /// # Safety
-        ///
-        /// `view` might not allow `None`.
         #[unsafe(method(initWheelEvent:wheelDeltaY:view:screenX:screenY:clientX:clientY:ctrlKey:altKey:shiftKey:metaKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn initWheelEvent_wheelDeltaY_view_screenX_screenY_clientX_clientY_ctrlKey_altKey_shiftKey_metaKey(

@@ -40,9 +40,6 @@ extern_conformance!(
 impl NSPredicate {
     extern_methods!(
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `arguments` generic should be of the correct type.
         #[unsafe(method(predicateWithFormat:argumentArray:))]
         #[unsafe(method_family = none)]
         pub unsafe fn predicateWithFormat_argumentArray(
@@ -53,18 +50,18 @@ impl NSPredicate {
         #[cfg(feature = "NSString")]
         #[unsafe(method(predicateFromMetadataQueryString:))]
         #[unsafe(method_family = none)]
-        pub fn predicateFromMetadataQueryString(
+        pub unsafe fn predicateFromMetadataQueryString(
             query_string: &NSString,
         ) -> Option<Retained<NSPredicate>>;
 
         #[unsafe(method(predicateWithValue:))]
         #[unsafe(method_family = none)]
-        pub fn predicateWithValue(value: bool) -> Retained<NSPredicate>;
+        pub unsafe fn predicateWithValue(value: bool) -> Retained<NSPredicate>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString", feature = "block2"))]
         #[unsafe(method(predicateWithBlock:))]
         #[unsafe(method_family = none)]
-        pub fn predicateWithBlock(
+        pub unsafe fn predicateWithBlock(
             block: &block2::DynBlock<
                 dyn Fn(*mut AnyObject, *mut NSDictionary<NSString, AnyObject>) -> Bool,
             >,
@@ -73,12 +70,9 @@ impl NSPredicate {
         #[cfg(feature = "NSString")]
         #[unsafe(method(predicateFormat))]
         #[unsafe(method_family = none)]
-        pub fn predicateFormat(&self) -> Retained<NSString>;
+        pub unsafe fn predicateFormat(&self) -> Retained<NSString>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `variables` generic should be of the correct type.
         #[unsafe(method(predicateWithSubstitutionVariables:))]
         #[unsafe(method_family = none)]
         pub unsafe fn predicateWithSubstitutionVariables(
@@ -86,18 +80,11 @@ impl NSPredicate {
             variables: &NSDictionary<NSString, AnyObject>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `object` should be of the correct type.
         #[unsafe(method(evaluateWithObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn evaluateWithObject(&self, object: Option<&AnyObject>) -> bool;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// - `object` should be of the correct type.
-        /// - `bindings` generic should be of the correct type.
         #[unsafe(method(evaluateWithObject:substitutionVariables:))]
         #[unsafe(method_family = none)]
         pub unsafe fn evaluateWithObject_substitutionVariables(
@@ -108,7 +95,7 @@ impl NSPredicate {
 
         #[unsafe(method(allowEvaluation))]
         #[unsafe(method_family = none)]
-        pub fn allowEvaluation(&self);
+        pub unsafe fn allowEvaluation(&self);
     );
 }
 
@@ -117,19 +104,12 @@ impl NSPredicate {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSPredicate {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSPredicateSupport.
@@ -138,7 +118,7 @@ impl<ObjectType: Message> NSArray<ObjectType> {
     extern_methods!(
         #[unsafe(method(filteredArrayUsingPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn filteredArrayUsingPredicate(
+        pub unsafe fn filteredArrayUsingPredicate(
             &self,
             predicate: &NSPredicate,
         ) -> Retained<NSArray<ObjectType>>;
@@ -151,7 +131,7 @@ impl<ObjectType: Message> NSMutableArray<ObjectType> {
     extern_methods!(
         #[unsafe(method(filterUsingPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn filterUsingPredicate(&self, predicate: &NSPredicate);
+        pub unsafe fn filterUsingPredicate(&self, predicate: &NSPredicate);
     );
 }
 
@@ -161,7 +141,7 @@ impl<ObjectType: Message> NSSet<ObjectType> {
     extern_methods!(
         #[unsafe(method(filteredSetUsingPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn filteredSetUsingPredicate(
+        pub unsafe fn filteredSetUsingPredicate(
             &self,
             predicate: &NSPredicate,
         ) -> Retained<NSSet<ObjectType>>;
@@ -174,7 +154,7 @@ impl<ObjectType: Message> NSMutableSet<ObjectType> {
     extern_methods!(
         #[unsafe(method(filterUsingPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn filterUsingPredicate(&self, predicate: &NSPredicate);
+        pub unsafe fn filterUsingPredicate(&self, predicate: &NSPredicate);
     );
 }
 
@@ -184,7 +164,7 @@ impl<ObjectType: Message> NSOrderedSet<ObjectType> {
     extern_methods!(
         #[unsafe(method(filteredOrderedSetUsingPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn filteredOrderedSetUsingPredicate(
+        pub unsafe fn filteredOrderedSetUsingPredicate(
             &self,
             p: &NSPredicate,
         ) -> Retained<NSOrderedSet<ObjectType>>;
@@ -197,6 +177,6 @@ impl<ObjectType: Message> NSMutableOrderedSet<ObjectType> {
     extern_methods!(
         #[unsafe(method(filterUsingPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn filterUsingPredicate(&self, p: &NSPredicate);
+        pub unsafe fn filterUsingPredicate(&self, p: &NSPredicate);
     );
 }

@@ -22,7 +22,6 @@ libc = { workspace = true, optional = true }
 objc2 = { workspace = true, features = ["std"] }
 objc2-core-foundation = { workspace = true, optional = true, features = [
     "CFCGTypes",
-    "CFDate",
     "objc2",
 ] }
 objc2-foundation = { workspace = true, features = ["alloc"] }
@@ -47,7 +46,6 @@ objc2-core-graphics = { workspace = true, optional = true, features = [
     "CGColor",
     "CGColorSpace",
     "CGContext",
-    "CGDirectDisplay",
     "CGEventTypes",
     "CGFont",
     "CGImage",
@@ -60,24 +58,10 @@ objc2-core-image = { workspace = true, optional = true, features = [
     "CIFilter",
     "CIImage",
 ] }
-objc2-core-text = { workspace = true, optional = true, features = [
-    "CTFont",
-    "CTFontCollection",
-    "CTFontDescriptor",
-    "CTGlyphInfo",
-    "objc2",
-] }
-objc2-core-video = { workspace = true, optional = true, features = [
-    "CVBase",
-    "objc2",
-] }
-objc2-open-gl = { workspace = true, optional = true, features = ["CGLTypes"] }
 objc2-quartz-core = { workspace = true, optional = true, features = [
     "CADisplayLink",
     "CALayer",
-    "CAMediaTiming",
     "CAMediaTimingFunction",
-    "CAOpenGLLayer",
 ] }
 objc2-uniform-type-identifiers = { workspace = true, optional = true, features = ["UTType"] }
 
@@ -91,10 +75,7 @@ targets = [
     "x86_64-unknown-linux-gnu",
     "i686-unknown-linux-gnu",
 ]
-features = [
-    "objc2-open-gl",
-    "objc2-uniform-type-identifiers",
-]
+features = ["objc2-uniform-type-identifiers"]
 
 [features]
 default = [
@@ -122,7 +103,6 @@ default = [
     "NSApplicationScripting",
     "NSArrayController",
     "NSAttributedString",
-    "NSBackgroundExtensionView",
     "NSBezierPath",
     "NSBitmapImageRep",
     "NSBox",
@@ -189,7 +169,6 @@ default = [
     "NSForm",
     "NSFormCell",
     "NSGestureRecognizer",
-    "NSGlassEffectView",
     "NSGlyphGenerator",
     "NSGlyphInfo",
     "NSGradient",
@@ -206,7 +185,6 @@ default = [
     "NSInputManager",
     "NSInputServer",
     "NSInterfaceStyle",
-    "NSItemBadge",
     "NSItemProvider",
     "NSKeyValueBinding",
     "NSLayoutAnchor",
@@ -303,7 +281,6 @@ default = [
     "NSSplitView",
     "NSSplitViewController",
     "NSSplitViewItem",
-    "NSSplitViewItemAccessoryViewController",
     "NSStackView",
     "NSStatusBar",
     "NSStatusBarButton",
@@ -356,7 +333,6 @@ default = [
     "NSTextView",
     "NSTextViewportLayoutController",
     "NSTintConfiguration",
-    "NSTintProminence",
     "NSTitlebarAccessoryViewController",
     "NSTokenField",
     "NSTokenFieldCell",
@@ -380,7 +356,6 @@ default = [
     "NSUserInterfaceValidation",
     "NSView",
     "NSViewController",
-    "NSViewLayoutRegion",
     "NSVisualEffectView",
     "NSWindow",
     "NSWindowController",
@@ -400,8 +375,6 @@ default = [
     "objc2-core-foundation",
     "objc2-core-graphics",
     "objc2-core-image",
-    "objc2-core-text",
-    "objc2-core-video",
     "objc2-quartz-core",
 ]
 std = ["alloc"]
@@ -419,12 +392,8 @@ objc2-core-data = ["dep:objc2-core-data"]
 objc2-core-foundation = ["dep:objc2-core-foundation"]
 objc2-core-graphics = ["dep:objc2-core-graphics"]
 objc2-core-image = ["dep:objc2-core-image"]
-objc2-core-text = ["dep:objc2-core-text"]
-objc2-core-video = ["dep:objc2-core-video"]
-objc2-open-gl = ["dep:objc2-open-gl"]
 objc2-quartz-core = ["dep:objc2-quartz-core"]
 objc2-uniform-type-identifiers = ["dep:objc2-uniform-type-identifiers"]
-unstable-darwin-objc = []
 
 AppKitDefines = []
 AppKitErrors = []
@@ -555,12 +524,6 @@ NSAttributedString = [
     "objc2-foundation/NSRange",
     "objc2-foundation/NSString",
     "objc2-foundation/NSURL",
-]
-NSBackgroundExtensionView = [
-    "objc2-foundation/NSCoder",
-    "objc2-foundation/NSGeometry",
-    "objc2-foundation/NSObject",
-    "objc2-foundation/objc2-core-foundation",
 ]
 NSBezierPath = [
     "objc2-foundation/NSAffineTransform",
@@ -1045,13 +1008,6 @@ NSGestureRecognizer = [
     "objc2-foundation/NSCoder",
     "objc2-foundation/NSGeometry",
     "objc2-foundation/NSObject",
-    "objc2-foundation/NSString",
-    "objc2-foundation/objc2-core-foundation",
-]
-NSGlassEffectView = [
-    "objc2-foundation/NSCoder",
-    "objc2-foundation/NSGeometry",
-    "objc2-foundation/NSObject",
     "objc2-foundation/objc2-core-foundation",
 ]
 NSGlyphGenerator = ["objc2-foundation/NSAttributedString"]
@@ -1153,7 +1109,6 @@ NSInputServer = [
     "objc2-foundation/objc2-core-foundation",
 ]
 NSInterfaceStyle = ["objc2-foundation/NSString"]
-NSItemBadge = ["objc2-foundation/NSString"]
 NSItemProvider = [
     "objc2-foundation/NSGeometry",
     "objc2-foundation/NSItemProvider",
@@ -1293,18 +1248,9 @@ NSObjectController = [
     "objc2-foundation/NSPredicate",
     "objc2-foundation/NSString",
 ]
-NSOpenGL = [
-    "objc2-foundation/NSData",
-    "objc2-foundation/NSLock",
-    "objc2-foundation/NSObject",
-]
-NSOpenGLLayer = ["objc2-foundation/NSObject"]
-NSOpenGLView = [
-    "objc2-foundation/NSCoder",
-    "objc2-foundation/NSGeometry",
-    "objc2-foundation/NSObject",
-    "objc2-foundation/objc2-core-foundation",
-]
+NSOpenGL = []
+NSOpenGLLayer = []
+NSOpenGLView = []
 NSOpenPanel = [
     "objc2-foundation/NSArray",
     "objc2-foundation/NSCoder",
@@ -1792,16 +1738,7 @@ NSSplitViewController = [
     "objc2-foundation/NSString",
     "objc2-foundation/objc2-core-foundation",
 ]
-NSSplitViewItem = [
-    "objc2-foundation/NSArray",
-    "objc2-foundation/NSObject",
-]
-NSSplitViewItemAccessoryViewController = [
-    "objc2-foundation/NSBundle",
-    "objc2-foundation/NSCoder",
-    "objc2-foundation/NSObject",
-    "objc2-foundation/NSString",
-]
+NSSplitViewItem = ["objc2-foundation/NSObject"]
 NSStackView = [
     "objc2-foundation/NSArray",
     "objc2-foundation/NSCoder",
@@ -2146,7 +2083,6 @@ NSTextView = [
 ]
 NSTextViewportLayoutController = []
 NSTintConfiguration = ["objc2-foundation/NSObject"]
-NSTintProminence = []
 NSTitlebarAccessoryViewController = [
     "objc2-foundation/NSBundle",
     "objc2-foundation/NSCoder",
@@ -2297,10 +2233,6 @@ NSViewController = [
     "objc2-foundation/NSString",
     "objc2-foundation/objc2-core-foundation",
 ]
-NSViewLayoutRegion = [
-    "objc2-foundation/NSGeometry",
-    "objc2-foundation/objc2-core-foundation",
-]
 NSVisualEffectView = [
     "objc2-foundation/NSCoder",
     "objc2-foundation/NSGeometry",
@@ -2380,4 +2312,25 @@ NSWritingToolsCoordinatorContext = [
     "objc2-foundation/NSAttributedString",
     "objc2-foundation/NSRange",
     "objc2-foundation/NSUUID",
+]
+
+[[example]]
+name = "delegate"
+required-features = [
+    "objc2-foundation/NSNotification",
+    "objc2-foundation/NSString",
+    "objc2-foundation/NSObject",
+    "objc2-foundation/NSThread",
+    "NSResponder",
+    "NSApplication",
+    "NSRunningApplication",
+]
+
+[[example]]
+name = "nspasteboard"
+required-features = [
+    "objc2-foundation/NSArray",
+    "objc2-foundation/NSString",
+    "objc2-foundation/NSObject",
+    "NSPasteboard",
 ]

@@ -47,13 +47,13 @@ impl NSXMLElement {
         /// .
         #[unsafe(method(initWithName:))]
         #[unsafe(method_family = init)]
-        pub fn initWithName(this: Allocated<Self>, name: &NSString) -> Retained<Self>;
+        pub unsafe fn initWithName(this: Allocated<Self>, name: &NSString) -> Retained<Self>;
 
         #[cfg(feature = "NSString")]
         /// Returns an element whose full QName is specified.
         #[unsafe(method(initWithName:URI:))]
         #[unsafe(method_family = init)]
-        pub fn initWithName_URI(
+        pub unsafe fn initWithName_URI(
             this: Allocated<Self>,
             name: &NSString,
             uri: Option<&NSString>,
@@ -70,7 +70,7 @@ impl NSXMLElement {
         /// .
         #[unsafe(method(initWithName:stringValue:))]
         #[unsafe(method_family = init)]
-        pub fn initWithName_stringValue(
+        pub unsafe fn initWithName_stringValue(
             this: Allocated<Self>,
             name: &NSString,
             string: Option<&NSString>,
@@ -84,7 +84,7 @@ impl NSXMLElement {
         /// .
         #[unsafe(method(initWithXMLString:error:_))]
         #[unsafe(method_family = init)]
-        pub fn initWithXMLString_error(
+        pub unsafe fn initWithXMLString_error(
             this: Allocated<Self>,
             string: &NSString,
         ) -> Result<Retained<Self>, Retained<NSError>>;
@@ -92,7 +92,7 @@ impl NSXMLElement {
         #[cfg(feature = "NSXMLNodeOptions")]
         #[unsafe(method(initWithKind:options:))]
         #[unsafe(method_family = init)]
-        pub fn initWithKind_options(
+        pub unsafe fn initWithKind_options(
             this: Allocated<Self>,
             kind: NSXMLNodeKind,
             options: NSXMLNodeOptions,
@@ -102,13 +102,13 @@ impl NSXMLElement {
         /// Returns all of the child elements that match this name.
         #[unsafe(method(elementsForName:))]
         #[unsafe(method_family = none)]
-        pub fn elementsForName(&self, name: &NSString) -> Retained<NSArray<NSXMLElement>>;
+        pub unsafe fn elementsForName(&self, name: &NSString) -> Retained<NSArray<NSXMLElement>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         /// Returns all of the child elements that match this localname URI pair.
         #[unsafe(method(elementsForLocalName:URI:))]
         #[unsafe(method_family = none)]
-        pub fn elementsForLocalName_URI(
+        pub unsafe fn elementsForLocalName_URI(
             &self,
             local_name: &NSString,
             uri: Option<&NSString>,
@@ -117,45 +117,46 @@ impl NSXMLElement {
         /// Adds an attribute. Attributes with duplicate names are not added.
         #[unsafe(method(addAttribute:))]
         #[unsafe(method_family = none)]
-        pub fn addAttribute(&self, attribute: &NSXMLNode);
+        pub unsafe fn addAttribute(&self, attribute: &NSXMLNode);
 
         #[cfg(feature = "NSString")]
         /// Removes an attribute based on its name.
         #[unsafe(method(removeAttributeForName:))]
         #[unsafe(method_family = none)]
-        pub fn removeAttributeForName(&self, name: &NSString);
+        pub unsafe fn removeAttributeForName(&self, name: &NSString);
 
         #[cfg(feature = "NSArray")]
         /// Set the attributes. In the case of duplicate names, the first attribute with the name is used.
         #[unsafe(method(attributes))]
         #[unsafe(method_family = none)]
-        pub fn attributes(&self) -> Option<Retained<NSArray<NSXMLNode>>>;
+        pub unsafe fn attributes(&self) -> Option<Retained<NSArray<NSXMLNode>>>;
 
         #[cfg(feature = "NSArray")]
         /// Setter for [`attributes`][Self::attributes].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributes(&self, attributes: Option<&NSArray<NSXMLNode>>);
+        pub unsafe fn setAttributes(&self, attributes: Option<&NSArray<NSXMLNode>>);
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
         /// Set the attributes based on a name-value dictionary.
         #[unsafe(method(setAttributesWithDictionary:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributesWithDictionary(&self, attributes: &NSDictionary<NSString, NSString>);
+        pub unsafe fn setAttributesWithDictionary(
+            &self,
+            attributes: &NSDictionary<NSString, NSString>,
+        );
 
         #[cfg(feature = "NSString")]
         /// Returns an attribute matching this name.
         #[unsafe(method(attributeForName:))]
         #[unsafe(method_family = none)]
-        pub fn attributeForName(&self, name: &NSString) -> Option<Retained<NSXMLNode>>;
+        pub unsafe fn attributeForName(&self, name: &NSString) -> Option<Retained<NSXMLNode>>;
 
         #[cfg(feature = "NSString")]
         /// Returns an attribute matching this localname URI pair.
         #[unsafe(method(attributeForLocalName:URI:))]
         #[unsafe(method_family = none)]
-        pub fn attributeForLocalName_URI(
+        pub unsafe fn attributeForLocalName_URI(
             &self,
             local_name: &NSString,
             uri: Option<&NSString>,
@@ -164,45 +165,46 @@ impl NSXMLElement {
         /// Adds a namespace. Namespaces with duplicate names are not added.
         #[unsafe(method(addNamespace:))]
         #[unsafe(method_family = none)]
-        pub fn addNamespace(&self, a_namespace: &NSXMLNode);
+        pub unsafe fn addNamespace(&self, a_namespace: &NSXMLNode);
 
         #[cfg(feature = "NSString")]
         /// Removes a namespace with a particular name.
         #[unsafe(method(removeNamespaceForPrefix:))]
         #[unsafe(method_family = none)]
-        pub fn removeNamespaceForPrefix(&self, name: &NSString);
+        pub unsafe fn removeNamespaceForPrefix(&self, name: &NSString);
 
         #[cfg(feature = "NSArray")]
         /// Set the namespaces. In the case of duplicate names, the first namespace with the name is used.
         #[unsafe(method(namespaces))]
         #[unsafe(method_family = none)]
-        pub fn namespaces(&self) -> Option<Retained<NSArray<NSXMLNode>>>;
+        pub unsafe fn namespaces(&self) -> Option<Retained<NSArray<NSXMLNode>>>;
 
         #[cfg(feature = "NSArray")]
         /// Setter for [`namespaces`][Self::namespaces].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setNamespaces:))]
         #[unsafe(method_family = none)]
-        pub fn setNamespaces(&self, namespaces: Option<&NSArray<NSXMLNode>>);
+        pub unsafe fn setNamespaces(&self, namespaces: Option<&NSArray<NSXMLNode>>);
 
         #[cfg(feature = "NSString")]
         /// Returns the namespace matching this prefix.
         #[unsafe(method(namespaceForPrefix:))]
         #[unsafe(method_family = none)]
-        pub fn namespaceForPrefix(&self, name: &NSString) -> Option<Retained<NSXMLNode>>;
+        pub unsafe fn namespaceForPrefix(&self, name: &NSString) -> Option<Retained<NSXMLNode>>;
 
         #[cfg(feature = "NSString")]
         /// Returns the namespace who matches the prefix of the name given. Looks in the entire namespace chain.
         #[unsafe(method(resolveNamespaceForName:))]
         #[unsafe(method_family = none)]
-        pub fn resolveNamespaceForName(&self, name: &NSString) -> Option<Retained<NSXMLNode>>;
+        pub unsafe fn resolveNamespaceForName(
+            &self,
+            name: &NSString,
+        ) -> Option<Retained<NSXMLNode>>;
 
         #[cfg(feature = "NSString")]
         /// Returns the URI of this prefix. Looks in the entire namespace chain.
         #[unsafe(method(resolvePrefixForNamespaceURI:))]
         #[unsafe(method_family = none)]
-        pub fn resolvePrefixForNamespaceURI(
+        pub unsafe fn resolvePrefixForNamespaceURI(
             &self,
             namespace_uri: &NSString,
         ) -> Option<Retained<NSString>>;
@@ -210,39 +212,43 @@ impl NSXMLElement {
         /// Inserts a child at a particular index.
         #[unsafe(method(insertChild:atIndex:))]
         #[unsafe(method_family = none)]
-        pub fn insertChild_atIndex(&self, child: &NSXMLNode, index: NSUInteger);
+        pub unsafe fn insertChild_atIndex(&self, child: &NSXMLNode, index: NSUInteger);
 
         #[cfg(feature = "NSArray")]
         /// Insert several children at a particular index.
         #[unsafe(method(insertChildren:atIndex:))]
         #[unsafe(method_family = none)]
-        pub fn insertChildren_atIndex(&self, children: &NSArray<NSXMLNode>, index: NSUInteger);
+        pub unsafe fn insertChildren_atIndex(
+            &self,
+            children: &NSArray<NSXMLNode>,
+            index: NSUInteger,
+        );
 
         /// Removes a child at a particular index.
         #[unsafe(method(removeChildAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn removeChildAtIndex(&self, index: NSUInteger);
+        pub unsafe fn removeChildAtIndex(&self, index: NSUInteger);
 
         #[cfg(feature = "NSArray")]
         /// Removes all existing children and replaces them with the new children. Set children to nil to simply remove all children.
         #[unsafe(method(setChildren:))]
         #[unsafe(method_family = none)]
-        pub fn setChildren(&self, children: Option<&NSArray<NSXMLNode>>);
+        pub unsafe fn setChildren(&self, children: Option<&NSArray<NSXMLNode>>);
 
         /// Adds a child to the end of the existing children.
         #[unsafe(method(addChild:))]
         #[unsafe(method_family = none)]
-        pub fn addChild(&self, child: &NSXMLNode);
+        pub unsafe fn addChild(&self, child: &NSXMLNode);
 
         /// Replaces a child at a particular index with another child.
         #[unsafe(method(replaceChildAtIndex:withNode:))]
         #[unsafe(method_family = none)]
-        pub fn replaceChildAtIndex_withNode(&self, index: NSUInteger, node: &NSXMLNode);
+        pub unsafe fn replaceChildAtIndex_withNode(&self, index: NSUInteger, node: &NSXMLNode);
 
         /// Adjacent text nodes are coalesced. If the node's value is the empty string, it is removed. This should be called with a value of NO before using XQuery or XPath.
         #[unsafe(method(normalizeAdjacentTextNodesPreservingCDATA:))]
         #[unsafe(method_family = none)]
-        pub fn normalizeAdjacentTextNodesPreservingCDATA(&self, preserve: bool);
+        pub unsafe fn normalizeAdjacentTextNodesPreservingCDATA(&self, preserve: bool);
     );
 }
 
@@ -252,7 +258,7 @@ impl NSXMLElement {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         /// Invokes
         ///
@@ -263,7 +269,7 @@ impl NSXMLElement {
         /// with options set to NSXMLNodeOptionsNone
         #[unsafe(method(initWithKind:))]
         #[unsafe(method_family = init)]
-        pub fn initWithKind(this: Allocated<Self>, kind: NSXMLNodeKind) -> Retained<Self>;
+        pub unsafe fn initWithKind(this: Allocated<Self>, kind: NSXMLNodeKind) -> Retained<Self>;
     );
 }
 
@@ -273,16 +279,8 @@ impl NSXMLElement {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSXMLNode")]
-impl DefaultRetained for NSXMLElement {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSDeprecated.
@@ -293,10 +291,6 @@ impl NSXMLElement {
         /// Set the attributes base on a name-value dictionary.
         ///
         /// This method is deprecated and does not function correctly. Use -setAttributesWithDictionary: instead.
-        ///
-        /// # Safety
-        ///
-        /// `attributes` generic should be of the correct type.
         #[deprecated]
         #[unsafe(method(setAttributesAsDictionary:))]
         #[unsafe(method_family = none)]

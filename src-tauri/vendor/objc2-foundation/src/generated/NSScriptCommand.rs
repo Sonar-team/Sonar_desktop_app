@@ -50,15 +50,12 @@ impl NSScriptCommand {
         #[cfg(feature = "NSScriptCommandDescription")]
         #[unsafe(method(initWithCommandDescription:))]
         #[unsafe(method_family = init)]
-        pub fn initWithCommandDescription(
+        pub unsafe fn initWithCommandDescription(
             this: Allocated<Self>,
             command_def: &NSScriptCommandDescription,
         ) -> Retained<Self>;
 
         #[cfg(feature = "NSCoder")]
-        /// # Safety
-        ///
-        /// `in_coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -69,17 +66,13 @@ impl NSScriptCommand {
         #[cfg(feature = "NSScriptCommandDescription")]
         #[unsafe(method(commandDescription))]
         #[unsafe(method_family = none)]
-        pub fn commandDescription(&self) -> Retained<NSScriptCommandDescription>;
+        pub unsafe fn commandDescription(&self) -> Retained<NSScriptCommandDescription>;
 
         #[unsafe(method(directParameter))]
         #[unsafe(method_family = none)]
-        pub fn directParameter(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn directParameter(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`directParameter`][Self::directParameter].
-        ///
-        /// # Safety
-        ///
-        /// `direct_parameter` should be of the correct type.
         #[unsafe(method(setDirectParameter:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDirectParameter(&self, direct_parameter: Option<&AnyObject>);
@@ -87,31 +80,28 @@ impl NSScriptCommand {
         #[cfg(feature = "NSScriptObjectSpecifiers")]
         #[unsafe(method(receiversSpecifier))]
         #[unsafe(method_family = none)]
-        pub fn receiversSpecifier(&self) -> Option<Retained<NSScriptObjectSpecifier>>;
+        pub unsafe fn receiversSpecifier(&self) -> Option<Retained<NSScriptObjectSpecifier>>;
 
         #[cfg(feature = "NSScriptObjectSpecifiers")]
         /// Setter for [`receiversSpecifier`][Self::receiversSpecifier].
         #[unsafe(method(setReceiversSpecifier:))]
         #[unsafe(method_family = none)]
-        pub fn setReceiversSpecifier(&self, receivers_specifier: Option<&NSScriptObjectSpecifier>);
+        pub unsafe fn setReceiversSpecifier(
+            &self,
+            receivers_specifier: Option<&NSScriptObjectSpecifier>,
+        );
 
         #[unsafe(method(evaluatedReceivers))]
         #[unsafe(method_family = none)]
-        pub fn evaluatedReceivers(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn evaluatedReceivers(&self) -> Option<Retained<AnyObject>>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
         #[unsafe(method(arguments))]
         #[unsafe(method_family = none)]
-        pub fn arguments(&self) -> Option<Retained<NSDictionary<NSString, AnyObject>>>;
+        pub unsafe fn arguments(&self) -> Option<Retained<NSDictionary<NSString, AnyObject>>>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
         /// Setter for [`arguments`][Self::arguments].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `arguments` generic should be of the correct type.
         #[unsafe(method(setArguments:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setArguments(&self, arguments: Option<&NSDictionary<NSString, AnyObject>>);
@@ -119,33 +109,35 @@ impl NSScriptCommand {
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
         #[unsafe(method(evaluatedArguments))]
         #[unsafe(method_family = none)]
-        pub fn evaluatedArguments(&self) -> Option<Retained<NSDictionary<NSString, AnyObject>>>;
+        pub unsafe fn evaluatedArguments(
+            &self,
+        ) -> Option<Retained<NSDictionary<NSString, AnyObject>>>;
 
         #[unsafe(method(isWellFormed))]
         #[unsafe(method_family = none)]
-        pub fn isWellFormed(&self) -> bool;
+        pub unsafe fn isWellFormed(&self) -> bool;
 
         #[unsafe(method(performDefaultImplementation))]
         #[unsafe(method_family = none)]
-        pub fn performDefaultImplementation(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn performDefaultImplementation(&self) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(executeCommand))]
         #[unsafe(method_family = none)]
-        pub fn executeCommand(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn executeCommand(&self) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(scriptErrorNumber))]
         #[unsafe(method_family = none)]
-        pub fn scriptErrorNumber(&self) -> NSInteger;
+        pub unsafe fn scriptErrorNumber(&self) -> NSInteger;
 
         /// Setter for [`scriptErrorNumber`][Self::scriptErrorNumber].
         #[unsafe(method(setScriptErrorNumber:))]
         #[unsafe(method_family = none)]
-        pub fn setScriptErrorNumber(&self, script_error_number: NSInteger);
+        pub unsafe fn setScriptErrorNumber(&self, script_error_number: NSInteger);
 
         #[cfg(feature = "NSAppleEventDescriptor")]
         #[unsafe(method(scriptErrorOffendingObjectDescriptor))]
         #[unsafe(method_family = none)]
-        pub fn scriptErrorOffendingObjectDescriptor(
+        pub unsafe fn scriptErrorOffendingObjectDescriptor(
             &self,
         ) -> Option<Retained<NSAppleEventDescriptor>>;
 
@@ -153,7 +145,7 @@ impl NSScriptCommand {
         /// Setter for [`scriptErrorOffendingObjectDescriptor`][Self::scriptErrorOffendingObjectDescriptor].
         #[unsafe(method(setScriptErrorOffendingObjectDescriptor:))]
         #[unsafe(method_family = none)]
-        pub fn setScriptErrorOffendingObjectDescriptor(
+        pub unsafe fn setScriptErrorOffendingObjectDescriptor(
             &self,
             script_error_offending_object_descriptor: Option<&NSAppleEventDescriptor>,
         );
@@ -161,14 +153,15 @@ impl NSScriptCommand {
         #[cfg(feature = "NSAppleEventDescriptor")]
         #[unsafe(method(scriptErrorExpectedTypeDescriptor))]
         #[unsafe(method_family = none)]
-        pub fn scriptErrorExpectedTypeDescriptor(&self)
-            -> Option<Retained<NSAppleEventDescriptor>>;
+        pub unsafe fn scriptErrorExpectedTypeDescriptor(
+            &self,
+        ) -> Option<Retained<NSAppleEventDescriptor>>;
 
         #[cfg(feature = "NSAppleEventDescriptor")]
         /// Setter for [`scriptErrorExpectedTypeDescriptor`][Self::scriptErrorExpectedTypeDescriptor].
         #[unsafe(method(setScriptErrorExpectedTypeDescriptor:))]
         #[unsafe(method_family = none)]
-        pub fn setScriptErrorExpectedTypeDescriptor(
+        pub unsafe fn setScriptErrorExpectedTypeDescriptor(
             &self,
             script_error_expected_type_descriptor: Option<&NSAppleEventDescriptor>,
         );
@@ -176,32 +169,27 @@ impl NSScriptCommand {
         #[cfg(feature = "NSString")]
         #[unsafe(method(scriptErrorString))]
         #[unsafe(method_family = none)]
-        pub fn scriptErrorString(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn scriptErrorString(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Setter for [`scriptErrorString`][Self::scriptErrorString].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setScriptErrorString:))]
         #[unsafe(method_family = none)]
-        pub fn setScriptErrorString(&self, script_error_string: Option<&NSString>);
+        pub unsafe fn setScriptErrorString(&self, script_error_string: Option<&NSString>);
 
         #[unsafe(method(currentCommand))]
         #[unsafe(method_family = none)]
-        pub fn currentCommand() -> Option<Retained<NSScriptCommand>>;
+        pub unsafe fn currentCommand() -> Option<Retained<NSScriptCommand>>;
 
         #[cfg(feature = "NSAppleEventDescriptor")]
         #[unsafe(method(appleEvent))]
         #[unsafe(method_family = none)]
-        pub fn appleEvent(&self) -> Option<Retained<NSAppleEventDescriptor>>;
+        pub unsafe fn appleEvent(&self) -> Option<Retained<NSAppleEventDescriptor>>;
 
         #[unsafe(method(suspendExecution))]
         #[unsafe(method_family = none)]
-        pub fn suspendExecution(&self);
+        pub unsafe fn suspendExecution(&self);
 
-        /// # Safety
-        ///
-        /// `result` should be of the correct type.
         #[unsafe(method(resumeExecutionWithResult:))]
         #[unsafe(method_family = none)]
         pub unsafe fn resumeExecutionWithResult(&self, result: Option<&AnyObject>);
@@ -213,17 +201,10 @@ impl NSScriptCommand {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSScriptCommand {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

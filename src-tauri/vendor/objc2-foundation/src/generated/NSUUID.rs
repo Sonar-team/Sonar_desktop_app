@@ -61,7 +61,7 @@ impl NSUUID {
         #[cfg(feature = "NSObjCRuntime")]
         #[unsafe(method(compare:))]
         #[unsafe(method_family = none)]
-        pub fn compare(&self, other_uuid: &NSUUID) -> NSComparisonResult;
+        pub unsafe fn compare(&self, other_uuid: &NSUUID) -> NSComparisonResult;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(UUIDString))]

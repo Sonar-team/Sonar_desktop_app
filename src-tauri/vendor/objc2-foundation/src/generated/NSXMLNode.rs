@@ -75,7 +75,7 @@ impl NSXMLNode {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         /// Invokes
         ///
@@ -86,13 +86,13 @@ impl NSXMLNode {
         /// with options set to NSXMLNodeOptionsNone
         #[unsafe(method(initWithKind:))]
         #[unsafe(method_family = init)]
-        pub fn initWithKind(this: Allocated<Self>, kind: NSXMLNodeKind) -> Retained<Self>;
+        pub unsafe fn initWithKind(this: Allocated<Self>, kind: NSXMLNodeKind) -> Retained<Self>;
 
         #[cfg(feature = "NSXMLNodeOptions")]
         /// Inits a node with fidelity options as description NSXMLNodeOptions.h
         #[unsafe(method(initWithKind:options:))]
         #[unsafe(method_family = init)]
-        pub fn initWithKind_options(
+        pub unsafe fn initWithKind_options(
             this: Allocated<Self>,
             kind: NSXMLNodeKind,
             options: NSXMLNodeOptions,
@@ -101,7 +101,7 @@ impl NSXMLNode {
         /// Returns an empty document.
         #[unsafe(method(document))]
         #[unsafe(method_family = none)]
-        pub fn document() -> Retained<AnyObject>;
+        pub unsafe fn document() -> Retained<AnyObject>;
 
         #[cfg(feature = "NSXMLElement")]
         /// Returns a document
@@ -109,7 +109,7 @@ impl NSXMLNode {
         /// Parameter `element`: The document's root node.
         #[unsafe(method(documentWithRootElement:))]
         #[unsafe(method_family = none)]
-        pub fn documentWithRootElement(element: &NSXMLElement) -> Retained<AnyObject>;
+        pub unsafe fn documentWithRootElement(element: &NSXMLElement) -> Retained<AnyObject>;
 
         #[cfg(feature = "NSString")]
         /// Returns an element
@@ -122,13 +122,13 @@ impl NSXMLNode {
         /// .
         #[unsafe(method(elementWithName:))]
         #[unsafe(method_family = none)]
-        pub fn elementWithName(name: &NSString) -> Retained<AnyObject>;
+        pub unsafe fn elementWithName(name: &NSString) -> Retained<AnyObject>;
 
         #[cfg(feature = "NSString")]
         /// Returns an element whose full QName is specified.
         #[unsafe(method(elementWithName:URI:))]
         #[unsafe(method_family = none)]
-        pub fn elementWithName_URI(name: &NSString, uri: &NSString) -> Retained<AnyObject>;
+        pub unsafe fn elementWithName_URI(name: &NSString, uri: &NSString) -> Retained<AnyObject>;
 
         #[cfg(feature = "NSString")]
         /// Returns an element with a single text node child
@@ -141,7 +141,7 @@ impl NSXMLNode {
         /// .
         #[unsafe(method(elementWithName:stringValue:))]
         #[unsafe(method_family = none)]
-        pub fn elementWithName_stringValue(
+        pub unsafe fn elementWithName_stringValue(
             name: &NSString,
             string: &NSString,
         ) -> Retained<AnyObject>;
@@ -159,7 +159,7 @@ impl NSXMLNode {
         /// .
         #[unsafe(method(elementWithName:children:attributes:))]
         #[unsafe(method_family = none)]
-        pub fn elementWithName_children_attributes(
+        pub unsafe fn elementWithName_children_attributes(
             name: &NSString,
             children: Option<&NSArray<NSXMLNode>>,
             attributes: Option<&NSArray<NSXMLNode>>,
@@ -173,7 +173,7 @@ impl NSXMLNode {
         /// .
         #[unsafe(method(attributeWithName:stringValue:))]
         #[unsafe(method_family = none)]
-        pub fn attributeWithName_stringValue(
+        pub unsafe fn attributeWithName_stringValue(
             name: &NSString,
             string_value: &NSString,
         ) -> Retained<AnyObject>;
@@ -182,7 +182,7 @@ impl NSXMLNode {
         /// Returns an attribute whose full QName is specified.
         #[unsafe(method(attributeWithName:URI:stringValue:))]
         #[unsafe(method_family = none)]
-        pub fn attributeWithName_URI_stringValue(
+        pub unsafe fn attributeWithName_URI_stringValue(
             name: &NSString,
             uri: &NSString,
             string_value: &NSString,
@@ -196,7 +196,7 @@ impl NSXMLNode {
         /// .
         #[unsafe(method(namespaceWithName:stringValue:))]
         #[unsafe(method_family = none)]
-        pub fn namespaceWithName_stringValue(
+        pub unsafe fn namespaceWithName_stringValue(
             name: &NSString,
             string_value: &NSString,
         ) -> Retained<AnyObject>;
@@ -210,7 +210,7 @@ impl NSXMLNode {
         /// .
         #[unsafe(method(processingInstructionWithName:stringValue:))]
         #[unsafe(method_family = none)]
-        pub fn processingInstructionWithName_stringValue(
+        pub unsafe fn processingInstructionWithName_stringValue(
             name: &NSString,
             string_value: &NSString,
         ) -> Retained<AnyObject>;
@@ -224,49 +224,43 @@ impl NSXMLNode {
         /// .
         #[unsafe(method(commentWithStringValue:))]
         #[unsafe(method_family = none)]
-        pub fn commentWithStringValue(string_value: &NSString) -> Retained<AnyObject>;
+        pub unsafe fn commentWithStringValue(string_value: &NSString) -> Retained<AnyObject>;
 
         #[cfg(feature = "NSString")]
         /// Returns a text node.
         #[unsafe(method(textWithStringValue:))]
         #[unsafe(method_family = none)]
-        pub fn textWithStringValue(string_value: &NSString) -> Retained<AnyObject>;
+        pub unsafe fn textWithStringValue(string_value: &NSString) -> Retained<AnyObject>;
 
         #[cfg(feature = "NSString")]
         /// Returns an element, attribute, entity, or notation DTD node based on the full XML string.
         #[unsafe(method(DTDNodeWithXMLString:))]
         #[unsafe(method_family = none)]
-        pub fn DTDNodeWithXMLString(string: &NSString) -> Option<Retained<AnyObject>>;
+        pub unsafe fn DTDNodeWithXMLString(string: &NSString) -> Option<Retained<AnyObject>>;
 
         /// Returns an element, attribute, entity, or notation DTD node based on the full XML string.
         #[unsafe(method(kind))]
         #[unsafe(method_family = none)]
-        pub fn kind(&self) -> NSXMLNodeKind;
+        pub unsafe fn kind(&self) -> NSXMLNodeKind;
 
         #[cfg(feature = "NSString")]
         /// Sets the nodes name. Applicable for element, attribute, namespace, processing-instruction, document type declaration, element declaration, attribute declaration, entity declaration, and notation declaration.
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
-        pub fn name(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn name(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
-        pub fn setName(&self, name: Option<&NSString>);
+        pub unsafe fn setName(&self, name: Option<&NSString>);
 
         /// Sets the content of the node. Setting the objectValue removes all existing children including processing instructions and comments. Setting the object value on an element creates a single text node child.
         #[unsafe(method(objectValue))]
         #[unsafe(method_family = none)]
-        pub fn objectValue(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn objectValue(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`objectValue`][Self::objectValue].
-        ///
-        /// # Safety
-        ///
-        /// `object_value` should be of the correct type.
         #[unsafe(method(setObjectValue:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setObjectValue(&self, object_value: Option<&AnyObject>);
@@ -275,15 +269,13 @@ impl NSXMLNode {
         /// Sets the content of the node. Setting the stringValue removes all existing children including processing instructions and comments. Setting the string value on an element creates a single text node child. The getter returns the string value of the node, which may be either its content or child text nodes, depending on the type of node. Elements are recursed and text nodes concatenated in document order with no intervening spaces.
         #[unsafe(method(stringValue))]
         #[unsafe(method_family = none)]
-        pub fn stringValue(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn stringValue(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Setter for [`stringValue`][Self::stringValue].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setStringValue:))]
         #[unsafe(method_family = none)]
-        pub fn setStringValue(&self, string_value: Option<&NSString>);
+        pub unsafe fn setStringValue(&self, string_value: Option<&NSString>);
 
         #[cfg(feature = "NSString")]
         /// Sets the content as with
@@ -295,143 +287,144 @@ impl NSXMLNode {
         /// , but when "resolve" is true, character references, predefined entities and user entities available in the document's dtd are resolved. Entities not available in the dtd remain in their entity form.
         #[unsafe(method(setStringValue:resolvingEntities:))]
         #[unsafe(method_family = none)]
-        pub fn setStringValue_resolvingEntities(&self, string: &NSString, resolve: bool);
+        pub unsafe fn setStringValue_resolvingEntities(&self, string: &NSString, resolve: bool);
 
         /// A node's index amongst its siblings.
         #[unsafe(method(index))]
         #[unsafe(method_family = none)]
-        pub fn index(&self) -> NSUInteger;
+        pub unsafe fn index(&self) -> NSUInteger;
 
         /// The depth of the node within the tree. Documents and standalone nodes are level 0.
         #[unsafe(method(level))]
         #[unsafe(method_family = none)]
-        pub fn level(&self) -> NSUInteger;
+        pub unsafe fn level(&self) -> NSUInteger;
 
         #[cfg(feature = "NSXMLDocument")]
         /// The encompassing document or nil.
         #[unsafe(method(rootDocument))]
         #[unsafe(method_family = none)]
-        pub fn rootDocument(&self) -> Option<Retained<NSXMLDocument>>;
+        pub unsafe fn rootDocument(&self) -> Option<Retained<NSXMLDocument>>;
 
         /// The parent of this node. Documents and standalone Nodes have a nil parent; there is not a 1-to-1 relationship between parent and children, eg a namespace cannot be a child but has a parent element.
         #[unsafe(method(parent))]
         #[unsafe(method_family = none)]
-        pub fn parent(&self) -> Option<Retained<NSXMLNode>>;
+        pub unsafe fn parent(&self) -> Option<Retained<NSXMLNode>>;
 
         /// The amount of children, relevant for documents, elements, and document type declarations. Use this instead of [[self children] count].
         #[unsafe(method(childCount))]
         #[unsafe(method_family = none)]
-        pub fn childCount(&self) -> NSUInteger;
+        pub unsafe fn childCount(&self) -> NSUInteger;
 
         #[cfg(feature = "NSArray")]
         /// An immutable array of child nodes. Relevant for documents, elements, and document type declarations.
         #[unsafe(method(children))]
         #[unsafe(method_family = none)]
-        pub fn children(&self) -> Option<Retained<NSArray<NSXMLNode>>>;
+        pub unsafe fn children(&self) -> Option<Retained<NSArray<NSXMLNode>>>;
 
         /// Returns the child node at a particular index.
         #[unsafe(method(childAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn childAtIndex(&self, index: NSUInteger) -> Option<Retained<NSXMLNode>>;
+        pub unsafe fn childAtIndex(&self, index: NSUInteger) -> Option<Retained<NSXMLNode>>;
 
         /// Returns the previous sibling, or nil if there isn't one.
         #[unsafe(method(previousSibling))]
         #[unsafe(method_family = none)]
-        pub fn previousSibling(&self) -> Option<Retained<NSXMLNode>>;
+        pub unsafe fn previousSibling(&self) -> Option<Retained<NSXMLNode>>;
 
         /// Returns the next sibling, or nil if there isn't one.
         #[unsafe(method(nextSibling))]
         #[unsafe(method_family = none)]
-        pub fn nextSibling(&self) -> Option<Retained<NSXMLNode>>;
+        pub unsafe fn nextSibling(&self) -> Option<Retained<NSXMLNode>>;
 
         /// Returns the previous node in document order. This can be used to walk the tree backwards.
         #[unsafe(method(previousNode))]
         #[unsafe(method_family = none)]
-        pub fn previousNode(&self) -> Option<Retained<NSXMLNode>>;
+        pub unsafe fn previousNode(&self) -> Option<Retained<NSXMLNode>>;
 
         /// Returns the next node in document order. This can be used to walk the tree forwards.
         #[unsafe(method(nextNode))]
         #[unsafe(method_family = none)]
-        pub fn nextNode(&self) -> Option<Retained<NSXMLNode>>;
+        pub unsafe fn nextNode(&self) -> Option<Retained<NSXMLNode>>;
 
         /// Detaches this node from its parent.
         #[unsafe(method(detach))]
         #[unsafe(method_family = none)]
-        pub fn detach(&self);
+        pub unsafe fn detach(&self);
 
         #[cfg(feature = "NSString")]
         /// Returns the XPath to this node, for example foo/bar[2]/baz.
         #[unsafe(method(XPath))]
         #[unsafe(method_family = none)]
-        pub fn XPath(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn XPath(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Returns the local name bar if this attribute or element's name is foo:bar
         #[unsafe(method(localName))]
         #[unsafe(method_family = none)]
-        pub fn localName(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn localName(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Returns the prefix foo if this attribute or element's name if foo:bar
         #[unsafe(method(prefix))]
         #[unsafe(method_family = none)]
-        pub fn prefix(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn prefix(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Set the URI of this element, attribute, or document. For documents it is the URI of document origin. Getter returns the URI of this element, attribute, or document. For documents it is the URI of document origin and is automatically set when using initWithContentsOfURL.
         #[unsafe(method(URI))]
         #[unsafe(method_family = none)]
-        pub fn URI(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn URI(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Setter for [`URI`][Self::URI].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setURI:))]
         #[unsafe(method_family = none)]
-        pub fn setURI(&self, uri: Option<&NSString>);
+        pub unsafe fn setURI(&self, uri: Option<&NSString>);
 
         #[cfg(feature = "NSString")]
         /// Returns the local name bar in foo:bar.
         #[unsafe(method(localNameForName:))]
         #[unsafe(method_family = none)]
-        pub fn localNameForName(name: &NSString) -> Retained<NSString>;
+        pub unsafe fn localNameForName(name: &NSString) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         /// Returns the prefix foo in the name foo:bar.
         #[unsafe(method(prefixForName:))]
         #[unsafe(method_family = none)]
-        pub fn prefixForName(name: &NSString) -> Option<Retained<NSString>>;
+        pub unsafe fn prefixForName(name: &NSString) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Returns the namespace belonging to one of the predefined namespaces xml, xs, or xsi
         #[unsafe(method(predefinedNamespaceForPrefix:))]
         #[unsafe(method_family = none)]
-        pub fn predefinedNamespaceForPrefix(name: &NSString) -> Option<Retained<NSXMLNode>>;
+        pub unsafe fn predefinedNamespaceForPrefix(name: &NSString) -> Option<Retained<NSXMLNode>>;
 
         #[cfg(feature = "NSString")]
         /// Used for debugging. May give more information than XMLString.
         #[unsafe(method(description))]
         #[unsafe(method_family = none)]
-        pub fn description(&self) -> Retained<NSString>;
+        pub unsafe fn description(&self) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         /// The representation of this node as it would appear in an XML document.
         #[unsafe(method(XMLString))]
         #[unsafe(method_family = none)]
-        pub fn XMLString(&self) -> Retained<NSString>;
+        pub unsafe fn XMLString(&self) -> Retained<NSString>;
 
         #[cfg(all(feature = "NSString", feature = "NSXMLNodeOptions"))]
         /// The representation of this node as it would appear in an XML document, with various output options available.
         #[unsafe(method(XMLStringWithOptions:))]
         #[unsafe(method_family = none)]
-        pub fn XMLStringWithOptions(&self, options: NSXMLNodeOptions) -> Retained<NSString>;
+        pub unsafe fn XMLStringWithOptions(&self, options: NSXMLNodeOptions) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         /// W3 canonical form (http://www.w3.org/TR/xml-c14n). The input option NSXMLNodePreserveWhitespace should be set for true canonical form.
         #[unsafe(method(canonicalXMLStringPreservingComments:))]
         #[unsafe(method_family = none)]
-        pub fn canonicalXMLStringPreservingComments(&self, comments: bool) -> Retained<NSString>;
+        pub unsafe fn canonicalXMLStringPreservingComments(
+            &self,
+            comments: bool,
+        ) -> Retained<NSString>;
 
         #[cfg(all(feature = "NSArray", feature = "NSError", feature = "NSString"))]
         /// Returns the nodes resulting from applying an XPath to this node using the node as the context item ("."). normalizeAdjacentTextNodesPreservingCDATA:NO should be called if there are adjacent text nodes since they are not allowed under the XPath/XQuery Data Model.
@@ -439,7 +432,7 @@ impl NSXMLNode {
         /// Returns: An array whose elements are a kind of NSXMLNode.
         #[unsafe(method(nodesForXPath:error:_))]
         #[unsafe(method_family = none)]
-        pub fn nodesForXPath_error(
+        pub unsafe fn nodesForXPath_error(
             &self,
             xpath: &NSString,
         ) -> Result<Retained<NSArray<NSXMLNode>>, Retained<NSError>>;
@@ -453,10 +446,6 @@ impl NSXMLNode {
         /// Returns the objects resulting from applying an XQuery to this node using the node as the context item ("."). Constants are a name-value dictionary for constants declared "external" in the query. normalizeAdjacentTextNodesPreservingCDATA:NO should be called if there are adjacent text nodes since they are not allowed under the XPath/XQuery Data Model.
         ///
         /// Returns: An array whose elements are kinds of NSArray, NSData, NSDate, NSNumber, NSString, NSURL, or NSXMLNode.
-        ///
-        /// # Safety
-        ///
-        /// `constants` generic should be of the correct type.
         #[unsafe(method(objectsForXQuery:constants:error:_))]
         #[unsafe(method_family = none)]
         pub unsafe fn objectsForXQuery_constants_error(
@@ -468,7 +457,7 @@ impl NSXMLNode {
         #[cfg(all(feature = "NSArray", feature = "NSError", feature = "NSString"))]
         #[unsafe(method(objectsForXQuery:error:_))]
         #[unsafe(method_family = none)]
-        pub fn objectsForXQuery_error(
+        pub unsafe fn objectsForXQuery_error(
             &self,
             xquery: &NSString,
         ) -> Result<Retained<NSArray>, Retained<NSError>>;
@@ -480,13 +469,6 @@ impl NSXMLNode {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSXMLNode {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

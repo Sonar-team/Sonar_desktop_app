@@ -24,18 +24,10 @@ impl NSThread {
         pub fn currentThread() -> Retained<NSThread>;
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `block` block must be sendable.
         #[unsafe(method(detachNewThreadWithBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn detachNewThreadWithBlock(block: &block2::DynBlock<dyn Fn()>);
 
-        /// # Safety
-        ///
-        /// - `selector` must be a valid selector.
-        /// - `target` should be of the correct type.
-        /// - `argument` should be of the correct type.
         #[unsafe(method(detachNewThreadSelector:toTarget:withObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn detachNewThreadSelector_toTarget_withObject(
@@ -49,9 +41,6 @@ impl NSThread {
         pub fn isMultiThreaded() -> bool;
 
         #[cfg(feature = "NSDictionary")]
-        /// # Safety
-        ///
-        /// The returned generic should be of the correct type.
         #[unsafe(method(threadDictionary))]
         #[unsafe(method_family = none)]
         pub unsafe fn threadDictionary(&self) -> Retained<NSMutableDictionary>;
@@ -59,54 +48,54 @@ impl NSThread {
         #[cfg(feature = "NSDate")]
         #[unsafe(method(sleepUntilDate:))]
         #[unsafe(method_family = none)]
-        pub fn sleepUntilDate(date: &NSDate);
+        pub unsafe fn sleepUntilDate(date: &NSDate);
 
         #[cfg(feature = "NSDate")]
         #[unsafe(method(sleepForTimeInterval:))]
         #[unsafe(method_family = none)]
-        pub fn sleepForTimeInterval(ti: NSTimeInterval);
+        pub unsafe fn sleepForTimeInterval(ti: NSTimeInterval);
 
         #[unsafe(method(exit))]
         #[unsafe(method_family = none)]
-        pub fn exit();
+        pub unsafe fn exit();
 
         #[unsafe(method(threadPriority))]
         #[unsafe(method_family = none)]
-        pub fn threadPriority_class() -> c_double;
+        pub unsafe fn threadPriority_class() -> c_double;
 
         #[unsafe(method(setThreadPriority:))]
         #[unsafe(method_family = none)]
-        pub fn setThreadPriority_class(p: c_double) -> bool;
+        pub unsafe fn setThreadPriority_class(p: c_double) -> bool;
 
         #[unsafe(method(threadPriority))]
         #[unsafe(method_family = none)]
-        pub fn threadPriority(&self) -> c_double;
+        pub unsafe fn threadPriority(&self) -> c_double;
 
         /// Setter for [`threadPriority`][Self::threadPriority].
         #[unsafe(method(setThreadPriority:))]
         #[unsafe(method_family = none)]
-        pub fn setThreadPriority(&self, thread_priority: c_double);
+        pub unsafe fn setThreadPriority(&self, thread_priority: c_double);
 
         #[cfg(feature = "NSObjCRuntime")]
         #[unsafe(method(qualityOfService))]
         #[unsafe(method_family = none)]
-        pub fn qualityOfService(&self) -> NSQualityOfService;
+        pub unsafe fn qualityOfService(&self) -> NSQualityOfService;
 
         #[cfg(feature = "NSObjCRuntime")]
         /// Setter for [`qualityOfService`][Self::qualityOfService].
         #[unsafe(method(setQualityOfService:))]
         #[unsafe(method_family = none)]
-        pub fn setQualityOfService(&self, quality_of_service: NSQualityOfService);
+        pub unsafe fn setQualityOfService(&self, quality_of_service: NSQualityOfService);
 
         #[cfg(all(feature = "NSArray", feature = "NSValue"))]
         #[unsafe(method(callStackReturnAddresses))]
         #[unsafe(method_family = none)]
-        pub fn callStackReturnAddresses() -> Retained<NSArray<NSNumber>>;
+        pub unsafe fn callStackReturnAddresses() -> Retained<NSArray<NSNumber>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         #[unsafe(method(callStackSymbols))]
         #[unsafe(method_family = none)]
-        pub fn callStackSymbols() -> Retained<NSArray<NSString>>;
+        pub unsafe fn callStackSymbols() -> Retained<NSArray<NSString>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(name))]
@@ -115,20 +104,18 @@ impl NSThread {
 
         #[cfg(feature = "NSString")]
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
-        pub fn setName(&self, name: Option<&NSString>);
+        pub unsafe fn setName(&self, name: Option<&NSString>);
 
         #[unsafe(method(stackSize))]
         #[unsafe(method_family = none)]
-        pub fn stackSize(&self) -> NSUInteger;
+        pub unsafe fn stackSize(&self) -> NSUInteger;
 
         /// Setter for [`stackSize`][Self::stackSize].
         #[unsafe(method(setStackSize:))]
         #[unsafe(method_family = none)]
-        pub fn setStackSize(&self, stack_size: NSUInteger);
+        pub unsafe fn setStackSize(&self, stack_size: NSUInteger);
 
         #[unsafe(method(isMainThread))]
         #[unsafe(method_family = none)]
@@ -146,11 +133,6 @@ impl NSThread {
         #[unsafe(method_family = init)]
         pub fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `selector` must be a valid selector.
-        /// - `argument` should be of the correct type.
         #[unsafe(method(initWithTarget:selector:object:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTarget_selector_object(
@@ -161,9 +143,6 @@ impl NSThread {
         ) -> Retained<Self>;
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `block` block must be sendable.
         #[unsafe(method(initWithBlock:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithBlock(
@@ -173,23 +152,23 @@ impl NSThread {
 
         #[unsafe(method(isExecuting))]
         #[unsafe(method_family = none)]
-        pub fn isExecuting(&self) -> bool;
+        pub unsafe fn isExecuting(&self) -> bool;
 
         #[unsafe(method(isFinished))]
         #[unsafe(method_family = none)]
-        pub fn isFinished(&self) -> bool;
+        pub unsafe fn isFinished(&self) -> bool;
 
         #[unsafe(method(isCancelled))]
         #[unsafe(method_family = none)]
-        pub fn isCancelled(&self) -> bool;
+        pub unsafe fn isCancelled(&self) -> bool;
 
         #[unsafe(method(cancel))]
         #[unsafe(method_family = none)]
-        pub fn cancel(&self);
+        pub unsafe fn cancel(&self);
 
         #[unsafe(method(start))]
         #[unsafe(method_family = none)]
-        pub fn start(&self);
+        pub unsafe fn start(&self);
 
         #[unsafe(method(main))]
         #[unsafe(method_family = none)]
@@ -216,21 +195,18 @@ impl DefaultRetained for NSThread {
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nswillbecomemultithreadednotification?language=objc)
     #[cfg(all(feature = "NSNotification", feature = "NSString"))]
-    #[deprecated = "This notification does not protect against data races"]
     pub static NSWillBecomeMultiThreadedNotification: &'static NSNotificationName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nsdidbecomesinglethreadednotification?language=objc)
     #[cfg(all(feature = "NSNotification", feature = "NSString"))]
-    #[deprecated = "Programs no longer transition to single-threaded mode from threaded environments"]
     pub static NSDidBecomeSingleThreadedNotification: &'static NSNotificationName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nsthreadwillexitnotification?language=objc)
     #[cfg(all(feature = "NSNotification", feature = "NSString"))]
-    #[deprecated = "This notification does not protect against data races"]
     pub static NSThreadWillExitNotification: &'static NSNotificationName;
 }
 
@@ -245,10 +221,6 @@ pub unsafe trait NSObjectNSThreadPerformAdditions:
 {
     extern_methods!(
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// - `a_selector` must be a valid selector.
-        /// - `arg` should be of the correct type.
         #[unsafe(method(performSelectorOnMainThread:withObject:waitUntilDone:modes:))]
         #[unsafe(method_family = none)]
         unsafe fn performSelectorOnMainThread_withObject_waitUntilDone_modes(
@@ -259,10 +231,6 @@ pub unsafe trait NSObjectNSThreadPerformAdditions:
             array: Option<&NSArray<NSString>>,
         );
 
-        /// # Safety
-        ///
-        /// - `a_selector` must be a valid selector.
-        /// - `arg` should be of the correct type.
         #[unsafe(method(performSelectorOnMainThread:withObject:waitUntilDone:))]
         #[unsafe(method_family = none)]
         unsafe fn performSelectorOnMainThread_withObject_waitUntilDone(
@@ -273,10 +241,6 @@ pub unsafe trait NSObjectNSThreadPerformAdditions:
         );
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// - `a_selector` must be a valid selector.
-        /// - `arg` should be of the correct type.
         #[unsafe(method(performSelector:onThread:withObject:waitUntilDone:modes:))]
         #[unsafe(method_family = none)]
         unsafe fn performSelector_onThread_withObject_waitUntilDone_modes(
@@ -288,10 +252,6 @@ pub unsafe trait NSObjectNSThreadPerformAdditions:
             array: Option<&NSArray<NSString>>,
         );
 
-        /// # Safety
-        ///
-        /// - `a_selector` must be a valid selector.
-        /// - `arg` should be of the correct type.
         #[unsafe(method(performSelector:onThread:withObject:waitUntilDone:))]
         #[unsafe(method_family = none)]
         unsafe fn performSelector_onThread_withObject_waitUntilDone(
@@ -302,10 +262,6 @@ pub unsafe trait NSObjectNSThreadPerformAdditions:
             wait: bool,
         );
 
-        /// # Safety
-        ///
-        /// - `a_selector` must be a valid selector.
-        /// - `arg` should be of the correct type.
         #[unsafe(method(performSelectorInBackground:withObject:))]
         #[unsafe(method_family = none)]
         unsafe fn performSelectorInBackground_withObject(

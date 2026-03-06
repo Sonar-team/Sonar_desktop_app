@@ -16,20 +16,6 @@ extern_class!(
     pub struct NSLayoutAnchor<AnchorType: ?Sized = AnyObject>;
 );
 
-impl<AnchorType: ?Sized + Message> NSLayoutAnchor<AnchorType> {
-    /// Unchecked conversion of the generic parameter.
-    ///
-    /// # Safety
-    ///
-    /// The generic must be valid to reinterpret as the given type.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewAnchorType: ?Sized + Message>(
-        &self,
-    ) -> &NSLayoutAnchor<NewAnchorType> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
 extern_conformance!(
     unsafe impl<AnchorType: ?Sized + NSCoding> NSCoding for NSLayoutAnchor<AnchorType> {}
 );
@@ -52,7 +38,7 @@ impl<AnchorType: Message> NSLayoutAnchor<AnchorType> {
         #[must_use]
         #[unsafe(method(constraintEqualToAnchor:))]
         #[unsafe(method_family = none)]
-        pub fn constraintEqualToAnchor(
+        pub unsafe fn constraintEqualToAnchor(
             &self,
             anchor: &NSLayoutAnchor<AnchorType>,
         ) -> Retained<NSLayoutConstraint>;
@@ -61,7 +47,7 @@ impl<AnchorType: Message> NSLayoutAnchor<AnchorType> {
         #[must_use]
         #[unsafe(method(constraintGreaterThanOrEqualToAnchor:))]
         #[unsafe(method_family = none)]
-        pub fn constraintGreaterThanOrEqualToAnchor(
+        pub unsafe fn constraintGreaterThanOrEqualToAnchor(
             &self,
             anchor: &NSLayoutAnchor<AnchorType>,
         ) -> Retained<NSLayoutConstraint>;
@@ -70,7 +56,7 @@ impl<AnchorType: Message> NSLayoutAnchor<AnchorType> {
         #[must_use]
         #[unsafe(method(constraintLessThanOrEqualToAnchor:))]
         #[unsafe(method_family = none)]
-        pub fn constraintLessThanOrEqualToAnchor(
+        pub unsafe fn constraintLessThanOrEqualToAnchor(
             &self,
             anchor: &NSLayoutAnchor<AnchorType>,
         ) -> Retained<NSLayoutConstraint>;
@@ -79,7 +65,7 @@ impl<AnchorType: Message> NSLayoutAnchor<AnchorType> {
         #[must_use]
         #[unsafe(method(constraintEqualToAnchor:constant:))]
         #[unsafe(method_family = none)]
-        pub fn constraintEqualToAnchor_constant(
+        pub unsafe fn constraintEqualToAnchor_constant(
             &self,
             anchor: &NSLayoutAnchor<AnchorType>,
             c: CGFloat,
@@ -89,7 +75,7 @@ impl<AnchorType: Message> NSLayoutAnchor<AnchorType> {
         #[must_use]
         #[unsafe(method(constraintGreaterThanOrEqualToAnchor:constant:))]
         #[unsafe(method_family = none)]
-        pub fn constraintGreaterThanOrEqualToAnchor_constant(
+        pub unsafe fn constraintGreaterThanOrEqualToAnchor_constant(
             &self,
             anchor: &NSLayoutAnchor<AnchorType>,
             c: CGFloat,
@@ -99,7 +85,7 @@ impl<AnchorType: Message> NSLayoutAnchor<AnchorType> {
         #[must_use]
         #[unsafe(method(constraintLessThanOrEqualToAnchor:constant:))]
         #[unsafe(method_family = none)]
-        pub fn constraintLessThanOrEqualToAnchor_constant(
+        pub unsafe fn constraintLessThanOrEqualToAnchor_constant(
             &self,
             anchor: &NSLayoutAnchor<AnchorType>,
             c: CGFloat,
@@ -107,20 +93,20 @@ impl<AnchorType: Message> NSLayoutAnchor<AnchorType> {
 
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
-        pub fn name(&self) -> Retained<NSString>;
+        pub unsafe fn name(&self) -> Retained<NSString>;
 
         #[unsafe(method(item))]
         #[unsafe(method_family = none)]
-        pub fn item(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn item(&self) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(hasAmbiguousLayout))]
         #[unsafe(method_family = none)]
-        pub fn hasAmbiguousLayout(&self) -> bool;
+        pub unsafe fn hasAmbiguousLayout(&self) -> bool;
 
         #[cfg(feature = "NSLayoutConstraint")]
         #[unsafe(method(constraintsAffectingLayout))]
         #[unsafe(method_family = none)]
-        pub fn constraintsAffectingLayout(&self) -> Retained<NSArray<NSLayoutConstraint>>;
+        pub unsafe fn constraintsAffectingLayout(&self) -> Retained<NSArray<NSLayoutConstraint>>;
     );
 }
 
@@ -129,11 +115,11 @@ impl<AnchorType: Message> NSLayoutAnchor<AnchorType> {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -165,7 +151,7 @@ impl NSLayoutXAxisAnchor {
     extern_methods!(
         #[unsafe(method(anchorWithOffsetToAnchor:))]
         #[unsafe(method_family = none)]
-        pub fn anchorWithOffsetToAnchor(
+        pub unsafe fn anchorWithOffsetToAnchor(
             &self,
             other_anchor: &NSLayoutXAxisAnchor,
         ) -> Retained<NSLayoutDimension>;
@@ -177,11 +163,11 @@ impl NSLayoutXAxisAnchor {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -213,7 +199,7 @@ impl NSLayoutYAxisAnchor {
     extern_methods!(
         #[unsafe(method(anchorWithOffsetToAnchor:))]
         #[unsafe(method_family = none)]
-        pub fn anchorWithOffsetToAnchor(
+        pub unsafe fn anchorWithOffsetToAnchor(
             &self,
             other_anchor: &NSLayoutYAxisAnchor,
         ) -> Retained<NSLayoutDimension>;
@@ -225,11 +211,11 @@ impl NSLayoutYAxisAnchor {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -263,13 +249,13 @@ impl NSLayoutDimension {
         #[must_use]
         #[unsafe(method(constraintEqualToConstant:))]
         #[unsafe(method_family = none)]
-        pub fn constraintEqualToConstant(&self, c: CGFloat) -> Retained<NSLayoutConstraint>;
+        pub unsafe fn constraintEqualToConstant(&self, c: CGFloat) -> Retained<NSLayoutConstraint>;
 
         #[cfg(all(feature = "NSLayoutConstraint", feature = "objc2-core-foundation"))]
         #[must_use]
         #[unsafe(method(constraintGreaterThanOrEqualToConstant:))]
         #[unsafe(method_family = none)]
-        pub fn constraintGreaterThanOrEqualToConstant(
+        pub unsafe fn constraintGreaterThanOrEqualToConstant(
             &self,
             c: CGFloat,
         ) -> Retained<NSLayoutConstraint>;
@@ -278,7 +264,7 @@ impl NSLayoutDimension {
         #[must_use]
         #[unsafe(method(constraintLessThanOrEqualToConstant:))]
         #[unsafe(method_family = none)]
-        pub fn constraintLessThanOrEqualToConstant(
+        pub unsafe fn constraintLessThanOrEqualToConstant(
             &self,
             c: CGFloat,
         ) -> Retained<NSLayoutConstraint>;
@@ -287,7 +273,7 @@ impl NSLayoutDimension {
         #[must_use]
         #[unsafe(method(constraintEqualToAnchor:multiplier:))]
         #[unsafe(method_family = none)]
-        pub fn constraintEqualToAnchor_multiplier(
+        pub unsafe fn constraintEqualToAnchor_multiplier(
             &self,
             anchor: &NSLayoutDimension,
             m: CGFloat,
@@ -297,7 +283,7 @@ impl NSLayoutDimension {
         #[must_use]
         #[unsafe(method(constraintGreaterThanOrEqualToAnchor:multiplier:))]
         #[unsafe(method_family = none)]
-        pub fn constraintGreaterThanOrEqualToAnchor_multiplier(
+        pub unsafe fn constraintGreaterThanOrEqualToAnchor_multiplier(
             &self,
             anchor: &NSLayoutDimension,
             m: CGFloat,
@@ -307,7 +293,7 @@ impl NSLayoutDimension {
         #[must_use]
         #[unsafe(method(constraintLessThanOrEqualToAnchor:multiplier:))]
         #[unsafe(method_family = none)]
-        pub fn constraintLessThanOrEqualToAnchor_multiplier(
+        pub unsafe fn constraintLessThanOrEqualToAnchor_multiplier(
             &self,
             anchor: &NSLayoutDimension,
             m: CGFloat,
@@ -317,7 +303,7 @@ impl NSLayoutDimension {
         #[must_use]
         #[unsafe(method(constraintEqualToAnchor:multiplier:constant:))]
         #[unsafe(method_family = none)]
-        pub fn constraintEqualToAnchor_multiplier_constant(
+        pub unsafe fn constraintEqualToAnchor_multiplier_constant(
             &self,
             anchor: &NSLayoutDimension,
             m: CGFloat,
@@ -328,7 +314,7 @@ impl NSLayoutDimension {
         #[must_use]
         #[unsafe(method(constraintGreaterThanOrEqualToAnchor:multiplier:constant:))]
         #[unsafe(method_family = none)]
-        pub fn constraintGreaterThanOrEqualToAnchor_multiplier_constant(
+        pub unsafe fn constraintGreaterThanOrEqualToAnchor_multiplier_constant(
             &self,
             anchor: &NSLayoutDimension,
             m: CGFloat,
@@ -339,7 +325,7 @@ impl NSLayoutDimension {
         #[must_use]
         #[unsafe(method(constraintLessThanOrEqualToAnchor:multiplier:constant:))]
         #[unsafe(method_family = none)]
-        pub fn constraintLessThanOrEqualToAnchor_multiplier_constant(
+        pub unsafe fn constraintLessThanOrEqualToAnchor_multiplier_constant(
             &self,
             anchor: &NSLayoutDimension,
             m: CGFloat,
@@ -353,11 +339,11 @@ impl NSLayoutDimension {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -368,7 +354,7 @@ impl NSLayoutXAxisAnchor {
         #[must_use]
         #[unsafe(method(constraintEqualToSystemSpacingAfterAnchor:multiplier:))]
         #[unsafe(method_family = none)]
-        pub fn constraintEqualToSystemSpacingAfterAnchor_multiplier(
+        pub unsafe fn constraintEqualToSystemSpacingAfterAnchor_multiplier(
             &self,
             anchor: &NSLayoutXAxisAnchor,
             multiplier: CGFloat,
@@ -378,7 +364,7 @@ impl NSLayoutXAxisAnchor {
         #[must_use]
         #[unsafe(method(constraintGreaterThanOrEqualToSystemSpacingAfterAnchor:multiplier:))]
         #[unsafe(method_family = none)]
-        pub fn constraintGreaterThanOrEqualToSystemSpacingAfterAnchor_multiplier(
+        pub unsafe fn constraintGreaterThanOrEqualToSystemSpacingAfterAnchor_multiplier(
             &self,
             anchor: &NSLayoutXAxisAnchor,
             multiplier: CGFloat,
@@ -388,7 +374,7 @@ impl NSLayoutXAxisAnchor {
         #[must_use]
         #[unsafe(method(constraintLessThanOrEqualToSystemSpacingAfterAnchor:multiplier:))]
         #[unsafe(method_family = none)]
-        pub fn constraintLessThanOrEqualToSystemSpacingAfterAnchor_multiplier(
+        pub unsafe fn constraintLessThanOrEqualToSystemSpacingAfterAnchor_multiplier(
             &self,
             anchor: &NSLayoutXAxisAnchor,
             multiplier: CGFloat,
@@ -403,7 +389,7 @@ impl NSLayoutYAxisAnchor {
         #[must_use]
         #[unsafe(method(constraintEqualToSystemSpacingBelowAnchor:multiplier:))]
         #[unsafe(method_family = none)]
-        pub fn constraintEqualToSystemSpacingBelowAnchor_multiplier(
+        pub unsafe fn constraintEqualToSystemSpacingBelowAnchor_multiplier(
             &self,
             anchor: &NSLayoutYAxisAnchor,
             multiplier: CGFloat,
@@ -413,7 +399,7 @@ impl NSLayoutYAxisAnchor {
         #[must_use]
         #[unsafe(method(constraintGreaterThanOrEqualToSystemSpacingBelowAnchor:multiplier:))]
         #[unsafe(method_family = none)]
-        pub fn constraintGreaterThanOrEqualToSystemSpacingBelowAnchor_multiplier(
+        pub unsafe fn constraintGreaterThanOrEqualToSystemSpacingBelowAnchor_multiplier(
             &self,
             anchor: &NSLayoutYAxisAnchor,
             multiplier: CGFloat,
@@ -423,7 +409,7 @@ impl NSLayoutYAxisAnchor {
         #[must_use]
         #[unsafe(method(constraintLessThanOrEqualToSystemSpacingBelowAnchor:multiplier:))]
         #[unsafe(method_family = none)]
-        pub fn constraintLessThanOrEqualToSystemSpacingBelowAnchor_multiplier(
+        pub unsafe fn constraintLessThanOrEqualToSystemSpacingBelowAnchor_multiplier(
             &self,
             anchor: &NSLayoutYAxisAnchor,
             multiplier: CGFloat,

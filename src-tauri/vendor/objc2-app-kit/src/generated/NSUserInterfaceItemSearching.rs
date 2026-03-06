@@ -13,23 +13,17 @@ extern_protocol!(
         #[cfg(feature = "block2")]
         #[unsafe(method(searchForItemsWithSearchString:resultLimit:matchedItemHandler:))]
         #[unsafe(method_family = none)]
-        fn searchForItemsWithSearchString_resultLimit_matchedItemHandler(
+        unsafe fn searchForItemsWithSearchString_resultLimit_matchedItemHandler(
             &self,
             search_string: &NSString,
             result_limit: NSInteger,
             handle_matched_items: &block2::DynBlock<dyn Fn(NonNull<NSArray>)>,
         );
 
-        /// # Safety
-        ///
-        /// `item` should be of the correct type.
         #[unsafe(method(localizedTitlesForItem:))]
         #[unsafe(method_family = none)]
         unsafe fn localizedTitlesForItem(&self, item: &AnyObject) -> Retained<NSArray<NSString>>;
 
-        /// # Safety
-        ///
-        /// `item` should be of the correct type.
         #[optional]
         #[unsafe(method(performActionForItem:))]
         #[unsafe(method_family = none)]
@@ -38,7 +32,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(showAllHelpTopicsForSearchString:))]
         #[unsafe(method_family = none)]
-        fn showAllHelpTopicsForSearchString(&self, search_string: &NSString);
+        unsafe fn showAllHelpTopicsForSearchString(&self, search_string: &NSString);
     }
 );
 
@@ -48,21 +42,18 @@ impl NSApplication {
     extern_methods!(
         #[unsafe(method(registerUserInterfaceItemSearchHandler:))]
         #[unsafe(method_family = none)]
-        pub fn registerUserInterfaceItemSearchHandler(
+        pub unsafe fn registerUserInterfaceItemSearchHandler(
             &self,
             handler: &ProtocolObject<dyn NSUserInterfaceItemSearching>,
         );
 
         #[unsafe(method(unregisterUserInterfaceItemSearchHandler:))]
         #[unsafe(method_family = none)]
-        pub fn unregisterUserInterfaceItemSearchHandler(
+        pub unsafe fn unregisterUserInterfaceItemSearchHandler(
             &self,
             handler: &ProtocolObject<dyn NSUserInterfaceItemSearching>,
         );
 
-        /// # Safety
-        ///
-        /// `found_range` must be a valid pointer or null.
         #[unsafe(method(searchString:inUserInterfaceItemString:searchRange:foundRange:))]
         #[unsafe(method_family = none)]
         pub unsafe fn searchString_inUserInterfaceItemString_searchRange_foundRange(

@@ -73,91 +73,89 @@ impl NSClipView {
         #[cfg(feature = "NSColor")]
         #[unsafe(method(backgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn backgroundColor(&self) -> Retained<NSColor>;
+        pub unsafe fn backgroundColor(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`backgroundColor`][Self::backgroundColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundColor(&self, background_color: &NSColor);
+        pub unsafe fn setBackgroundColor(&self, background_color: &NSColor);
 
         #[unsafe(method(drawsBackground))]
         #[unsafe(method_family = none)]
-        pub fn drawsBackground(&self) -> bool;
+        pub unsafe fn drawsBackground(&self) -> bool;
 
         /// Setter for [`drawsBackground`][Self::drawsBackground].
         #[unsafe(method(setDrawsBackground:))]
         #[unsafe(method_family = none)]
-        pub fn setDrawsBackground(&self, draws_background: bool);
+        pub unsafe fn setDrawsBackground(&self, draws_background: bool);
 
         #[unsafe(method(documentView))]
         #[unsafe(method_family = none)]
-        pub fn documentView(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn documentView(&self) -> Option<Retained<NSView>>;
 
         /// Setter for [`documentView`][Self::documentView].
         #[unsafe(method(setDocumentView:))]
         #[unsafe(method_family = none)]
-        pub fn setDocumentView(&self, document_view: Option<&NSView>);
+        pub unsafe fn setDocumentView(&self, document_view: Option<&NSView>);
 
         #[unsafe(method(documentRect))]
         #[unsafe(method_family = none)]
-        pub fn documentRect(&self) -> NSRect;
+        pub unsafe fn documentRect(&self) -> NSRect;
 
         #[cfg(feature = "NSCursor")]
         #[unsafe(method(documentCursor))]
         #[unsafe(method_family = none)]
-        pub fn documentCursor(&self) -> Option<Retained<NSCursor>>;
+        pub unsafe fn documentCursor(&self) -> Option<Retained<NSCursor>>;
 
         #[cfg(feature = "NSCursor")]
         /// Setter for [`documentCursor`][Self::documentCursor].
         #[unsafe(method(setDocumentCursor:))]
         #[unsafe(method_family = none)]
-        pub fn setDocumentCursor(&self, document_cursor: Option<&NSCursor>);
+        pub unsafe fn setDocumentCursor(&self, document_cursor: Option<&NSCursor>);
 
         #[unsafe(method(documentVisibleRect))]
         #[unsafe(method_family = none)]
-        pub fn documentVisibleRect(&self) -> NSRect;
+        pub unsafe fn documentVisibleRect(&self) -> NSRect;
 
         #[unsafe(method(viewFrameChanged:))]
         #[unsafe(method_family = none)]
-        pub fn viewFrameChanged(&self, notification: &NSNotification);
+        pub unsafe fn viewFrameChanged(&self, notification: &NSNotification);
 
         #[unsafe(method(viewBoundsChanged:))]
         #[unsafe(method_family = none)]
-        pub fn viewBoundsChanged(&self, notification: &NSNotification);
+        pub unsafe fn viewBoundsChanged(&self, notification: &NSNotification);
 
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(autoscroll:))]
         #[unsafe(method_family = none)]
-        pub fn autoscroll(&self, event: &NSEvent) -> bool;
+        pub unsafe fn autoscroll(&self, event: &NSEvent) -> bool;
 
         #[unsafe(method(scrollToPoint:))]
         #[unsafe(method_family = none)]
-        pub fn scrollToPoint(&self, new_origin: NSPoint);
+        pub unsafe fn scrollToPoint(&self, new_origin: NSPoint);
 
         #[unsafe(method(constrainBoundsRect:))]
         #[unsafe(method_family = none)]
-        pub fn constrainBoundsRect(&self, proposed_bounds: NSRect) -> NSRect;
+        pub unsafe fn constrainBoundsRect(&self, proposed_bounds: NSRect) -> NSRect;
 
         #[unsafe(method(contentInsets))]
         #[unsafe(method_family = none)]
-        pub fn contentInsets(&self) -> NSEdgeInsets;
+        pub unsafe fn contentInsets(&self) -> NSEdgeInsets;
 
         /// Setter for [`contentInsets`][Self::contentInsets].
         #[unsafe(method(setContentInsets:))]
         #[unsafe(method_family = none)]
-        pub fn setContentInsets(&self, content_insets: NSEdgeInsets);
+        pub unsafe fn setContentInsets(&self, content_insets: NSEdgeInsets);
 
         #[unsafe(method(automaticallyAdjustsContentInsets))]
         #[unsafe(method_family = none)]
-        pub fn automaticallyAdjustsContentInsets(&self) -> bool;
+        pub unsafe fn automaticallyAdjustsContentInsets(&self) -> bool;
 
         /// Setter for [`automaticallyAdjustsContentInsets`][Self::automaticallyAdjustsContentInsets].
         #[unsafe(method(setAutomaticallyAdjustsContentInsets:))]
         #[unsafe(method_family = none)]
-        pub fn setAutomaticallyAdjustsContentInsets(
+        pub unsafe fn setAutomaticallyAdjustsContentInsets(
             &self,
             automatically_adjusts_content_insets: bool,
         );
@@ -170,11 +168,8 @@ impl NSClipView {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -190,7 +185,7 @@ impl NSClipView {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -200,7 +195,7 @@ impl NSClipView {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -210,11 +205,11 @@ impl NSView {
     extern_methods!(
         #[unsafe(method(reflectScrolledClipView:))]
         #[unsafe(method_family = none)]
-        pub fn reflectScrolledClipView(&self, clip_view: &NSClipView);
+        pub unsafe fn reflectScrolledClipView(&self, clip_view: &NSClipView);
 
         #[unsafe(method(scrollClipView:toPoint:))]
         #[unsafe(method_family = none)]
-        pub fn scrollClipView_toPoint(&self, clip_view: &NSClipView, point: NSPoint);
+        pub unsafe fn scrollClipView_toPoint(&self, clip_view: &NSClipView, point: NSPoint);
     );
 }
 
@@ -224,17 +219,17 @@ impl NSClipView {
         #[deprecated = "Use -constrainBoundsRect: instead."]
         #[unsafe(method(constrainScrollPoint:))]
         #[unsafe(method_family = none)]
-        pub fn constrainScrollPoint(&self, new_origin: NSPoint) -> NSPoint;
+        pub unsafe fn constrainScrollPoint(&self, new_origin: NSPoint) -> NSPoint;
 
         #[deprecated = "Setting this property has no effect.  NSClipView will always minimize the area of the document view that is invalidated.  To force invalidation of the document view, use -[NSView setNeedsDisplayInRect:]."]
         #[unsafe(method(copiesOnScroll))]
         #[unsafe(method_family = none)]
-        pub fn copiesOnScroll(&self) -> bool;
+        pub unsafe fn copiesOnScroll(&self) -> bool;
 
         /// Setter for [`copiesOnScroll`][Self::copiesOnScroll].
         #[deprecated = "Setting this property has no effect.  NSClipView will always minimize the area of the document view that is invalidated.  To force invalidation of the document view, use -[NSView setNeedsDisplayInRect:]."]
         #[unsafe(method(setCopiesOnScroll:))]
         #[unsafe(method_family = none)]
-        pub fn setCopiesOnScroll(&self, copies_on_scroll: bool);
+        pub unsafe fn setCopiesOnScroll(&self, copies_on_scroll: bool);
     );
 }

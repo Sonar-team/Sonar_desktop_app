@@ -43,79 +43,79 @@ impl UIContentUnavailableTextProperties {
         /// The font used for the text.
         #[unsafe(method(font))]
         #[unsafe(method_family = none)]
-        pub fn font(&self) -> Retained<UIFont>;
+        pub unsafe fn font(&self) -> Retained<UIFont>;
 
         #[cfg(feature = "UIFont")]
         /// Setter for [`font`][Self::font].
         #[unsafe(method(setFont:))]
         #[unsafe(method_family = none)]
-        pub fn setFont(&self, font: &UIFont);
+        pub unsafe fn setFont(&self, font: &UIFont);
 
         #[cfg(feature = "UIColor")]
         /// The color of the text.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
-        pub fn color(&self) -> Retained<UIColor>;
+        pub unsafe fn color(&self) -> Retained<UIColor>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`color`][Self::color].
         #[unsafe(method(setColor:))]
         #[unsafe(method_family = none)]
-        pub fn setColor(&self, color: &UIColor);
+        pub unsafe fn setColor(&self, color: &UIColor);
 
         #[cfg(feature = "NSParagraphStyle")]
         /// The line break mode to use for the text.
         #[unsafe(method(lineBreakMode))]
         #[unsafe(method_family = none)]
-        pub fn lineBreakMode(&self) -> NSLineBreakMode;
+        pub unsafe fn lineBreakMode(&self) -> NSLineBreakMode;
 
         #[cfg(feature = "NSParagraphStyle")]
         /// Setter for [`lineBreakMode`][Self::lineBreakMode].
         #[unsafe(method(setLineBreakMode:))]
         #[unsafe(method_family = none)]
-        pub fn setLineBreakMode(&self, line_break_mode: NSLineBreakMode);
+        pub unsafe fn setLineBreakMode(&self, line_break_mode: NSLineBreakMode);
 
         /// The maximum number of lines for the text. 0 indicates the number of lines is unlimited.
         #[unsafe(method(numberOfLines))]
         #[unsafe(method_family = none)]
-        pub fn numberOfLines(&self) -> NSInteger;
+        pub unsafe fn numberOfLines(&self) -> NSInteger;
 
         /// Setter for [`numberOfLines`][Self::numberOfLines].
         #[unsafe(method(setNumberOfLines:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberOfLines(&self, number_of_lines: NSInteger);
+        pub unsafe fn setNumberOfLines(&self, number_of_lines: NSInteger);
 
         /// Whether the font size of the text is automatically adjusted when necessary to fit in the available width.
         #[unsafe(method(adjustsFontSizeToFitWidth))]
         #[unsafe(method_family = none)]
-        pub fn adjustsFontSizeToFitWidth(&self) -> bool;
+        pub unsafe fn adjustsFontSizeToFitWidth(&self) -> bool;
 
         /// Setter for [`adjustsFontSizeToFitWidth`][Self::adjustsFontSizeToFitWidth].
         #[unsafe(method(setAdjustsFontSizeToFitWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setAdjustsFontSizeToFitWidth(&self, adjusts_font_size_to_fit_width: bool);
+        pub unsafe fn setAdjustsFontSizeToFitWidth(&self, adjusts_font_size_to_fit_width: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// When `adjustsFontSizeToFitWidth` is enabled, the smallest multiplier for the font size used to make the text fit.
         #[unsafe(method(minimumScaleFactor))]
         #[unsafe(method_family = none)]
-        pub fn minimumScaleFactor(&self) -> CGFloat;
+        pub unsafe fn minimumScaleFactor(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`minimumScaleFactor`][Self::minimumScaleFactor].
         #[unsafe(method(setMinimumScaleFactor:))]
         #[unsafe(method_family = none)]
-        pub fn setMinimumScaleFactor(&self, minimum_scale_factor: CGFloat);
+        pub unsafe fn setMinimumScaleFactor(&self, minimum_scale_factor: CGFloat);
 
         /// Whether the text is tightened before truncating.
         #[unsafe(method(allowsDefaultTighteningForTruncation))]
         #[unsafe(method_family = none)]
-        pub fn allowsDefaultTighteningForTruncation(&self) -> bool;
+        pub unsafe fn allowsDefaultTighteningForTruncation(&self) -> bool;
 
         /// Setter for [`allowsDefaultTighteningForTruncation`][Self::allowsDefaultTighteningForTruncation].
         #[unsafe(method(setAllowsDefaultTighteningForTruncation:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsDefaultTighteningForTruncation(
+        pub unsafe fn setAllowsDefaultTighteningForTruncation(
             &self,
             allows_default_tightening_for_truncation: bool,
         );
@@ -127,10 +127,10 @@ impl UIContentUnavailableTextProperties {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

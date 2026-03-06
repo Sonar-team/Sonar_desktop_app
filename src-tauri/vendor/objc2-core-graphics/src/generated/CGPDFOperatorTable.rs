@@ -31,16 +31,13 @@ pub type CGPDFOperatorCallback = Option<unsafe extern "C-unwind" fn(CGPDFScanner
 impl CGPDFOperatorTable {
     #[doc(alias = "CGPDFOperatorTableCreate")]
     #[inline]
-    pub fn create() -> CGPDFOperatorTableRef {
+    pub unsafe fn create() -> CGPDFOperatorTableRef {
         extern "C-unwind" {
             fn CGPDFOperatorTableCreate() -> CGPDFOperatorTableRef;
         }
         unsafe { CGPDFOperatorTableCreate() }
     }
 
-    /// # Safety
-    ///
-    /// `table` must be a valid pointer or null.
     #[doc(alias = "CGPDFOperatorTableRetain")]
     #[inline]
     pub unsafe fn retain(table: CGPDFOperatorTableRef) -> CGPDFOperatorTableRef {
@@ -50,9 +47,6 @@ impl CGPDFOperatorTable {
         unsafe { CGPDFOperatorTableRetain(table) }
     }
 
-    /// # Safety
-    ///
-    /// `table` must be a valid pointer or null.
     #[doc(alias = "CGPDFOperatorTableRelease")]
     #[inline]
     pub unsafe fn release(table: CGPDFOperatorTableRef) {
@@ -62,11 +56,6 @@ impl CGPDFOperatorTable {
         unsafe { CGPDFOperatorTableRelease(table) }
     }
 
-    /// # Safety
-    ///
-    /// - `table` must be a valid pointer or null.
-    /// - `name` must be a valid pointer or null.
-    /// - `callback` must be implemented correctly.
     #[doc(alias = "CGPDFOperatorTableSetCallback")]
     #[cfg(feature = "CGPDFScanner")]
     #[inline]
@@ -86,13 +75,9 @@ impl CGPDFOperatorTable {
     }
 }
 
-#[deprecated = "renamed to `CGPDFOperatorTable::create`"]
-#[inline]
-pub extern "C-unwind" fn CGPDFOperatorTableCreate() -> CGPDFOperatorTableRef {
-    extern "C-unwind" {
-        fn CGPDFOperatorTableCreate() -> CGPDFOperatorTableRef;
-    }
-    unsafe { CGPDFOperatorTableCreate() }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGPDFOperatorTable::create`"]
+    pub fn CGPDFOperatorTableCreate() -> CGPDFOperatorTableRef;
 }
 
 extern "C-unwind" {

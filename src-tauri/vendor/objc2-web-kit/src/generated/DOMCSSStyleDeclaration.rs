@@ -40,8 +40,6 @@ impl DOMCSSStyleDeclaration {
         pub unsafe fn cssText(&self) -> Retained<NSString>;
 
         /// Setter for [`cssText`][Self::cssText].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setCssText:))]
         #[unsafe(method_family = none)]
@@ -58,9 +56,6 @@ impl DOMCSSStyleDeclaration {
         #[unsafe(method_family = none)]
         pub unsafe fn parentRule(&self) -> Option<Retained<DOMCSSRule>>;
 
-        /// # Safety
-        ///
-        /// `property_name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(getPropertyValue:))]
         #[unsafe(method_family = none)]
@@ -70,9 +65,6 @@ impl DOMCSSStyleDeclaration {
         ) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "DOMCSSValue")]
-        /// # Safety
-        ///
-        /// `property_name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(getPropertyCSSValue:))]
         #[unsafe(method_family = none)]
@@ -81,9 +73,6 @@ impl DOMCSSStyleDeclaration {
             property_name: Option<&NSString>,
         ) -> Option<Retained<DOMCSSValue>>;
 
-        /// # Safety
-        ///
-        /// `property_name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(removeProperty:))]
         #[unsafe(method_family = none)]
@@ -92,9 +81,6 @@ impl DOMCSSStyleDeclaration {
             property_name: Option<&NSString>,
         ) -> Option<Retained<NSString>>;
 
-        /// # Safety
-        ///
-        /// `property_name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(getPropertyPriority:))]
         #[unsafe(method_family = none)]
@@ -103,11 +89,6 @@ impl DOMCSSStyleDeclaration {
             property_name: Option<&NSString>,
         ) -> Option<Retained<NSString>>;
 
-        /// # Safety
-        ///
-        /// - `property_name` might not allow `None`.
-        /// - `value` might not allow `None`.
-        /// - `priority` might not allow `None`.
         #[unsafe(method(setProperty:value:priority:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setProperty_value_priority(
@@ -122,9 +103,6 @@ impl DOMCSSStyleDeclaration {
         #[unsafe(method_family = none)]
         pub unsafe fn item(&self, index: c_uint) -> Option<Retained<NSString>>;
 
-        /// # Safety
-        ///
-        /// `property_name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(getPropertyShorthand:))]
         #[unsafe(method_family = none)]
@@ -133,9 +111,6 @@ impl DOMCSSStyleDeclaration {
             property_name: Option<&NSString>,
         ) -> Option<Retained<NSString>>;
 
-        /// # Safety
-        ///
-        /// `property_name` might not allow `None`.
         #[unsafe(method(isPropertyImplicit:))]
         #[unsafe(method_family = none)]
         pub unsafe fn isPropertyImplicit(&self, property_name: Option<&NSString>) -> bool;
@@ -164,15 +139,9 @@ impl DOMCSSStyleDeclaration {
 }
 
 /// DOMCSSStyleDeclarationDeprecated.
-#[deprecated]
 #[cfg(all(feature = "DOMObject", feature = "WebScriptObject"))]
 impl DOMCSSStyleDeclaration {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `property_name` might not allow `None`.
-        /// - `value` might not allow `None`.
-        /// - `priority` might not allow `None`.
         #[deprecated]
         #[unsafe(method(setProperty:::))]
         #[unsafe(method_family = none)]

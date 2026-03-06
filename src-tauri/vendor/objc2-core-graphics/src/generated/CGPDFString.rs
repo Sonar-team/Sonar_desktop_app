@@ -27,9 +27,6 @@ unsafe impl RefEncode for CGPDFString {
 pub type CGPDFStringRef = *mut CGPDFString;
 
 impl CGPDFString {
-    /// # Safety
-    ///
-    /// `string` must be a valid pointer or null.
     #[doc(alias = "CGPDFStringGetLength")]
     #[inline]
     pub unsafe fn length(string: CGPDFStringRef) -> usize {
@@ -39,9 +36,6 @@ impl CGPDFString {
         unsafe { CGPDFStringGetLength(string) }
     }
 
-    /// # Safety
-    ///
-    /// `string` must be a valid pointer or null.
     #[doc(alias = "CGPDFStringGetBytePtr")]
     #[inline]
     pub unsafe fn byte_ptr(string: CGPDFStringRef) -> *const c_uchar {
@@ -51,9 +45,6 @@ impl CGPDFString {
         unsafe { CGPDFStringGetBytePtr(string) }
     }
 
-    /// # Safety
-    ///
-    /// `string` must be a valid pointer or null.
     #[doc(alias = "CGPDFStringCopyTextString")]
     #[inline]
     pub unsafe fn text_string(string: CGPDFStringRef) -> Option<CFRetained<CFString>> {
@@ -64,9 +55,6 @@ impl CGPDFString {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `string` must be a valid pointer or null.
     #[doc(alias = "CGPDFStringCopyDate")]
     #[inline]
     pub unsafe fn date(string: CGPDFStringRef) -> Option<CFRetained<CFDate>> {

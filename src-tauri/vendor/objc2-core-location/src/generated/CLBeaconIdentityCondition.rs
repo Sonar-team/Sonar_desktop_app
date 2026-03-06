@@ -48,29 +48,14 @@ extern_conformance!(
 #[cfg(feature = "CLCondition")]
 impl CLBeaconIdentityCondition {
     extern_methods!(
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(UUID))]
         #[unsafe(method_family = none)]
         pub unsafe fn UUID(&self) -> Retained<NSUUID>;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(major))]
         #[unsafe(method_family = none)]
         pub unsafe fn major(&self) -> Option<Retained<NSNumber>>;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(minor))]
         #[unsafe(method_family = none)]
         pub unsafe fn minor(&self) -> Option<Retained<NSNumber>>;

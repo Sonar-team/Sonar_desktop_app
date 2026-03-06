@@ -212,68 +212,68 @@ impl UIPageControl {
         /// default is 0
         #[unsafe(method(numberOfPages))]
         #[unsafe(method_family = none)]
-        pub fn numberOfPages(&self) -> NSInteger;
+        pub unsafe fn numberOfPages(&self) -> NSInteger;
 
         /// Setter for [`numberOfPages`][Self::numberOfPages].
         #[unsafe(method(setNumberOfPages:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberOfPages(&self, number_of_pages: NSInteger);
+        pub unsafe fn setNumberOfPages(&self, number_of_pages: NSInteger);
 
         /// default is 0. Value is pinned to 0..numberOfPages-1
         #[unsafe(method(currentPage))]
         #[unsafe(method_family = none)]
-        pub fn currentPage(&self) -> NSInteger;
+        pub unsafe fn currentPage(&self) -> NSInteger;
 
         /// Setter for [`currentPage`][Self::currentPage].
         #[unsafe(method(setCurrentPage:))]
         #[unsafe(method_family = none)]
-        pub fn setCurrentPage(&self, current_page: NSInteger);
+        pub unsafe fn setCurrentPage(&self, current_page: NSInteger);
 
         /// hides the indicator if there is only one page, default is NO
         #[unsafe(method(hidesForSinglePage))]
         #[unsafe(method_family = none)]
-        pub fn hidesForSinglePage(&self) -> bool;
+        pub unsafe fn hidesForSinglePage(&self) -> bool;
 
         /// Setter for [`hidesForSinglePage`][Self::hidesForSinglePage].
         #[unsafe(method(setHidesForSinglePage:))]
         #[unsafe(method_family = none)]
-        pub fn setHidesForSinglePage(&self, hides_for_single_page: bool);
+        pub unsafe fn setHidesForSinglePage(&self, hides_for_single_page: bool);
 
         #[cfg(feature = "UIPageControlProgress")]
         /// An object that defines the progress of the page control. Default is nil.
         #[unsafe(method(progress))]
         #[unsafe(method_family = none)]
-        pub fn progress(&self) -> Option<Retained<UIPageControlProgress>>;
+        pub unsafe fn progress(&self) -> Option<Retained<UIPageControlProgress>>;
 
         #[cfg(feature = "UIPageControlProgress")]
         /// Setter for [`progress`][Self::progress].
         #[unsafe(method(setProgress:))]
         #[unsafe(method_family = none)]
-        pub fn setProgress(&self, progress: Option<&UIPageControlProgress>);
+        pub unsafe fn setProgress(&self, progress: Option<&UIPageControlProgress>);
 
         #[cfg(feature = "UIColor")]
         /// The tint color for non-selected indicators. Default is nil.
         #[unsafe(method(pageIndicatorTintColor))]
         #[unsafe(method_family = none)]
-        pub fn pageIndicatorTintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn pageIndicatorTintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`pageIndicatorTintColor`][Self::pageIndicatorTintColor].
         #[unsafe(method(setPageIndicatorTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setPageIndicatorTintColor(&self, page_indicator_tint_color: Option<&UIColor>);
+        pub unsafe fn setPageIndicatorTintColor(&self, page_indicator_tint_color: Option<&UIColor>);
 
         #[cfg(feature = "UIColor")]
         /// The tint color for the currently-selected indicators. Default is nil.
         #[unsafe(method(currentPageIndicatorTintColor))]
         #[unsafe(method_family = none)]
-        pub fn currentPageIndicatorTintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn currentPageIndicatorTintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`currentPageIndicatorTintColor`][Self::currentPageIndicatorTintColor].
         #[unsafe(method(setCurrentPageIndicatorTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setCurrentPageIndicatorTintColor(
+        pub unsafe fn setCurrentPageIndicatorTintColor(
             &self,
             current_page_indicator_tint_color: Option<&UIColor>,
         );
@@ -281,50 +281,53 @@ impl UIPageControl {
         /// The preferred background style. Default is UIPageControlBackgroundStyleAutomatic on iOS, and UIPageControlBackgroundStyleProminent on tvOS.
         #[unsafe(method(backgroundStyle))]
         #[unsafe(method_family = none)]
-        pub fn backgroundStyle(&self) -> UIPageControlBackgroundStyle;
+        pub unsafe fn backgroundStyle(&self) -> UIPageControlBackgroundStyle;
 
         /// Setter for [`backgroundStyle`][Self::backgroundStyle].
         #[unsafe(method(setBackgroundStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundStyle(&self, background_style: UIPageControlBackgroundStyle);
+        pub unsafe fn setBackgroundStyle(&self, background_style: UIPageControlBackgroundStyle);
 
         /// The layout direction of the page indicators. The default value is
         /// `UIPageControlDirectionNatural.`
         #[unsafe(method(direction))]
         #[unsafe(method_family = none)]
-        pub fn direction(&self) -> UIPageControlDirection;
+        pub unsafe fn direction(&self) -> UIPageControlDirection;
 
         /// Setter for [`direction`][Self::direction].
         #[unsafe(method(setDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setDirection(&self, direction: UIPageControlDirection);
+        pub unsafe fn setDirection(&self, direction: UIPageControlDirection);
 
         /// The current interaction state for when the current page changes. Default is UIPageControlInteractionStateNone
         #[unsafe(method(interactionState))]
         #[unsafe(method_family = none)]
-        pub fn interactionState(&self) -> UIPageControlInteractionState;
+        pub unsafe fn interactionState(&self) -> UIPageControlInteractionState;
 
         /// Returns YES if continuous interaction is supported and enabled, NO otherwise. Default is YES for platforms that support it.
         #[unsafe(method(allowsContinuousInteraction))]
         #[unsafe(method_family = none)]
-        pub fn allowsContinuousInteraction(&self) -> bool;
+        pub unsafe fn allowsContinuousInteraction(&self) -> bool;
 
         /// Setter for [`allowsContinuousInteraction`][Self::allowsContinuousInteraction].
         #[unsafe(method(setAllowsContinuousInteraction:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsContinuousInteraction(&self, allows_continuous_interaction: bool);
+        pub unsafe fn setAllowsContinuousInteraction(&self, allows_continuous_interaction: bool);
 
         #[cfg(feature = "UIImage")]
         /// The preferred image for indicators. Symbol images are recommended. Default is nil.
         #[unsafe(method(preferredIndicatorImage))]
         #[unsafe(method_family = none)]
-        pub fn preferredIndicatorImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn preferredIndicatorImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`preferredIndicatorImage`][Self::preferredIndicatorImage].
         #[unsafe(method(setPreferredIndicatorImage:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredIndicatorImage(&self, preferred_indicator_image: Option<&UIImage>);
+        pub unsafe fn setPreferredIndicatorImage(
+            &self,
+            preferred_indicator_image: Option<&UIImage>,
+        );
 
         #[cfg(feature = "UIImage")]
         /// Returns the override indicator image for the specific page, nil if no override image was set.
@@ -332,7 +335,7 @@ impl UIPageControl {
         /// Parameter `page`: Must be in the range of 0..numberOfPages
         #[unsafe(method(indicatorImageForPage:))]
         #[unsafe(method_family = none)]
-        pub fn indicatorImageForPage(&self, page: NSInteger) -> Option<Retained<UIImage>>;
+        pub unsafe fn indicatorImageForPage(&self, page: NSInteger) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Override the indicator image for a specific page. Symbol images are recommended.
@@ -342,7 +345,7 @@ impl UIPageControl {
         /// Parameter `page`: Must be in the range of 0..numberOfPages
         #[unsafe(method(setIndicatorImage:forPage:))]
         #[unsafe(method_family = none)]
-        pub fn setIndicatorImage_forPage(&self, image: Option<&UIImage>, page: NSInteger);
+        pub unsafe fn setIndicatorImage_forPage(&self, image: Option<&UIImage>, page: NSInteger);
 
         #[cfg(feature = "UIImage")]
         /// The preferred image for the current page indicator. Symbol images are recommended. Default is nil.
@@ -351,13 +354,13 @@ impl UIPageControl {
         /// the indicator image.
         #[unsafe(method(preferredCurrentPageIndicatorImage))]
         #[unsafe(method_family = none)]
-        pub fn preferredCurrentPageIndicatorImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn preferredCurrentPageIndicatorImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`preferredCurrentPageIndicatorImage`][Self::preferredCurrentPageIndicatorImage].
         #[unsafe(method(setPreferredCurrentPageIndicatorImage:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredCurrentPageIndicatorImage(
+        pub unsafe fn setPreferredCurrentPageIndicatorImage(
             &self,
             preferred_current_page_indicator_image: Option<&UIImage>,
         );
@@ -368,7 +371,7 @@ impl UIPageControl {
         /// Parameter `page`: Must be in the range of 0..numberOfPages
         #[unsafe(method(currentPageIndicatorImageForPage:))]
         #[unsafe(method_family = none)]
-        pub fn currentPageIndicatorImageForPage(
+        pub unsafe fn currentPageIndicatorImageForPage(
             &self,
             page: NSInteger,
         ) -> Option<Retained<UIImage>>;
@@ -381,7 +384,7 @@ impl UIPageControl {
         /// Parameter `page`: Must be in the range of 0..numberOfPages
         #[unsafe(method(setCurrentPageIndicatorImage:forPage:))]
         #[unsafe(method_family = none)]
-        pub fn setCurrentPageIndicatorImage_forPage(
+        pub unsafe fn setCurrentPageIndicatorImage_forPage(
             &self,
             image: Option<&UIImage>,
             page: NSInteger,
@@ -391,25 +394,25 @@ impl UIPageControl {
         /// Returns the minimum size required to display indicators for the given page count. Can be used to size the control if the page count could change.
         #[unsafe(method(sizeForNumberOfPages:))]
         #[unsafe(method_family = none)]
-        pub fn sizeForNumberOfPages(&self, page_count: NSInteger) -> CGSize;
+        pub unsafe fn sizeForNumberOfPages(&self, page_count: NSInteger) -> CGSize;
 
         /// if set, tapping to a new page won't update the currently displayed page until -updateCurrentPageDisplay is called. default is NO
         #[deprecated = "defersCurrentPageDisplay no longer does anything reasonable with the new interaction mode."]
         #[unsafe(method(defersCurrentPageDisplay))]
         #[unsafe(method_family = none)]
-        pub fn defersCurrentPageDisplay(&self) -> bool;
+        pub unsafe fn defersCurrentPageDisplay(&self) -> bool;
 
         /// Setter for [`defersCurrentPageDisplay`][Self::defersCurrentPageDisplay].
         #[deprecated = "defersCurrentPageDisplay no longer does anything reasonable with the new interaction mode."]
         #[unsafe(method(setDefersCurrentPageDisplay:))]
         #[unsafe(method_family = none)]
-        pub fn setDefersCurrentPageDisplay(&self, defers_current_page_display: bool);
+        pub unsafe fn setDefersCurrentPageDisplay(&self, defers_current_page_display: bool);
 
         /// update page display to match the currentPage. ignored if defersCurrentPageDisplay is NO. setting the page value directly will update immediately
         #[deprecated = "updateCurrentPageDisplay no longer does anything reasonable with the new interaction mode."]
         #[unsafe(method(updateCurrentPageDisplay))]
         #[unsafe(method_family = none)]
-        pub fn updateCurrentPageDisplay(&self);
+        pub unsafe fn updateCurrentPageDisplay(&self);
     );
 }
 
@@ -420,11 +423,8 @@ impl UIPageControl {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -440,7 +440,7 @@ impl UIPageControl {
         /// Initializes the control and adds primaryAction for the UIControlEventPrimaryActionTriggered control event. Subclasses of UIControl may alter or add behaviors around the usage of primaryAction, see subclass documentation of this initializer for additional information.
         #[unsafe(method(initWithFrame:primaryAction:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame_primaryAction(
+        pub unsafe fn initWithFrame_primaryAction(
             this: Allocated<Self>,
             frame: CGRect,
             primary_action: Option<&UIAction>,
@@ -448,22 +448,16 @@ impl UIPageControl {
     );
 }
 
-/// Methods declared on superclass `UIView`.
+/// Methods declared on superclass `NSObject`.
 #[cfg(all(feature = "UIControl", feature = "UIResponder", feature = "UIView"))]
 impl UIPageControl {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
-    );
-}
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-/// Methods declared on superclass `NSObject`.
-#[cfg(all(feature = "UIControl", feature = "UIResponder", feature = "UIView"))]
-impl UIPageControl {
-    extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

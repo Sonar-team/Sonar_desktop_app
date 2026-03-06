@@ -82,15 +82,12 @@ impl NSViewController {
         #[cfg(feature = "NSNib")]
         #[unsafe(method(initWithNibName:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibName_bundle(
+        pub unsafe fn initWithNibName_bundle(
             this: Allocated<Self>,
             nib_name_or_nil: Option<&NSNibName>,
             nib_bundle_or_nil: Option<&NSBundle>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -101,65 +98,54 @@ impl NSViewController {
         #[cfg(feature = "NSNib")]
         #[unsafe(method(nibName))]
         #[unsafe(method_family = none)]
-        pub fn nibName(&self) -> Option<Retained<NSNibName>>;
+        pub unsafe fn nibName(&self) -> Option<Retained<NSNibName>>;
 
         #[unsafe(method(nibBundle))]
         #[unsafe(method_family = none)]
-        pub fn nibBundle(&self) -> Option<Retained<NSBundle>>;
+        pub unsafe fn nibBundle(&self) -> Option<Retained<NSBundle>>;
 
         #[unsafe(method(representedObject))]
         #[unsafe(method_family = none)]
-        pub fn representedObject(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn representedObject(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`representedObject`][Self::representedObject].
-        ///
-        /// # Safety
-        ///
-        /// `represented_object` should be of the correct type.
         #[unsafe(method(setRepresentedObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRepresentedObject(&self, represented_object: Option<&AnyObject>);
 
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn title(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: Option<&NSString>);
+        pub unsafe fn setTitle(&self, title: Option<&NSString>);
 
         #[cfg(feature = "NSView")]
         #[unsafe(method(view))]
         #[unsafe(method_family = none)]
-        pub fn view(&self) -> Retained<NSView>;
+        pub unsafe fn view(&self) -> Retained<NSView>;
 
         #[cfg(feature = "NSView")]
         /// Setter for [`view`][Self::view].
         #[unsafe(method(setView:))]
         #[unsafe(method_family = none)]
-        pub fn setView(&self, view: &NSView);
+        pub unsafe fn setView(&self, view: &NSView);
 
         #[cfg(feature = "NSView")]
         #[unsafe(method(viewIfLoaded))]
         #[unsafe(method_family = none)]
-        pub fn viewIfLoaded(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn viewIfLoaded(&self) -> Option<Retained<NSView>>;
 
         #[unsafe(method(loadView))]
         #[unsafe(method_family = none)]
-        pub fn loadView(&self);
+        pub unsafe fn loadView(&self);
 
         #[unsafe(method(loadViewIfNeeded))]
         #[unsafe(method_family = none)]
-        pub fn loadViewIfNeeded(&self);
+        pub unsafe fn loadViewIfNeeded(&self);
 
-        /// # Safety
-        ///
-        /// - `delegate` should be of the correct type.
-        /// - `did_commit_selector` must be a valid selector.
-        /// - `context_info` must be a valid pointer or null.
         #[unsafe(method(commitEditingWithDelegate:didCommitSelector:contextInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn commitEditingWithDelegate_didCommitSelector_contextInfo(
@@ -171,56 +157,56 @@ impl NSViewController {
 
         #[unsafe(method(commitEditing))]
         #[unsafe(method_family = none)]
-        pub fn commitEditing(&self) -> bool;
+        pub unsafe fn commitEditing(&self) -> bool;
 
         #[unsafe(method(discardEditing))]
         #[unsafe(method_family = none)]
-        pub fn discardEditing(&self);
+        pub unsafe fn discardEditing(&self);
 
         #[unsafe(method(viewDidLoad))]
         #[unsafe(method_family = none)]
-        pub fn viewDidLoad(&self);
+        pub unsafe fn viewDidLoad(&self);
 
         #[unsafe(method(isViewLoaded))]
         #[unsafe(method_family = none)]
-        pub fn isViewLoaded(&self) -> bool;
+        pub unsafe fn isViewLoaded(&self) -> bool;
 
         #[unsafe(method(viewWillAppear))]
         #[unsafe(method_family = none)]
-        pub fn viewWillAppear(&self);
+        pub unsafe fn viewWillAppear(&self);
 
         #[unsafe(method(viewDidAppear))]
         #[unsafe(method_family = none)]
-        pub fn viewDidAppear(&self);
+        pub unsafe fn viewDidAppear(&self);
 
         #[unsafe(method(viewWillDisappear))]
         #[unsafe(method_family = none)]
-        pub fn viewWillDisappear(&self);
+        pub unsafe fn viewWillDisappear(&self);
 
         #[unsafe(method(viewDidDisappear))]
         #[unsafe(method_family = none)]
-        pub fn viewDidDisappear(&self);
+        pub unsafe fn viewDidDisappear(&self);
 
         #[unsafe(method(preferredContentSize))]
         #[unsafe(method_family = none)]
-        pub fn preferredContentSize(&self) -> NSSize;
+        pub unsafe fn preferredContentSize(&self) -> NSSize;
 
         /// Setter for [`preferredContentSize`][Self::preferredContentSize].
         #[unsafe(method(setPreferredContentSize:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredContentSize(&self, preferred_content_size: NSSize);
+        pub unsafe fn setPreferredContentSize(&self, preferred_content_size: NSSize);
 
         #[unsafe(method(updateViewConstraints))]
         #[unsafe(method_family = none)]
-        pub fn updateViewConstraints(&self);
+        pub unsafe fn updateViewConstraints(&self);
 
         #[unsafe(method(viewWillLayout))]
         #[unsafe(method_family = none)]
-        pub fn viewWillLayout(&self);
+        pub unsafe fn viewWillLayout(&self);
 
         #[unsafe(method(viewDidLayout))]
         #[unsafe(method_family = none)]
-        pub fn viewDidLayout(&self);
+        pub unsafe fn viewDidLayout(&self);
     );
 }
 
@@ -230,7 +216,7 @@ impl NSViewController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -240,7 +226,7 @@ impl NSViewController {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -250,7 +236,7 @@ impl NSViewController {
     extern_methods!(
         #[unsafe(method(presentViewController:animator:))]
         #[unsafe(method_family = none)]
-        pub fn presentViewController_animator(
+        pub unsafe fn presentViewController_animator(
             &self,
             view_controller: &NSViewController,
             animator: &ProtocolObject<dyn NSViewControllerPresentationAnimator>,
@@ -258,22 +244,18 @@ impl NSViewController {
 
         #[unsafe(method(dismissViewController:))]
         #[unsafe(method_family = none)]
-        pub fn dismissViewController(&self, view_controller: &NSViewController);
+        pub unsafe fn dismissViewController(&self, view_controller: &NSViewController);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(dismissController:))]
         #[unsafe(method_family = none)]
         pub unsafe fn dismissController(&self, sender: Option<&AnyObject>);
 
         #[unsafe(method(presentedViewControllers))]
         #[unsafe(method_family = none)]
-        pub fn presentedViewControllers(&self) -> Option<Retained<NSArray<NSViewController>>>;
+        pub unsafe fn presentedViewControllers(
+            &self,
+        ) -> Option<Retained<NSArray<NSViewController>>>;
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(presentingViewController))]
         #[unsafe(method_family = none)]
         pub unsafe fn presentingViewController(&self) -> Option<Retained<NSViewController>>;
@@ -286,16 +268,16 @@ impl NSViewController {
     extern_methods!(
         #[unsafe(method(presentViewControllerAsSheet:))]
         #[unsafe(method_family = none)]
-        pub fn presentViewControllerAsSheet(&self, view_controller: &NSViewController);
+        pub unsafe fn presentViewControllerAsSheet(&self, view_controller: &NSViewController);
 
         #[unsafe(method(presentViewControllerAsModalWindow:))]
         #[unsafe(method_family = none)]
-        pub fn presentViewControllerAsModalWindow(&self, view_controller: &NSViewController);
+        pub unsafe fn presentViewControllerAsModalWindow(&self, view_controller: &NSViewController);
 
         #[cfg(all(feature = "NSPopover", feature = "NSView"))]
         #[unsafe(method(presentViewController:asPopoverRelativeToRect:ofView:preferredEdge:behavior:))]
         #[unsafe(method_family = none)]
-        pub fn presentViewController_asPopoverRelativeToRect_ofView_preferredEdge_behavior(
+        pub unsafe fn presentViewController_asPopoverRelativeToRect_ofView_preferredEdge_behavior(
             &self,
             view_controller: &NSViewController,
             positioning_rect: NSRect,
@@ -307,7 +289,7 @@ impl NSViewController {
         #[cfg(all(feature = "NSPopover", feature = "NSView"))]
         #[unsafe(method(presentViewController:asPopoverRelativeToRect:ofView:preferredEdge:behavior:hasFullSizeContent:))]
         #[unsafe(method_family = none)]
-        pub fn presentViewController_asPopoverRelativeToRect_ofView_preferredEdge_behavior_hasFullSizeContent(
+        pub unsafe fn presentViewController_asPopoverRelativeToRect_ofView_preferredEdge_behavior_hasFullSizeContent(
             &self,
             view_controller: &NSViewController,
             positioning_rect: NSRect,
@@ -320,7 +302,7 @@ impl NSViewController {
         #[cfg(feature = "block2")]
         #[unsafe(method(transitionFromViewController:toViewController:options:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn transitionFromViewController_toViewController_options_completionHandler(
+        pub unsafe fn transitionFromViewController_toViewController_options_completionHandler(
             &self,
             from_view_controller: &NSViewController,
             to_view_controller: &NSViewController,
@@ -336,30 +318,31 @@ impl NSViewController {
     extern_methods!(
         #[unsafe(method(parentViewController))]
         #[unsafe(method_family = none)]
-        pub fn parentViewController(&self) -> Option<Retained<NSViewController>>;
+        pub unsafe fn parentViewController(&self) -> Option<Retained<NSViewController>>;
 
         #[unsafe(method(childViewControllers))]
         #[unsafe(method_family = none)]
-        pub fn childViewControllers(&self) -> Retained<NSArray<NSViewController>>;
+        pub unsafe fn childViewControllers(&self) -> Retained<NSArray<NSViewController>>;
 
         /// Setter for [`childViewControllers`][Self::childViewControllers].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setChildViewControllers:))]
         #[unsafe(method_family = none)]
-        pub fn setChildViewControllers(&self, child_view_controllers: &NSArray<NSViewController>);
+        pub unsafe fn setChildViewControllers(
+            &self,
+            child_view_controllers: &NSArray<NSViewController>,
+        );
 
         #[unsafe(method(addChildViewController:))]
         #[unsafe(method_family = none)]
-        pub fn addChildViewController(&self, child_view_controller: &NSViewController);
+        pub unsafe fn addChildViewController(&self, child_view_controller: &NSViewController);
 
         #[unsafe(method(removeFromParentViewController))]
         #[unsafe(method_family = none)]
-        pub fn removeFromParentViewController(&self);
+        pub unsafe fn removeFromParentViewController(&self);
 
         #[unsafe(method(insertChildViewController:atIndex:))]
         #[unsafe(method_family = none)]
-        pub fn insertChildViewController_atIndex(
+        pub unsafe fn insertChildViewController_atIndex(
             &self,
             child_view_controller: &NSViewController,
             index: NSInteger,
@@ -367,18 +350,18 @@ impl NSViewController {
 
         #[unsafe(method(removeChildViewControllerAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn removeChildViewControllerAtIndex(&self, index: NSInteger);
+        pub unsafe fn removeChildViewControllerAtIndex(&self, index: NSInteger);
 
         #[unsafe(method(preferredContentSizeDidChangeForViewController:))]
         #[unsafe(method_family = none)]
-        pub fn preferredContentSizeDidChangeForViewController(
+        pub unsafe fn preferredContentSizeDidChangeForViewController(
             &self,
             view_controller: &NSViewController,
         );
 
         #[unsafe(method(viewWillTransitionToSize:))]
         #[unsafe(method_family = none)]
-        pub fn viewWillTransitionToSize(&self, new_size: NSSize);
+        pub unsafe fn viewWillTransitionToSize(&self, new_size: NSSize);
     );
 }
 
@@ -390,7 +373,7 @@ extern_protocol!(
         #[cfg(feature = "NSResponder")]
         #[unsafe(method(animatePresentationOfViewController:fromViewController:))]
         #[unsafe(method_family = none)]
-        fn animatePresentationOfViewController_fromViewController(
+        unsafe fn animatePresentationOfViewController_fromViewController(
             &self,
             view_controller: &NSViewController,
             from_view_controller: &NSViewController,
@@ -399,7 +382,7 @@ extern_protocol!(
         #[cfg(feature = "NSResponder")]
         #[unsafe(method(animateDismissalOfViewController:fromViewController:))]
         #[unsafe(method_family = none)]
-        fn animateDismissalOfViewController_fromViewController(
+        unsafe fn animateDismissalOfViewController_fromViewController(
             &self,
             view_controller: &NSViewController,
             from_view_controller: &NSViewController,
@@ -414,7 +397,7 @@ impl NSViewController {
         #[cfg(feature = "NSStoryboard")]
         #[unsafe(method(storyboard))]
         #[unsafe(method_family = none)]
-        pub fn storyboard(&self) -> Option<Retained<NSStoryboard>>;
+        pub unsafe fn storyboard(&self) -> Option<Retained<NSStoryboard>>;
     );
 }
 
@@ -424,35 +407,35 @@ impl NSViewController {
     extern_methods!(
         #[unsafe(method(extensionContext))]
         #[unsafe(method_family = none)]
-        pub fn extensionContext(&self) -> Option<Retained<NSExtensionContext>>;
+        pub unsafe fn extensionContext(&self) -> Option<Retained<NSExtensionContext>>;
 
         #[cfg(feature = "NSView")]
         #[unsafe(method(sourceItemView))]
         #[unsafe(method_family = none)]
-        pub fn sourceItemView(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn sourceItemView(&self) -> Option<Retained<NSView>>;
 
         #[cfg(feature = "NSView")]
         /// Setter for [`sourceItemView`][Self::sourceItemView].
         #[unsafe(method(setSourceItemView:))]
         #[unsafe(method_family = none)]
-        pub fn setSourceItemView(&self, source_item_view: Option<&NSView>);
+        pub unsafe fn setSourceItemView(&self, source_item_view: Option<&NSView>);
 
         #[unsafe(method(preferredScreenOrigin))]
         #[unsafe(method_family = none)]
-        pub fn preferredScreenOrigin(&self) -> NSPoint;
+        pub unsafe fn preferredScreenOrigin(&self) -> NSPoint;
 
         /// Setter for [`preferredScreenOrigin`][Self::preferredScreenOrigin].
         #[unsafe(method(setPreferredScreenOrigin:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredScreenOrigin(&self, preferred_screen_origin: NSPoint);
+        pub unsafe fn setPreferredScreenOrigin(&self, preferred_screen_origin: NSPoint);
 
         #[unsafe(method(preferredMinimumSize))]
         #[unsafe(method_family = none)]
-        pub fn preferredMinimumSize(&self) -> NSSize;
+        pub unsafe fn preferredMinimumSize(&self) -> NSSize;
 
         #[unsafe(method(preferredMaximumSize))]
         #[unsafe(method_family = none)]
-        pub fn preferredMaximumSize(&self) -> NSSize;
+        pub unsafe fn preferredMaximumSize(&self) -> NSSize;
     );
 }
 

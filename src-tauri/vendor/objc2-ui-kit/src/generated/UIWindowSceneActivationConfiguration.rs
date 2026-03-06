@@ -23,7 +23,7 @@ impl UIWindowSceneActivationConfiguration {
         /// The user activity that will be used to request a scene
         #[unsafe(method(userActivity))]
         #[unsafe(method_family = none)]
-        pub fn userActivity(&self) -> Retained<NSUserActivity>;
+        pub unsafe fn userActivity(&self) -> Retained<NSUserActivity>;
 
         #[cfg(all(
             feature = "UISceneOptions",
@@ -32,7 +32,7 @@ impl UIWindowSceneActivationConfiguration {
         /// Options for customizing the scene request. If omitted default options are used.
         #[unsafe(method(options))]
         #[unsafe(method_family = none)]
-        pub fn options(
+        pub unsafe fn options(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<UIWindowSceneActivationRequestOptions>>;
@@ -44,23 +44,23 @@ impl UIWindowSceneActivationConfiguration {
         /// Setter for [`options`][Self::options].
         #[unsafe(method(setOptions:))]
         #[unsafe(method_family = none)]
-        pub fn setOptions(&self, options: Option<&UIWindowSceneActivationRequestOptions>);
+        pub unsafe fn setOptions(&self, options: Option<&UIWindowSceneActivationRequestOptions>);
 
         #[cfg(feature = "UITargetedPreview")]
         /// An optional preview used to define the visual "source" of the newly activated scene for use in system animations.
         #[unsafe(method(preview))]
         #[unsafe(method_family = none)]
-        pub fn preview(&self, mtm: MainThreadMarker) -> Option<Retained<UITargetedPreview>>;
+        pub unsafe fn preview(&self, mtm: MainThreadMarker) -> Option<Retained<UITargetedPreview>>;
 
         #[cfg(feature = "UITargetedPreview")]
         /// Setter for [`preview`][Self::preview].
         #[unsafe(method(setPreview:))]
         #[unsafe(method_family = none)]
-        pub fn setPreview(&self, preview: Option<&UITargetedPreview>);
+        pub unsafe fn setPreview(&self, preview: Option<&UITargetedPreview>);
 
         #[unsafe(method(initWithUserActivity:))]
         #[unsafe(method_family = init)]
-        pub fn initWithUserActivity(
+        pub unsafe fn initWithUserActivity(
             this: Allocated<Self>,
             user_activity: &NSUserActivity,
         ) -> Retained<Self>;

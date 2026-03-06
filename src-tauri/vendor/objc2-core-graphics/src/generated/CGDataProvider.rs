@@ -11,7 +11,6 @@ use objc2_core_foundation::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgdataprovider?language=objc)
-#[doc(alias = "CGDataProviderRef")]
 #[repr(C)]
 pub struct CGDataProvider {
     inner: [u8; 0],
@@ -44,7 +43,6 @@ pub type CGDataProviderReleaseInfoCallback = Option<unsafe extern "C-unwind" fn(
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgdataprovidersequentialcallbacks?language=objc)
 #[cfg(feature = "libc")]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CGDataProviderSequentialCallbacks {
     pub version: c_uint,
@@ -89,7 +87,6 @@ pub type CGDataProviderGetBytesAtPositionCallback =
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgdataproviderdirectcallbacks?language=objc)
 #[cfg(feature = "libc")]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CGDataProviderDirectCallbacks {
     pub version: c_uint,
@@ -130,10 +127,6 @@ unsafe impl ConcreteType for CGDataProvider {
 }
 
 impl CGDataProvider {
-    /// # Safety
-    ///
-    /// - `info` must be a valid pointer or null.
-    /// - `callbacks` must be a valid pointer or null.
     #[doc(alias = "CGDataProviderCreateSequential")]
     #[cfg(feature = "libc")]
     #[inline]
@@ -151,10 +144,6 @@ impl CGDataProvider {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// - `info` must be a valid pointer or null.
-    /// - `callbacks` must be a valid pointer or null.
     #[doc(alias = "CGDataProviderCreateDirect")]
     #[cfg(feature = "libc")]
     #[inline]
@@ -180,11 +169,6 @@ pub type CGDataProviderReleaseDataCallback =
     Option<unsafe extern "C-unwind" fn(*mut c_void, NonNull<c_void>, usize)>;
 
 impl CGDataProvider {
-    /// # Safety
-    ///
-    /// - `info` must be a valid pointer or null.
-    /// - `data` must be a valid pointer or null.
-    /// - `release_data` must be implemented correctly.
     #[doc(alias = "CGDataProviderCreateWithData")]
     #[inline]
     pub unsafe fn with_data(
@@ -207,7 +191,7 @@ impl CGDataProvider {
 
     #[doc(alias = "CGDataProviderCreateWithCFData")]
     #[inline]
-    pub fn with_cf_data(data: Option<&CFData>) -> Option<CFRetained<CGDataProvider>> {
+    pub unsafe fn with_cf_data(data: Option<&CFData>) -> Option<CFRetained<CGDataProvider>> {
         extern "C-unwind" {
             fn CGDataProviderCreateWithCFData(
                 data: Option<&CFData>,
@@ -219,7 +203,7 @@ impl CGDataProvider {
 
     #[doc(alias = "CGDataProviderCreateWithURL")]
     #[inline]
-    pub fn with_url(url: Option<&CFURL>) -> Option<CFRetained<CGDataProvider>> {
+    pub unsafe fn with_url(url: Option<&CFURL>) -> Option<CFRetained<CGDataProvider>> {
         extern "C-unwind" {
             fn CGDataProviderCreateWithURL(url: Option<&CFURL>) -> Option<NonNull<CGDataProvider>>;
         }
@@ -227,9 +211,6 @@ impl CGDataProvider {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `filename` must be a valid pointer or null.
     #[doc(alias = "CGDataProviderCreateWithFilename")]
     #[inline]
     pub unsafe fn with_filename(filename: *const c_char) -> Option<CFRetained<CGDataProvider>> {
@@ -244,7 +225,7 @@ impl CGDataProvider {
 
     #[doc(alias = "CGDataProviderCopyData")]
     #[inline]
-    pub fn data(provider: Option<&CGDataProvider>) -> Option<CFRetained<CFData>> {
+    pub unsafe fn data(provider: Option<&CGDataProvider>) -> Option<CFRetained<CFData>> {
         extern "C-unwind" {
             fn CGDataProviderCopyData(provider: Option<&CGDataProvider>)
                 -> Option<NonNull<CFData>>;
@@ -255,7 +236,7 @@ impl CGDataProvider {
 
     #[doc(alias = "CGDataProviderGetInfo")]
     #[inline]
-    pub fn info(provider: Option<&CGDataProvider>) -> *mut c_void {
+    pub unsafe fn info(provider: Option<&CGDataProvider>) -> *mut c_void {
         extern "C-unwind" {
             fn CGDataProviderGetInfo(provider: Option<&CGDataProvider>) -> *mut c_void;
         }
@@ -321,7 +302,7 @@ pub unsafe extern "C-unwind" fn CGDataProviderCreateWithData(
 
 #[deprecated = "renamed to `CGDataProvider::with_cf_data`"]
 #[inline]
-pub extern "C-unwind" fn CGDataProviderCreateWithCFData(
+pub unsafe extern "C-unwind" fn CGDataProviderCreateWithCFData(
     data: Option<&CFData>,
 ) -> Option<CFRetained<CGDataProvider>> {
     extern "C-unwind" {
@@ -334,7 +315,7 @@ pub extern "C-unwind" fn CGDataProviderCreateWithCFData(
 
 #[deprecated = "renamed to `CGDataProvider::with_url`"]
 #[inline]
-pub extern "C-unwind" fn CGDataProviderCreateWithURL(
+pub unsafe extern "C-unwind" fn CGDataProviderCreateWithURL(
     url: Option<&CFURL>,
 ) -> Option<CFRetained<CGDataProvider>> {
     extern "C-unwind" {
@@ -360,7 +341,7 @@ pub unsafe extern "C-unwind" fn CGDataProviderCreateWithFilename(
 
 #[deprecated = "renamed to `CGDataProvider::data`"]
 #[inline]
-pub extern "C-unwind" fn CGDataProviderCopyData(
+pub unsafe extern "C-unwind" fn CGDataProviderCopyData(
     provider: Option<&CGDataProvider>,
 ) -> Option<CFRetained<CFData>> {
     extern "C-unwind" {
@@ -370,11 +351,7 @@ pub extern "C-unwind" fn CGDataProviderCopyData(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-#[deprecated = "renamed to `CGDataProvider::info`"]
-#[inline]
-pub extern "C-unwind" fn CGDataProviderGetInfo(provider: Option<&CGDataProvider>) -> *mut c_void {
-    extern "C-unwind" {
-        fn CGDataProviderGetInfo(provider: Option<&CGDataProvider>) -> *mut c_void;
-    }
-    unsafe { CGDataProviderGetInfo(provider) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGDataProvider::info`"]
+    pub fn CGDataProviderGetInfo(provider: Option<&CGDataProvider>) -> *mut c_void;
 }

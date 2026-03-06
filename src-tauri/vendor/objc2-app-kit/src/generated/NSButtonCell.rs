@@ -87,42 +87,39 @@ impl NSBezelStyle {
     /// A bezel style that is typically used in table rows to display information about the row, such as a count.
     #[doc(alias = "NSBezelStyleBadge")]
     pub const Badge: Self = Self(15);
-    /// A bezel style with a glass effect
-    #[doc(alias = "NSBezelStyleGlass")]
-    pub const Glass: Self = Self(16);
-    /// A bezel style with a glass effect
+    /// A bezel style that is typically used in table rows to display information about the row, such as a count.
     #[doc(alias = "NSBezelStyleShadowlessSquare")]
     #[deprecated]
     pub const ShadowlessSquare: Self = Self(6);
-    /// A bezel style with a glass effect
+    /// A bezel style that is typically used in table rows to display information about the row, such as a count.
     #[doc(alias = "NSBezelStyleTexturedSquare")]
     #[deprecated]
     pub const TexturedSquare: Self = Self(8);
-    /// A bezel style with a glass effect
+    /// A bezel style that is typically used in table rows to display information about the row, such as a count.
     #[doc(alias = "NSBezelStyleRounded")]
     #[deprecated]
     pub const Rounded: Self = Self(NSBezelStyle::Push.0);
-    /// A bezel style with a glass effect
+    /// A bezel style that is typically used in table rows to display information about the row, such as a count.
     #[doc(alias = "NSBezelStyleRegularSquare")]
     #[deprecated]
     pub const RegularSquare: Self = Self(NSBezelStyle::FlexiblePush.0);
-    /// A bezel style with a glass effect
+    /// A bezel style that is typically used in table rows to display information about the row, such as a count.
     #[doc(alias = "NSBezelStyleTexturedRounded")]
     #[deprecated]
     pub const TexturedRounded: Self = Self(NSBezelStyle::Toolbar.0);
-    /// A bezel style with a glass effect
+    /// A bezel style that is typically used in table rows to display information about the row, such as a count.
     #[doc(alias = "NSBezelStyleRoundRect")]
     #[deprecated]
     pub const RoundRect: Self = Self(NSBezelStyle::AccessoryBarAction.0);
-    /// A bezel style with a glass effect
+    /// A bezel style that is typically used in table rows to display information about the row, such as a count.
     #[doc(alias = "NSBezelStyleRecessed")]
     #[deprecated]
     pub const Recessed: Self = Self(NSBezelStyle::AccessoryBar.0);
-    /// A bezel style with a glass effect
+    /// A bezel style that is typically used in table rows to display information about the row, such as a count.
     #[doc(alias = "NSBezelStyleRoundedDisclosure")]
     #[deprecated]
     pub const RoundedDisclosure: Self = Self(NSBezelStyle::PushDisclosure.0);
-    /// A bezel style with a glass effect
+    /// A bezel style that is typically used in table rows to display information about the row, such as a count.
     #[doc(alias = "NSBezelStyleInline")]
     #[deprecated]
     pub const Inline: Self = Self(NSBezelStyle::Badge.0);
@@ -196,179 +193,172 @@ impl NSButtonCell {
     extern_methods!(
         #[unsafe(method(initTextCell:))]
         #[unsafe(method_family = init)]
-        pub fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
+        pub unsafe fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(initImageCell:))]
         #[unsafe(method_family = init)]
-        pub fn initImageCell(this: Allocated<Self>, image: Option<&NSImage>) -> Retained<Self>;
+        pub unsafe fn initImageCell(
+            this: Allocated<Self>,
+            image: Option<&NSImage>,
+        ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
 
         #[unsafe(method(bezelStyle))]
         #[unsafe(method_family = none)]
-        pub fn bezelStyle(&self) -> NSBezelStyle;
+        pub unsafe fn bezelStyle(&self) -> NSBezelStyle;
 
         /// Setter for [`bezelStyle`][Self::bezelStyle].
         #[unsafe(method(setBezelStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setBezelStyle(&self, bezel_style: NSBezelStyle);
+        pub unsafe fn setBezelStyle(&self, bezel_style: NSBezelStyle);
 
         #[unsafe(method(setButtonType:))]
         #[unsafe(method_family = none)]
-        pub fn setButtonType(&self, r#type: NSButtonType);
+        pub unsafe fn setButtonType(&self, r#type: NSButtonType);
 
         #[unsafe(method(highlightsBy))]
         #[unsafe(method_family = none)]
-        pub fn highlightsBy(&self) -> NSCellStyleMask;
+        pub unsafe fn highlightsBy(&self) -> NSCellStyleMask;
 
         /// Setter for [`highlightsBy`][Self::highlightsBy].
         #[unsafe(method(setHighlightsBy:))]
         #[unsafe(method_family = none)]
-        pub fn setHighlightsBy(&self, highlights_by: NSCellStyleMask);
+        pub unsafe fn setHighlightsBy(&self, highlights_by: NSCellStyleMask);
 
         #[unsafe(method(showsStateBy))]
         #[unsafe(method_family = none)]
-        pub fn showsStateBy(&self) -> NSCellStyleMask;
+        pub unsafe fn showsStateBy(&self) -> NSCellStyleMask;
 
         /// Setter for [`showsStateBy`][Self::showsStateBy].
         #[unsafe(method(setShowsStateBy:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsStateBy(&self, shows_state_by: NSCellStyleMask);
+        pub unsafe fn setShowsStateBy(&self, shows_state_by: NSCellStyleMask);
 
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: Option<&NSString>);
+        pub unsafe fn setTitle(&self, title: Option<&NSString>);
 
         #[unsafe(method(attributedTitle))]
         #[unsafe(method_family = none)]
-        pub fn attributedTitle(&self) -> Retained<NSAttributedString>;
+        pub unsafe fn attributedTitle(&self) -> Retained<NSAttributedString>;
 
         /// Setter for [`attributedTitle`][Self::attributedTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAttributedTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributedTitle(&self, attributed_title: &NSAttributedString);
+        pub unsafe fn setAttributedTitle(&self, attributed_title: &NSAttributedString);
 
         #[unsafe(method(alternateTitle))]
         #[unsafe(method_family = none)]
-        pub fn alternateTitle(&self) -> Retained<NSString>;
+        pub unsafe fn alternateTitle(&self) -> Retained<NSString>;
 
         /// Setter for [`alternateTitle`][Self::alternateTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAlternateTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setAlternateTitle(&self, alternate_title: &NSString);
+        pub unsafe fn setAlternateTitle(&self, alternate_title: &NSString);
 
         #[unsafe(method(attributedAlternateTitle))]
         #[unsafe(method_family = none)]
-        pub fn attributedAlternateTitle(&self) -> Retained<NSAttributedString>;
+        pub unsafe fn attributedAlternateTitle(&self) -> Retained<NSAttributedString>;
 
         /// Setter for [`attributedAlternateTitle`][Self::attributedAlternateTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAttributedAlternateTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributedAlternateTitle(&self, attributed_alternate_title: &NSAttributedString);
+        pub unsafe fn setAttributedAlternateTitle(
+            &self,
+            attributed_alternate_title: &NSAttributedString,
+        );
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(alternateImage))]
         #[unsafe(method_family = none)]
-        pub fn alternateImage(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn alternateImage(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`alternateImage`][Self::alternateImage].
         #[unsafe(method(setAlternateImage:))]
         #[unsafe(method_family = none)]
-        pub fn setAlternateImage(&self, alternate_image: Option<&NSImage>);
+        pub unsafe fn setAlternateImage(&self, alternate_image: Option<&NSImage>);
 
         #[unsafe(method(imagePosition))]
         #[unsafe(method_family = none)]
-        pub fn imagePosition(&self) -> NSCellImagePosition;
+        pub unsafe fn imagePosition(&self) -> NSCellImagePosition;
 
         /// Setter for [`imagePosition`][Self::imagePosition].
         #[unsafe(method(setImagePosition:))]
         #[unsafe(method_family = none)]
-        pub fn setImagePosition(&self, image_position: NSCellImagePosition);
+        pub unsafe fn setImagePosition(&self, image_position: NSCellImagePosition);
 
         #[unsafe(method(imageScaling))]
         #[unsafe(method_family = none)]
-        pub fn imageScaling(&self) -> NSImageScaling;
+        pub unsafe fn imageScaling(&self) -> NSImageScaling;
 
         /// Setter for [`imageScaling`][Self::imageScaling].
         #[unsafe(method(setImageScaling:))]
         #[unsafe(method_family = none)]
-        pub fn setImageScaling(&self, image_scaling: NSImageScaling);
+        pub unsafe fn setImageScaling(&self, image_scaling: NSImageScaling);
 
         #[unsafe(method(keyEquivalent))]
         #[unsafe(method_family = none)]
-        pub fn keyEquivalent(&self) -> Retained<NSString>;
+        pub unsafe fn keyEquivalent(&self) -> Retained<NSString>;
 
         /// Setter for [`keyEquivalent`][Self::keyEquivalent].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setKeyEquivalent:))]
         #[unsafe(method_family = none)]
-        pub fn setKeyEquivalent(&self, key_equivalent: &NSString);
+        pub unsafe fn setKeyEquivalent(&self, key_equivalent: &NSString);
 
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(keyEquivalentModifierMask))]
         #[unsafe(method_family = none)]
-        pub fn keyEquivalentModifierMask(&self) -> NSEventModifierFlags;
+        pub unsafe fn keyEquivalentModifierMask(&self) -> NSEventModifierFlags;
 
         #[cfg(feature = "NSEvent")]
         /// Setter for [`keyEquivalentModifierMask`][Self::keyEquivalentModifierMask].
         #[unsafe(method(setKeyEquivalentModifierMask:))]
         #[unsafe(method_family = none)]
-        pub fn setKeyEquivalentModifierMask(
+        pub unsafe fn setKeyEquivalentModifierMask(
             &self,
             key_equivalent_modifier_mask: NSEventModifierFlags,
         );
 
         #[unsafe(method(isTransparent))]
         #[unsafe(method_family = none)]
-        pub fn isTransparent(&self) -> bool;
+        pub unsafe fn isTransparent(&self) -> bool;
 
         /// Setter for [`isTransparent`][Self::isTransparent].
         #[unsafe(method(setTransparent:))]
         #[unsafe(method_family = none)]
-        pub fn setTransparent(&self, transparent: bool);
+        pub unsafe fn setTransparent(&self, transparent: bool);
 
         #[unsafe(method(isOpaque))]
         #[unsafe(method_family = none)]
-        pub fn isOpaque(&self) -> bool;
+        pub unsafe fn isOpaque(&self) -> bool;
 
         #[unsafe(method(imageDimsWhenDisabled))]
         #[unsafe(method_family = none)]
-        pub fn imageDimsWhenDisabled(&self) -> bool;
+        pub unsafe fn imageDimsWhenDisabled(&self) -> bool;
 
         /// Setter for [`imageDimsWhenDisabled`][Self::imageDimsWhenDisabled].
         #[unsafe(method(setImageDimsWhenDisabled:))]
         #[unsafe(method_family = none)]
-        pub fn setImageDimsWhenDisabled(&self, image_dims_when_disabled: bool);
+        pub unsafe fn setImageDimsWhenDisabled(&self, image_dims_when_disabled: bool);
 
         #[unsafe(method(showsBorderOnlyWhileMouseInside))]
         #[unsafe(method_family = none)]
-        pub fn showsBorderOnlyWhileMouseInside(&self) -> bool;
+        pub unsafe fn showsBorderOnlyWhileMouseInside(&self) -> bool;
 
         /// Setter for [`showsBorderOnlyWhileMouseInside`][Self::showsBorderOnlyWhileMouseInside].
         #[unsafe(method(setShowsBorderOnlyWhileMouseInside:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsBorderOnlyWhileMouseInside(
+        pub unsafe fn setShowsBorderOnlyWhileMouseInside(
             &self,
             shows_border_only_while_mouse_inside: bool,
         );
@@ -376,35 +366,29 @@ impl NSButtonCell {
         #[cfg(feature = "NSSound")]
         #[unsafe(method(sound))]
         #[unsafe(method_family = none)]
-        pub fn sound(&self) -> Option<Retained<NSSound>>;
+        pub unsafe fn sound(&self) -> Option<Retained<NSSound>>;
 
         #[cfg(feature = "NSSound")]
         /// Setter for [`sound`][Self::sound].
         #[unsafe(method(setSound:))]
         #[unsafe(method_family = none)]
-        pub fn setSound(&self, sound: Option<&NSSound>);
+        pub unsafe fn setSound(&self, sound: Option<&NSSound>);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(backgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn backgroundColor(&self) -> Option<Retained<NSColor>>;
+        pub unsafe fn backgroundColor(&self) -> Option<Retained<NSColor>>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`backgroundColor`][Self::backgroundColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundColor(&self, background_color: Option<&NSColor>);
+        pub unsafe fn setBackgroundColor(&self, background_color: Option<&NSColor>);
 
         #[unsafe(method(setPeriodicDelay:interval:))]
         #[unsafe(method_family = none)]
-        pub fn setPeriodicDelay_interval(&self, delay: c_float, interval: c_float);
+        pub unsafe fn setPeriodicDelay_interval(&self, delay: c_float, interval: c_float);
 
-        /// # Safety
-        ///
-        /// - `delay` must be a valid pointer.
-        /// - `interval` must be a valid pointer.
         #[unsafe(method(getPeriodicDelay:interval:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getPeriodicDelay_interval(
@@ -413,9 +397,6 @@ impl NSButtonCell {
             interval: NonNull<c_float>,
         );
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(performClick:))]
         #[unsafe(method_family = none)]
         pub unsafe fn performClick(&self, sender: Option<&AnyObject>);
@@ -423,22 +404,22 @@ impl NSButtonCell {
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(mouseEntered:))]
         #[unsafe(method_family = none)]
-        pub fn mouseEntered(&self, event: &NSEvent);
+        pub unsafe fn mouseEntered(&self, event: &NSEvent);
 
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(mouseExited:))]
         #[unsafe(method_family = none)]
-        pub fn mouseExited(&self, event: &NSEvent);
+        pub unsafe fn mouseExited(&self, event: &NSEvent);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(drawBezelWithFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn drawBezelWithFrame_inView(&self, frame: NSRect, control_view: &NSView);
+        pub unsafe fn drawBezelWithFrame_inView(&self, frame: NSRect, control_view: &NSView);
 
         #[cfg(all(feature = "NSImage", feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(drawImage:withFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn drawImage_withFrame_inView(
+        pub unsafe fn drawImage_withFrame_inView(
             &self,
             image: &NSImage,
             frame: NSRect,
@@ -448,7 +429,7 @@ impl NSButtonCell {
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(drawTitle:withFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn drawTitle_withFrame_inView(
+        pub unsafe fn drawTitle_withFrame_inView(
             &self,
             title: &NSAttributedString,
             frame: NSRect,
@@ -463,7 +444,7 @@ impl NSButtonCell {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -473,7 +454,7 @@ impl NSButtonCell {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -485,19 +466,14 @@ impl NSButtonCell {
 pub struct NSGradientType(pub NSUInteger);
 impl NSGradientType {
     #[doc(alias = "NSGradientNone")]
-    #[deprecated]
     pub const None: Self = Self(0);
     #[doc(alias = "NSGradientConcaveWeak")]
-    #[deprecated]
     pub const ConcaveWeak: Self = Self(1);
     #[doc(alias = "NSGradientConcaveStrong")]
-    #[deprecated]
     pub const ConcaveStrong: Self = Self(2);
     #[doc(alias = "NSGradientConvexWeak")]
-    #[deprecated]
     pub const ConvexWeak: Self = Self(3);
     #[doc(alias = "NSGradientConvexStrong")]
-    #[deprecated]
     pub const ConvexStrong: Self = Self(4);
 }
 
@@ -510,118 +486,90 @@ unsafe impl RefEncode for NSGradientType {
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmomentarylightbutton?language=objc)
-#[deprecated]
 pub static NSMomentaryLightButton: NSButtonType = NSButtonType(NSButtonType::MomentaryLight.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nspushonpushoffbutton?language=objc)
-#[deprecated]
 pub static NSPushOnPushOffButton: NSButtonType = NSButtonType(NSButtonType::PushOnPushOff.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstogglebutton?language=objc)
-#[deprecated]
 pub static NSToggleButton: NSButtonType = NSButtonType(NSButtonType::Toggle.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsswitchbutton?language=objc)
-#[deprecated]
 pub static NSSwitchButton: NSButtonType = NSButtonType(NSButtonType::Switch.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsradiobutton?language=objc)
-#[deprecated]
 pub static NSRadioButton: NSButtonType = NSButtonType(NSButtonType::Radio.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmomentarychangebutton?language=objc)
-#[deprecated]
 pub static NSMomentaryChangeButton: NSButtonType = NSButtonType(NSButtonType::MomentaryChange.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsonoffbutton?language=objc)
-#[deprecated]
 pub static NSOnOffButton: NSButtonType = NSButtonType(NSButtonType::OnOff.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmomentarypushinbutton?language=objc)
-#[deprecated]
 pub static NSMomentaryPushInButton: NSButtonType = NSButtonType(NSButtonType::MomentaryPushIn.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsacceleratorbutton?language=objc)
-#[deprecated]
 pub static NSAcceleratorButton: NSButtonType = NSButtonType(NSButtonType::Accelerator.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmultilevelacceleratorbutton?language=objc)
-#[deprecated]
 pub static NSMultiLevelAcceleratorButton: NSButtonType =
     NSButtonType(NSButtonType::MultiLevelAccelerator.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmomentarypushbutton?language=objc)
-#[deprecated = "This constant is misnamed and has the same effect as NSButtonTypeMomentaryLight. Use that name instead, or switch to NSButtonTypeMomentaryPushIn."]
 pub static NSMomentaryPushButton: NSButtonType = NSButtonType(NSButtonType::MomentaryLight.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmomentarylight?language=objc)
-#[deprecated = "This constant is misnamed and has the same effect as NSButtonTypeMomentaryPushIn. Use that name instead, or switch to NSButtonTypeMomentaryLight."]
 pub static NSMomentaryLight: NSButtonType = NSButtonType(NSButtonType::MomentaryPushIn.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsroundedbezelstyle?language=objc)
-#[deprecated]
 pub static NSRoundedBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::Push.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsregularsquarebezelstyle?language=objc)
-#[deprecated]
 pub static NSRegularSquareBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::FlexiblePush.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsdisclosurebezelstyle?language=objc)
-#[deprecated]
 pub static NSDisclosureBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::Disclosure.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsshadowlesssquarebezelstyle?language=objc)
-#[deprecated]
 pub static NSShadowlessSquareBezelStyle: NSBezelStyle =
     NSBezelStyle(NSBezelStyle::ShadowlessSquare.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscircularbezelstyle?language=objc)
-#[deprecated]
 pub static NSCircularBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::Circular.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstexturedsquarebezelstyle?language=objc)
-#[deprecated]
 pub static NSTexturedSquareBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::TexturedSquare.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nshelpbuttonbezelstyle?language=objc)
-#[deprecated]
 pub static NSHelpButtonBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::HelpButton.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nssmallsquarebezelstyle?language=objc)
-#[deprecated]
 pub static NSSmallSquareBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::SmallSquare.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstexturedroundedbezelstyle?language=objc)
-#[deprecated]
 pub static NSTexturedRoundedBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::Toolbar.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsroundrectbezelstyle?language=objc)
-#[deprecated]
 pub static NSRoundRectBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::AccessoryBarAction.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsrecessedbezelstyle?language=objc)
-#[deprecated]
 pub static NSRecessedBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::AccessoryBar.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsroundeddisclosurebezelstyle?language=objc)
-#[deprecated]
 pub static NSRoundedDisclosureBezelStyle: NSBezelStyle =
     NSBezelStyle(NSBezelStyle::PushDisclosure.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsinlinebezelstyle?language=objc)
-#[deprecated]
 pub static NSInlineBezelStyle: NSBezelStyle = NSBezelStyle(NSBezelStyle::Badge.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nssmalliconbuttonbezelstyle?language=objc)
-#[deprecated = "This bezel style is obsolete and should not be used."]
 pub static NSSmallIconButtonBezelStyle: NSBezelStyle = NSBezelStyle(2);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsthicksquarebezelstyle?language=objc)
-#[deprecated]
 pub static NSThickSquareBezelStyle: NSBezelStyle = NSBezelStyle(3);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsthickersquarebezelstyle?language=objc)
-#[deprecated]
 pub static NSThickerSquareBezelStyle: NSBezelStyle = NSBezelStyle(4);
 
 /// NSDeprecated.
@@ -631,25 +579,19 @@ impl NSButtonCell {
         #[deprecated = "The gradientType property is unused, and setting it has no effect."]
         #[unsafe(method(gradientType))]
         #[unsafe(method_family = none)]
-        pub fn gradientType(&self) -> NSGradientType;
+        pub unsafe fn gradientType(&self) -> NSGradientType;
 
         /// Setter for [`gradientType`][Self::gradientType].
         #[deprecated = "The gradientType property is unused, and setting it has no effect."]
         #[unsafe(method(setGradientType:))]
         #[unsafe(method_family = none)]
-        pub fn setGradientType(&self, gradient_type: NSGradientType);
+        pub unsafe fn setGradientType(&self, gradient_type: NSGradientType);
 
-        /// # Safety
-        ///
-        /// `string_with_ampersand` might not allow `None`.
         #[deprecated = "Mnemonics are not used on macOS. Set the title property directly instead."]
         #[unsafe(method(setTitleWithMnemonic:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTitleWithMnemonic(&self, string_with_ampersand: Option<&NSString>);
 
-        /// # Safety
-        ///
-        /// `string_with_ampersand` might not allow `None`.
         #[deprecated = "Mnemonics are not used on macOS. Set the alternateTitle property directly instead."]
         #[unsafe(method(setAlternateTitleWithMnemonic:))]
         #[unsafe(method_family = none)]
@@ -661,35 +603,35 @@ impl NSButtonCell {
         #[deprecated = "Mnemonics are not used on macOS. Calling this method has no effect."]
         #[unsafe(method(setAlternateMnemonicLocation:))]
         #[unsafe(method_family = none)]
-        pub fn setAlternateMnemonicLocation(&self, location: NSUInteger);
+        pub unsafe fn setAlternateMnemonicLocation(&self, location: NSUInteger);
 
         #[deprecated = "Mnemonics are not used on macOS. This property always returns NSNotFound."]
         #[unsafe(method(alternateMnemonicLocation))]
         #[unsafe(method_family = none)]
-        pub fn alternateMnemonicLocation(&self) -> NSUInteger;
+        pub unsafe fn alternateMnemonicLocation(&self) -> NSUInteger;
 
         #[deprecated = "Mnemonics are not used on macOS. This property always returns an empty string."]
         #[unsafe(method(alternateMnemonic))]
         #[unsafe(method_family = none)]
-        pub fn alternateMnemonic(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn alternateMnemonic(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSFont")]
         #[deprecated = "The keyEquivalentFont property is no longer used. It always returns the NSButtonCell's font, and setting it has no effect."]
         #[unsafe(method(keyEquivalentFont))]
         #[unsafe(method_family = none)]
-        pub fn keyEquivalentFont(&self) -> Option<Retained<NSFont>>;
+        pub unsafe fn keyEquivalentFont(&self) -> Option<Retained<NSFont>>;
 
         #[cfg(feature = "NSFont")]
         /// Setter for [`keyEquivalentFont`][Self::keyEquivalentFont].
         #[deprecated = "The keyEquivalentFont property is no longer used. It always returns the NSButtonCell's font, and setting it has no effect."]
         #[unsafe(method(setKeyEquivalentFont:))]
         #[unsafe(method_family = none)]
-        pub fn setKeyEquivalentFont(&self, key_equivalent_font: Option<&NSFont>);
+        pub unsafe fn setKeyEquivalentFont(&self, key_equivalent_font: Option<&NSFont>);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[deprecated = "The keyEquivalentFont property is no longer used. Setting it has no effect."]
         #[unsafe(method(setKeyEquivalentFont:size:))]
         #[unsafe(method_family = none)]
-        pub fn setKeyEquivalentFont_size(&self, font_name: &NSString, font_size: CGFloat);
+        pub unsafe fn setKeyEquivalentFont_size(&self, font_name: &NSString, font_size: CGFloat);
     );
 }

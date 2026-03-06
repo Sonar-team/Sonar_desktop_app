@@ -22,10 +22,6 @@ extern_class!(
     pub struct CIKernel;
 );
 
-unsafe impl Send for CIKernel {}
-
-unsafe impl Sync for CIKernel {}
-
 extern_conformance!(
     unsafe impl NSObjectProtocol for CIKernel {}
 );
@@ -73,9 +69,6 @@ impl CIKernel {
         #[unsafe(method_family = none)]
         pub unsafe fn name(&self) -> Retained<NSString>;
 
-        /// # Safety
-        ///
-        /// `method` must be a valid selector.
         #[unsafe(method(setROISelector:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setROISelector(&self, method: Sel);
@@ -85,10 +78,6 @@ impl CIKernel {
             feature = "block2",
             feature = "objc2-core-foundation"
         ))]
-        /// # Safety
-        ///
-        /// - `callback` must be a valid pointer.
-        /// - `args` generic should be of the correct type.
         #[unsafe(method(applyWithExtent:roiCallback:arguments:))]
         #[unsafe(method_family = none)]
         pub unsafe fn applyWithExtent_roiCallback_arguments(
@@ -120,10 +109,6 @@ extern_class!(
     pub struct CIColorKernel;
 );
 
-unsafe impl Send for CIColorKernel {}
-
-unsafe impl Sync for CIColorKernel {}
-
 extern_conformance!(
     unsafe impl NSObjectProtocol for CIColorKernel {}
 );
@@ -136,9 +121,6 @@ impl CIColorKernel {
         pub unsafe fn kernelWithString(string: &NSString) -> Option<Retained<Self>>;
 
         #[cfg(all(feature = "CIImage", feature = "objc2-core-foundation"))]
-        /// # Safety
-        ///
-        /// `args` generic should be of the correct type.
         #[unsafe(method(applyWithExtent:arguments:))]
         #[unsafe(method_family = none)]
         pub unsafe fn applyWithExtent_arguments(
@@ -190,10 +172,6 @@ extern_class!(
     pub struct CIWarpKernel;
 );
 
-unsafe impl Send for CIWarpKernel {}
-
-unsafe impl Sync for CIWarpKernel {}
-
 extern_conformance!(
     unsafe impl NSObjectProtocol for CIWarpKernel {}
 );
@@ -210,10 +188,6 @@ impl CIWarpKernel {
             feature = "block2",
             feature = "objc2-core-foundation"
         ))]
-        /// # Safety
-        ///
-        /// - `callback` must be a valid pointer.
-        /// - `args` generic should be of the correct type.
         #[unsafe(method(applyWithExtent:roiCallback:inputImage:arguments:))]
         #[unsafe(method_family = none)]
         pub unsafe fn applyWithExtent_roiCallback_inputImage_arguments(
@@ -266,10 +240,6 @@ extern_class!(
     #[derive(Debug, PartialEq, Eq, Hash)]
     pub struct CIBlendKernel;
 );
-
-unsafe impl Send for CIBlendKernel {}
-
-unsafe impl Sync for CIBlendKernel {}
 
 extern_conformance!(
     unsafe impl NSObjectProtocol for CIBlendKernel {}

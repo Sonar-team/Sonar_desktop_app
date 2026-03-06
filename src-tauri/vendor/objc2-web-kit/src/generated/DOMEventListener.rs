@@ -14,9 +14,6 @@ extern_protocol!(
             feature = "DOMObject",
             feature = "WebScriptObject"
         ))]
-        /// # Safety
-        ///
-        /// `event` might not allow `None`.
         #[deprecated]
         #[unsafe(method(handleEvent:))]
         #[unsafe(method_family = none)]

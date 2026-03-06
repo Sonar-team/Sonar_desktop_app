@@ -60,8 +60,6 @@ impl DOMCSSStyleRule {
         pub unsafe fn selectorText(&self) -> Retained<NSString>;
 
         /// Setter for [`selectorText`][Self::selectorText].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setSelectorText:))]
         #[unsafe(method_family = none)]

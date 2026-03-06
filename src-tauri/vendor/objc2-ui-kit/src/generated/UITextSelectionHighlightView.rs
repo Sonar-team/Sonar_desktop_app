@@ -23,12 +23,12 @@ extern_protocol!(
         /// receiver's coordinate space.
         #[unsafe(method(selectionRects))]
         #[unsafe(method_family = none)]
-        fn selectionRects(&self) -> Retained<NSArray<UITextSelectionRect>>;
+        unsafe fn selectionRects(&self) -> Retained<NSArray<UITextSelectionRect>>;
 
         #[cfg(feature = "UITextInput")]
         /// Setter for [`selectionRects`][Self::selectionRects].
         #[unsafe(method(setSelectionRects:))]
         #[unsafe(method_family = none)]
-        fn setSelectionRects(&self, selection_rects: &NSArray<UITextSelectionRect>);
+        unsafe fn setSelectionRects(&self, selection_rects: &NSArray<UITextSelectionRect>);
     }
 );

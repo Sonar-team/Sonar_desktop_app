@@ -177,7 +177,6 @@ extern "C" {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uiimagepickercontrollerreferenceurl?language=objc)
-    #[deprecated = "Will be removed in a future release, use PHPicker."]
     pub static UIImagePickerControllerReferenceURL: &'static UIImagePickerControllerInfoKey;
 }
 
@@ -193,7 +192,6 @@ extern "C" {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uiimagepickercontrollerphasset?language=objc)
-    #[deprecated = "Will be removed in a future release, use PHPicker."]
     pub static UIImagePickerControllerPHAsset: &'static UIImagePickerControllerInfoKey;
 }
 
@@ -290,42 +288,42 @@ impl UIImagePickerController {
     extern_methods!(
         #[unsafe(method(isSourceTypeAvailable:))]
         #[unsafe(method_family = none)]
-        pub fn isSourceTypeAvailable(
+        pub unsafe fn isSourceTypeAvailable(
             source_type: UIImagePickerControllerSourceType,
             mtm: MainThreadMarker,
         ) -> bool;
 
         #[unsafe(method(availableMediaTypesForSourceType:))]
         #[unsafe(method_family = none)]
-        pub fn availableMediaTypesForSourceType(
+        pub unsafe fn availableMediaTypesForSourceType(
             source_type: UIImagePickerControllerSourceType,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSArray<NSString>>>;
 
         #[unsafe(method(isCameraDeviceAvailable:))]
         #[unsafe(method_family = none)]
-        pub fn isCameraDeviceAvailable(
+        pub unsafe fn isCameraDeviceAvailable(
             camera_device: UIImagePickerControllerCameraDevice,
             mtm: MainThreadMarker,
         ) -> bool;
 
         #[unsafe(method(isFlashAvailableForCameraDevice:))]
         #[unsafe(method_family = none)]
-        pub fn isFlashAvailableForCameraDevice(
+        pub unsafe fn isFlashAvailableForCameraDevice(
             camera_device: UIImagePickerControllerCameraDevice,
             mtm: MainThreadMarker,
         ) -> bool;
 
         #[unsafe(method(availableCaptureModesForCameraDevice:))]
         #[unsafe(method_family = none)]
-        pub fn availableCaptureModesForCameraDevice(
+        pub unsafe fn availableCaptureModesForCameraDevice(
             camera_device: UIImagePickerControllerCameraDevice,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSArray<NSNumber>>>;
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<
             Retained<
@@ -333,13 +331,8 @@ impl UIImagePickerController {
             >,
         >;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `delegate` should be of the correct type.
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(
@@ -351,161 +344,160 @@ impl UIImagePickerController {
 
         #[unsafe(method(sourceType))]
         #[unsafe(method_family = none)]
-        pub fn sourceType(&self) -> UIImagePickerControllerSourceType;
+        pub unsafe fn sourceType(&self) -> UIImagePickerControllerSourceType;
 
         /// Setter for [`sourceType`][Self::sourceType].
         #[unsafe(method(setSourceType:))]
         #[unsafe(method_family = none)]
-        pub fn setSourceType(&self, source_type: UIImagePickerControllerSourceType);
+        pub unsafe fn setSourceType(&self, source_type: UIImagePickerControllerSourceType);
 
         #[unsafe(method(mediaTypes))]
         #[unsafe(method_family = none)]
-        pub fn mediaTypes(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn mediaTypes(&self) -> Retained<NSArray<NSString>>;
 
         /// Setter for [`mediaTypes`][Self::mediaTypes].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setMediaTypes:))]
         #[unsafe(method_family = none)]
-        pub fn setMediaTypes(&self, media_types: &NSArray<NSString>);
+        pub unsafe fn setMediaTypes(&self, media_types: &NSArray<NSString>);
 
         #[unsafe(method(allowsEditing))]
         #[unsafe(method_family = none)]
-        pub fn allowsEditing(&self) -> bool;
+        pub unsafe fn allowsEditing(&self) -> bool;
 
         /// Setter for [`allowsEditing`][Self::allowsEditing].
         #[unsafe(method(setAllowsEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsEditing(&self, allows_editing: bool);
+        pub unsafe fn setAllowsEditing(&self, allows_editing: bool);
 
         #[deprecated]
         #[unsafe(method(allowsImageEditing))]
         #[unsafe(method_family = none)]
-        pub fn allowsImageEditing(&self) -> bool;
+        pub unsafe fn allowsImageEditing(&self) -> bool;
 
         /// Setter for [`allowsImageEditing`][Self::allowsImageEditing].
         #[deprecated]
         #[unsafe(method(setAllowsImageEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsImageEditing(&self, allows_image_editing: bool);
+        pub unsafe fn setAllowsImageEditing(&self, allows_image_editing: bool);
 
         #[deprecated = "Will be removed in a future release, use PHPicker."]
         #[unsafe(method(imageExportPreset))]
         #[unsafe(method_family = none)]
-        pub fn imageExportPreset(&self) -> UIImagePickerControllerImageURLExportPreset;
+        pub unsafe fn imageExportPreset(&self) -> UIImagePickerControllerImageURLExportPreset;
 
         /// Setter for [`imageExportPreset`][Self::imageExportPreset].
         #[deprecated = "Will be removed in a future release, use PHPicker."]
         #[unsafe(method(setImageExportPreset:))]
         #[unsafe(method_family = none)]
-        pub fn setImageExportPreset(
+        pub unsafe fn setImageExportPreset(
             &self,
             image_export_preset: UIImagePickerControllerImageURLExportPreset,
         );
 
         #[unsafe(method(videoMaximumDuration))]
         #[unsafe(method_family = none)]
-        pub fn videoMaximumDuration(&self) -> NSTimeInterval;
+        pub unsafe fn videoMaximumDuration(&self) -> NSTimeInterval;
 
         /// Setter for [`videoMaximumDuration`][Self::videoMaximumDuration].
         #[unsafe(method(setVideoMaximumDuration:))]
         #[unsafe(method_family = none)]
-        pub fn setVideoMaximumDuration(&self, video_maximum_duration: NSTimeInterval);
+        pub unsafe fn setVideoMaximumDuration(&self, video_maximum_duration: NSTimeInterval);
 
         #[unsafe(method(videoQuality))]
         #[unsafe(method_family = none)]
-        pub fn videoQuality(&self) -> UIImagePickerControllerQualityType;
+        pub unsafe fn videoQuality(&self) -> UIImagePickerControllerQualityType;
 
         /// Setter for [`videoQuality`][Self::videoQuality].
         #[unsafe(method(setVideoQuality:))]
         #[unsafe(method_family = none)]
-        pub fn setVideoQuality(&self, video_quality: UIImagePickerControllerQualityType);
+        pub unsafe fn setVideoQuality(&self, video_quality: UIImagePickerControllerQualityType);
 
         #[deprecated = "Will be removed in a future release, use PHPicker."]
         #[unsafe(method(videoExportPreset))]
         #[unsafe(method_family = none)]
-        pub fn videoExportPreset(&self) -> Retained<NSString>;
+        pub unsafe fn videoExportPreset(&self) -> Retained<NSString>;
 
         /// Setter for [`videoExportPreset`][Self::videoExportPreset].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated = "Will be removed in a future release, use PHPicker."]
         #[unsafe(method(setVideoExportPreset:))]
         #[unsafe(method_family = none)]
-        pub fn setVideoExportPreset(&self, video_export_preset: &NSString);
+        pub unsafe fn setVideoExportPreset(&self, video_export_preset: &NSString);
 
         #[unsafe(method(showsCameraControls))]
         #[unsafe(method_family = none)]
-        pub fn showsCameraControls(&self) -> bool;
+        pub unsafe fn showsCameraControls(&self) -> bool;
 
         /// Setter for [`showsCameraControls`][Self::showsCameraControls].
         #[unsafe(method(setShowsCameraControls:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsCameraControls(&self, shows_camera_controls: bool);
+        pub unsafe fn setShowsCameraControls(&self, shows_camera_controls: bool);
 
         #[cfg(feature = "UIView")]
         #[unsafe(method(cameraOverlayView))]
         #[unsafe(method_family = none)]
-        pub fn cameraOverlayView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn cameraOverlayView(&self) -> Option<Retained<UIView>>;
 
         #[cfg(feature = "UIView")]
         /// Setter for [`cameraOverlayView`][Self::cameraOverlayView].
         #[unsafe(method(setCameraOverlayView:))]
         #[unsafe(method_family = none)]
-        pub fn setCameraOverlayView(&self, camera_overlay_view: Option<&UIView>);
+        pub unsafe fn setCameraOverlayView(&self, camera_overlay_view: Option<&UIView>);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(cameraViewTransform))]
         #[unsafe(method_family = none)]
-        pub fn cameraViewTransform(&self) -> CGAffineTransform;
+        pub unsafe fn cameraViewTransform(&self) -> CGAffineTransform;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`cameraViewTransform`][Self::cameraViewTransform].
         #[unsafe(method(setCameraViewTransform:))]
         #[unsafe(method_family = none)]
-        pub fn setCameraViewTransform(&self, camera_view_transform: CGAffineTransform);
+        pub unsafe fn setCameraViewTransform(&self, camera_view_transform: CGAffineTransform);
 
         #[unsafe(method(takePicture))]
         #[unsafe(method_family = none)]
-        pub fn takePicture(&self);
+        pub unsafe fn takePicture(&self);
 
         #[unsafe(method(startVideoCapture))]
         #[unsafe(method_family = none)]
-        pub fn startVideoCapture(&self) -> bool;
+        pub unsafe fn startVideoCapture(&self) -> bool;
 
         #[unsafe(method(stopVideoCapture))]
         #[unsafe(method_family = none)]
-        pub fn stopVideoCapture(&self);
+        pub unsafe fn stopVideoCapture(&self);
 
         #[unsafe(method(cameraCaptureMode))]
         #[unsafe(method_family = none)]
-        pub fn cameraCaptureMode(&self) -> UIImagePickerControllerCameraCaptureMode;
+        pub unsafe fn cameraCaptureMode(&self) -> UIImagePickerControllerCameraCaptureMode;
 
         /// Setter for [`cameraCaptureMode`][Self::cameraCaptureMode].
         #[unsafe(method(setCameraCaptureMode:))]
         #[unsafe(method_family = none)]
-        pub fn setCameraCaptureMode(
+        pub unsafe fn setCameraCaptureMode(
             &self,
             camera_capture_mode: UIImagePickerControllerCameraCaptureMode,
         );
 
         #[unsafe(method(cameraDevice))]
         #[unsafe(method_family = none)]
-        pub fn cameraDevice(&self) -> UIImagePickerControllerCameraDevice;
+        pub unsafe fn cameraDevice(&self) -> UIImagePickerControllerCameraDevice;
 
         /// Setter for [`cameraDevice`][Self::cameraDevice].
         #[unsafe(method(setCameraDevice:))]
         #[unsafe(method_family = none)]
-        pub fn setCameraDevice(&self, camera_device: UIImagePickerControllerCameraDevice);
+        pub unsafe fn setCameraDevice(&self, camera_device: UIImagePickerControllerCameraDevice);
 
         #[unsafe(method(cameraFlashMode))]
         #[unsafe(method_family = none)]
-        pub fn cameraFlashMode(&self) -> UIImagePickerControllerCameraFlashMode;
+        pub unsafe fn cameraFlashMode(&self) -> UIImagePickerControllerCameraFlashMode;
 
         /// Setter for [`cameraFlashMode`][Self::cameraFlashMode].
         #[unsafe(method(setCameraFlashMode:))]
         #[unsafe(method_family = none)]
-        pub fn setCameraFlashMode(&self, camera_flash_mode: UIImagePickerControllerCameraFlashMode);
+        pub unsafe fn setCameraFlashMode(
+            &self,
+            camera_flash_mode: UIImagePickerControllerCameraFlashMode,
+        );
     );
 }
 
@@ -517,10 +509,6 @@ impl UIImagePickerController {
 ))]
 impl UIImagePickerController {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `navigation_bar_class` probably has further requirements.
-        /// - `toolbar_class` probably has further requirements.
         #[unsafe(method(initWithNavigationBarClass:toolbarClass:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithNavigationBarClass_toolbarClass(
@@ -531,22 +519,19 @@ impl UIImagePickerController {
 
         #[unsafe(method(initWithRootViewController:))]
         #[unsafe(method_family = init)]
-        pub fn initWithRootViewController(
+        pub unsafe fn initWithRootViewController(
             this: Allocated<Self>,
             root_view_controller: &UIViewController,
         ) -> Retained<Self>;
 
         #[unsafe(method(initWithNibName:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibName_bundle(
+        pub unsafe fn initWithNibName_bundle(
             this: Allocated<Self>,
             nib_name_or_nil: Option<&NSString>,
             nib_bundle_or_nil: Option<&NSBundle>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `a_decoder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -566,11 +551,11 @@ impl UIImagePickerController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -585,9 +570,6 @@ extern_protocol!(
             feature = "UIResponder",
             feature = "UIViewController"
         ))]
-        /// # Safety
-        ///
-        /// `editing_info` generic should be of the correct type.
         #[deprecated]
         #[optional]
         #[unsafe(method(imagePickerController:didFinishPickingImage:editingInfo:))]
@@ -604,9 +586,6 @@ extern_protocol!(
             feature = "UIResponder",
             feature = "UIViewController"
         ))]
-        /// # Safety
-        ///
-        /// `info` generic should be of the correct type.
         #[optional]
         #[unsafe(method(imagePickerController:didFinishPickingMediaWithInfo:))]
         #[unsafe(method_family = none)]
@@ -624,22 +603,17 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(imagePickerControllerDidCancel:))]
         #[unsafe(method_family = none)]
-        fn imagePickerControllerDidCancel(&self, picker: &UIImagePickerController);
+        unsafe fn imagePickerControllerDidCancel(&self, picker: &UIImagePickerController);
     }
 );
 
 #[cfg(feature = "UIImage")]
 impl UIImage {
-    /// # Safety
-    ///
-    /// - `completion_target` should be of the correct type.
-    /// - `completion_selector` must be a valid selector.
-    /// - `context_info` must be a valid pointer or null.
     #[doc(alias = "UIImageWriteToSavedPhotosAlbum")]
     #[cfg(feature = "UIImage")]
     #[inline]
     pub unsafe fn write_to_saved_photos_album(
-        &self,
+        self: &UIImage,
         completion_target: Option<&AnyObject>,
         completion_selector: Option<Sel>,
         context_info: *mut c_void,
@@ -664,7 +638,7 @@ impl UIImage {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(
+pub unsafe extern "C-unwind" fn UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(
     video_path: &NSString,
 ) -> bool {
     extern "C-unwind" {
@@ -674,11 +648,6 @@ pub extern "C-unwind" fn UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `completion_target` should be of the correct type.
-    /// - `completion_selector` must be a valid selector.
-    /// - `context_info` must be a valid pointer or null.
     pub fn UISaveVideoAtPathToSavedPhotosAlbum(
         video_path: &NSString,
         completion_target: Option<&AnyObject>,

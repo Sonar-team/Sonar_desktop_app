@@ -10,7 +10,7 @@ jobs:
     name: Tidy Code
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v4
     - uses: hecrj/setup-rust-action@v2
       with:
         rust-version: stable
@@ -25,71 +25,13 @@ jobs:
     - name: Run Typos
       run: typos
 
-  msrv:
-    name: MSRV
-    needs: fmt
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        # Android
-        - target: aarch64-linux-android
-
-        # CoreGraphics
-        - target: aarch64-apple-darwin
-        - target: x86_64-apple-ios
-
-        # Orbital (doesn't follow MSRV)
-        # - target: x86_64-unknown-redox
-
-        # Wayland, KMS/DRM, X11
-        - target: i686-unknown-linux-gnu
-        - target: x86_64-unknown-linux-gnu
-        - target: x86_64-unknown-linux-gnu
-          features: "x11,x11-dlopen"
-        - target: x86_64-unknown-linux-gnu
-          features: "wayland,wayland-dlopen"
-        - target: x86_64-unknown-linux-gnu
-          features: "kms"
-        - target: x86_64-unknown-freebsd
-        - target: x86_64-unknown-netbsd
-          features: "x11,x11-dlopen,wayland,wayland-dlopen"
-
-        # Web
-        - target: wasm32-unknown-unknown
-
-        # Win32
-        - target: x86_64-pc-windows-msvc
-        - target: x86_64-pc-windows-gnu
-
-    steps:
-    - uses: actions/checkout@v6
-    - uses: hecrj/setup-rust-action@v2
-      with:
-        rust-version: '1.71.1'
-        targets: ${{ matrix.target }}
-
-    - name: Use minimal dependency versions
-      # By downgrading all our dependency versions, we ensure that our minimum
-      # version bounds are actually adequate (i.e. users can build `softbuffer`
-      # with minimal versions themselves) and opt-out of any unexpected MSRV
-      # bumps in semver-compatible releases of downstream crates.
-      #
-      # RUSTC_BOOTSTRAP=1 is kind of a hack, but it's cumbersome and slow to
-      # install the nightly toolchain.
-      run: RUSTC_BOOTSTRAP=1 cargo -Zminimal-versions generate-lockfile
-
-    - name: Check that crate compiles
-      run: cargo check --verbose --target ${{ matrix.target }} ${{ matrix.features && '--no-default-features --features' }} ${{ matrix.features }}
-
   tests:
     name: Tests
     needs: fmt
     strategy:
       fail-fast: false
       matrix:
-        rust_version: [stable, nightly]
+        rust_version: ['1.70.0', stable, nightly]
         platform:
           - { target: x86_64-pc-windows-msvc,   os: windows-latest,  }
           - { target: i686-pc-windows-msvc,     os: windows-latest,  }
@@ -107,6 +49,10 @@ jobs:
           - { target: x86_64-unknown-netbsd,    os: ubuntu-latest, options: --no-default-features, features: "x11,x11-dlopen,wayland,wayland-dlopen"  }
           - { target: aarch64-apple-darwin,     os: macos-latest,    }
           - { target: wasm32-unknown-unknown,   os: ubuntu-latest,   }
+        exclude:
+          # Orbital doesn't follow MSRV
+          - rust_version: '1.70.0'
+            platform: { target: x86_64-unknown-redox, os: ubuntu-latest }
         include:
           - rust_version: nightly
             platform: { target: wasm32-unknown-unknown, os: ubuntu-latest, options: "-Zbuild-std=panic_abort,std", rustflags: "-Ctarget-feature=+atomics,+bulk-memory" }
@@ -118,17 +64,14 @@ jobs:
       RUST_BACKTRACE: 1
       CARGO_INCREMENTAL: 0
       RUSTFLAGS: "-C debuginfo=0 --deny warnings ${{ matrix.platform.rustflags }}"
-      # Disable doc tests on Rust 1.83, since some path handling regressed there.
-      # This has been fixed in Rust 1.84 beta.
-      # https://github.com/rust-lang/rust/issues/132203
-      OPTIONS: ${{ matrix.platform.options }} ${{ matrix.rust_version == 'stable' && '--lib' || '' }}
+      OPTIONS: ${{ matrix.platform.options }}
       FEATURES: ${{ format(',{0}', matrix.platform.features ) }}
       CMD: ${{ matrix.platform.cmd }}
       RUSTDOCFLAGS: -Dwarnings
 
     runs-on: ${{ matrix.platform.os }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v4
 
     - uses: taiki-e/install-action@v2
       if: matrix.platform.target == 'wasm32-unknown-unknown'
@@ -148,6 +91,12 @@ jobs:
     - name: Install GCC Multilib
       if: (matrix.platform.os == 'ubuntu-latest') && contains(matrix.platform.target, 'i686')
       run: sudo apt-get install gcc-multilib
+
+    - name: Pin deps that break MSRV
+      if: matrix.rust_version == '1.70.0'
+      run: |
+        cargo update -p ahash --precise 0.8.7
+        cargo update -p bumpalo --precise 3.14.0
 
     - name: Build crate
       shell: bash

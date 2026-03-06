@@ -15,6 +15,7 @@
 #![allow(clippy::doc_lazy_continuation)]
 #![allow(rustdoc::broken_intra_doc_links)]
 #![allow(rustdoc::bare_urls)]
+#![allow(rustdoc::unportable_markdown)]
 #![allow(rustdoc::invalid_html_tags)]
 
 #[link(name = "UIKit", kind = "framework")]
@@ -212,9 +213,6 @@ mod __UIAttachmentBehavior;
 #[cfg(feature = "UIBackgroundConfiguration")]
 #[path = "UIBackgroundConfiguration.rs"]
 mod __UIBackgroundConfiguration;
-#[cfg(feature = "UIBackgroundExtensionView")]
-#[path = "UIBackgroundExtensionView.rs"]
-mod __UIBackgroundExtensionView;
 #[cfg(feature = "UIBandSelectionInteraction")]
 #[path = "UIBandSelectionInteraction.rs"]
 mod __UIBandSelectionInteraction;
@@ -227,9 +225,6 @@ mod __UIBarButtonItem;
 #[cfg(feature = "UIBarButtonItemAppearance")]
 #[path = "UIBarButtonItemAppearance.rs"]
 mod __UIBarButtonItemAppearance;
-#[cfg(feature = "UIBarButtonItemBadge")]
-#[path = "UIBarButtonItemBadge.rs"]
-mod __UIBarButtonItemBadge;
 #[cfg(feature = "UIBarButtonItemGroup")]
 #[path = "UIBarButtonItemGroup.rs"]
 mod __UIBarButtonItemGroup;
@@ -371,9 +366,6 @@ mod __UIContextMenuConfiguration;
 #[cfg(feature = "UIContextMenuInteraction")]
 #[path = "UIContextMenuInteraction.rs"]
 mod __UIContextMenuInteraction;
-#[cfg(feature = "UIContextMenuSystem")]
-#[path = "UIContextMenuSystem.rs"]
-mod __UIContextMenuSystem;
 #[cfg(feature = "UIContextualAction")]
 #[path = "UIContextualAction.rs"]
 mod __UIContextualAction;
@@ -386,12 +378,6 @@ mod __UIConversationContext;
 #[cfg(feature = "UIConversationEntry")]
 #[path = "UIConversationEntry.rs"]
 mod __UIConversationEntry;
-#[cfg(feature = "UICornerConfiguration")]
-#[path = "UICornerConfiguration.rs"]
-mod __UICornerConfiguration;
-#[cfg(feature = "UICornerRadius")]
-#[path = "UICornerRadius.rs"]
-mod __UICornerRadius;
 #[cfg(feature = "UIDataDetectors")]
 #[path = "UIDataDetectors.rs"]
 mod __UIDataDetectors;
@@ -500,9 +486,6 @@ mod __UIFocusAnimationCoordinator;
 #[cfg(feature = "UIFocusDebugger")]
 #[path = "UIFocusDebugger.rs"]
 mod __UIFocusDebugger;
-#[cfg(feature = "UIFocusDefines")]
-#[path = "UIFocusDefines.rs"]
-mod __UIFocusDefines;
 #[cfg(feature = "UIFocusEffect")]
 #[path = "UIFocusEffect.rs"]
 mod __UIFocusEffect;
@@ -515,12 +498,6 @@ mod __UIFocusMovementHint;
 #[cfg(feature = "UIFocusSystem")]
 #[path = "UIFocusSystem.rs"]
 mod __UIFocusSystem;
-#[cfg(feature = "UIFocusSystem_UIKitAdditions")]
-#[path = "UIFocusSystem_UIKitAdditions.rs"]
-mod __UIFocusSystem_UIKitAdditions;
-#[cfg(feature = "UIFocusUpdateContext_UIKitAdditions")]
-#[path = "UIFocusUpdateContext_UIKitAdditions.rs"]
-mod __UIFocusUpdateContext_UIKitAdditions;
 #[cfg(feature = "UIFont")]
 #[path = "UIFont.rs"]
 mod __UIFont;
@@ -548,9 +525,6 @@ mod __UIGestureRecognizer;
 #[cfg(feature = "UIGestureRecognizerSubclass")]
 #[path = "UIGestureRecognizerSubclass.rs"]
 mod __UIGestureRecognizerSubclass;
-#[cfg(feature = "UIGlassEffect")]
-#[path = "UIGlassEffect.rs"]
-mod __UIGlassEffect;
 #[cfg(feature = "UIGraphics")]
 #[path = "UIGraphics.rs"]
 mod __UIGraphics;
@@ -689,9 +663,6 @@ mod __UIMailConversationContext;
 #[cfg(feature = "UIMailConversationEntry")]
 #[path = "UIMailConversationEntry.rs"]
 mod __UIMailConversationEntry;
-#[cfg(feature = "UIMainMenuSystem")]
-#[path = "UIMainMenuSystem.rs"]
-mod __UIMainMenuSystem;
 #[cfg(feature = "UIManagedDocument")]
 #[path = "UIManagedDocument.rs"]
 mod __UIManagedDocument;
@@ -890,15 +861,9 @@ mod __UIScene;
 #[cfg(feature = "UISceneActivationConditions")]
 #[path = "UISceneActivationConditions.rs"]
 mod __UISceneActivationConditions;
-#[cfg(feature = "UISceneConfiguration")]
-#[path = "UISceneConfiguration.rs"]
-mod __UISceneConfiguration;
 #[cfg(feature = "UISceneDefinitions")]
 #[path = "UISceneDefinitions.rs"]
 mod __UISceneDefinitions;
-#[cfg(feature = "UISceneDestructionCondition")]
-#[path = "UISceneDestructionCondition.rs"]
-mod __UISceneDestructionCondition;
 #[cfg(feature = "UISceneEnhancedStateRestoration")]
 #[path = "UISceneEnhancedStateRestoration.rs"]
 mod __UISceneEnhancedStateRestoration;
@@ -911,18 +876,12 @@ mod __UISceneSession;
 #[cfg(feature = "UISceneSessionActivationRequest")]
 #[path = "UISceneSessionActivationRequest.rs"]
 mod __UISceneSessionActivationRequest;
-#[cfg(feature = "UISceneSizeRestrictions")]
-#[path = "UISceneSizeRestrictions.rs"]
-mod __UISceneSizeRestrictions;
 #[cfg(feature = "UISceneSystemProtectionManager")]
 #[path = "UISceneSystemProtectionManager.rs"]
 mod __UISceneSystemProtectionManager;
 #[cfg(feature = "UISceneWindowingBehaviors")]
 #[path = "UISceneWindowingBehaviors.rs"]
 mod __UISceneWindowingBehaviors;
-#[cfg(feature = "UISceneWindowingControlStyle")]
-#[path = "UISceneWindowingControlStyle.rs"]
-mod __UISceneWindowingControlStyle;
 #[cfg(feature = "UIScene_AVAudioSession")]
 #[path = "UIScene_AVAudioSession.rs"]
 mod __UIScene_AVAudioSession;
@@ -941,9 +900,6 @@ mod __UIScreenshotService;
 #[cfg(feature = "UIScribbleInteraction")]
 #[path = "UIScribbleInteraction.rs"]
 mod __UIScribbleInteraction;
-#[cfg(feature = "UIScrollEdgeElementContainerInteraction")]
-#[path = "UIScrollEdgeElementContainerInteraction.rs"]
-mod __UIScrollEdgeElementContainerInteraction;
 #[cfg(feature = "UIScrollView")]
 #[path = "UIScrollView.rs"]
 mod __UIScrollView;
@@ -986,9 +942,6 @@ mod __UISheetPresentationController;
 #[cfg(feature = "UISlider")]
 #[path = "UISlider.rs"]
 mod __UISlider;
-#[cfg(feature = "UISliderTrackConfiguration")]
-#[path = "UISliderTrackConfiguration.rs"]
-mod __UISliderTrackConfiguration;
 #[cfg(feature = "UISmartReplySuggestion")]
 #[path = "UISmartReplySuggestion.rs"]
 mod __UISmartReplySuggestion;
@@ -998,9 +951,6 @@ mod __UISnapBehavior;
 #[cfg(feature = "UISplitViewController")]
 #[path = "UISplitViewController.rs"]
 mod __UISplitViewController;
-#[cfg(feature = "UISplitViewControllerLayoutEnvironment")]
-#[path = "UISplitViewControllerLayoutEnvironment.rs"]
-mod __UISplitViewControllerLayoutEnvironment;
 #[cfg(feature = "UISpringLoadedInteraction")]
 #[path = "UISpringLoadedInteraction.rs"]
 mod __UISpringLoadedInteraction;
@@ -1043,18 +993,12 @@ mod __UISwipeGestureRecognizer;
 #[cfg(feature = "UISwitch")]
 #[path = "UISwitch.rs"]
 mod __UISwitch;
-#[cfg(feature = "UISymbolContentTransition")]
-#[path = "UISymbolContentTransition.rs"]
-mod __UISymbolContentTransition;
 #[cfg(feature = "UISymbolEffectCompletion")]
 #[path = "UISymbolEffectCompletion.rs"]
 mod __UISymbolEffectCompletion;
 #[cfg(feature = "UITab")]
 #[path = "UITab.rs"]
 mod __UITab;
-#[cfg(feature = "UITabAccessory")]
-#[path = "UITabAccessory.rs"]
-mod __UITabAccessory;
 #[cfg(feature = "UITabBar")]
 #[path = "UITabBar.rs"]
 mod __UITabBar;
@@ -1259,9 +1203,6 @@ mod __UIViewControllerTransitionCoordinator;
 #[cfg(feature = "UIViewControllerTransitioning")]
 #[path = "UIViewControllerTransitioning.rs"]
 mod __UIViewControllerTransitioning;
-#[cfg(feature = "UIViewLayoutRegion")]
-#[path = "UIViewLayoutRegion.rs"]
-mod __UIViewLayoutRegion;
 #[cfg(feature = "UIViewPropertyAnimator")]
 #[path = "UIViewPropertyAnimator.rs"]
 mod __UIViewPropertyAnimator;
@@ -1617,8 +1558,6 @@ pub use self::__NSStringDrawing::NSStringDrawingContext;
 pub use self::__NSStringDrawing::NSStringDrawingOptions;
 #[cfg(feature = "NSStringDrawing")]
 pub use self::__NSStringDrawing::NSStringNSExtendedStringDrawing;
-#[cfg(feature = "NSText")]
-pub use self::__NSText::NSTextAlignment;
 #[cfg(feature = "NSText")]
 pub use self::__NSText::NSWritingDirection;
 #[cfg(feature = "NSTextAttachment")]
@@ -2142,8 +2081,6 @@ pub use self::__UIAction::UIActionHandler;
 #[cfg(feature = "UIAction")]
 pub use self::__UIAction::UIActionIdentifier;
 #[cfg(feature = "UIAction")]
-pub use self::__UIAction::UIActionNewFromPasteboard;
-#[cfg(feature = "UIAction")]
 pub use self::__UIAction::UIActionPaste;
 #[cfg(feature = "UIAction")]
 pub use self::__UIAction::UIActionPasteAndGo;
@@ -2457,12 +2394,6 @@ pub use self::__UIAttachmentBehavior::UIFloatRangeIsInfinite;
 pub use self::__UIAttachmentBehavior::UIFloatRangeZero;
 #[cfg(feature = "UIBackgroundConfiguration")]
 pub use self::__UIBackgroundConfiguration::UIBackgroundConfiguration;
-#[cfg(all(
-    feature = "UIBackgroundExtensionView",
-    feature = "UIResponder",
-    feature = "UIView"
-))]
-pub use self::__UIBackgroundExtensionView::UIBackgroundExtensionView;
 #[cfg(feature = "UIBandSelectionInteraction")]
 pub use self::__UIBandSelectionInteraction::UIBandSelectionInteraction;
 #[cfg(feature = "UIBandSelectionInteraction")]
@@ -2479,8 +2410,6 @@ pub use self::__UIBarButtonItem::UIBarButtonSystemItem;
 pub use self::__UIBarButtonItemAppearance::UIBarButtonItemAppearance;
 #[cfg(feature = "UIBarButtonItemAppearance")]
 pub use self::__UIBarButtonItemAppearance::UIBarButtonItemStateAppearance;
-#[cfg(feature = "UIBarButtonItemBadge")]
-pub use self::__UIBarButtonItemBadge::UIBarButtonItemBadge;
 #[cfg(feature = "UIBarButtonItemGroup")]
 pub use self::__UIBarButtonItemGroup::UIBarButtonItemGroup;
 #[cfg(feature = "UIBarCommon")]
@@ -3037,8 +2966,6 @@ pub use self::__UIContextMenuInteraction::UIContextMenuInteractionCommitAnimatin
 pub use self::__UIContextMenuInteraction::UIContextMenuInteractionCommitStyle;
 #[cfg(feature = "UIContextMenuInteraction")]
 pub use self::__UIContextMenuInteraction::UIContextMenuInteractionDelegate;
-#[cfg(all(feature = "UIContextMenuSystem", feature = "UIMenuSystem"))]
-pub use self::__UIContextMenuSystem::UIContextMenuSystem;
 #[cfg(feature = "UIContextualAction")]
 pub use self::__UIContextualAction::UIContextualAction;
 #[cfg(all(
@@ -3064,10 +2991,6 @@ pub use self::__UIControl::UIControlState;
 pub use self::__UIConversationContext::UIConversationContext;
 #[cfg(feature = "UIConversationEntry")]
 pub use self::__UIConversationEntry::UIConversationEntry;
-#[cfg(feature = "UICornerConfiguration")]
-pub use self::__UICornerConfiguration::UICornerConfiguration;
-#[cfg(feature = "UICornerRadius")]
-pub use self::__UICornerRadius::UICornerRadius;
 #[cfg(feature = "UIDataDetectors")]
 pub use self::__UIDataDetectors::UIDataDetectorTypes;
 #[cfg(feature = "UIDataSourceTranslating")]
@@ -3085,10 +3008,6 @@ pub use self::__UIDatePicker::UIDatePickerMode;
 pub use self::__UIDatePicker::UIDatePickerStyle;
 #[cfg(all(feature = "UIDeferredMenuElement", feature = "UIMenuElement"))]
 pub use self::__UIDeferredMenuElement::UIDeferredMenuElement;
-#[cfg(feature = "UIDeferredMenuElement")]
-pub use self::__UIDeferredMenuElement::UIDeferredMenuElementIdentifier;
-#[cfg(feature = "UIDeferredMenuElement")]
-pub use self::__UIDeferredMenuElement::UIDeferredMenuElementProvider;
 #[cfg(feature = "UIDevice")]
 pub use self::__UIDevice::UIDevice;
 #[cfg(feature = "UIDevice")]
@@ -3159,10 +3078,6 @@ pub use self::__UIDocument::UIDocumentChangeKind;
 pub use self::__UIDocument::UIDocumentCreationIntent;
 #[cfg(feature = "UIDocument")]
 pub use self::__UIDocument::UIDocumentCreationIntentDefault;
-#[cfg(feature = "UIDocument")]
-pub use self::__UIDocument::UIDocumentDidMoveToWritableLocationNotification;
-#[cfg(feature = "UIDocument")]
-pub use self::__UIDocument::UIDocumentDidMoveToWritableLocationOldURLKey;
 #[cfg(feature = "UIDocument")]
 pub use self::__UIDocument::UIDocumentSaveOperation;
 #[cfg(feature = "UIDocument")]
@@ -3548,6 +3463,8 @@ pub use self::__UIGeometry::NSStringFromUIOffset;
 #[cfg(feature = "UIGeometry")]
 pub use self::__UIGeometry::NSValueUIGeometryExtensions;
 #[cfg(feature = "UIGeometry")]
+pub use self::__UIGeometry::UIAxis;
+#[cfg(feature = "UIGeometry")]
 pub use self::__UIGeometry::UIDirectionalRectEdge;
 #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
 pub use self::__UIGeometry::UIEdgeInsets;
@@ -3563,18 +3480,14 @@ pub use self::__UIGeometry::UIOffsetFromString;
 pub use self::__UIGeometry::UIOffsetZero;
 #[cfg(feature = "UIGeometry")]
 pub use self::__UIGeometry::UIRectCorner;
+#[cfg(feature = "UIGeometry")]
+pub use self::__UIGeometry::UIRectEdge;
 #[cfg(feature = "UIGestureRecognizer")]
 pub use self::__UIGestureRecognizer::UIGestureRecognizer;
 #[cfg(feature = "UIGestureRecognizer")]
 pub use self::__UIGestureRecognizer::UIGestureRecognizerDelegate;
 #[cfg(feature = "UIGestureRecognizer")]
 pub use self::__UIGestureRecognizer::UIGestureRecognizerState;
-#[cfg(all(feature = "UIGlassEffect", feature = "UIVisualEffect"))]
-pub use self::__UIGlassEffect::UIGlassContainerEffect;
-#[cfg(all(feature = "UIGlassEffect", feature = "UIVisualEffect"))]
-pub use self::__UIGlassEffect::UIGlassEffect;
-#[cfg(feature = "UIGlassEffect")]
-pub use self::__UIGlassEffect::UIGlassEffectStyle;
 #[cfg(all(feature = "UIGraphics", feature = "objc2-core-foundation"))]
 pub use self::__UIGraphics::UIGraphicsAddPDFContextDestinationAtPoint;
 #[cfg(all(feature = "UIGraphics", feature = "objc2-core-foundation"))]
@@ -3593,12 +3506,6 @@ pub use self::__UIGraphics::UIGraphicsBeginPDFPageWithInfo;
 pub use self::__UIGraphics::UIGraphicsEndImageContext;
 #[cfg(feature = "UIGraphics")]
 pub use self::__UIGraphics::UIGraphicsEndPDFContext;
-#[cfg(all(
-    feature = "UIGraphics",
-    feature = "objc2-core-foundation",
-    feature = "objc2-core-graphics"
-))]
-pub use self::__UIGraphics::UIGraphicsGetCurrentContext;
 #[cfg(all(feature = "UIGraphics", feature = "UIImage"))]
 pub use self::__UIGraphics::UIGraphicsGetImageFromCurrentImageContext;
 #[cfg(all(feature = "UIGraphics", feature = "objc2-core-foundation"))]
@@ -3777,8 +3684,6 @@ pub use self::__UIImageReader::UIImageReaderConfiguration;
     feature = "objc2-core-foundation"
 ))]
 pub use self::__UIImageSymbolConfiguration::UIFontWeightForImageSymbolWeight;
-#[cfg(feature = "UIImageSymbolConfiguration")]
-pub use self::__UIImageSymbolConfiguration::UIImageSymbolColorRenderingMode;
 #[cfg(all(
     feature = "UIImageConfiguration",
     feature = "UIImageSymbolConfiguration"
@@ -3786,8 +3691,6 @@ pub use self::__UIImageSymbolConfiguration::UIImageSymbolColorRenderingMode;
 pub use self::__UIImageSymbolConfiguration::UIImageSymbolConfiguration;
 #[cfg(feature = "UIImageSymbolConfiguration")]
 pub use self::__UIImageSymbolConfiguration::UIImageSymbolScale;
-#[cfg(feature = "UIImageSymbolConfiguration")]
-pub use self::__UIImageSymbolConfiguration::UIImageSymbolVariableValueMode;
 #[cfg(feature = "UIImageSymbolConfiguration")]
 pub use self::__UIImageSymbolConfiguration::UIImageSymbolWeight;
 #[cfg(all(
@@ -3834,8 +3737,6 @@ pub use self::__UIInterface::UIAccessibilityContrast;
 pub use self::__UIInterface::UIBarStyle;
 #[cfg(feature = "UIInterface")]
 pub use self::__UIInterface::UIDisplayGamut;
-#[cfg(feature = "UIInterface")]
-pub use self::__UIInterface::UIHDRHeadroomUsageLimit;
 #[cfg(feature = "UIInterface")]
 pub use self::__UIInterface::UIImageDynamicRange;
 #[cfg(feature = "UIInterface")]
@@ -3943,10 +3844,6 @@ pub use self::__UIMailConversationContext::UIMailConversationContext;
 pub use self::__UIMailConversationEntry::UIMailConversationEntry;
 #[cfg(feature = "UIMailConversationEntry")]
 pub use self::__UIMailConversationEntry::UIMailConversationEntryKind;
-#[cfg(all(feature = "UIMainMenuSystem", feature = "UIMenuSystem"))]
-pub use self::__UIMainMenuSystem::UIMainMenuSystem;
-#[cfg(feature = "UIMainMenuSystem")]
-pub use self::__UIMainMenuSystem::UIMainMenuSystemConfiguration;
 #[cfg(all(feature = "UIDocument", feature = "UIManagedDocument"))]
 pub use self::__UIManagedDocument::UIManagedDocument;
 #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
@@ -3974,8 +3871,6 @@ pub use self::__UIMenu::UIMenuFile;
 #[cfg(feature = "UIMenu")]
 pub use self::__UIMenu::UIMenuFind;
 #[cfg(feature = "UIMenu")]
-pub use self::__UIMenu::UIMenuFindPanel;
-#[cfg(feature = "UIMenu")]
 pub use self::__UIMenu::UIMenuFont;
 #[cfg(feature = "UIMenu")]
 pub use self::__UIMenu::UIMenuFormat;
@@ -3993,8 +3888,6 @@ pub use self::__UIMenu::UIMenuLearn;
 pub use self::__UIMenu::UIMenuLookup;
 #[cfg(feature = "UIMenu")]
 pub use self::__UIMenu::UIMenuMinimizeAndZoom;
-#[cfg(feature = "UIMenu")]
-pub use self::__UIMenu::UIMenuNewItem;
 #[cfg(feature = "UIMenu")]
 pub use self::__UIMenu::UIMenuNewScene;
 #[cfg(feature = "UIMenu")]
@@ -4082,19 +3975,11 @@ pub use self::__UIMenuElement::UIMenuElement;
 #[cfg(feature = "UIMenuElement")]
 pub use self::__UIMenuElement::UIMenuElementAttributes;
 #[cfg(feature = "UIMenuElement")]
-pub use self::__UIMenuElement::UIMenuElementRepeatBehavior;
-#[cfg(feature = "UIMenuElement")]
 pub use self::__UIMenuElement::UIMenuElementState;
 #[cfg(feature = "UIMenuLeaf")]
 pub use self::__UIMenuLeaf::UIMenuLeaf;
 #[cfg(feature = "UIMenuSystem")]
 pub use self::__UIMenuSystem::UIMenuSystem;
-#[cfg(feature = "UIMenuSystem")]
-pub use self::__UIMenuSystem::UIMenuSystemElementGroupPreference;
-#[cfg(feature = "UIMenuSystem")]
-pub use self::__UIMenuSystem::UIMenuSystemFindElementGroupConfiguration;
-#[cfg(feature = "UIMenuSystem")]
-pub use self::__UIMenuSystem::UIMenuSystemFindElementGroupConfigurationStyle;
 #[cfg(all(
     feature = "UIConversationContext",
     feature = "UIMessageConversationContext"
@@ -4564,8 +4449,6 @@ pub use self::__UIScene::UISceneWillEnterForegroundNotification;
 pub use self::__UISceneActivationConditions::NSUserActivityUISceneActivationConditions;
 #[cfg(feature = "UISceneActivationConditions")]
 pub use self::__UISceneActivationConditions::UISceneActivationConditions;
-#[cfg(feature = "UISceneConfiguration")]
-pub use self::__UISceneConfiguration::UISceneConfiguration;
 #[cfg(feature = "UISceneDefinitions")]
 pub use self::__UISceneDefinitions::UISceneActivationState;
 #[cfg(feature = "UISceneDefinitions")]
@@ -4576,8 +4459,6 @@ pub use self::__UISceneDefinitions::UISceneErrorCode;
 pub use self::__UISceneDefinitions::UISceneErrorDomain;
 #[cfg(feature = "UISceneDefinitions")]
 pub use self::__UISceneDefinitions::UISceneSessionRole;
-#[cfg(feature = "UISceneDestructionCondition")]
-pub use self::__UISceneDestructionCondition::UISceneDestructionCondition;
 #[cfg(feature = "UISceneOptions")]
 pub use self::__UISceneOptions::UISceneActivationRequestOptions;
 #[cfg(feature = "UISceneOptions")]
@@ -4591,19 +4472,17 @@ pub use self::__UISceneOptions::UISceneOpenExternalURLOptions;
 #[cfg(feature = "UISceneOptions")]
 pub use self::__UISceneOptions::UISceneOpenURLOptions;
 #[cfg(feature = "UISceneSession")]
+pub use self::__UISceneSession::UISceneConfiguration;
+#[cfg(feature = "UISceneSession")]
 pub use self::__UISceneSession::UISceneSession;
 #[cfg(feature = "UISceneSessionActivationRequest")]
 pub use self::__UISceneSessionActivationRequest::UISceneSessionActivationRequest;
-#[cfg(feature = "UISceneSizeRestrictions")]
-pub use self::__UISceneSizeRestrictions::UISceneSizeRestrictions;
 #[cfg(feature = "UISceneSystemProtectionManager")]
 pub use self::__UISceneSystemProtectionManager::UISceneSystemProtectionDidChangeNotification;
 #[cfg(feature = "UISceneSystemProtectionManager")]
 pub use self::__UISceneSystemProtectionManager::UISceneSystemProtectionManager;
 #[cfg(feature = "UISceneWindowingBehaviors")]
 pub use self::__UISceneWindowingBehaviors::UISceneWindowingBehaviors;
-#[cfg(feature = "UISceneWindowingControlStyle")]
-pub use self::__UISceneWindowingControlStyle::UISceneWindowingControlStyle;
 #[cfg(feature = "UIScreen")]
 pub use self::__UIScreen::UIScreen;
 #[cfg(feature = "UIScreen")]
@@ -4638,12 +4517,6 @@ pub use self::__UIScreenshotService::UIScreenshotServiceDelegate;
 pub use self::__UIScribbleInteraction::UIScribbleInteraction;
 #[cfg(feature = "UIScribbleInteraction")]
 pub use self::__UIScribbleInteraction::UIScribbleInteractionDelegate;
-#[cfg(feature = "UIScrollEdgeElementContainerInteraction")]
-pub use self::__UIScrollEdgeElementContainerInteraction::UIScrollEdgeElementContainerInteraction;
-#[cfg(feature = "UIScrollView")]
-pub use self::__UIScrollView::UIScrollEdgeEffect;
-#[cfg(feature = "UIScrollView")]
-pub use self::__UIScrollView::UIScrollEdgeEffectStyle;
 #[cfg(all(feature = "UIResponder", feature = "UIScrollView", feature = "UIView"))]
 pub use self::__UIScrollView::UIScrollView;
 #[cfg(feature = "UIScrollView")]
@@ -4781,12 +4654,6 @@ pub use self::__UISheetPresentationController::UISheetPresentationControllerDete
     feature = "UIView"
 ))]
 pub use self::__UISlider::UISlider;
-#[cfg(feature = "UISlider")]
-pub use self::__UISlider::UISliderStyle;
-#[cfg(feature = "UISliderTrackConfiguration")]
-pub use self::__UISliderTrackConfiguration::UISliderTick;
-#[cfg(feature = "UISliderTrackConfiguration")]
-pub use self::__UISliderTrackConfiguration::UISliderTrackConfiguration;
 #[cfg(all(feature = "UIInputSuggestion", feature = "UISmartReplySuggestion"))]
 pub use self::__UISmartReplySuggestion::UISmartReplySuggestion;
 #[cfg(all(feature = "UIDynamicBehavior", feature = "UISnapBehavior"))]
@@ -4815,10 +4682,6 @@ pub use self::__UISplitViewController::UISplitViewControllerPrimaryEdge;
 pub use self::__UISplitViewController::UISplitViewControllerSplitBehavior;
 #[cfg(feature = "UISplitViewController")]
 pub use self::__UISplitViewController::UISplitViewControllerStyle;
-#[cfg(feature = "UISplitViewControllerLayoutEnvironment")]
-pub use self::__UISplitViewControllerLayoutEnvironment::UISplitViewControllerLayoutEnvironment;
-#[cfg(feature = "UISplitViewControllerLayoutEnvironment")]
-pub use self::__UISplitViewControllerLayoutEnvironment::UITraitSplitViewControllerLayoutEnvironment;
 #[cfg(feature = "UISpringLoadedInteraction")]
 pub use self::__UISpringLoadedInteraction::UISpringLoadedInteraction;
 #[cfg(feature = "UISpringLoadedInteraction")]
@@ -4918,8 +4781,6 @@ pub use self::__UISwipeGestureRecognizer::UISwipeGestureRecognizerDirection;
 pub use self::__UISwitch::UISwitch;
 #[cfg(feature = "UISwitch")]
 pub use self::__UISwitch::UISwitchStyle;
-#[cfg(feature = "UISymbolContentTransition")]
-pub use self::__UISymbolContentTransition::UISymbolContentTransition;
 #[cfg(all(feature = "UISymbolEffectCompletion", feature = "block2"))]
 pub use self::__UISymbolEffectCompletion::UISymbolEffectCompletion;
 #[cfg(feature = "UISymbolEffectCompletion")]
@@ -4928,12 +4789,6 @@ pub use self::__UISymbolEffectCompletion::UISymbolEffectCompletionContext;
 pub use self::__UITab::UITab;
 #[cfg(feature = "UITab")]
 pub use self::__UITab::UITabPlacement;
-#[cfg(feature = "UITabAccessory")]
-pub use self::__UITabAccessory::UITabAccessory;
-#[cfg(feature = "UITabAccessory")]
-pub use self::__UITabAccessory::UITabAccessoryEnvironment;
-#[cfg(feature = "UITabAccessory")]
-pub use self::__UITabAccessory::UITraitTabAccessoryEnvironment;
 #[cfg(all(feature = "UIResponder", feature = "UITabBar", feature = "UIView"))]
 pub use self::__UITabBar::UITabBar;
 #[cfg(feature = "UITabBar")]
@@ -4958,8 +4813,6 @@ pub use self::__UITabBarController::UITabBarController;
 pub use self::__UITabBarController::UITabBarControllerDelegate;
 #[cfg(feature = "UITabBarController")]
 pub use self::__UITabBarController::UITabBarControllerMode;
-#[cfg(feature = "UITabBarController")]
-pub use self::__UITabBarController::UITabBarMinimizeBehavior;
 #[cfg(feature = "UITabBarControllerSidebar")]
 pub use self::__UITabBarControllerSidebar::UITabBarControllerSidebar;
 #[cfg(feature = "UITabBarControllerSidebar")]
@@ -5584,8 +5437,6 @@ pub use self::__UITrait::UITraitDisplayScale;
 #[cfg(feature = "UITrait")]
 pub use self::__UITrait::UITraitForceTouchCapability;
 #[cfg(feature = "UITrait")]
-pub use self::__UITrait::UITraitHDRHeadroomUsageLimit;
-#[cfg(feature = "UITrait")]
 pub use self::__UITrait::UITraitHorizontalSizeClass;
 #[cfg(feature = "UITrait")]
 pub use self::__UITrait::UITraitImageDynamicRange;
@@ -5595,8 +5446,6 @@ pub use self::__UITrait::UITraitLayoutDirection;
 pub use self::__UITrait::UITraitLegibilityWeight;
 #[cfg(feature = "UITrait")]
 pub use self::__UITrait::UITraitPreferredContentSizeCategory;
-#[cfg(feature = "UITrait")]
-pub use self::__UITrait::UITraitResolvesNaturalAlignmentWithBaseWritingDirection;
 #[cfg(feature = "UITrait")]
 pub use self::__UITrait::UITraitSceneCaptureState;
 #[cfg(feature = "UITrait")]
@@ -5674,6 +5523,8 @@ pub use self::__UIVibrancyEffect::UIVibrancyEffectStyle;
 pub use self::__UIVideoEditorController::UIVideoEditorController;
 #[cfg(feature = "UIVideoEditorController")]
 pub use self::__UIVideoEditorController::UIVideoEditorControllerDelegate;
+#[cfg(feature = "UIView")]
+pub use self::__UIView::UICoordinateSpace;
 #[cfg(feature = "UIView")]
 pub use self::__UIView::UILayoutConstraintAxis;
 #[cfg(all(feature = "UIView", feature = "objc2-core-foundation"))]
@@ -5780,10 +5631,6 @@ pub use self::__UIViewControllerTransitioning::UIViewControllerContextTransition
 pub use self::__UIViewControllerTransitioning::UIViewControllerInteractiveTransitioning;
 #[cfg(feature = "UIViewControllerTransitioning")]
 pub use self::__UIViewControllerTransitioning::UIViewControllerTransitioningDelegate;
-#[cfg(feature = "UIViewLayoutRegion")]
-pub use self::__UIViewLayoutRegion::UIViewLayoutRegion;
-#[cfg(feature = "UIViewLayoutRegion")]
-pub use self::__UIViewLayoutRegion::UIViewLayoutRegionAdaptivityAxis;
 #[cfg(feature = "UIViewPropertyAnimator")]
 pub use self::__UIViewPropertyAnimator::UIViewPropertyAnimator;
 #[cfg(feature = "UIVisualEffect")]
@@ -5852,6 +5699,8 @@ pub use self::__UIWindow::UIWindowLevelAlert;
 pub use self::__UIWindow::UIWindowLevelNormal;
 #[cfg(all(feature = "UIWindow", feature = "objc2-core-foundation"))]
 pub use self::__UIWindow::UIWindowLevelStatusBar;
+#[cfg(feature = "UIWindowScene")]
+pub use self::__UIWindowScene::UISceneSizeRestrictions;
 #[cfg(all(
     feature = "UIResponder",
     feature = "UIScene",
@@ -5866,8 +5715,6 @@ pub use self::__UIWindowScene::UIWindowSceneDestructionRequestOptions;
 pub use self::__UIWindowScene::UIWindowSceneDismissalAnimation;
 #[cfg(all(feature = "UISceneDefinitions", feature = "UIWindowScene"))]
 pub use self::__UIWindowScene::UIWindowSceneSessionRoleApplication;
-#[cfg(all(feature = "UISceneDefinitions", feature = "UIWindowScene"))]
-pub use self::__UIWindowScene::UIWindowSceneSessionRoleAssistiveAccessApplication;
 #[cfg(all(feature = "UISceneDefinitions", feature = "UIWindowScene"))]
 pub use self::__UIWindowScene::UIWindowSceneSessionRoleExternalDisplay;
 #[cfg(all(feature = "UISceneDefinitions", feature = "UIWindowScene"))]

@@ -56,12 +56,6 @@ extern_conformance!(
 impl WKNavigationAction {
     extern_methods!(
         #[cfg(feature = "WKFrameInfo")]
-        /// The frame requesting the navigation.
-        #[unsafe(method(sourceFrame))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn sourceFrame(&self) -> Option<Retained<WKFrameInfo>>;
-
-        #[cfg(feature = "WKFrameInfo")]
         /// The target frame, or nil if this is a new window navigation.
         #[unsafe(method(targetFrame))]
         #[unsafe(method_family = none)]
@@ -83,11 +77,6 @@ impl WKNavigationAction {
         #[unsafe(method(shouldPerformDownload))]
         #[unsafe(method_family = none)]
         pub unsafe fn shouldPerformDownload(&self) -> bool;
-
-        /// Whether or not the navigation is a redirect from a content rule list.
-        #[unsafe(method(isContentRuleListRedirect))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn isContentRuleListRedirect(&self) -> bool;
 
         #[cfg(feature = "objc2-app-kit")]
         #[cfg(target_os = "macos")]

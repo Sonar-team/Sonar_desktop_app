@@ -2,8 +2,6 @@
 //! DO NOT EDIT
 use core::ptr::NonNull;
 use objc2::__framework_prelude::*;
-#[cfg(feature = "objc2-cloud-kit")]
-use objc2_cloud_kit::*;
 use objc2_foundation::*;
 
 use crate::*;
@@ -60,38 +58,6 @@ impl NSPersistentCloudKitContainer {
             &self,
             options: NSPersistentCloudKitContainerSchemaInitializationOptions,
         ) -> Result<(), Retained<NSError>>;
-
-        #[cfg(all(feature = "NSManagedObjectID", feature = "objc2-cloud-kit"))]
-        #[unsafe(method(recordForManagedObjectID:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn recordForManagedObjectID(
-            &self,
-            managed_object_id: &NSManagedObjectID,
-        ) -> Option<Retained<CKRecord>>;
-
-        #[cfg(all(feature = "NSManagedObjectID", feature = "objc2-cloud-kit"))]
-        #[unsafe(method(recordsForManagedObjectIDs:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn recordsForManagedObjectIDs(
-            &self,
-            managed_object_i_ds: &NSArray<NSManagedObjectID>,
-        ) -> Retained<NSDictionary<NSManagedObjectID, CKRecord>>;
-
-        #[cfg(all(feature = "NSManagedObjectID", feature = "objc2-cloud-kit"))]
-        #[unsafe(method(recordIDForManagedObjectID:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn recordIDForManagedObjectID(
-            &self,
-            managed_object_id: &NSManagedObjectID,
-        ) -> Option<Retained<CKRecordID>>;
-
-        #[cfg(all(feature = "NSManagedObjectID", feature = "objc2-cloud-kit"))]
-        #[unsafe(method(recordIDsForManagedObjectIDs:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn recordIDsForManagedObjectIDs(
-            &self,
-            managed_object_i_ds: &NSArray<NSManagedObjectID>,
-        ) -> Retained<NSDictionary<NSManagedObjectID, CKRecordID>>;
 
         #[cfg(feature = "NSManagedObjectID")]
         #[unsafe(method(canUpdateRecordForManagedObjectWithID:))]

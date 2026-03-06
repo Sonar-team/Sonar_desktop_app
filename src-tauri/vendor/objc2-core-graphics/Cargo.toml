@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "objc2-core-graphics"
-version = "0.3.2"
+version = "0.3.1"
 build = false
 autolib = false
 autobins = false
@@ -40,6 +40,7 @@ repository = "https://github.com/madsmtm/objc2"
 
 [package.metadata.docs.rs]
 default-target = "aarch64-apple-darwin"
+features = ["objc2-io-surface"]
 rustc-args = [
     "--cfg",
     "docsrs",
@@ -53,17 +54,11 @@ targets = [
     "aarch64-apple-ios-macabi",
     "aarch64-apple-visionos",
 ]
-features = ["objc2-io-surface"]
 
 [features]
 CGAffineTransform = ["objc2-core-foundation/CFCGTypes"]
 CGBase = []
-CGBitmapContext = [
-    "bitflags",
-    "objc2-core-foundation/CFByteOrder",
-    "objc2-core-foundation/CFDictionary",
-    "objc2-core-foundation/CFError",
-]
+CGBitmapContext = []
 CGColor = [
     "objc2-core-foundation/CFCGTypes",
     "objc2-core-foundation/CFDictionary",
@@ -111,7 +106,7 @@ CGDisplayStream = [
     "objc2-core-foundation/CFDictionary",
     "objc2-core-foundation/CFRunLoop",
 ]
-CGEXRToneMappingGamma = ["objc2-core-foundation/CFDictionary"]
+CGEXRToneMappingGamma = []
 CGError = []
 CGEvent = [
     "objc2-core-foundation/CFCGTypes",
@@ -178,10 +173,9 @@ CGRemoteOperation = [
     "objc2-core-foundation/CFDate",
     "objc2-core-foundation/CFMachPort",
 ]
-CGRenderingBufferProvider = ["objc2-core-foundation/CFData"]
 CGSession = ["objc2-core-foundation/CFDictionary"]
 CGShading = ["objc2-core-foundation/CFCGTypes"]
-CGToneMapping = ["objc2-core-foundation/CFDictionary"]
+CGToneMapping = []
 CGWindow = [
     "bitflags",
     "objc2-core-foundation/CFArray",
@@ -236,7 +230,6 @@ default = [
     "CGPath",
     "CGPattern",
     "CGRemoteOperation",
-    "CGRenderingBufferProvider",
     "CGSession",
     "CGShading",
     "CGToneMapping",
@@ -260,15 +253,10 @@ objc2 = [
 objc2-io-surface = ["dep:objc2-io-surface"]
 objc2-metal = ["dep:objc2-metal"]
 std = ["alloc"]
-unstable-darwin-objc = []
 
 [lib]
 name = "objc2_core_graphics"
 path = "src/lib.rs"
-
-[[test]]
-name = "invalid"
-path = "tests/invalid.rs"
 
 [dependencies.bitflags]
 version = "2.5.0"
@@ -294,23 +282,23 @@ optional = true
 default-features = false
 
 [dependencies.objc2]
-version = ">=0.6.2, <0.8.0"
+version = ">=0.6.1, <0.8.0"
 features = ["std"]
 optional = true
 default-features = false
 
 [dependencies.objc2-core-foundation]
-version = "0.3.2"
+version = "0.3.1"
 default-features = false
 
 [target.'cfg(not(target_os = "watchos"))'.dependencies.objc2-io-surface]
-version = "0.3.2"
+version = "0.3.1"
 features = ["IOSurfaceRef"]
 optional = true
 default-features = false
 
 [target.'cfg(not(target_os = "watchos"))'.dependencies.objc2-metal]
-version = "0.3.2"
+version = "0.3.1"
 features = ["MTLDevice"]
 optional = true
 default-features = false

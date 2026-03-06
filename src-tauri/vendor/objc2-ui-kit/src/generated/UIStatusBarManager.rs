@@ -32,16 +32,16 @@ impl UIStatusBarManager {
         #[cfg(feature = "UIApplication")]
         #[unsafe(method(statusBarStyle))]
         #[unsafe(method_family = none)]
-        pub fn statusBarStyle(&self) -> UIStatusBarStyle;
+        pub unsafe fn statusBarStyle(&self) -> UIStatusBarStyle;
 
         #[unsafe(method(isStatusBarHidden))]
         #[unsafe(method_family = none)]
-        pub fn isStatusBarHidden(&self) -> bool;
+        pub unsafe fn isStatusBarHidden(&self) -> bool;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(statusBarFrame))]
         #[unsafe(method_family = none)]
-        pub fn statusBarFrame(&self) -> CGRect;
+        pub unsafe fn statusBarFrame(&self) -> CGRect;
     );
 }
 
@@ -55,6 +55,6 @@ impl UIWindowScene {
     extern_methods!(
         #[unsafe(method(statusBarManager))]
         #[unsafe(method_family = none)]
-        pub fn statusBarManager(&self) -> Option<Retained<UIStatusBarManager>>;
+        pub unsafe fn statusBarManager(&self) -> Option<Retained<UIStatusBarManager>>;
     );
 }

@@ -7,25 +7,21 @@ use crate::*;
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uitextattributefont?language=objc)
-    #[deprecated]
     pub static UITextAttributeFont: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uitextattributetextcolor?language=objc)
-    #[deprecated]
     pub static UITextAttributeTextColor: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uitextattributetextshadowcolor?language=objc)
-    #[deprecated = "Use NSShadowAttributeName with an NSShadow instance as the value"]
     pub static UITextAttributeTextShadowColor: Option<&'static NSString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uitextattributetextshadowoffset?language=objc)
-    #[deprecated = "Use NSShadowAttributeName with an NSShadow instance as the value"]
     pub static UITextAttributeTextShadowOffset: Option<&'static NSString>;
 }
 

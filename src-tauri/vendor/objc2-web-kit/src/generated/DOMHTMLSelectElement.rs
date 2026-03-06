@@ -126,8 +126,6 @@ impl DOMHTMLSelectElement {
         pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
@@ -177,8 +175,6 @@ impl DOMHTMLSelectElement {
         pub unsafe fn value(&self) -> Retained<NSString>;
 
         /// Setter for [`value`][Self::value].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setValue:))]
         #[unsafe(method_family = none)]
@@ -192,17 +188,10 @@ impl DOMHTMLSelectElement {
         #[unsafe(method_family = none)]
         pub unsafe fn item(&self, index: c_uint) -> Option<Retained<DOMNode>>;
 
-        /// # Safety
-        ///
-        /// `name` might not allow `None`.
         #[unsafe(method(namedItem:))]
         #[unsafe(method_family = none)]
         pub unsafe fn namedItem(&self, name: Option<&NSString>) -> Option<Retained<DOMNode>>;
 
-        /// # Safety
-        ///
-        /// - `element` might not allow `None`.
-        /// - `before` might not allow `None`.
         #[unsafe(method(add:before:))]
         #[unsafe(method_family = none)]
         pub unsafe fn add_before(
@@ -252,7 +241,6 @@ impl DOMHTMLSelectElement {
 }
 
 /// DOMHTMLSelectElementDeprecated.
-#[deprecated]
 #[cfg(all(
     feature = "DOMElement",
     feature = "DOMHTMLElement",
@@ -262,10 +250,6 @@ impl DOMHTMLSelectElement {
 ))]
 impl DOMHTMLSelectElement {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `element` might not allow `None`.
-        /// - `before` might not allow `None`.
         #[deprecated]
         #[unsafe(method(add::))]
         #[unsafe(method_family = none)]

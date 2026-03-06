@@ -8,15 +8,6 @@ use crate::*;
 
 #[cfg(feature = "CFURL")]
 impl CFURL {
-    /// # Safety
-    ///
-    /// - `alloc` might not allow `None`.
-    /// - `url` might not allow `None`.
-    /// - `resource_data` must be a valid pointer.
-    /// - `properties` must be a valid pointer.
-    /// - `desired_properties` generic must be of the correct type.
-    /// - `desired_properties` might not allow `None`.
-    /// - `error_code` must be a valid pointer.
     #[doc(alias = "CFURLCreateDataAndPropertiesFromResource")]
     #[cfg(all(
         feature = "CFArray",
@@ -57,18 +48,12 @@ impl CFURL {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// - `data_to_write` might not allow `None`.
-    /// - `properties_to_write` generics must be of the correct type.
-    /// - `properties_to_write` might not allow `None`.
-    /// - `error_code` must be a valid pointer.
     #[doc(alias = "CFURLWriteDataAndPropertiesToResource")]
     #[cfg(all(feature = "CFData", feature = "CFDictionary", feature = "CFURL"))]
     #[deprecated = "For resource data, use the CFWriteStream API. For file resource properties, use CFURLSetResourcePropertiesForKeys."]
     #[inline]
     pub unsafe fn write_data_and_properties_to_resource(
-        &self,
+        self: &CFURL,
         data_to_write: Option<&CFData>,
         properties_to_write: Option<&CFDictionary>,
         error_code: *mut i32,
@@ -92,14 +77,11 @@ impl CFURL {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// `error_code` must be a valid pointer.
     #[doc(alias = "CFURLDestroyResource")]
     #[cfg(feature = "CFURL")]
     #[deprecated = "Use CFURLGetFileSystemRepresentation and removefile(3) instead."]
     #[inline]
-    pub unsafe fn destroy_resource(&self, error_code: *mut i32) -> bool {
+    pub unsafe fn destroy_resource(self: &CFURL, error_code: *mut i32) -> bool {
         extern "C-unwind" {
             fn CFURLDestroyResource(url: &CFURL, error_code: *mut i32) -> Boolean;
         }
@@ -107,12 +89,6 @@ impl CFURL {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// - `alloc` might not allow `None`.
-    /// - `url` might not allow `None`.
-    /// - `property` might not allow `None`.
-    /// - `error_code` must be a valid pointer.
     #[doc(alias = "CFURLCreatePropertyFromResource")]
     #[cfg(feature = "CFURL")]
     #[deprecated = "For file resource properties, use CFURLCopyResourcePropertyForKey."]
@@ -184,49 +160,41 @@ unsafe impl RefEncode for CFURLError {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfurlfileexists?language=objc)
-    #[deprecated = "Use CFURLResourceIsReachable instead."]
     pub static kCFURLFileExists: Option<&'static CFString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfurlfiledirectorycontents?language=objc)
-    #[deprecated = "Use the CFURLEnumerator API instead."]
     pub static kCFURLFileDirectoryContents: Option<&'static CFString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfurlfilelength?language=objc)
-    #[deprecated = "Use CFURLCopyResourcePropertyForKey with kCFURLFileSizeKey instead."]
     pub static kCFURLFileLength: Option<&'static CFString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfurlfilelastmodificationtime?language=objc)
-    #[deprecated = "Use CFURLCopyResourcePropertyForKey with kCFURLContentModificationDateKey instead."]
     pub static kCFURLFileLastModificationTime: Option<&'static CFString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfurlfileposixmode?language=objc)
-    #[deprecated = "Use CFURLCopyResourcePropertyForKey with kCFURLFileSecurityKey and then the CFFileSecurity API instead."]
     pub static kCFURLFilePOSIXMode: Option<&'static CFString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfurlfileownerid?language=objc)
-    #[deprecated = "Use CFURLCopyResourcePropertyForKey with kCFURLFileSecurityKey and then the CFFileSecurity API instead."]
     pub static kCFURLFileOwnerID: Option<&'static CFString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfurlhttpstatuscode?language=objc)
-    #[deprecated = "Use NSHTTPURLResponse methods instead."]
     pub static kCFURLHTTPStatusCode: Option<&'static CFString>;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/kcfurlhttpstatusline?language=objc)
-    #[deprecated = "Use NSHTTPURLResponse methods instead."]
     pub static kCFURLHTTPStatusLine: Option<&'static CFString>;
 }
 

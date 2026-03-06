@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "objc2-io-kit"
-version = "0.3.2"
+version = "0.3.1"
 build = false
 autolib = false
 autobins = false
@@ -79,11 +79,7 @@ default = [
     "hid",
     "hidsystem",
     "libc",
-    "network",
     "objc2",
-    "ps",
-    "pwr_mgt",
-    "serial",
     "usb",
 ]
 dispatch2 = ["dep:dispatch2"]
@@ -107,42 +103,17 @@ hidsystem = [
     "objc2-core-foundation/CFDictionary",
 ]
 libc = ["dep:libc"]
-network = []
 objc2 = [
     "dep:objc2",
     "dispatch2?/objc2",
     "objc2-core-foundation/objc2",
 ]
-ps = [
-    "objc2-core-foundation/CFArray",
-    "objc2-core-foundation/CFDate",
-    "objc2-core-foundation/CFDictionary",
-    "objc2-core-foundation/CFPlugInCOM",
-    "objc2-core-foundation/CFRunLoop",
-    "objc2-core-foundation/CFSet",
-    "objc2-core-foundation/CFUUID",
-]
-pwr_mgt = [
-    "objc2-core-foundation/CFArray",
-    "objc2-core-foundation/CFDate",
-    "objc2-core-foundation/CFDictionary",
-]
-serial = []
 std = ["alloc"]
-unstable-darwin-objc = []
 usb = []
 
 [lib]
 name = "objc2_io_kit"
 path = "src/lib.rs"
-
-[[test]]
-name = "alignment"
-path = "tests/alignment.rs"
-
-[[test]]
-name = "invalid_kernel_object"
-path = "tests/invalid_kernel_object.rs"
 
 [dependencies.bitflags]
 version = "2.5.0"
@@ -171,13 +142,13 @@ optional = true
 default-features = false
 
 [dependencies.objc2]
-version = ">=0.6.2, <0.8.0"
+version = ">=0.6.1, <0.8.0"
 features = ["std"]
 optional = true
 default-features = false
 
 [dependencies.objc2-core-foundation]
-version = "0.3.2"
+version = "0.3.1"
 features = [
     "CFArray",
     "CFData",

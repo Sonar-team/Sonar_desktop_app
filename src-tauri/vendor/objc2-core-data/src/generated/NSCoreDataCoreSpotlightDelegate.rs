@@ -3,9 +3,6 @@
 use core::ffi::*;
 use core::ptr::NonNull;
 use objc2::__framework_prelude::*;
-#[cfg(feature = "objc2-core-spotlight")]
-#[cfg(not(any(target_os = "tvos", target_os = "watchos")))]
-use objc2_core_spotlight::*;
 use objc2_foundation::*;
 
 use crate::*;
@@ -84,36 +81,6 @@ impl NSCoreDataCoreSpotlightDelegate {
         pub unsafe fn deleteSpotlightIndexWithCompletionHandler(
             &self,
             completion_handler: &block2::DynBlock<dyn Fn(*mut NSError)>,
-        );
-
-        #[cfg(all(feature = "NSManagedObject", feature = "objc2-core-spotlight"))]
-        #[cfg(not(any(target_os = "tvos", target_os = "watchos")))]
-        #[unsafe(method(attributeSetForObject:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn attributeSetForObject(
-            &self,
-            object: &NSManagedObject,
-        ) -> Option<Retained<CSSearchableItemAttributeSet>>;
-
-        #[cfg(all(feature = "block2", feature = "objc2-core-spotlight"))]
-        #[cfg(not(any(target_os = "tvos", target_os = "watchos")))]
-        #[unsafe(method(searchableIndex:reindexAllSearchableItemsWithAcknowledgementHandler:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn searchableIndex_reindexAllSearchableItemsWithAcknowledgementHandler(
-            &self,
-            searchable_index: &CSSearchableIndex,
-            acknowledgement_handler: &block2::DynBlock<dyn Fn()>,
-        );
-
-        #[cfg(all(feature = "block2", feature = "objc2-core-spotlight"))]
-        #[cfg(not(any(target_os = "tvos", target_os = "watchos")))]
-        #[unsafe(method(searchableIndex:reindexSearchableItemsWithIdentifiers:acknowledgementHandler:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn searchableIndex_reindexSearchableItemsWithIdentifiers_acknowledgementHandler(
-            &self,
-            searchable_index: &CSSearchableIndex,
-            identifiers: &NSArray<NSString>,
-            acknowledgement_handler: &block2::DynBlock<dyn Fn()>,
         );
     );
 }

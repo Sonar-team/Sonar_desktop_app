@@ -10,9 +10,6 @@ use objc2::__framework_prelude::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfboolean?language=objc)
-///
-/// This is toll-free bridged with `NSNumber`.
-#[doc(alias = "CFBooleanRef")]
 #[repr(C)]
 pub struct CFBoolean {
     inner: [u8; 0],
@@ -51,7 +48,7 @@ unsafe impl ConcreteType for CFBoolean {
 impl CFBoolean {
     #[doc(alias = "CFBooleanGetValue")]
     #[inline]
-    pub fn value(&self) -> bool {
+    pub fn value(self: &CFBoolean) -> bool {
         extern "C-unwind" {
             fn CFBooleanGetValue(boolean: &CFBoolean) -> Boolean;
         }
@@ -113,9 +110,6 @@ unsafe impl RefEncode for CFNumberType {
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cfnumber?language=objc)
-///
-/// This is toll-free bridged with `NSNumber`.
-#[doc(alias = "CFNumberRef")]
 #[repr(C)]
 pub struct CFNumber {
     inner: [u8; 0],
@@ -157,10 +151,6 @@ unsafe impl ConcreteType for CFNumber {
 }
 
 impl CFNumber {
-    /// # Safety
-    ///
-    /// - `allocator` might not allow `None`.
-    /// - `value_ptr` must be a valid pointer.
     #[doc(alias = "CFNumberCreate")]
     #[inline]
     pub unsafe fn new(
@@ -181,7 +171,7 @@ impl CFNumber {
 
     #[doc(alias = "CFNumberGetType")]
     #[inline]
-    pub fn r#type(&self) -> CFNumberType {
+    pub fn r#type(self: &CFNumber) -> CFNumberType {
         extern "C-unwind" {
             fn CFNumberGetType(number: &CFNumber) -> CFNumberType;
         }
@@ -190,7 +180,7 @@ impl CFNumber {
 
     #[doc(alias = "CFNumberGetByteSize")]
     #[inline]
-    pub fn byte_size(&self) -> CFIndex {
+    pub fn byte_size(self: &CFNumber) -> CFIndex {
         extern "C-unwind" {
             fn CFNumberGetByteSize(number: &CFNumber) -> CFIndex;
         }
@@ -199,7 +189,7 @@ impl CFNumber {
 
     #[doc(alias = "CFNumberIsFloatType")]
     #[inline]
-    pub fn is_float_type(&self) -> bool {
+    pub fn is_float_type(self: &CFNumber) -> bool {
         extern "C-unwind" {
             fn CFNumberIsFloatType(number: &CFNumber) -> Boolean;
         }
@@ -207,12 +197,9 @@ impl CFNumber {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// `value_ptr` must be a valid pointer.
     #[doc(alias = "CFNumberGetValue")]
     #[inline]
-    pub unsafe fn value(&self, the_type: CFNumberType, value_ptr: *mut c_void) -> bool {
+    pub unsafe fn value(self: &CFNumber, the_type: CFNumberType, value_ptr: *mut c_void) -> bool {
         extern "C-unwind" {
             fn CFNumberGetValue(
                 number: &CFNumber,
@@ -224,14 +211,10 @@ impl CFNumber {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// - `other_number` might not allow `None`.
-    /// - `context` must be a valid pointer.
     #[doc(alias = "CFNumberCompare")]
     #[inline]
     pub unsafe fn compare(
-        &self,
+        self: &CFNumber,
         other_number: Option<&CFNumber>,
         context: *mut c_void,
     ) -> CFComparisonResult {

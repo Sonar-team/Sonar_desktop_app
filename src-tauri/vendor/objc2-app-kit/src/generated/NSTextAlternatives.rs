@@ -30,7 +30,7 @@ impl NSTextAlternatives {
     extern_methods!(
         #[unsafe(method(initWithPrimaryString:alternativeStrings:))]
         #[unsafe(method_family = init)]
-        pub fn initWithPrimaryString_alternativeStrings(
+        pub unsafe fn initWithPrimaryString_alternativeStrings(
             this: Allocated<Self>,
             primary_string: &NSString,
             alternative_strings: &NSArray<NSString>,
@@ -38,15 +38,15 @@ impl NSTextAlternatives {
 
         #[unsafe(method(primaryString))]
         #[unsafe(method_family = none)]
-        pub fn primaryString(&self) -> Retained<NSString>;
+        pub unsafe fn primaryString(&self) -> Retained<NSString>;
 
         #[unsafe(method(alternativeStrings))]
         #[unsafe(method_family = none)]
-        pub fn alternativeStrings(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn alternativeStrings(&self) -> Retained<NSArray<NSString>>;
 
         #[unsafe(method(noteSelectedAlternativeString:))]
         #[unsafe(method_family = none)]
-        pub fn noteSelectedAlternativeString(&self, alternative_string: &NSString);
+        pub unsafe fn noteSelectedAlternativeString(&self, alternative_string: &NSString);
     );
 }
 
@@ -55,19 +55,12 @@ impl NSTextAlternatives {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSTextAlternatives {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern "C" {

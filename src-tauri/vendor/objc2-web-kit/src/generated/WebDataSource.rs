@@ -31,10 +31,6 @@ impl WebDataSource {
         /// Parameter `request`: The request to use in creating a datasource.
         ///
         /// Returns: Returns an initialized WebDataSource.
-        ///
-        /// # Safety
-        ///
-        /// `request` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initWithRequest:))]
         #[unsafe(method_family = init)]
@@ -155,10 +151,6 @@ impl WebDataSource {
         ///
         /// Parameter `URL`: The URL of the subresource.
         /// Returns non-nil if the data source has fully downloaded a subresource with the given URL.
-        ///
-        /// # Safety
-        ///
-        /// `url` might not allow `None`.
         #[deprecated]
         #[unsafe(method(subresourceForURL:))]
         #[unsafe(method_family = none)]
@@ -177,10 +169,6 @@ impl WebDataSource {
         /// an image that is already downloaded to a web page, addSubresource: can be called so that the data source
         /// uses the downloaded image rather than accessing the network. NOTE: If the data source already has a
         /// subresource with the same URL, addSubresource: will replace it.
-        ///
-        /// # Safety
-        ///
-        /// `subresource` might not allow `None`.
         #[deprecated]
         #[unsafe(method(addSubresource:))]
         #[unsafe(method_family = none)]

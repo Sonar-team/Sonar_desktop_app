@@ -25,76 +25,64 @@ impl UIConversationEntry {
         /// A string that contains the message’s text.
         #[unsafe(method(text))]
         #[unsafe(method_family = none)]
-        pub fn text(&self) -> Retained<NSString>;
+        pub unsafe fn text(&self) -> Retained<NSString>;
 
         /// Setter for [`text`][Self::text].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setText:))]
         #[unsafe(method_family = none)]
-        pub fn setText(&self, text: &NSString);
+        pub unsafe fn setText(&self, text: &NSString);
 
         /// A string that identifies the message’s sender.
         #[unsafe(method(senderIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn senderIdentifier(&self) -> Retained<NSString>;
+        pub unsafe fn senderIdentifier(&self) -> Retained<NSString>;
 
         /// Setter for [`senderIdentifier`][Self::senderIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSenderIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setSenderIdentifier(&self, sender_identifier: &NSString);
+        pub unsafe fn setSenderIdentifier(&self, sender_identifier: &NSString);
 
         /// A date that notes when the sender added the message to the conversation.
         #[unsafe(method(sentDate))]
         #[unsafe(method_family = none)]
-        pub fn sentDate(&self) -> Retained<NSDate>;
+        pub unsafe fn sentDate(&self) -> Retained<NSDate>;
 
         /// Setter for [`sentDate`][Self::sentDate].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSentDate:))]
         #[unsafe(method_family = none)]
-        pub fn setSentDate(&self, sent_date: &NSDate);
+        pub unsafe fn setSentDate(&self, sent_date: &NSDate);
 
         /// A string that uniquely identifies this specific entry in the conversation.
         #[unsafe(method(entryIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn entryIdentifier(&self) -> Retained<NSString>;
+        pub unsafe fn entryIdentifier(&self) -> Retained<NSString>;
 
         /// Setter for [`entryIdentifier`][Self::entryIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setEntryIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setEntryIdentifier(&self, entry_identifier: &NSString);
+        pub unsafe fn setEntryIdentifier(&self, entry_identifier: &NSString);
 
         /// An optional string that identifies another message in a conversation, when this entry is a reply to that message.
         ///
         /// When an entry is a reply to another conversation entry, this contains the identifier of the conversation entry that the person replied to.
         #[unsafe(method(replyThreadIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn replyThreadIdentifier(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn replyThreadIdentifier(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`replyThreadIdentifier`][Self::replyThreadIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setReplyThreadIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setReplyThreadIdentifier(&self, reply_thread_identifier: Option<&NSString>);
+        pub unsafe fn setReplyThreadIdentifier(&self, reply_thread_identifier: Option<&NSString>);
 
         /// A set of strings that identifies the primary recipients of the message.
         #[unsafe(method(primaryRecipientIdentifiers))]
         #[unsafe(method_family = none)]
-        pub fn primaryRecipientIdentifiers(&self) -> Retained<NSSet<NSString>>;
+        pub unsafe fn primaryRecipientIdentifiers(&self) -> Retained<NSSet<NSString>>;
 
         /// Setter for [`primaryRecipientIdentifiers`][Self::primaryRecipientIdentifiers].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPrimaryRecipientIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn setPrimaryRecipientIdentifiers(
+        pub unsafe fn setPrimaryRecipientIdentifiers(
             &self,
             primary_recipient_identifiers: &NSSet<NSString>,
         );
@@ -106,17 +94,10 @@ impl UIConversationEntry {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for UIConversationEntry {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

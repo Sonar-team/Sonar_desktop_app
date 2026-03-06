@@ -114,12 +114,12 @@ impl NSTabViewController {
         /// `NSTabViewControllerTabStyleSegmentedControlOnTop.`
         #[unsafe(method(tabStyle))]
         #[unsafe(method_family = none)]
-        pub fn tabStyle(&self) -> NSTabViewControllerTabStyle;
+        pub unsafe fn tabStyle(&self) -> NSTabViewControllerTabStyle;
 
         /// Setter for [`tabStyle`][Self::tabStyle].
         #[unsafe(method(setTabStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setTabStyle(&self, tab_style: NSTabViewControllerTabStyle);
+        pub unsafe fn setTabStyle(&self, tab_style: NSTabViewControllerTabStyle);
 
         #[cfg(all(feature = "NSTabView", feature = "NSView"))]
         /// Access to the tab view that the controller is controlling. To provide a custom NSTabView, assign the value anytime before
@@ -130,36 +130,39 @@ impl NSTabViewController {
         /// `viewController.view.`Properties such as the tabStyle can be directly manipulated, but calling methods that add and remove tabViewItems or changing the delegate is not allowed. The NSTabViewController will be made the delegate of the NSTabView. Internally, the NSTabView is always used to switch between displayed childViewControllers, regardless of the style displayed.
         #[unsafe(method(tabView))]
         #[unsafe(method_family = none)]
-        pub fn tabView(&self) -> Retained<NSTabView>;
+        pub unsafe fn tabView(&self) -> Retained<NSTabView>;
 
         #[cfg(all(feature = "NSTabView", feature = "NSView"))]
         /// Setter for [`tabView`][Self::tabView].
         #[unsafe(method(setTabView:))]
         #[unsafe(method_family = none)]
-        pub fn setTabView(&self, tab_view: &NSTabView);
+        pub unsafe fn setTabView(&self, tab_view: &NSTabView);
 
         /// This defines how NSTabViewController transitions from one view to another. Transitions go through [self transitionFromViewController:toViewController:options:completionHandler:]. The default value is
         /// `NSViewControllerTransitionCrossfade|NSViewControllerTransitionAllowUserInteraction.`
         #[unsafe(method(transitionOptions))]
         #[unsafe(method_family = none)]
-        pub fn transitionOptions(&self) -> NSViewControllerTransitionOptions;
+        pub unsafe fn transitionOptions(&self) -> NSViewControllerTransitionOptions;
 
         /// Setter for [`transitionOptions`][Self::transitionOptions].
         #[unsafe(method(setTransitionOptions:))]
         #[unsafe(method_family = none)]
-        pub fn setTransitionOptions(&self, transition_options: NSViewControllerTransitionOptions);
+        pub unsafe fn setTransitionOptions(
+            &self,
+            transition_options: NSViewControllerTransitionOptions,
+        );
 
         /// If YES and the receiving NSTabViewController has a nil title,
         /// `-title`will return its selected child ViewController's title. If NO, it will continue to return nil. The default value is
         /// `YES.`
         #[unsafe(method(canPropagateSelectedChildViewControllerTitle))]
         #[unsafe(method_family = none)]
-        pub fn canPropagateSelectedChildViewControllerTitle(&self) -> bool;
+        pub unsafe fn canPropagateSelectedChildViewControllerTitle(&self) -> bool;
 
         /// Setter for [`canPropagateSelectedChildViewControllerTitle`][Self::canPropagateSelectedChildViewControllerTitle].
         #[unsafe(method(setCanPropagateSelectedChildViewControllerTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setCanPropagateSelectedChildViewControllerTitle(
+        pub unsafe fn setCanPropagateSelectedChildViewControllerTitle(
             &self,
             can_propagate_selected_child_view_controller_title: bool,
         );
@@ -168,15 +171,13 @@ impl NSTabViewController {
         /// The array of tab view items that correspond to the current child view controllers. After a child view controller is added to the receiving TabViewController, a NSTabViewItem with the default values will be created for it. Once the child is removed, its corresponding tabViewItem will be removed from the tabViewItems array.
         #[unsafe(method(tabViewItems))]
         #[unsafe(method_family = none)]
-        pub fn tabViewItems(&self) -> Retained<NSArray<NSTabViewItem>>;
+        pub unsafe fn tabViewItems(&self) -> Retained<NSArray<NSTabViewItem>>;
 
         #[cfg(feature = "NSTabViewItem")]
         /// Setter for [`tabViewItems`][Self::tabViewItems].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTabViewItems:))]
         #[unsafe(method_family = none)]
-        pub fn setTabViewItems(&self, tab_view_items: &NSArray<NSTabViewItem>);
+        pub unsafe fn setTabViewItems(&self, tab_view_items: &NSArray<NSTabViewItem>);
 
         /// Read and write the current selected TabViewItem that is being shown. This value is KVC compliant and can be the target of a binding. For instance, a NSSegmentedControl's selection can be bound to this value with:
         ///
@@ -185,12 +186,12 @@ impl NSTabViewController {
         /// ```
         #[unsafe(method(selectedTabViewItemIndex))]
         #[unsafe(method_family = none)]
-        pub fn selectedTabViewItemIndex(&self) -> NSInteger;
+        pub unsafe fn selectedTabViewItemIndex(&self) -> NSInteger;
 
         /// Setter for [`selectedTabViewItemIndex`][Self::selectedTabViewItemIndex].
         #[unsafe(method(setSelectedTabViewItemIndex:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectedTabViewItemIndex(&self, selected_tab_view_item_index: NSInteger);
+        pub unsafe fn setSelectedTabViewItemIndex(&self, selected_tab_view_item_index: NSInteger);
 
         #[cfg(feature = "NSTabViewItem")]
         /// Adds a TabViewItem to the end of the TabViewController. The tabViewItem’s viewController’s view will only be loaded once its tab is selected.
@@ -199,7 +200,7 @@ impl NSTabViewController {
         /// `viewController`set by the time it is added or an exception will be thrown. An exception will also be thrown if tabViewItem is nil.
         #[unsafe(method(addTabViewItem:))]
         #[unsafe(method_family = none)]
-        pub fn addTabViewItem(&self, tab_view_item: &NSTabViewItem);
+        pub unsafe fn addTabViewItem(&self, tab_view_item: &NSTabViewItem);
 
         #[cfg(feature = "NSTabViewItem")]
         /// Adds a TabViewItem to a given index in the TabViewController. The tabViewItem’s viewController’s view will only be loaded once its tab is selected.
@@ -216,7 +217,11 @@ impl NSTabViewController {
         /// `tabViewItems.count`
         #[unsafe(method(insertTabViewItem:atIndex:))]
         #[unsafe(method_family = none)]
-        pub fn insertTabViewItem_atIndex(&self, tab_view_item: &NSTabViewItem, index: NSInteger);
+        pub unsafe fn insertTabViewItem_atIndex(
+            &self,
+            tab_view_item: &NSTabViewItem,
+            index: NSInteger,
+        );
 
         #[cfg(feature = "NSTabViewItem")]
         /// Removes a TabViewItem from the receiver. If the removed tabViewItem currently selected, the next (or previous, if there is no next) tabViewItem will become selected. If this is the only tabViewItem in the TabViewController, the selectedTabViewItemIndex will become
@@ -227,7 +232,7 @@ impl NSTabViewController {
         /// `tabViewItem`is not in the NSTabViewController or if it is nil.
         #[unsafe(method(removeTabViewItem:))]
         #[unsafe(method_family = none)]
-        pub fn removeTabViewItem(&self, tab_view_item: &NSTabViewItem);
+        pub unsafe fn removeTabViewItem(&self, tab_view_item: &NSTabViewItem);
 
         #[cfg(feature = "NSTabViewItem")]
         /// Convenience method for getting the associated tab view item for a particular childViewController.
@@ -238,19 +243,19 @@ impl NSTabViewController {
         /// `viewController`is not a child of the TabViewController.
         #[unsafe(method(tabViewItemForViewController:))]
         #[unsafe(method_family = none)]
-        pub fn tabViewItemForViewController(
+        pub unsafe fn tabViewItemForViewController(
             &self,
             view_controller: &NSViewController,
         ) -> Option<Retained<NSTabViewItem>>;
 
         #[unsafe(method(viewDidLoad))]
         #[unsafe(method_family = none)]
-        pub fn viewDidLoad(&self);
+        pub unsafe fn viewDidLoad(&self);
 
         #[cfg(all(feature = "NSTabView", feature = "NSTabViewItem", feature = "NSView"))]
         #[unsafe(method(tabView:willSelectTabViewItem:))]
         #[unsafe(method_family = none)]
-        pub fn tabView_willSelectTabViewItem(
+        pub unsafe fn tabView_willSelectTabViewItem(
             &self,
             tab_view: &NSTabView,
             tab_view_item: Option<&NSTabViewItem>,
@@ -259,7 +264,7 @@ impl NSTabViewController {
         #[cfg(all(feature = "NSTabView", feature = "NSTabViewItem", feature = "NSView"))]
         #[unsafe(method(tabView:didSelectTabViewItem:))]
         #[unsafe(method_family = none)]
-        pub fn tabView_didSelectTabViewItem(
+        pub unsafe fn tabView_didSelectTabViewItem(
             &self,
             tab_view: &NSTabView,
             tab_view_item: Option<&NSTabViewItem>,
@@ -268,7 +273,7 @@ impl NSTabViewController {
         #[cfg(all(feature = "NSTabView", feature = "NSTabViewItem", feature = "NSView"))]
         #[unsafe(method(tabView:shouldSelectTabViewItem:))]
         #[unsafe(method_family = none)]
-        pub fn tabView_shouldSelectTabViewItem(
+        pub unsafe fn tabView_shouldSelectTabViewItem(
             &self,
             tab_view: &NSTabView,
             tab_view_item: Option<&NSTabViewItem>,
@@ -277,7 +282,7 @@ impl NSTabViewController {
         #[cfg(all(feature = "NSToolbar", feature = "NSToolbarItem"))]
         #[unsafe(method(toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:))]
         #[unsafe(method_family = none)]
-        pub fn toolbar_itemForItemIdentifier_willBeInsertedIntoToolbar(
+        pub unsafe fn toolbar_itemForItemIdentifier_willBeInsertedIntoToolbar(
             &self,
             toolbar: &NSToolbar,
             item_identifier: &NSToolbarItemIdentifier,
@@ -287,7 +292,7 @@ impl NSTabViewController {
         #[cfg(feature = "NSToolbar")]
         #[unsafe(method(toolbarDefaultItemIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn toolbarDefaultItemIdentifiers(
+        pub unsafe fn toolbarDefaultItemIdentifiers(
             &self,
             toolbar: &NSToolbar,
         ) -> Retained<NSArray<NSToolbarItemIdentifier>>;
@@ -295,7 +300,7 @@ impl NSTabViewController {
         #[cfg(feature = "NSToolbar")]
         #[unsafe(method(toolbarAllowedItemIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn toolbarAllowedItemIdentifiers(
+        pub unsafe fn toolbarAllowedItemIdentifiers(
             &self,
             toolbar: &NSToolbar,
         ) -> Retained<NSArray<NSToolbarItemIdentifier>>;
@@ -303,7 +308,7 @@ impl NSTabViewController {
         #[cfg(feature = "NSToolbar")]
         #[unsafe(method(toolbarSelectableItemIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn toolbarSelectableItemIdentifiers(
+        pub unsafe fn toolbarSelectableItemIdentifiers(
             &self,
             toolbar: &NSToolbar,
         ) -> Retained<NSArray<NSToolbarItemIdentifier>>;
@@ -317,15 +322,12 @@ impl NSTabViewController {
         #[cfg(feature = "NSNib")]
         #[unsafe(method(initWithNibName:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibName_bundle(
+        pub unsafe fn initWithNibName_bundle(
             this: Allocated<Self>,
             nib_name_or_nil: Option<&NSNibName>,
             nib_bundle_or_nil: Option<&NSBundle>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -341,7 +343,7 @@ impl NSTabViewController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -351,6 +353,6 @@ impl NSTabViewController {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

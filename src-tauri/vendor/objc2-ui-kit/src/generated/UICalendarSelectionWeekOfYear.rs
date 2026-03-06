@@ -27,19 +27,20 @@ impl UICalendarSelectionWeekOfYear {
         /// The currently selected week of year in the Calendar view. The components must include `[.yearForWeekOfYear, .weekOfYear]`.
         #[unsafe(method(selectedWeekOfYear))]
         #[unsafe(method_family = none)]
-        pub fn selectedWeekOfYear(&self) -> Option<Retained<NSDateComponents>>;
+        pub unsafe fn selectedWeekOfYear(&self) -> Option<Retained<NSDateComponents>>;
 
         /// Setter for [`selectedWeekOfYear`][Self::selectedWeekOfYear].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSelectedWeekOfYear:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectedWeekOfYear(&self, selected_week_of_year: Option<&NSDateComponents>);
+        pub unsafe fn setSelectedWeekOfYear(
+            &self,
+            selected_week_of_year: Option<&NSDateComponents>,
+        );
 
         /// Sets the dates to display in the calendar, with an option to animate the setting.
         #[unsafe(method(setSelectedWeekOfYear:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectedWeekOfYear_animated(
+        pub unsafe fn setSelectedWeekOfYear_animated(
             &self,
             selected_week_of_year: Option<&NSDateComponents>,
             animated: bool,
@@ -48,14 +49,14 @@ impl UICalendarSelectionWeekOfYear {
         /// The object that acts as the delegate of the calendar view selection
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UICalendarSelectionWeekOfYearDelegate>>>;
 
         /// Creates a new multi-date selection with the specified delegate.
         #[unsafe(method(initWithDelegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDelegate(
+        pub unsafe fn initWithDelegate(
             this: Allocated<Self>,
             delegate: Option<&ProtocolObject<dyn UICalendarSelectionWeekOfYearDelegate>>,
         ) -> Retained<Self>;
@@ -90,7 +91,7 @@ extern_protocol!(
         /// Parameter `dateComponents`: The date that was selected by the user.
         #[unsafe(method(weekOfYearSelection:didSelectWeekOfYear:))]
         #[unsafe(method_family = none)]
-        fn weekOfYearSelection_didSelectWeekOfYear(
+        unsafe fn weekOfYearSelection_didSelectWeekOfYear(
             &self,
             selection: &UICalendarSelectionWeekOfYear,
             week_of_year_components: Option<&NSDateComponents>,
@@ -109,7 +110,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(weekOfYearSelection:canSelectWeekOfYear:))]
         #[unsafe(method_family = none)]
-        fn weekOfYearSelection_canSelectWeekOfYear(
+        unsafe fn weekOfYearSelection_canSelectWeekOfYear(
             &self,
             selection: &UICalendarSelectionWeekOfYear,
             week_of_year_components: Option<&NSDateComponents>,

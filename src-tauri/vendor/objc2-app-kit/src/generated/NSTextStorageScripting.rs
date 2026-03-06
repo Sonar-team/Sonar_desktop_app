@@ -13,68 +13,60 @@ impl NSTextStorage {
     extern_methods!(
         #[unsafe(method(attributeRuns))]
         #[unsafe(method_family = none)]
-        pub fn attributeRuns(&self) -> Retained<NSArray<NSTextStorage>>;
+        pub unsafe fn attributeRuns(&self) -> Retained<NSArray<NSTextStorage>>;
 
         /// Setter for [`attributeRuns`][Self::attributeRuns].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAttributeRuns:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributeRuns(&self, attribute_runs: &NSArray<NSTextStorage>);
+        pub unsafe fn setAttributeRuns(&self, attribute_runs: &NSArray<NSTextStorage>);
 
         #[unsafe(method(paragraphs))]
         #[unsafe(method_family = none)]
-        pub fn paragraphs(&self) -> Retained<NSArray<NSTextStorage>>;
+        pub unsafe fn paragraphs(&self) -> Retained<NSArray<NSTextStorage>>;
 
         /// Setter for [`paragraphs`][Self::paragraphs].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setParagraphs:))]
         #[unsafe(method_family = none)]
-        pub fn setParagraphs(&self, paragraphs: &NSArray<NSTextStorage>);
+        pub unsafe fn setParagraphs(&self, paragraphs: &NSArray<NSTextStorage>);
 
         #[unsafe(method(words))]
         #[unsafe(method_family = none)]
-        pub fn words(&self) -> Retained<NSArray<NSTextStorage>>;
+        pub unsafe fn words(&self) -> Retained<NSArray<NSTextStorage>>;
 
         /// Setter for [`words`][Self::words].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setWords:))]
         #[unsafe(method_family = none)]
-        pub fn setWords(&self, words: &NSArray<NSTextStorage>);
+        pub unsafe fn setWords(&self, words: &NSArray<NSTextStorage>);
 
         #[unsafe(method(characters))]
         #[unsafe(method_family = none)]
-        pub fn characters(&self) -> Retained<NSArray<NSTextStorage>>;
+        pub unsafe fn characters(&self) -> Retained<NSArray<NSTextStorage>>;
 
         /// Setter for [`characters`][Self::characters].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCharacters:))]
         #[unsafe(method_family = none)]
-        pub fn setCharacters(&self, characters: &NSArray<NSTextStorage>);
+        pub unsafe fn setCharacters(&self, characters: &NSArray<NSTextStorage>);
 
         #[cfg(feature = "NSFont")]
         #[unsafe(method(font))]
         #[unsafe(method_family = none)]
-        pub fn font(&self) -> Option<Retained<NSFont>>;
+        pub unsafe fn font(&self) -> Option<Retained<NSFont>>;
 
         #[cfg(feature = "NSFont")]
         /// Setter for [`font`][Self::font].
         #[unsafe(method(setFont:))]
         #[unsafe(method_family = none)]
-        pub fn setFont(&self, font: Option<&NSFont>);
+        pub unsafe fn setFont(&self, font: Option<&NSFont>);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(foregroundColor))]
         #[unsafe(method_family = none)]
-        pub fn foregroundColor(&self) -> Option<Retained<NSColor>>;
+        pub unsafe fn foregroundColor(&self) -> Option<Retained<NSColor>>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`foregroundColor`][Self::foregroundColor].
         #[unsafe(method(setForegroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setForegroundColor(&self, foreground_color: Option<&NSColor>);
+        pub unsafe fn setForegroundColor(&self, foreground_color: Option<&NSColor>);
     );
 }

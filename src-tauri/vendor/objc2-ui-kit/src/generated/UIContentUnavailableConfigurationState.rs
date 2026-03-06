@@ -45,14 +45,11 @@ impl UIContentUnavailableConfigurationState {
         #[cfg(feature = "UITraitCollection")]
         #[unsafe(method(initWithTraitCollection:))]
         #[unsafe(method_family = init)]
-        pub fn initWithTraitCollection(
+        pub unsafe fn initWithTraitCollection(
             this: Allocated<Self>,
             trait_collection: &UITraitCollection,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -72,22 +69,22 @@ impl UIContentUnavailableConfigurationState {
         /// The trait collection.
         #[unsafe(method(traitCollection))]
         #[unsafe(method_family = none)]
-        pub fn traitCollection(&self) -> Retained<UITraitCollection>;
+        pub unsafe fn traitCollection(&self) -> Retained<UITraitCollection>;
 
         #[cfg(feature = "UITraitCollection")]
         /// Setter for [`traitCollection`][Self::traitCollection].
         #[unsafe(method(setTraitCollection:))]
         #[unsafe(method_family = none)]
-        pub fn setTraitCollection(&self, trait_collection: &UITraitCollection);
+        pub unsafe fn setTraitCollection(&self, trait_collection: &UITraitCollection);
 
         /// The search text. Default is the search bar text of the view controller's search controller.
         #[unsafe(method(searchText))]
         #[unsafe(method_family = none)]
-        pub fn searchText(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn searchText(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`searchText`][Self::searchText].
         #[unsafe(method(setSearchText:))]
         #[unsafe(method_family = none)]
-        pub fn setSearchText(&self, search_text: Option<&NSString>);
+        pub unsafe fn setSearchText(&self, search_text: Option<&NSString>);
     );
 }

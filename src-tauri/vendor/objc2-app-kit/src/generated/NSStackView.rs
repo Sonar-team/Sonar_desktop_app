@@ -152,128 +152,132 @@ impl NSStackView {
     extern_methods!(
         #[unsafe(method(stackViewWithViews:))]
         #[unsafe(method_family = none)]
-        pub fn stackViewWithViews(views: &NSArray<NSView>, mtm: MainThreadMarker)
-            -> Retained<Self>;
+        pub unsafe fn stackViewWithViews(
+            views: &NSArray<NSView>,
+            mtm: MainThreadMarker,
+        ) -> Retained<Self>;
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSStackViewDelegate>>>;
+        pub unsafe fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSStackViewDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSStackViewDelegate>>);
+        pub unsafe fn setDelegate(
+            &self,
+            delegate: Option<&ProtocolObject<dyn NSStackViewDelegate>>,
+        );
 
         #[cfg(feature = "NSUserInterfaceLayout")]
         /// Orientation of the StackView, defaults to NSUserInterfaceLayoutOrientationHorizontal
         #[unsafe(method(orientation))]
         #[unsafe(method_family = none)]
-        pub fn orientation(&self) -> NSUserInterfaceLayoutOrientation;
+        pub unsafe fn orientation(&self) -> NSUserInterfaceLayoutOrientation;
 
         #[cfg(feature = "NSUserInterfaceLayout")]
         /// Setter for [`orientation`][Self::orientation].
         #[unsafe(method(setOrientation:))]
         #[unsafe(method_family = none)]
-        pub fn setOrientation(&self, orientation: NSUserInterfaceLayoutOrientation);
+        pub unsafe fn setOrientation(&self, orientation: NSUserInterfaceLayoutOrientation);
 
         #[cfg(feature = "NSLayoutConstraint")]
         /// Describes how subviews are aligned within the StackView, defaults to `NSLayoutAttributeCenterY` for horizontal stacks, `NSLayoutAttributeCenterX` for vertical stacks. Setting `NSLayoutAttributeNotAnAttribute` will cause the internal alignment constraints to not be created, and could result in an ambiguous layout. Setting an inapplicable attribute for the set orientation will result in the alignment being ignored (similar to its handling with NSLayoutAttributeNotAnAttribute). The alignment constraints are established at a priority of `NSLayoutPriorityDefaultLow` and are overridable for individual views using external constraints.
         #[unsafe(method(alignment))]
         #[unsafe(method_family = none)]
-        pub fn alignment(&self) -> NSLayoutAttribute;
+        pub unsafe fn alignment(&self) -> NSLayoutAttribute;
 
         #[cfg(feature = "NSLayoutConstraint")]
         /// Setter for [`alignment`][Self::alignment].
         #[unsafe(method(setAlignment:))]
         #[unsafe(method_family = none)]
-        pub fn setAlignment(&self, alignment: NSLayoutAttribute);
+        pub unsafe fn setAlignment(&self, alignment: NSLayoutAttribute);
 
         /// Default padding inside the StackView, around all of the subviews.
         #[unsafe(method(edgeInsets))]
         #[unsafe(method_family = none)]
-        pub fn edgeInsets(&self) -> NSEdgeInsets;
+        pub unsafe fn edgeInsets(&self) -> NSEdgeInsets;
 
         /// Setter for [`edgeInsets`][Self::edgeInsets].
         #[unsafe(method(setEdgeInsets:))]
         #[unsafe(method_family = none)]
-        pub fn setEdgeInsets(&self, edge_insets: NSEdgeInsets);
+        pub unsafe fn setEdgeInsets(&self, edge_insets: NSEdgeInsets);
 
         /// The spacing and sizing distribution of stacked views along the primary axis. Defaults to GravityAreas.
         #[unsafe(method(distribution))]
         #[unsafe(method_family = none)]
-        pub fn distribution(&self) -> NSStackViewDistribution;
+        pub unsafe fn distribution(&self) -> NSStackViewDistribution;
 
         /// Setter for [`distribution`][Self::distribution].
         #[unsafe(method(setDistribution:))]
         #[unsafe(method_family = none)]
-        pub fn setDistribution(&self, distribution: NSStackViewDistribution);
+        pub unsafe fn setDistribution(&self, distribution: NSStackViewDistribution);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Default (minimum) spacing between each view
         #[unsafe(method(spacing))]
         #[unsafe(method_family = none)]
-        pub fn spacing(&self) -> CGFloat;
+        pub unsafe fn spacing(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`spacing`][Self::spacing].
         #[unsafe(method(setSpacing:))]
         #[unsafe(method_family = none)]
-        pub fn setSpacing(&self, spacing: CGFloat);
+        pub unsafe fn setSpacing(&self, spacing: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(setCustomSpacing:afterView:))]
         #[unsafe(method_family = none)]
-        pub fn setCustomSpacing_afterView(&self, spacing: CGFloat, view: &NSView);
+        pub unsafe fn setCustomSpacing_afterView(&self, spacing: CGFloat, view: &NSView);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(customSpacingAfterView:))]
         #[unsafe(method_family = none)]
-        pub fn customSpacingAfterView(&self, view: &NSView) -> CGFloat;
+        pub unsafe fn customSpacingAfterView(&self, view: &NSView) -> CGFloat;
 
         /// If YES, when a stacked view's `hidden` property is set to YES, the view will be detached from the stack and reattached when set to NO. Similarly, if the view has a lowered visibility priority and is detached from the stack view, it will be set as `hidden` rather than removed from the view hierarchy. Defaults to YES for apps linked on the 10.11 SDK or later.
         #[unsafe(method(detachesHiddenViews))]
         #[unsafe(method_family = none)]
-        pub fn detachesHiddenViews(&self) -> bool;
+        pub unsafe fn detachesHiddenViews(&self) -> bool;
 
         /// Setter for [`detachesHiddenViews`][Self::detachesHiddenViews].
         #[unsafe(method(setDetachesHiddenViews:))]
         #[unsafe(method_family = none)]
-        pub fn setDetachesHiddenViews(&self, detaches_hidden_views: bool);
+        pub unsafe fn setDetachesHiddenViews(&self, detaches_hidden_views: bool);
 
         /// The list of views that are arranged in a stack by the receiver. They are a subset of
         /// `-subviews,`with potential difference in ordering.
         #[unsafe(method(arrangedSubviews))]
         #[unsafe(method_family = none)]
-        pub fn arrangedSubviews(&self) -> Retained<NSArray<NSView>>;
+        pub unsafe fn arrangedSubviews(&self) -> Retained<NSArray<NSView>>;
 
         /// Adds a view to the end of the arrangedSubviews list. If the view is not a subview of the receiver, it will be added as one.
         #[unsafe(method(addArrangedSubview:))]
         #[unsafe(method_family = none)]
-        pub fn addArrangedSubview(&self, view: &NSView);
+        pub unsafe fn addArrangedSubview(&self, view: &NSView);
 
         /// Adds a view to the arrangedSubviews list at a specific index.
         /// If the view is already in the arrangedSubviews list, it will move the view to the specified index (but not change the subview index).
         /// If the view is not a subview of the receiver, it will be added as one (not necessarily at the same index).
         #[unsafe(method(insertArrangedSubview:atIndex:))]
         #[unsafe(method_family = none)]
-        pub fn insertArrangedSubview_atIndex(&self, view: &NSView, index: NSInteger);
+        pub unsafe fn insertArrangedSubview_atIndex(&self, view: &NSView, index: NSInteger);
 
         /// Removes a subview from the list of arranged subviews without removing it as a subview of the receiver.
         /// Removing the view as a subview (either by -[view removeFromSuperview] or setting the receiver's subviews) will automatically remove it as an arranged subview.
         #[unsafe(method(removeArrangedSubview:))]
         #[unsafe(method_family = none)]
-        pub fn removeArrangedSubview(&self, view: &NSView);
+        pub unsafe fn removeArrangedSubview(&self, view: &NSView);
 
         /// The arrangedSubviews that are currently detached/hidden.
         #[unsafe(method(detachedViews))]
         #[unsafe(method_family = none)]
-        pub fn detachedViews(&self) -> Retained<NSArray<NSView>>;
+        pub unsafe fn detachedViews(&self) -> Retained<NSArray<NSView>>;
 
         #[unsafe(method(setVisibilityPriority:forView:))]
         #[unsafe(method_family = none)]
-        pub fn setVisibilityPriority_forView(
+        pub unsafe fn setVisibilityPriority_forView(
             &self,
             priority: NSStackViewVisibilityPriority,
             view: &NSView,
@@ -281,12 +285,15 @@ impl NSStackView {
 
         #[unsafe(method(visibilityPriorityForView:))]
         #[unsafe(method_family = none)]
-        pub fn visibilityPriorityForView(&self, view: &NSView) -> NSStackViewVisibilityPriority;
+        pub unsafe fn visibilityPriorityForView(
+            &self,
+            view: &NSView,
+        ) -> NSStackViewVisibilityPriority;
 
         #[cfg(feature = "NSLayoutConstraint")]
         #[unsafe(method(clippingResistancePriorityForOrientation:))]
         #[unsafe(method_family = none)]
-        pub fn clippingResistancePriorityForOrientation(
+        pub unsafe fn clippingResistancePriorityForOrientation(
             &self,
             orientation: NSLayoutConstraintOrientation,
         ) -> NSLayoutPriority;
@@ -294,7 +301,7 @@ impl NSStackView {
         #[cfg(feature = "NSLayoutConstraint")]
         #[unsafe(method(setClippingResistancePriority:forOrientation:))]
         #[unsafe(method_family = none)]
-        pub fn setClippingResistancePriority_forOrientation(
+        pub unsafe fn setClippingResistancePriority_forOrientation(
             &self,
             clipping_resistance_priority: NSLayoutPriority,
             orientation: NSLayoutConstraintOrientation,
@@ -303,7 +310,7 @@ impl NSStackView {
         #[cfg(feature = "NSLayoutConstraint")]
         #[unsafe(method(huggingPriorityForOrientation:))]
         #[unsafe(method_family = none)]
-        pub fn huggingPriorityForOrientation(
+        pub unsafe fn huggingPriorityForOrientation(
             &self,
             orientation: NSLayoutConstraintOrientation,
         ) -> NSLayoutPriority;
@@ -311,7 +318,7 @@ impl NSStackView {
         #[cfg(feature = "NSLayoutConstraint")]
         #[unsafe(method(setHuggingPriority:forOrientation:))]
         #[unsafe(method_family = none)]
-        pub fn setHuggingPriority_forOrientation(
+        pub unsafe fn setHuggingPriority_forOrientation(
             &self,
             hugging_priority: NSLayoutPriority,
             orientation: NSLayoutConstraintOrientation,
@@ -325,11 +332,8 @@ impl NSStackView {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -345,7 +349,7 @@ impl NSStackView {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -355,7 +359,7 @@ impl NSStackView {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -366,13 +370,21 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(stackView:willDetachViews:))]
         #[unsafe(method_family = none)]
-        fn stackView_willDetachViews(&self, stack_view: &NSStackView, views: &NSArray<NSView>);
+        unsafe fn stackView_willDetachViews(
+            &self,
+            stack_view: &NSStackView,
+            views: &NSArray<NSView>,
+        );
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[optional]
         #[unsafe(method(stackView:didReattachViews:))]
         #[unsafe(method_family = none)]
-        fn stackView_didReattachViews(&self, stack_view: &NSStackView, views: &NSArray<NSView>);
+        unsafe fn stackView_didReattachViews(
+            &self,
+            stack_view: &NSStackView,
+            views: &NSArray<NSView>,
+        );
     }
 );
 
@@ -382,11 +394,11 @@ impl NSStackView {
     extern_methods!(
         #[unsafe(method(addView:inGravity:))]
         #[unsafe(method_family = none)]
-        pub fn addView_inGravity(&self, view: &NSView, gravity: NSStackViewGravity);
+        pub unsafe fn addView_inGravity(&self, view: &NSView, gravity: NSStackViewGravity);
 
         #[unsafe(method(insertView:atIndex:inGravity:))]
         #[unsafe(method_family = none)]
-        pub fn insertView_atIndex_inGravity(
+        pub unsafe fn insertView_atIndex_inGravity(
             &self,
             view: &NSView,
             index: NSUInteger,
@@ -395,19 +407,26 @@ impl NSStackView {
 
         #[unsafe(method(removeView:))]
         #[unsafe(method_family = none)]
-        pub fn removeView(&self, view: &NSView);
+        pub unsafe fn removeView(&self, view: &NSView);
 
         #[unsafe(method(viewsInGravity:))]
         #[unsafe(method_family = none)]
-        pub fn viewsInGravity(&self, gravity: NSStackViewGravity) -> Retained<NSArray<NSView>>;
+        pub unsafe fn viewsInGravity(
+            &self,
+            gravity: NSStackViewGravity,
+        ) -> Retained<NSArray<NSView>>;
 
         #[unsafe(method(setViews:inGravity:))]
         #[unsafe(method_family = none)]
-        pub fn setViews_inGravity(&self, views: &NSArray<NSView>, gravity: NSStackViewGravity);
+        pub unsafe fn setViews_inGravity(
+            &self,
+            views: &NSArray<NSView>,
+            gravity: NSStackViewGravity,
+        );
 
         #[unsafe(method(views))]
         #[unsafe(method_family = none)]
-        pub fn views(&self) -> Retained<NSArray<NSView>>;
+        pub unsafe fn views(&self) -> Retained<NSArray<NSView>>;
     );
 }
 
@@ -418,12 +437,12 @@ impl NSStackView {
         #[deprecated = "Set -distribution to NSStackViewDistributionEqualSpacing instead."]
         #[unsafe(method(hasEqualSpacing))]
         #[unsafe(method_family = none)]
-        pub fn hasEqualSpacing(&self) -> bool;
+        pub unsafe fn hasEqualSpacing(&self) -> bool;
 
         /// Setter for [`hasEqualSpacing`][Self::hasEqualSpacing].
         #[deprecated = "Set -distribution to NSStackViewDistributionEqualSpacing instead."]
         #[unsafe(method(setHasEqualSpacing:))]
         #[unsafe(method_family = none)]
-        pub fn setHasEqualSpacing(&self, has_equal_spacing: bool);
+        pub unsafe fn setHasEqualSpacing(&self, has_equal_spacing: bool);
     );
 }

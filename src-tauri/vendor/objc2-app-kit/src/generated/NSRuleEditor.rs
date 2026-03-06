@@ -175,135 +175,133 @@ impl NSRuleEditor {
     extern_methods!(
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSRuleEditorDelegate>>>;
+        pub unsafe fn delegate(&self)
+            -> Option<Retained<ProtocolObject<dyn NSRuleEditorDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSRuleEditorDelegate>>);
+        pub unsafe fn setDelegate(
+            &self,
+            delegate: Option<&ProtocolObject<dyn NSRuleEditorDelegate>>,
+        );
 
         #[unsafe(method(formattingStringsFilename))]
         #[unsafe(method_family = none)]
-        pub fn formattingStringsFilename(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn formattingStringsFilename(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`formattingStringsFilename`][Self::formattingStringsFilename].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFormattingStringsFilename:))]
         #[unsafe(method_family = none)]
-        pub fn setFormattingStringsFilename(&self, formatting_strings_filename: Option<&NSString>);
+        pub unsafe fn setFormattingStringsFilename(
+            &self,
+            formatting_strings_filename: Option<&NSString>,
+        );
 
         #[unsafe(method(formattingDictionary))]
         #[unsafe(method_family = none)]
-        pub fn formattingDictionary(&self) -> Option<Retained<NSDictionary<NSString, NSString>>>;
+        pub unsafe fn formattingDictionary(
+            &self,
+        ) -> Option<Retained<NSDictionary<NSString, NSString>>>;
 
         /// Setter for [`formattingDictionary`][Self::formattingDictionary].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFormattingDictionary:))]
         #[unsafe(method_family = none)]
-        pub fn setFormattingDictionary(
+        pub unsafe fn setFormattingDictionary(
             &self,
             formatting_dictionary: Option<&NSDictionary<NSString, NSString>>,
         );
 
         #[unsafe(method(reloadCriteria))]
         #[unsafe(method_family = none)]
-        pub fn reloadCriteria(&self);
+        pub unsafe fn reloadCriteria(&self);
 
         #[unsafe(method(nestingMode))]
         #[unsafe(method_family = none)]
-        pub fn nestingMode(&self) -> NSRuleEditorNestingMode;
+        pub unsafe fn nestingMode(&self) -> NSRuleEditorNestingMode;
 
         /// Setter for [`nestingMode`][Self::nestingMode].
         #[unsafe(method(setNestingMode:))]
         #[unsafe(method_family = none)]
-        pub fn setNestingMode(&self, nesting_mode: NSRuleEditorNestingMode);
+        pub unsafe fn setNestingMode(&self, nesting_mode: NSRuleEditorNestingMode);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(rowHeight))]
         #[unsafe(method_family = none)]
-        pub fn rowHeight(&self) -> CGFloat;
+        pub unsafe fn rowHeight(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`rowHeight`][Self::rowHeight].
         #[unsafe(method(setRowHeight:))]
         #[unsafe(method_family = none)]
-        pub fn setRowHeight(&self, row_height: CGFloat);
+        pub unsafe fn setRowHeight(&self, row_height: CGFloat);
 
         #[unsafe(method(isEditable))]
         #[unsafe(method_family = none)]
-        pub fn isEditable(&self) -> bool;
+        pub unsafe fn isEditable(&self) -> bool;
 
         /// Setter for [`isEditable`][Self::isEditable].
         #[unsafe(method(setEditable:))]
         #[unsafe(method_family = none)]
-        pub fn setEditable(&self, editable: bool);
+        pub unsafe fn setEditable(&self, editable: bool);
 
         #[unsafe(method(canRemoveAllRows))]
         #[unsafe(method_family = none)]
-        pub fn canRemoveAllRows(&self) -> bool;
+        pub unsafe fn canRemoveAllRows(&self) -> bool;
 
         /// Setter for [`canRemoveAllRows`][Self::canRemoveAllRows].
         #[unsafe(method(setCanRemoveAllRows:))]
         #[unsafe(method_family = none)]
-        pub fn setCanRemoveAllRows(&self, can_remove_all_rows: bool);
+        pub unsafe fn setCanRemoveAllRows(&self, can_remove_all_rows: bool);
 
         #[unsafe(method(predicate))]
         #[unsafe(method_family = none)]
-        pub fn predicate(&self) -> Option<Retained<NSPredicate>>;
+        pub unsafe fn predicate(&self) -> Option<Retained<NSPredicate>>;
 
         #[unsafe(method(reloadPredicate))]
         #[unsafe(method_family = none)]
-        pub fn reloadPredicate(&self);
+        pub unsafe fn reloadPredicate(&self);
 
         #[unsafe(method(predicateForRow:))]
         #[unsafe(method_family = none)]
-        pub fn predicateForRow(&self, row: NSInteger) -> Option<Retained<NSPredicate>>;
+        pub unsafe fn predicateForRow(&self, row: NSInteger) -> Option<Retained<NSPredicate>>;
 
         #[unsafe(method(numberOfRows))]
         #[unsafe(method_family = none)]
-        pub fn numberOfRows(&self) -> NSInteger;
+        pub unsafe fn numberOfRows(&self) -> NSInteger;
 
         #[unsafe(method(subrowIndexesForRow:))]
         #[unsafe(method_family = none)]
-        pub fn subrowIndexesForRow(&self, row_index: NSInteger) -> Retained<NSIndexSet>;
+        pub unsafe fn subrowIndexesForRow(&self, row_index: NSInteger) -> Retained<NSIndexSet>;
 
         #[unsafe(method(criteriaForRow:))]
         #[unsafe(method_family = none)]
-        pub fn criteriaForRow(&self, row: NSInteger) -> Retained<NSArray>;
+        pub unsafe fn criteriaForRow(&self, row: NSInteger) -> Retained<NSArray>;
 
         #[unsafe(method(displayValuesForRow:))]
         #[unsafe(method_family = none)]
-        pub fn displayValuesForRow(&self, row: NSInteger) -> Retained<NSArray>;
+        pub unsafe fn displayValuesForRow(&self, row: NSInteger) -> Retained<NSArray>;
 
-        /// # Safety
-        ///
-        /// `display_value` should be of the correct type.
         #[unsafe(method(rowForDisplayValue:))]
         #[unsafe(method_family = none)]
         pub unsafe fn rowForDisplayValue(&self, display_value: &AnyObject) -> NSInteger;
 
         #[unsafe(method(rowTypeForRow:))]
         #[unsafe(method_family = none)]
-        pub fn rowTypeForRow(&self, row_index: NSInteger) -> NSRuleEditorRowType;
+        pub unsafe fn rowTypeForRow(&self, row_index: NSInteger) -> NSRuleEditorRowType;
 
         #[unsafe(method(parentRowForRow:))]
         #[unsafe(method_family = none)]
-        pub fn parentRowForRow(&self, row_index: NSInteger) -> NSInteger;
+        pub unsafe fn parentRowForRow(&self, row_index: NSInteger) -> NSInteger;
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(addRow:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addRow(&self, sender: Option<&AnyObject>);
 
         #[unsafe(method(insertRowAtIndex:withType:asSubrowOfRow:animate:))]
         #[unsafe(method_family = none)]
-        pub fn insertRowAtIndex_withType_asSubrowOfRow_animate(
+        pub unsafe fn insertRowAtIndex_withType_asSubrowOfRow_animate(
             &self,
             row_index: NSInteger,
             row_type: NSRuleEditorRowType,
@@ -311,10 +309,6 @@ impl NSRuleEditor {
             should_animate: bool,
         );
 
-        /// # Safety
-        ///
-        /// - `criteria` generic should be of the correct type.
-        /// - `values` generic should be of the correct type.
         #[unsafe(method(setCriteria:andDisplayValues:forRowAtIndex:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setCriteria_andDisplayValues_forRowAtIndex(
@@ -326,11 +320,11 @@ impl NSRuleEditor {
 
         #[unsafe(method(removeRowAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn removeRowAtIndex(&self, row_index: NSInteger);
+        pub unsafe fn removeRowAtIndex(&self, row_index: NSInteger);
 
         #[unsafe(method(removeRowsAtIndexes:includeSubrows:))]
         #[unsafe(method_family = none)]
-        pub fn removeRowsAtIndexes_includeSubrows(
+        pub unsafe fn removeRowsAtIndexes_includeSubrows(
             &self,
             row_indexes: &NSIndexSet,
             include_subrows: bool,
@@ -338,72 +332,60 @@ impl NSRuleEditor {
 
         #[unsafe(method(selectedRowIndexes))]
         #[unsafe(method_family = none)]
-        pub fn selectedRowIndexes(&self) -> Retained<NSIndexSet>;
+        pub unsafe fn selectedRowIndexes(&self) -> Retained<NSIndexSet>;
 
         #[unsafe(method(selectRowIndexes:byExtendingSelection:))]
         #[unsafe(method_family = none)]
-        pub fn selectRowIndexes_byExtendingSelection(&self, indexes: &NSIndexSet, extend: bool);
+        pub unsafe fn selectRowIndexes_byExtendingSelection(
+            &self,
+            indexes: &NSIndexSet,
+            extend: bool,
+        );
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(rowClass))]
         #[unsafe(method_family = none)]
         pub unsafe fn rowClass(&self) -> &'static AnyClass;
 
         /// Setter for [`rowClass`][Self::rowClass].
-        ///
-        /// # Safety
-        ///
-        /// - `row_class` probably has further requirements.
-        /// - This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setRowClass:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRowClass(&self, row_class: &AnyClass);
 
         #[unsafe(method(rowTypeKeyPath))]
         #[unsafe(method_family = none)]
-        pub fn rowTypeKeyPath(&self) -> Retained<NSString>;
+        pub unsafe fn rowTypeKeyPath(&self) -> Retained<NSString>;
 
         /// Setter for [`rowTypeKeyPath`][Self::rowTypeKeyPath].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setRowTypeKeyPath:))]
         #[unsafe(method_family = none)]
-        pub fn setRowTypeKeyPath(&self, row_type_key_path: &NSString);
+        pub unsafe fn setRowTypeKeyPath(&self, row_type_key_path: &NSString);
 
         #[unsafe(method(subrowsKeyPath))]
         #[unsafe(method_family = none)]
-        pub fn subrowsKeyPath(&self) -> Retained<NSString>;
+        pub unsafe fn subrowsKeyPath(&self) -> Retained<NSString>;
 
         /// Setter for [`subrowsKeyPath`][Self::subrowsKeyPath].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSubrowsKeyPath:))]
         #[unsafe(method_family = none)]
-        pub fn setSubrowsKeyPath(&self, subrows_key_path: &NSString);
+        pub unsafe fn setSubrowsKeyPath(&self, subrows_key_path: &NSString);
 
         #[unsafe(method(criteriaKeyPath))]
         #[unsafe(method_family = none)]
-        pub fn criteriaKeyPath(&self) -> Retained<NSString>;
+        pub unsafe fn criteriaKeyPath(&self) -> Retained<NSString>;
 
         /// Setter for [`criteriaKeyPath`][Self::criteriaKeyPath].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCriteriaKeyPath:))]
         #[unsafe(method_family = none)]
-        pub fn setCriteriaKeyPath(&self, criteria_key_path: &NSString);
+        pub unsafe fn setCriteriaKeyPath(&self, criteria_key_path: &NSString);
 
         #[unsafe(method(displayValuesKeyPath))]
         #[unsafe(method_family = none)]
-        pub fn displayValuesKeyPath(&self) -> Retained<NSString>;
+        pub unsafe fn displayValuesKeyPath(&self) -> Retained<NSString>;
 
         /// Setter for [`displayValuesKeyPath`][Self::displayValuesKeyPath].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDisplayValuesKeyPath:))]
         #[unsafe(method_family = none)]
-        pub fn setDisplayValuesKeyPath(&self, display_values_key_path: &NSString);
+        pub unsafe fn setDisplayValuesKeyPath(&self, display_values_key_path: &NSString);
     );
 }
 
@@ -413,11 +395,8 @@ impl NSRuleEditor {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -433,7 +412,7 @@ impl NSRuleEditor {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -443,7 +422,7 @@ impl NSRuleEditor {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -451,9 +430,6 @@ extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsruleeditordelegate?language=objc)
     pub unsafe trait NSRuleEditorDelegate: NSObjectProtocol + MainThreadOnly {
         #[cfg(all(feature = "NSControl", feature = "NSResponder", feature = "NSView"))]
-        /// # Safety
-        ///
-        /// `criterion` should be of the correct type.
         #[unsafe(method(ruleEditor:numberOfChildrenForCriterion:withRowType:))]
         #[unsafe(method_family = none)]
         unsafe fn ruleEditor_numberOfChildrenForCriterion_withRowType(
@@ -464,9 +440,6 @@ extern_protocol!(
         ) -> NSInteger;
 
         #[cfg(all(feature = "NSControl", feature = "NSResponder", feature = "NSView"))]
-        /// # Safety
-        ///
-        /// `criterion` should be of the correct type.
         #[unsafe(method(ruleEditor:child:forCriterion:withRowType:))]
         #[unsafe(method_family = none)]
         unsafe fn ruleEditor_child_forCriterion_withRowType(
@@ -478,9 +451,6 @@ extern_protocol!(
         ) -> Retained<AnyObject>;
 
         #[cfg(all(feature = "NSControl", feature = "NSResponder", feature = "NSView"))]
-        /// # Safety
-        ///
-        /// `criterion` should be of the correct type.
         #[unsafe(method(ruleEditor:displayValueForCriterion:inRow:))]
         #[unsafe(method_family = none)]
         unsafe fn ruleEditor_displayValueForCriterion_inRow(
@@ -491,10 +461,6 @@ extern_protocol!(
         ) -> Retained<AnyObject>;
 
         #[cfg(all(feature = "NSControl", feature = "NSResponder", feature = "NSView"))]
-        /// # Safety
-        ///
-        /// - `criterion` should be of the correct type.
-        /// - `value` should be of the correct type.
         #[optional]
         #[unsafe(method(ruleEditor:predicatePartsForCriterion:withDisplayValue:inRow:))]
         #[unsafe(method_family = none)]
@@ -509,7 +475,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(ruleEditorRowsDidChange:))]
         #[unsafe(method_family = none)]
-        fn ruleEditorRowsDidChange(&self, notification: &NSNotification);
+        unsafe fn ruleEditorRowsDidChange(&self, notification: &NSNotification);
     }
 );
 

@@ -30,7 +30,7 @@ impl UIHoverGestureRecognizer {
         /// don't support z offset.
         #[unsafe(method(zOffset))]
         #[unsafe(method_family = none)]
-        pub fn zOffset(&self) -> CGFloat;
+        pub unsafe fn zOffset(&self) -> CGFloat;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -41,7 +41,7 @@ impl UIHoverGestureRecognizer {
         /// returned for devices that don't support azimuth.
         #[unsafe(method(azimuthAngleInView:))]
         #[unsafe(method_family = none)]
-        pub fn azimuthAngleInView(&self, view: Option<&UIView>) -> CGFloat;
+        pub unsafe fn azimuthAngleInView(&self, view: Option<&UIView>) -> CGFloat;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -52,18 +52,18 @@ impl UIHoverGestureRecognizer {
         /// An empty vector is returned for devices that don't support azimuth.
         #[unsafe(method(azimuthUnitVectorInView:))]
         #[unsafe(method_family = none)]
-        pub fn azimuthUnitVectorInView(&self, view: Option<&UIView>) -> CGVector;
+        pub unsafe fn azimuthUnitVectorInView(&self, view: Option<&UIView>) -> CGVector;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The altitude angle of the current device. 0 is returned for devices that don't support altitude.
         #[unsafe(method(altitudeAngle))]
         #[unsafe(method_family = none)]
-        pub fn altitudeAngle(&self) -> CGFloat;
+        pub unsafe fn altitudeAngle(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(rollAngle))]
         #[unsafe(method_family = none)]
-        pub fn rollAngle(&self) -> CGFloat;
+        pub unsafe fn rollAngle(&self) -> CGFloat;
     );
 }
 
@@ -71,10 +71,6 @@ impl UIHoverGestureRecognizer {
 #[cfg(feature = "UIGestureRecognizer")]
 impl UIHoverGestureRecognizer {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `action` must be a valid selector.
         #[unsafe(method(initWithTarget:action:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTarget_action(
@@ -85,11 +81,8 @@ impl UIHoverGestureRecognizer {
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -105,6 +98,6 @@ impl UIHoverGestureRecognizer {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

@@ -178,37 +178,16 @@ extern_class!(
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsasynchronousfetchresult?language=objc)
     #[unsafe(super(NSPersistentStoreAsynchronousResult, NSPersistentStoreResult, NSObject))]
     #[derive(Debug, PartialEq, Eq, Hash)]
-    #[cfg(feature = "NSFetchRequest")]
     pub struct NSAsynchronousFetchResult<ResultType: ?Sized = AnyObject>;
 );
 
-#[cfg(feature = "NSFetchRequest")]
-impl<ResultType: ?Sized + Message + NSFetchRequestResult> NSAsynchronousFetchResult<ResultType> {
-    /// Unchecked conversion of the generic parameter.
-    ///
-    /// # Safety
-    ///
-    /// The generic must be valid to reinterpret as the given type.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewResultType: ?Sized + Message + NSFetchRequestResult>(
-        &self,
-    ) -> &NSAsynchronousFetchResult<NewResultType> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
-#[cfg(feature = "NSFetchRequest")]
 extern_conformance!(
-    unsafe impl<ResultType: ?Sized + NSFetchRequestResult> NSObjectProtocol
-        for NSAsynchronousFetchResult<ResultType>
-    {
-    }
+    unsafe impl<ResultType: ?Sized> NSObjectProtocol for NSAsynchronousFetchResult<ResultType> {}
 );
 
-#[cfg(feature = "NSFetchRequest")]
-impl<ResultType: Message + NSFetchRequestResult> NSAsynchronousFetchResult<ResultType> {
+impl<ResultType: Message> NSAsynchronousFetchResult<ResultType> {
     extern_methods!(
-        #[cfg(feature = "NSPersistentStoreRequest")]
+        #[cfg(all(feature = "NSFetchRequest", feature = "NSPersistentStoreRequest"))]
         #[unsafe(method(fetchRequest))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchRequest(&self) -> Retained<NSAsynchronousFetchRequest<ResultType>>;
@@ -220,8 +199,7 @@ impl<ResultType: Message + NSFetchRequestResult> NSAsynchronousFetchResult<Resul
 }
 
 /// Methods declared on superclass `NSObject`.
-#[cfg(feature = "NSFetchRequest")]
-impl<ResultType: Message + NSFetchRequestResult> NSAsynchronousFetchResult<ResultType> {
+impl<ResultType: Message> NSAsynchronousFetchResult<ResultType> {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

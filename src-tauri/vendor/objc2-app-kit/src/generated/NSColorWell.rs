@@ -3,8 +3,6 @@
 use core::ffi::*;
 use core::ptr::NonNull;
 use objc2::__framework_prelude::*;
-#[cfg(feature = "objc2-core-foundation")]
-use objc2_core_foundation::*;
 use objc2_foundation::*;
 
 use crate::*;
@@ -116,40 +114,39 @@ impl NSColorWell {
     extern_methods!(
         #[unsafe(method(colorWellWithStyle:))]
         #[unsafe(method_family = none)]
-        pub fn colorWellWithStyle(style: NSColorWellStyle, mtm: MainThreadMarker)
-            -> Retained<Self>;
+        pub unsafe fn colorWellWithStyle(
+            style: NSColorWellStyle,
+            mtm: MainThreadMarker,
+        ) -> Retained<Self>;
 
         /// Instantiates a well in the given style with a default configuration.
         #[unsafe(method(deactivate))]
         #[unsafe(method_family = none)]
-        pub fn deactivate(&self);
+        pub unsafe fn deactivate(&self);
 
         #[unsafe(method(activate:))]
         #[unsafe(method_family = none)]
-        pub fn activate(&self, exclusive: bool);
+        pub unsafe fn activate(&self, exclusive: bool);
 
         #[unsafe(method(isActive))]
         #[unsafe(method_family = none)]
-        pub fn isActive(&self) -> bool;
+        pub unsafe fn isActive(&self) -> bool;
 
         #[unsafe(method(drawWellInside:))]
         #[unsafe(method_family = none)]
-        pub fn drawWellInside(&self, inside_rect: NSRect);
+        pub unsafe fn drawWellInside(&self, inside_rect: NSRect);
 
         #[deprecated = "This property will be deprecated in a future release."]
         #[unsafe(method(isBordered))]
         #[unsafe(method_family = none)]
-        pub fn isBordered(&self) -> bool;
+        pub unsafe fn isBordered(&self) -> bool;
 
         /// Setter for [`isBordered`][Self::isBordered].
         #[deprecated = "This property will be deprecated in a future release."]
         #[unsafe(method(setBordered:))]
         #[unsafe(method_family = none)]
-        pub fn setBordered(&self, bordered: bool);
+        pub unsafe fn setBordered(&self, bordered: bool);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(takeColorFrom:))]
         #[unsafe(method_family = none)]
         pub unsafe fn takeColorFrom(&self, sender: Option<&AnyObject>);
@@ -157,48 +154,41 @@ impl NSColorWell {
         #[cfg(feature = "NSColor")]
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
-        pub fn color(&self) -> Retained<NSColor>;
+        pub unsafe fn color(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`color`][Self::color].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setColor:))]
         #[unsafe(method_family = none)]
-        pub fn setColor(&self, color: &NSColor);
+        pub unsafe fn setColor(&self, color: &NSColor);
 
         #[unsafe(method(colorWellStyle))]
         #[unsafe(method_family = none)]
-        pub fn colorWellStyle(&self) -> NSColorWellStyle;
+        pub unsafe fn colorWellStyle(&self) -> NSColorWellStyle;
 
         /// Setter for [`colorWellStyle`][Self::colorWellStyle].
         #[unsafe(method(setColorWellStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setColorWellStyle(&self, color_well_style: NSColorWellStyle);
+        pub unsafe fn setColorWellStyle(&self, color_well_style: NSColorWellStyle);
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`image`][Self::image].
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&NSImage>);
+        pub unsafe fn setImage(&self, image: Option<&NSImage>);
 
         /// The image that appears on the button portion of the expanded control. This property only applicable when `colorWellStyle` is `NSColorWellStyleExpanded`.
         #[unsafe(method(pulldownTarget))]
         #[unsafe(method_family = none)]
-        pub fn pulldownTarget(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn pulldownTarget(&self) -> Option<Retained<AnyObject>>;
 
-        /// Setter for [`pulldownTarget`][Self::pulldownTarget].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `pulldown_target` should be of the correct type.
+        /// Setter for [`pulldownTarget`][Self::pulldownTarget].
         #[unsafe(method(setPulldownTarget:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPulldownTarget(&self, pulldown_target: Option<&AnyObject>);
@@ -206,13 +196,9 @@ impl NSColorWell {
         /// The target which `pulldownAction` is sent to. This property only applicable when `colorWellStyle` is `NSColorWellStyleExpanded` or `NSColorWellStyleMinimal`.
         #[unsafe(method(pulldownAction))]
         #[unsafe(method_family = none)]
-        pub fn pulldownAction(&self) -> Option<Sel>;
+        pub unsafe fn pulldownAction(&self) -> Option<Sel>;
 
         /// Setter for [`pulldownAction`][Self::pulldownAction].
-        ///
-        /// # Safety
-        ///
-        /// `pulldown_action` must be a valid selector.
         #[unsafe(method(setPulldownAction:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPulldownAction(&self, pulldown_action: Option<Sel>);
@@ -221,24 +207,12 @@ impl NSColorWell {
         /// When `NSColor.ignoresAlpha` (deprecated) is set to `YES`, this property will always return `NO` and alpha is not supported globally.
         #[unsafe(method(supportsAlpha))]
         #[unsafe(method_family = none)]
-        pub fn supportsAlpha(&self) -> bool;
+        pub unsafe fn supportsAlpha(&self) -> bool;
 
         /// Setter for [`supportsAlpha`][Self::supportsAlpha].
         #[unsafe(method(setSupportsAlpha:))]
         #[unsafe(method_family = none)]
-        pub fn setSupportsAlpha(&self, supports_alpha: bool);
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// The maximum linear exposure a color in this color well can be set to. Defaults to 1 and ignores any value less than 1. If set to a value >= 2, the color picked for this well may have a linear exposure applied to it.
-        #[unsafe(method(maximumLinearExposure))]
-        #[unsafe(method_family = none)]
-        pub fn maximumLinearExposure(&self) -> CGFloat;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// Setter for [`maximumLinearExposure`][Self::maximumLinearExposure].
-        #[unsafe(method(setMaximumLinearExposure:))]
-        #[unsafe(method_family = none)]
-        pub fn setMaximumLinearExposure(&self, maximum_linear_exposure: CGFloat);
+        pub unsafe fn setSupportsAlpha(&self, supports_alpha: bool);
     );
 }
 
@@ -248,11 +222,8 @@ impl NSColorWell {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -268,7 +239,7 @@ impl NSColorWell {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -278,6 +249,6 @@ impl NSColorWell {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

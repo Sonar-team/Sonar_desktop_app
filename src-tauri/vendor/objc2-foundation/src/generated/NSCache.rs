@@ -13,20 +13,6 @@ extern_class!(
     pub struct NSCache<KeyType: ?Sized = AnyObject, ObjectType: ?Sized = AnyObject>;
 );
 
-impl<KeyType: ?Sized + Message, ObjectType: ?Sized + Message> NSCache<KeyType, ObjectType> {
-    /// Unchecked conversion of the generic parameters.
-    ///
-    /// # Safety
-    ///
-    /// The generics must be valid to reinterpret as the given types.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewKeyType: ?Sized + Message, NewObjectType: ?Sized + Message>(
-        &self,
-    ) -> &NSCache<NewKeyType, NewObjectType> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
 extern_conformance!(
     unsafe impl<KeyType: ?Sized, ObjectType: ?Sized> NSObjectProtocol for NSCache<KeyType, ObjectType> {}
 );
@@ -40,24 +26,15 @@ impl<KeyType: Message, ObjectType: Message> NSCache<KeyType, ObjectType> {
 
         #[cfg(feature = "NSString")]
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setName(&self, name: &NSString);
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
         pub unsafe fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSCacheDelegate>>>;
 
         /// Setter for [`delegate`][Self::delegate].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSCacheDelegate>>);
@@ -130,10 +107,6 @@ impl<KeyType: Message, ObjectType: Message> NSCache<KeyType, ObjectType> {
 extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nscachedelegate?language=objc)
     pub unsafe trait NSCacheDelegate: NSObjectProtocol {
-        /// # Safety
-        ///
-        /// - `cache` generic should be of the correct type.
-        /// - `obj` should be of the correct type.
         #[optional]
         #[unsafe(method(cache:willEvictObject:))]
         #[unsafe(method_family = none)]

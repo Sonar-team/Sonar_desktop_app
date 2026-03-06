@@ -28,7 +28,7 @@ impl NSNib {
     extern_methods!(
         #[unsafe(method(initWithNibNamed:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibNamed_bundle(
+        pub unsafe fn initWithNibNamed_bundle(
             this: Allocated<Self>,
             nib_name: &NSNibName,
             bundle: Option<&NSBundle>,
@@ -36,7 +36,7 @@ impl NSNib {
 
         #[unsafe(method(initWithNibData:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibData_bundle(
+        pub unsafe fn initWithNibData_bundle(
             this: Allocated<Self>,
             nib_data: &NSData,
             bundle: Option<&NSBundle>,
@@ -49,27 +49,17 @@ impl NSNib {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSNib {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSDeprecated.
 impl NSNib {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `nib_file_url` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initWithContentsOfURL:))]
         #[unsafe(method_family = init)]
@@ -78,10 +68,6 @@ impl NSNib {
             nib_file_url: Option<&NSURL>,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// - `external_name_table` generic should be of the correct type.
-        /// - `external_name_table` might not allow `None`.
         #[deprecated]
         #[unsafe(method(instantiateNibWithExternalNameTable:))]
         #[unsafe(method_family = none)]
@@ -90,12 +76,6 @@ impl NSNib {
             external_name_table: Option<&NSDictionary>,
         ) -> bool;
 
-        /// # Safety
-        ///
-        /// - `owner` should be of the correct type.
-        /// - `owner` might not allow `None`.
-        /// - `top_level_objects` generic should be of the correct type.
-        /// - `top_level_objects` might not allow `None`.
         #[deprecated]
         #[unsafe(method(instantiateNibWithOwner:topLevelObjects:))]
         #[unsafe(method_family = none)]
@@ -109,12 +89,10 @@ impl NSNib {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsnibowner?language=objc)
-    #[deprecated]
     pub static NSNibOwner: &'static NSString;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsnibtoplevelobjects?language=objc)
-    #[deprecated]
     pub static NSNibTopLevelObjects: &'static NSString;
 }

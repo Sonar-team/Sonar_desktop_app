@@ -15,6 +15,7 @@
 #![allow(clippy::doc_lazy_continuation)]
 #![allow(rustdoc::broken_intra_doc_links)]
 #![allow(rustdoc::bare_urls)]
+#![allow(rustdoc::unportable_markdown)]
 #![allow(rustdoc::invalid_html_tags)]
 
 #[link(name = "WebKit", kind = "framework")]
@@ -2020,8 +2021,6 @@ pub use self::__WKWebView::WKMediaPlaybackState;
 #[cfg(all(feature = "WKWebView", feature = "objc2-app-kit"))]
 #[cfg(target_os = "macos")]
 pub use self::__WKWebView::WKWebView;
-#[cfg(feature = "WKWebView")]
-pub use self::__WKWebView::WKWebViewDataType;
 #[cfg(feature = "WKWebViewConfiguration")]
 pub use self::__WKWebViewConfiguration::WKAudiovisualMediaTypes;
 #[cfg(feature = "WKWebViewConfiguration")]
@@ -2056,8 +2055,6 @@ pub use self::__WKWebsiteDataRecord::WKWebsiteDataTypeMediaKeys;
 pub use self::__WKWebsiteDataRecord::WKWebsiteDataTypeMemoryCache;
 #[cfg(feature = "WKWebsiteDataRecord")]
 pub use self::__WKWebsiteDataRecord::WKWebsiteDataTypeOfflineWebApplicationCache;
-#[cfg(feature = "WKWebsiteDataRecord")]
-pub use self::__WKWebsiteDataRecord::WKWebsiteDataTypeScreenTime;
 #[cfg(feature = "WKWebsiteDataRecord")]
 pub use self::__WKWebsiteDataRecord::WKWebsiteDataTypeSearchFieldRecentSearches;
 #[cfg(feature = "WKWebsiteDataRecord")]

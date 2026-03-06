@@ -12,26 +12,6 @@ use objc2_quartz_core::*;
 
 use crate::*;
 
-/// [Apple's documentation](https://developer.apple.com/documentation/uikit/uisliderstyle?language=objc)
-// NS_ENUM
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct UISliderStyle(pub NSInteger);
-impl UISliderStyle {
-    #[doc(alias = "UISliderStyleDefault")]
-    pub const Default: Self = Self(0);
-    #[doc(alias = "UISliderStyleThumbless")]
-    pub const Thumbless: Self = Self(1);
-}
-
-unsafe impl Encode for UISliderStyle {
-    const ENCODING: Encoding = NSInteger::ENCODING;
-}
-
-unsafe impl RefEncode for UISliderStyle {
-    const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
-}
-
 extern_class!(
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uislider?language=objc)
     #[unsafe(super(UIControl, UIView, UIResponder, NSObject))]
@@ -147,190 +127,178 @@ impl UISlider {
     extern_methods!(
         #[unsafe(method(value))]
         #[unsafe(method_family = none)]
-        pub fn value(&self) -> c_float;
+        pub unsafe fn value(&self) -> c_float;
 
         /// Setter for [`value`][Self::value].
         #[unsafe(method(setValue:))]
         #[unsafe(method_family = none)]
-        pub fn setValue(&self, value: c_float);
+        pub unsafe fn setValue(&self, value: c_float);
 
         #[unsafe(method(minimumValue))]
         #[unsafe(method_family = none)]
-        pub fn minimumValue(&self) -> c_float;
+        pub unsafe fn minimumValue(&self) -> c_float;
 
         /// Setter for [`minimumValue`][Self::minimumValue].
         #[unsafe(method(setMinimumValue:))]
         #[unsafe(method_family = none)]
-        pub fn setMinimumValue(&self, minimum_value: c_float);
+        pub unsafe fn setMinimumValue(&self, minimum_value: c_float);
 
         #[unsafe(method(maximumValue))]
         #[unsafe(method_family = none)]
-        pub fn maximumValue(&self) -> c_float;
+        pub unsafe fn maximumValue(&self) -> c_float;
 
         /// Setter for [`maximumValue`][Self::maximumValue].
         #[unsafe(method(setMaximumValue:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumValue(&self, maximum_value: c_float);
+        pub unsafe fn setMaximumValue(&self, maximum_value: c_float);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(minimumValueImage))]
         #[unsafe(method_family = none)]
-        pub fn minimumValueImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn minimumValueImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`minimumValueImage`][Self::minimumValueImage].
         #[unsafe(method(setMinimumValueImage:))]
         #[unsafe(method_family = none)]
-        pub fn setMinimumValueImage(&self, minimum_value_image: Option<&UIImage>);
+        pub unsafe fn setMinimumValueImage(&self, minimum_value_image: Option<&UIImage>);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(maximumValueImage))]
         #[unsafe(method_family = none)]
-        pub fn maximumValueImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn maximumValueImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`maximumValueImage`][Self::maximumValueImage].
         #[unsafe(method(setMaximumValueImage:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumValueImage(&self, maximum_value_image: Option<&UIImage>);
+        pub unsafe fn setMaximumValueImage(&self, maximum_value_image: Option<&UIImage>);
 
         #[unsafe(method(isContinuous))]
         #[unsafe(method_family = none)]
-        pub fn isContinuous(&self) -> bool;
+        pub unsafe fn isContinuous(&self) -> bool;
 
         /// Setter for [`isContinuous`][Self::isContinuous].
         #[unsafe(method(setContinuous:))]
         #[unsafe(method_family = none)]
-        pub fn setContinuous(&self, continuous: bool);
-
-        #[cfg(feature = "UISliderTrackConfiguration")]
-        #[unsafe(method(trackConfiguration))]
-        #[unsafe(method_family = none)]
-        pub fn trackConfiguration(&self) -> Option<Retained<UISliderTrackConfiguration>>;
-
-        #[cfg(feature = "UISliderTrackConfiguration")]
-        /// Setter for [`trackConfiguration`][Self::trackConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        #[unsafe(method(setTrackConfiguration:))]
-        #[unsafe(method_family = none)]
-        pub fn setTrackConfiguration(
-            &self,
-            track_configuration: Option<&UISliderTrackConfiguration>,
-        );
-
-        #[unsafe(method(sliderStyle))]
-        #[unsafe(method_family = none)]
-        pub fn sliderStyle(&self) -> UISliderStyle;
-
-        /// Setter for [`sliderStyle`][Self::sliderStyle].
-        #[unsafe(method(setSliderStyle:))]
-        #[unsafe(method_family = none)]
-        pub fn setSliderStyle(&self, slider_style: UISliderStyle);
+        pub unsafe fn setContinuous(&self, continuous: bool);
 
         #[cfg(feature = "UIColor")]
         #[unsafe(method(minimumTrackTintColor))]
         #[unsafe(method_family = none)]
-        pub fn minimumTrackTintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn minimumTrackTintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`minimumTrackTintColor`][Self::minimumTrackTintColor].
         #[unsafe(method(setMinimumTrackTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setMinimumTrackTintColor(&self, minimum_track_tint_color: Option<&UIColor>);
+        pub unsafe fn setMinimumTrackTintColor(&self, minimum_track_tint_color: Option<&UIColor>);
 
         #[cfg(feature = "UIColor")]
         #[unsafe(method(maximumTrackTintColor))]
         #[unsafe(method_family = none)]
-        pub fn maximumTrackTintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn maximumTrackTintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`maximumTrackTintColor`][Self::maximumTrackTintColor].
         #[unsafe(method(setMaximumTrackTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumTrackTintColor(&self, maximum_track_tint_color: Option<&UIColor>);
+        pub unsafe fn setMaximumTrackTintColor(&self, maximum_track_tint_color: Option<&UIColor>);
 
         #[cfg(feature = "UIColor")]
         #[unsafe(method(thumbTintColor))]
         #[unsafe(method_family = none)]
-        pub fn thumbTintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn thumbTintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`thumbTintColor`][Self::thumbTintColor].
         #[unsafe(method(setThumbTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setThumbTintColor(&self, thumb_tint_color: Option<&UIColor>);
+        pub unsafe fn setThumbTintColor(&self, thumb_tint_color: Option<&UIColor>);
 
         #[unsafe(method(setValue:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setValue_animated(&self, value: c_float, animated: bool);
+        pub unsafe fn setValue_animated(&self, value: c_float, animated: bool);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(setThumbImage:forState:))]
         #[unsafe(method_family = none)]
-        pub fn setThumbImage_forState(&self, image: Option<&UIImage>, state: UIControlState);
+        pub unsafe fn setThumbImage_forState(&self, image: Option<&UIImage>, state: UIControlState);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(setMinimumTrackImage:forState:))]
         #[unsafe(method_family = none)]
-        pub fn setMinimumTrackImage_forState(&self, image: Option<&UIImage>, state: UIControlState);
+        pub unsafe fn setMinimumTrackImage_forState(
+            &self,
+            image: Option<&UIImage>,
+            state: UIControlState,
+        );
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(setMaximumTrackImage:forState:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumTrackImage_forState(&self, image: Option<&UIImage>, state: UIControlState);
+        pub unsafe fn setMaximumTrackImage_forState(
+            &self,
+            image: Option<&UIImage>,
+            state: UIControlState,
+        );
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(thumbImageForState:))]
         #[unsafe(method_family = none)]
-        pub fn thumbImageForState(&self, state: UIControlState) -> Option<Retained<UIImage>>;
+        pub unsafe fn thumbImageForState(&self, state: UIControlState)
+            -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(minimumTrackImageForState:))]
         #[unsafe(method_family = none)]
-        pub fn minimumTrackImageForState(&self, state: UIControlState)
-            -> Option<Retained<UIImage>>;
+        pub unsafe fn minimumTrackImageForState(
+            &self,
+            state: UIControlState,
+        ) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(maximumTrackImageForState:))]
         #[unsafe(method_family = none)]
-        pub fn maximumTrackImageForState(&self, state: UIControlState)
-            -> Option<Retained<UIImage>>;
+        pub unsafe fn maximumTrackImageForState(
+            &self,
+            state: UIControlState,
+        ) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(currentThumbImage))]
         #[unsafe(method_family = none)]
-        pub fn currentThumbImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn currentThumbImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(currentMinimumTrackImage))]
         #[unsafe(method_family = none)]
-        pub fn currentMinimumTrackImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn currentMinimumTrackImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(currentMaximumTrackImage))]
         #[unsafe(method_family = none)]
-        pub fn currentMaximumTrackImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn currentMaximumTrackImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(minimumValueImageRectForBounds:))]
         #[unsafe(method_family = none)]
-        pub fn minimumValueImageRectForBounds(&self, bounds: CGRect) -> CGRect;
+        pub unsafe fn minimumValueImageRectForBounds(&self, bounds: CGRect) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(maximumValueImageRectForBounds:))]
         #[unsafe(method_family = none)]
-        pub fn maximumValueImageRectForBounds(&self, bounds: CGRect) -> CGRect;
+        pub unsafe fn maximumValueImageRectForBounds(&self, bounds: CGRect) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(trackRectForBounds:))]
         #[unsafe(method_family = none)]
-        pub fn trackRectForBounds(&self, bounds: CGRect) -> CGRect;
+        pub unsafe fn trackRectForBounds(&self, bounds: CGRect) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(thumbRectForBounds:trackRect:value:))]
         #[unsafe(method_family = none)]
-        pub fn thumbRectForBounds_trackRect_value(
+        pub unsafe fn thumbRectForBounds_trackRect_value(
             &self,
             bounds: CGRect,
             rect: CGRect,
@@ -346,11 +314,8 @@ impl UISlider {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -366,7 +331,7 @@ impl UISlider {
         /// Initializes the control and adds primaryAction for the UIControlEventPrimaryActionTriggered control event. Subclasses of UIControl may alter or add behaviors around the usage of primaryAction, see subclass documentation of this initializer for additional information.
         #[unsafe(method(initWithFrame:primaryAction:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame_primaryAction(
+        pub unsafe fn initWithFrame_primaryAction(
             this: Allocated<Self>,
             frame: CGRect,
             primary_action: Option<&UIAction>,
@@ -374,22 +339,16 @@ impl UISlider {
     );
 }
 
-/// Methods declared on superclass `UIView`.
+/// Methods declared on superclass `NSObject`.
 #[cfg(all(feature = "UIControl", feature = "UIResponder", feature = "UIView"))]
 impl UISlider {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
-    );
-}
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-/// Methods declared on superclass `NSObject`.
-#[cfg(all(feature = "UIControl", feature = "UIResponder", feature = "UIView"))]
-impl UISlider {
-    extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

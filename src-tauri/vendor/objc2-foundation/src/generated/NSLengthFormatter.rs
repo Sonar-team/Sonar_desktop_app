@@ -72,38 +72,36 @@ impl NSLengthFormatter {
         #[cfg(feature = "NSNumberFormatter")]
         #[unsafe(method(numberFormatter))]
         #[unsafe(method_family = none)]
-        pub fn numberFormatter(&self) -> Retained<NSNumberFormatter>;
+        pub unsafe fn numberFormatter(&self) -> Retained<NSNumberFormatter>;
 
         #[cfg(feature = "NSNumberFormatter")]
         /// Setter for [`numberFormatter`][Self::numberFormatter].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setNumberFormatter:))]
         #[unsafe(method_family = none)]
-        pub fn setNumberFormatter(&self, number_formatter: Option<&NSNumberFormatter>);
+        pub unsafe fn setNumberFormatter(&self, number_formatter: Option<&NSNumberFormatter>);
 
         #[unsafe(method(unitStyle))]
         #[unsafe(method_family = none)]
-        pub fn unitStyle(&self) -> NSFormattingUnitStyle;
+        pub unsafe fn unitStyle(&self) -> NSFormattingUnitStyle;
 
         /// Setter for [`unitStyle`][Self::unitStyle].
         #[unsafe(method(setUnitStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setUnitStyle(&self, unit_style: NSFormattingUnitStyle);
+        pub unsafe fn setUnitStyle(&self, unit_style: NSFormattingUnitStyle);
 
         #[unsafe(method(isForPersonHeightUse))]
         #[unsafe(method_family = none)]
-        pub fn isForPersonHeightUse(&self) -> bool;
+        pub unsafe fn isForPersonHeightUse(&self) -> bool;
 
         /// Setter for [`isForPersonHeightUse`][Self::isForPersonHeightUse].
         #[unsafe(method(setForPersonHeightUse:))]
         #[unsafe(method_family = none)]
-        pub fn setForPersonHeightUse(&self, for_person_height_use: bool);
+        pub unsafe fn setForPersonHeightUse(&self, for_person_height_use: bool);
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(stringFromValue:unit:))]
         #[unsafe(method_family = none)]
-        pub fn stringFromValue_unit(
+        pub unsafe fn stringFromValue_unit(
             &self,
             value: c_double,
             unit: NSLengthFormatterUnit,
@@ -112,21 +110,18 @@ impl NSLengthFormatter {
         #[cfg(feature = "NSString")]
         #[unsafe(method(stringFromMeters:))]
         #[unsafe(method_family = none)]
-        pub fn stringFromMeters(&self, number_in_meters: c_double) -> Retained<NSString>;
+        pub unsafe fn stringFromMeters(&self, number_in_meters: c_double) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(unitStringFromValue:unit:))]
         #[unsafe(method_family = none)]
-        pub fn unitStringFromValue_unit(
+        pub unsafe fn unitStringFromValue_unit(
             &self,
             value: c_double,
             unit: NSLengthFormatterUnit,
         ) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `unitp` must be a valid pointer or null.
         #[unsafe(method(unitStringFromMeters:usedUnit:))]
         #[unsafe(method_family = none)]
         pub unsafe fn unitStringFromMeters_usedUnit(
@@ -136,9 +131,6 @@ impl NSLengthFormatter {
         ) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `obj` should be of the correct type.
         #[unsafe(method(getObjectValue:forString:errorDescription:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getObjectValue_forString_errorDescription(
@@ -156,18 +148,10 @@ impl NSLengthFormatter {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSFormatter")]
-impl DefaultRetained for NSLengthFormatter {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

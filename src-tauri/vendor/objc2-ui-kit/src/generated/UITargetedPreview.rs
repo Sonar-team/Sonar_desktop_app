@@ -37,7 +37,7 @@ impl UIPreviewTarget {
         ))]
         #[unsafe(method(initWithContainer:center:transform:))]
         #[unsafe(method_family = init)]
-        pub fn initWithContainer_center_transform(
+        pub unsafe fn initWithContainer_center_transform(
             this: Allocated<Self>,
             container: &UIView,
             center: CGPoint,
@@ -51,7 +51,7 @@ impl UIPreviewTarget {
         ))]
         #[unsafe(method(initWithContainer:center:))]
         #[unsafe(method_family = init)]
-        pub fn initWithContainer_center(
+        pub unsafe fn initWithContainer_center(
             this: Allocated<Self>,
             container: &UIView,
             center: CGPoint,
@@ -68,17 +68,17 @@ impl UIPreviewTarget {
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(container))]
         #[unsafe(method_family = none)]
-        pub fn container(&self) -> Retained<UIView>;
+        pub unsafe fn container(&self) -> Retained<UIView>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(center))]
         #[unsafe(method_family = none)]
-        pub fn center(&self) -> CGPoint;
+        pub unsafe fn center(&self) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(transform))]
         #[unsafe(method_family = none)]
-        pub fn transform(&self) -> CGAffineTransform;
+        pub unsafe fn transform(&self) -> CGAffineTransform;
     );
 }
 
@@ -111,7 +111,7 @@ impl UITargetedPreview {
         ))]
         #[unsafe(method(initWithView:parameters:target:))]
         #[unsafe(method_family = init)]
-        pub fn initWithView_parameters_target(
+        pub unsafe fn initWithView_parameters_target(
             this: Allocated<Self>,
             view: &UIView,
             parameters: &UIPreviewParameters,
@@ -125,7 +125,7 @@ impl UITargetedPreview {
         ))]
         #[unsafe(method(initWithView:parameters:))]
         #[unsafe(method_family = init)]
-        pub fn initWithView_parameters(
+        pub unsafe fn initWithView_parameters(
             this: Allocated<Self>,
             view: &UIView,
             parameters: &UIPreviewParameters,
@@ -134,7 +134,7 @@ impl UITargetedPreview {
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(initWithView:))]
         #[unsafe(method_family = init)]
-        pub fn initWithView(this: Allocated<Self>, view: &UIView) -> Retained<Self>;
+        pub unsafe fn initWithView(this: Allocated<Self>, view: &UIView) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -146,22 +146,22 @@ impl UITargetedPreview {
 
         #[unsafe(method(target))]
         #[unsafe(method_family = none)]
-        pub fn target(&self) -> Retained<UIPreviewTarget>;
+        pub unsafe fn target(&self) -> Retained<UIPreviewTarget>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(view))]
         #[unsafe(method_family = none)]
-        pub fn view(&self) -> Retained<UIView>;
+        pub unsafe fn view(&self) -> Retained<UIView>;
 
         #[cfg(feature = "UIPreviewParameters")]
         #[unsafe(method(parameters))]
         #[unsafe(method_family = none)]
-        pub fn parameters(&self) -> Retained<UIPreviewParameters>;
+        pub unsafe fn parameters(&self) -> Retained<UIPreviewParameters>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(size))]
         #[unsafe(method_family = none)]
-        pub fn size(&self) -> CGSize;
+        pub unsafe fn size(&self) -> CGSize;
 
         #[unsafe(method(retargetedPreviewWithTarget:))]
         #[unsafe(method_family = none)]

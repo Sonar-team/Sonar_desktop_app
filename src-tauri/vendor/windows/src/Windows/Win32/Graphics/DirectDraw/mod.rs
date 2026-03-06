@@ -3,7 +3,7 @@ pub unsafe fn DirectDrawCreate<P2>(lpguid: *mut windows_core::GUID, lplpdd: *mut
 where
     P2: windows_core::Param<windows_core::IUnknown>,
 {
-    windows_link::link!("ddraw.dll" "system" fn DirectDrawCreate(lpguid : *mut windows_core::GUID, lplpdd : *mut * mut core::ffi::c_void, punkouter : * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("ddraw.dll" "system" fn DirectDrawCreate(lpguid : *mut windows_core::GUID, lplpdd : *mut * mut core::ffi::c_void, punkouter : * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { DirectDrawCreate(lpguid as _, core::mem::transmute(lplpdd), punkouter.param().abi()).ok() }
 }
 #[inline]
@@ -11,7 +11,7 @@ pub unsafe fn DirectDrawCreateClipper<P2>(dwflags: u32, lplpddclipper: *mut Opti
 where
     P2: windows_core::Param<windows_core::IUnknown>,
 {
-    windows_link::link!("ddraw.dll" "system" fn DirectDrawCreateClipper(dwflags : u32, lplpddclipper : *mut * mut core::ffi::c_void, punkouter : * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("ddraw.dll" "system" fn DirectDrawCreateClipper(dwflags : u32, lplpddclipper : *mut * mut core::ffi::c_void, punkouter : * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { DirectDrawCreateClipper(dwflags, core::mem::transmute(lplpddclipper), punkouter.param().abi()).ok() }
 }
 #[inline]
@@ -19,29 +19,29 @@ pub unsafe fn DirectDrawCreateEx<P3>(lpguid: *mut windows_core::GUID, lplpdd: *m
 where
     P3: windows_core::Param<windows_core::IUnknown>,
 {
-    windows_link::link!("ddraw.dll" "system" fn DirectDrawCreateEx(lpguid : *mut windows_core::GUID, lplpdd : *mut *mut core::ffi::c_void, iid : *const windows_core::GUID, punkouter : * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("ddraw.dll" "system" fn DirectDrawCreateEx(lpguid : *mut windows_core::GUID, lplpdd : *mut *mut core::ffi::c_void, iid : *const windows_core::GUID, punkouter : * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { DirectDrawCreateEx(lpguid as _, lplpdd as _, iid, punkouter.param().abi()).ok() }
 }
 #[inline]
 pub unsafe fn DirectDrawEnumerateA(lpcallback: LPDDENUMCALLBACKA, lpcontext: *mut core::ffi::c_void) -> windows_core::Result<()> {
-    windows_link::link!("ddraw.dll" "system" fn DirectDrawEnumerateA(lpcallback : LPDDENUMCALLBACKA, lpcontext : *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("ddraw.dll" "system" fn DirectDrawEnumerateA(lpcallback : LPDDENUMCALLBACKA, lpcontext : *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { DirectDrawEnumerateA(lpcallback, lpcontext as _).ok() }
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
 #[inline]
 pub unsafe fn DirectDrawEnumerateExA(lpcallback: LPDDENUMCALLBACKEXA, lpcontext: *mut core::ffi::c_void, dwflags: u32) -> windows_core::Result<()> {
-    windows_link::link!("ddraw.dll" "system" fn DirectDrawEnumerateExA(lpcallback : LPDDENUMCALLBACKEXA, lpcontext : *mut core::ffi::c_void, dwflags : u32) -> windows_core::HRESULT);
+    windows_core::link!("ddraw.dll" "system" fn DirectDrawEnumerateExA(lpcallback : LPDDENUMCALLBACKEXA, lpcontext : *mut core::ffi::c_void, dwflags : u32) -> windows_core::HRESULT);
     unsafe { DirectDrawEnumerateExA(lpcallback, lpcontext as _, dwflags).ok() }
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
 #[inline]
 pub unsafe fn DirectDrawEnumerateExW(lpcallback: LPDDENUMCALLBACKEXW, lpcontext: *mut core::ffi::c_void, dwflags: u32) -> windows_core::Result<()> {
-    windows_link::link!("ddraw.dll" "system" fn DirectDrawEnumerateExW(lpcallback : LPDDENUMCALLBACKEXW, lpcontext : *mut core::ffi::c_void, dwflags : u32) -> windows_core::HRESULT);
+    windows_core::link!("ddraw.dll" "system" fn DirectDrawEnumerateExW(lpcallback : LPDDENUMCALLBACKEXW, lpcontext : *mut core::ffi::c_void, dwflags : u32) -> windows_core::HRESULT);
     unsafe { DirectDrawEnumerateExW(lpcallback, lpcontext as _, dwflags).ok() }
 }
 #[inline]
 pub unsafe fn DirectDrawEnumerateW(lpcallback: LPDDENUMCALLBACKW, lpcontext: *mut core::ffi::c_void) -> windows_core::Result<()> {
-    windows_link::link!("ddraw.dll" "system" fn DirectDrawEnumerateW(lpcallback : LPDDENUMCALLBACKW, lpcontext : *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("ddraw.dll" "system" fn DirectDrawEnumerateW(lpcallback : LPDDENUMCALLBACKW, lpcontext : *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { DirectDrawEnumerateW(lpcallback, lpcontext as _).ok() }
 }
 #[repr(C)]
@@ -875,7 +875,7 @@ pub const DDEDM_STANDARDVGAMODES: i32 = 2i32;
 pub const DDEM_MODEFAILED: i32 = 2i32;
 pub const DDEM_MODEPASSED: i32 = 1i32;
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDENABLEIRQINFO {
     pub dwIRQSources: u32,
     pub dwLine: u32,
@@ -1052,7 +1052,7 @@ pub const DDGFS_CANFLIP: i32 = 1i32;
 pub const DDGFS_ISFLIPDONE: i32 = 2i32;
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DDHALDDRAWFNS {
     pub dwSize: u32,
     pub lpSetInfo: LPDDHAL_SETINFO,
@@ -1108,7 +1108,7 @@ pub struct DDHALMODEINFO {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_ADDATTACHEDSURFACEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -1125,7 +1125,7 @@ impl Default for DDHAL_ADDATTACHEDSURFACEDATA {
 pub const DDHAL_APP_DLLNAME: windows_core::PCSTR = windows_core::s!("DDRAW.DLL");
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_BEGINMOCOMPFRAMEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpMoComp: *mut DDRAWI_DDMOTIONCOMP_LCL,
@@ -1176,7 +1176,7 @@ impl Default for DDHAL_BLTDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DDHAL_CALLBACKS {
     pub cbDDCallbacks: DDHAL_DDCALLBACKS,
     pub cbDDSurfaceCallbacks: DDHAL_DDSURFACECALLBACKS,
@@ -1203,7 +1203,7 @@ pub struct DDHAL_CALLBACKS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_CANCREATESURFACEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurfaceDesc: *mut DDSURFACEDESC,
@@ -1219,7 +1219,7 @@ impl Default for DDHAL_CANCREATESURFACEDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_CANCREATEVPORTDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpDDVideoPortDesc: *mut DDVIDEOPORTDESC,
@@ -1245,7 +1245,7 @@ pub const DDHAL_CB32_SETMODE: i32 = 8i32;
 pub const DDHAL_CB32_WAITFORVERTICALBLANK: i32 = 16i32;
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_COLORCONTROLDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -1284,7 +1284,7 @@ impl Default for DDHAL_CREATEMOCOMPDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_CREATEPALETTEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDPalette: *mut DDRAWI_DDRAWPALETTE_GBL,
@@ -1301,7 +1301,7 @@ impl Default for DDHAL_CREATEPALETTEDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_CREATESURFACEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurfaceDesc: *mut DDSURFACEDESC,
@@ -1334,7 +1334,7 @@ impl Default for DDHAL_CREATESURFACEEXDATA {
 pub const DDHAL_CREATESURFACEEX_SWAPHANDLES: i32 = 1i32;
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_CREATEVPORTDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpDDVideoPortDesc: *mut DDVIDEOPORTDESC,
@@ -1355,7 +1355,7 @@ pub const DDHAL_D3DBUFCB32_LOCKD3DBUF: i32 = 8i32;
 pub const DDHAL_D3DBUFCB32_UNLOCKD3DBUF: i32 = 16i32;
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DDHAL_DDCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -1372,7 +1372,7 @@ pub struct DDHAL_DDCALLBACKS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DDHAL_DDCOLORCONTROLCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -1380,7 +1380,7 @@ pub struct DDHAL_DDCOLORCONTROLCALLBACKS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DDHAL_DDEXEBUFCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -1392,7 +1392,7 @@ pub struct DDHAL_DDEXEBUFCALLBACKS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DDHAL_DDKERNELCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -1401,7 +1401,7 @@ pub struct DDHAL_DDKERNELCALLBACKS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_DDMISCELLANEOUS2CALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -1418,7 +1418,7 @@ impl Default for DDHAL_DDMISCELLANEOUS2CALLBACKS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DDHAL_DDMISCELLANEOUSCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -1429,7 +1429,7 @@ pub struct DDHAL_DDMISCELLANEOUSCALLBACKS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DDHAL_DDMOTIONCOMPCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -1446,7 +1446,7 @@ pub struct DDHAL_DDMOTIONCOMPCALLBACKS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DDHAL_DDPALETTECALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -1455,7 +1455,7 @@ pub struct DDHAL_DDPALETTECALLBACKS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_DDSURFACECALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -1482,7 +1482,7 @@ impl Default for DDHAL_DDSURFACECALLBACKS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_DDVIDEOPORTCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -1525,7 +1525,7 @@ impl Default for DDHAL_DESTROYDDLOCALDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_DESTROYDRIVERDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub ddRVal: windows_core::HRESULT,
@@ -1539,7 +1539,7 @@ impl Default for DDHAL_DESTROYDRIVERDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_DESTROYMOCOMPDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpMoComp: *mut DDRAWI_DDMOTIONCOMP_LCL,
@@ -1554,7 +1554,7 @@ impl Default for DDHAL_DESTROYMOCOMPDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_DESTROYPALETTEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDPalette: *mut DDRAWI_DDRAWPALETTE_GBL,
@@ -1569,7 +1569,7 @@ impl Default for DDHAL_DESTROYPALETTEDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_DESTROYSURFACEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -1584,7 +1584,7 @@ impl Default for DDHAL_DESTROYSURFACEDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_DESTROYVPORTDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -1603,7 +1603,7 @@ pub const DDHAL_DRIVER_NOCKEYHW: i32 = 2i32;
 pub const DDHAL_DRIVER_NOTHANDLED: i32 = 0i32;
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_DRVSETCOLORKEYDATA {
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
     pub dwFlags: u32,
@@ -1619,7 +1619,7 @@ impl Default for DDHAL_DRVSETCOLORKEYDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_ENDMOCOMPFRAMEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpMoComp: *mut DDRAWI_DDMOTIONCOMP_LCL,
@@ -1641,7 +1641,7 @@ pub const DDHAL_EXEBUFCB32_LOCKEXEBUF: i32 = 8i32;
 pub const DDHAL_EXEBUFCB32_UNLOCKEXEBUF: i32 = 16i32;
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_FLIPDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpSurfCurr: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -1660,7 +1660,7 @@ impl Default for DDHAL_FLIPDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_FLIPTOGDISURFACEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub dwToGDI: u32,
@@ -1676,7 +1676,7 @@ impl Default for DDHAL_FLIPTOGDISURFACEDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_FLIPVPORTDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -1711,7 +1711,7 @@ impl Default for DDHAL_GETAVAILDRIVERMEMORYDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETBLTSTATUSDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -1768,7 +1768,7 @@ impl Default for DDHAL_GETDRIVERSTATEDATA_0 {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETFLIPSTATUSDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -1837,7 +1837,7 @@ impl Default for DDHAL_GETMOCOMPCOMPBUFFDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETMOCOMPFORMATSDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpGuid: *mut windows_core::GUID,
@@ -1854,7 +1854,7 @@ impl Default for DDHAL_GETMOCOMPFORMATSDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETMOCOMPGUIDSDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub dwNumGuids: u32,
@@ -1870,7 +1870,7 @@ impl Default for DDHAL_GETMOCOMPGUIDSDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETSCANLINEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub dwScanLine: u32,
@@ -1885,7 +1885,7 @@ impl Default for DDHAL_GETSCANLINEDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETVPORTBANDWIDTHDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -1905,7 +1905,7 @@ impl Default for DDHAL_GETVPORTBANDWIDTHDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETVPORTCONNECTDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub dwPortId: u32,
@@ -1922,7 +1922,7 @@ impl Default for DDHAL_GETVPORTCONNECTDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETVPORTFIELDDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -1938,7 +1938,7 @@ impl Default for DDHAL_GETVPORTFIELDDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETVPORTFLIPSTATUSDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub fpSurface: usize,
@@ -1953,7 +1953,7 @@ impl Default for DDHAL_GETVPORTFLIPSTATUSDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETVPORTINPUTFORMATDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -1971,7 +1971,7 @@ impl Default for DDHAL_GETVPORTINPUTFORMATDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETVPORTLINEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -1987,7 +1987,7 @@ impl Default for DDHAL_GETVPORTLINEDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETVPORTOUTPUTFORMATDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -2006,7 +2006,7 @@ impl Default for DDHAL_GETVPORTOUTPUTFORMATDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_GETVPORTSIGNALDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -2024,7 +2024,7 @@ pub const DDHAL_KERNEL_SYNCSURFACEDATA: i32 = 1i32;
 pub const DDHAL_KERNEL_SYNCVIDEOPORTDATA: i32 = 2i32;
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_LOCKDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -2072,7 +2072,7 @@ pub const DDHAL_PRIVATECAP_NOTIFYPRIMARYCREATION: i32 = 2i32;
 pub const DDHAL_PRIVATECAP_RESERVED1: i32 = 4i32;
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_QUERYMOCOMPSTATUSDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpMoComp: *mut DDRAWI_DDMOTIONCOMP_LCL,
@@ -2089,7 +2089,7 @@ impl Default for DDHAL_QUERYMOCOMPSTATUSDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_RENDERMOCOMPDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpMoComp: *mut DDRAWI_DDMOTIONCOMP_LCL,
@@ -2111,7 +2111,7 @@ impl Default for DDHAL_RENDERMOCOMPDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_SETCLIPLISTDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -2126,7 +2126,7 @@ impl Default for DDHAL_SETCLIPLISTDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_SETCOLORKEYDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -2143,7 +2143,7 @@ impl Default for DDHAL_SETCOLORKEYDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_SETENTRIESDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDPalette: *mut DDRAWI_DDRAWPALETTE_GBL,
@@ -2161,7 +2161,7 @@ impl Default for DDHAL_SETENTRIESDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_SETEXCLUSIVEMODEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub dwEnterExcl: u32,
@@ -2177,7 +2177,7 @@ impl Default for DDHAL_SETEXCLUSIVEMODEDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_SETMODEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub dwModeIndex: u32,
@@ -2194,7 +2194,7 @@ impl Default for DDHAL_SETMODEDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_SETOVERLAYPOSITIONDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSrcSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -2212,7 +2212,7 @@ impl Default for DDHAL_SETOVERLAYPOSITIONDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_SETPALETTEDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -2290,7 +2290,7 @@ impl Default for DDHAL_SYNCVIDEOPORTDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_UNLOCKDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub lpDDSurface: *mut DDRAWI_DDRAWSURFACE_LCL,
@@ -2305,7 +2305,7 @@ impl Default for DDHAL_UNLOCKDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_UPDATENONLOCALHEAPDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub dwHeap: u32,
@@ -2348,7 +2348,7 @@ impl Default for DDHAL_UPDATEOVERLAYDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_UPDATEVPORTDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -2385,7 +2385,7 @@ pub const DDHAL_VPORT32_UPDATE: i32 = 4096i32;
 pub const DDHAL_VPORT32_WAITFORSYNC: i32 = 8192i32;
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_VPORTCOLORDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -2402,7 +2402,7 @@ impl Default for DDHAL_VPORTCOLORDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_WAITFORVERTICALBLANKDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_GBL,
     pub dwFlags: u32,
@@ -2419,7 +2419,7 @@ impl Default for DDHAL_WAITFORVERTICALBLANKDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DDHAL_WAITFORVPORTSYNCDATA {
     pub lpDD: *mut DDRAWI_DIRECTDRAW_LCL,
     pub lpVideoPort: *mut DDRAWI_DDVIDEOPORT_LCL,
@@ -3586,7 +3586,7 @@ impl Default for DDRAWI_DIRECTDRAW_INT {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct DDRAWI_DIRECTDRAW_LCL {
     pub lpDDMore: u32,
     pub lpGbl: *mut DDRAWI_DIRECTDRAW_GBL,
@@ -4354,7 +4354,7 @@ impl Default for DD_BLTDATA {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DD_CALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -4406,7 +4406,7 @@ pub struct DD_CLIPPER_LOCAL {
     pub dwReserved1: usize,
 }
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DD_COLORCONTROLCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -4505,7 +4505,7 @@ impl Default for DD_CREATEVPORTDATA {
     }
 }
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DD_D3DBUFCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -5014,7 +5014,7 @@ impl Default for DD_HALINFO_V4 {
 }
 pub const DD_HAL_VERSION: u32 = 256u32;
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DD_KERNELCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -5054,7 +5054,7 @@ impl Default for DD_MAPMEMORYDATA {
     }
 }
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DD_MISCELLANEOUS2CALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -5064,7 +5064,7 @@ pub struct DD_MISCELLANEOUS2CALLBACKS {
     pub DestroyDDLocal: PDD_DESTROYDDLOCAL,
 }
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DD_MISCELLANEOUSCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -5107,7 +5107,7 @@ impl Default for DD_MORESURFACECAPS_0 {
     }
 }
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DD_MOTIONCOMPCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -5158,7 +5158,7 @@ impl Default for DD_NONLOCALVIDMEMCAPS {
     }
 }
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DD_NTCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -5174,7 +5174,7 @@ pub struct DD_NTPRIVATEDRIVERCAPS {
 }
 #[repr(C)]
 #[cfg(feature = "Win32_Graphics_Gdi")]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct DD_PALETTECALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -5328,7 +5328,7 @@ pub struct DD_STEREOMODE {
     pub bSupported: windows_core::BOOL,
 }
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DD_SURFACECALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -5582,7 +5582,7 @@ impl Default for DD_UPDATEVPORTDATA {
 }
 pub const DD_VERSION: i32 = 512i32;
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DD_VIDEOPORTCALLBACKS {
     pub dwSize: u32,
     pub dwFlags: u32,
@@ -5679,7 +5679,7 @@ pub const DELETED_OK: u32 = 0u32;
 pub const DIRECTDRAW_VERSION: u32 = 1792u32;
 pub const DXAPI_HALVERSION: u32 = 1u32;
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct DXAPI_INTERFACE {
     pub Size: u16,
     pub Version: u16,
@@ -5818,7 +5818,7 @@ pub struct IDDVideoPortContainer_Vtbl {
     pub QueryVideoPortStatus: unsafe extern "system" fn(*mut core::ffi::c_void, u32, *mut DDVIDEOPORTSTATUS) -> windows_core::HRESULT,
 }
 pub trait IDDVideoPortContainer_Impl: windows_core::IUnknownImpl {
-    fn CreateVideoPort(&self, param0: u32, param1: *mut DDVIDEOPORTDESC, param2: windows_core::OutRef<'_, IDirectDrawVideoPort>, param3: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn CreateVideoPort(&self, param0: u32, param1: *mut DDVIDEOPORTDESC, param2: windows_core::OutRef<IDirectDrawVideoPort>, param3: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
     fn EnumVideoPorts(&self, param0: u32, param1: *mut DDVIDEOPORTCAPS, param2: *mut core::ffi::c_void, param3: LPDDENUMVIDEOCALLBACK) -> windows_core::Result<()>;
     fn GetVideoPortConnectInfo(&self, param0: u32, pcinfo: *mut u32, param2: *mut DDVIDEOPORTCONNECT) -> windows_core::Result<()>;
     fn QueryVideoPortStatus(&self, param0: u32, param1: *mut DDVIDEOPORTSTATUS) -> windows_core::Result<()>;
@@ -5976,10 +5976,10 @@ pub struct IDirectDraw_Vtbl {
 #[cfg(feature = "Win32_Graphics_Gdi")]
 pub trait IDirectDraw_Impl: windows_core::IUnknownImpl {
     fn Compact(&self) -> windows_core::Result<()>;
-    fn CreateClipper(&self, param0: u32, param1: windows_core::OutRef<'_, IDirectDrawClipper>, param2: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn CreatePalette(&self, param0: u32, param1: *mut super::Gdi::PALETTEENTRY, param2: windows_core::OutRef<'_, IDirectDrawPalette>, param3: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn CreateSurface(&self, param0: *mut DDSURFACEDESC, param1: windows_core::OutRef<'_, IDirectDrawSurface>, param2: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn DuplicateSurface(&self, param0: windows_core::Ref<'_, IDirectDrawSurface>) -> windows_core::Result<IDirectDrawSurface>;
+    fn CreateClipper(&self, param0: u32, param1: windows_core::OutRef<IDirectDrawClipper>, param2: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn CreatePalette(&self, param0: u32, param1: *mut super::Gdi::PALETTEENTRY, param2: windows_core::OutRef<IDirectDrawPalette>, param3: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn CreateSurface(&self, param0: *mut DDSURFACEDESC, param1: windows_core::OutRef<IDirectDrawSurface>, param2: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn DuplicateSurface(&self, param0: windows_core::Ref<IDirectDrawSurface>) -> windows_core::Result<IDirectDrawSurface>;
     fn EnumDisplayModes(&self, param0: u32, param1: *mut DDSURFACEDESC, param2: *mut core::ffi::c_void, param3: LPDDENUMMODESCALLBACK) -> windows_core::Result<()>;
     fn EnumSurfaces(&self, param0: u32, param1: *mut DDSURFACEDESC, param2: *mut core::ffi::c_void, param3: LPDDENUMSURFACESCALLBACK) -> windows_core::Result<()>;
     fn FlipToGDISurface(&self) -> windows_core::Result<()>;
@@ -6279,10 +6279,10 @@ pub struct IDirectDraw2_Vtbl {
 #[cfg(feature = "Win32_Graphics_Gdi")]
 pub trait IDirectDraw2_Impl: windows_core::IUnknownImpl {
     fn Compact(&self) -> windows_core::Result<()>;
-    fn CreateClipper(&self, param0: u32, param1: windows_core::OutRef<'_, IDirectDrawClipper>, param2: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn CreatePalette(&self, param0: u32, param1: *mut super::Gdi::PALETTEENTRY, param2: windows_core::OutRef<'_, IDirectDrawPalette>, param3: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn CreateSurface(&self, param0: *mut DDSURFACEDESC, param1: windows_core::OutRef<'_, IDirectDrawSurface>, param2: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn DuplicateSurface(&self, param0: windows_core::Ref<'_, IDirectDrawSurface>) -> windows_core::Result<IDirectDrawSurface>;
+    fn CreateClipper(&self, param0: u32, param1: windows_core::OutRef<IDirectDrawClipper>, param2: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn CreatePalette(&self, param0: u32, param1: *mut super::Gdi::PALETTEENTRY, param2: windows_core::OutRef<IDirectDrawPalette>, param3: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn CreateSurface(&self, param0: *mut DDSURFACEDESC, param1: windows_core::OutRef<IDirectDrawSurface>, param2: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn DuplicateSurface(&self, param0: windows_core::Ref<IDirectDrawSurface>) -> windows_core::Result<IDirectDrawSurface>;
     fn EnumDisplayModes(&self, param0: u32, param1: *mut DDSURFACEDESC, param2: *mut core::ffi::c_void, param3: LPDDENUMMODESCALLBACK) -> windows_core::Result<()>;
     fn EnumSurfaces(&self, param0: u32, param1: *mut DDSURFACEDESC, param2: *mut core::ffi::c_void, param3: LPDDENUMSURFACESCALLBACK) -> windows_core::Result<()>;
     fn FlipToGDISurface(&self) -> windows_core::Result<()>;
@@ -6613,10 +6613,10 @@ pub struct IDirectDraw4_Vtbl {
 #[cfg(feature = "Win32_Graphics_Gdi")]
 pub trait IDirectDraw4_Impl: windows_core::IUnknownImpl {
     fn Compact(&self) -> windows_core::Result<()>;
-    fn CreateClipper(&self, param0: u32, param1: windows_core::OutRef<'_, IDirectDrawClipper>, param2: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn CreatePalette(&self, param0: u32, param1: *mut super::Gdi::PALETTEENTRY, param2: windows_core::OutRef<'_, IDirectDrawPalette>, param3: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn CreateSurface(&self, param0: *mut DDSURFACEDESC2, param1: windows_core::OutRef<'_, IDirectDrawSurface4>, param2: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn DuplicateSurface(&self, param0: windows_core::Ref<'_, IDirectDrawSurface4>) -> windows_core::Result<IDirectDrawSurface4>;
+    fn CreateClipper(&self, param0: u32, param1: windows_core::OutRef<IDirectDrawClipper>, param2: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn CreatePalette(&self, param0: u32, param1: *mut super::Gdi::PALETTEENTRY, param2: windows_core::OutRef<IDirectDrawPalette>, param3: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn CreateSurface(&self, param0: *mut DDSURFACEDESC2, param1: windows_core::OutRef<IDirectDrawSurface4>, param2: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn DuplicateSurface(&self, param0: windows_core::Ref<IDirectDrawSurface4>) -> windows_core::Result<IDirectDrawSurface4>;
     fn EnumDisplayModes(&self, param0: u32, param1: *mut DDSURFACEDESC2, param2: *mut core::ffi::c_void, param3: LPDDENUMMODESCALLBACK2) -> windows_core::Result<()>;
     fn EnumSurfaces(&self, param0: u32, param1: *mut DDSURFACEDESC2, param2: *mut core::ffi::c_void, param3: LPDDENUMSURFACESCALLBACK2) -> windows_core::Result<()>;
     fn FlipToGDISurface(&self) -> windows_core::Result<()>;
@@ -6993,10 +6993,10 @@ pub struct IDirectDraw7_Vtbl {
 #[cfg(feature = "Win32_Graphics_Gdi")]
 pub trait IDirectDraw7_Impl: windows_core::IUnknownImpl {
     fn Compact(&self) -> windows_core::Result<()>;
-    fn CreateClipper(&self, param0: u32, param1: windows_core::OutRef<'_, IDirectDrawClipper>, param2: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn CreatePalette(&self, param0: u32, param1: *mut super::Gdi::PALETTEENTRY, param2: windows_core::OutRef<'_, IDirectDrawPalette>, param3: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn CreateSurface(&self, param0: *mut DDSURFACEDESC2, param1: windows_core::OutRef<'_, IDirectDrawSurface7>, param2: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn DuplicateSurface(&self, param0: windows_core::Ref<'_, IDirectDrawSurface7>) -> windows_core::Result<IDirectDrawSurface7>;
+    fn CreateClipper(&self, param0: u32, param1: windows_core::OutRef<IDirectDrawClipper>, param2: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn CreatePalette(&self, param0: u32, param1: *mut super::Gdi::PALETTEENTRY, param2: windows_core::OutRef<IDirectDrawPalette>, param3: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn CreateSurface(&self, param0: *mut DDSURFACEDESC2, param1: windows_core::OutRef<IDirectDrawSurface7>, param2: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn DuplicateSurface(&self, param0: windows_core::Ref<IDirectDrawSurface7>) -> windows_core::Result<IDirectDrawSurface7>;
     fn EnumDisplayModes(&self, param0: u32, param1: *mut DDSURFACEDESC2, param2: *mut core::ffi::c_void, param3: LPDDENUMMODESCALLBACK2) -> windows_core::Result<()>;
     fn EnumSurfaces(&self, param0: u32, param1: *mut DDSURFACEDESC2, param2: *mut core::ffi::c_void, param3: LPDDENUMSURFACESCALLBACK7) -> windows_core::Result<()>;
     fn FlipToGDISurface(&self) -> windows_core::Result<()>;
@@ -7288,7 +7288,7 @@ pub struct IDirectDrawClipper_Vtbl {
 pub trait IDirectDrawClipper_Impl: windows_core::IUnknownImpl {
     fn GetClipList(&self, param0: *mut super::super::Foundation::RECT, param1: *mut super::Gdi::RGNDATA, param2: *mut u32) -> windows_core::Result<()>;
     fn GetHWnd(&self, param0: *mut super::super::Foundation::HWND) -> windows_core::Result<()>;
-    fn Initialize(&self, param0: windows_core::Ref<'_, IDirectDraw>, param1: u32) -> windows_core::Result<()>;
+    fn Initialize(&self, param0: windows_core::Ref<IDirectDraw>, param1: u32) -> windows_core::Result<()>;
     fn IsClipListChanged(&self, param0: *mut windows_core::BOOL) -> windows_core::Result<()>;
     fn SetClipList(&self, param0: *mut super::Gdi::RGNDATA, param1: u32) -> windows_core::Result<()>;
     fn SetHWnd(&self, param0: u32, param1: super::super::Foundation::HWND) -> windows_core::Result<()>;
@@ -7542,7 +7542,7 @@ pub struct IDirectDrawPalette_Vtbl {
 pub trait IDirectDrawPalette_Impl: windows_core::IUnknownImpl {
     fn GetCaps(&self, param0: *mut u32) -> windows_core::Result<()>;
     fn GetEntries(&self, param0: u32, param1: u32, param2: u32, param3: *mut super::Gdi::PALETTEENTRY) -> windows_core::Result<()>;
-    fn Initialize(&self, param0: windows_core::Ref<'_, IDirectDraw>, param1: u32, param2: *mut super::Gdi::PALETTEENTRY) -> windows_core::Result<()>;
+    fn Initialize(&self, param0: windows_core::Ref<IDirectDraw>, param1: u32, param2: *mut super::Gdi::PALETTEENTRY) -> windows_core::Result<()>;
     fn SetEntries(&self, param0: u32, param1: u32, param2: u32, param3: *mut super::Gdi::PALETTEENTRY) -> windows_core::Result<()>;
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
@@ -7773,16 +7773,16 @@ pub struct IDirectDrawSurface_Vtbl {
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
 pub trait IDirectDrawSurface_Impl: windows_core::IUnknownImpl {
-    fn AddAttachedSurface(&self, param0: windows_core::Ref<'_, IDirectDrawSurface>) -> windows_core::Result<()>;
+    fn AddAttachedSurface(&self, param0: windows_core::Ref<IDirectDrawSurface>) -> windows_core::Result<()>;
     fn AddOverlayDirtyRect(&self, param0: *mut super::super::Foundation::RECT) -> windows_core::Result<()>;
-    fn Blt(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<'_, IDirectDrawSurface>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDBLTFX) -> windows_core::Result<()>;
+    fn Blt(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<IDirectDrawSurface>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDBLTFX) -> windows_core::Result<()>;
     fn BltBatch(&self, param0: *mut DDBLTBATCH, param1: u32, param2: u32) -> windows_core::Result<()>;
-    fn BltFast(&self, param0: u32, param1: u32, param2: windows_core::Ref<'_, IDirectDrawSurface>, param3: *mut super::super::Foundation::RECT, param4: u32) -> windows_core::Result<()>;
-    fn DeleteAttachedSurface(&self, param0: u32, param1: windows_core::Ref<'_, IDirectDrawSurface>) -> windows_core::Result<()>;
+    fn BltFast(&self, param0: u32, param1: u32, param2: windows_core::Ref<IDirectDrawSurface>, param3: *mut super::super::Foundation::RECT, param4: u32) -> windows_core::Result<()>;
+    fn DeleteAttachedSurface(&self, param0: u32, param1: windows_core::Ref<IDirectDrawSurface>) -> windows_core::Result<()>;
     fn EnumAttachedSurfaces(&self, param0: *mut core::ffi::c_void, param1: LPDDENUMSURFACESCALLBACK) -> windows_core::Result<()>;
     fn EnumOverlayZOrders(&self, param0: u32, param1: *mut core::ffi::c_void, param2: LPDDENUMSURFACESCALLBACK) -> windows_core::Result<()>;
-    fn Flip(&self, param0: windows_core::Ref<'_, IDirectDrawSurface>, param1: u32) -> windows_core::Result<()>;
-    fn GetAttachedSurface(&self, param0: *mut DDSCAPS, param1: windows_core::OutRef<'_, IDirectDrawSurface>) -> windows_core::Result<()>;
+    fn Flip(&self, param0: windows_core::Ref<IDirectDrawSurface>, param1: u32) -> windows_core::Result<()>;
+    fn GetAttachedSurface(&self, param0: *mut DDSCAPS, param1: windows_core::OutRef<IDirectDrawSurface>) -> windows_core::Result<()>;
     fn GetBltStatus(&self, param0: u32) -> windows_core::Result<()>;
     fn GetCaps(&self, param0: *mut DDSCAPS) -> windows_core::Result<()>;
     fn GetClipper(&self) -> windows_core::Result<IDirectDrawClipper>;
@@ -7793,19 +7793,19 @@ pub trait IDirectDrawSurface_Impl: windows_core::IUnknownImpl {
     fn GetPalette(&self) -> windows_core::Result<IDirectDrawPalette>;
     fn GetPixelFormat(&self, param0: *mut DDPIXELFORMAT) -> windows_core::Result<()>;
     fn GetSurfaceDesc(&self, param0: *mut DDSURFACEDESC) -> windows_core::Result<()>;
-    fn Initialize(&self, param0: windows_core::Ref<'_, IDirectDraw>, param1: *mut DDSURFACEDESC) -> windows_core::Result<()>;
+    fn Initialize(&self, param0: windows_core::Ref<IDirectDraw>, param1: *mut DDSURFACEDESC) -> windows_core::Result<()>;
     fn IsLost(&self) -> windows_core::Result<()>;
     fn Lock(&self, param0: *mut super::super::Foundation::RECT, param1: *mut DDSURFACEDESC, param2: u32, param3: super::super::Foundation::HANDLE) -> windows_core::Result<()>;
     fn ReleaseDC(&self, param0: super::Gdi::HDC) -> windows_core::Result<()>;
     fn Restore(&self) -> windows_core::Result<()>;
-    fn SetClipper(&self, param0: windows_core::Ref<'_, IDirectDrawClipper>) -> windows_core::Result<()>;
+    fn SetClipper(&self, param0: windows_core::Ref<IDirectDrawClipper>) -> windows_core::Result<()>;
     fn SetColorKey(&self, param0: u32, param1: *mut DDCOLORKEY) -> windows_core::Result<()>;
     fn SetOverlayPosition(&self, param0: i32, param1: i32) -> windows_core::Result<()>;
-    fn SetPalette(&self, param0: windows_core::Ref<'_, IDirectDrawPalette>) -> windows_core::Result<()>;
+    fn SetPalette(&self, param0: windows_core::Ref<IDirectDrawPalette>) -> windows_core::Result<()>;
     fn Unlock(&self, param0: *mut core::ffi::c_void) -> windows_core::Result<()>;
-    fn UpdateOverlay(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<'_, IDirectDrawSurface>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDOVERLAYFX) -> windows_core::Result<()>;
+    fn UpdateOverlay(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<IDirectDrawSurface>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDOVERLAYFX) -> windows_core::Result<()>;
     fn UpdateOverlayDisplay(&self, param0: u32) -> windows_core::Result<()>;
-    fn UpdateOverlayZOrder(&self, param0: u32, param1: windows_core::Ref<'_, IDirectDrawSurface>) -> windows_core::Result<()>;
+    fn UpdateOverlayZOrder(&self, param0: u32, param1: windows_core::Ref<IDirectDrawSurface>) -> windows_core::Result<()>;
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
 impl IDirectDrawSurface_Vtbl {
@@ -8262,16 +8262,16 @@ pub struct IDirectDrawSurface2_Vtbl {
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
 pub trait IDirectDrawSurface2_Impl: windows_core::IUnknownImpl {
-    fn AddAttachedSurface(&self, param0: windows_core::Ref<'_, IDirectDrawSurface2>) -> windows_core::Result<()>;
+    fn AddAttachedSurface(&self, param0: windows_core::Ref<IDirectDrawSurface2>) -> windows_core::Result<()>;
     fn AddOverlayDirtyRect(&self, param0: *mut super::super::Foundation::RECT) -> windows_core::Result<()>;
-    fn Blt(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<'_, IDirectDrawSurface2>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDBLTFX) -> windows_core::Result<()>;
+    fn Blt(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<IDirectDrawSurface2>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDBLTFX) -> windows_core::Result<()>;
     fn BltBatch(&self, param0: *mut DDBLTBATCH, param1: u32, param2: u32) -> windows_core::Result<()>;
-    fn BltFast(&self, param0: u32, param1: u32, param2: windows_core::Ref<'_, IDirectDrawSurface2>, param3: *mut super::super::Foundation::RECT, param4: u32) -> windows_core::Result<()>;
-    fn DeleteAttachedSurface(&self, param0: u32, param1: windows_core::Ref<'_, IDirectDrawSurface2>) -> windows_core::Result<()>;
+    fn BltFast(&self, param0: u32, param1: u32, param2: windows_core::Ref<IDirectDrawSurface2>, param3: *mut super::super::Foundation::RECT, param4: u32) -> windows_core::Result<()>;
+    fn DeleteAttachedSurface(&self, param0: u32, param1: windows_core::Ref<IDirectDrawSurface2>) -> windows_core::Result<()>;
     fn EnumAttachedSurfaces(&self, param0: *mut core::ffi::c_void, param1: LPDDENUMSURFACESCALLBACK) -> windows_core::Result<()>;
     fn EnumOverlayZOrders(&self, param0: u32, param1: *mut core::ffi::c_void, param2: LPDDENUMSURFACESCALLBACK) -> windows_core::Result<()>;
-    fn Flip(&self, param0: windows_core::Ref<'_, IDirectDrawSurface2>, param1: u32) -> windows_core::Result<()>;
-    fn GetAttachedSurface(&self, param0: *mut DDSCAPS, param1: windows_core::OutRef<'_, IDirectDrawSurface2>) -> windows_core::Result<()>;
+    fn Flip(&self, param0: windows_core::Ref<IDirectDrawSurface2>, param1: u32) -> windows_core::Result<()>;
+    fn GetAttachedSurface(&self, param0: *mut DDSCAPS, param1: windows_core::OutRef<IDirectDrawSurface2>) -> windows_core::Result<()>;
     fn GetBltStatus(&self, param0: u32) -> windows_core::Result<()>;
     fn GetCaps(&self, param0: *mut DDSCAPS) -> windows_core::Result<()>;
     fn GetClipper(&self) -> windows_core::Result<IDirectDrawClipper>;
@@ -8282,19 +8282,19 @@ pub trait IDirectDrawSurface2_Impl: windows_core::IUnknownImpl {
     fn GetPalette(&self) -> windows_core::Result<IDirectDrawPalette>;
     fn GetPixelFormat(&self, param0: *mut DDPIXELFORMAT) -> windows_core::Result<()>;
     fn GetSurfaceDesc(&self, param0: *mut DDSURFACEDESC) -> windows_core::Result<()>;
-    fn Initialize(&self, param0: windows_core::Ref<'_, IDirectDraw>, param1: *mut DDSURFACEDESC) -> windows_core::Result<()>;
+    fn Initialize(&self, param0: windows_core::Ref<IDirectDraw>, param1: *mut DDSURFACEDESC) -> windows_core::Result<()>;
     fn IsLost(&self) -> windows_core::Result<()>;
     fn Lock(&self, param0: *mut super::super::Foundation::RECT, param1: *mut DDSURFACEDESC, param2: u32, param3: super::super::Foundation::HANDLE) -> windows_core::Result<()>;
     fn ReleaseDC(&self, param0: super::Gdi::HDC) -> windows_core::Result<()>;
     fn Restore(&self) -> windows_core::Result<()>;
-    fn SetClipper(&self, param0: windows_core::Ref<'_, IDirectDrawClipper>) -> windows_core::Result<()>;
+    fn SetClipper(&self, param0: windows_core::Ref<IDirectDrawClipper>) -> windows_core::Result<()>;
     fn SetColorKey(&self, param0: u32, param1: *mut DDCOLORKEY) -> windows_core::Result<()>;
     fn SetOverlayPosition(&self, param0: i32, param1: i32) -> windows_core::Result<()>;
-    fn SetPalette(&self, param0: windows_core::Ref<'_, IDirectDrawPalette>) -> windows_core::Result<()>;
+    fn SetPalette(&self, param0: windows_core::Ref<IDirectDrawPalette>) -> windows_core::Result<()>;
     fn Unlock(&self, param0: *mut core::ffi::c_void) -> windows_core::Result<()>;
-    fn UpdateOverlay(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<'_, IDirectDrawSurface2>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDOVERLAYFX) -> windows_core::Result<()>;
+    fn UpdateOverlay(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<IDirectDrawSurface2>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDOVERLAYFX) -> windows_core::Result<()>;
     fn UpdateOverlayDisplay(&self, param0: u32) -> windows_core::Result<()>;
-    fn UpdateOverlayZOrder(&self, param0: u32, param1: windows_core::Ref<'_, IDirectDrawSurface2>) -> windows_core::Result<()>;
+    fn UpdateOverlayZOrder(&self, param0: u32, param1: windows_core::Ref<IDirectDrawSurface2>) -> windows_core::Result<()>;
     fn GetDDInterface(&self, param0: *mut *mut core::ffi::c_void) -> windows_core::Result<()>;
     fn PageLock(&self, param0: u32) -> windows_core::Result<()>;
     fn PageUnlock(&self, param0: u32) -> windows_core::Result<()>;
@@ -8779,16 +8779,16 @@ pub struct IDirectDrawSurface3_Vtbl {
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
 pub trait IDirectDrawSurface3_Impl: windows_core::IUnknownImpl {
-    fn AddAttachedSurface(&self, param0: windows_core::Ref<'_, IDirectDrawSurface3>) -> windows_core::Result<()>;
+    fn AddAttachedSurface(&self, param0: windows_core::Ref<IDirectDrawSurface3>) -> windows_core::Result<()>;
     fn AddOverlayDirtyRect(&self, param0: *mut super::super::Foundation::RECT) -> windows_core::Result<()>;
-    fn Blt(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<'_, IDirectDrawSurface3>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDBLTFX) -> windows_core::Result<()>;
+    fn Blt(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<IDirectDrawSurface3>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDBLTFX) -> windows_core::Result<()>;
     fn BltBatch(&self, param0: *mut DDBLTBATCH, param1: u32, param2: u32) -> windows_core::Result<()>;
-    fn BltFast(&self, param0: u32, param1: u32, param2: windows_core::Ref<'_, IDirectDrawSurface3>, param3: *mut super::super::Foundation::RECT, param4: u32) -> windows_core::Result<()>;
-    fn DeleteAttachedSurface(&self, param0: u32, param1: windows_core::Ref<'_, IDirectDrawSurface3>) -> windows_core::Result<()>;
+    fn BltFast(&self, param0: u32, param1: u32, param2: windows_core::Ref<IDirectDrawSurface3>, param3: *mut super::super::Foundation::RECT, param4: u32) -> windows_core::Result<()>;
+    fn DeleteAttachedSurface(&self, param0: u32, param1: windows_core::Ref<IDirectDrawSurface3>) -> windows_core::Result<()>;
     fn EnumAttachedSurfaces(&self, param0: *mut core::ffi::c_void, param1: LPDDENUMSURFACESCALLBACK) -> windows_core::Result<()>;
     fn EnumOverlayZOrders(&self, param0: u32, param1: *mut core::ffi::c_void, param2: LPDDENUMSURFACESCALLBACK) -> windows_core::Result<()>;
-    fn Flip(&self, param0: windows_core::Ref<'_, IDirectDrawSurface3>, param1: u32) -> windows_core::Result<()>;
-    fn GetAttachedSurface(&self, param0: *mut DDSCAPS, param1: windows_core::OutRef<'_, IDirectDrawSurface3>) -> windows_core::Result<()>;
+    fn Flip(&self, param0: windows_core::Ref<IDirectDrawSurface3>, param1: u32) -> windows_core::Result<()>;
+    fn GetAttachedSurface(&self, param0: *mut DDSCAPS, param1: windows_core::OutRef<IDirectDrawSurface3>) -> windows_core::Result<()>;
     fn GetBltStatus(&self, param0: u32) -> windows_core::Result<()>;
     fn GetCaps(&self, param0: *mut DDSCAPS) -> windows_core::Result<()>;
     fn GetClipper(&self) -> windows_core::Result<IDirectDrawClipper>;
@@ -8799,19 +8799,19 @@ pub trait IDirectDrawSurface3_Impl: windows_core::IUnknownImpl {
     fn GetPalette(&self) -> windows_core::Result<IDirectDrawPalette>;
     fn GetPixelFormat(&self, param0: *mut DDPIXELFORMAT) -> windows_core::Result<()>;
     fn GetSurfaceDesc(&self, param0: *mut DDSURFACEDESC) -> windows_core::Result<()>;
-    fn Initialize(&self, param0: windows_core::Ref<'_, IDirectDraw>, param1: *mut DDSURFACEDESC) -> windows_core::Result<()>;
+    fn Initialize(&self, param0: windows_core::Ref<IDirectDraw>, param1: *mut DDSURFACEDESC) -> windows_core::Result<()>;
     fn IsLost(&self) -> windows_core::Result<()>;
     fn Lock(&self, param0: *mut super::super::Foundation::RECT, param1: *mut DDSURFACEDESC, param2: u32, param3: super::super::Foundation::HANDLE) -> windows_core::Result<()>;
     fn ReleaseDC(&self, param0: super::Gdi::HDC) -> windows_core::Result<()>;
     fn Restore(&self) -> windows_core::Result<()>;
-    fn SetClipper(&self, param0: windows_core::Ref<'_, IDirectDrawClipper>) -> windows_core::Result<()>;
+    fn SetClipper(&self, param0: windows_core::Ref<IDirectDrawClipper>) -> windows_core::Result<()>;
     fn SetColorKey(&self, param0: u32, param1: *mut DDCOLORKEY) -> windows_core::Result<()>;
     fn SetOverlayPosition(&self, param0: i32, param1: i32) -> windows_core::Result<()>;
-    fn SetPalette(&self, param0: windows_core::Ref<'_, IDirectDrawPalette>) -> windows_core::Result<()>;
+    fn SetPalette(&self, param0: windows_core::Ref<IDirectDrawPalette>) -> windows_core::Result<()>;
     fn Unlock(&self, param0: *mut core::ffi::c_void) -> windows_core::Result<()>;
-    fn UpdateOverlay(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<'_, IDirectDrawSurface3>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDOVERLAYFX) -> windows_core::Result<()>;
+    fn UpdateOverlay(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<IDirectDrawSurface3>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDOVERLAYFX) -> windows_core::Result<()>;
     fn UpdateOverlayDisplay(&self, param0: u32) -> windows_core::Result<()>;
-    fn UpdateOverlayZOrder(&self, param0: u32, param1: windows_core::Ref<'_, IDirectDrawSurface3>) -> windows_core::Result<()>;
+    fn UpdateOverlayZOrder(&self, param0: u32, param1: windows_core::Ref<IDirectDrawSurface3>) -> windows_core::Result<()>;
     fn GetDDInterface(&self, param0: *mut *mut core::ffi::c_void) -> windows_core::Result<()>;
     fn PageLock(&self, param0: u32) -> windows_core::Result<()>;
     fn PageUnlock(&self, param0: u32) -> windows_core::Result<()>;
@@ -9324,16 +9324,16 @@ pub struct IDirectDrawSurface4_Vtbl {
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
 pub trait IDirectDrawSurface4_Impl: windows_core::IUnknownImpl {
-    fn AddAttachedSurface(&self, param0: windows_core::Ref<'_, IDirectDrawSurface4>) -> windows_core::Result<()>;
+    fn AddAttachedSurface(&self, param0: windows_core::Ref<IDirectDrawSurface4>) -> windows_core::Result<()>;
     fn AddOverlayDirtyRect(&self, param0: *mut super::super::Foundation::RECT) -> windows_core::Result<()>;
-    fn Blt(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<'_, IDirectDrawSurface4>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDBLTFX) -> windows_core::Result<()>;
+    fn Blt(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<IDirectDrawSurface4>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDBLTFX) -> windows_core::Result<()>;
     fn BltBatch(&self, param0: *mut DDBLTBATCH, param1: u32, param2: u32) -> windows_core::Result<()>;
-    fn BltFast(&self, param0: u32, param1: u32, param2: windows_core::Ref<'_, IDirectDrawSurface4>, param3: *mut super::super::Foundation::RECT, param4: u32) -> windows_core::Result<()>;
-    fn DeleteAttachedSurface(&self, param0: u32, param1: windows_core::Ref<'_, IDirectDrawSurface4>) -> windows_core::Result<()>;
+    fn BltFast(&self, param0: u32, param1: u32, param2: windows_core::Ref<IDirectDrawSurface4>, param3: *mut super::super::Foundation::RECT, param4: u32) -> windows_core::Result<()>;
+    fn DeleteAttachedSurface(&self, param0: u32, param1: windows_core::Ref<IDirectDrawSurface4>) -> windows_core::Result<()>;
     fn EnumAttachedSurfaces(&self, param0: *mut core::ffi::c_void, param1: LPDDENUMSURFACESCALLBACK2) -> windows_core::Result<()>;
     fn EnumOverlayZOrders(&self, param0: u32, param1: *mut core::ffi::c_void, param2: LPDDENUMSURFACESCALLBACK2) -> windows_core::Result<()>;
-    fn Flip(&self, param0: windows_core::Ref<'_, IDirectDrawSurface4>, param1: u32) -> windows_core::Result<()>;
-    fn GetAttachedSurface(&self, param0: *mut DDSCAPS2, param1: windows_core::OutRef<'_, IDirectDrawSurface4>) -> windows_core::Result<()>;
+    fn Flip(&self, param0: windows_core::Ref<IDirectDrawSurface4>, param1: u32) -> windows_core::Result<()>;
+    fn GetAttachedSurface(&self, param0: *mut DDSCAPS2, param1: windows_core::OutRef<IDirectDrawSurface4>) -> windows_core::Result<()>;
     fn GetBltStatus(&self, param0: u32) -> windows_core::Result<()>;
     fn GetCaps(&self, param0: *mut DDSCAPS2) -> windows_core::Result<()>;
     fn GetClipper(&self) -> windows_core::Result<IDirectDrawClipper>;
@@ -9344,19 +9344,19 @@ pub trait IDirectDrawSurface4_Impl: windows_core::IUnknownImpl {
     fn GetPalette(&self) -> windows_core::Result<IDirectDrawPalette>;
     fn GetPixelFormat(&self, param0: *mut DDPIXELFORMAT) -> windows_core::Result<()>;
     fn GetSurfaceDesc(&self, param0: *mut DDSURFACEDESC2) -> windows_core::Result<()>;
-    fn Initialize(&self, param0: windows_core::Ref<'_, IDirectDraw>, param1: *mut DDSURFACEDESC2) -> windows_core::Result<()>;
+    fn Initialize(&self, param0: windows_core::Ref<IDirectDraw>, param1: *mut DDSURFACEDESC2) -> windows_core::Result<()>;
     fn IsLost(&self) -> windows_core::Result<()>;
     fn Lock(&self, param0: *mut super::super::Foundation::RECT, param1: *mut DDSURFACEDESC2, param2: u32, param3: super::super::Foundation::HANDLE) -> windows_core::Result<()>;
     fn ReleaseDC(&self, param0: super::Gdi::HDC) -> windows_core::Result<()>;
     fn Restore(&self) -> windows_core::Result<()>;
-    fn SetClipper(&self, param0: windows_core::Ref<'_, IDirectDrawClipper>) -> windows_core::Result<()>;
+    fn SetClipper(&self, param0: windows_core::Ref<IDirectDrawClipper>) -> windows_core::Result<()>;
     fn SetColorKey(&self, param0: u32, param1: *mut DDCOLORKEY) -> windows_core::Result<()>;
     fn SetOverlayPosition(&self, param0: i32, param1: i32) -> windows_core::Result<()>;
-    fn SetPalette(&self, param0: windows_core::Ref<'_, IDirectDrawPalette>) -> windows_core::Result<()>;
+    fn SetPalette(&self, param0: windows_core::Ref<IDirectDrawPalette>) -> windows_core::Result<()>;
     fn Unlock(&self, param0: *mut super::super::Foundation::RECT) -> windows_core::Result<()>;
-    fn UpdateOverlay(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<'_, IDirectDrawSurface4>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDOVERLAYFX) -> windows_core::Result<()>;
+    fn UpdateOverlay(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<IDirectDrawSurface4>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDOVERLAYFX) -> windows_core::Result<()>;
     fn UpdateOverlayDisplay(&self, param0: u32) -> windows_core::Result<()>;
-    fn UpdateOverlayZOrder(&self, param0: u32, param1: windows_core::Ref<'_, IDirectDrawSurface4>) -> windows_core::Result<()>;
+    fn UpdateOverlayZOrder(&self, param0: u32, param1: windows_core::Ref<IDirectDrawSurface4>) -> windows_core::Result<()>;
     fn GetDDInterface(&self, param0: *mut *mut core::ffi::c_void) -> windows_core::Result<()>;
     fn PageLock(&self, param0: u32) -> windows_core::Result<()>;
     fn PageUnlock(&self, param0: u32) -> windows_core::Result<()>;
@@ -9925,16 +9925,16 @@ pub struct IDirectDrawSurface7_Vtbl {
 }
 #[cfg(feature = "Win32_Graphics_Gdi")]
 pub trait IDirectDrawSurface7_Impl: windows_core::IUnknownImpl {
-    fn AddAttachedSurface(&self, param0: windows_core::Ref<'_, IDirectDrawSurface7>) -> windows_core::Result<()>;
+    fn AddAttachedSurface(&self, param0: windows_core::Ref<IDirectDrawSurface7>) -> windows_core::Result<()>;
     fn AddOverlayDirtyRect(&self, param0: *mut super::super::Foundation::RECT) -> windows_core::Result<()>;
-    fn Blt(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<'_, IDirectDrawSurface7>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDBLTFX) -> windows_core::Result<()>;
+    fn Blt(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<IDirectDrawSurface7>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDBLTFX) -> windows_core::Result<()>;
     fn BltBatch(&self, param0: *mut DDBLTBATCH, param1: u32, param2: u32) -> windows_core::Result<()>;
-    fn BltFast(&self, param0: u32, param1: u32, param2: windows_core::Ref<'_, IDirectDrawSurface7>, param3: *mut super::super::Foundation::RECT, param4: u32) -> windows_core::Result<()>;
-    fn DeleteAttachedSurface(&self, param0: u32, param1: windows_core::Ref<'_, IDirectDrawSurface7>) -> windows_core::Result<()>;
+    fn BltFast(&self, param0: u32, param1: u32, param2: windows_core::Ref<IDirectDrawSurface7>, param3: *mut super::super::Foundation::RECT, param4: u32) -> windows_core::Result<()>;
+    fn DeleteAttachedSurface(&self, param0: u32, param1: windows_core::Ref<IDirectDrawSurface7>) -> windows_core::Result<()>;
     fn EnumAttachedSurfaces(&self, param0: *mut core::ffi::c_void, param1: LPDDENUMSURFACESCALLBACK7) -> windows_core::Result<()>;
     fn EnumOverlayZOrders(&self, param0: u32, param1: *mut core::ffi::c_void, param2: LPDDENUMSURFACESCALLBACK7) -> windows_core::Result<()>;
-    fn Flip(&self, param0: windows_core::Ref<'_, IDirectDrawSurface7>, param1: u32) -> windows_core::Result<()>;
-    fn GetAttachedSurface(&self, param0: *mut DDSCAPS2, param1: windows_core::OutRef<'_, IDirectDrawSurface7>) -> windows_core::Result<()>;
+    fn Flip(&self, param0: windows_core::Ref<IDirectDrawSurface7>, param1: u32) -> windows_core::Result<()>;
+    fn GetAttachedSurface(&self, param0: *mut DDSCAPS2, param1: windows_core::OutRef<IDirectDrawSurface7>) -> windows_core::Result<()>;
     fn GetBltStatus(&self, param0: u32) -> windows_core::Result<()>;
     fn GetCaps(&self, param0: *mut DDSCAPS2) -> windows_core::Result<()>;
     fn GetClipper(&self) -> windows_core::Result<IDirectDrawClipper>;
@@ -9945,19 +9945,19 @@ pub trait IDirectDrawSurface7_Impl: windows_core::IUnknownImpl {
     fn GetPalette(&self) -> windows_core::Result<IDirectDrawPalette>;
     fn GetPixelFormat(&self, param0: *mut DDPIXELFORMAT) -> windows_core::Result<()>;
     fn GetSurfaceDesc(&self, param0: *mut DDSURFACEDESC2) -> windows_core::Result<()>;
-    fn Initialize(&self, param0: windows_core::Ref<'_, IDirectDraw>, param1: *mut DDSURFACEDESC2) -> windows_core::Result<()>;
+    fn Initialize(&self, param0: windows_core::Ref<IDirectDraw>, param1: *mut DDSURFACEDESC2) -> windows_core::Result<()>;
     fn IsLost(&self) -> windows_core::Result<()>;
     fn Lock(&self, param0: *mut super::super::Foundation::RECT, param1: *mut DDSURFACEDESC2, param2: u32, param3: super::super::Foundation::HANDLE) -> windows_core::Result<()>;
     fn ReleaseDC(&self, param0: super::Gdi::HDC) -> windows_core::Result<()>;
     fn Restore(&self) -> windows_core::Result<()>;
-    fn SetClipper(&self, param0: windows_core::Ref<'_, IDirectDrawClipper>) -> windows_core::Result<()>;
+    fn SetClipper(&self, param0: windows_core::Ref<IDirectDrawClipper>) -> windows_core::Result<()>;
     fn SetColorKey(&self, param0: u32, param1: *mut DDCOLORKEY) -> windows_core::Result<()>;
     fn SetOverlayPosition(&self, param0: i32, param1: i32) -> windows_core::Result<()>;
-    fn SetPalette(&self, param0: windows_core::Ref<'_, IDirectDrawPalette>) -> windows_core::Result<()>;
+    fn SetPalette(&self, param0: windows_core::Ref<IDirectDrawPalette>) -> windows_core::Result<()>;
     fn Unlock(&self, param0: *mut super::super::Foundation::RECT) -> windows_core::Result<()>;
-    fn UpdateOverlay(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<'_, IDirectDrawSurface7>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDOVERLAYFX) -> windows_core::Result<()>;
+    fn UpdateOverlay(&self, param0: *mut super::super::Foundation::RECT, param1: windows_core::Ref<IDirectDrawSurface7>, param2: *mut super::super::Foundation::RECT, param3: u32, param4: *mut DDOVERLAYFX) -> windows_core::Result<()>;
     fn UpdateOverlayDisplay(&self, param0: u32) -> windows_core::Result<()>;
-    fn UpdateOverlayZOrder(&self, param0: u32, param1: windows_core::Ref<'_, IDirectDrawSurface7>) -> windows_core::Result<()>;
+    fn UpdateOverlayZOrder(&self, param0: u32, param1: windows_core::Ref<IDirectDrawSurface7>) -> windows_core::Result<()>;
     fn GetDDInterface(&self, param0: *mut *mut core::ffi::c_void) -> windows_core::Result<()>;
     fn PageLock(&self, param0: u32) -> windows_core::Result<()>;
     fn PageUnlock(&self, param0: u32) -> windows_core::Result<()>;
@@ -10437,7 +10437,7 @@ pub struct IDirectDrawVideoPort_Vtbl {
     pub WaitForSync: unsafe extern "system" fn(*mut core::ffi::c_void, u32, u32, u32) -> windows_core::HRESULT,
 }
 pub trait IDirectDrawVideoPort_Impl: windows_core::IUnknownImpl {
-    fn Flip(&self, param0: windows_core::Ref<'_, IDirectDrawSurface>, param1: u32) -> windows_core::Result<()>;
+    fn Flip(&self, param0: windows_core::Ref<IDirectDrawSurface>, param1: u32) -> windows_core::Result<()>;
     fn GetBandwidthInfo(&self, param0: *mut DDPIXELFORMAT, param1: u32, param2: u32, param3: u32, param4: *mut DDVIDEOPORTBANDWIDTH) -> windows_core::Result<()>;
     fn GetColorControls(&self, param0: *mut DDCOLORCONTROL) -> windows_core::Result<()>;
     fn GetInputFormats(&self, lpnumformats: *mut u32, param1: *mut DDPIXELFORMAT, param2: u32) -> windows_core::Result<()>;
@@ -10446,7 +10446,7 @@ pub trait IDirectDrawVideoPort_Impl: windows_core::IUnknownImpl {
     fn GetVideoLine(&self, param0: *mut u32) -> windows_core::Result<()>;
     fn GetVideoSignalStatus(&self, param0: *mut u32) -> windows_core::Result<()>;
     fn SetColorControls(&self, param0: *mut DDCOLORCONTROL) -> windows_core::Result<()>;
-    fn SetTargetSurface(&self, param0: windows_core::Ref<'_, IDirectDrawSurface>, param1: u32) -> windows_core::Result<()>;
+    fn SetTargetSurface(&self, param0: windows_core::Ref<IDirectDrawSurface>, param1: u32) -> windows_core::Result<()>;
     fn StartVideo(&self, param0: *mut DDVIDEOPORTINFO) -> windows_core::Result<()>;
     fn StopVideo(&self) -> windows_core::Result<()>;
     fn UpdateVideo(&self, param0: *mut DDVIDEOPORTINFO) -> windows_core::Result<()>;
@@ -10621,7 +10621,7 @@ impl Default for IUNKNOWN_LIST {
         unsafe { core::mem::zeroed() }
     }
 }
-pub type LPCLIPPERCALLBACK = Option<unsafe extern "system" fn(lpddclipper: windows_core::Ref<'_, IDirectDrawClipper>, hwnd: super::super::Foundation::HWND, code: u32, lpcontext: *mut core::ffi::c_void) -> u32>;
+pub type LPCLIPPERCALLBACK = Option<unsafe extern "system" fn(lpddclipper: windows_core::Ref<IDirectDrawClipper>, hwnd: super::super::Foundation::HWND, code: u32, lpcontext: *mut core::ffi::c_void) -> u32>;
 pub type LPDD32BITDRIVERINIT = Option<unsafe extern "system" fn(dwcontext: u32) -> u32>;
 pub type LPDDENUMCALLBACKA = Option<unsafe extern "system" fn(param0: *mut windows_core::GUID, param1: windows_core::PCSTR, param2: windows_core::PCSTR, param3: *mut core::ffi::c_void) -> windows_core::BOOL>;
 #[cfg(feature = "Win32_Graphics_Gdi")]
@@ -10631,9 +10631,9 @@ pub type LPDDENUMCALLBACKEXW = Option<unsafe extern "system" fn(param0: *mut win
 pub type LPDDENUMCALLBACKW = Option<unsafe extern "system" fn(param0: *mut windows_core::GUID, param1: windows_core::PCWSTR, param2: windows_core::PCWSTR, param3: *mut core::ffi::c_void) -> windows_core::BOOL>;
 pub type LPDDENUMMODESCALLBACK = Option<unsafe extern "system" fn(param0: *mut DDSURFACEDESC, param1: *mut core::ffi::c_void) -> windows_core::HRESULT>;
 pub type LPDDENUMMODESCALLBACK2 = Option<unsafe extern "system" fn(param0: *mut DDSURFACEDESC2, param1: *mut core::ffi::c_void) -> windows_core::HRESULT>;
-pub type LPDDENUMSURFACESCALLBACK = Option<unsafe extern "system" fn(param0: windows_core::Ref<'_, IDirectDrawSurface>, param1: *mut DDSURFACEDESC, param2: *mut core::ffi::c_void) -> windows_core::HRESULT>;
-pub type LPDDENUMSURFACESCALLBACK2 = Option<unsafe extern "system" fn(param0: windows_core::Ref<'_, IDirectDrawSurface4>, param1: *mut DDSURFACEDESC2, param2: *mut core::ffi::c_void) -> windows_core::HRESULT>;
-pub type LPDDENUMSURFACESCALLBACK7 = Option<unsafe extern "system" fn(param0: windows_core::Ref<'_, IDirectDrawSurface7>, param1: *mut DDSURFACEDESC2, param2: *mut core::ffi::c_void) -> windows_core::HRESULT>;
+pub type LPDDENUMSURFACESCALLBACK = Option<unsafe extern "system" fn(param0: windows_core::Ref<IDirectDrawSurface>, param1: *mut DDSURFACEDESC, param2: *mut core::ffi::c_void) -> windows_core::HRESULT>;
+pub type LPDDENUMSURFACESCALLBACK2 = Option<unsafe extern "system" fn(param0: windows_core::Ref<IDirectDrawSurface4>, param1: *mut DDSURFACEDESC2, param2: *mut core::ffi::c_void) -> windows_core::HRESULT>;
+pub type LPDDENUMSURFACESCALLBACK7 = Option<unsafe extern "system" fn(param0: windows_core::Ref<IDirectDrawSurface7>, param1: *mut DDSURFACEDESC2, param2: *mut core::ffi::c_void) -> windows_core::HRESULT>;
 pub type LPDDENUMVIDEOCALLBACK = Option<unsafe extern "system" fn(param0: *mut DDVIDEOPORTCAPS, param1: *mut core::ffi::c_void) -> windows_core::HRESULT>;
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

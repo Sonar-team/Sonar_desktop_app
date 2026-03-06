@@ -60,9 +60,6 @@ impl CKQuery {
         #[unsafe(method_family = new)]
         pub unsafe fn new() -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `a_decoder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, a_decoder: &NSCoder) -> Retained<Self>;
@@ -97,8 +94,6 @@ impl CKQuery {
         pub unsafe fn sortDescriptors(&self) -> Option<Retained<NSArray<NSSortDescriptor>>>;
 
         /// Setter for [`sortDescriptors`][Self::sortDescriptors].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSortDescriptors:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSortDescriptors(

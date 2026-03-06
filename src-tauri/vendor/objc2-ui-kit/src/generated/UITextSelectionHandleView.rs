@@ -21,38 +21,38 @@ extern_protocol!(
         /// edge, so the dot will be rendered on top.
         #[unsafe(method(direction))]
         #[unsafe(method_family = none)]
-        fn direction(&self) -> NSDirectionalRectEdge;
+        unsafe fn direction(&self) -> NSDirectionalRectEdge;
 
         #[cfg(feature = "UIGeometry")]
         /// Setter for [`direction`][Self::direction].
         #[unsafe(method(setDirection:))]
         #[unsafe(method_family = none)]
-        fn setDirection(&self, direction: NSDirectionalRectEdge);
+        unsafe fn setDirection(&self, direction: NSDirectionalRectEdge);
 
         /// Convenience accessor for
         /// `direction`calculations.
         #[unsafe(method(isVertical))]
         #[unsafe(method_family = none)]
-        fn isVertical(&self) -> bool;
+        unsafe fn isVertical(&self) -> bool;
 
         #[cfg(feature = "UIBezierPath")]
         /// If applicable, a custom shape for the lollipop stem. Default is
         /// `nil,`which results in a rounded rect style based on bounds.
         #[unsafe(method(customShape))]
         #[unsafe(method_family = none)]
-        fn customShape(&self) -> Option<Retained<UIBezierPath>>;
+        unsafe fn customShape(&self) -> Option<Retained<UIBezierPath>>;
 
         #[cfg(feature = "UIBezierPath")]
         /// Setter for [`customShape`][Self::customShape].
         #[unsafe(method(setCustomShape:))]
         #[unsafe(method_family = none)]
-        fn setCustomShape(&self, custom_shape: Option<&UIBezierPath>);
+        unsafe fn setCustomShape(&self, custom_shape: Option<&UIBezierPath>);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Provides a preferred frame given
         /// `rect`based on the current appearance configuration.
         #[unsafe(method(preferredFrameForRect:))]
         #[unsafe(method_family = none)]
-        fn preferredFrameForRect(&self, rect: CGRect) -> CGRect;
+        unsafe fn preferredFrameForRect(&self, rect: CGRect) -> CGRect;
     }
 );

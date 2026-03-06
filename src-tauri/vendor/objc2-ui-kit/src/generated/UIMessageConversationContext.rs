@@ -27,12 +27,12 @@ impl UIMessageConversationContext {
         /// A Boolean value that indicates whether the message thread is "junk", such as spam.
         #[unsafe(method(isJunk))]
         #[unsafe(method_family = none)]
-        pub fn isJunk(&self) -> bool;
+        pub unsafe fn isJunk(&self) -> bool;
 
         /// Setter for [`isJunk`][Self::isJunk].
         #[unsafe(method(setIsJunk:))]
         #[unsafe(method_family = none)]
-        pub fn setIsJunk(&self, is_junk: bool);
+        pub unsafe fn setIsJunk(&self, is_junk: bool);
     );
 }
 
@@ -42,18 +42,10 @@ impl UIMessageConversationContext {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "UIConversationContext")]
-impl DefaultRetained for UIMessageConversationContext {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

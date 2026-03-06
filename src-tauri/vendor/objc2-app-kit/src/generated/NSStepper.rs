@@ -100,48 +100,48 @@ impl NSStepper {
     extern_methods!(
         #[unsafe(method(minValue))]
         #[unsafe(method_family = none)]
-        pub fn minValue(&self) -> c_double;
+        pub unsafe fn minValue(&self) -> c_double;
 
         /// Setter for [`minValue`][Self::minValue].
         #[unsafe(method(setMinValue:))]
         #[unsafe(method_family = none)]
-        pub fn setMinValue(&self, min_value: c_double);
+        pub unsafe fn setMinValue(&self, min_value: c_double);
 
         #[unsafe(method(maxValue))]
         #[unsafe(method_family = none)]
-        pub fn maxValue(&self) -> c_double;
+        pub unsafe fn maxValue(&self) -> c_double;
 
         /// Setter for [`maxValue`][Self::maxValue].
         #[unsafe(method(setMaxValue:))]
         #[unsafe(method_family = none)]
-        pub fn setMaxValue(&self, max_value: c_double);
+        pub unsafe fn setMaxValue(&self, max_value: c_double);
 
         #[unsafe(method(increment))]
         #[unsafe(method_family = none)]
-        pub fn increment(&self) -> c_double;
+        pub unsafe fn increment(&self) -> c_double;
 
         /// Setter for [`increment`][Self::increment].
         #[unsafe(method(setIncrement:))]
         #[unsafe(method_family = none)]
-        pub fn setIncrement(&self, increment: c_double);
+        pub unsafe fn setIncrement(&self, increment: c_double);
 
         #[unsafe(method(valueWraps))]
         #[unsafe(method_family = none)]
-        pub fn valueWraps(&self) -> bool;
+        pub unsafe fn valueWraps(&self) -> bool;
 
         /// Setter for [`valueWraps`][Self::valueWraps].
         #[unsafe(method(setValueWraps:))]
         #[unsafe(method_family = none)]
-        pub fn setValueWraps(&self, value_wraps: bool);
+        pub unsafe fn setValueWraps(&self, value_wraps: bool);
 
         #[unsafe(method(autorepeat))]
         #[unsafe(method_family = none)]
-        pub fn autorepeat(&self) -> bool;
+        pub unsafe fn autorepeat(&self) -> bool;
 
         /// Setter for [`autorepeat`][Self::autorepeat].
         #[unsafe(method(setAutorepeat:))]
         #[unsafe(method_family = none)]
-        pub fn setAutorepeat(&self, autorepeat: bool);
+        pub unsafe fn setAutorepeat(&self, autorepeat: bool);
     );
 }
 
@@ -151,11 +151,8 @@ impl NSStepper {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -171,7 +168,7 @@ impl NSStepper {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -181,6 +178,6 @@ impl NSStepper {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

@@ -11,37 +11,17 @@ extern_class!(
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsfetchedresultscontroller?language=objc)
     #[unsafe(super(NSObject))]
     #[derive(Debug, PartialEq, Eq, Hash)]
-    #[cfg(feature = "NSFetchRequest")]
     pub struct NSFetchedResultsController<ResultType: ?Sized = AnyObject>;
 );
 
-#[cfg(feature = "NSFetchRequest")]
-impl<ResultType: ?Sized + Message + NSFetchRequestResult> NSFetchedResultsController<ResultType> {
-    /// Unchecked conversion of the generic parameter.
-    ///
-    /// # Safety
-    ///
-    /// The generic must be valid to reinterpret as the given type.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewResultType: ?Sized + Message + NSFetchRequestResult>(
-        &self,
-    ) -> &NSFetchedResultsController<NewResultType> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
-#[cfg(feature = "NSFetchRequest")]
 extern_conformance!(
-    unsafe impl<ResultType: ?Sized + NSFetchRequestResult> NSObjectProtocol
-        for NSFetchedResultsController<ResultType>
-    {
-    }
+    unsafe impl<ResultType: ?Sized> NSObjectProtocol for NSFetchedResultsController<ResultType> {}
 );
 
-#[cfg(feature = "NSFetchRequest")]
-impl<ResultType: Message + NSFetchRequestResult> NSFetchedResultsController<ResultType> {
+impl<ResultType: Message> NSFetchedResultsController<ResultType> {
     extern_methods!(
         #[cfg(all(
+            feature = "NSFetchRequest",
             feature = "NSManagedObjectContext",
             feature = "NSPersistentStoreRequest"
         ))]
@@ -59,7 +39,7 @@ impl<ResultType: Message + NSFetchRequestResult> NSFetchedResultsController<Resu
         #[unsafe(method_family = none)]
         pub unsafe fn performFetch(&self) -> Result<(), Retained<NSError>>;
 
-        #[cfg(feature = "NSPersistentStoreRequest")]
+        #[cfg(all(feature = "NSFetchRequest", feature = "NSPersistentStoreRequest"))]
         #[unsafe(method(fetchRequest))]
         #[unsafe(method_family = none)]
         pub unsafe fn fetchRequest(&self) -> Retained<NSFetchRequest<ResultType>>;
@@ -77,9 +57,6 @@ impl<ResultType: Message + NSFetchRequestResult> NSFetchedResultsController<Resu
         #[unsafe(method_family = none)]
         pub unsafe fn cacheName(&self) -> Option<Retained<NSString>>;
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
         pub unsafe fn delegate(
@@ -87,10 +64,6 @@ impl<ResultType: Message + NSFetchRequestResult> NSFetchedResultsController<Resu
         ) -> Option<Retained<ProtocolObject<dyn NSFetchedResultsControllerDelegate>>>;
 
         /// Setter for [`delegate`][Self::delegate].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(
@@ -145,8 +118,7 @@ impl<ResultType: Message + NSFetchRequestResult> NSFetchedResultsController<Resu
 }
 
 /// Methods declared on superclass `NSObject`.
-#[cfg(feature = "NSFetchRequest")]
-impl<ResultType: Message + NSFetchRequestResult> NSFetchedResultsController<ResultType> {
+impl<ResultType: Message> NSFetchedResultsController<ResultType> {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -206,10 +178,7 @@ unsafe impl RefEncode for NSFetchedResultsChangeType {
 extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/coredata/nsfetchedresultscontrollerdelegate?language=objc)
     pub unsafe trait NSFetchedResultsControllerDelegate: NSObjectProtocol {
-        #[cfg(all(feature = "NSFetchRequest", feature = "NSManagedObjectID"))]
-        /// # Safety
-        ///
-        /// `controller` generic should be bound by `NSFetchRequestResult`.
+        #[cfg(feature = "NSManagedObjectID")]
         #[optional]
         #[unsafe(method(controller:didChangeContentWithDifference:))]
         #[unsafe(method_family = none)]
@@ -219,11 +188,6 @@ extern_protocol!(
             diff: &NSOrderedCollectionDifference<NSManagedObjectID>,
         );
 
-        #[cfg(feature = "NSFetchRequest")]
-        /// # Safety
-        ///
-        /// - `controller` generic should be bound by `NSFetchRequestResult`.
-        /// - `an_object` should be of the correct type.
         #[optional]
         #[unsafe(method(controller:didChangeObject:atIndexPath:forChangeType:newIndexPath:))]
         #[unsafe(method_family = none)]
@@ -236,10 +200,6 @@ extern_protocol!(
             new_index_path: Option<&NSIndexPath>,
         );
 
-        #[cfg(feature = "NSFetchRequest")]
-        /// # Safety
-        ///
-        /// `controller` generic should be bound by `NSFetchRequestResult`.
         #[optional]
         #[unsafe(method(controller:didChangeSection:atIndex:forChangeType:))]
         #[unsafe(method_family = none)]
@@ -251,28 +211,16 @@ extern_protocol!(
             r#type: NSFetchedResultsChangeType,
         );
 
-        #[cfg(feature = "NSFetchRequest")]
-        /// # Safety
-        ///
-        /// `controller` generic should be bound by `NSFetchRequestResult`.
         #[optional]
         #[unsafe(method(controllerWillChangeContent:))]
         #[unsafe(method_family = none)]
         unsafe fn controllerWillChangeContent(&self, controller: &NSFetchedResultsController);
 
-        #[cfg(feature = "NSFetchRequest")]
-        /// # Safety
-        ///
-        /// `controller` generic should be bound by `NSFetchRequestResult`.
         #[optional]
         #[unsafe(method(controllerDidChangeContent:))]
         #[unsafe(method_family = none)]
         unsafe fn controllerDidChangeContent(&self, controller: &NSFetchedResultsController);
 
-        #[cfg(feature = "NSFetchRequest")]
-        /// # Safety
-        ///
-        /// `controller` generic should be bound by `NSFetchRequestResult`.
         #[optional]
         #[unsafe(method(controller:sectionIndexTitleForSectionName:))]
         #[unsafe(method_family = none)]

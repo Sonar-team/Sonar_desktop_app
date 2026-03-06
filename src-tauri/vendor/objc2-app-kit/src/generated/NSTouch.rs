@@ -111,27 +111,27 @@ impl NSTouch {
     extern_methods!(
         #[unsafe(method(identity))]
         #[unsafe(method_family = none)]
-        pub fn identity(&self) -> Retained<AnyObject /* NSObjectProtocol+ NSCopying */>;
+        pub unsafe fn identity(&self) -> Retained<AnyObject /* NSObjectProtocol+ NSCopying */>;
 
         #[unsafe(method(phase))]
         #[unsafe(method_family = none)]
-        pub fn phase(&self) -> NSTouchPhase;
+        pub unsafe fn phase(&self) -> NSTouchPhase;
 
         #[unsafe(method(normalizedPosition))]
         #[unsafe(method_family = none)]
-        pub fn normalizedPosition(&self) -> NSPoint;
+        pub unsafe fn normalizedPosition(&self) -> NSPoint;
 
         #[unsafe(method(isResting))]
         #[unsafe(method_family = none)]
-        pub fn isResting(&self) -> bool;
+        pub unsafe fn isResting(&self) -> bool;
 
         #[unsafe(method(device))]
         #[unsafe(method_family = none)]
-        pub fn device(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn device(&self) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(deviceSize))]
         #[unsafe(method_family = none)]
-        pub fn deviceSize(&self) -> NSSize;
+        pub unsafe fn deviceSize(&self) -> NSSize;
     );
 }
 
@@ -140,19 +140,12 @@ impl NSTouch {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSTouch {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSTouchBar.
@@ -160,16 +153,16 @@ impl NSTouch {
     extern_methods!(
         #[unsafe(method(type))]
         #[unsafe(method_family = none)]
-        pub fn r#type(&self) -> NSTouchType;
+        pub unsafe fn r#type(&self) -> NSTouchType;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(locationInView:))]
         #[unsafe(method_family = none)]
-        pub fn locationInView(&self, view: Option<&NSView>) -> NSPoint;
+        pub unsafe fn locationInView(&self, view: Option<&NSView>) -> NSPoint;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(previousLocationInView:))]
         #[unsafe(method_family = none)]
-        pub fn previousLocationInView(&self, view: Option<&NSView>) -> NSPoint;
+        pub unsafe fn previousLocationInView(&self, view: Option<&NSView>) -> NSPoint;
     );
 }

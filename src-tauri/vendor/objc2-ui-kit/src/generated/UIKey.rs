@@ -39,7 +39,7 @@ impl UIKey {
         /// contain capital letters).
         #[unsafe(method(characters))]
         #[unsafe(method_family = none)]
-        pub fn characters(&self) -> Retained<NSString>;
+        pub unsafe fn characters(&self) -> Retained<NSString>;
 
         /// Returns: a string representing which characters would be inserted into a text field when this key is
         /// pressed, not taking any held modifiers into account.
@@ -48,19 +48,19 @@ impl UIKey {
         /// taking shift key into account). If only a modifier key was pressed, this property will contain an empty string.
         #[unsafe(method(charactersIgnoringModifiers))]
         #[unsafe(method_family = none)]
-        pub fn charactersIgnoringModifiers(&self) -> Retained<NSString>;
+        pub unsafe fn charactersIgnoringModifiers(&self) -> Retained<NSString>;
 
         #[cfg(feature = "UICommand")]
         /// Returns: a bitfield representing which modifier keys are currently being held in addition to this key.
         #[unsafe(method(modifierFlags))]
         #[unsafe(method_family = none)]
-        pub fn modifierFlags(&self) -> UIKeyModifierFlags;
+        pub unsafe fn modifierFlags(&self) -> UIKeyModifierFlags;
 
         #[cfg(all(feature = "UIKeyConstants", feature = "objc2-core-foundation"))]
         /// Returns: the raw HID usage code for the pressed key. See UIKeyConstants.h.
         #[unsafe(method(keyCode))]
         #[unsafe(method_family = none)]
-        pub fn keyCode(&self) -> UIKeyboardHIDUsage;
+        pub unsafe fn keyCode(&self) -> UIKeyboardHIDUsage;
     );
 }
 
@@ -69,10 +69,10 @@ impl UIKey {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

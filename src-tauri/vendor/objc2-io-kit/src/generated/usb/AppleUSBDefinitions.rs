@@ -146,7 +146,7 @@ unsafe impl RefEncode for tIOUSBDescriptorSize {
 /// descriptors.
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdescriptorheader?language=objc)
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDescriptorHeader {
     pub bLength: u8,
@@ -355,7 +355,7 @@ pub const kIOUSBConfigurationDescriptorAttributeSelfPowered: c_uint = IOUSBBit!(
 /// USB 2.0 9.6.5: Interface
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfacedescriptor?language=objc)
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceDescriptor {
     pub bLength: u8,
@@ -665,7 +665,7 @@ unsafe impl RefEncode for tIOUSBLanguageID {
 /// USB 2.0 9.6.7: String
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbstringdescriptor?language=objc)
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBStringDescriptor {
     pub bLength: u8,
@@ -774,7 +774,7 @@ unsafe impl RefEncode for IOUSBBOSDescriptor {
 /// USB 3.0 9.6.2: Binary Device Object Store (BOS)
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicecapabilitydescriptorheader?language=objc)
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceCapabilityDescriptorHeader {
     pub bLength: u8,
@@ -1039,7 +1039,7 @@ pub const kIOUSBSuperSpeedPlusDeviceCapabilitySublinkSpeedMantissaPhase: c_uint 
 /// USB 3.0 9.6.2.3: Container ID
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbdevicecapabilitycontainerid?language=objc)
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBDeviceCapabilityContainerID {
     pub bLength: u8,
@@ -1072,7 +1072,7 @@ unsafe impl RefEncode for IOUSBDeviceCapabilityContainerID {
 /// USB 3.1 9.6.2.4: Platform Descriptor
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbplatformcapabilitydescriptor?language=objc)
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBPlatformCapabilityDescriptor {
     pub bLength: u8,
@@ -1240,7 +1240,7 @@ unsafe impl RefEncode for IOUSBDeviceCapabilityBillboardAltMode {
 /// USB 3.0 9.6.4: Interface Association
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbinterfaceassociationdescriptor?language=objc)
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBInterfaceAssociationDescriptor {
     pub bLength: u8,
@@ -1495,7 +1495,7 @@ pub const kIOUSBSuperSpeedHubDelayMax: c_uint = 400;
 /// Structure used to specify the Mass Storage Specific UAS pipe usage descriptor
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/uaspipedescriptor?language=objc)
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct UASPipeDescriptor {
     pub bLength: u8,
@@ -1571,7 +1571,7 @@ unsafe impl RefEncode for IOUSBHIDDescriptor {
 /// .
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/iousbhidreportdesc?language=objc)
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOUSBHIDReportDesc {
     pub hidDescriptorType: u8,

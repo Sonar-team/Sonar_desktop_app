@@ -66,8 +66,6 @@ impl WKWebExtensionCommand {
         pub unsafe fn activationKey(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`activationKey`][Self::activationKey].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setActivationKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setActivationKey(&self, activation_key: Option<&NSString>);

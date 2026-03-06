@@ -19,7 +19,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(selectionContainerViewBelowTextForSelectionDisplayInteraction:))]
         #[unsafe(method_family = none)]
-        fn selectionContainerViewBelowTextForSelectionDisplayInteraction(
+        unsafe fn selectionContainerViewBelowTextForSelectionDisplayInteraction(
             &self,
             interaction: &UITextSelectionDisplayInteraction,
         ) -> Option<Retained<UIView>>;
@@ -55,24 +55,24 @@ impl UITextSelectionDisplayInteraction {
         /// Controls both the hidden sate of contained selection views as well as interactions that follow.
         #[unsafe(method(isActivated))]
         #[unsafe(method_family = none)]
-        pub fn isActivated(&self) -> bool;
+        pub unsafe fn isActivated(&self) -> bool;
 
         /// Setter for [`isActivated`][Self::isActivated].
         #[unsafe(method(setActivated:))]
         #[unsafe(method_family = none)]
-        pub fn setActivated(&self, activated: bool);
+        pub unsafe fn setActivated(&self, activated: bool);
 
         #[cfg(all(feature = "UITextInput", feature = "UITextInputTraits"))]
         /// The object the selection is being managed for.
         #[unsafe(method(textInput))]
         #[unsafe(method_family = none)]
-        pub fn textInput(&self) -> Option<Retained<ProtocolObject<dyn UITextInput>>>;
+        pub unsafe fn textInput(&self) -> Option<Retained<ProtocolObject<dyn UITextInput>>>;
 
         /// See
         /// `UITextSelectionDisplayInteractionDelegate.`
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UITextSelectionDisplayInteractionDelegate>>>;
 
@@ -84,7 +84,7 @@ impl UITextSelectionDisplayInteraction {
         /// The cursor view (also known as "caret" view). Shown when the selection is not ranged.
         #[unsafe(method(cursorView))]
         #[unsafe(method_family = none)]
-        pub fn cursorView(&self) -> Retained<UIView>;
+        pub unsafe fn cursorView(&self) -> Retained<UIView>;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -92,10 +92,6 @@ impl UITextSelectionDisplayInteraction {
             feature = "UIView"
         ))]
         /// Setter for [`cursorView`][Self::cursorView].
-        ///
-        /// # Safety
-        ///
-        /// `cursor_view` must implement UITextCursorView.
         #[unsafe(method(setCursorView:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setCursorView(&self, cursor_view: &UIView);
@@ -108,7 +104,7 @@ impl UITextSelectionDisplayInteraction {
         /// The highlight view. This is the blue/tinted highlight drawn behind the rendered text.
         #[unsafe(method(highlightView))]
         #[unsafe(method_family = none)]
-        pub fn highlightView(&self) -> Retained<UIView>;
+        pub unsafe fn highlightView(&self) -> Retained<UIView>;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -116,10 +112,6 @@ impl UITextSelectionDisplayInteraction {
             feature = "UIView"
         ))]
         /// Setter for [`highlightView`][Self::highlightView].
-        ///
-        /// # Safety
-        ///
-        /// `highlight_view` must implement UITextSelectionHighlightView.
         #[unsafe(method(setHighlightView:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setHighlightView(&self, highlight_view: &UIView);
@@ -136,7 +128,7 @@ impl UITextSelectionDisplayInteraction {
         /// and another to be used as the trailing handle.
         #[unsafe(method(handleViews))]
         #[unsafe(method_family = none)]
-        pub fn handleViews(&self) -> Retained<NSArray<UIView>>;
+        pub unsafe fn handleViews(&self) -> Retained<NSArray<UIView>>;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -144,10 +136,6 @@ impl UITextSelectionDisplayInteraction {
             feature = "UIView"
         ))]
         /// Setter for [`handleViews`][Self::handleViews].
-        ///
-        /// # Safety
-        ///
-        /// `handle_views` generic must implement UITextSelectionHandleView.
         #[unsafe(method(setHandleViews:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setHandleViews(&self, handle_views: &NSArray<UIView>);
@@ -157,7 +145,7 @@ impl UITextSelectionDisplayInteraction {
         /// `textInput` may be the same as the view this interaction is installed onto.
         #[unsafe(method(initWithTextInput:delegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithTextInput_delegate(
+        pub unsafe fn initWithTextInput_delegate(
             this: Allocated<Self>,
             text_input: &ProtocolObject<dyn UITextInput>,
             delegate: &ProtocolObject<dyn UITextSelectionDisplayInteractionDelegate>,
@@ -166,12 +154,12 @@ impl UITextSelectionDisplayInteraction {
         /// Loads the selection from `-[UITextInput selectedTextRange]` and applies the selection to all managed subviews.
         #[unsafe(method(layoutManagedSubviews))]
         #[unsafe(method_family = none)]
-        pub fn layoutManagedSubviews(&self);
+        pub unsafe fn layoutManagedSubviews(&self);
 
         /// Call this whenever the selection changes, or needs to be re-laid out.
         #[unsafe(method(setNeedsSelectionUpdate))]
         #[unsafe(method_family = none)]
-        pub fn setNeedsSelectionUpdate(&self);
+        pub unsafe fn setNeedsSelectionUpdate(&self);
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

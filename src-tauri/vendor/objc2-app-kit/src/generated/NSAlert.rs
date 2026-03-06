@@ -74,33 +74,29 @@ impl NSAlert {
         /// - Note: The `NSAlert` class extracts the localized error description, recovery suggestion, and recovery options from the error parameter and uses them as the alert’s message text, informative text, and button titles, respectively.
         #[unsafe(method(alertWithError:))]
         #[unsafe(method_family = none)]
-        pub fn alertWithError(error: &NSError, mtm: MainThreadMarker) -> Retained<NSAlert>;
+        pub unsafe fn alertWithError(error: &NSError, mtm: MainThreadMarker) -> Retained<NSAlert>;
 
         /// The text that is displayed prominently in the alert.
         /// - Note: Use this string to get the user’s attention and communicate the reason for displaying the alert.
         #[unsafe(method(messageText))]
         #[unsafe(method_family = none)]
-        pub fn messageText(&self) -> Retained<NSString>;
+        pub unsafe fn messageText(&self) -> Retained<NSString>;
 
         /// Setter for [`messageText`][Self::messageText].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setMessageText:))]
         #[unsafe(method_family = none)]
-        pub fn setMessageText(&self, message_text: &NSString);
+        pub unsafe fn setMessageText(&self, message_text: &NSString);
 
         /// The descriptive text that provides more details about the reason for the alert.
         /// - Note: The informative text string is displayed below the message text and is less prominent. Use this string to provide additional context about the reason for the alert or about the actions that the user might take.
         #[unsafe(method(informativeText))]
         #[unsafe(method_family = none)]
-        pub fn informativeText(&self) -> Retained<NSString>;
+        pub unsafe fn informativeText(&self) -> Retained<NSString>;
 
         /// Setter for [`informativeText`][Self::informativeText].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setInformativeText:))]
         #[unsafe(method_family = none)]
-        pub fn setInformativeText(&self, informative_text: &NSString);
+        pub unsafe fn setInformativeText(&self, informative_text: &NSString);
 
         #[cfg(feature = "NSImage")]
         /// The custom icon displayed in the alert.
@@ -108,14 +104,10 @@ impl NSAlert {
         /// If a custom alert icon had been set, it can be cleared by setting this property’s value to `nil`, which restores use of the app icon for the alert.
         #[unsafe(method(icon))]
         #[unsafe(method_family = none)]
-        pub fn icon(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn icon(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`icon`][Self::icon].
-        ///
-        /// # Safety
-        ///
-        /// `icon` might not allow `None`.
         #[unsafe(method(setIcon:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setIcon(&self, icon: Option<&NSImage>);
@@ -138,7 +130,7 @@ impl NSAlert {
         /// - Returns: The button that was added to the alert.
         #[unsafe(method(addButtonWithTitle:))]
         #[unsafe(method_family = none)]
-        pub fn addButtonWithTitle(&self, title: &NSString) -> Retained<NSButton>;
+        pub unsafe fn addButtonWithTitle(&self, title: &NSString) -> Retained<NSButton>;
 
         #[cfg(all(
             feature = "NSButton",
@@ -150,17 +142,17 @@ impl NSAlert {
         /// The buttons are in the order in which they were added, and do not necessarily reflect the order they are arranged visually. The array does not include the default “OK” button that is shown in an alert presented without any buttons added with `-addButtonWithTitle:`.
         #[unsafe(method(buttons))]
         #[unsafe(method_family = none)]
-        pub fn buttons(&self) -> Retained<NSArray<NSButton>>;
+        pub unsafe fn buttons(&self) -> Retained<NSArray<NSButton>>;
 
         /// Indicates the alert’s severity level. See the `NSAlertStyle` enumeration for the list of alert style constants.
         #[unsafe(method(alertStyle))]
         #[unsafe(method_family = none)]
-        pub fn alertStyle(&self) -> NSAlertStyle;
+        pub unsafe fn alertStyle(&self) -> NSAlertStyle;
 
         /// Setter for [`alertStyle`][Self::alertStyle].
         #[unsafe(method(setAlertStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setAlertStyle(&self, alert_style: NSAlertStyle);
+        pub unsafe fn setAlertStyle(&self, alert_style: NSAlertStyle);
 
         /// Specifies whether the alert has a help button.
         ///
@@ -174,63 +166,60 @@ impl NSAlert {
         /// - The alert delegate implements `-alertShowHelp:` but returns `NO`. When this is the case, an exception is raised if no help anchor is set.
         #[unsafe(method(showsHelp))]
         #[unsafe(method_family = none)]
-        pub fn showsHelp(&self) -> bool;
+        pub unsafe fn showsHelp(&self) -> bool;
 
         /// Setter for [`showsHelp`][Self::showsHelp].
         #[unsafe(method(setShowsHelp:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsHelp(&self, shows_help: bool);
+        pub unsafe fn setShowsHelp(&self, shows_help: bool);
 
         #[cfg(feature = "NSHelpManager")]
         /// The alert’s HTML help anchor used when the user clicks the alert’s help button
         #[unsafe(method(helpAnchor))]
         #[unsafe(method_family = none)]
-        pub fn helpAnchor(&self) -> Option<Retained<NSHelpAnchorName>>;
+        pub unsafe fn helpAnchor(&self) -> Option<Retained<NSHelpAnchorName>>;
 
         #[cfg(feature = "NSHelpManager")]
         /// Setter for [`helpAnchor`][Self::helpAnchor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setHelpAnchor:))]
         #[unsafe(method_family = none)]
-        pub fn setHelpAnchor(&self, help_anchor: Option<&NSHelpAnchorName>);
+        pub unsafe fn setHelpAnchor(&self, help_anchor: Option<&NSHelpAnchorName>);
 
         /// The delegate of the receiver, currently only allows for custom help behavior of the alert.
         /// For apps linked against 10.12, this property has zeroing weak memory semantics. When linked against an older SDK this back to having `retain` semantics, matching legacy behavior.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSAlertDelegate>>>;
+        pub unsafe fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSAlertDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSAlertDelegate>>);
+        pub unsafe fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSAlertDelegate>>);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         /// The accessory view displayed in the alert, placed between the informative text or suppression checkbox (if present) and the response buttons. Before changing the location of the accessory view, first call the `-layout` method.
         #[unsafe(method(accessoryView))]
         #[unsafe(method_family = none)]
-        pub fn accessoryView(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn accessoryView(&self) -> Option<Retained<NSView>>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         /// Setter for [`accessoryView`][Self::accessoryView].
         #[unsafe(method(setAccessoryView:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessoryView(&self, accessory_view: Option<&NSView>);
+        pub unsafe fn setAccessoryView(&self, accessory_view: Option<&NSView>);
 
         /// Specifies that the alert must do immediate layout instead of lazily just before display.
         /// Used to indicate that the alert panel should do immediate layout, overriding the default behavior of laying out lazily just before showing panel. Only call this method if wanting to do custom layout after it returns. Call this method only after the alert’s other customization, including setting message and informative text, and adding buttons and an accessory view if needed. Layout changes can be made after this method returns, in particular to adjust the frame of an accessory view. Note that the standard layout of the alert may change in the future, so layout customization should be done with caution.
         #[unsafe(method(layout))]
         #[unsafe(method_family = none)]
-        pub fn layout(&self);
+        pub unsafe fn layout(&self);
 
         #[cfg(feature = "NSApplication")]
         /// Runs the alert as an app-modal dialog and returns the constant that identifies the button clicked.
         #[unsafe(method(runModal))]
         #[unsafe(method_family = none)]
-        pub fn runModal(&self) -> NSModalResponse;
+        pub unsafe fn runModal(&self) -> NSModalResponse;
 
         /// Specifies whether the alert includes a suppression checkbox, which can be employed to allow a user to opt out of seeing the alert again.
         /// The default value of this property is `NO`, which specifies the absence of a suppression checkbox in the alert. Set the value to `YES` to show a suppression checkbox in the alert.
@@ -243,12 +232,12 @@ impl NSAlert {
         /// To create an alert that responds to the selection state of the suppression checkbox, check `myAlert.suppressionButton.state`.
         #[unsafe(method(showsSuppressionButton))]
         #[unsafe(method_family = none)]
-        pub fn showsSuppressionButton(&self) -> bool;
+        pub unsafe fn showsSuppressionButton(&self) -> bool;
 
         /// Setter for [`showsSuppressionButton`][Self::showsSuppressionButton].
         #[unsafe(method(setShowsSuppressionButton:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsSuppressionButton(&self, shows_suppression_button: bool);
+        pub unsafe fn setShowsSuppressionButton(&self, shows_suppression_button: bool);
 
         #[cfg(all(
             feature = "NSButton",
@@ -259,7 +248,7 @@ impl NSAlert {
         /// The alert’s suppression checkbox. The checkbox may be customized, including the title and the initial state. Additionally, use this method to get the state of the button after the alert is dismissed, which may be stored in user defaults and checked before showing the alert again. In order to show the suppression button in the alert panel, you must set `showsSuppressionButton` to `YES`.
         #[unsafe(method(suppressionButton))]
         #[unsafe(method_family = none)]
-        pub fn suppressionButton(&self) -> Option<Retained<NSButton>>;
+        pub unsafe fn suppressionButton(&self) -> Option<Retained<NSButton>>;
 
         #[cfg(all(
             feature = "NSApplication",
@@ -276,7 +265,7 @@ impl NSAlert {
         /// Note that `-orderOut:` no longer needs to be called in the completion handler. If the alert isn’t  don’t dismiss the alert, it will be done for you after the completion handler finishes.
         #[unsafe(method(beginSheetModalForWindow:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn beginSheetModalForWindow_completionHandler(
+        pub unsafe fn beginSheetModalForWindow_completionHandler(
             &self,
             sheet_window: &NSWindow,
             handler: Option<&block2::DynBlock<dyn Fn(NSModalResponse)>>,
@@ -286,7 +275,7 @@ impl NSAlert {
         /// The app-modal panel or document-modal sheet that corresponds to the alert
         #[unsafe(method(window))]
         #[unsafe(method_family = none)]
-        pub fn window(&self) -> Retained<NSWindow>;
+        pub unsafe fn window(&self) -> Retained<NSWindow>;
     );
 }
 
@@ -295,11 +284,11 @@ impl NSAlert {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -314,7 +303,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(alertShowHelp:))]
         #[unsafe(method_family = none)]
-        fn alertShowHelp(&self, alert: &NSAlert) -> bool;
+        unsafe fn alertShowHelp(&self, alert: &NSAlert) -> bool;
     }
 );
 
@@ -322,11 +311,6 @@ extern_protocol!(
 impl NSAlert {
     extern_methods!(
         #[cfg(all(feature = "NSResponder", feature = "NSWindow"))]
-        /// # Safety
-        ///
-        /// - `delegate` should be of the correct type.
-        /// - `did_end_selector` must be a valid selector.
-        /// - `context_info` must be a valid pointer or null.
         #[deprecated = "Use -beginSheetModalForWindow:completionHandler: instead"]
         #[unsafe(method(beginSheetModalForWindow:modalDelegate:didEndSelector:contextInfo:))]
         #[unsafe(method_family = none)]
@@ -341,13 +325,10 @@ impl NSAlert {
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nswarningalertstyle?language=objc)
-#[deprecated]
 pub static NSWarningAlertStyle: NSAlertStyle = NSAlertStyle(NSAlertStyle::Warning.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsinformationalalertstyle?language=objc)
-#[deprecated]
 pub static NSInformationalAlertStyle: NSAlertStyle = NSAlertStyle(NSAlertStyle::Informational.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscriticalalertstyle?language=objc)
-#[deprecated]
 pub static NSCriticalAlertStyle: NSAlertStyle = NSAlertStyle(NSAlertStyle::Critical.0);

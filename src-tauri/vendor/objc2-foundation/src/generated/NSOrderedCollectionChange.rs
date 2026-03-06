@@ -32,20 +32,6 @@ extern_class!(
     pub struct NSOrderedCollectionChange<ObjectType: ?Sized = AnyObject>;
 );
 
-impl<ObjectType: ?Sized + Message> NSOrderedCollectionChange<ObjectType> {
-    /// Unchecked conversion of the generic parameter.
-    ///
-    /// # Safety
-    ///
-    /// The generic must be valid to reinterpret as the given type.
-    #[inline]
-    pub unsafe fn cast_unchecked<NewObjectType: ?Sized + Message>(
-        &self,
-    ) -> &NSOrderedCollectionChange<NewObjectType> {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
 extern_conformance!(
     unsafe impl<ObjectType: ?Sized> NSObjectProtocol for NSOrderedCollectionChange<ObjectType> {}
 );
@@ -54,7 +40,7 @@ impl<ObjectType: Message> NSOrderedCollectionChange<ObjectType> {
     extern_methods!(
         #[unsafe(method(changeWithObject:type:index:))]
         #[unsafe(method_family = none)]
-        pub fn changeWithObject_type_index(
+        pub unsafe fn changeWithObject_type_index(
             an_object: Option<&ObjectType>,
             r#type: NSCollectionChangeType,
             index: NSUInteger,
@@ -62,7 +48,7 @@ impl<ObjectType: Message> NSOrderedCollectionChange<ObjectType> {
 
         #[unsafe(method(changeWithObject:type:index:associatedIndex:))]
         #[unsafe(method_family = none)]
-        pub fn changeWithObject_type_index_associatedIndex(
+        pub unsafe fn changeWithObject_type_index_associatedIndex(
             an_object: Option<&ObjectType>,
             r#type: NSCollectionChangeType,
             index: NSUInteger,
@@ -71,19 +57,19 @@ impl<ObjectType: Message> NSOrderedCollectionChange<ObjectType> {
 
         #[unsafe(method(object))]
         #[unsafe(method_family = none)]
-        pub fn object(&self) -> Option<Retained<ObjectType>>;
+        pub unsafe fn object(&self) -> Option<Retained<ObjectType>>;
 
         #[unsafe(method(changeType))]
         #[unsafe(method_family = none)]
-        pub fn changeType(&self) -> NSCollectionChangeType;
+        pub unsafe fn changeType(&self) -> NSCollectionChangeType;
 
         #[unsafe(method(index))]
         #[unsafe(method_family = none)]
-        pub fn index(&self) -> NSUInteger;
+        pub unsafe fn index(&self) -> NSUInteger;
 
         #[unsafe(method(associatedIndex))]
         #[unsafe(method_family = none)]
-        pub fn associatedIndex(&self) -> NSUInteger;
+        pub unsafe fn associatedIndex(&self) -> NSUInteger;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -91,7 +77,7 @@ impl<ObjectType: Message> NSOrderedCollectionChange<ObjectType> {
 
         #[unsafe(method(initWithObject:type:index:))]
         #[unsafe(method_family = init)]
-        pub fn initWithObject_type_index(
+        pub unsafe fn initWithObject_type_index(
             this: Allocated<Self>,
             an_object: Option<&ObjectType>,
             r#type: NSCollectionChangeType,
@@ -100,7 +86,7 @@ impl<ObjectType: Message> NSOrderedCollectionChange<ObjectType> {
 
         #[unsafe(method(initWithObject:type:index:associatedIndex:))]
         #[unsafe(method_family = init)]
-        pub fn initWithObject_type_index_associatedIndex(
+        pub unsafe fn initWithObject_type_index_associatedIndex(
             this: Allocated<Self>,
             an_object: Option<&ObjectType>,
             r#type: NSCollectionChangeType,

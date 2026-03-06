@@ -48,6 +48,6 @@ impl NSLocalizedNumberFormatRule {
 
         #[unsafe(method(automatic))]
         #[unsafe(method_family = none)]
-        pub fn automatic() -> Retained<NSLocalizedNumberFormatRule>;
+        pub unsafe fn automatic() -> Retained<NSLocalizedNumberFormatRule>;
     );
 }

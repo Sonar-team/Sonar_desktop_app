@@ -11,7 +11,6 @@ use objc2_core_foundation::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgfunction?language=objc)
-#[doc(alias = "CGFunctionRef")]
 #[repr(C)]
 pub struct CGFunction {
     inner: [u8; 0],
@@ -35,7 +34,6 @@ pub type CGFunctionReleaseInfoCallback = Option<unsafe extern "C-unwind" fn(*mut
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgfunctioncallbacks?language=objc)
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CGFunctionCallbacks {
     pub version: c_uint,
@@ -72,12 +70,6 @@ unsafe impl ConcreteType for CGFunction {
 }
 
 impl CGFunction {
-    /// # Safety
-    ///
-    /// - `info` must be a valid pointer or null.
-    /// - `domain` must be a valid pointer or null.
-    /// - `range` must be a valid pointer or null.
-    /// - `callbacks` must be a valid pointer or null.
     #[doc(alias = "CGFunctionCreate")]
     #[inline]
     pub unsafe fn new(

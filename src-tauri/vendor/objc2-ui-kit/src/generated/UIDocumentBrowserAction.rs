@@ -51,7 +51,7 @@ impl UIDocumentBrowserAction {
         #[cfg(feature = "block2")]
         #[unsafe(method(initWithIdentifier:localizedTitle:availability:handler:))]
         #[unsafe(method_family = init)]
-        pub fn initWithIdentifier_localizedTitle_availability_handler(
+        pub unsafe fn initWithIdentifier_localizedTitle_availability_handler(
             this: Allocated<Self>,
             identifier: &NSString,
             localized_title: &NSString,
@@ -61,59 +61,46 @@ impl UIDocumentBrowserAction {
 
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Retained<NSString>;
+        pub unsafe fn identifier(&self) -> Retained<NSString>;
 
         #[unsafe(method(localizedTitle))]
         #[unsafe(method_family = none)]
-        pub fn localizedTitle(&self) -> Retained<NSString>;
+        pub unsafe fn localizedTitle(&self) -> Retained<NSString>;
 
         #[unsafe(method(availability))]
         #[unsafe(method_family = none)]
-        pub fn availability(&self) -> UIDocumentBrowserActionAvailability;
+        pub unsafe fn availability(&self) -> UIDocumentBrowserActionAvailability;
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`image`][Self::image].
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&UIImage>);
-
-        #[cfg(feature = "UIImage")]
-        #[unsafe(method(imageOnlyForContextMenu))]
-        #[unsafe(method_family = none)]
-        pub fn imageOnlyForContextMenu(&self) -> Option<Retained<UIImage>>;
-
-        #[cfg(feature = "UIImage")]
-        /// Setter for [`imageOnlyForContextMenu`][Self::imageOnlyForContextMenu].
-        #[unsafe(method(setImageOnlyForContextMenu:))]
-        #[unsafe(method_family = none)]
-        pub fn setImageOnlyForContextMenu(&self, image_only_for_context_menu: Option<&UIImage>);
+        pub unsafe fn setImage(&self, image: Option<&UIImage>);
 
         /// Allows clients to restrict the action to only a specific set of content types. Default: [UTTypeItem.identifier]
         #[unsafe(method(supportedContentTypes))]
         #[unsafe(method_family = none)]
-        pub fn supportedContentTypes(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn supportedContentTypes(&self) -> Retained<NSArray<NSString>>;
 
         /// Setter for [`supportedContentTypes`][Self::supportedContentTypes].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSupportedContentTypes:))]
         #[unsafe(method_family = none)]
-        pub fn setSupportedContentTypes(&self, supported_content_types: &NSArray<NSString>);
+        pub unsafe fn setSupportedContentTypes(&self, supported_content_types: &NSArray<NSString>);
 
         /// If NO, the action is only available, if there is only one item selected. Default: YES.
         #[unsafe(method(supportsMultipleItems))]
         #[unsafe(method_family = none)]
-        pub fn supportsMultipleItems(&self) -> bool;
+        pub unsafe fn supportsMultipleItems(&self) -> bool;
 
         /// Setter for [`supportsMultipleItems`][Self::supportsMultipleItems].
         #[unsafe(method(setSupportsMultipleItems:))]
         #[unsafe(method_family = none)]
-        pub fn setSupportsMultipleItems(&self, supports_multiple_items: bool);
+        pub unsafe fn setSupportsMultipleItems(&self, supports_multiple_items: bool);
     );
 }
 

@@ -31,11 +31,8 @@ impl UISceneActivationConditions {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `a_decoder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -45,29 +42,28 @@ impl UISceneActivationConditions {
 
         #[unsafe(method(canActivateForTargetContentIdentifierPredicate))]
         #[unsafe(method_family = none)]
-        pub fn canActivateForTargetContentIdentifierPredicate(&self) -> Retained<NSPredicate>;
+        pub unsafe fn canActivateForTargetContentIdentifierPredicate(
+            &self,
+        ) -> Retained<NSPredicate>;
 
         /// Setter for [`canActivateForTargetContentIdentifierPredicate`][Self::canActivateForTargetContentIdentifierPredicate].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCanActivateForTargetContentIdentifierPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn setCanActivateForTargetContentIdentifierPredicate(
+        pub unsafe fn setCanActivateForTargetContentIdentifierPredicate(
             &self,
             can_activate_for_target_content_identifier_predicate: &NSPredicate,
         );
 
         #[unsafe(method(prefersToActivateForTargetContentIdentifierPredicate))]
         #[unsafe(method_family = none)]
-        pub fn prefersToActivateForTargetContentIdentifierPredicate(&self)
-            -> Retained<NSPredicate>;
+        pub unsafe fn prefersToActivateForTargetContentIdentifierPredicate(
+            &self,
+        ) -> Retained<NSPredicate>;
 
         /// Setter for [`prefersToActivateForTargetContentIdentifierPredicate`][Self::prefersToActivateForTargetContentIdentifierPredicate].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPrefersToActivateForTargetContentIdentifierPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn setPrefersToActivateForTargetContentIdentifierPredicate(
+        pub unsafe fn setPrefersToActivateForTargetContentIdentifierPredicate(
             &self,
             prefers_to_activate_for_target_content_identifier_predicate: &NSPredicate,
         );
@@ -79,7 +75,7 @@ impl UISceneActivationConditions {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -95,14 +91,12 @@ pub unsafe trait NSUserActivityUISceneActivationConditions:
     extern_methods!(
         #[unsafe(method(targetContentIdentifier))]
         #[unsafe(method_family = none)]
-        fn targetContentIdentifier(&self) -> Option<Retained<NSString>>;
+        unsafe fn targetContentIdentifier(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`targetContentIdentifier`][Self::targetContentIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTargetContentIdentifier:))]
         #[unsafe(method_family = none)]
-        fn setTargetContentIdentifier(&self, target_content_identifier: Option<&NSString>);
+        unsafe fn setTargetContentIdentifier(&self, target_content_identifier: Option<&NSString>);
     );
 }
 

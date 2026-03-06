@@ -76,11 +76,6 @@ extern "C" {
     pub static WKWebsiteDataTypeHashSalt: &'static NSString;
 }
 
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/webkit/wkwebsitedatatypescreentime?language=objc)
-    pub static WKWebsiteDataTypeScreenTime: &'static NSString;
-}
-
 extern_class!(
     /// A WKWebsiteDataRecord represents website data, grouped by domain name using the public suffix list.
     ///

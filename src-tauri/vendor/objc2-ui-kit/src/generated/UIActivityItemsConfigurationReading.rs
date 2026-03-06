@@ -69,12 +69,14 @@ extern_protocol!(
     {
         #[unsafe(method(itemProvidersForActivityItemsConfiguration))]
         #[unsafe(method_family = none)]
-        fn itemProvidersForActivityItemsConfiguration(&self) -> Retained<NSArray<NSItemProvider>>;
+        unsafe fn itemProvidersForActivityItemsConfiguration(
+            &self,
+        ) -> Retained<NSArray<NSItemProvider>>;
 
         #[optional]
         #[unsafe(method(activityItemsConfigurationSupportsInteraction:))]
         #[unsafe(method_family = none)]
-        fn activityItemsConfigurationSupportsInteraction(
+        unsafe fn activityItemsConfigurationSupportsInteraction(
             &self,
             interaction: &UIActivityItemsConfigurationInteraction,
         ) -> bool;
@@ -82,7 +84,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(activityItemsConfigurationMetadataForKey:))]
         #[unsafe(method_family = none)]
-        fn activityItemsConfigurationMetadataForKey(
+        unsafe fn activityItemsConfigurationMetadataForKey(
             &self,
             key: &UIActivityItemsConfigurationMetadataKey,
         ) -> Option<Retained<AnyObject>>;
@@ -90,7 +92,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(activityItemsConfigurationMetadataForItemAtIndex:key:))]
         #[unsafe(method_family = none)]
-        fn activityItemsConfigurationMetadataForItemAtIndex_key(
+        unsafe fn activityItemsConfigurationMetadataForItemAtIndex_key(
             &self,
             index: NSInteger,
             key: &UIActivityItemsConfigurationMetadataKey,
@@ -100,7 +102,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(activityItemsConfigurationPreviewForItemAtIndex:intent:suggestedSize:))]
         #[unsafe(method_family = none)]
-        fn activityItemsConfigurationPreviewForItemAtIndex_intent_suggestedSize(
+        unsafe fn activityItemsConfigurationPreviewForItemAtIndex_intent_suggestedSize(
             &self,
             index: NSInteger,
             intent: &UIActivityItemsConfigurationPreviewIntent,
@@ -111,7 +113,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(applicationActivitiesForActivityItemsConfiguration))]
         #[unsafe(method_family = none)]
-        fn applicationActivitiesForActivityItemsConfiguration(
+        unsafe fn applicationActivitiesForActivityItemsConfiguration(
             &self,
         ) -> Option<Retained<NSArray<UIActivity>>>;
     }
@@ -124,7 +126,7 @@ extern_protocol!(
     pub unsafe trait UIActivityItemsConfigurationProviding: NSObjectProtocol {
         #[unsafe(method(activityItemsConfiguration))]
         #[unsafe(method_family = none)]
-        fn activityItemsConfiguration(
+        unsafe fn activityItemsConfiguration(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<ProtocolObject<dyn UIActivityItemsConfigurationReading>>>;

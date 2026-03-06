@@ -41,51 +41,47 @@ impl UIContentUnavailableButtonProperties {
         /// The primary action of the button.
         #[unsafe(method(primaryAction))]
         #[unsafe(method_family = none)]
-        pub fn primaryAction(&self) -> Option<Retained<UIAction>>;
+        pub unsafe fn primaryAction(&self) -> Option<Retained<UIAction>>;
 
         #[cfg(all(feature = "UIAction", feature = "UIMenuElement"))]
         /// Setter for [`primaryAction`][Self::primaryAction].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPrimaryAction:))]
         #[unsafe(method_family = none)]
-        pub fn setPrimaryAction(&self, primary_action: Option<&UIAction>);
+        pub unsafe fn setPrimaryAction(&self, primary_action: Option<&UIAction>);
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
         /// An optional menu for the button to display.
         #[unsafe(method(menu))]
         #[unsafe(method_family = none)]
-        pub fn menu(&self) -> Option<Retained<UIMenu>>;
+        pub unsafe fn menu(&self) -> Option<Retained<UIMenu>>;
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
         /// Setter for [`menu`][Self::menu].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setMenu:))]
         #[unsafe(method_family = none)]
-        pub fn setMenu(&self, menu: Option<&UIMenu>);
+        pub unsafe fn setMenu(&self, menu: Option<&UIMenu>);
 
         /// Whether the button is enabled. Default is YES.
         #[unsafe(method(isEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isEnabled(&self) -> bool;
+        pub unsafe fn isEnabled(&self) -> bool;
 
         /// Setter for [`isEnabled`][Self::isEnabled].
         #[unsafe(method(setEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setEnabled(&self, enabled: bool);
+        pub unsafe fn setEnabled(&self, enabled: bool);
 
         #[cfg(feature = "UIButton")]
         /// The role of the button.
         #[unsafe(method(role))]
         #[unsafe(method_family = none)]
-        pub fn role(&self) -> UIButtonRole;
+        pub unsafe fn role(&self) -> UIButtonRole;
 
         #[cfg(feature = "UIButton")]
         /// Setter for [`role`][Self::role].
         #[unsafe(method(setRole:))]
         #[unsafe(method_family = none)]
-        pub fn setRole(&self, role: UIButtonRole);
+        pub unsafe fn setRole(&self, role: UIButtonRole);
     );
 }
 
@@ -94,10 +90,10 @@ impl UIContentUnavailableButtonProperties {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

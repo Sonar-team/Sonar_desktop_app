@@ -13,24 +13,24 @@ impl NSString {
         #[cfg(feature = "NSArray")]
         #[unsafe(method(pathWithComponents:))]
         #[unsafe(method_family = none)]
-        pub fn pathWithComponents(components: &NSArray<NSString>) -> Retained<NSString>;
+        pub unsafe fn pathWithComponents(components: &NSArray<NSString>) -> Retained<NSString>;
 
         #[cfg(feature = "NSArray")]
         #[unsafe(method(pathComponents))]
         #[unsafe(method_family = none)]
-        pub fn pathComponents(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn pathComponents(&self) -> Retained<NSArray<NSString>>;
 
         #[unsafe(method(isAbsolutePath))]
         #[unsafe(method_family = none)]
-        pub fn isAbsolutePath(&self) -> bool;
+        pub unsafe fn isAbsolutePath(&self) -> bool;
 
         #[unsafe(method(lastPathComponent))]
         #[unsafe(method_family = none)]
-        pub fn lastPathComponent(&self) -> Retained<NSString>;
+        pub unsafe fn lastPathComponent(&self) -> Retained<NSString>;
 
         #[unsafe(method(stringByDeletingLastPathComponent))]
         #[unsafe(method_family = none)]
-        pub fn stringByDeletingLastPathComponent(&self) -> Retained<NSString>;
+        pub unsafe fn stringByDeletingLastPathComponent(&self) -> Retained<NSString>;
 
         #[unsafe(method(stringByAppendingPathComponent:))]
         #[unsafe(method_family = none)]
@@ -38,36 +38,39 @@ impl NSString {
 
         #[unsafe(method(pathExtension))]
         #[unsafe(method_family = none)]
-        pub fn pathExtension(&self) -> Retained<NSString>;
+        pub unsafe fn pathExtension(&self) -> Retained<NSString>;
 
         #[unsafe(method(stringByDeletingPathExtension))]
         #[unsafe(method_family = none)]
-        pub fn stringByDeletingPathExtension(&self) -> Retained<NSString>;
+        pub unsafe fn stringByDeletingPathExtension(&self) -> Retained<NSString>;
 
         #[unsafe(method(stringByAppendingPathExtension:))]
         #[unsafe(method_family = none)]
-        pub fn stringByAppendingPathExtension(&self, str: &NSString) -> Option<Retained<NSString>>;
+        pub unsafe fn stringByAppendingPathExtension(
+            &self,
+            str: &NSString,
+        ) -> Option<Retained<NSString>>;
 
         #[unsafe(method(stringByAbbreviatingWithTildeInPath))]
         #[unsafe(method_family = none)]
-        pub fn stringByAbbreviatingWithTildeInPath(&self) -> Retained<NSString>;
+        pub unsafe fn stringByAbbreviatingWithTildeInPath(&self) -> Retained<NSString>;
 
         #[unsafe(method(stringByExpandingTildeInPath))]
         #[unsafe(method_family = none)]
-        pub fn stringByExpandingTildeInPath(&self) -> Retained<NSString>;
+        pub unsafe fn stringByExpandingTildeInPath(&self) -> Retained<NSString>;
 
         #[unsafe(method(stringByStandardizingPath))]
         #[unsafe(method_family = none)]
-        pub fn stringByStandardizingPath(&self) -> Retained<NSString>;
+        pub unsafe fn stringByStandardizingPath(&self) -> Retained<NSString>;
 
         #[unsafe(method(stringByResolvingSymlinksInPath))]
         #[unsafe(method_family = none)]
-        pub fn stringByResolvingSymlinksInPath(&self) -> Retained<NSString>;
+        pub unsafe fn stringByResolvingSymlinksInPath(&self) -> Retained<NSString>;
 
         #[cfg(feature = "NSArray")]
         #[unsafe(method(stringsByAppendingPaths:))]
         #[unsafe(method_family = none)]
-        pub fn stringsByAppendingPaths(
+        pub unsafe fn stringsByAppendingPaths(
             &self,
             paths: &NSArray<NSString>,
         ) -> Retained<NSArray<NSString>>;
@@ -75,7 +78,7 @@ impl NSString {
         #[cfg(feature = "NSArray")]
         #[unsafe(method(completePathIntoString:caseSensitive:matchesIntoArray:filterTypes:))]
         #[unsafe(method_family = none)]
-        pub fn completePathIntoString_caseSensitive_matchesIntoArray_filterTypes(
+        pub unsafe fn completePathIntoString_caseSensitive_matchesIntoArray_filterTypes(
             &self,
             output_name: Option<&mut Option<Retained<NSString>>>,
             flag: bool,
@@ -85,11 +88,8 @@ impl NSString {
 
         #[unsafe(method(fileSystemRepresentation))]
         #[unsafe(method_family = none)]
-        pub fn fileSystemRepresentation(&self) -> NonNull<c_char>;
+        pub unsafe fn fileSystemRepresentation(&self) -> NonNull<c_char>;
 
-        /// # Safety
-        ///
-        /// `cname` must be a valid pointer.
         #[unsafe(method(getFileSystemRepresentation:maxLength:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getFileSystemRepresentation_maxLength(
@@ -107,7 +107,7 @@ impl<ObjectType: Message> NSArray<ObjectType> {
         #[cfg(feature = "NSString")]
         #[unsafe(method(pathsMatchingExtensions:))]
         #[unsafe(method_family = none)]
-        pub fn pathsMatchingExtensions(
+        pub unsafe fn pathsMatchingExtensions(
             &self,
             filter_types: &NSArray<NSString>,
         ) -> Retained<NSArray<NSString>>;
@@ -116,7 +116,7 @@ impl<ObjectType: Message> NSArray<ObjectType> {
 
 #[cfg(feature = "NSString")]
 #[inline]
-pub extern "C-unwind" fn NSUserName() -> Retained<NSString> {
+pub unsafe extern "C-unwind" fn NSUserName() -> Retained<NSString> {
     extern "C-unwind" {
         fn NSUserName() -> *mut NSString;
     }
@@ -127,7 +127,7 @@ pub extern "C-unwind" fn NSUserName() -> Retained<NSString> {
 
 #[cfg(feature = "NSString")]
 #[inline]
-pub extern "C-unwind" fn NSFullUserName() -> Retained<NSString> {
+pub unsafe extern "C-unwind" fn NSFullUserName() -> Retained<NSString> {
     extern "C-unwind" {
         fn NSFullUserName() -> *mut NSString;
     }
@@ -138,7 +138,7 @@ pub extern "C-unwind" fn NSFullUserName() -> Retained<NSString> {
 
 #[cfg(feature = "NSString")]
 #[inline]
-pub extern "C-unwind" fn NSHomeDirectory() -> Retained<NSString> {
+pub unsafe extern "C-unwind" fn NSHomeDirectory() -> Retained<NSString> {
     extern "C-unwind" {
         fn NSHomeDirectory() -> *mut NSString;
     }
@@ -149,7 +149,7 @@ pub extern "C-unwind" fn NSHomeDirectory() -> Retained<NSString> {
 
 #[cfg(feature = "NSString")]
 #[inline]
-pub extern "C-unwind" fn NSHomeDirectoryForUser(
+pub unsafe extern "C-unwind" fn NSHomeDirectoryForUser(
     user_name: Option<&NSString>,
 ) -> Option<Retained<NSString>> {
     extern "C-unwind" {
@@ -161,7 +161,7 @@ pub extern "C-unwind" fn NSHomeDirectoryForUser(
 
 #[cfg(feature = "NSString")]
 #[inline]
-pub extern "C-unwind" fn NSTemporaryDirectory() -> Retained<NSString> {
+pub unsafe extern "C-unwind" fn NSTemporaryDirectory() -> Retained<NSString> {
     extern "C-unwind" {
         fn NSTemporaryDirectory() -> *mut NSString;
     }
@@ -172,7 +172,7 @@ pub extern "C-unwind" fn NSTemporaryDirectory() -> Retained<NSString> {
 
 #[cfg(feature = "NSString")]
 #[inline]
-pub extern "C-unwind" fn NSOpenStepRootDirectory() -> Retained<NSString> {
+pub unsafe extern "C-unwind" fn NSOpenStepRootDirectory() -> Retained<NSString> {
     extern "C-unwind" {
         fn NSOpenStepRootDirectory() -> *mut NSString;
     }
@@ -281,7 +281,7 @@ unsafe impl RefEncode for NSSearchPathDomainMask {
 
 #[cfg(all(feature = "NSArray", feature = "NSString"))]
 #[inline]
-pub extern "C-unwind" fn NSSearchPathForDirectoriesInDomains(
+pub unsafe extern "C-unwind" fn NSSearchPathForDirectoriesInDomains(
     directory: NSSearchPathDirectory,
     domain_mask: NSSearchPathDomainMask,
     expand_tilde: bool,

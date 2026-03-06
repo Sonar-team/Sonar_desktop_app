@@ -36,19 +36,20 @@ impl NSColorList {
     extern_methods!(
         #[unsafe(method(availableColorLists))]
         #[unsafe(method_family = none)]
-        pub fn availableColorLists() -> Retained<NSArray<NSColorList>>;
+        pub unsafe fn availableColorLists() -> Retained<NSArray<NSColorList>>;
 
         #[unsafe(method(colorListNamed:))]
         #[unsafe(method_family = none)]
-        pub fn colorListNamed(name: &NSColorListName) -> Option<Retained<NSColorList>>;
+        pub unsafe fn colorListNamed(name: &NSColorListName) -> Option<Retained<NSColorList>>;
 
         #[unsafe(method(initWithName:))]
         #[unsafe(method_family = init)]
-        pub fn initWithName(this: Allocated<Self>, name: &NSColorListName) -> Retained<Self>;
+        pub unsafe fn initWithName(this: Allocated<Self>, name: &NSColorListName)
+            -> Retained<Self>;
 
         #[unsafe(method(initWithName:fromFile:))]
         #[unsafe(method_family = init)]
-        pub fn initWithName_fromFile(
+        pub unsafe fn initWithName_fromFile(
             this: Allocated<Self>,
             name: &NSColorListName,
             path: Option<&NSString>,
@@ -56,47 +57,53 @@ impl NSColorList {
 
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
-        pub fn name(&self) -> Option<Retained<NSColorListName>>;
+        pub unsafe fn name(&self) -> Option<Retained<NSColorListName>>;
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(setColor:forKey:))]
         #[unsafe(method_family = none)]
-        pub fn setColor_forKey(&self, color: &NSColor, key: &NSColorName);
+        pub unsafe fn setColor_forKey(&self, color: &NSColor, key: &NSColorName);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(insertColor:key:atIndex:))]
         #[unsafe(method_family = none)]
-        pub fn insertColor_key_atIndex(&self, color: &NSColor, key: &NSColorName, loc: NSUInteger);
+        pub unsafe fn insertColor_key_atIndex(
+            &self,
+            color: &NSColor,
+            key: &NSColorName,
+            loc: NSUInteger,
+        );
 
         #[unsafe(method(removeColorWithKey:))]
         #[unsafe(method_family = none)]
-        pub fn removeColorWithKey(&self, key: &NSColorName);
+        pub unsafe fn removeColorWithKey(&self, key: &NSColorName);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(colorWithKey:))]
         #[unsafe(method_family = none)]
-        pub fn colorWithKey(&self, key: &NSColorName) -> Option<Retained<NSColor>>;
+        pub unsafe fn colorWithKey(&self, key: &NSColorName) -> Option<Retained<NSColor>>;
 
         #[unsafe(method(allKeys))]
         #[unsafe(method_family = none)]
-        pub fn allKeys(&self) -> Retained<NSArray<NSColorName>>;
+        pub unsafe fn allKeys(&self) -> Retained<NSArray<NSColorName>>;
 
         #[unsafe(method(isEditable))]
         #[unsafe(method_family = none)]
-        pub fn isEditable(&self) -> bool;
+        pub unsafe fn isEditable(&self) -> bool;
 
         #[unsafe(method(writeToURL:error:_))]
         #[unsafe(method_family = none)]
-        pub fn writeToURL_error(&self, url: Option<&NSURL>) -> Result<(), Retained<NSError>>;
+        pub unsafe fn writeToURL_error(&self, url: Option<&NSURL>)
+            -> Result<(), Retained<NSError>>;
 
         #[deprecated = "Use -writeToURL:error: instead"]
         #[unsafe(method(writeToFile:))]
         #[unsafe(method_family = none)]
-        pub fn writeToFile(&self, path: Option<&NSString>) -> bool;
+        pub unsafe fn writeToFile(&self, path: Option<&NSString>) -> bool;
 
         #[unsafe(method(removeFile))]
         #[unsafe(method_family = none)]
-        pub fn removeFile(&self);
+        pub unsafe fn removeFile(&self);
     );
 }
 
@@ -105,19 +112,12 @@ impl NSColorList {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSColorList {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern "C" {

@@ -35,37 +35,37 @@ impl UIKeyboardLayoutGuide {
         /// `NO.`
         #[unsafe(method(followsUndockedKeyboard))]
         #[unsafe(method_family = none)]
-        pub fn followsUndockedKeyboard(&self) -> bool;
+        pub unsafe fn followsUndockedKeyboard(&self) -> bool;
 
         /// Setter for [`followsUndockedKeyboard`][Self::followsUndockedKeyboard].
         #[unsafe(method(setFollowsUndockedKeyboard:))]
         #[unsafe(method_family = none)]
-        pub fn setFollowsUndockedKeyboard(&self, follows_undocked_keyboard: bool);
+        pub unsafe fn setFollowsUndockedKeyboard(&self, follows_undocked_keyboard: bool);
 
         /// Defaults to
         /// `YES.`When the keyboard is offscreen, the layout guide is tied to the bottomAnchor of the view's safeAreaLayoutGuide. Set this to
         /// `NO`to instead have the guide use the bottomAnchor of the view.
         #[unsafe(method(usesBottomSafeArea))]
         #[unsafe(method_family = none)]
-        pub fn usesBottomSafeArea(&self) -> bool;
+        pub unsafe fn usesBottomSafeArea(&self) -> bool;
 
         /// Setter for [`usesBottomSafeArea`][Self::usesBottomSafeArea].
         #[unsafe(method(setUsesBottomSafeArea:))]
         #[unsafe(method_family = none)]
-        pub fn setUsesBottomSafeArea(&self, uses_bottom_safe_area: bool);
+        pub unsafe fn setUsesBottomSafeArea(&self, uses_bottom_safe_area: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Defaults to 0.0. When a user scrolls to dismiss the keyboard (see
         /// `UIScrollViewKeyboardDismissMode),`the gesture waits to start the dismiss until it intersects with the keyboard. This adds padding above the keyboard to start the dismiss earlier. Negative values will be treated as 0.
         #[unsafe(method(keyboardDismissPadding))]
         #[unsafe(method_family = none)]
-        pub fn keyboardDismissPadding(&self) -> CGFloat;
+        pub unsafe fn keyboardDismissPadding(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`keyboardDismissPadding`][Self::keyboardDismissPadding].
         #[unsafe(method(setKeyboardDismissPadding:))]
         #[unsafe(method_family = none)]
-        pub fn setKeyboardDismissPadding(&self, keyboard_dismiss_padding: CGFloat);
+        pub unsafe fn setKeyboardDismissPadding(&self, keyboard_dismiss_padding: CGFloat);
     );
 }
 
@@ -75,10 +75,10 @@ impl UIKeyboardLayoutGuide {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

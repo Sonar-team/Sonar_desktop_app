@@ -26,52 +26,44 @@ impl UIConversationContext {
         /// This identifier is persistent for the life of the conversation.
         #[unsafe(method(threadIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn threadIdentifier(&self) -> Retained<NSString>;
+        pub unsafe fn threadIdentifier(&self) -> Retained<NSString>;
 
         /// Setter for [`threadIdentifier`][Self::threadIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setThreadIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setThreadIdentifier(&self, thread_identifier: &NSString);
+        pub unsafe fn setThreadIdentifier(&self, thread_identifier: &NSString);
 
         #[cfg(feature = "UIConversationEntry")]
         /// Array of messages in the conversation
         #[unsafe(method(entries))]
         #[unsafe(method_family = none)]
-        pub fn entries(&self) -> Retained<NSArray<UIConversationEntry>>;
+        pub unsafe fn entries(&self) -> Retained<NSArray<UIConversationEntry>>;
 
         #[cfg(feature = "UIConversationEntry")]
         /// Setter for [`entries`][Self::entries].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setEntries:))]
         #[unsafe(method_family = none)]
-        pub fn setEntries(&self, entries: &NSArray<UIConversationEntry>);
+        pub unsafe fn setEntries(&self, entries: &NSArray<UIConversationEntry>);
 
         /// A set of strings that identifies the active person in the conversation on the current device.
         #[unsafe(method(selfIdentifiers))]
         #[unsafe(method_family = none)]
-        pub fn selfIdentifiers(&self) -> Retained<NSSet<NSString>>;
+        pub unsafe fn selfIdentifiers(&self) -> Retained<NSSet<NSString>>;
 
         /// Setter for [`selfIdentifiers`][Self::selfIdentifiers].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSelfIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn setSelfIdentifiers(&self, self_identifiers: &NSSet<NSString>);
+        pub unsafe fn setSelfIdentifiers(&self, self_identifiers: &NSSet<NSString>);
 
         /// A dictionary that relates participant identifiers to participant names.
         #[unsafe(method(responsePrimaryRecipientIdentifiers))]
         #[unsafe(method_family = none)]
-        pub fn responsePrimaryRecipientIdentifiers(&self) -> Retained<NSSet<NSString>>;
+        pub unsafe fn responsePrimaryRecipientIdentifiers(&self) -> Retained<NSSet<NSString>>;
 
         /// Setter for [`responsePrimaryRecipientIdentifiers`][Self::responsePrimaryRecipientIdentifiers].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setResponsePrimaryRecipientIdentifiers:))]
         #[unsafe(method_family = none)]
-        pub fn setResponsePrimaryRecipientIdentifiers(
+        pub unsafe fn setResponsePrimaryRecipientIdentifiers(
             &self,
             response_primary_recipient_identifiers: &NSSet<NSString>,
         );
@@ -79,16 +71,14 @@ impl UIConversationContext {
         /// Map of participant identifiers to participant names
         #[unsafe(method(participantNameByIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn participantNameByIdentifier(
+        pub unsafe fn participantNameByIdentifier(
             &self,
         ) -> Retained<NSDictionary<NSString, NSPersonNameComponents>>;
 
         /// Setter for [`participantNameByIdentifier`][Self::participantNameByIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setParticipantNameByIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setParticipantNameByIdentifier(
+        pub unsafe fn setParticipantNameByIdentifier(
             &self,
             participant_name_by_identifier: &NSDictionary<NSString, NSPersonNameComponents>,
         );
@@ -100,17 +90,10 @@ impl UIConversationContext {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for UIConversationContext {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

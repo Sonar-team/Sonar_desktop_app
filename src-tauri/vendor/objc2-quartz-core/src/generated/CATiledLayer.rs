@@ -43,36 +43,36 @@ impl CATiledLayer {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(fadeDuration))]
         #[unsafe(method_family = none)]
-        pub fn fadeDuration() -> CFTimeInterval;
+        pub unsafe fn fadeDuration() -> CFTimeInterval;
 
         #[unsafe(method(levelsOfDetail))]
         #[unsafe(method_family = none)]
-        pub fn levelsOfDetail(&self) -> usize;
+        pub unsafe fn levelsOfDetail(&self) -> usize;
 
         /// Setter for [`levelsOfDetail`][Self::levelsOfDetail].
         #[unsafe(method(setLevelsOfDetail:))]
         #[unsafe(method_family = none)]
-        pub fn setLevelsOfDetail(&self, levels_of_detail: usize);
+        pub unsafe fn setLevelsOfDetail(&self, levels_of_detail: usize);
 
         #[unsafe(method(levelsOfDetailBias))]
         #[unsafe(method_family = none)]
-        pub fn levelsOfDetailBias(&self) -> usize;
+        pub unsafe fn levelsOfDetailBias(&self) -> usize;
 
         /// Setter for [`levelsOfDetailBias`][Self::levelsOfDetailBias].
         #[unsafe(method(setLevelsOfDetailBias:))]
         #[unsafe(method_family = none)]
-        pub fn setLevelsOfDetailBias(&self, levels_of_detail_bias: usize);
+        pub unsafe fn setLevelsOfDetailBias(&self, levels_of_detail_bias: usize);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(tileSize))]
         #[unsafe(method_family = none)]
-        pub fn tileSize(&self) -> CGSize;
+        pub unsafe fn tileSize(&self) -> CGSize;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`tileSize`][Self::tileSize].
         #[unsafe(method(setTileSize:))]
         #[unsafe(method_family = none)]
-        pub fn setTileSize(&self, tile_size: CGSize);
+        pub unsafe fn setTileSize(&self, tile_size: CGSize);
     );
 }
 
@@ -83,15 +83,12 @@ impl CATiledLayer {
         /// Layer creation and initialization. *
         #[unsafe(method(layer))]
         #[unsafe(method_family = none)]
-        pub fn layer() -> Retained<Self>;
+        pub unsafe fn layer() -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `layer` should be of the correct type.
         #[unsafe(method(initWithLayer:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithLayer(this: Allocated<Self>, layer: &AnyObject) -> Retained<Self>;
@@ -104,14 +101,6 @@ impl CATiledLayer {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "CALayer")]
-impl DefaultRetained for CATiledLayer {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

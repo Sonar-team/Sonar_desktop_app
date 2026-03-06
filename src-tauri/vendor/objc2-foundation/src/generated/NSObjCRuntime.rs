@@ -187,9 +187,6 @@ pub type NSRunLoopMode = NSString;
 
 #[cfg(feature = "NSString")]
 impl NSString {
-    /// # Safety
-    ///
-    /// `a_selector` must be a valid selector.
     #[doc(alias = "NSStringFromSelector")]
     #[cfg(feature = "NSString")]
     #[inline]
@@ -203,13 +200,9 @@ impl NSString {
     }
 }
 
-#[cfg(feature = "NSString")]
-#[inline]
-pub extern "C-unwind" fn NSSelectorFromString(a_selector_name: &NSString) -> Sel {
-    extern "C-unwind" {
-        fn NSSelectorFromString(a_selector_name: &NSString) -> Sel;
-    }
-    unsafe { NSSelectorFromString(a_selector_name) }
+extern "C-unwind" {
+    #[cfg(feature = "NSString")]
+    pub fn NSSelectorFromString(a_selector_name: &NSString) -> Sel;
 }
 
 #[cfg(feature = "NSString")]
@@ -227,20 +220,13 @@ impl NSString {
     }
 }
 
-#[cfg(feature = "NSString")]
-#[inline]
-pub extern "C-unwind" fn NSClassFromString(a_class_name: &NSString) -> Option<&'static AnyClass> {
-    extern "C-unwind" {
-        fn NSClassFromString(a_class_name: &NSString) -> Option<&'static AnyClass>;
-    }
-    unsafe { NSClassFromString(a_class_name) }
+extern "C-unwind" {
+    #[cfg(feature = "NSString")]
+    pub fn NSClassFromString(a_class_name: &NSString) -> Option<&'static AnyClass>;
 }
 
 #[cfg(feature = "NSString")]
 impl NSString {
-    /// # Safety
-    ///
-    /// `proto` possibly has further requirements.
     #[doc(alias = "NSStringFromProtocol")]
     #[cfg(feature = "NSString")]
     #[inline]
@@ -256,7 +242,9 @@ impl NSString {
 
 #[cfg(feature = "NSString")]
 #[inline]
-pub extern "C-unwind" fn NSProtocolFromString(namestr: &NSString) -> Option<Retained<AnyProtocol>> {
+pub unsafe extern "C-unwind" fn NSProtocolFromString(
+    namestr: &NSString,
+) -> Option<Retained<AnyProtocol>> {
     extern "C-unwind" {
         fn NSProtocolFromString(namestr: &NSString) -> *mut AnyProtocol;
     }
@@ -264,11 +252,6 @@ pub extern "C-unwind" fn NSProtocolFromString(namestr: &NSString) -> Option<Reta
     unsafe { Retained::retain_autoreleased(ret) }
 }
 
-/// # Safety
-///
-/// - `type_ptr` must be a valid pointer.
-/// - `sizep` must be a valid pointer or null.
-/// - `alignp` must be a valid pointer or null.
 #[inline]
 pub unsafe extern "C-unwind" fn NSGetSizeAndAlignment(
     type_ptr: NonNull<c_char>,

@@ -83,20 +83,6 @@ impl WKHTTPCookieStore {
         );
 
         #[cfg(feature = "block2")]
-        /// Set multiple cookies.
-        ///
-        /// Parameter `cookies`: An array of cookies to set.
-        ///
-        /// Parameter `completionHandler`: A block to invoke once the cookies have been stored.
-        #[unsafe(method(setCookies:completionHandler:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn setCookies_completionHandler(
-            &self,
-            cookies: &NSArray<NSHTTPCookie>,
-            completion_handler: Option<&block2::DynBlock<dyn Fn()>>,
-        );
-
-        #[cfg(feature = "block2")]
         /// Delete the specified cookie.
         ///
         /// Parameter `completionHandler`: A block to invoke once the cookie has been deleted.

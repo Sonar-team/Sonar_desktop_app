@@ -56,8 +56,6 @@ impl WKSnapshotConfiguration {
         pub unsafe fn snapshotWidth(&self) -> Option<Retained<NSNumber>>;
 
         /// Setter for [`snapshotWidth`][Self::snapshotWidth].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSnapshotWidth:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSnapshotWidth(&self, snapshot_width: Option<&NSNumber>);

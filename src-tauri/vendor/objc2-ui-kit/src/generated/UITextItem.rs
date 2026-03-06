@@ -55,28 +55,28 @@ impl UITextItem {
         /// The content type of the text item.
         #[unsafe(method(contentType))]
         #[unsafe(method_family = none)]
-        pub fn contentType(&self) -> UITextItemContentType;
+        pub unsafe fn contentType(&self) -> UITextItemContentType;
 
         /// The range of the text item.
         #[unsafe(method(range))]
         #[unsafe(method_family = none)]
-        pub fn range(&self) -> NSRange;
+        pub unsafe fn range(&self) -> NSRange;
 
         /// The link represented by the text item. This value is `nil` if the `contentType != UITextItemContentTypeLink`
         #[unsafe(method(link))]
         #[unsafe(method_family = none)]
-        pub fn link(&self) -> Option<Retained<NSURL>>;
+        pub unsafe fn link(&self) -> Option<Retained<NSURL>>;
 
         #[cfg(feature = "NSTextAttachment")]
         /// The text attachment represented by the text item. This value is `nil` if the `contentType != UITextItemContentTypeTextAttachment`
         #[unsafe(method(textAttachment))]
         #[unsafe(method_family = none)]
-        pub fn textAttachment(&self) -> Option<Retained<NSTextAttachment>>;
+        pub unsafe fn textAttachment(&self) -> Option<Retained<NSTextAttachment>>;
 
         /// The custom tag identifier represented by the text item. This value is `nil` if the `contentType != UITextItemContentTypeTag`
         #[unsafe(method(tagIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn tagIdentifier(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn tagIdentifier(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -107,13 +107,13 @@ impl UITextItemMenuPreview {
         /// Show the default system preview for the given text item.
         #[unsafe(method(defaultPreview))]
         #[unsafe(method_family = none)]
-        pub fn defaultPreview(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn defaultPreview(mtm: MainThreadMarker) -> Retained<Self>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         /// Show the specified preview view for the given text item.
         #[unsafe(method(initWithView:))]
         #[unsafe(method_family = init)]
-        pub fn initWithView(this: Allocated<Self>, view: &UIView) -> Retained<Self>;
+        pub unsafe fn initWithView(this: Allocated<Self>, view: &UIView) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -146,7 +146,7 @@ impl UITextItemMenuConfiguration {
         /// Parameter `menu`: The menu to be presented.
         #[unsafe(method(configurationWithMenu:))]
         #[unsafe(method_family = none)]
-        pub fn configurationWithMenu(menu: &UIMenu) -> Retained<Self>;
+        pub unsafe fn configurationWithMenu(menu: &UIMenu) -> Retained<Self>;
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement"))]
         /// Creates a menu configuration with the specified menu and custom preview.
@@ -158,7 +158,7 @@ impl UITextItemMenuConfiguration {
         /// `nil`for no preview.
         #[unsafe(method(configurationWithPreview:menu:))]
         #[unsafe(method_family = none)]
-        pub fn configurationWithPreview_menu(
+        pub unsafe fn configurationWithPreview_menu(
             preview: Option<&UITextItemMenuPreview>,
             menu: &UIMenu,
         ) -> Retained<Self>;

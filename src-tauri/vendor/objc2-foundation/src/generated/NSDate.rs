@@ -3,8 +3,6 @@
 use core::ffi::*;
 use core::ptr::NonNull;
 use objc2::__framework_prelude::*;
-#[cfg(feature = "objc2-core-foundation")]
-use objc2_core_foundation::*;
 
 use crate::*;
 
@@ -27,22 +25,6 @@ extern_class!(
 unsafe impl Send for NSDate {}
 
 unsafe impl Sync for NSDate {}
-
-#[cfg(feature = "objc2-core-foundation")]
-impl AsRef<NSDate> for CFDate {
-    #[inline]
-    fn as_ref(&self) -> &NSDate {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
-#[cfg(feature = "objc2-core-foundation")]
-impl AsRef<CFDate> for NSDate {
-    #[inline]
-    fn as_ref(&self) -> &CFDate {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
 
 #[cfg(feature = "NSObject")]
 extern_conformance!(
@@ -72,23 +54,20 @@ impl NSDate {
     extern_methods!(
         #[unsafe(method(timeIntervalSinceReferenceDate))]
         #[unsafe(method_family = none)]
-        pub fn timeIntervalSinceReferenceDate(&self) -> NSTimeInterval;
+        pub unsafe fn timeIntervalSinceReferenceDate(&self) -> NSTimeInterval;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(initWithTimeIntervalSinceReferenceDate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithTimeIntervalSinceReferenceDate(
+        pub unsafe fn initWithTimeIntervalSinceReferenceDate(
             this: Allocated<Self>,
             ti: NSTimeInterval,
         ) -> Retained<Self>;
 
         #[cfg(feature = "NSCoder")]
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -103,15 +82,8 @@ impl NSDate {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSDate {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSExtendedDate.
@@ -119,51 +91,48 @@ impl NSDate {
     extern_methods!(
         #[unsafe(method(timeIntervalSinceDate:))]
         #[unsafe(method_family = none)]
-        pub fn timeIntervalSinceDate(&self, another_date: &NSDate) -> NSTimeInterval;
+        pub unsafe fn timeIntervalSinceDate(&self, another_date: &NSDate) -> NSTimeInterval;
 
         #[unsafe(method(timeIntervalSinceNow))]
         #[unsafe(method_family = none)]
-        pub fn timeIntervalSinceNow(&self) -> NSTimeInterval;
+        pub unsafe fn timeIntervalSinceNow(&self) -> NSTimeInterval;
 
         #[unsafe(method(timeIntervalSince1970))]
         #[unsafe(method_family = none)]
-        pub fn timeIntervalSince1970(&self) -> NSTimeInterval;
+        pub unsafe fn timeIntervalSince1970(&self) -> NSTimeInterval;
 
         #[deprecated = "Use dateByAddingTimeInterval instead"]
         #[unsafe(method(addTimeInterval:))]
         #[unsafe(method_family = none)]
-        pub fn addTimeInterval(&self, seconds: NSTimeInterval) -> Retained<AnyObject>;
+        pub unsafe fn addTimeInterval(&self, seconds: NSTimeInterval) -> Retained<AnyObject>;
 
         #[unsafe(method(dateByAddingTimeInterval:))]
         #[unsafe(method_family = none)]
-        pub fn dateByAddingTimeInterval(&self, ti: NSTimeInterval) -> Retained<Self>;
+        pub unsafe fn dateByAddingTimeInterval(&self, ti: NSTimeInterval) -> Retained<Self>;
 
         #[unsafe(method(earlierDate:))]
         #[unsafe(method_family = none)]
-        pub fn earlierDate(&self, another_date: &NSDate) -> Retained<NSDate>;
+        pub unsafe fn earlierDate(&self, another_date: &NSDate) -> Retained<NSDate>;
 
         #[unsafe(method(laterDate:))]
         #[unsafe(method_family = none)]
-        pub fn laterDate(&self, another_date: &NSDate) -> Retained<NSDate>;
+        pub unsafe fn laterDate(&self, another_date: &NSDate) -> Retained<NSDate>;
 
         #[cfg(feature = "NSObjCRuntime")]
         #[unsafe(method(compare:))]
         #[unsafe(method_family = none)]
-        pub fn compare(&self, other: &NSDate) -> NSComparisonResult;
+        pub unsafe fn compare(&self, other: &NSDate) -> NSComparisonResult;
 
         #[unsafe(method(isEqualToDate:))]
         #[unsafe(method_family = none)]
-        pub fn isEqualToDate(&self, other_date: &NSDate) -> bool;
+        pub unsafe fn isEqualToDate(&self, other_date: &NSDate) -> bool;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(description))]
         #[unsafe(method_family = none)]
-        pub fn description(&self) -> Retained<NSString>;
+        pub unsafe fn description(&self) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `locale` should be of the correct type.
         #[unsafe(method(descriptionWithLocale:))]
         #[unsafe(method_family = none)]
         pub unsafe fn descriptionWithLocale(
@@ -173,7 +142,7 @@ impl NSDate {
 
         #[unsafe(method(timeIntervalSinceReferenceDate))]
         #[unsafe(method_family = none)]
-        pub fn timeIntervalSinceReferenceDate_class() -> NSTimeInterval;
+        pub unsafe fn timeIntervalSinceReferenceDate_class() -> NSTimeInterval;
     );
 }
 
@@ -182,56 +151,56 @@ impl NSDate {
     extern_methods!(
         #[unsafe(method(date))]
         #[unsafe(method_family = none)]
-        pub fn date() -> Retained<Self>;
+        pub unsafe fn date() -> Retained<Self>;
 
         #[unsafe(method(dateWithTimeIntervalSinceNow:))]
         #[unsafe(method_family = none)]
-        pub fn dateWithTimeIntervalSinceNow(secs: NSTimeInterval) -> Retained<Self>;
+        pub unsafe fn dateWithTimeIntervalSinceNow(secs: NSTimeInterval) -> Retained<Self>;
 
         #[unsafe(method(dateWithTimeIntervalSinceReferenceDate:))]
         #[unsafe(method_family = none)]
-        pub fn dateWithTimeIntervalSinceReferenceDate(ti: NSTimeInterval) -> Retained<Self>;
+        pub unsafe fn dateWithTimeIntervalSinceReferenceDate(ti: NSTimeInterval) -> Retained<Self>;
 
         #[unsafe(method(dateWithTimeIntervalSince1970:))]
         #[unsafe(method_family = none)]
-        pub fn dateWithTimeIntervalSince1970(secs: NSTimeInterval) -> Retained<Self>;
+        pub unsafe fn dateWithTimeIntervalSince1970(secs: NSTimeInterval) -> Retained<Self>;
 
         #[unsafe(method(dateWithTimeInterval:sinceDate:))]
         #[unsafe(method_family = none)]
-        pub fn dateWithTimeInterval_sinceDate(
+        pub unsafe fn dateWithTimeInterval_sinceDate(
             secs_to_be_added: NSTimeInterval,
             date: &NSDate,
         ) -> Retained<Self>;
 
         #[unsafe(method(distantFuture))]
         #[unsafe(method_family = none)]
-        pub fn distantFuture() -> Retained<NSDate>;
+        pub unsafe fn distantFuture() -> Retained<NSDate>;
 
         #[unsafe(method(distantPast))]
         #[unsafe(method_family = none)]
-        pub fn distantPast() -> Retained<NSDate>;
+        pub unsafe fn distantPast() -> Retained<NSDate>;
 
         #[unsafe(method(now))]
         #[unsafe(method_family = none)]
-        pub fn now() -> Retained<NSDate>;
+        pub unsafe fn now() -> Retained<NSDate>;
 
         #[unsafe(method(initWithTimeIntervalSinceNow:))]
         #[unsafe(method_family = init)]
-        pub fn initWithTimeIntervalSinceNow(
+        pub unsafe fn initWithTimeIntervalSinceNow(
             this: Allocated<Self>,
             secs: NSTimeInterval,
         ) -> Retained<Self>;
 
         #[unsafe(method(initWithTimeIntervalSince1970:))]
         #[unsafe(method_family = init)]
-        pub fn initWithTimeIntervalSince1970(
+        pub unsafe fn initWithTimeIntervalSince1970(
             this: Allocated<Self>,
             secs: NSTimeInterval,
         ) -> Retained<Self>;
 
         #[unsafe(method(initWithTimeInterval:sinceDate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithTimeInterval_sinceDate(
+        pub unsafe fn initWithTimeInterval_sinceDate(
             this: Allocated<Self>,
             secs_to_be_added: NSTimeInterval,
             date: &NSDate,

@@ -28,7 +28,7 @@ impl UISnapBehavior {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithItem:snapToPoint:))]
         #[unsafe(method_family = init)]
-        pub fn initWithItem_snapToPoint(
+        pub unsafe fn initWithItem_snapToPoint(
             this: Allocated<Self>,
             item: &ProtocolObject<dyn UIDynamicItem>,
             point: CGPoint,
@@ -37,24 +37,24 @@ impl UISnapBehavior {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(snapPoint))]
         #[unsafe(method_family = none)]
-        pub fn snapPoint(&self) -> CGPoint;
+        pub unsafe fn snapPoint(&self) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`snapPoint`][Self::snapPoint].
         #[unsafe(method(setSnapPoint:))]
         #[unsafe(method_family = none)]
-        pub fn setSnapPoint(&self, snap_point: CGPoint);
+        pub unsafe fn setSnapPoint(&self, snap_point: CGPoint);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(damping))]
         #[unsafe(method_family = none)]
-        pub fn damping(&self) -> CGFloat;
+        pub unsafe fn damping(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`damping`][Self::damping].
         #[unsafe(method(setDamping:))]
         #[unsafe(method_family = none)]
-        pub fn setDamping(&self, damping: CGFloat);
+        pub unsafe fn setDamping(&self, damping: CGFloat);
     );
 }
 
@@ -64,10 +64,10 @@ impl UISnapBehavior {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

@@ -99,13 +99,13 @@ impl NSSplitViewController {
         /// `NSSplitViewDividerStyleThin.`To provide a custom NSSplitView, set the splitView property anytime before self.viewLoaded is YES.
         #[unsafe(method(splitView))]
         #[unsafe(method_family = none)]
-        pub fn splitView(&self) -> Retained<NSSplitView>;
+        pub unsafe fn splitView(&self) -> Retained<NSSplitView>;
 
         #[cfg(all(feature = "NSSplitView", feature = "NSView"))]
         /// Setter for [`splitView`][Self::splitView].
         #[unsafe(method(setSplitView:))]
         #[unsafe(method_family = none)]
-        pub fn setSplitView(&self, split_view: &NSSplitView);
+        pub unsafe fn setSplitView(&self, split_view: &NSSplitView);
 
         #[cfg(feature = "NSSplitViewItem")]
         /// The array of SplitViewItems that correspond to the current child view controllers. After a child view controller is added to the receiving splitViewController, a NSSplitViewItem with the default values will be created for it. Once the child is removed, its corresponding splitViewItem will be removed from the splitViewItems array. Setting this will call through to
@@ -113,15 +113,13 @@ impl NSSplitViewController {
         /// `-removeSplitViewItem:`for items that are new or need removal.
         #[unsafe(method(splitViewItems))]
         #[unsafe(method_family = none)]
-        pub fn splitViewItems(&self) -> Retained<NSArray<NSSplitViewItem>>;
+        pub unsafe fn splitViewItems(&self) -> Retained<NSArray<NSSplitViewItem>>;
 
         #[cfg(feature = "NSSplitViewItem")]
         /// Setter for [`splitViewItems`][Self::splitViewItems].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSplitViewItems:))]
         #[unsafe(method_family = none)]
-        pub fn setSplitViewItems(&self, split_view_items: &NSArray<NSSplitViewItem>);
+        pub unsafe fn setSplitViewItems(&self, split_view_items: &NSArray<NSSplitViewItem>);
 
         #[cfg(feature = "NSSplitViewItem")]
         /// Adds a SplitViewItem to the end of the SplitViewController. If the receiver's view is loaded and the SplitViewItem is not collapsed, the SplitViewItem's viewController's view will be loaded and added to the splitView. This calls through to -insertSplitViewItem:atIndex:.
@@ -129,7 +127,7 @@ impl NSSplitViewController {
         /// Parameter `splitViewItem`: The SplitViewItem to add. It must have a viewController set by the time it is added or an exception will be thrown. An exception will also be thrown if splitViewItem is nil.
         #[unsafe(method(addSplitViewItem:))]
         #[unsafe(method_family = none)]
-        pub fn addSplitViewItem(&self, split_view_item: &NSSplitViewItem);
+        pub unsafe fn addSplitViewItem(&self, split_view_item: &NSSplitViewItem);
 
         #[cfg(feature = "NSSplitViewItem")]
         /// Adds a SplitViewItem to a given index in the SplitViewController. If the receiver's view is loaded and the SplitViewItem is not collapsed, the SplitViewItem's viewController's view will be loaded and added to the
@@ -146,7 +144,7 @@ impl NSSplitViewController {
         /// `splitViewItems.count`
         #[unsafe(method(insertSplitViewItem:atIndex:))]
         #[unsafe(method_family = none)]
-        pub fn insertSplitViewItem_atIndex(
+        pub unsafe fn insertSplitViewItem_atIndex(
             &self,
             split_view_item: &NSSplitViewItem,
             index: NSInteger,
@@ -161,7 +159,7 @@ impl NSSplitViewController {
         /// `splitViewItem`is not in the SplitViewController or if it is nil.
         #[unsafe(method(removeSplitViewItem:))]
         #[unsafe(method_family = none)]
-        pub fn removeSplitViewItem(&self, split_view_item: &NSSplitViewItem);
+        pub unsafe fn removeSplitViewItem(&self, split_view_item: &NSSplitViewItem);
 
         #[cfg(feature = "NSSplitViewItem")]
         /// Returns the corresponding SplitViewItem for a given child ViewController.
@@ -172,7 +170,7 @@ impl NSSplitViewController {
         /// `viewController`is not a child of the SplitViewController.
         #[unsafe(method(splitViewItemForViewController:))]
         #[unsafe(method_family = none)]
-        pub fn splitViewItemForViewController(
+        pub unsafe fn splitViewItemForViewController(
             &self,
             view_controller: &NSViewController,
         ) -> Option<Retained<NSSplitViewItem>>;
@@ -184,13 +182,13 @@ impl NSSplitViewController {
         /// `NSSplitViewControllerAutomaticDimension,`which will use the effective minimum sizes of the split view item views as described by constraints in the window to determine the minimum size for inline sidebars. Once constraints establishing the minimum size can't be satisfied for all non-collapsed split panes, all sidebars will auto-collapse. When fullscreen, if a sidebar tries to uncollapse in this state, it will overlay.
         #[unsafe(method(minimumThicknessForInlineSidebars))]
         #[unsafe(method_family = none)]
-        pub fn minimumThicknessForInlineSidebars(&self) -> CGFloat;
+        pub unsafe fn minimumThicknessForInlineSidebars(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`minimumThicknessForInlineSidebars`][Self::minimumThicknessForInlineSidebars].
         #[unsafe(method(setMinimumThicknessForInlineSidebars:))]
         #[unsafe(method_family = none)]
-        pub fn setMinimumThicknessForInlineSidebars(
+        pub unsafe fn setMinimumThicknessForInlineSidebars(
             &self,
             minimum_thickness_for_inline_sidebars: CGFloat,
         );
@@ -199,19 +197,19 @@ impl NSSplitViewController {
         /// Validates items with an action of `toggleSidebar:` to reflect the status of the sidebar item contained within the receiver.
         #[unsafe(method(validateUserInterfaceItem:))]
         #[unsafe(method_family = none)]
-        pub fn validateUserInterfaceItem(
+        pub unsafe fn validateUserInterfaceItem(
             &self,
             item: &ProtocolObject<dyn NSValidatedUserInterfaceItem>,
         ) -> bool;
 
         #[unsafe(method(viewDidLoad))]
         #[unsafe(method_family = none)]
-        pub fn viewDidLoad(&self);
+        pub unsafe fn viewDidLoad(&self);
 
         #[cfg(all(feature = "NSSplitView", feature = "NSView"))]
         #[unsafe(method(splitView:canCollapseSubview:))]
         #[unsafe(method_family = none)]
-        pub fn splitView_canCollapseSubview(
+        pub unsafe fn splitView_canCollapseSubview(
             &self,
             split_view: &NSSplitView,
             subview: &NSView,
@@ -221,7 +219,7 @@ impl NSSplitViewController {
         #[deprecated = "NSSplitView no longer supports collapsing sections via double-click. This delegate method is never called, and NSSplitViewController's implementation always returns NO."]
         #[unsafe(method(splitView:shouldCollapseSubview:forDoubleClickOnDividerAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn splitView_shouldCollapseSubview_forDoubleClickOnDividerAtIndex(
+        pub unsafe fn splitView_shouldCollapseSubview_forDoubleClickOnDividerAtIndex(
             &self,
             split_view: &NSSplitView,
             subview: &NSView,
@@ -231,7 +229,7 @@ impl NSSplitViewController {
         #[cfg(all(feature = "NSSplitView", feature = "NSView"))]
         #[unsafe(method(splitView:shouldHideDividerAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn splitView_shouldHideDividerAtIndex(
+        pub unsafe fn splitView_shouldHideDividerAtIndex(
             &self,
             split_view: &NSSplitView,
             divider_index: NSInteger,
@@ -240,7 +238,7 @@ impl NSSplitViewController {
         #[cfg(all(feature = "NSSplitView", feature = "NSView"))]
         #[unsafe(method(splitView:effectiveRect:forDrawnRect:ofDividerAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn splitView_effectiveRect_forDrawnRect_ofDividerAtIndex(
+        pub unsafe fn splitView_effectiveRect_forDrawnRect_ofDividerAtIndex(
             &self,
             split_view: &NSSplitView,
             proposed_effective_rect: NSRect,
@@ -251,7 +249,7 @@ impl NSSplitViewController {
         #[cfg(all(feature = "NSSplitView", feature = "NSView"))]
         #[unsafe(method(splitView:additionalEffectiveRectOfDividerAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn splitView_additionalEffectiveRectOfDividerAtIndex(
+        pub unsafe fn splitView_additionalEffectiveRectOfDividerAtIndex(
             &self,
             split_view: &NSSplitView,
             divider_index: NSInteger,
@@ -266,15 +264,12 @@ impl NSSplitViewController {
         #[cfg(feature = "NSNib")]
         #[unsafe(method(initWithNibName:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibName_bundle(
+        pub unsafe fn initWithNibName_bundle(
             this: Allocated<Self>,
             nib_name_or_nil: Option<&NSNibName>,
             nib_bundle_or_nil: Option<&NSBundle>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -290,7 +285,7 @@ impl NSSplitViewController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -300,7 +295,7 @@ impl NSSplitViewController {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -309,19 +304,11 @@ impl NSSplitViewController {
 impl NSSplitViewController {
     extern_methods!(
         /// Animatedly collapses or uncollapses the first sidebar split view item in the receiver. Does nothing if the receiver does not contain any sidebars.
-        ///
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(toggleSidebar:))]
         #[unsafe(method_family = none)]
         pub unsafe fn toggleSidebar(&self, sender: Option<&AnyObject>);
 
         /// Animatedly collapses or uncollapses the first inspector split view item in the receiver. Does nothing if the receiver does not contain any inspectors.
-        ///
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(toggleInspector:))]
         #[unsafe(method_family = none)]
         pub unsafe fn toggleInspector(&self, sender: Option<&AnyObject>);

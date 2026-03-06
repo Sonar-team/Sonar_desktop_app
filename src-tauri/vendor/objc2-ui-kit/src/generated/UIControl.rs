@@ -244,11 +244,8 @@ impl UIControl {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -264,7 +261,7 @@ impl UIControl {
         /// Initializes the control and adds primaryAction for the UIControlEventPrimaryActionTriggered control event. Subclasses of UIControl may alter or add behaviors around the usage of primaryAction, see subclass documentation of this initializer for additional information.
         #[unsafe(method(initWithFrame:primaryAction:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame_primaryAction(
+        pub unsafe fn initWithFrame_primaryAction(
             this: Allocated<Self>,
             frame: CGRect,
             primary_action: Option<&UIAction>,
@@ -272,75 +269,77 @@ impl UIControl {
 
         #[unsafe(method(isEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isEnabled(&self) -> bool;
+        pub unsafe fn isEnabled(&self) -> bool;
 
         /// Setter for [`isEnabled`][Self::isEnabled].
         #[unsafe(method(setEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setEnabled(&self, enabled: bool);
+        pub unsafe fn setEnabled(&self, enabled: bool);
 
         #[unsafe(method(isSelected))]
         #[unsafe(method_family = none)]
-        pub fn isSelected(&self) -> bool;
+        pub unsafe fn isSelected(&self) -> bool;
 
         /// Setter for [`isSelected`][Self::isSelected].
         #[unsafe(method(setSelected:))]
         #[unsafe(method_family = none)]
-        pub fn setSelected(&self, selected: bool);
+        pub unsafe fn setSelected(&self, selected: bool);
 
         #[unsafe(method(isHighlighted))]
         #[unsafe(method_family = none)]
-        pub fn isHighlighted(&self) -> bool;
+        pub unsafe fn isHighlighted(&self) -> bool;
 
         /// Setter for [`isHighlighted`][Self::isHighlighted].
         #[unsafe(method(setHighlighted:))]
         #[unsafe(method_family = none)]
-        pub fn setHighlighted(&self, highlighted: bool);
+        pub unsafe fn setHighlighted(&self, highlighted: bool);
 
         #[unsafe(method(contentVerticalAlignment))]
         #[unsafe(method_family = none)]
-        pub fn contentVerticalAlignment(&self) -> UIControlContentVerticalAlignment;
+        pub unsafe fn contentVerticalAlignment(&self) -> UIControlContentVerticalAlignment;
 
         /// Setter for [`contentVerticalAlignment`][Self::contentVerticalAlignment].
         #[unsafe(method(setContentVerticalAlignment:))]
         #[unsafe(method_family = none)]
-        pub fn setContentVerticalAlignment(
+        pub unsafe fn setContentVerticalAlignment(
             &self,
             content_vertical_alignment: UIControlContentVerticalAlignment,
         );
 
         #[unsafe(method(contentHorizontalAlignment))]
         #[unsafe(method_family = none)]
-        pub fn contentHorizontalAlignment(&self) -> UIControlContentHorizontalAlignment;
+        pub unsafe fn contentHorizontalAlignment(&self) -> UIControlContentHorizontalAlignment;
 
         /// Setter for [`contentHorizontalAlignment`][Self::contentHorizontalAlignment].
         #[unsafe(method(setContentHorizontalAlignment:))]
         #[unsafe(method_family = none)]
-        pub fn setContentHorizontalAlignment(
+        pub unsafe fn setContentHorizontalAlignment(
             &self,
             content_horizontal_alignment: UIControlContentHorizontalAlignment,
         );
 
         #[unsafe(method(effectiveContentHorizontalAlignment))]
         #[unsafe(method_family = none)]
-        pub fn effectiveContentHorizontalAlignment(&self) -> UIControlContentHorizontalAlignment;
+        pub unsafe fn effectiveContentHorizontalAlignment(
+            &self,
+        ) -> UIControlContentHorizontalAlignment;
 
         #[unsafe(method(state))]
         #[unsafe(method_family = none)]
-        pub fn state(&self) -> UIControlState;
+        pub unsafe fn state(&self) -> UIControlState;
 
         #[unsafe(method(isTracking))]
         #[unsafe(method_family = none)]
-        pub fn isTracking(&self) -> bool;
+        pub unsafe fn isTracking(&self) -> bool;
 
         #[unsafe(method(isTouchInside))]
         #[unsafe(method_family = none)]
-        pub fn isTouchInside(&self) -> bool;
+        pub unsafe fn isTouchInside(&self) -> bool;
 
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(beginTrackingWithTouch:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn beginTrackingWithTouch_withEvent(
+        pub unsafe fn beginTrackingWithTouch_withEvent(
             &self,
             touch: &UITouch,
             event: Option<&UIEvent>,
@@ -349,7 +348,7 @@ impl UIControl {
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(continueTrackingWithTouch:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn continueTrackingWithTouch_withEvent(
+        pub unsafe fn continueTrackingWithTouch_withEvent(
             &self,
             touch: &UITouch,
             event: Option<&UIEvent>,
@@ -358,7 +357,7 @@ impl UIControl {
         #[cfg(all(feature = "UIEvent", feature = "UITouch"))]
         #[unsafe(method(endTrackingWithTouch:withEvent:))]
         #[unsafe(method_family = none)]
-        pub fn endTrackingWithTouch_withEvent(
+        pub unsafe fn endTrackingWithTouch_withEvent(
             &self,
             touch: Option<&UITouch>,
             event: Option<&UIEvent>,
@@ -367,12 +366,8 @@ impl UIControl {
         #[cfg(feature = "UIEvent")]
         #[unsafe(method(cancelTrackingWithEvent:))]
         #[unsafe(method_family = none)]
-        pub fn cancelTrackingWithEvent(&self, event: Option<&UIEvent>);
+        pub unsafe fn cancelTrackingWithEvent(&self, event: Option<&UIEvent>);
 
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `action` must be a valid selector.
         #[unsafe(method(addTarget:action:forControlEvents:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addTarget_action_forControlEvents(
@@ -382,10 +377,6 @@ impl UIControl {
             control_events: UIControlEvents,
         );
 
-        /// # Safety
-        ///
-        /// - `target` should be of the correct type.
-        /// - `action` must be a valid selector.
         #[unsafe(method(removeTarget:action:forControlEvents:))]
         #[unsafe(method_family = none)]
         pub unsafe fn removeTarget_action_forControlEvents(
@@ -399,7 +390,7 @@ impl UIControl {
         /// Adds the UIAction to a given event. UIActions are uniqued based on their identifier, and subsequent actions with the same identifier replace previously added actions. You may add multiple UIActions for corresponding controlEvents, and you may add the same action to multiple controlEvents.
         #[unsafe(method(addAction:forControlEvents:))]
         #[unsafe(method_family = none)]
-        pub fn addAction_forControlEvents(
+        pub unsafe fn addAction_forControlEvents(
             &self,
             action: &UIAction,
             control_events: UIControlEvents,
@@ -409,7 +400,7 @@ impl UIControl {
         /// Removes the action from the set of passed control events.
         #[unsafe(method(removeAction:forControlEvents:))]
         #[unsafe(method_family = none)]
-        pub fn removeAction_forControlEvents(
+        pub unsafe fn removeAction_forControlEvents(
             &self,
             action: &UIAction,
             control_events: UIControlEvents,
@@ -419,7 +410,7 @@ impl UIControl {
         /// Removes the action with the provided identifier from the set of passed control events.
         #[unsafe(method(removeActionForIdentifier:forControlEvents:))]
         #[unsafe(method_family = none)]
-        pub fn removeActionForIdentifier_forControlEvents(
+        pub unsafe fn removeActionForIdentifier_forControlEvents(
             &self,
             action_identifier: &UIActionIdentifier,
             control_events: UIControlEvents,
@@ -428,19 +419,16 @@ impl UIControl {
         /// Performs the control's primary action.
         #[unsafe(method(performPrimaryAction))]
         #[unsafe(method_family = none)]
-        pub fn performPrimaryAction(&self);
+        pub unsafe fn performPrimaryAction(&self);
 
         #[unsafe(method(allTargets))]
         #[unsafe(method_family = none)]
-        pub fn allTargets(&self) -> Retained<NSSet>;
+        pub unsafe fn allTargets(&self) -> Retained<NSSet>;
 
         #[unsafe(method(allControlEvents))]
         #[unsafe(method_family = none)]
-        pub fn allControlEvents(&self) -> UIControlEvents;
+        pub unsafe fn allControlEvents(&self) -> UIControlEvents;
 
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
         #[unsafe(method(actionsForTarget:forControlEvent:))]
         #[unsafe(method_family = none)]
         pub unsafe fn actionsForTarget_forControlEvent(
@@ -453,7 +441,7 @@ impl UIControl {
         /// Iterate over the event handlers installed on this control at the time this method is called. For each call, either actionHandler or action will be non-nil. controlEvents is always non-zero. Setting *stop to YES will terminate the enumeration early. It is legal to manipulate the control's event handlers within the block.
         #[unsafe(method(enumerateEventHandlers:))]
         #[unsafe(method_family = none)]
-        pub fn enumerateEventHandlers(
+        pub unsafe fn enumerateEventHandlers(
             &self,
             iterator: &block2::DynBlock<
                 dyn Fn(*mut UIAction, *mut AnyObject, Option<Sel>, UIControlEvents, NonNull<Bool>)
@@ -463,11 +451,6 @@ impl UIControl {
 
         #[cfg(feature = "UIEvent")]
         /// Dispatch the target-action pair. This method is called repeatedly by -sendActionsForControlEvents: and is a point at which you can observe or override behavior.
-        ///
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `target` should be of the correct type.
         #[unsafe(method(sendAction:to:forEvent:))]
         #[unsafe(method_family = none)]
         pub unsafe fn sendAction_to_forEvent(
@@ -481,38 +464,41 @@ impl UIControl {
         /// Like -sendAction:to:forEvent:, this method is called by -sendActionsForControlEvents:. You may override this method to observe or modify behavior. If you override this method, you should call super precisely once to dispatch the action, or not call super to suppress sending that action.
         #[unsafe(method(sendAction:))]
         #[unsafe(method_family = none)]
-        pub fn sendAction(&self, action: &UIAction);
+        pub unsafe fn sendAction(&self, action: &UIAction);
 
         /// send all actions associated with the given control events
         #[unsafe(method(sendActionsForControlEvents:))]
         #[unsafe(method_family = none)]
-        pub fn sendActionsForControlEvents(&self, control_events: UIControlEvents);
+        pub unsafe fn sendActionsForControlEvents(&self, control_events: UIControlEvents);
 
         #[cfg(feature = "UIContextMenuInteraction")]
         /// Returns a UIContextMenuInteraction with this control set as its delegate. Before constructing the UIContextMenuInteraction, UIControl verifies 'self' is a viable delegate. See 'Implementing UIControl Menus' below for more details.
         #[unsafe(method(contextMenuInteraction))]
         #[unsafe(method_family = none)]
-        pub fn contextMenuInteraction(&self) -> Option<Retained<UIContextMenuInteraction>>;
+        pub unsafe fn contextMenuInteraction(&self) -> Option<Retained<UIContextMenuInteraction>>;
 
         /// Specifies if the context menu interaction is enabled. NO by default.
         #[unsafe(method(isContextMenuInteractionEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isContextMenuInteractionEnabled(&self) -> bool;
+        pub unsafe fn isContextMenuInteractionEnabled(&self) -> bool;
 
         /// Setter for [`isContextMenuInteractionEnabled`][Self::isContextMenuInteractionEnabled].
         #[unsafe(method(setContextMenuInteractionEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setContextMenuInteractionEnabled(&self, context_menu_interaction_enabled: bool);
+        pub unsafe fn setContextMenuInteractionEnabled(
+            &self,
+            context_menu_interaction_enabled: bool,
+        );
 
         /// If the contextMenuInteraction is the primary action of the control, invoked on touch-down. NO by default.
         #[unsafe(method(showsMenuAsPrimaryAction))]
         #[unsafe(method_family = none)]
-        pub fn showsMenuAsPrimaryAction(&self) -> bool;
+        pub unsafe fn showsMenuAsPrimaryAction(&self) -> bool;
 
         /// Setter for [`showsMenuAsPrimaryAction`][Self::showsMenuAsPrimaryAction].
         #[unsafe(method(setShowsMenuAsPrimaryAction:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsMenuAsPrimaryAction(&self, shows_menu_as_primary_action: bool);
+        pub unsafe fn setShowsMenuAsPrimaryAction(&self, shows_menu_as_primary_action: bool);
 
         #[cfg(all(
             feature = "UIContextMenuConfiguration",
@@ -521,7 +507,7 @@ impl UIControl {
         /// Return a point in this control's coordinate space to which to attach the given configuration's menu.
         #[unsafe(method(menuAttachmentPointForConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn menuAttachmentPointForConfiguration(
+        pub unsafe fn menuAttachmentPointForConfiguration(
             &self,
             configuration: &UIContextMenuConfiguration,
         ) -> CGPoint;
@@ -529,41 +515,29 @@ impl UIControl {
         /// Assigning a value to this property causes the tool tip to be displayed for the view. Setting the property to nil cancels the display of the tool tip for the view.
         #[unsafe(method(toolTip))]
         #[unsafe(method_family = none)]
-        pub fn toolTip(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn toolTip(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`toolTip`][Self::toolTip].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setToolTip:))]
         #[unsafe(method_family = none)]
-        pub fn setToolTip(&self, tool_tip: Option<&NSString>);
+        pub unsafe fn setToolTip(&self, tool_tip: Option<&NSString>);
 
         #[cfg(feature = "UIToolTipInteraction")]
         /// Returns the control's default UIToolTipInteraction.
         #[unsafe(method(toolTipInteraction))]
         #[unsafe(method_family = none)]
-        pub fn toolTipInteraction(&self) -> Option<Retained<UIToolTipInteraction>>;
+        pub unsafe fn toolTipInteraction(&self) -> Option<Retained<UIToolTipInteraction>>;
 
         /// Whether or not symbol animations are enabled for this control.
         /// The default value varies depending on the control.
         #[unsafe(method(isSymbolAnimationEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isSymbolAnimationEnabled(&self) -> bool;
+        pub unsafe fn isSymbolAnimationEnabled(&self) -> bool;
 
         /// Setter for [`isSymbolAnimationEnabled`][Self::isSymbolAnimationEnabled].
         #[unsafe(method(setSymbolAnimationEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setSymbolAnimationEnabled(&self, symbol_animation_enabled: bool);
-    );
-}
-
-/// Methods declared on superclass `UIView`.
-#[cfg(all(feature = "UIResponder", feature = "UIView"))]
-impl UIControl {
-    extern_methods!(
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn setSymbolAnimationEnabled(&self, symbol_animation_enabled: bool);
     );
 }
 
@@ -571,9 +545,13 @@ impl UIControl {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UIControl {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -590,7 +568,7 @@ impl UIControl {
         /// An override is required for UIControl to create a UIContextMenuInteraction. Direct UIControl subclasses do not need to call super.
         #[unsafe(method(contextMenuInteraction:configurationForMenuAtLocation:))]
         #[unsafe(method_family = none)]
-        pub fn contextMenuInteraction_configurationForMenuAtLocation(
+        pub unsafe fn contextMenuInteraction_configurationForMenuAtLocation(
             &self,
             interaction: &UIContextMenuInteraction,
             location: CGPoint,
@@ -604,7 +582,7 @@ impl UIControl {
         /// Direct UIControl subclasses do not need to call super.
         #[unsafe(method(contextMenuInteraction:previewForHighlightingMenuWithConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn contextMenuInteraction_previewForHighlightingMenuWithConfiguration(
+        pub unsafe fn contextMenuInteraction_previewForHighlightingMenuWithConfiguration(
             &self,
             interaction: &UIContextMenuInteraction,
             configuration: &UIContextMenuConfiguration,
@@ -618,7 +596,7 @@ impl UIControl {
         /// Direct UIControl subclasses do not need to call super.
         #[unsafe(method(contextMenuInteraction:previewForDismissingMenuWithConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn contextMenuInteraction_previewForDismissingMenuWithConfiguration(
+        pub unsafe fn contextMenuInteraction_previewForDismissingMenuWithConfiguration(
             &self,
             interaction: &UIContextMenuInteraction,
             configuration: &UIContextMenuConfiguration,
@@ -631,7 +609,7 @@ impl UIControl {
         /// UIControl subclasses should always call super.
         #[unsafe(method(contextMenuInteraction:willDisplayMenuForConfiguration:animator:))]
         #[unsafe(method_family = none)]
-        pub fn contextMenuInteraction_willDisplayMenuForConfiguration_animator(
+        pub unsafe fn contextMenuInteraction_willDisplayMenuForConfiguration_animator(
             &self,
             interaction: &UIContextMenuInteraction,
             configuration: &UIContextMenuConfiguration,
@@ -645,7 +623,7 @@ impl UIControl {
         /// UIControl subclasses should always call super.
         #[unsafe(method(contextMenuInteraction:willEndForConfiguration:animator:))]
         #[unsafe(method_family = none)]
-        pub fn contextMenuInteraction_willEndForConfiguration_animator(
+        pub unsafe fn contextMenuInteraction_willEndForConfiguration_animator(
             &self,
             interaction: &UIContextMenuInteraction,
             configuration: &UIContextMenuConfiguration,

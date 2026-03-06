@@ -12,7 +12,6 @@ extern "C" {
     /// the plug-in's view.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/webkit/webpluginbaseurlkey?language=objc)
-    #[deprecated]
     pub static WebPlugInBaseURLKey: Option<&'static NSString>;
 }
 
@@ -24,7 +23,6 @@ extern "C" {
     /// and values in this NSDictionary must be NSStrings.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/webkit/webpluginattributeskey?language=objc)
-    #[deprecated]
     pub static WebPlugInAttributesKey: Option<&'static NSString>;
 }
 
@@ -34,7 +32,6 @@ extern "C" {
     /// occur.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/webkit/webplugincontainerkey?language=objc)
-    #[deprecated]
     pub static WebPlugInContainerKey: Option<&'static NSString>;
 }
 
@@ -42,7 +39,6 @@ extern "C" {
     /// the plug-in.  May be nil.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/webkit/webplugincontainingelementkey?language=objc)
-    #[deprecated]
     pub static WebPlugInContainingElementKey: Option<&'static NSString>;
 }
 
@@ -53,7 +49,6 @@ extern "C" {
     /// WebPlugInShouldLoadMainResourceKey is NO if it is absent from the arguments dictionary.
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/webkit/webpluginshouldloadmainresourcekey?language=objc)
-    #[deprecated]
     pub static WebPlugInShouldLoadMainResourceKey: Option<&'static NSString>;
 }
 
@@ -69,11 +64,6 @@ extern_protocol!(
         /// Parameter `arguments`: The arguments dictionary with the mentioned keys and objects. This method is required to implement.
         ///
         /// Returns: Returns an NSView object that conforms to the WebPlugIn informal protocol.
-        ///
-        /// # Safety
-        ///
-        /// - `arguments` generic should be of the correct type.
-        /// - `arguments` might not allow `None`.
         #[deprecated]
         #[unsafe(method(plugInViewWithArguments:))]
         #[unsafe(method_family = none)]

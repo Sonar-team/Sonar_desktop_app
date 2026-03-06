@@ -100,89 +100,87 @@ impl UICalendarView {
         /// The object that defines the delegate of the calendar view.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UICalendarViewDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn UICalendarViewDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn UICalendarViewDelegate>>);
+        pub unsafe fn setDelegate(
+            &self,
+            delegate: Option<&ProtocolObject<dyn UICalendarViewDelegate>>,
+        );
 
         #[cfg(feature = "UICalendarSelection")]
         /// The object that defines the selection behavior of the calendar view.
         #[unsafe(method(selectionBehavior))]
         #[unsafe(method_family = none)]
-        pub fn selectionBehavior(&self) -> Option<Retained<UICalendarSelection>>;
+        pub unsafe fn selectionBehavior(&self) -> Option<Retained<UICalendarSelection>>;
 
         #[cfg(feature = "UICalendarSelection")]
         /// Setter for [`selectionBehavior`][Self::selectionBehavior].
         #[unsafe(method(setSelectionBehavior:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectionBehavior(&self, selection_behavior: Option<&UICalendarSelection>);
+        pub unsafe fn setSelectionBehavior(&self, selection_behavior: Option<&UICalendarSelection>);
 
         /// The backing locale of the calendar view. The default value is
         /// `NSLocale.currentLocale`
         #[unsafe(method(locale))]
         #[unsafe(method_family = none)]
-        pub fn locale(&self) -> Retained<NSLocale>;
+        pub unsafe fn locale(&self) -> Retained<NSLocale>;
 
         /// Setter for [`locale`][Self::locale].
         #[unsafe(method(setLocale:))]
         #[unsafe(method_family = none)]
-        pub fn setLocale(&self, locale: &NSLocale);
+        pub unsafe fn setLocale(&self, locale: &NSLocale);
 
         /// The backing calendar of the calendar view. The default value is
         /// `NSCalendar.currentCalendar`
         #[unsafe(method(calendar))]
         #[unsafe(method_family = none)]
-        pub fn calendar(&self) -> Retained<NSCalendar>;
+        pub unsafe fn calendar(&self) -> Retained<NSCalendar>;
 
         /// Setter for [`calendar`][Self::calendar].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCalendar:))]
         #[unsafe(method_family = none)]
-        pub fn setCalendar(&self, calendar: &NSCalendar);
+        pub unsafe fn setCalendar(&self, calendar: &NSCalendar);
 
         /// The backing time zone of the calendar view. Default is nil
         #[unsafe(method(timeZone))]
         #[unsafe(method_family = none)]
-        pub fn timeZone(&self) -> Option<Retained<NSTimeZone>>;
+        pub unsafe fn timeZone(&self) -> Option<Retained<NSTimeZone>>;
 
         /// Setter for [`timeZone`][Self::timeZone].
         #[unsafe(method(setTimeZone:))]
         #[unsafe(method_family = none)]
-        pub fn setTimeZone(&self, time_zone: Option<&NSTimeZone>);
+        pub unsafe fn setTimeZone(&self, time_zone: Option<&NSTimeZone>);
 
         #[cfg(feature = "UIFontDescriptor")]
         /// The font design of the calendar view. The default value is
         /// `UIFontDescriptorSystemDesignDefault`
         #[unsafe(method(fontDesign))]
         #[unsafe(method_family = none)]
-        pub fn fontDesign(&self) -> Retained<UIFontDescriptorSystemDesign>;
+        pub unsafe fn fontDesign(&self) -> Retained<UIFontDescriptorSystemDesign>;
 
         #[cfg(feature = "UIFontDescriptor")]
         /// Setter for [`fontDesign`][Self::fontDesign].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFontDesign:))]
         #[unsafe(method_family = none)]
-        pub fn setFontDesign(&self, font_design: &UIFontDescriptorSystemDesign);
+        pub unsafe fn setFontDesign(&self, font_design: &UIFontDescriptorSystemDesign);
 
         /// The available date range of the calendar view. The default is a date interval from
         /// `NSDate.distantPast`to
         /// `NSDate.distantFuture`
         #[unsafe(method(availableDateRange))]
         #[unsafe(method_family = none)]
-        pub fn availableDateRange(&self) -> Retained<NSDateInterval>;
+        pub unsafe fn availableDateRange(&self) -> Retained<NSDateInterval>;
 
         /// Setter for [`availableDateRange`][Self::availableDateRange].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAvailableDateRange:))]
         #[unsafe(method_family = none)]
-        pub fn setAvailableDateRange(&self, available_date_range: &NSDateInterval);
+        pub unsafe fn setAvailableDateRange(&self, available_date_range: &NSDateInterval);
 
         /// The date components representing the current visible date of the calendar view. The default value is the
         /// NSDateComponents representation of the current date given the granularity of the displayed component.
@@ -201,14 +199,12 @@ impl UICalendarView {
         /// `UICalendarView.calendar.`
         #[unsafe(method(visibleDateComponents))]
         #[unsafe(method_family = none)]
-        pub fn visibleDateComponents(&self) -> Retained<NSDateComponents>;
+        pub unsafe fn visibleDateComponents(&self) -> Retained<NSDateComponents>;
 
         /// Setter for [`visibleDateComponents`][Self::visibleDateComponents].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setVisibleDateComponents:))]
         #[unsafe(method_family = none)]
-        pub fn setVisibleDateComponents(&self, visible_date_components: &NSDateComponents);
+        pub unsafe fn setVisibleDateComponents(&self, visible_date_components: &NSDateComponents);
 
         /// Sets the visible date components of the calendar view, with an option to animate the setting.
         /// The
@@ -226,7 +222,7 @@ impl UICalendarView {
         /// `UICalendarView.calendar.`
         #[unsafe(method(setVisibleDateComponents:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setVisibleDateComponents_animated(
+        pub unsafe fn setVisibleDateComponents_animated(
             &self,
             date_components: &NSDateComponents,
             animated: bool,
@@ -238,19 +234,19 @@ impl UICalendarView {
         /// `calendarView:decorationForDate:`to show decorations.
         #[unsafe(method(wantsDateDecorations))]
         #[unsafe(method_family = none)]
-        pub fn wantsDateDecorations(&self) -> bool;
+        pub unsafe fn wantsDateDecorations(&self) -> bool;
 
         /// Setter for [`wantsDateDecorations`][Self::wantsDateDecorations].
         #[unsafe(method(setWantsDateDecorations:))]
         #[unsafe(method_family = none)]
-        pub fn setWantsDateDecorations(&self, wants_date_decorations: bool);
+        pub unsafe fn setWantsDateDecorations(&self, wants_date_decorations: bool);
 
         /// Reloads the decorations for the specified dates, with an option to animate the action.
         /// Decorations are only available if you implement the delegate method
         /// `calendarView:decorationForDate:`
         #[unsafe(method(reloadDecorationsForDateComponents:animated:))]
         #[unsafe(method_family = none)]
-        pub fn reloadDecorationsForDateComponents_animated(
+        pub unsafe fn reloadDecorationsForDateComponents_animated(
             &self,
             dates: &NSArray<NSDateComponents>,
             animated: bool,
@@ -265,21 +261,14 @@ impl UICalendarView {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
             this: Allocated<Self>,
             coder: &NSCoder,
         ) -> Option<Retained<Self>>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -287,9 +276,13 @@ impl UICalendarView {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UICalendarView {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -315,7 +308,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(calendarView:decorationForDateComponents:))]
         #[unsafe(method_family = none)]
-        fn calendarView_decorationForDateComponents(
+        unsafe fn calendarView_decorationForDateComponents(
             &self,
             calendar_view: &UICalendarView,
             date_components: &NSDateComponents,
@@ -332,7 +325,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(calendarView:didChangeVisibleDateComponentsFrom:))]
         #[unsafe(method_family = none)]
-        fn calendarView_didChangeVisibleDateComponentsFrom(
+        unsafe fn calendarView_didChangeVisibleDateComponentsFrom(
             &self,
             calendar_view: &UICalendarView,
             previous_date_components: &NSDateComponents,

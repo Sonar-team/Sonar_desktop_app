@@ -44,14 +44,11 @@ impl NSAdaptiveImageGlyph {
     extern_methods!(
         #[unsafe(method(initWithImageContent:))]
         #[unsafe(method_family = init)]
-        pub fn initWithImageContent(
+        pub unsafe fn initWithImageContent(
             this: Allocated<Self>,
             image_content: &NSData,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
@@ -62,21 +59,21 @@ impl NSAdaptiveImageGlyph {
 
         #[unsafe(method(imageContent))]
         #[unsafe(method_family = none)]
-        pub fn imageContent(&self) -> Retained<NSData>;
+        pub unsafe fn imageContent(&self) -> Retained<NSData>;
 
         #[unsafe(method(contentIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn contentIdentifier(&self) -> Retained<NSString>;
+        pub unsafe fn contentIdentifier(&self) -> Retained<NSString>;
 
         #[unsafe(method(contentDescription))]
         #[unsafe(method_family = none)]
-        pub fn contentDescription(&self) -> Retained<NSString>;
+        pub unsafe fn contentDescription(&self) -> Retained<NSString>;
 
         #[cfg(feature = "objc2-uniform-type-identifiers")]
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(contentType))]
         #[unsafe(method_family = none)]
-        pub fn contentType() -> Retained<UTType>;
+        pub unsafe fn contentType() -> Retained<UTType>;
     );
 }
 
@@ -98,9 +95,6 @@ pub unsafe trait NSAttributedStringAdaptiveImageGlyphConveniences:
     ClassType + Sized + private_NSAttributedStringAdaptiveImageGlyphConveniences::Sealed
 {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `attributes` generic should be of the correct type.
         #[unsafe(method(attributedStringWithAdaptiveImageGlyph:attributes:))]
         #[unsafe(method_family = none)]
         unsafe fn attributedStringWithAdaptiveImageGlyph_attributes(

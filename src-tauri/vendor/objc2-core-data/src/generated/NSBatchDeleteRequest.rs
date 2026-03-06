@@ -38,9 +38,6 @@ impl NSBatchDeleteRequest {
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[cfg(feature = "NSFetchRequest")]
-        /// # Safety
-        ///
-        /// `fetch` generic should be bound by `NSFetchRequestResult`.
         #[unsafe(method(initWithFetchRequest:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithFetchRequest(

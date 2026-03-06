@@ -34,7 +34,7 @@ impl UITextCursorDropPositionAnimator {
         /// The cursor view to be animated.
         #[unsafe(method(cursorView))]
         #[unsafe(method_family = none)]
-        pub fn cursorView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn cursorView(&self) -> Option<Retained<UIView>>;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -45,7 +45,7 @@ impl UITextCursorDropPositionAnimator {
         /// The object that implements the UITextInput protocol, used to query for geometry information regarding cursor placement.
         #[unsafe(method(textInput))]
         #[unsafe(method_family = none)]
-        pub fn textInput(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn textInput(&self) -> Option<Retained<UIView>>;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -55,13 +55,6 @@ impl UITextCursorDropPositionAnimator {
             feature = "UIView"
         ))]
         /// Creates an animator for the given text cursor view implementation, and the document object that implements the UITextInput protocol.
-        ///
-        /// # Safety
-        ///
-        /// - `cursor_view` must implement UITextCursorView.
-        /// - `cursor_view` might not allow `None`.
-        /// - `text_input` must implement UITextInput.
-        /// - `text_input` might not allow `None`.
         #[unsafe(method(initWithTextCursorView:textInput:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithTextCursorView_textInput(
@@ -73,16 +66,12 @@ impl UITextCursorDropPositionAnimator {
         /// Controls the visibility of the cursor.
         #[unsafe(method(setCursorVisible:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setCursorVisible_animated(&self, visible: bool, animated: bool);
+        pub unsafe fn setCursorVisible_animated(&self, visible: bool, animated: bool);
 
         #[cfg(feature = "UITextInput")]
         /// Controls the placement of the cursor, using
         /// `textInput`and
         /// `position`to compute the final frame for the cursor view.
-        ///
-        /// # Safety
-        ///
-        /// `position` might not allow `None`.
         #[unsafe(method(placeCursorAtPosition:animated:))]
         #[unsafe(method_family = none)]
         pub unsafe fn placeCursorAtPosition_animated(
@@ -95,7 +84,7 @@ impl UITextCursorDropPositionAnimator {
         /// Optionally, provide an animation block or completion block to run alongside cursor appearance or position update animations.
         #[unsafe(method(animateAlongsideChanges:completion:))]
         #[unsafe(method_family = none)]
-        pub fn animateAlongsideChanges_completion(
+        pub unsafe fn animateAlongsideChanges_completion(
             &self,
             animation: Option<&block2::DynBlock<dyn Fn()>>,
             completion: Option<&block2::DynBlock<dyn Fn()>>,

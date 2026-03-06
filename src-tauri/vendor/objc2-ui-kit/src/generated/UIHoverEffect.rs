@@ -45,7 +45,7 @@ impl UIHoverHighlightEffect {
     extern_methods!(
         #[unsafe(method(effect))]
         #[unsafe(method_family = none)]
-        pub fn effect(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn effect(mtm: MainThreadMarker) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -87,7 +87,7 @@ impl UIHoverLiftEffect {
     extern_methods!(
         #[unsafe(method(effect))]
         #[unsafe(method_family = none)]
-        pub fn effect(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn effect(mtm: MainThreadMarker) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -130,7 +130,7 @@ impl UIHoverAutomaticEffect {
     extern_methods!(
         #[unsafe(method(effect))]
         #[unsafe(method_family = none)]
-        pub fn effect(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn effect(mtm: MainThreadMarker) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

@@ -34,11 +34,11 @@ impl CAMediaTimingFunction {
     extern_methods!(
         #[unsafe(method(functionWithName:))]
         #[unsafe(method_family = none)]
-        pub fn functionWithName(name: &CAMediaTimingFunctionName) -> Retained<Self>;
+        pub unsafe fn functionWithName(name: &CAMediaTimingFunctionName) -> Retained<Self>;
 
         #[unsafe(method(functionWithControlPoints::::))]
         #[unsafe(method_family = none)]
-        pub fn functionWithControlPoints(
+        pub unsafe fn functionWithControlPoints(
             c1x: c_float,
             c1y: c_float,
             c2x: c_float,
@@ -47,7 +47,7 @@ impl CAMediaTimingFunction {
 
         #[unsafe(method(initWithControlPoints::::))]
         #[unsafe(method_family = init)]
-        pub fn initWithControlPoints(
+        pub unsafe fn initWithControlPoints(
             this: Allocated<Self>,
             c1x: c_float,
             c1y: c_float,
@@ -62,19 +62,12 @@ impl CAMediaTimingFunction {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for CAMediaTimingFunction {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern "C" {

@@ -74,12 +74,12 @@ impl UITextSearchOptions {
         /// See UITextSearchMatchMethod above.
         #[unsafe(method(wordMatchMethod))]
         #[unsafe(method_family = none)]
-        pub fn wordMatchMethod(&self) -> UITextSearchMatchMethod;
+        pub unsafe fn wordMatchMethod(&self) -> UITextSearchMatchMethod;
 
         /// Comparison options to use when searching for strings.
         #[unsafe(method(stringCompareOptions))]
         #[unsafe(method_family = none)]
-        pub fn stringCompareOptions(&self) -> NSStringCompareOptions;
+        pub unsafe fn stringCompareOptions(&self) -> NSStringCompareOptions;
     );
 }
 
@@ -88,11 +88,11 @@ impl UITextSearchOptions {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -124,7 +124,7 @@ impl UIFindSession {
         /// `updateResultCount`to update the system find panel's UI if already visible.
         #[unsafe(method(resultCount))]
         #[unsafe(method_family = none)]
-        pub fn resultCount(&self) -> NSInteger;
+        pub unsafe fn resultCount(&self) -> NSInteger;
 
         /// Returns the index of the currently highlighted result, out of
         /// `resultCount.`If no result is currently highlighted, return NSNotFound.
@@ -132,18 +132,18 @@ impl UIFindSession {
         /// `updateResultCount`to update the system find panel's UI if already visible.
         #[unsafe(method(highlightedResultIndex))]
         #[unsafe(method_family = none)]
-        pub fn highlightedResultIndex(&self) -> NSInteger;
+        pub unsafe fn highlightedResultIndex(&self) -> NSInteger;
 
         /// Defines how results are reported through the find panel's UI. The default style is
         /// `CurrentAndTotal.`
         #[unsafe(method(searchResultDisplayStyle))]
         #[unsafe(method_family = none)]
-        pub fn searchResultDisplayStyle(&self) -> UIFindSessionSearchResultDisplayStyle;
+        pub unsafe fn searchResultDisplayStyle(&self) -> UIFindSessionSearchResultDisplayStyle;
 
         /// Setter for [`searchResultDisplayStyle`][Self::searchResultDisplayStyle].
         #[unsafe(method(setSearchResultDisplayStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setSearchResultDisplayStyle(
+        pub unsafe fn setSearchResultDisplayStyle(
             &self,
             search_result_display_style: UIFindSessionSearchResultDisplayStyle,
         );
@@ -151,14 +151,14 @@ impl UIFindSession {
         /// Return YES if replacement is supported. This gates the appearance of replace UI in the find navigator panel. Default is NO.
         #[unsafe(method(supportsReplacement))]
         #[unsafe(method_family = none)]
-        pub fn supportsReplacement(&self) -> bool;
+        pub unsafe fn supportsReplacement(&self) -> bool;
 
         /// Return YES if replacement is allowed for the currently highlighted item. This property controls the enabled state
         /// of the "replace" button in the find navigator, as well as various hardware keyboard shortcuts involving replacement.
         /// Default is YES, if supportsReplacement is YES.
         #[unsafe(method(allowsReplacementForCurrentlyHighlightedResult))]
         #[unsafe(method_family = none)]
-        pub fn allowsReplacementForCurrentlyHighlightedResult(&self) -> bool;
+        pub unsafe fn allowsReplacementForCurrentlyHighlightedResult(&self) -> bool;
 
         /// Called when the user requests a search to be performed for
         /// `query,`using
@@ -169,7 +169,7 @@ impl UIFindSession {
         /// Parameter `options`: Object representing all configured search options for this search.
         #[unsafe(method(performSearchWithQuery:options:))]
         #[unsafe(method_family = none)]
-        pub fn performSearchWithQuery_options(
+        pub unsafe fn performSearchWithQuery_options(
             &self,
             query: &NSString,
             options: Option<&UITextSearchOptions>,
@@ -186,7 +186,7 @@ impl UIFindSession {
         /// Parameter `options`: Object representing all configured search options for this replacement.
         #[unsafe(method(performSingleReplacementWithSearchQuery:replacementString:options:))]
         #[unsafe(method_family = none)]
-        pub fn performSingleReplacementWithSearchQuery_replacementString_options(
+        pub unsafe fn performSingleReplacementWithSearchQuery_replacementString_options(
             &self,
             search_query: &NSString,
             replacement_string: &NSString,
@@ -203,7 +203,7 @@ impl UIFindSession {
         /// Parameter `options`: Object representing all configured search options for this replacement.
         #[unsafe(method(replaceAllInstancesOfSearchQuery:withReplacementString:options:))]
         #[unsafe(method_family = none)]
-        pub fn replaceAllInstancesOfSearchQuery_withReplacementString_options(
+        pub unsafe fn replaceAllInstancesOfSearchQuery_withReplacementString_options(
             &self,
             search_query: &NSString,
             replacement_string: &NSString,
@@ -217,18 +217,18 @@ impl UIFindSession {
         /// Parameter `direction`: Which direction the user intends to move, either forward or backward.
         #[unsafe(method(highlightNextResultInDirection:))]
         #[unsafe(method_family = none)]
-        pub fn highlightNextResultInDirection(&self, direction: UITextStorageDirection);
+        pub unsafe fn highlightNextResultInDirection(&self, direction: UITextStorageDirection);
 
         /// This method will be called whenever the current find session's found/highlighted results are to be invalidated. For instance,
         /// when the search query is cleared, options changed, or any other event where we may not perform another search right away.
         #[unsafe(method(invalidateFoundResults))]
         #[unsafe(method_family = none)]
-        pub fn invalidateFoundResults(&self);
+        pub unsafe fn invalidateFoundResults(&self);
 
         #[deprecated]
         #[unsafe(method(allowsReplacement))]
         #[unsafe(method_family = none)]
-        pub fn allowsReplacement(&self) -> bool;
+        pub unsafe fn allowsReplacement(&self) -> bool;
     );
 }
 
@@ -237,11 +237,11 @@ impl UIFindSession {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -277,12 +277,14 @@ impl UITextSearchingFindSession {
         /// See `UITextSearching.h` for more information.
         #[unsafe(method(searchableObject))]
         #[unsafe(method_family = none)]
-        pub fn searchableObject(&self) -> Option<Retained<ProtocolObject<dyn UITextSearching>>>;
+        pub unsafe fn searchableObject(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn UITextSearching>>>;
 
         #[cfg(feature = "UITextSearching")]
         #[unsafe(method(initWithSearchableObject:))]
         #[unsafe(method_family = init)]
-        pub fn initWithSearchableObject(
+        pub unsafe fn initWithSearchableObject(
             this: Allocated<Self>,
             searchable_object: &ProtocolObject<dyn UITextSearching>,
         ) -> Retained<Self>;

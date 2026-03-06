@@ -10,26 +10,6 @@ use objc2_foundation::*;
 
 use crate::*;
 
-/// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstoolbaritemstyle?language=objc)
-// NS_ENUM
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct NSToolbarItemStyle(pub NSInteger);
-impl NSToolbarItemStyle {
-    #[doc(alias = "NSToolbarItemStylePlain")]
-    pub const Plain: Self = Self(0);
-    #[doc(alias = "NSToolbarItemStyleProminent")]
-    pub const Prominent: Self = Self(1);
-}
-
-unsafe impl Encode for NSToolbarItemStyle {
-    const ENCODING: Encoding = NSInteger::ENCODING;
-}
-
-unsafe impl RefEncode for NSToolbarItemStyle {
-    const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
-}
-
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstoolbaritemvisibilitypriority?language=objc)
 // NS_TYPED_EXTENSIBLE_ENUM
 pub type NSToolbarItemVisibilityPriority = NSInteger;
@@ -72,7 +52,7 @@ impl NSToolbarItem {
         /// Initialize the toolbar item with an identifier which is a development language string used by the toolbar and its delegate for identification purposes.
         #[unsafe(method(initWithItemIdentifier:))]
         #[unsafe(method_family = init)]
-        pub fn initWithItemIdentifier(
+        pub unsafe fn initWithItemIdentifier(
             this: Allocated<Self>,
             item_identifier: &NSToolbarItemIdentifier,
         ) -> Retained<Self>;
@@ -80,65 +60,57 @@ impl NSToolbarItem {
         #[cfg(feature = "NSToolbar")]
         #[unsafe(method(itemIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn itemIdentifier(&self) -> Retained<NSToolbarItemIdentifier>;
+        pub unsafe fn itemIdentifier(&self) -> Retained<NSToolbarItemIdentifier>;
 
         #[cfg(feature = "NSToolbar")]
         /// Use this to determine the toolbar in which an item is currently displayed.
         #[unsafe(method(toolbar))]
         #[unsafe(method_family = none)]
-        pub fn toolbar(&self) -> Option<Retained<NSToolbar>>;
+        pub unsafe fn toolbar(&self) -> Option<Retained<NSToolbar>>;
 
         /// Use this to set the item's label that appears in the toolbar.
         /// The label may also be used for the default `menuFormRepresentation` of the item.
         /// Also, developers should make sure the length of the label is appropriate and not too long.
         #[unsafe(method(label))]
         #[unsafe(method_family = none)]
-        pub fn label(&self) -> Retained<NSString>;
+        pub unsafe fn label(&self) -> Retained<NSString>;
 
         /// Setter for [`label`][Self::label].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setLabel:))]
         #[unsafe(method_family = none)]
-        pub fn setLabel(&self, label: &NSString);
+        pub unsafe fn setLabel(&self, label: &NSString);
 
         /// Use this to set the item's label that appears when the item is in the customization palette.
         /// All Items must have a palette label, and for most things it is reasonable to set them to the same string as the label used in the toolbar.
         #[unsafe(method(paletteLabel))]
         #[unsafe(method_family = none)]
-        pub fn paletteLabel(&self) -> Retained<NSString>;
+        pub unsafe fn paletteLabel(&self) -> Retained<NSString>;
 
         /// Setter for [`paletteLabel`][Self::paletteLabel].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPaletteLabel:))]
         #[unsafe(method_family = none)]
-        pub fn setPaletteLabel(&self, palette_label: &NSString);
+        pub unsafe fn setPaletteLabel(&self, palette_label: &NSString);
 
         /// An array of all alternate labels this item may display.
         /// The item will use the size of the longest label to prevent resizing when the label is changed.
         #[unsafe(method(possibleLabels))]
         #[unsafe(method_family = none)]
-        pub fn possibleLabels(&self) -> Retained<NSSet<NSString>>;
+        pub unsafe fn possibleLabels(&self) -> Retained<NSSet<NSString>>;
 
         /// Setter for [`possibleLabels`][Self::possibleLabels].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPossibleLabels:))]
         #[unsafe(method_family = none)]
-        pub fn setPossibleLabels(&self, possible_labels: &NSSet<NSString>);
+        pub unsafe fn setPossibleLabels(&self, possible_labels: &NSSet<NSString>);
 
         /// Use this to set a tooltip to be used when the item is displayed in the toolbar. (forwards to `-view` if it responds)
         #[unsafe(method(toolTip))]
         #[unsafe(method_family = none)]
-        pub fn toolTip(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn toolTip(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`toolTip`][Self::toolTip].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setToolTip:))]
         #[unsafe(method_family = none)]
-        pub fn setToolTip(&self, tool_tip: Option<&NSString>);
+        pub unsafe fn setToolTip(&self, tool_tip: Option<&NSString>);
 
         #[cfg(feature = "NSMenuItem")]
         /// The menu form of a toolbar item's purpose is twofold.
@@ -151,36 +123,34 @@ impl NSToolbarItem {
         /// For standard items, the target, action is set.
         #[unsafe(method(menuFormRepresentation))]
         #[unsafe(method_family = none)]
-        pub fn menuFormRepresentation(&self) -> Option<Retained<NSMenuItem>>;
+        pub unsafe fn menuFormRepresentation(&self) -> Option<Retained<NSMenuItem>>;
 
         #[cfg(feature = "NSMenuItem")]
         /// Setter for [`menuFormRepresentation`][Self::menuFormRepresentation].
         #[unsafe(method(setMenuFormRepresentation:))]
         #[unsafe(method_family = none)]
-        pub fn setMenuFormRepresentation(&self, menu_form_representation: Option<&NSMenuItem>);
+        pub unsafe fn setMenuFormRepresentation(
+            &self,
+            menu_form_representation: Option<&NSMenuItem>,
+        );
 
         /// Tag for your own custom purpose. (forwards to `-view` if it responds)
         #[unsafe(method(tag))]
         #[unsafe(method_family = none)]
-        pub fn tag(&self) -> NSInteger;
+        pub unsafe fn tag(&self) -> NSInteger;
 
         /// Setter for [`tag`][Self::tag].
         #[unsafe(method(setTag:))]
         #[unsafe(method_family = none)]
-        pub fn setTag(&self, tag: NSInteger);
+        pub unsafe fn setTag(&self, tag: NSInteger);
 
         /// Set and get the action of an item. (forwards to `-view` if it responds)
         #[unsafe(method(target))]
         #[unsafe(method_family = none)]
-        pub fn target(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn target(&self) -> Option<Retained<AnyObject>>;
 
-        /// Setter for [`target`][Self::target].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
+        /// Setter for [`target`][Self::target].
         #[unsafe(method(setTarget:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTarget(&self, target: Option<&AnyObject>);
@@ -189,13 +159,9 @@ impl NSToolbarItem {
         /// For custom views, this method will call `-setAction:` on the view if it responds. (forwards to `-view` if it responds)
         #[unsafe(method(action))]
         #[unsafe(method_family = none)]
-        pub fn action(&self) -> Option<Sel>;
+        pub unsafe fn action(&self) -> Option<Sel>;
 
         /// Setter for [`action`][Self::action].
-        ///
-        /// # Safety
-        ///
-        /// `action` must be a valid selector.
         #[unsafe(method(setAction:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAction(&self, action: Option<Sel>);
@@ -204,84 +170,57 @@ impl NSToolbarItem {
         /// For custom views, this method will call `-setEnabled:` on the view if it responds. (forwards to `-view` if it responds)
         #[unsafe(method(isEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isEnabled(&self) -> bool;
+        pub unsafe fn isEnabled(&self) -> bool;
 
         /// Setter for [`isEnabled`][Self::isEnabled].
         #[unsafe(method(setEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setEnabled(&self, enabled: bool);
+        pub unsafe fn setEnabled(&self, enabled: bool);
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`image`][Self::image].
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&NSImage>);
+        pub unsafe fn setImage(&self, image: Option<&NSImage>);
 
         /// Set and get the title of an item.
         /// For custom views, this method will call `-setTitle:` on the view if it responds. (forwards to `-view` if it responds)
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: &NSString);
+        pub unsafe fn setTitle(&self, title: &NSString);
 
         /// When set on an item without a custom view, the button produced will have a bordered style.
         /// Defaults to NO.
         #[unsafe(method(isBordered))]
         #[unsafe(method_family = none)]
-        pub fn isBordered(&self) -> bool;
+        pub unsafe fn isBordered(&self) -> bool;
 
         /// Setter for [`isBordered`][Self::isBordered].
         #[unsafe(method(setBordered:))]
         #[unsafe(method_family = none)]
-        pub fn setBordered(&self, bordered: bool);
-
-        #[cfg(feature = "NSColor")]
-        #[unsafe(method(backgroundTintColor))]
-        #[unsafe(method_family = none)]
-        pub fn backgroundTintColor(&self) -> Option<Retained<NSColor>>;
-
-        #[cfg(feature = "NSColor")]
-        /// Setter for [`backgroundTintColor`][Self::backgroundTintColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        #[unsafe(method(setBackgroundTintColor:))]
-        #[unsafe(method_family = none)]
-        pub fn setBackgroundTintColor(&self, background_tint_color: Option<&NSColor>);
-
-        /// Defines the toolbar item’s appearance. The default style is plain.
-        /// Prominent style tints the background. If a background tint color is set, it uses it; otherwise, it uses the app’s or system’s accent color. If grouped with other items,
-        /// it moves to its own to avoid tinting other items' background.
-        #[unsafe(method(style))]
-        #[unsafe(method_family = none)]
-        pub fn style(&self) -> NSToolbarItemStyle;
-
-        /// Setter for [`style`][Self::style].
-        #[unsafe(method(setStyle:))]
-        #[unsafe(method_family = none)]
-        pub fn setStyle(&self, style: NSToolbarItemStyle);
+        pub unsafe fn setBordered(&self, bordered: bool);
 
         /// Whether or not the item behaves as a navigation item (i.e. back/forward) in the toolbar.
         /// Navigation items may be specially positioned by the system outside the normal list of items of the toolbar in the order specified by `-toolbarDefaultItemIdentifiers:`.
         /// Defaults to NO.
         #[unsafe(method(isNavigational))]
         #[unsafe(method_family = none)]
-        pub fn isNavigational(&self) -> bool;
+        pub unsafe fn isNavigational(&self) -> bool;
 
         /// Setter for [`isNavigational`][Self::isNavigational].
         #[unsafe(method(setNavigational:))]
         #[unsafe(method_family = none)]
-        pub fn setNavigational(&self, navigational: bool);
+        pub unsafe fn setNavigational(&self, navigational: bool);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         /// Items with automatically generated views will return nil from this getter.
@@ -289,29 +228,29 @@ impl NSToolbarItem {
         /// Note that, by default, many of the set/get methods will be implemented by calls forwarded to the view you set, if it responds to it.
         #[unsafe(method(view))]
         #[unsafe(method_family = none)]
-        pub fn view(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn view(&self) -> Option<Retained<NSView>>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         /// Setter for [`view`][Self::view].
         #[unsafe(method(setView:))]
         #[unsafe(method_family = none)]
-        pub fn setView(&self, view: Option<&NSView>);
+        pub unsafe fn setView(&self, view: Option<&NSView>);
 
         /// An item is visible if it is present in the NSToolbar and not in the overflow menu.
         /// This property is key value observable.
         #[unsafe(method(isVisible))]
         #[unsafe(method_family = none)]
-        pub fn isVisible(&self) -> bool;
+        pub unsafe fn isVisible(&self) -> bool;
 
         /// When an item is hidden it will not be visible in the toolbar. The item will still be visible in the customization panel. Because hidden items may be visible during user customization, use the `visible` property to determine if an item is currently displayed. Note that even hidden toolbar items are sync'd to other toolbars with a shared identifier, but its `hidden` state can be unique to each instance. Use this property to show a toolbar item in one toolbar instance but not another.
         #[unsafe(method(isHidden))]
         #[unsafe(method_family = none)]
-        pub fn isHidden(&self) -> bool;
+        pub unsafe fn isHidden(&self) -> bool;
 
         /// Setter for [`isHidden`][Self::isHidden].
         #[unsafe(method(setHidden:))]
         #[unsafe(method_family = none)]
-        pub fn setHidden(&self, hidden: bool);
+        pub unsafe fn setHidden(&self, hidden: bool);
 
         /// Unless you have already set your own custom view, you should not call these methods.
         /// The min size should be small enough to look nice in all display modes.
@@ -320,24 +259,24 @@ impl NSToolbarItem {
         #[deprecated = "This property is no longer recommended. Instead, let the system automatically measure the size of the view using constraints."]
         #[unsafe(method(minSize))]
         #[unsafe(method_family = none)]
-        pub fn minSize(&self) -> NSSize;
+        pub unsafe fn minSize(&self) -> NSSize;
 
         /// Setter for [`minSize`][Self::minSize].
         #[deprecated = "This property is no longer recommended. Instead, let the system automatically measure the size of the view using constraints."]
         #[unsafe(method(setMinSize:))]
         #[unsafe(method_family = none)]
-        pub fn setMinSize(&self, min_size: NSSize);
+        pub unsafe fn setMinSize(&self, min_size: NSSize);
 
         #[deprecated = "This property is no longer recommended. Instead, let the system automatically measure the size of the view using constraints."]
         #[unsafe(method(maxSize))]
         #[unsafe(method_family = none)]
-        pub fn maxSize(&self) -> NSSize;
+        pub unsafe fn maxSize(&self) -> NSSize;
 
         /// Setter for [`maxSize`][Self::maxSize].
         #[deprecated = "This property is no longer recommended. Instead, let the system automatically measure the size of the view using constraints."]
         #[unsafe(method(setMaxSize:))]
         #[unsafe(method_family = none)]
-        pub fn setMaxSize(&self, max_size: NSSize);
+        pub unsafe fn setMaxSize(&self, max_size: NSSize);
 
         /// When a toolbar does not have enough space to fit all its items, it must push some into the overflow menu.
         /// Items with the highest `visibilityPriority` level are chosen last for the overflow menu.
@@ -346,26 +285,15 @@ impl NSToolbarItem {
         /// In 10.7, users can no longer modify the toolbar item visibility priority.
         #[unsafe(method(visibilityPriority))]
         #[unsafe(method_family = none)]
-        pub fn visibilityPriority(&self) -> NSToolbarItemVisibilityPriority;
+        pub unsafe fn visibilityPriority(&self) -> NSToolbarItemVisibilityPriority;
 
         /// Setter for [`visibilityPriority`][Self::visibilityPriority].
         #[unsafe(method(setVisibilityPriority:))]
         #[unsafe(method_family = none)]
-        pub fn setVisibilityPriority(&self, visibility_priority: NSToolbarItemVisibilityPriority);
-
-        #[cfg(feature = "NSItemBadge")]
-        /// A badge that can be attached to an NSToolbarItem. This provides a way to display small visual indicators that can be used to highlight important information, such as unread notifications or status indicators.
-        #[unsafe(method(badge))]
-        #[unsafe(method_family = none)]
-        pub fn badge(&self) -> Option<Retained<NSItemBadge>>;
-
-        #[cfg(feature = "NSItemBadge")]
-        /// Setter for [`badge`][Self::badge].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        #[unsafe(method(setBadge:))]
-        #[unsafe(method_family = none)]
-        pub fn setBadge(&self, badge: Option<&NSItemBadge>);
+        pub unsafe fn setVisibilityPriority(
+            &self,
+            visibility_priority: NSToolbarItemVisibilityPriority,
+        );
 
         /// Typically you should not invoke this method.
         /// This method is called by its toolbar during validation.
@@ -374,25 +302,25 @@ impl NSToolbarItem {
         /// So for your custom items it may be useful to override this method and invent your own validation.
         #[unsafe(method(validate))]
         #[unsafe(method_family = none)]
-        pub fn validate(&self);
+        pub unsafe fn validate(&self);
 
         /// This property only affects automatic validation performed by NSToolbar.
         /// Explicit validation requests, such as the `-[NSToolbar validateVisibleItems]` method, will invoke the `-validate` method even if `autovalidates` is `NO`.
         /// Defaults to YES.
         #[unsafe(method(autovalidates))]
         #[unsafe(method_family = none)]
-        pub fn autovalidates(&self) -> bool;
+        pub unsafe fn autovalidates(&self) -> bool;
 
         /// Setter for [`autovalidates`][Self::autovalidates].
         #[unsafe(method(setAutovalidates:))]
         #[unsafe(method_family = none)]
-        pub fn setAutovalidates(&self, autovalidates: bool);
+        pub unsafe fn setAutovalidates(&self, autovalidates: bool);
 
         /// Duplicate items outside of spaces are not allowed.
         #[deprecated = "Duplicates are no longer supported."]
         #[unsafe(method(allowsDuplicatesInToolbar))]
         #[unsafe(method_family = none)]
-        pub fn allowsDuplicatesInToolbar(&self) -> bool;
+        pub unsafe fn allowsDuplicatesInToolbar(&self) -> bool;
     );
 }
 
@@ -401,11 +329,11 @@ impl NSToolbarItem {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -430,7 +358,7 @@ extern_protocol!(
         /// Note: This message is sent from NSToolbarItem's validate method, however validate will not send this message for items that have custom views.
         #[unsafe(method(validateToolbarItem:))]
         #[unsafe(method_family = none)]
-        fn validateToolbarItem(&self, item: &NSToolbarItem) -> bool;
+        unsafe fn validateToolbarItem(&self, item: &NSToolbarItem) -> bool;
     }
 );
 
@@ -444,7 +372,7 @@ extern_protocol!(
         /// The state of the item will be changed reflect the state of the CKShare.
         #[unsafe(method(cloudShareForUserInterfaceItem:))]
         #[unsafe(method_family = none)]
-        fn cloudShareForUserInterfaceItem(
+        unsafe fn cloudShareForUserInterfaceItem(
             &self,
             item: &ProtocolObject<dyn NSValidatedUserInterfaceItem>,
         ) -> Option<Retained<CKShare>>;
@@ -546,13 +474,11 @@ extern "C" {
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/appkit/nstoolbarseparatoritemidentifier?language=objc)
     #[cfg(feature = "NSToolbar")]
-    #[deprecated = "This item is no longer recommended and will be ignored on 10.7 and later."]
     pub static NSToolbarSeparatorItemIdentifier: &'static NSToolbarItemIdentifier;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstoolbarcustomizetoolbaritemidentifier?language=objc)
     #[cfg(feature = "NSToolbar")]
-    #[deprecated = "This item is no longer recommended and will be ignored on 10.7 and later."]
     pub static NSToolbarCustomizeToolbarItemIdentifier: &'static NSToolbarItemIdentifier;
 }

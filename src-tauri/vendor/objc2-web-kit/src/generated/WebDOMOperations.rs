@@ -7,7 +7,6 @@ use objc2_foundation::*;
 use crate::*;
 
 /// WebDOMNodeOperations.
-#[deprecated]
 #[cfg(all(
     feature = "DOMNode",
     feature = "DOMObject",
@@ -25,7 +24,6 @@ impl DOMNode {
 }
 
 /// WebDOMDocumentOperations.
-#[deprecated]
 #[cfg(all(
     feature = "DOMDocument",
     feature = "DOMNode",
@@ -46,10 +44,6 @@ impl DOMDocument {
         /// This method constructs a URL given an attribute string just as WebKit does.
         /// An attribute string is the value of an attribute of an element such as the href attribute on
         /// the DOMHTMLAnchorElement class. This method is only applicable to attributes that refer to URLs.
-        ///
-        /// # Safety
-        ///
-        /// `string` might not allow `None`.
         #[deprecated]
         #[unsafe(method(URLWithAttributeString:))]
         #[unsafe(method_family = none)]
@@ -61,7 +55,6 @@ impl DOMDocument {
 }
 
 /// WebDOMRangeOperations.
-#[deprecated]
 #[cfg(all(
     feature = "DOMObject",
     feature = "DOMRange",
@@ -85,7 +78,6 @@ impl DOMRange {
 }
 
 /// WebDOMHTMLFrameElementOperations.
-#[deprecated]
 #[cfg(all(
     feature = "DOMElement",
     feature = "DOMHTMLElement",
@@ -106,7 +98,6 @@ impl DOMHTMLFrameElement {
 }
 
 /// WebDOMHTMLIFrameElementOperations.
-#[deprecated]
 #[cfg(all(
     feature = "DOMElement",
     feature = "DOMHTMLElement",
@@ -127,7 +118,6 @@ impl DOMHTMLIFrameElement {
 }
 
 /// WebDOMHTMLObjectElementOperations.
-#[deprecated]
 #[cfg(all(
     feature = "DOMElement",
     feature = "DOMHTMLElement",

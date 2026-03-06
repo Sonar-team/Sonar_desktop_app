@@ -9,9 +9,6 @@ use objc2::__framework_prelude::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/cffilesecurity?language=objc)
-///
-/// This is toll-free bridged with `NSFileSecurity`.
-#[doc(alias = "CFFileSecurityRef")]
 #[repr(C)]
 pub struct CFFileSecurity {
     inner: [u8; 0],
@@ -66,13 +63,10 @@ impl CFFileSecurity {
         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
     }
 
-    /// # Safety
-    ///
-    /// `owner_uuid` must be a valid pointer.
     #[doc(alias = "CFFileSecurityCopyOwnerUUID")]
     #[cfg(feature = "CFUUID")]
     #[inline]
-    pub unsafe fn owner_uuid(&self, owner_uuid: *mut *const CFUUID) -> bool {
+    pub unsafe fn owner_uuid(self: &CFFileSecurity, owner_uuid: *mut *const CFUUID) -> bool {
         extern "C-unwind" {
             fn CFFileSecurityCopyOwnerUUID(
                 file_sec: &CFFileSecurity,
@@ -86,7 +80,7 @@ impl CFFileSecurity {
     #[doc(alias = "CFFileSecuritySetOwnerUUID")]
     #[cfg(feature = "CFUUID")]
     #[inline]
-    pub fn set_owner_uuid(&self, owner_uuid: Option<&CFUUID>) -> bool {
+    pub fn set_owner_uuid(self: &CFFileSecurity, owner_uuid: Option<&CFUUID>) -> bool {
         extern "C-unwind" {
             fn CFFileSecuritySetOwnerUUID(
                 file_sec: &CFFileSecurity,
@@ -97,13 +91,10 @@ impl CFFileSecurity {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// `group_uuid` must be a valid pointer.
     #[doc(alias = "CFFileSecurityCopyGroupUUID")]
     #[cfg(feature = "CFUUID")]
     #[inline]
-    pub unsafe fn group_uuid(&self, group_uuid: *mut *const CFUUID) -> bool {
+    pub unsafe fn group_uuid(self: &CFFileSecurity, group_uuid: *mut *const CFUUID) -> bool {
         extern "C-unwind" {
             fn CFFileSecurityCopyGroupUUID(
                 file_sec: &CFFileSecurity,
@@ -117,7 +108,7 @@ impl CFFileSecurity {
     #[doc(alias = "CFFileSecuritySetGroupUUID")]
     #[cfg(feature = "CFUUID")]
     #[inline]
-    pub fn set_group_uuid(&self, group_uuid: Option<&CFUUID>) -> bool {
+    pub fn set_group_uuid(self: &CFFileSecurity, group_uuid: Option<&CFUUID>) -> bool {
         extern "C-unwind" {
             fn CFFileSecuritySetGroupUUID(
                 file_sec: &CFFileSecurity,
@@ -128,13 +119,10 @@ impl CFFileSecurity {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// `owner` must be a valid pointer.
     #[doc(alias = "CFFileSecurityGetOwner")]
     #[cfg(feature = "libc")]
     #[inline]
-    pub unsafe fn owner(&self, owner: *mut libc::uid_t) -> bool {
+    pub unsafe fn owner(self: &CFFileSecurity, owner: *mut libc::uid_t) -> bool {
         extern "C-unwind" {
             fn CFFileSecurityGetOwner(
                 file_sec: &CFFileSecurity,
@@ -148,7 +136,7 @@ impl CFFileSecurity {
     #[doc(alias = "CFFileSecuritySetOwner")]
     #[cfg(feature = "libc")]
     #[inline]
-    pub fn set_owner(&self, owner: libc::uid_t) -> bool {
+    pub fn set_owner(self: &CFFileSecurity, owner: libc::uid_t) -> bool {
         extern "C-unwind" {
             fn CFFileSecuritySetOwner(file_sec: &CFFileSecurity, owner: libc::uid_t) -> Boolean;
         }
@@ -156,13 +144,10 @@ impl CFFileSecurity {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// `group` must be a valid pointer.
     #[doc(alias = "CFFileSecurityGetGroup")]
     #[cfg(feature = "libc")]
     #[inline]
-    pub unsafe fn group(&self, group: *mut libc::gid_t) -> bool {
+    pub unsafe fn group(self: &CFFileSecurity, group: *mut libc::gid_t) -> bool {
         extern "C-unwind" {
             fn CFFileSecurityGetGroup(
                 file_sec: &CFFileSecurity,
@@ -176,7 +161,7 @@ impl CFFileSecurity {
     #[doc(alias = "CFFileSecuritySetGroup")]
     #[cfg(feature = "libc")]
     #[inline]
-    pub fn set_group(&self, group: libc::gid_t) -> bool {
+    pub fn set_group(self: &CFFileSecurity, group: libc::gid_t) -> bool {
         extern "C-unwind" {
             fn CFFileSecuritySetGroup(file_sec: &CFFileSecurity, group: libc::gid_t) -> Boolean;
         }
@@ -184,13 +169,10 @@ impl CFFileSecurity {
         ret != 0
     }
 
-    /// # Safety
-    ///
-    /// `mode` must be a valid pointer.
     #[doc(alias = "CFFileSecurityGetMode")]
     #[cfg(feature = "libc")]
     #[inline]
-    pub unsafe fn mode(&self, mode: *mut libc::mode_t) -> bool {
+    pub unsafe fn mode(self: &CFFileSecurity, mode: *mut libc::mode_t) -> bool {
         extern "C-unwind" {
             fn CFFileSecurityGetMode(file_sec: &CFFileSecurity, mode: *mut libc::mode_t)
                 -> Boolean;
@@ -202,7 +184,7 @@ impl CFFileSecurity {
     #[doc(alias = "CFFileSecuritySetMode")]
     #[cfg(feature = "libc")]
     #[inline]
-    pub fn set_mode(&self, mode: libc::mode_t) -> bool {
+    pub fn set_mode(self: &CFFileSecurity, mode: libc::mode_t) -> bool {
         extern "C-unwind" {
             fn CFFileSecuritySetMode(file_sec: &CFFileSecurity, mode: libc::mode_t) -> Boolean;
         }
@@ -246,7 +228,10 @@ unsafe impl RefEncode for CFFileSecurityClearOptions {
 impl CFFileSecurity {
     #[doc(alias = "CFFileSecurityClearProperties")]
     #[inline]
-    pub fn clear_properties(&self, clear_property_mask: CFFileSecurityClearOptions) -> bool {
+    pub fn clear_properties(
+        self: &CFFileSecurity,
+        clear_property_mask: CFFileSecurityClearOptions,
+    ) -> bool {
         extern "C-unwind" {
             fn CFFileSecurityClearProperties(
                 file_sec: &CFFileSecurity,

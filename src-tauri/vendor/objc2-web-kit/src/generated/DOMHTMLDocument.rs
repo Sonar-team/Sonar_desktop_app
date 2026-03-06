@@ -98,8 +98,6 @@ impl DOMHTMLDocument {
         pub unsafe fn dir(&self) -> Retained<NSString>;
 
         /// Setter for [`dir`][Self::dir].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDir:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDir(&self, dir: Option<&NSString>);
@@ -109,8 +107,6 @@ impl DOMHTMLDocument {
         pub unsafe fn designMode(&self) -> Retained<NSString>;
 
         /// Setter for [`designMode`][Self::designMode].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDesignMode:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDesignMode(&self, design_mode: Option<&NSString>);
@@ -124,8 +120,6 @@ impl DOMHTMLDocument {
         pub unsafe fn bgColor(&self) -> Retained<NSString>;
 
         /// Setter for [`bgColor`][Self::bgColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBgColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setBgColor(&self, bg_color: Option<&NSString>);
@@ -135,8 +129,6 @@ impl DOMHTMLDocument {
         pub unsafe fn fgColor(&self) -> Retained<NSString>;
 
         /// Setter for [`fgColor`][Self::fgColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFgColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setFgColor(&self, fg_color: Option<&NSString>);
@@ -146,8 +138,6 @@ impl DOMHTMLDocument {
         pub unsafe fn alinkColor(&self) -> Retained<NSString>;
 
         /// Setter for [`alinkColor`][Self::alinkColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAlinkColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAlinkColor(&self, alink_color: Option<&NSString>);
@@ -157,8 +147,6 @@ impl DOMHTMLDocument {
         pub unsafe fn linkColor(&self) -> Retained<NSString>;
 
         /// Setter for [`linkColor`][Self::linkColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setLinkColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setLinkColor(&self, link_color: Option<&NSString>);
@@ -168,8 +156,6 @@ impl DOMHTMLDocument {
         pub unsafe fn vlinkColor(&self) -> Retained<NSString>;
 
         /// Setter for [`vlinkColor`][Self::vlinkColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setVlinkColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setVlinkColor(&self, vlink_color: Option<&NSString>);
@@ -184,17 +170,11 @@ impl DOMHTMLDocument {
         #[unsafe(method_family = none)]
         pub unsafe fn close(&self);
 
-        /// # Safety
-        ///
-        /// `text` might not allow `None`.
         #[deprecated]
         #[unsafe(method(write:))]
         #[unsafe(method_family = none)]
         pub unsafe fn write(&self, text: Option<&NSString>);
 
-        /// # Safety
-        ///
-        /// `text` might not allow `None`.
         #[deprecated]
         #[unsafe(method(writeln:))]
         #[unsafe(method_family = none)]

@@ -20,14 +20,9 @@ pub const NSWindows95InterfaceStyle: c_uint = 2;
 pub const NSMacintoshInterfaceStyle: c_uint = 3;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsinterfacestyle?language=objc)
-#[deprecated]
 pub type NSInterfaceStyle = NSUInteger;
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `key` might not allow `None`.
-    /// - `responder` might not allow `None`.
     #[cfg(feature = "NSResponder")]
     #[deprecated]
     pub fn NSInterfaceStyleForKey(
@@ -43,17 +38,16 @@ impl NSResponder {
         #[deprecated]
         #[unsafe(method(interfaceStyle))]
         #[unsafe(method_family = none)]
-        pub fn interfaceStyle(&self) -> NSInterfaceStyle;
+        pub unsafe fn interfaceStyle(&self) -> NSInterfaceStyle;
 
         #[deprecated]
         #[unsafe(method(setInterfaceStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setInterfaceStyle(&self, interface_style: NSInterfaceStyle);
+        pub unsafe fn setInterfaceStyle(&self, interface_style: NSInterfaceStyle);
     );
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsinterfacestyledefault?language=objc)
-    #[deprecated]
     pub static NSInterfaceStyleDefault: Option<&'static NSString>;
 }

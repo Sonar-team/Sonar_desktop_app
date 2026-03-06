@@ -15,7 +15,6 @@ const PATH_MAX: usize = 1024;
 
 /// [`Path`] conversion.
 impl NSURL {
-    // FIXME(breaking): Make this private.
     pub fn from_path(
         path: &Path,
         is_directory: bool,
@@ -197,7 +196,7 @@ impl NSURL {
 #[cfg(test)]
 #[cfg(unix)]
 mod tests {
-    use std::os::unix::ffi::OsStrExt;
+    use std::{fs, os::unix::ffi::OsStrExt};
 
     use super::*;
 
@@ -229,16 +228,19 @@ mod tests {
     fn special_paths() {
         use crate::{NSData, NSFileManager};
 
-        let manager = NSFileManager::defaultManager();
+        let manager = unsafe { NSFileManager::defaultManager() };
 
         let path = Path::new(OsStr::from_bytes(b"\xf8"));
         // Foundation is broken, needs a different encoding to work.
         let url = NSURL::from_file_path("%F8").unwrap();
 
         // Create, read and remove file, using different APIs.
-        std::fs::write(path, "").unwrap();
-        assert_eq!(NSData::dataWithContentsOfURL(&url), Some(NSData::new()));
-        manager.removeItemAtURL_error(&url).unwrap();
+        fs::write(path, "").unwrap();
+        assert_eq!(
+            unsafe { NSData::dataWithContentsOfURL(&url) },
+            Some(NSData::new())
+        );
+        unsafe { manager.removeItemAtURL_error(&url).unwrap() };
     }
 
     // Useful when testing HFS+ and non-UTF-8:

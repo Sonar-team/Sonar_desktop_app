@@ -10,8 +10,6 @@ use objc2_core_graphics::*;
 #[cfg(feature = "objc2-core-video")]
 use objc2_core_video::*;
 use objc2_foundation::*;
-#[cfg(feature = "objc2-image-io")]
-use objc2_image_io::*;
 #[cfg(feature = "objc2-io-surface")]
 use objc2_io_surface::*;
 #[cfg(feature = "objc2-metal")]
@@ -36,11 +34,6 @@ extern "C" {
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/kciformatrgba8?language=objc)
     pub static kCIFormatRGBA8: CIFormat;
-}
-
-extern "C" {
-    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/kciformatrgbx8?language=objc)
-    pub static kCIFormatRGBX8: CIFormat;
 }
 
 extern "C" {
@@ -193,23 +186,6 @@ extern "C" {
 }
 
 extern "C" {
-    /// A Boolean value to control whether an image created with a CVPixelBuffer or an IOSurface
-    /// should be cropped and offset according clean aperture attachments.
-    ///
-    /// For a `CVPixelBuffer` this will use `kCVImageBufferPreferredCleanApertureKey`
-    /// or `kCVImageBufferCleanApertureKey`.
-    ///
-    /// If the value for this option is:
-    /// * True: then image will be cropped and offset to the clean aperture.
-    /// * False: then the full image is returned.
-    /// * ``CIVector`` : then use it as a `CGRect` to crop and offset.
-    /// * Not specified : then it will behave as if False was specified.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/kciimageapplycleanaperture?language=objc)
-    pub static kCIImageApplyCleanAperture: &'static CIImageOption;
-}
-
-extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/kciimagetonemaphdrtosdr?language=objc)
     pub static kCIImageToneMapHDRtoSDR: &'static CIImageOption;
 }
@@ -220,23 +196,8 @@ extern "C" {
 }
 
 extern "C" {
-    /// A value for overriding the automatic behavior of the Content Headroom property
-    /// when creating an image.
-    ///
-    /// The value for this key should be an `NSNumber` instance.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/kciimagecontentheadroom?language=objc)
+    /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/kciimagecontentheadroom?language=objc)
     pub static kCIImageContentHeadroom: &'static CIImageOption;
-}
-
-extern "C" {
-    /// A value for overriding the automatic behavior of the Content Average Light Level property
-    /// when creating an image.
-    ///
-    /// The value for this key should be an `NSNumber` instance.
-    ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/coreimage/kciimagecontentaveragelightlevel?language=objc)
-    pub static kCIImageContentAverageLightLevel: &'static CIImageOption;
 }
 
 extern "C" {
@@ -261,13 +222,11 @@ extern "C" {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/kciimagetexturetarget?language=objc)
-    #[deprecated = "Core Image OpenGL API deprecated. (Define CI_SILENCE_GL_DEPRECATION to silence these warnings)"]
     pub static kCIImageTextureTarget: &'static CIImageOption;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coreimage/kciimagetextureformat?language=objc)
-    #[deprecated = "Core Image OpenGL API deprecated. (Define CI_SILENCE_GL_DEPRECATION to silence these warnings)"]
     pub static kCIImageTextureFormat: &'static CIImageOption;
 }
 
@@ -323,10 +282,6 @@ extern_class!(
     pub struct CIImage;
 );
 
-unsafe impl Send for CIImage {}
-
-unsafe impl Sync for CIImage {}
-
 extern_conformance!(
     unsafe impl NSCoding for CIImage {}
 );
@@ -355,26 +310,11 @@ impl CIImage {
         pub unsafe fn imageWithCGImage(image: &CGImage) -> Retained<CIImage>;
 
         #[cfg(feature = "objc2-core-graphics")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(imageWithCGImage:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageWithCGImage_options(
             image: &CGImage,
             options: Option<&NSDictionary<CIImageOption, AnyObject>>,
-        ) -> Retained<CIImage>;
-
-        #[cfg(feature = "objc2-image-io")]
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
-        #[unsafe(method(imageWithCGImageSource:index:options:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn imageWithCGImageSource_index_options(
-            source: &CGImageSource,
-            index: usize,
-            dict: Option<&NSDictionary<CIImageOption, AnyObject>>,
         ) -> Retained<CIImage>;
 
         #[cfg(feature = "objc2-core-graphics")]
@@ -384,9 +324,6 @@ impl CIImage {
         pub unsafe fn imageWithCGLayer(layer: &CGLayer) -> Retained<CIImage>;
 
         #[cfg(feature = "objc2-core-graphics")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[deprecated]
         #[unsafe(method(imageWithCGLayer:options:))]
         #[unsafe(method_family = none)]
@@ -418,9 +355,6 @@ impl CIImage {
         ) -> Retained<CIImage>;
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[deprecated = "Core Image OpenGL API deprecated. (Define CI_SILENCE_GL_DEPRECATION to silence these warnings)"]
         #[unsafe(method(imageWithTexture:size:flipped:options:))]
         #[unsafe(method_family = none)]
@@ -432,11 +366,6 @@ impl CIImage {
         ) -> Retained<CIImage>;
 
         #[cfg(feature = "objc2-metal")]
-        /// # Safety
-        ///
-        /// - `texture` may need to be synchronized.
-        /// - `texture` may be unretained, you must ensure it is kept alive while in use.
-        /// - `options` generic should be of the correct type.
         #[unsafe(method(imageWithMTLTexture:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageWithMTLTexture_options(
@@ -448,9 +377,6 @@ impl CIImage {
         #[unsafe(method_family = none)]
         pub unsafe fn imageWithContentsOfURL(url: &NSURL) -> Option<Retained<CIImage>>;
 
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(imageWithContentsOfURL:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageWithContentsOfURL_options(
@@ -462,9 +388,6 @@ impl CIImage {
         #[unsafe(method_family = none)]
         pub unsafe fn imageWithData(data: &NSData) -> Option<Retained<CIImage>>;
 
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(imageWithData:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageWithData_options(
@@ -478,9 +401,6 @@ impl CIImage {
         pub unsafe fn imageWithCVImageBuffer(image_buffer: &CVImageBuffer) -> Retained<CIImage>;
 
         #[cfg(feature = "objc2-core-video")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(imageWithCVImageBuffer:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageWithCVImageBuffer_options(
@@ -494,9 +414,6 @@ impl CIImage {
         pub unsafe fn imageWithCVPixelBuffer(pixel_buffer: &CVPixelBuffer) -> Retained<CIImage>;
 
         #[cfg(feature = "objc2-core-video")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(imageWithCVPixelBuffer:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageWithCVPixelBuffer_options(
@@ -510,9 +427,6 @@ impl CIImage {
         pub unsafe fn imageWithIOSurface(surface: &IOSurfaceRef) -> Retained<CIImage>;
 
         #[cfg(feature = "objc2-io-surface")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(imageWithIOSurface:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageWithIOSurface_options(
@@ -575,28 +489,12 @@ impl CIImage {
         pub unsafe fn initWithCGImage(this: Allocated<Self>, image: &CGImage) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-graphics")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(initWithCGImage:options:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCGImage_options(
             this: Allocated<Self>,
             image: &CGImage,
             options: Option<&NSDictionary<CIImageOption, AnyObject>>,
-        ) -> Retained<Self>;
-
-        #[cfg(feature = "objc2-image-io")]
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
-        #[unsafe(method(initWithCGImageSource:index:options:))]
-        #[unsafe(method_family = init)]
-        pub unsafe fn initWithCGImageSource_index_options(
-            this: Allocated<Self>,
-            source: &CGImageSource,
-            index: usize,
-            dict: Option<&NSDictionary<CIImageOption, AnyObject>>,
         ) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-graphics")]
@@ -606,9 +504,6 @@ impl CIImage {
         pub unsafe fn initWithCGLayer(this: Allocated<Self>, layer: &CGLayer) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-graphics")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[deprecated = "Use initWithCGImage:options instead."]
         #[unsafe(method(initWithCGLayer:options:))]
         #[unsafe(method_family = init)]
@@ -622,9 +517,6 @@ impl CIImage {
         #[unsafe(method_family = init)]
         pub unsafe fn initWithData(this: Allocated<Self>, data: &NSData) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(initWithData:options:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithData_options(
@@ -658,9 +550,6 @@ impl CIImage {
         ) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-foundation")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[deprecated = "Core Image OpenGL API deprecated. (Define CI_SILENCE_GL_DEPRECATION to silence these warnings)"]
         #[unsafe(method(initWithTexture:size:flipped:options:))]
         #[unsafe(method_family = init)]
@@ -673,11 +562,6 @@ impl CIImage {
         ) -> Retained<Self>;
 
         #[cfg(feature = "objc2-metal")]
-        /// # Safety
-        ///
-        /// - `texture` may need to be synchronized.
-        /// - `texture` may be unretained, you must ensure it is kept alive while in use.
-        /// - `options` generic should be of the correct type.
         #[unsafe(method(initWithMTLTexture:options:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithMTLTexture_options(
@@ -693,9 +577,6 @@ impl CIImage {
             url: &NSURL,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(initWithContentsOfURL:options:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithContentsOfURL_options(
@@ -713,9 +594,6 @@ impl CIImage {
         ) -> Retained<Self>;
 
         #[cfg(feature = "objc2-io-surface")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(initWithIOSurface:options:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithIOSurface_options(
@@ -725,9 +603,6 @@ impl CIImage {
         ) -> Retained<Self>;
 
         #[cfg(feature = "objc2-io-surface")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[deprecated]
         #[unsafe(method(initWithIOSurface:plane:format:options:))]
         #[unsafe(method_family = init)]
@@ -748,9 +623,6 @@ impl CIImage {
         ) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-video")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(initWithCVImageBuffer:options:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCVImageBuffer_options(
@@ -768,9 +640,6 @@ impl CIImage {
         ) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-video")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(initWithCVPixelBuffer:options:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCVPixelBuffer_options(
@@ -805,27 +674,6 @@ impl CIImage {
         #[unsafe(method_family = none)]
         pub unsafe fn imageByApplyingOrientation(&self, orientation: c_int) -> Retained<CIImage>;
 
-        #[cfg(feature = "objc2-core-foundation")]
-        #[unsafe(method(imageTransformForOrientation:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn imageTransformForOrientation(&self, orientation: c_int) -> CGAffineTransform;
-
-        #[cfg(feature = "objc2-image-io")]
-        #[unsafe(method(imageByApplyingCGOrientation:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn imageByApplyingCGOrientation(
-            &self,
-            orientation: CGImagePropertyOrientation,
-        ) -> Retained<CIImage>;
-
-        #[cfg(all(feature = "objc2-core-foundation", feature = "objc2-image-io"))]
-        #[unsafe(method(imageTransformForCGOrientation:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn imageTransformForCGOrientation(
-            &self,
-            orientation: CGImagePropertyOrientation,
-        ) -> CGAffineTransform;
-
         #[unsafe(method(imageByCompositingOverImage:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageByCompositingOverImage(&self, dest: &CIImage) -> Retained<CIImage>;
@@ -844,9 +692,6 @@ impl CIImage {
         #[unsafe(method_family = none)]
         pub unsafe fn imageByClampingToRect(&self, rect: CGRect) -> Retained<CIImage>;
 
-        /// # Safety
-        ///
-        /// `params` generic should be of the correct type.
         #[unsafe(method(imageByApplyingFilter:withInputParameters:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageByApplyingFilter_withInputParameters(
@@ -888,12 +733,6 @@ impl CIImage {
         #[unsafe(method_family = none)]
         pub unsafe fn imageBySettingAlphaOneInExtent(&self, extent: CGRect) -> Retained<CIImage>;
 
-        /// Create an image by applying a gaussian blur to the receiver.
-        /// - Parameters:
-        /// - sigma: The sigma of the gaussian blur to apply to the receiver.
-        /// If the sigma is very small (less than `0.16`) then the receiver is returned.
-        /// - Returns:
-        /// An autoreleased ``CIImage`` instance or the received image.
         #[unsafe(method(imageByApplyingGaussianBlurWithSigma:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageByApplyingGaussianBlurWithSigma(
@@ -901,20 +740,6 @@ impl CIImage {
             sigma: c_double,
         ) -> Retained<CIImage>;
 
-        /// Return a new image by changing the receiver's metadata properties.
-        ///
-        /// When you create an image, Core Image sets an image’s properties to a metadata
-        /// dictionary as described here: ``properties``.
-        /// Use this method to override an image’s metadata properties with new values.
-        ///
-        /// - Parameters:
-        /// - properties: A dictionary of metadata properties akin to the `CGImageSourceCopyPropertiesAtIndex()` function.
-        /// - Returns:
-        /// An autoreleased ``CIImage`` instance with a copy of the new properties.
-        ///
-        /// # Safety
-        ///
-        /// `properties` generic should be of the correct type.
         #[unsafe(method(imageBySettingProperties:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageBySettingProperties(
@@ -922,76 +747,26 @@ impl CIImage {
             properties: &NSDictionary,
         ) -> Retained<CIImage>;
 
-        /// Create an image by changing the receiver's sample mode to bilinear interpolation.
-        /// - Returns:
-        /// An autoreleased ``CIImage`` instance with a bilinear sampling.
         #[unsafe(method(imageBySamplingLinear))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageBySamplingLinear(&self) -> Retained<CIImage>;
 
-        /// Create an image by changing the receiver's sample mode to nearest neighbor.
-        /// - Returns:
-        /// An autoreleased ``CIImage`` instance with a nearest sampling.
         #[unsafe(method(imageBySamplingNearest))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageBySamplingNearest(&self) -> Retained<CIImage>;
 
-        /// Create an image that inserts a intermediate that is cacheable
-        ///
-        /// This intermediate will be not be cached if ``kCIContextCacheIntermediates`` is false.
-        /// - Returns:
-        /// An autoreleased ``CIImage``.
         #[unsafe(method(imageByInsertingIntermediate))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageByInsertingIntermediate(&self) -> Retained<CIImage>;
 
-        /// Create an image that inserts a intermediate that is cacheable.
-        ///
-        /// - Parameters:
-        /// - cache: Controls if Core Image caches the returned image.
-        /// * `YES` : This intermediate will be cacheable even if
-        /// ``kCIContextCacheIntermediates`` is false.
-        /// * `NO`  : the intermediate will be not be cached if
-        /// ``kCIContextCacheIntermediates`` is false.
-        /// - Returns:
-        /// An autoreleased ``CIImage``.
         #[unsafe(method(imageByInsertingIntermediate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageByInsertingIntermediate_(&self, cache: bool) -> Retained<CIImage>;
 
-        /// Create an image that inserts a intermediate that is cached in tiles
-        ///
-        /// This intermediate will be cacheable even if ``kCIContextCacheIntermediates`` is false.
-        /// - Returns:
-        /// An autoreleased ``CIImage``.
-        #[unsafe(method(imageByInsertingTiledIntermediate))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn imageByInsertingTiledIntermediate(&self) -> Retained<CIImage>;
-
-        /// Create an image that applies a gain map Core Image image to the received Core Image image.
-        ///
-        /// The gain map image can be obtained by creating a ``CIImage`` instance from `NSURL`/`NSData`
-        /// and setting the ``kCIImageAuxiliaryHDRGainMap`` option set to `
-        /// `true``.
-        ///
-        /// If the gain map ``CIImage`` instance doesn't have the needed ``properties`` metadata,
-        /// the received image will be returned as-is.
-        ///
-        /// - Returns:
-        /// An autoreleased ``CIImage`` instance or the received image.
         #[unsafe(method(imageByApplyingGainMap:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageByApplyingGainMap(&self, gainmap: &CIImage) -> Retained<CIImage>;
 
-        /// Create an image that applies a gain map Core Image image with a specified headroom to the received Core Image image.
-        ///
-        /// - Parameters:
-        /// - gainmap: The gain map ``CIImage`` instance to apply to the receiver.
-        /// - headroom: a float value that specify how much headroom the resulting image should have.
-        /// The headroom value will be limited to between 1.0 (i.e. SDR) and
-        /// the full headroom allowed by the gain map.
-        /// - Returns:
-        /// An autoreleased ``CIImage`` instance or the received image.
         #[unsafe(method(imageByApplyingGainMap:headroom:))]
         #[unsafe(method_family = none)]
         pub unsafe fn imageByApplyingGainMap_headroom(
@@ -1000,60 +775,15 @@ impl CIImage {
             headroom: c_float,
         ) -> Retained<CIImage>;
 
-        /// Create an image by changing the receiver's contentHeadroom property.
-        ///
-        /// Changing this value will alter the behavior of the `CIToneMapHeadroom` and `CISystemToneMap` filters.
-        /// * If the value is set to 0.0 then the returned image's headroom is unknown.
-        /// * If the value is set to 1.0 then the returned image is SDR.
-        /// * If the value is set to greater 1.0 then the returned image is HDR.
-        /// * Otherwise the returned image's headroom is unknown.
-        ///
-        /// - Returns:
-        /// An autoreleased ``CIImage``.
-        #[unsafe(method(imageBySettingContentHeadroom:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn imageBySettingContentHeadroom(&self, headroom: c_float) -> Retained<CIImage>;
-
-        /// Create an image by changing the receiver's contentAverageLightLevel property.
-        ///
-        /// Changing this value will alter the behavior of the `CIToneMapHeadroom` and `CISystemToneMap` filters.
-        /// * If the value is set to 0.0 or less then the returned image's ``contentAverageLightLevel`` is unknown.
-        ///
-        /// - Returns:
-        /// An autoreleased ``CIImage``.
-        #[unsafe(method(imageBySettingContentAverageLightLevel:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn imageBySettingContentAverageLightLevel(
-            &self,
-            average: c_float,
-        ) -> Retained<CIImage>;
-
         #[cfg(feature = "objc2-core-foundation")]
-        /// Returns a rectangle the defines the bounds of non-(0,0,0,0) pixels in the image.
-        /// > Note: the ``extent`` of `CIImage`` may be infinite or have a non-zero origin.
         #[unsafe(method(extent))]
         #[unsafe(method_family = none)]
         pub unsafe fn extent(&self) -> CGRect;
 
-        /// Returns YES if the image is known to have and alpha value of `1.0` over the entire image extent.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(isOpaque))]
         #[unsafe(method_family = none)]
         pub unsafe fn isOpaque(&self) -> bool;
 
-        /// Returns the metadata properties dictionary of the image.
-        ///
-        /// If the ``CIImage`` was created from `NSURL` or `NSData` then this dictionary is determined by calling `CGImageSourceCopyPropertiesAtIndex()`.
-        ///
-        /// If the ``CIImage`` was created with the ``kCIImageProperties`` option, then that dictionary is returned.
-        ///
-        /// If the ``CIImage`` was created by applying ``CIFilter-class`` or ``CIKernel`` then the
-        /// properties of the root inputImage will be returned.
         #[unsafe(method(properties))]
         #[unsafe(method_family = none)]
         pub unsafe fn properties(&self) -> Retained<NSDictionary<NSString, AnyObject>>;
@@ -1072,100 +802,21 @@ impl CIImage {
         #[unsafe(method_family = none)]
         pub unsafe fn colorSpace(&self) -> Option<Retained<CGColorSpace>>;
 
-        /// Returns the content headroom of the image.
-        ///
-        /// If the image headroom is unknown, then the value 0.0 will be returned.
-        ///
-        /// If the image headroom is known, then a value greater than or equal to 1.0 will be returned.
-        /// A value of 1.0 will be returned if the image is SDR.
-        /// A value greater than 1.0 will be returned if the image is HDR.
-        ///
-        /// The image headroom may known when a CIImage is first initialized.
-        /// If the a CIImage is initialized using:
-        /// * `NSURL` or `NSData` : the headroom may be determined by associated metadata
-        /// or deduced from pixel format or colorSpace information.
-        /// * `CGImage` : headroom may be determined by `CGImageGetHeadroomInfo()`
-        /// or deduced from pixel format or colorSpace information.
-        /// * `IOSurface` : then the headroom will be determined by `kIOSurfaceContentHeadroom`.
-        /// or deduced from pixel format or colorSpace information.
-        /// * `CVPixelBuffer` : then the headroom will be determined by `kCVImageBufferContentLightLevelInfoKey`.
-        /// or deduced from pixel format or colorSpace information.
-        /// * `BitmapData` : headroom may be deduced from pixel format or colorSpace information.
-        ///
-        /// If the image is the result of applying a ``CIFilter-class`` or ``CIKernel``, this method will return `0.0`.
-        ///
-        /// There are exceptions to this.  Applying a `CIWarpKernel`` or certain ``CIFilter-class``
-        /// (e.g. `CIGaussianBlur`, `CILanczosScaleTransform`, `CIAreaAverage` and some others)
-        /// to an image will result in a ``CIImage`` instance with the same `contentHeadroom` property value.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(contentHeadroom))]
         #[unsafe(method_family = none)]
         pub unsafe fn contentHeadroom(&self) -> c_float;
 
-        /// Returns the content average light level of the image.
-        ///
-        /// If the image average light level is unknown, then the value 0.0 will be returned.
-        ///
-        /// If the image headroom is known, then a value greater than or equal to 0.0 will be returned.
-        ///
-        /// The image average light level may known when a CIImage is first initialized.
-        /// If the a CIImage is initialized with a:
-        /// * `CGImage` : then the headroom will be determined by `CGImageGetContentAverageLightLevel()`.
-        /// * `CVPixelBuffer` : then the headroom will be determined by `kCVImageBufferContentLightLevelInfoKey`.
-        ///
-        /// If the image is the result of applying a ``CIFilter-class`` or ``CIKernel``, this property will return `0.0`.
-        ///
-        /// There are exceptions to this.  Applying a ``CIWarpKernel`` or certain ``CIFilter-class``
-        /// (e.g. `CIGaussianBlur`, `CILanczosScaleTransform`, `CIAreaAverage` and some others)
-        /// to an image will result in a ``CIImage`` instance with the same `contentAverageLightLevel` property value.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
-        #[unsafe(method(contentAverageLightLevel))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn contentAverageLightLevel(&self) -> c_float;
-
         #[cfg(feature = "objc2-core-video")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(pixelBuffer))]
         #[unsafe(method_family = none)]
         pub unsafe fn pixelBuffer(&self) -> Option<Retained<CVPixelBuffer>>;
 
         #[cfg(feature = "objc2-core-graphics")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(CGImage))]
         #[unsafe(method_family = none)]
         pub unsafe fn CGImage(&self) -> Option<Retained<CGImage>>;
 
         #[cfg(feature = "objc2-metal")]
-        /// Returns a Metal Texture if the Core Image image was created with a texture.
-        ///
-        /// This will return non-nil if the image was created with ``/CIImage/imageWithMTLTexture:options:`` and no options.
-        /// Otherwise this property will be `nil` you should instead call
-        /// ``/CIContext/render:toMTLTexture:commandBuffer:bounds:colorSpace:``.
-        /// > Warning: Modifying the contents of this texture will cause the ``CIImage`` instance to render with incorrect results.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(metalTexture))]
         #[unsafe(method_family = none)]
         pub unsafe fn metalTexture(&self) -> Option<Retained<ProtocolObject<dyn MTLTexture>>>;
@@ -1232,9 +883,6 @@ impl CIImage {
         pub unsafe fn autoAdjustmentFilters(&self) -> Retained<NSArray<CIFilter>>;
 
         #[cfg(feature = "CIFilter")]
-        /// # Safety
-        ///
-        /// `options` generic should be of the correct type.
         #[unsafe(method(autoAdjustmentFiltersWithOptions:))]
         #[unsafe(method_family = none)]
         pub unsafe fn autoAdjustmentFiltersWithOptions(

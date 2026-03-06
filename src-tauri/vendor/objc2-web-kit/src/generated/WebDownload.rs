@@ -94,9 +94,6 @@ extern_protocol!(
     pub unsafe trait WebDownloadDelegate: NSURLDownloadDelegate {
         #[cfg(feature = "objc2-app-kit")]
         #[cfg(target_os = "macos")]
-        /// # Safety
-        ///
-        /// `download` might not allow `None`.
         #[deprecated]
         #[optional]
         #[unsafe(method(downloadWindowForAuthenticationSheet:))]

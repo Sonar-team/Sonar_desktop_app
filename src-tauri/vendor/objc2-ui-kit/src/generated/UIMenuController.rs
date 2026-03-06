@@ -55,23 +55,23 @@ impl UIMenuController {
         #[deprecated = "UIMenuController is deprecated. Use UIEditMenuInteraction instead."]
         #[unsafe(method(sharedMenuController))]
         #[unsafe(method_family = none)]
-        pub fn sharedMenuController(mtm: MainThreadMarker) -> Retained<UIMenuController>;
+        pub unsafe fn sharedMenuController(mtm: MainThreadMarker) -> Retained<UIMenuController>;
 
         #[deprecated = "UIMenuController is deprecated. Use UIEditMenuInteraction instead."]
         #[unsafe(method(isMenuVisible))]
         #[unsafe(method_family = none)]
-        pub fn isMenuVisible(&self) -> bool;
+        pub unsafe fn isMenuVisible(&self) -> bool;
 
         /// Setter for [`isMenuVisible`][Self::isMenuVisible].
         #[deprecated = "UIMenuController is deprecated. Use UIEditMenuInteraction instead."]
         #[unsafe(method(setMenuVisible:))]
         #[unsafe(method_family = none)]
-        pub fn setMenuVisible(&self, menu_visible: bool);
+        pub unsafe fn setMenuVisible(&self, menu_visible: bool);
 
         #[deprecated = "Use showMenuFromView:rect: or hideMenuFromView: instead."]
         #[unsafe(method(setMenuVisible:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setMenuVisible_animated(&self, menu_visible: bool, animated: bool);
+        pub unsafe fn setMenuVisible_animated(&self, menu_visible: bool, animated: bool);
 
         #[cfg(all(
             feature = "UIResponder",
@@ -81,7 +81,7 @@ impl UIMenuController {
         #[deprecated = "Use showMenuFromView:rect: instead."]
         #[unsafe(method(setTargetRect:inView:))]
         #[unsafe(method_family = none)]
-        pub fn setTargetRect_inView(&self, target_rect: CGRect, target_view: &UIView);
+        pub unsafe fn setTargetRect_inView(&self, target_rect: CGRect, target_view: &UIView);
 
         #[cfg(all(
             feature = "UIResponder",
@@ -90,47 +90,45 @@ impl UIMenuController {
         ))]
         #[unsafe(method(showMenuFromView:rect:))]
         #[unsafe(method_family = none)]
-        pub fn showMenuFromView_rect(&self, target_view: &UIView, target_rect: CGRect);
+        pub unsafe fn showMenuFromView_rect(&self, target_view: &UIView, target_rect: CGRect);
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(hideMenuFromView:))]
         #[unsafe(method_family = none)]
-        pub fn hideMenuFromView(&self, target_view: &UIView);
+        pub unsafe fn hideMenuFromView(&self, target_view: &UIView);
 
         #[unsafe(method(hideMenu))]
         #[unsafe(method_family = none)]
-        pub fn hideMenu(&self);
+        pub unsafe fn hideMenu(&self);
 
         #[unsafe(method(arrowDirection))]
         #[unsafe(method_family = none)]
-        pub fn arrowDirection(&self) -> UIMenuControllerArrowDirection;
+        pub unsafe fn arrowDirection(&self) -> UIMenuControllerArrowDirection;
 
         /// Setter for [`arrowDirection`][Self::arrowDirection].
         #[unsafe(method(setArrowDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setArrowDirection(&self, arrow_direction: UIMenuControllerArrowDirection);
+        pub unsafe fn setArrowDirection(&self, arrow_direction: UIMenuControllerArrowDirection);
 
         #[unsafe(method(menuItems))]
         #[unsafe(method_family = none)]
-        pub fn menuItems(&self) -> Option<Retained<NSArray<UIMenuItem>>>;
+        pub unsafe fn menuItems(&self) -> Option<Retained<NSArray<UIMenuItem>>>;
 
         /// Setter for [`menuItems`][Self::menuItems].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setMenuItems:))]
         #[unsafe(method_family = none)]
-        pub fn setMenuItems(&self, menu_items: Option<&NSArray<UIMenuItem>>);
+        pub unsafe fn setMenuItems(&self, menu_items: Option<&NSArray<UIMenuItem>>);
 
         #[deprecated = "UIMenuController is deprecated. Use UIEditMenuInteraction instead."]
         #[unsafe(method(update))]
         #[unsafe(method_family = none)]
-        pub fn update(&self);
+        pub unsafe fn update(&self);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[deprecated = "UIMenuController is deprecated. Use UIEditMenuInteraction instead."]
         #[unsafe(method(menuFrame))]
         #[unsafe(method_family = none)]
-        pub fn menuFrame(&self) -> CGRect;
+        pub unsafe fn menuFrame(&self) -> CGRect;
     );
 }
 
@@ -139,41 +137,36 @@ impl UIMenuController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenucontrollerwillshowmenunotification?language=objc)
-    #[deprecated = "UIMenuController is deprecated. Use UIEditMenuInteraction instead."]
     pub static UIMenuControllerWillShowMenuNotification: &'static NSNotificationName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenucontrollerdidshowmenunotification?language=objc)
-    #[deprecated = "UIMenuController is deprecated. Use UIEditMenuInteraction instead."]
     pub static UIMenuControllerDidShowMenuNotification: &'static NSNotificationName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenucontrollerwillhidemenunotification?language=objc)
-    #[deprecated = "UIMenuController is deprecated. Use UIEditMenuInteraction instead."]
     pub static UIMenuControllerWillHideMenuNotification: &'static NSNotificationName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenucontrollerdidhidemenunotification?language=objc)
-    #[deprecated = "UIMenuController is deprecated. Use UIEditMenuInteraction instead."]
     pub static UIMenuControllerDidHideMenuNotification: &'static NSNotificationName;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uimenucontrollermenuframedidchangenotification?language=objc)
-    #[deprecated = "UIMenuController is deprecated. Use UIEditMenuInteraction instead."]
     pub static UIMenuControllerMenuFrameDidChangeNotification: &'static NSNotificationName;
 }
 
@@ -192,9 +185,6 @@ extern_conformance!(
 
 impl UIMenuItem {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `action` must be a valid selector.
         #[deprecated = "UIMenuItem is deprecated. Use UIEditMenuInteraction instead."]
         #[unsafe(method(initWithTitle:action:))]
         #[unsafe(method_family = init)]
@@ -207,26 +197,20 @@ impl UIMenuItem {
         #[deprecated = "UIMenuItem is deprecated. Use UIEditMenuInteraction instead."]
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated = "UIMenuItem is deprecated. Use UIEditMenuInteraction instead."]
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: &NSString);
+        pub unsafe fn setTitle(&self, title: &NSString);
 
         #[deprecated = "UIMenuItem is deprecated. Use UIEditMenuInteraction instead."]
         #[unsafe(method(action))]
         #[unsafe(method_family = none)]
-        pub fn action(&self) -> Sel;
+        pub unsafe fn action(&self) -> Sel;
 
         /// Setter for [`action`][Self::action].
-        ///
-        /// # Safety
-        ///
-        /// `action` must be a valid selector.
         #[deprecated = "UIMenuItem is deprecated. Use UIEditMenuInteraction instead."]
         #[unsafe(method(setAction:))]
         #[unsafe(method_family = none)]
@@ -239,10 +223,10 @@ impl UIMenuItem {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

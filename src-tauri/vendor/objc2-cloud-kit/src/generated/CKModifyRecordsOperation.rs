@@ -95,45 +95,23 @@ impl CKModifyRecordsOperation {
         ) -> Retained<Self>;
 
         #[cfg(feature = "CKRecord")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(recordsToSave))]
         #[unsafe(method_family = none)]
         pub unsafe fn recordsToSave(&self) -> Option<Retained<NSArray<CKRecord>>>;
 
         #[cfg(feature = "CKRecord")]
         /// Setter for [`recordsToSave`][Self::recordsToSave].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setRecordsToSave:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRecordsToSave(&self, records_to_save: Option<&NSArray<CKRecord>>);
 
         #[cfg(feature = "CKRecordID")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(recordIDsToDelete))]
         #[unsafe(method_family = none)]
         pub unsafe fn recordIDsToDelete(&self) -> Option<Retained<NSArray<CKRecordID>>>;
 
         #[cfg(feature = "CKRecordID")]
         /// Setter for [`recordIDsToDelete`][Self::recordIDsToDelete].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setRecordIDsToDelete:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRecordIDsToDelete(
@@ -150,44 +128,22 @@ impl CKModifyRecordsOperation {
         /// `CKShare`record is always treated as
         /// `CKRecordSaveIfServerRecordUnchanged,`regardless of the
         /// `savePolicy`specified.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(savePolicy))]
         #[unsafe(method_family = none)]
         pub unsafe fn savePolicy(&self) -> CKRecordSavePolicy;
 
         /// Setter for [`savePolicy`][Self::savePolicy].
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setSavePolicy:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSavePolicy(&self, save_policy: CKRecordSavePolicy);
 
         /// This property is kept by the server to identify the last known request from this client.
         /// Multiple requests from the client with the same change token will be ignored by the server.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(clientChangeTokenData))]
         #[unsafe(method_family = none)]
         pub unsafe fn clientChangeTokenData(&self) -> Option<Retained<NSData>>;
 
         /// Setter for [`clientChangeTokenData`][Self::clientChangeTokenData].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setClientChangeTokenData:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setClientChangeTokenData(&self, client_change_token_data: Option<&NSData>);
@@ -199,21 +155,11 @@ impl CKModifyRecordsOperation {
         /// Server-side write atomicity is only enforced on zones that have
         /// `CKRecordZoneCapabilityAtomic.`If
         /// `isAtomic`is YES, client-side checks are enforced regardless of the zone's capabilities.  (For example, if a record is malformed, and cannot be sent to the server, the client will forcibly fail all other records-to-be-modified in that zone)
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(atomic))]
         #[unsafe(method_family = none)]
         pub unsafe fn atomic(&self) -> bool;
 
         /// Setter for [`atomic`][Self::atomic].
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setAtomic:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAtomic(&self, atomic: bool);
@@ -228,13 +174,6 @@ impl CKModifyRecordsOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - This might not be thread-safe.
         #[unsafe(method(perRecordProgressBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn perRecordProgressBlock(
@@ -243,12 +182,6 @@ impl CKModifyRecordsOperation {
 
         #[cfg(all(feature = "CKRecord", feature = "block2"))]
         /// Setter for [`perRecordProgressBlock`][Self::perRecordProgressBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setPerRecordProgressBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPerRecordProgressBlock(
@@ -268,14 +201,6 @@ impl CKModifyRecordsOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[deprecated]
         #[unsafe(method(perRecordCompletionBlock))]
         #[unsafe(method_family = none)]
@@ -285,12 +210,6 @@ impl CKModifyRecordsOperation {
 
         #[cfg(all(feature = "CKRecord", feature = "block2"))]
         /// Setter for [`perRecordCompletionBlock`][Self::perRecordCompletionBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[deprecated]
         #[unsafe(method(setPerRecordCompletionBlock:))]
         #[unsafe(method_family = none)]
@@ -314,15 +233,6 @@ impl CKModifyRecordsOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - The returned block's argument 3 must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[unsafe(method(perRecordSaveBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn perRecordSaveBlock(
@@ -331,12 +241,6 @@ impl CKModifyRecordsOperation {
 
         #[cfg(all(feature = "CKRecord", feature = "CKRecordID", feature = "block2"))]
         /// Setter for [`perRecordSaveBlock`][Self::perRecordSaveBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setPerRecordSaveBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPerRecordSaveBlock(
@@ -353,14 +257,6 @@ impl CKModifyRecordsOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[unsafe(method(perRecordDeleteBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn perRecordDeleteBlock(
@@ -369,12 +265,6 @@ impl CKModifyRecordsOperation {
 
         #[cfg(all(feature = "CKRecordID", feature = "block2"))]
         /// Setter for [`perRecordDeleteBlock`][Self::perRecordDeleteBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setPerRecordDeleteBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPerRecordDeleteBlock(
@@ -406,15 +296,6 @@ impl CKModifyRecordsOperation {
         /// `CKOperation`instance has a private serial queue. This queue is used for all callback block invocations.
         /// This block may share mutable state with other blocks assigned to this operation, but any such mutable state
         /// should not be concurrently used outside of blocks assigned to this operation.
-        ///
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer or null.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - The returned block's argument 3 must be a valid pointer or null.
-        /// - This might not be thread-safe.
         #[unsafe(method(modifyRecordsCompletionBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn modifyRecordsCompletionBlock(
@@ -425,12 +306,6 @@ impl CKModifyRecordsOperation {
 
         #[cfg(all(feature = "CKRecord", feature = "CKRecordID", feature = "block2"))]
         /// Setter for [`modifyRecordsCompletionBlock`][Self::modifyRecordsCompletionBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setModifyRecordsCompletionBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setModifyRecordsCompletionBlock(

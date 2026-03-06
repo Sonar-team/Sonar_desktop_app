@@ -48,7 +48,7 @@ impl UIDragPreviewTarget {
         ))]
         #[unsafe(method(initWithContainer:center:transform:))]
         #[unsafe(method_family = init)]
-        pub fn initWithContainer_center_transform(
+        pub unsafe fn initWithContainer_center_transform(
             this: Allocated<Self>,
             container: &UIView,
             center: CGPoint,
@@ -62,7 +62,7 @@ impl UIDragPreviewTarget {
         ))]
         #[unsafe(method(initWithContainer:center:))]
         #[unsafe(method_family = init)]
-        pub fn initWithContainer_center(
+        pub unsafe fn initWithContainer_center(
             this: Allocated<Self>,
             container: &UIView,
             center: CGPoint,
@@ -125,7 +125,7 @@ impl UITargetedDragPreview {
         ))]
         #[unsafe(method(initWithView:parameters:target:))]
         #[unsafe(method_family = init)]
-        pub fn initWithView_parameters_target(
+        pub unsafe fn initWithView_parameters_target(
             this: Allocated<Self>,
             view: &UIView,
             parameters: &UIPreviewParameters,
@@ -139,7 +139,7 @@ impl UITargetedDragPreview {
         ))]
         #[unsafe(method(initWithView:parameters:))]
         #[unsafe(method_family = init)]
-        pub fn initWithView_parameters(
+        pub unsafe fn initWithView_parameters(
             this: Allocated<Self>,
             view: &UIView,
             parameters: &UIPreviewParameters,
@@ -148,7 +148,7 @@ impl UITargetedDragPreview {
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(initWithView:))]
         #[unsafe(method_family = init)]
-        pub fn initWithView(this: Allocated<Self>, view: &UIView) -> Retained<Self>;
+        pub unsafe fn initWithView(this: Allocated<Self>, view: &UIView) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

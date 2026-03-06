@@ -40,8 +40,6 @@ impl DOMMediaList {
         pub unsafe fn mediaText(&self) -> Retained<NSString>;
 
         /// Setter for [`mediaText`][Self::mediaText].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setMediaText:))]
         #[unsafe(method_family = none)]
@@ -57,17 +55,11 @@ impl DOMMediaList {
         #[unsafe(method_family = none)]
         pub unsafe fn item(&self, index: c_uint) -> Option<Retained<NSString>>;
 
-        /// # Safety
-        ///
-        /// `old_medium` might not allow `None`.
         #[deprecated]
         #[unsafe(method(deleteMedium:))]
         #[unsafe(method_family = none)]
         pub unsafe fn deleteMedium(&self, old_medium: Option<&NSString>);
 
-        /// # Safety
-        ///
-        /// `new_medium` might not allow `None`.
         #[deprecated]
         #[unsafe(method(appendMedium:))]
         #[unsafe(method_family = none)]

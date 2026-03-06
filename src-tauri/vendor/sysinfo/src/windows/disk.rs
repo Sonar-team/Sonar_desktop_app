@@ -49,22 +49,22 @@ pub(crate) fn get_volume_guid_paths() -> Vec<Vec<u16>> {
         let Ok(handle) = FindFirstVolumeW(&mut buf[..]) else {
             sysinfo_debug!(
                 "Error: FindFirstVolumeW() = {:?}",
-                Error::from_win32().code()
+                Error::from_thread().code()
             );
             return Vec::new();
         };
         volume_names.push(from_zero_terminated(&buf[..]));
         loop {
             if FindNextVolumeW(handle, &mut buf[..]).is_err() {
-                if Error::from_win32().code() != ERROR_NO_MORE_FILES {
-                    sysinfo_debug!("Error: FindNextVolumeW = {}", Error::from_win32().code());
+                if Error::from_thread().code() != ERROR_NO_MORE_FILES {
+                    sysinfo_debug!("Error: FindNextVolumeW = {}", Error::from_thread().code());
                 }
                 break;
             }
             volume_names.push(from_zero_terminated(&buf[..]));
         }
         if FindVolumeClose(handle).is_err() {
-            sysinfo_debug!("Error: FindVolumeClose = {:?}", Error::from_win32().code());
+            sysinfo_debug!("Error: FindVolumeClose = {:?}", Error::from_thread().code());
         };
     }
     volume_names
@@ -93,7 +93,7 @@ pub(crate) unsafe fn get_volume_path_names_for_volume_name(
                 &mut path_names_output_size,
             )
         };
-        let code = volume_path_names.map_err(|_| Error::from_win32().code());
+        let code = volume_path_names.map_err(|_| Error::from_thread().code());
         match code {
             Ok(()) => break,
             Err(ERROR_MORE_DATA) => {
@@ -123,7 +123,7 @@ pub(crate) unsafe fn get_volume_path_names_for_volume_name(
 pub(crate) struct DiskInner {
     type_: DiskKind,
     name: OsString,
-    file_system: OsString,
+    pub(crate) file_system: OsString,
     mount_point: Vec<u16>,
     s_mount_point: OsString,
     total_space: u64,
@@ -136,6 +136,29 @@ pub(crate) struct DiskInner {
     written_bytes: u64,
     read_bytes: u64,
     updated: bool,
+}
+
+#[cfg(test)]
+impl Default for DiskInner {
+    fn default() -> Self {
+        Self {
+            type_: DiskKind::Unknown(0),
+            name: OsString::new(),
+            file_system: OsString::new(),
+            mount_point: Vec::new(),
+            s_mount_point: OsString::new(),
+            total_space: 0,
+            available_space: 0,
+            is_removable: false,
+            is_read_only: false,
+            device_path: Vec::new(),
+            old_written_bytes: 0,
+            old_read_bytes: 0,
+            written_bytes: 0,
+            read_bytes: 0,
+            updated: false,
+        }
+    }
 }
 
 impl DiskInner {
@@ -310,7 +333,7 @@ pub(crate) unsafe fn get_list(
         if !volume_info_res {
             sysinfo_debug!(
                 "Error: GetVolumeInformationW = {:?}",
-                Error::from_win32().code()
+                Error::from_thread().code()
             );
             continue;
         }

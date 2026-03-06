@@ -28,25 +28,28 @@ impl UIWindowSceneGeometryPreferencesMac {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithSystemFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithSystemFrame(this: Allocated<Self>, system_frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithSystemFrame(
+            this: Allocated<Self>,
+            system_frame: CGRect,
+        ) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The preferred system frame in the system scale where an origin of (0, 0) corresponds to the top-left
         /// corner of the main display. Defaults to CGRectNull to indicate no preference.
         #[unsafe(method(systemFrame))]
         #[unsafe(method_family = none)]
-        pub fn systemFrame(&self) -> CGRect;
+        pub unsafe fn systemFrame(&self) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`systemFrame`][Self::systemFrame].
         #[unsafe(method(setSystemFrame:))]
         #[unsafe(method_family = none)]
-        pub fn setSystemFrame(&self, system_frame: CGRect);
+        pub unsafe fn setSystemFrame(&self, system_frame: CGRect);
     );
 }
 

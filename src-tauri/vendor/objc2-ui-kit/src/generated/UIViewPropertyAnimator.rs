@@ -44,90 +44,73 @@ impl UIViewPropertyAnimator {
         #[cfg(feature = "UITimingCurveProvider")]
         #[unsafe(method(timingParameters))]
         #[unsafe(method_family = none)]
-        pub fn timingParameters(
+        pub unsafe fn timingParameters(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UITimingCurveProvider>>>;
 
         #[unsafe(method(duration))]
         #[unsafe(method_family = none)]
-        pub fn duration(&self) -> NSTimeInterval;
+        pub unsafe fn duration(&self) -> NSTimeInterval;
 
         /// Defaults to 0. This property is set when calling -[UIView startAnimationAfterDelay:].
         #[unsafe(method(delay))]
         #[unsafe(method_family = none)]
-        pub fn delay(&self) -> NSTimeInterval;
+        pub unsafe fn delay(&self) -> NSTimeInterval;
 
         /// Defaults to YES. Raises if set on an active animator.
         #[unsafe(method(isUserInteractionEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isUserInteractionEnabled(&self) -> bool;
+        pub unsafe fn isUserInteractionEnabled(&self) -> bool;
 
         /// Setter for [`isUserInteractionEnabled`][Self::isUserInteractionEnabled].
         #[unsafe(method(setUserInteractionEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setUserInteractionEnabled(&self, user_interaction_enabled: bool);
+        pub unsafe fn setUserInteractionEnabled(&self, user_interaction_enabled: bool);
 
         /// Defaults to NO. Set if you need to manage the the hit-testing of animating view hierarchies
         #[unsafe(method(isManualHitTestingEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isManualHitTestingEnabled(&self) -> bool;
+        pub unsafe fn isManualHitTestingEnabled(&self) -> bool;
 
         /// Setter for [`isManualHitTestingEnabled`][Self::isManualHitTestingEnabled].
         #[unsafe(method(setManualHitTestingEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setManualHitTestingEnabled(&self, manual_hit_testing_enabled: bool);
+        pub unsafe fn setManualHitTestingEnabled(&self, manual_hit_testing_enabled: bool);
 
         /// Defaults to YES. Raises if set on an active animator.
         #[unsafe(method(isInterruptible))]
         #[unsafe(method_family = none)]
-        pub fn isInterruptible(&self) -> bool;
+        pub unsafe fn isInterruptible(&self) -> bool;
 
         /// Setter for [`isInterruptible`][Self::isInterruptible].
         #[unsafe(method(setInterruptible:))]
         #[unsafe(method_family = none)]
-        pub fn setInterruptible(&self, interruptible: bool);
+        pub unsafe fn setInterruptible(&self, interruptible: bool);
 
         /// Defaults to YES. Provides the ability for an animator to pause and scrub either linearly or using the animator’s current timing.
         #[unsafe(method(scrubsLinearly))]
         #[unsafe(method_family = none)]
-        pub fn scrubsLinearly(&self) -> bool;
+        pub unsafe fn scrubsLinearly(&self) -> bool;
 
         /// Setter for [`scrubsLinearly`][Self::scrubsLinearly].
         #[unsafe(method(setScrubsLinearly:))]
         #[unsafe(method_family = none)]
-        pub fn setScrubsLinearly(&self, scrubs_linearly: bool);
+        pub unsafe fn setScrubsLinearly(&self, scrubs_linearly: bool);
 
         /// Defaults to NO. Provides the ability for an animator to pause on completion instead of transitioning to the .inactive state.
         #[unsafe(method(pausesOnCompletion))]
         #[unsafe(method_family = none)]
-        pub fn pausesOnCompletion(&self) -> bool;
+        pub unsafe fn pausesOnCompletion(&self) -> bool;
 
         /// Setter for [`pausesOnCompletion`][Self::pausesOnCompletion].
         #[unsafe(method(setPausesOnCompletion:))]
         #[unsafe(method_family = none)]
-        pub fn setPausesOnCompletion(&self, pauses_on_completion: bool);
-
-        /// Flush all pending updates (including traits, properties, and layout) whenever the animation context changes.
-        /// This includes flushing updates:
-        /// - Before entering an animation scope, for invalidations that happened previously without animation.
-        /// - Before entering a nested animation scope, for invalidations that happened in the outer animation scope.
-        /// - Before exiting any animation scope, for invalidations that happened in that animation scope.
-        /// - Before disabling animations, for invalidations that happened in the animation scope with animations enabled.
-        /// - Before re-enabling animations, for invalidations that happened in the scope with animations disabled.
-        /// This behavior implicitly applies to any nested animation scopes, even if they don't explicitly specify this.
-        #[unsafe(method(flushUpdates))]
-        #[unsafe(method_family = none)]
-        pub fn flushUpdates(&self) -> bool;
-
-        /// Setter for [`flushUpdates`][Self::flushUpdates].
-        #[unsafe(method(setFlushUpdates:))]
-        #[unsafe(method_family = none)]
-        pub fn setFlushUpdates(&self, flush_updates: bool);
+        pub unsafe fn setPausesOnCompletion(&self, pauses_on_completion: bool);
 
         #[cfg(feature = "UITimingCurveProvider")]
         #[unsafe(method(initWithDuration:timingParameters:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDuration_timingParameters(
+        pub unsafe fn initWithDuration_timingParameters(
             this: Allocated<Self>,
             duration: NSTimeInterval,
             parameters: &ProtocolObject<dyn UITimingCurveProvider>,
@@ -137,7 +120,7 @@ impl UIViewPropertyAnimator {
         /// All convenience initializers return an animator which is not running.
         #[unsafe(method(initWithDuration:curve:animations:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDuration_curve_animations(
+        pub unsafe fn initWithDuration_curve_animations(
             this: Allocated<Self>,
             duration: NSTimeInterval,
             curve: UIViewAnimationCurve,
@@ -147,7 +130,7 @@ impl UIViewPropertyAnimator {
         #[cfg(all(feature = "block2", feature = "objc2-core-foundation"))]
         #[unsafe(method(initWithDuration:controlPoint1:controlPoint2:animations:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDuration_controlPoint1_controlPoint2_animations(
+        pub unsafe fn initWithDuration_controlPoint1_controlPoint2_animations(
             this: Allocated<Self>,
             duration: NSTimeInterval,
             point1: CGPoint,
@@ -158,7 +141,7 @@ impl UIViewPropertyAnimator {
         #[cfg(all(feature = "block2", feature = "objc2-core-foundation"))]
         #[unsafe(method(initWithDuration:dampingRatio:animations:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDuration_dampingRatio_animations(
+        pub unsafe fn initWithDuration_dampingRatio_animations(
             this: Allocated<Self>,
             duration: NSTimeInterval,
             ratio: CGFloat,
@@ -182,7 +165,7 @@ impl UIViewPropertyAnimator {
         /// propertyAnimator.
         #[unsafe(method(runningPropertyAnimatorWithDuration:delay:options:animations:completion:))]
         #[unsafe(method_family = none)]
-        pub fn runningPropertyAnimatorWithDuration_delay_options_animations_completion(
+        pub unsafe fn runningPropertyAnimatorWithDuration_delay_options_animations_completion(
             duration: NSTimeInterval,
             delay: NSTimeInterval,
             options: UIViewAnimationOptions,
@@ -198,7 +181,7 @@ impl UIViewPropertyAnimator {
         /// will be (1 - delayFactor) * animator.duration seconds.
         #[unsafe(method(addAnimations:delayFactor:))]
         #[unsafe(method_family = none)]
-        pub fn addAnimations_delayFactor(
+        pub unsafe fn addAnimations_delayFactor(
             &self,
             animation: &block2::DynBlock<dyn Fn()>,
             delay_factor: CGFloat,
@@ -214,12 +197,15 @@ impl UIViewPropertyAnimator {
         /// are no animation blocks, will start the animator in a transient paused state.
         #[unsafe(method(addAnimations:))]
         #[unsafe(method_family = none)]
-        pub fn addAnimations(&self, animation: &block2::DynBlock<dyn Fn()>);
+        pub unsafe fn addAnimations(&self, animation: &block2::DynBlock<dyn Fn()>);
 
         #[cfg(all(feature = "UIViewAnimating", feature = "block2"))]
         #[unsafe(method(addCompletion:))]
         #[unsafe(method_family = none)]
-        pub fn addCompletion(&self, completion: &block2::DynBlock<dyn Fn(UIViewAnimatingPosition)>);
+        pub unsafe fn addCompletion(
+            &self,
+            completion: &block2::DynBlock<dyn Fn(UIViewAnimatingPosition)>,
+        );
 
         #[cfg(all(feature = "UITimingCurveProvider", feature = "objc2-core-foundation"))]
         /// Provides a means to continue an animation in either the forward or reversed
@@ -230,7 +216,7 @@ impl UIViewPropertyAnimator {
         /// with a new duration and timing parameters.
         #[unsafe(method(continueAnimationWithTimingParameters:durationFactor:))]
         #[unsafe(method_family = none)]
-        pub fn continueAnimationWithTimingParameters_durationFactor(
+        pub unsafe fn continueAnimationWithTimingParameters_durationFactor(
             &self,
             parameters: Option<&ProtocolObject<dyn UITimingCurveProvider>>,
             duration_factor: CGFloat,
@@ -243,10 +229,10 @@ impl UIViewPropertyAnimator {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

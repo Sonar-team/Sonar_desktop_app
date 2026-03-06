@@ -21,9 +21,6 @@ extern_conformance!(
 impl NSIncrementalStoreNode {
     extern_methods!(
         #[cfg(feature = "NSManagedObjectID")]
-        /// # Safety
-        ///
-        /// `values` generic should be of the correct type.
         #[unsafe(method(initWithObjectID:withValues:version:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithObjectID_withValues_version(
@@ -33,9 +30,6 @@ impl NSIncrementalStoreNode {
             version: u64,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `values` generic should be of the correct type.
         #[unsafe(method(updateWithValues:version:))]
         #[unsafe(method_family = none)]
         pub unsafe fn updateWithValues_version(

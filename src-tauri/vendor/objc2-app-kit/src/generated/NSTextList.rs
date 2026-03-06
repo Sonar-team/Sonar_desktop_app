@@ -147,7 +147,7 @@ impl NSTextList {
     extern_methods!(
         #[unsafe(method(initWithMarkerFormat:options:startingItemNumber:))]
         #[unsafe(method_family = init)]
-        pub fn initWithMarkerFormat_options_startingItemNumber(
+        pub unsafe fn initWithMarkerFormat_options_startingItemNumber(
             this: Allocated<Self>,
             marker_format: &NSTextListMarkerFormat,
             options: NSTextListOptions,
@@ -156,15 +156,12 @@ impl NSTextList {
 
         #[unsafe(method(initWithMarkerFormat:options:))]
         #[unsafe(method_family = init)]
-        pub fn initWithMarkerFormat_options(
+        pub unsafe fn initWithMarkerFormat_options(
             this: Allocated<Self>,
             marker_format: &NSTextListMarkerFormat,
             options: NSUInteger,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -174,32 +171,28 @@ impl NSTextList {
 
         #[unsafe(method(markerFormat))]
         #[unsafe(method_family = none)]
-        pub fn markerFormat(&self) -> Retained<NSTextListMarkerFormat>;
+        pub unsafe fn markerFormat(&self) -> Retained<NSTextListMarkerFormat>;
 
         #[unsafe(method(listOptions))]
         #[unsafe(method_family = none)]
-        pub fn listOptions(&self) -> NSTextListOptions;
+        pub unsafe fn listOptions(&self) -> NSTextListOptions;
 
         #[unsafe(method(startingItemNumber))]
         #[unsafe(method_family = none)]
-        pub fn startingItemNumber(&self) -> NSInteger;
+        pub unsafe fn startingItemNumber(&self) -> NSInteger;
 
         /// Setter for [`startingItemNumber`][Self::startingItemNumber].
         #[unsafe(method(setStartingItemNumber:))]
         #[unsafe(method_family = none)]
-        pub fn setStartingItemNumber(&self, starting_item_number: NSInteger);
+        pub unsafe fn setStartingItemNumber(&self, starting_item_number: NSInteger);
 
         #[unsafe(method(isOrdered))]
         #[unsafe(method_family = none)]
-        pub fn isOrdered(&self) -> bool;
+        pub unsafe fn isOrdered(&self) -> bool;
 
         #[unsafe(method(markerForItemNumber:))]
         #[unsafe(method_family = none)]
-        pub fn markerForItemNumber(&self, item_number: NSInteger) -> Retained<NSString>;
-
-        #[unsafe(method(includesTextListMarkers))]
-        #[unsafe(method_family = none)]
-        pub fn includesTextListMarkers() -> bool;
+        pub unsafe fn markerForItemNumber(&self, item_number: NSInteger) -> Retained<NSString>;
     );
 }
 
@@ -208,17 +201,10 @@ impl NSTextList {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSTextList {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

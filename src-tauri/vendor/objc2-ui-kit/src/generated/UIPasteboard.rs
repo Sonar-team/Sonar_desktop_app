@@ -18,7 +18,6 @@ extern "C" {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uipasteboardnamefind?language=objc)
-    #[deprecated = "The Find pasteboard is no longer available."]
     pub static UIPasteboardNameFind: &'static NSString;
 }
 
@@ -137,37 +136,27 @@ impl UIPasteboard {
     extern_methods!(
         #[unsafe(method(generalPasteboard))]
         #[unsafe(method_family = none)]
-        pub fn generalPasteboard() -> Retained<UIPasteboard>;
+        pub unsafe fn generalPasteboard() -> Retained<UIPasteboard>;
 
         #[unsafe(method(pasteboardWithName:create:))]
         #[unsafe(method_family = none)]
-        pub fn pasteboardWithName_create(
+        pub unsafe fn pasteboardWithName_create(
             pasteboard_name: &UIPasteboardName,
             create: bool,
         ) -> Option<Retained<UIPasteboard>>;
 
         #[unsafe(method(pasteboardWithUniqueName))]
         #[unsafe(method_family = none)]
-        pub fn pasteboardWithUniqueName() -> Retained<UIPasteboard>;
+        pub unsafe fn pasteboardWithUniqueName() -> Retained<UIPasteboard>;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
         pub unsafe fn name(&self) -> Retained<UIPasteboardName>;
 
         #[unsafe(method(removePasteboardWithName:))]
         #[unsafe(method_family = none)]
-        pub fn removePasteboardWithName(pasteboard_name: &UIPasteboardName);
+        pub unsafe fn removePasteboardWithName(pasteboard_name: &UIPasteboardName);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(isPersistent))]
         #[unsafe(method_family = none)]
         pub unsafe fn isPersistent(&self) -> bool;
@@ -175,40 +164,24 @@ impl UIPasteboard {
         #[deprecated = "Do not set persistence on pasteboards. This property is set automatically."]
         #[unsafe(method(setPersistent:))]
         #[unsafe(method_family = none)]
-        pub fn setPersistent(&self, persistent: bool);
+        pub unsafe fn setPersistent(&self, persistent: bool);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(changeCount))]
         #[unsafe(method_family = none)]
         pub unsafe fn changeCount(&self) -> NSInteger;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(itemProviders))]
         #[unsafe(method_family = none)]
         pub unsafe fn itemProviders(&self) -> Retained<NSArray<NSItemProvider>>;
 
         /// Setter for [`itemProviders`][Self::itemProviders].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setItemProviders:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setItemProviders(&self, item_providers: &NSArray<NSItemProvider>);
 
         #[unsafe(method(setItemProviders:localOnly:expirationDate:))]
         #[unsafe(method_family = none)]
-        pub fn setItemProviders_localOnly_expirationDate(
+        pub unsafe fn setItemProviders_localOnly_expirationDate(
             &self,
             item_providers: &NSArray<NSItemProvider>,
             local_only: bool,
@@ -217,45 +190,42 @@ impl UIPasteboard {
 
         #[unsafe(method(setObjects:))]
         #[unsafe(method_family = none)]
-        pub fn setObjects(&self, objects: &NSArray<ProtocolObject<dyn NSItemProviderWriting>>);
+        pub unsafe fn setObjects(
+            &self,
+            objects: &NSArray<ProtocolObject<dyn NSItemProviderWriting>>,
+        );
 
         #[unsafe(method(setObjects:localOnly:expirationDate:))]
         #[unsafe(method_family = none)]
-        pub fn setObjects_localOnly_expirationDate(
+        pub unsafe fn setObjects_localOnly_expirationDate(
             &self,
             objects: &NSArray<ProtocolObject<dyn NSItemProviderWriting>>,
             local_only: bool,
             expiration_date: Option<&NSDate>,
         );
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(pasteboardTypes))]
         #[unsafe(method_family = none)]
         pub unsafe fn pasteboardTypes(&self) -> Retained<NSArray<NSString>>;
 
         #[unsafe(method(containsPasteboardTypes:))]
         #[unsafe(method_family = none)]
-        pub fn containsPasteboardTypes(&self, pasteboard_types: &NSArray<NSString>) -> bool;
+        pub unsafe fn containsPasteboardTypes(&self, pasteboard_types: &NSArray<NSString>) -> bool;
 
         #[unsafe(method(dataForPasteboardType:))]
         #[unsafe(method_family = none)]
-        pub fn dataForPasteboardType(&self, pasteboard_type: &NSString)
-            -> Option<Retained<NSData>>;
+        pub unsafe fn dataForPasteboardType(
+            &self,
+            pasteboard_type: &NSString,
+        ) -> Option<Retained<NSData>>;
 
         #[unsafe(method(valueForPasteboardType:))]
         #[unsafe(method_family = none)]
-        pub fn valueForPasteboardType(
+        pub unsafe fn valueForPasteboardType(
             &self,
             pasteboard_type: &NSString,
         ) -> Option<Retained<AnyObject>>;
 
-        /// # Safety
-        ///
-        /// `value` should be of the correct type.
         #[unsafe(method(setValue:forPasteboardType:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setValue_forPasteboardType(
@@ -266,27 +236,22 @@ impl UIPasteboard {
 
         #[unsafe(method(setData:forPasteboardType:))]
         #[unsafe(method_family = none)]
-        pub fn setData_forPasteboardType(&self, data: &NSData, pasteboard_type: &NSString);
+        pub unsafe fn setData_forPasteboardType(&self, data: &NSData, pasteboard_type: &NSString);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(numberOfItems))]
         #[unsafe(method_family = none)]
         pub unsafe fn numberOfItems(&self) -> NSInteger;
 
         #[unsafe(method(pasteboardTypesForItemSet:))]
         #[unsafe(method_family = none)]
-        pub fn pasteboardTypesForItemSet(
+        pub unsafe fn pasteboardTypesForItemSet(
             &self,
             item_set: Option<&NSIndexSet>,
         ) -> Option<Retained<NSArray<NSArray<NSString>>>>;
 
         #[unsafe(method(containsPasteboardTypes:inItemSet:))]
         #[unsafe(method_family = none)]
-        pub fn containsPasteboardTypes_inItemSet(
+        pub unsafe fn containsPasteboardTypes_inItemSet(
             &self,
             pasteboard_types: &NSArray<NSString>,
             item_set: Option<&NSIndexSet>,
@@ -294,14 +259,14 @@ impl UIPasteboard {
 
         #[unsafe(method(itemSetWithPasteboardTypes:))]
         #[unsafe(method_family = none)]
-        pub fn itemSetWithPasteboardTypes(
+        pub unsafe fn itemSetWithPasteboardTypes(
             &self,
             pasteboard_types: &NSArray<NSString>,
         ) -> Option<Retained<NSIndexSet>>;
 
         #[unsafe(method(valuesForPasteboardType:inItemSet:))]
         #[unsafe(method_family = none)]
-        pub fn valuesForPasteboardType_inItemSet(
+        pub unsafe fn valuesForPasteboardType_inItemSet(
             &self,
             pasteboard_type: &NSString,
             item_set: Option<&NSIndexSet>,
@@ -309,44 +274,25 @@ impl UIPasteboard {
 
         #[unsafe(method(dataForPasteboardType:inItemSet:))]
         #[unsafe(method_family = none)]
-        pub fn dataForPasteboardType_inItemSet(
+        pub unsafe fn dataForPasteboardType_inItemSet(
             &self,
             pasteboard_type: &NSString,
             item_set: Option<&NSIndexSet>,
         ) -> Option<Retained<NSArray<NSData>>>;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(items))]
         #[unsafe(method_family = none)]
         pub unsafe fn items(&self) -> Retained<NSArray<NSDictionary<NSString, AnyObject>>>;
 
         /// Setter for [`items`][Self::items].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// - `items` generic generic should be of the correct type.
-        /// - This might not be thread-safe.
         #[unsafe(method(setItems:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setItems(&self, items: &NSArray<NSDictionary<NSString, AnyObject>>);
 
-        /// # Safety
-        ///
-        /// `items` generic generic should be of the correct type.
         #[unsafe(method(addItems:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addItems(&self, items: &NSArray<NSDictionary<NSString, AnyObject>>);
 
-        /// # Safety
-        ///
-        /// - `items` generic generic should be of the correct type.
-        /// - `options` generic should be of the correct type.
         #[unsafe(method(setItems:options:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setItems_options(
@@ -355,206 +301,98 @@ impl UIPasteboard {
             options: &NSDictionary<UIPasteboardOption, AnyObject>,
         );
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(string))]
         #[unsafe(method_family = none)]
         pub unsafe fn string(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`string`][Self::string].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setString:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setString(&self, string: Option<&NSString>);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(strings))]
         #[unsafe(method_family = none)]
         pub unsafe fn strings(&self) -> Option<Retained<NSArray<NSString>>>;
 
         /// Setter for [`strings`][Self::strings].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setStrings:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setStrings(&self, strings: Option<&NSArray<NSString>>);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(URL))]
         #[unsafe(method_family = none)]
         pub unsafe fn URL(&self) -> Option<Retained<NSURL>>;
 
         /// Setter for [`URL`][Self::URL].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setURL:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setURL(&self, url: Option<&NSURL>);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(URLs))]
         #[unsafe(method_family = none)]
         pub unsafe fn URLs(&self) -> Option<Retained<NSArray<NSURL>>>;
 
         /// Setter for [`URLs`][Self::URLs].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setURLs:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setURLs(&self, ur_ls: Option<&NSArray<NSURL>>);
 
         #[cfg(feature = "UIImage")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
         pub unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`image`][Self::image].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setImage(&self, image: Option<&UIImage>);
 
         #[cfg(feature = "UIImage")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(images))]
         #[unsafe(method_family = none)]
         pub unsafe fn images(&self) -> Option<Retained<NSArray<UIImage>>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`images`][Self::images].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setImages:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setImages(&self, images: Option<&NSArray<UIImage>>);
 
         #[cfg(feature = "UIColor")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
         pub unsafe fn color(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`color`][Self::color].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setColor(&self, color: Option<&UIColor>);
 
         #[cfg(feature = "UIColor")]
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(colors))]
         #[unsafe(method_family = none)]
         pub unsafe fn colors(&self) -> Option<Retained<NSArray<UIColor>>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`colors`][Self::colors].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(setColors:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setColors(&self, colors: Option<&NSArray<UIColor>>);
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(hasStrings))]
         #[unsafe(method_family = none)]
         pub unsafe fn hasStrings(&self) -> bool;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(hasURLs))]
         #[unsafe(method_family = none)]
         pub unsafe fn hasURLs(&self) -> bool;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(hasImages))]
         #[unsafe(method_family = none)]
         pub unsafe fn hasImages(&self) -> bool;
 
-        /// This property is not atomic.
-        ///
-        /// # Safety
-        ///
-        /// This might not be thread-safe.
         #[unsafe(method(hasColors))]
         #[unsafe(method_family = none)]
         pub unsafe fn hasColors(&self) -> bool;
@@ -568,7 +406,7 @@ impl UIPasteboard {
         /// Parameter `completionHandler`: Receives which patterns were detected, or an error.
         #[unsafe(method(detectPatternsForPatterns:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn detectPatternsForPatterns_completionHandler(
+        pub unsafe fn detectPatternsForPatterns_completionHandler(
             &self,
             patterns: &NSSet<UIPasteboardDetectionPattern>,
             completion_handler: &block2::DynBlock<
@@ -588,7 +426,7 @@ impl UIPasteboard {
         /// or an error.
         #[unsafe(method(detectPatternsForPatterns:inItemSet:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn detectPatternsForPatterns_inItemSet_completionHandler(
+        pub unsafe fn detectPatternsForPatterns_inItemSet_completionHandler(
             &self,
             patterns: &NSSet<UIPasteboardDetectionPattern>,
             item_set: Option<&NSIndexSet>,
@@ -606,7 +444,7 @@ impl UIPasteboard {
         /// Parameter `completionHandler`: Receives which patterns and values were detected, or an error.
         #[unsafe(method(detectValuesForPatterns:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn detectValuesForPatterns_completionHandler(
+        pub unsafe fn detectValuesForPatterns_completionHandler(
             &self,
             patterns: &NSSet<UIPasteboardDetectionPattern>,
             completion_handler: &block2::DynBlock<
@@ -626,7 +464,7 @@ impl UIPasteboard {
         /// or an error.
         #[unsafe(method(detectValuesForPatterns:inItemSet:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn detectValuesForPatterns_inItemSet_completionHandler(
+        pub unsafe fn detectValuesForPatterns_inItemSet_completionHandler(
             &self,
             patterns: &NSSet<UIPasteboardDetectionPattern>,
             item_set: Option<&NSIndexSet>,
@@ -645,19 +483,12 @@ impl UIPasteboard {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for UIPasteboard {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern "C" {

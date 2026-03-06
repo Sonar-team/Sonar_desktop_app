@@ -119,29 +119,26 @@ impl UIInputView {
     extern_methods!(
         #[unsafe(method(inputViewStyle))]
         #[unsafe(method_family = none)]
-        pub fn inputViewStyle(&self) -> UIInputViewStyle;
+        pub unsafe fn inputViewStyle(&self) -> UIInputViewStyle;
 
         #[unsafe(method(allowsSelfSizing))]
         #[unsafe(method_family = none)]
-        pub fn allowsSelfSizing(&self) -> bool;
+        pub unsafe fn allowsSelfSizing(&self) -> bool;
 
         /// Setter for [`allowsSelfSizing`][Self::allowsSelfSizing].
         #[unsafe(method(setAllowsSelfSizing:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsSelfSizing(&self, allows_self_sizing: bool);
+        pub unsafe fn setAllowsSelfSizing(&self, allows_self_sizing: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:inputViewStyle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame_inputViewStyle(
+        pub unsafe fn initWithFrame_inputViewStyle(
             this: Allocated<Self>,
             frame: CGRect,
             input_view_style: UIInputViewStyle,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -158,11 +155,7 @@ impl UIInputView {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
     );
 }
 
@@ -170,8 +163,12 @@ impl UIInputView {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UIInputView {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

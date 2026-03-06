@@ -22,7 +22,6 @@ pub type REFIID = CFUUIDBytes;
 /// [Apple's documentation](https://developer.apple.com/documentation/corefoundation/iunknownvtbl?language=objc)
 #[cfg(feature = "CFUUID")]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IUnknownVTbl {
     pub(crate) _reserved: *mut c_void,

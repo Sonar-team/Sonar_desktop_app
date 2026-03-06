@@ -102,7 +102,6 @@ extern "C" {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/kcgwindowworkspace?language=objc)
-    #[deprecated = "No longer supported"]
     pub static kCGWindowWorkspace: &'static CFString;
 }
 
@@ -159,7 +158,7 @@ unsafe impl RefEncode for CGWindowListOption {
 }
 
 #[inline]
-pub extern "C-unwind" fn CGWindowListCopyWindowInfo(
+pub unsafe extern "C-unwind" fn CGWindowListCopyWindowInfo(
     option: CGWindowListOption,
     relative_to_window: CGWindowID,
 ) -> Option<CFRetained<CFArray>> {
@@ -174,7 +173,7 @@ pub extern "C-unwind" fn CGWindowListCopyWindowInfo(
 }
 
 #[inline]
-pub extern "C-unwind" fn CGWindowListCreate(
+pub unsafe extern "C-unwind" fn CGWindowListCreate(
     option: CGWindowListOption,
     relative_to_window: CGWindowID,
 ) -> Option<CFRetained<CFArray>> {
@@ -188,9 +187,6 @@ pub extern "C-unwind" fn CGWindowListCreate(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// `window_array` generic must be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn CGWindowListCreateDescriptionFromArray(
     window_array: Option<&CFArray>,
@@ -239,7 +235,7 @@ unsafe impl RefEncode for CGWindowImageOption {
 #[cfg(feature = "CGImage")]
 #[deprecated = "Please use ScreenCaptureKit instead."]
 #[inline]
-pub extern "C-unwind" fn CGWindowListCreateImage(
+pub unsafe extern "C-unwind" fn CGWindowListCreateImage(
     screen_bounds: CGRect,
     list_option: CGWindowListOption,
     window_id: CGWindowID,
@@ -258,9 +254,6 @@ pub extern "C-unwind" fn CGWindowListCreateImage(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// `window_array` generic must be of the correct type.
 #[cfg(feature = "CGImage")]
 #[deprecated = "Please use ScreenCaptureKit instead."]
 #[inline]
@@ -281,18 +274,10 @@ pub unsafe extern "C-unwind" fn CGWindowListCreateImageFromArray(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-#[inline]
-pub extern "C-unwind" fn CGPreflightScreenCaptureAccess() -> bool {
-    extern "C-unwind" {
-        fn CGPreflightScreenCaptureAccess() -> bool;
-    }
-    unsafe { CGPreflightScreenCaptureAccess() }
+extern "C-unwind" {
+    pub fn CGPreflightScreenCaptureAccess() -> bool;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGRequestScreenCaptureAccess() -> bool {
-    extern "C-unwind" {
-        fn CGRequestScreenCaptureAccess() -> bool;
-    }
-    unsafe { CGRequestScreenCaptureAccess() }
+extern "C-unwind" {
+    pub fn CGRequestScreenCaptureAccess() -> bool;
 }

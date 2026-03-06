@@ -18,13 +18,13 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(searchFieldDidStartSearching:))]
         #[unsafe(method_family = none)]
-        fn searchFieldDidStartSearching(&self, sender: &NSSearchField);
+        unsafe fn searchFieldDidStartSearching(&self, sender: &NSSearchField);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[optional]
         #[unsafe(method(searchFieldDidEndSearching:))]
         #[unsafe(method_family = none)]
-        fn searchFieldDidEndSearching(&self, sender: &NSSearchField);
+        unsafe fn searchFieldDidEndSearching(&self, sender: &NSSearchField);
     }
 );
 
@@ -181,37 +181,35 @@ impl NSSearchField {
     extern_methods!(
         #[unsafe(method(searchTextBounds))]
         #[unsafe(method_family = none)]
-        pub fn searchTextBounds(&self) -> NSRect;
+        pub unsafe fn searchTextBounds(&self) -> NSRect;
 
         #[unsafe(method(searchButtonBounds))]
         #[unsafe(method_family = none)]
-        pub fn searchButtonBounds(&self) -> NSRect;
+        pub unsafe fn searchButtonBounds(&self) -> NSRect;
 
         #[unsafe(method(cancelButtonBounds))]
         #[unsafe(method_family = none)]
-        pub fn cancelButtonBounds(&self) -> NSRect;
+        pub unsafe fn cancelButtonBounds(&self) -> NSRect;
 
         #[unsafe(method(recentSearches))]
         #[unsafe(method_family = none)]
-        pub fn recentSearches(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn recentSearches(&self) -> Retained<NSArray<NSString>>;
 
         /// Setter for [`recentSearches`][Self::recentSearches].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setRecentSearches:))]
         #[unsafe(method_family = none)]
-        pub fn setRecentSearches(&self, recent_searches: &NSArray<NSString>);
+        pub unsafe fn setRecentSearches(&self, recent_searches: &NSArray<NSString>);
 
         #[unsafe(method(recentsAutosaveName))]
         #[unsafe(method_family = none)]
-        pub fn recentsAutosaveName(&self) -> Option<Retained<NSSearchFieldRecentsAutosaveName>>;
+        pub unsafe fn recentsAutosaveName(
+            &self,
+        ) -> Option<Retained<NSSearchFieldRecentsAutosaveName>>;
 
         /// Setter for [`recentsAutosaveName`][Self::recentsAutosaveName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setRecentsAutosaveName:))]
         #[unsafe(method_family = none)]
-        pub fn setRecentsAutosaveName(
+        pub unsafe fn setRecentsAutosaveName(
             &self,
             recents_autosave_name: Option<&NSSearchFieldRecentsAutosaveName>,
         );
@@ -219,48 +217,49 @@ impl NSSearchField {
         #[cfg(feature = "NSMenu")]
         #[unsafe(method(searchMenuTemplate))]
         #[unsafe(method_family = none)]
-        pub fn searchMenuTemplate(&self) -> Option<Retained<NSMenu>>;
+        pub unsafe fn searchMenuTemplate(&self) -> Option<Retained<NSMenu>>;
 
         #[cfg(feature = "NSMenu")]
         /// Setter for [`searchMenuTemplate`][Self::searchMenuTemplate].
         #[unsafe(method(setSearchMenuTemplate:))]
         #[unsafe(method_family = none)]
-        pub fn setSearchMenuTemplate(&self, search_menu_template: Option<&NSMenu>);
+        pub unsafe fn setSearchMenuTemplate(&self, search_menu_template: Option<&NSMenu>);
 
         #[unsafe(method(sendsWholeSearchString))]
         #[unsafe(method_family = none)]
-        pub fn sendsWholeSearchString(&self) -> bool;
+        pub unsafe fn sendsWholeSearchString(&self) -> bool;
 
         /// Setter for [`sendsWholeSearchString`][Self::sendsWholeSearchString].
         #[unsafe(method(setSendsWholeSearchString:))]
         #[unsafe(method_family = none)]
-        pub fn setSendsWholeSearchString(&self, sends_whole_search_string: bool);
+        pub unsafe fn setSendsWholeSearchString(&self, sends_whole_search_string: bool);
 
         #[unsafe(method(maximumRecents))]
         #[unsafe(method_family = none)]
-        pub fn maximumRecents(&self) -> NSInteger;
+        pub unsafe fn maximumRecents(&self) -> NSInteger;
 
         /// Setter for [`maximumRecents`][Self::maximumRecents].
         #[unsafe(method(setMaximumRecents:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumRecents(&self, maximum_recents: NSInteger);
+        pub unsafe fn setMaximumRecents(&self, maximum_recents: NSInteger);
 
         #[unsafe(method(sendsSearchStringImmediately))]
         #[unsafe(method_family = none)]
-        pub fn sendsSearchStringImmediately(&self) -> bool;
+        pub unsafe fn sendsSearchStringImmediately(&self) -> bool;
 
         /// Setter for [`sendsSearchStringImmediately`][Self::sendsSearchStringImmediately].
         #[unsafe(method(setSendsSearchStringImmediately:))]
         #[unsafe(method_family = none)]
-        pub fn setSendsSearchStringImmediately(&self, sends_search_string_immediately: bool);
+        pub unsafe fn setSendsSearchStringImmediately(&self, sends_search_string_immediately: bool);
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSSearchFieldDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn NSSearchFieldDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(
@@ -281,11 +280,8 @@ impl NSSearchField {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -306,7 +302,7 @@ impl NSSearchField {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -321,7 +317,7 @@ impl NSSearchField {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -337,27 +333,27 @@ impl NSSearchField {
         #[deprecated]
         #[unsafe(method(rectForSearchTextWhenCentered:))]
         #[unsafe(method_family = none)]
-        pub fn rectForSearchTextWhenCentered(&self, is_centered: bool) -> NSRect;
+        pub unsafe fn rectForSearchTextWhenCentered(&self, is_centered: bool) -> NSRect;
 
         #[deprecated]
         #[unsafe(method(rectForSearchButtonWhenCentered:))]
         #[unsafe(method_family = none)]
-        pub fn rectForSearchButtonWhenCentered(&self, is_centered: bool) -> NSRect;
+        pub unsafe fn rectForSearchButtonWhenCentered(&self, is_centered: bool) -> NSRect;
 
         #[deprecated]
         #[unsafe(method(rectForCancelButtonWhenCentered:))]
         #[unsafe(method_family = none)]
-        pub fn rectForCancelButtonWhenCentered(&self, is_centered: bool) -> NSRect;
+        pub unsafe fn rectForCancelButtonWhenCentered(&self, is_centered: bool) -> NSRect;
 
         #[deprecated = "The placeholder centering UI design is no longer available. Setting this property is no-op."]
         #[unsafe(method(centersPlaceholder))]
         #[unsafe(method_family = none)]
-        pub fn centersPlaceholder(&self) -> bool;
+        pub unsafe fn centersPlaceholder(&self) -> bool;
 
         /// Setter for [`centersPlaceholder`][Self::centersPlaceholder].
         #[deprecated = "The placeholder centering UI design is no longer available. Setting this property is no-op."]
         #[unsafe(method(setCentersPlaceholder:))]
         #[unsafe(method_family = none)]
-        pub fn setCentersPlaceholder(&self, centers_placeholder: bool);
+        pub unsafe fn setCentersPlaceholder(&self, centers_placeholder: bool);
     );
 }

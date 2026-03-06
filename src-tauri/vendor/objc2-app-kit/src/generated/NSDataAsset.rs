@@ -37,7 +37,7 @@ impl NSDataAsset {
         /// Equivalent to -initWithName:name bundle:[NSBundle mainBundle];
         #[unsafe(method(initWithName:))]
         #[unsafe(method_family = init)]
-        pub fn initWithName(
+        pub unsafe fn initWithName(
             this: Allocated<Self>,
             name: &NSDataAssetName,
         ) -> Option<Retained<Self>>;
@@ -45,7 +45,7 @@ impl NSDataAsset {
         /// Create a data asset with the given name from the given bundle. Returns nil if the asset was not found.
         #[unsafe(method(initWithName:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithName_bundle(
+        pub unsafe fn initWithName_bundle(
             this: Allocated<Self>,
             name: &NSDataAssetName,
             bundle: &NSBundle,
@@ -54,17 +54,17 @@ impl NSDataAsset {
         /// The name used to reference the data asset
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
-        pub fn name(&self) -> Retained<NSDataAssetName>;
+        pub unsafe fn name(&self) -> Retained<NSDataAssetName>;
 
         /// The data for this asset, as stored in the asset catalog
         #[unsafe(method(data))]
         #[unsafe(method_family = none)]
-        pub fn data(&self) -> Retained<NSData>;
+        pub unsafe fn data(&self) -> Retained<NSData>;
 
         /// The Uniform Type Identifier for this data object.
         #[unsafe(method(typeIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn typeIdentifier(&self) -> Retained<NSString>;
+        pub unsafe fn typeIdentifier(&self) -> Retained<NSString>;
     );
 }
 

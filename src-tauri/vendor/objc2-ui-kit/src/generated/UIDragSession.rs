@@ -15,7 +15,7 @@ extern_protocol!(
         #[cfg(feature = "UIDragItem")]
         #[unsafe(method(items))]
         #[unsafe(method_family = none)]
-        fn items(&self) -> Retained<NSArray<UIDragItem>>;
+        unsafe fn items(&self) -> Retained<NSArray<UIDragItem>>;
 
         #[cfg(all(
             feature = "UIResponder",
@@ -24,24 +24,23 @@ extern_protocol!(
         ))]
         #[unsafe(method(locationInView:))]
         #[unsafe(method_family = none)]
-        fn locationInView(&self, view: &UIView) -> CGPoint;
+        unsafe fn locationInView(&self, view: &UIView) -> CGPoint;
 
         #[unsafe(method(allowsMoveOperation))]
         #[unsafe(method_family = none)]
-        fn allowsMoveOperation(&self) -> bool;
+        unsafe fn allowsMoveOperation(&self) -> bool;
 
         #[unsafe(method(isRestrictedToDraggingApplication))]
         #[unsafe(method_family = none)]
-        fn isRestrictedToDraggingApplication(&self) -> bool;
+        unsafe fn isRestrictedToDraggingApplication(&self) -> bool;
 
         #[unsafe(method(hasItemsConformingToTypeIdentifiers:))]
         #[unsafe(method_family = none)]
-        fn hasItemsConformingToTypeIdentifiers(&self, type_identifiers: &NSArray<NSString>)
-            -> bool;
+        unsafe fn hasItemsConformingToTypeIdentifiers(
+            &self,
+            type_identifiers: &NSArray<NSString>,
+        ) -> bool;
 
-        /// # Safety
-        ///
-        /// `a_class` must implement NSItemProviderReading.
         #[unsafe(method(canLoadObjectsOfClass:))]
         #[unsafe(method_family = none)]
         unsafe fn canLoadObjectsOfClass(&self, a_class: &AnyClass) -> bool;
@@ -53,13 +52,9 @@ extern_protocol!(
     pub unsafe trait UIDragSession: UIDragDropSession + MainThreadOnly {
         #[unsafe(method(localContext))]
         #[unsafe(method_family = none)]
-        fn localContext(&self) -> Option<Retained<AnyObject>>;
+        unsafe fn localContext(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`localContext`][Self::localContext].
-        ///
-        /// # Safety
-        ///
-        /// `local_context` should be of the correct type.
         #[unsafe(method(setLocalContext:))]
         #[unsafe(method_family = none)]
         unsafe fn setLocalContext(&self, local_context: Option<&AnyObject>);
@@ -93,24 +88,21 @@ extern_protocol!(
     {
         #[unsafe(method(localDragSession))]
         #[unsafe(method_family = none)]
-        fn localDragSession(&self) -> Option<Retained<ProtocolObject<dyn UIDragSession>>>;
+        unsafe fn localDragSession(&self) -> Option<Retained<ProtocolObject<dyn UIDragSession>>>;
 
         #[unsafe(method(progressIndicatorStyle))]
         #[unsafe(method_family = none)]
-        fn progressIndicatorStyle(&self) -> UIDropSessionProgressIndicatorStyle;
+        unsafe fn progressIndicatorStyle(&self) -> UIDropSessionProgressIndicatorStyle;
 
         /// Setter for [`progressIndicatorStyle`][Self::progressIndicatorStyle].
         #[unsafe(method(setProgressIndicatorStyle:))]
         #[unsafe(method_family = none)]
-        fn setProgressIndicatorStyle(
+        unsafe fn setProgressIndicatorStyle(
             &self,
             progress_indicator_style: UIDropSessionProgressIndicatorStyle,
         );
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `a_class` must implement NSItemProviderReading.
         #[unsafe(method(loadObjectsOfClass:completion:))]
         #[unsafe(method_family = none)]
         unsafe fn loadObjectsOfClass_completion(

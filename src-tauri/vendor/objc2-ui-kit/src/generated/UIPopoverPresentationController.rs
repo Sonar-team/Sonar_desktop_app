@@ -18,7 +18,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(prepareForPopoverPresentation:))]
         #[unsafe(method_family = none)]
-        fn prepareForPopoverPresentation(
+        unsafe fn prepareForPopoverPresentation(
             &self,
             popover_presentation_controller: &UIPopoverPresentationController,
         );
@@ -27,7 +27,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(popoverPresentationControllerShouldDismissPopover:))]
         #[unsafe(method_family = none)]
-        fn popoverPresentationControllerShouldDismissPopover(
+        unsafe fn popoverPresentationControllerShouldDismissPopover(
             &self,
             popover_presentation_controller: &UIPopoverPresentationController,
         ) -> bool;
@@ -36,7 +36,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(popoverPresentationControllerDidDismissPopover:))]
         #[unsafe(method_family = none)]
-        fn popoverPresentationControllerDidDismissPopover(
+        unsafe fn popoverPresentationControllerDidDismissPopover(
             &self,
             popover_presentation_controller: &UIPopoverPresentationController,
         );
@@ -46,9 +46,6 @@ extern_protocol!(
             feature = "UIView",
             feature = "objc2-core-foundation"
         ))]
-        /// # Safety
-        ///
-        /// `rect` must be a valid pointer.
         #[optional]
         #[unsafe(method(popoverPresentationController:willRepositionPopoverToRect:inView:))]
         #[unsafe(method_family = none)]
@@ -100,13 +97,12 @@ impl UIPopoverPresentationController {
     extern_methods!(
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIPopoverPresentationControllerDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(
@@ -117,13 +113,13 @@ impl UIPopoverPresentationController {
         #[cfg(feature = "UIPopoverSupport")]
         #[unsafe(method(permittedArrowDirections))]
         #[unsafe(method_family = none)]
-        pub fn permittedArrowDirections(&self) -> UIPopoverArrowDirection;
+        pub unsafe fn permittedArrowDirections(&self) -> UIPopoverArrowDirection;
 
         #[cfg(feature = "UIPopoverSupport")]
         /// Setter for [`permittedArrowDirections`][Self::permittedArrowDirections].
         #[unsafe(method(setPermittedArrowDirections:))]
         #[unsafe(method_family = none)]
-        pub fn setPermittedArrowDirections(
+        pub unsafe fn setPermittedArrowDirections(
             &self,
             permitted_arrow_directions: UIPopoverArrowDirection,
         );
@@ -131,38 +127,38 @@ impl UIPopoverPresentationController {
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(sourceView))]
         #[unsafe(method_family = none)]
-        pub fn sourceView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn sourceView(&self) -> Option<Retained<UIView>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         /// Setter for [`sourceView`][Self::sourceView].
         #[unsafe(method(setSourceView:))]
         #[unsafe(method_family = none)]
-        pub fn setSourceView(&self, source_view: Option<&UIView>);
+        pub unsafe fn setSourceView(&self, source_view: Option<&UIView>);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(sourceRect))]
         #[unsafe(method_family = none)]
-        pub fn sourceRect(&self) -> CGRect;
+        pub unsafe fn sourceRect(&self) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`sourceRect`][Self::sourceRect].
         #[unsafe(method(setSourceRect:))]
         #[unsafe(method_family = none)]
-        pub fn setSourceRect(&self, source_rect: CGRect);
+        pub unsafe fn setSourceRect(&self, source_rect: CGRect);
 
         #[unsafe(method(canOverlapSourceViewRect))]
         #[unsafe(method_family = none)]
-        pub fn canOverlapSourceViewRect(&self) -> bool;
+        pub unsafe fn canOverlapSourceViewRect(&self) -> bool;
 
         /// Setter for [`canOverlapSourceViewRect`][Self::canOverlapSourceViewRect].
         #[unsafe(method(setCanOverlapSourceViewRect:))]
         #[unsafe(method_family = none)]
-        pub fn setCanOverlapSourceViewRect(&self, can_overlap_source_view_rect: bool);
+        pub unsafe fn setCanOverlapSourceViewRect(&self, can_overlap_source_view_rect: bool);
 
         #[cfg(feature = "UIPopoverPresentationControllerSourceItem")]
         #[unsafe(method(sourceItem))]
         #[unsafe(method_family = none)]
-        pub fn sourceItem(
+        pub unsafe fn sourceItem(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIPopoverPresentationControllerSourceItem>>>;
 
@@ -170,7 +166,7 @@ impl UIPopoverPresentationController {
         /// Setter for [`sourceItem`][Self::sourceItem].
         #[unsafe(method(setSourceItem:))]
         #[unsafe(method_family = none)]
-        pub fn setSourceItem(
+        pub unsafe fn setSourceItem(
             &self,
             source_item: Option<&ProtocolObject<dyn UIPopoverPresentationControllerSourceItem>>,
         );
@@ -179,68 +175,60 @@ impl UIPopoverPresentationController {
         #[deprecated]
         #[unsafe(method(barButtonItem))]
         #[unsafe(method_family = none)]
-        pub fn barButtonItem(&self) -> Option<Retained<UIBarButtonItem>>;
+        pub unsafe fn barButtonItem(&self) -> Option<Retained<UIBarButtonItem>>;
 
         #[cfg(all(feature = "UIBarButtonItem", feature = "UIBarItem"))]
         /// Setter for [`barButtonItem`][Self::barButtonItem].
         #[deprecated]
         #[unsafe(method(setBarButtonItem:))]
         #[unsafe(method_family = none)]
-        pub fn setBarButtonItem(&self, bar_button_item: Option<&UIBarButtonItem>);
+        pub unsafe fn setBarButtonItem(&self, bar_button_item: Option<&UIBarButtonItem>);
 
         #[cfg(feature = "UIPopoverSupport")]
         #[unsafe(method(arrowDirection))]
         #[unsafe(method_family = none)]
-        pub fn arrowDirection(&self) -> UIPopoverArrowDirection;
+        pub unsafe fn arrowDirection(&self) -> UIPopoverArrowDirection;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(passthroughViews))]
         #[unsafe(method_family = none)]
-        pub fn passthroughViews(&self) -> Option<Retained<NSArray<UIView>>>;
+        pub unsafe fn passthroughViews(&self) -> Option<Retained<NSArray<UIView>>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         /// Setter for [`passthroughViews`][Self::passthroughViews].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPassthroughViews:))]
         #[unsafe(method_family = none)]
-        pub fn setPassthroughViews(&self, passthrough_views: Option<&NSArray<UIView>>);
+        pub unsafe fn setPassthroughViews(&self, passthrough_views: Option<&NSArray<UIView>>);
 
         #[cfg(feature = "UIColor")]
         #[unsafe(method(backgroundColor))]
         #[unsafe(method_family = none)]
-        pub fn backgroundColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn backgroundColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`backgroundColor`][Self::backgroundColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBackgroundColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundColor(&self, background_color: Option<&UIColor>);
+        pub unsafe fn setBackgroundColor(&self, background_color: Option<&UIColor>);
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         #[unsafe(method(popoverLayoutMargins))]
         #[unsafe(method_family = none)]
-        pub fn popoverLayoutMargins(&self) -> UIEdgeInsets;
+        pub unsafe fn popoverLayoutMargins(&self) -> UIEdgeInsets;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Setter for [`popoverLayoutMargins`][Self::popoverLayoutMargins].
         #[unsafe(method(setPopoverLayoutMargins:))]
         #[unsafe(method_family = none)]
-        pub fn setPopoverLayoutMargins(&self, popover_layout_margins: UIEdgeInsets);
+        pub unsafe fn setPopoverLayoutMargins(&self, popover_layout_margins: UIEdgeInsets);
 
         #[cfg(feature = "UIPopoverBackgroundView")]
         #[unsafe(method(popoverBackgroundViewClass))]
         #[unsafe(method_family = none)]
-        pub fn popoverBackgroundViewClass(&self) -> Option<&'static AnyClass>;
+        pub unsafe fn popoverBackgroundViewClass(&self) -> Option<&'static AnyClass>;
 
         #[cfg(feature = "UIPopoverBackgroundView")]
         /// Setter for [`popoverBackgroundViewClass`][Self::popoverBackgroundViewClass].
-        ///
-        /// # Safety
-        ///
-        /// `popover_background_view_class` must implement UIPopoverBackgroundViewMethods.
         #[unsafe(method(setPopoverBackgroundViewClass:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPopoverBackgroundViewClass(
@@ -251,7 +239,7 @@ impl UIPopoverPresentationController {
         #[cfg(feature = "UISheetPresentationController")]
         #[unsafe(method(adaptiveSheetPresentationController))]
         #[unsafe(method_family = none)]
-        pub fn adaptiveSheetPresentationController(
+        pub unsafe fn adaptiveSheetPresentationController(
             &self,
         ) -> Retained<UISheetPresentationController>;
     );
@@ -264,7 +252,7 @@ impl UIPopoverPresentationController {
         #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
         #[unsafe(method(initWithPresentedViewController:presentingViewController:))]
         #[unsafe(method_family = init)]
-        pub fn initWithPresentedViewController_presentingViewController(
+        pub unsafe fn initWithPresentedViewController_presentingViewController(
             this: Allocated<Self>,
             presented_view_controller: &UIViewController,
             presenting_view_controller: Option<&UIViewController>,

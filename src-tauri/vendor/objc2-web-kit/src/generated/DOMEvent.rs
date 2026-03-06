@@ -117,9 +117,6 @@ impl DOMEvent {
         #[unsafe(method_family = none)]
         pub unsafe fn preventDefault(&self);
 
-        /// # Safety
-        ///
-        /// `event_type_arg` might not allow `None`.
         #[unsafe(method(initEvent:canBubbleArg:cancelableArg:))]
         #[unsafe(method_family = none)]
         pub unsafe fn initEvent_canBubbleArg_cancelableArg(
@@ -153,13 +150,9 @@ impl DOMEvent {
 }
 
 /// DOMEventDeprecated.
-#[deprecated]
 #[cfg(all(feature = "DOMObject", feature = "WebScriptObject"))]
 impl DOMEvent {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `event_type_arg` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initEvent:::))]
         #[unsafe(method_family = none)]

@@ -9,207 +9,109 @@ extern "C" {
     pub static CGAffineTransformIdentity: CGAffineTransform;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformMake(
-    a: CGFloat,
-    b: CGFloat,
-    c: CGFloat,
-    d: CGFloat,
-    tx: CGFloat,
-    ty: CGFloat,
-) -> CGAffineTransform {
-    extern "C-unwind" {
-        fn CGAffineTransformMake(
-            a: CGFloat,
-            b: CGFloat,
-            c: CGFloat,
-            d: CGFloat,
-            tx: CGFloat,
-            ty: CGFloat,
-        ) -> CGAffineTransform;
-    }
-    unsafe { CGAffineTransformMake(a, b, c, d, tx, ty) }
+extern "C-unwind" {
+    pub fn CGAffineTransformMake(
+        a: CGFloat,
+        b: CGFloat,
+        c: CGFloat,
+        d: CGFloat,
+        tx: CGFloat,
+        ty: CGFloat,
+    ) -> CGAffineTransform;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformMakeTranslation(
-    tx: CGFloat,
-    ty: CGFloat,
-) -> CGAffineTransform {
-    extern "C-unwind" {
-        fn CGAffineTransformMakeTranslation(tx: CGFloat, ty: CGFloat) -> CGAffineTransform;
-    }
-    unsafe { CGAffineTransformMakeTranslation(tx, ty) }
+extern "C-unwind" {
+    pub fn CGAffineTransformMakeTranslation(tx: CGFloat, ty: CGFloat) -> CGAffineTransform;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformMakeScale(sx: CGFloat, sy: CGFloat) -> CGAffineTransform {
-    extern "C-unwind" {
-        fn CGAffineTransformMakeScale(sx: CGFloat, sy: CGFloat) -> CGAffineTransform;
-    }
-    unsafe { CGAffineTransformMakeScale(sx, sy) }
+extern "C-unwind" {
+    pub fn CGAffineTransformMakeScale(sx: CGFloat, sy: CGFloat) -> CGAffineTransform;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformMakeRotation(angle: CGFloat) -> CGAffineTransform {
-    extern "C-unwind" {
-        fn CGAffineTransformMakeRotation(angle: CGFloat) -> CGAffineTransform;
-    }
-    unsafe { CGAffineTransformMakeRotation(angle) }
+extern "C-unwind" {
+    pub fn CGAffineTransformMakeRotation(angle: CGFloat) -> CGAffineTransform;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformIsIdentity(t: CGAffineTransform) -> bool {
-    extern "C-unwind" {
-        fn CGAffineTransformIsIdentity(t: CGAffineTransform) -> bool;
-    }
-    unsafe { CGAffineTransformIsIdentity(t) }
+extern "C-unwind" {
+    pub fn CGAffineTransformIsIdentity(t: CGAffineTransform) -> bool;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformTranslate(
-    t: CGAffineTransform,
-    tx: CGFloat,
-    ty: CGFloat,
-) -> CGAffineTransform {
-    extern "C-unwind" {
-        fn CGAffineTransformTranslate(
-            t: CGAffineTransform,
-            tx: CGFloat,
-            ty: CGFloat,
-        ) -> CGAffineTransform;
-    }
-    unsafe { CGAffineTransformTranslate(t, tx, ty) }
+extern "C-unwind" {
+    pub fn CGAffineTransformTranslate(
+        t: CGAffineTransform,
+        tx: CGFloat,
+        ty: CGFloat,
+    ) -> CGAffineTransform;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformScale(
-    t: CGAffineTransform,
-    sx: CGFloat,
-    sy: CGFloat,
-) -> CGAffineTransform {
-    extern "C-unwind" {
-        fn CGAffineTransformScale(
-            t: CGAffineTransform,
-            sx: CGFloat,
-            sy: CGFloat,
-        ) -> CGAffineTransform;
-    }
-    unsafe { CGAffineTransformScale(t, sx, sy) }
+extern "C-unwind" {
+    pub fn CGAffineTransformScale(
+        t: CGAffineTransform,
+        sx: CGFloat,
+        sy: CGFloat,
+    ) -> CGAffineTransform;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformRotate(
-    t: CGAffineTransform,
-    angle: CGFloat,
-) -> CGAffineTransform {
-    extern "C-unwind" {
-        fn CGAffineTransformRotate(t: CGAffineTransform, angle: CGFloat) -> CGAffineTransform;
-    }
-    unsafe { CGAffineTransformRotate(t, angle) }
+extern "C-unwind" {
+    pub fn CGAffineTransformRotate(t: CGAffineTransform, angle: CGFloat) -> CGAffineTransform;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformInvert(t: CGAffineTransform) -> CGAffineTransform {
-    extern "C-unwind" {
-        fn CGAffineTransformInvert(t: CGAffineTransform) -> CGAffineTransform;
-    }
-    unsafe { CGAffineTransformInvert(t) }
+extern "C-unwind" {
+    pub fn CGAffineTransformInvert(t: CGAffineTransform) -> CGAffineTransform;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformConcat(
-    t1: CGAffineTransform,
-    t2: CGAffineTransform,
-) -> CGAffineTransform {
-    extern "C-unwind" {
-        fn CGAffineTransformConcat(
-            t1: CGAffineTransform,
-            t2: CGAffineTransform,
-        ) -> CGAffineTransform;
-    }
-    unsafe { CGAffineTransformConcat(t1, t2) }
+extern "C-unwind" {
+    pub fn CGAffineTransformConcat(
+        t1: CGAffineTransform,
+        t2: CGAffineTransform,
+    ) -> CGAffineTransform;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformEqualToTransform(
-    t1: CGAffineTransform,
-    t2: CGAffineTransform,
-) -> bool {
-    extern "C-unwind" {
-        fn CGAffineTransformEqualToTransform(t1: CGAffineTransform, t2: CGAffineTransform) -> bool;
-    }
-    unsafe { CGAffineTransformEqualToTransform(t1, t2) }
+extern "C-unwind" {
+    pub fn CGAffineTransformEqualToTransform(t1: CGAffineTransform, t2: CGAffineTransform) -> bool;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGPointApplyAffineTransform(
-    point: CGPoint,
-    t: CGAffineTransform,
-) -> CGPoint {
-    extern "C-unwind" {
-        fn CGPointApplyAffineTransform(point: CGPoint, t: CGAffineTransform) -> CGPoint;
-    }
-    unsafe { CGPointApplyAffineTransform(point, t) }
+extern "C-unwind" {
+    pub fn CGPointApplyAffineTransform(point: CGPoint, t: CGAffineTransform) -> CGPoint;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGSizeApplyAffineTransform(size: CGSize, t: CGAffineTransform) -> CGSize {
-    extern "C-unwind" {
-        fn CGSizeApplyAffineTransform(size: CGSize, t: CGAffineTransform) -> CGSize;
-    }
-    unsafe { CGSizeApplyAffineTransform(size, t) }
+extern "C-unwind" {
+    pub fn CGSizeApplyAffineTransform(size: CGSize, t: CGAffineTransform) -> CGSize;
 }
 
-#[inline]
-pub extern "C-unwind" fn CGRectApplyAffineTransform(rect: CGRect, t: CGAffineTransform) -> CGRect {
-    extern "C-unwind" {
-        fn CGRectApplyAffineTransform(rect: CGRect, t: CGAffineTransform) -> CGRect;
-    }
-    unsafe { CGRectApplyAffineTransform(rect, t) }
+extern "C-unwind" {
+    pub fn CGRectApplyAffineTransform(rect: CGRect, t: CGAffineTransform) -> CGRect;
 }
 
-/// Decompose a CGAffineTransform into a scale * shear * rotation * translation
-///
-/// This decomposition method may be used to provide insight into what a
-/// arbitrary CGAffineTransform does. This may be necessary, for example, because
-/// an algorithm would like to know what the scaling portion of a transform is before rotation,
-/// or perhaps because some part of a transform is undesired and your application would like
-/// to replace a portion of it with a different transformation.
-///
-/// Since there are many ways to make a affine transform out of other affine transforms
-/// this method can not tell us the ordering of geometric steps used to create the original
-/// CGAffineTransform. It tells us what the transform does, not how it was made.
-///
-///
-/// Parameter `transform`: The CGAffineTransform to decompose
-///
-/// Returns: A decomposed set of geometric operations, the product of which is the CGAffineTransform.
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformDecompose(
-    transform: CGAffineTransform,
-) -> CGAffineTransformComponents {
-    extern "C-unwind" {
-        fn CGAffineTransformDecompose(transform: CGAffineTransform) -> CGAffineTransformComponents;
-    }
-    unsafe { CGAffineTransformDecompose(transform) }
+extern "C-unwind" {
+    /// Decompose a CGAffineTransform into a scale * shear * rotation * translation
+    ///
+    /// This decomposition method may be used to provide insight into what a
+    /// arbitrary CGAffineTransform does. This may be necessary, for example, because
+    /// an algorithm would like to know what the scaling portion of a transform is before rotation,
+    /// or perhaps because some part of a transform is undesired and your application would like
+    /// to replace a portion of it with a different transformation.
+    ///
+    /// Since there are many ways to make a affine transform out of other affine transforms
+    /// this method can not tell us the ordering of geometric steps used to create the original
+    /// CGAffineTransform. It tells us what the transform does, not how it was made.
+    ///
+    ///
+    /// Parameter `transform`: The CGAffineTransform to decompose
+    ///
+    /// Returns: A decomposed set of geometric operations, the product of which is the CGAffineTransform.
+    pub fn CGAffineTransformDecompose(transform: CGAffineTransform) -> CGAffineTransformComponents;
 }
 
-/// Create CGAffineTransform from scale * shear * rotation * translation CGAffineTransformComponents
-///
-/// Parameter `components`: The set of CGAffineTransformComponents to use to create a new CGAffineTransform
-///
-/// Returns: A new CGAffineTransform built from the provided components
-#[inline]
-pub extern "C-unwind" fn CGAffineTransformMakeWithComponents(
-    components: CGAffineTransformComponents,
-) -> CGAffineTransform {
-    extern "C-unwind" {
-        fn CGAffineTransformMakeWithComponents(
-            components: CGAffineTransformComponents,
-        ) -> CGAffineTransform;
-    }
-    unsafe { CGAffineTransformMakeWithComponents(components) }
+extern "C-unwind" {
+    /// Create CGAffineTransform from scale * shear * rotation * translation CGAffineTransformComponents
+    ///
+    /// Parameter `components`: The set of CGAffineTransformComponents to use to create a new CGAffineTransform
+    ///
+    /// Returns: A new CGAffineTransform built from the provided components
+    pub fn CGAffineTransformMakeWithComponents(
+        components: CGAffineTransformComponents,
+    ) -> CGAffineTransform;
 }
 
 // TODO: pub fn __CGAffineTransformMake(a: CGFloat,b: CGFloat,c: CGFloat,d: CGFloat,tx: CGFloat,ty: CGFloat,) -> CGAffineTransform;

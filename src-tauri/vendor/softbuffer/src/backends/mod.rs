@@ -1,48 +1,19 @@
 use crate::{ContextInterface, InitError};
 use raw_window_handle::HasDisplayHandle;
 
-#[cfg(target_os = "android")]
-pub(crate) mod android;
 #[cfg(target_vendor = "apple")]
 pub(crate) mod cg;
-#[cfg(all(
-    feature = "kms",
-    not(any(
-        target_os = "android",
-        target_vendor = "apple",
-        target_os = "redox",
-        target_family = "wasm",
-        target_os = "windows"
-    ))
-))]
+#[cfg(kms_platform)]
 pub(crate) mod kms;
 #[cfg(target_os = "redox")]
 pub(crate) mod orbital;
-#[cfg(all(
-    feature = "wayland",
-    not(any(
-        target_os = "android",
-        target_vendor = "apple",
-        target_os = "redox",
-        target_family = "wasm",
-        target_os = "windows"
-    ))
-))]
+#[cfg(wayland_platform)]
 pub(crate) mod wayland;
-#[cfg(target_family = "wasm")]
+#[cfg(target_arch = "wasm32")]
 pub(crate) mod web;
 #[cfg(target_os = "windows")]
 pub(crate) mod win32;
-#[cfg(all(
-    feature = "x11",
-    not(any(
-        target_os = "android",
-        target_vendor = "apple",
-        target_os = "redox",
-        target_family = "wasm",
-        target_os = "windows"
-    ))
-))]
+#[cfg(x11_platform)]
 pub(crate) mod x11;
 
 impl<D: HasDisplayHandle> ContextInterface<D> for D {

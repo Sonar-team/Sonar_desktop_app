@@ -127,43 +127,39 @@ impl UIRefreshControl {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(isRefreshing))]
         #[unsafe(method_family = none)]
-        pub fn isRefreshing(&self) -> bool;
+        pub unsafe fn isRefreshing(&self) -> bool;
 
         #[cfg(feature = "UIColor")]
         #[unsafe(method(tintColor))]
         #[unsafe(method_family = none)]
-        pub fn tintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn tintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`tintColor`][Self::tintColor].
-        ///
-        /// # Safety
-        ///
-        /// `tint_color` might not allow `None`.
         #[unsafe(method(setTintColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTintColor(&self, tint_color: Option<&UIColor>);
 
         #[unsafe(method(attributedTitle))]
         #[unsafe(method_family = none)]
-        pub fn attributedTitle(&self) -> Option<Retained<NSAttributedString>>;
+        pub unsafe fn attributedTitle(&self) -> Option<Retained<NSAttributedString>>;
 
         /// Setter for [`attributedTitle`][Self::attributedTitle].
         #[unsafe(method(setAttributedTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributedTitle(&self, attributed_title: Option<&NSAttributedString>);
+        pub unsafe fn setAttributedTitle(&self, attributed_title: Option<&NSAttributedString>);
 
         #[unsafe(method(beginRefreshing))]
         #[unsafe(method_family = none)]
-        pub fn beginRefreshing(&self);
+        pub unsafe fn beginRefreshing(&self);
 
         #[unsafe(method(endRefreshing))]
         #[unsafe(method_family = none)]
-        pub fn endRefreshing(&self);
+        pub unsafe fn endRefreshing(&self);
     );
 }
 
@@ -174,11 +170,8 @@ impl UIRefreshControl {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -194,7 +187,7 @@ impl UIRefreshControl {
         /// Initializes the control and adds primaryAction for the UIControlEventPrimaryActionTriggered control event. Subclasses of UIControl may alter or add behaviors around the usage of primaryAction, see subclass documentation of this initializer for additional information.
         #[unsafe(method(initWithFrame:primaryAction:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame_primaryAction(
+        pub unsafe fn initWithFrame_primaryAction(
             this: Allocated<Self>,
             frame: CGRect,
             primary_action: Option<&UIAction>,
@@ -208,6 +201,6 @@ impl UIRefreshControl {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

@@ -79,16 +79,13 @@ impl NSTextSelection {
         #[cfg(feature = "NSTextRange")]
         #[unsafe(method(initWithRanges:affinity:granularity:))]
         #[unsafe(method_family = init)]
-        pub fn initWithRanges_affinity_granularity(
+        pub unsafe fn initWithRanges_affinity_granularity(
             this: Allocated<Self>,
             text_ranges: &NSArray<NSTextRange>,
             affinity: NSTextSelectionAffinity,
             granularity: NSTextSelectionGranularity,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -99,7 +96,7 @@ impl NSTextSelection {
         #[cfg(feature = "NSTextRange")]
         #[unsafe(method(initWithRange:affinity:granularity:))]
         #[unsafe(method_family = init)]
-        pub fn initWithRange_affinity_granularity(
+        pub unsafe fn initWithRange_affinity_granularity(
             this: Allocated<Self>,
             range: &NSTextRange,
             affinity: NSTextSelectionAffinity,
@@ -109,7 +106,7 @@ impl NSTextSelection {
         #[cfg(feature = "NSTextRange")]
         #[unsafe(method(initWithLocation:affinity:))]
         #[unsafe(method_family = init)]
-        pub fn initWithLocation_affinity(
+        pub unsafe fn initWithLocation_affinity(
             this: Allocated<Self>,
             location: &ProtocolObject<dyn NSTextLocation>,
             affinity: NSTextSelectionAffinity,
@@ -122,44 +119,44 @@ impl NSTextSelection {
         #[cfg(feature = "NSTextRange")]
         #[unsafe(method(textRanges))]
         #[unsafe(method_family = none)]
-        pub fn textRanges(&self) -> Retained<NSArray<NSTextRange>>;
+        pub unsafe fn textRanges(&self) -> Retained<NSArray<NSTextRange>>;
 
         #[unsafe(method(granularity))]
         #[unsafe(method_family = none)]
-        pub fn granularity(&self) -> NSTextSelectionGranularity;
+        pub unsafe fn granularity(&self) -> NSTextSelectionGranularity;
 
         #[unsafe(method(affinity))]
         #[unsafe(method_family = none)]
-        pub fn affinity(&self) -> NSTextSelectionAffinity;
+        pub unsafe fn affinity(&self) -> NSTextSelectionAffinity;
 
         #[unsafe(method(isTransient))]
         #[unsafe(method_family = none)]
-        pub fn isTransient(&self) -> bool;
+        pub unsafe fn isTransient(&self) -> bool;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(anchorPositionOffset))]
         #[unsafe(method_family = none)]
-        pub fn anchorPositionOffset(&self) -> CGFloat;
+        pub unsafe fn anchorPositionOffset(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`anchorPositionOffset`][Self::anchorPositionOffset].
         #[unsafe(method(setAnchorPositionOffset:))]
         #[unsafe(method_family = none)]
-        pub fn setAnchorPositionOffset(&self, anchor_position_offset: CGFloat);
+        pub unsafe fn setAnchorPositionOffset(&self, anchor_position_offset: CGFloat);
 
         #[unsafe(method(isLogical))]
         #[unsafe(method_family = none)]
-        pub fn isLogical(&self) -> bool;
+        pub unsafe fn isLogical(&self) -> bool;
 
         /// Setter for [`isLogical`][Self::isLogical].
         #[unsafe(method(setLogical:))]
         #[unsafe(method_family = none)]
-        pub fn setLogical(&self, logical: bool);
+        pub unsafe fn setLogical(&self, logical: bool);
 
         #[cfg(feature = "NSTextRange")]
         #[unsafe(method(secondarySelectionLocation))]
         #[unsafe(method_family = none)]
-        pub fn secondarySelectionLocation(
+        pub unsafe fn secondarySelectionLocation(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn NSTextLocation>>>;
 
@@ -167,22 +164,18 @@ impl NSTextSelection {
         /// Setter for [`secondarySelectionLocation`][Self::secondarySelectionLocation].
         #[unsafe(method(setSecondarySelectionLocation:))]
         #[unsafe(method_family = none)]
-        pub fn setSecondarySelectionLocation(
+        pub unsafe fn setSecondarySelectionLocation(
             &self,
             secondary_selection_location: Option<&ProtocolObject<dyn NSTextLocation>>,
         );
 
         #[unsafe(method(typingAttributes))]
         #[unsafe(method_family = none)]
-        pub fn typingAttributes(&self) -> Retained<NSDictionary<NSAttributedStringKey, AnyObject>>;
+        pub unsafe fn typingAttributes(
+            &self,
+        ) -> Retained<NSDictionary<NSAttributedStringKey, AnyObject>>;
 
         /// Setter for [`typingAttributes`][Self::typingAttributes].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `typing_attributes` generic should be of the correct type.
         #[unsafe(method(setTypingAttributes:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTypingAttributes(
@@ -193,7 +186,7 @@ impl NSTextSelection {
         #[cfg(feature = "NSTextRange")]
         #[unsafe(method(textSelectionWithTextRanges:))]
         #[unsafe(method_family = none)]
-        pub fn textSelectionWithTextRanges(
+        pub unsafe fn textSelectionWithTextRanges(
             &self,
             text_ranges: &NSArray<NSTextRange>,
         ) -> Retained<NSTextSelection>;

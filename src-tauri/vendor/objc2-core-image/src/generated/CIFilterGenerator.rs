@@ -103,11 +103,6 @@ impl CIFilterGenerator {
         /// Parameter `targetObject`: The object that you link the source object to.
         ///
         /// Parameter `targetKey`: The key that you assign the source object to.
-        ///
-        /// # Safety
-        ///
-        /// - `source_object` should be of the correct type.
-        /// - `target_object` should be of the correct type.
         #[unsafe(method(connectObject:withKey:toObject:withKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn connectObject_withKey_toObject_withKey(
@@ -129,11 +124,6 @@ impl CIFilterGenerator {
         /// Parameter `targetObject`: The object that you linked the source object to.
         ///
         /// Parameter `targetKey`: The key that you assigned the source object to.
-        ///
-        /// # Safety
-        ///
-        /// - `source_object` should be of the correct type.
-        /// - `target_object` should be of the correct type.
         #[unsafe(method(disconnectObject:withKey:toObject:withKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn disconnectObject_withKey_toObject_withKey(
@@ -153,10 +143,6 @@ impl CIFilterGenerator {
         /// Parameter `targetObject`: The object of which the key is to be exported (eg the filter).
         ///
         /// Parameter `exportedKeyName`: The name under which you want the new key to be available. This parameter can be nil in which case the original key name will be used. This name has to be unique. If a key being exported is an inputKey of the filter it will be exported as an input key and the other way around for output keys.
-        ///
-        /// # Safety
-        ///
-        /// `target_object` should be of the correct type.
         #[unsafe(method(exportKey:fromObject:withName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn exportKey_fromObject_withName(
@@ -187,10 +173,6 @@ impl CIFilterGenerator {
         /// Set a new dictionary of attributes for an exported key.
         ///
         /// By default, the exported key inherits the attributes from its original key and target object. Use this method to for instance change the default value or lower the maximum allowed value.
-        ///
-        /// # Safety
-        ///
-        /// `attributes` generic should be of the correct type.
         #[unsafe(method(setAttributes:forExportedKey:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAttributes_forExportedKey(
@@ -207,10 +189,6 @@ impl CIFilterGenerator {
         pub unsafe fn classAttributes(&self) -> Retained<NSDictionary>;
 
         /// Setter for [`classAttributes`][Self::classAttributes].
-        ///
-        /// # Safety
-        ///
-        /// `class_attributes` generic should be of the correct type.
         #[unsafe(method(setClassAttributes:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setClassAttributes(&self, class_attributes: &NSDictionary);

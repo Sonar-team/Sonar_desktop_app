@@ -9,25 +9,18 @@ use objc2_foundation::*;
 
 use crate::*;
 
-#[cfg(all(
-    feature = "UIResponder",
-    feature = "UIView",
-    feature = "objc2-core-foundation"
-))]
-#[inline]
-pub extern "C-unwind" fn UIAccessibilityConvertFrameToScreenCoordinates(
-    rect: CGRect,
-    view: &UIView,
-) -> CGRect {
-    extern "C-unwind" {
-        fn UIAccessibilityConvertFrameToScreenCoordinates(rect: CGRect, view: &UIView) -> CGRect;
-    }
-    unsafe { UIAccessibilityConvertFrameToScreenCoordinates(rect, view) }
+extern "C-unwind" {
+    #[cfg(all(
+        feature = "UIResponder",
+        feature = "UIView",
+        feature = "objc2-core-foundation"
+    ))]
+    pub fn UIAccessibilityConvertFrameToScreenCoordinates(rect: CGRect, view: &UIView) -> CGRect;
 }
 
 #[cfg(all(feature = "UIBezierPath", feature = "UIResponder", feature = "UIView"))]
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityConvertPathToScreenCoordinates(
+pub unsafe extern "C-unwind" fn UIAccessibilityConvertPathToScreenCoordinates(
     path: &UIBezierPath,
     view: &UIView,
 ) -> Retained<UIBezierPath> {
@@ -132,23 +125,25 @@ pub unsafe trait NSObjectUIAccessibility:
     extern_methods!(
         #[unsafe(method(isAccessibilityElement))]
         #[unsafe(method_family = none)]
-        fn isAccessibilityElement(&self, mtm: MainThreadMarker) -> bool;
+        unsafe fn isAccessibilityElement(&self, mtm: MainThreadMarker) -> bool;
 
         /// Setter for [`isAccessibilityElement`][Self::isAccessibilityElement].
         #[unsafe(method(setIsAccessibilityElement:))]
         #[unsafe(method_family = none)]
-        fn setIsAccessibilityElement(&self, is_accessibility_element: bool, mtm: MainThreadMarker);
+        unsafe fn setIsAccessibilityElement(
+            &self,
+            is_accessibility_element: bool,
+            mtm: MainThreadMarker,
+        );
 
         #[unsafe(method(accessibilityLabel))]
         #[unsafe(method_family = none)]
-        fn accessibilityLabel(&self, mtm: MainThreadMarker) -> Option<Retained<NSString>>;
+        unsafe fn accessibilityLabel(&self, mtm: MainThreadMarker) -> Option<Retained<NSString>>;
 
         /// Setter for [`accessibilityLabel`][Self::accessibilityLabel].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityLabel:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityLabel(
+        unsafe fn setAccessibilityLabel(
             &self,
             accessibility_label: Option<&NSString>,
             mtm: MainThreadMarker,
@@ -156,17 +151,15 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityAttributedLabel))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributedLabel(
+        unsafe fn accessibilityAttributedLabel(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSAttributedString>>;
 
         /// Setter for [`accessibilityAttributedLabel`][Self::accessibilityAttributedLabel].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityAttributedLabel:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityAttributedLabel(
+        unsafe fn setAccessibilityAttributedLabel(
             &self,
             accessibility_attributed_label: Option<&NSAttributedString>,
             mtm: MainThreadMarker,
@@ -174,14 +167,12 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityHint))]
         #[unsafe(method_family = none)]
-        fn accessibilityHint(&self, mtm: MainThreadMarker) -> Option<Retained<NSString>>;
+        unsafe fn accessibilityHint(&self, mtm: MainThreadMarker) -> Option<Retained<NSString>>;
 
         /// Setter for [`accessibilityHint`][Self::accessibilityHint].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityHint:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityHint(
+        unsafe fn setAccessibilityHint(
             &self,
             accessibility_hint: Option<&NSString>,
             mtm: MainThreadMarker,
@@ -189,17 +180,15 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityAttributedHint))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributedHint(
+        unsafe fn accessibilityAttributedHint(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSAttributedString>>;
 
         /// Setter for [`accessibilityAttributedHint`][Self::accessibilityAttributedHint].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityAttributedHint:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityAttributedHint(
+        unsafe fn setAccessibilityAttributedHint(
             &self,
             accessibility_attributed_hint: Option<&NSAttributedString>,
             mtm: MainThreadMarker,
@@ -207,14 +196,12 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityValue))]
         #[unsafe(method_family = none)]
-        fn accessibilityValue(&self, mtm: MainThreadMarker) -> Option<Retained<NSString>>;
+        unsafe fn accessibilityValue(&self, mtm: MainThreadMarker) -> Option<Retained<NSString>>;
 
         /// Setter for [`accessibilityValue`][Self::accessibilityValue].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityValue:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityValue(
+        unsafe fn setAccessibilityValue(
             &self,
             accessibility_value: Option<&NSString>,
             mtm: MainThreadMarker,
@@ -222,17 +209,15 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityAttributedValue))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributedValue(
+        unsafe fn accessibilityAttributedValue(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSAttributedString>>;
 
         /// Setter for [`accessibilityAttributedValue`][Self::accessibilityAttributedValue].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityAttributedValue:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityAttributedValue(
+        unsafe fn setAccessibilityAttributedValue(
             &self,
             accessibility_attributed_value: Option<&NSAttributedString>,
             mtm: MainThreadMarker,
@@ -241,13 +226,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "UIAccessibilityConstants")]
         #[unsafe(method(accessibilityTraits))]
         #[unsafe(method_family = none)]
-        fn accessibilityTraits(&self, mtm: MainThreadMarker) -> UIAccessibilityTraits;
+        unsafe fn accessibilityTraits(&self, mtm: MainThreadMarker) -> UIAccessibilityTraits;
 
         #[cfg(feature = "UIAccessibilityConstants")]
         /// Setter for [`accessibilityTraits`][Self::accessibilityTraits].
         #[unsafe(method(setAccessibilityTraits:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityTraits(
+        unsafe fn setAccessibilityTraits(
             &self,
             accessibility_traits: UIAccessibilityTraits,
             mtm: MainThreadMarker,
@@ -256,26 +241,25 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(accessibilityFrame))]
         #[unsafe(method_family = none)]
-        fn accessibilityFrame(&self, mtm: MainThreadMarker) -> CGRect;
+        unsafe fn accessibilityFrame(&self, mtm: MainThreadMarker) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`accessibilityFrame`][Self::accessibilityFrame].
         #[unsafe(method(setAccessibilityFrame:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityFrame(&self, accessibility_frame: CGRect, mtm: MainThreadMarker);
+        unsafe fn setAccessibilityFrame(&self, accessibility_frame: CGRect, mtm: MainThreadMarker);
 
         #[cfg(feature = "UIBezierPath")]
         #[unsafe(method(accessibilityPath))]
         #[unsafe(method_family = none)]
-        fn accessibilityPath(&self, mtm: MainThreadMarker) -> Option<Retained<UIBezierPath>>;
+        unsafe fn accessibilityPath(&self, mtm: MainThreadMarker)
+            -> Option<Retained<UIBezierPath>>;
 
         #[cfg(feature = "UIBezierPath")]
         /// Setter for [`accessibilityPath`][Self::accessibilityPath].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityPath:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityPath(
+        unsafe fn setAccessibilityPath(
             &self,
             accessibility_path: Option<&UIBezierPath>,
             mtm: MainThreadMarker,
@@ -284,13 +268,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(accessibilityActivationPoint))]
         #[unsafe(method_family = none)]
-        fn accessibilityActivationPoint(&self, mtm: MainThreadMarker) -> CGPoint;
+        unsafe fn accessibilityActivationPoint(&self, mtm: MainThreadMarker) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`accessibilityActivationPoint`][Self::accessibilityActivationPoint].
         #[unsafe(method(setAccessibilityActivationPoint:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityActivationPoint(
+        unsafe fn setAccessibilityActivationPoint(
             &self,
             accessibility_activation_point: CGPoint,
             mtm: MainThreadMarker,
@@ -298,12 +282,13 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityLanguage))]
         #[unsafe(method_family = none)]
-        fn accessibilityLanguage(&self, mtm: MainThreadMarker) -> Option<Retained<NSString>>;
+        unsafe fn accessibilityLanguage(&self, mtm: MainThreadMarker)
+            -> Option<Retained<NSString>>;
 
         /// Setter for [`accessibilityLanguage`][Self::accessibilityLanguage].
         #[unsafe(method(setAccessibilityLanguage:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityLanguage(
+        unsafe fn setAccessibilityLanguage(
             &self,
             accessibility_language: Option<&NSString>,
             mtm: MainThreadMarker,
@@ -311,12 +296,12 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityElementsHidden))]
         #[unsafe(method_family = none)]
-        fn accessibilityElementsHidden(&self, mtm: MainThreadMarker) -> bool;
+        unsafe fn accessibilityElementsHidden(&self, mtm: MainThreadMarker) -> bool;
 
         /// Setter for [`accessibilityElementsHidden`][Self::accessibilityElementsHidden].
         #[unsafe(method(setAccessibilityElementsHidden:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityElementsHidden(
+        unsafe fn setAccessibilityElementsHidden(
             &self,
             accessibility_elements_hidden: bool,
             mtm: MainThreadMarker,
@@ -324,12 +309,12 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityViewIsModal))]
         #[unsafe(method_family = none)]
-        fn accessibilityViewIsModal(&self, mtm: MainThreadMarker) -> bool;
+        unsafe fn accessibilityViewIsModal(&self, mtm: MainThreadMarker) -> bool;
 
         /// Setter for [`accessibilityViewIsModal`][Self::accessibilityViewIsModal].
         #[unsafe(method(setAccessibilityViewIsModal:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityViewIsModal(
+        unsafe fn setAccessibilityViewIsModal(
             &self,
             accessibility_view_is_modal: bool,
             mtm: MainThreadMarker,
@@ -337,12 +322,12 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(shouldGroupAccessibilityChildren))]
         #[unsafe(method_family = none)]
-        fn shouldGroupAccessibilityChildren(&self, mtm: MainThreadMarker) -> bool;
+        unsafe fn shouldGroupAccessibilityChildren(&self, mtm: MainThreadMarker) -> bool;
 
         /// Setter for [`shouldGroupAccessibilityChildren`][Self::shouldGroupAccessibilityChildren].
         #[unsafe(method(setShouldGroupAccessibilityChildren:))]
         #[unsafe(method_family = none)]
-        fn setShouldGroupAccessibilityChildren(
+        unsafe fn setShouldGroupAccessibilityChildren(
             &self,
             should_group_accessibility_children: bool,
             mtm: MainThreadMarker,
@@ -351,7 +336,7 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "UIAccessibilityConstants")]
         #[unsafe(method(accessibilityNavigationStyle))]
         #[unsafe(method_family = none)]
-        fn accessibilityNavigationStyle(
+        unsafe fn accessibilityNavigationStyle(
             &self,
             mtm: MainThreadMarker,
         ) -> UIAccessibilityNavigationStyle;
@@ -360,7 +345,7 @@ pub unsafe trait NSObjectUIAccessibility:
         /// Setter for [`accessibilityNavigationStyle`][Self::accessibilityNavigationStyle].
         #[unsafe(method(setAccessibilityNavigationStyle:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityNavigationStyle(
+        unsafe fn setAccessibilityNavigationStyle(
             &self,
             accessibility_navigation_style: UIAccessibilityNavigationStyle,
             mtm: MainThreadMarker,
@@ -368,12 +353,12 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityRespondsToUserInteraction))]
         #[unsafe(method_family = none)]
-        fn accessibilityRespondsToUserInteraction(&self, mtm: MainThreadMarker) -> bool;
+        unsafe fn accessibilityRespondsToUserInteraction(&self, mtm: MainThreadMarker) -> bool;
 
         /// Setter for [`accessibilityRespondsToUserInteraction`][Self::accessibilityRespondsToUserInteraction].
         #[unsafe(method(setAccessibilityRespondsToUserInteraction:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityRespondsToUserInteraction(
+        unsafe fn setAccessibilityRespondsToUserInteraction(
             &self,
             accessibility_responds_to_user_interaction: bool,
             mtm: MainThreadMarker,
@@ -381,16 +366,12 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityUserInputLabels))]
         #[unsafe(method_family = none)]
-        fn accessibilityUserInputLabels(
+        unsafe fn accessibilityUserInputLabels(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSArray<NSString>>>;
 
         /// Setter for [`accessibilityUserInputLabels`][Self::accessibilityUserInputLabels].
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_user_input_labels` might not allow `None`.
         #[unsafe(method(setAccessibilityUserInputLabels:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityUserInputLabels(
@@ -401,17 +382,15 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityAttributedUserInputLabels))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributedUserInputLabels(
+        unsafe fn accessibilityAttributedUserInputLabels(
             &self,
             mtm: MainThreadMarker,
         ) -> Retained<NSArray<NSAttributedString>>;
 
         /// Setter for [`accessibilityAttributedUserInputLabels`][Self::accessibilityAttributedUserInputLabels].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityAttributedUserInputLabels:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityAttributedUserInputLabels(
+        unsafe fn setAccessibilityAttributedUserInputLabels(
             &self,
             accessibility_attributed_user_input_labels: Option<&NSArray<NSAttributedString>>,
             mtm: MainThreadMarker,
@@ -419,15 +398,12 @@ pub unsafe trait NSObjectUIAccessibility:
 
         #[unsafe(method(accessibilityHeaderElements))]
         #[unsafe(method_family = none)]
-        fn accessibilityHeaderElements(&self, mtm: MainThreadMarker) -> Option<Retained<NSArray>>;
+        unsafe fn accessibilityHeaderElements(
+            &self,
+            mtm: MainThreadMarker,
+        ) -> Option<Retained<NSArray>>;
 
         /// Setter for [`accessibilityHeaderElements`][Self::accessibilityHeaderElements].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_header_elements` generic should be of the correct type.
         #[unsafe(method(setAccessibilityHeaderElements:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityHeaderElements(
@@ -439,7 +415,7 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "UIAccessibilityConstants")]
         #[unsafe(method(accessibilityTextualContext))]
         #[unsafe(method_family = none)]
-        fn accessibilityTextualContext(
+        unsafe fn accessibilityTextualContext(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<UIAccessibilityTextualContext>>;
@@ -448,7 +424,7 @@ pub unsafe trait NSObjectUIAccessibility:
         /// Setter for [`accessibilityTextualContext`][Self::accessibilityTextualContext].
         #[unsafe(method(setAccessibilityTextualContext:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityTextualContext(
+        unsafe fn setAccessibilityTextualContext(
             &self,
             accessibility_textual_context: Option<&UIAccessibilityTextualContext>,
             mtm: MainThreadMarker,
@@ -457,7 +433,7 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "UIAccessibilityConstants")]
         #[unsafe(method(accessibilityDirectTouchOptions))]
         #[unsafe(method_family = none)]
-        fn accessibilityDirectTouchOptions(
+        unsafe fn accessibilityDirectTouchOptions(
             &self,
             mtm: MainThreadMarker,
         ) -> UIAccessibilityDirectTouchOptions;
@@ -466,7 +442,7 @@ pub unsafe trait NSObjectUIAccessibility:
         /// Setter for [`accessibilityDirectTouchOptions`][Self::accessibilityDirectTouchOptions].
         #[unsafe(method(setAccessibilityDirectTouchOptions:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityDirectTouchOptions(
+        unsafe fn setAccessibilityDirectTouchOptions(
             &self,
             accessibility_direct_touch_options: UIAccessibilityDirectTouchOptions,
             mtm: MainThreadMarker,
@@ -475,7 +451,7 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "UIAccessibilityConstants")]
         #[unsafe(method(accessibilityExpandedStatus))]
         #[unsafe(method_family = none)]
-        fn accessibilityExpandedStatus(
+        unsafe fn accessibilityExpandedStatus(
             &self,
             mtm: MainThreadMarker,
         ) -> UIAccessibilityExpandedStatus;
@@ -484,7 +460,7 @@ pub unsafe trait NSObjectUIAccessibility:
         /// Setter for [`accessibilityExpandedStatus`][Self::accessibilityExpandedStatus].
         #[unsafe(method(setAccessibilityExpandedStatus:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityExpandedStatus(
+        unsafe fn setAccessibilityExpandedStatus(
             &self,
             accessibility_expanded_status: UIAccessibilityExpandedStatus,
             mtm: MainThreadMarker,
@@ -493,16 +469,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(isAccessibilityElementBlock))]
         #[unsafe(method_family = none)]
-        fn isAccessibilityElementBlock(&self, mtm: MainThreadMarker) -> AXBoolReturnBlock;
+        unsafe fn isAccessibilityElementBlock(&self, mtm: MainThreadMarker) -> AXBoolReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`isAccessibilityElementBlock`][Self::isAccessibilityElementBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `is_accessibility_element_block` must be a valid pointer or null.
         #[unsafe(method(setIsAccessibilityElementBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setIsAccessibilityElementBlock(
@@ -514,16 +484,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityLabelBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityLabelBlock(&self, mtm: MainThreadMarker) -> AXStringReturnBlock;
+        unsafe fn accessibilityLabelBlock(&self, mtm: MainThreadMarker) -> AXStringReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityLabelBlock`][Self::accessibilityLabelBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_label_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityLabelBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityLabelBlock(
@@ -535,16 +499,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityValueBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityValueBlock(&self, mtm: MainThreadMarker) -> AXStringReturnBlock;
+        unsafe fn accessibilityValueBlock(&self, mtm: MainThreadMarker) -> AXStringReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityValueBlock`][Self::accessibilityValueBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_value_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityValueBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityValueBlock(
@@ -556,16 +514,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityHintBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityHintBlock(&self, mtm: MainThreadMarker) -> AXStringReturnBlock;
+        unsafe fn accessibilityHintBlock(&self, mtm: MainThreadMarker) -> AXStringReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityHintBlock`][Self::accessibilityHintBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_hint_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityHintBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityHintBlock(
@@ -577,16 +529,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(all(feature = "UIAccessibilityConstants", feature = "block2"))]
         #[unsafe(method(accessibilityTraitsBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityTraitsBlock(&self, mtm: MainThreadMarker) -> AXTraitsReturnBlock;
+        unsafe fn accessibilityTraitsBlock(&self, mtm: MainThreadMarker) -> AXTraitsReturnBlock;
 
         #[cfg(all(feature = "UIAccessibilityConstants", feature = "block2"))]
         /// Setter for [`accessibilityTraitsBlock`][Self::accessibilityTraitsBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_traits_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityTraitsBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityTraitsBlock(
@@ -598,16 +544,11 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityIdentifierBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityIdentifierBlock(&self, mtm: MainThreadMarker) -> AXStringReturnBlock;
+        unsafe fn accessibilityIdentifierBlock(&self, mtm: MainThreadMarker)
+            -> AXStringReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityIdentifierBlock`][Self::accessibilityIdentifierBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_identifier_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityIdentifierBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityIdentifierBlock(
@@ -619,16 +560,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityHeaderElementsBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityHeaderElementsBlock(&self, mtm: MainThreadMarker) -> AXArrayReturnBlock;
+        unsafe fn accessibilityHeaderElementsBlock(
+            &self,
+            mtm: MainThreadMarker,
+        ) -> AXArrayReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityHeaderElementsBlock`][Self::accessibilityHeaderElementsBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_header_elements_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityHeaderElementsBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityHeaderElementsBlock(
@@ -640,19 +578,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityAttributedLabelBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributedLabelBlock(
+        unsafe fn accessibilityAttributedLabelBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXAttributedStringReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityAttributedLabelBlock`][Self::accessibilityAttributedLabelBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_attributed_label_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityAttributedLabelBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityAttributedLabelBlock(
@@ -664,19 +596,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityAttributedHintBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributedHintBlock(
+        unsafe fn accessibilityAttributedHintBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXAttributedStringReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityAttributedHintBlock`][Self::accessibilityAttributedHintBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_attributed_hint_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityAttributedHintBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityAttributedHintBlock(
@@ -688,16 +614,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityLanguageBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityLanguageBlock(&self, mtm: MainThreadMarker) -> AXStringReturnBlock;
+        unsafe fn accessibilityLanguageBlock(&self, mtm: MainThreadMarker) -> AXStringReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityLanguageBlock`][Self::accessibilityLanguageBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_language_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityLanguageBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityLanguageBlock(
@@ -709,19 +629,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(all(feature = "UIAccessibilityConstants", feature = "block2"))]
         #[unsafe(method(accessibilityTextualContextBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityTextualContextBlock(
+        unsafe fn accessibilityTextualContextBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXTextualContextReturnBlock;
 
         #[cfg(all(feature = "UIAccessibilityConstants", feature = "block2"))]
         /// Setter for [`accessibilityTextualContextBlock`][Self::accessibilityTextualContextBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_textual_context_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityTextualContextBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityTextualContextBlock(
@@ -733,19 +647,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityUserInputLabelsBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityUserInputLabelsBlock(
+        unsafe fn accessibilityUserInputLabelsBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXStringArrayReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityUserInputLabelsBlock`][Self::accessibilityUserInputLabelsBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_user_input_labels_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityUserInputLabelsBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityUserInputLabelsBlock(
@@ -757,19 +665,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityAttributedUserInputLabelsBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributedUserInputLabelsBlock(
+        unsafe fn accessibilityAttributedUserInputLabelsBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXAttributedStringArrayReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityAttributedUserInputLabelsBlock`][Self::accessibilityAttributedUserInputLabelsBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_attributed_user_input_labels_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityAttributedUserInputLabelsBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityAttributedUserInputLabelsBlock(
@@ -781,19 +683,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityAttributedValueBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributedValueBlock(
+        unsafe fn accessibilityAttributedValueBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXAttributedStringReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityAttributedValueBlock`][Self::accessibilityAttributedValueBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_attributed_value_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityAttributedValueBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityAttributedValueBlock(
@@ -805,16 +701,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityElementsHiddenBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityElementsHiddenBlock(&self, mtm: MainThreadMarker) -> AXBoolReturnBlock;
+        unsafe fn accessibilityElementsHiddenBlock(
+            &self,
+            mtm: MainThreadMarker,
+        ) -> AXBoolReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityElementsHiddenBlock`][Self::accessibilityElementsHiddenBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_elements_hidden_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityElementsHiddenBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityElementsHiddenBlock(
@@ -826,19 +719,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityRespondsToUserInteractionBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityRespondsToUserInteractionBlock(
+        unsafe fn accessibilityRespondsToUserInteractionBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXBoolReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityRespondsToUserInteractionBlock`][Self::accessibilityRespondsToUserInteractionBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_responds_to_user_interaction_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityRespondsToUserInteractionBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityRespondsToUserInteractionBlock(
@@ -850,16 +737,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityViewIsModalBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityViewIsModalBlock(&self, mtm: MainThreadMarker) -> AXBoolReturnBlock;
+        unsafe fn accessibilityViewIsModalBlock(&self, mtm: MainThreadMarker) -> AXBoolReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityViewIsModalBlock`][Self::accessibilityViewIsModalBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_view_is_modal_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityViewIsModalBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityViewIsModalBlock(
@@ -871,19 +752,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityShouldGroupAccessibilityChildrenBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityShouldGroupAccessibilityChildrenBlock(
+        unsafe fn accessibilityShouldGroupAccessibilityChildrenBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXBoolReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityShouldGroupAccessibilityChildrenBlock`][Self::accessibilityShouldGroupAccessibilityChildrenBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_should_group_accessibility_children_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityShouldGroupAccessibilityChildrenBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityShouldGroupAccessibilityChildrenBlock(
@@ -895,18 +770,16 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(all(feature = "UIAccessibilityConstants", feature = "block2"))]
         #[unsafe(method(accessibilityExpandedStatusBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityExpandedStatusBlock(
+        unsafe fn accessibilityExpandedStatusBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> *mut block2::DynBlock<dyn Fn() -> UIAccessibilityExpandedStatus>;
 
         #[cfg(all(feature = "UIAccessibilityConstants", feature = "block2"))]
         /// Setter for [`accessibilityExpandedStatusBlock`][Self::accessibilityExpandedStatusBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityExpandedStatusBlock:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityExpandedStatusBlock(
+        unsafe fn setAccessibilityExpandedStatusBlock(
             &self,
             accessibility_expanded_status_block: Option<
                 &block2::DynBlock<dyn Fn() -> UIAccessibilityExpandedStatus>,
@@ -917,16 +790,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityElementsBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityElementsBlock(&self, mtm: MainThreadMarker) -> AXArrayReturnBlock;
+        unsafe fn accessibilityElementsBlock(&self, mtm: MainThreadMarker) -> AXArrayReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityElementsBlock`][Self::accessibilityElementsBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_elements_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityElementsBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityElementsBlock(
@@ -938,16 +805,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(automationElementsBlock))]
         #[unsafe(method_family = none)]
-        fn automationElementsBlock(&self, mtm: MainThreadMarker) -> AXArrayReturnBlock;
+        unsafe fn automationElementsBlock(&self, mtm: MainThreadMarker) -> AXArrayReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`automationElementsBlock`][Self::automationElementsBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `automation_elements_block` must be a valid pointer or null.
         #[unsafe(method(setAutomationElementsBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAutomationElementsBlock(
@@ -959,19 +820,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(all(feature = "UIAccessibilityConstants", feature = "block2"))]
         #[unsafe(method(accessibilityContainerTypeBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityContainerTypeBlock(
+        unsafe fn accessibilityContainerTypeBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXContainerTypeReturnBlock;
 
         #[cfg(all(feature = "UIAccessibilityConstants", feature = "block2"))]
         /// Setter for [`accessibilityContainerTypeBlock`][Self::accessibilityContainerTypeBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_container_type_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityContainerTypeBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityContainerTypeBlock(
@@ -983,16 +838,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(all(feature = "block2", feature = "objc2-core-foundation"))]
         #[unsafe(method(accessibilityActivationPointBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityActivationPointBlock(&self, mtm: MainThreadMarker) -> AXPointReturnBlock;
+        unsafe fn accessibilityActivationPointBlock(
+            &self,
+            mtm: MainThreadMarker,
+        ) -> AXPointReturnBlock;
 
         #[cfg(all(feature = "block2", feature = "objc2-core-foundation"))]
         /// Setter for [`accessibilityActivationPointBlock`][Self::accessibilityActivationPointBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_activation_point_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityActivationPointBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityActivationPointBlock(
@@ -1004,16 +856,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(all(feature = "block2", feature = "objc2-core-foundation"))]
         #[unsafe(method(accessibilityFrameBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityFrameBlock(&self, mtm: MainThreadMarker) -> AXRectReturnBlock;
+        unsafe fn accessibilityFrameBlock(&self, mtm: MainThreadMarker) -> AXRectReturnBlock;
 
         #[cfg(all(feature = "block2", feature = "objc2-core-foundation"))]
         /// Setter for [`accessibilityFrameBlock`][Self::accessibilityFrameBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_frame_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityFrameBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityFrameBlock(
@@ -1025,19 +871,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(all(feature = "UIAccessibilityConstants", feature = "block2"))]
         #[unsafe(method(accessibilityNavigationStyleBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityNavigationStyleBlock(
+        unsafe fn accessibilityNavigationStyleBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXNavigationStyleReturnBlock;
 
         #[cfg(all(feature = "UIAccessibilityConstants", feature = "block2"))]
         /// Setter for [`accessibilityNavigationStyleBlock`][Self::accessibilityNavigationStyleBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_navigation_style_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityNavigationStyleBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityNavigationStyleBlock(
@@ -1049,16 +889,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(all(feature = "UIBezierPath", feature = "block2"))]
         #[unsafe(method(accessibilityPathBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityPathBlock(&self, mtm: MainThreadMarker) -> AXPathReturnBlock;
+        unsafe fn accessibilityPathBlock(&self, mtm: MainThreadMarker) -> AXPathReturnBlock;
 
         #[cfg(all(feature = "UIBezierPath", feature = "block2"))]
         /// Setter for [`accessibilityPathBlock`][Self::accessibilityPathBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_path_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityPathBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityPathBlock(
@@ -1070,16 +904,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityActivateBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityActivateBlock(&self, mtm: MainThreadMarker) -> AXBoolReturnBlock;
+        unsafe fn accessibilityActivateBlock(&self, mtm: MainThreadMarker) -> AXBoolReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityActivateBlock`][Self::accessibilityActivateBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_activate_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityActivateBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityActivateBlock(
@@ -1091,16 +919,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityIncrementBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityIncrementBlock(&self, mtm: MainThreadMarker) -> AXVoidReturnBlock;
+        unsafe fn accessibilityIncrementBlock(&self, mtm: MainThreadMarker) -> AXVoidReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityIncrementBlock`][Self::accessibilityIncrementBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_increment_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityIncrementBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityIncrementBlock(
@@ -1112,16 +934,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityDecrementBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityDecrementBlock(&self, mtm: MainThreadMarker) -> AXVoidReturnBlock;
+        unsafe fn accessibilityDecrementBlock(&self, mtm: MainThreadMarker) -> AXVoidReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityDecrementBlock`][Self::accessibilityDecrementBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_decrement_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityDecrementBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityDecrementBlock(
@@ -1133,16 +949,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityPerformEscapeBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityPerformEscapeBlock(&self, mtm: MainThreadMarker) -> AXBoolReturnBlock;
+        unsafe fn accessibilityPerformEscapeBlock(
+            &self,
+            mtm: MainThreadMarker,
+        ) -> AXBoolReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityPerformEscapeBlock`][Self::accessibilityPerformEscapeBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_perform_escape_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityPerformEscapeBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityPerformEscapeBlock(
@@ -1154,16 +967,10 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityMagicTapBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityMagicTapBlock(&self, mtm: MainThreadMarker) -> AXBoolReturnBlock;
+        unsafe fn accessibilityMagicTapBlock(&self, mtm: MainThreadMarker) -> AXBoolReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityMagicTapBlock`][Self::accessibilityMagicTapBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_magic_tap_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityMagicTapBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityMagicTapBlock(
@@ -1175,19 +982,13 @@ pub unsafe trait NSObjectUIAccessibility:
         #[cfg(all(feature = "UIAccessibilityCustomAction", feature = "block2"))]
         #[unsafe(method(accessibilityCustomActionsBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityCustomActionsBlock(
+        unsafe fn accessibilityCustomActionsBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXCustomActionsReturnBlock;
 
         #[cfg(all(feature = "UIAccessibilityCustomAction", feature = "block2"))]
         /// Setter for [`accessibilityCustomActionsBlock`][Self::accessibilityCustomActionsBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_custom_actions_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityCustomActionsBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityCustomActionsBlock(
@@ -1203,7 +1004,7 @@ unsafe impl NSObjectUIAccessibility for NSObject {}
 
 #[cfg(feature = "UIAccessibilityConstants")]
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityFocusedElement(
+pub unsafe extern "C-unwind" fn UIAccessibilityFocusedElement(
     assistive_technology_identifier: Option<&UIAccessibilityAssistiveTechnologyIdentifier>,
 ) -> Option<Retained<AnyObject>> {
     extern "C-unwind" {
@@ -1227,20 +1028,20 @@ pub unsafe trait NSObjectUIAccessibilityFocus:
     extern_methods!(
         #[unsafe(method(accessibilityElementDidBecomeFocused))]
         #[unsafe(method_family = none)]
-        fn accessibilityElementDidBecomeFocused(&self, mtm: MainThreadMarker);
+        unsafe fn accessibilityElementDidBecomeFocused(&self, mtm: MainThreadMarker);
 
         #[unsafe(method(accessibilityElementDidLoseFocus))]
         #[unsafe(method_family = none)]
-        fn accessibilityElementDidLoseFocus(&self, mtm: MainThreadMarker);
+        unsafe fn accessibilityElementDidLoseFocus(&self, mtm: MainThreadMarker);
 
         #[unsafe(method(accessibilityElementIsFocused))]
         #[unsafe(method_family = none)]
-        fn accessibilityElementIsFocused(&self, mtm: MainThreadMarker) -> bool;
+        unsafe fn accessibilityElementIsFocused(&self, mtm: MainThreadMarker) -> bool;
 
         #[cfg(feature = "UIAccessibilityConstants")]
         #[unsafe(method(accessibilityAssistiveTechnologyFocusedIdentifiers))]
         #[unsafe(method_family = none)]
-        fn accessibilityAssistiveTechnologyFocusedIdentifiers(
+        unsafe fn accessibilityAssistiveTechnologyFocusedIdentifiers(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSSet<UIAccessibilityAssistiveTechnologyIdentifier>>>;
@@ -1290,29 +1091,30 @@ pub unsafe trait NSObjectUIAccessibilityAction:
     extern_methods!(
         #[unsafe(method(accessibilityActivate))]
         #[unsafe(method_family = none)]
-        fn accessibilityActivate(&self, mtm: MainThreadMarker) -> bool;
+        unsafe fn accessibilityActivate(&self, mtm: MainThreadMarker) -> bool;
 
         #[unsafe(method(accessibilityIncrement))]
         #[unsafe(method_family = none)]
-        fn accessibilityIncrement(&self, mtm: MainThreadMarker);
+        unsafe fn accessibilityIncrement(&self, mtm: MainThreadMarker);
 
         #[unsafe(method(accessibilityDecrement))]
         #[unsafe(method_family = none)]
-        fn accessibilityDecrement(&self, mtm: MainThreadMarker);
+        unsafe fn accessibilityDecrement(&self, mtm: MainThreadMarker);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(accessibilityZoomInAtPoint:))]
         #[unsafe(method_family = none)]
-        fn accessibilityZoomInAtPoint(&self, point: CGPoint, mtm: MainThreadMarker) -> bool;
+        unsafe fn accessibilityZoomInAtPoint(&self, point: CGPoint, mtm: MainThreadMarker) -> bool;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(accessibilityZoomOutAtPoint:))]
         #[unsafe(method_family = none)]
-        fn accessibilityZoomOutAtPoint(&self, point: CGPoint, mtm: MainThreadMarker) -> bool;
+        unsafe fn accessibilityZoomOutAtPoint(&self, point: CGPoint, mtm: MainThreadMarker)
+            -> bool;
 
         #[unsafe(method(accessibilityScroll:))]
         #[unsafe(method_family = none)]
-        fn accessibilityScroll(
+        unsafe fn accessibilityScroll(
             &self,
             direction: UIAccessibilityScrollDirection,
             mtm: MainThreadMarker,
@@ -1320,16 +1122,16 @@ pub unsafe trait NSObjectUIAccessibilityAction:
 
         #[unsafe(method(accessibilityPerformEscape))]
         #[unsafe(method_family = none)]
-        fn accessibilityPerformEscape(&self, mtm: MainThreadMarker) -> bool;
+        unsafe fn accessibilityPerformEscape(&self, mtm: MainThreadMarker) -> bool;
 
         #[unsafe(method(accessibilityPerformMagicTap))]
         #[unsafe(method_family = none)]
-        fn accessibilityPerformMagicTap(&self, mtm: MainThreadMarker) -> bool;
+        unsafe fn accessibilityPerformMagicTap(&self, mtm: MainThreadMarker) -> bool;
 
         #[cfg(feature = "UIAccessibilityCustomAction")]
         #[unsafe(method(accessibilityCustomActions))]
         #[unsafe(method_family = none)]
-        fn accessibilityCustomActions(
+        unsafe fn accessibilityCustomActions(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSArray<UIAccessibilityCustomAction>>>;
@@ -1338,7 +1140,7 @@ pub unsafe trait NSObjectUIAccessibilityAction:
         /// Setter for [`accessibilityCustomActions`][Self::accessibilityCustomActions].
         #[unsafe(method(setAccessibilityCustomActions:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityCustomActions(
+        unsafe fn setAccessibilityCustomActions(
             &self,
             accessibility_custom_actions: Option<&NSArray<UIAccessibilityCustomAction>>,
             mtm: MainThreadMarker,
@@ -1355,11 +1157,11 @@ extern_protocol!(
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(accessibilityLineNumberForPoint:))]
         #[unsafe(method_family = none)]
-        fn accessibilityLineNumberForPoint(&self, point: CGPoint) -> NSInteger;
+        unsafe fn accessibilityLineNumberForPoint(&self, point: CGPoint) -> NSInteger;
 
         #[unsafe(method(accessibilityContentForLineNumber:))]
         #[unsafe(method_family = none)]
-        fn accessibilityContentForLineNumber(
+        unsafe fn accessibilityContentForLineNumber(
             &self,
             line_number: NSInteger,
         ) -> Option<Retained<NSString>>;
@@ -1367,16 +1169,16 @@ extern_protocol!(
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(accessibilityFrameForLineNumber:))]
         #[unsafe(method_family = none)]
-        fn accessibilityFrameForLineNumber(&self, line_number: NSInteger) -> CGRect;
+        unsafe fn accessibilityFrameForLineNumber(&self, line_number: NSInteger) -> CGRect;
 
         #[unsafe(method(accessibilityPageContent))]
         #[unsafe(method_family = none)]
-        fn accessibilityPageContent(&self) -> Option<Retained<NSString>>;
+        unsafe fn accessibilityPageContent(&self) -> Option<Retained<NSString>>;
 
         #[optional]
         #[unsafe(method(accessibilityAttributedContentForLineNumber:))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributedContentForLineNumber(
+        unsafe fn accessibilityAttributedContentForLineNumber(
             &self,
             line_number: NSInteger,
         ) -> Option<Retained<NSAttributedString>>;
@@ -1384,7 +1186,8 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(accessibilityAttributedPageContent))]
         #[unsafe(method_family = none)]
-        fn accessibilityAttributedPageContent(&self) -> Option<Retained<NSAttributedString>>;
+        unsafe fn accessibilityAttributedPageContent(&self)
+            -> Option<Retained<NSAttributedString>>;
     }
 );
 
@@ -1401,18 +1204,16 @@ pub unsafe trait NSObjectUIAccessibilityDragging:
         #[cfg(feature = "UIAccessibilityLocationDescriptor")]
         #[unsafe(method(accessibilityDragSourceDescriptors))]
         #[unsafe(method_family = none)]
-        fn accessibilityDragSourceDescriptors(
+        unsafe fn accessibilityDragSourceDescriptors(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSArray<UIAccessibilityLocationDescriptor>>>;
 
         #[cfg(feature = "UIAccessibilityLocationDescriptor")]
         /// Setter for [`accessibilityDragSourceDescriptors`][Self::accessibilityDragSourceDescriptors].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityDragSourceDescriptors:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityDragSourceDescriptors(
+        unsafe fn setAccessibilityDragSourceDescriptors(
             &self,
             accessibility_drag_source_descriptors: Option<
                 &NSArray<UIAccessibilityLocationDescriptor>,
@@ -1423,18 +1224,16 @@ pub unsafe trait NSObjectUIAccessibilityDragging:
         #[cfg(feature = "UIAccessibilityLocationDescriptor")]
         #[unsafe(method(accessibilityDropPointDescriptors))]
         #[unsafe(method_family = none)]
-        fn accessibilityDropPointDescriptors(
+        unsafe fn accessibilityDropPointDescriptors(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<NSArray<UIAccessibilityLocationDescriptor>>>;
 
         #[cfg(feature = "UIAccessibilityLocationDescriptor")]
         /// Setter for [`accessibilityDropPointDescriptors`][Self::accessibilityDropPointDescriptors].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessibilityDropPointDescriptors:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityDropPointDescriptors(
+        unsafe fn setAccessibilityDropPointDescriptors(
             &self,
             accessibility_drop_point_descriptors: Option<
                 &NSArray<UIAccessibilityLocationDescriptor>,
@@ -1460,7 +1259,7 @@ pub unsafe trait NSObjectUIAccessibilityHitTest:
         #[cfg(all(feature = "UIEvent", feature = "objc2-core-foundation"))]
         #[unsafe(method(accessibilityHitTest:withEvent:))]
         #[unsafe(method_family = none)]
-        fn accessibilityHitTest_withEvent(
+        unsafe fn accessibilityHitTest_withEvent(
             &self,
             point: CGPoint,
             event: Option<&UIEvent>,
@@ -1484,16 +1283,12 @@ pub unsafe trait NSObjectUIAccessibilityTextNavigation:
     extern_methods!(
         #[unsafe(method(accessibilityPreviousTextNavigationElement))]
         #[unsafe(method_family = none)]
-        fn accessibilityPreviousTextNavigationElement(
+        unsafe fn accessibilityPreviousTextNavigationElement(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`accessibilityPreviousTextNavigationElement`][Self::accessibilityPreviousTextNavigationElement].
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_previous_text_navigation_element` should be of the correct type.
         #[unsafe(method(setAccessibilityPreviousTextNavigationElement:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityPreviousTextNavigationElement(
@@ -1504,16 +1299,12 @@ pub unsafe trait NSObjectUIAccessibilityTextNavigation:
 
         #[unsafe(method(accessibilityNextTextNavigationElement))]
         #[unsafe(method_family = none)]
-        fn accessibilityNextTextNavigationElement(
+        unsafe fn accessibilityNextTextNavigationElement(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`accessibilityNextTextNavigationElement`][Self::accessibilityNextTextNavigationElement].
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_next_text_navigation_element` should be of the correct type.
         #[unsafe(method(setAccessibilityNextTextNavigationElement:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityNextTextNavigationElement(
@@ -1525,19 +1316,13 @@ pub unsafe trait NSObjectUIAccessibilityTextNavigation:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityPreviousTextNavigationElementBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityPreviousTextNavigationElementBlock(
+        unsafe fn accessibilityPreviousTextNavigationElementBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXObjectReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityPreviousTextNavigationElementBlock`][Self::accessibilityPreviousTextNavigationElementBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_previous_text_navigation_element_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityPreviousTextNavigationElementBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityPreviousTextNavigationElementBlock(
@@ -1549,19 +1334,13 @@ pub unsafe trait NSObjectUIAccessibilityTextNavigation:
         #[cfg(feature = "block2")]
         #[unsafe(method(accessibilityNextTextNavigationElementBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityNextTextNavigationElementBlock(
+        unsafe fn accessibilityNextTextNavigationElementBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXObjectReturnBlock;
 
         #[cfg(feature = "block2")]
         /// Setter for [`accessibilityNextTextNavigationElementBlock`][Self::accessibilityNextTextNavigationElementBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_next_text_navigation_element_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityNextTextNavigationElementBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityNextTextNavigationElementBlock(
@@ -1588,18 +1367,17 @@ pub unsafe trait NSObjectUIAccessibilityTextOperations:
         #[cfg(all(feature = "UITextInput", feature = "UITextInputTraits"))]
         #[unsafe(method(accessibilityTextInputResponder))]
         #[unsafe(method_family = none)]
-        fn accessibilityTextInputResponder(
+        unsafe fn accessibilityTextInputResponder(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<ProtocolObject<dyn UITextInput>>>;
 
         #[cfg(all(feature = "UITextInput", feature = "UITextInputTraits"))]
-        /// Setter for [`accessibilityTextInputResponder`][Self::accessibilityTextInputResponder].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`accessibilityTextInputResponder`][Self::accessibilityTextInputResponder].
         #[unsafe(method(setAccessibilityTextInputResponder:))]
         #[unsafe(method_family = none)]
-        fn setAccessibilityTextInputResponder(
+        unsafe fn setAccessibilityTextInputResponder(
             &self,
             accessibility_text_input_responder: Option<&ProtocolObject<dyn UITextInput>>,
             mtm: MainThreadMarker,
@@ -1612,7 +1390,7 @@ pub unsafe trait NSObjectUIAccessibilityTextOperations:
         ))]
         #[unsafe(method(accessibilityTextInputResponderBlock))]
         #[unsafe(method_family = none)]
-        fn accessibilityTextInputResponderBlock(
+        unsafe fn accessibilityTextInputResponderBlock(
             &self,
             mtm: MainThreadMarker,
         ) -> AXUITextInputReturnBlock;
@@ -1623,12 +1401,6 @@ pub unsafe trait NSObjectUIAccessibilityTextOperations:
             feature = "block2"
         ))]
         /// Setter for [`accessibilityTextInputResponderBlock`][Self::accessibilityTextInputResponderBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `accessibility_text_input_responder_block` must be a valid pointer or null.
         #[unsafe(method(setAccessibilityTextInputResponderBlock:))]
         #[unsafe(method_family = none)]
         unsafe fn setAccessibilityTextInputResponderBlock(
@@ -1643,9 +1415,6 @@ impl private_NSObjectUIAccessibilityTextOperations::Sealed for NSObject {}
 unsafe impl NSObjectUIAccessibilityTextOperations for NSObject {}
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `argument` should be of the correct type.
     #[cfg(feature = "UIAccessibilityConstants")]
     pub fn UIAccessibilityPostNotification(
         notification: UIAccessibilityNotifications,
@@ -1654,7 +1423,7 @@ extern "C-unwind" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsVoiceOverRunning() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsVoiceOverRunning() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsVoiceOverRunning() -> Bool;
     }
@@ -1663,7 +1432,6 @@ pub extern "C-unwind" fn UIAccessibilityIsVoiceOverRunning() -> bool {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uiaccessibilityvoiceoverstatuschanged?language=objc)
-    #[deprecated]
     pub static UIAccessibilityVoiceOverStatusChanged: &'static NSString;
 }
 
@@ -1673,7 +1441,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsMonoAudioEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsMonoAudioEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsMonoAudioEnabled() -> Bool;
     }
@@ -1686,7 +1454,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsClosedCaptioningEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsClosedCaptioningEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsClosedCaptioningEnabled() -> Bool;
     }
@@ -1700,7 +1468,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsInvertColorsEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsInvertColorsEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsInvertColorsEnabled() -> Bool;
     }
@@ -1713,7 +1481,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsGuidedAccessEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsGuidedAccessEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsGuidedAccessEnabled() -> Bool;
     }
@@ -1726,7 +1494,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsBoldTextEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsBoldTextEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsBoldTextEnabled() -> Bool;
     }
@@ -1739,7 +1507,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityButtonShapesEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityButtonShapesEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityButtonShapesEnabled() -> Bool;
     }
@@ -1753,7 +1521,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsGrayscaleEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsGrayscaleEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsGrayscaleEnabled() -> Bool;
     }
@@ -1766,7 +1534,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsReduceTransparencyEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsReduceTransparencyEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsReduceTransparencyEnabled() -> Bool;
     }
@@ -1780,7 +1548,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsReduceMotionEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsReduceMotionEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsReduceMotionEnabled() -> Bool;
     }
@@ -1793,7 +1561,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityPrefersCrossFadeTransitions() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityPrefersCrossFadeTransitions() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityPrefersCrossFadeTransitions() -> Bool;
     }
@@ -1807,7 +1575,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsVideoAutoplayEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsVideoAutoplayEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsVideoAutoplayEnabled() -> Bool;
     }
@@ -1820,7 +1588,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityDarkerSystemColorsEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityDarkerSystemColorsEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityDarkerSystemColorsEnabled() -> Bool;
     }
@@ -1834,7 +1602,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsSwitchControlRunning() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsSwitchControlRunning() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsSwitchControlRunning() -> Bool;
     }
@@ -1847,7 +1615,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsSpeakSelectionEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsSpeakSelectionEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsSpeakSelectionEnabled() -> Bool;
     }
@@ -1861,7 +1629,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsSpeakScreenEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsSpeakScreenEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsSpeakScreenEnabled() -> Bool;
     }
@@ -1874,7 +1642,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsShakeToUndoEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsShakeToUndoEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsShakeToUndoEnabled() -> Bool;
     }
@@ -1887,7 +1655,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsAssistiveTouchRunning() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsAssistiveTouchRunning() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsAssistiveTouchRunning() -> Bool;
     }
@@ -1901,7 +1669,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityShouldDifferentiateWithoutColor() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityShouldDifferentiateWithoutColor() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityShouldDifferentiateWithoutColor() -> Bool;
     }
@@ -1915,7 +1683,7 @@ extern "C" {
 }
 
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityIsOnOffSwitchLabelsEnabled() -> bool {
+pub unsafe extern "C-unwind" fn UIAccessibilityIsOnOffSwitchLabelsEnabled() -> bool {
     extern "C-unwind" {
         fn UIAccessibilityIsOnOffSwitchLabelsEnabled() -> Bool;
     }
@@ -1929,7 +1697,7 @@ extern "C" {
 
 #[cfg(feature = "block2")]
 #[inline]
-pub extern "C-unwind" fn UIAccessibilityRequestGuidedAccessSession(
+pub unsafe extern "C-unwind" fn UIAccessibilityRequestGuidedAccessSession(
     enable: bool,
     completion_handler: &block2::DynBlock<dyn Fn(Bool)>,
 ) {
@@ -1968,13 +1736,8 @@ unsafe impl RefEncode for UIAccessibilityHearingDeviceEar {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-#[inline]
-pub extern "C-unwind" fn UIAccessibilityHearingDevicePairedEar() -> UIAccessibilityHearingDeviceEar
-{
-    extern "C-unwind" {
-        fn UIAccessibilityHearingDevicePairedEar() -> UIAccessibilityHearingDeviceEar;
-    }
-    unsafe { UIAccessibilityHearingDevicePairedEar() }
+extern "C-unwind" {
+    pub fn UIAccessibilityHearingDevicePairedEar() -> UIAccessibilityHearingDeviceEar;
 }
 
 extern "C" {

@@ -126,138 +126,132 @@ impl NSBox {
     extern_methods!(
         #[unsafe(method(boxType))]
         #[unsafe(method_family = none)]
-        pub fn boxType(&self) -> NSBoxType;
+        pub unsafe fn boxType(&self) -> NSBoxType;
 
         /// Setter for [`boxType`][Self::boxType].
         #[unsafe(method(setBoxType:))]
         #[unsafe(method_family = none)]
-        pub fn setBoxType(&self, box_type: NSBoxType);
+        pub unsafe fn setBoxType(&self, box_type: NSBoxType);
 
         #[unsafe(method(titlePosition))]
         #[unsafe(method_family = none)]
-        pub fn titlePosition(&self) -> NSTitlePosition;
+        pub unsafe fn titlePosition(&self) -> NSTitlePosition;
 
         /// Setter for [`titlePosition`][Self::titlePosition].
         #[unsafe(method(setTitlePosition:))]
         #[unsafe(method_family = none)]
-        pub fn setTitlePosition(&self, title_position: NSTitlePosition);
+        pub unsafe fn setTitlePosition(&self, title_position: NSTitlePosition);
 
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: &NSString);
+        pub unsafe fn setTitle(&self, title: &NSString);
 
         #[cfg(feature = "NSFont")]
         #[unsafe(method(titleFont))]
         #[unsafe(method_family = none)]
-        pub fn titleFont(&self) -> Retained<NSFont>;
+        pub unsafe fn titleFont(&self) -> Retained<NSFont>;
 
         #[cfg(feature = "NSFont")]
         /// Setter for [`titleFont`][Self::titleFont].
         #[unsafe(method(setTitleFont:))]
         #[unsafe(method_family = none)]
-        pub fn setTitleFont(&self, title_font: &NSFont);
+        pub unsafe fn setTitleFont(&self, title_font: &NSFont);
 
         #[unsafe(method(borderRect))]
         #[unsafe(method_family = none)]
-        pub fn borderRect(&self) -> NSRect;
+        pub unsafe fn borderRect(&self) -> NSRect;
 
         #[unsafe(method(titleRect))]
         #[unsafe(method_family = none)]
-        pub fn titleRect(&self) -> NSRect;
+        pub unsafe fn titleRect(&self) -> NSRect;
 
         #[unsafe(method(titleCell))]
         #[unsafe(method_family = none)]
-        pub fn titleCell(&self) -> Retained<AnyObject>;
+        pub unsafe fn titleCell(&self) -> Retained<AnyObject>;
 
         #[unsafe(method(contentViewMargins))]
         #[unsafe(method_family = none)]
-        pub fn contentViewMargins(&self) -> NSSize;
+        pub unsafe fn contentViewMargins(&self) -> NSSize;
 
         /// Setter for [`contentViewMargins`][Self::contentViewMargins].
         #[unsafe(method(setContentViewMargins:))]
         #[unsafe(method_family = none)]
-        pub fn setContentViewMargins(&self, content_view_margins: NSSize);
+        pub unsafe fn setContentViewMargins(&self, content_view_margins: NSSize);
 
         #[unsafe(method(sizeToFit))]
         #[unsafe(method_family = none)]
-        pub fn sizeToFit(&self);
+        pub unsafe fn sizeToFit(&self);
 
         #[unsafe(method(setFrameFromContentFrame:))]
         #[unsafe(method_family = none)]
-        pub fn setFrameFromContentFrame(&self, content_frame: NSRect);
+        pub unsafe fn setFrameFromContentFrame(&self, content_frame: NSRect);
 
         #[unsafe(method(contentView))]
         #[unsafe(method_family = none)]
-        pub fn contentView(&self) -> Option<Retained<NSView>>;
+        pub unsafe fn contentView(&self) -> Option<Retained<NSView>>;
 
         /// Setter for [`contentView`][Self::contentView].
         #[unsafe(method(setContentView:))]
         #[unsafe(method_family = none)]
-        pub fn setContentView(&self, content_view: Option<&NSView>);
+        pub unsafe fn setContentView(&self, content_view: Option<&NSView>);
 
         #[unsafe(method(isTransparent))]
         #[unsafe(method_family = none)]
-        pub fn isTransparent(&self) -> bool;
+        pub unsafe fn isTransparent(&self) -> bool;
 
         /// Setter for [`isTransparent`][Self::isTransparent].
         #[unsafe(method(setTransparent:))]
         #[unsafe(method_family = none)]
-        pub fn setTransparent(&self, transparent: bool);
+        pub unsafe fn setTransparent(&self, transparent: bool);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(borderWidth))]
         #[unsafe(method_family = none)]
-        pub fn borderWidth(&self) -> CGFloat;
+        pub unsafe fn borderWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`borderWidth`][Self::borderWidth].
         #[unsafe(method(setBorderWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setBorderWidth(&self, border_width: CGFloat);
+        pub unsafe fn setBorderWidth(&self, border_width: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(cornerRadius))]
         #[unsafe(method_family = none)]
-        pub fn cornerRadius(&self) -> CGFloat;
+        pub unsafe fn cornerRadius(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`cornerRadius`][Self::cornerRadius].
         #[unsafe(method(setCornerRadius:))]
         #[unsafe(method_family = none)]
-        pub fn setCornerRadius(&self, corner_radius: CGFloat);
+        pub unsafe fn setCornerRadius(&self, corner_radius: CGFloat);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(borderColor))]
         #[unsafe(method_family = none)]
-        pub fn borderColor(&self) -> Retained<NSColor>;
+        pub unsafe fn borderColor(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`borderColor`][Self::borderColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBorderColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBorderColor(&self, border_color: &NSColor);
+        pub unsafe fn setBorderColor(&self, border_color: &NSColor);
 
         #[cfg(feature = "NSColor")]
         #[unsafe(method(fillColor))]
         #[unsafe(method_family = none)]
-        pub fn fillColor(&self) -> Retained<NSColor>;
+        pub unsafe fn fillColor(&self) -> Retained<NSColor>;
 
         #[cfg(feature = "NSColor")]
         /// Setter for [`fillColor`][Self::fillColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFillColor:))]
         #[unsafe(method_family = none)]
-        pub fn setFillColor(&self, fill_color: &NSColor);
+        pub unsafe fn setFillColor(&self, fill_color: &NSColor);
     );
 }
 
@@ -267,11 +261,8 @@ impl NSBox {
     extern_methods!(
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame_rect: NSRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -287,7 +278,7 @@ impl NSBox {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -297,7 +288,7 @@ impl NSBox {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -308,17 +299,14 @@ impl NSBox {
         #[deprecated = "borderType is only applicable to NSBoxOldStyle, which is deprecated. To replace a borderType of NSNoBorder, use the `transparent` property."]
         #[unsafe(method(borderType))]
         #[unsafe(method_family = none)]
-        pub fn borderType(&self) -> NSBorderType;
+        pub unsafe fn borderType(&self) -> NSBorderType;
 
         /// Setter for [`borderType`][Self::borderType].
         #[deprecated = "borderType is only applicable to NSBoxOldStyle, which is deprecated. To replace a borderType of NSNoBorder, use the `transparent` property."]
         #[unsafe(method(setBorderType:))]
         #[unsafe(method_family = none)]
-        pub fn setBorderType(&self, border_type: NSBorderType);
+        pub unsafe fn setBorderType(&self, border_type: NSBorderType);
 
-        /// # Safety
-        ///
-        /// `string_with_ampersand` might not allow `None`.
         #[deprecated]
         #[unsafe(method(setTitleWithMnemonic:))]
         #[unsafe(method_family = none)]
@@ -327,9 +315,7 @@ impl NSBox {
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsboxsecondary?language=objc)
-#[deprecated]
 pub static NSBoxSecondary: NSBoxType = NSBoxType(1);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsboxoldstyle?language=objc)
-#[deprecated = "NSBoxOldStyle is discouraged in modern application design. It should be replaced with either NSBoxPrimary or NSBoxCustom."]
 pub static NSBoxOldStyle: NSBoxType = NSBoxType(3);

@@ -77,18 +77,18 @@ extern_protocol!(
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(preferredContentSize))]
         #[unsafe(method_family = none)]
-        fn preferredContentSize(&self) -> CGSize;
+        unsafe fn preferredContentSize(&self) -> CGSize;
 
         #[unsafe(method(preferredContentSizeDidChangeForChildContentContainer:))]
         #[unsafe(method_family = none)]
-        fn preferredContentSizeDidChangeForChildContentContainer(
+        unsafe fn preferredContentSizeDidChangeForChildContentContainer(
             &self,
             container: &ProtocolObject<dyn UIContentContainer>,
         );
 
         #[unsafe(method(systemLayoutFittingSizeDidChangeForChildContentContainer:))]
         #[unsafe(method_family = none)]
-        fn systemLayoutFittingSizeDidChangeForChildContentContainer(
+        unsafe fn systemLayoutFittingSizeDidChangeForChildContentContainer(
             &self,
             container: &ProtocolObject<dyn UIContentContainer>,
         );
@@ -96,7 +96,7 @@ extern_protocol!(
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(sizeForChildContentContainer:withParentContainerSize:))]
         #[unsafe(method_family = none)]
-        fn sizeForChildContentContainer_withParentContainerSize(
+        unsafe fn sizeForChildContentContainer_withParentContainerSize(
             &self,
             container: &ProtocolObject<dyn UIContentContainer>,
             parent_size: CGSize,
@@ -108,7 +108,7 @@ extern_protocol!(
         ))]
         #[unsafe(method(viewWillTransitionToSize:withTransitionCoordinator:))]
         #[unsafe(method_family = none)]
-        fn viewWillTransitionToSize_withTransitionCoordinator(
+        unsafe fn viewWillTransitionToSize_withTransitionCoordinator(
             &self,
             size: CGSize,
             coordinator: &ProtocolObject<dyn UIViewControllerTransitionCoordinator>,
@@ -120,7 +120,7 @@ extern_protocol!(
         ))]
         #[unsafe(method(willTransitionToTraitCollection:withTransitionCoordinator:))]
         #[unsafe(method_family = none)]
-        fn willTransitionToTraitCollection_withTransitionCoordinator(
+        unsafe fn willTransitionToTraitCollection_withTransitionCoordinator(
             &self,
             new_collection: &UITraitCollection,
             coordinator: &ProtocolObject<dyn UIViewControllerTransitionCoordinator>,
@@ -182,15 +182,12 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(initWithNibName:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibName_bundle(
+        pub unsafe fn initWithNibName_bundle(
             this: Allocated<Self>,
             nib_name_or_nil: Option<&NSString>,
             nib_bundle_or_nil: Option<&NSBundle>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -211,54 +208,51 @@ impl UIViewController {
 
         #[unsafe(method(loadView))]
         #[unsafe(method_family = none)]
-        pub fn loadView(&self);
+        pub unsafe fn loadView(&self);
 
         #[unsafe(method(loadViewIfNeeded))]
         #[unsafe(method_family = none)]
-        pub fn loadViewIfNeeded(&self);
+        pub unsafe fn loadViewIfNeeded(&self);
 
         #[cfg(feature = "UIView")]
         #[unsafe(method(viewIfLoaded))]
         #[unsafe(method_family = none)]
-        pub fn viewIfLoaded(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn viewIfLoaded(&self) -> Option<Retained<UIView>>;
 
         #[deprecated]
         #[unsafe(method(viewWillUnload))]
         #[unsafe(method_family = none)]
-        pub fn viewWillUnload(&self);
+        pub unsafe fn viewWillUnload(&self);
 
         #[deprecated]
         #[unsafe(method(viewDidUnload))]
         #[unsafe(method_family = none)]
-        pub fn viewDidUnload(&self);
+        pub unsafe fn viewDidUnload(&self);
 
         #[unsafe(method(viewDidLoad))]
         #[unsafe(method_family = none)]
-        pub fn viewDidLoad(&self);
+        pub unsafe fn viewDidLoad(&self);
 
         #[unsafe(method(isViewLoaded))]
         #[unsafe(method_family = none)]
-        pub fn isViewLoaded(&self) -> bool;
+        pub unsafe fn isViewLoaded(&self) -> bool;
 
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(nibName))]
         #[unsafe(method_family = none)]
-        pub fn nibName(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn nibName(&self) -> Option<Retained<NSString>>;
 
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(nibBundle))]
         #[unsafe(method_family = none)]
-        pub fn nibBundle(&self) -> Option<Retained<NSBundle>>;
+        pub unsafe fn nibBundle(&self) -> Option<Retained<NSBundle>>;
 
         #[cfg(feature = "UIStoryboard")]
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(storyboard))]
         #[unsafe(method_family = none)]
-        pub fn storyboard(&self) -> Option<Retained<UIStoryboard>>;
+        pub unsafe fn storyboard(&self) -> Option<Retained<UIStoryboard>>;
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(performSegueWithIdentifier:sender:))]
         #[unsafe(method_family = none)]
@@ -268,9 +262,6 @@ impl UIViewController {
             sender: Option<&AnyObject>,
         );
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(shouldPerformSegueWithIdentifier:sender:))]
         #[unsafe(method_family = none)]
@@ -281,9 +272,6 @@ impl UIViewController {
         ) -> bool;
 
         #[cfg(feature = "UIStoryboardSegue")]
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(prepareForSegue:sender:))]
         #[unsafe(method_family = none)]
@@ -293,10 +281,6 @@ impl UIViewController {
             sender: Option<&AnyObject>,
         );
 
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `sender` should be of the correct type.
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(canPerformUnwindSegueAction:fromViewController:sender:))]
         #[unsafe(method_family = none)]
@@ -307,10 +291,6 @@ impl UIViewController {
             sender: Option<&AnyObject>,
         ) -> bool;
 
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `sender` should be of the correct type.
         #[deprecated]
         #[unsafe(method(canPerformUnwindSegueAction:fromViewController:withSender:))]
         #[unsafe(method_family = none)]
@@ -325,7 +305,7 @@ impl UIViewController {
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(allowedChildViewControllersForUnwindingFromSource:))]
         #[unsafe(method_family = none)]
-        pub fn allowedChildViewControllersForUnwindingFromSource(
+        pub unsafe fn allowedChildViewControllersForUnwindingFromSource(
             &self,
             source: &UIStoryboardUnwindSegueSource,
         ) -> Retained<NSArray<UIViewController>>;
@@ -334,15 +314,11 @@ impl UIViewController {
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(childViewControllerContainingSegueSource:))]
         #[unsafe(method_family = none)]
-        pub fn childViewControllerContainingSegueSource(
+        pub unsafe fn childViewControllerContainingSegueSource(
             &self,
             source: &UIStoryboardUnwindSegueSource,
         ) -> Option<Retained<UIViewController>>;
 
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `sender` should be of the correct type.
         #[deprecated]
         #[unsafe(method(viewControllerForUnwindSegueAction:fromViewController:withSender:))]
         #[unsafe(method_family = none)]
@@ -357,7 +333,7 @@ impl UIViewController {
         #[deprecated = "Loading Interface Builder products will not be supported in a future version of visionOS."]
         #[unsafe(method(unwindForSegue:towardsViewController:))]
         #[unsafe(method_family = none)]
-        pub fn unwindForSegue_towardsViewController(
+        pub unsafe fn unwindForSegue_towardsViewController(
             &self,
             unwind_segue: &UIStoryboardSegue,
             subsequent_vc: &UIViewController,
@@ -367,7 +343,7 @@ impl UIViewController {
         #[deprecated]
         #[unsafe(method(segueForUnwindingToViewController:fromViewController:identifier:))]
         #[unsafe(method_family = none)]
-        pub fn segueForUnwindingToViewController_fromViewController_identifier(
+        pub unsafe fn segueForUnwindingToViewController_fromViewController_identifier(
             &self,
             to_view_controller: &UIViewController,
             from_view_controller: &UIViewController,
@@ -384,7 +360,7 @@ impl UIViewController {
         /// view or view controller's trait collection or the view hierarchy.
         #[unsafe(method(viewWillAppear:))]
         #[unsafe(method_family = none)]
-        pub fn viewWillAppear(&self, animated: bool);
+        pub unsafe fn viewWillAppear(&self, animated: bool);
 
         /// Called when the view is becoming visible at the beginning of the appearance transition,
         /// after it has been added to the hierarchy and been laid out by its superview. This method
@@ -399,158 +375,134 @@ impl UIViewController {
         /// that provides equivalent or superior behavior in nearly all cases.
         #[unsafe(method(viewIsAppearing:))]
         #[unsafe(method_family = none)]
-        pub fn viewIsAppearing(&self, animated: bool);
+        pub unsafe fn viewIsAppearing(&self, animated: bool);
 
         /// Called after the view has fully transitioned to visible, when any transition animations have completed.
         #[unsafe(method(viewDidAppear:))]
         #[unsafe(method_family = none)]
-        pub fn viewDidAppear(&self, animated: bool);
+        pub unsafe fn viewDidAppear(&self, animated: bool);
 
         /// Called when the view is about to be dismissed, covered, or otherwise hidden.
         #[unsafe(method(viewWillDisappear:))]
         #[unsafe(method_family = none)]
-        pub fn viewWillDisappear(&self, animated: bool);
+        pub unsafe fn viewWillDisappear(&self, animated: bool);
 
         /// Called after the view has fully been dismissed, covered, or otherwise hidden, when any transition animations have completed.
         #[unsafe(method(viewDidDisappear:))]
         #[unsafe(method_family = none)]
-        pub fn viewDidDisappear(&self, animated: bool);
-
-        /// Call to manually request a properties update for the view controller.
-        /// Multiple requests may be coalesced into a single update alongside the next layout pass.
-        #[unsafe(method(setNeedsUpdateProperties))]
-        #[unsafe(method_family = none)]
-        pub fn setNeedsUpdateProperties(&self);
-
-        /// Override point for subclasses to update properties of this view controller or its view.
-        /// Never call this method directly; use `setNeedsUpdateProperties` to schedule an update.
-        #[unsafe(method(updateProperties))]
-        #[unsafe(method_family = none)]
-        pub fn updateProperties(&self);
-
-        /// Forces an immediate properties update for this view controller and its view,
-        /// including any view controllers and views in this subtree.
-        #[unsafe(method(updatePropertiesIfNeeded))]
-        #[unsafe(method_family = none)]
-        pub fn updatePropertiesIfNeeded(&self);
+        pub unsafe fn viewDidDisappear(&self, animated: bool);
 
         #[unsafe(method(viewWillLayoutSubviews))]
         #[unsafe(method_family = none)]
-        pub fn viewWillLayoutSubviews(&self);
+        pub unsafe fn viewWillLayoutSubviews(&self);
 
         #[unsafe(method(viewDidLayoutSubviews))]
         #[unsafe(method_family = none)]
-        pub fn viewDidLayoutSubviews(&self);
+        pub unsafe fn viewDidLayoutSubviews(&self);
 
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn title(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: Option<&NSString>);
+        pub unsafe fn setTitle(&self, title: Option<&NSString>);
 
         #[unsafe(method(didReceiveMemoryWarning))]
         #[unsafe(method_family = none)]
-        pub fn didReceiveMemoryWarning(&self);
+        pub unsafe fn didReceiveMemoryWarning(&self);
 
         #[unsafe(method(parentViewController))]
         #[unsafe(method_family = none)]
-        pub fn parentViewController(&self) -> Option<Retained<UIViewController>>;
+        pub unsafe fn parentViewController(&self) -> Option<Retained<UIViewController>>;
 
         #[deprecated]
         #[unsafe(method(modalViewController))]
         #[unsafe(method_family = none)]
-        pub fn modalViewController(&self) -> Option<Retained<UIViewController>>;
+        pub unsafe fn modalViewController(&self) -> Option<Retained<UIViewController>>;
 
         #[unsafe(method(presentedViewController))]
         #[unsafe(method_family = none)]
-        pub fn presentedViewController(&self) -> Option<Retained<UIViewController>>;
+        pub unsafe fn presentedViewController(&self) -> Option<Retained<UIViewController>>;
 
         #[unsafe(method(presentingViewController))]
         #[unsafe(method_family = none)]
-        pub fn presentingViewController(&self) -> Option<Retained<UIViewController>>;
+        pub unsafe fn presentingViewController(&self) -> Option<Retained<UIViewController>>;
 
         #[unsafe(method(definesPresentationContext))]
         #[unsafe(method_family = none)]
-        pub fn definesPresentationContext(&self) -> bool;
+        pub unsafe fn definesPresentationContext(&self) -> bool;
 
         /// Setter for [`definesPresentationContext`][Self::definesPresentationContext].
         #[unsafe(method(setDefinesPresentationContext:))]
         #[unsafe(method_family = none)]
-        pub fn setDefinesPresentationContext(&self, defines_presentation_context: bool);
+        pub unsafe fn setDefinesPresentationContext(&self, defines_presentation_context: bool);
 
         #[unsafe(method(providesPresentationContextTransitionStyle))]
         #[unsafe(method_family = none)]
-        pub fn providesPresentationContextTransitionStyle(&self) -> bool;
+        pub unsafe fn providesPresentationContextTransitionStyle(&self) -> bool;
 
         /// Setter for [`providesPresentationContextTransitionStyle`][Self::providesPresentationContextTransitionStyle].
         #[unsafe(method(setProvidesPresentationContextTransitionStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setProvidesPresentationContextTransitionStyle(
+        pub unsafe fn setProvidesPresentationContextTransitionStyle(
             &self,
             provides_presentation_context_transition_style: bool,
         );
 
         #[unsafe(method(restoresFocusAfterTransition))]
         #[unsafe(method_family = none)]
-        pub fn restoresFocusAfterTransition(&self) -> bool;
+        pub unsafe fn restoresFocusAfterTransition(&self) -> bool;
 
         /// Setter for [`restoresFocusAfterTransition`][Self::restoresFocusAfterTransition].
         #[unsafe(method(setRestoresFocusAfterTransition:))]
         #[unsafe(method_family = none)]
-        pub fn setRestoresFocusAfterTransition(&self, restores_focus_after_transition: bool);
+        pub unsafe fn setRestoresFocusAfterTransition(&self, restores_focus_after_transition: bool);
 
         /// The identifier of the focus group that this view controller belongs to. If this is nil, the view controller inherits the focus group of its parent focus environment.
         #[unsafe(method(focusGroupIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn focusGroupIdentifier(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn focusGroupIdentifier(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`focusGroupIdentifier`][Self::focusGroupIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setFocusGroupIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setFocusGroupIdentifier(&self, focus_group_identifier: Option<&NSString>);
+        pub unsafe fn setFocusGroupIdentifier(&self, focus_group_identifier: Option<&NSString>);
 
         /// The base name for tracking user interactions as activities hosted by this view controller.
         #[unsafe(method(interactionActivityTrackingBaseName))]
         #[unsafe(method_family = none)]
-        pub fn interactionActivityTrackingBaseName(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn interactionActivityTrackingBaseName(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`interactionActivityTrackingBaseName`][Self::interactionActivityTrackingBaseName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setInteractionActivityTrackingBaseName:))]
         #[unsafe(method_family = none)]
-        pub fn setInteractionActivityTrackingBaseName(
+        pub unsafe fn setInteractionActivityTrackingBaseName(
             &self,
             interaction_activity_tracking_base_name: Option<&NSString>,
         );
 
         #[unsafe(method(isBeingPresented))]
         #[unsafe(method_family = none)]
-        pub fn isBeingPresented(&self) -> bool;
+        pub unsafe fn isBeingPresented(&self) -> bool;
 
         #[unsafe(method(isBeingDismissed))]
         #[unsafe(method_family = none)]
-        pub fn isBeingDismissed(&self) -> bool;
+        pub unsafe fn isBeingDismissed(&self) -> bool;
 
         #[unsafe(method(isMovingToParentViewController))]
         #[unsafe(method_family = none)]
-        pub fn isMovingToParentViewController(&self) -> bool;
+        pub unsafe fn isMovingToParentViewController(&self) -> bool;
 
         #[unsafe(method(isMovingFromParentViewController))]
         #[unsafe(method_family = none)]
-        pub fn isMovingFromParentViewController(&self) -> bool;
+        pub unsafe fn isMovingFromParentViewController(&self) -> bool;
 
         #[cfg(feature = "block2")]
         #[unsafe(method(presentViewController:animated:completion:))]
         #[unsafe(method_family = none)]
-        pub fn presentViewController_animated_completion(
+        pub unsafe fn presentViewController_animated_completion(
             &self,
             view_controller_to_present: &UIViewController,
             flag: bool,
@@ -560,7 +512,7 @@ impl UIViewController {
         #[cfg(feature = "block2")]
         #[unsafe(method(dismissViewControllerAnimated:completion:))]
         #[unsafe(method_family = none)]
-        pub fn dismissViewControllerAnimated_completion(
+        pub unsafe fn dismissViewControllerAnimated_completion(
             &self,
             flag: bool,
             completion: Option<&block2::DynBlock<dyn Fn()>>,
@@ -569,7 +521,7 @@ impl UIViewController {
         #[deprecated]
         #[unsafe(method(presentModalViewController:animated:))]
         #[unsafe(method_family = none)]
-        pub fn presentModalViewController_animated(
+        pub unsafe fn presentModalViewController_animated(
             &self,
             modal_view_controller: &UIViewController,
             animated: bool,
@@ -578,16 +530,19 @@ impl UIViewController {
         #[deprecated]
         #[unsafe(method(dismissModalViewControllerAnimated:))]
         #[unsafe(method_family = none)]
-        pub fn dismissModalViewControllerAnimated(&self, animated: bool);
+        pub unsafe fn dismissModalViewControllerAnimated(&self, animated: bool);
 
         #[unsafe(method(modalTransitionStyle))]
         #[unsafe(method_family = none)]
-        pub fn modalTransitionStyle(&self) -> UIModalTransitionStyle;
+        pub unsafe fn modalTransitionStyle(&self) -> UIModalTransitionStyle;
 
         /// Setter for [`modalTransitionStyle`][Self::modalTransitionStyle].
         #[unsafe(method(setModalTransitionStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setModalTransitionStyle(&self, modal_transition_style: UIModalTransitionStyle);
+        pub unsafe fn setModalTransitionStyle(
+            &self,
+            modal_transition_style: UIModalTransitionStyle,
+        );
 
         #[cfg(feature = "UIViewControllerTransition")]
         /// Preferred system provided transition to use when displaying this
@@ -597,72 +552,75 @@ impl UIViewController {
         /// the .zoom transition, but not the .coverVertical transition.
         #[unsafe(method(preferredTransition))]
         #[unsafe(method_family = none)]
-        pub fn preferredTransition(&self) -> Option<Retained<UIViewControllerTransition>>;
+        pub unsafe fn preferredTransition(&self) -> Option<Retained<UIViewControllerTransition>>;
 
         #[cfg(feature = "UIViewControllerTransition")]
         /// Setter for [`preferredTransition`][Self::preferredTransition].
         #[unsafe(method(setPreferredTransition:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredTransition(
+        pub unsafe fn setPreferredTransition(
             &self,
             preferred_transition: Option<&UIViewControllerTransition>,
         );
 
         #[unsafe(method(modalPresentationStyle))]
         #[unsafe(method_family = none)]
-        pub fn modalPresentationStyle(&self) -> UIModalPresentationStyle;
+        pub unsafe fn modalPresentationStyle(&self) -> UIModalPresentationStyle;
 
         /// Setter for [`modalPresentationStyle`][Self::modalPresentationStyle].
         #[unsafe(method(setModalPresentationStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setModalPresentationStyle(&self, modal_presentation_style: UIModalPresentationStyle);
+        pub unsafe fn setModalPresentationStyle(
+            &self,
+            modal_presentation_style: UIModalPresentationStyle,
+        );
 
         #[unsafe(method(modalPresentationCapturesStatusBarAppearance))]
         #[unsafe(method_family = none)]
-        pub fn modalPresentationCapturesStatusBarAppearance(&self) -> bool;
+        pub unsafe fn modalPresentationCapturesStatusBarAppearance(&self) -> bool;
 
         /// Setter for [`modalPresentationCapturesStatusBarAppearance`][Self::modalPresentationCapturesStatusBarAppearance].
         #[unsafe(method(setModalPresentationCapturesStatusBarAppearance:))]
         #[unsafe(method_family = none)]
-        pub fn setModalPresentationCapturesStatusBarAppearance(
+        pub unsafe fn setModalPresentationCapturesStatusBarAppearance(
             &self,
             modal_presentation_captures_status_bar_appearance: bool,
         );
 
         #[unsafe(method(disablesAutomaticKeyboardDismissal))]
         #[unsafe(method_family = none)]
-        pub fn disablesAutomaticKeyboardDismissal(&self) -> bool;
+        pub unsafe fn disablesAutomaticKeyboardDismissal(&self) -> bool;
 
         #[deprecated]
         #[unsafe(method(wantsFullScreenLayout))]
         #[unsafe(method_family = none)]
-        pub fn wantsFullScreenLayout(&self) -> bool;
+        pub unsafe fn wantsFullScreenLayout(&self) -> bool;
 
         /// Setter for [`wantsFullScreenLayout`][Self::wantsFullScreenLayout].
         #[deprecated]
         #[unsafe(method(setWantsFullScreenLayout:))]
         #[unsafe(method_family = none)]
-        pub fn setWantsFullScreenLayout(&self, wants_full_screen_layout: bool);
+        pub unsafe fn setWantsFullScreenLayout(&self, wants_full_screen_layout: bool);
 
         #[cfg(feature = "UIGeometry")]
         #[unsafe(method(edgesForExtendedLayout))]
         #[unsafe(method_family = none)]
-        pub fn edgesForExtendedLayout(&self) -> UIRectEdge;
+        pub unsafe fn edgesForExtendedLayout(&self) -> UIRectEdge;
 
         #[cfg(feature = "UIGeometry")]
         /// Setter for [`edgesForExtendedLayout`][Self::edgesForExtendedLayout].
         #[unsafe(method(setEdgesForExtendedLayout:))]
         #[unsafe(method_family = none)]
-        pub fn setEdgesForExtendedLayout(&self, edges_for_extended_layout: UIRectEdge);
+        pub unsafe fn setEdgesForExtendedLayout(&self, edges_for_extended_layout: UIRectEdge);
 
         #[unsafe(method(extendedLayoutIncludesOpaqueBars))]
         #[unsafe(method_family = none)]
-        pub fn extendedLayoutIncludesOpaqueBars(&self) -> bool;
+        pub unsafe fn extendedLayoutIncludesOpaqueBars(&self) -> bool;
 
         /// Setter for [`extendedLayoutIncludesOpaqueBars`][Self::extendedLayoutIncludesOpaqueBars].
         #[unsafe(method(setExtendedLayoutIncludesOpaqueBars:))]
         #[unsafe(method_family = none)]
-        pub fn setExtendedLayoutIncludesOpaqueBars(
+        pub unsafe fn setExtendedLayoutIncludesOpaqueBars(
             &self,
             extended_layout_includes_opaque_bars: bool,
         );
@@ -670,13 +628,13 @@ impl UIViewController {
         #[deprecated = "Use UIScrollView's contentInsetAdjustmentBehavior instead"]
         #[unsafe(method(automaticallyAdjustsScrollViewInsets))]
         #[unsafe(method_family = none)]
-        pub fn automaticallyAdjustsScrollViewInsets(&self) -> bool;
+        pub unsafe fn automaticallyAdjustsScrollViewInsets(&self) -> bool;
 
         /// Setter for [`automaticallyAdjustsScrollViewInsets`][Self::automaticallyAdjustsScrollViewInsets].
         #[deprecated = "Use UIScrollView's contentInsetAdjustmentBehavior instead"]
         #[unsafe(method(setAutomaticallyAdjustsScrollViewInsets:))]
         #[unsafe(method_family = none)]
-        pub fn setAutomaticallyAdjustsScrollViewInsets(
+        pub unsafe fn setAutomaticallyAdjustsScrollViewInsets(
             &self,
             automatically_adjusts_scroll_view_insets: bool,
         );
@@ -685,7 +643,7 @@ impl UIViewController {
         /// Aggregate values (e.g., NSDirectionalRectEdgeAll) are accepted in the `edge` parameter; NSDirectionalRectEdgeLeading and Trailing are ignored on iOS 15.0
         #[unsafe(method(setContentScrollView:forEdge:))]
         #[unsafe(method_family = none)]
-        pub fn setContentScrollView_forEdge(
+        pub unsafe fn setContentScrollView_forEdge(
             &self,
             scroll_view: Option<&UIScrollView>,
             edge: NSDirectionalRectEdge,
@@ -695,7 +653,7 @@ impl UIViewController {
         /// Pass only a single edge (e.g., NSDirectionalRectEdgeTop) in the `edge` parameter. Raises an exception when passed an aggregate edge (e.g., NSDirectionalRectEdgeAll)
         #[unsafe(method(contentScrollViewForEdge:))]
         #[unsafe(method_family = none)]
-        pub fn contentScrollViewForEdge(
+        pub unsafe fn contentScrollViewForEdge(
             &self,
             edge: NSDirectionalRectEdge,
         ) -> Option<Retained<UIScrollView>>;
@@ -703,39 +661,35 @@ impl UIViewController {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(preferredContentSize))]
         #[unsafe(method_family = none)]
-        pub fn preferredContentSize(&self) -> CGSize;
+        pub unsafe fn preferredContentSize(&self) -> CGSize;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`preferredContentSize`][Self::preferredContentSize].
         #[unsafe(method(setPreferredContentSize:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredContentSize(&self, preferred_content_size: CGSize);
+        pub unsafe fn setPreferredContentSize(&self, preferred_content_size: CGSize);
 
         #[cfg(feature = "UIApplication")]
         #[deprecated = "Has no effect on visionOS"]
         #[unsafe(method(preferredStatusBarStyle))]
         #[unsafe(method_family = none)]
-        pub fn preferredStatusBarStyle(&self) -> UIStatusBarStyle;
+        pub unsafe fn preferredStatusBarStyle(&self) -> UIStatusBarStyle;
 
         #[deprecated = "Has no effect on visionOS"]
         #[unsafe(method(prefersStatusBarHidden))]
         #[unsafe(method_family = none)]
-        pub fn prefersStatusBarHidden(&self) -> bool;
+        pub unsafe fn prefersStatusBarHidden(&self) -> bool;
 
         #[cfg(feature = "UIApplication")]
         #[deprecated = "Has no effect on visionOS"]
         #[unsafe(method(preferredStatusBarUpdateAnimation))]
         #[unsafe(method_family = none)]
-        pub fn preferredStatusBarUpdateAnimation(&self) -> UIStatusBarAnimation;
+        pub unsafe fn preferredStatusBarUpdateAnimation(&self) -> UIStatusBarAnimation;
 
         #[unsafe(method(setNeedsStatusBarAppearanceUpdate))]
         #[unsafe(method_family = none)]
         pub fn setNeedsStatusBarAppearanceUpdate(&self);
 
-        /// # Safety
-        ///
-        /// - `action` must be a valid selector.
-        /// - `sender` should be of the correct type.
         #[unsafe(method(targetViewControllerForAction:sender:))]
         #[unsafe(method_family = none)]
         pub unsafe fn targetViewControllerForAction_sender(
@@ -744,9 +698,6 @@ impl UIViewController {
             sender: Option<&AnyObject>,
         ) -> Option<Retained<UIViewController>>;
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(showViewController:sender:))]
         #[unsafe(method_family = none)]
         pub unsafe fn showViewController_sender(
@@ -755,9 +706,6 @@ impl UIViewController {
             sender: Option<&AnyObject>,
         );
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(showDetailViewController:sender:))]
         #[unsafe(method_family = none)]
         pub unsafe fn showDetailViewController_sender(
@@ -769,22 +717,22 @@ impl UIViewController {
         #[cfg(feature = "UIInterface")]
         #[unsafe(method(preferredUserInterfaceStyle))]
         #[unsafe(method_family = none)]
-        pub fn preferredUserInterfaceStyle(&self) -> UIUserInterfaceStyle;
+        pub unsafe fn preferredUserInterfaceStyle(&self) -> UIUserInterfaceStyle;
 
         #[unsafe(method(setNeedsUserInterfaceAppearanceUpdate))]
         #[unsafe(method_family = none)]
-        pub fn setNeedsUserInterfaceAppearanceUpdate(&self);
+        pub unsafe fn setNeedsUserInterfaceAppearanceUpdate(&self);
 
         #[cfg(feature = "UIInterface")]
         #[unsafe(method(overrideUserInterfaceStyle))]
         #[unsafe(method_family = none)]
-        pub fn overrideUserInterfaceStyle(&self) -> UIUserInterfaceStyle;
+        pub unsafe fn overrideUserInterfaceStyle(&self) -> UIUserInterfaceStyle;
 
         #[cfg(feature = "UIInterface")]
         /// Setter for [`overrideUserInterfaceStyle`][Self::overrideUserInterfaceStyle].
         #[unsafe(method(setOverrideUserInterfaceStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setOverrideUserInterfaceStyle(
+        pub unsafe fn setOverrideUserInterfaceStyle(
             &self,
             override_user_interface_style: UIUserInterfaceStyle,
         );
@@ -797,11 +745,11 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -818,7 +766,7 @@ impl UIViewController {
         #[deprecated]
         #[unsafe(method(shouldAutorotateToInterfaceOrientation:))]
         #[unsafe(method_family = none)]
-        pub fn shouldAutorotateToInterfaceOrientation(
+        pub unsafe fn shouldAutorotateToInterfaceOrientation(
             &self,
             to_interface_orientation: UIInterfaceOrientation,
         ) -> bool;
@@ -826,47 +774,48 @@ impl UIViewController {
         #[deprecated = "Update supported interface orientations and call setNeedsUpdateOfSupportedInterfaceOrientations to indicate a change."]
         #[unsafe(method(shouldAutorotate))]
         #[unsafe(method_family = none)]
-        pub fn shouldAutorotate(&self) -> bool;
+        pub unsafe fn shouldAutorotate(&self) -> bool;
 
         #[cfg(feature = "UIOrientation")]
         #[unsafe(method(supportedInterfaceOrientations))]
         #[unsafe(method_family = none)]
-        pub fn supportedInterfaceOrientations(&self) -> UIInterfaceOrientationMask;
+        pub unsafe fn supportedInterfaceOrientations(&self) -> UIInterfaceOrientationMask;
 
         #[cfg(feature = "UIOrientation")]
         #[unsafe(method(preferredInterfaceOrientationForPresentation))]
         #[unsafe(method_family = none)]
-        pub fn preferredInterfaceOrientationForPresentation(&self) -> UIInterfaceOrientation;
+        pub unsafe fn preferredInterfaceOrientationForPresentation(&self)
+            -> UIInterfaceOrientation;
 
         /// Notifies the view controller that a change occurred that affects supported interface orientations or the preferred interface orientation for presentation.
         /// By default, this will animate any changes to orientation. To perform a non-animated update, call within `[UIView performWithoutAnimation:]`.
         #[unsafe(method(setNeedsUpdateOfSupportedInterfaceOrientations))]
         #[unsafe(method_family = none)]
-        pub fn setNeedsUpdateOfSupportedInterfaceOrientations(&self);
+        pub unsafe fn setNeedsUpdateOfSupportedInterfaceOrientations(&self);
 
         #[cfg(feature = "UIView")]
         #[deprecated = "Header views are animated along with the rest of the view hierarchy"]
         #[unsafe(method(rotatingHeaderView))]
         #[unsafe(method_family = none)]
-        pub fn rotatingHeaderView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn rotatingHeaderView(&self) -> Option<Retained<UIView>>;
 
         #[cfg(feature = "UIView")]
         #[deprecated = "Footer views are animated along with the rest of the view hierarchy"]
         #[unsafe(method(rotatingFooterView))]
         #[unsafe(method_family = none)]
-        pub fn rotatingFooterView(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn rotatingFooterView(&self) -> Option<Retained<UIView>>;
 
         #[cfg(feature = "UIOrientation")]
         #[deprecated]
         #[unsafe(method(interfaceOrientation))]
         #[unsafe(method_family = none)]
-        pub fn interfaceOrientation(&self) -> UIInterfaceOrientation;
+        pub unsafe fn interfaceOrientation(&self) -> UIInterfaceOrientation;
 
         #[cfg(feature = "UIOrientation")]
         #[deprecated = "Implement viewWillTransitionToSize:withTransitionCoordinator: instead"]
         #[unsafe(method(willRotateToInterfaceOrientation:duration:))]
         #[unsafe(method_family = none)]
-        pub fn willRotateToInterfaceOrientation_duration(
+        pub unsafe fn willRotateToInterfaceOrientation_duration(
             &self,
             to_interface_orientation: UIInterfaceOrientation,
             duration: NSTimeInterval,
@@ -876,7 +825,7 @@ impl UIViewController {
         #[deprecated]
         #[unsafe(method(didRotateFromInterfaceOrientation:))]
         #[unsafe(method_family = none)]
-        pub fn didRotateFromInterfaceOrientation(
+        pub unsafe fn didRotateFromInterfaceOrientation(
             &self,
             from_interface_orientation: UIInterfaceOrientation,
         );
@@ -885,7 +834,7 @@ impl UIViewController {
         #[deprecated = "Implement viewWillTransitionToSize:withTransitionCoordinator: instead"]
         #[unsafe(method(willAnimateRotationToInterfaceOrientation:duration:))]
         #[unsafe(method_family = none)]
-        pub fn willAnimateRotationToInterfaceOrientation_duration(
+        pub unsafe fn willAnimateRotationToInterfaceOrientation_duration(
             &self,
             to_interface_orientation: UIInterfaceOrientation,
             duration: NSTimeInterval,
@@ -895,7 +844,7 @@ impl UIViewController {
         #[deprecated]
         #[unsafe(method(willAnimateFirstHalfOfRotationToInterfaceOrientation:duration:))]
         #[unsafe(method_family = none)]
-        pub fn willAnimateFirstHalfOfRotationToInterfaceOrientation_duration(
+        pub unsafe fn willAnimateFirstHalfOfRotationToInterfaceOrientation_duration(
             &self,
             to_interface_orientation: UIInterfaceOrientation,
             duration: NSTimeInterval,
@@ -905,7 +854,7 @@ impl UIViewController {
         #[deprecated]
         #[unsafe(method(didAnimateFirstHalfOfRotationToInterfaceOrientation:))]
         #[unsafe(method_family = none)]
-        pub fn didAnimateFirstHalfOfRotationToInterfaceOrientation(
+        pub unsafe fn didAnimateFirstHalfOfRotationToInterfaceOrientation(
             &self,
             to_interface_orientation: UIInterfaceOrientation,
         );
@@ -914,7 +863,7 @@ impl UIViewController {
         #[deprecated]
         #[unsafe(method(willAnimateSecondHalfOfRotationFromInterfaceOrientation:duration:))]
         #[unsafe(method_family = none)]
-        pub fn willAnimateSecondHalfOfRotationFromInterfaceOrientation_duration(
+        pub unsafe fn willAnimateSecondHalfOfRotationFromInterfaceOrientation_duration(
             &self,
             from_interface_orientation: UIInterfaceOrientation,
             duration: NSTimeInterval,
@@ -928,21 +877,21 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(isEditing))]
         #[unsafe(method_family = none)]
-        pub fn isEditing(&self) -> bool;
+        pub unsafe fn isEditing(&self) -> bool;
 
         /// Setter for [`isEditing`][Self::isEditing].
         #[unsafe(method(setEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setEditing(&self, editing: bool);
+        pub unsafe fn setEditing(&self, editing: bool);
 
         #[unsafe(method(setEditing:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setEditing_animated(&self, editing: bool, animated: bool);
+        pub unsafe fn setEditing_animated(&self, editing: bool, animated: bool);
 
         #[cfg(all(feature = "UIBarButtonItem", feature = "UIBarItem"))]
         #[unsafe(method(editButtonItem))]
         #[unsafe(method_family = none)]
-        pub fn editButtonItem(&self) -> Retained<UIBarButtonItem>;
+        pub unsafe fn editButtonItem(&self) -> Retained<UIBarButtonItem>;
     );
 }
 
@@ -954,7 +903,8 @@ impl UIViewController {
         #[deprecated]
         #[unsafe(method(searchDisplayController))]
         #[unsafe(method_family = none)]
-        pub fn searchDisplayController(&self) -> Option<Retained<UISearchDisplayController>>;
+        pub unsafe fn searchDisplayController(&self)
+            -> Option<Retained<UISearchDisplayController>>;
     );
 }
 
@@ -969,20 +919,20 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(childViewControllers))]
         #[unsafe(method_family = none)]
-        pub fn childViewControllers(&self) -> Retained<NSArray<UIViewController>>;
+        pub unsafe fn childViewControllers(&self) -> Retained<NSArray<UIViewController>>;
 
         #[unsafe(method(addChildViewController:))]
         #[unsafe(method_family = none)]
-        pub fn addChildViewController(&self, child_controller: &UIViewController);
+        pub unsafe fn addChildViewController(&self, child_controller: &UIViewController);
 
         #[unsafe(method(removeFromParentViewController))]
         #[unsafe(method_family = none)]
-        pub fn removeFromParentViewController(&self);
+        pub unsafe fn removeFromParentViewController(&self);
 
         #[cfg(all(feature = "UIView", feature = "block2"))]
         #[unsafe(method(transitionFromViewController:toViewController:duration:options:animations:completion:))]
         #[unsafe(method_family = none)]
-        pub fn transitionFromViewController_toViewController_duration_options_animations_completion(
+        pub unsafe fn transitionFromViewController_toViewController_duration_options_animations_completion(
             &self,
             from_view_controller: &UIViewController,
             to_view_controller: &UIViewController,
@@ -994,27 +944,31 @@ impl UIViewController {
 
         #[unsafe(method(beginAppearanceTransition:animated:))]
         #[unsafe(method_family = none)]
-        pub fn beginAppearanceTransition_animated(&self, is_appearing: bool, animated: bool);
+        pub unsafe fn beginAppearanceTransition_animated(&self, is_appearing: bool, animated: bool);
 
         #[unsafe(method(endAppearanceTransition))]
         #[unsafe(method_family = none)]
-        pub fn endAppearanceTransition(&self);
+        pub unsafe fn endAppearanceTransition(&self);
 
         #[deprecated = "Has no effect on visionOS"]
         #[unsafe(method(childViewControllerForStatusBarStyle))]
         #[unsafe(method_family = none)]
-        pub fn childViewControllerForStatusBarStyle(&self) -> Option<Retained<UIViewController>>;
+        pub unsafe fn childViewControllerForStatusBarStyle(
+            &self,
+        ) -> Option<Retained<UIViewController>>;
 
         #[deprecated = "Has no effect on visionOS"]
         #[unsafe(method(childViewControllerForStatusBarHidden))]
         #[unsafe(method_family = none)]
-        pub fn childViewControllerForStatusBarHidden(&self) -> Option<Retained<UIViewController>>;
+        pub unsafe fn childViewControllerForStatusBarHidden(
+            &self,
+        ) -> Option<Retained<UIViewController>>;
 
         #[cfg(feature = "UITraitCollection")]
         #[deprecated = "Use the traitOverrides property on the child view controller instead"]
         #[unsafe(method(setOverrideTraitCollection:forChildViewController:))]
         #[unsafe(method_family = none)]
-        pub fn setOverrideTraitCollection_forChildViewController(
+        pub unsafe fn setOverrideTraitCollection_forChildViewController(
             &self,
             collection: Option<&UITraitCollection>,
             child_view_controller: &UIViewController,
@@ -1024,14 +978,14 @@ impl UIViewController {
         #[deprecated = "Use the traitOverrides property on the child view controller instead"]
         #[unsafe(method(overrideTraitCollectionForChildViewController:))]
         #[unsafe(method_family = none)]
-        pub fn overrideTraitCollectionForChildViewController(
+        pub unsafe fn overrideTraitCollectionForChildViewController(
             &self,
             child_view_controller: &UIViewController,
         ) -> Option<Retained<UITraitCollection>>;
 
         #[unsafe(method(childViewControllerForUserInterfaceStyle))]
         #[unsafe(method_family = none)]
-        pub fn childViewControllerForUserInterfaceStyle(
+        pub unsafe fn childViewControllerForUserInterfaceStyle(
             &self,
         ) -> Option<Retained<UIViewController>>;
     );
@@ -1044,26 +998,26 @@ impl UIViewController {
         #[deprecated]
         #[unsafe(method(automaticallyForwardAppearanceAndRotationMethodsToChildViewControllers))]
         #[unsafe(method_family = none)]
-        pub fn automaticallyForwardAppearanceAndRotationMethodsToChildViewControllers(
+        pub unsafe fn automaticallyForwardAppearanceAndRotationMethodsToChildViewControllers(
             &self,
         ) -> bool;
 
         #[deprecated = "Manually forward viewWillTransitionToSize:withTransitionCoordinator: if necessary"]
         #[unsafe(method(shouldAutomaticallyForwardRotationMethods))]
         #[unsafe(method_family = none)]
-        pub fn shouldAutomaticallyForwardRotationMethods(&self) -> bool;
+        pub unsafe fn shouldAutomaticallyForwardRotationMethods(&self) -> bool;
 
         #[unsafe(method(shouldAutomaticallyForwardAppearanceMethods))]
         #[unsafe(method_family = none)]
-        pub fn shouldAutomaticallyForwardAppearanceMethods(&self) -> bool;
+        pub unsafe fn shouldAutomaticallyForwardAppearanceMethods(&self) -> bool;
 
         #[unsafe(method(willMoveToParentViewController:))]
         #[unsafe(method_family = none)]
-        pub fn willMoveToParentViewController(&self, parent: Option<&UIViewController>);
+        pub unsafe fn willMoveToParentViewController(&self, parent: Option<&UIViewController>);
 
         #[unsafe(method(didMoveToParentViewController:))]
         #[unsafe(method_family = none)]
-        pub fn didMoveToParentViewController(&self, parent: Option<&UIViewController>);
+        pub unsafe fn didMoveToParentViewController(&self, parent: Option<&UIViewController>);
     );
 }
 
@@ -1073,51 +1027,35 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(restorationIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn restorationIdentifier(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn restorationIdentifier(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`restorationIdentifier`][Self::restorationIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setRestorationIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn setRestorationIdentifier(&self, restoration_identifier: Option<&NSString>);
+        pub unsafe fn setRestorationIdentifier(&self, restoration_identifier: Option<&NSString>);
 
         #[cfg(feature = "UIStateRestoration")]
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(restorationClass))]
         #[unsafe(method_family = none)]
         pub unsafe fn restorationClass(&self) -> Option<&'static AnyClass>;
 
         #[cfg(feature = "UIStateRestoration")]
         /// Setter for [`restorationClass`][Self::restorationClass].
-        ///
-        /// # Safety
-        ///
-        /// - `restoration_class` must implement UIViewControllerRestoration.
-        /// - This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setRestorationClass:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRestorationClass(&self, restoration_class: Option<&AnyClass>);
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(encodeRestorableStateWithCoder:))]
         #[unsafe(method_family = none)]
         pub unsafe fn encodeRestorableStateWithCoder(&self, coder: &NSCoder);
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(decodeRestorableStateWithCoder:))]
         #[unsafe(method_family = none)]
         pub unsafe fn decodeRestorableStateWithCoder(&self, coder: &NSCoder);
 
         #[unsafe(method(applicationFinishedRestoringState))]
         #[unsafe(method_family = none)]
-        pub fn applicationFinishedRestoringState(&self);
+        pub unsafe fn applicationFinishedRestoringState(&self);
     );
 }
 
@@ -1132,7 +1070,7 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(updateViewConstraints))]
         #[unsafe(method_family = none)]
-        pub fn updateViewConstraints(&self);
+        pub unsafe fn updateViewConstraints(&self);
     );
 }
 
@@ -1143,17 +1081,16 @@ impl UIViewController {
         #[cfg(feature = "UIViewControllerTransitioning")]
         #[unsafe(method(transitioningDelegate))]
         #[unsafe(method_family = none)]
-        pub fn transitioningDelegate(
+        pub unsafe fn transitioningDelegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIViewControllerTransitioningDelegate>>>;
 
         #[cfg(feature = "UIViewControllerTransitioning")]
-        /// Setter for [`transitioningDelegate`][Self::transitioningDelegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`transitioningDelegate`][Self::transitioningDelegate].
         #[unsafe(method(setTransitioningDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setTransitioningDelegate(
+        pub unsafe fn setTransitioningDelegate(
             &self,
             transitioning_delegate: Option<
                 &ProtocolObject<dyn UIViewControllerTransitioningDelegate>,
@@ -1170,49 +1107,49 @@ impl UIViewController {
         #[deprecated = "Use view.safeAreaLayoutGuide.topAnchor instead of topLayoutGuide.bottomAnchor"]
         #[unsafe(method(topLayoutGuide))]
         #[unsafe(method_family = none)]
-        pub fn topLayoutGuide(&self) -> Retained<ProtocolObject<dyn UILayoutSupport>>;
+        pub unsafe fn topLayoutGuide(&self) -> Retained<ProtocolObject<dyn UILayoutSupport>>;
 
         #[cfg(feature = "NSLayoutConstraint")]
         #[deprecated = "Use view.safeAreaLayoutGuide.bottomAnchor instead of bottomLayoutGuide.topAnchor"]
         #[unsafe(method(bottomLayoutGuide))]
         #[unsafe(method_family = none)]
-        pub fn bottomLayoutGuide(&self) -> Retained<ProtocolObject<dyn UILayoutSupport>>;
+        pub unsafe fn bottomLayoutGuide(&self) -> Retained<ProtocolObject<dyn UILayoutSupport>>;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         #[unsafe(method(additionalSafeAreaInsets))]
         #[unsafe(method_family = none)]
-        pub fn additionalSafeAreaInsets(&self) -> UIEdgeInsets;
+        pub unsafe fn additionalSafeAreaInsets(&self) -> UIEdgeInsets;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Setter for [`additionalSafeAreaInsets`][Self::additionalSafeAreaInsets].
         #[unsafe(method(setAdditionalSafeAreaInsets:))]
         #[unsafe(method_family = none)]
-        pub fn setAdditionalSafeAreaInsets(&self, additional_safe_area_insets: UIEdgeInsets);
+        pub unsafe fn setAdditionalSafeAreaInsets(&self, additional_safe_area_insets: UIEdgeInsets);
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         #[unsafe(method(systemMinimumLayoutMargins))]
         #[unsafe(method_family = none)]
-        pub fn systemMinimumLayoutMargins(&self) -> NSDirectionalEdgeInsets;
+        pub unsafe fn systemMinimumLayoutMargins(&self) -> NSDirectionalEdgeInsets;
 
         #[unsafe(method(viewRespectsSystemMinimumLayoutMargins))]
         #[unsafe(method_family = none)]
-        pub fn viewRespectsSystemMinimumLayoutMargins(&self) -> bool;
+        pub unsafe fn viewRespectsSystemMinimumLayoutMargins(&self) -> bool;
 
         /// Setter for [`viewRespectsSystemMinimumLayoutMargins`][Self::viewRespectsSystemMinimumLayoutMargins].
         #[unsafe(method(setViewRespectsSystemMinimumLayoutMargins:))]
         #[unsafe(method_family = none)]
-        pub fn setViewRespectsSystemMinimumLayoutMargins(
+        pub unsafe fn setViewRespectsSystemMinimumLayoutMargins(
             &self,
             view_respects_system_minimum_layout_margins: bool,
         );
 
         #[unsafe(method(viewLayoutMarginsDidChange))]
         #[unsafe(method_family = none)]
-        pub fn viewLayoutMarginsDidChange(&self);
+        pub unsafe fn viewLayoutMarginsDidChange(&self);
 
         #[unsafe(method(viewSafeAreaInsetsDidChange))]
         #[unsafe(method_family = none)]
-        pub fn viewSafeAreaInsetsDidChange(&self);
+        pub unsafe fn viewSafeAreaInsetsDidChange(&self);
     );
 }
 
@@ -1227,7 +1164,7 @@ impl UIViewController {
         ))]
         #[unsafe(method(addKeyCommand:))]
         #[unsafe(method_family = none)]
-        pub fn addKeyCommand(&self, key_command: &UIKeyCommand);
+        pub unsafe fn addKeyCommand(&self, key_command: &UIKeyCommand);
 
         #[cfg(all(
             feature = "UICommand",
@@ -1236,7 +1173,7 @@ impl UIViewController {
         ))]
         #[unsafe(method(removeKeyCommand:))]
         #[unsafe(method_family = none)]
-        pub fn removeKeyCommand(&self, key_command: &UIKeyCommand);
+        pub unsafe fn removeKeyCommand(&self, key_command: &UIKeyCommand);
     );
 }
 
@@ -1249,7 +1186,7 @@ impl UIViewController {
         /// Defaults to YES. You can change the default return value by providing a value for UIViewControllerPerformsActionsWhilePresentingModally in your Info.plist file.
         #[unsafe(method(performsActionsWhilePresentingModally))]
         #[unsafe(method_family = none)]
-        pub fn performsActionsWhilePresentingModally(&self) -> bool;
+        pub unsafe fn performsActionsWhilePresentingModally(&self) -> bool;
     );
 }
 
@@ -1259,7 +1196,7 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(extensionContext))]
         #[unsafe(method_family = none)]
-        pub fn extensionContext(&self) -> Option<Retained<NSExtensionContext>>;
+        pub unsafe fn extensionContext(&self) -> Option<Retained<NSExtensionContext>>;
     );
 }
 
@@ -1275,7 +1212,7 @@ impl UIViewController {
         #[cfg(feature = "UIPresentationController")]
         #[unsafe(method(presentationController))]
         #[unsafe(method_family = none)]
-        pub fn presentationController(&self) -> Option<Retained<UIPresentationController>>;
+        pub unsafe fn presentationController(&self) -> Option<Retained<UIPresentationController>>;
 
         #[cfg(all(
             feature = "UIPresentationController",
@@ -1283,7 +1220,7 @@ impl UIViewController {
         ))]
         #[unsafe(method(sheetPresentationController))]
         #[unsafe(method_family = none)]
-        pub fn sheetPresentationController(
+        pub unsafe fn sheetPresentationController(
             &self,
         ) -> Option<Retained<UISheetPresentationController>>;
 
@@ -1293,23 +1230,25 @@ impl UIViewController {
         ))]
         #[unsafe(method(popoverPresentationController))]
         #[unsafe(method_family = none)]
-        pub fn popoverPresentationController(
+        pub unsafe fn popoverPresentationController(
             &self,
         ) -> Option<Retained<UIPopoverPresentationController>>;
 
         #[cfg(feature = "UIPresentationController")]
         #[unsafe(method(activePresentationController))]
         #[unsafe(method_family = none)]
-        pub fn activePresentationController(&self) -> Option<Retained<UIPresentationController>>;
+        pub unsafe fn activePresentationController(
+            &self,
+        ) -> Option<Retained<UIPresentationController>>;
 
         #[unsafe(method(isModalInPresentation))]
         #[unsafe(method_family = none)]
-        pub fn isModalInPresentation(&self) -> bool;
+        pub unsafe fn isModalInPresentation(&self) -> bool;
 
         /// Setter for [`isModalInPresentation`][Self::isModalInPresentation].
         #[unsafe(method(setModalInPresentation:))]
         #[unsafe(method_family = none)]
-        pub fn setModalInPresentation(&self, modal_in_presentation: bool);
+        pub unsafe fn setModalInPresentation(&self, modal_in_presentation: bool);
     );
 }
 
@@ -1320,33 +1259,35 @@ extern_protocol!(
         #[deprecated = "UIViewControllerPreviewing is deprecated. Please use UIContextMenuInteraction."]
         #[unsafe(method(previewingGestureRecognizerForFailureRelationship))]
         #[unsafe(method_family = none)]
-        fn previewingGestureRecognizerForFailureRelationship(
+        unsafe fn previewingGestureRecognizerForFailureRelationship(
             &self,
         ) -> Retained<UIGestureRecognizer>;
 
         #[deprecated = "UIViewControllerPreviewing is deprecated. Please use UIContextMenuInteraction."]
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        fn delegate(&self) -> Retained<ProtocolObject<dyn UIViewControllerPreviewingDelegate>>;
+        unsafe fn delegate(
+            &self,
+        ) -> Retained<ProtocolObject<dyn UIViewControllerPreviewingDelegate>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[deprecated = "UIViewControllerPreviewing is deprecated. Please use UIContextMenuInteraction."]
         #[unsafe(method(sourceView))]
         #[unsafe(method_family = none)]
-        fn sourceView(&self) -> Retained<UIView>;
+        unsafe fn sourceView(&self) -> Retained<UIView>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[deprecated = "UIViewControllerPreviewing is deprecated. Please use UIContextMenuInteraction."]
         #[unsafe(method(sourceRect))]
         #[unsafe(method_family = none)]
-        fn sourceRect(&self) -> CGRect;
+        unsafe fn sourceRect(&self) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`sourceRect`][Self::sourceRect].
         #[deprecated = "UIViewControllerPreviewing is deprecated. Please use UIContextMenuInteraction."]
         #[unsafe(method(setSourceRect:))]
         #[unsafe(method_family = none)]
-        fn setSourceRect(&self, source_rect: CGRect);
+        unsafe fn setSourceRect(&self, source_rect: CGRect);
     }
 );
 
@@ -1359,7 +1300,7 @@ extern_protocol!(
         #[deprecated = "UIViewControllerPreviewing is deprecated. Please use UIContextMenuInteraction."]
         #[unsafe(method(previewingContext:viewControllerForLocation:))]
         #[unsafe(method_family = none)]
-        fn previewingContext_viewControllerForLocation(
+        unsafe fn previewingContext_viewControllerForLocation(
             &self,
             previewing_context: &ProtocolObject<dyn UIViewControllerPreviewing>,
             location: CGPoint,
@@ -1369,7 +1310,7 @@ extern_protocol!(
         #[deprecated = "UIViewControllerPreviewing is deprecated. Please use UIContextMenuInteraction."]
         #[unsafe(method(previewingContext:commitViewController:))]
         #[unsafe(method_family = none)]
-        fn previewingContext_commitViewController(
+        unsafe fn previewingContext_commitViewController(
             &self,
             previewing_context: &ProtocolObject<dyn UIViewControllerPreviewing>,
             view_controller_to_commit: &UIViewController,
@@ -1385,7 +1326,7 @@ impl UIViewController {
         #[deprecated = "UIViewControllerPreviewing is deprecated. Please use UIContextMenuInteraction."]
         #[unsafe(method(registerForPreviewingWithDelegate:sourceView:))]
         #[unsafe(method_family = none)]
-        pub fn registerForPreviewingWithDelegate_sourceView(
+        pub unsafe fn registerForPreviewingWithDelegate_sourceView(
             &self,
             delegate: &ProtocolObject<dyn UIViewControllerPreviewingDelegate>,
             source_view: &UIView,
@@ -1394,7 +1335,7 @@ impl UIViewController {
         #[deprecated = "UIViewControllerPreviewing is deprecated. Please use UIContextMenuInteraction."]
         #[unsafe(method(unregisterForPreviewingWithContext:))]
         #[unsafe(method_family = none)]
-        pub fn unregisterForPreviewingWithContext(
+        pub unsafe fn unregisterForPreviewingWithContext(
             &self,
             previewing: &ProtocolObject<dyn UIViewControllerPreviewing>,
         );
@@ -1407,14 +1348,14 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(childViewControllerForScreenEdgesDeferringSystemGestures))]
         #[unsafe(method_family = none)]
-        pub fn childViewControllerForScreenEdgesDeferringSystemGestures(
+        pub unsafe fn childViewControllerForScreenEdgesDeferringSystemGestures(
             &self,
         ) -> Option<Retained<UIViewController>>;
 
         #[cfg(feature = "UIGeometry")]
         #[unsafe(method(preferredScreenEdgesDeferringSystemGestures))]
         #[unsafe(method_family = none)]
-        pub fn preferredScreenEdgesDeferringSystemGestures(&self) -> UIRectEdge;
+        pub unsafe fn preferredScreenEdgesDeferringSystemGestures(&self) -> UIRectEdge;
 
         #[unsafe(method(setNeedsUpdateOfScreenEdgesDeferringSystemGestures))]
         #[unsafe(method_family = none)]
@@ -1428,13 +1369,13 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(childViewControllerForHomeIndicatorAutoHidden))]
         #[unsafe(method_family = none)]
-        pub fn childViewControllerForHomeIndicatorAutoHidden(
+        pub unsafe fn childViewControllerForHomeIndicatorAutoHidden(
             &self,
         ) -> Option<Retained<UIViewController>>;
 
         #[unsafe(method(prefersHomeIndicatorAutoHidden))]
         #[unsafe(method_family = none)]
-        pub fn prefersHomeIndicatorAutoHidden(&self) -> bool;
+        pub unsafe fn prefersHomeIndicatorAutoHidden(&self) -> bool;
 
         #[unsafe(method(setNeedsUpdateOfHomeIndicatorAutoHidden))]
         #[unsafe(method_family = none)]
@@ -1448,15 +1389,17 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(childViewControllerForPointerLock))]
         #[unsafe(method_family = none)]
-        pub fn childViewControllerForPointerLock(&self) -> Option<Retained<UIViewController>>;
+        pub unsafe fn childViewControllerForPointerLock(
+            &self,
+        ) -> Option<Retained<UIViewController>>;
 
         #[unsafe(method(prefersPointerLocked))]
         #[unsafe(method_family = none)]
-        pub fn prefersPointerLocked(&self) -> bool;
+        pub unsafe fn prefersPointerLocked(&self) -> bool;
 
         #[unsafe(method(setNeedsUpdateOfPrefersPointerLocked))]
         #[unsafe(method_family = none)]
-        pub fn setNeedsUpdateOfPrefersPointerLocked(&self);
+        pub unsafe fn setNeedsUpdateOfPrefersPointerLocked(&self);
     );
 }
 
@@ -1469,17 +1412,15 @@ impl UIViewController {
         /// The default value is nil.
         #[unsafe(method(contentUnavailableConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn contentUnavailableConfiguration(
+        pub unsafe fn contentUnavailableConfiguration(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIContentConfiguration>>>;
 
         #[cfg(feature = "UIContentConfiguration")]
         /// Setter for [`contentUnavailableConfiguration`][Self::contentUnavailableConfiguration].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setContentUnavailableConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setContentUnavailableConfiguration(
+        pub unsafe fn setContentUnavailableConfiguration(
             &self,
             content_unavailable_configuration: Option<&ProtocolObject<dyn UIContentConfiguration>>,
         );
@@ -1490,7 +1431,7 @@ impl UIViewController {
         /// system properties set, then set your own custom states as desired.
         #[unsafe(method(contentUnavailableConfigurationState))]
         #[unsafe(method_family = none)]
-        pub fn contentUnavailableConfigurationState(
+        pub unsafe fn contentUnavailableConfigurationState(
             &self,
         ) -> Retained<UIContentUnavailableConfigurationState>;
 
@@ -1499,14 +1440,14 @@ impl UIViewController {
         /// update may be required. Multiple requests may be coalesced into a single update at the appropriate time.
         #[unsafe(method(setNeedsUpdateContentUnavailableConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn setNeedsUpdateContentUnavailableConfiguration(&self);
+        pub unsafe fn setNeedsUpdateContentUnavailableConfiguration(&self);
 
         #[cfg(feature = "UIContentUnavailableConfigurationState")]
         /// Subclasses should override this method and update the content unavailable's configuration using the state provided.
         /// This method should not be called directly, use `setNeedsUpdateContentUnavailableConfiguration` to request an update.
         #[unsafe(method(updateContentUnavailableConfigurationUsingState:))]
         #[unsafe(method_family = none)]
-        pub fn updateContentUnavailableConfigurationUsingState(
+        pub unsafe fn updateContentUnavailableConfigurationUsingState(
             &self,
             state: &UIContentUnavailableConfigurationState,
         );
@@ -1516,34 +1457,10 @@ impl UIViewController {
 #[cfg(feature = "UIResponder")]
 impl UIViewController {
     extern_methods!(
-        /// Override to return a child view controller or nil. If non-nil, that view controller's preference for interface orientation lock will be used. If nil, `self` is used.
-        /// Whenever the return value changes, call `setNeedsUpdateOfPrefersInterfaceOrientationLocked()`.
-        #[unsafe(method(childViewControllerForInterfaceOrientationLock))]
-        #[unsafe(method_family = none)]
-        pub fn childViewControllerForInterfaceOrientationLock(
-            &self,
-        ) -> Option<Retained<UIViewController>>;
-
-        /// Whether this view controller prefers the scene's interface orientation to be locked when shown. The default is `NO`. Note that this preference may or may not be honored.
-        /// See `UIWindowScene.Geometry` for the current state of interface orientation lock.
-        #[unsafe(method(prefersInterfaceOrientationLocked))]
-        #[unsafe(method_family = none)]
-        pub fn prefersInterfaceOrientationLocked(&self) -> bool;
-
-        /// Call whenever the view controller's preference for interface orientation lock has changed
-        #[unsafe(method(setNeedsUpdateOfPrefersInterfaceOrientationLocked))]
-        #[unsafe(method_family = none)]
-        pub fn setNeedsUpdateOfPrefersInterfaceOrientationLocked(&self);
-    );
-}
-
-#[cfg(feature = "UIResponder")]
-impl UIViewController {
-    extern_methods!(
         #[deprecated = "UIViewControllerPreviewing is deprecated. Please use UIContextMenuInteraction."]
         #[unsafe(method(previewActionItems))]
         #[unsafe(method_family = none)]
-        pub fn previewActionItems(
+        pub unsafe fn previewActionItems(
             &self,
         ) -> Retained<NSArray<ProtocolObject<dyn UIPreviewActionItem>>>;
     );
@@ -1555,13 +1472,13 @@ impl UIViewController {
         #[cfg(feature = "UITraitCollection")]
         #[unsafe(method(traitOverrides))]
         #[unsafe(method_family = none)]
-        pub fn traitOverrides(&self) -> Retained<ProtocolObject<dyn UITraitOverrides>>;
+        pub unsafe fn traitOverrides(&self) -> Retained<ProtocolObject<dyn UITraitOverrides>>;
 
         /// Forces an immediate trait update for this view controller and its view, including any view
         /// controllers and views in this subtree. Any trait change callbacks are sent synchronously.
         #[unsafe(method(updateTraitsIfNeeded))]
         #[unsafe(method_family = none)]
-        pub fn updateTraitsIfNeeded(&self);
+        pub unsafe fn updateTraitsIfNeeded(&self);
     );
 }
 
@@ -1597,17 +1514,17 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(preferredContainerBackgroundStyle))]
         #[unsafe(method_family = none)]
-        pub fn preferredContainerBackgroundStyle(&self) -> UIContainerBackgroundStyle;
+        pub unsafe fn preferredContainerBackgroundStyle(&self) -> UIContainerBackgroundStyle;
 
         #[unsafe(method(childViewControllerForPreferredContainerBackgroundStyle))]
         #[unsafe(method_family = none)]
-        pub fn childViewControllerForPreferredContainerBackgroundStyle(
+        pub unsafe fn childViewControllerForPreferredContainerBackgroundStyle(
             &self,
         ) -> Option<Retained<UIViewController>>;
 
         #[unsafe(method(setNeedsUpdateOfPreferredContainerBackgroundStyle))]
         #[unsafe(method_family = none)]
-        pub fn setNeedsUpdateOfPreferredContainerBackgroundStyle(&self);
+        pub unsafe fn setNeedsUpdateOfPreferredContainerBackgroundStyle(&self);
     );
 }
 
@@ -1616,7 +1533,7 @@ extern_protocol!(
     pub unsafe trait UIPreviewActionItem: NSObjectProtocol + MainThreadOnly {
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        fn title(&self) -> Retained<NSString>;
+        unsafe fn title(&self) -> Retained<NSString>;
     }
 );
 
@@ -1674,10 +1591,6 @@ extern_conformance!(
 impl UIPreviewAction {
     extern_methods!(
         #[cfg(all(feature = "UIResponder", feature = "block2"))]
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer.
         #[unsafe(method(handler))]
         #[unsafe(method_family = none)]
         pub unsafe fn handler(
@@ -1691,7 +1604,7 @@ impl UIPreviewAction {
         #[cfg(all(feature = "UIResponder", feature = "block2"))]
         #[unsafe(method(actionWithTitle:style:handler:))]
         #[unsafe(method_family = none)]
-        pub fn actionWithTitle_style_handler(
+        pub unsafe fn actionWithTitle_style_handler(
             title: &NSString,
             style: UIPreviewActionStyle,
             handler: &block2::DynBlock<dyn Fn(NonNull<UIPreviewAction>, NonNull<UIViewController>)>,
@@ -1705,11 +1618,11 @@ impl UIPreviewAction {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -1742,7 +1655,7 @@ impl UIPreviewActionGroup {
     extern_methods!(
         #[unsafe(method(actionGroupWithTitle:style:actions:))]
         #[unsafe(method_family = none)]
-        pub fn actionGroupWithTitle_style_actions(
+        pub unsafe fn actionGroupWithTitle_style_actions(
             title: &NSString,
             style: UIPreviewActionStyle,
             actions: &NSArray<UIPreviewAction>,
@@ -1756,10 +1669,10 @@ impl UIPreviewActionGroup {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

@@ -23,7 +23,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(printerPickerControllerParentViewController:))]
         #[unsafe(method_family = none)]
-        fn printerPickerControllerParentViewController(
+        unsafe fn printerPickerControllerParentViewController(
             &self,
             printer_picker_controller: &UIPrinterPickerController,
         ) -> Option<Retained<UIViewController>>;
@@ -39,7 +39,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(printerPickerController:shouldShowPrinter:))]
         #[unsafe(method_family = none)]
-        fn printerPickerController_shouldShowPrinter(
+        unsafe fn printerPickerController_shouldShowPrinter(
             &self,
             printer_picker_controller: &UIPrinterPickerController,
             printer: &UIPrinter,
@@ -48,7 +48,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(printerPickerControllerWillPresent:))]
         #[unsafe(method_family = none)]
-        fn printerPickerControllerWillPresent(
+        unsafe fn printerPickerControllerWillPresent(
             &self,
             printer_picker_controller: &UIPrinterPickerController,
         );
@@ -56,7 +56,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(printerPickerControllerDidPresent:))]
         #[unsafe(method_family = none)]
-        fn printerPickerControllerDidPresent(
+        unsafe fn printerPickerControllerDidPresent(
             &self,
             printer_picker_controller: &UIPrinterPickerController,
         );
@@ -64,7 +64,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(printerPickerControllerWillDismiss:))]
         #[unsafe(method_family = none)]
-        fn printerPickerControllerWillDismiss(
+        unsafe fn printerPickerControllerWillDismiss(
             &self,
             printer_picker_controller: &UIPrinterPickerController,
         );
@@ -72,7 +72,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(printerPickerControllerDidDismiss:))]
         #[unsafe(method_family = none)]
-        fn printerPickerControllerDidDismiss(
+        unsafe fn printerPickerControllerDidDismiss(
             &self,
             printer_picker_controller: &UIPrinterPickerController,
         );
@@ -80,7 +80,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(printerPickerControllerDidSelectPrinter:))]
         #[unsafe(method_family = none)]
-        fn printerPickerControllerDidSelectPrinter(
+        unsafe fn printerPickerControllerDidSelectPrinter(
             &self,
             printer_picker_controller: &UIPrinterPickerController,
         );
@@ -108,7 +108,7 @@ impl UIPrinterPickerController {
         /// If no printer should be preselected, use a value of nil for the parameter.
         #[unsafe(method(printerPickerControllerWithInitiallySelectedPrinter:))]
         #[unsafe(method_family = none)]
-        pub fn printerPickerControllerWithInitiallySelectedPrinter(
+        pub unsafe fn printerPickerControllerWithInitiallySelectedPrinter(
             printer: Option<&UIPrinter>,
             mtm: MainThreadMarker,
         ) -> Retained<UIPrinterPickerController>;
@@ -118,28 +118,24 @@ impl UIPrinterPickerController {
         /// selected printer. Use this to determine which printer the user selected.
         #[unsafe(method(selectedPrinter))]
         #[unsafe(method_family = none)]
-        pub fn selectedPrinter(&self) -> Option<Retained<UIPrinter>>;
+        pub unsafe fn selectedPrinter(&self) -> Option<Retained<UIPrinter>>;
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIPrinterPickerControllerDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(
+        pub unsafe fn setDelegate(
             &self,
             delegate: Option<&ProtocolObject<dyn UIPrinterPickerControllerDelegate>>,
         );
 
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// `completion` must be a valid pointer or null.
         #[unsafe(method(presentAnimated:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn presentAnimated_completionHandler(
@@ -154,9 +150,6 @@ impl UIPrinterPickerController {
             feature = "block2",
             feature = "objc2-core-foundation"
         ))]
-        /// # Safety
-        ///
-        /// `completion` must be a valid pointer or null.
         #[unsafe(method(presentFromRect:inView:animated:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn presentFromRect_inView_animated_completionHandler(
@@ -168,9 +161,6 @@ impl UIPrinterPickerController {
         ) -> bool;
 
         #[cfg(all(feature = "UIBarButtonItem", feature = "UIBarItem", feature = "block2"))]
-        /// # Safety
-        ///
-        /// `completion` must be a valid pointer or null.
         #[unsafe(method(presentFromBarButtonItem:animated:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn presentFromBarButtonItem_animated_completionHandler(
@@ -182,7 +172,7 @@ impl UIPrinterPickerController {
 
         #[unsafe(method(dismissAnimated:))]
         #[unsafe(method_family = none)]
-        pub fn dismissAnimated(&self, animated: bool);
+        pub unsafe fn dismissAnimated(&self, animated: bool);
     );
 }
 
@@ -191,10 +181,10 @@ impl UIPrinterPickerController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

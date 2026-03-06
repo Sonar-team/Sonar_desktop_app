@@ -224,8 +224,6 @@ impl NSControlSize {
     pub const Mini: Self = Self(2);
     #[doc(alias = "NSControlSizeLarge")]
     pub const Large: Self = Self(3);
-    #[doc(alias = "NSControlSizeExtraLarge")]
-    pub const ExtraLarge: Self = Self(4);
 }
 
 unsafe impl Encode for NSControlSize {
@@ -279,348 +277,301 @@ impl NSCell {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(initTextCell:))]
         #[unsafe(method_family = init)]
-        pub fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
+        pub unsafe fn initTextCell(this: Allocated<Self>, string: &NSString) -> Retained<Self>;
 
         #[cfg(feature = "NSImage")]
         #[unsafe(method(initImageCell:))]
         #[unsafe(method_family = init)]
-        pub fn initImageCell(this: Allocated<Self>, image: Option<&NSImage>) -> Retained<Self>;
+        pub unsafe fn initImageCell(
+            this: Allocated<Self>,
+            image: Option<&NSImage>,
+        ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
 
         #[unsafe(method(prefersTrackingUntilMouseUp))]
         #[unsafe(method_family = none)]
-        pub fn prefersTrackingUntilMouseUp(mtm: MainThreadMarker) -> bool;
+        pub unsafe fn prefersTrackingUntilMouseUp(mtm: MainThreadMarker) -> bool;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(controlView))]
         #[unsafe(method_family = none)]
         pub unsafe fn controlView(&self) -> Option<Retained<NSView>>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         /// Setter for [`controlView`][Self::controlView].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setControlView:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setControlView(&self, control_view: Option<&NSView>);
 
         #[unsafe(method(type))]
         #[unsafe(method_family = none)]
-        pub fn r#type(&self) -> NSCellType;
+        pub unsafe fn r#type(&self) -> NSCellType;
 
         /// Setter for [`type`][Self::type].
         #[unsafe(method(setType:))]
         #[unsafe(method_family = none)]
-        pub fn setType(&self, r#type: NSCellType);
+        pub unsafe fn setType(&self, r#type: NSCellType);
 
         #[unsafe(method(state))]
         #[unsafe(method_family = none)]
-        pub fn state(&self) -> NSControlStateValue;
+        pub unsafe fn state(&self) -> NSControlStateValue;
 
         /// Setter for [`state`][Self::state].
         #[unsafe(method(setState:))]
         #[unsafe(method_family = none)]
-        pub fn setState(&self, state: NSControlStateValue);
+        pub unsafe fn setState(&self, state: NSControlStateValue);
 
         #[unsafe(method(target))]
         #[unsafe(method_family = none)]
-        pub fn target(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn target(&self) -> Option<Retained<AnyObject>>;
 
-        /// Setter for [`target`][Self::target].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
-        ///
-        /// # Safety
-        ///
-        /// `target` should be of the correct type.
+        /// Setter for [`target`][Self::target].
         #[unsafe(method(setTarget:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTarget(&self, target: Option<&AnyObject>);
 
         #[unsafe(method(action))]
         #[unsafe(method_family = none)]
-        pub fn action(&self) -> Option<Sel>;
+        pub unsafe fn action(&self) -> Option<Sel>;
 
         /// Setter for [`action`][Self::action].
-        ///
-        /// # Safety
-        ///
-        /// `action` must be a valid selector.
         #[unsafe(method(setAction:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAction(&self, action: Option<Sel>);
 
         #[unsafe(method(tag))]
         #[unsafe(method_family = none)]
-        pub fn tag(&self) -> NSInteger;
+        pub unsafe fn tag(&self) -> NSInteger;
 
         /// Setter for [`tag`][Self::tag].
         #[unsafe(method(setTag:))]
         #[unsafe(method_family = none)]
-        pub fn setTag(&self, tag: NSInteger);
+        pub unsafe fn setTag(&self, tag: NSInteger);
 
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        pub fn title(&self) -> Retained<NSString>;
+        pub unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setTitle(&self, title: &NSString);
+        pub unsafe fn setTitle(&self, title: &NSString);
 
         #[unsafe(method(isOpaque))]
         #[unsafe(method_family = none)]
-        pub fn isOpaque(&self) -> bool;
+        pub unsafe fn isOpaque(&self) -> bool;
 
         #[unsafe(method(isEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isEnabled(&self) -> bool;
+        pub unsafe fn isEnabled(&self) -> bool;
 
         /// Setter for [`isEnabled`][Self::isEnabled].
         #[unsafe(method(setEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setEnabled(&self, enabled: bool);
+        pub unsafe fn setEnabled(&self, enabled: bool);
 
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(sendActionOn:))]
         #[unsafe(method_family = none)]
-        pub fn sendActionOn(&self, mask: NSEventMask) -> NSInteger;
+        pub unsafe fn sendActionOn(&self, mask: NSEventMask) -> NSInteger;
 
         #[unsafe(method(isContinuous))]
         #[unsafe(method_family = none)]
-        pub fn isContinuous(&self) -> bool;
+        pub unsafe fn isContinuous(&self) -> bool;
 
         /// Setter for [`isContinuous`][Self::isContinuous].
         #[unsafe(method(setContinuous:))]
         #[unsafe(method_family = none)]
-        pub fn setContinuous(&self, continuous: bool);
+        pub unsafe fn setContinuous(&self, continuous: bool);
 
         #[unsafe(method(isEditable))]
         #[unsafe(method_family = none)]
-        pub fn isEditable(&self) -> bool;
+        pub unsafe fn isEditable(&self) -> bool;
 
         /// Setter for [`isEditable`][Self::isEditable].
         #[unsafe(method(setEditable:))]
         #[unsafe(method_family = none)]
-        pub fn setEditable(&self, editable: bool);
+        pub unsafe fn setEditable(&self, editable: bool);
 
         #[unsafe(method(isSelectable))]
         #[unsafe(method_family = none)]
-        pub fn isSelectable(&self) -> bool;
+        pub unsafe fn isSelectable(&self) -> bool;
 
         /// Setter for [`isSelectable`][Self::isSelectable].
         #[unsafe(method(setSelectable:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectable(&self, selectable: bool);
+        pub unsafe fn setSelectable(&self, selectable: bool);
 
         #[unsafe(method(isBordered))]
         #[unsafe(method_family = none)]
-        pub fn isBordered(&self) -> bool;
+        pub unsafe fn isBordered(&self) -> bool;
 
         /// Setter for [`isBordered`][Self::isBordered].
         #[unsafe(method(setBordered:))]
         #[unsafe(method_family = none)]
-        pub fn setBordered(&self, bordered: bool);
+        pub unsafe fn setBordered(&self, bordered: bool);
 
         #[unsafe(method(isBezeled))]
         #[unsafe(method_family = none)]
-        pub fn isBezeled(&self) -> bool;
+        pub unsafe fn isBezeled(&self) -> bool;
 
         /// Setter for [`isBezeled`][Self::isBezeled].
         #[unsafe(method(setBezeled:))]
         #[unsafe(method_family = none)]
-        pub fn setBezeled(&self, bezeled: bool);
+        pub unsafe fn setBezeled(&self, bezeled: bool);
 
         #[unsafe(method(isScrollable))]
         #[unsafe(method_family = none)]
-        pub fn isScrollable(&self) -> bool;
+        pub unsafe fn isScrollable(&self) -> bool;
 
         /// Setter for [`isScrollable`][Self::isScrollable].
         #[unsafe(method(setScrollable:))]
         #[unsafe(method_family = none)]
-        pub fn setScrollable(&self, scrollable: bool);
+        pub unsafe fn setScrollable(&self, scrollable: bool);
 
         #[unsafe(method(isHighlighted))]
         #[unsafe(method_family = none)]
-        pub fn isHighlighted(&self) -> bool;
+        pub unsafe fn isHighlighted(&self) -> bool;
 
         /// Setter for [`isHighlighted`][Self::isHighlighted].
         #[unsafe(method(setHighlighted:))]
         #[unsafe(method_family = none)]
-        pub fn setHighlighted(&self, highlighted: bool);
+        pub unsafe fn setHighlighted(&self, highlighted: bool);
 
         #[cfg(feature = "NSText")]
         #[unsafe(method(alignment))]
         #[unsafe(method_family = none)]
-        pub fn alignment(&self) -> NSTextAlignment;
+        pub unsafe fn alignment(&self) -> NSTextAlignment;
 
         #[cfg(feature = "NSText")]
         /// Setter for [`alignment`][Self::alignment].
         #[unsafe(method(setAlignment:))]
         #[unsafe(method_family = none)]
-        pub fn setAlignment(&self, alignment: NSTextAlignment);
+        pub unsafe fn setAlignment(&self, alignment: NSTextAlignment);
 
         #[unsafe(method(wraps))]
         #[unsafe(method_family = none)]
-        pub fn wraps(&self) -> bool;
+        pub unsafe fn wraps(&self) -> bool;
 
         /// Setter for [`wraps`][Self::wraps].
         #[unsafe(method(setWraps:))]
         #[unsafe(method_family = none)]
-        pub fn setWraps(&self, wraps: bool);
+        pub unsafe fn setWraps(&self, wraps: bool);
 
         #[cfg(feature = "NSFont")]
         #[unsafe(method(font))]
         #[unsafe(method_family = none)]
-        pub fn font(&self) -> Option<Retained<NSFont>>;
+        pub unsafe fn font(&self) -> Option<Retained<NSFont>>;
 
         #[cfg(feature = "NSFont")]
         /// Setter for [`font`][Self::font].
         #[unsafe(method(setFont:))]
         #[unsafe(method_family = none)]
-        pub fn setFont(&self, font: Option<&NSFont>);
+        pub unsafe fn setFont(&self, font: Option<&NSFont>);
 
         #[unsafe(method(keyEquivalent))]
         #[unsafe(method_family = none)]
-        pub fn keyEquivalent(&self) -> Retained<NSString>;
+        pub unsafe fn keyEquivalent(&self) -> Retained<NSString>;
 
         #[unsafe(method(formatter))]
         #[unsafe(method_family = none)]
-        pub fn formatter(&self) -> Option<Retained<NSFormatter>>;
+        pub unsafe fn formatter(&self) -> Option<Retained<NSFormatter>>;
 
         /// Setter for [`formatter`][Self::formatter].
         #[unsafe(method(setFormatter:))]
         #[unsafe(method_family = none)]
-        pub fn setFormatter(&self, formatter: Option<&NSFormatter>);
+        pub unsafe fn setFormatter(&self, formatter: Option<&NSFormatter>);
 
         #[unsafe(method(objectValue))]
         #[unsafe(method_family = none)]
-        pub fn objectValue(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn objectValue(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`objectValue`][Self::objectValue].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `object_value` should be of the correct type.
         #[unsafe(method(setObjectValue:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setObjectValue(&self, object_value: Option<&AnyObject>);
 
         #[unsafe(method(hasValidObjectValue))]
         #[unsafe(method_family = none)]
-        pub fn hasValidObjectValue(&self) -> bool;
+        pub unsafe fn hasValidObjectValue(&self) -> bool;
 
         #[unsafe(method(stringValue))]
         #[unsafe(method_family = none)]
-        pub fn stringValue(&self) -> Retained<NSString>;
+        pub unsafe fn stringValue(&self) -> Retained<NSString>;
 
         /// Setter for [`stringValue`][Self::stringValue].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setStringValue:))]
         #[unsafe(method_family = none)]
-        pub fn setStringValue(&self, string_value: &NSString);
+        pub unsafe fn setStringValue(&self, string_value: &NSString);
 
-        /// # Safety
-        ///
-        /// `other_cell` should be of the correct type.
         #[unsafe(method(compare:))]
         #[unsafe(method_family = none)]
         pub unsafe fn compare(&self, other_cell: &AnyObject) -> NSComparisonResult;
 
         #[unsafe(method(intValue))]
         #[unsafe(method_family = none)]
-        pub fn intValue(&self) -> c_int;
+        pub unsafe fn intValue(&self) -> c_int;
 
         /// Setter for [`intValue`][Self::intValue].
         #[unsafe(method(setIntValue:))]
         #[unsafe(method_family = none)]
-        pub fn setIntValue(&self, int_value: c_int);
+        pub unsafe fn setIntValue(&self, int_value: c_int);
 
         #[unsafe(method(floatValue))]
         #[unsafe(method_family = none)]
-        pub fn floatValue(&self) -> c_float;
+        pub unsafe fn floatValue(&self) -> c_float;
 
         /// Setter for [`floatValue`][Self::floatValue].
         #[unsafe(method(setFloatValue:))]
         #[unsafe(method_family = none)]
-        pub fn setFloatValue(&self, float_value: c_float);
+        pub unsafe fn setFloatValue(&self, float_value: c_float);
 
         #[unsafe(method(doubleValue))]
         #[unsafe(method_family = none)]
-        pub fn doubleValue(&self) -> c_double;
+        pub unsafe fn doubleValue(&self) -> c_double;
 
         /// Setter for [`doubleValue`][Self::doubleValue].
         #[unsafe(method(setDoubleValue:))]
         #[unsafe(method_family = none)]
-        pub fn setDoubleValue(&self, double_value: c_double);
+        pub unsafe fn setDoubleValue(&self, double_value: c_double);
 
         #[unsafe(method(integerValue))]
         #[unsafe(method_family = none)]
-        pub fn integerValue(&self) -> NSInteger;
+        pub unsafe fn integerValue(&self) -> NSInteger;
 
         /// Setter for [`integerValue`][Self::integerValue].
         #[unsafe(method(setIntegerValue:))]
         #[unsafe(method_family = none)]
-        pub fn setIntegerValue(&self, integer_value: NSInteger);
+        pub unsafe fn setIntegerValue(&self, integer_value: NSInteger);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(takeIntValueFrom:))]
         #[unsafe(method_family = none)]
         pub unsafe fn takeIntValueFrom(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(takeFloatValueFrom:))]
         #[unsafe(method_family = none)]
         pub unsafe fn takeFloatValueFrom(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(takeDoubleValueFrom:))]
         #[unsafe(method_family = none)]
         pub unsafe fn takeDoubleValueFrom(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(takeStringValueFrom:))]
         #[unsafe(method_family = none)]
         pub unsafe fn takeStringValueFrom(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(takeObjectValueFrom:))]
         #[unsafe(method_family = none)]
         pub unsafe fn takeObjectValueFrom(&self, sender: Option<&AnyObject>);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(takeIntegerValueFrom:))]
         #[unsafe(method_family = none)]
         pub unsafe fn takeIntegerValueFrom(&self, sender: Option<&AnyObject>);
@@ -628,76 +579,64 @@ impl NSCell {
         #[cfg(feature = "NSImage")]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<NSImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<NSImage>>;
 
         #[cfg(feature = "NSImage")]
         /// Setter for [`image`][Self::image].
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&NSImage>);
+        pub unsafe fn setImage(&self, image: Option<&NSImage>);
 
         #[unsafe(method(controlSize))]
         #[unsafe(method_family = none)]
-        pub fn controlSize(&self) -> NSControlSize;
+        pub unsafe fn controlSize(&self) -> NSControlSize;
 
         /// Setter for [`controlSize`][Self::controlSize].
         #[unsafe(method(setControlSize:))]
         #[unsafe(method_family = none)]
-        pub fn setControlSize(&self, control_size: NSControlSize);
+        pub unsafe fn setControlSize(&self, control_size: NSControlSize);
 
         #[unsafe(method(representedObject))]
         #[unsafe(method_family = none)]
-        pub fn representedObject(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn representedObject(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`representedObject`][Self::representedObject].
-        ///
-        /// # Safety
-        ///
-        /// `represented_object` should be of the correct type.
         #[unsafe(method(setRepresentedObject:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRepresentedObject(&self, represented_object: Option<&AnyObject>);
 
         #[unsafe(method(cellAttribute:))]
         #[unsafe(method_family = none)]
-        pub fn cellAttribute(&self, parameter: NSCellAttribute) -> NSInteger;
+        pub unsafe fn cellAttribute(&self, parameter: NSCellAttribute) -> NSInteger;
 
         #[unsafe(method(setCellAttribute:to:))]
         #[unsafe(method_family = none)]
-        pub fn setCellAttribute_to(&self, parameter: NSCellAttribute, value: NSInteger);
+        pub unsafe fn setCellAttribute_to(&self, parameter: NSCellAttribute, value: NSInteger);
 
         #[unsafe(method(imageRectForBounds:))]
         #[unsafe(method_family = none)]
-        pub fn imageRectForBounds(&self, rect: NSRect) -> NSRect;
+        pub unsafe fn imageRectForBounds(&self, rect: NSRect) -> NSRect;
 
         #[unsafe(method(titleRectForBounds:))]
         #[unsafe(method_family = none)]
-        pub fn titleRectForBounds(&self, rect: NSRect) -> NSRect;
+        pub unsafe fn titleRectForBounds(&self, rect: NSRect) -> NSRect;
 
         #[unsafe(method(drawingRectForBounds:))]
         #[unsafe(method_family = none)]
-        pub fn drawingRectForBounds(&self, rect: NSRect) -> NSRect;
-
-        #[unsafe(method(_bulletStringForString:bulletCharacter:))]
-        #[unsafe(method_family = none)]
-        pub fn _bulletStringForString_bulletCharacter(
-            string: &NSString,
-            bullet_char: unichar,
-            mtm: MainThreadMarker,
-        ) -> Retained<NSString>;
+        pub unsafe fn drawingRectForBounds(&self, rect: NSRect) -> NSRect;
 
         #[unsafe(method(cellSize))]
         #[unsafe(method_family = none)]
-        pub fn cellSize(&self) -> NSSize;
+        pub unsafe fn cellSize(&self) -> NSSize;
 
         #[unsafe(method(cellSizeForBounds:))]
         #[unsafe(method_family = none)]
-        pub fn cellSizeForBounds(&self, rect: NSRect) -> NSSize;
+        pub unsafe fn cellSizeForBounds(&self, rect: NSRect) -> NSSize;
 
         #[cfg(all(feature = "NSColor", feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(highlightColorWithFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn highlightColorWithFrame_inView(
+        pub unsafe fn highlightColorWithFrame_inView(
             &self,
             cell_frame: NSRect,
             control_view: &NSView,
@@ -705,27 +644,31 @@ impl NSCell {
 
         #[unsafe(method(calcDrawInfo:))]
         #[unsafe(method_family = none)]
-        pub fn calcDrawInfo(&self, rect: NSRect);
+        pub unsafe fn calcDrawInfo(&self, rect: NSRect);
 
         #[cfg(all(feature = "NSResponder", feature = "NSText", feature = "NSView"))]
         #[unsafe(method(setUpFieldEditorAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn setUpFieldEditorAttributes(&self, text_obj: &NSText) -> Retained<NSText>;
+        pub unsafe fn setUpFieldEditorAttributes(&self, text_obj: &NSText) -> Retained<NSText>;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(drawInteriorWithFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn drawInteriorWithFrame_inView(&self, cell_frame: NSRect, control_view: &NSView);
+        pub unsafe fn drawInteriorWithFrame_inView(
+            &self,
+            cell_frame: NSRect,
+            control_view: &NSView,
+        );
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(drawWithFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn drawWithFrame_inView(&self, cell_frame: NSRect, control_view: &NSView);
+        pub unsafe fn drawWithFrame_inView(&self, cell_frame: NSRect, control_view: &NSView);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(highlight:withFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn highlight_withFrame_inView(
+        pub unsafe fn highlight_withFrame_inView(
             &self,
             flag: bool,
             cell_frame: NSRect,
@@ -734,12 +677,8 @@ impl NSCell {
 
         #[unsafe(method(mouseDownFlags))]
         #[unsafe(method_family = none)]
-        pub fn mouseDownFlags(&self) -> NSInteger;
+        pub unsafe fn mouseDownFlags(&self) -> NSInteger;
 
-        /// # Safety
-        ///
-        /// - `delay` must be a valid pointer.
-        /// - `interval` must be a valid pointer.
         #[unsafe(method(getPeriodicDelay:interval:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getPeriodicDelay_interval(
@@ -751,12 +690,16 @@ impl NSCell {
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(startTrackingAt:inView:))]
         #[unsafe(method_family = none)]
-        pub fn startTrackingAt_inView(&self, start_point: NSPoint, control_view: &NSView) -> bool;
+        pub unsafe fn startTrackingAt_inView(
+            &self,
+            start_point: NSPoint,
+            control_view: &NSView,
+        ) -> bool;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(continueTracking:at:inView:))]
         #[unsafe(method_family = none)]
-        pub fn continueTracking_at_inView(
+        pub unsafe fn continueTracking_at_inView(
             &self,
             last_point: NSPoint,
             current_point: NSPoint,
@@ -766,7 +709,7 @@ impl NSCell {
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(stopTracking:at:inView:mouseIsUp:))]
         #[unsafe(method_family = none)]
-        pub fn stopTracking_at_inView_mouseIsUp(
+        pub unsafe fn stopTracking_at_inView_mouseIsUp(
             &self,
             last_point: NSPoint,
             stop_point: NSPoint,
@@ -777,7 +720,7 @@ impl NSCell {
         #[cfg(all(feature = "NSEvent", feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(trackMouse:inRect:ofView:untilMouseUp:))]
         #[unsafe(method_family = none)]
-        pub fn trackMouse_inRect_ofView_untilMouseUp(
+        pub unsafe fn trackMouse_inRect_ofView_untilMouseUp(
             &self,
             event: &NSEvent,
             cell_frame: NSRect,
@@ -791,9 +734,6 @@ impl NSCell {
             feature = "NSText",
             feature = "NSView"
         ))]
-        /// # Safety
-        ///
-        /// `delegate` should be of the correct type.
         #[unsafe(method(editWithFrame:inView:editor:delegate:event:))]
         #[unsafe(method_family = none)]
         pub unsafe fn editWithFrame_inView_editor_delegate_event(
@@ -806,9 +746,6 @@ impl NSCell {
         );
 
         #[cfg(all(feature = "NSResponder", feature = "NSText", feature = "NSView"))]
-        /// # Safety
-        ///
-        /// `delegate` should be of the correct type.
         #[unsafe(method(selectWithFrame:inView:editor:delegate:start:length:))]
         #[unsafe(method_family = none)]
         pub unsafe fn selectWithFrame_inView_editor_delegate_start_length(
@@ -824,23 +761,23 @@ impl NSCell {
         #[cfg(all(feature = "NSResponder", feature = "NSText", feature = "NSView"))]
         #[unsafe(method(endEditing:))]
         #[unsafe(method_family = none)]
-        pub fn endEditing(&self, text_obj: &NSText);
+        pub unsafe fn endEditing(&self, text_obj: &NSText);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(resetCursorRect:inView:))]
         #[unsafe(method_family = none)]
-        pub fn resetCursorRect_inView(&self, cell_frame: NSRect, control_view: &NSView);
+        pub unsafe fn resetCursorRect_inView(&self, cell_frame: NSRect, control_view: &NSView);
 
         #[cfg(feature = "NSMenu")]
         #[unsafe(method(menu))]
         #[unsafe(method_family = none)]
-        pub fn menu(&self) -> Option<Retained<NSMenu>>;
+        pub unsafe fn menu(&self) -> Option<Retained<NSMenu>>;
 
         #[cfg(feature = "NSMenu")]
         /// Setter for [`menu`][Self::menu].
         #[unsafe(method(setMenu:))]
         #[unsafe(method_family = none)]
-        pub fn setMenu(&self, menu: Option<&NSMenu>);
+        pub unsafe fn setMenu(&self, menu: Option<&NSMenu>);
 
         #[cfg(all(
             feature = "NSEvent",
@@ -850,7 +787,7 @@ impl NSCell {
         ))]
         #[unsafe(method(menuForEvent:inRect:ofView:))]
         #[unsafe(method_family = none)]
-        pub fn menuForEvent_inRect_ofView(
+        pub unsafe fn menuForEvent_inRect_ofView(
             &self,
             event: &NSEvent,
             cell_frame: NSRect,
@@ -860,67 +797,67 @@ impl NSCell {
         #[cfg(feature = "NSMenu")]
         #[unsafe(method(defaultMenu))]
         #[unsafe(method_family = none)]
-        pub fn defaultMenu(mtm: MainThreadMarker) -> Option<Retained<NSMenu>>;
+        pub unsafe fn defaultMenu(mtm: MainThreadMarker) -> Option<Retained<NSMenu>>;
 
         #[unsafe(method(sendsActionOnEndEditing))]
         #[unsafe(method_family = none)]
-        pub fn sendsActionOnEndEditing(&self) -> bool;
+        pub unsafe fn sendsActionOnEndEditing(&self) -> bool;
 
         /// Setter for [`sendsActionOnEndEditing`][Self::sendsActionOnEndEditing].
         #[unsafe(method(setSendsActionOnEndEditing:))]
         #[unsafe(method_family = none)]
-        pub fn setSendsActionOnEndEditing(&self, sends_action_on_end_editing: bool);
+        pub unsafe fn setSendsActionOnEndEditing(&self, sends_action_on_end_editing: bool);
 
         #[cfg(feature = "NSText")]
         #[unsafe(method(baseWritingDirection))]
         #[unsafe(method_family = none)]
-        pub fn baseWritingDirection(&self) -> NSWritingDirection;
+        pub unsafe fn baseWritingDirection(&self) -> NSWritingDirection;
 
         #[cfg(feature = "NSText")]
         /// Setter for [`baseWritingDirection`][Self::baseWritingDirection].
         #[unsafe(method(setBaseWritingDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setBaseWritingDirection(&self, base_writing_direction: NSWritingDirection);
+        pub unsafe fn setBaseWritingDirection(&self, base_writing_direction: NSWritingDirection);
 
         #[cfg(feature = "NSParagraphStyle")]
         #[unsafe(method(lineBreakMode))]
         #[unsafe(method_family = none)]
-        pub fn lineBreakMode(&self) -> NSLineBreakMode;
+        pub unsafe fn lineBreakMode(&self) -> NSLineBreakMode;
 
         #[cfg(feature = "NSParagraphStyle")]
         /// Setter for [`lineBreakMode`][Self::lineBreakMode].
         #[unsafe(method(setLineBreakMode:))]
         #[unsafe(method_family = none)]
-        pub fn setLineBreakMode(&self, line_break_mode: NSLineBreakMode);
+        pub unsafe fn setLineBreakMode(&self, line_break_mode: NSLineBreakMode);
 
         #[unsafe(method(allowsUndo))]
         #[unsafe(method_family = none)]
-        pub fn allowsUndo(&self) -> bool;
+        pub unsafe fn allowsUndo(&self) -> bool;
 
         /// Setter for [`allowsUndo`][Self::allowsUndo].
         #[unsafe(method(setAllowsUndo:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsUndo(&self, allows_undo: bool);
+        pub unsafe fn setAllowsUndo(&self, allows_undo: bool);
 
         #[unsafe(method(truncatesLastVisibleLine))]
         #[unsafe(method_family = none)]
-        pub fn truncatesLastVisibleLine(&self) -> bool;
+        pub unsafe fn truncatesLastVisibleLine(&self) -> bool;
 
         /// Setter for [`truncatesLastVisibleLine`][Self::truncatesLastVisibleLine].
         #[unsafe(method(setTruncatesLastVisibleLine:))]
         #[unsafe(method_family = none)]
-        pub fn setTruncatesLastVisibleLine(&self, truncates_last_visible_line: bool);
+        pub unsafe fn setTruncatesLastVisibleLine(&self, truncates_last_visible_line: bool);
 
         #[cfg(feature = "NSUserInterfaceLayout")]
         #[unsafe(method(userInterfaceLayoutDirection))]
         #[unsafe(method_family = none)]
-        pub fn userInterfaceLayoutDirection(&self) -> NSUserInterfaceLayoutDirection;
+        pub unsafe fn userInterfaceLayoutDirection(&self) -> NSUserInterfaceLayoutDirection;
 
         #[cfg(feature = "NSUserInterfaceLayout")]
         /// Setter for [`userInterfaceLayoutDirection`][Self::userInterfaceLayoutDirection].
         #[unsafe(method(setUserInterfaceLayoutDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setUserInterfaceLayoutDirection(
+        pub unsafe fn setUserInterfaceLayoutDirection(
             &self,
             user_interface_layout_direction: NSUserInterfaceLayoutDirection,
         );
@@ -933,16 +870,19 @@ impl NSCell {
         ))]
         #[unsafe(method(fieldEditorForView:))]
         #[unsafe(method_family = none)]
-        pub fn fieldEditorForView(&self, control_view: &NSView) -> Option<Retained<NSTextView>>;
+        pub unsafe fn fieldEditorForView(
+            &self,
+            control_view: &NSView,
+        ) -> Option<Retained<NSTextView>>;
 
         #[unsafe(method(usesSingleLineMode))]
         #[unsafe(method_family = none)]
-        pub fn usesSingleLineMode(&self) -> bool;
+        pub unsafe fn usesSingleLineMode(&self) -> bool;
 
         /// Setter for [`usesSingleLineMode`][Self::usesSingleLineMode].
         #[unsafe(method(setUsesSingleLineMode:))]
         #[unsafe(method_family = none)]
-        pub fn setUsesSingleLineMode(&self, uses_single_line_mode: bool);
+        pub unsafe fn setUsesSingleLineMode(&self, uses_single_line_mode: bool);
 
         #[cfg(all(
             feature = "NSDraggingItem",
@@ -951,7 +891,7 @@ impl NSCell {
         ))]
         #[unsafe(method(draggingImageComponentsWithFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn draggingImageComponentsWithFrame_inView(
+        pub unsafe fn draggingImageComponentsWithFrame_inView(
             &self,
             frame: NSRect,
             view: &NSView,
@@ -964,7 +904,7 @@ impl NSCell {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -973,29 +913,26 @@ impl NSCell {
     extern_methods!(
         #[unsafe(method(refusesFirstResponder))]
         #[unsafe(method_family = none)]
-        pub fn refusesFirstResponder(&self) -> bool;
+        pub unsafe fn refusesFirstResponder(&self) -> bool;
 
         /// Setter for [`refusesFirstResponder`][Self::refusesFirstResponder].
         #[unsafe(method(setRefusesFirstResponder:))]
         #[unsafe(method_family = none)]
-        pub fn setRefusesFirstResponder(&self, refuses_first_responder: bool);
+        pub unsafe fn setRefusesFirstResponder(&self, refuses_first_responder: bool);
 
         #[unsafe(method(acceptsFirstResponder))]
         #[unsafe(method_family = none)]
-        pub fn acceptsFirstResponder(&self) -> bool;
+        pub unsafe fn acceptsFirstResponder(&self) -> bool;
 
         #[unsafe(method(showsFirstResponder))]
         #[unsafe(method_family = none)]
-        pub fn showsFirstResponder(&self) -> bool;
+        pub unsafe fn showsFirstResponder(&self) -> bool;
 
         /// Setter for [`showsFirstResponder`][Self::showsFirstResponder].
         #[unsafe(method(setShowsFirstResponder:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsFirstResponder(&self, shows_first_responder: bool);
+        pub unsafe fn setShowsFirstResponder(&self, shows_first_responder: bool);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(performClick:))]
         #[unsafe(method_family = none)]
         pub unsafe fn performClick(&self, sender: Option<&AnyObject>);
@@ -1003,28 +940,32 @@ impl NSCell {
         #[cfg(feature = "NSGraphics")]
         #[unsafe(method(focusRingType))]
         #[unsafe(method_family = none)]
-        pub fn focusRingType(&self) -> NSFocusRingType;
+        pub unsafe fn focusRingType(&self) -> NSFocusRingType;
 
         #[cfg(feature = "NSGraphics")]
         /// Setter for [`focusRingType`][Self::focusRingType].
         #[unsafe(method(setFocusRingType:))]
         #[unsafe(method_family = none)]
-        pub fn setFocusRingType(&self, focus_ring_type: NSFocusRingType);
+        pub unsafe fn setFocusRingType(&self, focus_ring_type: NSFocusRingType);
 
         #[cfg(feature = "NSGraphics")]
         #[unsafe(method(defaultFocusRingType))]
         #[unsafe(method_family = none)]
-        pub fn defaultFocusRingType(mtm: MainThreadMarker) -> NSFocusRingType;
+        pub unsafe fn defaultFocusRingType(mtm: MainThreadMarker) -> NSFocusRingType;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(drawFocusRingMaskWithFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn drawFocusRingMaskWithFrame_inView(&self, cell_frame: NSRect, control_view: &NSView);
+        pub unsafe fn drawFocusRingMaskWithFrame_inView(
+            &self,
+            cell_frame: NSRect,
+            control_view: &NSView,
+        );
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(focusRingMaskBoundsForFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn focusRingMaskBoundsForFrame_inView(
+        pub unsafe fn focusRingMaskBoundsForFrame_inView(
             &self,
             cell_frame: NSRect,
             control_view: &NSView,
@@ -1032,7 +973,7 @@ impl NSCell {
 
         #[unsafe(method(wantsNotificationForMarkedText))]
         #[unsafe(method_family = none)]
-        pub fn wantsNotificationForMarkedText(&self) -> bool;
+        pub unsafe fn wantsNotificationForMarkedText(&self) -> bool;
     );
 }
 
@@ -1041,32 +982,30 @@ impl NSCell {
     extern_methods!(
         #[unsafe(method(attributedStringValue))]
         #[unsafe(method_family = none)]
-        pub fn attributedStringValue(&self) -> Retained<NSAttributedString>;
+        pub unsafe fn attributedStringValue(&self) -> Retained<NSAttributedString>;
 
         /// Setter for [`attributedStringValue`][Self::attributedStringValue].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAttributedStringValue:))]
         #[unsafe(method_family = none)]
-        pub fn setAttributedStringValue(&self, attributed_string_value: &NSAttributedString);
+        pub unsafe fn setAttributedStringValue(&self, attributed_string_value: &NSAttributedString);
 
         #[unsafe(method(allowsEditingTextAttributes))]
         #[unsafe(method_family = none)]
-        pub fn allowsEditingTextAttributes(&self) -> bool;
+        pub unsafe fn allowsEditingTextAttributes(&self) -> bool;
 
         /// Setter for [`allowsEditingTextAttributes`][Self::allowsEditingTextAttributes].
         #[unsafe(method(setAllowsEditingTextAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsEditingTextAttributes(&self, allows_editing_text_attributes: bool);
+        pub unsafe fn setAllowsEditingTextAttributes(&self, allows_editing_text_attributes: bool);
 
         #[unsafe(method(importsGraphics))]
         #[unsafe(method_family = none)]
-        pub fn importsGraphics(&self) -> bool;
+        pub unsafe fn importsGraphics(&self) -> bool;
 
         /// Setter for [`importsGraphics`][Self::importsGraphics].
         #[unsafe(method(setImportsGraphics:))]
         #[unsafe(method_family = none)]
-        pub fn setImportsGraphics(&self, imports_graphics: bool);
+        pub unsafe fn setImportsGraphics(&self, imports_graphics: bool);
     );
 }
 
@@ -1075,20 +1014,20 @@ impl NSCell {
     extern_methods!(
         #[unsafe(method(allowsMixedState))]
         #[unsafe(method_family = none)]
-        pub fn allowsMixedState(&self) -> bool;
+        pub unsafe fn allowsMixedState(&self) -> bool;
 
         /// Setter for [`allowsMixedState`][Self::allowsMixedState].
         #[unsafe(method(setAllowsMixedState:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsMixedState(&self, allows_mixed_state: bool);
+        pub unsafe fn setAllowsMixedState(&self, allows_mixed_state: bool);
 
         #[unsafe(method(nextState))]
         #[unsafe(method_family = none)]
-        pub fn nextState(&self) -> NSInteger;
+        pub unsafe fn nextState(&self) -> NSInteger;
 
         #[unsafe(method(setNextState))]
         #[unsafe(method_family = none)]
-        pub fn setNextState(&self);
+        pub unsafe fn setNextState(&self);
     );
 }
 
@@ -1124,7 +1063,7 @@ impl NSCell {
         #[cfg(all(feature = "NSEvent", feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(hitTestForEvent:inRect:ofView:))]
         #[unsafe(method_family = none)]
-        pub fn hitTestForEvent_inRect_ofView(
+        pub unsafe fn hitTestForEvent_inRect_ofView(
             &self,
             event: &NSEvent,
             cell_frame: NSRect,
@@ -1139,12 +1078,16 @@ impl NSCell {
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(expansionFrameWithFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn expansionFrameWithFrame_inView(&self, cell_frame: NSRect, view: &NSView) -> NSRect;
+        pub unsafe fn expansionFrameWithFrame_inView(
+            &self,
+            cell_frame: NSRect,
+            view: &NSView,
+        ) -> NSRect;
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(drawWithExpansionFrame:inView:))]
         #[unsafe(method_family = none)]
-        pub fn drawWithExpansionFrame_inView(&self, cell_frame: NSRect, view: &NSView);
+        pub unsafe fn drawWithExpansionFrame_inView(&self, cell_frame: NSRect, view: &NSView);
     );
 }
 
@@ -1177,16 +1120,16 @@ impl NSCell {
     extern_methods!(
         #[unsafe(method(backgroundStyle))]
         #[unsafe(method_family = none)]
-        pub fn backgroundStyle(&self) -> NSBackgroundStyle;
+        pub unsafe fn backgroundStyle(&self) -> NSBackgroundStyle;
 
         /// Setter for [`backgroundStyle`][Self::backgroundStyle].
         #[unsafe(method(setBackgroundStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundStyle(&self, background_style: NSBackgroundStyle);
+        pub unsafe fn setBackgroundStyle(&self, background_style: NSBackgroundStyle);
 
         #[unsafe(method(interiorBackgroundStyle))]
         #[unsafe(method_family = none)]
-        pub fn interiorBackgroundStyle(&self) -> NSBackgroundStyle;
+        pub unsafe fn interiorBackgroundStyle(&self) -> NSBackgroundStyle;
     );
 }
 
@@ -1196,7 +1139,7 @@ impl NSCell {
     feature = "objc2-core-foundation"
 ))]
 #[inline]
-pub extern "C-unwind" fn NSDrawThreePartImage(
+pub unsafe extern "C-unwind" fn NSDrawThreePartImage(
     frame: NSRect,
     start_cap: Option<&NSImage>,
     center_fill: Option<&NSImage>,
@@ -1238,7 +1181,7 @@ pub extern "C-unwind" fn NSDrawThreePartImage(
     feature = "objc2-core-foundation"
 ))]
 #[inline]
-pub extern "C-unwind" fn NSDrawNinePartImage(
+pub unsafe extern "C-unwind" fn NSDrawNinePartImage(
     frame: NSRect,
     top_left_corner: Option<&NSImage>,
     top_edge_fill: Option<&NSImage>,
@@ -1295,33 +1238,33 @@ impl NSCell {
         #[deprecated = "The controlTint property is not respected on 10.14 and later. For custom cells, use +[NSColor controlAccentColor] to respect the user's preferred accent color when drawing."]
         #[unsafe(method(controlTint))]
         #[unsafe(method_family = none)]
-        pub fn controlTint(&self) -> NSControlTint;
+        pub unsafe fn controlTint(&self) -> NSControlTint;
 
         /// Setter for [`controlTint`][Self::controlTint].
         #[deprecated = "The controlTint property is not respected on 10.14 and later. For custom cells, use +[NSColor controlAccentColor] to respect the user's preferred accent color when drawing."]
         #[unsafe(method(setControlTint:))]
         #[unsafe(method_family = none)]
-        pub fn setControlTint(&self, control_tint: NSControlTint);
+        pub unsafe fn setControlTint(&self, control_tint: NSControlTint);
 
         #[deprecated]
         #[unsafe(method(entryType))]
         #[unsafe(method_family = none)]
-        pub fn entryType(&self) -> NSInteger;
+        pub unsafe fn entryType(&self) -> NSInteger;
 
         #[deprecated]
         #[unsafe(method(setEntryType:))]
         #[unsafe(method_family = none)]
-        pub fn setEntryType(&self, r#type: NSInteger);
+        pub unsafe fn setEntryType(&self, r#type: NSInteger);
 
         #[deprecated]
         #[unsafe(method(isEntryAcceptable:))]
         #[unsafe(method_family = none)]
-        pub fn isEntryAcceptable(&self, string: &NSString) -> bool;
+        pub unsafe fn isEntryAcceptable(&self, string: &NSString) -> bool;
 
         #[deprecated]
         #[unsafe(method(setFloatingPointFormat:left:right:))]
         #[unsafe(method_family = none)]
-        pub fn setFloatingPointFormat_left_right(
+        pub unsafe fn setFloatingPointFormat_left_right(
             &self,
             auto_range: bool,
             left_digits: NSUInteger,
@@ -1331,66 +1274,56 @@ impl NSCell {
         #[deprecated]
         #[unsafe(method(setMnemonicLocation:))]
         #[unsafe(method_family = none)]
-        pub fn setMnemonicLocation(&self, location: NSUInteger);
+        pub unsafe fn setMnemonicLocation(&self, location: NSUInteger);
 
         #[deprecated]
         #[unsafe(method(mnemonicLocation))]
         #[unsafe(method_family = none)]
-        pub fn mnemonicLocation(&self) -> NSUInteger;
+        pub unsafe fn mnemonicLocation(&self) -> NSUInteger;
 
         #[deprecated]
         #[unsafe(method(mnemonic))]
         #[unsafe(method_family = none)]
-        pub fn mnemonic(&self) -> Retained<NSString>;
+        pub unsafe fn mnemonic(&self) -> Retained<NSString>;
 
         #[deprecated]
         #[unsafe(method(setTitleWithMnemonic:))]
         #[unsafe(method_family = none)]
-        pub fn setTitleWithMnemonic(&self, string_with_ampersand: &NSString);
+        pub unsafe fn setTitleWithMnemonic(&self, string_with_ampersand: &NSString);
     );
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsbackgroundstylelight?language=objc)
-#[deprecated]
 pub static NSBackgroundStyleLight: NSBackgroundStyle =
     NSBackgroundStyle(NSBackgroundStyle::Normal.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsbackgroundstyledark?language=objc)
-#[deprecated]
 pub static NSBackgroundStyleDark: NSBackgroundStyle =
     NSBackgroundStyle(NSBackgroundStyle::Emphasized.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscellstatevalue?language=objc)
-#[deprecated]
 pub type NSCellStateValue = NSControlStateValue;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmixedstate?language=objc)
-#[deprecated]
 pub static NSMixedState: NSControlStateValue = NSControlStateValueMixed;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsoffstate?language=objc)
-#[deprecated]
 pub static NSOffState: NSControlStateValue = NSControlStateValueOff;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsonstate?language=objc)
-#[deprecated]
 pub static NSOnState: NSControlStateValue = NSControlStateValueOn;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsregularcontrolsize?language=objc)
-#[deprecated]
 pub static NSRegularControlSize: NSControlSize = NSControlSize(NSControlSize::Regular.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nssmallcontrolsize?language=objc)
-#[deprecated]
 pub static NSSmallControlSize: NSControlSize = NSControlSize(NSControlSize::Small.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsminicontrolsize?language=objc)
-#[deprecated]
 pub static NSMiniControlSize: NSControlSize = NSControlSize(NSControlSize::Mini.0);
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscontroltintdidchangenotification?language=objc)
-    #[deprecated = "Changes to the accent color can be manually observed by implementing -viewDidChangeEffectiveAppearance in a NSView subclass, or by Key-Value Observing the -effectiveAppearance property on NSApplication. Views are automatically redisplayed when the accent color changes."]
     pub static NSControlTintDidChangeNotification: &'static NSNotificationName;
 }
 

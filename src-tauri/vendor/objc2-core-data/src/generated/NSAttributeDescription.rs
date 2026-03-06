@@ -100,8 +100,6 @@ impl NSAttributeDescription {
         pub unsafe fn attributeValueClassName(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`attributeValueClassName`][Self::attributeValueClassName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAttributeValueClassName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setAttributeValueClassName(
@@ -114,10 +112,6 @@ impl NSAttributeDescription {
         pub unsafe fn defaultValue(&self) -> Option<Retained<AnyObject>>;
 
         /// Setter for [`defaultValue`][Self::defaultValue].
-        ///
-        /// # Safety
-        ///
-        /// `default_value` should be of the correct type.
         #[unsafe(method(setDefaultValue:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDefaultValue(&self, default_value: Option<&AnyObject>);
@@ -131,8 +125,6 @@ impl NSAttributeDescription {
         pub unsafe fn valueTransformerName(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`valueTransformerName`][Self::valueTransformerName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setValueTransformerName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setValueTransformerName(&self, value_transformer_name: Option<&NSString>);

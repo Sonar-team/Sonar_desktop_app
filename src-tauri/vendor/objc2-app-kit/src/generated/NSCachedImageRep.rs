@@ -39,9 +39,6 @@ extern_conformance!(
 impl NSCachedImageRep {
     extern_methods!(
         #[cfg(all(feature = "NSResponder", feature = "NSWindow"))]
-        /// # Safety
-        ///
-        /// `win` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initWithWindow:rect:))]
         #[unsafe(method_family = init)]
@@ -55,7 +52,7 @@ impl NSCachedImageRep {
         #[deprecated]
         #[unsafe(method(initWithSize:depth:separate:alpha:))]
         #[unsafe(method_family = init)]
-        pub fn initWithSize_depth_separate_alpha(
+        pub unsafe fn initWithSize_depth_separate_alpha(
             this: Allocated<Self>,
             size: NSSize,
             depth: NSWindowDepth,
@@ -67,12 +64,12 @@ impl NSCachedImageRep {
         #[deprecated]
         #[unsafe(method(window))]
         #[unsafe(method_family = none)]
-        pub fn window(&self, mtm: MainThreadMarker) -> Option<Retained<NSWindow>>;
+        pub unsafe fn window(&self, mtm: MainThreadMarker) -> Option<Retained<NSWindow>>;
 
         #[deprecated]
         #[unsafe(method(rect))]
         #[unsafe(method_family = none)]
-        pub fn rect(&self) -> NSRect;
+        pub unsafe fn rect(&self) -> NSRect;
     );
 }
 
@@ -82,11 +79,8 @@ impl NSCachedImageRep {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -102,14 +96,6 @@ impl NSCachedImageRep {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "NSImageRep")]
-impl DefaultRetained for NSCachedImageRep {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

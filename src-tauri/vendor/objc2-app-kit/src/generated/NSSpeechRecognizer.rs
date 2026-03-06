@@ -22,72 +22,67 @@ impl NSSpeechRecognizer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Option<Retained<Self>>;
+        pub unsafe fn init(this: Allocated<Self>) -> Option<Retained<Self>>;
 
         #[unsafe(method(startListening))]
         #[unsafe(method_family = none)]
-        pub fn startListening(&self);
+        pub unsafe fn startListening(&self);
 
         #[unsafe(method(stopListening))]
         #[unsafe(method_family = none)]
-        pub fn stopListening(&self);
+        pub unsafe fn stopListening(&self);
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
             mtm: MainThreadMarker,
         ) -> Option<Retained<ProtocolObject<dyn NSSpeechRecognizerDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(
+        pub unsafe fn setDelegate(
             &self,
             delegate: Option<&ProtocolObject<dyn NSSpeechRecognizerDelegate>>,
         );
 
         #[unsafe(method(commands))]
         #[unsafe(method_family = none)]
-        pub fn commands(&self) -> Option<Retained<NSArray<NSString>>>;
+        pub unsafe fn commands(&self) -> Option<Retained<NSArray<NSString>>>;
 
         /// Setter for [`commands`][Self::commands].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCommands:))]
         #[unsafe(method_family = none)]
-        pub fn setCommands(&self, commands: Option<&NSArray<NSString>>);
+        pub unsafe fn setCommands(&self, commands: Option<&NSArray<NSString>>);
 
         #[unsafe(method(displayedCommandsTitle))]
         #[unsafe(method_family = none)]
-        pub fn displayedCommandsTitle(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn displayedCommandsTitle(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`displayedCommandsTitle`][Self::displayedCommandsTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDisplayedCommandsTitle:))]
         #[unsafe(method_family = none)]
-        pub fn setDisplayedCommandsTitle(&self, displayed_commands_title: Option<&NSString>);
+        pub unsafe fn setDisplayedCommandsTitle(&self, displayed_commands_title: Option<&NSString>);
 
         #[unsafe(method(listensInForegroundOnly))]
         #[unsafe(method_family = none)]
-        pub fn listensInForegroundOnly(&self) -> bool;
+        pub unsafe fn listensInForegroundOnly(&self) -> bool;
 
         /// Setter for [`listensInForegroundOnly`][Self::listensInForegroundOnly].
         #[unsafe(method(setListensInForegroundOnly:))]
         #[unsafe(method_family = none)]
-        pub fn setListensInForegroundOnly(&self, listens_in_foreground_only: bool);
+        pub unsafe fn setListensInForegroundOnly(&self, listens_in_foreground_only: bool);
 
         #[unsafe(method(blocksOtherRecognizers))]
         #[unsafe(method_family = none)]
-        pub fn blocksOtherRecognizers(&self) -> bool;
+        pub unsafe fn blocksOtherRecognizers(&self) -> bool;
 
         /// Setter for [`blocksOtherRecognizers`][Self::blocksOtherRecognizers].
         #[unsafe(method(setBlocksOtherRecognizers:))]
         #[unsafe(method_family = none)]
-        pub fn setBlocksOtherRecognizers(&self, blocks_other_recognizers: bool);
+        pub unsafe fn setBlocksOtherRecognizers(&self, blocks_other_recognizers: bool);
     );
 }
 
@@ -96,15 +91,8 @@ impl NSSpeechRecognizer {
     extern_methods!(
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSSpeechRecognizer {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_protocol!(
@@ -113,7 +101,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(speechRecognizer:didRecognizeCommand:))]
         #[unsafe(method_family = none)]
-        fn speechRecognizer_didRecognizeCommand(
+        unsafe fn speechRecognizer_didRecognizeCommand(
             &self,
             sender: &NSSpeechRecognizer,
             command: &NSString,

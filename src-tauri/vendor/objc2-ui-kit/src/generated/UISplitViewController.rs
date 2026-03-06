@@ -125,8 +125,6 @@ impl UISplitViewControllerColumn {
     pub const Secondary: Self = Self(2);
     #[doc(alias = "UISplitViewControllerColumnCompact")]
     pub const Compact: Self = Self(3);
-    #[doc(alias = "UISplitViewControllerColumnInspector")]
-    pub const Inspector: Self = Self(4);
 }
 
 unsafe impl Encode for UISplitViewControllerColumn {
@@ -248,9 +246,6 @@ extern_conformance!(
 #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
 impl UISplitViewController {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -260,7 +255,7 @@ impl UISplitViewController {
 
         #[unsafe(method(initWithNibName:bundle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithNibName_bundle(
+        pub unsafe fn initWithNibName_bundle(
             this: Allocated<Self>,
             nib_name_or_nil: Option<&NSString>,
             nib_bundle_or_nil: Option<&NSBundle>,
@@ -268,59 +263,58 @@ impl UISplitViewController {
 
         #[unsafe(method(initWithStyle:))]
         #[unsafe(method_family = init)]
-        pub fn initWithStyle(
+        pub unsafe fn initWithStyle(
             this: Allocated<Self>,
             style: UISplitViewControllerStyle,
         ) -> Retained<Self>;
 
         #[unsafe(method(style))]
         #[unsafe(method_family = none)]
-        pub fn style(&self) -> UISplitViewControllerStyle;
+        pub unsafe fn style(&self) -> UISplitViewControllerStyle;
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UISplitViewControllerDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(
+        pub unsafe fn setDelegate(
             &self,
             delegate: Option<&ProtocolObject<dyn UISplitViewControllerDelegate>>,
         );
 
         #[unsafe(method(showsSecondaryOnlyButton))]
         #[unsafe(method_family = none)]
-        pub fn showsSecondaryOnlyButton(&self) -> bool;
+        pub unsafe fn showsSecondaryOnlyButton(&self) -> bool;
 
         /// Setter for [`showsSecondaryOnlyButton`][Self::showsSecondaryOnlyButton].
         #[unsafe(method(setShowsSecondaryOnlyButton:))]
         #[unsafe(method_family = none)]
-        pub fn setShowsSecondaryOnlyButton(&self, shows_secondary_only_button: bool);
+        pub unsafe fn setShowsSecondaryOnlyButton(&self, shows_secondary_only_button: bool);
 
         #[unsafe(method(preferredSplitBehavior))]
         #[unsafe(method_family = none)]
-        pub fn preferredSplitBehavior(&self) -> UISplitViewControllerSplitBehavior;
+        pub unsafe fn preferredSplitBehavior(&self) -> UISplitViewControllerSplitBehavior;
 
         /// Setter for [`preferredSplitBehavior`][Self::preferredSplitBehavior].
         #[unsafe(method(setPreferredSplitBehavior:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredSplitBehavior(
+        pub unsafe fn setPreferredSplitBehavior(
             &self,
             preferred_split_behavior: UISplitViewControllerSplitBehavior,
         );
 
         #[unsafe(method(splitBehavior))]
         #[unsafe(method_family = none)]
-        pub fn splitBehavior(&self) -> UISplitViewControllerSplitBehavior;
+        pub unsafe fn splitBehavior(&self) -> UISplitViewControllerSplitBehavior;
 
         #[unsafe(method(setViewController:forColumn:))]
         #[unsafe(method_family = none)]
-        pub fn setViewController_forColumn(
+        pub unsafe fn setViewController_forColumn(
             &self,
             vc: Option<&UIViewController>,
             column: UISplitViewControllerColumn,
@@ -328,78 +322,72 @@ impl UISplitViewController {
 
         #[unsafe(method(viewControllerForColumn:))]
         #[unsafe(method_family = none)]
-        pub fn viewControllerForColumn(
+        pub unsafe fn viewControllerForColumn(
             &self,
             column: UISplitViewControllerColumn,
         ) -> Option<Retained<UIViewController>>;
 
         #[unsafe(method(hideColumn:))]
         #[unsafe(method_family = none)]
-        pub fn hideColumn(&self, column: UISplitViewControllerColumn);
+        pub unsafe fn hideColumn(&self, column: UISplitViewControllerColumn);
 
         #[unsafe(method(showColumn:))]
         #[unsafe(method_family = none)]
-        pub fn showColumn(&self, column: UISplitViewControllerColumn);
-
-        #[unsafe(method(isShowingColumn:))]
-        #[unsafe(method_family = none)]
-        pub fn isShowingColumn(&self, column: UISplitViewControllerColumn) -> bool;
+        pub unsafe fn showColumn(&self, column: UISplitViewControllerColumn);
 
         #[unsafe(method(viewControllers))]
         #[unsafe(method_family = none)]
-        pub fn viewControllers(&self) -> Retained<NSArray<UIViewController>>;
+        pub unsafe fn viewControllers(&self) -> Retained<NSArray<UIViewController>>;
 
         /// Setter for [`viewControllers`][Self::viewControllers].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setViewControllers:))]
         #[unsafe(method_family = none)]
-        pub fn setViewControllers(&self, view_controllers: &NSArray<UIViewController>);
+        pub unsafe fn setViewControllers(&self, view_controllers: &NSArray<UIViewController>);
 
         #[unsafe(method(presentsWithGesture))]
         #[unsafe(method_family = none)]
-        pub fn presentsWithGesture(&self) -> bool;
+        pub unsafe fn presentsWithGesture(&self) -> bool;
 
         /// Setter for [`presentsWithGesture`][Self::presentsWithGesture].
         #[unsafe(method(setPresentsWithGesture:))]
         #[unsafe(method_family = none)]
-        pub fn setPresentsWithGesture(&self, presents_with_gesture: bool);
+        pub unsafe fn setPresentsWithGesture(&self, presents_with_gesture: bool);
 
         #[unsafe(method(isCollapsed))]
         #[unsafe(method_family = none)]
-        pub fn isCollapsed(&self) -> bool;
+        pub unsafe fn isCollapsed(&self) -> bool;
 
         #[unsafe(method(preferredDisplayMode))]
         #[unsafe(method_family = none)]
-        pub fn preferredDisplayMode(&self) -> UISplitViewControllerDisplayMode;
+        pub unsafe fn preferredDisplayMode(&self) -> UISplitViewControllerDisplayMode;
 
         /// Setter for [`preferredDisplayMode`][Self::preferredDisplayMode].
         #[unsafe(method(setPreferredDisplayMode:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredDisplayMode(
+        pub unsafe fn setPreferredDisplayMode(
             &self,
             preferred_display_mode: UISplitViewControllerDisplayMode,
         );
 
         #[unsafe(method(displayMode))]
         #[unsafe(method_family = none)]
-        pub fn displayMode(&self) -> UISplitViewControllerDisplayMode;
+        pub unsafe fn displayMode(&self) -> UISplitViewControllerDisplayMode;
 
         #[cfg(all(feature = "UIBarButtonItem", feature = "UIBarItem"))]
         #[unsafe(method(displayModeButtonItem))]
         #[unsafe(method_family = none)]
-        pub fn displayModeButtonItem(&self) -> Retained<UIBarButtonItem>;
+        pub unsafe fn displayModeButtonItem(&self) -> Retained<UIBarButtonItem>;
 
         #[unsafe(method(displayModeButtonVisibility))]
         #[unsafe(method_family = none)]
-        pub fn displayModeButtonVisibility(
+        pub unsafe fn displayModeButtonVisibility(
             &self,
         ) -> UISplitViewControllerDisplayModeButtonVisibility;
 
         /// Setter for [`displayModeButtonVisibility`][Self::displayModeButtonVisibility].
         #[unsafe(method(setDisplayModeButtonVisibility:))]
         #[unsafe(method_family = none)]
-        pub fn setDisplayModeButtonVisibility(
+        pub unsafe fn setDisplayModeButtonVisibility(
             &self,
             display_mode_button_visibility: UISplitViewControllerDisplayModeButtonVisibility,
         );
@@ -407,13 +395,13 @@ impl UISplitViewController {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(preferredPrimaryColumnWidthFraction))]
         #[unsafe(method_family = none)]
-        pub fn preferredPrimaryColumnWidthFraction(&self) -> CGFloat;
+        pub unsafe fn preferredPrimaryColumnWidthFraction(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`preferredPrimaryColumnWidthFraction`][Self::preferredPrimaryColumnWidthFraction].
         #[unsafe(method(setPreferredPrimaryColumnWidthFraction:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredPrimaryColumnWidthFraction(
+        pub unsafe fn setPreferredPrimaryColumnWidthFraction(
             &self,
             preferred_primary_column_width_fraction: CGFloat,
         );
@@ -421,51 +409,54 @@ impl UISplitViewController {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(preferredPrimaryColumnWidth))]
         #[unsafe(method_family = none)]
-        pub fn preferredPrimaryColumnWidth(&self) -> CGFloat;
+        pub unsafe fn preferredPrimaryColumnWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`preferredPrimaryColumnWidth`][Self::preferredPrimaryColumnWidth].
         #[unsafe(method(setPreferredPrimaryColumnWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredPrimaryColumnWidth(&self, preferred_primary_column_width: CGFloat);
+        pub unsafe fn setPreferredPrimaryColumnWidth(
+            &self,
+            preferred_primary_column_width: CGFloat,
+        );
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(minimumPrimaryColumnWidth))]
         #[unsafe(method_family = none)]
-        pub fn minimumPrimaryColumnWidth(&self) -> CGFloat;
+        pub unsafe fn minimumPrimaryColumnWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`minimumPrimaryColumnWidth`][Self::minimumPrimaryColumnWidth].
         #[unsafe(method(setMinimumPrimaryColumnWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setMinimumPrimaryColumnWidth(&self, minimum_primary_column_width: CGFloat);
+        pub unsafe fn setMinimumPrimaryColumnWidth(&self, minimum_primary_column_width: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(maximumPrimaryColumnWidth))]
         #[unsafe(method_family = none)]
-        pub fn maximumPrimaryColumnWidth(&self) -> CGFloat;
+        pub unsafe fn maximumPrimaryColumnWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`maximumPrimaryColumnWidth`][Self::maximumPrimaryColumnWidth].
         #[unsafe(method(setMaximumPrimaryColumnWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumPrimaryColumnWidth(&self, maximum_primary_column_width: CGFloat);
+        pub unsafe fn setMaximumPrimaryColumnWidth(&self, maximum_primary_column_width: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(primaryColumnWidth))]
         #[unsafe(method_family = none)]
-        pub fn primaryColumnWidth(&self) -> CGFloat;
+        pub unsafe fn primaryColumnWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(preferredSupplementaryColumnWidthFraction))]
         #[unsafe(method_family = none)]
-        pub fn preferredSupplementaryColumnWidthFraction(&self) -> CGFloat;
+        pub unsafe fn preferredSupplementaryColumnWidthFraction(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`preferredSupplementaryColumnWidthFraction`][Self::preferredSupplementaryColumnWidthFraction].
         #[unsafe(method(setPreferredSupplementaryColumnWidthFraction:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredSupplementaryColumnWidthFraction(
+        pub unsafe fn setPreferredSupplementaryColumnWidthFraction(
             &self,
             preferred_supplementary_column_width_fraction: CGFloat,
         );
@@ -473,13 +464,13 @@ impl UISplitViewController {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(preferredSupplementaryColumnWidth))]
         #[unsafe(method_family = none)]
-        pub fn preferredSupplementaryColumnWidth(&self) -> CGFloat;
+        pub unsafe fn preferredSupplementaryColumnWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`preferredSupplementaryColumnWidth`][Self::preferredSupplementaryColumnWidth].
         #[unsafe(method(setPreferredSupplementaryColumnWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredSupplementaryColumnWidth(
+        pub unsafe fn setPreferredSupplementaryColumnWidth(
             &self,
             preferred_supplementary_column_width: CGFloat,
         );
@@ -487,13 +478,13 @@ impl UISplitViewController {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(minimumSupplementaryColumnWidth))]
         #[unsafe(method_family = none)]
-        pub fn minimumSupplementaryColumnWidth(&self) -> CGFloat;
+        pub unsafe fn minimumSupplementaryColumnWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`minimumSupplementaryColumnWidth`][Self::minimumSupplementaryColumnWidth].
         #[unsafe(method(setMinimumSupplementaryColumnWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setMinimumSupplementaryColumnWidth(
+        pub unsafe fn setMinimumSupplementaryColumnWidth(
             &self,
             minimum_supplementary_column_width: CGFloat,
         );
@@ -501,13 +492,13 @@ impl UISplitViewController {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(maximumSupplementaryColumnWidth))]
         #[unsafe(method_family = none)]
-        pub fn maximumSupplementaryColumnWidth(&self) -> CGFloat;
+        pub unsafe fn maximumSupplementaryColumnWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`maximumSupplementaryColumnWidth`][Self::maximumSupplementaryColumnWidth].
         #[unsafe(method(setMaximumSupplementaryColumnWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setMaximumSupplementaryColumnWidth(
+        pub unsafe fn setMaximumSupplementaryColumnWidth(
             &self,
             maximum_supplementary_column_width: CGFloat,
         );
@@ -515,103 +506,17 @@ impl UISplitViewController {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(supplementaryColumnWidth))]
         #[unsafe(method_family = none)]
-        pub fn supplementaryColumnWidth(&self) -> CGFloat;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        #[unsafe(method(preferredSecondaryColumnWidthFraction))]
-        #[unsafe(method_family = none)]
-        pub fn preferredSecondaryColumnWidthFraction(&self) -> CGFloat;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// Setter for [`preferredSecondaryColumnWidthFraction`][Self::preferredSecondaryColumnWidthFraction].
-        #[unsafe(method(setPreferredSecondaryColumnWidthFraction:))]
-        #[unsafe(method_family = none)]
-        pub fn setPreferredSecondaryColumnWidthFraction(
-            &self,
-            preferred_secondary_column_width_fraction: CGFloat,
-        );
-
-        #[cfg(feature = "objc2-core-foundation")]
-        #[unsafe(method(preferredSecondaryColumnWidth))]
-        #[unsafe(method_family = none)]
-        pub fn preferredSecondaryColumnWidth(&self) -> CGFloat;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// Setter for [`preferredSecondaryColumnWidth`][Self::preferredSecondaryColumnWidth].
-        #[unsafe(method(setPreferredSecondaryColumnWidth:))]
-        #[unsafe(method_family = none)]
-        pub fn setPreferredSecondaryColumnWidth(&self, preferred_secondary_column_width: CGFloat);
-
-        #[cfg(feature = "objc2-core-foundation")]
-        #[unsafe(method(minimumSecondaryColumnWidth))]
-        #[unsafe(method_family = none)]
-        pub fn minimumSecondaryColumnWidth(&self) -> CGFloat;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// Setter for [`minimumSecondaryColumnWidth`][Self::minimumSecondaryColumnWidth].
-        #[unsafe(method(setMinimumSecondaryColumnWidth:))]
-        #[unsafe(method_family = none)]
-        pub fn setMinimumSecondaryColumnWidth(&self, minimum_secondary_column_width: CGFloat);
-
-        #[cfg(feature = "objc2-core-foundation")]
-        #[unsafe(method(preferredInspectorColumnWidthFraction))]
-        #[unsafe(method_family = none)]
-        pub fn preferredInspectorColumnWidthFraction(&self) -> CGFloat;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// Setter for [`preferredInspectorColumnWidthFraction`][Self::preferredInspectorColumnWidthFraction].
-        #[unsafe(method(setPreferredInspectorColumnWidthFraction:))]
-        #[unsafe(method_family = none)]
-        pub fn setPreferredInspectorColumnWidthFraction(
-            &self,
-            preferred_inspector_column_width_fraction: CGFloat,
-        );
-
-        #[cfg(feature = "objc2-core-foundation")]
-        #[unsafe(method(preferredInspectorColumnWidth))]
-        #[unsafe(method_family = none)]
-        pub fn preferredInspectorColumnWidth(&self) -> CGFloat;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// Setter for [`preferredInspectorColumnWidth`][Self::preferredInspectorColumnWidth].
-        #[unsafe(method(setPreferredInspectorColumnWidth:))]
-        #[unsafe(method_family = none)]
-        pub fn setPreferredInspectorColumnWidth(&self, preferred_inspector_column_width: CGFloat);
-
-        #[cfg(feature = "objc2-core-foundation")]
-        #[unsafe(method(minimumInspectorColumnWidth))]
-        #[unsafe(method_family = none)]
-        pub fn minimumInspectorColumnWidth(&self) -> CGFloat;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// Setter for [`minimumInspectorColumnWidth`][Self::minimumInspectorColumnWidth].
-        #[unsafe(method(setMinimumInspectorColumnWidth:))]
-        #[unsafe(method_family = none)]
-        pub fn setMinimumInspectorColumnWidth(&self, minimum_inspector_column_width: CGFloat);
-
-        #[cfg(feature = "objc2-core-foundation")]
-        #[unsafe(method(maximumInspectorColumnWidth))]
-        #[unsafe(method_family = none)]
-        pub fn maximumInspectorColumnWidth(&self) -> CGFloat;
-
-        #[cfg(feature = "objc2-core-foundation")]
-        /// Setter for [`maximumInspectorColumnWidth`][Self::maximumInspectorColumnWidth].
-        #[unsafe(method(setMaximumInspectorColumnWidth:))]
-        #[unsafe(method_family = none)]
-        pub fn setMaximumInspectorColumnWidth(&self, maximum_inspector_column_width: CGFloat);
+        pub unsafe fn supplementaryColumnWidth(&self) -> CGFloat;
 
         #[unsafe(method(primaryEdge))]
         #[unsafe(method_family = none)]
-        pub fn primaryEdge(&self) -> UISplitViewControllerPrimaryEdge;
+        pub unsafe fn primaryEdge(&self) -> UISplitViewControllerPrimaryEdge;
 
         /// Setter for [`primaryEdge`][Self::primaryEdge].
         #[unsafe(method(setPrimaryEdge:))]
         #[unsafe(method_family = none)]
-        pub fn setPrimaryEdge(&self, primary_edge: UISplitViewControllerPrimaryEdge);
+        pub unsafe fn setPrimaryEdge(&self, primary_edge: UISplitViewControllerPrimaryEdge);
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(showViewController:sender:))]
         #[unsafe(method_family = none)]
         pub unsafe fn showViewController_sender(
@@ -620,9 +525,6 @@ impl UISplitViewController {
             sender: Option<&AnyObject>,
         );
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[unsafe(method(showDetailViewController:sender:))]
         #[unsafe(method_family = none)]
         pub unsafe fn showDetailViewController_sender(
@@ -633,12 +535,12 @@ impl UISplitViewController {
 
         #[unsafe(method(primaryBackgroundStyle))]
         #[unsafe(method_family = none)]
-        pub fn primaryBackgroundStyle(&self) -> UISplitViewControllerBackgroundStyle;
+        pub unsafe fn primaryBackgroundStyle(&self) -> UISplitViewControllerBackgroundStyle;
 
         /// Setter for [`primaryBackgroundStyle`][Self::primaryBackgroundStyle].
         #[unsafe(method(setPrimaryBackgroundStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setPrimaryBackgroundStyle(
+        pub unsafe fn setPrimaryBackgroundStyle(
             &self,
             primary_background_style: UISplitViewControllerBackgroundStyle,
         );
@@ -651,11 +553,11 @@ impl UISplitViewController {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -666,7 +568,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewController:willChangeToDisplayMode:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_willChangeToDisplayMode(
+        unsafe fn splitViewController_willChangeToDisplayMode(
             &self,
             svc: &UISplitViewController,
             display_mode: UISplitViewControllerDisplayMode,
@@ -676,15 +578,12 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(targetDisplayModeForActionInSplitViewController:))]
         #[unsafe(method_family = none)]
-        fn targetDisplayModeForActionInSplitViewController(
+        unsafe fn targetDisplayModeForActionInSplitViewController(
             &self,
             svc: &UISplitViewController,
         ) -> UISplitViewControllerDisplayMode;
 
         #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(splitViewController:showViewController:sender:))]
         #[unsafe(method_family = none)]
@@ -696,9 +595,6 @@ extern_protocol!(
         ) -> bool;
 
         #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(splitViewController:showDetailViewController:sender:))]
         #[unsafe(method_family = none)]
@@ -713,7 +609,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(primaryViewControllerForCollapsingSplitViewController:))]
         #[unsafe(method_family = none)]
-        fn primaryViewControllerForCollapsingSplitViewController(
+        unsafe fn primaryViewControllerForCollapsingSplitViewController(
             &self,
             split_view_controller: &UISplitViewController,
         ) -> Option<Retained<UIViewController>>;
@@ -722,7 +618,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(primaryViewControllerForExpandingSplitViewController:))]
         #[unsafe(method_family = none)]
-        fn primaryViewControllerForExpandingSplitViewController(
+        unsafe fn primaryViewControllerForExpandingSplitViewController(
             &self,
             split_view_controller: &UISplitViewController,
         ) -> Option<Retained<UIViewController>>;
@@ -731,7 +627,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewController:collapseSecondaryViewController:ontoPrimaryViewController:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_collapseSecondaryViewController_ontoPrimaryViewController(
+        unsafe fn splitViewController_collapseSecondaryViewController_ontoPrimaryViewController(
             &self,
             split_view_controller: &UISplitViewController,
             secondary_view_controller: &UIViewController,
@@ -742,7 +638,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewController:separateSecondaryViewControllerFromPrimaryViewController:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_separateSecondaryViewControllerFromPrimaryViewController(
+        unsafe fn splitViewController_separateSecondaryViewControllerFromPrimaryViewController(
             &self,
             split_view_controller: &UISplitViewController,
             primary_view_controller: &UIViewController,
@@ -756,7 +652,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewControllerSupportedInterfaceOrientations:))]
         #[unsafe(method_family = none)]
-        fn splitViewControllerSupportedInterfaceOrientations(
+        unsafe fn splitViewControllerSupportedInterfaceOrientations(
             &self,
             split_view_controller: &UISplitViewController,
         ) -> UIInterfaceOrientationMask;
@@ -769,7 +665,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewControllerPreferredInterfaceOrientationForPresentation:))]
         #[unsafe(method_family = none)]
-        fn splitViewControllerPreferredInterfaceOrientationForPresentation(
+        unsafe fn splitViewControllerPreferredInterfaceOrientationForPresentation(
             &self,
             split_view_controller: &UISplitViewController,
         ) -> UIInterfaceOrientation;
@@ -785,7 +681,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewController:willHideViewController:withBarButtonItem:forPopoverController:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_willHideViewController_withBarButtonItem_forPopoverController(
+        unsafe fn splitViewController_willHideViewController_withBarButtonItem_forPopoverController(
             &self,
             svc: &UISplitViewController,
             a_view_controller: &UIViewController,
@@ -803,7 +699,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewController:willShowViewController:invalidatingBarButtonItem:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_willShowViewController_invalidatingBarButtonItem(
+        unsafe fn splitViewController_willShowViewController_invalidatingBarButtonItem(
             &self,
             svc: &UISplitViewController,
             a_view_controller: &UIViewController,
@@ -819,7 +715,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewController:popoverController:willPresentViewController:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_popoverController_willPresentViewController(
+        unsafe fn splitViewController_popoverController_willPresentViewController(
             &self,
             svc: &UISplitViewController,
             pc: &UIPopoverController,
@@ -835,7 +731,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewController:shouldHideViewController:inOrientation:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_shouldHideViewController_inOrientation(
+        unsafe fn splitViewController_shouldHideViewController_inOrientation(
             &self,
             svc: &UISplitViewController,
             vc: &UIViewController,
@@ -846,7 +742,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewController:topColumnForCollapsingToProposedTopColumn:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_topColumnForCollapsingToProposedTopColumn(
+        unsafe fn splitViewController_topColumnForCollapsingToProposedTopColumn(
             &self,
             svc: &UISplitViewController,
             proposed_top_column: UISplitViewControllerColumn,
@@ -856,7 +752,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewController:displayModeForExpandingToProposedDisplayMode:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_displayModeForExpandingToProposedDisplayMode(
+        unsafe fn splitViewController_displayModeForExpandingToProposedDisplayMode(
             &self,
             svc: &UISplitViewController,
             proposed_display_mode: UISplitViewControllerDisplayMode,
@@ -866,19 +762,19 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewControllerDidCollapse:))]
         #[unsafe(method_family = none)]
-        fn splitViewControllerDidCollapse(&self, svc: &UISplitViewController);
+        unsafe fn splitViewControllerDidCollapse(&self, svc: &UISplitViewController);
 
         #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
         #[optional]
         #[unsafe(method(splitViewControllerDidExpand:))]
         #[unsafe(method_family = none)]
-        fn splitViewControllerDidExpand(&self, svc: &UISplitViewController);
+        unsafe fn splitViewControllerDidExpand(&self, svc: &UISplitViewController);
 
         #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
         #[optional]
         #[unsafe(method(splitViewController:willShowColumn:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_willShowColumn(
+        unsafe fn splitViewController_willShowColumn(
             &self,
             svc: &UISplitViewController,
             column: UISplitViewControllerColumn,
@@ -888,27 +784,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewController:willHideColumn:))]
         #[unsafe(method_family = none)]
-        fn splitViewController_willHideColumn(
-            &self,
-            svc: &UISplitViewController,
-            column: UISplitViewControllerColumn,
-        );
-
-        #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
-        #[optional]
-        #[unsafe(method(splitViewController:didShowColumn:))]
-        #[unsafe(method_family = none)]
-        fn splitViewController_didShowColumn(
-            &self,
-            svc: &UISplitViewController,
-            column: UISplitViewControllerColumn,
-        );
-
-        #[cfg(all(feature = "UIResponder", feature = "UIViewController"))]
-        #[optional]
-        #[unsafe(method(splitViewController:didHideColumn:))]
-        #[unsafe(method_family = none)]
-        fn splitViewController_didHideColumn(
+        unsafe fn splitViewController_willHideColumn(
             &self,
             svc: &UISplitViewController,
             column: UISplitViewControllerColumn,
@@ -918,7 +794,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewControllerInteractivePresentationGestureWillBegin:))]
         #[unsafe(method_family = none)]
-        fn splitViewControllerInteractivePresentationGestureWillBegin(
+        unsafe fn splitViewControllerInteractivePresentationGestureWillBegin(
             &self,
             svc: &UISplitViewController,
         );
@@ -927,7 +803,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(splitViewControllerInteractivePresentationGestureDidEnd:))]
         #[unsafe(method_family = none)]
-        fn splitViewControllerInteractivePresentationGestureDidEnd(
+        unsafe fn splitViewControllerInteractivePresentationGestureDidEnd(
             &self,
             svc: &UISplitViewController,
         );
@@ -940,11 +816,11 @@ impl UIViewController {
     extern_methods!(
         #[unsafe(method(splitViewController))]
         #[unsafe(method_family = none)]
-        pub fn splitViewController(&self) -> Option<Retained<UISplitViewController>>;
+        pub unsafe fn splitViewController(&self) -> Option<Retained<UISplitViewController>>;
 
         #[unsafe(method(collapseSecondaryViewController:forSplitViewController:))]
         #[unsafe(method_family = none)]
-        pub fn collapseSecondaryViewController_forSplitViewController(
+        pub unsafe fn collapseSecondaryViewController_forSplitViewController(
             &self,
             secondary_view_controller: &UIViewController,
             split_view_controller: &UISplitViewController,
@@ -952,7 +828,7 @@ impl UIViewController {
 
         #[unsafe(method(separateSecondaryViewControllerForSplitViewController:))]
         #[unsafe(method_family = none)]
-        pub fn separateSecondaryViewControllerForSplitViewController(
+        pub unsafe fn separateSecondaryViewControllerForSplitViewController(
             &self,
             split_view_controller: &UISplitViewController,
         ) -> Option<Retained<UIViewController>>;

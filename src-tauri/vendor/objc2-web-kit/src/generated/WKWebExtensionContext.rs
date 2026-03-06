@@ -257,8 +257,6 @@ impl WKWebExtensionContext {
         pub unsafe fn baseURL(&self) -> Retained<NSURL>;
 
         /// Setter for [`baseURL`][Self::baseURL].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setBaseURL:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setBaseURL(&self, base_url: &NSURL);
@@ -273,8 +271,6 @@ impl WKWebExtensionContext {
         pub unsafe fn uniqueIdentifier(&self) -> Retained<NSString>;
 
         /// Setter for [`uniqueIdentifier`][Self::uniqueIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setUniqueIdentifier:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUniqueIdentifier(&self, unique_identifier: &NSString);
@@ -300,8 +296,6 @@ impl WKWebExtensionContext {
         pub unsafe fn inspectionName(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`inspectionName`][Self::inspectionName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setInspectionName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setInspectionName(&self, inspection_name: Option<&NSString>);
@@ -321,8 +315,6 @@ impl WKWebExtensionContext {
         pub unsafe fn unsupportedAPIs(&self) -> Retained<NSSet<NSString>>;
 
         /// Setter for [`unsupportedAPIs`][Self::unsupportedAPIs].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setUnsupportedAPIs:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUnsupportedAPIs(&self, unsupported_ap_is: Option<&NSSet<NSString>>);
@@ -385,8 +377,6 @@ impl WKWebExtensionContext {
 
         #[cfg(feature = "WKWebExtensionPermission")]
         /// Setter for [`grantedPermissions`][Self::grantedPermissions].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setGrantedPermissions:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setGrantedPermissions(
@@ -413,8 +403,6 @@ impl WKWebExtensionContext {
 
         #[cfg(feature = "WKWebExtensionMatchPattern")]
         /// Setter for [`grantedPermissionMatchPatterns`][Self::grantedPermissionMatchPatterns].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setGrantedPermissionMatchPatterns:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setGrantedPermissionMatchPatterns(
@@ -441,8 +429,6 @@ impl WKWebExtensionContext {
 
         #[cfg(feature = "WKWebExtensionPermission")]
         /// Setter for [`deniedPermissions`][Self::deniedPermissions].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDeniedPermissions:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDeniedPermissions(
@@ -469,8 +455,6 @@ impl WKWebExtensionContext {
 
         #[cfg(feature = "WKWebExtensionMatchPattern")]
         /// Setter for [`deniedPermissionMatchPatterns`][Self::deniedPermissionMatchPatterns].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDeniedPermissionMatchPatterns:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDeniedPermissionMatchPatterns(

@@ -66,9 +66,8 @@ impl WKWebExtensionController {
         ) -> Option<Retained<ProtocolObject<dyn WKWebExtensionControllerDelegate>>>;
 
         #[cfg(feature = "WKWebExtensionControllerDelegate")]
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(

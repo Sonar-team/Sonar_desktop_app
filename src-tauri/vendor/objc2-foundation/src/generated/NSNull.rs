@@ -2,8 +2,6 @@
 //! DO NOT EDIT
 use core::ptr::NonNull;
 use objc2::__framework_prelude::*;
-#[cfg(feature = "objc2-core-foundation")]
-use objc2_core_foundation::*;
 
 use crate::*;
 
@@ -17,22 +15,6 @@ extern_class!(
 unsafe impl Send for NSNull {}
 
 unsafe impl Sync for NSNull {}
-
-#[cfg(feature = "objc2-core-foundation")]
-impl AsRef<NSNull> for CFNull {
-    #[inline]
-    fn as_ref(&self) -> &NSNull {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
-#[cfg(feature = "objc2-core-foundation")]
-impl AsRef<CFNull> for NSNull {
-    #[inline]
-    fn as_ref(&self) -> &CFNull {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
 
 #[cfg(feature = "NSObject")]
 extern_conformance!(
@@ -62,7 +44,7 @@ impl NSNull {
     extern_methods!(
         #[unsafe(method(null))]
         #[unsafe(method_family = none)]
-        pub fn null() -> Retained<NSNull>;
+        pub unsafe fn null() -> Retained<NSNull>;
     );
 }
 
@@ -71,17 +53,10 @@ impl NSNull {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSNull {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

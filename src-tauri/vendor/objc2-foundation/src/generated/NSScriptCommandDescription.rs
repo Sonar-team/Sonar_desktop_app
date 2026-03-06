@@ -28,9 +28,6 @@ impl NSScriptCommandDescription {
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// `command_declaration` generic should be of the correct type.
         #[unsafe(method(initWithSuiteName:commandName:dictionary:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithSuiteName_commandName_dictionary(
@@ -41,9 +38,6 @@ impl NSScriptCommandDescription {
         ) -> Option<Retained<Self>>;
 
         #[cfg(feature = "NSCoder")]
-        /// # Safety
-        ///
-        /// `in_coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -54,44 +48,44 @@ impl NSScriptCommandDescription {
         #[cfg(feature = "NSString")]
         #[unsafe(method(suiteName))]
         #[unsafe(method_family = none)]
-        pub fn suiteName(&self) -> Retained<NSString>;
+        pub unsafe fn suiteName(&self) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(commandName))]
         #[unsafe(method_family = none)]
-        pub fn commandName(&self) -> Retained<NSString>;
+        pub unsafe fn commandName(&self) -> Retained<NSString>;
 
         #[unsafe(method(appleEventClassCode))]
         #[unsafe(method_family = none)]
-        pub fn appleEventClassCode(&self) -> FourCharCode;
+        pub unsafe fn appleEventClassCode(&self) -> FourCharCode;
 
         #[unsafe(method(appleEventCode))]
         #[unsafe(method_family = none)]
-        pub fn appleEventCode(&self) -> FourCharCode;
+        pub unsafe fn appleEventCode(&self) -> FourCharCode;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(commandClassName))]
         #[unsafe(method_family = none)]
-        pub fn commandClassName(&self) -> Retained<NSString>;
+        pub unsafe fn commandClassName(&self) -> Retained<NSString>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(returnType))]
         #[unsafe(method_family = none)]
-        pub fn returnType(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn returnType(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(appleEventCodeForReturnType))]
         #[unsafe(method_family = none)]
-        pub fn appleEventCodeForReturnType(&self) -> FourCharCode;
+        pub unsafe fn appleEventCodeForReturnType(&self) -> FourCharCode;
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         #[unsafe(method(argumentNames))]
         #[unsafe(method_family = none)]
-        pub fn argumentNames(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn argumentNames(&self) -> Retained<NSArray<NSString>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(typeForArgumentWithName:))]
         #[unsafe(method_family = none)]
-        pub fn typeForArgumentWithName(
+        pub unsafe fn typeForArgumentWithName(
             &self,
             argument_name: &NSString,
         ) -> Option<Retained<NSString>>;
@@ -99,22 +93,22 @@ impl NSScriptCommandDescription {
         #[cfg(feature = "NSString")]
         #[unsafe(method(appleEventCodeForArgumentWithName:))]
         #[unsafe(method_family = none)]
-        pub fn appleEventCodeForArgumentWithName(&self, argument_name: &NSString) -> FourCharCode;
+        pub unsafe fn appleEventCodeForArgumentWithName(
+            &self,
+            argument_name: &NSString,
+        ) -> FourCharCode;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(isOptionalArgumentWithName:))]
         #[unsafe(method_family = none)]
-        pub fn isOptionalArgumentWithName(&self, argument_name: &NSString) -> bool;
+        pub unsafe fn isOptionalArgumentWithName(&self, argument_name: &NSString) -> bool;
 
         #[cfg(feature = "NSScriptCommand")]
         #[unsafe(method(createCommandInstance))]
         #[unsafe(method_family = none)]
-        pub fn createCommandInstance(&self) -> Retained<NSScriptCommand>;
+        pub unsafe fn createCommandInstance(&self) -> Retained<NSScriptCommand>;
 
         #[cfg(all(feature = "NSScriptCommand", feature = "NSZone"))]
-        /// # Safety
-        ///
-        /// `zone` must be a valid pointer or null.
         #[unsafe(method(createCommandInstanceWithZone:))]
         #[unsafe(method_family = none)]
         pub unsafe fn createCommandInstanceWithZone(

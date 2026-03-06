@@ -15,7 +15,7 @@ use crate::*;
 ))]
 #[cfg(not(target_os = "watchos"))]
 #[inline]
-pub extern "C-unwind" fn CGDirectDisplayCopyCurrentMetalDevice(
+pub unsafe extern "C-unwind" fn CGDirectDisplayCopyCurrentMetalDevice(
     display: CGDirectDisplayID,
 ) -> Option<Retained<ProtocolObject<dyn MTLDevice>>> {
     extern "C-unwind" {

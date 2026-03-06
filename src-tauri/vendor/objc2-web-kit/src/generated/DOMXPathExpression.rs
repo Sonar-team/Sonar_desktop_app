@@ -35,10 +35,6 @@ extern_conformance!(
 impl DOMXPathExpression {
     extern_methods!(
         #[cfg(all(feature = "DOMNode", feature = "DOMXPathResult"))]
-        /// # Safety
-        ///
-        /// - `context_node` might not allow `None`.
-        /// - `in_result` might not allow `None`.
         #[unsafe(method(evaluate:type:inResult:))]
         #[unsafe(method_family = none)]
         pub unsafe fn evaluate_type_inResult(
@@ -72,15 +68,10 @@ impl DOMXPathExpression {
 }
 
 /// DOMXPathExpressionDeprecated.
-#[deprecated]
 #[cfg(all(feature = "DOMObject", feature = "WebScriptObject"))]
 impl DOMXPathExpression {
     extern_methods!(
         #[cfg(all(feature = "DOMNode", feature = "DOMXPathResult"))]
-        /// # Safety
-        ///
-        /// - `context_node` might not allow `None`.
-        /// - `in_result` might not allow `None`.
         #[deprecated]
         #[unsafe(method(evaluate:::))]
         #[unsafe(method_family = none)]

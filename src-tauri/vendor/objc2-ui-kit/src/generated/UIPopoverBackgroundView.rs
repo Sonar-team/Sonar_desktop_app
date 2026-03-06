@@ -18,17 +18,17 @@ extern_protocol!(
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(arrowBase))]
         #[unsafe(method_family = none)]
-        fn arrowBase() -> CGFloat;
+        unsafe fn arrowBase() -> CGFloat;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         #[unsafe(method(contentViewInsets))]
         #[unsafe(method_family = none)]
-        fn contentViewInsets() -> UIEdgeInsets;
+        unsafe fn contentViewInsets() -> UIEdgeInsets;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(arrowHeight))]
         #[unsafe(method_family = none)]
-        fn arrowHeight() -> CGFloat;
+        unsafe fn arrowHeight() -> CGFloat;
     }
 );
 
@@ -124,29 +124,29 @@ impl UIPopoverBackgroundView {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(arrowOffset))]
         #[unsafe(method_family = none)]
-        pub fn arrowOffset(&self) -> CGFloat;
+        pub unsafe fn arrowOffset(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`arrowOffset`][Self::arrowOffset].
         #[unsafe(method(setArrowOffset:))]
         #[unsafe(method_family = none)]
-        pub fn setArrowOffset(&self, arrow_offset: CGFloat);
+        pub unsafe fn setArrowOffset(&self, arrow_offset: CGFloat);
 
         #[cfg(feature = "UIPopoverSupport")]
         #[unsafe(method(arrowDirection))]
         #[unsafe(method_family = none)]
-        pub fn arrowDirection(&self) -> UIPopoverArrowDirection;
+        pub unsafe fn arrowDirection(&self) -> UIPopoverArrowDirection;
 
         #[cfg(feature = "UIPopoverSupport")]
         /// Setter for [`arrowDirection`][Self::arrowDirection].
         #[unsafe(method(setArrowDirection:))]
         #[unsafe(method_family = none)]
-        pub fn setArrowDirection(&self, arrow_direction: UIPopoverArrowDirection);
+        pub unsafe fn setArrowDirection(&self, arrow_direction: UIPopoverArrowDirection);
 
         #[deprecated = "No longer supported"]
         #[unsafe(method(wantsDefaultContentAppearance))]
         #[unsafe(method_family = none)]
-        pub fn wantsDefaultContentAppearance(mtm: MainThreadMarker) -> bool;
+        pub unsafe fn wantsDefaultContentAppearance(mtm: MainThreadMarker) -> bool;
     );
 }
 
@@ -157,21 +157,14 @@ impl UIPopoverBackgroundView {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
             this: Allocated<Self>,
             coder: &NSCoder,
         ) -> Option<Retained<Self>>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -179,8 +172,12 @@ impl UIPopoverBackgroundView {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UIPopoverBackgroundView {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

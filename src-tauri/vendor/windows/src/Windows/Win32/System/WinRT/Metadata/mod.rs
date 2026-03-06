@@ -1,12 +1,12 @@
 #[inline]
 pub unsafe fn MetaDataGetDispenser(rclsid: *const windows_core::GUID, riid: *const windows_core::GUID, ppv: *mut *mut core::ffi::c_void) -> windows_core::Result<()> {
-    windows_link::link!("rometadata.dll" "system" fn MetaDataGetDispenser(rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("rometadata.dll" "system" fn MetaDataGetDispenser(rclsid : *const windows_core::GUID, riid : *const windows_core::GUID, ppv : *mut *mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { MetaDataGetDispenser(rclsid, riid, ppv as _).ok() }
 }
 #[cfg(feature = "Foundation_Collections")]
 #[inline]
 pub unsafe fn RoCreateNonAgilePropertySet() -> windows_core::Result<super::super::super::super::Foundation::Collections::IPropertySet> {
-    windows_link::link!("api-ms-win-ro-typeresolution-l1-1-1.dll" "system" fn RoCreateNonAgilePropertySet(pppropertyset : *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("api-ms-win-ro-typeresolution-l1-1-1.dll" "system" fn RoCreateNonAgilePropertySet(pppropertyset : *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe {
         let mut result__ = core::mem::zeroed();
         RoCreateNonAgilePropertySet(&mut result__).and_then(|| windows_core::Type::from_abi(result__))
@@ -15,7 +15,7 @@ pub unsafe fn RoCreateNonAgilePropertySet() -> windows_core::Result<super::super
 #[cfg(feature = "Storage_Streams")]
 #[inline]
 pub unsafe fn RoCreatePropertySetSerializer() -> windows_core::Result<super::super::super::super::Storage::Streams::IPropertySetSerializer> {
-    windows_link::link!("api-ms-win-ro-typeresolution-l1-1-1.dll" "system" fn RoCreatePropertySetSerializer(pppropertysetserializer : *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("api-ms-win-ro-typeresolution-l1-1-1.dll" "system" fn RoCreatePropertySetSerializer(pppropertysetserializer : *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe {
         let mut result__ = core::mem::zeroed();
         RoCreatePropertySetSerializer(&mut result__).and_then(|| windows_core::Type::from_abi(result__))
@@ -23,7 +23,7 @@ pub unsafe fn RoCreatePropertySetSerializer() -> windows_core::Result<super::sup
 }
 #[inline]
 pub unsafe fn RoFreeParameterizedTypeExtra(extra: ROPARAMIIDHANDLE) {
-    windows_link::link!("api-ms-win-core-winrt-roparameterizediid-l1-1-0.dll" "system" fn RoFreeParameterizedTypeExtra(extra : ROPARAMIIDHANDLE));
+    windows_core::link!("api-ms-win-core-winrt-roparameterizediid-l1-1-0.dll" "system" fn RoFreeParameterizedTypeExtra(extra : ROPARAMIIDHANDLE));
     unsafe { RoFreeParameterizedTypeExtra(extra) }
 }
 #[inline]
@@ -31,7 +31,7 @@ pub unsafe fn RoGetMetaDataFile<P1>(name: &windows_core::HSTRING, metadatadispen
 where
     P1: windows_core::Param<IMetaDataDispenserEx>,
 {
-    windows_link::link!("api-ms-win-ro-typeresolution-l1-1-0.dll" "system" fn RoGetMetaDataFile(name : * mut core::ffi::c_void, metadatadispenser : * mut core::ffi::c_void, metadatafilepath : *mut * mut core::ffi::c_void, metadataimport : *mut * mut core::ffi::c_void, typedeftoken : *mut u32) -> windows_core::HRESULT);
+    windows_core::link!("api-ms-win-ro-typeresolution-l1-1-0.dll" "system" fn RoGetMetaDataFile(name : * mut core::ffi::c_void, metadatadispenser : * mut core::ffi::c_void, metadatafilepath : *mut * mut core::ffi::c_void, metadataimport : *mut * mut core::ffi::c_void, typedeftoken : *mut u32) -> windows_core::HRESULT);
     unsafe { RoGetMetaDataFile(core::mem::transmute_copy(name), metadatadispenser.param().abi(), metadatafilepath.unwrap_or(core::mem::zeroed()) as _, metadataimport.unwrap_or(core::mem::zeroed()) as _, typedeftoken.unwrap_or(core::mem::zeroed()) as _).ok() }
 }
 #[inline]
@@ -39,7 +39,7 @@ pub unsafe fn RoGetParameterizedTypeInstanceIID<P2>(nameelements: &[windows_core
 where
     P2: windows_core::Param<IRoMetaDataLocator>,
 {
-    windows_link::link!("api-ms-win-core-winrt-roparameterizediid-l1-1-0.dll" "system" fn RoGetParameterizedTypeInstanceIID(nameelementcount : u32, nameelements : *const windows_core::PCWSTR, metadatalocator : * mut core::ffi::c_void, iid : *mut windows_core::GUID, pextra : *mut ROPARAMIIDHANDLE) -> windows_core::HRESULT);
+    windows_core::link!("api-ms-win-core-winrt-roparameterizediid-l1-1-0.dll" "system" fn RoGetParameterizedTypeInstanceIID(nameelementcount : u32, nameelements : *const windows_core::PCWSTR, metadatalocator : * mut core::ffi::c_void, iid : *mut windows_core::GUID, pextra : *mut ROPARAMIIDHANDLE) -> windows_core::HRESULT);
     unsafe { RoGetParameterizedTypeInstanceIID(nameelements.len().try_into().unwrap(), core::mem::transmute(nameelements.as_ptr()), metadatalocator.param().abi(), iid as _, pextra.unwrap_or(core::mem::zeroed()) as _).ok() }
 }
 #[inline]
@@ -47,7 +47,7 @@ pub unsafe fn RoIsApiContractMajorVersionPresent<P0>(name: P0, majorversion: u16
 where
     P0: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("api-ms-win-ro-typeresolution-l1-1-1.dll" "system" fn RoIsApiContractMajorVersionPresent(name : windows_core::PCWSTR, majorversion : u16, present : *mut windows_core::BOOL) -> windows_core::HRESULT);
+    windows_core::link!("api-ms-win-ro-typeresolution-l1-1-1.dll" "system" fn RoIsApiContractMajorVersionPresent(name : windows_core::PCWSTR, majorversion : u16, present : *mut windows_core::BOOL) -> windows_core::HRESULT);
     unsafe {
         let mut result__ = core::mem::zeroed();
         RoIsApiContractMajorVersionPresent(name.param().abi(), majorversion, &mut result__).map(|| result__)
@@ -58,7 +58,7 @@ pub unsafe fn RoIsApiContractPresent<P0>(name: P0, majorversion: u16, minorversi
 where
     P0: windows_core::Param<windows_core::PCWSTR>,
 {
-    windows_link::link!("api-ms-win-ro-typeresolution-l1-1-1.dll" "system" fn RoIsApiContractPresent(name : windows_core::PCWSTR, majorversion : u16, minorversion : u16, present : *mut windows_core::BOOL) -> windows_core::HRESULT);
+    windows_core::link!("api-ms-win-ro-typeresolution-l1-1-1.dll" "system" fn RoIsApiContractPresent(name : windows_core::PCWSTR, majorversion : u16, minorversion : u16, present : *mut windows_core::BOOL) -> windows_core::HRESULT);
     unsafe {
         let mut result__ = core::mem::zeroed();
         RoIsApiContractPresent(name.param().abi(), majorversion, minorversion, &mut result__).map(|| result__)
@@ -66,17 +66,17 @@ where
 }
 #[inline]
 pub unsafe fn RoParameterizedTypeExtraGetTypeSignature(extra: ROPARAMIIDHANDLE) -> windows_core::PCSTR {
-    windows_link::link!("api-ms-win-core-winrt-roparameterizediid-l1-1-0.dll" "system" fn RoParameterizedTypeExtraGetTypeSignature(extra : ROPARAMIIDHANDLE) -> windows_core::PCSTR);
+    windows_core::link!("api-ms-win-core-winrt-roparameterizediid-l1-1-0.dll" "system" fn RoParameterizedTypeExtraGetTypeSignature(extra : ROPARAMIIDHANDLE) -> windows_core::PCSTR);
     unsafe { RoParameterizedTypeExtraGetTypeSignature(extra) }
 }
 #[inline]
 pub unsafe fn RoParseTypeName(typename: &windows_core::HSTRING, partscount: *mut u32, typenameparts: *mut *mut windows_core::HSTRING) -> windows_core::Result<()> {
-    windows_link::link!("api-ms-win-ro-typeresolution-l1-1-0.dll" "system" fn RoParseTypeName(typename : * mut core::ffi::c_void, partscount : *mut u32, typenameparts : *mut *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("api-ms-win-ro-typeresolution-l1-1-0.dll" "system" fn RoParseTypeName(typename : * mut core::ffi::c_void, partscount : *mut u32, typenameparts : *mut *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe { RoParseTypeName(core::mem::transmute_copy(typename), partscount as _, typenameparts as _).ok() }
 }
 #[inline]
 pub unsafe fn RoResolveNamespace(name: &windows_core::HSTRING, windowsmetadatadir: &windows_core::HSTRING, packagegraphdirs: Option<&[windows_core::HSTRING]>, metadatafilepathscount: Option<*mut u32>, metadatafilepaths: Option<*mut *mut windows_core::HSTRING>, subnamespacescount: Option<*mut u32>, subnamespaces: Option<*mut *mut windows_core::HSTRING>) -> windows_core::Result<()> {
-    windows_link::link!("api-ms-win-ro-typeresolution-l1-1-0.dll" "system" fn RoResolveNamespace(name : * mut core::ffi::c_void, windowsmetadatadir : * mut core::ffi::c_void, packagegraphdirscount : u32, packagegraphdirs : *const * mut core::ffi::c_void, metadatafilepathscount : *mut u32, metadatafilepaths : *mut *mut * mut core::ffi::c_void, subnamespacescount : *mut u32, subnamespaces : *mut *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
+    windows_core::link!("api-ms-win-ro-typeresolution-l1-1-0.dll" "system" fn RoResolveNamespace(name : * mut core::ffi::c_void, windowsmetadatadir : * mut core::ffi::c_void, packagegraphdirscount : u32, packagegraphdirs : *const * mut core::ffi::c_void, metadatafilepathscount : *mut u32, metadatafilepaths : *mut *mut * mut core::ffi::c_void, subnamespacescount : *mut u32, subnamespaces : *mut *mut * mut core::ffi::c_void) -> windows_core::HRESULT);
     unsafe {
         RoResolveNamespace(
             core::mem::transmute_copy(name),
@@ -1161,7 +1161,7 @@ pub trait IMetaDataAssemblyImport_Impl: windows_core::IUnknownImpl {
     fn FindExportedTypeByName(&self, szname: &windows_core::PCWSTR, mdtexportedtype: u32, ptkexportedtype: *mut u32) -> windows_core::Result<()>;
     fn FindManifestResourceByName(&self, szname: &windows_core::PCWSTR, ptkmanifestresource: *mut u32) -> windows_core::Result<()>;
     fn CloseEnum(&self, henum: *mut core::ffi::c_void);
-    fn FindAssembliesByName(&self, szappbase: &windows_core::PCWSTR, szprivatebin: &windows_core::PCWSTR, szassemblyname: &windows_core::PCWSTR, ppiunk: windows_core::OutRef<'_, windows_core::IUnknown>, cmax: u32, pcassemblies: *mut u32) -> windows_core::Result<()>;
+    fn FindAssembliesByName(&self, szappbase: &windows_core::PCWSTR, szprivatebin: &windows_core::PCWSTR, szassemblyname: &windows_core::PCWSTR, ppiunk: windows_core::OutRef<windows_core::IUnknown>, cmax: u32, pcassemblies: *mut u32) -> windows_core::Result<()>;
 }
 impl IMetaDataAssemblyImport_Vtbl {
     pub const fn new<Identity: IMetaDataAssemblyImport_Impl, const OFFSET: isize>() -> Self {
@@ -1435,7 +1435,7 @@ pub struct IMetaDataDispenserEx_Vtbl {
 pub trait IMetaDataDispenserEx_Impl: IMetaDataDispenser_Impl {
     fn SetOption(&self, optionid: *const windows_core::GUID, value: *const super::super::Variant::VARIANT) -> windows_core::Result<()>;
     fn GetOption(&self, optionid: *const windows_core::GUID, pvalue: *mut super::super::Variant::VARIANT) -> windows_core::Result<()>;
-    fn OpenScopeOnITypeInfo(&self, piti: windows_core::Ref<'_, super::super::Com::ITypeInfo>, dwopenflags: u32, riid: *const windows_core::GUID) -> windows_core::Result<windows_core::IUnknown>;
+    fn OpenScopeOnITypeInfo(&self, piti: windows_core::Ref<super::super::Com::ITypeInfo>, dwopenflags: u32, riid: *const windows_core::GUID) -> windows_core::Result<windows_core::IUnknown>;
     fn GetCORSystemDirectory(&self, szbuffer: windows_core::PWSTR, cchbuffer: u32, pchbuffer: *mut u32) -> windows_core::Result<()>;
     fn FindAssembly(&self, szappbase: &windows_core::PCWSTR, szprivatebin: &windows_core::PCWSTR, szglobalbin: &windows_core::PCWSTR, szassemblyname: &windows_core::PCWSTR, szname: &windows_core::PCWSTR, cchname: u32, pcname: *mut u32) -> windows_core::Result<()>;
     fn FindAssemblyModule(&self, szappbase: &windows_core::PCWSTR, szprivatebin: &windows_core::PCWSTR, szglobalbin: &windows_core::PCWSTR, szassemblyname: &windows_core::PCWSTR, szmodulename: &windows_core::PCWSTR, szname: windows_core::PWSTR, cchname: u32, pcname: *mut u32) -> windows_core::Result<()>;
@@ -1792,17 +1792,17 @@ pub struct IMetaDataEmit_Vtbl {
 pub trait IMetaDataEmit_Impl: windows_core::IUnknownImpl {
     fn SetModuleProps(&self, szname: &windows_core::PCWSTR) -> windows_core::Result<()>;
     fn Save(&self, szfile: &windows_core::PCWSTR, dwsaveflags: u32) -> windows_core::Result<()>;
-    fn SaveToStream(&self, pistream: windows_core::Ref<'_, super::super::Com::IStream>, dwsaveflags: u32) -> windows_core::Result<()>;
+    fn SaveToStream(&self, pistream: windows_core::Ref<super::super::Com::IStream>, dwsaveflags: u32) -> windows_core::Result<()>;
     fn GetSaveSize(&self, fsave: CorSaveSize, pdwsavesize: *mut u32) -> windows_core::Result<()>;
     fn DefineTypeDef(&self, sztypedef: &windows_core::PCWSTR, dwtypedefflags: u32, tkextends: u32, rtkimplements: *mut u32, ptd: *mut u32) -> windows_core::Result<()>;
     fn DefineNestedType(&self, sztypedef: &windows_core::PCWSTR, dwtypedefflags: u32, tkextends: u32, rtkimplements: *mut u32, tdencloser: u32, ptd: *mut u32) -> windows_core::Result<()>;
-    fn SetHandler(&self, punk: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn SetHandler(&self, punk: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
     fn DefineMethod(&self, td: u32, szname: &windows_core::PCWSTR, dwmethodflags: u32, pvsigblob: *mut u8, cbsigblob: u32, ulcoderva: u32, dwimplflags: u32, pmd: *mut u32) -> windows_core::Result<()>;
     fn DefineMethodImpl(&self, td: u32, tkbody: u32, tkdecl: u32) -> windows_core::Result<()>;
     fn DefineTypeRefByName(&self, tkresolutionscope: u32, szname: &windows_core::PCWSTR, ptr: *mut u32) -> windows_core::Result<()>;
-    fn DefineImportType(&self, passemimport: windows_core::Ref<'_, IMetaDataAssemblyImport>, pbhashvalue: *const core::ffi::c_void, cbhashvalue: u32, pimport: windows_core::Ref<'_, IMetaDataImport>, tdimport: u32, passememit: windows_core::Ref<'_, IMetaDataAssemblyEmit>, ptr: *mut u32) -> windows_core::Result<()>;
+    fn DefineImportType(&self, passemimport: windows_core::Ref<IMetaDataAssemblyImport>, pbhashvalue: *const core::ffi::c_void, cbhashvalue: u32, pimport: windows_core::Ref<IMetaDataImport>, tdimport: u32, passememit: windows_core::Ref<IMetaDataAssemblyEmit>, ptr: *mut u32) -> windows_core::Result<()>;
     fn DefineMemberRef(&self, tkimport: u32, szname: &windows_core::PCWSTR, pvsigblob: *mut u8, cbsigblob: u32, pmr: *mut u32) -> windows_core::Result<()>;
-    fn DefineImportMember(&self, passemimport: windows_core::Ref<'_, IMetaDataAssemblyImport>, pbhashvalue: *const core::ffi::c_void, cbhashvalue: u32, pimport: windows_core::Ref<'_, IMetaDataImport>, mbmember: u32, passememit: windows_core::Ref<'_, IMetaDataAssemblyEmit>, tkparent: u32, pmr: *mut u32) -> windows_core::Result<()>;
+    fn DefineImportMember(&self, passemimport: windows_core::Ref<IMetaDataAssemblyImport>, pbhashvalue: *const core::ffi::c_void, cbhashvalue: u32, pimport: windows_core::Ref<IMetaDataImport>, mbmember: u32, passememit: windows_core::Ref<IMetaDataAssemblyEmit>, tkparent: u32, pmr: *mut u32) -> windows_core::Result<()>;
     fn DefineEvent(&self, td: u32, szevent: &windows_core::PCWSTR, dweventflags: u32, tkeventtype: u32, mdaddon: u32, mdremoveon: u32, mdfire: u32, rmdothermethods: *mut u32, pmdevent: *mut u32) -> windows_core::Result<()>;
     fn SetClassLayout(&self, td: u32, dwpacksize: u32, rfieldoffsets: *mut COR_FIELD_OFFSET, ulclasssize: u32) -> windows_core::Result<()>;
     fn DeleteClassLayout(&self, td: u32) -> windows_core::Result<()>;
@@ -1833,11 +1833,11 @@ pub trait IMetaDataEmit_Impl: windows_core::IUnknownImpl {
     fn SetPropertyProps(&self, pr: u32, dwpropflags: u32, dwcplustypeflag: u32, pvalue: *const core::ffi::c_void, cchvalue: u32, mdsetter: u32, mdgetter: u32, rmdothermethods: *mut u32) -> windows_core::Result<()>;
     fn SetParamProps(&self, pd: u32, szname: &windows_core::PCWSTR, dwparamflags: u32, dwcplustypeflag: u32, pvalue: *const core::ffi::c_void, cchvalue: u32) -> windows_core::Result<()>;
     fn DefineSecurityAttributeSet(&self, tkobj: u32, rsecattrs: *mut COR_SECATTR, csecattrs: u32, pulerrorattr: *mut u32) -> windows_core::Result<()>;
-    fn ApplyEditAndContinue(&self, pimport: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
-    fn TranslateSigWithScope(&self, passemimport: windows_core::Ref<'_, IMetaDataAssemblyImport>, pbhashvalue: *const core::ffi::c_void, cbhashvalue: u32, import: windows_core::Ref<'_, IMetaDataImport>, pbsigblob: *mut u8, cbsigblob: u32, passememit: windows_core::Ref<'_, IMetaDataAssemblyEmit>, emit: windows_core::Ref<'_, IMetaDataEmit>, pvtranslatedsig: *mut u8, cbtranslatedsigmax: u32, pcbtranslatedsig: *mut u32) -> windows_core::Result<()>;
+    fn ApplyEditAndContinue(&self, pimport: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn TranslateSigWithScope(&self, passemimport: windows_core::Ref<IMetaDataAssemblyImport>, pbhashvalue: *const core::ffi::c_void, cbhashvalue: u32, import: windows_core::Ref<IMetaDataImport>, pbsigblob: *mut u8, cbsigblob: u32, passememit: windows_core::Ref<IMetaDataAssemblyEmit>, emit: windows_core::Ref<IMetaDataEmit>, pvtranslatedsig: *mut u8, cbtranslatedsigmax: u32, pcbtranslatedsig: *mut u32) -> windows_core::Result<()>;
     fn SetMethodImplFlags(&self, md: u32, dwimplflags: u32) -> windows_core::Result<()>;
     fn SetFieldRVA(&self, fd: u32, ulrva: u32) -> windows_core::Result<()>;
-    fn Merge(&self, pimport: windows_core::Ref<'_, IMetaDataImport>, phostmaptoken: windows_core::Ref<'_, IMapToken>, phandler: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn Merge(&self, pimport: windows_core::Ref<IMetaDataImport>, phostmaptoken: windows_core::Ref<IMapToken>, phandler: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
     fn MergeEnd(&self) -> windows_core::Result<()>;
 }
 #[cfg(feature = "Win32_System_Com")]
@@ -2264,7 +2264,7 @@ pub trait IMetaDataEmit2_Impl: IMetaDataEmit_Impl {
     fn DefineMethodSpec(&self, tkparent: u32, pvsigblob: *mut u8, cbsigblob: u32, pmi: *mut u32) -> windows_core::Result<()>;
     fn GetDeltaSaveSize(&self, fsave: CorSaveSize, pdwsavesize: *mut u32) -> windows_core::Result<()>;
     fn SaveDelta(&self, szfile: &windows_core::PCWSTR, dwsaveflags: u32) -> windows_core::Result<()>;
-    fn SaveDeltaToStream(&self, pistream: windows_core::Ref<'_, super::super::Com::IStream>, dwsaveflags: u32) -> windows_core::Result<()>;
+    fn SaveDeltaToStream(&self, pistream: windows_core::Ref<super::super::Com::IStream>, dwsaveflags: u32) -> windows_core::Result<()>;
     fn SaveDeltaToMemory(&self, pbdata: *mut core::ffi::c_void, cbdata: u32) -> windows_core::Result<()>;
     fn DefineGenericParam(&self, tk: u32, ulparamseq: u32, dwparamflags: u32, szname: &windows_core::PCWSTR, reserved: u32, rtkconstraints: *mut u32, pgp: *mut u32) -> windows_core::Result<()>;
     fn SetGenericParamProps(&self, gp: u32, dwparamflags: u32, szname: &windows_core::PCWSTR, reserved: u32, rtkconstraints: *mut u32) -> windows_core::Result<()>;
@@ -2734,7 +2734,7 @@ pub trait IMetaDataImport_Impl: windows_core::IUnknownImpl {
     fn GetTypeDefProps(&self, td: u32, sztypedef: windows_core::PWSTR, cchtypedef: u32, pchtypedef: *mut u32, pdwtypedefflags: *mut u32, ptkextends: *mut u32) -> windows_core::Result<()>;
     fn GetInterfaceImplProps(&self, iiimpl: u32, pclass: *mut u32, ptkiface: *mut u32) -> windows_core::Result<()>;
     fn GetTypeRefProps(&self, tr: u32, ptkresolutionscope: *mut u32, szname: windows_core::PWSTR, cchname: u32, pchname: *mut u32) -> windows_core::Result<()>;
-    fn ResolveTypeRef(&self, tr: u32, riid: *const windows_core::GUID, ppiscope: windows_core::OutRef<'_, windows_core::IUnknown>, ptd: *mut u32) -> windows_core::Result<()>;
+    fn ResolveTypeRef(&self, tr: u32, riid: *const windows_core::GUID, ppiscope: windows_core::OutRef<windows_core::IUnknown>, ptd: *mut u32) -> windows_core::Result<()>;
     fn EnumMembers(&self, phenum: *mut *mut core::ffi::c_void, cl: u32, rmembers: *mut u32, cmax: u32, pctokens: *mut u32) -> windows_core::Result<()>;
     fn EnumMembersWithName(&self, phenum: *mut *mut core::ffi::c_void, cl: u32, szname: &windows_core::PCWSTR, rmembers: *mut u32, cmax: u32, pctokens: *mut u32) -> windows_core::Result<()>;
     fn EnumMethods(&self, phenum: *mut *mut core::ffi::c_void, cl: u32, rmethods: *mut u32, cmax: u32, pctokens: *mut u32) -> windows_core::Result<()>;
@@ -3759,7 +3759,7 @@ pub struct IMetaDataValidate_Vtbl {
     pub ValidateMetaData: unsafe extern "system" fn(*mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 pub trait IMetaDataValidate_Impl: windows_core::IUnknownImpl {
-    fn ValidatorInit(&self, dwmoduletype: u32, punk: windows_core::Ref<'_, windows_core::IUnknown>) -> windows_core::Result<()>;
+    fn ValidatorInit(&self, dwmoduletype: u32, punk: windows_core::Ref<windows_core::IUnknown>) -> windows_core::Result<()>;
     fn ValidateMetaData(&self) -> windows_core::Result<()>;
 }
 impl IMetaDataValidate_Vtbl {
@@ -3916,7 +3916,7 @@ pub struct IRoMetaDataLocator_Vtbl {
     pub Locate: unsafe extern "system" fn(*mut core::ffi::c_void, windows_core::PCWSTR, *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 pub trait IRoMetaDataLocator_Impl {
-    fn Locate(&self, nameelement: &windows_core::PCWSTR, metadatadestination: windows_core::Ref<'_, IRoSimpleMetaDataBuilder>) -> windows_core::Result<()>;
+    fn Locate(&self, nameelement: &windows_core::PCWSTR, metadatadestination: windows_core::Ref<IRoSimpleMetaDataBuilder>) -> windows_core::Result<()>;
 }
 impl IRoMetaDataLocator_Vtbl {
     pub const fn new<Identity: IRoMetaDataLocator_Impl>() -> Self {
@@ -4318,7 +4318,7 @@ impl windows_core::Free for ROPARAMIIDHANDLE {
     #[inline]
     unsafe fn free(&mut self) {
         if !self.is_invalid() {
-            windows_link::link!("api-ms-win-core-winrt-roparameterizediid-l1-1-0.dll" "system" fn RoFreeParameterizedTypeExtra(extra : *mut core::ffi::c_void));
+            windows_core::link!("api-ms-win-core-winrt-roparameterizediid-l1-1-0.dll" "system" fn RoFreeParameterizedTypeExtra(extra : *mut core::ffi::c_void));
             unsafe {
                 RoFreeParameterizedTypeExtra(self.0);
             }

@@ -28,7 +28,7 @@ pub struct Ipv4Packet<'a> {
     /// Destination IP Address
     pub dest_addr: Ipv4Addr,
     /// Options (if any, variable length)
-    pub options: Vec<u8>,
+    pub options: &'a [u8],
     /// Payload data
     pub payload: &'a [u8],
 }
@@ -135,9 +135,9 @@ impl<'a> TryFrom<&'a [u8]> for Ipv4Packet<'a> {
 
         // Extract options if present
         let options = if header_len > MIN_HEADER_LEN {
-            data[MIN_HEADER_LEN..header_len].to_vec()
+            &data[MIN_HEADER_LEN..header_len]
         } else {
-            Vec::new()
+            &[]
         };
 
         // Extract payload

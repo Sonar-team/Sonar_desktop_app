@@ -15,12 +15,15 @@ extern_protocol!(
         #[cfg(feature = "block2")]
         #[unsafe(method(addAnimations:))]
         #[unsafe(method_family = none)]
-        fn addAnimations(&self, animations: &block2::DynBlock<dyn Fn()>);
+        unsafe fn addAnimations(&self, animations: &block2::DynBlock<dyn Fn()>);
 
         #[cfg(all(feature = "UIViewAnimating", feature = "block2"))]
         #[unsafe(method(addCompletion:))]
         #[unsafe(method_family = none)]
-        fn addCompletion(&self, completion: &block2::DynBlock<dyn Fn(UIViewAnimatingPosition)>);
+        unsafe fn addCompletion(
+            &self,
+            completion: &block2::DynBlock<dyn Fn(UIViewAnimatingPosition)>,
+        );
     }
 );
 
@@ -45,7 +48,7 @@ impl UIDragInteraction {
     extern_methods!(
         #[unsafe(method(initWithDelegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDelegate(
+        pub unsafe fn initWithDelegate(
             this: Allocated<Self>,
             delegate: &ProtocolObject<dyn UIDragInteractionDelegate>,
         ) -> Retained<Self>;
@@ -60,32 +63,34 @@ impl UIDragInteraction {
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UIDragInteractionDelegate>>>;
+        pub unsafe fn delegate(
+            &self,
+        ) -> Option<Retained<ProtocolObject<dyn UIDragInteractionDelegate>>>;
 
         #[unsafe(method(allowsSimultaneousRecognitionDuringLift))]
         #[unsafe(method_family = none)]
-        pub fn allowsSimultaneousRecognitionDuringLift(&self) -> bool;
+        pub unsafe fn allowsSimultaneousRecognitionDuringLift(&self) -> bool;
 
         /// Setter for [`allowsSimultaneousRecognitionDuringLift`][Self::allowsSimultaneousRecognitionDuringLift].
         #[unsafe(method(setAllowsSimultaneousRecognitionDuringLift:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsSimultaneousRecognitionDuringLift(
+        pub unsafe fn setAllowsSimultaneousRecognitionDuringLift(
             &self,
             allows_simultaneous_recognition_during_lift: bool,
         );
 
         #[unsafe(method(isEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isEnabled(&self) -> bool;
+        pub unsafe fn isEnabled(&self) -> bool;
 
         /// Setter for [`isEnabled`][Self::isEnabled].
         #[unsafe(method(setEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setEnabled(&self, enabled: bool);
+        pub unsafe fn setEnabled(&self, enabled: bool);
 
         #[unsafe(method(isEnabledByDefault))]
         #[unsafe(method_family = none)]
-        pub fn isEnabledByDefault(mtm: MainThreadMarker) -> bool;
+        pub unsafe fn isEnabledByDefault(mtm: MainThreadMarker) -> bool;
     );
 }
 
@@ -95,7 +100,7 @@ extern_protocol!(
         #[cfg(all(feature = "UIDragItem", feature = "UIDragSession"))]
         #[unsafe(method(dragInteraction:itemsForBeginningSession:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_itemsForBeginningSession(
+        unsafe fn dragInteraction_itemsForBeginningSession(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -110,7 +115,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:previewForLiftingItem:session:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_previewForLiftingItem_session(
+        unsafe fn dragInteraction_previewForLiftingItem_session(
             &self,
             interaction: &UIDragInteraction,
             item: &UIDragItem,
@@ -121,7 +126,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:willAnimateLiftWithAnimator:session:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_willAnimateLiftWithAnimator_session(
+        unsafe fn dragInteraction_willAnimateLiftWithAnimator_session(
             &self,
             interaction: &UIDragInteraction,
             animator: &ProtocolObject<dyn UIDragAnimating>,
@@ -132,7 +137,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:sessionWillBegin:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_sessionWillBegin(
+        unsafe fn dragInteraction_sessionWillBegin(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -142,7 +147,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:sessionAllowsMoveOperation:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_sessionAllowsMoveOperation(
+        unsafe fn dragInteraction_sessionAllowsMoveOperation(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -152,7 +157,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:sessionIsRestrictedToDraggingApplication:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_sessionIsRestrictedToDraggingApplication(
+        unsafe fn dragInteraction_sessionIsRestrictedToDraggingApplication(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -162,7 +167,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:prefersFullSizePreviewsForSession:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_prefersFullSizePreviewsForSession(
+        unsafe fn dragInteraction_prefersFullSizePreviewsForSession(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -172,7 +177,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:sessionDidMove:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_sessionDidMove(
+        unsafe fn dragInteraction_sessionDidMove(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -182,7 +187,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:session:willEndWithOperation:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_session_willEndWithOperation(
+        unsafe fn dragInteraction_session_willEndWithOperation(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -193,7 +198,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:session:didEndWithOperation:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_session_didEndWithOperation(
+        unsafe fn dragInteraction_session_didEndWithOperation(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -204,7 +209,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:sessionDidTransferItems:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_sessionDidTransferItems(
+        unsafe fn dragInteraction_sessionDidTransferItems(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -218,7 +223,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:itemsForAddingToSession:withTouchAtPoint:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_itemsForAddingToSession_withTouchAtPoint(
+        unsafe fn dragInteraction_itemsForAddingToSession_withTouchAtPoint(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -229,7 +234,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:sessionForAddingItems:withTouchAtPoint:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_sessionForAddingItems_withTouchAtPoint(
+        unsafe fn dragInteraction_sessionForAddingItems_withTouchAtPoint(
             &self,
             interaction: &UIDragInteraction,
             sessions: &NSArray<ProtocolObject<dyn UIDragSession>>,
@@ -240,7 +245,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:session:willAddItems:forInteraction:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_session_willAddItems_forInteraction(
+        unsafe fn dragInteraction_session_willAddItems_forInteraction(
             &self,
             interaction: &UIDragInteraction,
             session: &ProtocolObject<dyn UIDragSession>,
@@ -256,7 +261,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:previewForCancellingItem:withDefault:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_previewForCancellingItem_withDefault(
+        unsafe fn dragInteraction_previewForCancellingItem_withDefault(
             &self,
             interaction: &UIDragInteraction,
             item: &UIDragItem,
@@ -267,7 +272,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(dragInteraction:item:willAnimateCancelWithAnimator:))]
         #[unsafe(method_family = none)]
-        fn dragInteraction_item_willAnimateCancelWithAnimator(
+        unsafe fn dragInteraction_item_willAnimateCancelWithAnimator(
             &self,
             interaction: &UIDragInteraction,
             item: &UIDragItem,

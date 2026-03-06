@@ -73,7 +73,6 @@ extern "C" {
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/foundation/nsmetadataubiquitousitemisdownloadedkey?language=objc)
     #[cfg(feature = "NSString")]
-    #[deprecated = "Use NSMetadataUbiquitousItemDownloadingStatusKey instead"]
     pub static NSMetadataUbiquitousItemIsDownloadedKey: &'static NSString;
 }
 

@@ -37,7 +37,7 @@ extern "C" {
 impl CAFrameRateRange {
     #[doc(alias = "CAFrameRateRangeMake")]
     #[inline]
-    pub fn new(minimum: c_float, maximum: c_float, preferred: c_float) -> CAFrameRateRange {
+    pub unsafe fn new(minimum: c_float, maximum: c_float, preferred: c_float) -> CAFrameRateRange {
         extern "C-unwind" {
             fn CAFrameRateRangeMake(
                 minimum: c_float,
@@ -50,7 +50,7 @@ impl CAFrameRateRange {
 
     #[doc(alias = "CAFrameRateRangeIsEqualToRange")]
     #[inline]
-    pub fn is_equal_to_range(self, other: CAFrameRateRange) -> bool {
+    pub unsafe fn is_equal_to_range(self: CAFrameRateRange, other: CAFrameRateRange) -> bool {
         extern "C-unwind" {
             fn CAFrameRateRangeIsEqualToRange(
                 range: CAFrameRateRange,
@@ -61,32 +61,17 @@ impl CAFrameRateRange {
     }
 }
 
-#[deprecated = "renamed to `CAFrameRateRange::new`"]
-#[inline]
-pub extern "C-unwind" fn CAFrameRateRangeMake(
-    minimum: c_float,
-    maximum: c_float,
-    preferred: c_float,
-) -> CAFrameRateRange {
-    extern "C-unwind" {
-        fn CAFrameRateRangeMake(
-            minimum: c_float,
-            maximum: c_float,
-            preferred: c_float,
-        ) -> CAFrameRateRange;
-    }
-    unsafe { CAFrameRateRangeMake(minimum, maximum, preferred) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CAFrameRateRange::new`"]
+    pub fn CAFrameRateRangeMake(
+        minimum: c_float,
+        maximum: c_float,
+        preferred: c_float,
+    ) -> CAFrameRateRange;
 }
 
-#[deprecated = "renamed to `CAFrameRateRange::is_equal_to_range`"]
-#[inline]
-pub extern "C-unwind" fn CAFrameRateRangeIsEqualToRange(
-    range: CAFrameRateRange,
-    other: CAFrameRateRange,
-) -> bool {
-    extern "C-unwind" {
-        fn CAFrameRateRangeIsEqualToRange(range: CAFrameRateRange, other: CAFrameRateRange)
-            -> bool;
-    }
-    unsafe { CAFrameRateRangeIsEqualToRange(range, other) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CAFrameRateRange::is_equal_to_range`"]
+    pub fn CAFrameRateRangeIsEqualToRange(range: CAFrameRateRange, other: CAFrameRateRange)
+        -> bool;
 }

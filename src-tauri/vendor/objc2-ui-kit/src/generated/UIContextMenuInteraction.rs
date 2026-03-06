@@ -73,7 +73,7 @@ impl UIContextMenuInteraction {
         /// The interaction's delegate.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIContextMenuInteractionDelegate>>>;
 
@@ -81,11 +81,11 @@ impl UIContextMenuInteraction {
         /// dependent on the user's input method, the appearance is only known while the interaction is active.
         #[unsafe(method(menuAppearance))]
         #[unsafe(method_family = none)]
-        pub fn menuAppearance(&self) -> UIContextMenuInteractionAppearance;
+        pub unsafe fn menuAppearance(&self) -> UIContextMenuInteractionAppearance;
 
         #[unsafe(method(initWithDelegate:))]
         #[unsafe(method_family = init)]
-        pub fn initWithDelegate(
+        pub unsafe fn initWithDelegate(
             this: Allocated<Self>,
             delegate: &ProtocolObject<dyn UIContextMenuInteractionDelegate>,
         ) -> Retained<Self>;
@@ -109,7 +109,7 @@ impl UIContextMenuInteraction {
         /// Parameter `view`: The view in which to locate the interaction.
         #[unsafe(method(locationInView:))]
         #[unsafe(method_family = none)]
-        pub fn locationInView(&self, view: Option<&UIView>) -> CGPoint;
+        pub unsafe fn locationInView(&self, view: Option<&UIView>) -> CGPoint;
 
         #[cfg(all(feature = "UIMenu", feature = "UIMenuElement", feature = "block2"))]
         /// Call to update the currently visible menu. This method does nothing if called before a menu is presented.
@@ -126,10 +126,6 @@ impl UIContextMenuInteraction {
         ///
         /// If Submenu A is visible, the block is called twice (once for the Root Menu and once for Submenu A).
         /// If both A and B are visible, it's called 3 times (for the Root Menu, A, and B).
-        ///
-        /// # Safety
-        ///
-        /// `block` block's return must be a valid pointer.
         #[unsafe(method(updateVisibleMenuWithBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn updateVisibleMenuWithBlock(
@@ -140,7 +136,7 @@ impl UIContextMenuInteraction {
         /// Dismisses the currently presented menu (if there is one).
         #[unsafe(method(dismissMenu))]
         #[unsafe(method_family = none)]
-        pub fn dismissMenu(&self);
+        pub unsafe fn dismissMenu(&self);
     );
 }
 
@@ -153,17 +149,17 @@ extern_protocol!(
         /// Displayed preview view controller.
         #[unsafe(method(previewViewController))]
         #[unsafe(method_family = none)]
-        fn previewViewController(&self) -> Option<Retained<UIViewController>>;
+        unsafe fn previewViewController(&self) -> Option<Retained<UIViewController>>;
 
         #[cfg(feature = "block2")]
         #[unsafe(method(addAnimations:))]
         #[unsafe(method_family = none)]
-        fn addAnimations(&self, animations: &block2::DynBlock<dyn Fn()>);
+        unsafe fn addAnimations(&self, animations: &block2::DynBlock<dyn Fn()>);
 
         #[cfg(feature = "block2")]
         #[unsafe(method(addCompletion:))]
         #[unsafe(method_family = none)]
-        fn addCompletion(&self, completion: &block2::DynBlock<dyn Fn()>);
+        unsafe fn addCompletion(&self, completion: &block2::DynBlock<dyn Fn()>);
     }
 );
 
@@ -175,12 +171,12 @@ extern_protocol!(
         /// Preferred animation style for the menu's commit action. Triggered when the user taps the preview.
         #[unsafe(method(preferredCommitStyle))]
         #[unsafe(method_family = none)]
-        fn preferredCommitStyle(&self) -> UIContextMenuInteractionCommitStyle;
+        unsafe fn preferredCommitStyle(&self) -> UIContextMenuInteractionCommitStyle;
 
         /// Setter for [`preferredCommitStyle`][Self::preferredCommitStyle].
         #[unsafe(method(setPreferredCommitStyle:))]
         #[unsafe(method_family = none)]
-        fn setPreferredCommitStyle(
+        unsafe fn setPreferredCommitStyle(
             &self,
             preferred_commit_style: UIContextMenuInteractionCommitStyle,
         );
@@ -210,7 +206,7 @@ extern_protocol!(
         /// present at this particular time.
         #[unsafe(method(contextMenuInteraction:configurationForMenuAtLocation:))]
         #[unsafe(method_family = none)]
-        fn contextMenuInteraction_configurationForMenuAtLocation(
+        unsafe fn contextMenuInteraction_configurationForMenuAtLocation(
             &self,
             interaction: &UIContextMenuInteraction,
             location: CGPoint,
@@ -225,10 +221,6 @@ extern_protocol!(
         /// Parameter `configuration`: Configuration of the menu that will be presented if the interaction proceeds.
         ///
         /// Parameter `identifier`: Identifier for the item whose preview is being requested.
-        ///
-        /// # Safety
-        ///
-        /// `identifier` should be of the correct type.
         #[optional]
         #[unsafe(method(contextMenuInteraction:configuration:highlightPreviewForItemWithIdentifier:))]
         #[unsafe(method_family = none)]
@@ -248,10 +240,6 @@ extern_protocol!(
         /// Parameter `configuration`: Configuration of the menu being dismissed.
         ///
         /// Parameter `identifier`: Identifier for the item whose preview is being requested.
-        ///
-        /// # Safety
-        ///
-        /// `identifier` should be of the correct type.
         #[optional]
         #[unsafe(method(contextMenuInteraction:configuration:dismissalPreviewForItemWithIdentifier:))]
         #[unsafe(method_family = none)]
@@ -274,7 +262,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(contextMenuInteraction:willPerformPreviewActionForMenuWithConfiguration:animator:))]
         #[unsafe(method_family = none)]
-        fn contextMenuInteraction_willPerformPreviewActionForMenuWithConfiguration_animator(
+        unsafe fn contextMenuInteraction_willPerformPreviewActionForMenuWithConfiguration_animator(
             &self,
             interaction: &UIContextMenuInteraction,
             configuration: &UIContextMenuConfiguration,
@@ -293,7 +281,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(contextMenuInteraction:willDisplayMenuForConfiguration:animator:))]
         #[unsafe(method_family = none)]
-        fn contextMenuInteraction_willDisplayMenuForConfiguration_animator(
+        unsafe fn contextMenuInteraction_willDisplayMenuForConfiguration_animator(
             &self,
             interaction: &UIContextMenuInteraction,
             configuration: &UIContextMenuConfiguration,
@@ -312,7 +300,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(contextMenuInteraction:willEndForConfiguration:animator:))]
         #[unsafe(method_family = none)]
-        fn contextMenuInteraction_willEndForConfiguration_animator(
+        unsafe fn contextMenuInteraction_willEndForConfiguration_animator(
             &self,
             interaction: &UIContextMenuInteraction,
             configuration: &UIContextMenuConfiguration,
@@ -330,7 +318,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(contextMenuInteraction:previewForHighlightingMenuWithConfiguration:))]
         #[unsafe(method_family = none)]
-        fn contextMenuInteraction_previewForHighlightingMenuWithConfiguration(
+        unsafe fn contextMenuInteraction_previewForHighlightingMenuWithConfiguration(
             &self,
             interaction: &UIContextMenuInteraction,
             configuration: &UIContextMenuConfiguration,
@@ -352,7 +340,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(contextMenuInteraction:previewForDismissingMenuWithConfiguration:))]
         #[unsafe(method_family = none)]
-        fn contextMenuInteraction_previewForDismissingMenuWithConfiguration(
+        unsafe fn contextMenuInteraction_previewForDismissingMenuWithConfiguration(
             &self,
             interaction: &UIContextMenuInteraction,
             configuration: &UIContextMenuConfiguration,

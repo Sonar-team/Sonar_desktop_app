@@ -102,12 +102,15 @@ impl UIImageView {
         #[cfg(feature = "UIImage")]
         #[unsafe(method(initWithImage:))]
         #[unsafe(method_family = init)]
-        pub fn initWithImage(this: Allocated<Self>, image: Option<&UIImage>) -> Retained<Self>;
+        pub unsafe fn initWithImage(
+            this: Allocated<Self>,
+            image: Option<&UIImage>,
+        ) -> Retained<Self>;
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(initWithImage:highlightedImage:))]
         #[unsafe(method_family = init)]
-        pub fn initWithImage_highlightedImage(
+        pub unsafe fn initWithImage_highlightedImage(
             this: Allocated<Self>,
             image: Option<&UIImage>,
             highlighted_image: Option<&UIImage>,
@@ -116,24 +119,24 @@ impl UIImageView {
         #[cfg(feature = "UIImage")]
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        pub fn image(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`image`][Self::image].
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        pub fn setImage(&self, image: Option<&UIImage>);
+        pub unsafe fn setImage(&self, image: Option<&UIImage>);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(highlightedImage))]
         #[unsafe(method_family = none)]
-        pub fn highlightedImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn highlightedImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`highlightedImage`][Self::highlightedImage].
         #[unsafe(method(setHighlightedImage:))]
         #[unsafe(method_family = none)]
-        pub fn setHighlightedImage(&self, highlighted_image: Option<&UIImage>);
+        pub unsafe fn setHighlightedImage(&self, highlighted_image: Option<&UIImage>);
 
         #[cfg(all(
             feature = "UIImageConfiguration",
@@ -141,7 +144,9 @@ impl UIImageView {
         ))]
         #[unsafe(method(preferredSymbolConfiguration))]
         #[unsafe(method_family = none)]
-        pub fn preferredSymbolConfiguration(&self) -> Option<Retained<UIImageSymbolConfiguration>>;
+        pub unsafe fn preferredSymbolConfiguration(
+            &self,
+        ) -> Option<Retained<UIImageSymbolConfiguration>>;
 
         #[cfg(all(
             feature = "UIImageConfiguration",
@@ -150,114 +155,106 @@ impl UIImageView {
         /// Setter for [`preferredSymbolConfiguration`][Self::preferredSymbolConfiguration].
         #[unsafe(method(setPreferredSymbolConfiguration:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredSymbolConfiguration(
+        pub unsafe fn setPreferredSymbolConfiguration(
             &self,
             preferred_symbol_configuration: Option<&UIImageSymbolConfiguration>,
         );
 
         #[unsafe(method(isUserInteractionEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isUserInteractionEnabled(&self) -> bool;
+        pub unsafe fn isUserInteractionEnabled(&self) -> bool;
 
         /// Setter for [`isUserInteractionEnabled`][Self::isUserInteractionEnabled].
         #[unsafe(method(setUserInteractionEnabled:))]
         #[unsafe(method_family = none)]
-        pub fn setUserInteractionEnabled(&self, user_interaction_enabled: bool);
+        pub unsafe fn setUserInteractionEnabled(&self, user_interaction_enabled: bool);
 
         #[unsafe(method(isHighlighted))]
         #[unsafe(method_family = none)]
-        pub fn isHighlighted(&self) -> bool;
+        pub unsafe fn isHighlighted(&self) -> bool;
 
         /// Setter for [`isHighlighted`][Self::isHighlighted].
         #[unsafe(method(setHighlighted:))]
         #[unsafe(method_family = none)]
-        pub fn setHighlighted(&self, highlighted: bool);
+        pub unsafe fn setHighlighted(&self, highlighted: bool);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(animationImages))]
         #[unsafe(method_family = none)]
-        pub fn animationImages(&self) -> Option<Retained<NSArray<UIImage>>>;
+        pub unsafe fn animationImages(&self) -> Option<Retained<NSArray<UIImage>>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`animationImages`][Self::animationImages].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAnimationImages:))]
         #[unsafe(method_family = none)]
-        pub fn setAnimationImages(&self, animation_images: Option<&NSArray<UIImage>>);
+        pub unsafe fn setAnimationImages(&self, animation_images: Option<&NSArray<UIImage>>);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(highlightedAnimationImages))]
         #[unsafe(method_family = none)]
-        pub fn highlightedAnimationImages(&self) -> Option<Retained<NSArray<UIImage>>>;
+        pub unsafe fn highlightedAnimationImages(&self) -> Option<Retained<NSArray<UIImage>>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`highlightedAnimationImages`][Self::highlightedAnimationImages].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setHighlightedAnimationImages:))]
         #[unsafe(method_family = none)]
-        pub fn setHighlightedAnimationImages(
+        pub unsafe fn setHighlightedAnimationImages(
             &self,
             highlighted_animation_images: Option<&NSArray<UIImage>>,
         );
 
         #[unsafe(method(animationDuration))]
         #[unsafe(method_family = none)]
-        pub fn animationDuration(&self) -> NSTimeInterval;
+        pub unsafe fn animationDuration(&self) -> NSTimeInterval;
 
         /// Setter for [`animationDuration`][Self::animationDuration].
         #[unsafe(method(setAnimationDuration:))]
         #[unsafe(method_family = none)]
-        pub fn setAnimationDuration(&self, animation_duration: NSTimeInterval);
+        pub unsafe fn setAnimationDuration(&self, animation_duration: NSTimeInterval);
 
         #[unsafe(method(animationRepeatCount))]
         #[unsafe(method_family = none)]
-        pub fn animationRepeatCount(&self) -> NSInteger;
+        pub unsafe fn animationRepeatCount(&self) -> NSInteger;
 
         /// Setter for [`animationRepeatCount`][Self::animationRepeatCount].
         #[unsafe(method(setAnimationRepeatCount:))]
         #[unsafe(method_family = none)]
-        pub fn setAnimationRepeatCount(&self, animation_repeat_count: NSInteger);
+        pub unsafe fn setAnimationRepeatCount(&self, animation_repeat_count: NSInteger);
 
         #[cfg(feature = "UIColor")]
         #[unsafe(method(tintColor))]
         #[unsafe(method_family = none)]
-        pub fn tintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn tintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`tintColor`][Self::tintColor].
-        ///
-        /// # Safety
-        ///
-        /// `tint_color` might not allow `None`.
         #[unsafe(method(setTintColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTintColor(&self, tint_color: Option<&UIColor>);
 
         #[unsafe(method(startAnimating))]
         #[unsafe(method_family = none)]
-        pub fn startAnimating(&self);
+        pub unsafe fn startAnimating(&self);
 
         #[unsafe(method(stopAnimating))]
         #[unsafe(method_family = none)]
-        pub fn stopAnimating(&self);
+        pub unsafe fn stopAnimating(&self);
 
         #[unsafe(method(isAnimating))]
         #[unsafe(method_family = none)]
-        pub fn isAnimating(&self) -> bool;
+        pub unsafe fn isAnimating(&self) -> bool;
 
         #[cfg(feature = "UIInterface")]
         /// The preferred treatment to use for HDR images. By default the image view will defer to the value from its traitCollection.
         #[unsafe(method(preferredImageDynamicRange))]
         #[unsafe(method_family = none)]
-        pub fn preferredImageDynamicRange(&self) -> UIImageDynamicRange;
+        pub unsafe fn preferredImageDynamicRange(&self) -> UIImageDynamicRange;
 
         #[cfg(feature = "UIInterface")]
         /// Setter for [`preferredImageDynamicRange`][Self::preferredImageDynamicRange].
         #[unsafe(method(setPreferredImageDynamicRange:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredImageDynamicRange(
+        pub unsafe fn setPreferredImageDynamicRange(
             &self,
             preferred_image_dynamic_range: UIImageDynamicRange,
         );
@@ -266,34 +263,37 @@ impl UIImageView {
         /// The resolved treatment to use for HDR images.
         #[unsafe(method(imageDynamicRange))]
         #[unsafe(method_family = none)]
-        pub fn imageDynamicRange(&self) -> UIImageDynamicRange;
+        pub unsafe fn imageDynamicRange(&self) -> UIImageDynamicRange;
 
         #[unsafe(method(adjustsImageWhenAncestorFocused))]
         #[unsafe(method_family = none)]
-        pub fn adjustsImageWhenAncestorFocused(&self) -> bool;
+        pub unsafe fn adjustsImageWhenAncestorFocused(&self) -> bool;
 
         /// Setter for [`adjustsImageWhenAncestorFocused`][Self::adjustsImageWhenAncestorFocused].
         #[unsafe(method(setAdjustsImageWhenAncestorFocused:))]
         #[unsafe(method_family = none)]
-        pub fn setAdjustsImageWhenAncestorFocused(&self, adjusts_image_when_ancestor_focused: bool);
+        pub unsafe fn setAdjustsImageWhenAncestorFocused(
+            &self,
+            adjusts_image_when_ancestor_focused: bool,
+        );
 
         #[cfg(feature = "UILayoutGuide")]
         #[unsafe(method(focusedFrameGuide))]
         #[unsafe(method_family = none)]
-        pub fn focusedFrameGuide(&self) -> Retained<UILayoutGuide>;
+        pub unsafe fn focusedFrameGuide(&self) -> Retained<UILayoutGuide>;
 
         #[unsafe(method(overlayContentView))]
         #[unsafe(method_family = none)]
-        pub fn overlayContentView(&self) -> Retained<UIView>;
+        pub unsafe fn overlayContentView(&self) -> Retained<UIView>;
 
         #[unsafe(method(masksFocusEffectToContents))]
         #[unsafe(method_family = none)]
-        pub fn masksFocusEffectToContents(&self) -> bool;
+        pub unsafe fn masksFocusEffectToContents(&self) -> bool;
 
         /// Setter for [`masksFocusEffectToContents`][Self::masksFocusEffectToContents].
         #[unsafe(method(setMasksFocusEffectToContents:))]
         #[unsafe(method_family = none)]
-        pub fn setMasksFocusEffectToContents(&self, masks_focus_effect_to_contents: bool);
+        pub unsafe fn setMasksFocusEffectToContents(&self, masks_focus_effect_to_contents: bool);
     );
 }
 
@@ -304,21 +304,14 @@ impl UIImageView {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
             this: Allocated<Self>,
             coder: &NSCoder,
         ) -> Option<Retained<Self>>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -326,9 +319,13 @@ impl UIImageView {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UIImageView {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -339,13 +336,13 @@ impl UIImageView {
         /// Adds a symbol effect to the image view with default options and animation.
         #[unsafe(method(addSymbolEffect:))]
         #[unsafe(method_family = none)]
-        pub fn addSymbolEffect(&self, symbol_effect: &NSSymbolEffect);
+        pub unsafe fn addSymbolEffect(&self, symbol_effect: &NSSymbolEffect);
 
         #[cfg(feature = "objc2-symbols")]
         /// Adds a symbol effect to the image view with specified options and default animation.
         #[unsafe(method(addSymbolEffect:options:))]
         #[unsafe(method_family = none)]
-        pub fn addSymbolEffect_options(
+        pub unsafe fn addSymbolEffect_options(
             &self,
             symbol_effect: &NSSymbolEffect,
             options: &NSSymbolEffectOptions,
@@ -355,7 +352,7 @@ impl UIImageView {
         /// Adds a symbol effect to the image view with specified options and animation.
         #[unsafe(method(addSymbolEffect:options:animated:))]
         #[unsafe(method_family = none)]
-        pub fn addSymbolEffect_options_animated(
+        pub unsafe fn addSymbolEffect_options_animated(
             &self,
             symbol_effect: &NSSymbolEffect,
             options: &NSSymbolEffectOptions,
@@ -368,10 +365,6 @@ impl UIImageView {
             feature = "objc2-symbols"
         ))]
         /// Adds a symbol effect to the image view with specified options, animation, and completion handler.
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` must be a valid pointer or null.
         #[unsafe(method(addSymbolEffect:options:animated:completion:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addSymbolEffect_options_animated_completion(
@@ -386,13 +379,13 @@ impl UIImageView {
         /// Removes from the image view the symbol effect matching the type of effect passed in, with default options and animation.
         #[unsafe(method(removeSymbolEffectOfType:))]
         #[unsafe(method_family = none)]
-        pub fn removeSymbolEffectOfType(&self, symbol_effect: &NSSymbolEffect);
+        pub unsafe fn removeSymbolEffectOfType(&self, symbol_effect: &NSSymbolEffect);
 
         #[cfg(feature = "objc2-symbols")]
         /// Removes from the image view the symbol effect matching the type of effect passed in, with specified options and default animation.
         #[unsafe(method(removeSymbolEffectOfType:options:))]
         #[unsafe(method_family = none)]
-        pub fn removeSymbolEffectOfType_options(
+        pub unsafe fn removeSymbolEffectOfType_options(
             &self,
             symbol_effect: &NSSymbolEffect,
             options: &NSSymbolEffectOptions,
@@ -402,7 +395,7 @@ impl UIImageView {
         /// Removes from the image view the symbol effect matching the type of effect passed in, with specified options and animation.
         #[unsafe(method(removeSymbolEffectOfType:options:animated:))]
         #[unsafe(method_family = none)]
-        pub fn removeSymbolEffectOfType_options_animated(
+        pub unsafe fn removeSymbolEffectOfType_options_animated(
             &self,
             symbol_effect: &NSSymbolEffect,
             options: &NSSymbolEffectOptions,
@@ -415,10 +408,6 @@ impl UIImageView {
             feature = "objc2-symbols"
         ))]
         /// Removes from the image view the symbol effect matching the type of effect passed in, with specified options, animation, and completion handler.
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` must be a valid pointer or null.
         #[unsafe(method(removeSymbolEffectOfType:options:animated:completion:))]
         #[unsafe(method_family = none)]
         pub unsafe fn removeSymbolEffectOfType_options_animated_completion(
@@ -432,19 +421,19 @@ impl UIImageView {
         /// Removes all symbol effects from the image view with default options and animation.
         #[unsafe(method(removeAllSymbolEffects))]
         #[unsafe(method_family = none)]
-        pub fn removeAllSymbolEffects(&self);
+        pub unsafe fn removeAllSymbolEffects(&self);
 
         #[cfg(feature = "objc2-symbols")]
         /// Removes all symbol effects from the image view with specified options and default animation.
         #[unsafe(method(removeAllSymbolEffectsWithOptions:))]
         #[unsafe(method_family = none)]
-        pub fn removeAllSymbolEffectsWithOptions(&self, options: &NSSymbolEffectOptions);
+        pub unsafe fn removeAllSymbolEffectsWithOptions(&self, options: &NSSymbolEffectOptions);
 
         #[cfg(feature = "objc2-symbols")]
         /// Removes all symbol effects from the image view with specified options and animation.
         #[unsafe(method(removeAllSymbolEffectsWithOptions:animated:))]
         #[unsafe(method_family = none)]
-        pub fn removeAllSymbolEffectsWithOptions_animated(
+        pub unsafe fn removeAllSymbolEffectsWithOptions_animated(
             &self,
             options: &NSSymbolEffectOptions,
             animated: bool,
@@ -455,7 +444,7 @@ impl UIImageView {
         /// Passing in a non-symbol image will result in undefined behavior.
         #[unsafe(method(setSymbolImage:withContentTransition:))]
         #[unsafe(method_family = none)]
-        pub fn setSymbolImage_withContentTransition(
+        pub unsafe fn setSymbolImage_withContentTransition(
             &self,
             symbol_image: &UIImage,
             transition: &NSSymbolContentTransition,
@@ -466,7 +455,7 @@ impl UIImageView {
         /// Passing in a non-symbol image will result in undefined behavior.
         #[unsafe(method(setSymbolImage:withContentTransition:options:))]
         #[unsafe(method_family = none)]
-        pub fn setSymbolImage_withContentTransition_options(
+        pub unsafe fn setSymbolImage_withContentTransition_options(
             &self,
             symbol_image: &UIImage,
             transition: &NSSymbolContentTransition,
@@ -481,10 +470,6 @@ impl UIImageView {
         ))]
         /// Sets the symbol image on the image view with a symbol content transition, options, and completion handler.
         /// Passing in a non-symbol image will result in undefined behavior.
-        ///
-        /// # Safety
-        ///
-        /// `completion_handler` must be a valid pointer or null.
         #[unsafe(method(setSymbolImage:withContentTransition:options:completion:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSymbolImage_withContentTransition_options_completion(

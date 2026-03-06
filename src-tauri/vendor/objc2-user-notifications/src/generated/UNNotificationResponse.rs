@@ -48,11 +48,11 @@ impl UNNotificationResponse {
         #[cfg(feature = "UNNotification")]
         #[unsafe(method(notification))]
         #[unsafe(method_family = none)]
-        pub fn notification(&self) -> Retained<UNNotification>;
+        pub unsafe fn notification(&self) -> Retained<UNNotification>;
 
         #[unsafe(method(actionIdentifier))]
         #[unsafe(method_family = none)]
-        pub fn actionIdentifier(&self) -> Retained<NSString>;
+        pub unsafe fn actionIdentifier(&self) -> Retained<NSString>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -100,7 +100,7 @@ impl UNTextInputNotificationResponse {
     extern_methods!(
         #[unsafe(method(userText))]
         #[unsafe(method_family = none)]
-        pub fn userText(&self) -> Retained<NSString>;
+        pub unsafe fn userText(&self) -> Retained<NSString>;
     );
 }
 

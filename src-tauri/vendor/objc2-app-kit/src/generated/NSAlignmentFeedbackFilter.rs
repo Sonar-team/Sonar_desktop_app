@@ -30,22 +30,22 @@ impl NSAlignmentFeedbackFilter {
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(inputEventMask))]
         #[unsafe(method_family = none)]
-        pub fn inputEventMask() -> NSEventMask;
+        pub unsafe fn inputEventMask() -> NSEventMask;
 
         #[cfg(feature = "NSEvent")]
         #[unsafe(method(updateWithEvent:))]
         #[unsafe(method_family = none)]
-        pub fn updateWithEvent(&self, event: &NSEvent);
+        pub unsafe fn updateWithEvent(&self, event: &NSEvent);
 
         #[cfg(all(feature = "NSGestureRecognizer", feature = "NSPanGestureRecognizer"))]
         #[unsafe(method(updateWithPanRecognizer:))]
         #[unsafe(method_family = none)]
-        pub fn updateWithPanRecognizer(&self, pan_recognizer: &NSPanGestureRecognizer);
+        pub unsafe fn updateWithPanRecognizer(&self, pan_recognizer: &NSPanGestureRecognizer);
 
         #[cfg(all(feature = "NSResponder", feature = "NSView"))]
         #[unsafe(method(alignmentFeedbackTokenForMovementInView:previousPoint:alignedPoint:defaultPoint:))]
         #[unsafe(method_family = none)]
-        pub fn alignmentFeedbackTokenForMovementInView_previousPoint_alignedPoint_defaultPoint(
+        pub unsafe fn alignmentFeedbackTokenForMovementInView_previousPoint_alignedPoint_defaultPoint(
             &self,
             view: Option<&NSView>,
             previous_point: NSPoint,
@@ -60,7 +60,7 @@ impl NSAlignmentFeedbackFilter {
         ))]
         #[unsafe(method(alignmentFeedbackTokenForHorizontalMovementInView:previousX:alignedX:defaultX:))]
         #[unsafe(method_family = none)]
-        pub fn alignmentFeedbackTokenForHorizontalMovementInView_previousX_alignedX_defaultX(
+        pub unsafe fn alignmentFeedbackTokenForHorizontalMovementInView_previousX_alignedX_defaultX(
             &self,
             view: Option<&NSView>,
             previous_x: CGFloat,
@@ -75,7 +75,7 @@ impl NSAlignmentFeedbackFilter {
         ))]
         #[unsafe(method(alignmentFeedbackTokenForVerticalMovementInView:previousY:alignedY:defaultY:))]
         #[unsafe(method_family = none)]
-        pub fn alignmentFeedbackTokenForVerticalMovementInView_previousY_alignedY_defaultY(
+        pub unsafe fn alignmentFeedbackTokenForVerticalMovementInView_previousY_alignedY_defaultY(
             &self,
             view: Option<&NSView>,
             previous_y: CGFloat,
@@ -86,7 +86,7 @@ impl NSAlignmentFeedbackFilter {
         #[cfg(feature = "NSHapticFeedback")]
         #[unsafe(method(performFeedback:performanceTime:))]
         #[unsafe(method_family = none)]
-        pub fn performFeedback_performanceTime(
+        pub unsafe fn performFeedback_performanceTime(
             &self,
             alignment_feedback_tokens: &NSArray<ProtocolObject<dyn NSAlignmentFeedbackToken>>,
             performance_time: NSHapticFeedbackPerformanceTime,
@@ -99,17 +99,10 @@ impl NSAlignmentFeedbackFilter {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSAlignmentFeedbackFilter {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

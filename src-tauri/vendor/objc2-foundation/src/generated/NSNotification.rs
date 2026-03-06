@@ -44,22 +44,18 @@ impl NSNotification {
         #[cfg(feature = "NSString")]
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
-        pub fn name(&self) -> Retained<NSNotificationName>;
+        pub unsafe fn name(&self) -> Retained<NSNotificationName>;
 
         #[unsafe(method(object))]
         #[unsafe(method_family = none)]
-        pub fn object(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn object(&self) -> Option<Retained<AnyObject>>;
 
         #[cfg(feature = "NSDictionary")]
         #[unsafe(method(userInfo))]
         #[unsafe(method_family = none)]
-        pub fn userInfo(&self) -> Option<Retained<NSDictionary>>;
+        pub unsafe fn userInfo(&self) -> Option<Retained<NSDictionary>>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// - `object` should be of the correct type.
-        /// - `user_info` generic should be of the correct type.
         #[unsafe(method(initWithName:object:userInfo:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithName_object_userInfo(
@@ -70,9 +66,6 @@ impl NSNotification {
         ) -> Retained<Self>;
 
         #[cfg(feature = "NSCoder")]
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -86,9 +79,6 @@ impl NSNotification {
 impl NSNotification {
     extern_methods!(
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `an_object` should be of the correct type.
         #[unsafe(method(notificationWithName:object:))]
         #[unsafe(method_family = none)]
         pub unsafe fn notificationWithName_object(
@@ -97,10 +87,6 @@ impl NSNotification {
         ) -> Retained<Self>;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// - `an_object` should be of the correct type.
-        /// - `a_user_info` generic should be of the correct type.
         #[unsafe(method(notificationWithName:object:userInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn notificationWithName_object_userInfo(
@@ -132,14 +118,9 @@ impl NSNotificationCenter {
     extern_methods!(
         #[unsafe(method(defaultCenter))]
         #[unsafe(method_family = none)]
-        pub fn defaultCenter() -> Retained<NSNotificationCenter>;
+        pub unsafe fn defaultCenter() -> Retained<NSNotificationCenter>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// - `observer` should be of the correct type.
-        /// - `a_selector` must be a valid selector.
-        /// - `an_object` should be of the correct type.
         #[unsafe(method(addObserver:selector:name:object:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addObserver_selector_name_object(
@@ -152,12 +133,9 @@ impl NSNotificationCenter {
 
         #[unsafe(method(postNotification:))]
         #[unsafe(method_family = none)]
-        pub fn postNotification(&self, notification: &NSNotification);
+        pub unsafe fn postNotification(&self, notification: &NSNotification);
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `an_object` should be of the correct type.
         #[unsafe(method(postNotificationName:object:))]
         #[unsafe(method_family = none)]
         pub unsafe fn postNotificationName_object(
@@ -167,10 +145,6 @@ impl NSNotificationCenter {
         );
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
-        /// # Safety
-        ///
-        /// - `an_object` should be of the correct type.
-        /// - `a_user_info` generic should be of the correct type.
         #[unsafe(method(postNotificationName:object:userInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn postNotificationName_object_userInfo(
@@ -180,18 +154,11 @@ impl NSNotificationCenter {
             a_user_info: Option<&NSDictionary>,
         );
 
-        /// # Safety
-        ///
-        /// `observer` should be of the correct type.
         #[unsafe(method(removeObserver:))]
         #[unsafe(method_family = none)]
         pub unsafe fn removeObserver(&self, observer: &AnyObject);
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// - `observer` should be of the correct type.
-        /// - `an_object` should be of the correct type.
         #[unsafe(method(removeObserver:name:object:))]
         #[unsafe(method_family = none)]
         pub unsafe fn removeObserver_name_object(
@@ -202,11 +169,6 @@ impl NSNotificationCenter {
         );
 
         #[cfg(all(feature = "NSOperation", feature = "NSString", feature = "block2"))]
-        /// # Safety
-        ///
-        /// - `obj` should be of the correct type.
-        /// - `queue` possibly has additional threading requirements.
-        /// - `block` block must be sendable.
         #[unsafe(method(addObserverForName:object:queue:usingBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn addObserverForName_object_queue_usingBlock(
@@ -224,17 +186,10 @@ impl NSNotificationCenter {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSNotificationCenter {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

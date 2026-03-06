@@ -7,7 +7,7 @@ use objc2::__framework_prelude::*;
 use crate::*;
 
 #[inline]
-pub extern "C-unwind" fn NSDefaultMallocZone() -> NonNull<NSZone> {
+pub unsafe extern "C-unwind" fn NSDefaultMallocZone() -> NonNull<NSZone> {
     extern "C-unwind" {
         fn NSDefaultMallocZone() -> Option<NonNull<NSZone>>;
     }
@@ -16,7 +16,7 @@ pub extern "C-unwind" fn NSDefaultMallocZone() -> NonNull<NSZone> {
 }
 
 #[inline]
-pub extern "C-unwind" fn NSCreateZone(
+pub unsafe extern "C-unwind" fn NSCreateZone(
     start_size: NSUInteger,
     granularity: NSUInteger,
     can_free: bool,
@@ -33,23 +33,14 @@ pub extern "C-unwind" fn NSCreateZone(
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `zone` must be a valid pointer.
     pub fn NSRecycleZone(zone: NonNull<NSZone>);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `zone` must be a valid pointer or null.
     #[cfg(feature = "NSString")]
     pub fn NSSetZoneName(zone: *mut NSZone, name: &NSString);
 }
 
-/// # Safety
-///
-/// `zone` must be a valid pointer or null.
 #[cfg(feature = "NSString")]
 #[inline]
 pub unsafe extern "C-unwind" fn NSZoneName(zone: *mut NSZone) -> Retained<NSString> {
@@ -62,15 +53,9 @@ pub unsafe extern "C-unwind" fn NSZoneName(zone: *mut NSZone) -> Retained<NSStri
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `ptr` must be a valid pointer.
     pub fn NSZoneFromPointer(ptr: NonNull<c_void>) -> *mut NSZone;
 }
 
-/// # Safety
-///
-/// `zone` must be a valid pointer or null.
 #[inline]
 pub unsafe extern "C-unwind" fn NSZoneMalloc(
     zone: *mut NSZone,
@@ -83,9 +68,6 @@ pub unsafe extern "C-unwind" fn NSZoneMalloc(
     ret.expect("function was marked as returning non-null, but actually returned NULL")
 }
 
-/// # Safety
-///
-/// `zone` must be a valid pointer or null.
 #[inline]
 pub unsafe extern "C-unwind" fn NSZoneCalloc(
     zone: *mut NSZone,
@@ -103,10 +85,6 @@ pub unsafe extern "C-unwind" fn NSZoneCalloc(
     ret.expect("function was marked as returning non-null, but actually returned NULL")
 }
 
-/// # Safety
-///
-/// - `zone` must be a valid pointer or null.
-/// - `ptr` must be a valid pointer or null.
 #[inline]
 pub unsafe extern "C-unwind" fn NSZoneRealloc(
     zone: *mut NSZone,
@@ -125,10 +103,6 @@ pub unsafe extern "C-unwind" fn NSZoneRealloc(
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `zone` must be a valid pointer or null.
-    /// - `ptr` must be a valid pointer.
     pub fn NSZoneFree(zone: *mut NSZone, ptr: NonNull<c_void>);
 }
 
@@ -138,7 +112,7 @@ pub const NSScannedOption: NSUInteger = 1 << 0;
 pub const NSCollectorDisabledOption: NSUInteger = 1 << 1;
 
 #[inline]
-pub extern "C-unwind" fn NSAllocateCollectable(
+pub unsafe extern "C-unwind" fn NSAllocateCollectable(
     size: NSUInteger,
     options: NSUInteger,
 ) -> NonNull<c_void> {
@@ -149,9 +123,6 @@ pub extern "C-unwind" fn NSAllocateCollectable(
     ret.expect("function was marked as returning non-null, but actually returned NULL")
 }
 
-/// # Safety
-///
-/// `ptr` must be a valid pointer or null.
 #[inline]
 pub unsafe extern "C-unwind" fn NSReallocateCollectable(
     ptr: *mut c_void,
@@ -169,40 +140,24 @@ pub unsafe extern "C-unwind" fn NSReallocateCollectable(
     ret.expect("function was marked as returning non-null, but actually returned NULL")
 }
 
-#[inline]
-pub extern "C-unwind" fn NSPageSize() -> NSUInteger {
-    extern "C-unwind" {
-        fn NSPageSize() -> NSUInteger;
-    }
-    unsafe { NSPageSize() }
+extern "C-unwind" {
+    pub fn NSPageSize() -> NSUInteger;
+}
+
+extern "C-unwind" {
+    pub fn NSLogPageSize() -> NSUInteger;
+}
+
+extern "C-unwind" {
+    pub fn NSRoundUpToMultipleOfPageSize(bytes: NSUInteger) -> NSUInteger;
+}
+
+extern "C-unwind" {
+    pub fn NSRoundDownToMultipleOfPageSize(bytes: NSUInteger) -> NSUInteger;
 }
 
 #[inline]
-pub extern "C-unwind" fn NSLogPageSize() -> NSUInteger {
-    extern "C-unwind" {
-        fn NSLogPageSize() -> NSUInteger;
-    }
-    unsafe { NSLogPageSize() }
-}
-
-#[inline]
-pub extern "C-unwind" fn NSRoundUpToMultipleOfPageSize(bytes: NSUInteger) -> NSUInteger {
-    extern "C-unwind" {
-        fn NSRoundUpToMultipleOfPageSize(bytes: NSUInteger) -> NSUInteger;
-    }
-    unsafe { NSRoundUpToMultipleOfPageSize(bytes) }
-}
-
-#[inline]
-pub extern "C-unwind" fn NSRoundDownToMultipleOfPageSize(bytes: NSUInteger) -> NSUInteger {
-    extern "C-unwind" {
-        fn NSRoundDownToMultipleOfPageSize(bytes: NSUInteger) -> NSUInteger;
-    }
-    unsafe { NSRoundDownToMultipleOfPageSize(bytes) }
-}
-
-#[inline]
-pub extern "C-unwind" fn NSAllocateMemoryPages(bytes: NSUInteger) -> NonNull<c_void> {
+pub unsafe extern "C-unwind" fn NSAllocateMemoryPages(bytes: NSUInteger) -> NonNull<c_void> {
     extern "C-unwind" {
         fn NSAllocateMemoryPages(bytes: NSUInteger) -> Option<NonNull<c_void>>;
     }
@@ -211,25 +166,14 @@ pub extern "C-unwind" fn NSAllocateMemoryPages(bytes: NSUInteger) -> NonNull<c_v
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `ptr` must be a valid pointer.
     pub fn NSDeallocateMemoryPages(ptr: NonNull<c_void>, bytes: NSUInteger);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `source` must be a valid pointer.
-    /// - `dest` must be a valid pointer.
     pub fn NSCopyMemoryPages(source: NonNull<c_void>, dest: NonNull<c_void>, bytes: NSUInteger);
 }
 
-#[deprecated = "Use NSProcessInfo instead"]
-#[inline]
-pub extern "C-unwind" fn NSRealMemoryAvailable() -> NSUInteger {
-    extern "C-unwind" {
-        fn NSRealMemoryAvailable() -> NSUInteger;
-    }
-    unsafe { NSRealMemoryAvailable() }
+extern "C-unwind" {
+    #[deprecated = "Use NSProcessInfo instead"]
+    pub fn NSRealMemoryAvailable() -> NSUInteger;
 }

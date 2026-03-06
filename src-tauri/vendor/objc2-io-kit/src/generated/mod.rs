@@ -15,6 +15,7 @@
 #![allow(clippy::doc_lazy_continuation)]
 #![allow(rustdoc::broken_intra_doc_links)]
 #![allow(rustdoc::bare_urls)]
+#![allow(rustdoc::unportable_markdown)]
 #![allow(rustdoc::invalid_html_tags)]
 
 #[link(name = "IOKit", kind = "framework")]
@@ -29,18 +30,6 @@ mod __hid;
 #[cfg(feature = "hidsystem")]
 #[path = "hidsystem.rs"]
 mod __hidsystem;
-#[cfg(feature = "network")]
-#[path = "network.rs"]
-mod __network;
-#[cfg(feature = "ps")]
-#[path = "ps.rs"]
-mod __ps;
-#[cfg(feature = "pwr_mgt")]
-#[path = "pwr_mgt.rs"]
-mod __pwr_mgt;
-#[cfg(feature = "serial")]
-#[path = "serial.rs"]
-mod __serial;
 #[cfg(feature = "usb")]
 #[path = "usb/mod.rs"]
 mod __usb;
@@ -84,12 +73,6 @@ pub use self::__graphics::kConnectionColorMode;
 #[cfg(feature = "graphics")]
 pub use self::__graphics::kConnectionColorModesSupported;
 #[cfg(feature = "graphics")]
-pub use self::__graphics::kConnectionControllerColorDepth;
-#[cfg(feature = "graphics")]
-pub use self::__graphics::kConnectionControllerDepthsSupported;
-#[cfg(feature = "graphics")]
-pub use self::__graphics::kConnectionControllerDitherControl;
-#[cfg(feature = "graphics")]
 pub use self::__graphics::kConnectionDisplayFlags;
 #[cfg(feature = "graphics")]
 pub use self::__graphics::kConnectionDisplayParameterCount;
@@ -109,8 +92,6 @@ pub use self::__graphics::kConnectionGammaScale;
 pub use self::__graphics::kConnectionGreenGammaScale;
 #[cfg(feature = "graphics")]
 pub use self::__graphics::kConnectionHandleDisplayPortEvent;
-#[cfg(feature = "graphics")]
-pub use self::__graphics::kConnectionIgnore;
 #[cfg(feature = "graphics")]
 pub use self::__graphics::kConnectionOverscan;
 #[cfg(feature = "graphics")]
@@ -4218,8 +4199,6 @@ pub use self::__hid::kHIDUsage_Game_TurnRightOrLeft;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_GenDevControls_BackgroundControls;
 #[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_GenDevControls_BatteryStrength;
-#[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Haptics_AutoTrigger;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Haptics_AutoTriggerAssociatedControl;
@@ -4614,8 +4593,6 @@ pub use self::__hid::kHIDUsage_LED_BatteryOK;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_BatteryOperation;
 #[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_LED_BlueLEDChannel;
-#[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_Busy;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_CAV;
@@ -4658,10 +4635,6 @@ pub use self::__hid::kHIDUsage_LED_Forward;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_GenericIndicator;
 #[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_LED_GoodStatus;
-#[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_LED_GreenLEDChannel;
-#[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_HeadSet;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_HighCutFilter;
@@ -4669,8 +4642,6 @@ pub use self::__hid::kHIDUsage_LED_HighCutFilter;
 pub use self::__hid::kHIDUsage_LED_Hold;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_IndicatorAmber;
-#[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_LED_IndicatorBlue;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_IndicatorFastBlink;
 #[cfg(feature = "hid")]
@@ -4682,15 +4653,11 @@ pub use self::__hid::kHIDUsage_LED_IndicatorOff;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_IndicatorOn;
 #[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_LED_IndicatorOrange;
-#[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_IndicatorRed;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_IndicatorSlowBlink;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_Kana;
-#[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_LED_LEDIntensity;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_LowCutFilter;
 #[cfg(feature = "hid")]
@@ -4738,15 +4705,11 @@ pub use self::__hid::kHIDUsage_LED_PlayerIndicator;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_Power;
 #[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_LED_RGB_LED;
-#[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_Ready;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_Record;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_RecordingFormatDetect;
-#[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_LED_RedLEDChannel;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_Remote;
 #[cfg(feature = "hid")]
@@ -4786,8 +4749,6 @@ pub use self::__hid::kHIDUsage_LED_Stop;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_SurroundOn;
 #[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_LED_SystemMicrophoneMute;
-#[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_SystemSuspend;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_ToneEnable;
@@ -4799,8 +4760,6 @@ pub use self::__hid::kHIDUsage_LED_UsageInUseIndicator;
 pub use self::__hid::kHIDUsage_LED_UsageIndicatorColor;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_LED_UsageMultiModeIndicator;
-#[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_LED_WarningStatus;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_MSR_DeviceReadOnly;
 #[cfg(feature = "hid")]
@@ -5310,8 +5269,6 @@ pub use self::__hid::kHIDUsage_Sim_WingFlaps;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Snsr_Biometric;
 #[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_Snsr_Biometric_HeartRate;
-#[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Snsr_Biometric_HumanPresence;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Snsr_Biometric_HumanProximity;
@@ -5319,8 +5276,6 @@ pub use self::__hid::kHIDUsage_Snsr_Biometric_HumanProximity;
 pub use self::__hid::kHIDUsage_Snsr_Biometric_HumanTouch;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Snsr_Data_Biometric;
-#[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_Snsr_Data_Biometric_HeartRate;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Snsr_Data_Biometric_HumanPresence;
 #[cfg(feature = "hid")]
@@ -5834,8 +5789,6 @@ pub use self::__hid::kHIDUsage_Snsr_Motion_Accelerometer2D;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Snsr_Motion_Accelerometer3D;
 #[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_Snsr_Motion_GravityVector;
-#[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Snsr_Motion_Gyrometer;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Snsr_Motion_Gyrometer1D;
@@ -5843,8 +5796,6 @@ pub use self::__hid::kHIDUsage_Snsr_Motion_Gyrometer1D;
 pub use self::__hid::kHIDUsage_Snsr_Motion_Gyrometer2D;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Snsr_Motion_Gyrometer3D;
-#[cfg(feature = "hid")]
-pub use self::__hid::kHIDUsage_Snsr_Motion_LinearAccelerometer;
 #[cfg(feature = "hid")]
 pub use self::__hid::kHIDUsage_Snsr_Motion_MotionDetector;
 #[cfg(feature = "hid")]
@@ -6502,8 +6453,6 @@ pub use self::__hid::kIOHIDElementVendorSpecificKey;
 #[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDEventDriverHandlesReport;
 #[cfg(feature = "hid")]
-pub use self::__hid::kIOHIDEventServiceSensorControlOptionsKey;
-#[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDHeightKey;
 #[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDIdleTimeMicrosecondsKey;
@@ -6676,8 +6625,6 @@ pub use self::__hid::kIOHIDStandardTypeUnspecified;
 #[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDSurfaceDimensionsKey;
 #[cfg(feature = "hid")]
-pub use self::__hid::kIOHIDSystemButtonPressedDuringDarkBoot;
-#[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDTrackpadAccelerationType;
 #[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDTrackpadScrollAccelerationKey;
@@ -6700,8 +6647,6 @@ pub use self::__hid::kIOHIDTransportI2CValue;
 #[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDTransportIAPValue;
 #[cfg(feature = "hid")]
-pub use self::__hid::kIOHIDTransportInductiveInBandValue;
-#[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDTransportKey;
 #[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDTransportSPIValue;
@@ -6711,8 +6656,6 @@ pub use self::__hid::kIOHIDTransportSPUValue;
 pub use self::__hid::kIOHIDTransportSerialValue;
 #[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDTransportUSBValue;
-#[cfg(feature = "hid")]
-pub use self::__hid::kIOHIDTransportVirtualValue;
 #[cfg(feature = "hid")]
 pub use self::__hid::kIOHIDUniqueIDKey;
 #[cfg(feature = "hid")]
@@ -7030,8 +6973,6 @@ pub use self::__hid::IOHIDReportWithTimeStampCallback;
 #[cfg(feature = "hid")]
 pub use self::__hid::IOHIDScrollEventOptions;
 #[cfg(feature = "hid")]
-pub use self::__hid::IOHIDServiceSensorControlOptions;
-#[cfg(feature = "hid")]
 pub use self::__hid::IOHIDStandardType;
 #[cfg(feature = "hid")]
 pub use self::__hid::IOHIDTransaction;
@@ -7095,6 +7036,14 @@ pub use self::__hid::IOHIDValueMultipleCallback;
 pub use self::__hid::IOHIDValueOptions;
 #[cfg(feature = "hid")]
 pub use self::__hid::IOHIDValueScaleType;
+#[cfg(feature = "hidsystem")]
+pub(crate) use self::__hidsystem::_NXEvent_location;
+#[cfg(feature = "hidsystem")]
+pub(crate) use self::__hidsystem::_NXParsedKeyMapping_;
+#[cfg(feature = "hidsystem")]
+pub(crate) use self::__hidsystem::_NXTabletPointData_tilt;
+#[cfg(feature = "hidsystem")]
+pub(crate) use self::__hidsystem::_evOffsets;
 #[cfg(all(feature = "graphics", feature = "hidsystem"))]
 pub use self::__hidsystem::evioLLEvent;
 #[cfg(feature = "hidsystem")]
@@ -7510,1301 +7459,7 @@ pub use self::__hidsystem::NXTabletPointData;
 #[cfg(feature = "hidsystem")]
 pub use self::__hidsystem::NXTabletProximityData;
 #[cfg(feature = "hidsystem")]
-pub(crate) use self::__hidsystem::_NXEvent_location;
-#[cfg(feature = "hidsystem")]
-pub(crate) use self::__hidsystem::_NXParsedKeyMapping_;
-#[cfg(feature = "hidsystem")]
-pub(crate) use self::__hidsystem::_NXTabletPointData_tilt;
-#[cfg(feature = "hidsystem")]
-pub(crate) use self::__hidsystem::_evOffsets;
-#[cfg(feature = "hidsystem")]
 pub use self::__hidsystem::EVENT_SYSTEM_VERSION;
-#[cfg(feature = "network")]
-pub use self::__network::kIOActiveMedium;
-#[cfg(feature = "network")]
-pub use self::__network::kIOActivePacketFilters;
-#[cfg(feature = "network")]
-pub use self::__network::kIOBuiltin;
-#[cfg(feature = "network")]
-pub use self::__network::kIODefaultMedium;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetAddressSize;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetCRCSize;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetControllerClass;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetDisabledWakeOnLANFilterGroup;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetInterfaceClass;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetMaxPacketSize;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetMinPacketSize;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetStatsKey;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetWakeOnLANFilterGroup;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetWakeOnMagicPacket;
-#[cfg(feature = "network")]
-pub use self::__network::kIOEthernetWakeOnPacketAddressMatch;
-#[cfg(feature = "network")]
-pub use self::__network::kIOFeatures;
-#[cfg(feature = "network")]
-pub use self::__network::kIOInterfaceExtraFlags;
-#[cfg(feature = "network")]
-pub use self::__network::kIOInterfaceFlags;
-#[cfg(feature = "network")]
-pub use self::__network::kIOInterfaceNamePrefix;
-#[cfg(feature = "network")]
-pub use self::__network::kIOInterfaceState;
-#[cfg(feature = "network")]
-pub use self::__network::kIOInterfaceType;
-#[cfg(feature = "network")]
-pub use self::__network::kIOInterfaceUnit;
-#[cfg(feature = "network")]
-pub use self::__network::kIOLinkData;
-#[cfg(feature = "network")]
-pub use self::__network::kIOLinkSpeed;
-#[cfg(feature = "network")]
-pub use self::__network::kIOLinkStatus;
-#[cfg(feature = "network")]
-pub use self::__network::kIOLocation;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMACAddress;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMaxPacketSize;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMaxTransferUnit;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediaAddressLength;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediaHeaderLength;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumDictionary;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet1000BaseCX;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet1000BaseLX;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet1000BaseSX;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet1000BaseT;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet1000BaseTX;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet100BaseFX;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet100BaseT2;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet100BaseT4;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet100BaseTX;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet100BaseVG;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet10Base2;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet10Base5;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet10BaseFL;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet10BaseSTP;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet10BaseT;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet10GBaseCX4;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet10GBaseLR;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet10GBaseSR;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet10GBaseT;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet2500BaseT;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernet5000BaseT;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernetAuto;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernetHomePNA1;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernetManual;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumEthernetNone;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumFlags;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211Auto;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211DS1;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211DS11;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211DS2;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211DS5;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211FH1;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211FH2;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211Manual;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211None;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIEEE80211OptionAdhoc;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumIndex;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumOptionEEE;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumOptionFlag0;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumOptionFlag1;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumOptionFlag2;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumOptionFlowControl;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumOptionFullDuplex;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumOptionHalfDuplex;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumOptionLoopback;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumSpeed;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMediumType;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMinPacketSize;
-#[cfg(feature = "network")]
-pub use self::__network::kIOModel;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMulticastAddressList;
-#[cfg(feature = "network")]
-pub use self::__network::kIOMulticastFilterData;
-#[cfg(feature = "network")]
-pub use self::__network::kIONUCGetNetworkDataCapacityIndex;
-#[cfg(feature = "network")]
-pub use self::__network::kIONUCGetNetworkDataHandleIndex;
-#[cfg(feature = "network")]
-pub use self::__network::kIONUCLastIndex;
-#[cfg(feature = "network")]
-pub use self::__network::kIONUCReadNetworkDataIndex;
-#[cfg(feature = "network")]
-pub use self::__network::kIONUCResetNetworkDataIndex;
-#[cfg(feature = "network")]
-pub use self::__network::kIONUCType;
-#[cfg(feature = "network")]
-pub use self::__network::kIONUCWriteNetworkDataIndex;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkControllerClass;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkData;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataAccessTypeMask;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataAccessTypeRead;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataAccessTypeReset;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataAccessTypeSerialize;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataAccessTypeWrite;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataAccessTypes;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataBasicAccessTypes;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataBufferTypeExternal;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataBufferTypeInternal;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataBufferTypeNone;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataBytes;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkDataSize;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFeatureHWTimeStamp;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFeatureHardwareVlan;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFeatureLRO;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFeatureMultiPages;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFeatureNoBSDWait;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFeatureSWTimeStamp;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFeatureSoftwareVlan;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFeatureTSOIPv4;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFeatureTSOIPv6;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFeatureTransmitCompletionStatus;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkFilterGroup;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkInterfaceClass;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkInterfaceDisabledState;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkInterfaceOpenedState;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkInterfaceRegisteredState;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkLinkActive;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkLinkNoNetworkChange;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkLinkValid;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkNoBSDAttachKey;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkStackRegisterInterfaceAll;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkStackRegisterInterfaceWithLowestUnit;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkStackRegisterInterfaceWithUnit;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkStackUserCommand;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkStackUserCommandKey;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkStatsKey;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkSupportedPacketFilters;
-#[cfg(feature = "network")]
-pub use self::__network::kIONetworkUserClientTypeID;
-#[cfg(feature = "network")]
-pub use self::__network::kIOOutputQueueStatsKey;
-#[cfg(feature = "network")]
-pub use self::__network::kIOPacketFilterBroadcast;
-#[cfg(feature = "network")]
-pub use self::__network::kIOPacketFilterMulticast;
-#[cfg(feature = "network")]
-pub use self::__network::kIOPacketFilterMulticastAll;
-#[cfg(feature = "network")]
-pub use self::__network::kIOPacketFilterPromiscuous;
-#[cfg(feature = "network")]
-pub use self::__network::kIOPacketFilterPromiscuousAll;
-#[cfg(feature = "network")]
-pub use self::__network::kIOPacketFilterUnicast;
-#[cfg(feature = "network")]
-pub use self::__network::kIOPacketFilters;
-#[cfg(feature = "network")]
-pub use self::__network::kIOPrimaryInterface;
-#[cfg(feature = "network")]
-pub use self::__network::kIORequiredPacketFilters;
-#[cfg(feature = "network")]
-pub use self::__network::kIORevision;
-#[cfg(feature = "network")]
-pub use self::__network::kIOSelectedMedium;
-#[cfg(feature = "network")]
-pub use self::__network::kIOVendor;
-#[cfg(feature = "network")]
-pub use self::__network::IODot3CollEntry;
-#[cfg(feature = "network")]
-pub use self::__network::IODot3RxExtraEntry;
-#[cfg(feature = "network")]
-pub use self::__network::IODot3StatsEntry;
-#[cfg(feature = "network")]
-pub use self::__network::IODot3TxExtraEntry;
-#[cfg(feature = "network")]
-pub use self::__network::IOEthernetStats;
-#[cfg(feature = "network")]
-pub use self::__network::IOMediumType;
-#[cfg(feature = "network")]
-pub use self::__network::IONDHandle;
-#[cfg(all(feature = "libc", feature = "network"))]
-pub use self::__network::IONetworkClose;
-#[cfg(all(feature = "libc", feature = "network"))]
-pub use self::__network::IONetworkGetDataCapacity;
-#[cfg(all(feature = "libc", feature = "network"))]
-pub use self::__network::IONetworkGetDataHandle;
-#[cfg(all(feature = "libc", feature = "network"))]
-pub use self::__network::IONetworkGetPacketFiltersMask;
-#[cfg(all(feature = "libc", feature = "network"))]
-pub use self::__network::IONetworkOpen;
-#[cfg(all(feature = "libc", feature = "network"))]
-pub use self::__network::IONetworkReadData;
-#[cfg(all(feature = "libc", feature = "network"))]
-pub use self::__network::IONetworkResetData;
-#[cfg(all(feature = "libc", feature = "network"))]
-pub use self::__network::IONetworkSetPacketFiltersMask;
-#[cfg(feature = "network")]
-pub use self::__network::IONetworkStats;
-#[cfg(all(feature = "libc", feature = "network"))]
-pub use self::__network::IONetworkWriteData;
-#[cfg(feature = "network")]
-pub use self::__network::IOOutputQueueStats;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPMACPowerKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPMBatteryPowerKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPMUPSPowerKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSACPowerValue;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSBatteryFailureModesKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSBatteryHealthConditionKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSBatteryHealthKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSBatteryPowerValue;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSCheckBatteryValue;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSCommandDelayedRemovePowerKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSCommandEnableAudibleAlarmKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSCommandSendCurrentStateOfCharge;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSCommandSendCurrentTemperature;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSCommandSetCurrentLimitKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSCommandSetRequiredVoltageKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSCommandStartupDelayKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSCurrentCapacityKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSCurrentKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSDeadWarnLevelKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSDesignCapacityKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSDynamicStorePath;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureCellImbalance;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureChargeFET;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureChargeOverCurrent;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureChargeOverTemp;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureDataFlushFault;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureDischargeFET;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureDischargeOverCurrent;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureDischargeOverTemp;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureExternalInput;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureFuseBlown;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureOpenThermistor;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailurePeriodicAFEComms;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailurePermanentAFEComms;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFailureSafetyOverVoltage;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSFairValue;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSGoodValue;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSHardwareSerialNumberKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSHealthConfidenceKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSInternalBatteryType;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSInternalFailureKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSInternalType;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSIsChargedKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSIsChargingKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSIsFinishingChargeKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSIsPresentKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSLowWarnLevelKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSMaxCapacityKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSMaxErrKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSNameKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSNetworkTransportType;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSNominalCapacityKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSNotifyAnyPowerSource;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSNotifyAttach;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSNotifyLowBattery;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSNotifyPowerSource;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSNotifyTimeRemaining;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSOffLineValue;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPermanentFailureValue;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPoorValue;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPowerAdapterCurrentKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPowerAdapterFamilyKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPowerAdapterIDKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPowerAdapterRevisionKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPowerAdapterSerialNumberKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPowerAdapterSourceKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPowerAdapterWattsKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPowerSourceIDKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSPowerSourceStateKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSProductIDKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSSerialTransportType;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSTemperatureKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSTimeRemainingNotificationKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSTimeRemainingUnknown;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSTimeRemainingUnlimited;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSTimeToEmptyKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSTimeToFullChargeKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSTransportTypeKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSTypeKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSUPSManagementClaimed;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSUPSType;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSUSBTransportType;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSVendorDataKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSVendorIDKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::kIOPSVoltageKey;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPSCopyExternalPowerAdapterDetails;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPSCopyPowerSourcesInfo;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPSCopyPowerSourcesList;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPSCreateLimitedPowerNotification;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPSGetBatteryWarningLevel;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPSGetPowerSourceDescription;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPSGetProvidingPowerSourceType;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPSGetTimeRemainingEstimate;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPSLowBatteryWarningLevel;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPSNotificationCreateRunLoopSource;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOPowerSourceCallbackType;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOUPSEventCallbackFunction;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOUPSPlugInInterface;
-#[cfg(feature = "ps")]
-pub use self::__ps::IOUPSPlugInInterface_v140;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kAppleClamshellCausesSleepKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kAppleClamshellStateKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kClamshellSleepBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kClamshellStateBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOBatteryAmperageKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOBatteryCapacityKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOBatteryCharge;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOBatteryChargerConnect;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOBatteryCurrentChargeKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOBatteryCycleCountKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOBatteryFlagsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOBatteryInfoKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOBatteryInstalled;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOBatteryVoltageKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMACInstalled;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMACnoChargeCapability;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAckImplied;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAllowSleep;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAssertionLevelOff;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAssertionLevelOn;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAssertionsDriverDetailedKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAssertionsDriverKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAutoPowerOn;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAutoRestart;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAutoShutdown;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAutoSleep;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAutoWake;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAutoWakeOrPowerOn;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMAuxPowerOn;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBadSpecification;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBatteryAtWarn;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBatteryChargeStatusGradient;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBatteryChargeStatusTooCold;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBatteryChargeStatusTooHot;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBatteryChargeStatusTooHotOrCold;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBatteryCharging;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBatteryDepleted;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBatteryInstalled;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBootSessionUUIDKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMBroadcastAggressiveness;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMCPUPowerLimitProcessorCountKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMCPUPowerLimitProcessorSpeedKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMCPUPowerLimitSchedulerTimeKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMCPUPowerLimitsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMCPUPowerNotificationKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMCannotRaisePower;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMCapabilitiesMask;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMChildClamp;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMChildClamp2;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMClamshellClosed;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMClamshellOpened;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMClamshellStateOnWake;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMClockNormal;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMClockRunning;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMClosedClamshell;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMConfigRetained;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMContextRetained;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDWOverTemp;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDeepSleepDelayHighKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDeepSleepDelayKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDeepSleepEnabledKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDestroyFVKeyOnStandbyKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDeviceNameKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDeviceUsable;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDisableClamshell;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDoze;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionAssertedKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionBluetoothHIDDevicePairedBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionCPUBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionCreatedTimeKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionExternalMediaMountedBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionForceFullWakeupBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionForceWakeupBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionIDKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionLevelKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionMagicPacketWakeEnabledBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionModifiedTimeKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionNetworkKeepAliveActiveBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionOwnerServiceKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionOwnerStringKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionPreventDisplaySleepBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionPreventSystemIdleSleepBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionRegistryEntryIDKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionReservedBit5;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionReservedBit7;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMDriverAssertionUSBExternalDeviceBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMEnableClamshell;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMExternalPower;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMFairValue;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMForceLowSpeed;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMFullyChargedKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMGoodValue;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMGraphicsPowerLimitPerformanceKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMGraphicsPowerLimitsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMHighestState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMInitialDeviceState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMInternalPower;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMLowPower;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMLowestState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMMaxPerformance;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMMaxPowerStates;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMMessageBatteryStatusHasChanged;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMMessageClamshellStateChange;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMMessageDarkWakeThermalEmergency;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMMessageDriverAssertionsChanged;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMMessageFeatureChange;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMMessageInternalBatteryFullyDischarged;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMMessageSleepWakeUUIDChange;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMMessageSystemPowerEventOccurred;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMNextHigherState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMNextLowerState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMNoErr;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMNoSuchState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMNotAttainable;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMNotPowerManaged;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMNotYetInitialized;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMNullAssertionID;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMOverTemp;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsAmperageKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsCloakedKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsDescriptionKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsErrorFlagsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsFamilyKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsIDKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsPMUConfigurationKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsRevisionKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsSerialNumberKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsSharedSourceKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsSourceIDKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsVoltage;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterDetailsWattsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAdapterInfoKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAmperageKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAtCriticalLevelKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSAtWarnLevelKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSBatteryChargeStatusKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSBatteryHealthKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSBatteryInstalledKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSBatteryTemperatureKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSCapacityEstimatedKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSChargerConfigurationKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSCurrentCapacityKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSCycleCountKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSDesignCapacityKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSErrorConditionKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSExternalChargeCapableKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSExternalConnectedKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSHealthConfidenceKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSInvalidWakeSecondsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSIsChargingKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSLegacyBatteryInfoKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSLocationKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSLocationLeft;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSLocationRight;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSManufactureDateKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSManufacturerKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSMaxCapacityKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSMaxErrKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSModelKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSPostChargeWaitSecondsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSPostDishargeWaitSecondsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSSerialKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSTimeRemainingKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPSVoltageKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMParameterError;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPassThrough;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPoorValue;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPowerButton;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPowerButtonUp;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPowerEmergency;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPowerEventAppNameKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPowerEventAppPIDKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPowerEventTimeKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPowerEventTypeKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPowerOn;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPreventIdleSleep;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPreventSleep;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMPreventSystemSleep;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMProModeDisengaged;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMProModeEngaged;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMProcessorSpeedChange;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMRawLowBattery;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMResetPowerStateOnWakeKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMRestart;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMRestartCapability;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMRootDomainState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingAutoPowerCalendarKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingAutoPowerSecondsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingAutoWakeCalendarKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingAutoWakeSecondsKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingDebugPowerRelativeKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingDebugWakeRelativeKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingDisplaySleepUsesDimKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingGraphicsSwitchKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingMaintenanceWakeCalendarKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingMobileMotionModuleKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingProModeControl;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingProModeDefer;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingReduceBrightnessKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingRestartOnPowerLossKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingSleepOnPowerButtonKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingTimeZoneOffsetKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingWakeOnACChangeKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingWakeOnClamshellKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSettingWakeOnRingKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSleep;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSleepCapability;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSleepNow;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSleepWakeUUIDKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSoftSleep;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMStandbyBatteryThresholdKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMStaticPowerValid;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSystemCapabilityAOT;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSystemCapabilityAudio;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSystemCapabilityCPU;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSystemCapabilityDidChange;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSystemCapabilityGraphics;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSystemCapabilityNetwork;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMSystemCapabilityWillChange;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalLevelCritical;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalLevelDanger;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalLevelNormal;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalLevelTrap;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalLevelUnknown;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalLevelWarning;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalLevelWarningKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalWarningLevelCrisis;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalWarningLevelDanger;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalWarningLevelNormal;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMThermalWarningNotificationKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMUMessageLegacyAutoPower;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMUMessageLegacyAutoWake;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMUPSInstalled;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMUndefinedValue;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMUnidleDevice;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMUnknown;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPMWillAckLater;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSAdapterErrorFlagDeviceNeedsToBeRepositioned;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSAdapterErrorFlagForeignObjectDetected;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSAdapterErrorFlagInsufficientAvailablePower;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSAdapterErrorFlagNoErrors;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeAC;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeDisconnected;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeExternal;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeExternal2;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeExternal3;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeExternal4;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeExternal5;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeExternal6;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeExternal7;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeExternal8;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeFirewire;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBAdapter;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBCBrick;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBCPD;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBCTypeC;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBChargingPort;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBChargingPortDedicated;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBChargingPortDownstream;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBDevice;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBHost;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBHostSuspended;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUSBUnknown;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOPSFamilyCodeUnsupportedRegion;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOREMSleepEnabledKey;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOSystemLoadAdvisoryLevelBad;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOSystemLoadAdvisoryLevelGreat;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOSystemLoadAdvisoryLevelOK;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kIOSystemLoadAdvisoryNotifyName;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kInflowForciblyEnabledBit;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kMaxType;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kNumPMMethods;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMActivityTickle;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMAllowPowerChange;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMCancelPowerChange;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMEthernetWakeOnLANSettings;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMGeneralAggressiveness;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMGetAggressiveness;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMGetSystemSleepType;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMLastAggressivenessType;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMMinutesToDim;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMMinutesToSleep;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMMinutesToSpinDown;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMMotionSensor;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMPowerSource;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMRequestIdleSleepRevert;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMRestartSystem;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSetAggressiveness;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSetClamshellSleepState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSetDisplayPowerOn;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSetDisplayState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSetLDMHibernationDisable;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSetMaintenanceWakeCalendar;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSetProcessorSpeed;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSetUserAssertionLevels;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMShutdownSystem;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSleepSystem;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSleepSystemOptions;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSleepWakeDebugTrig;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::kPMSleepWakeWatchdogEnable;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::sleepWakeNote;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IOAllowPowerChange;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IOCancelPowerChange;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOCopySystemLoadAdvisoryDetailed;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IODeregisterApp;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IODeregisterForSystemPower;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOGetSystemLoadAdvisory;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAckImplied;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionCopyProperties;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionCreate;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionCreateWithDescription;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionCreateWithName;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionCreateWithProperties;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionDeclareUserActivity;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionID;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionLevel;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionRelease;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionRetain;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAssertionSetProperty;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMAuxPowerOn;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMBadSpecification;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMCalendarStruct;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMCancelScheduledPowerEvent;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMCannotRaisePower;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMClockNormal;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMClockRunning;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMConfigRetained;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMContextRetained;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMCopyAssertionsByProcess;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMCopyAssertionsStatus;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IOPMCopyBatteryInfo;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMCopyCPUPowerStatus;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMCopyScheduledPowerEvents;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMDeclareNetworkClientActivity;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMDeviceUsable;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IOPMFindPowerManagement;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IOPMGetAggressiveness;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMGetThermalWarningLevel;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMHighestState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMLowestState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMMaxPerformance;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMMaxPowerStates;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMNextHigherState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMNextLowerState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMNoErr;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMNoSuchState;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMNotAttainable;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMNotPowerManaged;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMNotYetInitialized;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMParameterError;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMPowerFlags;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMPowerOn;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMSchedulePowerEvent;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IOPMSetAggressiveness;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IOPMSleepEnabled;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IOPMSleepSystem;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMSoftSleep;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMSystemCapabilityChangeParameters;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMUserActiveType;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPMWillAckLater;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOPowerStateChangeNotification;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IORegisterApp;
-#[cfg(all(feature = "libc", feature = "pwr_mgt"))]
-pub use self::__pwr_mgt::IORegisterForSystemPower;
-#[cfg(feature = "pwr_mgt")]
-pub use self::__pwr_mgt::IOSystemLoadAdvisoryLevel;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIOCalloutDeviceKey;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIODialinDeviceKey;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIOSerialBSDAllTypes;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIOSerialBSDModemType;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIOSerialBSDRS232Type;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIOSerialBSDServiceValue;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIOSerialBSDTypeKey;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIOTTYBaseNameKey;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIOTTYDeviceKey;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIOTTYSuffixKey;
-#[cfg(feature = "serial")]
-pub use self::__serial::kIOTTYWaitForIdleKey;
-#[cfg(feature = "serial")]
-pub use self::__serial::user_shspeed_t;
-#[cfg(feature = "serial")]
-pub use self::__serial::user_speed_t;
-#[cfg(feature = "serial")]
-pub use self::__serial::user_ul_t;
-#[cfg(feature = "serial")]
-pub use self::__serial::user_us_t;
 #[cfg(feature = "usb")]
 pub use self::__usb::*;
 use core::cell::UnsafeCell;
@@ -8819,48 +7474,6 @@ use objc2_core_foundation::*;
 
 use crate::*;
 
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_common?language=objc)
-pub const sub_iokit_common: c_uint = err_sub!(0);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_usb?language=objc)
-pub const sub_iokit_usb: c_uint = err_sub!(1);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_firewire?language=objc)
-pub const sub_iokit_firewire: c_uint = err_sub!(2);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_block_storage?language=objc)
-pub const sub_iokit_block_storage: c_uint = err_sub!(4);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_graphics?language=objc)
-pub const sub_iokit_graphics: c_uint = err_sub!(5);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_networking?language=objc)
-pub const sub_iokit_networking: c_uint = err_sub!(6);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_bluetooth?language=objc)
-pub const sub_iokit_bluetooth: c_uint = err_sub!(8);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_pmu?language=objc)
-pub const sub_iokit_pmu: c_uint = err_sub!(9);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_acpi?language=objc)
-pub const sub_iokit_acpi: c_uint = err_sub!(10);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_smbus?language=objc)
-pub const sub_iokit_smbus: c_uint = err_sub!(11);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_ahci?language=objc)
-pub const sub_iokit_ahci: c_uint = err_sub!(12);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_powermanagement?language=objc)
-pub const sub_iokit_powermanagement: c_uint = err_sub!(13);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_hidsystem?language=objc)
-pub const sub_iokit_hidsystem: c_uint = err_sub!(14);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_scsi?language=objc)
-pub const sub_iokit_scsi: c_uint = err_sub!(16);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_usbaudio?language=objc)
-pub const sub_iokit_usbaudio: c_uint = err_sub!(17);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_wirelesscharging?language=objc)
-pub const sub_iokit_wirelesscharging: c_uint = err_sub!(18);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_graphics_acceleration?language=objc)
-pub const sub_iokit_graphics_acceleration: c_uint = err_sub!(30);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_keystore?language=objc)
-pub const sub_iokit_keystore: c_uint = err_sub!(31);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_apfs?language=objc)
-pub const sub_iokit_apfs: c_uint = err_sub!(33);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_acpiec?language=objc)
-pub const sub_iokit_acpiec: c_uint = err_sub!(34);
-/// [Apple's documentation](https://developer.apple.com/documentation/iokit/sub_iokit_timesync_avb?language=objc)
-pub const sub_iokit_timesync_avb: c_uint = err_sub!(35);
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kioreturnerror?language=objc)
 pub const kIOReturnError: c_uint = iokit_common_err!(0x2bc);
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kioreturnnomemory?language=objc)
@@ -9774,7 +8387,7 @@ pub const kOSAsyncRefSize: c_uint = 32;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/ioserviceinterestcontent?language=objc)
 #[cfg(feature = "libc")]
-#[repr(C, packed(4))]
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOServiceInterestContent {
     pub messageType: libc::natural_t,
@@ -9795,7 +8408,7 @@ unsafe impl RefEncode for IOServiceInterestContent {
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/ioasynccompletioncontent?language=objc)
-#[repr(C, packed(4))]
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOAsyncCompletionContent {
     pub result: IOReturn,
@@ -9885,10 +8498,6 @@ extern "C-unwind" {
     /// Parameter `mainPort`: The main port is returned.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// `main_port` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOMainPort(
         bootstrap_port: libc::mach_port_t,
@@ -9901,16 +8510,11 @@ extern "C" {
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/iokit/kiomasterportdefault?language=objc)
     #[cfg(feature = "libc")]
-    #[deprecated]
     pub static kIOMasterPortDefault: libc::mach_port_t;
 }
 
 extern "C-unwind" {
     /// Deprecated name for IOMainPort().
-    ///
-    /// # Safety
-    ///
-    /// `main_port` must be a valid pointer.
     #[cfg(feature = "libc")]
     #[deprecated]
     pub fn IOMasterPort(
@@ -9930,7 +8534,7 @@ impl IONotificationPort {
     #[doc(alias = "IONotificationPortCreate")]
     #[cfg(feature = "libc")]
     #[inline]
-    pub fn create(main_port: libc::mach_port_t) -> IONotificationPortRef {
+    pub unsafe fn create(main_port: libc::mach_port_t) -> IONotificationPortRef {
         extern "C-unwind" {
             fn IONotificationPortCreate(main_port: libc::mach_port_t) -> IONotificationPortRef;
         }
@@ -9956,10 +8560,6 @@ impl IONotificationPort {
     /// </code>
     ///
     /// Parameter `notify`: A reference to the notification object.
-    ///
-    /// # Safety
-    ///
-    /// `notify` must be a valid pointer.
     #[doc(alias = "IONotificationPortDestroy")]
     #[inline]
     pub unsafe fn destroy(notify: IONotificationPortRef) {
@@ -9988,10 +8588,6 @@ impl IONotificationPort {
     /// Parameter `notify`: The notification object.
     ///
     /// Returns: A CFRunLoopSourceRef for the notification object.
-    ///
-    /// # Safety
-    ///
-    /// `notify` must be a valid pointer.
     #[doc(alias = "IONotificationPortGetRunLoopSource")]
     #[inline]
     pub unsafe fn run_loop_source(
@@ -10027,10 +8623,6 @@ impl IONotificationPort {
     /// Parameter `notify`: The notification object.
     ///
     /// Returns: A mach_port for the notification object.
-    ///
-    /// # Safety
-    ///
-    /// `notify` must be a valid pointer.
     #[doc(alias = "IONotificationPortGetMachPort")]
     #[cfg(feature = "libc")]
     #[inline]
@@ -10051,10 +8643,6 @@ impl IONotificationPort {
     /// Parameter `notify`: The notification object.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// `notify` must be a valid pointer.
     #[doc(alias = "IONotificationPortSetImportanceReceiver")]
     #[cfg(feature = "libc")]
     #[inline]
@@ -10074,12 +8662,6 @@ impl IONotificationPort {
     /// Parameter `notify`: The notification object.
     ///
     /// Parameter `queue`: A dispatch queue.
-    ///
-    /// # Safety
-    ///
-    /// - `notify` must be a valid pointer.
-    /// - `queue` possibly has additional threading requirements.
-    /// - `queue` might not allow `None`.
     #[doc(alias = "IONotificationPortSetDispatchQueue")]
     #[cfg(feature = "dispatch2")]
     #[inline]
@@ -10108,10 +8690,6 @@ extern "C-unwind" {
     /// Parameter `recvPort`: The created port is returned.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// `recv_port` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOCreateReceivePort(
         msg_type: u32,
@@ -10119,36 +8697,28 @@ extern "C-unwind" {
     ) -> libc::kern_return_t;
 }
 
-/// Releases an object handle previously returned by IOKitLib.
-///
-/// All objects returned by IOKitLib should be released with this function when access to them is no longer needed. Using the object after it has been released may or may not return an error, depending on how many references the task has to the same object in the kernel.
-///
-/// Parameter `object`: The IOKit object to release.
-///
-/// Returns: A kern_return_t error code.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOObjectRelease(object: io_object_t) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOObjectRelease(object: io_object_t) -> libc::kern_return_t;
-    }
-    unsafe { IOObjectRelease(object) }
+extern "C-unwind" {
+    /// Releases an object handle previously returned by IOKitLib.
+    ///
+    /// All objects returned by IOKitLib should be released with this function when access to them is no longer needed. Using the object after it has been released may or may not return an error, depending on how many references the task has to the same object in the kernel.
+    ///
+    /// Parameter `object`: The IOKit object to release.
+    ///
+    /// Returns: A kern_return_t error code.
+    #[cfg(feature = "libc")]
+    pub fn IOObjectRelease(object: io_object_t) -> libc::kern_return_t;
 }
 
-/// Retains an object handle previously returned by IOKitLib.
-///
-/// Gives the caller an additional reference to an existing object handle previously returned by IOKitLib.
-///
-/// Parameter `object`: The IOKit object to retain.
-///
-/// Returns: A kern_return_t error code.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOObjectRetain(object: io_object_t) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOObjectRetain(object: io_object_t) -> libc::kern_return_t;
-    }
-    unsafe { IOObjectRetain(object) }
+extern "C-unwind" {
+    /// Retains an object handle previously returned by IOKitLib.
+    ///
+    /// Gives the caller an additional reference to an existing object handle previously returned by IOKitLib.
+    ///
+    /// Parameter `object`: The IOKit object to retain.
+    ///
+    /// Returns: A kern_return_t error code.
+    #[cfg(feature = "libc")]
+    pub fn IOObjectRetain(object: io_object_t) -> libc::kern_return_t;
 }
 
 extern "C-unwind" {
@@ -10161,10 +8731,6 @@ extern "C-unwind" {
     /// Parameter `className`: Caller allocated buffer to receive the name string.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// `class_name` Array TODO.
     #[cfg(feature = "libc")]
     pub fn IOObjectGetClass(object: io_object_t, class_name: io_name_t) -> libc::kern_return_t;
 }
@@ -10178,7 +8744,9 @@ extern "C-unwind" {
 /// Returns: The resulting CFStringRef. This should be released by the caller. If a valid object is not passed in, then NULL is returned.
 #[cfg(feature = "libc")]
 #[inline]
-pub extern "C-unwind" fn IOObjectCopyClass(object: io_object_t) -> Option<CFRetained<CFString>> {
+pub unsafe extern "C-unwind" fn IOObjectCopyClass(
+    object: io_object_t,
+) -> Option<CFRetained<CFString>> {
     extern "C-unwind" {
         fn IOObjectCopyClass(object: io_object_t) -> Option<NonNull<CFString>>;
     }
@@ -10193,10 +8761,6 @@ pub extern "C-unwind" fn IOObjectCopyClass(object: io_object_t) -> Option<CFReta
 /// Parameter `classname`: The name of the class as a CFString.
 ///
 /// Returns: The resulting CFStringRef. This should be released by the caller. If there is no superclass, or a valid class name is not passed in, then NULL is returned.
-///
-/// # Safety
-///
-/// `classname` might not allow `None`.
 #[inline]
 pub unsafe extern "C-unwind" fn IOObjectCopySuperclassForClass(
     classname: Option<&CFString>,
@@ -10217,10 +8781,6 @@ pub unsafe extern "C-unwind" fn IOObjectCopySuperclassForClass(
 /// Parameter `classname`: The name of the class as a CFString.
 ///
 /// Returns: The resulting CFStringRef. This should be released by the caller. If a valid class name is not passed in, then NULL is returned.
-///
-/// # Safety
-///
-/// `classname` might not allow `None`.
 #[inline]
 pub unsafe extern "C-unwind" fn IOObjectCopyBundleIdentifierForClass(
     classname: Option<&CFString>,
@@ -10243,10 +8803,6 @@ pub unsafe extern "C-unwind" fn IOObjectCopyBundleIdentifierForClass(
 /// Parameter `className`: The name of the class, as a C-string.
 ///
 /// Returns: If the object handle is valid, and represents an object in the kernel that dynamic casts to the class true is returned, otherwise false.
-///
-/// # Safety
-///
-/// `class_name` Array TODO.
 #[cfg(feature = "libc")]
 #[inline]
 pub unsafe extern "C-unwind" fn IOObjectConformsTo(
@@ -10271,7 +8827,10 @@ pub unsafe extern "C-unwind" fn IOObjectConformsTo(
 /// Returns: If both object handles are valid, and represent the same object in the kernel true is returned, otherwise false.
 #[cfg(feature = "libc")]
 #[inline]
-pub extern "C-unwind" fn IOObjectIsEqualTo(object: io_object_t, an_object: io_object_t) -> bool {
+pub unsafe extern "C-unwind" fn IOObjectIsEqualTo(
+    object: io_object_t,
+    an_object: io_object_t,
+) -> bool {
     extern "C-unwind" {
         fn IOObjectIsEqualTo(object: io_object_t, an_object: io_object_t) -> libc::boolean_t;
     }
@@ -10279,82 +8838,62 @@ pub extern "C-unwind" fn IOObjectIsEqualTo(object: io_object_t, an_object: io_ob
     ret != 0
 }
 
-/// Returns kernel retain count of an IOKit object.
-///
-/// This function may be used in diagnostics to determine the current retain count of the kernel object at the kernel level.
-///
-/// Parameter `object`: An IOKit object.
-///
-/// Returns: If the object handle is valid, the kernel objects retain count is returned, otherwise zero is returned.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOObjectGetKernelRetainCount(object: io_object_t) -> u32 {
-    extern "C-unwind" {
-        fn IOObjectGetKernelRetainCount(object: io_object_t) -> u32;
-    }
-    unsafe { IOObjectGetKernelRetainCount(object) }
+extern "C-unwind" {
+    /// Returns kernel retain count of an IOKit object.
+    ///
+    /// This function may be used in diagnostics to determine the current retain count of the kernel object at the kernel level.
+    ///
+    /// Parameter `object`: An IOKit object.
+    ///
+    /// Returns: If the object handle is valid, the kernel objects retain count is returned, otherwise zero is returned.
+    #[cfg(feature = "libc")]
+    pub fn IOObjectGetKernelRetainCount(object: io_object_t) -> u32;
 }
 
-/// Returns the retain count for the current process of an IOKit object.
-///
-/// This function may be used in diagnostics to determine the current retain count for the calling process of the kernel object.
-///
-/// Parameter `object`: An IOKit object.
-///
-/// Returns: If the object handle is valid, the objects user retain count is returned, otherwise zero is returned.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOObjectGetUserRetainCount(object: io_object_t) -> u32 {
-    extern "C-unwind" {
-        fn IOObjectGetUserRetainCount(object: io_object_t) -> u32;
-    }
-    unsafe { IOObjectGetUserRetainCount(object) }
+extern "C-unwind" {
+    /// Returns the retain count for the current process of an IOKit object.
+    ///
+    /// This function may be used in diagnostics to determine the current retain count for the calling process of the kernel object.
+    ///
+    /// Parameter `object`: An IOKit object.
+    ///
+    /// Returns: If the object handle is valid, the objects user retain count is returned, otherwise zero is returned.
+    #[cfg(feature = "libc")]
+    pub fn IOObjectGetUserRetainCount(object: io_object_t) -> u32;
 }
 
-/// Returns kernel retain count of an IOKit object. Identical to IOObjectGetKernelRetainCount() but available prior to Mac OS 10.6.
-///
-/// This function may be used in diagnostics to determine the current retain count of the kernel object at the kernel level.
-///
-/// Parameter `object`: An IOKit object.
-///
-/// Returns: If the object handle is valid, the kernel objects retain count is returned, otherwise zero is returned.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOObjectGetRetainCount(object: io_object_t) -> u32 {
-    extern "C-unwind" {
-        fn IOObjectGetRetainCount(object: io_object_t) -> u32;
-    }
-    unsafe { IOObjectGetRetainCount(object) }
+extern "C-unwind" {
+    /// Returns kernel retain count of an IOKit object. Identical to IOObjectGetKernelRetainCount() but available prior to Mac OS 10.6.
+    ///
+    /// This function may be used in diagnostics to determine the current retain count of the kernel object at the kernel level.
+    ///
+    /// Parameter `object`: An IOKit object.
+    ///
+    /// Returns: If the object handle is valid, the kernel objects retain count is returned, otherwise zero is returned.
+    #[cfg(feature = "libc")]
+    pub fn IOObjectGetRetainCount(object: io_object_t) -> u32;
 }
 
-/// Returns the next object in an iteration.
-///
-/// This function returns the next object in an iteration, or zero if no more remain or the iterator is invalid.
-///
-/// Parameter `iterator`: An IOKit iterator handle.
-///
-/// Returns: If the iterator handle is valid, the next element in the iteration is returned, otherwise zero is returned. The element should be released by the caller when it is finished.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOIteratorNext(iterator: io_iterator_t) -> io_object_t {
-    extern "C-unwind" {
-        fn IOIteratorNext(iterator: io_iterator_t) -> io_object_t;
-    }
-    unsafe { IOIteratorNext(iterator) }
+extern "C-unwind" {
+    /// Returns the next object in an iteration.
+    ///
+    /// This function returns the next object in an iteration, or zero if no more remain or the iterator is invalid.
+    ///
+    /// Parameter `iterator`: An IOKit iterator handle.
+    ///
+    /// Returns: If the iterator handle is valid, the next element in the iteration is returned, otherwise zero is returned. The element should be released by the caller when it is finished.
+    #[cfg(feature = "libc")]
+    pub fn IOIteratorNext(iterator: io_iterator_t) -> io_object_t;
 }
 
-/// Resets an iteration back to the beginning.
-///
-/// If an iterator is invalid, or if the caller wants to start over, IOIteratorReset will set the iteration back to the beginning.
-///
-/// Parameter `iterator`: An IOKit iterator handle.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOIteratorReset(iterator: io_iterator_t) {
-    extern "C-unwind" {
-        fn IOIteratorReset(iterator: io_iterator_t);
-    }
-    unsafe { IOIteratorReset(iterator) }
+extern "C-unwind" {
+    /// Resets an iteration back to the beginning.
+    ///
+    /// If an iterator is invalid, or if the caller wants to start over, IOIteratorReset will set the iteration back to the beginning.
+    ///
+    /// Parameter `iterator`: An IOKit iterator handle.
+    #[cfg(feature = "libc")]
+    pub fn IOIteratorReset(iterator: io_iterator_t);
 }
 
 /// Checks an iterator is still valid.
@@ -10366,7 +8905,7 @@ pub extern "C-unwind" fn IOIteratorReset(iterator: io_iterator_t) {
 /// Returns: True if the iterator handle is valid, otherwise false is returned.
 #[cfg(feature = "libc")]
 #[inline]
-pub extern "C-unwind" fn IOIteratorIsValid(iterator: io_iterator_t) -> bool {
+pub unsafe extern "C-unwind" fn IOIteratorIsValid(iterator: io_iterator_t) -> bool {
     extern "C-unwind" {
         fn IOIteratorIsValid(iterator: io_iterator_t) -> libc::boolean_t;
     }
@@ -10375,14 +8914,7 @@ pub extern "C-unwind" fn IOIteratorIsValid(iterator: io_iterator_t) -> bool {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `notification_type` Array TODO.
-    /// - `matching` generics must be of the correct type.
-    /// - `matching` might not allow `None`.
-    /// - `notification` must be a valid pointer.
     #[cfg(feature = "libc")]
-    #[deprecated]
     pub fn IOServiceAddNotification(
         main_port: libc::mach_port_t,
         notification_type: io_name_t,
@@ -10413,14 +8945,6 @@ extern "C-unwind" {
     /// Parameter `notification`: An object handle is returned on success, and should be released by the caller when the notification is to be destroyed.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `notify_port` must be a valid pointer.
-    /// - `interest_type` Array TODO.
-    /// - `callback` must be implemented correctly.
-    /// - `ref_con` must be a valid pointer.
-    /// - `notification` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOServiceAddInterestNotification(
         notify_port: IONotificationPortRef,
@@ -10444,12 +8968,6 @@ extern "C-unwind" {
     /// Parameter `matches`: The boolean result is returned.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `matching` generics must be of the correct type.
-    /// - `matching` might not allow `None`.
-    /// - `matches` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOServiceMatchPropertyTable(
         service: io_service_t,
@@ -10468,10 +8986,6 @@ extern "C-unwind" {
     /// Parameter `busyState`: The busyState count is returned.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// `busy_state` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOServiceGetBusyState(
         service: io_service_t,
@@ -10489,10 +9003,6 @@ extern "C-unwind" {
     /// Parameter `busyState`: The busyState count is returned.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// `busy_state` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOKitGetBusyState(
         main_port: libc::mach_port_t,
@@ -10516,10 +9026,6 @@ extern "C-unwind" {
     /// Parameter `connect`: An io_connect_t handle is returned on success, to be used with the IOConnectXXX APIs. It should be destroyed with IOServiceClose().
     ///
     /// Returns: A return code generated by IOService::newUserClient.
-    ///
-    /// # Safety
-    ///
-    /// `connect` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOServiceOpen(
         service: io_service_t,
@@ -10529,109 +9035,76 @@ extern "C-unwind" {
     ) -> libc::kern_return_t;
 }
 
-/// A request to rescan a bus for device changes.
-///
-/// A non kernel client may request a bus or controller rescan for added or removed devices, if the bus family does automatically notice such changes. For example, SCSI bus controllers do not notice device changes. The implementation of this routine is family dependent, and the default IOService implementation returns kIOReturnUnsupported.
-///
-/// Parameter `service`: The IOService object to request a rescan, usually obtained via the IOServiceGetMatchingServices or IOServiceAddNotification APIs.
-///
-/// Parameter `options`: An options mask, interpreted only by the IOService's family.
-///
-/// Returns: A return code generated by IOService::requestProbe.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOServiceRequestProbe(
-    service: io_service_t,
-    options: u32,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOServiceRequestProbe(service: io_service_t, options: u32) -> libc::kern_return_t;
-    }
-    unsafe { IOServiceRequestProbe(service, options) }
+extern "C-unwind" {
+    /// A request to rescan a bus for device changes.
+    ///
+    /// A non kernel client may request a bus or controller rescan for added or removed devices, if the bus family does automatically notice such changes. For example, SCSI bus controllers do not notice device changes. The implementation of this routine is family dependent, and the default IOService implementation returns kIOReturnUnsupported.
+    ///
+    /// Parameter `service`: The IOService object to request a rescan, usually obtained via the IOServiceGetMatchingServices or IOServiceAddNotification APIs.
+    ///
+    /// Parameter `options`: An options mask, interpreted only by the IOService's family.
+    ///
+    /// Returns: A return code generated by IOService::requestProbe.
+    #[cfg(feature = "libc")]
+    pub fn IOServiceRequestProbe(service: io_service_t, options: u32) -> libc::kern_return_t;
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kioserviceinteractionallowed?language=objc)
 pub const kIOServiceInteractionAllowed: c_uint = 0x00000001;
 
-/// Authorize access to an IOService.
-///
-/// Determine whether this application is authorized to invoke IOServiceOpen() for a given IOService, either by confirming that it has been previously authorized by the user, or by soliciting the console user.
-///
-/// Parameter `service`: The IOService object to be authorized, usually obtained via the IOServiceGetMatchingServices or IOServiceAddNotification APIs.
-///
-/// Parameter `options`: kIOServiceInteractionAllowed may be set to permit user interaction, if required.
-///
-/// Returns: kIOReturnSuccess if the IOService is authorized, kIOReturnNotPermitted if the IOService is not authorized.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOServiceAuthorize(
-    service: io_service_t,
-    options: u32,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOServiceAuthorize(service: io_service_t, options: u32) -> libc::kern_return_t;
-    }
-    unsafe { IOServiceAuthorize(service, options) }
+extern "C-unwind" {
+    /// Authorize access to an IOService.
+    ///
+    /// Determine whether this application is authorized to invoke IOServiceOpen() for a given IOService, either by confirming that it has been previously authorized by the user, or by soliciting the console user.
+    ///
+    /// Parameter `service`: The IOService object to be authorized, usually obtained via the IOServiceGetMatchingServices or IOServiceAddNotification APIs.
+    ///
+    /// Parameter `options`: kIOServiceInteractionAllowed may be set to permit user interaction, if required.
+    ///
+    /// Returns: kIOReturnSuccess if the IOService is authorized, kIOReturnNotPermitted if the IOService is not authorized.
+    #[cfg(feature = "libc")]
+    pub fn IOServiceAuthorize(service: io_service_t, options: u32) -> libc::kern_return_t;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOServiceOpenAsFileDescriptor(
-    service: io_service_t,
-    oflag: c_int,
-) -> c_int {
-    extern "C-unwind" {
-        fn IOServiceOpenAsFileDescriptor(service: io_service_t, oflag: c_int) -> c_int;
-    }
-    unsafe { IOServiceOpenAsFileDescriptor(service, oflag) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IOServiceOpenAsFileDescriptor(service: io_service_t, oflag: c_int) -> c_int;
 }
 
-/// Close a connection to an IOService and destroy the connect handle.
-///
-/// A connection created with the IOServiceOpen should be closed when the connection is no longer to be used with IOServiceClose.
-///
-/// Parameter `connect`: The connect handle created by IOServiceOpen. It will be destroyed by this function, and should not be released with IOObjectRelease.
-///
-/// Returns: A kern_return_t error code.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOServiceClose(connect: io_connect_t) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOServiceClose(connect: io_connect_t) -> libc::kern_return_t;
-    }
-    unsafe { IOServiceClose(connect) }
+extern "C-unwind" {
+    /// Close a connection to an IOService and destroy the connect handle.
+    ///
+    /// A connection created with the IOServiceOpen should be closed when the connection is no longer to be used with IOServiceClose.
+    ///
+    /// Parameter `connect`: The connect handle created by IOServiceOpen. It will be destroyed by this function, and should not be released with IOObjectRelease.
+    ///
+    /// Returns: A kern_return_t error code.
+    #[cfg(feature = "libc")]
+    pub fn IOServiceClose(connect: io_connect_t) -> libc::kern_return_t;
 }
 
-/// Adds a reference to the connect handle.
-///
-/// Adds a reference to the connect handle.
-///
-/// Parameter `connect`: The connect handle created by IOServiceOpen.
-///
-/// Returns: A kern_return_t error code.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectAddRef(connect: io_connect_t) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectAddRef(connect: io_connect_t) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectAddRef(connect) }
+extern "C-unwind" {
+    /// Adds a reference to the connect handle.
+    ///
+    /// Adds a reference to the connect handle.
+    ///
+    /// Parameter `connect`: The connect handle created by IOServiceOpen.
+    ///
+    /// Returns: A kern_return_t error code.
+    #[cfg(feature = "libc")]
+    pub fn IOConnectAddRef(connect: io_connect_t) -> libc::kern_return_t;
 }
 
-/// Remove a reference to the connect handle.
-///
-/// Removes a reference to the connect handle.  If the last reference is removed an implicit IOServiceClose is performed.
-///
-/// Parameter `connect`: The connect handle created by IOServiceOpen.
-///
-/// Returns: A kern_return_t error code.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectRelease(connect: io_connect_t) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectRelease(connect: io_connect_t) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectRelease(connect) }
+extern "C-unwind" {
+    /// Remove a reference to the connect handle.
+    ///
+    /// Removes a reference to the connect handle.  If the last reference is removed an implicit IOServiceClose is performed.
+    ///
+    /// Parameter `connect`: The connect handle created by IOServiceOpen.
+    ///
+    /// Returns: A kern_return_t error code.
+    #[cfg(feature = "libc")]
+    pub fn IOConnectRelease(connect: io_connect_t) -> libc::kern_return_t;
 }
 
 extern "C-unwind" {
@@ -10644,10 +9117,6 @@ extern "C-unwind" {
     /// Parameter `service`: On success, the service handle the connection was opened on, which should be released with IOObjectRelease.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// `service` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOConnectGetService(
         connect: io_connect_t,
@@ -10655,43 +9124,30 @@ extern "C-unwind" {
     ) -> libc::kern_return_t;
 }
 
-/// Set a port to receive family specific notifications.
-///
-/// This is a generic method to pass a mach port send right to be be used by family specific notifications.
-///
-/// Parameter `connect`: The connect handle created by IOServiceOpen.
-///
-/// Parameter `type`: The type of notification requested, not interpreted by IOKit and family defined.
-///
-/// Parameter `port`: The port to which to send notifications.
-///
-/// Parameter `reference`: Some families may support passing a reference parameter for the callers use with the notification.
-///
-/// Returns: A kern_return_t error code.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectSetNotificationPort(
-    connect: io_connect_t,
-    r#type: u32,
-    port: libc::mach_port_t,
-    reference: usize,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectSetNotificationPort(
-            connect: io_connect_t,
-            r#type: u32,
-            port: libc::mach_port_t,
-            reference: usize,
-        ) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectSetNotificationPort(connect, r#type, port, reference) }
+extern "C-unwind" {
+    /// Set a port to receive family specific notifications.
+    ///
+    /// This is a generic method to pass a mach port send right to be be used by family specific notifications.
+    ///
+    /// Parameter `connect`: The connect handle created by IOServiceOpen.
+    ///
+    /// Parameter `type`: The type of notification requested, not interpreted by IOKit and family defined.
+    ///
+    /// Parameter `port`: The port to which to send notifications.
+    ///
+    /// Parameter `reference`: Some families may support passing a reference parameter for the callers use with the notification.
+    ///
+    /// Returns: A kern_return_t error code.
+    #[cfg(feature = "libc")]
+    pub fn IOConnectSetNotificationPort(
+        connect: io_connect_t,
+        r#type: u32,
+        port: libc::mach_port_t,
+        reference: usize,
+    ) -> libc::kern_return_t;
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `at_address` must be a valid pointer.
-    /// - `of_size` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOConnectMapMemory(
         connect: io_connect_t,
@@ -10719,11 +9175,6 @@ extern "C-unwind" {
     /// Parameter `ofSize`: The size of the mapping created is passed back on success.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `at_address` must be a valid pointer.
-    /// - `of_size` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOConnectMapMemory64(
         connect: io_connect_t,
@@ -10778,11 +9229,6 @@ extern "C-unwind" {
     /// Parameter `properties`: A CF container - commonly a CFDictionary but this is not enforced. The container should consist of objects which are understood by IOKit - these are currently : CFDictionary, CFArray, CFSet, CFString, CFData, CFNumber, CFBoolean, and are passed in the kernel as the corresponding OSDictionary etc. objects.
     ///
     /// Returns: A kern_return_t error code returned by the family.
-    ///
-    /// # Safety
-    ///
-    /// - `properties` should be of the correct type.
-    /// - `properties` might not allow `None`.
     #[cfg(feature = "libc")]
     pub fn IOConnectSetCFProperties(
         connect: io_connect_t,
@@ -10802,12 +9248,6 @@ extern "C-unwind" {
     /// Parameter `property`: A CF container - should consist of objects which are understood by IOKit - these are currently : CFDictionary, CFArray, CFSet, CFString, CFData, CFNumber, CFBoolean, and are passed in the kernel as the corresponding OSDictionary etc. objects.
     ///
     /// Returns: A kern_return_t error code returned by the object.
-    ///
-    /// # Safety
-    ///
-    /// - `property_name` might not allow `None`.
-    /// - `property` should be of the correct type.
-    /// - `property` might not allow `None`.
     #[cfg(feature = "libc")]
     pub fn IOConnectSetCFProperty(
         connect: io_connect_t,
@@ -10817,14 +9257,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `input` must be a valid pointer.
-    /// - `input_struct` must be a valid pointer.
-    /// - `output` must be a valid pointer.
-    /// - `output_cnt` must be a valid pointer.
-    /// - `output_struct` must be a valid pointer.
-    /// - `output_struct_cnt` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOConnectCallMethod(
         connection: libc::mach_port_t,
@@ -10841,15 +9273,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `reference` must be a valid pointer.
-    /// - `input` must be a valid pointer.
-    /// - `input_struct` must be a valid pointer.
-    /// - `output` must be a valid pointer.
-    /// - `output_cnt` must be a valid pointer.
-    /// - `output_struct` must be a valid pointer.
-    /// - `output_struct_cnt` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOConnectCallAsyncMethod(
         connection: libc::mach_port_t,
@@ -10869,11 +9292,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `input_struct` must be a valid pointer.
-    /// - `output_struct` must be a valid pointer.
-    /// - `output_struct_cnt` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOConnectCallStructMethod(
         connection: libc::mach_port_t,
@@ -10886,12 +9304,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `reference` must be a valid pointer.
-    /// - `input_struct` must be a valid pointer.
-    /// - `output_struct` must be a valid pointer.
-    /// - `output_struct_cnt` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOConnectCallAsyncStructMethod(
         connection: libc::mach_port_t,
@@ -10907,11 +9319,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `input` must be a valid pointer.
-    /// - `output` must be a valid pointer.
-    /// - `output_cnt` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOConnectCallScalarMethod(
         connection: libc::mach_port_t,
@@ -10924,12 +9331,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `reference` must be a valid pointer.
-    /// - `input` must be a valid pointer.
-    /// - `output` must be a valid pointer.
-    /// - `output_cnt` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOConnectCallAsyncScalarMethod(
         connection: libc::mach_port_t,
@@ -10944,180 +9345,100 @@ extern "C-unwind" {
     ) -> libc::kern_return_t;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectTrap0(connect: io_connect_t, index: u32) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectTrap0(connect: io_connect_t, index: u32) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectTrap0(connect, index) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IOConnectTrap0(connect: io_connect_t, index: u32) -> libc::kern_return_t;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectTrap1(
-    connect: io_connect_t,
-    index: u32,
-    p1: usize,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectTrap1(connect: io_connect_t, index: u32, p1: usize) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectTrap1(connect, index, p1) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IOConnectTrap1(connect: io_connect_t, index: u32, p1: usize) -> libc::kern_return_t;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectTrap2(
-    connect: io_connect_t,
-    index: u32,
-    p1: usize,
-    p2: usize,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectTrap2(
-            connect: io_connect_t,
-            index: u32,
-            p1: usize,
-            p2: usize,
-        ) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectTrap2(connect, index, p1, p2) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IOConnectTrap2(
+        connect: io_connect_t,
+        index: u32,
+        p1: usize,
+        p2: usize,
+    ) -> libc::kern_return_t;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectTrap3(
-    connect: io_connect_t,
-    index: u32,
-    p1: usize,
-    p2: usize,
-    p3: usize,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectTrap3(
-            connect: io_connect_t,
-            index: u32,
-            p1: usize,
-            p2: usize,
-            p3: usize,
-        ) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectTrap3(connect, index, p1, p2, p3) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IOConnectTrap3(
+        connect: io_connect_t,
+        index: u32,
+        p1: usize,
+        p2: usize,
+        p3: usize,
+    ) -> libc::kern_return_t;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectTrap4(
-    connect: io_connect_t,
-    index: u32,
-    p1: usize,
-    p2: usize,
-    p3: usize,
-    p4: usize,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectTrap4(
-            connect: io_connect_t,
-            index: u32,
-            p1: usize,
-            p2: usize,
-            p3: usize,
-            p4: usize,
-        ) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectTrap4(connect, index, p1, p2, p3, p4) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IOConnectTrap4(
+        connect: io_connect_t,
+        index: u32,
+        p1: usize,
+        p2: usize,
+        p3: usize,
+        p4: usize,
+    ) -> libc::kern_return_t;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectTrap5(
-    connect: io_connect_t,
-    index: u32,
-    p1: usize,
-    p2: usize,
-    p3: usize,
-    p4: usize,
-    p5: usize,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectTrap5(
-            connect: io_connect_t,
-            index: u32,
-            p1: usize,
-            p2: usize,
-            p3: usize,
-            p4: usize,
-            p5: usize,
-        ) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectTrap5(connect, index, p1, p2, p3, p4, p5) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IOConnectTrap5(
+        connect: io_connect_t,
+        index: u32,
+        p1: usize,
+        p2: usize,
+        p3: usize,
+        p4: usize,
+        p5: usize,
+    ) -> libc::kern_return_t;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectTrap6(
-    connect: io_connect_t,
-    index: u32,
-    p1: usize,
-    p2: usize,
-    p3: usize,
-    p4: usize,
-    p5: usize,
-    p6: usize,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectTrap6(
-            connect: io_connect_t,
-            index: u32,
-            p1: usize,
-            p2: usize,
-            p3: usize,
-            p4: usize,
-            p5: usize,
-            p6: usize,
-        ) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectTrap6(connect, index, p1, p2, p3, p4, p5, p6) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IOConnectTrap6(
+        connect: io_connect_t,
+        index: u32,
+        p1: usize,
+        p2: usize,
+        p3: usize,
+        p4: usize,
+        p5: usize,
+        p6: usize,
+    ) -> libc::kern_return_t;
 }
 
-/// Inform a connection of a second connection.
-///
-/// This is a generic method to inform a family connection of a second connection, and is rarely used.
-///
-/// Parameter `connect`: The connect handle created by IOServiceOpen.
-///
-/// Parameter `client`: Another connect handle created by IOServiceOpen.
-///
-/// Returns: A kern_return_t error code returned by the family.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOConnectAddClient(
-    connect: io_connect_t,
-    client: io_connect_t,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOConnectAddClient(connect: io_connect_t, client: io_connect_t) -> libc::kern_return_t;
-    }
-    unsafe { IOConnectAddClient(connect, client) }
+extern "C-unwind" {
+    /// Inform a connection of a second connection.
+    ///
+    /// This is a generic method to inform a family connection of a second connection, and is rarely used.
+    ///
+    /// Parameter `connect`: The connect handle created by IOServiceOpen.
+    ///
+    /// Parameter `client`: Another connect handle created by IOServiceOpen.
+    ///
+    /// Returns: A kern_return_t error code returned by the family.
+    #[cfg(feature = "libc")]
+    pub fn IOConnectAddClient(connect: io_connect_t, client: io_connect_t) -> libc::kern_return_t;
 }
 
-/// Return a handle to the registry root.
-///
-/// This method provides an accessor to the root of the registry for the machine. The root may be passed to a registry iterator when iterating a plane, and contains properties that describe the available planes, and diagnostic information for IOKit.
-///
-/// Parameter `mainPort`: The main port obtained from IOMainPort(). Pass kIOMainPortDefault to look up the default main port.
-///
-/// Returns: A handle to the IORegistryEntry root instance, to be released with IOObjectRelease by the caller, or MACH_PORT_NULL on failure.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IORegistryGetRootEntry(
-    main_port: libc::mach_port_t,
-) -> io_registry_entry_t {
-    extern "C-unwind" {
-        fn IORegistryGetRootEntry(main_port: libc::mach_port_t) -> io_registry_entry_t;
-    }
-    unsafe { IORegistryGetRootEntry(main_port) }
+extern "C-unwind" {
+    /// Return a handle to the registry root.
+    ///
+    /// This method provides an accessor to the root of the registry for the machine. The root may be passed to a registry iterator when iterating a plane, and contains properties that describe the available planes, and diagnostic information for IOKit.
+    ///
+    /// Parameter `mainPort`: The main port obtained from IOMainPort(). Pass kIOMainPortDefault to look up the default main port.
+    ///
+    /// Returns: A handle to the IORegistryEntry root instance, to be released with IOObjectRelease by the caller, or MACH_PORT_NULL on failure.
+    #[cfg(feature = "libc")]
+    pub fn IORegistryGetRootEntry(main_port: libc::mach_port_t) -> io_registry_entry_t;
 }
 
 extern "C-unwind" {
@@ -11132,10 +9453,6 @@ extern "C-unwind" {
     /// Parameter `path`: A C-string path.
     ///
     /// Returns: A handle to the IORegistryEntry which was found with the path, to be released with IOObjectRelease by the caller, or MACH_PORT_NULL on failure.
-    ///
-    /// # Safety
-    ///
-    /// `path` Array TODO.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryFromPath(
         main_port: libc::mach_port_t,
@@ -11155,10 +9472,6 @@ extern "C-unwind" {
     /// Parameter `path`: A CFString path.
     ///
     /// Returns: A handle to the IORegistryEntry which was found with the path, to be released with IOObjectRelease by the caller, or MACH_PORT_NULL on failure.
-    ///
-    /// # Safety
-    ///
-    /// `path` might not allow `None`.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryCopyFromPath(
         main_port: libc::mach_port_t,
@@ -11185,11 +9498,6 @@ extern "C-unwind" {
     /// Parameter `iterator`: A created iterator handle, to be released by the caller when it has finished with it.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `plane` Array TODO.
-    /// - `iterator` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IORegistryCreateIterator(
         main_port: libc::mach_port_t,
@@ -11213,11 +9521,6 @@ extern "C-unwind" {
     /// Parameter `iterator`: A created iterator handle, to be released by the caller when it has finished with it.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `plane` Array TODO.
-    /// - `iterator` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryCreateIterator(
         entry: io_registry_entry_t,
@@ -11227,36 +9530,24 @@ extern "C-unwind" {
     ) -> libc::kern_return_t;
 }
 
-/// Recurse into the current entry in the registry iteration.
-///
-/// This method makes the current entry, ie. the last entry returned by IOIteratorNext, the root in a new level of recursion.
-///
-/// Returns: A kern_return_t error code.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IORegistryIteratorEnterEntry(
-    iterator: io_iterator_t,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IORegistryIteratorEnterEntry(iterator: io_iterator_t) -> libc::kern_return_t;
-    }
-    unsafe { IORegistryIteratorEnterEntry(iterator) }
+extern "C-unwind" {
+    /// Recurse into the current entry in the registry iteration.
+    ///
+    /// This method makes the current entry, ie. the last entry returned by IOIteratorNext, the root in a new level of recursion.
+    ///
+    /// Returns: A kern_return_t error code.
+    #[cfg(feature = "libc")]
+    pub fn IORegistryIteratorEnterEntry(iterator: io_iterator_t) -> libc::kern_return_t;
 }
 
-/// Exits a level of recursion, restoring the current entry.
-///
-/// This method undoes an IORegistryIteratorEnterEntry, restoring the current entry. If there are no more levels of recursion to exit false is returned, otherwise true is returned.
-///
-/// Returns: kIOReturnSuccess if a level of recursion was undone, kIOReturnNoDevice if no recursive levels are left in the iteration.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IORegistryIteratorExitEntry(
-    iterator: io_iterator_t,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IORegistryIteratorExitEntry(iterator: io_iterator_t) -> libc::kern_return_t;
-    }
-    unsafe { IORegistryIteratorExitEntry(iterator) }
+extern "C-unwind" {
+    /// Exits a level of recursion, restoring the current entry.
+    ///
+    /// This method undoes an IORegistryIteratorEnterEntry, restoring the current entry. If there are no more levels of recursion to exit false is returned, otherwise true is returned.
+    ///
+    /// Returns: kIOReturnSuccess if a level of recursion was undone, kIOReturnNoDevice if no recursive levels are left in the iteration.
+    #[cfg(feature = "libc")]
+    pub fn IORegistryIteratorExitEntry(iterator: io_iterator_t) -> libc::kern_return_t;
 }
 
 extern "C-unwind" {
@@ -11269,10 +9560,6 @@ extern "C-unwind" {
     /// Parameter `name`: The caller's buffer to receive the name.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// `name` Array TODO.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryGetName(
         entry: io_registry_entry_t,
@@ -11292,11 +9579,6 @@ extern "C-unwind" {
     /// Parameter `name`: The caller's buffer to receive the name.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `plane` Array TODO.
-    /// - `name` Array TODO.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryGetNameInPlane(
         entry: io_registry_entry_t,
@@ -11317,11 +9599,6 @@ extern "C-unwind" {
     /// Parameter `location`: The caller's buffer to receive the location string.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `plane` Array TODO.
-    /// - `location` Array TODO.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryGetLocationInPlane(
         entry: io_registry_entry_t,
@@ -11342,11 +9619,6 @@ extern "C-unwind" {
     /// Parameter `path`: A char buffer allocated by the caller.
     ///
     /// Returns: IORegistryEntryGetPath will fail if the entry is not attached in the plane, or if the buffer is not large enough to contain the path.
-    ///
-    /// # Safety
-    ///
-    /// - `plane` Array TODO.
-    /// - `path` Array TODO.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryGetPath(
         entry: io_registry_entry_t,
@@ -11364,10 +9636,6 @@ extern "C-unwind" {
 /// Parameter `plane`: The name of an existing registry plane. Plane names are defined in IOKitKeys.h, eg. kIOServicePlane.
 ///
 /// Returns: An instance of CFString on success, to be released by the caller. IORegistryEntryCopyPath will fail if the entry is not attached in the plane.
-///
-/// # Safety
-///
-/// `plane` Array TODO.
 #[cfg(feature = "libc")]
 #[inline]
 pub unsafe extern "C-unwind" fn IORegistryEntryCopyPath(
@@ -11394,10 +9662,6 @@ extern "C-unwind" {
     /// Parameter `entryID`: The resulting ID.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// `entry_id` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryGetRegistryEntryID(
         entry: io_registry_entry_t,
@@ -11419,11 +9683,6 @@ extern "C-unwind" {
     /// Parameter `options`: No options are currently defined.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `properties` must be a valid pointer.
-    /// - `allocator` might not allow `None`.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryCreateCFProperties(
         entry: io_registry_entry_t,
@@ -11446,11 +9705,6 @@ extern "C-unwind" {
 /// Parameter `options`: No options are currently defined.
 ///
 /// Returns: A CF container is created and returned the caller on success. The caller should release with CFRelease.
-///
-/// # Safety
-///
-/// - `key` might not allow `None`.
-/// - `allocator` might not allow `None`.
 #[cfg(feature = "libc")]
 #[inline]
 pub unsafe extern "C-unwind" fn IORegistryEntryCreateCFProperty(
@@ -11487,12 +9741,6 @@ pub unsafe extern "C-unwind" fn IORegistryEntryCreateCFProperty(
 /// Parameter `options`: kIORegistryIterateRecursively may be set to recurse automatically into the registry hierarchy. Without this option, this method degenerates into the standard IORegistryEntryCreateCFProperty() call. kIORegistryIterateParents may be set to iterate the parents of the entry, in place of the children.
 ///
 /// Returns: A CF container is created and returned the caller on success. The caller should release with CFRelease.
-///
-/// # Safety
-///
-/// - `plane` Array TODO.
-/// - `key` might not allow `None`.
-/// - `allocator` might not allow `None`.
 #[cfg(feature = "libc")]
 #[inline]
 pub unsafe extern "C-unwind" fn IORegistryEntrySearchCFProperty(
@@ -11516,11 +9764,6 @@ pub unsafe extern "C-unwind" fn IORegistryEntrySearchCFProperty(
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `property_name` Array TODO.
-    /// - `buffer` Array TODO.
-    /// - `size` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryGetProperty(
         entry: io_registry_entry_t,
@@ -11540,11 +9783,6 @@ extern "C-unwind" {
     /// Parameter `properties`: A CF container - commonly a CFDictionary but this is not enforced. The container should consist of objects which are understood by IOKit - these are currently : CFDictionary, CFArray, CFSet, CFString, CFData, CFNumber, CFBoolean, and are passed in the kernel as the corresponding OSDictionary etc. objects.
     ///
     /// Returns: A kern_return_t error code returned by the object.
-    ///
-    /// # Safety
-    ///
-    /// - `properties` should be of the correct type.
-    /// - `properties` might not allow `None`.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntrySetCFProperties(
         entry: io_registry_entry_t,
@@ -11564,12 +9802,6 @@ extern "C-unwind" {
     /// Parameter `property`: A CF container - should consist of objects which are understood by IOKit - these are currently : CFDictionary, CFArray, CFSet, CFString, CFData, CFNumber, CFBoolean, and are passed in the kernel as the corresponding OSDictionary etc. objects.
     ///
     /// Returns: A kern_return_t error code returned by the object.
-    ///
-    /// # Safety
-    ///
-    /// - `property_name` might not allow `None`.
-    /// - `property` should be of the correct type.
-    /// - `property` might not allow `None`.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntrySetCFProperty(
         entry: io_registry_entry_t,
@@ -11590,11 +9822,6 @@ extern "C-unwind" {
     /// Parameter `iterator`: The created iterator over the children of the entry, on success. The iterator must be released when the iteration is finished.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `plane` Array TODO.
-    /// - `iterator` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryGetChildIterator(
         entry: io_registry_entry_t,
@@ -11615,11 +9842,6 @@ extern "C-unwind" {
     /// Parameter `child`: The first child of the registry entry, on success. The child must be released by the caller.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `plane` Array TODO.
-    /// - `child` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryGetChildEntry(
         entry: io_registry_entry_t,
@@ -11640,11 +9862,6 @@ extern "C-unwind" {
     /// Parameter `iterator`: The created iterator over the parents of the entry, on success. The iterator must be released when the iteration is finished.
     ///
     /// Returns: A kern_return_t error.
-    ///
-    /// # Safety
-    ///
-    /// - `plane` Array TODO.
-    /// - `iterator` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryGetParentIterator(
         entry: io_registry_entry_t,
@@ -11665,11 +9882,6 @@ extern "C-unwind" {
     /// Parameter `parent`: The first parent of the registry entry, on success. The parent must be released by the caller.
     ///
     /// Returns: A kern_return_t error code.
-    ///
-    /// # Safety
-    ///
-    /// - `plane` Array TODO.
-    /// - `parent` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IORegistryEntryGetParentEntry(
         entry: io_registry_entry_t,
@@ -11687,10 +9899,6 @@ extern "C-unwind" {
 /// Parameter `plane`: The name of an existing registry plane. Plane names are defined in IOKitKeys.h, eg. kIOServicePlane.
 ///
 /// Returns: If the entry has a parent in the plane, true is returned, otherwise false is returned.
-///
-/// # Safety
-///
-/// `plane` Array TODO.
 #[cfg(feature = "libc")]
 #[inline]
 pub unsafe extern "C-unwind" fn IORegistryEntryInPlane(
@@ -11711,11 +9919,6 @@ pub unsafe extern "C-unwind" fn IORegistryEntryInPlane(
 /// Parameter `name`: The class name, as a const C-string. Class matching is successful on IOService's of this class or any subclass.
 ///
 /// Returns: The matching dictionary created, is returned on success, or zero on failure. The dictionary is commonly passed to IOServiceGetMatchingServices or IOServiceAddNotification which will consume a reference, otherwise it should be released with CFRelease by the caller.
-///
-/// # Safety
-///
-/// - `name` must be a valid pointer.
-/// - The returned generics must be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn IOServiceMatching(
     name: *const c_char,
@@ -11734,11 +9937,6 @@ pub unsafe extern "C-unwind" fn IOServiceMatching(
 /// Parameter `name`: The IOService name, as a const C-string.
 ///
 /// Returns: The matching dictionary created, is returned on success, or zero on failure. The dictionary is commonly passed to IOServiceGetMatchingServices or IOServiceAddNotification which will consume a reference, otherwise it should be released with CFRelease by the caller.
-///
-/// # Safety
-///
-/// - `name` must be a valid pointer.
-/// - The returned generics must be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn IOServiceNameMatching(
     name: *const c_char,
@@ -11761,11 +9959,6 @@ pub unsafe extern "C-unwind" fn IOServiceNameMatching(
 /// Parameter `bsdName`: The BSD name, as a const char *.
 ///
 /// Returns: The matching dictionary created, is returned on success, or zero on failure. The dictionary is commonly passed to IOServiceGetMatchingServices or IOServiceAddNotification which will consume a reference, otherwise it should be released with CFRelease by the caller.
-///
-/// # Safety
-///
-/// - `bsd_name` must be a valid pointer.
-/// - The returned generics must be of the correct type.
 #[cfg(feature = "libc")]
 #[inline]
 pub unsafe extern "C-unwind" fn IOBSDNameMatching(
@@ -11784,12 +9977,7 @@ pub unsafe extern "C-unwind" fn IOBSDNameMatching(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `path` must be a valid pointer.
-/// - The returned generics must be of the correct type.
 #[cfg(feature = "libc")]
-#[deprecated]
 #[inline]
 pub unsafe extern "C-unwind" fn IOOpenFirmwarePathMatching(
     main_port: libc::mach_port_t,
@@ -11814,10 +10002,6 @@ pub unsafe extern "C-unwind" fn IOOpenFirmwarePathMatching(
 /// Parameter `entryID`: The registry entry ID to be found.
 ///
 /// Returns: The matching dictionary created, is returned on success, or zero on failure. The dictionary is commonly passed to IOServiceGetMatchingServices or IOServiceAddNotification which will consume a reference, otherwise it should be released with CFRelease by the caller.
-///
-/// # Safety
-///
-/// The returned generics must be of the correct type.
 #[inline]
 pub unsafe extern "C-unwind" fn IORegistryEntryIDMatching(
     entry_id: u64,
@@ -11830,12 +10014,7 @@ pub unsafe extern "C-unwind" fn IORegistryEntryIDMatching(
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `open_firmware_path` Array TODO.
-    /// - `bsd_name` Array TODO.
     #[cfg(feature = "libc")]
-    #[deprecated]
     pub fn IOServiceOFPathToBSDName(
         main_port: libc::mach_port_t,
         open_firmware_path: io_name_t,
@@ -11897,9 +10076,6 @@ pub type IOAsyncCallback =
     Option<unsafe extern "C-unwind" fn(*mut c_void, IOReturn, *mut *mut c_void, u32)>;
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `buffer` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOCatalogueSendData(
         main_port: libc::mach_port_t,
@@ -11910,9 +10086,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `description` Array TODO.
     #[cfg(feature = "libc")]
     pub fn IOCatalogueTerminate(
         main_port: libc::mach_port_t,
@@ -11922,10 +10095,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `buffer` must be a valid pointer.
-    /// - `size` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOCatalogueGetData(
         main_port: libc::mach_port_t,
@@ -11936,9 +10105,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `name` Array TODO.
     #[cfg(feature = "libc")]
     pub fn IOCatalogueModuleLoaded(
         main_port: libc::mach_port_t,
@@ -11946,16 +10112,9 @@ extern "C-unwind" {
     ) -> libc::kern_return_t;
 }
 
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IOCatalogueReset(
-    main_port: libc::mach_port_t,
-    flag: u32,
-) -> libc::kern_return_t {
-    extern "C-unwind" {
-        fn IOCatalogueReset(main_port: libc::mach_port_t, flag: u32) -> libc::kern_return_t;
-    }
-    unsafe { IOCatalogueReset(main_port, flag) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    pub fn IOCatalogueReset(main_port: libc::mach_port_t, flag: u32) -> libc::kern_return_t;
 }
 
 /// Represents an entry within the data queue
@@ -12024,10 +10183,6 @@ unsafe impl RefEncode for IODataQueueMemory {
 /// Parameter `dataQueue`: The IODataQueueMemory region mapped from the kernel.
 ///
 /// Returns: Returns true if data is available and false if not.
-///
-/// # Safety
-///
-/// `data_queue` must be a valid pointer.
 #[inline]
 pub unsafe extern "C-unwind" fn IODataQueueDataAvailable(
     data_queue: *mut IODataQueueMemory,
@@ -12047,10 +10202,6 @@ extern "C-unwind" {
     /// Parameter `dataQueue`: The IODataQueueMemory region mapped from the kernel.
     ///
     /// Returns: Returns a pointer to the next IODataQueueEntry if one is available.  Zero is returned if the queue is empty.
-    ///
-    /// # Safety
-    ///
-    /// `data_queue` must be a valid pointer.
     pub fn IODataQueuePeek(data_queue: *mut IODataQueueMemory) -> *mut IODataQueueEntry;
 }
 
@@ -12066,12 +10217,6 @@ extern "C-unwind" {
     /// Parameter `dataSize`: A pointer to the size of the data parameter.  On return, this contains the size of the actual entry data - even if the original size was not large enough.
     ///
     /// Returns: Returns kIOReturnSuccess on success.  Other return values possible are: kIOReturnUnderrun - queue is empty, kIOReturnBadArgument - no dataQueue or no dataSize, kIOReturnNoSpace - dataSize is too small for entry.
-    ///
-    /// # Safety
-    ///
-    /// - `data_queue` must be a valid pointer.
-    /// - `data` must be a valid pointer.
-    /// - `data_size` must be a valid pointer.
     pub fn IODataQueueDequeue(
         data_queue: *mut IODataQueueMemory,
         data: *mut c_void,
@@ -12089,10 +10234,6 @@ extern "C-unwind" {
     /// Parameter `notificationPort`: Mach port on which to listen for incoming messages.
     ///
     /// Returns: Returns kIOReturnSuccess on success.  Returns kIOReturnBadArgument if either dataQueue is 0 (NULL) or notifyPort is MACH_PORT_NULL.  Returns the result of the mach_msg() listen call on the given port.
-    ///
-    /// # Safety
-    ///
-    /// `data_queue` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IODataQueueWaitForAvailableData(
         data_queue: *mut IODataQueueMemory,
@@ -12100,18 +10241,14 @@ extern "C-unwind" {
     ) -> IOReturn;
 }
 
-/// Allocates and returns a new mach port able to receive data available notifications from an IODataQueue.
-///
-/// This port is intended to be passed down into the kernel and into an IODataQueue to allow it to send the appropriate notification.  The returned mach port is allocated with a queue limit of one message.  This allows only one mach message to be queued up at a time.  The IODataQueue code is written with the restriction in mind and will only queue up a message if no messages alread have been sent.
-///
-/// Returns: Returns a newly allocated mach port on success.  On failure, it returns MACH_PORT_NULL.
-#[cfg(feature = "libc")]
-#[inline]
-pub extern "C-unwind" fn IODataQueueAllocateNotificationPort() -> libc::mach_port_t {
-    extern "C-unwind" {
-        fn IODataQueueAllocateNotificationPort() -> libc::mach_port_t;
-    }
-    unsafe { IODataQueueAllocateNotificationPort() }
+extern "C-unwind" {
+    /// Allocates and returns a new mach port able to receive data available notifications from an IODataQueue.
+    ///
+    /// This port is intended to be passed down into the kernel and into an IODataQueue to allow it to send the appropriate notification.  The returned mach port is allocated with a queue limit of one message.  This allows only one mach message to be queued up at a time.  The IODataQueue code is written with the restriction in mind and will only queue up a message if no messages alread have been sent.
+    ///
+    /// Returns: Returns a newly allocated mach port on success.  On failure, it returns MACH_PORT_NULL.
+    #[cfg(feature = "libc")]
+    pub fn IODataQueueAllocateNotificationPort() -> libc::mach_port_t;
 }
 
 extern "C-unwind" {
@@ -12132,11 +10269,6 @@ extern "C-unwind" {
     /// Parameter `dataSize`: Size of the data pointed to by data.
     ///
     /// Returns: Returns kIOReturnSuccess on success.  Other return values possible are: kIOReturnOverrun - queue is full.
-    ///
-    /// # Safety
-    ///
-    /// - `data_queue` must be a valid pointer.
-    /// - `data` must be a valid pointer.
     pub fn IODataQueueEnqueue(
         data_queue: *mut IODataQueueMemory,
         data: *mut c_void,
@@ -12157,10 +10289,6 @@ extern "C-unwind" {
     /// Parameter `notifyPort`: The mach port to target with the notification message.
     ///
     /// Returns: Returns kIOReturnSuccess on success.  Returns kIOReturnBadArgument if either dataQueue is 0 (NULL).
-    ///
-    /// # Safety
-    ///
-    /// `data_queue` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IODataQueueSetNotificationPort(
         data_queue: *mut IODataQueueMemory,
@@ -12171,7 +10299,6 @@ extern "C-unwind" {
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/iocfplugininterfacestruct?language=objc)
 #[cfg(feature = "libc")]
 #[repr(C)]
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IOCFPlugInInterfaceStruct {
     pub(crate) _reserved: *mut c_void,
@@ -12220,12 +10347,6 @@ unsafe impl RefEncode for IOCFPlugInInterfaceStruct {
 pub type IOCFPlugInInterface = IOCFPlugInInterfaceStruct;
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `plugin_type` might not allow `None`.
-    /// - `interface_type` might not allow `None`.
-    /// - `the_interface` must be a valid pointer.
-    /// - `the_score` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IOCreatePlugInInterfaceForService(
         service: io_service_t,
@@ -12237,9 +10358,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `interface` must be a valid pointer.
     #[cfg(feature = "libc")]
     pub fn IODestroyPlugInInterface(
         interface: *mut *mut IOCFPlugInInterface,
@@ -12249,10 +10367,6 @@ extern "C-unwind" {
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kiocfserializetobinary?language=objc)
 pub const kIOCFSerializeToBinary: c_uint = 0x00000001;
 
-/// # Safety
-///
-/// - `object` should be of the correct type.
-/// - `object` might not allow `None`.
 #[inline]
 pub unsafe extern "C-unwind" fn IOCFSerialize(
     object: Option<&CFType>,
@@ -12268,12 +10382,6 @@ pub unsafe extern "C-unwind" fn IOCFSerialize(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `alloc` might not allow `None`.
-/// - `url` might not allow `None`.
-/// - `property` might not allow `None`.
-/// - `error_code` must be a valid pointer.
 #[inline]
 pub unsafe extern "C-unwind" fn IOURLCreatePropertyFromResource(
     alloc: Option<&CFAllocator>,
@@ -12293,15 +10401,6 @@ pub unsafe extern "C-unwind" fn IOURLCreatePropertyFromResource(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `alloc` might not allow `None`.
-/// - `url` might not allow `None`.
-/// - `resource_data` must be a valid pointer.
-/// - `properties` must be a valid pointer.
-/// - `desired_properties` generic must be of the correct type.
-/// - `desired_properties` might not allow `None`.
-/// - `error_code` must be a valid pointer.
 #[inline]
 pub unsafe extern "C-unwind" fn IOURLCreateDataAndPropertiesFromResource(
     alloc: Option<&CFAllocator>,
@@ -12334,13 +10433,6 @@ pub unsafe extern "C-unwind" fn IOURLCreateDataAndPropertiesFromResource(
     ret != 0
 }
 
-/// # Safety
-///
-/// - `url` might not allow `None`.
-/// - `data_to_write` might not allow `None`.
-/// - `properties_to_write` generics must be of the correct type.
-/// - `properties_to_write` might not allow `None`.
-/// - `error_code` must be a valid pointer.
 #[inline]
 pub unsafe extern "C-unwind" fn IOURLWriteDataAndPropertiesToResource(
     url: Option<&CFURL>,
@@ -12437,11 +10529,6 @@ pub const kIOCatalogModuleTerminate: c_uint = 2;
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/kiocatalogserviceterminate?language=objc)
 pub const kIOCatalogServiceTerminate: c_uint = 3;
 
-/// # Safety
-///
-/// - `buffer` must be a valid pointer.
-/// - `allocator` might not allow `None`.
-/// - `error_string` must be a valid pointer.
 #[inline]
 pub unsafe extern "C-unwind" fn IOCFUnserialize(
     buffer: *const c_char,
@@ -12461,11 +10548,6 @@ pub unsafe extern "C-unwind" fn IOCFUnserialize(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `buffer` must be a valid pointer.
-/// - `allocator` might not allow `None`.
-/// - `error_string` must be a valid pointer.
 #[inline]
 pub unsafe extern "C-unwind" fn IOCFUnserializeBinary(
     buffer: *const c_char,
@@ -12488,11 +10570,6 @@ pub unsafe extern "C-unwind" fn IOCFUnserializeBinary(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `buffer` must be a valid pointer.
-/// - `allocator` might not allow `None`.
-/// - `error_string` must be a valid pointer.
 #[inline]
 pub unsafe extern "C-unwind" fn IOCFUnserializeWithSize(
     buffer: *const c_char,
@@ -12548,7 +10625,7 @@ pub const kIORPCMessageError: c_uint = 0x00000040;
 pub const kIORPCMessageSimpleReply: c_uint = 0x00000080;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/iokit/iorpcmessage?language=objc)
-#[repr(C, packed(4))]
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IORPCMessage {
     pub msgid: u64,
@@ -12665,16 +10742,10 @@ unsafe impl RefEncode for OSClassDescription {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }
 
-#[cfg(feature = "libc")]
-#[deprecated = "renamed to `IONotificationPort::create`"]
-#[inline]
-pub extern "C-unwind" fn IONotificationPortCreate(
-    main_port: libc::mach_port_t,
-) -> IONotificationPortRef {
-    extern "C-unwind" {
-        fn IONotificationPortCreate(main_port: libc::mach_port_t) -> IONotificationPortRef;
-    }
-    unsafe { IONotificationPortCreate(main_port) }
+extern "C-unwind" {
+    #[cfg(feature = "libc")]
+    #[deprecated = "renamed to `IONotificationPort::create`"]
+    pub fn IONotificationPortCreate(main_port: libc::mach_port_t) -> IONotificationPortRef;
 }
 
 extern "C-unwind" {

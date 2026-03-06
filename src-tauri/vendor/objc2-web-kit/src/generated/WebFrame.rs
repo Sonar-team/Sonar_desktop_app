@@ -44,12 +44,6 @@ impl WebFrame {
         /// Parameter `webView`: The WebView that manages the frame.
         ///
         /// Returns: Returns an initialized WebFrame.
-        ///
-        /// # Safety
-        ///
-        /// - `name` might not allow `None`.
-        /// - `view` might not allow `None`.
-        /// - `web_view` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initWithName:webFrameView:webView:))]
         #[unsafe(method_family = init)]
@@ -111,10 +105,6 @@ impl WebFrame {
         pub unsafe fn frameElement(&self) -> Option<Retained<DOMHTMLElement>>;
 
         /// Parameter `request`: The web request to load.
-        ///
-        /// # Safety
-        ///
-        /// `request` might not allow `None`.
         #[deprecated]
         #[unsafe(method(loadRequest:))]
         #[unsafe(method_family = none)]
@@ -127,13 +117,6 @@ impl WebFrame {
         /// Parameter `encodingName`: The encoding of the data.
         ///
         /// Parameter `URL`: The base URL to apply to relative URLs within the document.
-        ///
-        /// # Safety
-        ///
-        /// - `data` might not allow `None`.
-        /// - `mime_type` might not allow `None`.
-        /// - `encoding_name` might not allow `None`.
-        /// - `url` might not allow `None`.
         #[deprecated]
         #[unsafe(method(loadData:MIMEType:textEncodingName:baseURL:))]
         #[unsafe(method_family = none)]
@@ -148,11 +131,6 @@ impl WebFrame {
         /// Parameter `string`: The string to use for the main page of the document.
         ///
         /// Parameter `URL`: The base URL to apply to relative URLs within the document.
-        ///
-        /// # Safety
-        ///
-        /// - `string` might not allow `None`.
-        /// - `url` might not allow `None`.
         #[deprecated]
         #[unsafe(method(loadHTMLString:baseURL:))]
         #[unsafe(method_family = none)]
@@ -172,12 +150,6 @@ impl WebFrame {
         /// Parameter `baseURL`: The baseURL to apply to relative URLs within the document.
         ///
         /// Parameter `unreachableURL`: The URL for which this page will serve as alternate content.
-        ///
-        /// # Safety
-        ///
-        /// - `string` might not allow `None`.
-        /// - `base_url` might not allow `None`.
-        /// - `unreachable_url` might not allow `None`.
         #[deprecated]
         #[unsafe(method(loadAlternateHTMLString:baseURL:forUnreachableURL:))]
         #[unsafe(method_family = none)]
@@ -192,10 +164,6 @@ impl WebFrame {
         /// Causes WebFrame to load a WebArchive.
         ///
         /// Parameter `archive`: The archive to be loaded.
-        ///
-        /// # Safety
-        ///
-        /// `archive` might not allow `None`.
         #[deprecated]
         #[unsafe(method(loadArchive:))]
         #[unsafe(method_family = none)]
@@ -251,10 +219,6 @@ impl WebFrame {
         /// Parameter `name`: The name of the frame to find.
         ///
         /// Returns: The frame matching the provided name. nil if the frame is not found.
-        ///
-        /// # Safety
-        ///
-        /// `name` might not allow `None`.
         #[deprecated]
         #[unsafe(method(findFrameNamed:))]
         #[unsafe(method_family = none)]

@@ -25,12 +25,12 @@ impl UIPreviewInteraction {
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(initWithView:))]
         #[unsafe(method_family = init)]
-        pub fn initWithView(this: Allocated<Self>, view: &UIView) -> Retained<Self>;
+        pub unsafe fn initWithView(this: Allocated<Self>, view: &UIView) -> Retained<Self>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(view))]
         #[unsafe(method_family = none)]
-        pub fn view(&self) -> Option<Retained<UIView>>;
+        pub unsafe fn view(&self) -> Option<Retained<UIView>>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -38,16 +38,15 @@ impl UIPreviewInteraction {
 
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(
+        pub unsafe fn delegate(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIPreviewInteractionDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(
+        pub unsafe fn setDelegate(
             &self,
             delegate: Option<&ProtocolObject<dyn UIPreviewInteractionDelegate>>,
         );
@@ -55,14 +54,14 @@ impl UIPreviewInteraction {
         #[cfg(all(feature = "UIView", feature = "objc2-core-foundation"))]
         #[unsafe(method(locationInCoordinateSpace:))]
         #[unsafe(method_family = none)]
-        pub fn locationInCoordinateSpace(
+        pub unsafe fn locationInCoordinateSpace(
             &self,
             coordinate_space: Option<&ProtocolObject<dyn UICoordinateSpace>>,
         ) -> CGPoint;
 
         #[unsafe(method(cancelInteraction))]
         #[unsafe(method_family = none)]
-        pub fn cancelInteraction(&self);
+        pub unsafe fn cancelInteraction(&self);
     );
 }
 
@@ -83,7 +82,7 @@ extern_protocol!(
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(previewInteraction:didUpdatePreviewTransition:ended:))]
         #[unsafe(method_family = none)]
-        fn previewInteraction_didUpdatePreviewTransition_ended(
+        unsafe fn previewInteraction_didUpdatePreviewTransition_ended(
             &self,
             preview_interaction: &UIPreviewInteraction,
             transition_progress: CGFloat,
@@ -92,19 +91,21 @@ extern_protocol!(
 
         #[unsafe(method(previewInteractionDidCancel:))]
         #[unsafe(method_family = none)]
-        fn previewInteractionDidCancel(&self, preview_interaction: &UIPreviewInteraction);
+        unsafe fn previewInteractionDidCancel(&self, preview_interaction: &UIPreviewInteraction);
 
         #[optional]
         #[unsafe(method(previewInteractionShouldBegin:))]
         #[unsafe(method_family = none)]
-        fn previewInteractionShouldBegin(&self, preview_interaction: &UIPreviewInteraction)
-            -> bool;
+        unsafe fn previewInteractionShouldBegin(
+            &self,
+            preview_interaction: &UIPreviewInteraction,
+        ) -> bool;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[optional]
         #[unsafe(method(previewInteraction:didUpdateCommitTransition:ended:))]
         #[unsafe(method_family = none)]
-        fn previewInteraction_didUpdateCommitTransition_ended(
+        unsafe fn previewInteraction_didUpdateCommitTransition_ended(
             &self,
             preview_interaction: &UIPreviewInteraction,
             transition_progress: CGFloat,

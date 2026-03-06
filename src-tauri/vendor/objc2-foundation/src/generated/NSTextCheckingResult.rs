@@ -100,12 +100,12 @@ impl NSTextCheckingResult {
     extern_methods!(
         #[unsafe(method(resultType))]
         #[unsafe(method_family = none)]
-        pub fn resultType(&self) -> NSTextCheckingType;
+        pub unsafe fn resultType(&self) -> NSTextCheckingType;
 
         #[cfg(feature = "NSRange")]
         #[unsafe(method(range))]
         #[unsafe(method_family = none)]
-        pub fn range(&self) -> NSRange;
+        pub unsafe fn range(&self) -> NSRange;
     );
 }
 
@@ -114,19 +114,12 @@ impl NSTextCheckingResult {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSTextCheckingResult {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSTextCheckingResultOptional.
@@ -135,77 +128,79 @@ impl NSTextCheckingResult {
         #[cfg(feature = "NSOrthography")]
         #[unsafe(method(orthography))]
         #[unsafe(method_family = none)]
-        pub fn orthography(&self) -> Option<Retained<NSOrthography>>;
+        pub unsafe fn orthography(&self) -> Option<Retained<NSOrthography>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSDictionary", feature = "NSString"))]
         #[unsafe(method(grammarDetails))]
         #[unsafe(method_family = none)]
-        pub fn grammarDetails(
+        pub unsafe fn grammarDetails(
             &self,
         ) -> Option<Retained<NSArray<NSDictionary<NSString, AnyObject>>>>;
 
         #[cfg(feature = "NSDate")]
         #[unsafe(method(date))]
         #[unsafe(method_family = none)]
-        pub fn date(&self) -> Option<Retained<NSDate>>;
+        pub unsafe fn date(&self) -> Option<Retained<NSDate>>;
 
         #[cfg(feature = "NSTimeZone")]
         #[unsafe(method(timeZone))]
         #[unsafe(method_family = none)]
-        pub fn timeZone(&self) -> Option<Retained<NSTimeZone>>;
+        pub unsafe fn timeZone(&self) -> Option<Retained<NSTimeZone>>;
 
         #[cfg(feature = "NSDate")]
         #[unsafe(method(duration))]
         #[unsafe(method_family = none)]
-        pub fn duration(&self) -> NSTimeInterval;
+        pub unsafe fn duration(&self) -> NSTimeInterval;
 
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
         #[unsafe(method(components))]
         #[unsafe(method_family = none)]
-        pub fn components(&self) -> Option<Retained<NSDictionary<NSTextCheckingKey, NSString>>>;
+        pub unsafe fn components(
+            &self,
+        ) -> Option<Retained<NSDictionary<NSTextCheckingKey, NSString>>>;
 
         #[cfg(feature = "NSURL")]
         #[unsafe(method(URL))]
         #[unsafe(method_family = none)]
-        pub fn URL(&self) -> Option<Retained<NSURL>>;
+        pub unsafe fn URL(&self) -> Option<Retained<NSURL>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(replacementString))]
         #[unsafe(method_family = none)]
-        pub fn replacementString(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn replacementString(&self) -> Option<Retained<NSString>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         #[unsafe(method(alternativeStrings))]
         #[unsafe(method_family = none)]
-        pub fn alternativeStrings(&self) -> Option<Retained<NSArray<NSString>>>;
+        pub unsafe fn alternativeStrings(&self) -> Option<Retained<NSArray<NSString>>>;
 
         #[cfg(feature = "NSRegularExpression")]
         #[unsafe(method(regularExpression))]
         #[unsafe(method_family = none)]
-        pub fn regularExpression(&self) -> Option<Retained<NSRegularExpression>>;
+        pub unsafe fn regularExpression(&self) -> Option<Retained<NSRegularExpression>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(phoneNumber))]
         #[unsafe(method_family = none)]
-        pub fn phoneNumber(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn phoneNumber(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(numberOfRanges))]
         #[unsafe(method_family = none)]
-        pub fn numberOfRanges(&self) -> NSUInteger;
+        pub unsafe fn numberOfRanges(&self) -> NSUInteger;
 
         #[cfg(feature = "NSRange")]
         #[unsafe(method(rangeAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn rangeAtIndex(&self, idx: NSUInteger) -> NSRange;
+        pub unsafe fn rangeAtIndex(&self, idx: NSUInteger) -> NSRange;
 
         #[cfg(all(feature = "NSRange", feature = "NSString"))]
         #[unsafe(method(rangeWithName:))]
         #[unsafe(method_family = none)]
-        pub fn rangeWithName(&self, name: &NSString) -> NSRange;
+        pub unsafe fn rangeWithName(&self, name: &NSString) -> NSRange;
 
         #[unsafe(method(resultByAdjustingRangesWithOffset:))]
         #[unsafe(method_family = none)]
-        pub fn resultByAdjustingRangesWithOffset(
+        pub unsafe fn resultByAdjustingRangesWithOffset(
             &self,
             offset: NSInteger,
         ) -> Retained<NSTextCheckingResult>;
@@ -213,7 +208,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSDictionary", feature = "NSString"))]
         #[unsafe(method(addressComponents))]
         #[unsafe(method_family = none)]
-        pub fn addressComponents(
+        pub unsafe fn addressComponents(
             &self,
         ) -> Option<Retained<NSDictionary<NSTextCheckingKey, NSString>>>;
     );
@@ -291,7 +286,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSOrthography", feature = "NSRange"))]
         #[unsafe(method(orthographyCheckingResultWithRange:orthography:))]
         #[unsafe(method_family = none)]
-        pub fn orthographyCheckingResultWithRange_orthography(
+        pub unsafe fn orthographyCheckingResultWithRange_orthography(
             range: NSRange,
             orthography: &NSOrthography,
         ) -> Retained<NSTextCheckingResult>;
@@ -299,7 +294,9 @@ impl NSTextCheckingResult {
         #[cfg(feature = "NSRange")]
         #[unsafe(method(spellCheckingResultWithRange:))]
         #[unsafe(method_family = none)]
-        pub fn spellCheckingResultWithRange(range: NSRange) -> Retained<NSTextCheckingResult>;
+        pub unsafe fn spellCheckingResultWithRange(
+            range: NSRange,
+        ) -> Retained<NSTextCheckingResult>;
 
         #[cfg(all(
             feature = "NSArray",
@@ -307,9 +304,6 @@ impl NSTextCheckingResult {
             feature = "NSRange",
             feature = "NSString"
         ))]
-        /// # Safety
-        ///
-        /// `details` generic generic should be of the correct type.
         #[unsafe(method(grammarCheckingResultWithRange:details:))]
         #[unsafe(method_family = none)]
         pub unsafe fn grammarCheckingResultWithRange_details(
@@ -320,7 +314,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSDate", feature = "NSRange"))]
         #[unsafe(method(dateCheckingResultWithRange:date:))]
         #[unsafe(method_family = none)]
-        pub fn dateCheckingResultWithRange_date(
+        pub unsafe fn dateCheckingResultWithRange_date(
             range: NSRange,
             date: &NSDate,
         ) -> Retained<NSTextCheckingResult>;
@@ -328,7 +322,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSDate", feature = "NSRange", feature = "NSTimeZone"))]
         #[unsafe(method(dateCheckingResultWithRange:date:timeZone:duration:))]
         #[unsafe(method_family = none)]
-        pub fn dateCheckingResultWithRange_date_timeZone_duration(
+        pub unsafe fn dateCheckingResultWithRange_date_timeZone_duration(
             range: NSRange,
             date: &NSDate,
             time_zone: &NSTimeZone,
@@ -338,7 +332,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSDictionary", feature = "NSRange", feature = "NSString"))]
         #[unsafe(method(addressCheckingResultWithRange:components:))]
         #[unsafe(method_family = none)]
-        pub fn addressCheckingResultWithRange_components(
+        pub unsafe fn addressCheckingResultWithRange_components(
             range: NSRange,
             components: &NSDictionary<NSTextCheckingKey, NSString>,
         ) -> Retained<NSTextCheckingResult>;
@@ -346,7 +340,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSRange", feature = "NSURL"))]
         #[unsafe(method(linkCheckingResultWithRange:URL:))]
         #[unsafe(method_family = none)]
-        pub fn linkCheckingResultWithRange_URL(
+        pub unsafe fn linkCheckingResultWithRange_URL(
             range: NSRange,
             url: &NSURL,
         ) -> Retained<NSTextCheckingResult>;
@@ -354,7 +348,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSRange", feature = "NSString"))]
         #[unsafe(method(quoteCheckingResultWithRange:replacementString:))]
         #[unsafe(method_family = none)]
-        pub fn quoteCheckingResultWithRange_replacementString(
+        pub unsafe fn quoteCheckingResultWithRange_replacementString(
             range: NSRange,
             replacement_string: &NSString,
         ) -> Retained<NSTextCheckingResult>;
@@ -362,7 +356,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSRange", feature = "NSString"))]
         #[unsafe(method(dashCheckingResultWithRange:replacementString:))]
         #[unsafe(method_family = none)]
-        pub fn dashCheckingResultWithRange_replacementString(
+        pub unsafe fn dashCheckingResultWithRange_replacementString(
             range: NSRange,
             replacement_string: &NSString,
         ) -> Retained<NSTextCheckingResult>;
@@ -370,7 +364,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSRange", feature = "NSString"))]
         #[unsafe(method(replacementCheckingResultWithRange:replacementString:))]
         #[unsafe(method_family = none)]
-        pub fn replacementCheckingResultWithRange_replacementString(
+        pub unsafe fn replacementCheckingResultWithRange_replacementString(
             range: NSRange,
             replacement_string: &NSString,
         ) -> Retained<NSTextCheckingResult>;
@@ -378,7 +372,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSRange", feature = "NSString"))]
         #[unsafe(method(correctionCheckingResultWithRange:replacementString:))]
         #[unsafe(method_family = none)]
-        pub fn correctionCheckingResultWithRange_replacementString(
+        pub unsafe fn correctionCheckingResultWithRange_replacementString(
             range: NSRange,
             replacement_string: &NSString,
         ) -> Retained<NSTextCheckingResult>;
@@ -386,16 +380,13 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSArray", feature = "NSRange", feature = "NSString"))]
         #[unsafe(method(correctionCheckingResultWithRange:replacementString:alternativeStrings:))]
         #[unsafe(method_family = none)]
-        pub fn correctionCheckingResultWithRange_replacementString_alternativeStrings(
+        pub unsafe fn correctionCheckingResultWithRange_replacementString_alternativeStrings(
             range: NSRange,
             replacement_string: &NSString,
             alternative_strings: &NSArray<NSString>,
         ) -> Retained<NSTextCheckingResult>;
 
         #[cfg(all(feature = "NSRange", feature = "NSRegularExpression"))]
-        /// # Safety
-        ///
-        /// `ranges` must be a valid pointer.
         #[unsafe(method(regularExpressionCheckingResultWithRanges:count:regularExpression:))]
         #[unsafe(method_family = none)]
         pub unsafe fn regularExpressionCheckingResultWithRanges_count_regularExpression(
@@ -407,7 +398,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSRange", feature = "NSString"))]
         #[unsafe(method(phoneNumberCheckingResultWithRange:phoneNumber:))]
         #[unsafe(method_family = none)]
-        pub fn phoneNumberCheckingResultWithRange_phoneNumber(
+        pub unsafe fn phoneNumberCheckingResultWithRange_phoneNumber(
             range: NSRange,
             phone_number: &NSString,
         ) -> Retained<NSTextCheckingResult>;
@@ -415,7 +406,7 @@ impl NSTextCheckingResult {
         #[cfg(all(feature = "NSDictionary", feature = "NSRange", feature = "NSString"))]
         #[unsafe(method(transitInformationCheckingResultWithRange:components:))]
         #[unsafe(method_family = none)]
-        pub fn transitInformationCheckingResultWithRange_components(
+        pub unsafe fn transitInformationCheckingResultWithRange_components(
             range: NSRange,
             components: &NSDictionary<NSTextCheckingKey, NSString>,
         ) -> Retained<NSTextCheckingResult>;

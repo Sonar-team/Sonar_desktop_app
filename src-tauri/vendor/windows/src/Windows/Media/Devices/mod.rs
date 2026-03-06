@@ -501,7 +501,7 @@ impl windows_core::RuntimeType for CallControlEventHandler {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
 impl CallControlEventHandler {
-    pub fn new<F: FnMut(windows_core::Ref<'_, CallControl>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
+    pub fn new<F: Fn(windows_core::Ref<CallControl>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
         let com = CallControlEventHandlerBox { vtable: &CallControlEventHandlerBox::<F>::VTABLE, count: windows_core::imp::RefCount::new(1), invoke };
         unsafe { core::mem::transmute(windows_core::imp::Box::new(com)) }
     }
@@ -520,12 +520,12 @@ pub struct CallControlEventHandler_Vtbl {
     Invoke: unsafe extern "system" fn(this: *mut core::ffi::c_void, sender: *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 #[repr(C)]
-struct CallControlEventHandlerBox<F: FnMut(windows_core::Ref<'_, CallControl>) -> windows_core::Result<()> + Send + 'static> {
+struct CallControlEventHandlerBox<F: Fn(windows_core::Ref<CallControl>) -> windows_core::Result<()> + Send + 'static> {
     vtable: *const CallControlEventHandler_Vtbl,
     invoke: F,
     count: windows_core::imp::RefCount,
 }
-impl<F: FnMut(windows_core::Ref<'_, CallControl>) -> windows_core::Result<()> + Send + 'static> CallControlEventHandlerBox<F> {
+impl<F: Fn(windows_core::Ref<CallControl>) -> windows_core::Result<()> + Send + 'static> CallControlEventHandlerBox<F> {
     const VTABLE: CallControlEventHandler_Vtbl = CallControlEventHandler_Vtbl { base__: windows_core::IUnknown_Vtbl { QueryInterface: Self::QueryInterface, AddRef: Self::AddRef, Release: Self::Release }, Invoke: Self::Invoke };
     unsafe extern "system" fn QueryInterface(this: *mut core::ffi::c_void, iid: *const windows_core::GUID, interface: *mut *mut core::ffi::c_void) -> windows_core::HRESULT {
         unsafe {
@@ -858,7 +858,7 @@ impl windows_core::RuntimeType for DialRequestedEventHandler {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
 impl DialRequestedEventHandler {
-    pub fn new<F: FnMut(windows_core::Ref<'_, CallControl>, windows_core::Ref<'_, DialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
+    pub fn new<F: Fn(windows_core::Ref<CallControl>, windows_core::Ref<DialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
         let com = DialRequestedEventHandlerBox { vtable: &DialRequestedEventHandlerBox::<F>::VTABLE, count: windows_core::imp::RefCount::new(1), invoke };
         unsafe { core::mem::transmute(windows_core::imp::Box::new(com)) }
     }
@@ -878,12 +878,12 @@ pub struct DialRequestedEventHandler_Vtbl {
     Invoke: unsafe extern "system" fn(this: *mut core::ffi::c_void, sender: *mut core::ffi::c_void, e: *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 #[repr(C)]
-struct DialRequestedEventHandlerBox<F: FnMut(windows_core::Ref<'_, CallControl>, windows_core::Ref<'_, DialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static> {
+struct DialRequestedEventHandlerBox<F: Fn(windows_core::Ref<CallControl>, windows_core::Ref<DialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static> {
     vtable: *const DialRequestedEventHandler_Vtbl,
     invoke: F,
     count: windows_core::imp::RefCount,
 }
-impl<F: FnMut(windows_core::Ref<'_, CallControl>, windows_core::Ref<'_, DialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static> DialRequestedEventHandlerBox<F> {
+impl<F: Fn(windows_core::Ref<CallControl>, windows_core::Ref<DialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static> DialRequestedEventHandlerBox<F> {
     const VTABLE: DialRequestedEventHandler_Vtbl = DialRequestedEventHandler_Vtbl { base__: windows_core::IUnknown_Vtbl { QueryInterface: Self::QueryInterface, AddRef: Self::AddRef, Release: Self::Release }, Invoke: Self::Invoke };
     unsafe extern "system" fn QueryInterface(this: *mut core::ffi::c_void, iid: *const windows_core::GUID, interface: *mut *mut core::ffi::c_void) -> windows_core::HRESULT {
         unsafe {
@@ -2369,18 +2369,9 @@ impl windows_core::RuntimeType for IIsoSpeedControl {
 pub struct IIsoSpeedControl_Vtbl {
     pub base__: windows_core::IInspectable_Vtbl,
     pub Supported: unsafe extern "system" fn(*mut core::ffi::c_void, *mut bool) -> windows_core::HRESULT,
-    #[cfg(feature = "deprecated")]
     pub SupportedPresets: unsafe extern "system" fn(*mut core::ffi::c_void, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    SupportedPresets: usize,
-    #[cfg(feature = "deprecated")]
     pub Preset: unsafe extern "system" fn(*mut core::ffi::c_void, *mut IsoSpeedPreset) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    Preset: usize,
-    #[cfg(feature = "deprecated")]
     pub SetPresetAsync: unsafe extern "system" fn(*mut core::ffi::c_void, IsoSpeedPreset, *mut *mut core::ffi::c_void) -> windows_core::HRESULT,
-    #[cfg(not(feature = "deprecated"))]
-    SetPresetAsync: usize,
 }
 windows_core::imp::define_interface!(IIsoSpeedControl2, IIsoSpeedControl2_Vtbl, 0x6f1578f2_6d77_4f8a_8c2f_6130b6395053);
 impl windows_core::RuntimeType for IIsoSpeedControl2 {
@@ -2546,7 +2537,7 @@ impl windows_core::RuntimeName for IMediaDeviceController {
 pub trait IMediaDeviceController_Impl: windows_core::IUnknownImpl {
     fn GetAvailableMediaStreamProperties(&self, mediaStreamType: super::Capture::MediaStreamType) -> windows_core::Result<windows_collections::IVectorView<super::MediaProperties::IMediaEncodingProperties>>;
     fn GetMediaStreamProperties(&self, mediaStreamType: super::Capture::MediaStreamType) -> windows_core::Result<super::MediaProperties::IMediaEncodingProperties>;
-    fn SetMediaStreamPropertiesAsync(&self, mediaStreamType: super::Capture::MediaStreamType, mediaEncodingProperties: windows_core::Ref<'_, super::MediaProperties::IMediaEncodingProperties>) -> windows_core::Result<windows_future::IAsyncAction>;
+    fn SetMediaStreamPropertiesAsync(&self, mediaStreamType: super::Capture::MediaStreamType, mediaEncodingProperties: windows_core::Ref<super::MediaProperties::IMediaEncodingProperties>) -> windows_core::Result<windows_future::IAsyncAction>;
 }
 #[cfg(all(feature = "Media_Capture", feature = "Media_MediaProperties"))]
 impl IMediaDeviceController_Vtbl {
@@ -2996,7 +2987,6 @@ impl IsoSpeedControl {
             (windows_core::Interface::vtable(this).Supported)(windows_core::Interface::as_raw(this), &mut result__).map(|| result__)
         }
     }
-    #[cfg(feature = "deprecated")]
     pub fn SupportedPresets(&self) -> windows_core::Result<windows_collections::IVectorView<IsoSpeedPreset>> {
         let this = self;
         unsafe {
@@ -3004,7 +2994,6 @@ impl IsoSpeedControl {
             (windows_core::Interface::vtable(this).SupportedPresets)(windows_core::Interface::as_raw(this), &mut result__).and_then(|| windows_core::Type::from_abi(result__))
         }
     }
-    #[cfg(feature = "deprecated")]
     pub fn Preset(&self) -> windows_core::Result<IsoSpeedPreset> {
         let this = self;
         unsafe {
@@ -3012,7 +3001,6 @@ impl IsoSpeedControl {
             (windows_core::Interface::vtable(this).Preset)(windows_core::Interface::as_raw(this), &mut result__).map(|| result__)
         }
     }
-    #[cfg(feature = "deprecated")]
     pub fn SetPresetAsync(&self, preset: IsoSpeedPreset) -> windows_core::Result<windows_future::IAsyncAction> {
         let this = self;
         unsafe {
@@ -3133,7 +3121,7 @@ impl windows_core::RuntimeType for KeypadPressedEventHandler {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
 impl KeypadPressedEventHandler {
-    pub fn new<F: FnMut(windows_core::Ref<'_, CallControl>, windows_core::Ref<'_, KeypadPressedEventArgs>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
+    pub fn new<F: Fn(windows_core::Ref<CallControl>, windows_core::Ref<KeypadPressedEventArgs>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
         let com = KeypadPressedEventHandlerBox { vtable: &KeypadPressedEventHandlerBox::<F>::VTABLE, count: windows_core::imp::RefCount::new(1), invoke };
         unsafe { core::mem::transmute(windows_core::imp::Box::new(com)) }
     }
@@ -3153,12 +3141,12 @@ pub struct KeypadPressedEventHandler_Vtbl {
     Invoke: unsafe extern "system" fn(this: *mut core::ffi::c_void, sender: *mut core::ffi::c_void, e: *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 #[repr(C)]
-struct KeypadPressedEventHandlerBox<F: FnMut(windows_core::Ref<'_, CallControl>, windows_core::Ref<'_, KeypadPressedEventArgs>) -> windows_core::Result<()> + Send + 'static> {
+struct KeypadPressedEventHandlerBox<F: Fn(windows_core::Ref<CallControl>, windows_core::Ref<KeypadPressedEventArgs>) -> windows_core::Result<()> + Send + 'static> {
     vtable: *const KeypadPressedEventHandler_Vtbl,
     invoke: F,
     count: windows_core::imp::RefCount,
 }
-impl<F: FnMut(windows_core::Ref<'_, CallControl>, windows_core::Ref<'_, KeypadPressedEventArgs>) -> windows_core::Result<()> + Send + 'static> KeypadPressedEventHandlerBox<F> {
+impl<F: Fn(windows_core::Ref<CallControl>, windows_core::Ref<KeypadPressedEventArgs>) -> windows_core::Result<()> + Send + 'static> KeypadPressedEventHandlerBox<F> {
     const VTABLE: KeypadPressedEventHandler_Vtbl = KeypadPressedEventHandler_Vtbl { base__: windows_core::IUnknown_Vtbl { QueryInterface: Self::QueryInterface, AddRef: Self::AddRef, Release: Self::Release }, Invoke: Self::Invoke };
     unsafe extern "system" fn QueryInterface(this: *mut core::ffi::c_void, iid: *const windows_core::GUID, interface: *mut *mut core::ffi::c_void) -> windows_core::HRESULT {
         unsafe {
@@ -3836,7 +3824,7 @@ impl windows_core::RuntimeType for RedialRequestedEventHandler {
     const SIGNATURE: windows_core::imp::ConstBuffer = windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
 impl RedialRequestedEventHandler {
-    pub fn new<F: FnMut(windows_core::Ref<'_, CallControl>, windows_core::Ref<'_, RedialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
+    pub fn new<F: Fn(windows_core::Ref<CallControl>, windows_core::Ref<RedialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static>(invoke: F) -> Self {
         let com = RedialRequestedEventHandlerBox { vtable: &RedialRequestedEventHandlerBox::<F>::VTABLE, count: windows_core::imp::RefCount::new(1), invoke };
         unsafe { core::mem::transmute(windows_core::imp::Box::new(com)) }
     }
@@ -3856,12 +3844,12 @@ pub struct RedialRequestedEventHandler_Vtbl {
     Invoke: unsafe extern "system" fn(this: *mut core::ffi::c_void, sender: *mut core::ffi::c_void, e: *mut core::ffi::c_void) -> windows_core::HRESULT,
 }
 #[repr(C)]
-struct RedialRequestedEventHandlerBox<F: FnMut(windows_core::Ref<'_, CallControl>, windows_core::Ref<'_, RedialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static> {
+struct RedialRequestedEventHandlerBox<F: Fn(windows_core::Ref<CallControl>, windows_core::Ref<RedialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static> {
     vtable: *const RedialRequestedEventHandler_Vtbl,
     invoke: F,
     count: windows_core::imp::RefCount,
 }
-impl<F: FnMut(windows_core::Ref<'_, CallControl>, windows_core::Ref<'_, RedialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static> RedialRequestedEventHandlerBox<F> {
+impl<F: Fn(windows_core::Ref<CallControl>, windows_core::Ref<RedialRequestedEventArgs>) -> windows_core::Result<()> + Send + 'static> RedialRequestedEventHandlerBox<F> {
     const VTABLE: RedialRequestedEventHandler_Vtbl = RedialRequestedEventHandler_Vtbl { base__: windows_core::IUnknown_Vtbl { QueryInterface: Self::QueryInterface, AddRef: Self::AddRef, Release: Self::Release }, Invoke: Self::Invoke };
     unsafe extern "system" fn QueryInterface(this: *mut core::ffi::c_void, iid: *const windows_core::GUID, interface: *mut *mut core::ffi::c_void) -> windows_core::HRESULT {
         unsafe {

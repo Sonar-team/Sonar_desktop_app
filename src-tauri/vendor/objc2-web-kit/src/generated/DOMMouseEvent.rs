@@ -137,11 +137,6 @@ impl DOMMouseEvent {
         pub unsafe fn toElement(&self) -> Option<Retained<DOMNode>>;
 
         #[cfg(all(feature = "DOMAbstractView", feature = "DOMEventTarget"))]
-        /// # Safety
-        ///
-        /// - `type` might not allow `None`.
-        /// - `view` might not allow `None`.
-        /// - `related_target` might not allow `None`.
         #[unsafe(method(initMouseEvent:canBubble:cancelable:view:detail:screenX:screenY:clientX:clientY:ctrlKey:altKey:shiftKey:metaKey:button:relatedTarget:))]
         #[unsafe(method_family = none)]
         pub unsafe fn initMouseEvent_canBubble_cancelable_view_detail_screenX_screenY_clientX_clientY_ctrlKey_altKey_shiftKey_metaKey_button_relatedTarget(
@@ -197,7 +192,6 @@ impl DOMMouseEvent {
 }
 
 /// DOMMouseEventDeprecated.
-#[deprecated]
 #[cfg(all(
     feature = "DOMEvent",
     feature = "DOMObject",
@@ -207,11 +201,6 @@ impl DOMMouseEvent {
 impl DOMMouseEvent {
     extern_methods!(
         #[cfg(all(feature = "DOMAbstractView", feature = "DOMEventTarget"))]
-        /// # Safety
-        ///
-        /// - `type` might not allow `None`.
-        /// - `view` might not allow `None`.
-        /// - `related_target` might not allow `None`.
         #[deprecated]
         #[unsafe(method(initMouseEvent:::::::::::::::))]
         #[unsafe(method_family = none)]

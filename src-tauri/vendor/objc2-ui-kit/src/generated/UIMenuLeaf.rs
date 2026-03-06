@@ -13,99 +13,77 @@ extern_protocol!(
         /// Short display title.
         #[unsafe(method(title))]
         #[unsafe(method_family = none)]
-        fn title(&self) -> Retained<NSString>;
+        unsafe fn title(&self) -> Retained<NSString>;
 
         /// Setter for [`title`][Self::title].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setTitle:))]
         #[unsafe(method_family = none)]
-        fn setTitle(&self, title: &NSString);
+        unsafe fn setTitle(&self, title: &NSString);
 
         #[cfg(feature = "UIImage")]
         /// Image that can appear next to this element.
         #[unsafe(method(image))]
         #[unsafe(method_family = none)]
-        fn image(&self) -> Option<Retained<UIImage>>;
+        unsafe fn image(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`image`][Self::image].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setImage:))]
         #[unsafe(method_family = none)]
-        fn setImage(&self, image: Option<&UIImage>);
+        unsafe fn setImage(&self, image: Option<&UIImage>);
 
         #[cfg(feature = "UIImage")]
         /// Image that can appear next to this action when the `state` is `UIMenuElementStateOn`
         #[unsafe(method(selectedImage))]
         #[unsafe(method_family = none)]
-        fn selectedImage(&self) -> Option<Retained<UIImage>>;
+        unsafe fn selectedImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`selectedImage`][Self::selectedImage].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSelectedImage:))]
         #[unsafe(method_family = none)]
-        fn setSelectedImage(&self, selected_image: Option<&UIImage>);
+        unsafe fn setSelectedImage(&self, selected_image: Option<&UIImage>);
 
         /// Elaborated title used in keyboard shortcut overlay.
         #[unsafe(method(discoverabilityTitle))]
         #[unsafe(method_family = none)]
-        fn discoverabilityTitle(&self) -> Option<Retained<NSString>>;
+        unsafe fn discoverabilityTitle(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`discoverabilityTitle`][Self::discoverabilityTitle].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setDiscoverabilityTitle:))]
         #[unsafe(method_family = none)]
-        fn setDiscoverabilityTitle(&self, discoverability_title: Option<&NSString>);
+        unsafe fn setDiscoverabilityTitle(&self, discoverability_title: Option<&NSString>);
 
         #[cfg(feature = "UIMenuElement")]
         /// The element's attributes.
         #[unsafe(method(attributes))]
         #[unsafe(method_family = none)]
-        fn attributes(&self) -> UIMenuElementAttributes;
+        unsafe fn attributes(&self) -> UIMenuElementAttributes;
 
         #[cfg(feature = "UIMenuElement")]
         /// Setter for [`attributes`][Self::attributes].
         #[unsafe(method(setAttributes:))]
         #[unsafe(method_family = none)]
-        fn setAttributes(&self, attributes: UIMenuElementAttributes);
+        unsafe fn setAttributes(&self, attributes: UIMenuElementAttributes);
 
         #[cfg(feature = "UIMenuElement")]
         /// The element's selection state.
         #[unsafe(method(state))]
         #[unsafe(method_family = none)]
-        fn state(&self) -> UIMenuElementState;
+        unsafe fn state(&self) -> UIMenuElementState;
 
         #[cfg(feature = "UIMenuElement")]
         /// Setter for [`state`][Self::state].
         #[unsafe(method(setState:))]
         #[unsafe(method_family = none)]
-        fn setState(&self, state: UIMenuElementState);
-
-        #[cfg(feature = "UIMenuElement")]
-        /// The leaf's preferred repeat behavior.
-        /// Menu leaves can repeatedly perform their primary actions on prolonged interactions,
-        /// such as by holding down their keyboard shortcut.
-        #[unsafe(method(repeatBehavior))]
-        #[unsafe(method_family = none)]
-        fn repeatBehavior(&self) -> UIMenuElementRepeatBehavior;
-
-        #[cfg(feature = "UIMenuElement")]
-        /// Setter for [`repeatBehavior`][Self::repeatBehavior].
-        #[unsafe(method(setRepeatBehavior:))]
-        #[unsafe(method_family = none)]
-        fn setRepeatBehavior(&self, repeat_behavior: UIMenuElementRepeatBehavior);
+        unsafe fn setState(&self, state: UIMenuElementState);
 
         /// The object on behalf of which the element's primary action is being performed.
         /// This property is only populated during the execution of the element's
         /// primary action (i.e. its handler or selector) if available.
         #[unsafe(method(sender))]
         #[unsafe(method_family = none)]
-        fn sender(&self) -> Option<Retained<AnyObject>>;
+        unsafe fn sender(&self) -> Option<Retained<AnyObject>>;
 
         #[cfg(feature = "UIPopoverPresentationControllerSourceItem")]
         /// Source item for subsequent presentations. For example, an element displayed in a menu attached to a
@@ -113,16 +91,11 @@ extern_protocol!(
         /// If available, this property is only populated during the execution of the element's action (i.e. its handler or selector).
         #[unsafe(method(presentationSourceItem))]
         #[unsafe(method_family = none)]
-        fn presentationSourceItem(
+        unsafe fn presentationSourceItem(
             &self,
         ) -> Option<Retained<ProtocolObject<dyn UIPopoverPresentationControllerSourceItem>>>;
 
         /// Performs the element’s primary action (i.e. it's handler or selector).
-        ///
-        /// # Safety
-        ///
-        /// - `sender` should be of the correct type.
-        /// - `target` should be of the correct type.
         #[unsafe(method(performWithSender:target:))]
         #[unsafe(method_family = none)]
         unsafe fn performWithSender_target(

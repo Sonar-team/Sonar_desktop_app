@@ -33,10 +33,6 @@ extern_conformance!(
 #[cfg(all(feature = "DOMObject", feature = "WebScriptObject"))]
 impl DOMImplementation {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `feature` might not allow `None`.
-        /// - `version` might not allow `None`.
         #[unsafe(method(hasFeature:version:))]
         #[unsafe(method_family = none)]
         pub unsafe fn hasFeature_version(
@@ -46,11 +42,6 @@ impl DOMImplementation {
         ) -> bool;
 
         #[cfg(all(feature = "DOMDocumentType", feature = "DOMNode"))]
-        /// # Safety
-        ///
-        /// - `qualified_name` might not allow `None`.
-        /// - `public_id` might not allow `None`.
-        /// - `system_id` might not allow `None`.
         #[unsafe(method(createDocumentType:publicId:systemId:))]
         #[unsafe(method_family = none)]
         pub unsafe fn createDocumentType_publicId_systemId(
@@ -65,11 +56,6 @@ impl DOMImplementation {
             feature = "DOMDocumentType",
             feature = "DOMNode"
         ))]
-        /// # Safety
-        ///
-        /// - `namespace_uri` might not allow `None`.
-        /// - `qualified_name` might not allow `None`.
-        /// - `doctype` might not allow `None`.
         #[unsafe(method(createDocument:qualifiedName:doctype:))]
         #[unsafe(method_family = none)]
         pub unsafe fn createDocument_qualifiedName_doctype(
@@ -80,10 +66,6 @@ impl DOMImplementation {
         ) -> Option<Retained<DOMDocument>>;
 
         #[cfg(all(feature = "DOMCSSStyleSheet", feature = "DOMStyleSheet"))]
-        /// # Safety
-        ///
-        /// - `title` might not allow `None`.
-        /// - `media` might not allow `None`.
         #[unsafe(method(createCSSStyleSheet:media:))]
         #[unsafe(method_family = none)]
         pub unsafe fn createCSSStyleSheet_media(
@@ -97,9 +79,6 @@ impl DOMImplementation {
             feature = "DOMHTMLDocument",
             feature = "DOMNode"
         ))]
-        /// # Safety
-        ///
-        /// `title` might not allow `None`.
         #[unsafe(method(createHTMLDocument:))]
         #[unsafe(method_family = none)]
         pub unsafe fn createHTMLDocument(
@@ -131,14 +110,9 @@ impl DOMImplementation {
 }
 
 /// DOMImplementationDeprecated.
-#[deprecated]
 #[cfg(all(feature = "DOMObject", feature = "WebScriptObject"))]
 impl DOMImplementation {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `feature` might not allow `None`.
-        /// - `version` might not allow `None`.
         #[deprecated]
         #[unsafe(method(hasFeature::))]
         #[unsafe(method_family = none)]
@@ -149,11 +123,6 @@ impl DOMImplementation {
         ) -> bool;
 
         #[cfg(all(feature = "DOMDocumentType", feature = "DOMNode"))]
-        /// # Safety
-        ///
-        /// - `qualified_name` might not allow `None`.
-        /// - `public_id` might not allow `None`.
-        /// - `system_id` might not allow `None`.
         #[deprecated]
         #[unsafe(method(createDocumentType:::))]
         #[unsafe(method_family = none)]
@@ -169,11 +138,6 @@ impl DOMImplementation {
             feature = "DOMDocumentType",
             feature = "DOMNode"
         ))]
-        /// # Safety
-        ///
-        /// - `namespace_uri` might not allow `None`.
-        /// - `qualified_name` might not allow `None`.
-        /// - `doctype` might not allow `None`.
         #[deprecated]
         #[unsafe(method(createDocument:::))]
         #[unsafe(method_family = none)]
@@ -185,10 +149,6 @@ impl DOMImplementation {
         ) -> Option<Retained<DOMDocument>>;
 
         #[cfg(all(feature = "DOMCSSStyleSheet", feature = "DOMStyleSheet"))]
-        /// # Safety
-        ///
-        /// - `title` might not allow `None`.
-        /// - `media` might not allow `None`.
         #[deprecated]
         #[unsafe(method(createCSSStyleSheet::))]
         #[unsafe(method_family = none)]

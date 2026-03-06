@@ -3,8 +3,6 @@
 use core::ffi::*;
 use core::ptr::NonNull;
 use objc2::__framework_prelude::*;
-#[cfg(feature = "objc2-core-foundation")]
-use objc2_core_foundation::*;
 
 use crate::*;
 
@@ -14,22 +12,6 @@ extern_class!(
     #[derive(Debug, PartialEq, Eq, Hash)]
     pub struct NSTimer;
 );
-
-#[cfg(feature = "objc2-core-foundation")]
-impl AsRef<NSTimer> for CFRunLoopTimer {
-    #[inline]
-    fn as_ref(&self) -> &NSTimer {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
-
-#[cfg(feature = "objc2-core-foundation")]
-impl AsRef<CFRunLoopTimer> for NSTimer {
-    #[inline]
-    fn as_ref(&self) -> &CFRunLoopTimer {
-        unsafe { &*((self as *const Self).cast()) }
-    }
-}
 
 extern_conformance!(
     unsafe impl NSObjectProtocol for NSTimer {}
@@ -56,11 +38,6 @@ impl NSTimer {
         ) -> Retained<NSTimer>;
 
         #[cfg(feature = "NSDate")]
-        /// # Safety
-        ///
-        /// - `a_target` should be of the correct type.
-        /// - `a_selector` must be a valid selector.
-        /// - `user_info` should be of the correct type.
         #[unsafe(method(timerWithTimeInterval:target:selector:userInfo:repeats:))]
         #[unsafe(method_family = none)]
         pub unsafe fn timerWithTimeInterval_target_selector_userInfo_repeats(
@@ -72,11 +49,6 @@ impl NSTimer {
         ) -> Retained<NSTimer>;
 
         #[cfg(feature = "NSDate")]
-        /// # Safety
-        ///
-        /// - `a_target` should be of the correct type.
-        /// - `a_selector` must be a valid selector.
-        /// - `user_info` should be of the correct type.
         #[unsafe(method(scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:))]
         #[unsafe(method_family = none)]
         pub unsafe fn scheduledTimerWithTimeInterval_target_selector_userInfo_repeats(
@@ -92,10 +64,6 @@ impl NSTimer {
         /// - parameter:  timeInterval  The number of seconds between firings of the timer. If seconds is less than or equal to 0.0, this method chooses the nonnegative value of 0.1 milliseconds instead
         /// - parameter:  repeats  If YES, the timer will repeatedly reschedule itself until invalidated. If NO, the timer will be invalidated after it fires.
         /// - parameter:  block  The execution body of the timer; the timer itself is passed as the parameter to this block when executed to aid in avoiding cyclical references
-        ///
-        /// # Safety
-        ///
-        /// `block` block must be sendable.
         #[unsafe(method(timerWithTimeInterval:repeats:block:))]
         #[unsafe(method_family = none)]
         pub unsafe fn timerWithTimeInterval_repeats_block(
@@ -109,10 +77,6 @@ impl NSTimer {
         /// - parameter:  ti    The number of seconds between firings of the timer. If seconds is less than or equal to 0.0, this method chooses the nonnegative value of 0.1 milliseconds instead
         /// - parameter:  repeats  If YES, the timer will repeatedly reschedule itself until invalidated. If NO, the timer will be invalidated after it fires.
         /// - parameter:  block  The execution body of the timer; the timer itself is passed as the parameter to this block when executed to aid in avoiding cyclical references
-        ///
-        /// # Safety
-        ///
-        /// `block` block must be sendable.
         #[unsafe(method(scheduledTimerWithTimeInterval:repeats:block:))]
         #[unsafe(method_family = none)]
         pub unsafe fn scheduledTimerWithTimeInterval_repeats_block(
@@ -127,10 +91,6 @@ impl NSTimer {
         /// - parameter:  interval  The number of seconds between firings of the timer. If seconds is less than or equal to 0.0, this method chooses the nonnegative value of 0.1 milliseconds instead
         /// - parameter:  repeats  If YES, the timer will repeatedly reschedule itself until invalidated. If NO, the timer will be invalidated after it fires.
         /// - parameter:  block  The execution body of the timer; the timer itself is passed as the parameter to this block when executed to aid in avoiding cyclical references
-        ///
-        /// # Safety
-        ///
-        /// `block` block must be sendable.
         #[unsafe(method(initWithFireDate:interval:repeats:block:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithFireDate_interval_repeats_block(
@@ -142,11 +102,6 @@ impl NSTimer {
         ) -> Retained<Self>;
 
         #[cfg(feature = "NSDate")]
-        /// # Safety
-        ///
-        /// - `t` should be of the correct type.
-        /// - `s` must be a valid selector.
-        /// - `ui` should be of the correct type.
         #[unsafe(method(initWithFireDate:interval:target:selector:userInfo:repeats:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithFireDate_interval_target_selector_userInfo_repeats(
@@ -161,48 +116,46 @@ impl NSTimer {
 
         #[unsafe(method(fire))]
         #[unsafe(method_family = none)]
-        pub fn fire(&self);
+        pub unsafe fn fire(&self);
 
         #[cfg(feature = "NSDate")]
         #[unsafe(method(fireDate))]
         #[unsafe(method_family = none)]
-        pub fn fireDate(&self) -> Retained<NSDate>;
+        pub unsafe fn fireDate(&self) -> Retained<NSDate>;
 
         #[cfg(feature = "NSDate")]
         /// Setter for [`fireDate`][Self::fireDate].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setFireDate:))]
         #[unsafe(method_family = none)]
-        pub fn setFireDate(&self, fire_date: &NSDate);
+        pub unsafe fn setFireDate(&self, fire_date: &NSDate);
 
         #[cfg(feature = "NSDate")]
         #[unsafe(method(timeInterval))]
         #[unsafe(method_family = none)]
-        pub fn timeInterval(&self) -> NSTimeInterval;
+        pub unsafe fn timeInterval(&self) -> NSTimeInterval;
 
         #[cfg(feature = "NSDate")]
         #[unsafe(method(tolerance))]
         #[unsafe(method_family = none)]
-        pub fn tolerance(&self) -> NSTimeInterval;
+        pub unsafe fn tolerance(&self) -> NSTimeInterval;
 
         #[cfg(feature = "NSDate")]
         /// Setter for [`tolerance`][Self::tolerance].
         #[unsafe(method(setTolerance:))]
         #[unsafe(method_family = none)]
-        pub fn setTolerance(&self, tolerance: NSTimeInterval);
+        pub unsafe fn setTolerance(&self, tolerance: NSTimeInterval);
 
         #[unsafe(method(invalidate))]
         #[unsafe(method_family = none)]
-        pub fn invalidate(&self);
+        pub unsafe fn invalidate(&self);
 
         #[unsafe(method(isValid))]
         #[unsafe(method_family = none)]
-        pub fn isValid(&self) -> bool;
+        pub unsafe fn isValid(&self) -> bool;
 
         #[unsafe(method(userInfo))]
         #[unsafe(method_family = none)]
-        pub fn userInfo(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn userInfo(&self) -> Option<Retained<AnyObject>>;
     );
 }
 
@@ -211,17 +164,10 @@ impl NSTimer {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSTimer {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

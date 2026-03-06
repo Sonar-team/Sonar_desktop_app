@@ -13,17 +13,17 @@ extern_protocol!(
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(view))]
         #[unsafe(method_family = none)]
-        fn view(&self) -> Option<Retained<UIView>>;
+        unsafe fn view(&self) -> Option<Retained<UIView>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(willMoveToView:))]
         #[unsafe(method_family = none)]
-        fn willMoveToView(&self, view: Option<&UIView>);
+        unsafe fn willMoveToView(&self, view: Option<&UIView>);
 
         #[cfg(all(feature = "UIResponder", feature = "UIView"))]
         #[unsafe(method(didMoveToView:))]
         #[unsafe(method_family = none)]
-        fn didMoveToView(&self, view: Option<&UIView>);
+        unsafe fn didMoveToView(&self, view: Option<&UIView>);
     }
 );
 
@@ -33,21 +33,22 @@ impl UIView {
     extern_methods!(
         #[unsafe(method(addInteraction:))]
         #[unsafe(method_family = none)]
-        pub fn addInteraction(&self, interaction: &ProtocolObject<dyn UIInteraction>);
+        pub unsafe fn addInteraction(&self, interaction: &ProtocolObject<dyn UIInteraction>);
 
         #[unsafe(method(removeInteraction:))]
         #[unsafe(method_family = none)]
-        pub fn removeInteraction(&self, interaction: &ProtocolObject<dyn UIInteraction>);
+        pub unsafe fn removeInteraction(&self, interaction: &ProtocolObject<dyn UIInteraction>);
 
         #[unsafe(method(interactions))]
         #[unsafe(method_family = none)]
-        pub fn interactions(&self) -> Retained<NSArray<ProtocolObject<dyn UIInteraction>>>;
+        pub unsafe fn interactions(&self) -> Retained<NSArray<ProtocolObject<dyn UIInteraction>>>;
 
         /// Setter for [`interactions`][Self::interactions].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setInteractions:))]
         #[unsafe(method_family = none)]
-        pub fn setInteractions(&self, interactions: &NSArray<ProtocolObject<dyn UIInteraction>>);
+        pub unsafe fn setInteractions(
+            &self,
+            interactions: &NSArray<ProtocolObject<dyn UIInteraction>>,
+        );
     );
 }

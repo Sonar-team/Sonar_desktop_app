@@ -18,7 +18,6 @@ use std::num::NonZeroU32;
 /// Display implementation for the web platform.
 ///
 /// This just caches the document to prevent having to query it every time.
-#[derive(Clone, Debug)]
 pub struct WebDisplayImpl<D> {
     document: web_sys::Document,
     _display: D,
@@ -27,9 +26,10 @@ pub struct WebDisplayImpl<D> {
 impl<D: HasDisplayHandle> ContextInterface<D> for WebDisplayImpl<D> {
     fn new(display: D) -> Result<Self, InitError<D>> {
         let raw = display.display_handle()?.as_raw();
-        let RawDisplayHandle::Web(..) = raw else {
-            return Err(InitError::Unsupported(display));
-        };
+        match raw {
+            RawDisplayHandle::Web(..) => {}
+            _ => return Err(InitError::Unsupported(display)),
+        }
 
         let document = web_sys::window()
             .swbuf_err("`Window` is not present in this runtime")?
@@ -43,13 +43,12 @@ impl<D: HasDisplayHandle> ContextInterface<D> for WebDisplayImpl<D> {
     }
 }
 
-#[derive(Debug)]
 pub struct WebImpl<D, W> {
     /// The handle and context to the canvas that we're drawing to.
     canvas: Canvas,
 
     /// The buffer that we're drawing to.
-    buffer: util::PixelBuffer,
+    buffer: Vec<u32>,
 
     /// Buffer has been presented.
     buffer_presented: bool,
@@ -66,7 +65,6 @@ pub struct WebImpl<D, W> {
 
 /// Holding canvas and context for [`HtmlCanvasElement`] or [`OffscreenCanvas`],
 /// since they have different types.
-#[derive(Debug)]
 enum Canvas {
     Canvas {
         canvas: HtmlCanvasElement,
@@ -84,7 +82,7 @@ impl<D: HasDisplayHandle, W: HasWindowHandle> WebImpl<D, W> {
 
         Ok(Self {
             canvas: Canvas::Canvas { canvas, ctx },
-            buffer: util::PixelBuffer(Vec::new()),
+            buffer: Vec::new(),
             buffer_presented: false,
             size: None,
             window_handle: window,
@@ -100,7 +98,7 @@ impl<D: HasDisplayHandle, W: HasWindowHandle> WebImpl<D, W> {
 
         Ok(Self {
             canvas: Canvas::OffscreenCanvas { canvas, ctx },
-            buffer: util::PixelBuffer(Vec::new()),
+            buffer: Vec::new(),
             buffer_presented: false,
             size: None,
             window_handle: window,
@@ -209,10 +207,7 @@ impl<D: HasDisplayHandle, W: HasWindowHandle> WebImpl<D, W> {
 
 impl<D: HasDisplayHandle, W: HasWindowHandle> SurfaceInterface<D, W> for WebImpl<D, W> {
     type Context = WebDisplayImpl<D>;
-    type Buffer<'a>
-        = BufferImpl<'a, D, W>
-    where
-        Self: 'a;
+    type Buffer<'a> = BufferImpl<'a, D, W> where Self: 'a;
 
     fn new(window: W, display: &WebDisplayImpl<D>) -> Result<Self, InitError<W>> {
         let raw = window.window_handle()?.as_raw();
@@ -375,26 +370,11 @@ impl Canvas {
     }
 }
 
-#[derive(Debug)]
 pub struct BufferImpl<'a, D, W> {
     imp: &'a mut WebImpl<D, W>,
 }
 
-impl<D: HasDisplayHandle, W: HasWindowHandle> BufferInterface for BufferImpl<'_, D, W> {
-    fn width(&self) -> NonZeroU32 {
-        self.imp
-            .size
-            .expect("must set size of surface before calling `width()` on the buffer")
-            .0
-    }
-
-    fn height(&self) -> NonZeroU32 {
-        self.imp
-            .size
-            .expect("must set size of surface before calling `height()` on the buffer")
-            .1
-    }
-
+impl<'a, D: HasDisplayHandle, W: HasWindowHandle> BufferInterface for BufferImpl<'a, D, W> {
     fn pixels(&self) -> &[u32] {
         &self.imp.buffer
     }

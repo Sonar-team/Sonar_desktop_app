@@ -41,15 +41,13 @@ impl UIPointerStyle {
         /// The system will attempt to animate between neighboring or similar accessories.
         #[unsafe(method(accessories))]
         #[unsafe(method_family = none)]
-        pub fn accessories(&self) -> Retained<NSArray<UIPointerAccessory>>;
+        pub unsafe fn accessories(&self) -> Retained<NSArray<UIPointerAccessory>>;
 
         #[cfg(feature = "UIPointerAccessory")]
         /// Setter for [`accessories`][Self::accessories].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setAccessories:))]
         #[unsafe(method_family = none)]
-        pub fn setAccessories(&self, accessories: &NSArray<UIPointerAccessory>);
+        pub unsafe fn setAccessories(&self, accessories: &NSArray<UIPointerAccessory>);
 
         /// Applies the provided content effect and pointer shape within the current region.
         ///
@@ -73,7 +71,7 @@ impl UIPointerStyle {
         /// Parameter `axes`: Axes along which to recenter the pointer on touch up.
         #[unsafe(method(styleWithShape:constrainedAxes:))]
         #[unsafe(method_family = none)]
-        pub fn styleWithShape_constrainedAxes(
+        pub unsafe fn styleWithShape_constrainedAxes(
             shape: &UIPointerShape,
             axes: UIAxis,
         ) -> Retained<Self>;
@@ -81,12 +79,12 @@ impl UIPointerStyle {
         /// Hides the pointer when hovering over the current region.
         #[unsafe(method(hiddenPointerStyle))]
         #[unsafe(method_family = none)]
-        pub fn hiddenPointerStyle(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn hiddenPointerStyle(mtm: MainThreadMarker) -> Retained<Self>;
 
         /// Pointer style that displays an unconstrained system pointer. Use this to display accessories alongside the default pointer.
         #[unsafe(method(systemPointerStyle))]
         #[unsafe(method_family = none)]
-        pub fn systemPointerStyle(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn systemPointerStyle(mtm: MainThreadMarker) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -106,12 +104,15 @@ impl UIPointerStyle {
         /// Creates a hover style with the provided shape and a `UIHoverAutomaticEffect`.
         #[unsafe(method(styleWithShape:))]
         #[unsafe(method_family = none)]
-        pub fn styleWithShape(shape: Option<&UIShape>, mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn styleWithShape(
+            shape: Option<&UIShape>,
+            mtm: MainThreadMarker,
+        ) -> Retained<Self>;
 
         /// Creates a hover style with the default shape and a `UIHoverAutomaticEffect`.
         #[unsafe(method(automaticStyle))]
         #[unsafe(method_family = none)]
-        pub fn automaticStyle(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn automaticStyle(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -145,7 +146,7 @@ impl UIPointerEffect {
         #[cfg(feature = "UITargetedPreview")]
         #[unsafe(method(preview))]
         #[unsafe(method_family = none)]
-        pub fn preview(&self) -> Retained<UITargetedPreview>;
+        pub unsafe fn preview(&self) -> Retained<UITargetedPreview>;
 
         #[cfg(feature = "UITargetedPreview")]
         /// Creates a pointer content effect with the given preview's view.
@@ -158,7 +159,7 @@ impl UIPointerEffect {
         /// Use one of its subclasses to request a specific system-provided effect.
         #[unsafe(method(effectWithPreview:))]
         #[unsafe(method_family = none)]
-        pub fn effectWithPreview(preview: &UITargetedPreview) -> Retained<Self>;
+        pub unsafe fn effectWithPreview(preview: &UITargetedPreview) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -215,7 +216,7 @@ impl UIPointerHighlightEffect {
         /// Use one of its subclasses to request a specific system-provided effect.
         #[unsafe(method(effectWithPreview:))]
         #[unsafe(method_family = none)]
-        pub fn effectWithPreview(preview: &UITargetedPreview) -> Retained<Self>;
+        pub unsafe fn effectWithPreview(preview: &UITargetedPreview) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -272,7 +273,7 @@ impl UIPointerLiftEffect {
         /// Use one of its subclasses to request a specific system-provided effect.
         #[unsafe(method(effectWithPreview:))]
         #[unsafe(method_family = none)]
-        pub fn effectWithPreview(preview: &UITargetedPreview) -> Retained<Self>;
+        pub unsafe fn effectWithPreview(preview: &UITargetedPreview) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -337,30 +338,30 @@ impl UIPointerHoverEffect {
     extern_methods!(
         #[unsafe(method(preferredTintMode))]
         #[unsafe(method_family = none)]
-        pub fn preferredTintMode(&self) -> UIPointerEffectTintMode;
+        pub unsafe fn preferredTintMode(&self) -> UIPointerEffectTintMode;
 
         /// Setter for [`preferredTintMode`][Self::preferredTintMode].
         #[unsafe(method(setPreferredTintMode:))]
         #[unsafe(method_family = none)]
-        pub fn setPreferredTintMode(&self, preferred_tint_mode: UIPointerEffectTintMode);
+        pub unsafe fn setPreferredTintMode(&self, preferred_tint_mode: UIPointerEffectTintMode);
 
         #[unsafe(method(prefersShadow))]
         #[unsafe(method_family = none)]
-        pub fn prefersShadow(&self) -> bool;
+        pub unsafe fn prefersShadow(&self) -> bool;
 
         /// Setter for [`prefersShadow`][Self::prefersShadow].
         #[unsafe(method(setPrefersShadow:))]
         #[unsafe(method_family = none)]
-        pub fn setPrefersShadow(&self, prefers_shadow: bool);
+        pub unsafe fn setPrefersShadow(&self, prefers_shadow: bool);
 
         #[unsafe(method(prefersScaledContent))]
         #[unsafe(method_family = none)]
-        pub fn prefersScaledContent(&self) -> bool;
+        pub unsafe fn prefersScaledContent(&self) -> bool;
 
         /// Setter for [`prefersScaledContent`][Self::prefersScaledContent].
         #[unsafe(method(setPrefersScaledContent:))]
         #[unsafe(method_family = none)]
-        pub fn setPrefersScaledContent(&self, prefers_scaled_content: bool);
+        pub unsafe fn setPrefersScaledContent(&self, prefers_scaled_content: bool);
     );
 }
 
@@ -378,7 +379,7 @@ impl UIPointerHoverEffect {
         /// Use one of its subclasses to request a specific system-provided effect.
         #[unsafe(method(effectWithPreview:))]
         #[unsafe(method_family = none)]
-        pub fn effectWithPreview(preview: &UITargetedPreview) -> Retained<Self>;
+        pub unsafe fn effectWithPreview(preview: &UITargetedPreview) -> Retained<Self>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -418,7 +419,7 @@ impl UIPointerShape {
         /// The path's bounds' origin corresponds to the pointer's physical location.
         #[unsafe(method(shapeWithPath:))]
         #[unsafe(method_family = none)]
-        pub fn shapeWithPath(path: &UIBezierPath, mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn shapeWithPath(path: &UIBezierPath, mtm: MainThreadMarker) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Morphs the pointer to a rounded rectangle with the provided rect and the standard system corner radius.
@@ -429,7 +430,7 @@ impl UIPointerShape {
         /// and the rect's origin is interpreted as an offset.
         #[unsafe(method(shapeWithRoundedRect:))]
         #[unsafe(method_family = none)]
-        pub fn shapeWithRoundedRect(rect: CGRect, mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn shapeWithRoundedRect(rect: CGRect, mtm: MainThreadMarker) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Morphs the pointer to a rounded rectangle with the provided rect and cornerRadius.
@@ -442,7 +443,7 @@ impl UIPointerShape {
         /// Parameter `cornerRadius`: Corner radius to apply to the pointer.
         #[unsafe(method(shapeWithRoundedRect:cornerRadius:))]
         #[unsafe(method_family = none)]
-        pub fn shapeWithRoundedRect_cornerRadius(
+        pub unsafe fn shapeWithRoundedRect_cornerRadius(
             rect: CGRect,
             corner_radius: CGFloat,
             mtm: MainThreadMarker,
@@ -457,7 +458,7 @@ impl UIPointerShape {
         /// Parameter `axis`: The axis along which to draw the beam. Axis must be either UIAxisVertical or UIAxisHorizontal.
         #[unsafe(method(beamWithPreferredLength:axis:))]
         #[unsafe(method_family = none)]
-        pub fn beamWithPreferredLength_axis(
+        pub unsafe fn beamWithPreferredLength_axis(
             length: CGFloat,
             axis: UIAxis,
             mtm: MainThreadMarker,

@@ -46,8 +46,6 @@ impl NSFetchIndexDescription {
         pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setName(&self, name: &NSString);
@@ -59,16 +57,11 @@ impl NSFetchIndexDescription {
 
         #[cfg(feature = "NSFetchIndexElementDescription")]
         /// Setter for [`elements`][Self::elements].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setElements:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setElements(&self, elements: &NSArray<NSFetchIndexElementDescription>);
 
         #[cfg(feature = "NSEntityDescription")]
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(entity))]
         #[unsafe(method_family = none)]
         pub unsafe fn entity(&self) -> Option<Retained<NSEntityDescription>>;
@@ -78,8 +71,6 @@ impl NSFetchIndexDescription {
         pub unsafe fn partialIndexPredicate(&self) -> Option<Retained<NSPredicate>>;
 
         /// Setter for [`partialIndexPredicate`][Self::partialIndexPredicate].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPartialIndexPredicate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setPartialIndexPredicate(

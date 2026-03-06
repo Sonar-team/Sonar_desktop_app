@@ -173,52 +173,53 @@ impl UITextFormattingViewControllerChangeValue {
         /// Type of change.
         #[unsafe(method(changeType))]
         #[unsafe(method_family = none)]
-        pub fn changeType(&self) -> Retained<UITextFormattingViewControllerChangeType>;
+        pub unsafe fn changeType(&self) -> Retained<UITextFormattingViewControllerChangeType>;
 
         /// On formatting style change, use this property to determine selected style.
         #[unsafe(method(formattingStyleKey))]
         #[unsafe(method_family = none)]
-        pub fn formattingStyleKey(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn formattingStyleKey(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "UIFont")]
         /// Any font that may be associated with the change.
         /// For example, this property will be available in case of font typography settings change or new font selection.
         #[unsafe(method(font))]
         #[unsafe(method_family = none)]
-        pub fn font(&self) -> Option<Retained<UIFont>>;
+        pub unsafe fn font(&self) -> Option<Retained<UIFont>>;
 
         #[cfg(feature = "UIColor")]
         /// Any color value that may be associated with the change.
         /// For example, this property will be available if user has changed text color.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
-        pub fn color(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn color(&self) -> Option<Retained<UIColor>>;
 
         /// Any number value that may be associated with the change.
         /// For example, if case of font point size change, this property will reflect new point size.
         #[unsafe(method(numberValue))]
         #[unsafe(method_family = none)]
-        pub fn numberValue(&self) -> Option<Retained<NSNumber>>;
+        pub unsafe fn numberValue(&self) -> Option<Retained<NSNumber>>;
 
         #[cfg(feature = "UITextFormattingViewControllerFormattingDescriptor")]
         /// Text list style associated with the `UITextFormattingViewControllerTextListChangeType`.
         /// If property is nil for `UITextFormattingViewControllerTextListChangeType`, it indicates text list has been removed.
         #[unsafe(method(textList))]
         #[unsafe(method_family = none)]
-        pub fn textList(&self) -> Option<Retained<UITextFormattingViewControllerTextList>>;
+        pub unsafe fn textList(&self) -> Option<Retained<UITextFormattingViewControllerTextList>>;
 
         #[cfg(feature = "NSText")]
         /// Text alignment associated with the `UITextFormattingViewControllerTextAlignmentChangeType`.
         #[unsafe(method(textAlignment))]
         #[unsafe(method_family = none)]
-        pub fn textAlignment(&self) -> NSTextAlignment;
+        pub unsafe fn textAlignment(&self) -> NSTextAlignment;
 
         #[cfg(feature = "UITextFormattingViewControllerFormattingDescriptor")]
         /// Text highlight associated with the `UITextFormattingViewControllerHighlightChangeType`.
         /// If property is nil for `UITextFormattingViewControllerHighlightChangeType`, it indicates highlight has been removed.
         #[unsafe(method(highlight))]
         #[unsafe(method_family = none)]
-        pub fn highlight(&self) -> Option<Retained<UITextFormattingViewControllerHighlight>>;
+        pub unsafe fn highlight(&self)
+            -> Option<Retained<UITextFormattingViewControllerHighlight>>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

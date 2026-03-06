@@ -2,7 +2,7 @@
 #![allow(clippy::needless_doctest_main)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![warn(missing_docs)]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 extern crate core;
 
@@ -25,12 +25,11 @@ pub use error::SoftBufferError;
 
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle, RawDisplayHandle, RawWindowHandle};
 
-#[cfg(target_family = "wasm")]
+#[cfg(target_arch = "wasm32")]
 pub use backends::web::SurfaceExtWeb;
 
 /// An instance of this struct contains the platform-specific data that must be managed in order to
 /// write to a window on that platform.
-#[derive(Clone, Debug)]
 pub struct Context<D> {
     /// The inner static dispatch object.
     context_impl: ContextDispatch<D>,
@@ -73,7 +72,6 @@ pub struct Rect {
 }
 
 /// A surface for drawing to a window with software buffers.
-#[derive(Debug)]
 pub struct Surface<D, W> {
     /// This is boxed so that `Surface` is the same size on every platform.
     surface_impl: Box<SurfaceDispatch<D, W>>,
@@ -198,39 +196,13 @@ impl<D: HasDisplayHandle, W: HasWindowHandle> HasWindowHandle for Surface<D, W> 
 /// - Web
 /// - AppKit
 /// - UIKit
-///
-/// Buffer copies an channel swizzling happen on:
-/// - Android
-#[derive(Debug)]
 pub struct Buffer<'a, D, W> {
     buffer_impl: BufferDispatch<'a, D, W>,
     _marker: PhantomData<(Arc<D>, Cell<()>)>,
 }
 
-impl<D: HasDisplayHandle, W: HasWindowHandle> Buffer<'_, D, W> {
-    /// The amount of pixels wide the buffer is.
-    pub fn width(&self) -> NonZeroU32 {
-        let width = self.buffer_impl.width();
-        debug_assert_eq!(
-            width.get() as usize * self.buffer_impl.height().get() as usize,
-            self.len(),
-            "buffer must be sized correctly"
-        );
-        width
-    }
-
-    /// The amount of pixels tall the buffer is.
-    pub fn height(&self) -> NonZeroU32 {
-        let height = self.buffer_impl.height();
-        debug_assert_eq!(
-            height.get() as usize * self.buffer_impl.width().get() as usize,
-            self.len(),
-            "buffer must be sized correctly"
-        );
-        height
-    }
-
-    /// `age` is the number of frames ago this buffer was last presented. So if the value is
+impl<'a, D: HasDisplayHandle, W: HasWindowHandle> Buffer<'a, D, W> {
+    /// Is age is the number of frames ago this buffer was last presented. So if the value is
     /// `1`, it is the same as the last frame, and if it is `2`, it is the same as the frame
     /// before that (for backends using double buffering). If the value is `0`, it is a new
     /// buffer that has unspecified contents.
@@ -272,7 +244,7 @@ impl<D: HasDisplayHandle, W: HasWindowHandle> Buffer<'_, D, W> {
     }
 }
 
-impl<D: HasDisplayHandle, W: HasWindowHandle> ops::Deref for Buffer<'_, D, W> {
+impl<'a, D: HasDisplayHandle, W: HasWindowHandle> ops::Deref for Buffer<'a, D, W> {
     type Target = [u32];
 
     #[inline]
@@ -281,7 +253,7 @@ impl<D: HasDisplayHandle, W: HasWindowHandle> ops::Deref for Buffer<'_, D, W> {
     }
 }
 
-impl<D: HasDisplayHandle, W: HasWindowHandle> ops::DerefMut for Buffer<'_, D, W> {
+impl<'a, D: HasDisplayHandle, W: HasWindowHandle> ops::DerefMut for Buffer<'a, D, W> {
     #[inline]
     fn deref_mut(&mut self) -> &mut [u32] {
         self.buffer_impl.pixels_mut()

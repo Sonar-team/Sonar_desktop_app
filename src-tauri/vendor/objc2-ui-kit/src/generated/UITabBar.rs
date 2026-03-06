@@ -121,70 +121,66 @@ impl UITabBar {
     extern_methods!(
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
-        pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UITabBarDelegate>>>;
+        pub unsafe fn delegate(&self) -> Option<Retained<ProtocolObject<dyn UITabBarDelegate>>>;
 
-        /// Setter for [`delegate`][Self::delegate].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`delegate`][Self::delegate].
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
-        pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn UITabBarDelegate>>);
+        pub unsafe fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn UITabBarDelegate>>);
 
         #[cfg(all(feature = "UIBarItem", feature = "UITabBarItem"))]
         #[unsafe(method(items))]
         #[unsafe(method_family = none)]
-        pub fn items(&self) -> Option<Retained<NSArray<UITabBarItem>>>;
+        pub unsafe fn items(&self) -> Option<Retained<NSArray<UITabBarItem>>>;
 
         #[cfg(all(feature = "UIBarItem", feature = "UITabBarItem"))]
         /// Setter for [`items`][Self::items].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setItems:))]
         #[unsafe(method_family = none)]
-        pub fn setItems(&self, items: Option<&NSArray<UITabBarItem>>);
+        pub unsafe fn setItems(&self, items: Option<&NSArray<UITabBarItem>>);
 
         #[cfg(all(feature = "UIBarItem", feature = "UITabBarItem"))]
         #[unsafe(method(selectedItem))]
         #[unsafe(method_family = none)]
-        pub fn selectedItem(&self) -> Option<Retained<UITabBarItem>>;
+        pub unsafe fn selectedItem(&self) -> Option<Retained<UITabBarItem>>;
 
         #[cfg(all(feature = "UIBarItem", feature = "UITabBarItem"))]
-        /// Setter for [`selectedItem`][Self::selectedItem].
-        ///
         /// This is a [weak property][objc2::topics::weak_property].
+        /// Setter for [`selectedItem`][Self::selectedItem].
         #[unsafe(method(setSelectedItem:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectedItem(&self, selected_item: Option<&UITabBarItem>);
+        pub unsafe fn setSelectedItem(&self, selected_item: Option<&UITabBarItem>);
 
         #[cfg(all(feature = "UIBarItem", feature = "UITabBarItem"))]
         #[unsafe(method(setItems:animated:))]
         #[unsafe(method_family = none)]
-        pub fn setItems_animated(&self, items: Option<&NSArray<UITabBarItem>>, animated: bool);
+        pub unsafe fn setItems_animated(
+            &self,
+            items: Option<&NSArray<UITabBarItem>>,
+            animated: bool,
+        );
 
         #[cfg(all(feature = "UIBarItem", feature = "UITabBarItem"))]
         #[unsafe(method(beginCustomizingItems:))]
         #[unsafe(method_family = none)]
-        pub fn beginCustomizingItems(&self, items: &NSArray<UITabBarItem>);
+        pub unsafe fn beginCustomizingItems(&self, items: &NSArray<UITabBarItem>);
 
         #[unsafe(method(endCustomizingAnimated:))]
         #[unsafe(method_family = none)]
-        pub fn endCustomizingAnimated(&self, animated: bool) -> bool;
+        pub unsafe fn endCustomizingAnimated(&self, animated: bool) -> bool;
 
         #[unsafe(method(isCustomizing))]
         #[unsafe(method_family = none)]
-        pub fn isCustomizing(&self) -> bool;
+        pub unsafe fn isCustomizing(&self) -> bool;
 
         #[cfg(feature = "UIColor")]
         #[unsafe(method(tintColor))]
         #[unsafe(method_family = none)]
-        pub fn tintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn tintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`tintColor`][Self::tintColor].
-        ///
-        /// # Safety
-        ///
-        /// `tint_color` might not allow `None`.
         #[unsafe(method(setTintColor:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setTintColor(&self, tint_color: Option<&UIColor>);
@@ -192,160 +188,163 @@ impl UITabBar {
         #[cfg(feature = "UIColor")]
         #[unsafe(method(barTintColor))]
         #[unsafe(method_family = none)]
-        pub fn barTintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn barTintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`barTintColor`][Self::barTintColor].
         #[unsafe(method(setBarTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setBarTintColor(&self, bar_tint_color: Option<&UIColor>);
+        pub unsafe fn setBarTintColor(&self, bar_tint_color: Option<&UIColor>);
 
         #[cfg(feature = "UIColor")]
         /// Unselected items in this tab bar will be tinted with this color. Setting this value to nil indicates that UITabBar should use its default value instead.
         #[unsafe(method(unselectedItemTintColor))]
         #[unsafe(method_family = none)]
-        pub fn unselectedItemTintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn unselectedItemTintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`unselectedItemTintColor`][Self::unselectedItemTintColor].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setUnselectedItemTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setUnselectedItemTintColor(&self, unselected_item_tint_color: Option<&UIColor>);
+        pub unsafe fn setUnselectedItemTintColor(
+            &self,
+            unselected_item_tint_color: Option<&UIColor>,
+        );
 
         #[cfg(feature = "UIColor")]
         #[deprecated]
         #[unsafe(method(selectedImageTintColor))]
         #[unsafe(method_family = none)]
-        pub fn selectedImageTintColor(&self) -> Option<Retained<UIColor>>;
+        pub unsafe fn selectedImageTintColor(&self) -> Option<Retained<UIColor>>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`selectedImageTintColor`][Self::selectedImageTintColor].
         #[deprecated]
         #[unsafe(method(setSelectedImageTintColor:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectedImageTintColor(&self, selected_image_tint_color: Option<&UIColor>);
+        pub unsafe fn setSelectedImageTintColor(&self, selected_image_tint_color: Option<&UIColor>);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(backgroundImage))]
         #[unsafe(method_family = none)]
-        pub fn backgroundImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn backgroundImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`backgroundImage`][Self::backgroundImage].
         #[unsafe(method(setBackgroundImage:))]
         #[unsafe(method_family = none)]
-        pub fn setBackgroundImage(&self, background_image: Option<&UIImage>);
+        pub unsafe fn setBackgroundImage(&self, background_image: Option<&UIImage>);
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(selectionIndicatorImage))]
         #[unsafe(method_family = none)]
-        pub fn selectionIndicatorImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn selectionIndicatorImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`selectionIndicatorImage`][Self::selectionIndicatorImage].
         #[unsafe(method(setSelectionIndicatorImage:))]
         #[unsafe(method_family = none)]
-        pub fn setSelectionIndicatorImage(&self, selection_indicator_image: Option<&UIImage>);
+        pub unsafe fn setSelectionIndicatorImage(
+            &self,
+            selection_indicator_image: Option<&UIImage>,
+        );
 
         #[cfg(feature = "UIImage")]
         #[unsafe(method(shadowImage))]
         #[unsafe(method_family = none)]
-        pub fn shadowImage(&self) -> Option<Retained<UIImage>>;
+        pub unsafe fn shadowImage(&self) -> Option<Retained<UIImage>>;
 
         #[cfg(feature = "UIImage")]
         /// Setter for [`shadowImage`][Self::shadowImage].
         #[unsafe(method(setShadowImage:))]
         #[unsafe(method_family = none)]
-        pub fn setShadowImage(&self, shadow_image: Option<&UIImage>);
+        pub unsafe fn setShadowImage(&self, shadow_image: Option<&UIImage>);
 
         #[unsafe(method(itemPositioning))]
         #[unsafe(method_family = none)]
-        pub fn itemPositioning(&self) -> UITabBarItemPositioning;
+        pub unsafe fn itemPositioning(&self) -> UITabBarItemPositioning;
 
         /// Setter for [`itemPositioning`][Self::itemPositioning].
         #[unsafe(method(setItemPositioning:))]
         #[unsafe(method_family = none)]
-        pub fn setItemPositioning(&self, item_positioning: UITabBarItemPositioning);
+        pub unsafe fn setItemPositioning(&self, item_positioning: UITabBarItemPositioning);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(itemWidth))]
         #[unsafe(method_family = none)]
-        pub fn itemWidth(&self) -> CGFloat;
+        pub unsafe fn itemWidth(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`itemWidth`][Self::itemWidth].
         #[unsafe(method(setItemWidth:))]
         #[unsafe(method_family = none)]
-        pub fn setItemWidth(&self, item_width: CGFloat);
+        pub unsafe fn setItemWidth(&self, item_width: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(itemSpacing))]
         #[unsafe(method_family = none)]
-        pub fn itemSpacing(&self) -> CGFloat;
+        pub unsafe fn itemSpacing(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`itemSpacing`][Self::itemSpacing].
         #[unsafe(method(setItemSpacing:))]
         #[unsafe(method_family = none)]
-        pub fn setItemSpacing(&self, item_spacing: CGFloat);
+        pub unsafe fn setItemSpacing(&self, item_spacing: CGFloat);
 
         #[cfg(feature = "UIInterface")]
         #[unsafe(method(barStyle))]
         #[unsafe(method_family = none)]
-        pub fn barStyle(&self) -> UIBarStyle;
+        pub unsafe fn barStyle(&self) -> UIBarStyle;
 
         #[cfg(feature = "UIInterface")]
         /// Setter for [`barStyle`][Self::barStyle].
         #[unsafe(method(setBarStyle:))]
         #[unsafe(method_family = none)]
-        pub fn setBarStyle(&self, bar_style: UIBarStyle);
+        pub unsafe fn setBarStyle(&self, bar_style: UIBarStyle);
 
         #[unsafe(method(isTranslucent))]
         #[unsafe(method_family = none)]
-        pub fn isTranslucent(&self) -> bool;
+        pub unsafe fn isTranslucent(&self) -> bool;
 
         /// Setter for [`isTranslucent`][Self::isTranslucent].
         #[unsafe(method(setTranslucent:))]
         #[unsafe(method_family = none)]
-        pub fn setTranslucent(&self, translucent: bool);
+        pub unsafe fn setTranslucent(&self, translucent: bool);
 
         #[cfg(all(feature = "UIBarAppearance", feature = "UITabBarAppearance"))]
         /// Describes the appearance attributes for the tab bar to use.
         #[unsafe(method(standardAppearance))]
         #[unsafe(method_family = none)]
-        pub fn standardAppearance(&self) -> Retained<UITabBarAppearance>;
+        pub unsafe fn standardAppearance(&self) -> Retained<UITabBarAppearance>;
 
         #[cfg(all(feature = "UIBarAppearance", feature = "UITabBarAppearance"))]
         /// Setter for [`standardAppearance`][Self::standardAppearance].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setStandardAppearance:))]
         #[unsafe(method_family = none)]
-        pub fn setStandardAppearance(&self, standard_appearance: &UITabBarAppearance);
+        pub unsafe fn setStandardAppearance(&self, standard_appearance: &UITabBarAppearance);
 
         #[cfg(all(feature = "UIBarAppearance", feature = "UITabBarAppearance"))]
         /// Describes the appearance attributes for the tabBar to use when an observable scroll view is scrolled to the bottom. If not set, standardAppearance will be used instead.
         #[unsafe(method(scrollEdgeAppearance))]
         #[unsafe(method_family = none)]
-        pub fn scrollEdgeAppearance(&self) -> Option<Retained<UITabBarAppearance>>;
+        pub unsafe fn scrollEdgeAppearance(&self) -> Option<Retained<UITabBarAppearance>>;
 
         #[cfg(all(feature = "UIBarAppearance", feature = "UITabBarAppearance"))]
         /// Setter for [`scrollEdgeAppearance`][Self::scrollEdgeAppearance].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setScrollEdgeAppearance:))]
         #[unsafe(method_family = none)]
-        pub fn setScrollEdgeAppearance(&self, scroll_edge_appearance: Option<&UITabBarAppearance>);
+        pub unsafe fn setScrollEdgeAppearance(
+            &self,
+            scroll_edge_appearance: Option<&UITabBarAppearance>,
+        );
 
         #[unsafe(method(leadingAccessoryView))]
         #[unsafe(method_family = none)]
-        pub fn leadingAccessoryView(&self) -> Retained<UIView>;
+        pub unsafe fn leadingAccessoryView(&self) -> Retained<UIView>;
 
         #[unsafe(method(trailingAccessoryView))]
         #[unsafe(method_family = none)]
-        pub fn trailingAccessoryView(&self) -> Retained<UIView>;
+        pub unsafe fn trailingAccessoryView(&self) -> Retained<UIView>;
     );
 }
 
@@ -356,21 +355,14 @@ impl UITabBar {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
             this: Allocated<Self>,
             coder: &NSCoder,
         ) -> Option<Retained<Self>>;
-
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -378,9 +370,13 @@ impl UITabBar {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UITabBar {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -396,7 +392,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBar:didSelectItem:))]
         #[unsafe(method_family = none)]
-        fn tabBar_didSelectItem(&self, tab_bar: &UITabBar, item: &UITabBarItem);
+        unsafe fn tabBar_didSelectItem(&self, tab_bar: &UITabBar, item: &UITabBarItem);
 
         #[cfg(all(
             feature = "UIBarItem",
@@ -407,7 +403,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBar:willBeginCustomizingItems:))]
         #[unsafe(method_family = none)]
-        fn tabBar_willBeginCustomizingItems(
+        unsafe fn tabBar_willBeginCustomizingItems(
             &self,
             tab_bar: &UITabBar,
             items: &NSArray<UITabBarItem>,
@@ -422,7 +418,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBar:didBeginCustomizingItems:))]
         #[unsafe(method_family = none)]
-        fn tabBar_didBeginCustomizingItems(
+        unsafe fn tabBar_didBeginCustomizingItems(
             &self,
             tab_bar: &UITabBar,
             items: &NSArray<UITabBarItem>,
@@ -437,7 +433,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBar:willEndCustomizingItems:changed:))]
         #[unsafe(method_family = none)]
-        fn tabBar_willEndCustomizingItems_changed(
+        unsafe fn tabBar_willEndCustomizingItems_changed(
             &self,
             tab_bar: &UITabBar,
             items: &NSArray<UITabBarItem>,
@@ -453,7 +449,7 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(tabBar:didEndCustomizingItems:changed:))]
         #[unsafe(method_family = none)]
-        fn tabBar_didEndCustomizingItems_changed(
+        unsafe fn tabBar_didEndCustomizingItems_changed(
             &self,
             tab_bar: &UITabBar,
             items: &NSArray<UITabBarItem>,

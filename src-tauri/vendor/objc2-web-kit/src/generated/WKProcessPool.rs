@@ -17,7 +17,6 @@ extern_class!(
     #[unsafe(super(NSObject))]
     #[thread_kind = MainThreadOnly]
     #[derive(Debug, PartialEq, Eq, Hash)]
-    #[deprecated = "Creating and using multiple instances of WKProcessPool no longer has any effect."]
     pub struct WKProcessPool;
 );
 

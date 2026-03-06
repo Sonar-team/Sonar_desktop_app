@@ -241,7 +241,6 @@ mod private_NSAttributedStringAttributeFixing {
 }
 
 /// Category on [`NSMutableAttributedString`].
-///
 /// ********************** Attribute fixing ***********************
 pub unsafe trait NSAttributedStringAttributeFixing:
     ClassType + Sized + private_NSAttributedStringAttributeFixing::Sealed
@@ -249,7 +248,7 @@ pub unsafe trait NSAttributedStringAttributeFixing:
     extern_methods!(
         #[unsafe(method(fixAttributesInRange:))]
         #[unsafe(method_family = none)]
-        fn fixAttributesInRange(&self, range: NSRange);
+        unsafe fn fixAttributesInRange(&self, range: NSRange);
     );
 }
 
@@ -454,10 +453,6 @@ pub unsafe trait NSAttributedStringDocumentFormats:
     ClassType + Sized + private_NSAttributedStringDocumentFormats::Sealed
 {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `options` generic should be of the correct type.
-        /// - `dict` generic should be of the correct type.
         #[unsafe(method(initWithURL:options:documentAttributes:error:_))]
         #[unsafe(method_family = init)]
         unsafe fn initWithURL_options_documentAttributes_error(
@@ -471,10 +466,6 @@ pub unsafe trait NSAttributedStringDocumentFormats:
             >,
         ) -> Result<Retained<Self>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// - `options` generic should be of the correct type.
-        /// - `dict` generic should be of the correct type.
         #[unsafe(method(initWithData:options:documentAttributes:error:_))]
         #[unsafe(method_family = init)]
         unsafe fn initWithData_options_documentAttributes_error(
@@ -488,9 +479,6 @@ pub unsafe trait NSAttributedStringDocumentFormats:
             >,
         ) -> Result<Retained<Self>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(dataFromRange:documentAttributes:error:_))]
         #[unsafe(method_family = none)]
         unsafe fn dataFromRange_documentAttributes_error(
@@ -499,9 +487,6 @@ pub unsafe trait NSAttributedStringDocumentFormats:
             dict: &NSDictionary<NSAttributedStringDocumentAttributeKey, AnyObject>,
         ) -> Result<Retained<NSData>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(fileWrapperFromRange:documentAttributes:error:_))]
         #[unsafe(method_family = none)]
         unsafe fn fileWrapperFromRange_documentAttributes_error(
@@ -524,10 +509,6 @@ pub unsafe trait NSMutableAttributedStringDocumentFormats:
     ClassType + Sized + private_NSMutableAttributedStringDocumentFormats::Sealed
 {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `opts` generic should be of the correct type.
-        /// - `dict` generic should be of the correct type.
         #[unsafe(method(readFromURL:options:documentAttributes:error:_))]
         #[unsafe(method_family = none)]
         unsafe fn readFromURL_options_documentAttributes_error(
@@ -541,10 +522,6 @@ pub unsafe trait NSMutableAttributedStringDocumentFormats:
             >,
         ) -> Result<(), Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// - `opts` generic should be of the correct type.
-        /// - `dict` generic should be of the correct type.
         #[unsafe(method(readFromData:options:documentAttributes:error:_))]
         #[unsafe(method_family = none)]
         unsafe fn readFromData_options_documentAttributes_error(
@@ -568,7 +545,6 @@ mod private_NSAttributedStringKitAdditions {
 }
 
 /// Category on [`NSAttributedString`].
-///
 /// ********************** Misc methods ***********************
 pub unsafe trait NSAttributedStringKitAdditions:
     ClassType + Sized + private_NSAttributedStringKitAdditions::Sealed
@@ -576,11 +552,11 @@ pub unsafe trait NSAttributedStringKitAdditions:
     extern_methods!(
         #[unsafe(method(containsAttachmentsInRange:))]
         #[unsafe(method_family = none)]
-        fn containsAttachmentsInRange(&self, range: NSRange) -> bool;
+        unsafe fn containsAttachmentsInRange(&self, range: NSRange) -> bool;
 
         #[unsafe(method(prefersRTFDInRange:))]
         #[unsafe(method_family = none)]
-        fn prefersRTFDInRange(&self, range: NSRange) -> bool;
+        unsafe fn prefersRTFDInRange(&self, range: NSRange) -> bool;
     );
 }
 
@@ -647,7 +623,6 @@ mod private_NSAttributedStringAppKitAttributeFixing {
 }
 
 /// Category on [`NSMutableAttributedString`].
-///
 /// ********************** Attribute fixing ***********************
 pub unsafe trait NSAttributedStringAppKitAttributeFixing:
     ClassType + Sized + private_NSAttributedStringAppKitAttributeFixing::Sealed
@@ -655,15 +630,15 @@ pub unsafe trait NSAttributedStringAppKitAttributeFixing:
     extern_methods!(
         #[unsafe(method(fixFontAttributeInRange:))]
         #[unsafe(method_family = none)]
-        fn fixFontAttributeInRange(&self, range: NSRange);
+        unsafe fn fixFontAttributeInRange(&self, range: NSRange);
 
         #[unsafe(method(fixParagraphStyleAttributeInRange:))]
         #[unsafe(method_family = none)]
-        fn fixParagraphStyleAttributeInRange(&self, range: NSRange);
+        unsafe fn fixParagraphStyleAttributeInRange(&self, range: NSRange);
 
         #[unsafe(method(fixAttachmentAttributeInRange:))]
         #[unsafe(method_family = none)]
-        fn fixAttachmentAttributeInRange(&self, range: NSRange);
+        unsafe fn fixAttachmentAttributeInRange(&self, range: NSRange);
     );
 }
 
@@ -857,9 +832,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
     ClassType + Sized + private_NSAttributedStringAppKitDocumentFormats::Sealed
 {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(initWithRTF:documentAttributes:))]
         #[unsafe(method_family = init)]
         unsafe fn initWithRTF_documentAttributes(
@@ -872,9 +844,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
             >,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(initWithRTFD:documentAttributes:))]
         #[unsafe(method_family = init)]
         unsafe fn initWithRTFD_documentAttributes(
@@ -887,9 +856,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
             >,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(initWithHTML:documentAttributes:))]
         #[unsafe(method_family = init)]
         unsafe fn initWithHTML_documentAttributes(
@@ -902,9 +868,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
             >,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(initWithHTML:baseURL:documentAttributes:))]
         #[unsafe(method_family = init)]
         unsafe fn initWithHTML_baseURL_documentAttributes(
@@ -918,9 +881,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
             >,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(initWithDocFormat:documentAttributes:))]
         #[unsafe(method_family = init)]
         unsafe fn initWithDocFormat_documentAttributes(
@@ -933,10 +893,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
             >,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// - `options` generic should be of the correct type.
-        /// - `dict` generic should be of the correct type.
         #[unsafe(method(initWithHTML:options:documentAttributes:))]
         #[unsafe(method_family = init)]
         unsafe fn initWithHTML_options_documentAttributes(
@@ -950,9 +906,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
             >,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(initWithRTFDFileWrapper:documentAttributes:))]
         #[unsafe(method_family = init)]
         unsafe fn initWithRTFDFileWrapper_documentAttributes(
@@ -965,9 +918,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
             >,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(RTFFromRange:documentAttributes:))]
         #[unsafe(method_family = none)]
         unsafe fn RTFFromRange_documentAttributes(
@@ -976,9 +926,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
             dict: &NSDictionary<NSAttributedStringDocumentAttributeKey, AnyObject>,
         ) -> Option<Retained<NSData>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(RTFDFromRange:documentAttributes:))]
         #[unsafe(method_family = none)]
         unsafe fn RTFDFromRange_documentAttributes(
@@ -987,9 +934,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
             dict: &NSDictionary<NSAttributedStringDocumentAttributeKey, AnyObject>,
         ) -> Option<Retained<NSData>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(RTFDFileWrapperFromRange:documentAttributes:))]
         #[unsafe(method_family = none)]
         unsafe fn RTFDFileWrapperFromRange_documentAttributes(
@@ -998,9 +942,6 @@ pub unsafe trait NSAttributedStringAppKitDocumentFormats:
             dict: &NSDictionary<NSAttributedStringDocumentAttributeKey, AnyObject>,
         ) -> Option<Retained<NSFileWrapper>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(docFormatFromRange:documentAttributes:))]
         #[unsafe(method_family = none)]
         unsafe fn docFormatFromRange_documentAttributes(
@@ -1019,7 +960,6 @@ mod private_NSAttributedStringAppKitAdditions {
 }
 
 /// Category on [`NSAttributedString`].
-///
 /// ********************** Misc methods ***********************
 pub unsafe trait NSAttributedStringAppKitAdditions:
     ClassType + Sized + private_NSAttributedStringAppKitAdditions::Sealed
@@ -1027,21 +967,21 @@ pub unsafe trait NSAttributedStringAppKitAdditions:
     extern_methods!(
         #[unsafe(method(fontAttributesInRange:))]
         #[unsafe(method_family = none)]
-        fn fontAttributesInRange(
+        unsafe fn fontAttributesInRange(
             &self,
             range: NSRange,
         ) -> Retained<NSDictionary<NSAttributedStringKey, AnyObject>>;
 
         #[unsafe(method(rulerAttributesInRange:))]
         #[unsafe(method_family = none)]
-        fn rulerAttributesInRange(
+        unsafe fn rulerAttributesInRange(
             &self,
             range: NSRange,
         ) -> Retained<NSDictionary<NSAttributedStringKey, AnyObject>>;
 
         #[unsafe(method(lineBreakBeforeIndex:withinRange:))]
         #[unsafe(method_family = none)]
-        fn lineBreakBeforeIndex_withinRange(
+        unsafe fn lineBreakBeforeIndex_withinRange(
             &self,
             location: NSUInteger,
             a_range: NSRange,
@@ -1049,7 +989,7 @@ pub unsafe trait NSAttributedStringAppKitAdditions:
 
         #[unsafe(method(lineBreakByHyphenatingBeforeIndex:withinRange:))]
         #[unsafe(method_family = none)]
-        fn lineBreakByHyphenatingBeforeIndex_withinRange(
+        unsafe fn lineBreakByHyphenatingBeforeIndex_withinRange(
             &self,
             location: NSUInteger,
             a_range: NSRange,
@@ -1057,31 +997,47 @@ pub unsafe trait NSAttributedStringAppKitAdditions:
 
         #[unsafe(method(doubleClickAtIndex:))]
         #[unsafe(method_family = none)]
-        fn doubleClickAtIndex(&self, location: NSUInteger) -> NSRange;
+        unsafe fn doubleClickAtIndex(&self, location: NSUInteger) -> NSRange;
 
         #[unsafe(method(nextWordFromIndex:forward:))]
         #[unsafe(method_family = none)]
-        fn nextWordFromIndex_forward(&self, location: NSUInteger, is_forward: bool) -> NSUInteger;
+        unsafe fn nextWordFromIndex_forward(
+            &self,
+            location: NSUInteger,
+            is_forward: bool,
+        ) -> NSUInteger;
 
         #[cfg(feature = "NSTextTable")]
         #[unsafe(method(rangeOfTextBlock:atIndex:))]
         #[unsafe(method_family = none)]
-        fn rangeOfTextBlock_atIndex(&self, block: &NSTextBlock, location: NSUInteger) -> NSRange;
+        unsafe fn rangeOfTextBlock_atIndex(
+            &self,
+            block: &NSTextBlock,
+            location: NSUInteger,
+        ) -> NSRange;
 
         #[cfg(feature = "NSTextTable")]
         #[unsafe(method(rangeOfTextTable:atIndex:))]
         #[unsafe(method_family = none)]
-        fn rangeOfTextTable_atIndex(&self, table: &NSTextTable, location: NSUInteger) -> NSRange;
+        unsafe fn rangeOfTextTable_atIndex(
+            &self,
+            table: &NSTextTable,
+            location: NSUInteger,
+        ) -> NSRange;
 
         #[cfg(feature = "NSTextList")]
         #[unsafe(method(rangeOfTextList:atIndex:))]
         #[unsafe(method_family = none)]
-        fn rangeOfTextList_atIndex(&self, list: &NSTextList, location: NSUInteger) -> NSRange;
+        unsafe fn rangeOfTextList_atIndex(
+            &self,
+            list: &NSTextList,
+            location: NSUInteger,
+        ) -> NSRange;
 
         #[cfg(feature = "NSTextList")]
         #[unsafe(method(itemNumberInTextList:atIndex:))]
         #[unsafe(method_family = none)]
-        fn itemNumberInTextList_atIndex(
+        unsafe fn itemNumberInTextList_atIndex(
             &self,
             list: &NSTextList,
             location: NSUInteger,
@@ -1103,11 +1059,11 @@ pub unsafe trait NSAttributedStringPasteboardAdditions:
     extern_methods!(
         #[unsafe(method(textTypes))]
         #[unsafe(method_family = none)]
-        fn textTypes() -> Retained<NSArray<NSString>>;
+        unsafe fn textTypes() -> Retained<NSArray<NSString>>;
 
         #[unsafe(method(textUnfilteredTypes))]
         #[unsafe(method_family = none)]
-        fn textUnfilteredTypes() -> Retained<NSArray<NSString>>;
+        unsafe fn textUnfilteredTypes() -> Retained<NSArray<NSString>>;
     );
 }
 
@@ -1135,30 +1091,30 @@ pub unsafe trait NSMutableAttributedStringAppKitAdditions:
     extern_methods!(
         #[unsafe(method(superscriptRange:))]
         #[unsafe(method_family = none)]
-        fn superscriptRange(&self, range: NSRange);
+        unsafe fn superscriptRange(&self, range: NSRange);
 
         #[unsafe(method(subscriptRange:))]
         #[unsafe(method_family = none)]
-        fn subscriptRange(&self, range: NSRange);
+        unsafe fn subscriptRange(&self, range: NSRange);
 
         #[unsafe(method(unscriptRange:))]
         #[unsafe(method_family = none)]
-        fn unscriptRange(&self, range: NSRange);
+        unsafe fn unscriptRange(&self, range: NSRange);
 
         #[cfg(feature = "NSFontManager")]
         #[unsafe(method(applyFontTraits:range:))]
         #[unsafe(method_family = none)]
-        fn applyFontTraits_range(&self, trait_mask: NSFontTraitMask, range: NSRange);
+        unsafe fn applyFontTraits_range(&self, trait_mask: NSFontTraitMask, range: NSRange);
 
         #[cfg(feature = "NSText")]
         #[unsafe(method(setAlignment:range:))]
         #[unsafe(method_family = none)]
-        fn setAlignment_range(&self, alignment: NSTextAlignment, range: NSRange);
+        unsafe fn setAlignment_range(&self, alignment: NSTextAlignment, range: NSRange);
 
         #[cfg(feature = "NSText")]
         #[unsafe(method(setBaseWritingDirection:range:))]
         #[unsafe(method_family = none)]
-        fn setBaseWritingDirection_range(
+        unsafe fn setBaseWritingDirection_range(
             &self,
             writing_direction: NSWritingDirection,
             range: NSRange,
@@ -1196,31 +1152,26 @@ pub static NSUnderlineByWord: NSUnderlineStyle = NSUnderlineStyle(NSUnderlineSty
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nscharactershapeattributename?language=objc)
-    #[deprecated = "This attribute is bound to a specific implementation of ATS feature and not generically supported by wide range of fonts. The majority of characters accessed through this API are now encoded in the Unicode standard. Use the CTFont feature API for fine control over character shape choices."]
     pub static NSCharacterShapeAttributeName: &'static NSAttributedStringKey;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsusesscreenfontsdocumentattribute?language=objc)
-    #[deprecated]
     pub static NSUsesScreenFontsDocumentAttribute: &'static NSAttributedStringKey;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsobliquenessattributename?language=objc)
-    #[deprecated = "This attribute is not supported with TextKit 2"]
     pub static NSObliquenessAttributeName: &'static NSAttributedStringKey;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsexpansionattributename?language=objc)
-    #[deprecated = "This attribute is not supported with TextKit 2"]
     pub static NSExpansionAttributeName: &'static NSAttributedStringKey;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsverticalglyphformattributename?language=objc)
-    #[deprecated = "This attribute is not supported with TextKit 2"]
     pub static NSVerticalGlyphFormAttributeName: &'static NSAttributedStringKey;
 }
 
@@ -1233,13 +1184,11 @@ pub const NSSingleUnderlineStyle: c_uint = 1;
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsunderlinestrikethroughmask?language=objc)
-    #[deprecated = "Use NSStrikethroughStyleAttributeName instead"]
     pub static NSUnderlineStrikethroughMask: NSUInteger;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsunderlinebywordmask?language=objc)
-    #[deprecated = "Use NSUnderlineByWord instead"]
     pub static NSUnderlineByWordMask: NSUInteger;
 }
 
@@ -1255,31 +1204,28 @@ pub unsafe trait NSAttributedStringNSDeprecatedKitAdditions:
     extern_methods!(
         #[unsafe(method(containsAttachments))]
         #[unsafe(method_family = none)]
-        fn containsAttachments(&self) -> bool;
+        unsafe fn containsAttachments(&self) -> bool;
 
         #[deprecated]
         #[unsafe(method(textFileTypes))]
         #[unsafe(method_family = none)]
-        fn textFileTypes() -> Retained<NSArray>;
+        unsafe fn textFileTypes() -> Retained<NSArray>;
 
         #[deprecated]
         #[unsafe(method(textPasteboardTypes))]
         #[unsafe(method_family = none)]
-        fn textPasteboardTypes() -> Retained<NSArray>;
+        unsafe fn textPasteboardTypes() -> Retained<NSArray>;
 
         #[deprecated]
         #[unsafe(method(textUnfilteredFileTypes))]
         #[unsafe(method_family = none)]
-        fn textUnfilteredFileTypes() -> Retained<NSArray>;
+        unsafe fn textUnfilteredFileTypes() -> Retained<NSArray>;
 
         #[deprecated]
         #[unsafe(method(textUnfilteredPasteboardTypes))]
         #[unsafe(method_family = none)]
-        fn textUnfilteredPasteboardTypes() -> Retained<NSArray>;
+        unsafe fn textUnfilteredPasteboardTypes() -> Retained<NSArray>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[deprecated = "Use -initWithURL:options:documentAttributes:error: instead"]
         #[unsafe(method(initWithURL:documentAttributes:))]
         #[unsafe(method_family = init)]
@@ -1289,9 +1235,6 @@ pub unsafe trait NSAttributedStringNSDeprecatedKitAdditions:
             dict: Option<&mut Option<Retained<NSDictionary>>>,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[deprecated = "Use -initWithURL:options:documentAttributes:error: instead"]
         #[unsafe(method(initWithPath:documentAttributes:))]
         #[unsafe(method_family = init)]
@@ -1301,9 +1244,6 @@ pub unsafe trait NSAttributedStringNSDeprecatedKitAdditions:
             dict: Option<&mut Option<Retained<NSDictionary>>>,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `effective_range` must be a valid pointer.
         #[deprecated = "Use NSDataDetector instead"]
         #[unsafe(method(URLAtIndex:effectiveRange:))]
         #[unsafe(method_family = none)]

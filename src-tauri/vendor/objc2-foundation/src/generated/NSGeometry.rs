@@ -194,7 +194,7 @@ impl NSEdgeInsets {
 
 #[cfg(feature = "objc2-core-foundation")]
 #[inline]
-pub extern "C-unwind" fn NSEqualPoints(a_point: NSPoint, b_point: NSPoint) -> bool {
+pub unsafe extern "C-unwind" fn NSEqualPoints(a_point: NSPoint, b_point: NSPoint) -> bool {
     extern "C-unwind" {
         fn NSEqualPoints(a_point: NSPoint, b_point: NSPoint) -> Bool;
     }
@@ -203,7 +203,7 @@ pub extern "C-unwind" fn NSEqualPoints(a_point: NSPoint, b_point: NSPoint) -> bo
 
 #[cfg(feature = "objc2-core-foundation")]
 #[inline]
-pub extern "C-unwind" fn NSEqualSizes(a_size: NSSize, b_size: NSSize) -> bool {
+pub unsafe extern "C-unwind" fn NSEqualSizes(a_size: NSSize, b_size: NSSize) -> bool {
     extern "C-unwind" {
         fn NSEqualSizes(a_size: NSSize, b_size: NSSize) -> Bool;
     }
@@ -212,7 +212,7 @@ pub extern "C-unwind" fn NSEqualSizes(a_size: NSSize, b_size: NSSize) -> bool {
 
 #[cfg(feature = "objc2-core-foundation")]
 #[inline]
-pub extern "C-unwind" fn NSEqualRects(a_rect: NSRect, b_rect: NSRect) -> bool {
+pub unsafe extern "C-unwind" fn NSEqualRects(a_rect: NSRect, b_rect: NSRect) -> bool {
     extern "C-unwind" {
         fn NSEqualRects(a_rect: NSRect, b_rect: NSRect) -> Bool;
     }
@@ -221,7 +221,7 @@ pub extern "C-unwind" fn NSEqualRects(a_rect: NSRect, b_rect: NSRect) -> bool {
 
 #[cfg(feature = "objc2-core-foundation")]
 #[inline]
-pub extern "C-unwind" fn NSIsEmptyRect(a_rect: NSRect) -> bool {
+pub unsafe extern "C-unwind" fn NSIsEmptyRect(a_rect: NSRect) -> bool {
     extern "C-unwind" {
         fn NSIsEmptyRect(a_rect: NSRect) -> Bool;
     }
@@ -233,7 +233,7 @@ impl NSEdgeInsets {
     #[doc(alias = "NSEdgeInsetsEqual")]
     #[cfg(feature = "objc2-core-foundation")]
     #[inline]
-    pub fn equal(self, b_insets: NSEdgeInsets) -> bool {
+    pub unsafe fn equal(self: NSEdgeInsets, b_insets: NSEdgeInsets) -> bool {
         extern "C-unwind" {
             fn NSEdgeInsetsEqual(a_insets: NSEdgeInsets, b_insets: NSEdgeInsets) -> Bool;
         }
@@ -241,68 +241,37 @@ impl NSEdgeInsets {
     }
 }
 
-#[cfg(feature = "objc2-core-foundation")]
-#[inline]
-pub extern "C-unwind" fn NSInsetRect(a_rect: NSRect, d_x: CGFloat, d_y: CGFloat) -> NSRect {
-    extern "C-unwind" {
-        fn NSInsetRect(a_rect: NSRect, d_x: CGFloat, d_y: CGFloat) -> NSRect;
-    }
-    unsafe { NSInsetRect(a_rect, d_x, d_y) }
-}
-
-#[cfg(feature = "objc2-core-foundation")]
-#[inline]
-pub extern "C-unwind" fn NSIntegralRect(a_rect: NSRect) -> NSRect {
-    extern "C-unwind" {
-        fn NSIntegralRect(a_rect: NSRect) -> NSRect;
-    }
-    unsafe { NSIntegralRect(a_rect) }
-}
-
-#[cfg(feature = "objc2-core-foundation")]
-#[inline]
-pub extern "C-unwind" fn NSIntegralRectWithOptions(
-    a_rect: NSRect,
-    opts: NSAlignmentOptions,
-) -> NSRect {
-    extern "C-unwind" {
-        fn NSIntegralRectWithOptions(a_rect: NSRect, opts: NSAlignmentOptions) -> NSRect;
-    }
-    unsafe { NSIntegralRectWithOptions(a_rect, opts) }
-}
-
-#[cfg(feature = "objc2-core-foundation")]
-#[inline]
-pub extern "C-unwind" fn NSUnionRect(a_rect: NSRect, b_rect: NSRect) -> NSRect {
-    extern "C-unwind" {
-        fn NSUnionRect(a_rect: NSRect, b_rect: NSRect) -> NSRect;
-    }
-    unsafe { NSUnionRect(a_rect, b_rect) }
-}
-
-#[cfg(feature = "objc2-core-foundation")]
-#[inline]
-pub extern "C-unwind" fn NSIntersectionRect(a_rect: NSRect, b_rect: NSRect) -> NSRect {
-    extern "C-unwind" {
-        fn NSIntersectionRect(a_rect: NSRect, b_rect: NSRect) -> NSRect;
-    }
-    unsafe { NSIntersectionRect(a_rect, b_rect) }
-}
-
-#[cfg(feature = "objc2-core-foundation")]
-#[inline]
-pub extern "C-unwind" fn NSOffsetRect(a_rect: NSRect, d_x: CGFloat, d_y: CGFloat) -> NSRect {
-    extern "C-unwind" {
-        fn NSOffsetRect(a_rect: NSRect, d_x: CGFloat, d_y: CGFloat) -> NSRect;
-    }
-    unsafe { NSOffsetRect(a_rect, d_x, d_y) }
+extern "C-unwind" {
+    #[cfg(feature = "objc2-core-foundation")]
+    pub fn NSInsetRect(a_rect: NSRect, d_x: CGFloat, d_y: CGFloat) -> NSRect;
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// - `slice` must be a valid pointer.
-    /// - `rem` must be a valid pointer.
+    #[cfg(feature = "objc2-core-foundation")]
+    pub fn NSIntegralRect(a_rect: NSRect) -> NSRect;
+}
+
+extern "C-unwind" {
+    #[cfg(feature = "objc2-core-foundation")]
+    pub fn NSIntegralRectWithOptions(a_rect: NSRect, opts: NSAlignmentOptions) -> NSRect;
+}
+
+extern "C-unwind" {
+    #[cfg(feature = "objc2-core-foundation")]
+    pub fn NSUnionRect(a_rect: NSRect, b_rect: NSRect) -> NSRect;
+}
+
+extern "C-unwind" {
+    #[cfg(feature = "objc2-core-foundation")]
+    pub fn NSIntersectionRect(a_rect: NSRect, b_rect: NSRect) -> NSRect;
+}
+
+extern "C-unwind" {
+    #[cfg(feature = "objc2-core-foundation")]
+    pub fn NSOffsetRect(a_rect: NSRect, d_x: CGFloat, d_y: CGFloat) -> NSRect;
+}
+
+extern "C-unwind" {
     #[cfg(feature = "objc2-core-foundation")]
     pub fn NSDivideRect(
         in_rect: NSRect,
@@ -315,7 +284,7 @@ extern "C-unwind" {
 
 #[cfg(feature = "objc2-core-foundation")]
 #[inline]
-pub extern "C-unwind" fn NSPointInRect(a_point: NSPoint, a_rect: NSRect) -> bool {
+pub unsafe extern "C-unwind" fn NSPointInRect(a_point: NSPoint, a_rect: NSRect) -> bool {
     extern "C-unwind" {
         fn NSPointInRect(a_point: NSPoint, a_rect: NSRect) -> Bool;
     }
@@ -324,7 +293,11 @@ pub extern "C-unwind" fn NSPointInRect(a_point: NSPoint, a_rect: NSRect) -> bool
 
 #[cfg(feature = "objc2-core-foundation")]
 #[inline]
-pub extern "C-unwind" fn NSMouseInRect(a_point: NSPoint, a_rect: NSRect, flipped: bool) -> bool {
+pub unsafe extern "C-unwind" fn NSMouseInRect(
+    a_point: NSPoint,
+    a_rect: NSRect,
+    flipped: bool,
+) -> bool {
     extern "C-unwind" {
         fn NSMouseInRect(a_point: NSPoint, a_rect: NSRect, flipped: Bool) -> Bool;
     }
@@ -333,7 +306,7 @@ pub extern "C-unwind" fn NSMouseInRect(a_point: NSPoint, a_rect: NSRect, flipped
 
 #[cfg(feature = "objc2-core-foundation")]
 #[inline]
-pub extern "C-unwind" fn NSContainsRect(a_rect: NSRect, b_rect: NSRect) -> bool {
+pub unsafe extern "C-unwind" fn NSContainsRect(a_rect: NSRect, b_rect: NSRect) -> bool {
     extern "C-unwind" {
         fn NSContainsRect(a_rect: NSRect, b_rect: NSRect) -> Bool;
     }
@@ -342,7 +315,7 @@ pub extern "C-unwind" fn NSContainsRect(a_rect: NSRect, b_rect: NSRect) -> bool 
 
 #[cfg(feature = "objc2-core-foundation")]
 #[inline]
-pub extern "C-unwind" fn NSIntersectsRect(a_rect: NSRect, b_rect: NSRect) -> bool {
+pub unsafe extern "C-unwind" fn NSIntersectsRect(a_rect: NSRect, b_rect: NSRect) -> bool {
     extern "C-unwind" {
         fn NSIntersectsRect(a_rect: NSRect, b_rect: NSRect) -> Bool;
     }
@@ -354,7 +327,7 @@ impl NSString {
     #[doc(alias = "NSStringFromPoint")]
     #[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
     #[inline]
-    pub fn from_point(a_point: NSPoint) -> Retained<NSString> {
+    pub unsafe fn from_point(a_point: NSPoint) -> Retained<NSString> {
         extern "C-unwind" {
             fn NSStringFromPoint(a_point: NSPoint) -> *mut NSString;
         }
@@ -366,7 +339,7 @@ impl NSString {
     #[doc(alias = "NSStringFromSize")]
     #[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
     #[inline]
-    pub fn from_size(a_size: NSSize) -> Retained<NSString> {
+    pub unsafe fn from_size(a_size: NSSize) -> Retained<NSString> {
         extern "C-unwind" {
             fn NSStringFromSize(a_size: NSSize) -> *mut NSString;
         }
@@ -378,7 +351,7 @@ impl NSString {
     #[doc(alias = "NSStringFromRect")]
     #[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
     #[inline]
-    pub fn from_rect(a_rect: NSRect) -> Retained<NSString> {
+    pub unsafe fn from_rect(a_rect: NSRect) -> Retained<NSString> {
         extern "C-unwind" {
             fn NSStringFromRect(a_rect: NSRect) -> *mut NSString;
         }
@@ -388,31 +361,19 @@ impl NSString {
     }
 }
 
-#[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
-#[inline]
-pub extern "C-unwind" fn NSPointFromString(a_string: &NSString) -> NSPoint {
-    extern "C-unwind" {
-        fn NSPointFromString(a_string: &NSString) -> NSPoint;
-    }
-    unsafe { NSPointFromString(a_string) }
+extern "C-unwind" {
+    #[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
+    pub fn NSPointFromString(a_string: &NSString) -> NSPoint;
 }
 
-#[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
-#[inline]
-pub extern "C-unwind" fn NSSizeFromString(a_string: &NSString) -> NSSize {
-    extern "C-unwind" {
-        fn NSSizeFromString(a_string: &NSString) -> NSSize;
-    }
-    unsafe { NSSizeFromString(a_string) }
+extern "C-unwind" {
+    #[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
+    pub fn NSSizeFromString(a_string: &NSString) -> NSSize;
 }
 
-#[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
-#[inline]
-pub extern "C-unwind" fn NSRectFromString(a_string: &NSString) -> NSRect {
-    extern "C-unwind" {
-        fn NSRectFromString(a_string: &NSString) -> NSRect;
-    }
-    unsafe { NSRectFromString(a_string) }
+extern "C-unwind" {
+    #[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
+    pub fn NSRectFromString(a_string: &NSString) -> NSRect;
 }
 
 /// NSValueGeometryExtensions.
@@ -536,7 +497,10 @@ impl NSCoder {
 #[cfg(feature = "objc2-core-foundation")]
 #[deprecated = "renamed to `NSEdgeInsets::equal`"]
 #[inline]
-pub extern "C-unwind" fn NSEdgeInsetsEqual(a_insets: NSEdgeInsets, b_insets: NSEdgeInsets) -> bool {
+pub unsafe extern "C-unwind" fn NSEdgeInsetsEqual(
+    a_insets: NSEdgeInsets,
+    b_insets: NSEdgeInsets,
+) -> bool {
     extern "C-unwind" {
         fn NSEdgeInsetsEqual(a_insets: NSEdgeInsets, b_insets: NSEdgeInsets) -> Bool;
     }
@@ -546,7 +510,7 @@ pub extern "C-unwind" fn NSEdgeInsetsEqual(a_insets: NSEdgeInsets, b_insets: NSE
 #[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
 #[deprecated = "renamed to `NSString::from_point`"]
 #[inline]
-pub extern "C-unwind" fn NSStringFromPoint(a_point: NSPoint) -> Retained<NSString> {
+pub unsafe extern "C-unwind" fn NSStringFromPoint(a_point: NSPoint) -> Retained<NSString> {
     extern "C-unwind" {
         fn NSStringFromPoint(a_point: NSPoint) -> *mut NSString;
     }
@@ -558,7 +522,7 @@ pub extern "C-unwind" fn NSStringFromPoint(a_point: NSPoint) -> Retained<NSStrin
 #[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
 #[deprecated = "renamed to `NSString::from_size`"]
 #[inline]
-pub extern "C-unwind" fn NSStringFromSize(a_size: NSSize) -> Retained<NSString> {
+pub unsafe extern "C-unwind" fn NSStringFromSize(a_size: NSSize) -> Retained<NSString> {
     extern "C-unwind" {
         fn NSStringFromSize(a_size: NSSize) -> *mut NSString;
     }
@@ -570,7 +534,7 @@ pub extern "C-unwind" fn NSStringFromSize(a_size: NSSize) -> Retained<NSString> 
 #[cfg(all(feature = "NSString", feature = "objc2-core-foundation"))]
 #[deprecated = "renamed to `NSString::from_rect`"]
 #[inline]
-pub extern "C-unwind" fn NSStringFromRect(a_rect: NSRect) -> Retained<NSString> {
+pub unsafe extern "C-unwind" fn NSStringFromRect(a_rect: NSRect) -> Retained<NSString> {
     extern "C-unwind" {
         fn NSStringFromRect(a_rect: NSRect) -> *mut NSString;
     }

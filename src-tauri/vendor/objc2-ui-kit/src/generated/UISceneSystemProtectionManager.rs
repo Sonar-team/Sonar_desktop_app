@@ -44,7 +44,7 @@ impl UISceneSystemProtectionManager {
         /// the moment, but whether protection is enabled in general.
         #[unsafe(method(isUserAuthenticationEnabled))]
         #[unsafe(method_family = none)]
-        pub fn isUserAuthenticationEnabled(&self) -> bool;
+        pub unsafe fn isUserAuthenticationEnabled(&self) -> bool;
     );
 }
 
@@ -54,6 +54,8 @@ impl UIScene {
     extern_methods!(
         #[unsafe(method(systemProtectionManager))]
         #[unsafe(method_family = none)]
-        pub fn systemProtectionManager(&self) -> Option<Retained<UISceneSystemProtectionManager>>;
+        pub unsafe fn systemProtectionManager(
+            &self,
+        ) -> Option<Retained<UISceneSystemProtectionManager>>;
     );
 }

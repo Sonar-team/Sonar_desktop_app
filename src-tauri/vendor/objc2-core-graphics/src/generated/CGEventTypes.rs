@@ -19,7 +19,6 @@ pub const kCGNotifyEventTapAdded: &CStr =
 pub const kCGNotifyEventTapRemoved: &CStr =
     unsafe { CStr::from_bytes_with_nul_unchecked(b"com.apple.coregraphics.eventTapRemoved\0") };
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgevent?language=objc)
-#[doc(alias = "CGEventRef")]
 #[repr(C)]
 pub struct CGEvent {
     inner: [u8; 0],
@@ -572,7 +571,6 @@ unsafe impl RefEncode for CGEventTapInformation {
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cgeventsource?language=objc)
-#[doc(alias = "CGEventSourceRef")]
 #[repr(C)]
 pub struct CGEventSource {
     inner: [u8; 0],

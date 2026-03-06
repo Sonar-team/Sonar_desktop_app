@@ -16,9 +16,6 @@ pub unsafe trait NSStringUNUserNotificationCenterSupport:
     ClassType + Sized + private_NSStringUNUserNotificationCenterSupport::Sealed
 {
     extern_methods!(
-        /// # Safety
-        ///
-        /// `arguments` generic should be of the correct type.
         #[unsafe(method(localizedUserNotificationStringForKey:arguments:))]
         #[unsafe(method_family = none)]
         unsafe fn localizedUserNotificationStringForKey_arguments(

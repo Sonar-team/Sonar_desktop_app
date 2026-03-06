@@ -25,7 +25,6 @@ const ZERO_QUAD: Gdi::RGBQUAD = Gdi::RGBQUAD {
     rgbReserved: 0,
 };
 
-#[derive(Debug)]
 struct Buffer {
     dc: Gdi::HDC,
     bitmap: Gdi::HBITMAP,
@@ -136,7 +135,6 @@ impl Buffer {
 }
 
 /// The handle to a window for software buffering.
-#[derive(Debug)]
 pub struct Win32Impl<D: ?Sized, W> {
     /// The window handle.
     window: OnlyUsedFromOrigin<HWND>,
@@ -210,16 +208,14 @@ impl<D: HasDisplayHandle, W: HasWindowHandle> Win32Impl<D, W> {
 
 impl<D: HasDisplayHandle, W: HasWindowHandle> SurfaceInterface<D, W> for Win32Impl<D, W> {
     type Context = D;
-    type Buffer<'a>
-        = BufferImpl<'a, D, W>
-    where
-        Self: 'a;
+    type Buffer<'a> = BufferImpl<'a, D, W> where Self: 'a;
 
     /// Create a new `Win32Impl` from a `Win32WindowHandle`.
     fn new(window: W, _display: &D) -> Result<Self, crate::error::InitError<W>> {
         let raw = window.window_handle()?.as_raw();
-        let RawWindowHandle::Win32(handle) = raw else {
-            return Err(crate::InitError::Unsupported(window));
+        let handle = match raw {
+            RawWindowHandle::Win32(handle) => handle,
+            _ => return Err(crate::InitError::Unsupported(window)),
         };
 
         // Get the handle to the device context.
@@ -252,8 +248,8 @@ impl<D: HasDisplayHandle, W: HasWindowHandle> SurfaceInterface<D, W> for Win32Im
 
     fn resize(&mut self, width: NonZeroU32, height: NonZeroU32) -> Result<(), SoftBufferError> {
         let (width, height) = (|| {
-            let width = NonZeroI32::try_from(width).ok()?;
-            let height = NonZeroI32::try_from(height).ok()?;
+            let width = NonZeroI32::new(i32::try_from(width.get()).ok()?)?;
+            let height = NonZeroI32::new(i32::try_from(height.get()).ok()?)?;
             Some((width, height))
         })()
         .ok_or(SoftBufferError::SizeOutOfRange { width, height })?;
@@ -283,18 +279,9 @@ impl<D: HasDisplayHandle, W: HasWindowHandle> SurfaceInterface<D, W> for Win32Im
     }
 }
 
-#[derive(Debug)]
 pub struct BufferImpl<'a, D, W>(&'a mut Win32Impl<D, W>);
 
-impl<D: HasDisplayHandle, W: HasWindowHandle> BufferInterface for BufferImpl<'_, D, W> {
-    fn width(&self) -> NonZeroU32 {
-        self.0.buffer.as_ref().unwrap().width.try_into().unwrap()
-    }
-
-    fn height(&self) -> NonZeroU32 {
-        self.0.buffer.as_ref().unwrap().height.try_into().unwrap()
-    }
-
+impl<'a, D: HasDisplayHandle, W: HasWindowHandle> BufferInterface for BufferImpl<'a, D, W> {
     #[inline]
     fn pixels(&self) -> &[u32] {
         self.0.buffer.as_ref().unwrap().pixels()
@@ -471,7 +458,6 @@ impl Command {
     }
 }
 
-#[derive(Debug)]
 struct OnlyUsedFromOrigin<T>(T);
 unsafe impl<T> Send for OnlyUsedFromOrigin<T> {}
 

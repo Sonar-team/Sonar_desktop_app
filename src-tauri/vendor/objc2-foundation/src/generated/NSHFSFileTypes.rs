@@ -6,7 +6,7 @@ use crate::*;
 
 #[cfg(feature = "NSString")]
 #[inline]
-pub extern "C-unwind" fn NSFileTypeForHFSTypeCode(
+pub unsafe extern "C-unwind" fn NSFileTypeForHFSTypeCode(
     hfs_file_type_code: OSType,
 ) -> Option<Retained<NSString>> {
     extern "C-unwind" {
@@ -17,16 +17,10 @@ pub extern "C-unwind" fn NSFileTypeForHFSTypeCode(
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `file_type_string` might not allow `None`.
     #[cfg(feature = "NSString")]
     pub fn NSHFSTypeCodeFromFileType(file_type_string: Option<&NSString>) -> OSType;
 }
 
-/// # Safety
-///
-/// `full_file_path` might not allow `None`.
 #[cfg(feature = "NSString")]
 #[inline]
 pub unsafe extern "C-unwind" fn NSHFSTypeOfFile(

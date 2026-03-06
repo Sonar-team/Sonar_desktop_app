@@ -182,6 +182,5 @@ extern "C" {
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityexception?language=objc)
-    #[deprecated = "Exceptions are no longer appropriate for indicating errors in accessibility API. Unexpected values should be handled through appropriate type checking."]
     pub static NSAccessibilityException: &'static NSExceptionName;
 }

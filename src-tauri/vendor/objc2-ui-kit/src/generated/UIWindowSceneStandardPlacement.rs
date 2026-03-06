@@ -37,7 +37,7 @@ impl UIWindowSceneStandardPlacement {
         /// Creates a standard placement.
         #[unsafe(method(standardPlacement))]
         #[unsafe(method_family = none)]
-        pub fn standardPlacement() -> Retained<Self>;
+        pub unsafe fn standardPlacement() -> Retained<Self>;
     );
 }
 

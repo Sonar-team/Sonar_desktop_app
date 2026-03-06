@@ -11,6 +11,7 @@ use crate::*;
 extern_class!(
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/uiprintpaper?language=objc)
     #[unsafe(super(NSObject))]
+    #[thread_kind = MainThreadOnly]
     #[derive(Debug, PartialEq, Eq, Hash)]
     pub struct UIPrintPaper;
 );
@@ -24,20 +25,21 @@ impl UIPrintPaper {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(bestPaperForPageSize:withPapersFromArray:))]
         #[unsafe(method_family = none)]
-        pub fn bestPaperForPageSize_withPapersFromArray(
+        pub unsafe fn bestPaperForPageSize_withPapersFromArray(
             content_size: CGSize,
             paper_list: &NSArray<UIPrintPaper>,
+            mtm: MainThreadMarker,
         ) -> Retained<UIPrintPaper>;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(paperSize))]
         #[unsafe(method_family = none)]
-        pub fn paperSize(&self) -> CGSize;
+        pub unsafe fn paperSize(&self) -> CGSize;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(printableRect))]
         #[unsafe(method_family = none)]
-        pub fn printableRect(&self) -> CGRect;
+        pub unsafe fn printableRect(&self) -> CGRect;
     );
 }
 
@@ -46,19 +48,12 @@ impl UIPrintPaper {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for UIPrintPaper {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// Deprecated_Nonfunctional.
@@ -67,6 +62,6 @@ impl UIPrintPaper {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(printRect))]
         #[unsafe(method_family = none)]
-        pub fn printRect(&self) -> CGRect;
+        pub unsafe fn printRect(&self) -> CGRect;
     );
 }

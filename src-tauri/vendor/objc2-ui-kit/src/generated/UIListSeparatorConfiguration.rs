@@ -89,7 +89,7 @@ impl UIListSeparatorConfiguration {
         /// Parameter `listAppearance`: The appearance of the list consuming this separator configuration
         #[unsafe(method(initWithListAppearance:))]
         #[unsafe(method_family = init)]
-        pub fn initWithListAppearance(
+        pub unsafe fn initWithListAppearance(
             this: Allocated<Self>,
             list_appearance: UICollectionLayoutListAppearance,
         ) -> Retained<Self>;
@@ -97,12 +97,12 @@ impl UIListSeparatorConfiguration {
         /// The visibility of the top separator for the item that this configuration is applied to.
         #[unsafe(method(topSeparatorVisibility))]
         #[unsafe(method_family = none)]
-        pub fn topSeparatorVisibility(&self) -> UIListSeparatorVisibility;
+        pub unsafe fn topSeparatorVisibility(&self) -> UIListSeparatorVisibility;
 
         /// Setter for [`topSeparatorVisibility`][Self::topSeparatorVisibility].
         #[unsafe(method(setTopSeparatorVisibility:))]
         #[unsafe(method_family = none)]
-        pub fn setTopSeparatorVisibility(
+        pub unsafe fn setTopSeparatorVisibility(
             &self,
             top_separator_visibility: UIListSeparatorVisibility,
         );
@@ -110,12 +110,12 @@ impl UIListSeparatorConfiguration {
         /// The visibility of the bottom separator for the item that this configuration is applied to.
         #[unsafe(method(bottomSeparatorVisibility))]
         #[unsafe(method_family = none)]
-        pub fn bottomSeparatorVisibility(&self) -> UIListSeparatorVisibility;
+        pub unsafe fn bottomSeparatorVisibility(&self) -> UIListSeparatorVisibility;
 
         /// Setter for [`bottomSeparatorVisibility`][Self::bottomSeparatorVisibility].
         #[unsafe(method(setBottomSeparatorVisibility:))]
         #[unsafe(method_family = none)]
-        pub fn setBottomSeparatorVisibility(
+        pub unsafe fn setBottomSeparatorVisibility(
             &self,
             bottom_separator_visibility: UIListSeparatorVisibility,
         );
@@ -124,62 +124,63 @@ impl UIListSeparatorConfiguration {
         /// Insets to apply to the top separator of the item that this configuration is applied to. Defaults to UIListSeparatorAutomaticInsets.
         #[unsafe(method(topSeparatorInsets))]
         #[unsafe(method_family = none)]
-        pub fn topSeparatorInsets(&self) -> NSDirectionalEdgeInsets;
+        pub unsafe fn topSeparatorInsets(&self) -> NSDirectionalEdgeInsets;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Setter for [`topSeparatorInsets`][Self::topSeparatorInsets].
         #[unsafe(method(setTopSeparatorInsets:))]
         #[unsafe(method_family = none)]
-        pub fn setTopSeparatorInsets(&self, top_separator_insets: NSDirectionalEdgeInsets);
+        pub unsafe fn setTopSeparatorInsets(&self, top_separator_insets: NSDirectionalEdgeInsets);
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Insets to apply to the bottom separator of the item that this configuration is applied to. Defaults to UIListSeparatorAutomaticInsets.
         #[unsafe(method(bottomSeparatorInsets))]
         #[unsafe(method_family = none)]
-        pub fn bottomSeparatorInsets(&self) -> NSDirectionalEdgeInsets;
+        pub unsafe fn bottomSeparatorInsets(&self) -> NSDirectionalEdgeInsets;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Setter for [`bottomSeparatorInsets`][Self::bottomSeparatorInsets].
         #[unsafe(method(setBottomSeparatorInsets:))]
         #[unsafe(method_family = none)]
-        pub fn setBottomSeparatorInsets(&self, bottom_separator_insets: NSDirectionalEdgeInsets);
+        pub unsafe fn setBottomSeparatorInsets(
+            &self,
+            bottom_separator_insets: NSDirectionalEdgeInsets,
+        );
 
         #[cfg(feature = "UIColor")]
         /// The color to use for the separators for the item this configuration is applied to.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
-        pub fn color(&self) -> Retained<UIColor>;
+        pub unsafe fn color(&self) -> Retained<UIColor>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`color`][Self::color].
         #[unsafe(method(setColor:))]
         #[unsafe(method_family = none)]
-        pub fn setColor(&self, color: &UIColor);
+        pub unsafe fn setColor(&self, color: &UIColor);
 
         #[cfg(feature = "UIColor")]
         /// The color to use for the separators for the item this configuration is applied to, when the item is in a multiple selection group.
         #[unsafe(method(multipleSelectionColor))]
         #[unsafe(method_family = none)]
-        pub fn multipleSelectionColor(&self) -> Retained<UIColor>;
+        pub unsafe fn multipleSelectionColor(&self) -> Retained<UIColor>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`multipleSelectionColor`][Self::multipleSelectionColor].
         #[unsafe(method(setMultipleSelectionColor:))]
         #[unsafe(method_family = none)]
-        pub fn setMultipleSelectionColor(&self, multiple_selection_color: &UIColor);
+        pub unsafe fn setMultipleSelectionColor(&self, multiple_selection_color: &UIColor);
 
         #[cfg(feature = "UIVisualEffect")]
         /// The visual effect to use for the separators of the item this configuration is applied to.
         #[unsafe(method(visualEffect))]
         #[unsafe(method_family = none)]
-        pub fn visualEffect(&self) -> Option<Retained<UIVisualEffect>>;
+        pub unsafe fn visualEffect(&self) -> Option<Retained<UIVisualEffect>>;
 
         #[cfg(feature = "UIVisualEffect")]
         /// Setter for [`visualEffect`][Self::visualEffect].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setVisualEffect:))]
         #[unsafe(method_family = none)]
-        pub fn setVisualEffect(&self, visual_effect: Option<&UIVisualEffect>);
+        pub unsafe fn setVisualEffect(&self, visual_effect: Option<&UIVisualEffect>);
     );
 }

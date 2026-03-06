@@ -241,7 +241,6 @@ mod private_NSAttributedStringAttributeFixing {
 }
 
 /// Category on [`NSMutableAttributedString`].
-///
 /// ********************** Attribute fixing ***********************
 pub unsafe trait NSAttributedStringAttributeFixing:
     ClassType + Sized + private_NSAttributedStringAttributeFixing::Sealed
@@ -249,7 +248,7 @@ pub unsafe trait NSAttributedStringAttributeFixing:
     extern_methods!(
         #[unsafe(method(fixAttributesInRange:))]
         #[unsafe(method_family = none)]
-        fn fixAttributesInRange(&self, range: NSRange);
+        unsafe fn fixAttributesInRange(&self, range: NSRange);
     );
 }
 
@@ -454,10 +453,6 @@ pub unsafe trait NSAttributedStringDocumentFormats:
     ClassType + Sized + private_NSAttributedStringDocumentFormats::Sealed
 {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `options` generic should be of the correct type.
-        /// - `dict` generic should be of the correct type.
         #[unsafe(method(initWithURL:options:documentAttributes:error:_))]
         #[unsafe(method_family = init)]
         unsafe fn initWithURL_options_documentAttributes_error(
@@ -471,10 +466,6 @@ pub unsafe trait NSAttributedStringDocumentFormats:
             >,
         ) -> Result<Retained<Self>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// - `options` generic should be of the correct type.
-        /// - `dict` generic should be of the correct type.
         #[unsafe(method(initWithData:options:documentAttributes:error:_))]
         #[unsafe(method_family = init)]
         unsafe fn initWithData_options_documentAttributes_error(
@@ -488,9 +479,6 @@ pub unsafe trait NSAttributedStringDocumentFormats:
             >,
         ) -> Result<Retained<Self>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(dataFromRange:documentAttributes:error:_))]
         #[unsafe(method_family = none)]
         unsafe fn dataFromRange_documentAttributes_error(
@@ -499,9 +487,6 @@ pub unsafe trait NSAttributedStringDocumentFormats:
             dict: &NSDictionary<NSAttributedStringDocumentAttributeKey, AnyObject>,
         ) -> Result<Retained<NSData>, Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// `dict` generic should be of the correct type.
         #[unsafe(method(fileWrapperFromRange:documentAttributes:error:_))]
         #[unsafe(method_family = none)]
         unsafe fn fileWrapperFromRange_documentAttributes_error(
@@ -524,10 +509,6 @@ pub unsafe trait NSMutableAttributedStringDocumentFormats:
     ClassType + Sized + private_NSMutableAttributedStringDocumentFormats::Sealed
 {
     extern_methods!(
-        /// # Safety
-        ///
-        /// - `opts` generic should be of the correct type.
-        /// - `dict` generic should be of the correct type.
         #[unsafe(method(readFromURL:options:documentAttributes:error:_))]
         #[unsafe(method_family = none)]
         unsafe fn readFromURL_options_documentAttributes_error(
@@ -541,10 +522,6 @@ pub unsafe trait NSMutableAttributedStringDocumentFormats:
             >,
         ) -> Result<(), Retained<NSError>>;
 
-        /// # Safety
-        ///
-        /// - `opts` generic should be of the correct type.
-        /// - `dict` generic should be of the correct type.
         #[unsafe(method(readFromData:options:documentAttributes:error:_))]
         #[unsafe(method_family = none)]
         unsafe fn readFromData_options_documentAttributes_error(
@@ -568,7 +545,6 @@ mod private_NSAttributedStringKitAdditions {
 }
 
 /// Category on [`NSAttributedString`].
-///
 /// ********************** Misc methods ***********************
 pub unsafe trait NSAttributedStringKitAdditions:
     ClassType + Sized + private_NSAttributedStringKitAdditions::Sealed
@@ -576,11 +552,11 @@ pub unsafe trait NSAttributedStringKitAdditions:
     extern_methods!(
         #[unsafe(method(containsAttachmentsInRange:))]
         #[unsafe(method_family = none)]
-        fn containsAttachmentsInRange(&self, range: NSRange) -> bool;
+        unsafe fn containsAttachmentsInRange(&self, range: NSRange) -> bool;
 
         #[unsafe(method(prefersRTFDInRange:))]
         #[unsafe(method_family = none)]
-        fn prefersRTFDInRange(&self, range: NSRange) -> bool;
+        unsafe fn prefersRTFDInRange(&self, range: NSRange) -> bool;
     );
 }
 
@@ -596,49 +572,40 @@ extern "C" {
     /// ********************** Deprecated ***********************
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/uikit/nsobliquenessattributename?language=objc)
-    #[deprecated = "This attribute is not supported with TextKit 2"]
     pub static NSObliquenessAttributeName: &'static NSAttributedStringKey;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/nsexpansionattributename?language=objc)
-    #[deprecated = "This attribute is not supported with TextKit 2"]
     pub static NSExpansionAttributeName: &'static NSAttributedStringKey;
 }
 
 extern "C" {
     /// [Apple's documentation](https://developer.apple.com/documentation/uikit/nsverticalglyphformattributename?language=objc)
-    #[deprecated = "This attribute is not supported with TextKit 2"]
     pub static NSVerticalGlyphFormAttributeName: &'static NSAttributedStringKey;
 }
 
 /// [Apple's documentation](https://developer.apple.com/documentation/uikit/nsunderlinepatternsolid?language=objc)
-#[deprecated]
 pub static NSUnderlinePatternSolid: NSUnderlineStyle =
     NSUnderlineStyle(NSUnderlineStyle::PatternSolid.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/uikit/nsunderlinepatterndot?language=objc)
-#[deprecated]
 pub static NSUnderlinePatternDot: NSUnderlineStyle =
     NSUnderlineStyle(NSUnderlineStyle::PatternDot.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/uikit/nsunderlinepatterndash?language=objc)
-#[deprecated]
 pub static NSUnderlinePatternDash: NSUnderlineStyle =
     NSUnderlineStyle(NSUnderlineStyle::PatternDash.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/uikit/nsunderlinepatterndashdot?language=objc)
-#[deprecated]
 pub static NSUnderlinePatternDashDot: NSUnderlineStyle =
     NSUnderlineStyle(NSUnderlineStyle::PatternDashDot.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/uikit/nsunderlinepatterndashdotdot?language=objc)
-#[deprecated]
 pub static NSUnderlinePatternDashDotDot: NSUnderlineStyle =
     NSUnderlineStyle(NSUnderlineStyle::PatternDashDotDot.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/uikit/nsunderlinebyword?language=objc)
-#[deprecated]
 pub static NSUnderlineByWord: NSUnderlineStyle = NSUnderlineStyle(NSUnderlineStyle::ByWord.0);
 
 /// [Apple's documentation](https://developer.apple.com/documentation/uikit/nstextwritingdirection?language=objc)

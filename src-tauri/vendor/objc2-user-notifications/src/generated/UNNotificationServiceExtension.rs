@@ -26,7 +26,7 @@ impl UNNotificationServiceExtension {
         ))]
         #[unsafe(method(didReceiveNotificationRequest:withContentHandler:))]
         #[unsafe(method_family = none)]
-        pub fn didReceiveNotificationRequest_withContentHandler(
+        pub unsafe fn didReceiveNotificationRequest_withContentHandler(
             &self,
             request: &UNNotificationRequest,
             content_handler: &block2::DynBlock<dyn Fn(NonNull<UNNotificationContent>)>,
@@ -34,7 +34,7 @@ impl UNNotificationServiceExtension {
 
         #[unsafe(method(serviceExtensionTimeWillExpire))]
         #[unsafe(method_family = none)]
-        pub fn serviceExtensionTimeWillExpire(&self);
+        pub unsafe fn serviceExtensionTimeWillExpire(&self);
     );
 }
 
@@ -43,17 +43,10 @@ impl UNNotificationServiceExtension {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for UNNotificationServiceExtension {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

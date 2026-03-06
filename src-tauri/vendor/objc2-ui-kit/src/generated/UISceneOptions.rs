@@ -36,34 +36,34 @@ impl UISceneConnectionOptions {
         #[cfg(feature = "UIOpenURLContext")]
         #[unsafe(method(URLContexts))]
         #[unsafe(method_family = none)]
-        pub fn URLContexts(&self) -> Retained<NSSet<UIOpenURLContext>>;
+        pub unsafe fn URLContexts(&self) -> Retained<NSSet<UIOpenURLContext>>;
 
         #[unsafe(method(sourceApplication))]
         #[unsafe(method_family = none)]
-        pub fn sourceApplication(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn sourceApplication(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(handoffUserActivityType))]
         #[unsafe(method_family = none)]
-        pub fn handoffUserActivityType(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn handoffUserActivityType(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(userActivities))]
         #[unsafe(method_family = none)]
-        pub fn userActivities(&self) -> Retained<NSSet<NSUserActivity>>;
+        pub unsafe fn userActivities(&self) -> Retained<NSSet<NSUserActivity>>;
 
         #[cfg(feature = "objc2-user-notifications")]
         #[unsafe(method(notificationResponse))]
         #[unsafe(method_family = none)]
-        pub fn notificationResponse(&self) -> Option<Retained<UNNotificationResponse>>;
+        pub unsafe fn notificationResponse(&self) -> Option<Retained<UNNotificationResponse>>;
 
         #[cfg(feature = "UIApplicationShortcutItem")]
         #[unsafe(method(shortcutItem))]
         #[unsafe(method_family = none)]
-        pub fn shortcutItem(&self) -> Option<Retained<UIApplicationShortcutItem>>;
+        pub unsafe fn shortcutItem(&self) -> Option<Retained<UIApplicationShortcutItem>>;
 
         #[cfg(feature = "objc2-cloud-kit")]
         #[unsafe(method(cloudKitShareMetadata))]
         #[unsafe(method_family = none)]
-        pub fn cloudKitShareMetadata(&self) -> Option<Retained<CKShareMetadata>>;
+        pub unsafe fn cloudKitShareMetadata(&self) -> Option<Retained<CKShareMetadata>>;
     );
 }
 
@@ -91,20 +91,20 @@ impl UISceneOpenURLOptions {
 
         #[unsafe(method(sourceApplication))]
         #[unsafe(method_family = none)]
-        pub fn sourceApplication(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn sourceApplication(&self) -> Option<Retained<NSString>>;
 
         #[unsafe(method(annotation))]
         #[unsafe(method_family = none)]
-        pub fn annotation(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn annotation(&self) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(openInPlace))]
         #[unsafe(method_family = none)]
-        pub fn openInPlace(&self) -> bool;
+        pub unsafe fn openInPlace(&self) -> bool;
 
         #[cfg(feature = "UIEventAttribution")]
         #[unsafe(method(eventAttribution))]
         #[unsafe(method_family = none)]
-        pub fn eventAttribution(&self) -> Option<Retained<UIEventAttribution>>;
+        pub unsafe fn eventAttribution(&self) -> Option<Retained<UIEventAttribution>>;
     );
 }
 
@@ -124,25 +124,23 @@ impl UISceneOpenExternalURLOptions {
     extern_methods!(
         #[unsafe(method(universalLinksOnly))]
         #[unsafe(method_family = none)]
-        pub fn universalLinksOnly(&self) -> bool;
+        pub unsafe fn universalLinksOnly(&self) -> bool;
 
         /// Setter for [`universalLinksOnly`][Self::universalLinksOnly].
         #[unsafe(method(setUniversalLinksOnly:))]
         #[unsafe(method_family = none)]
-        pub fn setUniversalLinksOnly(&self, universal_links_only: bool);
+        pub unsafe fn setUniversalLinksOnly(&self, universal_links_only: bool);
 
         #[cfg(feature = "UIEventAttribution")]
         #[unsafe(method(eventAttribution))]
         #[unsafe(method_family = none)]
-        pub fn eventAttribution(&self) -> Option<Retained<UIEventAttribution>>;
+        pub unsafe fn eventAttribution(&self) -> Option<Retained<UIEventAttribution>>;
 
         #[cfg(feature = "UIEventAttribution")]
         /// Setter for [`eventAttribution`][Self::eventAttribution].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setEventAttribution:))]
         #[unsafe(method_family = none)]
-        pub fn setEventAttribution(&self, event_attribution: Option<&UIEventAttribution>);
+        pub unsafe fn setEventAttribution(&self, event_attribution: Option<&UIEventAttribution>);
     );
 }
 
@@ -151,11 +149,11 @@ impl UISceneOpenExternalURLOptions {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -200,22 +198,22 @@ impl UISceneActivationRequestOptions {
         #[cfg(all(feature = "UIResponder", feature = "UIScene"))]
         #[unsafe(method(requestingScene))]
         #[unsafe(method_family = none)]
-        pub fn requestingScene(&self) -> Option<Retained<UIScene>>;
+        pub unsafe fn requestingScene(&self) -> Option<Retained<UIScene>>;
 
         #[cfg(all(feature = "UIResponder", feature = "UIScene"))]
         /// Setter for [`requestingScene`][Self::requestingScene].
         #[unsafe(method(setRequestingScene:))]
         #[unsafe(method_family = none)]
-        pub fn setRequestingScene(&self, requesting_scene: Option<&UIScene>);
+        pub unsafe fn setRequestingScene(&self, requesting_scene: Option<&UIScene>);
 
         #[unsafe(method(collectionJoinBehavior))]
         #[unsafe(method_family = none)]
-        pub fn collectionJoinBehavior(&self) -> UISceneCollectionJoinBehavior;
+        pub unsafe fn collectionJoinBehavior(&self) -> UISceneCollectionJoinBehavior;
 
         /// Setter for [`collectionJoinBehavior`][Self::collectionJoinBehavior].
         #[unsafe(method(setCollectionJoinBehavior:))]
         #[unsafe(method_family = none)]
-        pub fn setCollectionJoinBehavior(
+        pub unsafe fn setCollectionJoinBehavior(
             &self,
             collection_join_behavior: UISceneCollectionJoinBehavior,
         );
@@ -227,11 +225,11 @@ impl UISceneActivationRequestOptions {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 
@@ -256,10 +254,10 @@ impl UISceneDestructionRequestOptions {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

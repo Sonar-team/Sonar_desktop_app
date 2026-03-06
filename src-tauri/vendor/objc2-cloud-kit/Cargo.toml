@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "objc2-cloud-kit"
-version = "0.3.2"
+version = "0.3.1"
 build = false
 autolib = false
 autobins = false
@@ -240,22 +240,13 @@ CKShare = [
     "objc2-foundation/NSString",
     "objc2-foundation/NSURL",
 ]
-CKShareAccessRequester = ["objc2-foundation/NSObject"]
-CKShareBlockedIdentity = ["objc2-foundation/NSObject"]
 CKShareMetadata = [
     "objc2-foundation/NSObject",
     "objc2-foundation/NSString",
 ]
 CKShareParticipant = [
-    "objc2-foundation/NSDate",
     "objc2-foundation/NSObject",
     "objc2-foundation/NSString",
-]
-CKShareRequestAccessOperation = [
-    "objc2-foundation/NSArray",
-    "objc2-foundation/NSError",
-    "objc2-foundation/NSOperation",
-    "objc2-foundation/NSURL",
 ]
 CKSubscription = [
     "bitflags",
@@ -342,11 +333,8 @@ default = [
     "CKReference",
     "CKServerChangeToken",
     "CKShare",
-    "CKShareAccessRequester",
-    "CKShareBlockedIdentity",
     "CKShareMetadata",
     "CKShareParticipant",
-    "CKShareRequestAccessOperation",
     "CKSubscription",
     "CKSyncEngine",
     "CKSyncEngineConfiguration",
@@ -359,13 +347,10 @@ default = [
     "NSItemProvider_CKSharingSupport",
     "bitflags",
     "block2",
-    "objc2-contacts",
     "objc2-core-location",
 ]
-objc2-contacts = ["dep:objc2-contacts"]
 objc2-core-location = ["dep:objc2-core-location"]
 std = ["alloc"]
-unstable-darwin-objc = []
 
 [lib]
 name = "objc2_cloud_kit"
@@ -384,25 +369,19 @@ optional = true
 default-features = false
 
 [dependencies.objc2]
-version = ">=0.6.2, <0.8.0"
+version = ">=0.6.1, <0.8.0"
 features = ["std"]
 default-features = false
 
 [dependencies.objc2-core-location]
-version = "0.3.2"
+version = "0.3.1"
 features = ["CLLocation"]
 optional = true
 default-features = false
 
 [dependencies.objc2-foundation]
-version = "0.3.2"
+version = "0.3.1"
 features = ["alloc"]
-default-features = false
-
-[target.'cfg(not(target_os = "tvos"))'.dependencies.objc2-contacts]
-version = "0.3.2"
-features = ["CNContact"]
-optional = true
 default-features = false
 
 [lints.clippy]

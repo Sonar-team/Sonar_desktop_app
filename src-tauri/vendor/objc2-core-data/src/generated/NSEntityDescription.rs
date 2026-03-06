@@ -53,9 +53,6 @@ impl NSEntityDescription {
         ) -> Retained<NSManagedObject>;
 
         #[cfg(feature = "NSManagedObjectModel")]
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(managedObjectModel))]
         #[unsafe(method_family = none)]
         pub unsafe fn managedObjectModel(&self) -> Retained<NSManagedObjectModel>;
@@ -65,8 +62,6 @@ impl NSEntityDescription {
         pub unsafe fn managedObjectClassName(&self) -> Retained<NSString>;
 
         /// Setter for [`managedObjectClassName`][Self::managedObjectClassName].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setManagedObjectClassName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setManagedObjectClassName(
@@ -79,8 +74,6 @@ impl NSEntityDescription {
         pub unsafe fn name(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setName(&self, name: Option<&NSString>);
@@ -109,9 +102,6 @@ impl NSEntityDescription {
         #[unsafe(method_family = none)]
         pub unsafe fn setSubentities(&self, subentities: &NSArray<NSEntityDescription>);
 
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(superentity))]
         #[unsafe(method_family = none)]
         pub unsafe fn superentity(&self) -> Option<Retained<NSEntityDescription>>;
@@ -139,10 +129,6 @@ impl NSEntityDescription {
         pub unsafe fn userInfo(&self) -> Option<Retained<NSDictionary>>;
 
         /// Setter for [`userInfo`][Self::userInfo].
-        ///
-        /// # Safety
-        ///
-        /// `user_info` generic should be of the correct type.
         #[unsafe(method(setUserInfo:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUserInfo(&self, user_info: Option<&NSDictionary>);
@@ -188,8 +174,6 @@ impl NSEntityDescription {
         pub unsafe fn versionHashModifier(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`versionHashModifier`][Self::versionHashModifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setVersionHashModifier:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setVersionHashModifier(&self, version_hash_modifier: Option<&NSString>);
@@ -199,8 +183,6 @@ impl NSEntityDescription {
         pub unsafe fn renamingIdentifier(&self) -> Option<Retained<NSString>>;
 
         /// Setter for [`renamingIdentifier`][Self::renamingIdentifier].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setRenamingIdentifier:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setRenamingIdentifier(&self, renaming_identifier: Option<&NSString>);
@@ -212,8 +194,6 @@ impl NSEntityDescription {
 
         #[cfg(feature = "NSFetchIndexDescription")]
         /// Setter for [`indexes`][Self::indexes].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setIndexes:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setIndexes(&self, indexes: &NSArray<NSFetchIndexDescription>);
@@ -223,10 +203,6 @@ impl NSEntityDescription {
         pub unsafe fn uniquenessConstraints(&self) -> Retained<NSArray<NSArray<AnyObject>>>;
 
         /// Setter for [`uniquenessConstraints`][Self::uniquenessConstraints].
-        ///
-        /// # Safety
-        ///
-        /// `uniqueness_constraints` generic generic should be of the correct type.
         #[unsafe(method(setUniquenessConstraints:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setUniquenessConstraints(
@@ -240,10 +216,6 @@ impl NSEntityDescription {
         pub unsafe fn compoundIndexes(&self) -> Retained<NSArray<NSArray<AnyObject>>>;
 
         /// Setter for [`compoundIndexes`][Self::compoundIndexes].
-        ///
-        /// # Safety
-        ///
-        /// `compound_indexes` generic generic should be of the correct type.
         #[deprecated = "Use NSEntityDescription.indexes instead"]
         #[unsafe(method(setCompoundIndexes:))]
         #[unsafe(method_family = none)]

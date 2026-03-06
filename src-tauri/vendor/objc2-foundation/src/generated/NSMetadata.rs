@@ -19,9 +19,6 @@ extern_conformance!(
 
 impl NSMetadataQuery {
     extern_methods!(
-        /// # Safety
-        ///
-        /// This is not retained internally, you must ensure the object is still alive.
         #[unsafe(method(delegate))]
         #[unsafe(method_family = none)]
         pub unsafe fn delegate(
@@ -29,10 +26,6 @@ impl NSMetadataQuery {
         ) -> Option<Retained<ProtocolObject<dyn NSMetadataQueryDelegate>>>;
 
         /// Setter for [`delegate`][Self::delegate].
-        ///
-        /// # Safety
-        ///
-        /// This is unretained, you must ensure the object is kept alive while in use.
         #[unsafe(method(setDelegate:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setDelegate(
@@ -43,65 +36,57 @@ impl NSMetadataQuery {
         #[cfg(feature = "NSPredicate")]
         #[unsafe(method(predicate))]
         #[unsafe(method_family = none)]
-        pub fn predicate(&self) -> Option<Retained<NSPredicate>>;
+        pub unsafe fn predicate(&self) -> Option<Retained<NSPredicate>>;
 
         #[cfg(feature = "NSPredicate")]
         /// Setter for [`predicate`][Self::predicate].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setPredicate:))]
         #[unsafe(method_family = none)]
-        pub fn setPredicate(&self, predicate: Option<&NSPredicate>);
+        pub unsafe fn setPredicate(&self, predicate: Option<&NSPredicate>);
 
         #[cfg(all(feature = "NSArray", feature = "NSSortDescriptor"))]
         #[unsafe(method(sortDescriptors))]
         #[unsafe(method_family = none)]
-        pub fn sortDescriptors(&self) -> Retained<NSArray<NSSortDescriptor>>;
+        pub unsafe fn sortDescriptors(&self) -> Retained<NSArray<NSSortDescriptor>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSSortDescriptor"))]
         /// Setter for [`sortDescriptors`][Self::sortDescriptors].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setSortDescriptors:))]
         #[unsafe(method_family = none)]
-        pub fn setSortDescriptors(&self, sort_descriptors: &NSArray<NSSortDescriptor>);
+        pub unsafe fn setSortDescriptors(&self, sort_descriptors: &NSArray<NSSortDescriptor>);
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         #[unsafe(method(valueListAttributes))]
         #[unsafe(method_family = none)]
-        pub fn valueListAttributes(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn valueListAttributes(&self) -> Retained<NSArray<NSString>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         /// Setter for [`valueListAttributes`][Self::valueListAttributes].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setValueListAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn setValueListAttributes(&self, value_list_attributes: &NSArray<NSString>);
+        pub unsafe fn setValueListAttributes(&self, value_list_attributes: &NSArray<NSString>);
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         #[unsafe(method(groupingAttributes))]
         #[unsafe(method_family = none)]
-        pub fn groupingAttributes(&self) -> Option<Retained<NSArray<NSString>>>;
+        pub unsafe fn groupingAttributes(&self) -> Option<Retained<NSArray<NSString>>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         /// Setter for [`groupingAttributes`][Self::groupingAttributes].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
         #[unsafe(method(setGroupingAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn setGroupingAttributes(&self, grouping_attributes: Option<&NSArray<NSString>>);
+        pub unsafe fn setGroupingAttributes(&self, grouping_attributes: Option<&NSArray<NSString>>);
 
         #[cfg(feature = "NSDate")]
         #[unsafe(method(notificationBatchingInterval))]
         #[unsafe(method_family = none)]
-        pub fn notificationBatchingInterval(&self) -> NSTimeInterval;
+        pub unsafe fn notificationBatchingInterval(&self) -> NSTimeInterval;
 
         #[cfg(feature = "NSDate")]
         /// Setter for [`notificationBatchingInterval`][Self::notificationBatchingInterval].
         #[unsafe(method(setNotificationBatchingInterval:))]
         #[unsafe(method_family = none)]
-        pub fn setNotificationBatchingInterval(
+        pub unsafe fn setNotificationBatchingInterval(
             &self,
             notification_batching_interval: NSTimeInterval,
         );
@@ -109,16 +94,10 @@ impl NSMetadataQuery {
         #[cfg(feature = "NSArray")]
         #[unsafe(method(searchScopes))]
         #[unsafe(method_family = none)]
-        pub fn searchScopes(&self) -> Retained<NSArray>;
+        pub unsafe fn searchScopes(&self) -> Retained<NSArray>;
 
         #[cfg(feature = "NSArray")]
         /// Setter for [`searchScopes`][Self::searchScopes].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `search_scopes` generic should be of the correct type.
         #[unsafe(method(setSearchScopes:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSearchScopes(&self, search_scopes: &NSArray);
@@ -126,16 +105,10 @@ impl NSMetadataQuery {
         #[cfg(feature = "NSArray")]
         #[unsafe(method(searchItems))]
         #[unsafe(method_family = none)]
-        pub fn searchItems(&self) -> Option<Retained<NSArray>>;
+        pub unsafe fn searchItems(&self) -> Option<Retained<NSArray>>;
 
         #[cfg(feature = "NSArray")]
         /// Setter for [`searchItems`][Self::searchItems].
-        ///
-        /// This is [copied][crate::NSCopying::copy] when set.
-        ///
-        /// # Safety
-        ///
-        /// `search_items` generic should be of the correct type.
         #[unsafe(method(setSearchItems:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSearchItems(&self, search_items: Option<&NSArray>);
@@ -143,58 +116,54 @@ impl NSMetadataQuery {
         #[cfg(feature = "NSOperation")]
         #[unsafe(method(operationQueue))]
         #[unsafe(method_family = none)]
-        pub fn operationQueue(&self) -> Option<Retained<NSOperationQueue>>;
+        pub unsafe fn operationQueue(&self) -> Option<Retained<NSOperationQueue>>;
 
         #[cfg(feature = "NSOperation")]
         /// Setter for [`operationQueue`][Self::operationQueue].
-        ///
-        /// # Safety
-        ///
-        /// `operation_queue` possibly has additional threading requirements.
         #[unsafe(method(setOperationQueue:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setOperationQueue(&self, operation_queue: Option<&NSOperationQueue>);
 
         #[unsafe(method(startQuery))]
         #[unsafe(method_family = none)]
-        pub fn startQuery(&self) -> bool;
+        pub unsafe fn startQuery(&self) -> bool;
 
         #[unsafe(method(stopQuery))]
         #[unsafe(method_family = none)]
-        pub fn stopQuery(&self);
+        pub unsafe fn stopQuery(&self);
 
         #[unsafe(method(isStarted))]
         #[unsafe(method_family = none)]
-        pub fn isStarted(&self) -> bool;
+        pub unsafe fn isStarted(&self) -> bool;
 
         #[unsafe(method(isGathering))]
         #[unsafe(method_family = none)]
-        pub fn isGathering(&self) -> bool;
+        pub unsafe fn isGathering(&self) -> bool;
 
         #[unsafe(method(isStopped))]
         #[unsafe(method_family = none)]
-        pub fn isStopped(&self) -> bool;
+        pub unsafe fn isStopped(&self) -> bool;
 
         #[unsafe(method(disableUpdates))]
         #[unsafe(method_family = none)]
-        pub fn disableUpdates(&self);
+        pub unsafe fn disableUpdates(&self);
 
         #[unsafe(method(enableUpdates))]
         #[unsafe(method_family = none)]
-        pub fn enableUpdates(&self);
+        pub unsafe fn enableUpdates(&self);
 
         #[unsafe(method(resultCount))]
         #[unsafe(method_family = none)]
-        pub fn resultCount(&self) -> NSUInteger;
+        pub unsafe fn resultCount(&self) -> NSUInteger;
 
         #[unsafe(method(resultAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn resultAtIndex(&self, idx: NSUInteger) -> Retained<AnyObject>;
+        pub unsafe fn resultAtIndex(&self, idx: NSUInteger) -> Retained<AnyObject>;
 
         #[cfg(feature = "block2")]
         #[unsafe(method(enumerateResultsUsingBlock:))]
         #[unsafe(method_family = none)]
-        pub fn enumerateResultsUsingBlock(
+        pub unsafe fn enumerateResultsUsingBlock(
             &self,
             block: &block2::DynBlock<dyn Fn(NonNull<AnyObject>, NSUInteger, NonNull<Bool>) + '_>,
         );
@@ -202,7 +171,7 @@ impl NSMetadataQuery {
         #[cfg(all(feature = "NSObjCRuntime", feature = "block2"))]
         #[unsafe(method(enumerateResultsWithOptions:usingBlock:))]
         #[unsafe(method_family = none)]
-        pub fn enumerateResultsWithOptions_usingBlock(
+        pub unsafe fn enumerateResultsWithOptions_usingBlock(
             &self,
             opts: NSEnumerationOptions,
             block: &block2::DynBlock<dyn Fn(NonNull<AnyObject>, NSUInteger, NonNull<Bool>) + '_>,
@@ -211,11 +180,8 @@ impl NSMetadataQuery {
         #[cfg(feature = "NSArray")]
         #[unsafe(method(results))]
         #[unsafe(method_family = none)]
-        pub fn results(&self) -> Retained<NSArray>;
+        pub unsafe fn results(&self) -> Retained<NSArray>;
 
-        /// # Safety
-        ///
-        /// `result` should be of the correct type.
         #[unsafe(method(indexOfResult:))]
         #[unsafe(method_family = none)]
         pub unsafe fn indexOfResult(&self, result: &AnyObject) -> NSUInteger;
@@ -223,19 +189,19 @@ impl NSMetadataQuery {
         #[cfg(all(feature = "NSArray", feature = "NSDictionary", feature = "NSString"))]
         #[unsafe(method(valueLists))]
         #[unsafe(method_family = none)]
-        pub fn valueLists(
+        pub unsafe fn valueLists(
             &self,
         ) -> Retained<NSDictionary<NSString, NSArray<NSMetadataQueryAttributeValueTuple>>>;
 
         #[cfg(feature = "NSArray")]
         #[unsafe(method(groupedResults))]
         #[unsafe(method_family = none)]
-        pub fn groupedResults(&self) -> Retained<NSArray<NSMetadataQueryResultGroup>>;
+        pub unsafe fn groupedResults(&self) -> Retained<NSArray<NSMetadataQueryResultGroup>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(valueOfAttribute:forResultAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn valueOfAttribute_forResultAtIndex(
+        pub unsafe fn valueOfAttribute_forResultAtIndex(
             &self,
             attr_name: &NSString,
             idx: NSUInteger,
@@ -248,19 +214,12 @@ impl NSMetadataQuery {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSMetadataQuery {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_protocol!(
@@ -269,16 +228,13 @@ extern_protocol!(
         #[optional]
         #[unsafe(method(metadataQuery:replacementObjectForResultObject:))]
         #[unsafe(method_family = none)]
-        fn metadataQuery_replacementObjectForResultObject(
+        unsafe fn metadataQuery_replacementObjectForResultObject(
             &self,
             query: &NSMetadataQuery,
             result: &NSMetadataItem,
         ) -> Retained<AnyObject>;
 
         #[cfg(feature = "NSString")]
-        /// # Safety
-        ///
-        /// `attr_value` should be of the correct type.
         #[optional]
         #[unsafe(method(metadataQuery:replacementValueForAttribute:value:))]
         #[unsafe(method_family = none)]
@@ -403,17 +359,17 @@ impl NSMetadataItem {
         #[cfg(feature = "NSURL")]
         #[unsafe(method(initWithURL:))]
         #[unsafe(method_family = init)]
-        pub fn initWithURL(this: Allocated<Self>, url: &NSURL) -> Option<Retained<Self>>;
+        pub unsafe fn initWithURL(this: Allocated<Self>, url: &NSURL) -> Option<Retained<Self>>;
 
         #[cfg(feature = "NSString")]
         #[unsafe(method(valueForAttribute:))]
         #[unsafe(method_family = none)]
-        pub fn valueForAttribute(&self, key: &NSString) -> Option<Retained<AnyObject>>;
+        pub unsafe fn valueForAttribute(&self, key: &NSString) -> Option<Retained<AnyObject>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSDictionary", feature = "NSString"))]
         #[unsafe(method(valuesForAttributes:))]
         #[unsafe(method_family = none)]
-        pub fn valuesForAttributes(
+        pub unsafe fn valuesForAttributes(
             &self,
             keys: &NSArray<NSString>,
         ) -> Option<Retained<NSDictionary<NSString, AnyObject>>>;
@@ -421,7 +377,7 @@ impl NSMetadataItem {
         #[cfg(all(feature = "NSArray", feature = "NSString"))]
         #[unsafe(method(attributes))]
         #[unsafe(method_family = none)]
-        pub fn attributes(&self) -> Retained<NSArray<NSString>>;
+        pub unsafe fn attributes(&self) -> Retained<NSArray<NSString>>;
     );
 }
 
@@ -430,19 +386,12 @@ impl NSMetadataItem {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSMetadataItem {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -461,15 +410,15 @@ impl NSMetadataQueryAttributeValueTuple {
         #[cfg(feature = "NSString")]
         #[unsafe(method(attribute))]
         #[unsafe(method_family = none)]
-        pub fn attribute(&self) -> Retained<NSString>;
+        pub unsafe fn attribute(&self) -> Retained<NSString>;
 
         #[unsafe(method(value))]
         #[unsafe(method_family = none)]
-        pub fn value(&self) -> Option<Retained<AnyObject>>;
+        pub unsafe fn value(&self) -> Option<Retained<AnyObject>>;
 
         #[unsafe(method(count))]
         #[unsafe(method_family = none)]
-        pub fn count(&self) -> NSUInteger;
+        pub unsafe fn count(&self) -> NSUInteger;
     );
 }
 
@@ -478,19 +427,12 @@ impl NSMetadataQueryAttributeValueTuple {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSMetadataQueryAttributeValueTuple {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -509,29 +451,29 @@ impl NSMetadataQueryResultGroup {
         #[cfg(feature = "NSString")]
         #[unsafe(method(attribute))]
         #[unsafe(method_family = none)]
-        pub fn attribute(&self) -> Retained<NSString>;
+        pub unsafe fn attribute(&self) -> Retained<NSString>;
 
         #[unsafe(method(value))]
         #[unsafe(method_family = none)]
-        pub fn value(&self) -> Retained<AnyObject>;
+        pub unsafe fn value(&self) -> Retained<AnyObject>;
 
         #[cfg(feature = "NSArray")]
         #[unsafe(method(subgroups))]
         #[unsafe(method_family = none)]
-        pub fn subgroups(&self) -> Option<Retained<NSArray<NSMetadataQueryResultGroup>>>;
+        pub unsafe fn subgroups(&self) -> Option<Retained<NSArray<NSMetadataQueryResultGroup>>>;
 
         #[unsafe(method(resultCount))]
         #[unsafe(method_family = none)]
-        pub fn resultCount(&self) -> NSUInteger;
+        pub unsafe fn resultCount(&self) -> NSUInteger;
 
         #[unsafe(method(resultAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn resultAtIndex(&self, idx: NSUInteger) -> Retained<AnyObject>;
+        pub unsafe fn resultAtIndex(&self, idx: NSUInteger) -> Retained<AnyObject>;
 
         #[cfg(feature = "NSArray")]
         #[unsafe(method(results))]
         #[unsafe(method_family = none)]
-        pub fn results(&self) -> Retained<NSArray>;
+        pub unsafe fn results(&self) -> Retained<NSArray>;
     );
 }
 
@@ -540,17 +482,10 @@ impl NSMetadataQueryResultGroup {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSMetadataQueryResultGroup {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

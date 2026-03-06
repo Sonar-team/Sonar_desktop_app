@@ -56,12 +56,6 @@ impl CKSystemSharingUIObserver {
         /// `share,`and a nonnull
         /// `error`Each
         /// `CKSystemSharingUIObserver`instance has a private serial queue. This queue is used for all callback block invocations.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer or null.
-        /// - The returned block's argument 3 must be a valid pointer or null.
         #[unsafe(method(systemSharingUIDidSaveShareBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn systemSharingUIDidSaveShareBlock(
@@ -75,8 +69,6 @@ impl CKSystemSharingUIObserver {
             feature = "block2"
         ))]
         /// Setter for [`systemSharingUIDidSaveShareBlock`][Self::systemSharingUIDidSaveShareBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSystemSharingUIDidSaveShareBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSystemSharingUIDidSaveShareBlock(
@@ -93,11 +85,6 @@ impl CKSystemSharingUIObserver {
         ///
         /// Each
         /// `CKSystemSharingUIObserver`instance has a private serial queue. This queue is used for all callback block invocations.
-        ///
-        /// # Safety
-        ///
-        /// - The returned block's argument 1 must be a valid pointer.
-        /// - The returned block's argument 2 must be a valid pointer or null.
         #[unsafe(method(systemSharingUIDidStopSharingBlock))]
         #[unsafe(method_family = none)]
         pub unsafe fn systemSharingUIDidStopSharingBlock(
@@ -106,8 +93,6 @@ impl CKSystemSharingUIObserver {
 
         #[cfg(all(feature = "CKRecordID", feature = "block2"))]
         /// Setter for [`systemSharingUIDidStopSharingBlock`][Self::systemSharingUIDidStopSharingBlock].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setSystemSharingUIDidStopSharingBlock:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setSystemSharingUIDidStopSharingBlock(

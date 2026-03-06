@@ -20,15 +20,15 @@ pub unsafe trait NSAffineTransformNSAppKitAdditions:
         #[cfg(feature = "NSBezierPath")]
         #[unsafe(method(transformBezierPath:))]
         #[unsafe(method_family = none)]
-        fn transformBezierPath(&self, path: &NSBezierPath) -> Retained<NSBezierPath>;
+        unsafe fn transformBezierPath(&self, path: &NSBezierPath) -> Retained<NSBezierPath>;
 
         #[unsafe(method(set))]
         #[unsafe(method_family = none)]
-        fn set(&self);
+        unsafe fn set(&self);
 
         #[unsafe(method(concat))]
         #[unsafe(method_family = none)]
-        fn concat(&self);
+        unsafe fn concat(&self);
     );
 }
 

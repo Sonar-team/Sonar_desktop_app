@@ -89,8 +89,6 @@ impl DOMHTMLFormElement {
         pub unsafe fn acceptCharset(&self) -> Retained<NSString>;
 
         /// Setter for [`acceptCharset`][Self::acceptCharset].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAcceptCharset:))]
         #[unsafe(method_family = none)]
@@ -102,8 +100,6 @@ impl DOMHTMLFormElement {
         pub unsafe fn action(&self) -> Retained<NSString>;
 
         /// Setter for [`action`][Self::action].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setAction:))]
         #[unsafe(method_family = none)]
@@ -115,8 +111,6 @@ impl DOMHTMLFormElement {
         pub unsafe fn enctype(&self) -> Retained<NSString>;
 
         /// Setter for [`enctype`][Self::enctype].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setEnctype:))]
         #[unsafe(method_family = none)]
@@ -127,8 +121,6 @@ impl DOMHTMLFormElement {
         pub unsafe fn encoding(&self) -> Retained<NSString>;
 
         /// Setter for [`encoding`][Self::encoding].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setEncoding:))]
         #[unsafe(method_family = none)]
         pub unsafe fn setEncoding(&self, encoding: Option<&NSString>);
@@ -139,8 +131,6 @@ impl DOMHTMLFormElement {
         pub unsafe fn method(&self) -> Retained<NSString>;
 
         /// Setter for [`method`][Self::method].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setMethod:))]
         #[unsafe(method_family = none)]
@@ -152,8 +142,6 @@ impl DOMHTMLFormElement {
         pub unsafe fn name(&self) -> Retained<NSString>;
 
         /// Setter for [`name`][Self::name].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setName:))]
         #[unsafe(method_family = none)]
@@ -165,8 +153,6 @@ impl DOMHTMLFormElement {
         pub unsafe fn target(&self) -> Retained<NSString>;
 
         /// Setter for [`target`][Self::target].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[deprecated]
         #[unsafe(method(setTarget:))]
         #[unsafe(method_family = none)]

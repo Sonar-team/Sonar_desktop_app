@@ -8,10 +8,6 @@ use objc2_core_foundation::*;
 
 use crate::*;
 
-/// # Safety
-///
-/// - `media_box` must be a valid pointer or null.
-/// - `auxiliary_info` generics must be of the correct type.
 #[cfg(all(feature = "CGContext", feature = "CGDataConsumer"))]
 #[inline]
 pub unsafe extern "C-unwind" fn CGPDFContextCreate(
@@ -30,10 +26,6 @@ pub unsafe extern "C-unwind" fn CGPDFContextCreate(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-/// # Safety
-///
-/// - `media_box` must be a valid pointer or null.
-/// - `auxiliary_info` generics must be of the correct type.
 #[cfg(feature = "CGContext")]
 #[inline]
 pub unsafe extern "C-unwind" fn CGPDFContextCreateWithURL(
@@ -52,48 +44,27 @@ pub unsafe extern "C-unwind" fn CGPDFContextCreateWithURL(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-#[cfg(feature = "CGContext")]
-#[inline]
-pub extern "C-unwind" fn CGPDFContextClose(context: Option<&CGContext>) {
-    extern "C-unwind" {
-        fn CGPDFContextClose(context: Option<&CGContext>);
-    }
-    unsafe { CGPDFContextClose(context) }
+extern "C-unwind" {
+    #[cfg(feature = "CGContext")]
+    pub fn CGPDFContextClose(context: Option<&CGContext>);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `page_info` generics must be of the correct type.
     #[cfg(feature = "CGContext")]
     pub fn CGPDFContextBeginPage(context: Option<&CGContext>, page_info: Option<&CFDictionary>);
 }
 
-#[cfg(feature = "CGContext")]
-#[inline]
-pub extern "C-unwind" fn CGPDFContextEndPage(context: Option<&CGContext>) {
-    extern "C-unwind" {
-        fn CGPDFContextEndPage(context: Option<&CGContext>);
-    }
-    unsafe { CGPDFContextEndPage(context) }
-}
-
-#[cfg(feature = "CGContext")]
-#[inline]
-pub extern "C-unwind" fn CGPDFContextAddDocumentMetadata(
-    context: Option<&CGContext>,
-    metadata: Option<&CFData>,
-) {
-    extern "C-unwind" {
-        fn CGPDFContextAddDocumentMetadata(context: Option<&CGContext>, metadata: Option<&CFData>);
-    }
-    unsafe { CGPDFContextAddDocumentMetadata(context, metadata) }
+extern "C-unwind" {
+    #[cfg(feature = "CGContext")]
+    pub fn CGPDFContextEndPage(context: Option<&CGContext>);
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `parent_tree_dictionary` must be a valid pointer.
+    #[cfg(feature = "CGContext")]
+    pub fn CGPDFContextAddDocumentMetadata(context: Option<&CGContext>, metadata: Option<&CFData>);
+}
+
+extern "C-unwind" {
     #[cfg(all(feature = "CGContext", feature = "CGPDFDictionary"))]
     pub fn CGPDFContextSetParentTree(
         context: Option<&CGContext>,
@@ -102,9 +73,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `id_tree_dictionary` must be a valid pointer.
     #[cfg(all(feature = "CGContext", feature = "CGPDFDictionary"))]
     pub fn CGPDFContextSetIDTree(
         context: Option<&CGContext>,
@@ -113,9 +81,6 @@ extern "C-unwind" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `page_tag_structure_tree_dictionary` generics must be of the correct type.
     #[cfg(feature = "CGContext")]
     pub fn CGPDFContextSetPageTagStructureTree(
         context: Option<&CGContext>,
@@ -123,51 +88,27 @@ extern "C-unwind" {
     );
 }
 
-#[cfg(feature = "CGContext")]
-#[inline]
-pub extern "C-unwind" fn CGPDFContextSetURLForRect(
-    context: Option<&CGContext>,
-    url: &CFURL,
-    rect: CGRect,
-) {
-    extern "C-unwind" {
-        fn CGPDFContextSetURLForRect(context: Option<&CGContext>, url: &CFURL, rect: CGRect);
-    }
-    unsafe { CGPDFContextSetURLForRect(context, url, rect) }
+extern "C-unwind" {
+    #[cfg(feature = "CGContext")]
+    pub fn CGPDFContextSetURLForRect(context: Option<&CGContext>, url: &CFURL, rect: CGRect);
 }
 
-#[cfg(feature = "CGContext")]
-#[inline]
-pub extern "C-unwind" fn CGPDFContextAddDestinationAtPoint(
-    context: Option<&CGContext>,
-    name: &CFString,
-    point: CGPoint,
-) {
-    extern "C-unwind" {
-        fn CGPDFContextAddDestinationAtPoint(
-            context: Option<&CGContext>,
-            name: &CFString,
-            point: CGPoint,
-        );
-    }
-    unsafe { CGPDFContextAddDestinationAtPoint(context, name, point) }
+extern "C-unwind" {
+    #[cfg(feature = "CGContext")]
+    pub fn CGPDFContextAddDestinationAtPoint(
+        context: Option<&CGContext>,
+        name: &CFString,
+        point: CGPoint,
+    );
 }
 
-#[cfg(feature = "CGContext")]
-#[inline]
-pub extern "C-unwind" fn CGPDFContextSetDestinationForRect(
-    context: Option<&CGContext>,
-    name: &CFString,
-    rect: CGRect,
-) {
-    extern "C-unwind" {
-        fn CGPDFContextSetDestinationForRect(
-            context: Option<&CGContext>,
-            name: &CFString,
-            rect: CGRect,
-        );
-    }
-    unsafe { CGPDFContextSetDestinationForRect(context, name, rect) }
+extern "C-unwind" {
+    #[cfg(feature = "CGContext")]
+    pub fn CGPDFContextSetDestinationForRect(
+        context: Option<&CGContext>,
+        name: &CFString,
+        rect: CGRect,
+    );
 }
 
 extern "C" {
@@ -291,9 +232,6 @@ extern "C" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `outline` generics must be of the correct type.
     #[cfg(feature = "CGContext")]
     pub fn CGPDFContextSetOutline(context: &CGContext, outline: Option<&CFDictionary>);
 }
@@ -429,7 +367,7 @@ unsafe impl RefEncode for CGPDFTagType {
 impl CGPDFTagType {
     #[doc(alias = "CGPDFTagTypeGetName")]
     #[inline]
-    pub fn name(self) -> *const c_char {
+    pub unsafe fn name(self: CGPDFTagType) -> *const c_char {
         extern "C-unwind" {
             fn CGPDFTagTypeGetName(tag_type: CGPDFTagType) -> *const c_char;
         }
@@ -462,9 +400,6 @@ extern "C" {
 }
 
 extern "C-unwind" {
-    /// # Safety
-    ///
-    /// `tag_properties` generics must be of the correct type.
     #[cfg(feature = "CGContext")]
     pub fn CGPDFContextBeginTag(
         context: &CGContext,
@@ -473,20 +408,12 @@ extern "C-unwind" {
     );
 }
 
-#[cfg(feature = "CGContext")]
-#[inline]
-pub extern "C-unwind" fn CGPDFContextEndTag(context: &CGContext) {
-    extern "C-unwind" {
-        fn CGPDFContextEndTag(context: &CGContext);
-    }
-    unsafe { CGPDFContextEndTag(context) }
+extern "C-unwind" {
+    #[cfg(feature = "CGContext")]
+    pub fn CGPDFContextEndTag(context: &CGContext);
 }
 
-#[deprecated = "renamed to `CGPDFTagType::name`"]
-#[inline]
-pub extern "C-unwind" fn CGPDFTagTypeGetName(tag_type: CGPDFTagType) -> *const c_char {
-    extern "C-unwind" {
-        fn CGPDFTagTypeGetName(tag_type: CGPDFTagType) -> *const c_char;
-    }
-    unsafe { CGPDFTagTypeGetName(tag_type) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGPDFTagType::name`"]
+    pub fn CGPDFTagTypeGetName(tag_type: CGPDFTagType) -> *const c_char;
 }

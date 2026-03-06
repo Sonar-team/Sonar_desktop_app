@@ -26,15 +26,18 @@ impl UIFocusDebugger {
         /// - To use in Objective-C, enter `po [UIFocusDebugger help]` when paused in lldb.
         #[unsafe(method(help))]
         #[unsafe(method_family = none)]
-        pub fn help(mtm: MainThreadMarker) -> Retained<ProtocolObject<dyn UIFocusDebuggerOutput>>;
+        pub unsafe fn help(
+            mtm: MainThreadMarker,
+        ) -> Retained<ProtocolObject<dyn UIFocusDebuggerOutput>>;
 
         /// Outputs information for the currently focused item.
         /// - To use in Swift, enter `po UIFocusDebugger.status()` when paused in lldb.
         /// - To use in Objective-C, enter `po [UIFocusDebugger status]` when paused in lldb.
         #[unsafe(method(status))]
         #[unsafe(method_family = none)]
-        pub fn status(mtm: MainThreadMarker)
-            -> Retained<ProtocolObject<dyn UIFocusDebuggerOutput>>;
+        pub unsafe fn status(
+            mtm: MainThreadMarker,
+        ) -> Retained<ProtocolObject<dyn UIFocusDebuggerOutput>>;
 
         #[cfg(feature = "UIFocus")]
         /// Outputs a diagnosis of the specified item's focusability, including any known issues that may be preventing focusability.
@@ -46,7 +49,7 @@ impl UIFocusDebugger {
         /// reference>]` when paused in lldb.
         #[unsafe(method(checkFocusabilityForItem:))]
         #[unsafe(method_family = none)]
-        pub fn checkFocusabilityForItem(
+        pub unsafe fn checkFocusabilityForItem(
             item: &ProtocolObject<dyn UIFocusItem>,
         ) -> Retained<ProtocolObject<dyn UIFocusDebuggerOutput>>;
 
@@ -60,7 +63,7 @@ impl UIFocusDebugger {
         /// reference>]` when paused in lldb.
         #[unsafe(method(simulateFocusUpdateRequestFromEnvironment:))]
         #[unsafe(method_family = none)]
-        pub fn simulateFocusUpdateRequestFromEnvironment(
+        pub unsafe fn simulateFocusUpdateRequestFromEnvironment(
             environment: &ProtocolObject<dyn UIFocusEnvironment>,
         ) -> Retained<ProtocolObject<dyn UIFocusDebuggerOutput>>;
 
@@ -75,7 +78,7 @@ impl UIFocusDebugger {
         /// reference>]` when paused in lldb.
         #[unsafe(method(focusGroupsForEnvironment:))]
         #[unsafe(method_family = none)]
-        pub fn focusGroupsForEnvironment(
+        pub unsafe fn focusGroupsForEnvironment(
             environment: &ProtocolObject<dyn UIFocusEnvironment>,
         ) -> Retained<ProtocolObject<dyn UIFocusDebuggerOutput>>;
 
@@ -89,7 +92,7 @@ impl UIFocusDebugger {
         /// reference>]` when paused in lldb.
         #[unsafe(method(preferredFocusEnvironmentsForEnvironment:))]
         #[unsafe(method_family = none)]
-        pub fn preferredFocusEnvironmentsForEnvironment(
+        pub unsafe fn preferredFocusEnvironmentsForEnvironment(
             environment: &ProtocolObject<dyn UIFocusEnvironment>,
         ) -> Retained<ProtocolObject<dyn UIFocusDebuggerOutput>>;
     );
@@ -100,11 +103,11 @@ impl UIFocusDebugger {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }
 

@@ -24,10 +24,6 @@ extern_conformance!(
 impl NSStoryboardSegue {
     extern_methods!(
         #[cfg(feature = "block2")]
-        /// # Safety
-        ///
-        /// - `source_controller` should be of the correct type.
-        /// - `destination_controller` should be of the correct type.
         #[unsafe(method(segueWithIdentifier:source:destination:performHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn segueWithIdentifier_source_destination_performHandler(
@@ -37,10 +33,6 @@ impl NSStoryboardSegue {
             perform_handler: &block2::DynBlock<dyn Fn()>,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// - `source_controller` should be of the correct type.
-        /// - `destination_controller` should be of the correct type.
         #[unsafe(method(initWithIdentifier:source:destination:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithIdentifier_source_destination(
@@ -52,19 +44,19 @@ impl NSStoryboardSegue {
 
         #[unsafe(method(identifier))]
         #[unsafe(method_family = none)]
-        pub fn identifier(&self) -> Option<Retained<NSStoryboardSegueIdentifier>>;
+        pub unsafe fn identifier(&self) -> Option<Retained<NSStoryboardSegueIdentifier>>;
 
         #[unsafe(method(sourceController))]
         #[unsafe(method_family = none)]
-        pub fn sourceController(&self) -> Retained<AnyObject>;
+        pub unsafe fn sourceController(&self) -> Retained<AnyObject>;
 
         #[unsafe(method(destinationController))]
         #[unsafe(method_family = none)]
-        pub fn destinationController(&self) -> Retained<AnyObject>;
+        pub unsafe fn destinationController(&self) -> Retained<AnyObject>;
 
         #[unsafe(method(perform))]
         #[unsafe(method_family = none)]
-        pub fn perform(&self);
+        pub unsafe fn perform(&self);
     );
 }
 
@@ -73,27 +65,17 @@ impl NSStoryboardSegue {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSStoryboardSegue {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nssegueperforming?language=objc)
     pub unsafe trait NSSeguePerforming: NSObjectProtocol + MainThreadOnly {
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(prepareForSegue:sender:))]
         #[unsafe(method_family = none)]
@@ -103,9 +85,6 @@ extern_protocol!(
             sender: Option<&AnyObject>,
         );
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(performSegueWithIdentifier:sender:))]
         #[unsafe(method_family = none)]
@@ -115,9 +94,6 @@ extern_protocol!(
             sender: Option<&AnyObject>,
         );
 
-        /// # Safety
-        ///
-        /// `sender` should be of the correct type.
         #[optional]
         #[unsafe(method(shouldPerformSegueWithIdentifier:sender:))]
         #[unsafe(method_family = none)]

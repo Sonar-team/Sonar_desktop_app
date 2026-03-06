@@ -44,7 +44,7 @@ extern_protocol!(
         /// Resolves this shape in the provided `context`.
         #[unsafe(method(resolvedShapeInContext:))]
         #[unsafe(method_family = none)]
-        fn resolvedShapeInContext(
+        unsafe fn resolvedShapeInContext(
             &self,
             context: &UIShapeResolutionContext,
         ) -> Retained<UIResolvedShape>;
@@ -90,33 +90,33 @@ impl UIShape {
         /// A rectangular shape.
         #[unsafe(method(rectShape))]
         #[unsafe(method_family = none)]
-        pub fn rectShape() -> Retained<UIShape>;
+        pub unsafe fn rectShape() -> Retained<UIShape>;
 
         /// A capsule shape, equivalent to a rounded rectangle where the corner
         /// radius is chosen as half the length of the rectangle’s smallest edge.
         #[unsafe(method(capsuleShape))]
         #[unsafe(method_family = none)]
-        pub fn capsuleShape() -> Retained<UIShape>;
+        pub unsafe fn capsuleShape() -> Retained<UIShape>;
 
         /// A circular shape, with a radius equals half the length of the frame
         /// rectangle’s smallest edge.
         #[unsafe(method(circleShape))]
         #[unsafe(method_family = none)]
-        pub fn circleShape() -> Retained<UIShape>;
+        pub unsafe fn circleShape() -> Retained<UIShape>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// A rectangular shape with rounded corners, aligned inside the frame of
         /// in which it is contained.
         #[unsafe(method(rectShapeWithCornerRadius:))]
         #[unsafe(method_family = none)]
-        pub fn rectShapeWithCornerRadius(corner_radius: CGFloat) -> Retained<Self>;
+        pub unsafe fn rectShapeWithCornerRadius(corner_radius: CGFloat) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// A rectangular shape with rounded corners, aligned inside the frame of
         /// in which it is contained.
         #[unsafe(method(rectShapeWithCornerRadius:cornerCurve:))]
         #[unsafe(method_family = none)]
-        pub fn rectShapeWithCornerRadius_cornerCurve(
+        pub unsafe fn rectShapeWithCornerRadius_cornerCurve(
             corner_radius: CGFloat,
             corner_curve: UICornerCurve,
         ) -> Retained<Self>;
@@ -126,7 +126,7 @@ impl UIShape {
         /// in which it is contained.
         #[unsafe(method(rectShapeWithCornerRadius:cornerCurve:maskedCorners:))]
         #[unsafe(method_family = none)]
-        pub fn rectShapeWithCornerRadius_cornerCurve_maskedCorners(
+        pub unsafe fn rectShapeWithCornerRadius_cornerCurve_maskedCorners(
             corner_radius: CGFloat,
             corner_curve: UICornerCurve,
             masked_corners: UIRectCorner,
@@ -137,14 +137,14 @@ impl UIShape {
         /// frame in which it is contained.
         #[unsafe(method(fixedRectShapeWithRect:))]
         #[unsafe(method_family = none)]
-        pub fn fixedRectShapeWithRect(rect: CGRect) -> Retained<Self>;
+        pub unsafe fn fixedRectShapeWithRect(rect: CGRect) -> Retained<Self>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// A fixed rectangle shape using `rect` as its shape, regardless of the
         /// frame in which it is contained, with rounded corners using `cornerRadius`.
         #[unsafe(method(fixedRectShapeWithRect:cornerRadius:))]
         #[unsafe(method_family = none)]
-        pub fn fixedRectShapeWithRect_cornerRadius(
+        pub unsafe fn fixedRectShapeWithRect_cornerRadius(
             rect: CGRect,
             corner_radius: CGFloat,
         ) -> Retained<Self>;
@@ -154,7 +154,7 @@ impl UIShape {
         /// frame in which it is contained, with rounded corners using `cornerRadius`.
         #[unsafe(method(fixedRectShapeWithRect:cornerRadius:cornerCurve:maskedCorners:))]
         #[unsafe(method_family = none)]
-        pub fn fixedRectShapeWithRect_cornerRadius_cornerCurve_maskedCorners(
+        pub unsafe fn fixedRectShapeWithRect_cornerRadius_cornerCurve_maskedCorners(
             rect: CGRect,
             corner_radius: CGFloat,
             corner_curve: UICornerCurve,
@@ -165,13 +165,15 @@ impl UIShape {
         /// A shape with a custom bezier path.
         #[unsafe(method(shapeWithBezierPath:))]
         #[unsafe(method_family = none)]
-        pub fn shapeWithBezierPath(path: &UIBezierPath) -> Retained<Self>;
+        pub unsafe fn shapeWithBezierPath(path: &UIBezierPath) -> Retained<Self>;
 
         /// Creates a dynamic shape that can be resolved using the provided
         /// `UIShapeProvider` based on context like its containing rect.
         #[unsafe(method(shapeWithProvider:))]
         #[unsafe(method_family = none)]
-        pub fn shapeWithProvider(provider: &ProtocolObject<dyn UIShapeProvider>) -> Retained<Self>;
+        pub unsafe fn shapeWithProvider(
+            provider: &ProtocolObject<dyn UIShapeProvider>,
+        ) -> Retained<Self>;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Insets this shape by the provided `insets`, returning a new modified
@@ -184,7 +186,7 @@ impl UIShape {
         /// concentric.
         #[unsafe(method(shapeByApplyingInsets:))]
         #[unsafe(method_family = none)]
-        pub fn shapeByApplyingInsets(&self, insets: UIEdgeInsets) -> Retained<UIShape>;
+        pub unsafe fn shapeByApplyingInsets(&self, insets: UIEdgeInsets) -> Retained<UIShape>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Insets this shape by the provided `inset`, returning a new modified
@@ -197,12 +199,12 @@ impl UIShape {
         /// concentric.
         #[unsafe(method(shapeByApplyingInset:))]
         #[unsafe(method_family = none)]
-        pub fn shapeByApplyingInset(&self, inset: CGFloat) -> Retained<UIShape>;
+        pub unsafe fn shapeByApplyingInset(&self, inset: CGFloat) -> Retained<UIShape>;
 
         /// Resolves this shape in the provided `context`.
         #[unsafe(method(resolvedShapeInContext:))]
         #[unsafe(method_family = none)]
-        pub fn resolvedShapeInContext(
+        pub unsafe fn resolvedShapeInContext(
             &self,
             context: &UIShapeResolutionContext,
         ) -> Retained<UIResolvedShape>;
@@ -243,19 +245,19 @@ impl UIResolvedShape {
         /// The abstract shape that produced this resolved shape.
         #[unsafe(method(shape))]
         #[unsafe(method_family = none)]
-        pub fn shape(&self) -> Retained<UIShape>;
+        pub unsafe fn shape(&self) -> Retained<UIShape>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The bounding rect in which the shape is framed.
         #[unsafe(method(boundingRect))]
         #[unsafe(method_family = none)]
-        pub fn boundingRect(&self) -> CGRect;
+        pub unsafe fn boundingRect(&self) -> CGRect;
 
         #[cfg(feature = "UIBezierPath")]
         /// The bezier path representing this shape.
         #[unsafe(method(path))]
         #[unsafe(method_family = none)]
-        pub fn path(&self) -> Retained<UIBezierPath>;
+        pub unsafe fn path(&self) -> Retained<UIBezierPath>;
 
         #[cfg(all(feature = "UIGeometry", feature = "objc2-core-foundation"))]
         /// Insets this shape by the provided `insets`, returning a new modified
@@ -268,7 +270,10 @@ impl UIResolvedShape {
         /// concentric.
         #[unsafe(method(shapeByApplyingInsets:))]
         #[unsafe(method_family = none)]
-        pub fn shapeByApplyingInsets(&self, insets: UIEdgeInsets) -> Retained<UIResolvedShape>;
+        pub unsafe fn shapeByApplyingInsets(
+            &self,
+            insets: UIEdgeInsets,
+        ) -> Retained<UIResolvedShape>;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Insets this shape by the provided `inset`, returning a new modified
@@ -281,7 +286,7 @@ impl UIResolvedShape {
         /// concentric.
         #[unsafe(method(shapeByApplyingInset:))]
         #[unsafe(method_family = none)]
-        pub fn shapeByApplyingInset(&self, inset: CGFloat) -> Retained<UIResolvedShape>;
+        pub unsafe fn shapeByApplyingInset(&self, inset: CGFloat) -> Retained<UIResolvedShape>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
@@ -315,7 +320,7 @@ impl UIShapeResolutionContext {
         /// shape relative to the bounding `rect` of the `contentShape`.
         #[unsafe(method(contentShape))]
         #[unsafe(method_family = none)]
-        pub fn contentShape(&self) -> Retained<UIResolvedShape>;
+        pub unsafe fn contentShape(&self) -> Retained<UIResolvedShape>;
 
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]

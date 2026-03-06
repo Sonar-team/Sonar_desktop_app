@@ -3,13 +3,13 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
 fn buffer_mut(c: &mut Criterion) {
-    #[cfg(target_family = "wasm")]
+    #[cfg(any(target_arch = "wasm32", target_arch = "wasm64"))]
     {
         // Do nothing.
         let _ = c;
     }
 
-    #[cfg(not(target_family = "wasm"))]
+    #[cfg(not(any(target_arch = "wasm32", target_arch = "wasm64")))]
     {
         use criterion::black_box;
         use softbuffer::{Context, Surface};
@@ -18,7 +18,6 @@ fn buffer_mut(c: &mut Criterion) {
         use winit::platform::run_on_demand::EventLoopExtRunOnDemand;
 
         let mut evl = winit::event_loop::EventLoop::new().unwrap();
-        let context = Context::new(evl.owned_display_handle()).unwrap();
         let window = evl
             .create_window(winit::window::Window::default_attributes().with_visible(false))
             .unwrap();
@@ -29,7 +28,10 @@ fn buffer_mut(c: &mut Criterion) {
             if let winit::event::Event::AboutToWait = ev {
                 elwt.exit();
 
-                let mut surface = Surface::new(&context, &window).unwrap();
+                let mut surface = {
+                    let context = Context::new(elwt).unwrap();
+                    Surface::new(&context, &window).unwrap()
+                };
 
                 let size = window.inner_size();
                 surface

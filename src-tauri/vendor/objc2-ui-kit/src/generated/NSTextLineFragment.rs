@@ -34,15 +34,12 @@ impl NSTextLineFragment {
     extern_methods!(
         #[unsafe(method(initWithAttributedString:range:))]
         #[unsafe(method_family = init)]
-        pub fn initWithAttributedString_range(
+        pub unsafe fn initWithAttributedString_range(
             this: Allocated<Self>,
             attributed_string: &NSAttributedString,
             range: NSRange,
         ) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `a_decoder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(
@@ -50,9 +47,6 @@ impl NSTextLineFragment {
             a_decoder: &NSCoder,
         ) -> Option<Retained<Self>>;
 
-        /// # Safety
-        ///
-        /// `attributes` generic should be of the correct type.
         #[unsafe(method(initWithString:attributes:range:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithString_attributes_range(
@@ -68,41 +62,41 @@ impl NSTextLineFragment {
 
         #[unsafe(method(attributedString))]
         #[unsafe(method_family = none)]
-        pub fn attributedString(&self) -> Retained<NSAttributedString>;
+        pub unsafe fn attributedString(&self) -> Retained<NSAttributedString>;
 
         #[unsafe(method(characterRange))]
         #[unsafe(method_family = none)]
-        pub fn characterRange(&self) -> NSRange;
+        pub unsafe fn characterRange(&self) -> NSRange;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(typographicBounds))]
         #[unsafe(method_family = none)]
-        pub fn typographicBounds(&self) -> CGRect;
+        pub unsafe fn typographicBounds(&self) -> CGRect;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(glyphOrigin))]
         #[unsafe(method_family = none)]
-        pub fn glyphOrigin(&self) -> CGPoint;
+        pub unsafe fn glyphOrigin(&self) -> CGPoint;
 
         #[cfg(all(feature = "objc2-core-foundation", feature = "objc2-core-graphics"))]
         #[unsafe(method(drawAtPoint:inContext:))]
         #[unsafe(method_family = none)]
-        pub fn drawAtPoint_inContext(&self, point: CGPoint, context: &CGContext);
+        pub unsafe fn drawAtPoint_inContext(&self, point: CGPoint, context: &CGContext);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(locationForCharacterAtIndex:))]
         #[unsafe(method_family = none)]
-        pub fn locationForCharacterAtIndex(&self, index: NSInteger) -> CGPoint;
+        pub unsafe fn locationForCharacterAtIndex(&self, index: NSInteger) -> CGPoint;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(characterIndexForPoint:))]
         #[unsafe(method_family = none)]
-        pub fn characterIndexForPoint(&self, point: CGPoint) -> NSInteger;
+        pub unsafe fn characterIndexForPoint(&self, point: CGPoint) -> NSInteger;
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(fractionOfDistanceThroughGlyphForPoint:))]
         #[unsafe(method_family = none)]
-        pub fn fractionOfDistanceThroughGlyphForPoint(&self, point: CGPoint) -> CGFloat;
+        pub unsafe fn fractionOfDistanceThroughGlyphForPoint(&self, point: CGPoint) -> CGFloat;
     );
 }
 

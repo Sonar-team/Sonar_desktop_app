@@ -69,7 +69,7 @@ impl NSURLResponse {
         /// This is the designated initializer for NSURLResponse.
         #[unsafe(method(initWithURL:MIMEType:expectedContentLength:textEncodingName:))]
         #[unsafe(method_family = init)]
-        pub fn initWithURL_MIMEType_expectedContentLength_textEncodingName(
+        pub unsafe fn initWithURL_MIMEType_expectedContentLength_textEncodingName(
             this: Allocated<Self>,
             url: &NSURL,
             mime_type: Option<&NSString>,
@@ -83,7 +83,7 @@ impl NSURLResponse {
         /// Returns: The URL of the receiver.
         #[unsafe(method(URL))]
         #[unsafe(method_family = none)]
-        pub fn URL(&self) -> Option<Retained<NSURL>>;
+        pub unsafe fn URL(&self) -> Option<Retained<NSURL>>;
 
         #[cfg(feature = "NSString")]
         /// Returns the MIME type of the receiver.
@@ -98,7 +98,7 @@ impl NSURLResponse {
         /// Returns: The MIME type of the receiver.
         #[unsafe(method(MIMEType))]
         #[unsafe(method_family = none)]
-        pub fn MIMEType(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn MIMEType(&self) -> Option<Retained<NSString>>;
 
         /// Returns the expected content length of the receiver.
         ///
@@ -114,7 +114,7 @@ impl NSURLResponse {
         /// content length.
         #[unsafe(method(expectedContentLength))]
         #[unsafe(method_family = none)]
-        pub fn expectedContentLength(&self) -> c_longlong;
+        pub unsafe fn expectedContentLength(&self) -> c_longlong;
 
         #[cfg(feature = "NSString")]
         /// Returns the name of the text encoding of the receiver.
@@ -129,7 +129,7 @@ impl NSURLResponse {
         /// text encoding was specified.
         #[unsafe(method(textEncodingName))]
         #[unsafe(method_family = none)]
-        pub fn textEncodingName(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn textEncodingName(&self) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Returns a suggested filename if the resource were saved to disk.
@@ -145,7 +145,7 @@ impl NSURLResponse {
         /// Returns: A suggested filename to use if saving the resource to disk.
         #[unsafe(method(suggestedFilename))]
         #[unsafe(method_family = none)]
-        pub fn suggestedFilename(&self) -> Option<Retained<NSString>>;
+        pub unsafe fn suggestedFilename(&self) -> Option<Retained<NSString>>;
     );
 }
 
@@ -154,19 +154,12 @@ impl NSURLResponse {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSURLResponse {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 extern_class!(
@@ -227,7 +220,7 @@ impl NSHTTPURLResponse {
         /// This API was introduced in Mac OS X 10.7.2 and iOS 5.0 and is not available prior to those releases.
         #[unsafe(method(initWithURL:statusCode:HTTPVersion:headerFields:))]
         #[unsafe(method_family = init)]
-        pub fn initWithURL_statusCode_HTTPVersion_headerFields(
+        pub unsafe fn initWithURL_statusCode_HTTPVersion_headerFields(
             this: Allocated<Self>,
             url: &NSURL,
             status_code: NSInteger,
@@ -240,7 +233,7 @@ impl NSHTTPURLResponse {
         /// Returns: The HTTP status code of the receiver.
         #[unsafe(method(statusCode))]
         #[unsafe(method_family = none)]
-        pub fn statusCode(&self) -> NSInteger;
+        pub unsafe fn statusCode(&self) -> NSInteger;
 
         #[cfg(feature = "NSDictionary")]
         /// Returns a dictionary containing all the HTTP header fields
@@ -255,7 +248,7 @@ impl NSHTTPURLResponse {
         /// receiver.
         #[unsafe(method(allHeaderFields))]
         #[unsafe(method_family = none)]
-        pub fn allHeaderFields(&self) -> Retained<NSDictionary>;
+        pub unsafe fn allHeaderFields(&self) -> Retained<NSDictionary>;
 
         #[cfg(feature = "NSString")]
         /// Returns the value which corresponds to the given header
@@ -269,7 +262,10 @@ impl NSHTTPURLResponse {
         /// there is no value associated with the given header field.
         #[unsafe(method(valueForHTTPHeaderField:))]
         #[unsafe(method_family = none)]
-        pub fn valueForHTTPHeaderField(&self, field: &NSString) -> Option<Retained<NSString>>;
+        pub unsafe fn valueForHTTPHeaderField(
+            &self,
+            field: &NSString,
+        ) -> Option<Retained<NSString>>;
 
         #[cfg(feature = "NSString")]
         /// Convenience method which returns a localized string
@@ -280,7 +276,7 @@ impl NSHTTPURLResponse {
         /// Returns: A localized string corresponding to the given status code.
         #[unsafe(method(localizedStringForStatusCode:))]
         #[unsafe(method_family = none)]
-        pub fn localizedStringForStatusCode(status_code: NSInteger) -> Retained<NSString>;
+        pub unsafe fn localizedStringForStatusCode(status_code: NSInteger) -> Retained<NSString>;
     );
 }
 
@@ -303,7 +299,7 @@ impl NSHTTPURLResponse {
         /// This is the designated initializer for NSURLResponse.
         #[unsafe(method(initWithURL:MIMEType:expectedContentLength:textEncodingName:))]
         #[unsafe(method_family = init)]
-        pub fn initWithURL_MIMEType_expectedContentLength_textEncodingName(
+        pub unsafe fn initWithURL_MIMEType_expectedContentLength_textEncodingName(
             this: Allocated<Self>,
             url: &NSURL,
             mime_type: Option<&NSString>,
@@ -318,17 +314,10 @@ impl NSHTTPURLResponse {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSHTTPURLResponse {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

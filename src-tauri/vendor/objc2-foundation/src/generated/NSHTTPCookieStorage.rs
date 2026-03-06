@@ -65,7 +65,7 @@ impl NSHTTPCookieStorage {
         /// which will not be shared with other applications.
         #[unsafe(method(sharedHTTPCookieStorage))]
         #[unsafe(method_family = none)]
-        pub fn sharedHTTPCookieStorage() -> Retained<NSHTTPCookieStorage>;
+        pub unsafe fn sharedHTTPCookieStorage() -> Retained<NSHTTPCookieStorage>;
 
         #[cfg(feature = "NSString")]
         /// Get the cookie storage for the container associated with the specified application group identifier
@@ -81,7 +81,7 @@ impl NSHTTPCookieStorage {
         /// method with the same identifier will return the same cookie storage instance.
         #[unsafe(method(sharedCookieStorageForGroupContainerIdentifier:))]
         #[unsafe(method_family = none)]
-        pub fn sharedCookieStorageForGroupContainerIdentifier(
+        pub unsafe fn sharedCookieStorageForGroupContainerIdentifier(
             identifier: &NSString,
         ) -> Retained<NSHTTPCookieStorage>;
 
@@ -91,7 +91,7 @@ impl NSHTTPCookieStorage {
         /// Returns: An NSArray of NSHTTPCookies
         #[unsafe(method(cookies))]
         #[unsafe(method_family = none)]
-        pub fn cookies(&self) -> Option<Retained<NSArray<NSHTTPCookie>>>;
+        pub unsafe fn cookies(&self) -> Option<Retained<NSArray<NSHTTPCookie>>>;
 
         #[cfg(feature = "NSHTTPCookie")]
         /// Set a cookie
@@ -100,19 +100,19 @@ impl NSHTTPCookieStorage {
         /// same name, domain and path, if any.
         #[unsafe(method(setCookie:))]
         #[unsafe(method_family = none)]
-        pub fn setCookie(&self, cookie: &NSHTTPCookie);
+        pub unsafe fn setCookie(&self, cookie: &NSHTTPCookie);
 
         #[cfg(feature = "NSHTTPCookie")]
         /// Delete the specified cookie
         #[unsafe(method(deleteCookie:))]
         #[unsafe(method_family = none)]
-        pub fn deleteCookie(&self, cookie: &NSHTTPCookie);
+        pub unsafe fn deleteCookie(&self, cookie: &NSHTTPCookie);
 
         #[cfg(feature = "NSDate")]
         /// Delete all cookies from the cookie storage since the provided date.
         #[unsafe(method(removeCookiesSinceDate:))]
         #[unsafe(method_family = none)]
-        pub fn removeCookiesSinceDate(&self, date: &NSDate);
+        pub unsafe fn removeCookiesSinceDate(&self, date: &NSDate);
 
         #[cfg(all(feature = "NSArray", feature = "NSHTTPCookie", feature = "NSURL"))]
         /// Returns an array of cookies to send to the given URL.
@@ -130,7 +130,7 @@ impl NSHTTPCookieStorage {
         /// into a set of header fields to add to a request.
         #[unsafe(method(cookiesForURL:))]
         #[unsafe(method_family = none)]
-        pub fn cookiesForURL(&self, url: &NSURL) -> Option<Retained<NSArray<NSHTTPCookie>>>;
+        pub unsafe fn cookiesForURL(&self, url: &NSURL) -> Option<Retained<NSArray<NSHTTPCookie>>>;
 
         #[cfg(all(feature = "NSArray", feature = "NSHTTPCookie", feature = "NSURL"))]
         /// Adds an array cookies to the cookie store, following the
@@ -157,7 +157,7 @@ impl NSHTTPCookieStorage {
         /// in accordance with policy settings.
         #[unsafe(method(setCookies:forURL:mainDocumentURL:))]
         #[unsafe(method_family = none)]
-        pub fn setCookies_forURL_mainDocumentURL(
+        pub unsafe fn setCookies_forURL_mainDocumentURL(
             &self,
             cookies: &NSArray<NSHTTPCookie>,
             url: Option<&NSURL>,
@@ -168,12 +168,12 @@ impl NSHTTPCookieStorage {
         /// receiver.
         #[unsafe(method(cookieAcceptPolicy))]
         #[unsafe(method_family = none)]
-        pub fn cookieAcceptPolicy(&self) -> NSHTTPCookieAcceptPolicy;
+        pub unsafe fn cookieAcceptPolicy(&self) -> NSHTTPCookieAcceptPolicy;
 
         /// Setter for [`cookieAcceptPolicy`][Self::cookieAcceptPolicy].
         #[unsafe(method(setCookieAcceptPolicy:))]
         #[unsafe(method_family = none)]
-        pub fn setCookieAcceptPolicy(&self, cookie_accept_policy: NSHTTPCookieAcceptPolicy);
+        pub unsafe fn setCookieAcceptPolicy(&self, cookie_accept_policy: NSHTTPCookieAcceptPolicy);
 
         #[cfg(all(
             feature = "NSArray",
@@ -187,7 +187,7 @@ impl NSHTTPCookieStorage {
         /// proper sorting of cookies may require extensive string conversion, which can be avoided by allowing the system to perform the sorting.  This API is to be preferred over the more generic -[NSHTTPCookieStorage cookies] API, if sorting is going to be performed.
         #[unsafe(method(sortedCookiesUsingDescriptors:))]
         #[unsafe(method_family = none)]
-        pub fn sortedCookiesUsingDescriptors(
+        pub unsafe fn sortedCookiesUsingDescriptors(
             &self,
             sort_order: &NSArray<NSSortDescriptor>,
         ) -> Retained<NSArray<NSHTTPCookie>>;
@@ -199,19 +199,12 @@ impl NSHTTPCookieStorage {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSHTTPCookieStorage {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
 
 /// NSURLSessionTaskAdditions.
@@ -224,7 +217,7 @@ impl NSHTTPCookieStorage {
         ))]
         #[unsafe(method(storeCookies:forTask:))]
         #[unsafe(method_family = none)]
-        pub fn storeCookies_forTask(
+        pub unsafe fn storeCookies_forTask(
             &self,
             cookies: &NSArray<NSHTTPCookie>,
             task: &NSURLSessionTask,
@@ -236,9 +229,6 @@ impl NSHTTPCookieStorage {
             feature = "NSURLSession",
             feature = "block2"
         ))]
-        /// # Safety
-        ///
-        /// `completion_handler` block must be sendable.
         #[unsafe(method(getCookiesForTask:completionHandler:))]
         #[unsafe(method_family = none)]
         pub unsafe fn getCookiesForTask_completionHandler(
@@ -256,7 +246,6 @@ extern "C" {
     ///
     /// See also [Apple's documentation](https://developer.apple.com/documentation/foundation/nshttpcookiemanageracceptpolicychangednotification?language=objc)
     #[cfg(all(feature = "NSNotification", feature = "NSString"))]
-    #[deprecated = "Notification is never posted"]
     pub static NSHTTPCookieManagerAcceptPolicyChangedNotification: &'static NSNotificationName;
 }
 

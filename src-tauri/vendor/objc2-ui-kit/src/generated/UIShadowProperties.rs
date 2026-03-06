@@ -43,49 +43,49 @@ impl UIShadowProperties {
         /// The color to use when rendering the shadow. Defaults to `UIColor.blackColor`.
         #[unsafe(method(color))]
         #[unsafe(method_family = none)]
-        pub fn color(&self) -> Retained<UIColor>;
+        pub unsafe fn color(&self) -> Retained<UIColor>;
 
         #[cfg(feature = "UIColor")]
         /// Setter for [`color`][Self::color].
         #[unsafe(method(setColor:))]
         #[unsafe(method_family = none)]
-        pub fn setColor(&self, color: &UIColor);
+        pub unsafe fn setColor(&self, color: &UIColor);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The shadow's opacity. Defaults to `0.0`.
         #[unsafe(method(opacity))]
         #[unsafe(method_family = none)]
-        pub fn opacity(&self) -> CGFloat;
+        pub unsafe fn opacity(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`opacity`][Self::opacity].
         #[unsafe(method(setOpacity:))]
         #[unsafe(method_family = none)]
-        pub fn setOpacity(&self, opacity: CGFloat);
+        pub unsafe fn setOpacity(&self, opacity: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The blur radius, in points, used to render the shadow. Defaults to `0.0`.
         #[unsafe(method(radius))]
         #[unsafe(method_family = none)]
-        pub fn radius(&self) -> CGFloat;
+        pub unsafe fn radius(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`radius`][Self::radius].
         #[unsafe(method(setRadius:))]
         #[unsafe(method_family = none)]
-        pub fn setRadius(&self, radius: CGFloat);
+        pub unsafe fn setRadius(&self, radius: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         /// The offset, in points, of the layer's shadow. Defaults to `CGSizeZero`.
         #[unsafe(method(offset))]
         #[unsafe(method_family = none)]
-        pub fn offset(&self) -> CGSize;
+        pub unsafe fn offset(&self) -> CGSize;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`offset`][Self::offset].
         #[unsafe(method(setOffset:))]
         #[unsafe(method_family = none)]
-        pub fn setOffset(&self, offset: CGSize);
+        pub unsafe fn setOffset(&self, offset: CGSize);
 
         #[cfg(feature = "UIBezierPath")]
         /// The path that is used to create the shadow. When `nil`, the shadow will be rendered to match
@@ -93,15 +93,13 @@ impl UIShadowProperties {
         /// Defaults to `nil`.
         #[unsafe(method(path))]
         #[unsafe(method_family = none)]
-        pub fn path(&self) -> Option<Retained<UIBezierPath>>;
+        pub unsafe fn path(&self) -> Option<Retained<UIBezierPath>>;
 
         #[cfg(feature = "UIBezierPath")]
         /// Setter for [`path`][Self::path].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setPath:))]
         #[unsafe(method_family = none)]
-        pub fn setPath(&self, path: Option<&UIBezierPath>);
+        pub unsafe fn setPath(&self, path: Option<&UIBezierPath>);
     );
 }
 
@@ -110,10 +108,10 @@ impl UIShadowProperties {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

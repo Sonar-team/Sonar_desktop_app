@@ -11,7 +11,6 @@ use objc2_core_foundation::*;
 use crate::*;
 
 /// [Apple's documentation](https://developer.apple.com/documentation/coregraphics/cglayer?language=objc)
-#[doc(alias = "CGLayerRef")]
 #[repr(C)]
 pub struct CGLayer {
     inner: [u8; 0],
@@ -27,9 +26,6 @@ cf_objc2_type!(
 );
 
 impl CGLayer {
-    /// # Safety
-    ///
-    /// `auxiliary_info` generics must be of the correct type.
     #[doc(alias = "CGLayerCreateWithContext")]
     #[cfg(feature = "CGContext")]
     #[inline]
@@ -51,7 +47,7 @@ impl CGLayer {
 
     #[doc(alias = "CGLayerGetSize")]
     #[inline]
-    pub fn size(layer: Option<&CGLayer>) -> CGSize {
+    pub unsafe fn size(layer: Option<&CGLayer>) -> CGSize {
         extern "C-unwind" {
             fn CGLayerGetSize(layer: Option<&CGLayer>) -> CGSize;
         }
@@ -61,7 +57,7 @@ impl CGLayer {
     #[doc(alias = "CGLayerGetContext")]
     #[cfg(feature = "CGContext")]
     #[inline]
-    pub fn context(layer: Option<&CGLayer>) -> Option<CFRetained<CGContext>> {
+    pub unsafe fn context(layer: Option<&CGLayer>) -> Option<CFRetained<CGContext>> {
         extern "C-unwind" {
             fn CGLayerGetContext(layer: Option<&CGLayer>) -> Option<NonNull<CGContext>>;
         }
@@ -75,7 +71,11 @@ impl CGContext {
     #[doc(alias = "CGContextDrawLayerInRect")]
     #[cfg(feature = "CGContext")]
     #[inline]
-    pub fn draw_layer_in_rect(context: Option<&CGContext>, rect: CGRect, layer: Option<&CGLayer>) {
+    pub unsafe fn draw_layer_in_rect(
+        context: Option<&CGContext>,
+        rect: CGRect,
+        layer: Option<&CGLayer>,
+    ) {
         extern "C-unwind" {
             fn CGContextDrawLayerInRect(
                 context: Option<&CGContext>,
@@ -89,7 +89,7 @@ impl CGContext {
     #[doc(alias = "CGContextDrawLayerAtPoint")]
     #[cfg(feature = "CGContext")]
     #[inline]
-    pub fn draw_layer_at_point(
+    pub unsafe fn draw_layer_at_point(
         context: Option<&CGContext>,
         point: CGPoint,
         layer: Option<&CGLayer>,
@@ -135,19 +135,15 @@ pub unsafe extern "C-unwind" fn CGLayerCreateWithContext(
     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
 }
 
-#[deprecated = "renamed to `CGLayer::size`"]
-#[inline]
-pub extern "C-unwind" fn CGLayerGetSize(layer: Option<&CGLayer>) -> CGSize {
-    extern "C-unwind" {
-        fn CGLayerGetSize(layer: Option<&CGLayer>) -> CGSize;
-    }
-    unsafe { CGLayerGetSize(layer) }
+extern "C-unwind" {
+    #[deprecated = "renamed to `CGLayer::size`"]
+    pub fn CGLayerGetSize(layer: Option<&CGLayer>) -> CGSize;
 }
 
 #[cfg(feature = "CGContext")]
 #[deprecated = "renamed to `CGLayer::context`"]
 #[inline]
-pub extern "C-unwind" fn CGLayerGetContext(
+pub unsafe extern "C-unwind" fn CGLayerGetContext(
     layer: Option<&CGLayer>,
 ) -> Option<CFRetained<CGContext>> {
     extern "C-unwind" {
@@ -157,38 +153,22 @@ pub extern "C-unwind" fn CGLayerGetContext(
     ret.map(|ret| unsafe { CFRetained::retain(ret) })
 }
 
-#[cfg(feature = "CGContext")]
-#[deprecated = "renamed to `CGContext::draw_layer_in_rect`"]
-#[inline]
-pub extern "C-unwind" fn CGContextDrawLayerInRect(
-    context: Option<&CGContext>,
-    rect: CGRect,
-    layer: Option<&CGLayer>,
-) {
-    extern "C-unwind" {
-        fn CGContextDrawLayerInRect(
-            context: Option<&CGContext>,
-            rect: CGRect,
-            layer: Option<&CGLayer>,
-        );
-    }
-    unsafe { CGContextDrawLayerInRect(context, rect, layer) }
+extern "C-unwind" {
+    #[cfg(feature = "CGContext")]
+    #[deprecated = "renamed to `CGContext::draw_layer_in_rect`"]
+    pub fn CGContextDrawLayerInRect(
+        context: Option<&CGContext>,
+        rect: CGRect,
+        layer: Option<&CGLayer>,
+    );
 }
 
-#[cfg(feature = "CGContext")]
-#[deprecated = "renamed to `CGContext::draw_layer_at_point`"]
-#[inline]
-pub extern "C-unwind" fn CGContextDrawLayerAtPoint(
-    context: Option<&CGContext>,
-    point: CGPoint,
-    layer: Option<&CGLayer>,
-) {
-    extern "C-unwind" {
-        fn CGContextDrawLayerAtPoint(
-            context: Option<&CGContext>,
-            point: CGPoint,
-            layer: Option<&CGLayer>,
-        );
-    }
-    unsafe { CGContextDrawLayerAtPoint(context, point, layer) }
+extern "C-unwind" {
+    #[cfg(feature = "CGContext")]
+    #[deprecated = "renamed to `CGContext::draw_layer_at_point`"]
+    pub fn CGContextDrawLayerAtPoint(
+        context: Option<&CGContext>,
+        point: CGPoint,
+        layer: Option<&CGLayer>,
+    );
 }

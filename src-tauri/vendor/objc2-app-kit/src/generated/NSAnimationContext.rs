@@ -26,7 +26,7 @@ impl NSAnimationContext {
         #[cfg(feature = "block2")]
         #[unsafe(method(runAnimationGroup:completionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn runAnimationGroup_completionHandler(
+        pub unsafe fn runAnimationGroup_completionHandler(
             changes: &block2::DynBlock<dyn Fn(NonNull<NSAnimationContext>) + '_>,
             completion_handler: Option<&block2::DynBlock<dyn Fn()>>,
         );
@@ -34,65 +34,66 @@ impl NSAnimationContext {
         #[cfg(feature = "block2")]
         #[unsafe(method(runAnimationGroup:))]
         #[unsafe(method_family = none)]
-        pub fn runAnimationGroup(
+        pub unsafe fn runAnimationGroup(
             changes: &block2::DynBlock<dyn Fn(NonNull<NSAnimationContext>) + '_>,
         );
 
         #[unsafe(method(beginGrouping))]
         #[unsafe(method_family = none)]
-        pub fn beginGrouping();
+        pub unsafe fn beginGrouping();
 
         #[unsafe(method(endGrouping))]
         #[unsafe(method_family = none)]
-        pub fn endGrouping();
+        pub unsafe fn endGrouping();
 
         #[unsafe(method(currentContext))]
         #[unsafe(method_family = none)]
-        pub fn currentContext() -> Retained<NSAnimationContext>;
+        pub unsafe fn currentContext() -> Retained<NSAnimationContext>;
 
         #[unsafe(method(duration))]
         #[unsafe(method_family = none)]
-        pub fn duration(&self) -> NSTimeInterval;
+        pub unsafe fn duration(&self) -> NSTimeInterval;
 
         /// Setter for [`duration`][Self::duration].
         #[unsafe(method(setDuration:))]
         #[unsafe(method_family = none)]
-        pub fn setDuration(&self, duration: NSTimeInterval);
+        pub unsafe fn setDuration(&self, duration: NSTimeInterval);
 
         #[cfg(feature = "objc2-quartz-core")]
         #[cfg(target_vendor = "apple")]
         #[unsafe(method(timingFunction))]
         #[unsafe(method_family = none)]
-        pub fn timingFunction(&self) -> Option<Retained<CAMediaTimingFunction>>;
+        pub unsafe fn timingFunction(&self) -> Option<Retained<CAMediaTimingFunction>>;
 
         #[cfg(feature = "objc2-quartz-core")]
         #[cfg(target_vendor = "apple")]
         /// Setter for [`timingFunction`][Self::timingFunction].
         #[unsafe(method(setTimingFunction:))]
         #[unsafe(method_family = none)]
-        pub fn setTimingFunction(&self, timing_function: Option<&CAMediaTimingFunction>);
+        pub unsafe fn setTimingFunction(&self, timing_function: Option<&CAMediaTimingFunction>);
 
         #[cfg(feature = "block2")]
         #[unsafe(method(completionHandler))]
         #[unsafe(method_family = none)]
-        pub fn completionHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
+        pub unsafe fn completionHandler(&self) -> *mut block2::DynBlock<dyn Fn()>;
 
         #[cfg(feature = "block2")]
         /// Setter for [`completionHandler`][Self::completionHandler].
-        ///
-        /// This is [copied][objc2_foundation::NSCopying::copy] when set.
         #[unsafe(method(setCompletionHandler:))]
         #[unsafe(method_family = none)]
-        pub fn setCompletionHandler(&self, completion_handler: Option<&block2::DynBlock<dyn Fn()>>);
+        pub unsafe fn setCompletionHandler(
+            &self,
+            completion_handler: Option<&block2::DynBlock<dyn Fn()>>,
+        );
 
         #[unsafe(method(allowsImplicitAnimation))]
         #[unsafe(method_family = none)]
-        pub fn allowsImplicitAnimation(&self) -> bool;
+        pub unsafe fn allowsImplicitAnimation(&self) -> bool;
 
         /// Setter for [`allowsImplicitAnimation`][Self::allowsImplicitAnimation].
         #[unsafe(method(setAllowsImplicitAnimation:))]
         #[unsafe(method_family = none)]
-        pub fn setAllowsImplicitAnimation(&self, allows_implicit_animation: bool);
+        pub unsafe fn setAllowsImplicitAnimation(&self, allows_implicit_animation: bool);
     );
 }
 
@@ -101,17 +102,10 @@ impl NSAnimationContext {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-impl DefaultRetained for NSAnimationContext {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }

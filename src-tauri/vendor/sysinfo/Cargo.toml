@@ -13,7 +13,7 @@
 edition = "2024"
 rust-version = "1.88"
 name = "sysinfo"
-version = "0.37.2"
+version = "0.38.3"
 authors = ["Guillaume Gomez <guillaume1.gomez@gmail.com>"]
 build = false
 exclude = ["/test-unknown"]
@@ -213,13 +213,13 @@ version = "1.0"
 version = "3.9"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.objc2-core-foundation]
-version = "0.3.1"
+version = "=0.3.1"
 features = ["std"]
 optional = true
 default-features = false
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.objc2-io-kit]
-version = "0.3.1"
+version = "=0.3.1"
 features = [
     "std",
     "libc",
@@ -235,5 +235,5 @@ version = "0.4"
 optional = true
 
 [target."cfg(windows)".dependencies.windows]
-version = ">=0.59, <0.62"
+version = ">=0.62, <0.63"
 optional = true

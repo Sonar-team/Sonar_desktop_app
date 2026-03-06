@@ -9,9 +9,6 @@ extern_protocol!(
     /// [Apple's documentation](https://developer.apple.com/documentation/webkit/domxpathnsresolver?language=objc)
     #[deprecated]
     pub unsafe trait DOMXPathNSResolver: NSObjectProtocol {
-        /// # Safety
-        ///
-        /// `prefix` might not allow `None`.
         #[deprecated]
         #[unsafe(method(lookupNamespaceURI:))]
         #[unsafe(method_family = none)]

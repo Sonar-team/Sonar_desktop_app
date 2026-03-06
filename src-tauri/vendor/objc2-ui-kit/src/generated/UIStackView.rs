@@ -166,116 +166,107 @@ impl UIStackView {
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(initWithFrame:))]
         #[unsafe(method_family = init)]
-        pub fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
+        pub unsafe fn initWithFrame(this: Allocated<Self>, frame: CGRect) -> Retained<Self>;
 
-        /// # Safety
-        ///
-        /// `coder` possibly has further requirements.
         #[unsafe(method(initWithCoder:))]
         #[unsafe(method_family = init)]
         pub unsafe fn initWithCoder(this: Allocated<Self>, coder: &NSCoder) -> Retained<Self>;
 
         #[unsafe(method(initWithArrangedSubviews:))]
         #[unsafe(method_family = init)]
-        pub fn initWithArrangedSubviews(
+        pub unsafe fn initWithArrangedSubviews(
             this: Allocated<Self>,
             views: &NSArray<UIView>,
         ) -> Retained<Self>;
 
         #[unsafe(method(arrangedSubviews))]
         #[unsafe(method_family = none)]
-        pub fn arrangedSubviews(&self) -> Retained<NSArray<UIView>>;
+        pub unsafe fn arrangedSubviews(&self) -> Retained<NSArray<UIView>>;
 
         #[unsafe(method(addArrangedSubview:))]
         #[unsafe(method_family = none)]
-        pub fn addArrangedSubview(&self, view: &UIView);
+        pub unsafe fn addArrangedSubview(&self, view: &UIView);
 
         #[unsafe(method(removeArrangedSubview:))]
         #[unsafe(method_family = none)]
-        pub fn removeArrangedSubview(&self, view: &UIView);
+        pub unsafe fn removeArrangedSubview(&self, view: &UIView);
 
         #[unsafe(method(insertArrangedSubview:atIndex:))]
         #[unsafe(method_family = none)]
-        pub fn insertArrangedSubview_atIndex(&self, view: &UIView, stack_index: NSUInteger);
+        pub unsafe fn insertArrangedSubview_atIndex(&self, view: &UIView, stack_index: NSUInteger);
 
         #[unsafe(method(axis))]
         #[unsafe(method_family = none)]
-        pub fn axis(&self) -> UILayoutConstraintAxis;
+        pub unsafe fn axis(&self) -> UILayoutConstraintAxis;
 
         /// Setter for [`axis`][Self::axis].
         #[unsafe(method(setAxis:))]
         #[unsafe(method_family = none)]
-        pub fn setAxis(&self, axis: UILayoutConstraintAxis);
+        pub unsafe fn setAxis(&self, axis: UILayoutConstraintAxis);
 
         #[unsafe(method(distribution))]
         #[unsafe(method_family = none)]
-        pub fn distribution(&self) -> UIStackViewDistribution;
+        pub unsafe fn distribution(&self) -> UIStackViewDistribution;
 
         /// Setter for [`distribution`][Self::distribution].
         #[unsafe(method(setDistribution:))]
         #[unsafe(method_family = none)]
-        pub fn setDistribution(&self, distribution: UIStackViewDistribution);
+        pub unsafe fn setDistribution(&self, distribution: UIStackViewDistribution);
 
         #[unsafe(method(alignment))]
         #[unsafe(method_family = none)]
-        pub fn alignment(&self) -> UIStackViewAlignment;
+        pub unsafe fn alignment(&self) -> UIStackViewAlignment;
 
         /// Setter for [`alignment`][Self::alignment].
         #[unsafe(method(setAlignment:))]
         #[unsafe(method_family = none)]
-        pub fn setAlignment(&self, alignment: UIStackViewAlignment);
+        pub unsafe fn setAlignment(&self, alignment: UIStackViewAlignment);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(spacing))]
         #[unsafe(method_family = none)]
-        pub fn spacing(&self) -> CGFloat;
+        pub unsafe fn spacing(&self) -> CGFloat;
 
         #[cfg(feature = "objc2-core-foundation")]
         /// Setter for [`spacing`][Self::spacing].
         #[unsafe(method(setSpacing:))]
         #[unsafe(method_family = none)]
-        pub fn setSpacing(&self, spacing: CGFloat);
+        pub unsafe fn setSpacing(&self, spacing: CGFloat);
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(setCustomSpacing:afterView:))]
         #[unsafe(method_family = none)]
-        pub fn setCustomSpacing_afterView(&self, spacing: CGFloat, arranged_subview: &UIView);
+        pub unsafe fn setCustomSpacing_afterView(
+            &self,
+            spacing: CGFloat,
+            arranged_subview: &UIView,
+        );
 
         #[cfg(feature = "objc2-core-foundation")]
         #[unsafe(method(customSpacingAfterView:))]
         #[unsafe(method_family = none)]
-        pub fn customSpacingAfterView(&self, arranged_subview: &UIView) -> CGFloat;
+        pub unsafe fn customSpacingAfterView(&self, arranged_subview: &UIView) -> CGFloat;
 
         #[unsafe(method(isBaselineRelativeArrangement))]
         #[unsafe(method_family = none)]
-        pub fn isBaselineRelativeArrangement(&self) -> bool;
+        pub unsafe fn isBaselineRelativeArrangement(&self) -> bool;
 
         /// Setter for [`isBaselineRelativeArrangement`][Self::isBaselineRelativeArrangement].
         #[unsafe(method(setBaselineRelativeArrangement:))]
         #[unsafe(method_family = none)]
-        pub fn setBaselineRelativeArrangement(&self, baseline_relative_arrangement: bool);
+        pub unsafe fn setBaselineRelativeArrangement(&self, baseline_relative_arrangement: bool);
 
         #[unsafe(method(isLayoutMarginsRelativeArrangement))]
         #[unsafe(method_family = none)]
-        pub fn isLayoutMarginsRelativeArrangement(&self) -> bool;
+        pub unsafe fn isLayoutMarginsRelativeArrangement(&self) -> bool;
 
         /// Setter for [`isLayoutMarginsRelativeArrangement`][Self::isLayoutMarginsRelativeArrangement].
         #[unsafe(method(setLayoutMarginsRelativeArrangement:))]
         #[unsafe(method_family = none)]
-        pub fn setLayoutMarginsRelativeArrangement(
+        pub unsafe fn setLayoutMarginsRelativeArrangement(
             &self,
             layout_margins_relative_arrangement: bool,
         );
-    );
-}
-
-/// Methods declared on superclass `UIView`.
-#[cfg(all(feature = "UIResponder", feature = "UIView"))]
-impl UIStackView {
-    extern_methods!(
-        #[unsafe(method(init))]
-        #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -283,8 +274,12 @@ impl UIStackView {
 #[cfg(all(feature = "UIResponder", feature = "UIView"))]
 impl UIStackView {
     extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new(mtm: MainThreadMarker) -> Retained<Self>;
+        pub unsafe fn new(mtm: MainThreadMarker) -> Retained<Self>;
     );
 }

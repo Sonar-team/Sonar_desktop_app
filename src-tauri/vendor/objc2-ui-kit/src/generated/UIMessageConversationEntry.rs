@@ -54,22 +54,22 @@ impl UIMessageConversationEntry {
         /// Indicates the data format of the entry
         #[unsafe(method(dataKind))]
         #[unsafe(method_family = none)]
-        pub fn dataKind(&self) -> UIMessageConversationEntryDataKind;
+        pub unsafe fn dataKind(&self) -> UIMessageConversationEntryDataKind;
 
         /// Setter for [`dataKind`][Self::dataKind].
         #[unsafe(method(setDataKind:))]
         #[unsafe(method_family = none)]
-        pub fn setDataKind(&self, data_kind: UIMessageConversationEntryDataKind);
+        pub unsafe fn setDataKind(&self, data_kind: UIMessageConversationEntryDataKind);
 
         /// A Boolean value that indicates whether the current user sent the message.
         #[unsafe(method(wasSentBySelf))]
         #[unsafe(method_family = none)]
-        pub fn wasSentBySelf(&self) -> bool;
+        pub unsafe fn wasSentBySelf(&self) -> bool;
 
         /// Setter for [`wasSentBySelf`][Self::wasSentBySelf].
         #[unsafe(method(setWasSentBySelf:))]
         #[unsafe(method_family = none)]
-        pub fn setWasSentBySelf(&self, was_sent_by_self: bool);
+        pub unsafe fn setWasSentBySelf(&self, was_sent_by_self: bool);
     );
 }
 
@@ -79,18 +79,10 @@ impl UIMessageConversationEntry {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub fn new() -> Retained<Self>;
+        pub unsafe fn new() -> Retained<Self>;
     );
-}
-
-#[cfg(feature = "UIConversationEntry")]
-impl DefaultRetained for UIMessageConversationEntry {
-    #[inline]
-    fn default_retained() -> Retained<Self> {
-        Self::new()
-    }
 }
