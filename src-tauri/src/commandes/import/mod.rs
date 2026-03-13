@@ -2,6 +2,7 @@ use log::{error, info};
 use packet_parser::PacketFlow;
 use pcap::Capture;
 use std::fs::File;
+#[cfg(unix)]
 use std::os::unix::io::IntoRawFd;
 use std::sync::{Arc, Mutex};
 use tauri::{State, ipc::Channel};
@@ -16,20 +17,32 @@ use crate::{
 };
 
 fn open_capture(file_path: &str) -> Result<Capture<pcap::Offline>, CaptureStateError> {
-    let file = File::open(file_path).map_err(|e| {
-        CaptureStateError::Import(PcapImportError::OpenFileError(
-            file_path.to_string(),
-            e.to_string(),
-        ))
-    })?;
-    let fd = file.into_raw_fd();
-    // SAFETY: fd est valide et nous en sommes propriétaires
-    unsafe { Capture::from_raw_fd(fd) }.map_err(|e| {
-        CaptureStateError::Import(PcapImportError::OpenFileError(
-            file_path.to_string(),
-            e.to_string(),
-        ))
-    })
+    #[cfg(unix)]
+    {
+        let file = File::open(file_path).map_err(|e| {
+            CaptureStateError::Import(PcapImportError::OpenFileError(
+                file_path.to_string(),
+                e.to_string(),
+            ))
+        })?;
+        let fd = file.into_raw_fd();
+        // SAFETY: fd est valide et nous en sommes propriétaires. `from_raw_fd` en prend possession.
+        unsafe { Capture::from_raw_fd(fd) }.map_err(|e| {
+            CaptureStateError::Import(PcapImportError::OpenFileError(
+                file_path.to_string(),
+                e.to_string(),
+            ))
+        })
+    }
+    #[cfg(not(unix))]
+    {
+        Capture::from_file(file_path).map_err(|e| {
+            CaptureStateError::Import(PcapImportError::OpenFileError(
+                file_path.to_string(),
+                e.to_string(),
+            ))
+        })
+    }
 }
 
 fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
