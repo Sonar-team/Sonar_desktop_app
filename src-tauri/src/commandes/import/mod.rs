@@ -34,7 +34,40 @@ fn open_capture(file_path: &str) -> Result<Capture<pcap::Offline>, CaptureStateE
             ))
         })
     }
-    #[cfg(not(unix))]
+    #[cfg(windows)]
+    {
+        use std::ffi::OsStr;
+        use std::os::windows::ffi::OsStrExt;
+        use windows_sys::Win32::Storage::FileSystem::GetShortPathNameW;
+
+        // Convertit le chemin en UTF-16 pour l'API Windows
+        let wide: Vec<u16> = OsStr::new(file_path)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+
+        // Récupère la taille du buffer nécessaire pour le chemin court (8.3)
+        let len = unsafe { GetShortPathNameW(wide.as_ptr(), std::ptr::null_mut(), 0) };
+
+        let short_path = if len > 0 {
+            let mut buf = vec![0u16; len as usize];
+            unsafe { GetShortPathNameW(wide.as_ptr(), buf.as_mut_ptr(), len) };
+            // Retire le null-terminator
+            String::from_utf16_lossy(&buf[..len as usize - 1])
+        } else {
+            // Fallback si GetShortPathNameW échoue (ex: short names désactivés)
+            file_path.to_string()
+        };
+
+        Capture::from_file(&short_path).map_err(|e| {
+            CaptureStateError::Import(PcapImportError::OpenFileError(
+                file_path.to_string(),
+                e.to_string(),
+            ))
+        })
+    }
+
+    #[cfg(not(any(unix, windows)))]
     {
         Capture::from_file(file_path).map_err(|e| {
             CaptureStateError::Import(PcapImportError::OpenFileError(
