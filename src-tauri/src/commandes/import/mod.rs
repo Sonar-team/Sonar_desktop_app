@@ -1,6 +1,8 @@
 use log::{error, info};
 use packet_parser::PacketFlow;
 use pcap::Capture;
+use std::fs::File;
+use std::os::unix::io::IntoRawFd;
 use std::sync::{Arc, Mutex};
 use tauri::{State, ipc::Channel};
 
@@ -13,13 +15,25 @@ use crate::{
     },
 };
 
-fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
-    let mut cap = Capture::from_file(file_path).map_err(|e| {
+fn open_capture(file_path: &str) -> Result<Capture<pcap::Offline>, CaptureStateError> {
+    let file = File::open(file_path).map_err(|e| {
         CaptureStateError::Import(PcapImportError::OpenFileError(
             file_path.to_string(),
             e.to_string(),
         ))
     })?;
+    let fd = file.into_raw_fd();
+    // SAFETY: fd est valide et nous en sommes propriétaires
+    unsafe { Capture::from_raw_fd(fd) }.map_err(|e| {
+        CaptureStateError::Import(PcapImportError::OpenFileError(
+            file_path.to_string(),
+            e.to_string(),
+        ))
+    })
+}
+
+fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
+    let mut cap = open_capture(file_path)?;
 
     let mut count: usize = 0;
     while cap.next_packet().is_ok() {
@@ -89,12 +103,7 @@ fn handle_pcap_file(
         file_path, total
     );
 
-    let mut cap = Capture::from_file(file_path).map_err(|e| {
-        CaptureStateError::Import(PcapImportError::OpenFileError(
-            file_path.to_string(),
-            e.to_string(),
-        ))
-    })?;
+    let mut cap = open_capture(file_path)?;
 
     let mut packet_count: usize = 0;
 
