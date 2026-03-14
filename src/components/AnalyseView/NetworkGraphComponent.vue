@@ -13,16 +13,16 @@ import LegendComponent from './LegendComponent.vue';
 
 // --- Colors ----------------------------------------------------------------
 const EDGE_COLORS_LC: Record<string, string> = Object.freeze({
-  arp: "#FFFF00",
-  ipv4: "#FFA500",
-  ipv6: "#EE82EE",
-  profinet_rt: "#008000",
-  tls: "#0000FF",
-  dns: "#FF0000",
-  ntp: "#FFA500",
+  arp: "#a89040",
+  ipv4: "#a07030",
+  ipv6: "#8a5f8a",
+  profinet_rt: "#3f7040",
+  tls: "#3a5c9a",
+  dns: "#8a3c3c",
+  ntp: "#a07030",
 })
 const colorForLabel = (label: string) =>
-  EDGE_COLORS_LC[label?.toLowerCase?.() ?? ""] || "#ffffff"
+  EDGE_COLORS_LC[label?.toLowerCase?.() ?? ""] || "#808095"
 
 // --- Helpers ---------------------------------------------------------------
 function clamp01(x: number) { return x < 0 ? 0 : x > 1 ? 1 : x }
@@ -138,16 +138,16 @@ export default defineComponent({
             radius: 20,
             color: (node: NodeData) => node._hover ?? brighten(node.color, 0.18),
           },
-          label: { 
-            text: (node: NodeData) => node.label || node.name, 
-            fontSize: 10, 
-            color: "#ffffff", 
+          label: {
+            text: (node: NodeData) => node.label || node.name,
+            fontSize: 10,
+            color: "#c0c0c8",
             direction: "north" as const,
             lineHeight: 2.0,
             margin: 4,
-            background: { 
+            background: {
                visible: true,
-               color: "#000000",
+               color: "#1e1e28",
                padding: { vertical: 3, horizontal: 6 },
                borderRadius: 2,
             },
@@ -167,17 +167,17 @@ export default defineComponent({
             target: { type: "arrow" as const, width: 5, height: 5, margin: 0, offset: 0, units: "strokeWidth" as const, color: null },
           },
           label: {
-            fontSize: 21, 
-            lineHeight: 1.1, 
-            color: "#E0E0E0", 
+            fontSize: 18,
+            lineHeight: 1.1,
+            color: "#9a9aa8",
             margin: 4,
-              background: { 
-                visible: true, 
-                color: "#000000", 
-                padding: { 
-                  vertical: 1, 
-                  horizontal: 4 
-                }, 
+              background: {
+                visible: true,
+                color: "#1e1e28",
+                padding: {
+                  vertical: 1,
+                  horizontal: 4
+                },
                 borderRadius: 2 },
           },
         },
@@ -301,7 +301,7 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
       if (!node) continue;
 
       try {
-        const color = node.color || "#2196F3";
+        const color = node.color || "#4a6aa0";
         const id = node.id || nodeId;
 
         this.graphData.nodes[id] = {
@@ -529,7 +529,7 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
         case "NodeAdded": {
           const node = u.payload
           if (node) {
-            const color = node.color || "#2196F3"
+            const color = node.color || "#4a6aa0"
             this.graphData.nodes[node.id] = {
               id: node.id,
               name: node.name,
@@ -573,15 +573,27 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
 
 <template>
   <div class="graph-container">
-    <div class="top-buttons">
-      <button class="download-button" @click="downloadPng" title="Exporter en PNG">⬇️ Export PNG</button>
+    <div class="graph-controls">
+      <!-- Export PNG -->
+      <button class="graph-btn" @click="downloadPng" title="Exporter en PNG">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 2v8M5 7l3 3 3-3"/>
+          <path d="M3 12h10"/>
+        </svg>
+      </button>
+
+      <!-- Gravité toggle -->
       <button
-        class="force-button"
-        :class="{ on: forceEnabled }"
+        class="graph-btn"
+        :class="{ active: forceEnabled }"
         @click="toggleForce"
         :title="forceEnabled ? 'Désactiver la gravité' : 'Activer la gravité'"
       >
-        {{ forceEnabled ? "Gravité: ON" : "Gravité: OFF" }}
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="5" r="2.5"/>
+          <path d="M8 7.5v5"/>
+          <path d="M5.5 10.5l2.5 2.5 2.5-2.5"/>
+        </svg>
       </button>
     </div>
 
@@ -604,7 +616,7 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
           vertical-align="above"
           v-bind="slotProps"
           :font-size="18 * slotProps.scale"
-          fill="#FFFFFF"
+          fill="#9a9aa8"
         />
         <v-edge-label
           v-if="zoomLevel >= 1.8"
@@ -631,7 +643,15 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
     <div class="bottom-info">
       <div class="zoom">Zoom: {{ zoomLevel.toPrecision(2) }}</div>
       <div class="sep" />
-      <button class="download-button" @click="printLabels" title="afficher les labels">Afficher les labels</button>
+      <button class="inline-btn" @click="printLabels" title="Afficher les labels">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <circle cx="4" cy="7" r="1.5"/>
+          <circle cx="7" cy="3.5" r="1.5"/>
+          <circle cx="10" cy="7" r="1.5"/>
+          <circle cx="7" cy="10.5" r="1.5"/>
+        </svg>
+        Labels
+      </button>
       <div class="sep" />
       <div class="node-infos" v-if="selectedNodeInfos.length">
         <strong>Nœud sélectionné</strong>
@@ -654,7 +674,7 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
           >
             {{ isSavingLabel ? "Enregistrement…" : "Enregistrer" }}
           </button>
-          <button class="ghost" @click="cancelEdit" :disabled="isSavingLabel">Annuler</button>
+          <button class="ghost" @click="clearNodeInfos" :disabled="isSavingLabel">Annuler</button>
         </div>
 
         <ul>
@@ -678,52 +698,101 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: #111;
+  background: #282838;
   overflow: hidden;
 }
-.graph { flex: 1; background: #000; }
+.graph { flex: 1; background: #1e1e28; }
 
-/* Boutons */
-.top-buttons {
+/* Contrôles flottants */
+.graph-controls {
   position: absolute;
   top: 10px;
   left: 10px;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 2px;
   z-index: 10;
 }
-.download-button, .force-button {
-  background: #0b1b25;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
+
+.graph-btn {
+  width: 28px;
+  height: 28px;
+  background: rgba(28, 28, 32, 0.75);
+  border: 1px solid #3c3c50;
+  border-radius: 5px;
+  color: #585870;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  backdrop-filter: blur(4px);
 }
-.force-button.on { box-shadow: 0 0 0 2px #1de9b6 inset; }
+
+.graph-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.graph-btn:hover {
+  color: #888894;
+  background: rgba(30, 30, 34, 0.9);
+  border-color: #484858;
+  transform: translateY(-1px);
+}
+.graph-btn:active {
+  transform: scale(0.9);
+}
+
+.graph-btn.active {
+  color: #5a8a9a;
+  border-color: #2a4a55;
+  background: rgba(30, 50, 60, 0.6);
+}
 
 /* Bandeau bas */
 .bottom-info {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 200px; /* ajuste si besoin */
+  bottom: 200px;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
-  background: #0f0f0fcc;
-  color: #eaeaea;
-  border-top: 1px solid #333;
+  background: rgba(24, 24, 28, 0.92);
+  color: #a0a0b4;
+  border-top: 1px solid #484860;
   backdrop-filter: blur(4px);
   z-index: 20;
 }
-.bottom-info .zoom { font-variant-numeric: tabular-nums; }
+.bottom-info .zoom {
+  font-variant-numeric: tabular-nums;
+  font-family: monospace;
+  font-size: 11px;
+  color: #585870;
+}
 .bottom-info .sep {
   width: 1px;
-  height: 20px;
-  background: #333;
+  height: 16px;
+  background: #3c3c50;
 }
+
+.inline-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  color: #585870;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: color 0.15s ease;
+}
+.inline-btn svg { width: 11px; height: 11px; }
+.inline-btn:hover { color: #888894; }
 .node-infos {
   display: flex;
   flex-direction: column;
@@ -738,7 +807,7 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
   gap: 10px;
 }
 .node-infos li { opacity: 0.95; }
-.node-infos.hint { opacity: 0.7; font-style: italic; }
+.node-infos.hint { color: #8888a0; font-style: italic; font-size: 12px; }
 
 .edit-row {
   display: flex;
@@ -747,29 +816,29 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
   margin: 6px 0 10px;
 }
 .edit-row input {
-  background: #0b0b0b;
-  color: #eaeaea;
-  border: 1px solid #333;
+  background: #343448;
+  color: #d4d4d8;
+  border: 1px solid #545465;
   border-radius: 6px;
   padding: 6px 8px;
   min-width: 220px;
 }
 button.primary {
-  background: #116466;
-  color: #fff;
-  border: none;
+  background: #2e4a68;
+  color: #d4d4d8;
+  border: 1px solid #3a5a80;
   border-radius: 6px;
   padding: 6px 10px;
   cursor: pointer;
 }
 button.primary:disabled {
-  opacity: 0.6;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 button.ghost {
   background: transparent;
-  color: #bbb;
-  border: 1px solid #444;
+  color: #888894;
+  border: 1px solid #484858;
   border-radius: 6px;
   padding: 6px 10px;
   cursor: pointer;

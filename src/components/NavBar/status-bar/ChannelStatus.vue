@@ -1,13 +1,14 @@
 <template>
-    <div class="channel-status">
-      <p :title="progress + '%'">🚨​:</p>
-      <p> {{ progress }}%</p>
+    <div class="channel-status" title="Remplissage du buffer canal">
+      <!-- buffer/layers icon -->
+      <svg class="stat-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1.5 4l4.5 2 4.5-2-4.5-2-4.5 2z"/>
+        <path d="M1.5 6.5l4.5 2 4.5-2"/>
+        <path d="M1.5 9l4.5 2 4.5-2"/>
+      </svg>
+      <span class="buf-pct">{{ progress }}%</span>
       <div class="progress-bar-background">
-        <div class="progress-bar" 
-          :style="{ width: progress + '%' }" 
-          >
-        </div>
-        
+        <div class="progress-bar" :style="{ width: progress + '%' }"></div>
       </div>
     </div>
   </template>
@@ -47,17 +48,31 @@
     align-items: center;
     gap: 5px;
   }
-  
-  .progress-bar-background {
-    width: 100px; /* Taille fixe de la barre */
-    height: 3px;
-    background-color: #f7f7f7;
+
+  .stat-icon {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+    color: #585870;
   }
-  
+
+  .buf-pct {
+    font-family: monospace;
+    color: #6a6a80;
+    font-size: 11px;
+    min-width: 28px;
+  }
+
+  .progress-bar-background {
+    width: 60px;
+    height: 2px;
+    background-color: #3c3c50;
+  }
+
   .progress-bar {
     height: 100%;
-    background-color: #e79a6e;
- 
+    background-color: #4a6080;
+    transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   }
   </style>
   

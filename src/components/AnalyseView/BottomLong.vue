@@ -116,8 +116,9 @@ export default defineComponent({
   display: block;
   height: 190px;
   flex-shrink: 0;
-  background-color: #000;
+  background-color: #2c2c3a;
   font-family: 'Courier New', Courier, monospace;
+  border-top: 1px solid #383850;
 }
 table {
   width: 100%;
@@ -125,17 +126,29 @@ table {
   table-layout: fixed;
 }
 td, th {
-  padding: 8px;
+  padding: 6px 8px;
   text-align: center;
-  color: rgb(132, 195, 247);
-  background-color: #000;
+  color: #7090a8;
+  background-color: #2c2c3a;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: 11px;
+}
+th {
+  color: #687888;
+  font-weight: 500;
 }
 tbody {
   display: block;
   overflow-y: auto;
+}
+tbody tr {
+  animation: row-in 0.18s cubic-bezier(0.25, 1, 0.5, 1);
+}
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 thead, tbody tr {
   display: table;
