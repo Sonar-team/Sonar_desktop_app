@@ -126,6 +126,6 @@ pub fn set_filter(
 ) -> Result<(), CaptureStateError> {
     info!("[set_filter] filter: {}", filter);
     let mut app = state.lock()?;
-    app.filter = Some(filter);
+    app.filter = if filter.is_empty() { None } else { Some(filter) };
     Ok(())
 }

@@ -1,48 +1,42 @@
 <template>
   <div class="interface-selector">
-    <label class="selector-label">Interface réseau</label>
-    <div class="selector-container">
-      <select 
-        v-model="selectedInterface" 
-        @change="onInterfaceChange"
-        class="interface-select"
-        :disabled="netInterfaces.length === 0"
+    <label class="field-label">Interface réseau</label>
+
+    <select
+      v-model="selectedInterface"
+      @change="onInterfaceChange"
+      class="field-select"
+      :disabled="netInterfaces.length === 0"
+    >
+      <option value="" disabled>Choisir une interface…</option>
+      <option
+        v-for="iface in netInterfaces"
+        :key="iface.name"
+        :value="iface"
       >
-        <option value="" disabled>Choisir une interface...</option>
-        <option 
-          v-for="netInterface in netInterfaces" 
-          :key="netInterface.name" 
-          :value="netInterface"
-        >
-          {{ formatInterfaceDisplay(netInterface) }}
-        </option>
-      </select>
-      
-      <div v-if="selectedInterface" class="interface-details">
-        <div class="detail-item" v-if="selectedInterface.desc">
-          <span class="detail-label">Description:</span>
-          <span class="detail-value">{{ selectedInterface.desc }}</span>
+        {{ formatInterfaceDisplay(iface) }}
+      </option>
+    </select>
+
+    <div v-if="selectedInterface" class="iface-details">
+      <div class="detail-row" v-if="selectedInterface.desc">
+        <span class="detail-label">Desc</span>
+        <span class="detail-value">{{ selectedInterface.desc }}</span>
+      </div>
+      <div class="detail-row" v-if="selectedInterface.addresses?.length">
+        <span class="detail-label">IP</span>
+        <div class="addr-list">
+          <span
+            v-for="addr in selectedInterface.addresses"
+            :key="addr.addr"
+            class="addr-badge"
+          >{{ addr.addr }}</span>
         </div>
-        
-        <div class="detail-item" v-if="selectedInterface.addresses.length > 0">
-          <span class="detail-label">Adresses:</span>
-          <div class="addresses-list">
-            <span 
-              v-for="addr in selectedInterface.addresses" 
-              :key="addr.addr" 
-              class="address-item"
-            >
-              {{ addr.addr }}
-            </span>
-          </div>
-        </div>
-        
-        <div class="detail-item">
-          <span class="detail-label">Statut:</span>
-          <span class="detail-value status" :class="getStatusClass(selectedInterface.flags.connection_status)">
-            {{ getStatusText(selectedInterface.flags.connection_status) }}
-          </span>
-        </div>
+      </div>
+      <div class="detail-row row-status">
+        <span class="detail-label">Statut</span>
+        <span class="status-dot" :class="getStatusClass(selectedInterface.flags.connection_status)"></span>
+        <span class="detail-value">{{ getStatusText(selectedInterface.flags.connection_status) }}</span>
       </div>
     </div>
   </div>
@@ -56,7 +50,6 @@ interface Props {
   netInterfaces: NetDevice[]
   modelValue?: NetDevice | null
 }
-
 interface Emits {
   (e: 'update:modelValue', value: NetDevice | null): void
   (e: 'interface-selected', selectedInterface: NetDevice): void
@@ -64,73 +57,35 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
-
 const selectedInterface = ref<NetDevice | null>(props.modelValue || null)
 
-const formatInterfaceDisplay = (netInterface: NetDevice): string => {
-  if (netInterface.desc) {
-    return `${netInterface.name} - ${netInterface.desc}`
-  }
-  return netInterface.name
-}
+const formatInterfaceDisplay = (iface: NetDevice) =>
+  iface.desc ? `${iface.name} — ${iface.desc}` : iface.name
 
-const getStatusText = (status: string): string => {
+const getStatusText = (status: string) => {
   switch (status) {
-    case 'Connected':
-      return 'Connecté'
-    case 'Disconnected':
-      return 'Déconnecté'
-    case 'Unknown':
-      return 'Inconnu'
-    case 'NotApplicable':
-      return 'Non applicable'
-    default:
-      return status
+    case 'Connected': return 'Connecté'
+    case 'Disconnected': return 'Déconnecté'
+    case 'NotApplicable': return 'N/A'
+    default: return 'Inconnu'
   }
 }
-
-const getStatusClass = (status: string): string => {
+const getStatusClass = (status: string) => {
   switch (status) {
-    case 'Connected':
-      return 'status-connected'
-    case 'Disconnected':
-      return 'status-disconnected'
-    case 'Unknown':
-      return 'status-unknown'
-    case 'NotApplicable':
-      return 'status-not-applicable'
-    default:
-      return ''
+    case 'Connected': return 'connected'
+    case 'Disconnected': return 'disconnected'
+    default: return 'unknown'
   }
 }
-
 const onInterfaceChange = () => {
   emit('update:modelValue', selectedInterface.value)
-  if (selectedInterface.value) {
-    emit('interface-selected', selectedInterface.value)
-  }
+  if (selectedInterface.value) emit('interface-selected', selectedInterface.value)
 }
 
-// Synchroniser avec le modelValue externe
-watch(() => props.modelValue, (newValue) => {
-  selectedInterface.value = newValue
-})
-
-// Sélectionner automatiquement la première interface disponible si aucune n'est sélectionnée
-watch(() => props.netInterfaces, (newInterfaces) => {
-  if (newInterfaces.length > 0 && !selectedInterface.value) {
-    // Chercher une interface connectée en priorité
-    const connectedInterface = newInterfaces.find(
-      iface => iface.flags.connection_status === 'Connected'
-    )
-    
-    if (connectedInterface) {
-      selectedInterface.value = connectedInterface
-    } else {
-      // Sinon prendre la première
-      selectedInterface.value = newInterfaces[0]
-    }
-    
+watch(() => props.modelValue, v => { selectedInterface.value = v ?? null })
+watch(() => props.netInterfaces, ifaces => {
+  if (ifaces.length > 0 && !selectedInterface.value) {
+    selectedInterface.value = ifaces.find(i => i.flags.connection_status === 'Connected') ?? ifaces[0]
     onInterfaceChange()
   }
 }, { immediate: true })
@@ -140,108 +95,118 @@ watch(() => props.netInterfaces, (newInterfaces) => {
 .interface-selector {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
-.selector-label {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.875rem;
+.field-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #707088;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-.selector-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.interface-select {
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  background-color: white;
-  font-size: 0.875rem;
-  color: #374151;
+.field-select {
+  width: 100%;
+  background: #2c2c3a;
+  border: 1px solid #484860;
+  border-radius: 4px;
+  color: #b0b0c8;
+  font-size: 13px;
+  padding: 7px 32px 7px 10px;
   cursor: pointer;
-  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23686884' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color 0.15s, color 0.15s;
 }
-
-.interface-select:focus {
+.field-select:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #5a6a80;
+  color: #d0d0e0;
 }
-
-.interface-select:disabled {
-  background-color: #f9fafb;
-  color: #9ca3af;
+.field-select:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
-
-.interface-details {
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  padding: 0.75rem;
-  font-size: 0.875rem;
+.field-select option {
+  background: #363648;
+  color: #b0b0c8;
 }
 
-.detail-item {
+.iface-details {
+  background: #2c2c3a;
+  border: 1px solid #484860;
+  border-radius: 4px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
+  gap: 6px;
 }
 
-.detail-item:last-child {
-  margin-bottom: 0;
-}
-
-.detail-label {
-  font-weight: 600;
-  color: #6b7280;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-}
-
-.detail-value {
-  color: #374151;
-}
-
-.addresses-list {
+.detail-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11px;
+  min-width: 0;
+}
+.detail-row.row-status {
+  align-items: center;
+}
+.detail-label {
+  color: #585872;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  width: 36px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+.detail-value {
+  color: #808095;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
 }
 
-.address-item {
-  background-color: #e5e7eb;
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
+.addr-list { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.addr-badge {
+  background: #303042;
+  border: 1px solid #3a3a4e;
+  border-radius: 3px;
+  padding: 1px 6px;
   font-family: monospace;
-  font-size: 0.75rem;
-  color: #374151;
+  font-size: 11px;
+  color: #5a7a8a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
-.status {
-  font-weight: 600;
-  text-transform: capitalize;
+.status-dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  align-self: center;
 }
-
-.status-connected {
-  color: #059669;
+.status-dot.connected {
+  background: #4a8a5a;
+  box-shadow: 0 0 0 0 rgba(74, 138, 90, 0.5);
+  animation: dot-pulse 2.4s ease-out infinite;
 }
+.status-dot.disconnected { background: #6a3a3a; }
+.status-dot.unknown      { background: #585872; }
 
-.status-disconnected {
-  color: #dc2626;
-}
-
-.status-unknown {
-  color: #6b7280;
-}
-
-.status-not-applicable {
-  color: #6b7280;
+@keyframes dot-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(74, 138, 90, 0.5); }
+  60%  { box-shadow: 0 0 0 5px rgba(74, 138, 90, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(74, 138, 90, 0); }
 }
 </style>

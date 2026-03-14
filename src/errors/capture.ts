@@ -1,4 +1,3 @@
-import { message } from "@tauri-apps/plugin-dialog";
 import { error } from "@tauri-apps/plugin-log";
 
 export type CaptureErrorKind =
@@ -20,58 +19,59 @@ export type CaptureStateErrorKind =
   | { kind: "import"; message: ImportErrorKind }
   | { kind: "other"; message: string };
 
+function showError(title: string, kind: string, message: string, detail?: string) {
+  document.dispatchEvent(new CustomEvent('show-error', {
+    detail: { title, kind, message, detail }
+  }));
+}
+
 export async function displayCaptureError(err: unknown) {
   const captureError = err as CaptureStateErrorKind;
-  let userFriendlyMessage = "Erreur inconnue";
 
-  if ("kind" in captureError) {
-    switch (captureError.kind) {
-      case "io":
-        userFriendlyMessage = `Erreur IO : ${captureError.message}`;
-        break;
-      case "poisonError":
-        userFriendlyMessage = `Erreur verrou : ${captureError.message}`;
-        break;
-      case "capture":
-        const captureKind = captureError.message as CaptureErrorKind;
-        if ("kind" in captureKind) {
-          switch (captureKind.kind) {
-            case "interfaceNotFound":
-              userFriendlyMessage =
-                `Interface non trouvée : ${captureKind.message}`;
-              break;
-            case "deviceListError":
-              userFriendlyMessage =
-                `Erreur récupération device : ${captureKind.message}.\nEssayez : sudo setcap cap_net_raw,cap_net_admin=eip nom_du_binaire.`;
-              break;
-            case "captureInitError":
-              userFriendlyMessage =
-                `Erreur initialisation capture : ${captureKind.message}`;
-              break;
-            case "channelSendError":
-              userFriendlyMessage =
-                `Erreur envoi canal capture : ${captureKind.message}`;
-              break;
-          }
-        }
-        break;
-      case "import":
-        userFriendlyMessage = handleImportError(captureError.message);
-        break;
-
-      case "other":
-        userFriendlyMessage = `Erreur inattendue : ${captureError.message}`;
-        break;
-    }
+  if (!("kind" in captureError)) {
+    showError("Erreur Capture", "unknown", "Erreur inconnue.", JSON.stringify(err));
+    error(`Erreur Capture inconnue : ${JSON.stringify(err)}`);
+    return;
   }
 
-  await message(userFriendlyMessage, {
-    title: `Erreur Capture (${captureError.kind})`,
-    kind: "error",
-  });
-  error(
-    `Erreur Capture (${captureError.kind}) : ${userFriendlyMessage}`,
-  );
+  switch (captureError.kind) {
+    case "io":
+      showError("Erreur Capture", "io", "Erreur d'entrée/sortie.", captureError.message);
+      break;
+    case "poisonError":
+      showError("Erreur Capture", "poisonError", "Erreur verrou interne.", captureError.message);
+      break;
+    case "capture": {
+      const captureKind = captureError.message as CaptureErrorKind;
+      if ("kind" in captureKind) {
+        switch (captureKind.kind) {
+          case "interfaceNotFound":
+            showError("Erreur Capture", "interfaceNotFound", "Interface réseau introuvable.", captureKind.message);
+            break;
+          case "deviceListError":
+            showError("Erreur Capture", "deviceListError", "Impossible de lister les interfaces réseau.", captureKind.message);
+            break;
+          case "captureInitError":
+            showError("Erreur Capture", "captureInitError", "Échec de l'initialisation de la capture.", captureKind.message);
+            break;
+          case "channelSendError":
+            showError("Erreur Capture", "channelSendError", "Erreur d'envoi sur le canal de capture.", captureKind.message);
+            break;
+        }
+      }
+      break;
+    }
+    case "import": {
+      const importKind = captureError.message as ImportErrorKind;
+      showError("Erreur Import", importKind?.kind ?? "import", handleImportError(importKind));
+      break;
+    }
+    case "other":
+      showError("Erreur", "other", "Erreur inattendue.", captureError.message);
+      break;
+  }
+
+  error(`Erreur Capture (${captureError.kind})`);
 }
 
 function handleImportError(importError: ImportErrorKind): string {

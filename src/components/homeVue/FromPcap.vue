@@ -76,12 +76,12 @@
     justify-content: center;
     align-items: center;
     height: 50vh;
-    border-radius: 15px;
+    border-radius: 12px;
     padding: 20px;
-    background-color: #1a1a1a;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    color: #FFF;
-    border: 2px solid #3a3a3a;
+    background-color: #343448;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    color: #d4d4d8;
+    border: 1px solid #484858;
     margin: auto;
   }
   
@@ -94,19 +94,21 @@
   
   .btn {
     padding: 8px 12px;
-    border: none;
+    border: 1px solid #545465;
     border-radius: 5px;
     cursor: pointer;
-    background-color: #007bff;
-    color: white;
+    background-color: #2e4a68;
+    color: #d4d4d8;
   }
-  
+
   .btn-clear {
-    background-color: #dc3545;
+    background-color: #4a2828;
+    border-color: #5c3030;
   }
-  
+
   .btn-open {
-    background-color: #218621;
+    background-color: #284a28;
+    border-color: #305c30;
   }
   
   .file-list {

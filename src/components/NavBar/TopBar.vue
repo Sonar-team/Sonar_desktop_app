@@ -1,29 +1,118 @@
 <template>
   <div class="top-bar">
-    <button class="image-btn" @click="start" title="Démarrer (ctrl+p)" :disabled="isRunning">
-      <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
+
+    <!-- App controls: left side -->
+    <div class="bar-left">
+
+    <!-- Start -->
+    <button class="image-btn logo-btn" @click="start" title="Démarrer (ctrl+p)" :disabled="isRunning">
+      <img src="/src-tauri/icons/StoreLogo.png" alt="Sonar" class="logo-img" />
     </button>
 
+    <!-- Stop -->
     <button class="image-btn" @click="stop" title="Arrêter (ctrl+shift+p)" :disabled="!isRunning">
-      🛑
-    </button>
-    <button class="image-btn" @click="reset" title="Réinitialiser (ctrl+shift+r)">🔄</button>
-    <button class="image-btn"  title="Config (ctrl+,)" :disabled="isRunning" @click="handleConfigClick">
-      <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
+      <svg viewBox="0 0 16 16" fill="currentColor"><rect x="3.5" y="3.5" width="9" height="9" rx="1.5"/></svg>
     </button>
 
-    <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
-    <button class="image-btn" @click="displayPcapOpener" title="Ouvrir (ctrl+o)">📄</button>
-    <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">❌</button>
-    <button class="image-btn" @click="export_logs" title="Logs (ctrl+l)">📒</button>
-    <button class="image-btn" @click="handleFilterClick" title="Filtrer (ctrl+f)">
-      <img src="/src/assets/filter-solid-full.svg" alt="Flux" class="icon-img" />
+    <!-- Reset -->
+    <button class="image-btn" @click="reset" title="Réinitialiser (ctrl+shift+r)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13.5 8a5.5 5.5 0 1 1-1.1-3.3"/>
+        <path d="M13.5 3v2.5H11"/>
+      </svg>
     </button>
+
+    <div class="sep"/>
+
+    <!-- Config -->
+    <button class="image-btn" title="Config (ctrl+,)" :disabled="isRunning" @click="handleConfigClick">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <circle cx="8" cy="8" r="2"/>
+        <path d="M8 1.5v1M8 13.5v1M1.5 8h1M13.5 8h1M3.4 3.4l.7.7M11.9 11.9l.7.7M11.9 4.1l-.7.7M4.8 11.2l-.7.7"/>
+      </svg>
+    </button>
+
+    <!-- Save -->
+    <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2.5 13.5h11V5l-3-3H2.5v11.5z"/>
+        <rect x="5" y="9" width="6" height="4.5" rx="0.5"/>
+        <rect x="5.5" y="2.5" width="4" height="3" rx="0.5"/>
+      </svg>
+    </button>
+
+    <!-- Open -->
+    <button class="image-btn" @click="displayPcapOpener" title="Ouvrir (ctrl+o)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1.5 4.5h4l1.5 2H14v7H1.5V4.5z"/>
+        <path d="M1.5 6.5v-3a1 1 0 0 1 1-1h3"/>
+      </svg>
+    </button>
+
+    <!-- Logs -->
+    <button class="image-btn" @click="export_logs" title="Logs (ctrl+l)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <rect x="3" y="1.5" width="10" height="13" rx="1"/>
+        <line x1="5.5" y1="5" x2="10.5" y2="5"/>
+        <line x1="5.5" y1="8" x2="10.5" y2="8"/>
+        <line x1="5.5" y1="11" x2="8.5" y2="11"/>
+      </svg>
+    </button>
+
+    <!-- Filter -->
+    <button class="image-btn" @click="handleFilterClick" title="Filtrer (ctrl+f)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 3.5h12M4.5 7.5h7M7 11.5h2"/>
+      </svg>
+    </button>
+
+    <div class="sep"/>
+
+    <!-- Quit -->
+    <button class="image-btn quit-btn" @click="quit" title="Quitter (ctrl+q)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="8" cy="8" r="5.5"/>
+        <path d="M8 4.5v3.5"/>
+        <path d="M8 4.5v0" stroke-width="2"/>
+        <path d="M5.2 5.5A4 4 0 1 0 10.8 5.5"/>
+      </svg>
+    </button>
+
+    </div><!-- end bar-left -->
+
+    <!-- Title centered — drag region -->
+    <div class="bar-title" @mousedown="onDragStart">SONAR</div>
+
+    <!-- Window controls: right side -->
+    <div class="bar-right">
+      <button class="wm-btn" @click="minimizeWindow" title="Réduire">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <line x1="3.5" y1="8" x2="12.5" y2="8"/>
+        </svg>
+      </button>
+      <button class="wm-btn" @click="toggleMaximize" title="Agrandir">
+        <svg v-if="!isMaximized" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3.5" y="3.5" width="9" height="9" rx="1"/>
+        </svg>
+        <svg v-else viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="5" width="7" height="7" rx="1"/>
+          <path d="M4 11V4h7"/>
+        </svg>
+      </button>
+      <button class="wm-btn wm-close" @click="closeWindow" title="Fermer">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <line x1="4" y1="4" x2="12" y2="12"/>
+          <line x1="12" y1="4" x2="4" y2="12"/>
+        </svg>
+      </button>
+    </div>
+
   </div>
 </template>
 
 <script lang="ts">
 import { Channel, invoke } from '@tauri-apps/api/core';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { exit } from '@tauri-apps/plugin-process';
 import { info, error } from '@tauri-apps/plugin-log';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -33,10 +122,13 @@ import { register, unregister } from '@tauri-apps/plugin-global-shortcut';
 
 
 
-import { displayCaptureError } from '../../errors/capture'; // Gestion des erreurs propre
+import { displayCaptureError } from '../../errors/capture';
 import { getCurrentDate } from '../../utils/time';
 import { useCaptureStore } from '../../store/capture';
 import { CaptureEvent } from '../../types/capture';
+
+// Stocké hors de Vue pour éviter que le Proxy réactif ne casse les méthodes Tauri
+let appWindow: ReturnType<typeof getCurrentWebviewWindow> | null = null;
 
 export default {
   name: "TopBar",
@@ -56,11 +148,18 @@ export default {
   },
   data() {
     return {
-      showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
+      showMatrice: true,
       shortcuts: [] as string[],
+      isMaximized: false,
     };
   },
-  mounted() {
+  async mounted() {
+    appWindow = getCurrentWebviewWindow();
+    this.isMaximized = await appWindow.isMaximized();
+    await appWindow.onResized(async () => {
+      this.isMaximized = await appWindow!.isMaximized();
+    });
+
     // Sauvegardes
     this.bindShortcut('CommandOrControl+S', () => this.SaveAsCsv());
     this.bindShortcut('CommandOrControl+Shift+S', () => this.SaveAsXlsx());
@@ -234,8 +333,23 @@ export default {
       await exit(0);
     },
     toggleConfig() {
-      info('Ouverture panneau config'); 
-    }
+      info('Ouverture panneau config');
+    },
+
+    async minimizeWindow() {
+      await appWindow?.minimize();
+    },
+    async toggleMaximize() {
+      await appWindow?.toggleMaximize();
+    },
+    async closeWindow() {
+      await appWindow?.close();
+    },
+    async onDragStart(e: MouseEvent) {
+      if (e.button === 0) {
+        await appWindow?.startDragging();
+      }
+    },
   }
 }
 </script>
@@ -247,49 +361,143 @@ export default {
   left: 0;
   height: 40px;
   width: 100%;
-  background-color: #070416;
+  background-color: #2c2c3a;
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  gap: 8px;
-  border-bottom: 1px solid #252526;
+  border-bottom: 1px solid #3c3c50;
   z-index: 9999;
+  user-select: none;
+}
+
+.bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+
+.bar-title {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: #585872;
+  text-transform: uppercase;
+  cursor: default;
+}
+
+.bar-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+/* Window management buttons */
+.wm-btn {
+  width: 46px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: #585872;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.wm-btn svg {
+  transition: transform 0.1s ease;
+}
+.wm-btn:active svg {
+  transform: scale(0.82);
+}
+
+.wm-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.wm-btn:hover {
+  background-color: #383850;
+  color: #9090a0;
+}
+
+.wm-close:hover {
+  background-color: #5a2828;
+  color: #e0a0a0;
 }
 
 .image-btn {
   background: transparent;
   border: none;
-  padding: 4px;
+  padding: 5px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 18px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-font-smoothing: subpixel-antialiased;
+  color: #6a6a80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+}
+
+.image-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  transition: transform 0.1s ease;
 }
 
 .image-btn:hover {
-  background-color: #3f4758;
-  transform: translateY(-1px) translateZ(0);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #383850;
+  color: #9090a0;
 }
 
 .image-btn:active {
-  transform: translateY(1px) scale(0.99) translateZ(0);
-  transition: transform 0.1s ease, background-color 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #d4d4d8;
+  background-color: #3c3c50;
+  transform: scale(0.88);
 }
+
 .image-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
   background-color: transparent;
-  transform: none !important;
-  box-shadow: none !important;
+  color: #6a6a80;
 }
-.icon-img {
-  height: 30;
-  width: 30px;
-  vertical-align: middle;
+
+.quit-btn:hover {
+  color: #8a4a4a;
+}
+
+.logo-btn {
+  padding: 3px;
+  margin-right: 4px;
+}
+
+.logo-img {
+  width: 22px;
+  height: 22px;
+  display: block;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.logo-btn:hover .logo-img {
+  opacity: 1;
+}
+
+.logo-btn:disabled .logo-img {
+  opacity: 0.25;
+}
+
+.sep {
+  width: 1px;
+  height: 18px;
+  background: #3c3c50;
+  margin: 0 2px;
+  flex-shrink: 0;
 }
 </style>

@@ -1,11 +1,19 @@
 <template>
   <div class="bg"></div>
   <router-view></router-view>
+  <QuitDialog
+    :visible="showQuitDialog"
+    @confirm="onQuitConfirm"
+    @cancel="onQuitCancel"
+  />
+  <ErrorDialog />
 </template>
 
 <style>
 :root {
   height: 100vh;
+  --ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-fast: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html, body {
@@ -24,53 +32,66 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #1a1a1a;
+  background-color: #282838;
   z-index: -1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>
 
 <script>
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { confirm } from '@tauri-apps/plugin-dialog';
 import { exit } from '@tauri-apps/plugin-process';
 import { info } from '@tauri-apps/plugin-log';
+import QuitDialog from './components/QuitDialog.vue';
+import ErrorDialog from './components/ErrorDialog.vue';
 
 const appWindow = getCurrentWebviewWindow()
 
 export default {
+  components: { QuitDialog, ErrorDialog },
+
   data() {
     return {
-      // Add a data property for the unlisten function
       unlistenCloseEvent: null,
+      showQuitDialog: false,
+      pendingCloseEvent: null,
     };
   },
 
   async mounted() {
-    console.log("mounted");
-
-    // Set up the close event listener
     this.unlistenCloseEvent = await appWindow.onCloseRequested(async (event) => {
-      info("close resquested")
-      const confirmed = await confirm('Etes-vous sûr de vouloir quitter ?');
-      if (!confirmed) {
-        // User did not confirm closing the window; let's prevent it
-        info("anule exit")
-        event.preventDefault();
-      }
-      else {
-        info("exit")
-        await exit(1);
-      }
+      info("close requested")
+      event.preventDefault();
+      this.pendingCloseEvent = event;
+      this.showQuitDialog = true;
     });
   },
 
   beforeUnmount() {
-    // Call the unlisten function when the component is unmounted
     if (this.unlistenCloseEvent) {
       this.unlistenCloseEvent();
     }
-  }
+  },
+
+  methods: {
+    async onQuitConfirm() {
+      info("exit confirmed")
+      this.showQuitDialog = false;
+      this.pendingCloseEvent = null;
+      await exit(0);
+    },
+    onQuitCancel() {
+      info("exit cancelled")
+      this.showQuitDialog = false;
+      this.pendingCloseEvent = null;
+    },
+  },
 };
 </script>
-
-
