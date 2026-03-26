@@ -1,6 +1,0 @@
-{
-  "git": {
-    "sha1": "dffa41a8a46d3f5565eefbff2de57d38d399f158"
-  },
-  "path_in_vcs": "crates/callback-macros"
-}

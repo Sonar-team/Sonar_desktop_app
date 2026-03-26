@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "sonar",
-  "version": "3.11.0",
+  "version": "3.11.1",
   "identifier": "fr.sonar.ssf",
   "build": {
     "beforeDevCommand": "deno task dev",
@@ -52,11 +52,14 @@
         "headerImage": "windows\\header_image_nsis.bmp",
         "sidebarImage": "windows\\sidebar_image_nsis.bmp",
         "installerHooks": "windows\\hooks.nsh"
+      },
+      "webviewInstallMode": {
+        "type": "offlineInstaller"
       }
     },
     "resources": {
       "resources/labels.csv": "resources/labels.csv",
-      "windows/npcap-1.86.exe": "windows/npcap-1.86.exe"
+      "windows/npcap-1.87.exe": "windows/npcap-1.87.exe"
     }
   },
   "plugins": {

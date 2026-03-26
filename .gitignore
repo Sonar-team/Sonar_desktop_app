@@ -53,7 +53,7 @@ src-tauri/vendor/**/target/**.dylib
 src-tauri/vendor/**/target/**.dll
 src-tauri/vendor/**/target/**.exe
 
-
+vuln.txt
 
 # Tauri
 target
