@@ -52,9 +52,6 @@
         "headerImage": "windows\\header_image_nsis.bmp",
         "sidebarImage": "windows\\sidebar_image_nsis.bmp",
         "installerHooks": "windows\\hooks.nsh"
-      },
-      "webviewInstallMode": {
-        "type": "offlineInstaller"
       }
     },
     "resources": {
