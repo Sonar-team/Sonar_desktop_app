@@ -58,3 +58,10 @@ vuln.txt
 # Tauri
 target
 /target
+
+# Nix
+shell.nix
+
+# Dev tools
+gen_pcap.py
+test.pcap
