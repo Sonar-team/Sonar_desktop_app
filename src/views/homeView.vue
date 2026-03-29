@@ -40,10 +40,12 @@ const toggleView = () => {
   top: 0;
   right: 10px;
   padding: 5px 10px;
-  background-color: #444;
-  color: white;
+  background-color: #3c3c50;
+  color: #9090a0;
   cursor: pointer;
   border-radius: 0 0 5px 5px;
+  border: 1px solid #484858;
+  border-top: none;
 }
 
 .overlay {
@@ -55,6 +57,7 @@ const toggleView = () => {
 .footer {
   padding: 10px;
   text-align: left;
-  color: rgb(255, 255, 255);
+  color: #656578;
+  font-size: 0.8em;
 }
 </style>

@@ -1,7 +1,14 @@
 <template>
     <div class="cpu">
-      <img src="/src/assets/images/TablerCpu.png" alt="Flux" class="icon-img" />
-      <p>{{ cpuUsage.toFixed(2) }}%</p>
+      <!-- chip icon -->
+      <svg class="stat-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+        <rect x="3" y="3" width="6" height="6" rx="0.8"/>
+        <line x1="5" y1="1.5" x2="5" y2="3"/><line x1="7" y1="1.5" x2="7" y2="3"/>
+        <line x1="5" y1="9" x2="5" y2="10.5"/><line x1="7" y1="9" x2="7" y2="10.5"/>
+        <line x1="1.5" y1="5" x2="3" y2="5"/><line x1="1.5" y1="7" x2="3" y2="7"/>
+        <line x1="9" y1="5" x2="10.5" y2="5"/><line x1="9" y1="7" x2="10.5" y2="7"/>
+      </svg>
+      <span class="cpu-val">{{ cpuUsage.toFixed(1) }}%</span>
     </div>
   </template>
   
@@ -49,13 +56,21 @@
   .cpu {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
   }
-  
-  .icon-img {
-    height: 15px;
-    width: 15px;
-    vertical-align: middle;
+
+  .stat-icon {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+    color: #585870;
+  }
+
+  .cpu-val {
+    font-family: monospace;
+    font-size: 11px;
+    color: #6a6a80;
+    min-width: 38px;
   }
   </style>
   

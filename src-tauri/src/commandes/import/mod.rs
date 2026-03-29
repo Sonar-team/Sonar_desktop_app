@@ -1,6 +1,9 @@
 use log::{error, info};
 use packet_parser::PacketFlow;
 use pcap::Capture;
+use std::fs::File;
+#[cfg(unix)]
+use std::os::unix::io::IntoRawFd;
 use std::sync::{Arc, Mutex};
 use tauri::{State, ipc::Channel};
 
@@ -13,13 +16,70 @@ use crate::{
     },
 };
 
+fn open_capture(file_path: &str) -> Result<Capture<pcap::Offline>, CaptureStateError> {
+    #[cfg(unix)]
+    {
+        let file = File::open(file_path).map_err(|e| {
+            CaptureStateError::Import(PcapImportError::OpenFileError(
+                file_path.to_string(),
+                e.to_string(),
+            ))
+        })?;
+        let fd = file.into_raw_fd();
+        // SAFETY: fd est valide et nous en sommes propriétaires. `from_raw_fd` en prend possession.
+        unsafe { Capture::from_raw_fd(fd) }.map_err(|e| {
+            CaptureStateError::Import(PcapImportError::OpenFileError(
+                file_path.to_string(),
+                e.to_string(),
+            ))
+        })
+    }
+    #[cfg(windows)]
+    {
+        use std::ffi::OsStr;
+        use std::os::windows::ffi::OsStrExt;
+        use windows_sys::Win32::Storage::FileSystem::GetShortPathNameW;
+
+        // Convertit le chemin en UTF-16 pour l'API Windows
+        let wide: Vec<u16> = OsStr::new(file_path)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+
+        // Récupère la taille du buffer nécessaire pour le chemin court (8.3)
+        let len = unsafe { GetShortPathNameW(wide.as_ptr(), std::ptr::null_mut(), 0) };
+
+        let short_path = if len > 0 {
+            let mut buf = vec![0u16; len as usize];
+            unsafe { GetShortPathNameW(wide.as_ptr(), buf.as_mut_ptr(), len) };
+            // Retire le null-terminator
+            String::from_utf16_lossy(&buf[..len as usize - 1])
+        } else {
+            // Fallback si GetShortPathNameW échoue (ex: short names désactivés)
+            file_path.to_string()
+        };
+
+        Capture::from_file(&short_path).map_err(|e| {
+            CaptureStateError::Import(PcapImportError::OpenFileError(
+                file_path.to_string(),
+                e.to_string(),
+            ))
+        })
+    }
+
+    #[cfg(not(any(unix, windows)))]
+    {
+        Capture::from_file(file_path).map_err(|e| {
+            CaptureStateError::Import(PcapImportError::OpenFileError(
+                file_path.to_string(),
+                e.to_string(),
+            ))
+        })
+    }
+}
+
 fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
-    let mut cap = Capture::from_file(file_path).map_err(|e| {
-        CaptureStateError::Import(PcapImportError::OpenFileError(
-            file_path.to_string(),
-            e.to_string(),
-        ))
-    })?;
+    let mut cap = open_capture(file_path)?;
 
     let mut count: usize = 0;
     while cap.next_packet().is_ok() {
@@ -89,12 +149,7 @@ fn handle_pcap_file(
         file_path, total
     );
 
-    let mut cap = Capture::from_file(file_path).map_err(|e| {
-        CaptureStateError::Import(PcapImportError::OpenFileError(
-            file_path.to_string(),
-            e.to_string(),
-        ))
-    })?;
+    let mut cap = open_capture(file_path)?;
 
     let mut packet_count: usize = 0;
 

@@ -10,7 +10,7 @@
       <div class="panels">
         <ConfigPanel v-if="showConfig" @update:ConfigPanel-visible="(val: any) => showConfig = val" />
         <ImportPanel v-if="showPcap" @update:visible="(val: any) => showPcap = val"/>
-        <Filter v-if="showFilter" @update:visible="(val: any) => showFilter = val"/>
+        <Filter :visible="showFilter" @update:visible="(val: any) => showFilter = val"/>
       </div>
     </div>
 
