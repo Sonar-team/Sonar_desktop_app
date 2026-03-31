@@ -30,7 +30,7 @@ tauri-plugin-log = "2.8.0"
 tauri-plugin-process = "2.3.1"
 
 pcap = "2.4.0"
-packet_parser = "1.1.1"
+packet_parser = "1.1.2"
 
 thiserror = "2.0.18"
 crossbeam = "0.8.4"

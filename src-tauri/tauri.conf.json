@@ -27,9 +27,9 @@
     "homepage": "https://sonar-team.github.io/doc/",
     "category": "Utility",
     "license": "AGPL-3.0",
-    "publisher": "avicocyprien@yahoo.com",
+    "publisher": "akmot9@proton.me",
     "shortDescription": "Outil de Relevé de matrice de flux",
-    "copyright": "avicocyprien@yahoo.com",
+    "copyright": "akmot9@proton.me",
     "active": true,
     "licenseFile": "../LICENSE.md",
     "targets": [
