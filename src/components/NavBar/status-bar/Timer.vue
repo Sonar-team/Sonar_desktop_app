@@ -1,6 +1,11 @@
 <template>
-  <div class="timer">
-    <p :title="title">{{ icon }}: {{ formattedTime }}</p>
+  <div class="timer" :title="title">
+    <!-- clock icon -->
+    <svg class="stat-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+      <circle cx="6" cy="6" r="4.5"/>
+      <path d="M6 3.5V6l1.5 1.5"/>
+    </svg>
+    <span class="timer-val">{{ formattedTime }}</span>
   </div>
 </template>
 
@@ -79,9 +84,23 @@ export default {
 
 <style scoped>
 .timer {
-  display: inline-block;
-  font-size: 12px;
-  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin: 0;
+}
+
+.stat-icon {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  color: #585870;
+}
+
+.timer-val {
+  font-family: monospace;
+  font-size: 11px;
+  color: #6a6a80;
+  min-width: 32px;
 }
 </style>

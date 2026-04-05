@@ -64,17 +64,21 @@ export default {
 
 <style scoped>
 .interface-btn {
-  background-color: #243452;
-  color: #ffffff;
+  background-color: transparent;
+  color: #6a6a80;
   border: none;
-  padding: 3px 10px;
-  font-size: 12px;
+  padding: 3px 6px;
+  font-size: 11px;
+  display: flex;
   align-items: center;
-  justify-content: center;
   cursor: pointer;
   border-radius: 3px;
   user-select: none;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition: color 0.2s;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 </style>

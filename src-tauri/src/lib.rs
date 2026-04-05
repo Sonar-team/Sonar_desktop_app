@@ -6,7 +6,7 @@ use commandes::{
 use log::info;
 
 use std::sync::{Arc, Mutex};
-use tauri::{Manager, menu::MenuBuilder};
+use tauri::Manager;
 use tauri_plugin_cli::CliExt;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
@@ -111,14 +111,6 @@ pub fn run() -> Result<(), tauri::Error> {
                 if !headless_enabled {
                     start_cpu_monitor(app.handle().clone());
 
-                    let menu = MenuBuilder::new(app)
-                        .text("fichier", "Fichier")
-                        .text("apropos", "A propos")
-                        .text("fermer", "Fermer")
-                        .build()?;
-
-                    app.set_menu(menu)?;
-
                     tauri::WebviewWindowBuilder::new(
                         app,
                         "main",
@@ -126,6 +118,7 @@ pub fn run() -> Result<(), tauri::Error> {
                     )
                     .title("SONAR")
                     .inner_size(1800.0, 950.0)
+                    .decorations(false)
                     .build()?;
                 } else {
                     let capture_state = app.state::<Arc<Mutex<CaptureState>>>();

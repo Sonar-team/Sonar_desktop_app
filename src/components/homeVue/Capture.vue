@@ -167,23 +167,26 @@ export default {
 }
 
 .capture-container {
-  border: 2px solid #3a3a3a; /* Bordure plus sombre */
+  border: 1px solid #484858;
   border-radius: 10px;
   padding: 20px;
   width: 60%;
   max-width: 600px;
   text-align: center;
-  color: #FFF; /* Texte en blanc */
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-  background-color: #1a1a1a; /* Fond plus sombre */
+  color: #d4d4d8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background-color: #343448;
 }
 
 
 .title-capture {
-  font-size: 20px;
+  font-size: 13px;
+  font-weight: 500;
   margin: 10px 0;
   text-align: center;
-  color: #bacbfa;
+  color: #8a9eba;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .content {
@@ -194,39 +197,51 @@ export default {
 }
 
 select, input {
-  font-size: 1.5em;
-  color: #FFF; /* Texte en blanc */
-  background-color: #333; /* Fond plus sombre pour les champs */
-  padding: 12px;
-  margin-bottom: 15px;
-  border: 2px solid #555; /* Bordure plus sombre */
+  font-size: 13px;
+  color: #b8b8d0;
+  background-color: #2c2c3a;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border: 1px solid #484860;
   border-radius: 5px;
-  width: 50%;
+  width: 55%;
+  box-sizing: border-box;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+select:focus, input:focus {
+  outline: none;
+  border-color: #5a6a80;
+  color: #d8d8e8;
+  box-shadow: 0 0 0 2px rgba(90, 106, 128, 0.18);
 }
 
 .invalid {
-  border-color: #e92525; /* Couleur rouge pour les champs invalides */
-  border-width: 5px;
+  border-color: #7a3a3a;
+  border-width: 2px;
 }
 
 select:hover, input:hover {
-  border-color: #cbdee5; /* Couleur de survol */
+  border-color: #606080;
 }
 
 button {
-  padding: 12px 20px;
-  background-color: #444; /* Fond du bouton plus sombre */
-  color: #FFF; /* Texte en blanc */
+  padding: 9px 20px;
+  background-color: #304868;
+  color: #88b4cc;
+  border: 1px solid #3e5c80;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 1.2em;
+  font-size: 12px;
+  transition: background 0.15s, color 0.15s;
 }
 
 button:hover {
-  background-color: #555; /* Couleur de survol */
+  background-color: #3a5878;
+  color: #aaced0;
 }
 
 /* Responsive Design */

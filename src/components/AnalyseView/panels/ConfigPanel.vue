@@ -1,36 +1,69 @@
 <template>
-  <div class="config-panel">
-    <h2>Configuration Capture</h2>
+  <div class="panel-backdrop" @click.self="close">
+    <div class="panel">
 
-    <InterfaceSelector 
-      v-model="netDevice"
-      :net-interfaces="netInterfaces"
-      class="config-item"
-    />
+      <!-- Header -->
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+            <circle cx="8" cy="8" r="2"/>
+            <path d="M8 1.5v1M8 13.5v1M1.5 8h1M13.5 8h1M3.4 3.4l.7.7M11.9 11.9l.7.7M11.9 4.1l-.7.7M4.8 11.2l-.7.7"/>
+          </svg>
+          Configuration capture
+        </div>
+        <button class="close-btn" @click="close" title="Fermer">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <line x1="4" y1="4" x2="12" y2="12"/>
+            <line x1="12" y1="4" x2="4" y2="12"/>
+          </svg>
+        </button>
+      </div>
 
-    <div class="config-item">
-      <label>Taille du buffer :</label>
-      <input type="number" v-model.number="bufferSize" />
-    </div>
+      <!-- Body -->
+      <div class="panel-body">
 
-    <div class="config-item">
-      <label>Nombre de buffers:</label>
-      <input type="number" v-model.number="chan_capacity" />
-    </div>
+        <!-- Interface -->
+        <InterfaceSelector
+          v-model="netDevice"
+          :net-interfaces="netInterfaces"
+        />
 
-    <div class="config-item">
-      <label>Timeout (ms) :</label>
-      <input type="number" v-model.number="timeout" />
-    </div>
+        <div class="divider"/>
 
-    <div class="config-item">
-      <label>Taille du snaplen :</label>
-      <input type="number" v-model.number="snaplen" />
-    </div>
+        <!-- Numeric fields -->
+        <div class="field">
+          <label class="field-label">Taille du buffer</label>
+          <input class="field-input" type="number" v-model.number="bufferSize" />
+        </div>
 
-    <div class="actions">
-      <button @click="save">Sauvegarder</button>
-      <button @click="close">Fermer</button>
+        <div class="field">
+          <label class="field-label">Nombre de buffers</label>
+          <input class="field-input" type="number" v-model.number="chan_capacity" />
+        </div>
+
+        <div class="field">
+          <label class="field-label">Timeout (ms)</label>
+          <input class="field-input" type="number" v-model.number="timeout" />
+        </div>
+
+        <div class="field">
+          <label class="field-label">Snaplen</label>
+          <input class="field-input" type="number" v-model.number="snaplen" />
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="panel-footer">
+        <button class="btn-ghost" @click="close">Annuler</button>
+        <button class="btn-primary" @click="save">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 7h10M8 3l4 4-4 4"/>
+          </svg>
+          Sauvegarder
+        </button>
+      </div>
+
     </div>
   </div>
 </template>
@@ -38,22 +71,17 @@
 <script>
 import { info } from '@tauri-apps/plugin-log';
 import { invoke } from '@tauri-apps/api/core';
-import { displayCaptureError } from '../../../errors/capture';
 import { useCaptureConfigStore } from '../../../store/capture';
 import InterfaceSelector from './CustomSelector/interfaceSelector.vue';
 
 export default {
   name: "ConfigPanel",
-  components: {
-    InterfaceSelector
-  },
+  components: { InterfaceSelector },
   emits: ['update:ConfigPanel-visible'],
 
   data() {
     return {
       netInterfaces: [],
-      selectedNetInterface: '',
-
       netDevice: '',
       bufferSize: '',
       chan_capacity: '',
@@ -63,56 +91,36 @@ export default {
   },
 
   computed: {
-    configStore() {
-      return useCaptureConfigStore();
-    }
+    configStore() { return useCaptureConfigStore(); }
   },
 
   methods: {
     async getConfig() {
       try {
         const config = await invoke('get_config_capture');
-        info("[ConfigPanel] invoke response =", config);
-
-        // Cast si besoin
         this.netDevice = config.device_name;
         this.bufferSize = config.buffer_size;
-        this.chan_capacity = config.chan_capacity
+        this.chan_capacity = config.chan_capacity;
         this.timeout = config.timeout;
         this.snaplen = config.snaplen;
-
         this.configStore.updateConfig(config);
-        info("[ConfigPanel] configStore =", this.configStore);
       } catch (err) {
         console.error("[ConfigPanel] erreur get_config_capture :", err);
       }
     },
 
     async save() {
-      info("Configuration sauvegardée : " + JSON.stringify({
-        netDevice: this.netDevice,
-        bufferSize: this.bufferSize,
-        chan_capacity: this.chan_capacity,
-        timeout: this.timeout,
-        snaplen: this.snaplen,
-      }));
+      if (!this.netDevice) return;
       try {
-        if (!this.netDevice) {
-          console.error("Aucune interface réseau sélectionnée");
-          return;
-        }
-        
-        const config = await invoke('config_capture', { 
-          device_name: this.netDevice.name, 
-          buffer_size: this.bufferSize, 
-          chan_capacity: this.chan_capacity, 
-          timeout: this.timeout, 
-          snaplen: this.snaplen 
+        const config = await invoke('config_capture', {
+          device_name: this.netDevice.name,
+          buffer_size: this.bufferSize,
+          chan_capacity: this.chan_capacity,
+          timeout: this.timeout,
+          snaplen: this.snaplen,
         });
-        
-        // Cast si besoin - config.device_name est une chaîne, nous devons trouver l'objet NetDevice correspondant
         if (typeof config.device_name === 'string') {
-          this.netDevice = this.netInterfaces.find(iface => iface.name === config.device_name) || null;
+          this.netDevice = this.netInterfaces.find(i => i.name === config.device_name) || null;
         } else {
           this.netDevice = config.device_name;
         }
@@ -120,10 +128,9 @@ export default {
         this.chan_capacity = config.chan_capacity;
         this.timeout = config.timeout;
         this.snaplen = config.snaplen;
-
         this.configStore.updateConfig(config);
       } catch (err) {
-        console.error("[ConfigPanel] erreur get_config_capture :", err);
+        console.error("[ConfigPanel] erreur config_capture :", err);
       }
       this.close();
     },
@@ -134,34 +141,16 @@ export default {
   },
 
   async mounted() {
-    info("[ConfigPanel] Monté avec visible =", this.visible);
     this.getConfig();
-
-    invoke('get_devices_list').then((interfaces) => {
+    invoke('get_devices_list').then(interfaces => {
       this.netInterfaces = interfaces;
-      if (interfaces.length > 0) {
-        this.selectedNetInterface = interfaces[interfaces.length - 1]; // Set the last item as default
-      }
-    }).catch(error => {
-      console.error("Failed to load interfaces:", error);
-    });
+    }).catch(err => console.error("Failed to load interfaces:", err));
   },
+
   watch: {
-    visible(newVal) {
-      info("[ConfigPanel] Changement de visible :", newVal);
-      if (newVal) {
-        this.getConfig();
-      }
-    },
-    netInterfaces(newInterfaces) {
-      // Convertir netDevice de string vers NetDevice si nécessaire
-      if (newInterfaces.length > 0 && typeof this.netDevice === 'string') {
-        const found = newInterfaces.find(iface => iface.name === this.netDevice);
-        if (found) {
-          this.netDevice = found;
-        } else {
-          this.netDevice = null;
-        }
+    netInterfaces(ifaces) {
+      if (ifaces.length > 0 && typeof this.netDevice === 'string') {
+        this.netDevice = ifaces.find(i => i.name === this.netDevice) || null;
       }
     }
   }
@@ -169,127 +158,165 @@ export default {
 </script>
 
 <style scoped>
-.config-panel {
+.panel-backdrop {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
   z-index: 1000;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 400px;
-  background-color: #1a1a1a;
-  color: #fff;
-  padding: 20px;
-  border-radius: 15px;
-  border: 2px solid #3a3a3a;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-  font-family: sans-serif;
-  box-sizing: border-box;
+  justify-content: flex-end;
 }
 
-.config-panel h2 {
-  margin-bottom: 20px;
-  font-size: 20px;
-  text-align: center;
-}
-
-.config-item {
-  width: 100%;
-  margin-bottom: 15px;
+.panel {
+  width: 340px;
+  height: 100%;
+  background: #363648;
+  border-left: 1px solid #4a4a60;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  animation: slide-in 0.22s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.config-item label {
-  display: block;
-  font-weight: bold;
-  width: 100%;
-  text-align: left;
+@keyframes slide-in {
+  from { transform: translateX(18px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
 }
 
-.config-item input,
-.config-panel select {
-  width: 100%;
-  padding: 10px;
-  background-color: #2e2a36;
-  border: 1px solid #666;
-  color: #fff;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.7em top 50%;
-  background-size: 0.65em auto;
-  padding-right: 2.5em;
-  cursor: pointer;
-}
-
-.config-item input:focus {
-  outline: none;
-  border-color: #c53d3d;
-  box-shadow: 0 0 0 2px rgba(58, 142, 230, 0.3);
-}
-
-select {
-  background-color: #2e2a36;
-  color: #ffffff;
-  border: 1px solid #555;
-}
-
-.config-panel select option {
-  background-color: #2e2a36 !important;
-  color: #ffffff !important;
-  padding: 10px;
-  border: none;
-}
-
-/* Style pour les options au survol */
-.config-panel select option:hover,
-.config-panel select option:focus,
-.config-panel select option:checked {
-  background-color: #c53d3d !important;
-  color: white !important;
-}
-
-select:focus {
-  border-color: #c53d3d;
-  box-shadow: 0 0 0 2px rgba(197, 61, 61, 0.3);
-  outline: none;
-}
-
-.actions {
+/* Header */
+.panel-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  width: 100%;
-  margin-top: 10px;
-  gap: 10px;
+  height: 44px;
+  padding: 0 14px 0 16px;
+  border-bottom: 1px solid #4a4a60;
+  flex-shrink: 0;
 }
 
-.actions button {
-  padding: 8px 12px;
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #a8a8be;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.panel-title svg {
+  width: 14px;
+  height: 14px;
+  color: #707090;
+}
+
+.close-btn {
+  width: 26px;
+  height: 26px;
+  background: transparent;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
+  color: #686884;
   cursor: pointer;
-  background-color: #007bff;
-  color: white;
-  font-weight: bold;
-  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.close-btn svg { width: 12px; height: 12px; }
+.close-btn:hover { background: #484860; color: #b0b0c8; }
+
+/* Body */
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.actions button:nth-child(2) {
-  background-color: #dc3545;
+.divider {
+  height: 1px;
+  background: #4a4a60;
+  margin: 2px 0;
 }
 
-.actions button:hover {
-  opacity: 0.9;
+/* Fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
+.field-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #808096;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.field-input {
+  width: 100%;
+  background: #2c2c3a;
+  border: 1px solid #484860;
+  border-radius: 4px;
+  color: #b0b0c8;
+  font-size: 13px;
+  padding: 7px 10px;
+  box-sizing: border-box;
+  transition: border-color 0.15s, color 0.15s;
+  appearance: none;
+  -moz-appearance: textfield;
+}
+.field-input:focus {
+  outline: none;
+  border-color: #5a6a80;
+  color: #d0d0e0;
+  box-shadow: 0 0 0 2px rgba(90, 106, 128, 0.18);
+}
+.field-input::-webkit-outer-spin-button,
+.field-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* Footer */
+.panel-footer {
+  display: flex;
+  gap: 8px;
+  padding: 14px 16px;
+  border-top: 1px solid #4a4a60;
+  flex-shrink: 0;
+}
+
+.btn-ghost {
+  flex: 1;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid #484860;
+  border-radius: 5px;
+  color: #808096;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, transform 0.1s ease;
+}
+.btn-ghost:active { transform: scale(0.97); }
+.btn-ghost:hover { border-color: #60607a; color: #a8a8be; }
+
+.btn-primary {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #304868;
+  border: 1px solid #3e5c80;
+  border-radius: 5px;
+  color: #88b4cc;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s ease;
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary svg { width: 13px; height: 13px; }
+.btn-primary:hover { background: #3a5878; border-color: #4a6888; color: #aaced0; }
 </style>

@@ -59,17 +59,26 @@
   ```bash
   sudo apt install libpcap-dev
   ```
-- **Non-root Execution:** Grant required capabilities using:
+
+- **Non-root Execution:** Grant the required network capabilities to the binary:
 
   ```bash
-  sudo setcap cap_net_raw,cap_net_admin=eip path/to/binary
+  sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar
   ```
 
-  Example:
+  > **Note:** `setcap` must be re-applied each time the binary is recompiled.
+
+### NixOS
+
+Add `libpcap` and `libcap` to your `buildInputs` (a `shell.nix` is provided at the root of the repository).
+
+- **Non-root Execution:** Grant capabilities after building:
 
   ```bash
-  sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar-desktop-app
+  sudo setcap cap_net_raw,cap_net_admin=eip src-tauri/target/debug/sonar
   ```
+
+  > On NixOS the binary path may differ if using a Nix-managed Rust toolchain — adjust the path accordingly.
 
 ### macOS
 
