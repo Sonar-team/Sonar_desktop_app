@@ -50,7 +50,7 @@ Automatically discover devices and connections. Build complete topology maps to 
 Identify unauthorized network protocols, as well as hidden IT, IoT, and OT devices or rogue connections.
 
 ### Compliance & Audit Support
-Generate detailed network documentation, traffic reports, and asset inventories for regulatory audits. Track changes over time and demonstrate visibility controls.
+Generate detailed network documentation and traffic reports for regulatory audits. Track changes over time and demonstrate visibility controls.
 
 ### SOC Rule Creation and Tuning
 Establish a baseline of normal network behavior and use it to create or refine SOC rules.
