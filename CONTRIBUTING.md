@@ -1,3 +1,39 @@
+# Contributing to the Project
+
+We’re glad you’re considering contributing to our project.  
+The following guidelines are here to help make the process smooth, effective, and collaborative.
+
+## Reporting Bugs
+
+If you find a bug in the project, please first check whether it has already been reported.  
+If it has not, please open a new issue using the bug report template.  
+Include as much relevant detail as possible so we can understand the issue and work toward a solution.
+
+## Suggesting Improvements
+
+All suggestions for improvement are welcome.  
+If you have an idea that could make the project better, feel free to open a new issue using the feature request template.
+
+## Submitting Pull Requests
+
+If you would like to contribute directly to the code, please follow these steps:
+
+1. Fork the project.
+2. Create your feature branch.
+   (`git checkout -b feature/NewFeature`)
+3. Commit your changes.
+   (`git commit -m 'Add some features'`)
+4. Push your branch.
+   (`git push origin feature/NewFeature`)
+5. Open a Pull Request.
+
+## Code Review Process
+
+Every contribution is reviewed by the project maintainers.  
+We aim to maintain a high standard of code quality and consistency throughout the project.
+
+---
+
 # Contribuer au projet
 
 Nous sommes ravis que vous envisagiez de contribuer à notre projet ! Voici

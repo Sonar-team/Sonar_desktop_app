@@ -10,6 +10,15 @@
 </p>
 
 <p align="center">
+  <i>
+    Gain deep network visibility.<br>
+    Eliminate shadow IT/OT.<br>
+    Empower your SOC/CSIRT teams.<br>
+    Stay ahead of cyber threats.
+  </i>
+</p>
+
+<p align="center">
   <a href="https://sonarcloud.io/summary/new_code?id=Sonar-team_Sonar_desktop_app">
     <img src="https://sonarcloud.io/api/project_badges/measure?project=Sonar-team_Sonar_desktop_app&metric=alert_status" alt="Quality Gate" />
   </a>
@@ -26,6 +35,30 @@
 </p>
 
 ---
+
+## For:
+- Network Administrators
+- Network Auditors  
+- SOC Architects
+
+## Use Cases 
+### Network Discovery & Mapping
+Automatically discover devices and connections. Create thourough topology maps to visualize blind spots and ensure complete coverage.
+
+### Shadow IT/OT Discovery
+Identify unauthorized network protocols, IT/IoT/OT devices, and rogue connections.
+
+### Compliance & Audit Support
+Generate detailed network documentation, traffic reports, and asset inventories for regulatory audits (GDPR, NIST, PCI-DSS). Track changes and prove visibility controls.
+
+### SOC Alert Triage & Threat Hunting
+Prioritize alerts by correlating network behavior with threats. Reduce false positives and accelerate investigations with enriched telemetry for lateral movement detection. [actiac](https://www.actiac.org/zero-trust-use-case/use-case-3-soc-improvement)
+
+### SOC Workflow Automation
+Streamline data ingestion, routing, and enrichment for SIEM platforms. Cut analyst burnout by filtering noise and providing contextual insights upfront. [vectra](https://www.vectra.ai/topics/soc-automation)
+
+These use cases align directly with your audience's pain points—pick 3-4 for your README to keep it focused. Want me to format them as Markdown cards or expand on any?
+
 
 ## 🚀 Key Features
 
