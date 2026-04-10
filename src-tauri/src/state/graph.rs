@@ -16,6 +16,8 @@ pub struct GraphData {
 pub enum GraphUpdate {
     #[serde(rename = "NodeAdded")]
     NewNode(Node),
+    #[serde(rename = "NodeUpdated")]
+    NodeUpdated(Node),
     #[serde(rename = "EdgeAdded")]
     NewEdge(Edge),
     #[serde(rename = "EdgeUpdated")]
@@ -32,10 +34,17 @@ pub struct Node {
     pub color: String, // stockée en String côté struct (UI-friendly)
     pub mac: String,
     pub ip: String,
+    pub label: Option<String>,
 }
 
 impl Node {
-    pub fn new(name: String, mac: String, color: &'static str, ip: String) -> Self {
+    pub fn new(
+        name: String,
+        mac: String,
+        color: &'static str,
+        ip: String,
+        label: Option<String>,
+    ) -> Self {
         let id = NODE_COUNTER.fetch_add(1, Ordering::SeqCst);
         Self {
             id: id.to_string(),
@@ -43,6 +52,7 @@ impl Node {
             color: color.to_string(),
             mac,
             ip,
+            label,
         }
     }
 }
@@ -89,7 +99,12 @@ impl GraphData {
         Self::default()
     }
 
-    pub fn add_packet_flow(&mut self, packet: &PacketFlowOwned) -> Vec<GraphUpdate> {
+    pub fn add_packet_flow(
+        &mut self,
+        packet: &PacketFlowOwned,
+        source_label: Option<String>,
+        destination_label: Option<String>,
+    ) -> Vec<GraphUpdate> {
         use std::collections::hash_map::Entry;
         let mut updates = Vec::new();
 
@@ -110,13 +125,17 @@ impl GraphData {
 
                 // Nœud source
                 let src_node_id = match self.nodes.entry(src_ip_str.clone()) {
-                    Entry::Occupied(e) => e.get().id.clone(),
+                    Entry::Occupied(mut e) => {
+                        maybe_update_node_label(e.get_mut(), source_label.clone(), &mut updates);
+                        e.get().id.clone()
+                    }
                     Entry::Vacant(v) => {
                         let node = Node::new(
                             src_ip_str.clone(),
                             packet.data_link.source_mac.clone(),
                             src_color,
                             src_ip_str.clone(),
+                            source_label.clone(),
                         );
                         let node_id = node.id.clone();
                         v.insert(node.clone());
@@ -127,13 +146,21 @@ impl GraphData {
 
                 // Nœud destination
                 let dst_node_id = match self.nodes.entry(dst_ip_str.clone()) {
-                    Entry::Occupied(e) => e.get().id.clone(),
+                    Entry::Occupied(mut e) => {
+                        maybe_update_node_label(
+                            e.get_mut(),
+                            destination_label.clone(),
+                            &mut updates,
+                        );
+                        e.get().id.clone()
+                    }
                     Entry::Vacant(v) => {
                         let node = Node::new(
                             dst_ip_str.clone(),
                             packet.data_link.destination_mac.clone(),
                             dst_color,
                             dst_ip_str.clone(),
+                            destination_label.clone(),
                         );
                         let node_id = node.id.clone();
                         v.insert(node.clone());
@@ -193,7 +220,13 @@ impl GraphData {
         let src_node_id = match self.nodes.entry(src_key.clone()) {
             Entry::Occupied(e) => e.get().id.clone(),
             Entry::Vacant(v) => {
-                let node = Node::new(src_mac.clone(), src_mac.clone(), L2_COLOR, "".to_string());
+                let node = Node::new(
+                    src_mac.clone(),
+                    src_mac.clone(),
+                    L2_COLOR,
+                    "".to_string(),
+                    None,
+                );
                 let node_id = node.id.clone();
                 v.insert(node.clone());
                 updates.push(GraphUpdate::NewNode(node));
@@ -205,7 +238,13 @@ impl GraphData {
         let dst_node_id = match self.nodes.entry(dst_key.clone()) {
             Entry::Occupied(e) => e.get().id.clone(),
             Entry::Vacant(v) => {
-                let node = Node::new(dst_mac.clone(), dst_mac.clone(), L2_COLOR, "".to_string());
+                let node = Node::new(
+                    dst_mac.clone(),
+                    dst_mac.clone(),
+                    L2_COLOR,
+                    "".to_string(),
+                    None,
+                );
                 let node_id = node.id.clone();
                 v.insert(node.clone());
                 updates.push(GraphUpdate::NewNode(node));
@@ -246,6 +285,31 @@ impl GraphData {
         let edges = self.edges.clone();
         GraphData { nodes, edges }
     }
+
+    pub fn update_node_label(
+        &mut self,
+        mac: &str,
+        ip: &str,
+        label: String,
+    ) -> Option<GraphUpdate> {
+        let normalized = if label.trim().is_empty() {
+            None
+        } else {
+            Some(label)
+        };
+
+        for node in self.nodes.values_mut() {
+            if node.mac == mac && node.ip == ip {
+                if node.label != normalized {
+                    node.label = normalized;
+                    return Some(GraphUpdate::NodeUpdated(node.clone()));
+                }
+                return None;
+            }
+        }
+
+        None
+    }
 }
 
 // ————— helpers —————
@@ -266,6 +330,13 @@ fn color_of(ip_type: Option<&IpType>) -> &'static str {
         Some(IpType::Ula) => "#9C27B0",           // violet
         Some(IpType::Documentation) => "#9E9E9E", // gris
         _ => "#9E9E9E",                           // défaut
+    }
+}
+
+fn maybe_update_node_label(node: &mut Node, label: Option<String>, updates: &mut Vec<GraphUpdate>) {
+    if label.is_some() && node.label != label {
+        node.label = label;
+        updates.push(GraphUpdate::NodeUpdated(node.clone()));
     }
 }
 

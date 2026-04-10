@@ -94,8 +94,9 @@ export interface EdgeData {
 
 // enum GraphUpdate : soit edge soit node
 export type GraphUpdate =
-  | { type: "NewNode"; payload: Node }
-  | { type: "NewEdge"; payload: Edge }
+  | { type: "NodeAdded"; payload: Node }
+  | { type: "NodeUpdated"; payload: Node }
+  | { type: "EdgeAdded"; payload: Edge }
   | { type: "EdgeUpdated"; payload: Edge };
 
 export type CaptureEvent =

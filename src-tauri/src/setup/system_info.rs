@@ -39,3 +39,30 @@ pub fn start_cpu_monitor(app_handle: AppHandle) {
         }
     });
 }
+
+pub fn get_interfaces() -> Vec<netdev::Interface> {
+    let interfaces = netdev::get_interfaces();
+
+    for iface in &interfaces {
+        print!("Interface: {}", iface.name);
+
+        // MAC
+        if let Some(mac) = iface.mac_addr {
+            print!(", Mac: {}", mac);
+        } else {
+            print!(", Mac: none");
+        }
+
+        // IPv4
+        for ipv4 in &iface.ipv4 {
+            print!(", IPv4: {}", ipv4);
+        }
+
+        // IPv6
+        for ipv6 in &iface.ipv6 {
+            print!(", IPv6: {}", ipv6);
+        }
+        println!();
+    }
+    interfaces.clone()
+}

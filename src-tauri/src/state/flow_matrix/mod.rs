@@ -198,6 +198,10 @@ impl FlowMatrix {
         self.label.insert((mac, ip), label);
     }
 
+    pub fn get_label(&self, mac: &str, ip: &str) -> Option<String> {
+        self.label.get(&(mac.to_string(), ip.to_string())).cloned()
+    }
+
     pub fn get_label_list(&self) -> Vec<String> {
         println!("get_label_list");
         println!("{:?}", self.label);

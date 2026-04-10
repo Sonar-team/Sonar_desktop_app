@@ -504,6 +504,7 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
       if (!u) return null
       if (u.type && "payload" in u) return u as GraphUpdate
       if (u.NewNode) return { type: "NodeAdded", payload: u.NewNode }
+      if (u.NodeUpdated) return { type: "NodeUpdated", payload: u.NodeUpdated }
       if (u.NewEdge) return { type: "EdgeAdded", payload: u.NewEdge }
       if (u.EdgeUpdated) return { type: "EdgeUpdated", payload: u.EdgeUpdated }
       return null
@@ -540,6 +541,37 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
               _stroke: darken(color, 0.25),
               _hover: brighten(color, 0.18),
             }
+          }
+          break
+        }
+        case "NodeUpdated": {
+          const node = u.payload
+          if (!node) break
+
+          const existing = this.graphData.nodes[node.id]
+          if (existing) {
+            existing.label = node.label || ""
+            existing.name = node.name
+            existing.mac = node.mac || ""
+            existing.ip = node.ip || ""
+          } else {
+            const color = node.color || "#2196F3"
+            this.graphData.nodes[node.id] = {
+              id: node.id,
+              name: node.name,
+              mac: node.mac || "",
+              ip: node.ip || "",
+              color,
+              label: node.label || "",
+              _stroke: darken(color, 0.25),
+              _hover: brighten(color, 0.18),
+            }
+          }
+
+          if (this.selectedNodeId === node.id) {
+            this.selectedNode = this.graphData.nodes[node.id]
+            this.editedLabel = this.selectedNode?.label ?? ""
+            this.selectedNodeInfos = this._buildNodeInfos(node.id)
           }
           break
         }

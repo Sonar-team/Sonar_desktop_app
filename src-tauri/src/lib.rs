@@ -89,6 +89,7 @@ pub fn run() -> Result<(), tauri::Error> {
             move |app| {
                 info!("{}", print_banner());
                 log_host_and_app_snapshot(app.app_handle());
+                info!("Reading labels...");
                 read_labels(app.handle())?;
 
                 // CLI
@@ -127,6 +128,14 @@ pub fn run() -> Result<(), tauri::Error> {
                     .title("SONAR")
                     .inner_size(1800.0, 950.0)
                     .build()?;
+
+                    let interfaces = setup::system_info::get_interfaces();
+                    let labels = setup::labels::create_labels_from_network_interfaces(interfaces)?;
+                    println!("labels: {:#?}", labels);
+                    setup::labels::add_labels_to_file(app.handle(), labels.clone())?;
+                    read_labels(app.handle())?;
+                    setup::labels::update_labels_in_state(app.handle(), labels)?;
+
                 } else {
                     let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
                     let config = get_config_capture(capture_state.clone());

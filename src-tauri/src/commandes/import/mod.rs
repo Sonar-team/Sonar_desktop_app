@@ -110,8 +110,26 @@ fn handle_pcap_file(
                 flow,
             };
 
-            matrice.update_flow(&packet_min.to_owned_packet());
+            let owned_packet = packet_min.to_owned_packet();
+            matrice.update_flow(&owned_packet);
             let matrix_count = matrice.matrix.len();
+            let source_ip = owned_packet
+                .flow
+                .internet
+                .as_ref()
+                .and_then(|i| i.source_ip)
+                .map(|ip| ip.to_string())
+                .unwrap_or_default();
+            let destination_ip = owned_packet
+                .flow
+                .internet
+                .as_ref()
+                .and_then(|i| i.destination_ip)
+                .map(|ip| ip.to_string())
+                .unwrap_or_default();
+            let source_label = matrice.get_label(&owned_packet.flow.data_link.source_mac, &source_ip);
+            let destination_label =
+                matrice.get_label(&owned_packet.flow.data_link.destination_mac, &destination_ip);
             // info!(
             //     "[handle_pcap_file] {} : paquet {}/{} ; lignes matrice = {}",
             //     file_path,
@@ -120,7 +138,7 @@ fn handle_pcap_file(
             //     matrix_count
             // );
 
-            graph.add_packet_flow(&packet_min.flow.to_owned());
+            graph.add_packet_flow(&owned_packet.flow, source_label, destination_label);
 
             // Stats périodiques (optionnel)
             if (packet_count.is_multiple_of(1000) || packet_count == total)
