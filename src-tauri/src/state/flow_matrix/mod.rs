@@ -117,10 +117,7 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_source_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
-                let label_source = self
-                    .label
-                    .get(&(flow.data_link.source_mac.clone(), ip_source.clone()))
-                    .cloned();
+                let label_source = self.get_label(&flow.data_link.source_mac, &ip_source);
 
                 let ip_destination = flow
                     .internet
@@ -134,13 +131,8 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_destination_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
-                let label_destination = self
-                    .label
-                    .get(&(
-                        flow.data_link.destination_mac.clone(),
-                        ip_destination.clone(),
-                    ))
-                    .cloned();
+                let label_destination =
+                    self.get_label(&flow.data_link.destination_mac, &ip_destination);
 
                 let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
                     Ok(dur) => {
@@ -199,7 +191,10 @@ impl FlowMatrix {
     }
 
     pub fn get_label(&self, mac: &str, ip: &str) -> Option<String> {
-        self.label.get(&(mac.to_string(), ip.to_string())).cloned()
+        self.label
+            .get(&(mac.to_string(), ip.to_string()))
+            .or_else(|| self.label.get(&(String::new(), ip.to_string())))
+            .cloned()
     }
 
     pub fn get_label_list(&self) -> Vec<String> {
@@ -245,6 +240,38 @@ use crate::state::capture::capture_handle::messages::capture::PacketOwnedStats;
 
 pub fn timeval_to_systemtime(tv_sec: i64, tv_usec: i64) -> SystemTime {
     UNIX_EPOCH + std::time::Duration::new(tv_sec as u64, (tv_usec * 1000) as u32)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FlowMatrix;
+
+    #[test]
+    fn get_label_falls_back_to_ip_only_label() {
+        let mut matrix = FlowMatrix::new();
+        matrix.add_label(String::new(), "8.8.8.8".to_string(), "google.com".to_string());
+
+        assert_eq!(
+            matrix.get_label("aa:bb:cc:dd:ee:ff", "8.8.8.8"),
+            Some("google.com".to_string())
+        );
+    }
+
+    #[test]
+    fn get_label_prefers_exact_mac_ip_label() {
+        let mut matrix = FlowMatrix::new();
+        matrix.add_label(String::new(), "8.8.8.8".to_string(), "google.com".to_string());
+        matrix.add_label(
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            "8.8.8.8".to_string(),
+            "custom dns".to_string(),
+        );
+
+        assert_eq!(
+            matrix.get_label("aa:bb:cc:dd:ee:ff", "8.8.8.8"),
+            Some("custom dns".to_string())
+        );
+    }
 }
 
 // #[cfg(test)]

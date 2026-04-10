@@ -1,6 +1,10 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashSet,
+    io::ErrorKind,
+    net::IpAddr,
+    sync::{Arc, Mutex},
+};
 
-use packet_parser::MacAddress;
 use tauri::{AppHandle, Manager, path::BaseDirectory};
 
 use crate::state::flow_matrix::FlowMatrix;
@@ -48,11 +52,12 @@ pub fn add_labels_to_file(app: &AppHandle, labels: Vec<String>) -> Result<(), ta
         .resolve("resources/labels.csv", BaseDirectory::Resource)?;
     println!("resource_path: {:?}", resource_path);
 
-    let csv_data = if labels.is_empty() {
-        String::new()
-    } else {
-        format!("{}\n", labels.join("\n"))
+    let existing_csv = match std::fs::read_to_string(&resource_path) {
+        Ok(csv_data) => csv_data,
+        Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+        Err(error) => return Err(error.into()),
     };
+    let csv_data = merge_label_rows(&existing_csv, labels);
 
     std::fs::write(resource_path, csv_data)?;
 
@@ -74,22 +79,55 @@ pub fn update_labels_in_state(app: &AppHandle, labels: Vec<String>) -> Result<()
     Ok(())
 }
 
-fn parse_label_row(row: &str) -> Option<(MacAddress, String, String)> {
-    let mut parts = row.splitn(3, ',');
-    let mac = parts.next()?.trim();
-    let ip = parts.next()?.trim();
-    let label = parts.next()?.trim();
+fn parse_label_row(row: &str) -> Option<(String, String, String)> {
+    let parts: Vec<_> = row.split(',').map(clean_csv_field).collect();
 
-    if mac.is_empty() || ip.is_empty() || label.is_empty() {
-        return None;
+    match parts.as_slice() {
+        [mac, ip, label] if !mac.is_empty() && !ip.is_empty() && !label.is_empty() => {
+            Some((mac.to_string(), ip.to_string(), label.to_string()))
+        }
+        [ip, label] if is_ip_address(ip) && !label.is_empty() => {
+            Some((String::new(), ip.to_string(), label.to_string()))
+        }
+        _ => None,
     }
-let macmac = MacAddress::try_from(mac.to_string());
-    Some((macmac.unwrap(), ip.to_string(), label.to_string()))
+}
+
+fn clean_csv_field(value: &str) -> &str {
+    value.trim().trim_matches('"')
+}
+
+fn is_ip_address(value: &str) -> bool {
+    value.parse::<IpAddr>().is_ok()
+}
+
+fn merge_label_rows(existing_csv: &str, labels: Vec<String>) -> String {
+    let mut seen = HashSet::new();
+    let mut rows = Vec::new();
+
+    for row in existing_csv.lines().map(str::trim).filter(|row| !row.is_empty()) {
+        if seen.insert(row.to_string()) {
+            rows.push(row.to_string());
+        }
+    }
+
+    for label in labels {
+        let label = label.trim();
+        if !label.is_empty() && seen.insert(label.to_string()) {
+            rows.push(label.to_string());
+        }
+    }
+
+    if rows.is_empty() {
+        String::new()
+    } else {
+        format!("{}\n", rows.join("\n"))
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{create_labels_from_network_interfaces, parse_label_row};
+    use super::{create_labels_from_network_interfaces, merge_label_rows, parse_label_row};
     use netdev::Interface;
     use netdev::ipnet::{Ipv4Net, Ipv6Net};
     use std::net::{Ipv4Addr, Ipv6Addr};
@@ -137,8 +175,53 @@ mod tests {
     }
 
     #[test]
+    fn parses_ip_only_label_row() {
+        let parsed = parse_label_row("8.8.8.8,google.com");
+
+        assert_eq!(
+            parsed,
+            Some((
+                String::new(),
+                "8.8.8.8".to_string(),
+                "google.com".to_string(),
+            ))
+        );
+    }
+
+    #[test]
+    fn parses_quoted_ip_only_label_row() {
+        let parsed = parse_label_row("\"8.8.8.8\", \"google.com\"");
+
+        assert_eq!(
+            parsed,
+            Some((
+                String::new(),
+                "8.8.8.8".to_string(),
+                "google.com".to_string(),
+            ))
+        );
+    }
+
+    #[test]
     fn rejects_invalid_label_rows() {
         assert_eq!(parse_label_row("aa:bb:cc:dd:ee:ff,192.168.1.10"), None);
         assert_eq!(parse_label_row(",,pc sonar"), None);
+    }
+
+    #[test]
+    fn appends_only_missing_label_rows() {
+        let existing_csv = "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar\n";
+        let merged = merge_label_rows(
+            existing_csv,
+            vec![
+                "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar".to_string(),
+                "aa:bb:cc:dd:ee:ff,2001:db8::10,pc sonar".to_string(),
+            ],
+        );
+
+        assert_eq!(
+            merged,
+            "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar\naa:bb:cc:dd:ee:ff,2001:db8::10,pc sonar\n"
+        );
     }
 }
