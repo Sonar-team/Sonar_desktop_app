@@ -10,6 +10,15 @@
 </p>
 
 <p align="center">
+  <i>
+    Gain deep network visibility.<br>
+    Eliminate shadow IT/OT.<br>
+    Empower your SOC/CSIRT teams.<br>
+    Stay ahead of cyber threats.
+  </i>
+</p>
+
+<p align="center">
   <a href="https://sonarcloud.io/summary/new_code?id=Sonar-team_Sonar_desktop_app">
     <img src="https://sonarcloud.io/api/project_badges/measure?project=Sonar-team_Sonar_desktop_app&metric=alert_status" alt="Quality Gate" />
   </a>
@@ -26,6 +35,27 @@
 </p>
 
 ---
+
+## For:
+- Network Administrators
+- Network Auditors  
+- SOC Architects
+
+## Use Cases
+
+### Network Discovery & Mapping
+Automatically discover devices and connections. Build complete topology maps to identify blind spots and ensure full network coverage.
+
+### Shadow IT/OT Discovery
+Identify unauthorized network protocols, as well as hidden IT, IoT, and OT devices or rogue connections.
+
+### Compliance & Audit Support
+Generate detailed network documentation and traffic reports for regulatory audits. Track changes over time and demonstrate visibility controls.
+
+### SOC Rule Creation and Tuning
+Establish a baseline of normal network behavior and use it to create or refine SOC rules.
+
+
 
 ## 🚀 Key Features
 
