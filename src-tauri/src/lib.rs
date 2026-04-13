@@ -110,7 +110,7 @@ pub fn run() -> Result<(), tauri::Error> {
 
                 // handle the capture state here
                 if !headless_enabled {
-                    start_cpu_monitor(app.handle().clone());
+                    let _ = start_cpu_monitor(app.handle().clone());
 
                     let menu = MenuBuilder::new(app)
                         .text("fichier", "Fichier")

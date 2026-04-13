@@ -8,37 +8,42 @@ pub struct SystemInfo {
     pub cpu_usage: f32,
 }
 
-pub fn start_cpu_monitor(app_handle: AppHandle) {
-    // Partage du System entre les itérations avec Mutex (thread-safe)
+pub fn start_cpu_monitor(app_handle: AppHandle) -> Result<(), tauri::Error> {
     let sys = Arc::new(Mutex::new(System::new_all()));
 
     tauri::async_runtime::spawn({
         let sys = Arc::clone(&sys);
         async move {
             loop {
-                {
-                    let mut sys = sys.lock().unwrap();
-                    sys.refresh_cpu_usage();
+                let average = match sys.lock() {
+                    Ok(mut sys) => {
+                        sys.refresh_cpu_usage();
 
-                    let cpus = sys.cpus();
-                    if cpus.is_empty() {
+                        let cpus = sys.cpus();
+                        if cpus.is_empty() {
+                            0.0
+                        } else {
+                            cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len() as f32
+                        }
+                    }
+                    Err(err) => {
+                        eprintln!("Failed to lock system info mutex: {err}");
                         continue;
                     }
+                };
 
-                    // Moyenne des usages CPU
-                    let average: f32 =
-                        cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len() as f32;
-
-                    let info = SystemInfo { cpu_usage: average };
-                    // println!("CPU Usage: {}%", info.cpu_usage);
-                    let _ = app_handle.emit("cpu_usage_update", info);
-                }
+                let info = SystemInfo { cpu_usage: average };
+                let _ = app_handle.emit("cpu_usage_update", info);
 
                 tokio::time::sleep(std::time::Duration::from_secs(1)).await;
             }
         }
     });
+
+    Ok(())
 }
+
+
 
 pub fn get_interfaces() -> Vec<netdev::Interface> {
     let interfaces = netdev::get_interfaces();
