@@ -46,7 +46,6 @@ pub fn run() -> Result<(), tauri::Error> {
     let exit_code = 0;
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_cli::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
