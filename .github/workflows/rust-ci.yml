@@ -22,7 +22,7 @@ jobs:
           toolchain: stable
           components: rustfmt, clippy
           override: true
-      
+
       - name: Install Linux system dependencies
         run: |
           sudo apt-get update
@@ -35,6 +35,14 @@ jobs:
             librsvg2-dev \
             libpcap-dev
 
+      - name: Install cargo tools
+        run: |
+          cargo install cargo-audit --locked
+          cargo install cargo-outdated --locked
+          cargo install cargo-udeps --locked
+          cargo install cargo-deny --locked
+        working-directory: ./src-tauri
+
       - name: Check formatting with cargo fmt
         run: cargo fmt -- --check
         working-directory: ./src-tauri
@@ -44,24 +52,21 @@ jobs:
         working-directory: ./src-tauri
 
       - name: Audit dependencies with cargo audit
-        uses: actions-rs/audit-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
+        run: cargo audit
+        working-directory: ./src-tauri
+
       - name: Run cargo clippy
         run: cargo clippy -- -D warnings
         working-directory: ./src-tauri
 
       - name: Check licenses and configurations with cargo deny
-        uses: EmbarkStudios/cargo-deny-action@v1
+        run: cargo deny check
+        working-directory: ./src-tauri
 
       - name: Check for outdated dependencies with cargo outdated
-        uses: actions-rs/cargo@v1
-        with:
-          command: outdated
+        run: cargo outdated
+        working-directory: ./src-tauri
 
       - name: Check unused dependencies with cargo udeps
-        uses: actions-rs/cargo@v1
-        with:
-          command: udeps
-          args: --all-targets
+        run: cargo udeps --all-targets
+        working-directory: ./src-tauri
