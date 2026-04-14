@@ -127,9 +127,12 @@ fn handle_pcap_file(
                 .and_then(|i| i.destination_ip)
                 .map(|ip| ip.to_string())
                 .unwrap_or_default();
-            let source_label = matrice.get_label(&owned_packet.flow.data_link.source_mac, &source_ip);
-            let destination_label =
-                matrice.get_label(&owned_packet.flow.data_link.destination_mac, &destination_ip);
+            let source_label =
+                matrice.get_label(&owned_packet.flow.data_link.source_mac, &source_ip);
+            let destination_label = matrice.get_label(
+                &owned_packet.flow.data_link.destination_mac,
+                &destination_ip,
+            );
             // info!(
             //     "[handle_pcap_file] {} : paquet {}/{} ; lignes matrice = {}",
             //     file_path,

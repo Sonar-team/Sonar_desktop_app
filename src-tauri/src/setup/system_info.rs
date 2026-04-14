@@ -43,8 +43,6 @@ pub fn start_cpu_monitor(app_handle: AppHandle) -> Result<(), tauri::Error> {
     Ok(())
 }
 
-
-
 pub fn get_interfaces() -> Vec<netdev::Interface> {
     let interfaces = netdev::get_interfaces();
 

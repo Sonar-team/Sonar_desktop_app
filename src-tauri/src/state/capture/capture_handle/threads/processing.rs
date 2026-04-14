@@ -72,32 +72,34 @@ pub fn spawn_processing_thread(
                     // ajout les paquets à la matrice de flux
                     let record_owned = packet.to_owned_packet();
                     let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
-                    let (source_label, destination_label) = if let Ok(locked_state) = flow_matrix.lock() {
-                        let source_ip = record_owned
-                            .flow
-                            .internet
-                            .as_ref()
-                            .and_then(|i| i.source_ip)
-                            .map(|ip| ip.to_string())
-                            .unwrap_or_default();
-                        let destination_ip = record_owned
-                            .flow
-                            .internet
-                            .as_ref()
-                            .and_then(|i| i.destination_ip)
-                            .map(|ip| ip.to_string())
-                            .unwrap_or_default();
+                    let (source_label, destination_label) =
+                        if let Ok(locked_state) = flow_matrix.lock() {
+                            let source_ip = record_owned
+                                .flow
+                                .internet
+                                .as_ref()
+                                .and_then(|i| i.source_ip)
+                                .map(|ip| ip.to_string())
+                                .unwrap_or_default();
+                            let destination_ip = record_owned
+                                .flow
+                                .internet
+                                .as_ref()
+                                .and_then(|i| i.destination_ip)
+                                .map(|ip| ip.to_string())
+                                .unwrap_or_default();
 
-                        (
-                            locked_state.get_label(&record_owned.flow.data_link.source_mac, &source_ip),
-                            locked_state.get_label(
-                                &record_owned.flow.data_link.destination_mac,
-                                &destination_ip,
-                            ),
-                        )
-                    } else {
-                        (None, None)
-                    };
+                            (
+                                locked_state
+                                    .get_label(&record_owned.flow.data_link.source_mac, &source_ip),
+                                locked_state.get_label(
+                                    &record_owned.flow.data_link.destination_mac,
+                                    &destination_ip,
+                                ),
+                            )
+                        } else {
+                            (None, None)
+                        };
                     if let Ok(mut locked_state) = flow_matrix.lock() {
                         locked_state.update_flow(&record_owned);
                         processed = locked_state.matrix.len() as u32;
@@ -106,11 +108,8 @@ pub fn spawn_processing_thread(
                     let graph = app.state::<Arc<Mutex<GraphData>>>();
                     if let Ok(mut g) = graph.lock() {
                         // record_owned.flow est un PacketFlowOwned
-                        let updates = g.add_packet_flow(
-                            &record_owned.flow,
-                            source_label,
-                            destination_label,
-                        );
+                        let updates =
+                            g.add_packet_flow(&record_owned.flow, source_label, destination_label);
                         // Envoi 1 par 1 (simple)
                         if !updates.is_empty() {
                             for update in updates {
@@ -211,32 +210,34 @@ pub fn spawn_processing_thread_cli(
                     // ajout les paquets à la matrice de flux
                     let record_owned = packet.to_owned_packet();
                     let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
-                    let (source_label, destination_label) = if let Ok(locked_state) = flow_matrix.lock() {
-                        let source_ip = record_owned
-                            .flow
-                            .internet
-                            .as_ref()
-                            .and_then(|i| i.source_ip)
-                            .map(|ip| ip.to_string())
-                            .unwrap_or_default();
-                        let destination_ip = record_owned
-                            .flow
-                            .internet
-                            .as_ref()
-                            .and_then(|i| i.destination_ip)
-                            .map(|ip| ip.to_string())
-                            .unwrap_or_default();
+                    let (source_label, destination_label) =
+                        if let Ok(locked_state) = flow_matrix.lock() {
+                            let source_ip = record_owned
+                                .flow
+                                .internet
+                                .as_ref()
+                                .and_then(|i| i.source_ip)
+                                .map(|ip| ip.to_string())
+                                .unwrap_or_default();
+                            let destination_ip = record_owned
+                                .flow
+                                .internet
+                                .as_ref()
+                                .and_then(|i| i.destination_ip)
+                                .map(|ip| ip.to_string())
+                                .unwrap_or_default();
 
-                        (
-                            locked_state.get_label(&record_owned.flow.data_link.source_mac, &source_ip),
-                            locked_state.get_label(
-                                &record_owned.flow.data_link.destination_mac,
-                                &destination_ip,
-                            ),
-                        )
-                    } else {
-                        (None, None)
-                    };
+                            (
+                                locked_state
+                                    .get_label(&record_owned.flow.data_link.source_mac, &source_ip),
+                                locked_state.get_label(
+                                    &record_owned.flow.data_link.destination_mac,
+                                    &destination_ip,
+                                ),
+                            )
+                        } else {
+                            (None, None)
+                        };
                     if let Ok(mut locked_state) = flow_matrix.lock() {
                         let (flow_stats, flow) = locked_state.update_flow_cli(&record_owned);
                         info!("flow_stats: {:?}, {:?}", flow_stats, flow);
@@ -246,11 +247,8 @@ pub fn spawn_processing_thread_cli(
                     let graph = app.state::<Arc<Mutex<GraphData>>>();
                     if let Ok(mut g) = graph.lock() {
                         // record_owned.flow est un PacketFlowOwned
-                        let updates = g.add_packet_flow(
-                            &record_owned.flow,
-                            source_label,
-                            destination_label,
-                        );
+                        let updates =
+                            g.add_packet_flow(&record_owned.flow, source_label, destination_label);
                         // Envoi 1 par 1 (simple)
                         if !updates.is_empty() {
                             for update in updates {

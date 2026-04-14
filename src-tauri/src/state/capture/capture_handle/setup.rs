@@ -60,17 +60,28 @@ use crate::state::capture::capture_config::CaptureConfig;
 ///   Réduisez-le si seules les en-têtes vous intéressent (gain CPU/mémoire).
 ///
 /// # Exemples
-/// ```no_run
-/// use pcap::Device;
+/// ```ignore
+/// use sonar_lib::state::capture::{
+///     capture_config::CaptureConfig,
+///     capture_handle::setup::setup_capture,
+/// };
+///
 /// // Votre configuration applicative :
 /// let iface = "eth0".to_string();
 /// let buffer_size = 64 * 1024 * 1024; // 64 MiB
-/// let channel_capacity = 1024;        // pour vos channels internes (non utilisé par pcap)
+/// let channel_capacity = 1024;        // pour vos channels internes (non utilise par pcap)
 /// let timeout_ms = 10;                // faible latence
-/// let snaplen = 65_535;               // capture complète
+/// let snaplen = 65_535;               // capture complete
 ///
-/// let cap = setup_capture((iface, buffer_size, channel_capacity, timeout_ms, snaplen))
-///     .expect("Impossible d'ouvrir la capture");
+/// let config = CaptureConfig {
+///     device_name: iface,
+///     buffer_size,
+///     chan_capacity: channel_capacity,
+///     timeout: timeout_ms,
+///     snaplen,
+/// };
+///
+/// let cap = setup_capture(config).expect("Impossible d'ouvrir la capture");
 ///
 /// // Exemple : itérer les paquets
 /// // while let Ok(packet) = cap.next_packet() {

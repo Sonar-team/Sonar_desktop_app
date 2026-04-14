@@ -2,8 +2,8 @@ use capture_config::CaptureConfig;
 use capture_handle::CaptureHandle;
 use capture_status::CaptureStatus;
 
-use tauri::ipc::Channel;
 use crate::events::CaptureEvent;
+use tauri::ipc::Channel;
 
 pub mod capture_config;
 pub mod capture_handle;

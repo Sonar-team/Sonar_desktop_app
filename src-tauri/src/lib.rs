@@ -136,7 +136,6 @@ pub fn run() -> Result<(), tauri::Error> {
                     setup::labels::add_labels_to_file(app.handle(), labels.clone())?;
                     read_labels(app.handle())?;
                     setup::labels::update_labels_in_state(app.handle(), labels)?;
-
                 } else {
                     let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
                     let config = get_config_capture(capture_state.clone());

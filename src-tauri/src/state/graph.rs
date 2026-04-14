@@ -286,12 +286,7 @@ impl GraphData {
         GraphData { nodes, edges }
     }
 
-    pub fn update_node_label(
-        &mut self,
-        mac: &str,
-        ip: &str,
-        label: String,
-    ) -> Option<GraphUpdate> {
+    pub fn update_node_label(&mut self, mac: &str, ip: &str, label: String) -> Option<GraphUpdate> {
         let normalized = if label.trim().is_empty() {
             None
         } else {

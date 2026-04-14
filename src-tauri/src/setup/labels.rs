@@ -105,7 +105,11 @@ fn merge_label_rows(existing_csv: &str, labels: Vec<String>) -> String {
     let mut seen = HashSet::new();
     let mut rows = Vec::new();
 
-    for row in existing_csv.lines().map(str::trim).filter(|row| !row.is_empty()) {
+    for row in existing_csv
+        .lines()
+        .map(str::trim)
+        .filter(|row| !row.is_empty())
+    {
         if seen.insert(row.to_string()) {
             rows.push(row.to_string());
         }
@@ -137,7 +141,8 @@ mod tests {
         let mut interface = Interface::dummy();
         interface.mac_addr = Some("aa:bb:cc:dd:ee:ff".parse().unwrap());
         interface.ipv4 = vec![Ipv4Net::new(Ipv4Addr::new(192, 168, 1, 10), 24).unwrap()];
-        interface.ipv6 = vec![Ipv6Net::new("2001:db8::10".parse::<Ipv6Addr>().unwrap(), 64).unwrap()];
+        interface.ipv6 =
+            vec![Ipv6Net::new("2001:db8::10".parse::<Ipv6Addr>().unwrap(), 64).unwrap()];
 
         let labels = create_labels_from_network_interfaces(vec![interface]).unwrap();
 

@@ -160,10 +160,7 @@ impl FlowMatrix {
                     port_source: flow.transport.as_ref().and_then(|t| t.source_port),
                     port_destination: flow.transport.as_ref().and_then(|t| t.destination_port),
                     protocol_transport: flow.transport.as_ref().map(|t| t.protocol.clone()),
-                    application_protocol: flow
-                        .application
-                        .as_ref()
-                        .map(|a| a.protocol.clone()),
+                    application_protocol: flow.application.as_ref().map(|a| a.protocol.clone()),
                     count: stats.count,
                     total_bytes: stats.total_bytes,
                     last_seen,
@@ -249,7 +246,11 @@ mod tests {
     #[test]
     fn get_label_falls_back_to_ip_only_label() {
         let mut matrix = FlowMatrix::new();
-        matrix.add_label(String::new(), "8.8.8.8".to_string(), "google.com".to_string());
+        matrix.add_label(
+            String::new(),
+            "8.8.8.8".to_string(),
+            "google.com".to_string(),
+        );
 
         assert_eq!(
             matrix.get_label("aa:bb:cc:dd:ee:ff", "8.8.8.8"),
@@ -260,7 +261,11 @@ mod tests {
     #[test]
     fn get_label_prefers_exact_mac_ip_label() {
         let mut matrix = FlowMatrix::new();
-        matrix.add_label(String::new(), "8.8.8.8".to_string(), "google.com".to_string());
+        matrix.add_label(
+            String::new(),
+            "8.8.8.8".to_string(),
+            "google.com".to_string(),
+        );
         matrix.add_label(
             "aa:bb:cc:dd:ee:ff".to_string(),
             "8.8.8.8".to_string(),
