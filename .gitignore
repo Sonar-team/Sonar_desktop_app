@@ -58,3 +58,10 @@ vuln.txt
 # Tauri
 target
 /target
+
+# Cosign
+cosign.key
+cosign.pub
+*.sigstore.json
+*.sig
+*.pem

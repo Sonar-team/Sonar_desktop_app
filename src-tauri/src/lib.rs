@@ -32,6 +32,7 @@ mod setup;
 mod state;
 mod utils;
 
+/// Main entry point for the application
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
     let now = Local::now();
