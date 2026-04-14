@@ -1,0 +1,26 @@
+image: rust:1.94.1
+
+stages:
+  - build
+
+variables:
+  NODE_VERSION: 24.14.0
+
+build:
+  stage: build
+  script:
+    - apt update
+    - apt install -y libgtk-3-dev pkg-config libjavascriptcoregtk-4.1-dev libsoup-3.0-dev libwebkit2gtk-4.1-dev libpcap-dev
+    - cargo -V
+    - export PATH=/usr/local/node/bin:$PATH
+    - curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz -C /tmp/
+    - /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node
+    - npm install -g deno
+    - deno install
+    - deno task tauri build
+
+  artifacts:
+    paths:
+      - src-tauri/target/release/bundle/deb/*.deb
+      - src-tauri/target/release/bundle/rpm/*.rpm
+    expire_in: 7 days
