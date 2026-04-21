@@ -1,0 +1,19 @@
+[package]
+name = "embed_plist"
+version = "1.2.2"
+authors = ["Nikolai Vazquez <hello@nikolaivazquez.com>"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+description = "Embed property list files like Info.plist directly in your executable binary."
+homepage = "https://github.com/nvzqz/embed-plist-rs"
+repository = "https://github.com/nvzqz/embed-plist-rs"
+documentation = "https://docs.rs/embed_plist"
+keywords = ["apple", "include", "info", "launchd", "plist"]
+categories = ["config", "development-tools::build-utils", "no-std"]
+include = ["Cargo.toml", "src", "tests", "README*", "CHANGELOG*", "LICENSE*"]
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[package.metadata.docs.rs]
+targets = ["x86_64-apple-darwin"]
