@@ -47,7 +47,6 @@ pub enum ConnectionStatus {
 }
 
 /// ====== Conversions depuis pcap::* vers nos DTO ======
-
 impl From<PcapAddress> for Address {
     fn from(a: PcapAddress) -> Self {
         Address {
