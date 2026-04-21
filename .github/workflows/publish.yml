@@ -40,8 +40,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libpcap-dev
 
-      - name: install frontend dependencies
-        run: deno install # change this to npm, pnpm, or bun if necessary.
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
 
       - name: Build and package with Tauri
         uses: tauri-apps/tauri-action@v0
