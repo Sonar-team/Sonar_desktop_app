@@ -56,7 +56,6 @@ dist-ssr
 vuln.txt
 
 # Tauri
-target
 /target
 
 # Cosign
