@@ -11,18 +11,18 @@
       <div class="file-group">
         <label for="packetFiles"></label>
         <div v-if="mode === 'csv'" class="file-group">
-          <button class="btn" @click="addCsvFiles" >
+          <button class="btn" @click="addCsvFiles" :disabled="isConverting">
           Ajouter des fichiers {{ mode }}
           </button>
-          <button class="btn btn-clear" @click="clearFiles" >
+          <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
             Effacer
           </button>
         </div>
         <div v-else-if="mode == 'pcap'" class="file-group">
-          <button class="btn" @click="addPcapFiles" >
+          <button class="btn" @click="addPcapFiles" :disabled="isConverting">
             Ajouter des fichiers
           </button>
-          <button class="btn btn-clear" @click="clearFiles" >
+          <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
             Effacer
           </button>
         </div>
@@ -88,6 +88,7 @@ export default defineComponent({
     addCsvFiles() {
       return this.addFiles('Label File', ['csv']);
     },
+
     async addFiles(name : string, extensions : string[]) {
       const files = await open({
         multiple: true,
