@@ -58,7 +58,7 @@ pub fn add_labels_to_file(app: &AppHandle, labels: Vec<String>) -> Result<(), ta
         Err(error) => return Err(error.into()),
     };
     let csv_data = merge_label_rows(&existing_csv, labels);
-    println!(csv_data);
+    println!("csv_date : {}", csv_data);
     std::fs::write(resource_path, csv_data)?;
 
     Ok(())
