@@ -10,14 +10,24 @@
 
       <div class="file-group">
         <label for="packetFiles"></label>
-        <button class="btn" @click="addFiles" :disabled="isConverting">
-          Ajouter des fichiers
-        </button>
-        <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
-          Effacer
-        </button>
+        <div v-if="mode === 'csv'" class="file-group">
+          <button class="btn" @click="addCsvFiles" >
+          Ajouter des fichiers {{ mode }}
+          </button>
+          <button class="btn btn-clear" @click="clearFiles" >
+            Effacer
+          </button>
+        </div>
+        <div v-else-if="mode == 'pcap'" class="file-group">
+          <button class="btn" @click="addPcapFiles" >
+            Ajouter des fichiers
+          </button>
+          <button class="btn btn-clear" @click="clearFiles" >
+            Effacer
+          </button>
+        </div>
       </div>
-
+        
       <ul class="file-list" v-if="packetFiles.length > 0">
         <li v-for="(file, index) in packetFiles" :key="index">
           {{ file }}
@@ -47,8 +57,13 @@ import { displayCaptureError } from '../../../errors/capture';
 
 export default defineComponent({
   name: 'ImportPanel',
-  emits: ['update:visible'],
-
+  emits: ['update:visible','toggle-pcap'],
+  props: {
+    mode: {
+      type: String,
+      default: 'pcap'
+    }
+  },
   data() {
     return {
       packetFiles: [] as string[],
@@ -66,10 +81,17 @@ export default defineComponent({
   },
 
   methods: {
-    async addFiles() {
+    addPcapFiles() {
+      return this.addFiles('Capture File', ['pcap', 'pcapng', 'cap']);
+    },
+
+    addCsvFiles() {
+      return this.addFiles('Label File', ['csv']);
+    },
+    async addFiles(name : string, extensions : string[]) {
       const files = await open({
         multiple: true,
-        filters: [{ name: 'Capture File', extensions: ['pcap', 'pcapng', 'cap'] }],
+        filters: [{ name: name, extensions: extensions }]
       });
 
       if (files) {

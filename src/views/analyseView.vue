@@ -3,13 +3,15 @@
     <div class="top-container">
       <TopBar 
         @toggle-config="toggleConfig" 
-        @toggle-pcap="togglePcap" 
+        @toggle-pcap="togglePcap"
+        @toggle-csv="toggleCsv"
         @toggle-filter="toggleFilter"
         @toggle-graph="toggleGraph"  
       />
       <div class="panels">
         <ConfigPanel v-if="showConfig" @update:ConfigPanel-visible="(val: any) => showConfig = val" />
-        <ImportPanel v-if="showPcap" @update:visible="(val: any) => showPcap = val"/>
+        <ImportPanel v-if="showPcap" :mode="'pcap'" @update:visible="(val: any) => showPcap = val"/>
+        <ImportPanel v-if="showCsv" :mode="'csv'" @update:visible="(val: any) => showCsv = val"/>
         <Filter v-if="showFilter" @update:visible="(val: any) => showFilter = val"/>
       </div>
     </div>
@@ -52,6 +54,7 @@ export default defineComponent({
     return {
       showConfig: false,
       showPcap: false,
+      showCsv: false,
       showFilter: false,
       showGraph: true, // ✅ état du graph
     };
@@ -67,6 +70,9 @@ export default defineComponent({
     },
     togglePcap() {
       this.showPcap = !this.showPcap;
+    },
+    toggleCsv(){
+      this.showCsv = !this.showCsv;
     },
     toggleFilter() {
       this.showFilter = !this.showFilter;

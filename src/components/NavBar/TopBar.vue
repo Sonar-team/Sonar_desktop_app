@@ -13,12 +13,13 @@
     </button>
 
     <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
-    <button class="image-btn" @click="displayPcapOpener" title="Ouvrir (ctrl+o)">📄</button>
+
+    <button class="image-btn" @click="displayPcapOpener" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
+    <button class="image-btn" @click="displayCsvOpener" title="Ouvrir un fichier csv"><img src="./Pictures/import_csv.png" alt="Ouvrir un fichier csv" /></button>
+    
     <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">❌</button>
-    <button class="image-btn" @click="export_logs" title="Logs (ctrl+l)">📒</button>
-    <button class="image-btn" @click="handleFilterClick" title="Filtrer (ctrl+f)">
-      <img src="/src/assets/filter-solid-full.svg" alt="Flux" class="icon-img" />
-    </button>
+    <button class="image-btn" @click="export_logs" title="Logs (ctrl+)">📒</button>
+    <button class="image-btn" @click="handleFilterClick" title="Filtrer (ctrl+,)">🔍</button>
   </div>
 </template>
 
@@ -40,7 +41,7 @@ import { CaptureEvent } from '../../types/capture';
 
 export default {
   name: "TopBar",
-  emits: ['toggle-config','toggle-pcap','toggle-filter'],
+  emits: ['toggle-config','toggle-pcap','toggle-csv','toggle-filter'],
 
   computed: {
     buttonText(): string {
@@ -58,6 +59,7 @@ export default {
     return {
       showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
       shortcuts: [] as string[],
+      showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
     };
   },
   mounted() {
@@ -193,6 +195,10 @@ export default {
     displayPcapOpener() {
       info("[TopBar] Bouton open cliqué");
       this.$emit('toggle-pcap');
+    },
+    displayCsvOpener() {
+      info("[TopBar] Bouton open cliqué");
+      this.$emit('toggle-csv');
     },
     handleFilterClick() {
       info("[TopBar] Bouton filter cliqué");
