@@ -54,6 +54,7 @@
         "installerHooks": "windows\\hooks.nsh"
       }
     },
+
     "resources": {
       "resources/labels.csv": "resources/labels.csv",
       "windows/npcap-1.87.exe": "windows/npcap-1.87.exe"
