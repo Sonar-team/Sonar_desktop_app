@@ -1,7 +1,10 @@
 use log::{error, info};
 use packet_parser::PacketFlow;
 use pcap::Capture;
-use std::{sync::{Arc, Mutex}, io::ErrorKind};
+use std::{sync::{Arc, Mutex}, 
+    io::ErrorKind, fs, 
+    path::{Path, PathBuf}
+};
 use tauri::{State, ipc::Channel, Manager};
 
 use crate::{
@@ -31,37 +34,66 @@ fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
 }
 
 #[tauri::command(async)]
-pub fn import_labels_from_csv(
+pub fn import_csv_files(
     csv_paths: Vec<String>,
     app: tauri::AppHandle,
 ) -> Result<(), tauri::Error> {
-    let state_label = app.state::<Arc<Mutex<FlowMatrix>>>();
-    let mut state_label = state_label.lock().unwrap();
-    println!("c'est ok pour state_label");
+    let dossier_data = app.path().app_data_dir().unwrap();
+    let dossier_labels = dossier_data.join("labels");
+
+    if !fs::exists(&dossier_labels).unwrap_or(false){
+        fs::create_dir(&dossier_labels)?;
+    }
     for csv_path in csv_paths {
-    println!("path : {:?}", csv_path);
-        let new_csv = match std::fs::read_to_string(&csv_path) {
+        let chemin = Path::new(&csv_path);
+        fs::copy(&csv_path,&dossier_labels.join(chemin.file_name().unwrap()))?;
+        println!("copie effectuée");
+    }
+
+    Ok(())
+}
+
+pub fn new_import_labels(
+    app: tauri::AppHandle,
+    state_label: State<'_, Arc<Mutex<FlowMatrix>>>
+) -> Result<(), std::io::Error> {
+    let mut state_label = state_label.lock().unwrap();
+    let dossier_data = app.path().app_data_dir().unwrap();
+    let dossier_labels = dossier_data.join("labels");
+
+    if fs::exists(&dossier_labels).unwrap_or(false){
+    let fichiers: Vec<PathBuf> = fs::read_dir(&dossier_labels)?
+        .filter_map(|entree| entree.ok())
+        .map(|entree| entree.path())
+        .filter(|chemin| chemin.is_file())
+        .filter(|chemin| chemin.extension().and_then(|e| e.to_str()) == Some("csv"))
+        .collect();
+    
+
+        for fichier in &fichiers {
+
+            let csv = match std::fs::read_to_string(&fichier) {
             Ok(csv_data) => csv_data,
             Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
             Err(error) => return Err(error.into()),
         };
 
-        let labels: Vec<String> = new_csv
-            .lines()
-            .map(|l| l.to_string())
-            .collect();
+            let labels: Vec<String> = csv
+                .lines()
+                .map(|l| l.to_string())
+                .collect();
 
-        for label in labels {
-            let Some((mac, ip, label_name)) = parse_label_row(&label) else {
-                continue;
-            };
+            for label in labels {
+                let Some((mac, ip, label)) = parse_label_row(&label) else {
+                    continue;
+                };
 
-            state_label.add_label(mac.to_string(), ip, label_name);
+                state_label.add_label(mac.to_string(), ip, label);
+            }
         }
     }
 
     Ok(())
-
 }
 
 #[tauri::command(async)]

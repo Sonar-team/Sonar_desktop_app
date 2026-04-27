@@ -136,12 +136,12 @@ export default defineComponent({
     async convertCsv() {
       if (this.packetFiles.length === 0) return;
 
-      info('import_labels_from_csv: ' + this.packetFiles);
+      info('import_csv_files: ' + this.packetFiles);
 
       this.isConverting = true;
 
       try {
-        await invoke('import_labels_from_csv', { csvPaths: this.packetFiles });
+        await invoke('import_csv_files', { csvPaths: this.packetFiles });
         info('réponse invoke');
         this.$emit('update:visible', false);
       } catch (err) {
