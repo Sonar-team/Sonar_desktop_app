@@ -1,16 +1,18 @@
 use log::{error, info};
 use packet_parser::PacketFlow;
 use pcap::Capture;
-use std::sync::{Arc, Mutex};
-use tauri::{State, ipc::Channel};
+use std::{sync::{Arc, Mutex}, io::ErrorKind};
+use tauri::{State, ipc::Channel, Manager};
 
 use crate::{
     errors::{CaptureStateError, import::PcapImportError},
     events::CaptureEvent,
     state::{
-        capture::capture_handle::messages::capture::PacketMinimal, flow_matrix::FlowMatrix,
+        capture::capture_handle::messages::capture::PacketMinimal, 
+        flow_matrix::FlowMatrix,
         graph::GraphData,
     },
+    setup::labels::parse_label_row
 };
 
 fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
@@ -26,6 +28,40 @@ fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
         count += 1;
     }
     Ok(count)
+}
+
+#[tauri::command(async)]
+pub fn import_labels_from_csv(
+    csv_paths: Vec<String>,
+    app: tauri::AppHandle,
+) -> Result<(), tauri::Error> {
+    let state_label = app.state::<Arc<Mutex<FlowMatrix>>>();
+    let mut state_label = state_label.lock().unwrap();
+    println!("c'est ok pour state_label");
+    for csv_path in csv_paths {
+    println!("path : {:?}", csv_path);
+        let new_csv = match std::fs::read_to_string(&csv_path) {
+            Ok(csv_data) => csv_data,
+            Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+            Err(error) => return Err(error.into()),
+        };
+
+        let labels: Vec<String> = new_csv
+            .lines()
+            .map(|l| l.to_string())
+            .collect();
+
+        for label in labels {
+            let Some((mac, ip, label_name)) = parse_label_row(&label) else {
+                continue;
+            };
+
+            state_label.add_label(mac.to_string(), ip, label_name);
+        }
+    }
+
+    Ok(())
+
 }
 
 #[tauri::command(async)]

@@ -23,7 +23,6 @@ pub fn start_capture(
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
     let mut state_lock = state.lock()?;
-
     if state_lock.capture.is_some() {
         println!("Déjà en cours.");
         return Ok(state_lock.status.clone());
