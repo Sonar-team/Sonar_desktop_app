@@ -34,8 +34,15 @@
         </li>
       </ul>
 
-      <button
-        @click="convert"
+      <button v-show="mode === 'pcap'"
+        @click="convertPcap"
+        class="btn btn-open"
+        :disabled="isConverting || packetFiles.length === 0"
+      >
+        Ouvrir
+      </button>
+      <button v-show="mode === 'csv'"
+        @click="convertCsv"
         class="btn btn-open"
         :disabled="isConverting || packetFiles.length === 0"
       >
@@ -105,7 +112,7 @@ export default defineComponent({
       this.packetFiles = [];
     },
 
-    async convert() {
+    async convertPcap() {
       if (this.packetFiles.length === 0) return;
 
       const onEvent = new Channel<CaptureEvent>();
@@ -117,6 +124,24 @@ export default defineComponent({
 
       try {
         await invoke('convert_from_pcap_list', { pcapPaths: this.packetFiles, onEvent });
+        info('réponse invoke');
+        this.$emit('update:visible', false);
+      } catch (err) {
+        displayCaptureError(err);
+      } finally {
+        this.isConverting = false;
+      }
+    },
+
+    async convertCsv() {
+      if (this.packetFiles.length === 0) return;
+
+      info('import_labels_from_csv: ' + this.packetFiles);
+
+      this.isConverting = true;
+
+      try {
+        await invoke('import_labels_from_csv', { csvPaths: this.packetFiles });
         info('réponse invoke');
         this.$emit('update:visible', false);
       } catch (err) {
