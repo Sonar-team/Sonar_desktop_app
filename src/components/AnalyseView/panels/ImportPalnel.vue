@@ -1,59 +1,78 @@
+<script setup lang="ts">
+  const checkedNames = ref(['Jack'])
+</script>
+
+
 <template>
   <div class="container">
     <div class="center-container">
 
-      <!-- Overlay de chargement -->
-      <div class="overlay" v-if="isConverting">
-        <div class="spinner"></div>
-        <p class="overlay-text">Conversion en cours…</p>
-      </div>
+      <div class="left-panel">
+        <input type="checkbox" id="jack" value="Jack" v-model="checkedNames">
+        <label for="jack">Jack</label>
+        <input type="checkbox" id="john" value='John' v-model="checkedNames">
+        <label for="john">John</label>
+        <input type="checkbox" id="mike" value="Mike" v-model="checkedNames">
+        <label for="mike">Mike</label>
+        <p>Checked names: {{ checkedNames }}</p>
 
-      <div class="file-group">
-        <label for="packetFiles"></label>
-        <div v-if="mode === 'csv'" class="file-group">
-          <button class="btn" @click="addCsvFiles" :disabled="isConverting">
-          Ajouter des fichiers de label
-          </button>
-          <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
-            Effacer
-          </button>
-        </div>
-        <div v-else-if="mode == 'pcap'" class="file-group">
-          <button class="btn" @click="addPcapFiles" :disabled="isConverting">
-            Ajouter des fichiers
-          </button>
-          <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
-            Effacer
-          </button>
-        </div>
       </div>
-        
-      <ul class="file-list" v-if="packetFiles.length > 0">
-        <li v-for="(file, index) in packetFiles" :key="index">
-          {{ file }}
-        </li>
-      </ul>
+      <div class="separateur"></div>
+      <div class="right-panel">
+        <!-- Overlay de chargement -->
+        <div class="overlay" v-if="isConverting">
+          <div class="spinner"></div>
+          <p class="overlay-text">Conversion en cours…</p>
+        </div>
 
-      <button v-show="mode === 'pcap'"
-        @click="convertPcap"
-        class="btn btn-open"
-        :disabled="isConverting || packetFiles.length === 0"
-      >
-        Ouvrir
-      </button>
-      <button v-show="mode === 'csv'"
-        @click="convertCsv"
-        class="btn btn-open"
-        :disabled="isConverting || packetFiles.length === 0"
-      >
-        Ouvrir
-      </button>
+        <div class="file-group">
+          <label for="packetFiles"></label>
+          <div v-if="mode === 'csv'" class="file-group">
+            <button class="btn" @click="addCsvFiles" :disabled="isConverting">
+            Ajouter des fichiers de label
+            </button>
+            <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
+              Effacer
+            </button>
+          </div>
+          <div v-else-if="mode === 'pcap'" class="file-group">
+            <button class="btn" @click="addPcapFiles" :disabled="isConverting">
+              Ajouter des fichiers
+            </button>
+            <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
+              Effacer
+            </button>
+          </div>
+        </div>
+          
+        <ul class="file-list" v-if="packetFiles.length > 0">
+          <li v-for="(file, index) in packetFiles" :key="index">
+            {{ file }}
+          </li>
+        </ul>
+
+        <button v-show="mode === 'pcap'"
+          @click="convertPcap"
+          class="btn btn-open"
+          :disabled="isConverting || packetFiles.length === 0"
+        >
+          Ouvrir
+        </button>
+        <button v-show="mode === 'csv'"
+          @click="convertCsv"
+          class="btn btn-open"
+          :disabled="isConverting || packetFiles.length === 0"
+        >
+          Ouvrir
+        </button>
+      </div>
 
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import { ref } from 'vue'
 import { defineComponent } from 'vue';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke, Channel } from '@tauri-apps/api/core';
@@ -61,6 +80,7 @@ import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
 import { displayCaptureError } from '../../../errors/capture';
+
 
 export default defineComponent({
   name: 'ImportPanel',
@@ -110,6 +130,10 @@ export default defineComponent({
 
     clearFiles() {
       this.packetFiles = [];
+    },
+
+    exit(){
+      this.$emit('update:visible', false)
     },
 
     async convertPcap() {
@@ -192,6 +216,22 @@ export default defineComponent({
   width: 90%;
   max-width: 600px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.left-panel {
+  width: 30%;
+  padding: 1rem;
+}
+
+.separateur {
+  width: 2px;
+  background-color: #ccc;
+  cursor: col-resize;
+}
+
+.right-panel {
+  flex: 1;
+  padding: 1rem;
 }
 
 .file-group {

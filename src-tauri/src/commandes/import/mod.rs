@@ -63,12 +63,12 @@ pub fn new_import_labels(
     let dossier_labels = dossier_data.join("labels");
 
     if fs::exists(&dossier_labels).unwrap_or(false){
-    let fichiers: Vec<PathBuf> = fs::read_dir(&dossier_labels)?
-        .filter_map(|entree| entree.ok())
-        .map(|entree| entree.path())
-        .filter(|chemin| chemin.is_file())
-        .filter(|chemin| chemin.extension().and_then(|e| e.to_str()) == Some("csv"))
-        .collect();
+        let fichiers: Vec<PathBuf> = fs::read_dir(&dossier_labels)?
+            .filter_map(|entree| entree.ok())
+            .map(|entree| entree.path())
+            .filter(|chemin| chemin.is_file())
+            .filter(|chemin| chemin.extension().and_then(|e| e.to_str()) == Some("csv"))
+            .collect();
     
 
         for fichier in &fichiers {
