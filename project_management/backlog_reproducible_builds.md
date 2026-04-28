@@ -8,6 +8,8 @@ Make SONAR builds reproducible by controlling dependency resolution, toolchain v
 
 ### 1. Pin the Rust toolchain exactly
 
+Status: Done
+
 - Update `src-tauri/rust-toolchain.toml` to use a fixed Rust version instead of `stable`.
 - Keep `src-tauri/Cargo.toml` aligned with the same Rust version.
 
@@ -17,6 +19,8 @@ Why:
 - ensures the same source is built with the same compiler version
 
 ### 2. Pin Deno everywhere
+
+Status: Done
 
 - Use the same exact Deno version in CI, local build documentation, and container builds.
 - Remove placeholder or floating Deno version references.
@@ -28,6 +32,8 @@ Why:
 
 ### 3. Keep Cargo vendoring enforced
 
+Status: Done
+
 - Keep `src-tauri/.cargo/config.toml` pointing to vendored sources.
 - Ensure `src-tauri/vendor/` is always committed and refreshed intentionally.
 
@@ -38,6 +44,8 @@ Why:
 
 ### 4. Keep frontend installs frozen
 
+Status: Done
+
 - Keep `deno.json` and `deno.lock` authoritative.
 - Fail CI if install would modify the lockfile.
 
@@ -47,6 +55,8 @@ Why:
 - makes rebuild inputs stable
 
 ### 5. Make the Docker build deterministic
+
+Status: Partially Done
 
 - Replace `rust:latest` with a pinned image or digest.
 - Stop downloading bootstrap tools from floating branches like GitHub `master`.
@@ -59,6 +69,8 @@ Why:
 
 ### 6. Pin or snapshot OS package dependencies
 
+Status: Partially Done
+
 - Pin apt package versions where practical, or build from a known image snapshot.
 - Document the expected Linux packaging dependencies.
 
@@ -68,6 +80,8 @@ Why:
 - release packaging often depends on exact system library behavior
 
 ### 7. Apply reproducibility flags in real release builds
+
+Status: Not Done
 
 - Reuse the logic already present in `security/repro-check.sh`.
 - Add `SOURCE_DATE_EPOCH` to release-oriented build steps.
@@ -79,6 +93,8 @@ Why:
 - removes local machine path leakage from build outputs
 
 ### 8. Enforce reproducibility verification in CI
+
+Status: Not Done
 
 - Run `security/repro-check.sh` on release candidates or tags.
 - Fail the pipeline when repeated builds are not identical.
@@ -92,6 +108,8 @@ Why:
 
 ### 9. Publish SHA256 hashes for release artifacts
 
+Status: Not Done
+
 - Generate hashes for binaries and packaged artifacts.
 - Publish them with release outputs.
 
@@ -102,6 +120,8 @@ Why:
 
 ### 10. Separate signing from reproducibility validation
 
+Status: Not Done
+
 - Validate reproducibility on unsigned artifacts first.
 - Apply signing after reproducibility checks pass.
 
@@ -111,6 +131,8 @@ Why:
 - signed outputs are not the right first-level reproducibility target
 
 ### 11. Define the exact reproducibility target
+
+Status: Not Done
 
 - Decide whether the target is:
   - same binary on same machine
@@ -125,6 +147,8 @@ Why:
 
 ### 12. Document the canonical build environment
 
+Status: Partially Done
+
 - Write down the expected OS, toolchain, Deno version, Rust version, package dependencies, and release process.
 
 Why:
@@ -136,6 +160,8 @@ Why:
 
 ### 13. Reduce moving targets in GitHub Actions
 
+Status: Partially Done
+
 - Replace `macos-latest` and `windows-latest` where possible with more stable runner choices or documented runner assumptions.
 - Review floating action references and pin them more tightly if needed.
 
@@ -146,6 +172,8 @@ Why:
 
 ### 14. Extend reproducibility checks to packaged outputs
 
+Status: Not Done
+
 - Start with the Linux binary and `.deb`.
 - Later extend to Windows and macOS packaging if feasible.
 
@@ -155,6 +183,8 @@ Why:
 - installer formats usually introduce extra nondeterminism
 
 ### 15. Add provenance alongside reproducibility
+
+Status: Not Done
 
 - Keep artifact signing and provenance generation as a separate but related track.
 - Use them to prove origin after reproducibility is under control.
