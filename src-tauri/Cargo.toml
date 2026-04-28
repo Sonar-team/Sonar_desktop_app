@@ -6,6 +6,7 @@ authors = ["Cyprien Avico <akmot9@proton.me>"]
 edition = "2024"
 repository = "https://github.com/Sonar-team/Sonar_desktop_app"
 license = "AGPL-3.0"
+rust-version = "1.95.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 
