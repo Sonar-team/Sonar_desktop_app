@@ -34,19 +34,20 @@ fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
 }
 
 #[tauri::command(async)]
-pub fn import_csv_files(
+pub fn import_label_files(
     csv_paths: Vec<String>,
     app: tauri::AppHandle,
 ) -> Result<(), tauri::Error> {
-    let dossier_data = app.path().app_data_dir().unwrap();
+    let dossier_data = app.path().app_data_dir()?;
     let dossier_labels = dossier_data.join("labels");
 
     if !fs::exists(&dossier_labels).unwrap_or(false){
         fs::create_dir(&dossier_labels)?;
     }
+
     for csv_path in csv_paths {
         let chemin = Path::new(&csv_path);
-        fs::copy(&csv_path,&dossier_labels.join(chemin.file_name().unwrap()))?;
+        fs::copy(&csv_path, &dossier_labels.join(chemin.file_name().unwrap()))?;
         println!("copie effectuée");
     }
 

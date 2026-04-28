@@ -12,7 +12,7 @@
         <label for="packetFiles"></label>
         <div v-if="mode === 'csv'" class="file-group">
           <button class="btn" @click="addCsvFiles" :disabled="isConverting">
-          Ajouter des fichiers {{ mode }}
+          Ajouter des fichiers de label
           </button>
           <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
             Effacer
@@ -136,12 +136,12 @@ export default defineComponent({
     async convertCsv() {
       if (this.packetFiles.length === 0) return;
 
-      info('import_csv_files: ' + this.packetFiles);
+      info('import_label_files: ' + this.packetFiles);
 
       this.isConverting = true;
 
       try {
-        await invoke('import_csv_files', { csvPaths: this.packetFiles });
+        await invoke('import_label_files', { csvPaths: this.packetFiles });
         info('réponse invoke');
         this.$emit('update:visible', false);
       } catch (err) {
