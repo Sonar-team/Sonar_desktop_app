@@ -10,14 +10,14 @@ jobs:
     permissions:
       contents: write
     strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: "macos-latest"
+        fail-fast: false
+        matrix:
+          include:
+          - platform: "macos-13"
             args: "--target x86_64-apple-darwin"
           - platform: "ubuntu-22.04"
             args: ""
-          - platform: "windows-latest"
+          - platform: "windows-2022"
             args: ""
 
     runs-on: ${{ matrix.platform }}
@@ -29,10 +29,11 @@ jobs:
         with:
           deno-version: v2.7.13
 
-      - name: install Rust stable
+      - name: install Rust pinned version 1.95.0
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'x86_64-apple-darwin' || '' }}
+          toolchain: 1.95.0
+          targets: ${{ matrix.platform == 'macos-13' && 'x86_64-apple-darwin' || '' }}
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
