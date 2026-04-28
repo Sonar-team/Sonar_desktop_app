@@ -1,5 +1,21 @@
 # Changelog
 
+## **[3.12.3] – 2026-04-28**
+## 🧪 Build / Reproductibilité
+
+* Verrouillage explicite de la toolchain Rust sur **1.95.0**.
+* Ajout de `rust-version = "1.95.0"` dans le manifest Cargo.
+* Verrouillage de **Deno 2.7.13** dans le pipeline de release et dans le build Docker.
+* Déclaration de la version cible de **Node 24.14.0** dans `package.json`.
+* Remplacement du bootstrap flottant Node/Deno dans Docker par des versions explicitement fixées.
+* Ajout d’un `.dockerignore` pour stabiliser et réduire fortement le contexte de build Docker.
+* Stabilisation partielle des runners GitHub Actions avec des labels plus explicites pour macOS et Windows.
+
+## 🛠 Corrections
+
+* Correction de la condition du target macOS dans le workflow de publication après changement du runner.
+* Mise à jour du backlog et de la revue de sprint liés à l’objectif de build reproductible.
+
 ## **[3.10.0] – 2026-01-08**
 ## ✨ Fonctionnalités
 
