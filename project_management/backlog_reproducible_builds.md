@@ -81,11 +81,12 @@ Why:
 
 ### 7. Apply reproducibility flags in real release builds
 
-Status: Not Done
+Status: Done
 
 - Reuse the logic already present in `security/repro-check.sh`.
 - Add `SOURCE_DATE_EPOCH` to release-oriented build steps.
 - Add path remapping such as `--remap-path-prefix`.
+- Validate the release-style build path on `ubuntu-22.04`, `windows-2022`, and `macos-14`.
 
 Why:
 
