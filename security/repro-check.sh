@@ -5,7 +5,7 @@ PROJECT_ROOT="${PROJECT_ROOT:-$(pwd)}"
 APP_NAME="${APP_NAME:-sonar}"
 TAURI_BUILD_CMD="${TAURI_BUILD_CMD:-deno task tauri build}"
 BIN_PATH="${BIN_PATH:-src-tauri/target/release/$APP_NAME}"
-DEB_PATH="${DEB_PATH:-src-tauri/target/release/bundle/deb/${APP_NAME}_3.12.2_amd64.deb}"
+DEB_PATH="${DEB_PATH:-src-tauri/target/release/bundle/deb/${APP_NAME}_3.12.3_amd64.deb}"
 WORKDIR="${WORKDIR:-/tmp/repro-check-${APP_NAME}}"
 FIXED_EPOCH="${FIXED_EPOCH:-1700000000}"
 
@@ -47,14 +47,11 @@ run_build() {
   clean_outputs
 
   if [[ "$mode" == "with-flags" ]]; then
-    export SOURCE_DATE_EPOCH="$FIXED_EPOCH"
-    export RUSTFLAGS="--remap-path-prefix=${PROJECT_ROOT}=/workspace"
+    SOURCE_DATE_EPOCH="$FIXED_EPOCH" \
+      deno run -A ./security/repro-env.ts run bash -lc "$TAURI_BUILD_CMD"
   else
-    unset SOURCE_DATE_EPOCH || true
-    unset RUSTFLAGS || true
+    bash -lc "$TAURI_BUILD_CMD"
   fi
-
-  bash -lc "$TAURI_BUILD_CMD"
 
   if [[ ! -f "$BIN_PATH" ]]; then
     err "Binaire introuvable : $BIN_PATH"

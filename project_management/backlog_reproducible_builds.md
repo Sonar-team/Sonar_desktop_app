@@ -176,6 +176,7 @@ Status: Not Done
 
 - Start with the Linux binary and `.deb`.
 - Later extend to Windows and macOS packaging if feasible.
+- Tracking issue: `#107` Debian package is not reproducible across rebuilds.
 
 Why:
 

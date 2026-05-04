@@ -13,7 +13,7 @@ jobs:
         fail-fast: false
         matrix:
           include:
-          - platform: "macos-13"
+          - platform: "macos-14"
             args: "--target x86_64-apple-darwin"
           - platform: "ubuntu-22.04"
             args: ""
@@ -43,6 +43,10 @@ jobs:
 
       - name: install frontend dependencies deterministically
         run: deno install --frozen
+
+      - name: configure reproducible build environment
+        shell: bash
+        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
 
       - name: Build and package with Tauri
         uses: tauri-apps/tauri-action@v0
