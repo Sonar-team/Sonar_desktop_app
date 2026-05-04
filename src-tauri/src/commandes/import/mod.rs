@@ -34,6 +34,30 @@ fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
 }
 
 #[tauri::command(async)]
+pub fn labels_file_list(
+    app: tauri::AppHandle,
+) -> Result<Vec<String>, tauri::Error>{
+    let dossier_data = app.path().app_data_dir()?;
+    let dossier_labels = dossier_data.join("labels");
+
+    if fs::exists(&dossier_labels).unwrap_or(false){
+        let mut fichiers: Vec<String> = fs::read_dir(&dossier_labels)?
+            .filter_map(|entree| entree.ok())
+            .map(|entree| entree.path())
+            .filter(|chemin| chemin.is_file())
+            .filter(|chemin| chemin.extension().and_then(|e| e.to_str()) == Some("csv"))
+            .filter_map(|chemin| chemin.file_name()?.to_str().map(String::from))
+            .collect();
+
+        fichiers.sort();
+
+        return Ok(fichiers);
+    }
+
+    Ok(vec![])
+}
+
+#[tauri::command(async)]
 pub fn import_label_files(
     csv_paths: Vec<String>,
     app: tauri::AppHandle,

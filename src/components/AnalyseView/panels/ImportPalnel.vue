@@ -1,23 +1,27 @@
-<script setup lang="ts">
-  const checkedNames = ref(['Jack'])
-</script>
-
-
 <template>
   <div class="container">
     <div class="center-container">
 
       <div class="left-panel">
-        <input type="checkbox" id="jack" value="Jack" v-model="checkedNames">
-        <label for="jack">Jack</label>
-        <input type="checkbox" id="john" value='John' v-model="checkedNames">
-        <label for="john">John</label>
-        <input type="checkbox" id="mike" value="Mike" v-model="checkedNames">
-        <label for="mike">Mike</label>
-        <p>Checked names: {{ checkedNames }}</p>
 
+        <ul class="file-list">
+          <li v-for="(file, index) in fichiers" :key="index">
+            <label :for="String(index)">
+              <input type="checkbox" v-model="selectedFiles" :value="file" :id="String(index)">
+              <span>{{ file }}</span>
+            </label>
+          </li>
+          <button 
+          @click="addToPacketFiles"
+          class="btn btn-open"
+          :disabled="selectedFiles.length === 0"
+          >
+            Ouvrir
+          </button>
+        </ul>
       </div>
       <div class="separateur"></div>
+
       <div class="right-panel">
         <!-- Overlay de chargement -->
         <div class="overlay" v-if="isConverting">
@@ -66,13 +70,12 @@
           Ouvrir
         </button>
       </div>
+    </div>
 
     </div>
-  </div>
 </template>
 
 <script lang="ts">
-import { ref } from 'vue'
 import { defineComponent } from 'vue';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke, Channel } from '@tauri-apps/api/core';
@@ -80,6 +83,7 @@ import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
 import { displayCaptureError } from '../../../errors/capture';
+import { appDataDir } from '@tauri-apps/api/path'
 
 
 export default defineComponent({
@@ -94,6 +98,8 @@ export default defineComponent({
   data() {
     return {
       packetFiles: [] as string[],
+      fichiers: [],
+      selectedFiles: [],
       isConverting: false,
     };
   },
@@ -116,6 +122,13 @@ export default defineComponent({
       return this.addFiles('Label File', ['csv']);
     },
 
+    async addToPacketFiles(){
+      const appDir = await appDataDir()
+      const chemins = this.selectedFiles.map(f => `${appDir}/labels/${f}`)
+      this.packetFiles.push(...chemins);
+      this.convertCsv();
+    },
+
     async addFiles(name : string, extensions : string[]) {
       const files = await open({
         multiple: true,
@@ -130,10 +143,6 @@ export default defineComponent({
 
     clearFiles() {
       this.packetFiles = [];
-    },
-
-    exit(){
-      this.$emit('update:visible', false)
     },
 
     async convertPcap() {
@@ -176,7 +185,7 @@ export default defineComponent({
     },
   },
 
-  mounted() {
+  async mounted() {
     this.captureStore.onStarted(() => {
       info("started hearded");
       this.captureStore.updateStatus({ is_running: true });
@@ -186,6 +195,8 @@ export default defineComponent({
       info("finished hearded");
       this.captureStore.updateStatus({ is_running: false });
     });
+
+    this.fichiers = await invoke('labels_file_list')
   },
 });
 </script>
@@ -207,9 +218,9 @@ export default defineComponent({
 .center-container {
   position: relative;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   background-color: #1e1e2e;
   border-radius: 8px;
   padding: 2rem;
@@ -219,19 +230,25 @@ export default defineComponent({
 }
 
 .left-panel {
-  width: 30%;
+  width: 50%;
   padding: 1rem;
+   display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .separateur {
   width: 2px;
   background-color: #ccc;
-  cursor: col-resize;
+  align-self: stretch; /* prend toute la hauteur du conteneur */
 }
 
 .right-panel {
-  flex: 1;
+  width: 50%;
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .file-group {
