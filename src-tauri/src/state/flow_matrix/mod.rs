@@ -235,10 +235,7 @@ use std::time::UNIX_EPOCH;
 
 use crate::state::capture::capture_handle::messages::capture::PacketOwnedStats;
 
-pub fn timeval_to_systemtime(
-    tv_sec: impl Into<i64>,
-    tv_usec: impl Into<i64>,
-) -> SystemTime {
+pub fn timeval_to_systemtime(tv_sec: impl Into<i64>, tv_usec: impl Into<i64>) -> SystemTime {
     let tv_sec = tv_sec.into();
     let tv_usec = tv_usec.into();
 

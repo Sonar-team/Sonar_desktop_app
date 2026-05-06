@@ -10,9 +10,9 @@ jobs:
     permissions:
       contents: write
     strategy:
-        fail-fast: false
-        matrix:
-          include:
+      fail-fast: false
+      matrix:
+        include:
           - platform: "macos-14"
             args: "--target x86_64-apple-darwin"
           - platform: "ubuntu-22.04"

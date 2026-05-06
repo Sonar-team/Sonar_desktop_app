@@ -128,7 +128,9 @@ async function main(): Promise<void> {
       return;
     }
     default:
-      throw new Error("Usage: deno run -A security/repro-env.ts <github-env|run ...>");
+      throw new Error(
+        "Usage: deno run -A security/repro-env.ts <github-env|run ...>",
+      );
   }
 }
 

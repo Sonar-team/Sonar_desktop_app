@@ -1,41 +1,51 @@
 # Changelog
 
 ## **[3.12.3] – 2026-04-28**
+
 ## 🧪 Build / Reproductibilité
 
-* Verrouillage explicite de la toolchain Rust sur **1.95.0**.
-* Ajout de `rust-version = "1.95.0"` dans le manifest Cargo.
-* Verrouillage de **Deno 2.7.13** dans le pipeline de release et dans le build Docker.
-* Déclaration de la version cible de **Node 24.14.0** dans `package.json`.
-* Remplacement du bootstrap flottant Node/Deno dans Docker par des versions explicitement fixées.
-* Ajout d’un `.dockerignore` pour stabiliser et réduire fortement le contexte de build Docker.
-* Stabilisation partielle des runners GitHub Actions avec des labels plus explicites pour macOS et Windows.
+- Verrouillage explicite de la toolchain Rust sur **1.95.0**.
+- Ajout de `rust-version = "1.95.0"` dans le manifest Cargo.
+- Verrouillage de **Deno 2.7.13** dans le pipeline de release et dans le build
+  Docker.
+- Déclaration de la version cible de **Node 24.14.0** dans `package.json`.
+- Remplacement du bootstrap flottant Node/Deno dans Docker par des versions
+  explicitement fixées.
+- Ajout d’un `.dockerignore` pour stabiliser et réduire fortement le contexte de
+  build Docker.
+- Stabilisation partielle des runners GitHub Actions avec des labels plus
+  explicites pour macOS et Windows.
 
 ## 🛠 Corrections
 
-* Correction de la condition du target macOS dans le workflow de publication après changement du runner.
-* Mise à jour du backlog et de la revue de sprint liés à l’objectif de build reproductible.
+- Correction de la condition du target macOS dans le workflow de publication
+  après changement du runner.
+- Mise à jour du backlog et de la revue de sprint liés à l’objectif de build
+  reproductible.
 
 ## **[3.10.0] – 2026-01-08**
+
 ## ✨ Fonctionnalités
 
-* Ajout du parsing Modbus/TCP au niveau applicatif, permettant l’analyse et la restitution des communications industrielles OT.
+- Ajout du parsing Modbus/TCP au niveau applicatif, permettant l’analyse et la
+  restitution des communications industrielles OT.
 
-* Introduction d’un mode headless / CLI, permettant l’exécution de SONAR sans interface graphique (usage automatisé, serveurs, environnements contraints).
+- Introduction d’un mode headless / CLI, permettant l’exécution de SONAR sans
+  interface graphique (usage automatisé, serveurs, environnements contraints).
 
 ## ✨ Améliorations
 
-* Mise à jour et amélioration de l’installer Npcap pour Windows.
+- Mise à jour et amélioration de l’installer Npcap pour Windows.
 
-* Mise à jour du release log et du changelog.
+- Mise à jour du release log et du changelog.
 
 ## **[3.9.6] – 2025-12-22**
 
 ## 🧪 Tests / Packaging
 
-* Tests et ajustements successifs des icônes de l’installer NSIS.
-* Corrections de format d’images (PNG → BMP) pour compatibilité NSIS.
-* Ajustements visuels et techniques des ressources d’installation.
+- Tests et ajustements successifs des icônes de l’installer NSIS.
+- Corrections de format d’images (PNG → BMP) pour compatibilité NSIS.
+- Ajustements visuels et techniques des ressources d’installation.
 
 ---
 
@@ -43,17 +53,18 @@
 
 ## ✨ Améliorations
 
-* Migration complète de l’installer Windows vers **NSIS**.
-* Ajout de **Npcap** dans les ressources de l’installer.
-* Support de l’installation de Npcap directement depuis l’installer.
-* Ajout du support de la langue **française** dans NSIS.
-* Nettoyage et stabilisation du pipeline d’installation Windows.
+- Migration complète de l’installer Windows vers **NSIS**.
+- Ajout de **Npcap** dans les ressources de l’installer.
+- Support de l’installation de Npcap directement depuis l’installer.
+- Ajout du support de la langue **française** dans NSIS.
+- Nettoyage et stabilisation du pipeline d’installation Windows.
 
 ## 🛠 Corrections
 
-* Correction de la détection de Npcap dans l’installer.
-* Corrections multiples sur les images utilisées par NSIS (format, compatibilité).
-* Corrections mineures sur le bundling et les scripts d’installation.
+- Correction de la détection de Npcap dans l’installer.
+- Corrections multiples sur les images utilisées par NSIS (format,
+  compatibilité).
+- Corrections mineures sur le bundling et les scripts d’installation.
 
 ---
 
@@ -61,8 +72,8 @@
 
 ## 🛠 Corrections
 
-* Suppression du mode **offline install** sur Windows.
-* Ajustements liés au bundling Windows.
+- Suppression du mode **offline install** sur Windows.
+- Ajustements liés au bundling Windows.
 
 ---
 
@@ -70,19 +81,20 @@
 
 ## ✨ Améliorations
 
-* Mise à jour de la version de l’application.
+- Mise à jour de la version de l’application.
 
 ## **[3.9.2] – 2025-12-03**
 
 ## ✨ Améliorations
 
-* Mise à jour de la version de l’application (`update version`).
-* Optimisation de la gestion CPU.
+- Mise à jour de la version de l’application (`update version`).
+- Optimisation de la gestion CPU.
 
 ## 🛠 Corrections
 
-* Correction du `.gitignore`.
-* Ajustements mineurs dans les statistiques de flux (clarification des logs, simplification de `update_flow`).
+- Correction du `.gitignore`.
+- Ajustements mineurs dans les statistiques de flux (clarification des logs,
+  simplification de `update_flow`).
 
 ---
 
@@ -90,11 +102,11 @@
 
 ## ✨ Améliorations
 
-* Mise à jour des dépendances.
+- Mise à jour des dépendances.
 
 ## 🖼 Interface
 
-* Correction de l'image CPU affichée dans la top bar.
+- Correction de l'image CPU affichée dans la top bar.
 
 ---
 
@@ -102,7 +114,7 @@
 
 ## ✨ Fonctionnalités
 
-* Ajout d’un système de **loading** lors de l’import PCAP.
+- Ajout d’un système de **loading** lors de l’import PCAP.
 
 ---
 
@@ -110,7 +122,7 @@
 
 ## ✨ Améliorations
 
-* Ajout du tag pour la version.
+- Ajout du tag pour la version.
 
 ---
 
@@ -118,8 +130,8 @@
 
 ## ✨ Fonctionnalités
 
-* **Amélioration majeure de l’import PCAP**.
-* **Refonte du graph processing** pour de meilleures performances et stabilité.
+- **Amélioration majeure de l’import PCAP**.
+- **Refonte du graph processing** pour de meilleures performances et stabilité.
 
 ---
 
@@ -127,7 +139,7 @@
 
 ## ✨ Améliorations
 
-* Mise à jour de la crate `packet-parser`.
+- Mise à jour de la crate `packet-parser`.
 
 ---
 
@@ -135,9 +147,9 @@
 
 ## ✨ Améliorations
 
-* Mise à jour de la version de l'application.
-* Amélioration des logs de démarrage.
-* Informations système enrichies.
+- Mise à jour de la version de l'application.
+- Amélioration des logs de démarrage.
+- Informations système enrichies.
 
 ---
 
@@ -145,8 +157,8 @@
 
 ## ✨ Améliorations
 
-* Mise à jour du parser réseau (`packet-parser`).
-* Stabilité accrue dans le traitement des protocoles.
+- Mise à jour du parser réseau (`packet-parser`).
+- Stabilité accrue dans le traitement des protocoles.
 
 ---
 
@@ -154,11 +166,11 @@
 
 ## ✨ Fonctionnalités
 
-* Ajout du **sélecteur d'interface réseau personnalisé**.
+- Ajout du **sélecteur d'interface réseau personnalisé**.
 
 ## 🎨 Interface
 
-* Ajout d’une **légende flottante** sur le graphe réseau.
+- Ajout d’une **légende flottante** sur le graphe réseau.
 
 ---
 
@@ -166,7 +178,7 @@
 
 ## 🎨 Interface
 
-* Ajout d’animations pour les boutons de la barre supérieure.
+- Ajout d’animations pour les boutons de la barre supérieure.
 
 ---
 
@@ -174,8 +186,8 @@
 
 ## ✨ Améliorations
 
-* Mise à jour des dépendances.
-* Mise à jour de la documentation.
+- Mise à jour des dépendances.
+- Mise à jour de la documentation.
 
 ---
 
@@ -183,11 +195,11 @@
 
 ## ✨ Fonctionnalités
 
-* Ajout d’un **système de filtres amélioré** pour la matrice.
+- Ajout d’un **système de filtres amélioré** pour la matrice.
 
 ## 🛠 Corrections
 
-* Nettoyage de code inutilisé.
+- Nettoyage de code inutilisé.
 
 ---
 
@@ -195,8 +207,8 @@
 
 ## ✨ Améliorations
 
-* Mise à jour des dépendances.
-* Ajustements mineurs du rendu.
+- Mise à jour des dépendances.
+- Ajustements mineurs du rendu.
 
 ---
 
@@ -204,11 +216,11 @@
 
 ## ✨ Fonctionnalités
 
-* Ajout de la **gestion des labels** sur les nœuds du graphe.
+- Ajout de la **gestion des labels** sur les nœuds du graphe.
 
 ## 🎨 Interface
 
-* Améliorations visuelles (zoom, level, clarity).
+- Améliorations visuelles (zoom, level, clarity).
 
 ---
 
@@ -216,7 +228,7 @@
 
 ## 🛠 Technique
 
-* Ajustements internes sur le format des données.
+- Ajustements internes sur le format des données.
 
 ---
 
@@ -224,7 +236,7 @@
 
 ## ✨ Améliorations
 
-* Mise à jour de la gestion des timestamps (`timeval`).
+- Mise à jour de la gestion des timestamps (`timeval`).
 
 ---
 
@@ -232,7 +244,7 @@
 
 ## ✨ Améliorations
 
-* Migration vers **Tauri 2.9**.
+- Migration vers **Tauri 2.9**.
 
 ---
 
@@ -240,7 +252,7 @@
 
 ## ✨ Fonctionnalités
 
-* Ajout de la **fonction de stop forcé** pour la capture réseau.
+- Ajout de la **fonction de stop forcé** pour la capture réseau.
 
 ---
 
@@ -248,7 +260,7 @@
 
 ## ✨ Fonctionnalités
 
-* Améliorations multiples de stabilité et configuration.
+- Améliorations multiples de stabilité et configuration.
 
 ---
 
@@ -256,7 +268,7 @@
 
 ## 🛠 Corrections
 
-* Corrections sur le cycle de release.
+- Corrections sur le cycle de release.
 
 ---
 
@@ -264,8 +276,8 @@
 
 ## ✨ Fonctionnalités
 
-* Refonte du graphe réseau.
-* Suppression de l'ancien système de graphe pour un modèle plus robuste.
+- Refonte du graphe réseau.
+- Suppression de l'ancien système de graphe pour un modèle plus robuste.
 
 ---
 

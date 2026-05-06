@@ -59,12 +59,14 @@ export const useCaptureStore = defineStore("capture", {
           case "graph": {
             const update = msg.data.update as GraphUpdate;
             for (const cb of this.graphUpdateListeners) cb(update);
-            break;}
+            break;
+          }
           case "graphSnapshot": {
             const graphData = msg.data.graph_data as GraphData;
             console.log("[CaptureStore] GraphSnapshot reçu");
             for (const cb of this.graphSnapshotListeners) cb(graphData);
-            break;}
+            break;
+          }
         }
       };
     },

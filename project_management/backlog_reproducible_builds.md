@@ -2,7 +2,8 @@
 
 ## Goal
 
-Make SONAR builds reproducible by controlling dependency resolution, toolchain versions, build environment inputs, and release verification.
+Make SONAR builds reproducible by controlling dependency resolution, toolchain
+versions, build environment inputs, and release verification.
 
 ## Must Have
 
@@ -10,7 +11,8 @@ Make SONAR builds reproducible by controlling dependency resolution, toolchain v
 
 Status: Done
 
-- Update `src-tauri/rust-toolchain.toml` to use a fixed Rust version instead of `stable`.
+- Update `src-tauri/rust-toolchain.toml` to use a fixed Rust version instead of
+  `stable`.
 - Keep `src-tauri/Cargo.toml` aligned with the same Rust version.
 
 Why:
@@ -22,7 +24,8 @@ Why:
 
 Status: Done
 
-- Use the same exact Deno version in CI, local build documentation, and container builds.
+- Use the same exact Deno version in CI, local build documentation, and
+  container builds.
 - Remove placeholder or floating Deno version references.
 
 Why:
@@ -71,7 +74,8 @@ Why:
 
 Status: Partially Done
 
-- Pin apt package versions where practical, or build from a known image snapshot.
+- Pin apt package versions where practical, or build from a known image
+  snapshot.
 - Document the expected Linux packaging dependencies.
 
 Why:
@@ -86,7 +90,8 @@ Status: Done
 - Reuse the logic already present in `security/repro-check.sh`.
 - Add `SOURCE_DATE_EPOCH` to release-oriented build steps.
 - Add path remapping such as `--remap-path-prefix`.
-- Validate the release-style build path on `ubuntu-22.04`, `windows-2022`, and `macos-14`.
+- Validate the release-style build path on `ubuntu-22.04`, `windows-2022`, and
+  `macos-14`.
 
 Why:
 
@@ -150,7 +155,8 @@ Why:
 
 Status: Partially Done
 
-- Write down the expected OS, toolchain, Deno version, Rust version, package dependencies, and release process.
+- Write down the expected OS, toolchain, Deno version, Rust version, package
+  dependencies, and release process.
 
 Why:
 
@@ -163,8 +169,10 @@ Why:
 
 Status: Partially Done
 
-- Replace `macos-latest` and `windows-latest` where possible with more stable runner choices or documented runner assumptions.
-- Review floating action references and pin them more tightly if needed.
+- Replace `macos-latest` and `windows-latest` where possible with more stable
+  runner choices or documented runner assumptions.
+- Review floating action references and pin them more tightly if needed (with a
+  hash).
 
 Why:
 
@@ -188,7 +196,8 @@ Why:
 
 Status: Not Done
 
-- Keep artifact signing and provenance generation as a separate but related track.
+- Keep artifact signing and provenance generation as a separate but related
+  track.
 - Use them to prove origin after reproducibility is under control.
 
 Why:
@@ -207,12 +216,78 @@ Why:
 7. Publish hashes and document the canonical rebuild process.
 8. Extend validation to packaged artifacts and provenance.
 
-## Definition of Done
+## Sprint Outcome
+
+The current sprint can reasonably be considered successful when:
+
+- release builds use pinned toolchains and locked dependencies
+- reproducibility flags are applied in the real release path
+- the release-style CI build works on `ubuntu-22.04`, `windows-2022`, and
+  `macos-14`
+- a lightweight CI check protects the reproducibility environment wiring
+
+This sprint outcome is now effectively achieved, but it is not the same thing as
+the full reproducible-build objective being complete.
+
+## Next Sprint Focus
+
+The next delivery focus should shift toward supply-chain trust and release
+authenticity:
+
+- sign release artifacts in CI
+- generate and publish provenance for release builds
+- generate and publish an SBOM for release outputs
+- keep reproducibility verification as the next enforcement step rather than
+  mixing signing into the reproducibility target
+
+Guiding rule:
+
+- reproducibility should target unsigned artifacts first
+- signing, provenance, and SBOM should prove origin and content after the build
+  completes
+
+## User Stories
+
+### Signing
+
+- As a SONAR user, I want release artifacts to be signed so that I can verify
+  they were produced by the official project pipeline.
+- As a maintainer, I want signing to happen in CI so that release trust does not
+  depend on manual local steps.
+- As a maintainer, I want signing keys or identities to be managed through CI
+  secrets or trusted signing infrastructure so that releases remain auditable.
+
+### Provenance
+
+- As a security reviewer, I want provenance attached to each release so that I
+  can see which workflow, commit, and builder produced the artifact.
+- As a downstream integrator, I want provenance generated automatically in CI so
+  that I can verify build origin without trusting a handwritten release note.
+- As a maintainer, I want provenance to be published alongside the artifact so
+  that origin verification is part of the release itself.
+
+### SBOM
+
+- As a SONAR user, I want an SBOM for each release so that I can understand
+  which components and dependencies are included.
+- As a security team member, I want the SBOM generated from CI for the exact
+  release artifact so that dependency inventory matches what was actually
+  shipped.
+- As a maintainer, I want the SBOM published with the release so that
+  vulnerability review and compliance checks can be done without rebuilding
+  locally.
+
+## Objective Done
 
 The reproducible-build objective can be considered fulfilled when:
 
 - the toolchain is fully pinned
 - dependency resolution is locked and vendored where required
 - the release build environment is stable and documented
-- repeated CI builds of the same revision produce identical target artifacts for the chosen scope
+- repeated CI builds of the same revision produce identical target artifacts for
+  the chosen scope
 - reproducibility checks are enforced automatically
+
+This objective remains broader than the current sprint and should stay separate
+from signing, provenance, and SBOM deliverables, even though all of them
+contribute to overall release trust.
