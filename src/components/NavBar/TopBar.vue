@@ -59,7 +59,6 @@ export default {
     return {
       showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
       shortcuts: [] as string[],
-      showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
     };
   },
   mounted() {

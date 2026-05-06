@@ -5,21 +5,22 @@
       <div class="left-panel">
 
         <ul class="file-list">
-          <li v-for="(file, index) in fichiers" :key="index">
+          <li v-for="([file, coche], index) in fichiers" :key="index">
             <label :for="String(index)">
               <input type="checkbox" v-model="selectedFiles" :value="file" :id="String(index)">
               <span>{{ file }}</span>
+              <button class="image-btn" @click.prevent="RemoveFile(file)" title="Supprimer">🗑️</button>
             </label>
           </li>
-          <button 
-          @click="addToPacketFiles"
-          class="btn btn-open"
-          :disabled="selectedFiles.length === 0"
-          >
-            Ouvrir
-          </button>
         </ul>
+        <button 
+          @click="addToLabelsFilesList"
+          class="btn btn-open"
+          >
+            Valider
+        </button>
       </div>
+      
       <div class="separateur"></div>
 
       <div class="right-panel">
@@ -83,7 +84,6 @@ import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
 import { displayCaptureError } from '../../../errors/capture';
-import { appDataDir } from '@tauri-apps/api/path'
 
 
 export default defineComponent({
@@ -98,8 +98,9 @@ export default defineComponent({
   data() {
     return {
       packetFiles: [] as string[],
-      fichiers: [],
-      selectedFiles: [],
+      fichiers: [] as [string, boolean][],
+      selectedFiles: [] as string[],
+      filesNames: [] as [string, boolean][],
       isConverting: false,
     };
   },
@@ -114,19 +115,31 @@ export default defineComponent({
   },
 
   methods: {
+    async addToLabelsFilesList(){
+
+      this.packetFiles.push(...this.selectedFiles);
+
+      info('packetFiles : ' + this.packetFiles);
+
+      try {
+        await invoke('add_to_label_file_list', { pathsList: this.packetFiles});
+        info('réponse invoke');
+        this.$emit('update:visible', false);
+      } catch (err) {
+        displayCaptureError(err);
+      } finally {
+        this.isConverting = false;
+      }
+
+      this.packetFiles = [];
+    },
+
     addPcapFiles() {
       return this.addFiles('Capture File', ['pcap', 'pcapng', 'cap']);
     },
 
     addCsvFiles() {
       return this.addFiles('Label File', ['csv']);
-    },
-
-    async addToPacketFiles(){
-      const appDir = await appDataDir()
-      const chemins = this.selectedFiles.map(f => `${appDir}/labels/${f}`)
-      this.packetFiles.push(...chemins);
-      this.convertCsv();
     },
 
     async addFiles(name : string, extensions : string[]) {
@@ -138,6 +151,22 @@ export default defineComponent({
       if (files) {
         const list = Array.isArray(files) ? files : [files];
         this.packetFiles.push(...list);
+        this.filesNames = files.map((chemin => [chemin.split(/[\\/]/).pop() ?? chemin, true]));
+        info('' + this.filesNames);
+      }
+    },
+
+    async RemoveFile(fileRemoved: string) {
+      info('fileRemoved : ' + fileRemoved);
+      try {
+        await invoke('remove_labels_file', { csvFile: fileRemoved});
+        info('réponse invoke');
+        this.fichiers = this.fichiers.filter(([nom]) => nom !== fileRemoved);
+        this.selectedFiles = this.selectedFiles.filter((nom) => nom !== fileRemoved);
+      } catch (err) {
+        displayCaptureError(err);
+      } finally {
+        this.isConverting = false;
       }
     },
 
@@ -164,6 +193,8 @@ export default defineComponent({
       } finally {
         this.isConverting = false;
       }
+
+      this.packetFiles = [];
     },
 
     async convertCsv() {
@@ -176,12 +207,15 @@ export default defineComponent({
       try {
         await invoke('import_label_files', { csvPaths: this.packetFiles });
         info('réponse invoke');
-        this.$emit('update:visible', false);
+        this.fichiers.push(...this.filesNames.filter(([nom]) => !this.fichiers.map(([nom]) => nom).includes(nom)));
+        this.fichiers.sort();
+        this.selectedFiles.push(...this.filesNames.map(([nom]) => nom));
       } catch (err) {
         displayCaptureError(err);
       } finally {
         this.isConverting = false;
       }
+      this.packetFiles = [];
     },
   },
 
@@ -196,7 +230,10 @@ export default defineComponent({
       this.captureStore.updateStatus({ is_running: false });
     });
 
-    this.fichiers = await invoke('labels_file_list')
+    this.fichiers = await invoke('labels_file_list');
+    this.selectedFiles = this.fichiers
+            .filter(([_, coche]) => coche)
+            .map(([file, _]) => file);
   },
 });
 </script>
@@ -249,6 +286,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 .file-group {
@@ -279,6 +317,26 @@ export default defineComponent({
 .btn-open {
   background-color: #48bb78;
   color: white;
+}
+
+.image-btn {
+  background: grey;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+  position: absolute;
+  top: 4px;
+  right: 4px
+}
+
+li {
+  position: relative;
 }
 
 .file-list {
