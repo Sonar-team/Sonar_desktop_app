@@ -1,5 +1,18 @@
 # Changelog
 
+## **[3.13.0] - 2026-05-07**
+
+## ✨ Améliorations
+
+- Mise à jour de la version de SONAR en **3.13.0**.
+- Alignement des versions dans `package.json`, `tauri.conf.json`, `Cargo.toml`
+  et `Cargo.lock`.
+
+## 🔎 Analyse protocolaire
+
+- Mise à jour de `packet_parser` en **1.3.0** pour ajouter la détection du
+  protocole **OPC UA**.
+
 ## **[3.12.3] – 2026-04-28**
 
 ## 🧪 Build / Reproductibilité
