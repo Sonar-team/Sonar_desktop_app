@@ -10,42 +10,54 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "ctor"
-version = "0.2.9"
+version = "0.8.0"
 authors = ["Matt Mastracci <matthew@mastracci.com>"]
+build = false
+autolib = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
 description = "__attribute__((constructor)) for Rust"
 readme = "README.md"
+categories = ["no-std"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/mmastrac/rust-ctor"
 
+[features]
+__no_warn_on_missing_unsafe = ["dtor?/__no_warn_on_missing_unsafe"]
+default = [
+    "std",
+    "dtor",
+    "proc_macro",
+    "__no_warn_on_missing_unsafe",
+]
+dtor = ["dep:dtor"]
+proc_macro = [
+    "dep:ctor-proc-macro",
+    "dtor?/proc_macro",
+]
+std = ["dtor?/std"]
+used_linker = ["dtor?/used_linker"]
+
 [lib]
 name = "ctor"
-proc-macro = true
+path = "src/lib.rs"
 
 [[example]]
 name = "example"
 path = "src/example.rs"
 
-[dependencies.quote]
-version = "1.0.20"
+[dependencies.ctor-proc-macro]
+version = "=0.0.7"
+optional = true
 
-[dependencies.syn]
-version = "2.0.12"
-features = [
-    "full",
-    "parsing",
-    "printing",
-    "proc-macro",
-]
+[dependencies.dtor]
+version = "0.3.0"
+optional = true
 default-features = false
 
 [dev-dependencies.libc-print]
 version = "0.1.20"
-
-[features]
-used_linker = []
-
-[badges.travis-ci]
-branch = "master"
-repository = "mmastrac/rust-ctor"

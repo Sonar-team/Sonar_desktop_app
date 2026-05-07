@@ -18,13 +18,14 @@ use windows_sys::{
             },
             WindowsAndMessaging::{
                 ChangeWindowMessageFilterEx, CreateWindowExW, DefWindowProcW, DestroyWindow,
-                GetCursorPos, KillTimer, RegisterClassW, RegisterWindowMessageA, SendMessageW,
-                SetForegroundWindow, SetTimer, TrackPopupMenu, CREATESTRUCTW, CW_USEDEFAULT,
-                GWL_USERDATA, HICON, HMENU, MSGFLT_ALLOW, TPM_BOTTOMALIGN, TPM_LEFTALIGN,
-                WM_CREATE, WM_DESTROY, WM_LBUTTONDBLCLK, WM_LBUTTONDOWN, WM_LBUTTONUP,
-                WM_MBUTTONDBLCLK, WM_MBUTTONDOWN, WM_MBUTTONUP, WM_MOUSEMOVE, WM_NCCREATE,
-                WM_RBUTTONDBLCLK, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_TIMER, WNDCLASSW, WS_EX_LAYERED,
-                WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT, WS_OVERLAPPED,
+                GetCursorPos, KillTimer, PostMessageW, RegisterClassW, RegisterWindowMessageA,
+                SendMessageW, SetForegroundWindow, SetTimer, TrackPopupMenu, CREATESTRUCTW,
+                CW_USEDEFAULT, GWL_USERDATA, HICON, HMENU, MSGFLT_ALLOW, TPM_BOTTOMALIGN,
+                TPM_LEFTALIGN, WM_CREATE, WM_DESTROY, WM_LBUTTONDBLCLK, WM_LBUTTONDOWN,
+                WM_LBUTTONUP, WM_MBUTTONDBLCLK, WM_MBUTTONDOWN, WM_MBUTTONUP, WM_MOUSEMOVE,
+                WM_NCCREATE, WM_NULL, WM_RBUTTONDBLCLK, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_TIMER,
+                WNDCLASSW, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT,
+                WS_OVERLAPPED,
             },
         },
     },
@@ -45,6 +46,7 @@ const WM_USER_HIDE_TRAYICON: u32 = 6006;
 const WM_USER_UPDATE_TRAYTOOLTIP: u32 = 6007;
 const WM_USER_LEAVE_TIMER_ID: u32 = 6008;
 const WM_USER_SHOW_MENU_ON_LEFT_CLICK: u32 = 6009;
+const WM_USER_SHOW_MENU_ON_RIGHT_CLICK: u32 = 6010;
 /// When the taskbar is created, it registers a message with the "TaskbarCreated" string and then broadcasts this message to all top-level windows
 /// When the application receives this message, it should assume that any taskbar icons it added have been removed and add them again.
 static S_U_TASKBAR_RESTART: Lazy<u32> =
@@ -60,6 +62,7 @@ struct TrayUserData {
     entered: bool,
     last_position: Option<PhysicalPosition<f64>>,
     menu_on_left_click: bool,
+    menu_on_right_click: bool,
 }
 
 pub struct TrayIcon {
@@ -95,6 +98,7 @@ impl TrayIcon {
                 entered: false,
                 last_position: None,
                 menu_on_left_click: attrs.menu_on_left_click,
+                menu_on_right_click: attrs.menu_on_right_click,
             };
 
             let hwnd = CreateWindowExW(
@@ -239,6 +243,27 @@ impl TrayIcon {
         }
     }
 
+    pub fn set_show_menu_on_right_click(&mut self, enable: bool) {
+        unsafe {
+            SendMessageW(
+                self.hwnd,
+                WM_USER_SHOW_MENU_ON_RIGHT_CLICK,
+                enable as usize,
+                0,
+            );
+        }
+    }
+
+    pub fn show_menu(&self) {
+        if let Some(menu) = &self.menu {
+            unsafe {
+                if let Some(rect) = get_tray_rect(self.internal_id, self.hwnd) {
+                    show_tray_menu(self.hwnd, menu.hpopupmenu() as _, rect.left, rect.top);
+                }
+            }
+        }
+    }
+
     pub fn set_title<S: AsRef<str>>(&mut self, _title: Option<S>) {}
 
     pub fn set_visible(&mut self, visible: bool) -> crate::Result<()> {
@@ -336,6 +361,7 @@ unsafe extern "system" fn tray_proc(
             userdata.tooltip = *tooltip;
         }
         _ if msg == *S_U_TASKBAR_RESTART => {
+            remove_tray_icon(userdata.hwnd, userdata.internal_id);
             register_tray_icon(
                 userdata.hwnd,
                 userdata.internal_id,
@@ -345,6 +371,9 @@ unsafe extern "system" fn tray_proc(
         }
         WM_USER_SHOW_MENU_ON_LEFT_CLICK => {
             userdata.menu_on_left_click = wparam != 0;
+        }
+        WM_USER_SHOW_MENU_ON_RIGHT_CLICK => {
+            userdata.menu_on_right_click = wparam != 0;
         }
 
         WM_USER_TRAYICON
@@ -459,8 +488,8 @@ unsafe extern "system" fn tray_proc(
 
             TrayIconEvent::send(event);
 
-            if lparam as u32 == WM_RBUTTONDOWN
-                || (userdata.menu_on_left_click && lparam as u32 == WM_LBUTTONDOWN)
+            if (userdata.menu_on_right_click && lparam as u32 == WM_RBUTTONUP)
+                || (userdata.menu_on_left_click && lparam as u32 == WM_LBUTTONUP)
             {
                 if let Some(menu) = userdata.hpopupmenu {
                     show_tray_menu(hwnd, menu, cursor.x, cursor.y);
@@ -523,6 +552,9 @@ unsafe fn show_tray_menu(hwnd: HWND, menu: HMENU, x: i32, y: i32) {
         hwnd,
         std::ptr::null_mut(),
     );
+    // The shell docs recommend posting a benign message after TrackPopupMenu
+    // for notification area menus so the task switch is finalized correctly.
+    PostMessageW(hwnd, WM_NULL, 0, 0);
 }
 
 #[inline]

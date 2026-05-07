@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri-runtime-wry"
-version = "2.10.1"
+version = "2.11.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 exclude = [
@@ -37,7 +37,11 @@ repository = "https://github.com/tauri-apps/tauri"
 
 [features]
 common-controls-v6 = []
-default = ["x11"]
+dbus = ["tao/dbus"]
+default = [
+    "x11",
+    "dbus",
+]
 devtools = [
     "wry/devtools",
     "tauri-runtime/devtools",
@@ -73,15 +77,15 @@ version = "0.4.21"
 version = "0.6"
 
 [dependencies.tao]
-version = "0.34.5"
+version = "0.35.0"
 features = ["rwh_06"]
 default-features = false
 
 [dependencies.tauri-runtime]
-version = "2.10.1"
+version = "2.11.1"
 
 [dependencies.tauri-utils]
-version = "2.8.3"
+version = "2.9.1"
 
 [dependencies.tracing]
 version = "0.1"
@@ -91,9 +95,8 @@ optional = true
 version = "2"
 
 [dependencies.wry]
-version = "0.54.0"
+version = "0.55.0"
 features = [
-    "drag-drop",
     "protocol",
     "os-webview",
     "linux-body",

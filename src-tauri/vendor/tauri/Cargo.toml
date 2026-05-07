@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri"
-version = "2.10.3"
+version = "2.11.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 links = "Tauri"
@@ -51,6 +51,7 @@ features = [
     "test",
     "specta",
     "dynamic-acl",
+    "isolation",
 ]
 default-target = "x86_64-unknown-linux-gnu"
 targets = [
@@ -79,12 +80,14 @@ compression = [
 config-json5 = ["tauri-macros/config-json5"]
 config-toml = ["tauri-macros/config-toml"]
 custom-protocol = ["tauri-macros/custom-protocol"]
+dbus = ["tauri-runtime-wry?/dbus"]
 default = [
     "wry",
     "compression",
     "common-controls-v6",
     "dynamic-acl",
     "x11",
+    "dbus",
 ]
 devtools = [
     "tauri-runtime/devtools",
@@ -127,7 +130,7 @@ tray-icon = ["dep:tray-icon"]
 unstable = ["tauri-runtime-wry?/unstable"]
 webview-data-url = [
     "data-url",
-    "tauri-utils/html-manipulation",
+    "tauri-utils/html-manipulation-2",
 ]
 wry = [
     "webview2-com",
@@ -217,18 +220,18 @@ optional = true
 default-features = false
 
 [dependencies.tauri-macros]
-version = "2.5.5"
+version = "2.6.1"
 
 [dependencies.tauri-runtime]
-version = "2.10.1"
+version = "2.11.1"
 
 [dependencies.tauri-runtime-wry]
-version = "2.10.1"
+version = "2.11.1"
 optional = true
 default-features = false
 
 [dependencies.tauri-utils]
-version = "2.8.3"
+version = "2.9.1"
 features = ["resources"]
 
 [dependencies.thiserror]
@@ -289,19 +292,23 @@ version = "0.3"
 version = "0.5"
 
 [build-dependencies.tauri-build]
-version = "2.5.6"
+version = "2.6.1"
 default-features = false
 
 [build-dependencies.tauri-utils]
-version = "2.8.3"
-features = ["build"]
+version = "2.9.1"
+features = ["build-2"]
 
 [target.'cfg(all(target_vendor = "apple", not(target_os = "macos")))'.dependencies.libc]
 version = "0.2"
 
 [target.'cfg(all(target_vendor = "apple", not(target_os = "macos")))'.dependencies.objc2-ui-kit]
 version = "0.3.0"
-features = ["UIView"]
+features = [
+    "UIApplication",
+    "UIResponder",
+    "UIView",
+]
 default-features = false
 
 [target.'cfg(all(target_vendor = "apple", not(target_os = "macos")))'.dependencies.swift-rs]
@@ -335,7 +342,7 @@ features = ["v2_40"]
 optional = true
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd", target_os = "windows", target_os = "macos"))'.dependencies.muda]
-version = "0.17"
+version = "0.19"
 features = [
     "serde",
     "gtk",
@@ -343,7 +350,7 @@ features = [
 default-features = false
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd", target_os = "windows", target_os = "macos"))'.dependencies.tray-icon]
-version = "0.21"
+version = "0.23"
 features = ["serde"]
 optional = true
 default-features = false

@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri-runtime"
-version = "2.10.1"
+version = "2.11.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 exclude = [
@@ -75,7 +75,7 @@ features = ["derive"]
 version = "1"
 
 [dependencies.tauri-utils]
-version = "2.8.3"
+version = "2.9.1"
 
 [dependencies.thiserror]
 version = "2"
@@ -91,6 +91,8 @@ version = "0.3.0"
 features = [
     "UIView",
     "UIResponder",
+    "UIScene",
+    "UISceneOptions",
 ]
 default-features = false
 

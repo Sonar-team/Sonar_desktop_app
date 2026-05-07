@@ -1,5 +1,7 @@
 //! Common types shared between the encoder and decoder
-use crate::text_metadata::{EncodableTextChunk, ITXtChunk, TEXtChunk, ZTXtChunk};
+use crate::text_metadata::{ITXtChunk, TEXtChunk, ZTXtChunk};
+#[allow(unused_imports)] // used by doc comments only
+use crate::Filter;
 use crate::{chunk, encoder};
 use io::Write;
 use std::{borrow::Cow, convert::TryFrom, fmt, io};
@@ -51,7 +53,7 @@ impl ColorType {
     pub(crate) fn checked_raw_row_length(self, depth: BitDepth, width: u32) -> Option<usize> {
         // No overflow can occur in 64 bits, we multiply 32-bit with 5 more bits.
         let bits = u64::from(width) * u64::from(self.samples_u8()) * u64::from(depth.into_u8());
-        TryFrom::try_from(1 + (bits + 7) / 8).ok()
+        TryFrom::try_from(1 + bits.div_ceil(8)).ok()
     }
 
     pub(crate) fn raw_row_length_from_width(self, depth: BitDepth, width: u32) -> usize {
@@ -76,6 +78,16 @@ impl ColorType {
                 || self == ColorType::GrayscaleAlpha
                 || self == ColorType::Rgba))
             || (bit_depth == BitDepth::Sixteen && self == ColorType::Indexed)
+    }
+
+    pub(crate) fn bits_per_pixel(&self, bit_depth: BitDepth) -> usize {
+        self.samples() * bit_depth as usize
+    }
+
+    pub(crate) fn bytes_per_pixel(&self, bit_depth: BitDepth) -> usize {
+        // If adjusting this for expansion or other transformation passes, remember to keep the old
+        // implementation for bpp_in_prediction, which is internal to the png specification.
+        self.samples() * ((bit_depth as usize + 7) >> 3)
     }
 }
 
@@ -303,43 +315,117 @@ impl AnimationControl {
 }
 
 /// The type and strength of applied compression.
+///
+/// This is a simple, high-level interface that will automatically choose
+/// the appropriate DEFLATE compression mode and PNG filter.
+///
+/// If you need more control over the encoding parameters,
+/// you can set the [`DeflateCompression`] and [`Filter`] manually.
 #[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
 pub enum Compression {
-    /// Default level
-    Default,
-    /// Fast minimal compression
-    Fast,
-    /// Higher compression level
+    /// No compression whatsoever. Fastest, but results in large files.
+    NoCompression,
+    /// Extremely fast but light compression.
     ///
-    /// Best in this context isn't actually the highest possible level
-    /// the encoder can do, but is meant to emulate the `Best` setting in the `Flate2`
-    /// library.
-    Best,
-    #[deprecated(
-        since = "0.17.6",
-        note = "use one of the other compression levels instead, such as 'fast'"
-    )]
-    Huffman,
-    #[deprecated(
-        since = "0.17.6",
-        note = "use one of the other compression levels instead, such as 'fast'"
-    )]
-    Rle,
+    /// Note: When used in streaming mode, this compression level can actually result in files
+    /// *larger* than would be produced by `NoCompression` on incompressible data because
+    /// it doesn't do any buffering of the output stream to detect whether the data is being compressed or not.
+    Fastest,
+    /// Extremely fast compression with a decent compression ratio.
+    ///
+    /// Significantly outperforms libpng and other popular encoders by using a [specialized DEFLATE
+    /// implementation tuned for PNG](https://crates.io/crates/fdeflate), while still providing
+    /// better compression ratio than the fastest modes of other encoders.
+    ///
+    /// Like [`Compression::Fastest`] this can currently produce files larger than `NoCompression` in
+    /// streaming mode when given incompressible data. This may change in the future.
+    Fast,
+    /// Balances encoding speed and compression ratio
+    Balanced,
+    /// Spend much more time to produce a slightly smaller file than with `Balanced`.
+    High,
 }
 
 impl Default for Compression {
     fn default() -> Self {
-        Self::Default
+        Self::Balanced
+    }
+}
+
+/// Advanced compression settings with more customization options than [`Compression`].
+///
+/// Note that this setting only affects DEFLATE compression.
+/// Another setting that influences the compression ratio and lets you choose
+/// between encoding speed and compression ratio is the [`Filter`].
+///
+/// ### Stability guarantees
+///
+/// The implementation details of DEFLATE compression may evolve over time,
+/// even without a semver-breaking change to the version of `png` crate.
+///
+/// If a certain compression setting is superseded by other options,
+/// it may be marked deprecated and remapped to a different option.
+/// You will see a deprecation notice when compiling code relying on such options.
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy)]
+pub enum DeflateCompression {
+    /// Do not compress the data at all.
+    ///
+    /// Useful for incompressible images, or when speed is paramount and you don't care about size
+    /// at all.
+    ///
+    /// This mode also disables filters, forcing [`Filter::NoFilter`].
+    NoCompression,
+
+    /// Excellent for creating lightly compressed PNG images very quickly.
+    ///
+    /// Uses the [fdeflate](https://crates.io/crates/fdeflate) crate under the hood to achieve
+    /// speeds far exceeding what libpng is capable of while still providing a decent compression
+    /// ratio.
+    ///
+    /// Note: When used in streaming mode, this compression level can actually result in files
+    /// *larger* than would be produced by `NoCompression` because it doesn't do any buffering of
+    /// the output stream to detect whether the data is being compressed or not.
+    FdeflateUltraFast,
+
+    /// Compression level between 1 and 9, where higher values mean better compression at the cost of
+    /// speed.
+    ///
+    /// This is currently implemented via [flate2](https://crates.io/crates/flate2) crate
+    /// by passing through the [compression level](flate2::Compression::new).
+    ///
+    /// The implementation details and the exact meaning of each level may change in the future,
+    /// including in semver-compatible releases.
+    Level(u8),
+    // Other variants can be added in the future
+}
+
+impl Default for DeflateCompression {
+    fn default() -> Self {
+        Self::from_simple(Compression::Balanced)
+    }
+}
+
+impl DeflateCompression {
+    pub(crate) fn from_simple(value: Compression) -> Self {
+        match value {
+            Compression::NoCompression => Self::NoCompression,
+            Compression::Fastest => Self::FdeflateUltraFast,
+            Compression::Fast => Self::FdeflateUltraFast,
+            Compression::Balanced => Self::Level(flate2::Compression::default().level() as u8),
+            Compression::High => Self::Level(flate2::Compression::best().level() as u8),
+        }
     }
 }
 
 /// An unsigned integer scaled version of a floating point value,
-/// equivalent to an integer quotient with fixed denominator (100_000)).
+/// equivalent to an integer quotient with [fixed denominator][ScaledFloat::SCALING]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ScaledFloat(u32);
 
 impl ScaledFloat {
-    const SCALING: f32 = 100_000.0;
+    pub const SCALING: f32 = 100_000.0;
 
     /// Gets whether the value is within the clamped range of this type.
     pub fn in_range(value: f32) -> bool {
@@ -587,7 +673,6 @@ pub struct Info<'a> {
 
     pub frame_control: Option<FrameControl>,
     pub animation_control: Option<AnimationControl>,
-    pub compression: Compression,
     /// Gamma of the source system.
     /// Set by both `gAMA` as well as to a replacement by `sRGB` chunk.
     pub source_gamma: Option<ScaledFloat>,
@@ -633,9 +718,6 @@ impl Default for Info<'_> {
             pixel_dims: None,
             frame_control: None,
             animation_control: None,
-            // Default to `deflate::Compression::Fast` and `filter::FilterType::Sub`
-            // to maintain backward compatible output.
-            compression: Compression::Fast,
             source_gamma: None,
             source_chromaticities: None,
             srgb: None,
@@ -683,14 +765,14 @@ impl Info<'_> {
 
     /// Returns the number of bits per pixel.
     pub fn bits_per_pixel(&self) -> usize {
-        self.color_type.samples() * self.bit_depth as usize
+        self.color_type.bits_per_pixel(self.bit_depth)
     }
 
     /// Returns the number of bytes per pixel.
     pub fn bytes_per_pixel(&self) -> usize {
         // If adjusting this for expansion or other transformation passes, remember to keep the old
         // implementation for bpp_in_prediction, which is internal to the png specification.
-        self.color_type.samples() * ((self.bit_depth as usize + 7) >> 3)
+        self.color_type.bytes_per_pixel(self.bit_depth)
     }
 
     /// Return the number of bytes for this pixel used in prediction.
@@ -725,6 +807,24 @@ impl Info<'_> {
             .raw_row_length_from_width(self.bit_depth, width)
     }
 
+    /// Gamma dependent on sRGB chunk
+    pub fn gamma(&self) -> Option<ScaledFloat> {
+        if self.srgb.is_some() {
+            Some(crate::srgb::substitute_gamma())
+        } else {
+            self.gama_chunk
+        }
+    }
+
+    /// Chromaticities dependent on sRGB chunk
+    pub fn chromaticities(&self) -> Option<SourceChromaticities> {
+        if self.srgb.is_some() {
+            Some(crate::srgb::substitute_chromaticities())
+        } else {
+            self.chrm_chunk
+        }
+    }
+
     /// Mark the image data as conforming to the SRGB color space with the specified rendering intent.
     ///
     /// Any ICC profiles will be ignored.
@@ -734,91 +834,6 @@ impl Info<'_> {
     pub(crate) fn set_source_srgb(&mut self, rendering_intent: SrgbRenderingIntent) {
         self.srgb = Some(rendering_intent);
         self.icc_profile = None;
-    }
-
-    /// Encode this header to the writer.
-    ///
-    /// Note that this does _not_ include the PNG signature, it starts with the IHDR chunk and then
-    /// includes other chunks that were added to the header.
-    #[deprecated(note = "Use Encoder+Writer instead")]
-    pub fn encode<W: Write>(&self, mut w: W) -> encoder::Result<()> {
-        // Encode the IHDR chunk
-        let mut data = [0; 13];
-        data[..4].copy_from_slice(&self.width.to_be_bytes());
-        data[4..8].copy_from_slice(&self.height.to_be_bytes());
-        data[8] = self.bit_depth as u8;
-        data[9] = self.color_type as u8;
-        data[12] = self.interlaced as u8;
-        encoder::write_chunk(&mut w, chunk::IHDR, &data)?;
-
-        // Encode the pHYs chunk
-        if let Some(pd) = self.pixel_dims {
-            let mut phys_data = [0; 9];
-            phys_data[0..4].copy_from_slice(&pd.xppu.to_be_bytes());
-            phys_data[4..8].copy_from_slice(&pd.yppu.to_be_bytes());
-            match pd.unit {
-                Unit::Meter => phys_data[8] = 1,
-                Unit::Unspecified => phys_data[8] = 0,
-            }
-            encoder::write_chunk(&mut w, chunk::pHYs, &phys_data)?;
-        }
-
-        // If specified, the sRGB information overrides the source gamma and chromaticities.
-        if let Some(srgb) = &self.srgb {
-            srgb.encode(&mut w)?;
-
-            // gAMA and cHRM are optional, for backwards compatibility
-            let srgb_gamma = crate::srgb::substitute_gamma();
-            if Some(srgb_gamma) == self.source_gamma {
-                srgb_gamma.encode_gama(&mut w)?
-            }
-            let srgb_chromaticities = crate::srgb::substitute_chromaticities();
-            if Some(srgb_chromaticities) == self.source_chromaticities {
-                srgb_chromaticities.encode(&mut w)?;
-            }
-        } else {
-            if let Some(gma) = self.source_gamma {
-                gma.encode_gama(&mut w)?
-            }
-            if let Some(chrms) = self.source_chromaticities {
-                chrms.encode(&mut w)?;
-            }
-            if let Some(iccp) = &self.icc_profile {
-                encoder::write_iccp_chunk(&mut w, "_", iccp)?
-            }
-        }
-
-        if let Some(exif) = &self.exif_metadata {
-            encoder::write_chunk(&mut w, chunk::eXIf, exif)?;
-        }
-
-        if let Some(actl) = self.animation_control {
-            actl.encode(&mut w)?;
-        }
-
-        // The position of the PLTE chunk is important, it must come before the tRNS chunk and after
-        // many of the other metadata chunks.
-        if let Some(p) = &self.palette {
-            encoder::write_chunk(&mut w, chunk::PLTE, p)?;
-        };
-
-        if let Some(t) = &self.trns {
-            encoder::write_chunk(&mut w, chunk::tRNS, t)?;
-        }
-
-        for text_chunk in &self.uncompressed_latin1_text {
-            text_chunk.encode(&mut w)?;
-        }
-
-        for text_chunk in &self.compressed_latin1_text {
-            text_chunk.encode(&mut w)?;
-        }
-
-        for text_chunk in &self.utf8_text {
-            text_chunk.encode(&mut w)?;
-        }
-
-        Ok(())
     }
 }
 
@@ -876,6 +891,7 @@ bitflags::bitflags! {
     const SCALE_16            = 0x8000; // read only
     ```
     "]
+    #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     pub struct Transformations: u32 {
         /// No transformation
         const IDENTITY            = 0x00000; // read and write */

@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.71"
+rust-version = "1.73"
 name = "muda"
-version = "0.17.2"
+version = "0.19.1"
 build = false
 include = [
     "README.md",
@@ -50,6 +50,7 @@ libxdo = ["dep:libxdo"]
 serde = [
     "dep:serde",
     "dpi/serde",
+    "keyboard-types/serde",
 ]
 
 [lib]
@@ -77,6 +78,8 @@ version = "2"
 
 [dev-dependencies.image]
 version = "0.25"
+features = ["png"]
+default-features = false
 
 [dev-dependencies.tao]
 version = "0.33"
@@ -96,7 +99,7 @@ version = "0.6.0"
 optional = true
 
 [target.'cfg(target_os = "macos")'.dependencies.objc2]
-version = "0.6.0"
+version = "0.6.1"
 
 [target.'cfg(target_os = "macos")'.dependencies.objc2-app-kit]
 version = "0.3.0"
@@ -138,10 +141,10 @@ features = [
 default-features = false
 
 [target.'cfg(target_os = "macos")'.dependencies.png]
-version = "0.17"
+version = "0.18"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows-sys]
-version = "0.60"
+version = ">=0.60, <=0.61"
 features = [
     "Win32_UI_WindowsAndMessaging",
     "Win32_Foundation",

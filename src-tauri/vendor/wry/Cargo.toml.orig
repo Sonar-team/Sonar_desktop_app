@@ -2,7 +2,7 @@ workspace = {}
 
 [package]
 name = "wry"
-version = "0.54.4"
+version = "0.55.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 edition = "2021"
 license = "Apache-2.0 OR MIT"
@@ -16,7 +16,7 @@ exclude = ["/.changes", "/.github", "/audits", "/wry-logo.svg"]
 
 [package.metadata.docs.rs]
 no-default-features = true
-features = ["drag-drop", "protocol", "os-webview"]
+features = ["protocol", "os-webview"]
 targets = [
   "x86_64-unknown-linux-gnu",
   "x86_64-pc-windows-msvc",
@@ -24,9 +24,8 @@ targets = [
 ]
 
 [features]
-default = ["drag-drop", "protocol", "os-webview", "x11"]
+default = ["protocol", "os-webview", "x11"]
 serde = ["dpi/serde"]
-drag-drop = []
 protocol = []
 devtools = []
 transparent = []
@@ -205,7 +204,7 @@ dom_query = { version = "0.27.0", default-features = false }
 
 [dev-dependencies]
 pollster = "0.4.0"
-tao = "0.34"
+tao = "0.35"
 wgpu = "23"
 winit = "0.30"
 getrandom = "0.3"

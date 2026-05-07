@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::{fs, io::Cursor, path::PathBuf};
 
 use clap::Parser;
 use png::Decoder;
@@ -43,20 +43,16 @@ fn run_encode(
     encoder.set_depth(bit_depth);
     encoder.set_compression(match args.speed {
         Speed::Fast => png::Compression::Fast,
-        Speed::Default => png::Compression::Default,
-        Speed::Best => png::Compression::Best,
+        Speed::Default => png::Compression::Balanced,
+        Speed::Best => png::Compression::High,
     });
     encoder.set_filter(match args.filter {
-        Filter::None => png::FilterType::NoFilter,
-        Filter::Sub => png::FilterType::Sub,
-        Filter::Up => png::FilterType::Up,
-        Filter::Average => png::FilterType::Avg,
-        Filter::Paeth => png::FilterType::Paeth,
-        Filter::Adaptive => png::FilterType::Paeth,
-    });
-    encoder.set_adaptive_filter(match args.filter {
-        Filter::Adaptive => png::AdaptiveFilterType::Adaptive,
-        _ => png::AdaptiveFilterType::NonAdaptive,
+        Filter::None => png::Filter::NoFilter,
+        Filter::Sub => png::Filter::Sub,
+        Filter::Up => png::Filter::Up,
+        Filter::Average => png::Filter::Avg,
+        Filter::Paeth => png::Filter::Paeth,
+        Filter::Adaptive => png::Filter::Adaptive,
     });
     let mut encoder = encoder.write_header().unwrap();
     encoder.write_image_data(image).unwrap();
@@ -66,7 +62,7 @@ fn run_encode(
 
 #[inline(never)]
 fn run_decode(image: &[u8], output: &mut [u8]) {
-    let mut reader = Decoder::new(image).read_info().unwrap();
+    let mut reader = Decoder::new(Cursor::new(image)).read_info().unwrap();
     reader.next_frame(output).unwrap();
 }
 
@@ -111,7 +107,7 @@ fn main() {
 
             // Parse
             let data = fs::read(entry.path()).unwrap();
-            let mut decoder = Decoder::new(&*data);
+            let mut decoder = Decoder::new(Cursor::new(&*data));
             if decoder.read_header_info().ok().map(|h| h.color_type)
                 == Some(png::ColorType::Indexed)
             {
@@ -123,7 +119,7 @@ fn main() {
                 Ok(reader) => reader,
                 Err(_) => continue,
             };
-            let mut image = vec![0; reader.output_buffer_size()];
+            let mut image = vec![0; reader.output_buffer_size().unwrap()];
             let info = match reader.next_frame(&mut image) {
                 Ok(info) => info,
                 Err(_) => continue,

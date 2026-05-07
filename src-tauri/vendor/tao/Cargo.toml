@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.74"
 name = "tao"
-version = "0.34.8"
+version = "0.35.2"
 authors = [
     "Tauri Programme within The Commons Conservancy",
     "The winit contributors",
@@ -45,6 +45,7 @@ features = [
     "rwh_06",
     "serde",
     "x11",
+    "dbus",
 ]
 default-target = "x86_64-unknown-linux-gnu"
 targets = [
@@ -56,9 +57,11 @@ targets = [
 ]
 
 [features]
+dbus = ["dep:dbus"]
 default = [
     "rwh_06",
     "x11",
+    "dbus",
 ]
 rwh_04 = ["dep:rwh_04"]
 rwh_05 = ["dep:rwh_05"]
@@ -251,6 +254,10 @@ version = "0.6"
 [target.'cfg(any(target_os = "ios", target_os = "macos"))'.dependencies.objc2]
 version = "0.6"
 
+[target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies.dbus]
+version = "0.9"
+optional = true
+
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies.dlopen2]
 version = "0.8.0"
 
@@ -277,14 +284,28 @@ version = "0.21"
 [target.'cfg(target_os = "android")'.dependencies.ndk]
 version = "0.9"
 
-[target.'cfg(target_os = "android")'.dependencies.ndk-context]
-version = "0.1"
-
 [target.'cfg(target_os = "android")'.dependencies.ndk-sys]
 version = "0.6"
 
+[target.'cfg(target_os = "android")'.dependencies.percent-encoding]
+version = "2.3"
+
 [target.'cfg(target_os = "android")'.dependencies.tao-macros]
 version = "0.1.0"
+
+[target.'cfg(target_os = "ios")'.dependencies.objc2-foundation]
+version = "0.3"
+features = ["NSProcessInfo"]
+default-features = false
+
+[target.'cfg(target_os = "ios")'.dependencies.objc2-ui-kit]
+version = "0.3"
+features = [
+    "UIResponder",
+    "UIScene",
+    "UISceneOptions",
+    "UIOpenURLContext",
+]
 
 [target.'cfg(target_os = "macos")'.dependencies.core-foundation]
 version = "0.10"

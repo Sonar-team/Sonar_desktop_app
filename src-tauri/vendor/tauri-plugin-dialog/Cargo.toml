@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri-plugin-dialog"
-version = "2.7.0"
+version = "2.7.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 links = "tauri-plugin-dialog"
@@ -81,7 +81,7 @@ version = "2.10"
 default-features = false
 
 [dependencies.tauri-plugin-fs]
-version = "2.5.0"
+version = "2.5.1"
 
 [dependencies.thiserror]
 version = "2"

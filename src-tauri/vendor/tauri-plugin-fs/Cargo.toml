@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri-plugin-fs"
-version = "2.5.0"
+version = "2.5.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 links = "tauri-plugin-fs"
@@ -119,7 +119,7 @@ features = ["build"]
 version = "2.8"
 
 [build-dependencies.toml]
-version = "0.9"
+version = "1.0"
 
 [target.'cfg(target_os = "ios")'.dependencies.objc2-foundation]
 version = "0.3"

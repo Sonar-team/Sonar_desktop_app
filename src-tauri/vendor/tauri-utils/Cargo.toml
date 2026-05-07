@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri-utils"
-version = "2.8.3"
+version = "2.9.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = false
 exclude = [
@@ -44,6 +44,14 @@ build = [
     "swift-rs",
     "html-manipulation",
 ]
+build-2 = [
+    "proc-macro2",
+    "quote",
+    "cargo_metadata",
+    "schema",
+    "swift-rs",
+    "html-manipulation-2",
+]
 compression = ["brotli"]
 config-json5 = ["json5"]
 config-toml = []
@@ -51,6 +59,7 @@ html-manipulation = [
     "dep:html5ever",
     "dep:kuchiki",
 ]
+html-manipulation-2 = ["dep:dom_query"]
 isolation = [
     "aes-gcm",
     "getrandom",
@@ -82,7 +91,17 @@ version = "0.19"
 optional = true
 
 [dependencies.ctor]
-version = "0.2"
+version = "0.8"
+features = [
+    "std",
+    "proc_macro",
+]
+default-features = false
+
+[dependencies.dom_query]
+version = "0.27"
+optional = true
+default-features = false
 
 [dependencies.dunce]
 version = "1"
@@ -124,8 +143,11 @@ version = "0.4.21"
 version = "2"
 
 [dependencies.phf]
-version = "0.11"
+version = "0.13"
 features = ["macros"]
+
+[dependencies.plist]
+version = "1"
 
 [dependencies.proc-macro2]
 version = "1"
@@ -170,7 +192,7 @@ optional = true
 version = "2"
 
 [dependencies.toml]
-version = "0.9"
+version = ">=0.9, <=1"
 features = ["parse"]
 
 [dependencies.url]
@@ -194,6 +216,9 @@ features = ["std"]
 
 [dev-dependencies.serial_test]
 version = "3"
+
+[dev-dependencies.tempfile]
+version = "3.15.0"
 
 [target.'cfg(target_os = "macos")'.dependencies.swift-rs]
 version = "1"

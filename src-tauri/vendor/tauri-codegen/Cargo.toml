@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri-codegen"
-version = "2.5.5"
+version = "2.6.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = false
 exclude = [
@@ -89,8 +89,8 @@ version = "0.10"
 version = "2"
 
 [dependencies.tauri-utils]
-version = "2.8.3"
-features = ["build"]
+version = "2.9.1"
+features = ["build-2"]
 
 [dependencies.thiserror]
 version = "2"

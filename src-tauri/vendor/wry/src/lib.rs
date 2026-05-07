@@ -74,7 +74,7 @@
 //!
 //! ## Child webviews
 //!
-//! You can use [`WebView::new_as_child`] or [`WebViewBuilder::build_as_child`] to create the webview as a child inside another window. This is supported on
+//! You can use [`WebViewBuilder::build_as_child`] to create the webview as a child inside another window. This is supported on
 //! macOS, Windows and Linux (X11 Only).
 //!
 //! ```no_run
@@ -540,11 +540,13 @@ pub struct NewWindowFeatures {
 /// An id for a webview
 pub type WebViewId<'a> = &'a str;
 
-pub struct WebViewAttributes<'a> {
+// WebViewAttributes is not stable enough to be pub.
+struct WebViewAttributes<'a> {
   /// An id that will be passed when this webview makes requests in certain callbacks.
   pub id: Option<WebViewId<'a>>,
 
   /// Web context to be shared with this webview.
+  #[allow(unused)]
   pub context: Option<&'a mut WebContext>,
 
   /// Whether the WebView should have a custom user-agent.
@@ -655,11 +657,7 @@ pub struct WebViewAttributes<'a> {
   ///
   /// Note, that if you do block this behavior, it won't be possible to drop files on `<input type="file">` forms.
   /// Also note, that it's not possible to manually set the value of a `<input type="file">` via JavaScript for security reasons.
-  #[cfg(feature = "drag-drop")]
-  #[cfg_attr(docsrs, doc(cfg(feature = "drag-drop")))]
   pub drag_drop_handler: Option<Box<dyn Fn(DragDropEvent) -> bool>>,
-  #[cfg(not(feature = "drag-drop"))]
-  drag_drop_handler: Option<Box<dyn Fn(DragDropEvent) -> bool>>,
 
   /// A navigation handler to decide if incoming url is allowed to navigate.
   ///
@@ -698,13 +696,8 @@ pub struct WebViewAttributes<'a> {
   ///
   /// The closure take the URL to open and the window features object and returns [`NewWindowResponse`] to determine whether the window should open.
   ///
-  /// ## Platform-specific:
-  ///
-  /// - **Windows**: The closure is executed on a separate thread to prevent a deadlock.
-  ///
   /// [window.open]: https://developer.mozilla.org/en-US/docs/Web/API/Window/open
-  pub new_window_req_handler:
-    Option<Box<dyn Fn(String, NewWindowFeatures) -> NewWindowResponse + Send + Sync>>,
+  pub new_window_req_handler: Option<Box<dyn Fn(String, NewWindowFeatures) -> NewWindowResponse>>,
 
   /// Enables clipboard access for the page rendered on **Linux** and **Windows**.
   ///
@@ -776,7 +769,7 @@ pub struct WebViewAttributes<'a> {
   pub focused: bool,
 
   /// The webview bounds. Defaults to `x: 0, y: 0, width: 200, height: 200`.
-  /// This is only effective if the webview was created by [`WebView::new_as_child`] or [`WebViewBuilder::new_as_child`]
+  /// This is only effective if the webview was created by [`WebViewBuilder::new_as_child`]
   /// or on Linux, if was created by [`WebViewExtUnix::new_gtk`] or [`WebViewBuilderExtUnix::new_gtk`] with [`gtk::Fixed`].
   pub bounds: Option<Rect>,
 
@@ -892,16 +885,6 @@ impl<'a> WebViewBuilder<'a> {
       ..Default::default()
     };
 
-    Self {
-      attrs,
-      #[allow(clippy::default_constructed_unit_structs)]
-      platform_specific: PlatformSpecificWebViewAttributes::default(),
-      error: Ok(()),
-    }
-  }
-
-  /// Create a new [`WebViewBuilder`] with the given [`WebViewAttributes`]
-  pub fn new_with_attributes(attrs: WebViewAttributes<'a>) -> Self {
     Self {
       attrs,
       #[allow(clippy::default_constructed_unit_structs)]
@@ -1167,8 +1150,6 @@ impl<'a> WebViewBuilder<'a> {
   ///
   /// Note, that if you do block this behavior, it won't be possible to drop files on `<input type="file">` forms.
   /// Also note, that it's not possible to manually set the value of a `<input type="file">` via JavaScript for security reasons.
-  #[cfg(feature = "drag-drop")]
-  #[cfg_attr(docsrs, doc(cfg(feature = "drag-drop")))]
   pub fn with_drag_drop_handler<F>(mut self, handler: F) -> Self
   where
     F: Fn(DragDropEvent) -> bool + 'static,
@@ -1342,7 +1323,7 @@ impl<'a> WebViewBuilder<'a> {
   /// [window.open]: https://developer.mozilla.org/en-US/docs/Web/API/Window/open
   pub fn with_new_window_req_handler(
     mut self,
-    callback: impl Fn(String, NewWindowFeatures) -> NewWindowResponse + Send + Sync + 'static,
+    callback: impl Fn(String, NewWindowFeatures) -> NewWindowResponse + 'static,
   ) -> Self {
     self.attrs.new_window_req_handler = Some(Box::new(callback));
     self
@@ -1848,8 +1829,14 @@ impl WebViewBuilderExtWindows for WebViewBuilder<'_> {
 #[cfg(target_os = "android")]
 #[derive(Default)]
 pub(crate) struct PlatformSpecificWebViewAttributes {
-  on_webview_created:
-    Option<Box<dyn Fn(prelude::Context) -> std::result::Result<(), jni::errors::Error> + Send>>,
+  on_webview_created: Option<
+    std::sync::Arc<
+      dyn Fn(prelude::Context) -> std::result::Result<(), jni::errors::Error>
+        + Send
+        + Sync
+        + 'static,
+    >,
+  >,
   with_asset_loader: bool,
   asset_loader_domain: Option<String>,
   https_scheme: bool,
@@ -1858,7 +1845,10 @@ pub(crate) struct PlatformSpecificWebViewAttributes {
 #[cfg(target_os = "android")]
 pub trait WebViewBuilderExtAndroid {
   fn on_webview_created<
-    F: Fn(prelude::Context<'_, '_>) -> std::result::Result<(), jni::errors::Error> + Send + 'static,
+    F: Fn(prelude::Context<'_, '_>) -> std::result::Result<(), jni::errors::Error>
+      + Send
+      + Sync
+      + 'static,
   >(
     self,
     f: F,
@@ -1885,12 +1875,15 @@ pub trait WebViewBuilderExtAndroid {
 #[cfg(target_os = "android")]
 impl WebViewBuilderExtAndroid for WebViewBuilder<'_> {
   fn on_webview_created<
-    F: Fn(prelude::Context<'_, '_>) -> std::result::Result<(), jni::errors::Error> + Send + 'static,
+    F: Fn(prelude::Context<'_, '_>) -> std::result::Result<(), jni::errors::Error>
+      + Send
+      + Sync
+      + 'static,
   >(
     mut self,
     f: F,
   ) -> Self {
-    self.platform_specific.on_webview_created = Some(Box::new(f));
+    self.platform_specific.on_webview_created = Some(std::sync::Arc::new(f));
     self
   }
 
@@ -1998,55 +1991,6 @@ pub struct WebView {
 }
 
 impl WebView {
-  /// Create a [`WebView`] from from a type that implements [`HasWindowHandle`].
-  /// Note that calling this directly loses
-  /// abilities to initialize scripts, add ipc handler, and many more before starting WebView. To
-  /// benefit from above features, create a [`WebViewBuilder`] instead.
-  ///
-  /// # Platform-specific:
-  ///
-  /// - **Linux**: Only X11 is supported, if you want to support Wayland too, use [`WebViewExtUnix::new_gtk`].
-  ///
-  ///   Although this methods only needs an X11 window handle, you use webkit2gtk, so you still need to initialize gtk
-  ///   by callling [`gtk::init`] and advance its loop alongside your event loop using [`gtk::main_iteration_do`].
-  ///   Checkout the [Platform Considerations](https://docs.rs/wry/latest/wry/#platform-considerations) section in the crate root documentation.
-  /// - **macOS / Windows**: The webview will auto-resize when the passed handle is resized.
-  /// - **Linux (X11)**: Unlike macOS and Windows, the webview will not auto-resize and you'll need to call [`WebView::set_bounds`] manually.
-  ///
-  /// # Panics:
-  ///
-  /// - Panics if the provided handle was not supported or invalid.
-  /// - Panics on Linux, if [`gtk::init`] was not called in this thread.
-  pub fn new(window: &impl HasWindowHandle, attrs: WebViewAttributes) -> Result<Self> {
-    WebViewBuilder::new_with_attributes(attrs).build(window)
-  }
-
-  /// Create [`WebViewBuilder`] as a child window inside the provided [`HasWindowHandle`].
-  ///
-  /// ## Platform-specific
-  ///
-  /// - **Windows**: This will create the webview as a child window of the `parent` window.
-  /// - **macOS**: This will create the webview as a `NSView` subview of the `parent` window's
-  ///   content view.
-  /// - **Linux**: This will create the webview as a child window of the `parent` window. Only X11
-  ///   is supported. This method won't work on Wayland.
-  ///
-  ///   Although this methods only needs an X11 window handle, you use webkit2gtk, so you still need to initialize gtk
-  ///   by callling [`gtk::init`] and advance its loop alongside your event loop using [`gtk::main_iteration_do`].
-  ///   Checkout the [Platform Considerations](https://docs.rs/wry/latest/wry/#platform-considerations) section in the crate root documentation.
-  ///
-  ///   If you want to support child webviews on X11 and Wayland at the same time,
-  ///   we recommend using [`WebViewBuilderExtUnix::new_gtk`] with [`gtk::Fixed`].
-  /// - **Android/iOS:** Unsupported.
-  ///
-  /// # Panics:
-  ///
-  /// - Panics if the provided handle was not support or invalid.
-  /// - Panics on Linux, if [`gtk::init`] was not called in this thread.
-  pub fn new_as_child(parent: &impl HasWindowHandle, attrs: WebViewAttributes) -> Result<Self> {
-    WebViewBuilder::new_with_attributes(attrs).build_as_child(parent)
-  }
-
   /// Returns the id of this webview.
   pub fn id(&self) -> WebViewId<'_> {
     self.webview.id()
@@ -2068,8 +2012,6 @@ impl WebView {
   /// serialized into a JSON string and passed to the callback function.
   ///
   /// Exception is ignored because of the limitation on windows. You can catch it yourself and return as string as a workaround.
-  ///
-  /// - ** Android:** Not implemented yet.
   pub fn evaluate_script_with_callback(
     &self,
     js: &str,
@@ -2498,7 +2440,9 @@ pub trait WebViewExtAndroid {
 #[cfg(target_os = "android")]
 impl WebViewExtAndroid for WebView {
   fn handle(&self) -> JniHandle {
-    JniHandle
+    JniHandle {
+      activity_id: self.webview.activity_id,
+    }
   }
 }
 

@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77"
 name = "wry"
-version = "0.54.4"
+version = "0.55.1"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 exclude = [
@@ -37,7 +37,6 @@ repository = "https://github.com/tauri-apps/wry"
 [package.metadata.docs.rs]
 no-default-features = true
 features = [
-    "drag-drop",
     "protocol",
     "os-webview",
 ]
@@ -49,13 +48,11 @@ targets = [
 
 [features]
 default = [
-    "drag-drop",
     "protocol",
     "os-webview",
     "x11",
 ]
 devtools = []
-drag-drop = []
 fullscreen = []
 linux-body = [
     "webkit2gtk/v2_40",
@@ -195,7 +192,7 @@ version = "0.4.0"
 version = "0.10"
 
 [dev-dependencies.tao]
-version = "0.34"
+version = "0.35"
 
 [dev-dependencies.wgpu]
 version = "23"
