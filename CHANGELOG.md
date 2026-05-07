@@ -1,5 +1,14 @@
 # Changelog
 
+## **[3.13.2] - 2026-05-07**
+
+## 🛠 Corrections
+
+- Hotfix CI release : le contrôle reproductible reste bloquant pour le binaire
+  SONAR, mais un bundle `.deb` non reproductible est traité comme diagnostic
+  afin de ne pas empêcher la publication d'une nouvelle version.
+- Mise à jour de la version de SONAR en **3.13.2** pour publier ce correctif.
+
 ## **[3.13.1] - 2026-05-07**
 
 ## 🛠 Corrections

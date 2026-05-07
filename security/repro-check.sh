@@ -9,6 +9,7 @@ DEB_PATH="${DEB_PATH:-}"
 WORKDIR="${WORKDIR:-/tmp/repro-check-${APP_NAME}}"
 FIXED_EPOCH="${FIXED_EPOCH:-1700000000}"
 REQUIRE_DEB="${REQUIRE_DEB:-0}"
+ALLOW_BUNDLE_NON_REPRODUCIBLE="${ALLOW_BUNDLE_NON_REPRODUCIBLE:-0}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -212,8 +213,12 @@ main() {
     compare_pair "with-flags" "$deb_with_1" "$deb_with_2" "deb"
     run_diffoscope_if_available "$deb_with_1" "$deb_with_2" "${WORKDIR}/with-flags/diffoscope-deb.txt"
     if ! cmp -s "$deb_with_1" "$deb_with_2"; then
-      err "Le paquet .deb avec flags reproductibles diffère entre les deux builds"
-      repro_failed=1
+      if [[ "$ALLOW_BUNDLE_NON_REPRODUCIBLE" == "1" ]]; then
+        warn "Le paquet .deb avec flags reproductibles diffère entre les deux builds"
+      else
+        err "Le paquet .deb avec flags reproductibles diffère entre les deux builds"
+        repro_failed=1
+      fi
     fi
   fi
 

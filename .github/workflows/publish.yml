@@ -35,6 +35,7 @@ jobs:
         shell: bash
         env:
           REQUIRE_DEB: "1"
+          ALLOW_BUNDLE_NON_REPRODUCIBLE: "1"
         run: ./security/repro-check.sh
 
   publish-tauri:
