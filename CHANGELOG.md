@@ -1,5 +1,14 @@
 # Changelog
 
+## **[3.13.1] - 2026-05-07**
+
+## 🛠 Corrections
+
+- Hotfix vendoring : inclusion complète des fichiers `diagram.svg` et
+  `diagram.png` de `libdbus-sys` pour éviter les erreurs de checksum Cargo en
+  CI.
+- Mise à jour de la version de SONAR en **3.13.1** pour publier ce correctif.
+
 ## **[3.13.0] - 2026-05-07**
 
 ## ✨ Améliorations
