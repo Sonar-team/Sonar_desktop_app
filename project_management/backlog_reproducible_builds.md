@@ -100,7 +100,7 @@ Why:
 
 ### 8. Enforce reproducibility verification in CI
 
-Status: Not Done
+Status: Done
 
 - Run `security/repro-check.sh` on release candidates or tags.
 - Fail the pipeline when repeated builds are not identical.
@@ -114,7 +114,7 @@ Why:
 
 ### 9. Publish SHA256 hashes for release artifacts
 
-Status: Not Done
+Status: Done
 
 - Generate hashes for binaries and packaged artifacts.
 - Publish them with release outputs.

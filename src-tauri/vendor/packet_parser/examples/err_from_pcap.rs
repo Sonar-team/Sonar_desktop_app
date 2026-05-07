@@ -3,9 +3,10 @@ use pcap::Capture;
 use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let pcap_file_path =
-        Path::new("/home/erdt-cyber/rust/ICS-Security-Tools/pcaps/ModbusTCP/mb2.pcap");
-
+    let pcap_file_path = Path::new(
+        "/home/erdt-cyber/rust/icsmaster/pcap/opc/opc-ua-ap-method-wireshark-freeze.pcap",
+    );
+    println!("Reading pcap file: {}", pcap_file_path.display());
     let mut cap = Capture::from_file(pcap_file_path)?;
     let mut id = 0;
     loop {
@@ -23,7 +24,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         match parsed {
             Ok(flow) => {
                 id += 1;
-                let _owned = flow.to_owned();
+                let owned = flow.to_owned();
+                println!("Packet {id}: {owned}");
             }
             Err(e) => {
                 id += 1;

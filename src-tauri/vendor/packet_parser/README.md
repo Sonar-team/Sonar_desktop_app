@@ -29,7 +29,7 @@ Add the dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-packet_parser = "0.7.0"
+packet_parser = "1.3.0"
 ```
 
 Then, import the crate in your project:
@@ -123,5 +123,4 @@ This crate is distributed under the MIT license. See the [LICENSE](LICENSE) file
 ---
 
 **Packet Parser** is designed to make network frame analysis efficient and extensible in complex environments. If you have any suggestions or feedback, feel free to reach out! 🚀
-
 

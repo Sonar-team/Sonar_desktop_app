@@ -12,6 +12,7 @@ use http::HttpRequest;
 use modbus_tcp::ModbusTcpPacket;
 use mqtt::MqttPacket;
 use ntp::NtpPacket;
+use opcua::OpcuaPacket;
 use s7comm::S7CommPacket;
 use tls::TlsPacket;
 
@@ -30,6 +31,7 @@ pub mod http;
 pub mod modbus_tcp;
 pub mod mqtt;
 pub mod ntp;
+pub mod opcua;
 pub mod quic;
 pub mod s7comm;
 pub mod srvloc;
@@ -53,6 +55,7 @@ pub enum ApplicationProtocol<'a> {
     Srvloc(SrvlocPacket),
     Ams(ams::AmsPacket<'a>),
     ModbusTcp(ModbusTcpPacket<'a>),
+    Opcua(OpcuaPacket<'a>),
     Raw(&'a [u8]),
     None,
 }

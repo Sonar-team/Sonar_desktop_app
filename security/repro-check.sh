@@ -5,9 +5,10 @@ PROJECT_ROOT="${PROJECT_ROOT:-$(pwd)}"
 APP_NAME="${APP_NAME:-sonar}"
 TAURI_BUILD_CMD="${TAURI_BUILD_CMD:-deno task tauri build}"
 BIN_PATH="${BIN_PATH:-src-tauri/target/release/$APP_NAME}"
-DEB_PATH="${DEB_PATH:-src-tauri/target/release/bundle/deb/${APP_NAME}_3.12.3_amd64.deb}"
+DEB_PATH="${DEB_PATH:-}"
 WORKDIR="${WORKDIR:-/tmp/repro-check-${APP_NAME}}"
 FIXED_EPOCH="${FIXED_EPOCH:-1700000000}"
+REQUIRE_DEB="${REQUIRE_DEB:-0}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -38,6 +39,15 @@ clean_outputs() {
   rm -rf src-tauri/target/release/bundle
 }
 
+resolve_deb_path() {
+  if [[ -n "$DEB_PATH" ]]; then
+    printf '%s\n' "$DEB_PATH"
+    return 0
+  fi
+
+  find src-tauri/target/release/bundle/deb -maxdepth 1 -type f -name '*.deb' 2>/dev/null | sort | head -n 1
+}
+
 run_build() {
   local mode="$1"
   local run="$2"
@@ -58,8 +68,15 @@ run_build() {
     exit 1
   fi
 
-  if [[ ! -f "$DEB_PATH" ]]; then
-    warn "Paquet .deb introuvable : $DEB_PATH"
+  local resolved_deb_path
+  resolved_deb_path="$(resolve_deb_path)"
+
+  if [[ -z "$resolved_deb_path" || ! -f "$resolved_deb_path" ]]; then
+    if [[ "$REQUIRE_DEB" == "1" ]]; then
+      err "Paquet .deb introuvable"
+      exit 1
+    fi
+    warn "Paquet .deb introuvable"
   fi
 
   local outdir="${WORKDIR}/${mode}/run${run}"
@@ -68,9 +85,9 @@ run_build() {
   cp "$BIN_PATH" "${outdir}/${APP_NAME}"
   sha256sum "${outdir}/${APP_NAME}" | tee "${outdir}/sha256-bin.txt"
 
-  if [[ -f "$DEB_PATH" ]]; then
-    cp "$DEB_PATH" "${outdir}/$(basename "$DEB_PATH")"
-    sha256sum "${outdir}/$(basename "$DEB_PATH")" | tee "${outdir}/sha256-deb.txt"
+  if [[ -n "$resolved_deb_path" && -f "$resolved_deb_path" ]]; then
+    cp "$resolved_deb_path" "${outdir}/$(basename "$resolved_deb_path")"
+    sha256sum "${outdir}/$(basename "$resolved_deb_path")" | tee "${outdir}/sha256-deb.txt"
   fi
 }
 
@@ -135,7 +152,7 @@ main() {
 
   log "Projet: $PROJECT_ROOT"
   log "Binaire attendu: $BIN_PATH"
-  log "Deb attendu: $DEB_PATH"
+  log "Deb attendu: ${DEB_PATH:-auto-detect}"
   log "Workspace: $WORKDIR"
 
   run_build "with-flags" "1"
@@ -149,7 +166,8 @@ main() {
   local bin_without_2="${WORKDIR}/without-flags/run2/${APP_NAME}"
 
   local deb_name
-  deb_name="$(basename "$DEB_PATH")"
+  deb_name="$(find "${WORKDIR}/with-flags/run1" -maxdepth 1 -type f -name '*.deb' 2>/dev/null | sort | head -n 1)"
+  deb_name="$(basename "$deb_name")"
 
   local deb_with_1="${WORKDIR}/with-flags/run1/${deb_name}"
   local deb_with_2="${WORKDIR}/with-flags/run2/${deb_name}"
@@ -169,6 +187,12 @@ main() {
   compare_pair "with-flags" "$bin_with_1" "$bin_with_2" "binary"
   compare_pair "without-flags" "$bin_without_1" "$bin_without_2" "binary"
 
+  local repro_failed=0
+  if ! cmp -s "$bin_with_1" "$bin_with_2"; then
+    err "Le binaire avec flags reproductibles diffère entre les deux builds"
+    repro_failed=1
+  fi
+
   echo
   echo "Comparaison du binaire avec-flags vs sans-flags :"
   sha256sum "$bin_with_1" "$bin_without_1"
@@ -187,6 +211,10 @@ main() {
       "deb"
     compare_pair "with-flags" "$deb_with_1" "$deb_with_2" "deb"
     run_diffoscope_if_available "$deb_with_1" "$deb_with_2" "${WORKDIR}/with-flags/diffoscope-deb.txt"
+    if ! cmp -s "$deb_with_1" "$deb_with_2"; then
+      err "Le paquet .deb avec flags reproductibles diffère entre les deux builds"
+      repro_failed=1
+    fi
   fi
 
   echo
@@ -205,6 +233,10 @@ main() {
   echo "  - with-flags/run2"
   echo "  - without-flags/run1"
   echo "  - without-flags/run2"
+
+  if [[ "$repro_failed" != "0" ]]; then
+    exit 1
+  fi
 }
 
 main "$@"

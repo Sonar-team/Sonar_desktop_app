@@ -98,6 +98,30 @@ impl<'a> Hash for PacketFlow<'a> {
 }
 
 impl<'a> PacketFlow<'a> {
+    fn parse_application_from_transport(transport: &Transport<'a>) -> Option<Application> {
+        let payload = transport.payload?;
+        if payload.is_empty() {
+            return None;
+        }
+
+        let parsed = Application::try_from(payload).ok();
+        if matches!(
+            parsed.as_ref().map(|app| app.application_protocol.as_str()),
+            Some("OPC UA")
+        ) {
+            return parsed;
+        }
+
+        if is_opcua_tcp_port(transport.source_port) || is_opcua_tcp_port(transport.destination_port)
+        {
+            return Some(Application {
+                application_protocol: "OPC UA".to_string(),
+            });
+        }
+
+        parsed
+    }
+
     /// Converts this borrowed [`PacketFlow`] into an owned version.
     ///
     /// This performs the necessary allocations to detach from the original
@@ -128,13 +152,9 @@ impl<'a> PacketFlow<'a> {
             None => None,
         };
 
-        let application = match &transport {
-            Some(t) => match t.payload {
-                Some(p) => Application::try_from(p).ok(),
-                None => None,
-            },
-            None => None,
-        };
+        let application = transport
+            .as_ref()
+            .and_then(Self::parse_application_from_transport);
 
         Ok(PacketFlow {
             data_link,
@@ -185,13 +205,9 @@ impl<'a> PacketFlow<'a> {
         timing.l4_ns = elapsed_ns(t0);
 
         let t0 = now();
-        let application = match &transport {
-            Some(t) => match t.payload {
-                Some(p) => Application::try_from(p).ok(),
-                None => None,
-            },
-            None => None,
-        };
+        let application = transport
+            .as_ref()
+            .and_then(Self::parse_application_from_transport);
         timing.l7_ns = elapsed_ns(t0);
 
         timing.total_ns = elapsed_ns(total_t0);
@@ -219,6 +235,10 @@ impl<'a> PacketFlow<'a> {
         *timing = crate::timing::ParseTiming::default();
         Self::parse_impl_timed(packets, timing)
     }
+}
+
+fn is_opcua_tcp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(4840 | 12001))
 }
 
 #[cfg(test)]

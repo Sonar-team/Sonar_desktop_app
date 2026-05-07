@@ -6,7 +6,39 @@ on:
       - "app-v*"
 
 jobs:
+  reproducibility-check:
+    permissions:
+      contents: read
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.7.13
+
+      - name: install Rust pinned version 1.95.0
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.95.0
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libpcap-dev
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: verify reproducible Linux build
+        shell: bash
+        env:
+          REQUIRE_DEB: "1"
+        run: ./security/repro-check.sh
+
   publish-tauri:
+    needs: reproducibility-check
     permissions:
       contents: write
     strategy:
@@ -33,7 +65,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: 1.95.0
-          targets: ${{ matrix.platform == 'macos-13' && 'x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-14' && 'x86_64-apple-darwin' || '' }}
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -59,3 +91,21 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Generate SHA256 checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          checksum_file="SHA256SUMS-${{ matrix.platform }}.txt"
+          find src-tauri/target/release/bundle -type f \
+            \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.dmg' -o -name '*.msi' -o -name '*.exe' \) \
+            | sort | while IFS= read -r artifact; do
+              sha256sum "$artifact"
+            done > "$checksum_file"
+          test -s "$checksum_file"
+
+      - name: Upload SHA256 checksums to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${GITHUB_REF_NAME}" "SHA256SUMS-${{ matrix.platform }}.txt" --clobber
