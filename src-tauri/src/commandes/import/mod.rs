@@ -35,160 +35,6 @@ fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
 }
 
 #[tauri::command(async)]
-pub fn labels_file_list(
-    app: tauri::AppHandle,
-) -> Result<Vec<(String, bool)>, tauri::Error>{
-    let dossier_data = app.path().app_data_dir()?;
-    let dossier_labels = dossier_data.join("labels");
-    let fichier_labels_file_list = dossier_labels.join("labels_file_list.txt");
-    let mut couples: Vec<(String, bool)> = Vec::new();
-
-    if fs::exists(&dossier_labels).unwrap_or(false){
-        let fichiers: Vec<String> = fs::read_dir(&dossier_labels)?
-            .filter_map(|entree| entree.ok())
-            .map(|entree| entree.path())
-            .filter(|chemin| chemin.is_file())
-            .filter(|chemin| chemin.extension().and_then(|e| e.to_str()) == Some("csv"))
-            .filter_map(|chemin| chemin.file_name()?.to_str().map(String::from))
-            .collect();
-
-        let contenu = fs::read_to_string(fichier_labels_file_list)?;
-        let lignes: Vec<String> = contenu.lines().map(String::from).collect();
-
-        let set1: HashSet<&String> = fichiers.iter().collect();
-        let set2: HashSet<&String> = lignes.iter().collect();
-
-        for ligne in set1 {
-            if set2.contains(ligne) {
-                couples.push((ligne.to_string(), true));
-            }
-            else {
-                couples.push((ligne.to_string(), false))
-            }
-
-            println!("couples : {:?}\n", couples);
-        }
-
-        couples.sort();
-
-        return Ok(couples);
-    }
-
-    Ok(vec![])
-}
-
-#[tauri::command(async)]
-pub fn add_to_label_file_list(
-    paths_list: Vec<String>,
-    app: tauri::AppHandle,
-)-> Result<(), tauri::Error> {
-    let dossier_data = app.path().app_data_dir()?;
-    let dossier_labels = dossier_data.join("labels");
-    let fichier_labels_file_list = dossier_labels.join("labels_file_list.txt");
-
-    if !fs::exists(&dossier_labels).unwrap_or(false){
-        fs::create_dir(&dossier_labels)?;
-    }
-
-    let mut fichier_labels_file_list = fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(fichier_labels_file_list)?;
-
-    for path in paths_list {
-        fichier_labels_file_list.write_all(format!("{}\n", path).as_bytes())?;
-    }
-
-    println!("Ajouté à la liste : {:?}", fichier_labels_file_list);
-    
-    
-    Ok(())
-}
-
-#[tauri::command(async)]
-pub fn import_label_files(
-    csv_paths: Vec<String>,
-    app: tauri::AppHandle,
-) -> Result<(), tauri::Error> {
-    let dossier_data = app.path().app_data_dir()?;
-    let dossier_labels = dossier_data.join("labels");
-
-    if !fs::exists(&dossier_labels).unwrap_or(false){
-        fs::create_dir(&dossier_labels)?;
-    }
-
-    for csv_path in csv_paths {
-        let chemin = Path::new(&csv_path);
-        fs::copy(&csv_path, &dossier_labels.join(chemin.file_name().unwrap()))?;
-        println!("copie effectuée");
-    }
-
-    Ok(())
-}
-
-pub fn new_import_labels(
-    app: tauri::AppHandle,
-    state_label: State<'_, Arc<Mutex<FlowMatrix>>>
-) -> Result<(), std::io::Error> {
-    let mut state_label = state_label.lock().unwrap();
-    let fichiers_choisis = labels_file_list(app.clone()).unwrap_or_default();
-    let dossier_data = app.path().app_data_dir().unwrap();
-    let dossier_labels = dossier_data.join("labels");
-
-    let noms_actifs: HashSet<String> = fichiers_choisis.into_iter().filter(|(_, actif)| *actif).map(|(nom, _)| nom).collect();
-
-    if fs::exists(&dossier_labels).unwrap_or(false){
-        let fichiers: Vec<PathBuf> = fs::read_dir(&dossier_labels)?
-            .filter_map(|entree| entree.ok())
-            .map(|entree| entree.path())
-            .filter(|chemin| chemin.is_file())
-            .filter(|chemin| chemin.extension().and_then(|e| e.to_str()) == Some("csv"))
-            .filter(|chemin| chemin.file_name().and_then(|e| e.to_str()).map(|nom|noms_actifs.contains(nom)).unwrap_or(false))
-            .collect();
-    
-
-        for fichier in &fichiers {
-
-            let csv = match std::fs::read_to_string(&fichier) {
-            Ok(csv_data) => csv_data,
-            Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
-            Err(error) => return Err(error.into()),
-        };
-
-            let labels: Vec<String> = csv
-                .lines()
-                .map(|l| l.to_string())
-                .collect();
-
-            for label in labels {
-                let Some((mac, ip, label)) = parse_label_row(&label) else {
-                    continue;
-                };
-
-                state_label.add_label(mac.to_string(), ip, label);
-            }
-        }
-    }
-
-    Ok(())
-}
-
-#[tauri::command(async)]
-pub fn remove_labels_file(
-    csv_file: String,
-    app: AppHandle
-)->Result<(), tauri::Error> {
-    println!("Entré dans remove_labels_file");
-    let dossier_data = app.path().app_data_dir().unwrap();
-    let dossier_labels = dossier_data.join("labels");
-    let fichier_labels = dossier_labels.join(csv_file);
-    fs::remove_file(fichier_labels)?;
-    println!("Fichier supprimé");
-    Ok(())
-}
-
-#[tauri::command(async)]
 pub fn convert_from_pcap_list(
     matrice: State<'_, Arc<Mutex<FlowMatrix>>>,
     graph: State<'_, Arc<Mutex<GraphData>>>,
@@ -332,5 +178,160 @@ fn handle_pcap_file(
         total,
         matrice.matrix.len()
     );
+    Ok(())
+}
+
+
+/*<----- Csv part -----> */
+
+
+#[tauri::command(async)]
+pub fn read_label_files_list(
+    app: tauri::AppHandle,
+) -> Result<Vec<(String, bool)>, tauri::Error>{
+    let data_folder = app.path().app_data_dir()?;
+    let labels_folder = data_folder.join("labels");
+    let label_files_list_file = labels_folder.join("labels_file_list.txt");
+    let mut label_files_list: Vec<(String, bool)> = Vec::new();
+
+    if fs::exists(&labels_folder).unwrap_or(false){
+        let fichiers: Vec<String> = fs::read_dir(&labels_folder)?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .filter(|path| path.is_file())
+            .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("csv"))
+            .filter_map(|path| path.file_name()?.to_str().map(String::from))
+            .collect();
+
+        let contenu = fs::read_to_string(label_files_list_file).unwrap_or_default();
+        let lignes: Vec<String> = contenu.lines().map(String::from).collect();
+
+        let set1: HashSet<&String> = fichiers.iter().collect();
+        let set2: HashSet<&String> = lignes.iter().collect();
+
+        for line in set1 {
+            if set2.contains(line) {
+                label_files_list.push((line.to_string(), true));
+            }
+            else {
+                label_files_list.push((line.to_string(), false))
+            }
+        }
+
+        label_files_list.sort();
+        println!("label_files_list : {:?}\n", label_files_list);
+
+        return Ok(label_files_list);
+    }
+
+    Ok(vec![])
+}
+
+#[tauri::command(async)]
+pub fn add_to_label_file_list(
+    selected_files_names_list: Vec<String>,
+    app: tauri::AppHandle,
+)-> Result<(), tauri::Error> {
+    let data_folder = app.path().app_data_dir()?;
+    let labels_folder = data_folder.join("labels");
+    let label_files_list_file = labels_folder.join("labels_file_list.txt");
+
+    if !fs::exists(&labels_folder).unwrap_or(false){
+        fs::create_dir(&labels_folder)?;
+    }
+
+    let mut label_files_list_file = fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(label_files_list_file)?;
+
+    for name in selected_files_names_list {
+        label_files_list_file.write_all(format!("{}\n", name).as_bytes())?;
+    }
+
+    println!("Ajouté à la liste : {:?}", label_files_list_file);
+    
+    
+    Ok(())
+}
+
+#[tauri::command(async)]
+pub fn import_label_files(
+    csv_paths: Vec<String>,
+    app: tauri::AppHandle,
+) -> Result<(), tauri::Error> {
+    let data_folder = app.path().app_data_dir()?;
+    let labels_folder = data_folder.join("labels");
+
+    if !fs::exists(&labels_folder).unwrap_or(false){
+        fs::create_dir(&labels_folder)?;
+    }
+
+    for csv_path in csv_paths {
+        let path = Path::new(&csv_path);
+        fs::copy(&csv_path, &labels_folder.join(path.file_name().unwrap()))?;
+        println!("copie effectuée");
+    }
+
+    Ok(())
+}
+
+pub fn labels_to_matrix(
+    app: tauri::AppHandle,
+    state_label: State<'_, Arc<Mutex<FlowMatrix>>>
+) -> Result<(), std::io::Error> {
+    let mut state_label = state_label.lock().unwrap();
+    let selected_files = read_label_files_list(app.clone()).unwrap_or_default();
+    let data_folder = app.path().app_data_dir().unwrap();
+    let labels_folder = data_folder.join("labels");
+
+    let selected_label_files_names: HashSet<String> = selected_files.into_iter().filter(|(_, actif)| *actif).map(|(nom, _)| nom).collect();
+
+    if fs::exists(&labels_folder).unwrap_or(false){
+        let selected_label_files: Vec<PathBuf> = fs::read_dir(&labels_folder)?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .filter(|path| path.is_file())
+            .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("csv"))
+            .filter(|path| path.file_name().and_then(|e| e.to_str()).map(|name|selected_label_files_names.contains(name)).unwrap_or(false))
+            .collect();
+    
+
+        for label_file in &selected_label_files {
+
+            let file = match std::fs::read_to_string(&label_file) {
+            Ok(csv_data) => csv_data,
+            Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+            Err(error) => return Err(error.into()),
+        };
+            let labels: Vec<String> = file
+                .lines()
+                .map(|l| l.to_string())
+                .collect();
+
+            for label in labels {
+                let Some((mac, ip, label)) = parse_label_row(&label) else {
+                    continue;
+                };
+
+                state_label.add_label(mac.to_string(), ip, label);
+            }
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command(async)]
+pub fn remove_label_file(
+    csv_file: String,
+    app: AppHandle
+)->Result<(), tauri::Error> {
+    let data_folder = app.path().app_data_dir()?;
+    let labels_folder = data_folder.join("labels");
+    let label_file = labels_folder.join(csv_file);
+    fs::remove_file(label_file)?;
+    println!("File removed");
     Ok(())
 }

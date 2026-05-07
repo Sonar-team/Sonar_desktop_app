@@ -2,78 +2,48 @@
   <div class="container">
     <div class="center-container">
 
-      <div class="left-panel">
-
-        <ul class="file-list">
-          <li v-for="([file, coche], index) in fichiers" :key="index">
-            <label :for="String(index)">
-              <input type="checkbox" v-model="selectedFiles" :value="file" :id="String(index)">
-              <span>{{ file }}</span>
-              <button class="image-btn" @click.prevent="RemoveFile(file)" title="Supprimer">🗑️</button>
-            </label>
-          </li>
-        </ul>
-        <button 
-          @click="addToLabelsFilesList"
-          class="btn btn-open"
-          >
-            Valider
-        </button>
-      </div>
-      
-      <div class="separateur"></div>
-
-      <div class="right-panel">
         <!-- Overlay de chargement -->
-        <div class="overlay" v-if="isConverting">
-          <div class="spinner"></div>
-          <p class="overlay-text">Conversion en cours…</p>
-        </div>
+      <div class="overlay" v-if="isConverting">
+        <div class="spinner"></div>
+        <p class="overlay-text">Conversion en cours…</p>
+      </div>
+      <button class="btn image-btn" @click.prevent="windowClosed">❌</button>
+      
+      <div v-if="mode === 'csv'" class="csv-group">
+          <button class="btn btn-add text" @click="addCsvFiles" :disabled="isConverting">
+            Ajouter des fichiers
+          </button>
+          <ul class="file-list">
+            <li v-for="([file,], index) in labelFiles" :key="index">
+              <label :for="String(index)">
+                <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" class="toggle" @change="addToLabelsFilesList">
+                <span class="text">{{ file }}</span>
+                <button class="image-btn" @click.prevent="RemoveLabelFile(file)" title="Supprimer"><img src="./Pictures/Poubelle.jpg" alt="Supprimer" /></button>
+              </label>
+            </li>
+          </ul>
+      </div>
 
+      <div v-else-if="mode === 'pcap'">
         <div class="file-group">
-          <label for="packetFiles"></label>
-          <div v-if="mode === 'csv'" class="file-group">
-            <button class="btn" @click="addCsvFiles" :disabled="isConverting">
-            Ajouter des fichiers de label
-            </button>
-            <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
-              Effacer
-            </button>
-          </div>
-          <div v-else-if="mode === 'pcap'" class="file-group">
-            <button class="btn" @click="addPcapFiles" :disabled="isConverting">
-              Ajouter des fichiers
-            </button>
-            <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
-              Effacer
-            </button>
-          </div>
+          <button class="btn btn-add text" @click="addPcapFiles" :disabled="isConverting">
+            Ajouter des fichiers
+          </button>
+          <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
+            Effacer
+          </button>
         </div>
-          
         <ul class="file-list" v-if="packetFiles.length > 0">
           <li v-for="(file, index) in packetFiles" :key="index">
             {{ file }}
           </li>
         </ul>
-
-        <button v-show="mode === 'pcap'"
-          @click="convertPcap"
-          class="btn btn-open"
-          :disabled="isConverting || packetFiles.length === 0"
-        >
-          Ouvrir
-        </button>
-        <button v-show="mode === 'csv'"
-          @click="convertCsv"
-          class="btn btn-open"
-          :disabled="isConverting || packetFiles.length === 0"
-        >
+        <button @click="convertPcap" class="btn btn-open" :disabled="isConverting || packetFiles.length === 0">
           Ouvrir
         </button>
       </div>
-    </div>
-
-    </div>
+    </div> 
+  </div>
 </template>
 
 <script lang="ts">
@@ -98,9 +68,8 @@ export default defineComponent({
   data() {
     return {
       packetFiles: [] as string[],
-      fichiers: [] as [string, boolean][],
-      selectedFiles: [] as string[],
-      filesNames: [] as [string, boolean][],
+      labelFiles: [] as [string, boolean][],
+      selectedLabelFiles: [] as string[],
       isConverting: false,
     };
   },
@@ -115,58 +84,37 @@ export default defineComponent({
   },
 
   methods: {
-    async addToLabelsFilesList(){
-
-      this.packetFiles.push(...this.selectedFiles);
-
-      info('packetFiles : ' + this.packetFiles);
-
-      try {
-        await invoke('add_to_label_file_list', { pathsList: this.packetFiles});
-        info('réponse invoke');
-        this.$emit('update:visible', false);
-      } catch (err) {
-        displayCaptureError(err);
-      } finally {
-        this.isConverting = false;
-      }
-
-      this.packetFiles = [];
+    windowClosed() {
+      this.$emit('update:visible', false);
     },
 
     addPcapFiles() {
-      return this.addFiles('Capture File', ['pcap', 'pcapng', 'cap']);
+      return this.addFiles('pcap', ['pcap', 'pcapng', 'cap']);
     },
 
     addCsvFiles() {
-      return this.addFiles('Label File', ['csv']);
+      return this.addFiles('csv', ['csv']);
     },
 
-    async addFiles(name : string, extensions : string[]) {
+    async addFiles(type : 'pcap' | 'csv', extensions : string[]) {
+
+      const label = type === 'csv' ? 'Label File' : 'Capture File';
+      
       const files = await open({
         multiple: true,
-        filters: [{ name: name, extensions: extensions }]
+        filters: [{ name: label, extensions: extensions }]
       });
 
-      if (files) {
-        const list = Array.isArray(files) ? files : [files];
-        this.packetFiles.push(...list);
-        this.filesNames = files.map((chemin => [chemin.split(/[\\/]/).pop() ?? chemin, true]));
-        info('' + this.filesNames);
-      }
-    },
+      if (!files) return;
 
-    async RemoveFile(fileRemoved: string) {
-      info('fileRemoved : ' + fileRemoved);
-      try {
-        await invoke('remove_labels_file', { csvFile: fileRemoved});
-        info('réponse invoke');
-        this.fichiers = this.fichiers.filter(([nom]) => nom !== fileRemoved);
-        this.selectedFiles = this.selectedFiles.filter((nom) => nom !== fileRemoved);
-      } catch (err) {
-        displayCaptureError(err);
-      } finally {
-        this.isConverting = false;
+      const list = Array.isArray(files) ? files : [files];
+
+      if (type === 'csv') {
+        let labelFilesNames = list.map(((path): [string, boolean] => [path.split(/[\\/]/).pop() ?? path, true]));
+        info('' + labelFilesNames);
+        await this.convertLabelFile(list, labelFilesNames)
+      } else {
+        this.packetFiles.push(...list);
       }
     },
 
@@ -197,27 +145,47 @@ export default defineComponent({
       this.packetFiles = [];
     },
 
-    async convertCsv() {
-      if (this.packetFiles.length === 0) return;
+    async convertLabelFile(paths: string[], names: [string, boolean][]) {
+      if (paths.length === 0) return;
 
-      info('import_label_files: ' + this.packetFiles);
+      info('import_label_files: ' + paths);
 
       this.isConverting = true;
 
       try {
-        await invoke('import_label_files', { csvPaths: this.packetFiles });
+        await invoke('import_label_files', { csvPaths: paths });
         info('réponse invoke');
-        this.fichiers.push(...this.filesNames.filter(([nom]) => !this.fichiers.map(([nom]) => nom).includes(nom)));
-        this.fichiers.sort();
-        this.selectedFiles.push(...this.filesNames.map(([nom]) => nom));
+        this.labelFiles.push(...names.filter(([name]) => !this.labelFiles.some(([existing]) => existing === name)));
+        this.labelFiles.sort();
       } catch (err) {
         displayCaptureError(err);
       } finally {
         this.isConverting = false;
       }
-      this.packetFiles = [];
     },
-  },
+  
+
+    async RemoveLabelFile(fileRemoved: string) {
+        info('fileRemoved : ' + fileRemoved);
+        try {
+          await invoke('remove_label_file', { csvFile: fileRemoved});
+          info('réponse invoke');
+          this.labelFiles = this.labelFiles.filter(([name]) => name !== fileRemoved);
+          this.selectedLabelFiles = this.selectedLabelFiles.filter((name) => name !== fileRemoved);
+        } catch (err) {
+          displayCaptureError(err);
+        }
+      },
+
+    async addToLabelsFilesList(){
+        try {
+          await invoke('add_to_label_file_list', { selectedFilesNamesList: this.selectedLabelFiles});
+          info('réponse invoke');
+        } catch (err) {
+          displayCaptureError(err);
+        }
+      },
+  }, 
 
   async mounted() {
     this.captureStore.onStarted(() => {
@@ -230,9 +198,9 @@ export default defineComponent({
       this.captureStore.updateStatus({ is_running: false });
     });
 
-    this.fichiers = await invoke('labels_file_list');
-    this.selectedFiles = this.fichiers
-            .filter(([_, coche]) => coche)
+    this.labelFiles = await invoke('read_label_files_list');
+    this.selectedLabelFiles = this.labelFiles
+            .filter(([_, checked]) => checked)
             .map(([file, _]) => file);
   },
 });
@@ -255,7 +223,7 @@ export default defineComponent({
 .center-container {
   position: relative;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
   align-items: stretch;
   background-color: #1e1e2e;
@@ -266,42 +234,32 @@ export default defineComponent({
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.left-panel {
-  width: 50%;
-  padding: 1rem;
-   display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.separateur {
-  width: 2px;
-  background-color: #ccc;
-  align-self: stretch; /* prend toute la hauteur du conteneur */
-}
-
-.right-panel {
-  width: 50%;
-  padding: 1rem;
+.csv-group {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  width: 100%;
 }
 
 .file-group {
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
+  justify-content: center;
 }
 
 .btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  border: 1px solid;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
   font-weight: 500;
+  font-family: inherit;
+  color: whitesmoke;
+  background-color: #181829;
+  transition: border-color 0.25s, background-color 0.25s;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .btn:disabled {
@@ -310,37 +268,126 @@ export default defineComponent({
 }
 
 .btn-clear {
-  background-color: #f56565;
+  background-color: #181829;
+  border-color: #d8392b;
   color: white;
+}
+
+.btn-clear:hover{
+  background-color:#313152 ;
+}
+
+.btn-clear:active {
+  background-color: #d8392b;
 }
 
 .btn-open {
+  background-color: #181829;
+  border-color: #48bb78;
+  display: block;
+  margin: 0 auto;
+}
+
+.btn-open:hover {
+    background-color: #313152;
+}
+
+.btn-open:active {
   background-color: #48bb78;
-  color: white;
+}
+
+.btn-add {
+  border-color: whitesmoke;
+}
+
+.btn-add:hover {
+  border-color: #2596be;
+  background-color:#313152 ;
+}
+.btn-add:active {
+  border-color: #2596be;
+  background-color: #2596be;
 }
 
 .image-btn {
-  background: grey;
-  border: none;
-  padding: 4px;
-  border-radius: 4px;
+  background: none;
+  border:none;
+  padding: 0;
   cursor: pointer;
-  font-size: 18px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-font-smoothing: subpixel-antialiased;
-  position: absolute;
-  top: 4px;
-  right: 4px
+  margin-left: auto;
 }
 
-li {
-  position: relative;
+.image-btn:hover {
+  transform: translateY(-1px) translateZ(0);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-btn:active {
+  transform: translateY(1px) scale(0.99) translateZ(0);
+  transition: transform 0.1s ease, background-color 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle {
+    /* On définit la hauteur de notre élément */
+    --toggle-height: 1.5rem;
+
+    /* On désactive le style par défaut du système d'exploitation */
+    appearance: none;
+
+    /* On définit les dimensions de la "piste" (le fond) */
+    width: 3rem;
+    height: var(--toggle-height);
+    border-radius: 99px; /* Un grand border-radius pour l'effet pilule */
+    background: #334155; /* Couleur quand c'est inactif (gris bleuté) */
+    position: relative;
+    cursor: pointer;
+    transition: 0.3s;
+
+    /* On crée la "pastille" (le bouton qui glisse) avec un pseudo-élément
+    * Le pseudo-élément est intéressant car le rond qui indique l'état n'a pas de sens sémantique,
+    * ajouter un élément juste graphique est de la responsabilité de CSS.
+    */
+    &::after {
+        /* On définit la hauteur et le placement de notre pastille */
+        --element-top-left: 2px;
+        --element-size: calc(var(--toggle-height) - var(--element-top-left) * 2);
+
+        content: '';
+        position: absolute;
+        left: var(--element-top-left);
+        top: var(--element-top-left);
+        width: var(--element-size);
+        height: var(--element-size);
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+
+    /* On gère l'état "Activé" grâce à la pseudo-classe :checked natif aux checkbox */
+    &:checked {
+        background: #2596be; /* Couleur quand c'est actif (vert néon) */
+
+
+        /* On déplace la pastille vers la droite */
+        &::after {
+            transform: translateX(var(--toggle-height));
+        }
+    }
+}
+
+.file-list label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.text {
+  color: whitesmoke
 }
 
 .file-list {
-  width: 100%;
+  width: 90%;
   max-height: 200px;
   overflow-y: auto;
   background-color: #2d3748;
@@ -352,7 +399,6 @@ li {
 .file-list li {
   padding: 0.5rem;
   margin: 0.25rem 0;
-  background-color: #2d3748;
   border-radius: 4px;
   word-break: break-all;
   font-family: monospace;
