@@ -95,25 +95,32 @@ jobs:
 
       - name: Generate SHA256 checksums
         shell: bash
-        run: |
-          set -euo pipefail
-          checksum_file="SHA256SUMS-${{ matrix.platform }}.txt"
+        run: ./script/ci/generate-release-hashes.sh "${{ matrix.platform }}"
 
-          if command -v sha256sum >/dev/null 2>&1; then
-            hash_cmd=(sha256sum)
-          else
-            hash_cmd=(shasum -a 256)
-          fi
+      - name: Upload release hashes artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-hashes-${{ matrix.platform }}
+          path: release-hashes-${{ matrix.platform }}.md
+          if-no-files-found: error
 
-          find src-tauri/target -type f \
-            \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.dmg' -o -name '*.msi' -o -name '*.exe' \) \
-            | sort | while IFS= read -r artifact; do
-              "${hash_cmd[@]}" "$artifact"
-            done > "$checksum_file"
-          test -s "$checksum_file"
+  update-release-body:
+    needs: publish-tauri
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Upload SHA256 checksums to release
+      - name: Download release hashes
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-hashes-*
+          path: release-hashes
+          merge-multiple: true
+
+      - name: Update GitHub release body with hashes
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${GITHUB_REF_NAME}" "SHA256SUMS-${{ matrix.platform }}.txt" --clobber
+        run: ./script/ci/update-release-body.sh "${GITHUB_REF_NAME}"

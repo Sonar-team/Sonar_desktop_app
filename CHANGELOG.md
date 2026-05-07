@@ -1,5 +1,16 @@
 # Changelog
 
+## **[3.13.4] - 2026-05-07**
+
+## 🛠 Corrections
+
+- Hotfix CI release : publication des hashes SHA256 des binaires et des bundles
+  directement dans le message de la release GitHub.
+- Suppression de l'upload des fichiers `SHA256SUMS-*` comme assets de release.
+- Extraction de la génération des hashes et de la mise à jour du message de
+  release dans des scripts CI dédiés.
+- Mise à jour de la version de SONAR en **3.13.4** pour publier ce correctif.
+
 ## **[3.13.3] - 2026-05-07**
 
 ## 🛠 Corrections
