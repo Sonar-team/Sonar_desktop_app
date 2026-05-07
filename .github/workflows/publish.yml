@@ -98,10 +98,17 @@ jobs:
         run: |
           set -euo pipefail
           checksum_file="SHA256SUMS-${{ matrix.platform }}.txt"
-          find src-tauri/target/release/bundle -type f \
+
+          if command -v sha256sum >/dev/null 2>&1; then
+            hash_cmd=(sha256sum)
+          else
+            hash_cmd=(shasum -a 256)
+          fi
+
+          find src-tauri/target -type f \
             \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.dmg' -o -name '*.msi' -o -name '*.exe' \) \
             | sort | while IFS= read -r artifact; do
-              sha256sum "$artifact"
+              "${hash_cmd[@]}" "$artifact"
             done > "$checksum_file"
           test -s "$checksum_file"
 

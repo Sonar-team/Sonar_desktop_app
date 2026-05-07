@@ -1,5 +1,16 @@
 # Changelog
 
+## **[3.13.3] - 2026-05-07**
+
+## 🛠 Corrections
+
+- Hotfix CI release : génération des fichiers `SHA256SUMS-*` depuis tous les
+  répertoires `bundle` produits sous `src-tauri/target`, y compris les builds
+  macOS avec target explicite.
+- Compatibilité macOS pour le calcul SHA256 via `shasum -a 256` lorsque
+  `sha256sum` n'est pas disponible.
+- Mise à jour de la version de SONAR en **3.13.3** pour publier ce correctif.
+
 ## **[3.13.2] - 2026-05-07**
 
 ## 🛠 Corrections
