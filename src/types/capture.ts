@@ -1,6 +1,11 @@
 // types/capture.ts
 import { Channel } from "@tauri-apps/api/core";
-import { EdgeData, EdgeId, NodeData, NodeId } from "../components/AnalyseView/NetworkGraphComponent.vue";
+import {
+  EdgeData,
+  EdgeId,
+  NodeData,
+  NodeId,
+} from "../components/AnalyseView/NetworkGraphComponent.vue";
 
 export type GraphData = {
   nodes: Record<NodeId, NodeData>;
@@ -68,28 +73,28 @@ export type Edge = {
   destination_port: number | null;
 };
 
-export type NodeId = string
-export type EdgeId = string
+export type NodeId = string;
+export type EdgeId = string;
 
 export interface NodeData {
-  id: string
-  name: string
-  mac?: string
-  ip?: string      // ← NEW
-  color: string
-  label?: string
-  _hover?: string
-  _stroke?: string
+  id: string;
+  name: string;
+  mac?: string;
+  ip?: string; // ← NEW
+  color: string;
+  label?: string;
+  _hover?: string;
+  _stroke?: string;
 }
 
 export interface EdgeData {
-  source: NodeId
-  target: NodeId
-  label: string
-  source_port?: string | number | null
-  destination_port?: string | number | null
-  bidir?: boolean
-  _color?: string
+  source: NodeId;
+  target: NodeId;
+  label: string;
+  source_port?: string | number | null;
+  destination_port?: string | number | null;
+  bidir?: boolean;
+  _color?: string;
 }
 
 // enum GraphUpdate : soit edge soit node
@@ -166,8 +171,7 @@ export type CaptureEvent =
     data: {
       graphData: GraphData;
     };
-  }
-  ;
+  };
 
 export interface CaptureChannel extends Channel<CaptureEvent> {
   onmessage: (event: { event: string; data: any }) => void;

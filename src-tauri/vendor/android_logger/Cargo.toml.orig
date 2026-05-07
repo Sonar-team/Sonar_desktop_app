@@ -1,0 +1,38 @@
+[package]
+name = "android_logger"
+version = "0.15.1"
+authors = ["The android_logger Developers"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/rust-mobile/android_logger-rs"
+description = """
+A logging implementation for `log` which hooks to android log output.
+"""
+keywords = ["android", "bindings", "log", "logger"]
+categories = ["api-bindings", "os::android-apis"]
+edition = "2021"
+
+[package.metadata.docs.rs]
+targets = [
+  "aarch64-linux-android",
+  "arm-linux-androideabi",
+  "armv7-linux-androideabi",
+  "i686-linux-android",
+  "thumbv7neon-linux-androideabi",
+  "x86_64-linux-android",
+]
+
+[features]
+default = ["regex"]
+regex = ["env_filter/regex"]
+android-api-30 = []
+
+[dependencies.log]
+version = "0.4"
+
+[dependencies.android_log-sys]
+version = "0.3.2"
+
+[dependencies.env_filter]
+version = "0.1"
+default-features = false

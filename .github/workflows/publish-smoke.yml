@@ -1,0 +1,49 @@
+name: Publish Smoke
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "ubuntu-22.04"
+            args: ""
+          - platform: "windows-2022"
+            args: ""
+          - platform: "macos-14"
+            args: "--target x86_64-apple-darwin"
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.7.13
+
+      - name: install Rust pinned version 1.95.0
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.95.0
+          targets: ${{ matrix.platform == 'macos-14' && 'x86_64-apple-darwin' || '' }}
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libpcap-dev
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: configure reproducible build environment
+        shell: bash
+        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
+
+      - name: smoke build with Tauri
+        run: npm run tauri build -- ${{ matrix.args }}

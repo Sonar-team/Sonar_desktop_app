@@ -1,0 +1,17 @@
+[package]
+name = "derive-into-owned"
+version = "0.2.0"
+authors = ["Joonas Koivunen <joonas.koivunen@gmail.com>"]
+description = "Custom derives to help with types containing Cow fields"
+license = "MIT"
+repository = "https://github.com/koivunej/derive-into-owned"
+homepage = "https://github.com/koivunej/derive-into-owned"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "1"
+quote = "1"
+proc-macro2 = "1"
