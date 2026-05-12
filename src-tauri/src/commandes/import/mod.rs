@@ -3,7 +3,7 @@ use packet_parser::PacketFlow;
 use pcap::Capture;
 use std::{sync::{Arc, Mutex}, 
     io::ErrorKind, fs, 
-    path::{PathBuf},
+    path::{Path, PathBuf},
     collections::HashSet
 };
 use tauri::{AppHandle, Manager, State, ipc::Channel};
@@ -254,8 +254,8 @@ pub fn import_label_files(
     }
     
     for csv_path in &csv_paths {
-        fs::copy(csv_path, &labels_folder)?;
-        println!("copie de {:?} effectuée", csv_path);
+        let path = Path::new(&csv_path);
+        fs::copy(&csv_path, &labels_folder.join(path.file_name().unwrap()))?;
     }
 
     Ok(())
