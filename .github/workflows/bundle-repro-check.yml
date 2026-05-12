@@ -15,11 +15,13 @@ jobs:
           - label: "Windows NSIS"
             platform: "windows-2022"
             args: ""
+            bundle_kind: "nsis"
             bundle_dir: "src-tauri/target/release/bundle/nsis"
             artifact_pattern: "*.exe"
           - label: "macOS DMG"
             platform: "macos-14"
             args: ""
+            bundle_kind: "dmg"
             bundle_dir: "src-tauri/target/release/bundle/dmg"
             artifact_pattern: "*.dmg"
 
@@ -55,6 +57,7 @@ jobs:
           BUNDLE_LABEL: ${{ matrix.label }}
           BUILD_ARGS: ${{ matrix.args }}
           BUILD_TARGET: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
+          BUNDLE_KIND: ${{ matrix.bundle_kind }}
           BUNDLE_DIR: ${{ matrix.bundle_dir }}
           BUNDLE_FALLBACK_DIRS: ${{ matrix.platform == 'macos-14' && format('src-tauri/target/{0}/release/bundle/dmg', steps.versions.outputs.MACOS_TARGET) || '' }}
           ARTIFACT_PATTERN: ${{ matrix.artifact_pattern }}

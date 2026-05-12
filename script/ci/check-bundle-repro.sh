@@ -7,6 +7,7 @@ set -euo pipefail
 
 BUILD_ARGS="${BUILD_ARGS:-}"
 BUILD_TARGET="${BUILD_TARGET:-}"
+BUNDLE_KIND="${BUNDLE_KIND:-}"
 BUNDLE_FALLBACK_DIRS="${BUNDLE_FALLBACK_DIRS:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-bundle-repro}"
 
@@ -27,15 +28,23 @@ run_build() {
   rm -rf dist src-tauri/target "$outdir"
   mkdir -p "$outdir"
 
-  if [[ -n "$BUILD_TARGET" && -n "$BUILD_ARGS" ]]; then
-    deno task tauri build -- $BUILD_ARGS --target "$BUILD_TARGET"
-  elif [[ -n "$BUILD_TARGET" ]]; then
-    deno task tauri build -- --target "$BUILD_TARGET"
-  elif [[ -n "$BUILD_ARGS" ]]; then
-    deno task tauri build -- $BUILD_ARGS
-  else
-    deno task tauri build
+  local command=(deno task tauri build --ci --no-sign --verbose)
+
+  if [[ -n "$BUILD_TARGET" ]]; then
+    command+=(--target "$BUILD_TARGET")
   fi
+
+  if [[ -n "$BUNDLE_KIND" ]]; then
+    command+=(--bundles "$BUNDLE_KIND")
+  fi
+
+  if [[ -n "$BUILD_ARGS" ]]; then
+    # shellcheck disable=SC2206
+    local extra_args=($BUILD_ARGS)
+    command+=("${extra_args[@]}")
+  fi
+
+  "${command[@]}"
 
   if [[ -n "$BUNDLE_FALLBACK_DIRS" ]]; then
     search_dirs="${search_dirs}:${BUNDLE_FALLBACK_DIRS}"
