@@ -7,6 +7,7 @@ on:
 
 jobs:
   reproducibility-check:
+    name: verify unsigned reproducible artifacts
     permissions:
       contents: read
     runs-on: ubuntu-22.04
@@ -45,6 +46,7 @@ jobs:
         run: ./security/repro-check.sh
 
   publish-tauri:
+    name: build and publish release artifacts
     needs: reproducibility-check
     permissions:
       contents: write
@@ -117,6 +119,7 @@ jobs:
           if-no-files-found: error
 
   update-release-body:
+    name: publish release hashes after artifact build
     needs: publish-tauri
     permissions:
       contents: write

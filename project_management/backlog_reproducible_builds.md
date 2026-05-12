@@ -126,10 +126,19 @@ Why:
 
 ### 10. Separate signing from reproducibility validation
 
-Status: Not Done
+Status: Done
 
 - Validate reproducibility on unsigned artifacts first.
 - Apply signing after reproducibility checks pass.
+
+Implementation notes:
+
+- `security/repro-check.sh` defaults to `deno task tauri build --ci --no-sign`.
+- `script/ci/check-bundle-repro.sh` also uses `--no-sign` for NSIS/DMG probes.
+- The release workflow gates publishing behind the unsigned reproducibility
+  check.
+- Signing, provenance, and SBOM remain separate release-trust work after
+  reproducibility validation.
 
 Why:
 
@@ -245,6 +254,19 @@ Guiding rule:
 - reproducibility should target unsigned artifacts first
 - signing, provenance, and SBOM should prove origin and content after the build
   completes
+
+Release trust flow:
+
+1. Run reproducibility validation on unsigned artifacts.
+2. Build and publish release artifacts.
+3. Sign the released binary and bundle artifacts with Sigstore/cosign keyless
+   signing on GitHub Actions.
+4. Publish signatures, hashes, provenance, and SBOM metadata alongside the
+   release artifacts.
+
+The signing job should use GitHub Actions OIDC with `id-token: write`, run only
+on trusted release tags such as `app-v*`, and stay out of the reproducibility
+comparison path.
 
 ## User Stories
 

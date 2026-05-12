@@ -151,6 +151,62 @@ produce:
 Signed artifacts are explicitly excluded from this comparison because signing
 metadata is expected to vary.
 
+## Release Trust Flow
+
+The release trust flow must stay separate from reproducibility validation:
+
+1. Validate reproducibility on unsigned artifacts.
+2. Build and publish release artifacts.
+3. Sign the released artifacts.
+4. Publish signatures, hashes, provenance, and SBOM metadata.
+
+The signing step should use Sigstore/cosign keyless signing on GitHub Actions.
+GitHub Actions OIDC provides a short-lived workflow identity, so the project
+does not need to store a long-lived private signing key in repository secrets.
+
+The signing job should run only after reproducibility validation has passed and
+after the release artifacts exist. It should be restricted to trusted release
+events, currently tags matching `app-v*`.
+
+Expected job order:
+
+```text
+reproducibility-check -> publish-tauri -> sign-artifacts -> update-release-body
+```
+
+The signing job should have the minimum permissions required:
+
+```yaml
+permissions:
+  contents: write
+  id-token: write
+```
+
+The initial signed artifacts are:
+
+- raw application binary for each platform
+- platform bundle for each platform
+- optional SHA256 manifest once generated
+
+Current platform bundle targets:
+
+- Linux: `.deb`
+- Windows: NSIS installer `.exe`
+- macOS: `.dmg`
+
+The signing command should use blob signing and publish the Sigstore bundle
+alongside the artifact:
+
+```bash
+cosign sign-blob --yes \
+  --bundle "${artifact}.sigstore.json" \
+  "${artifact}"
+```
+
+The release workflow should not sign artifacts from pull requests, forks, or
+untrusted workflow triggers. If stronger controls are needed, attach the signing
+job to a protected GitHub Environment such as `release`.
+
 ## Windows Target
 
 - OS: Windows runner version to be pinned
