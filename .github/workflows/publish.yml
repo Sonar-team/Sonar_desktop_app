@@ -13,20 +13,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
       - name: setup deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.7.13
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
-      - name: install Rust pinned version 1.95.0
+      - name: install Rust pinned version
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.95.0
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
 
       - name: install dependencies
+        shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libpcap-dev
+          sudo apt-get install -y $LINUX_APT_PACKAGES
 
       - name: install frontend dependencies deterministically
         run: deno install --frozen
@@ -47,7 +53,7 @@ jobs:
       matrix:
         include:
           - platform: "macos-14"
-            args: "--target x86_64-apple-darwin"
+            args: ""
           - platform: "ubuntu-22.04"
             args: ""
           - platform: "windows-2022"
@@ -57,22 +63,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
       - name: setup deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.7.13
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
-      - name: install Rust pinned version 1.95.0
+      - name: install Rust pinned version
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.95.0
-          targets: ${{ matrix.platform == 'macos-14' && 'x86_64-apple-darwin' || '' }}
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+          targets: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libpcap-dev
+          sudo apt-get install -y $LINUX_APT_PACKAGES
 
       - name: install frontend dependencies deterministically
         run: deno install --frozen
@@ -91,7 +103,7 @@ jobs:
           releaseBody: "Voir les assets ci-dessous pour télécharger cette version."
           releaseDraft: false
           prerelease: false
-          args: ${{ matrix.args }}
+          args: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
 
       - name: Generate SHA256 checksums
         shell: bash

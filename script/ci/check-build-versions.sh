@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+cd "$ROOT_DIR"
+
+eval "$(./script/ci/export-build-versions.sh)"
+
+check_contains() {
+  local file="$1"
+  local expected="$2"
+
+  if ! grep -Fq "$expected" "$file"; then
+    echo "Expected '$expected' in $file" >&2
+    exit 1
+  fi
+}
+
+check_contains src-tauri/rust-toolchain.toml "channel = \"${RUST_VERSION}\""
+check_contains package.json "\"node\": \"${NODE_VERSION}\""
+check_contains package.json "\"@tauri-apps/cli\": \"${TAURI_CLI_VERSION}\""
+check_contains Dockerfile "FROM rust:${RUST_VERSION} AS builder"
+check_contains Dockerfile "ENV NODE_VERSION=\"${NODE_VERSION}\""
+check_contains Dockerfile "ENV DENO_VERSION=\"${DENO_VERSION}\""
+
+echo "Build version references are aligned with config/build-versions.env"

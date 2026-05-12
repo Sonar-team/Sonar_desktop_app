@@ -38,6 +38,8 @@ bundle for that platform is reproducible.
 
 ## Shared Toolchains
 
+Canonical toolchain versions are tracked in `config/build-versions.env`.
+
 - Rust: `1.95.0`
 - Node.js: `24.14.0`
 - Deno: `2.7.13`
@@ -47,6 +49,10 @@ Rust is pinned in `src-tauri/rust-toolchain.toml`.
 Node.js is declared in `package.json` under `engines.node`.
 Deno is pinned in `Dockerfile`.
 The Tauri CLI version is pinned in `package.json`.
+
+When bumping one of these versions, update `config/build-versions.env` first,
+then keep the files above aligned. CI validates the alignment with
+`script/ci/check-build-versions.sh`.
 
 ## Shared Dependency Sources
 
@@ -91,13 +97,15 @@ is finalized.
 The Linux build environment must provide these apt packages:
 
 ```bash
-libgtk-3-dev
-pkg-config
-libjavascriptcoregtk-4.1-dev
-libsoup-3.0-dev
 libwebkit2gtk-4.1-dev
+libappindicator3-dev
+librsvg2-dev
+patchelf
 libpcap-dev
 ```
+
+The current CI package list is tracked in `config/build-versions.env` as
+`LINUX_APT_PACKAGES`.
 
 Package versions should be pinned or sourced from a documented OS snapshot when
 the release container is finalized.
@@ -154,6 +162,8 @@ The first NSIS reproducibility probe runs through the manual GitHub Actions
 workflow `.github/workflows/bundle-repro-check.yml`. It builds the same revision
 twice on `windows-2022` and compares the generated installer hashes.
 
+The hash comparison logic lives in `script/ci/check-bundle-repro.sh`.
+
 Before enforcing this target, document the exact runner image, Windows
 toolchain inputs, installer tooling, and whether NSIS can produce deterministic
 output with normalized timestamps and metadata.
@@ -169,6 +179,8 @@ The first DMG reproducibility probe runs through the manual GitHub Actions
 workflow `.github/workflows/bundle-repro-check.yml`. It builds the same revision
 twice on `macos-14` for `x86_64-apple-darwin` and compares the generated DMG
 hashes.
+
+The hash comparison logic lives in `script/ci/check-bundle-repro.sh`.
 
 Before enforcing this target, document the exact runner image, Xcode/toolchain
 inputs, code signing boundary, and whether the unsigned `.app` or `.dmg` can be

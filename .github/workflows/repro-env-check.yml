@@ -13,10 +13,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.7.13
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: Validate pinned build versions are aligned
+        shell: bash
+        run: ./script/ci/check-build-versions.sh
 
       - name: Validate helper emits GitHub env entries
         shell: bash

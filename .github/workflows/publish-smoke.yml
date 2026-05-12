@@ -14,29 +14,35 @@ jobs:
           - platform: "windows-2022"
             args: ""
           - platform: "macos-14"
-            args: "--target x86_64-apple-darwin"
+            args: ""
 
     runs-on: ${{ matrix.platform }}
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
       - name: setup deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.7.13
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
-      - name: install Rust pinned version 1.95.0
+      - name: install Rust pinned version
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.95.0
-          targets: ${{ matrix.platform == 'macos-14' && 'x86_64-apple-darwin' || '' }}
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+          targets: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libpcap-dev
+          sudo apt-get install -y $LINUX_APT_PACKAGES
 
       - name: install frontend dependencies deterministically
         run: deno install --frozen
@@ -46,4 +52,18 @@ jobs:
         run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
 
       - name: smoke build with Tauri
-        run: npm run tauri build -- ${{ matrix.args }}
+        shell: bash
+        env:
+          BUILD_ARGS: ${{ matrix.args }}
+          BUILD_TARGET: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$BUILD_TARGET" && -n "$BUILD_ARGS" ]]; then
+            npm run tauri build -- $BUILD_ARGS --target "$BUILD_TARGET"
+          elif [[ -n "$BUILD_TARGET" ]]; then
+            npm run tauri build -- --target "$BUILD_TARGET"
+          elif [[ -n "$BUILD_ARGS" ]]; then
+            npm run tauri build -- $BUILD_ARGS
+          else
+            npm run tauri build
+          fi
