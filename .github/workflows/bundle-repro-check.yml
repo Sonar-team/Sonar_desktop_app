@@ -1,0 +1,119 @@
+name: Bundle Reproducibility Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bundle-repro-check:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: "Windows NSIS"
+            platform: "windows-2022"
+            args: ""
+            bundle_dir: "src-tauri/target/release/bundle/nsis"
+            artifact_pattern: "*.exe"
+          - label: "macOS DMG"
+            platform: "macos-14"
+            args: "--target x86_64-apple-darwin"
+            bundle_dir: "src-tauri/target/x86_64-apple-darwin/release/bundle/dmg"
+            artifact_pattern: "*.dmg"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.7.13
+
+      - name: install Rust pinned version 1.95.0
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.95.0
+          targets: ${{ matrix.platform == 'macos-14' && 'x86_64-apple-darwin' || '' }}
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: configure reproducible build environment
+        shell: bash
+        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
+
+      - name: build bundle twice and compare hashes
+        shell: bash
+        env:
+          BUILD_ARGS: ${{ matrix.args }}
+          BUNDLE_DIR: ${{ matrix.bundle_dir }}
+          ARTIFACT_PATTERN: ${{ matrix.artifact_pattern }}
+        run: |
+          set -euo pipefail
+
+          hash_file() {
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "$1" | awk '{print $1}'
+            else
+              shasum -a 256 "$1" | awk '{print $1}'
+            fi
+          }
+
+          run_build() {
+            local run="$1"
+            local outdir="bundle-repro/${run}"
+            local artifact_list="${outdir}/ARTIFACTS"
+
+            rm -rf dist src-tauri/target "$outdir"
+            mkdir -p "$outdir"
+
+            if [[ -n "$BUILD_ARGS" ]]; then
+              deno task tauri build -- $BUILD_ARGS
+            else
+              deno task tauri build
+            fi
+
+            find "$BUNDLE_DIR" -maxdepth 1 -type f -name "$ARTIFACT_PATTERN" | sort > "$artifact_list"
+            if [[ ! -s "$artifact_list" ]]; then
+              echo "No bundle artifact found in $BUNDLE_DIR" >&2
+              exit 1
+            fi
+
+            while IFS= read -r artifact; do
+              local hash
+              hash="$(hash_file "$artifact")"
+              cp "$artifact" "$outdir/"
+              printf '%s  %s\n' "$hash" "$(basename "$artifact")" >> "$outdir/SHA256SUMS"
+            done < "$artifact_list"
+          }
+
+          run_build run1
+          run_build run2
+
+          echo "Run 1 artifacts:"
+          cat bundle-repro/run1/ARTIFACTS
+          echo "Run 2 artifacts:"
+          cat bundle-repro/run2/ARTIFACTS
+
+          echo "Run 1 hashes:"
+          cat bundle-repro/run1/SHA256SUMS
+          echo "Run 2 hashes:"
+          cat bundle-repro/run2/SHA256SUMS
+
+          if cmp -s bundle-repro/run1/SHA256SUMS bundle-repro/run2/SHA256SUMS; then
+            echo "Bundle is reproducible for ${{ matrix.label }}"
+          else
+            echo "Bundle is not reproducible for ${{ matrix.label }}" >&2
+            diff -u bundle-repro/run1/SHA256SUMS bundle-repro/run2/SHA256SUMS || true
+            exit 1
+          fi
+
+      - name: upload compared artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-repro-${{ matrix.platform }}
+          path: bundle-repro/
+          if-no-files-found: ignore
