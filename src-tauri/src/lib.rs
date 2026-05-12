@@ -14,14 +14,14 @@ use crate::{
     commandes::{
         export::{csv::export_csv, logs::export_logs},
         flow_matrix::{add_label, get_label_list},
-        import::{convert_from_pcap_list, import_label_files, read_label_files_list, add_to_label_file_list, remove_label_file},
+        import::{add_selected_label_files_list, convert_from_pcap_list, import_label_files, read_label_files_list, remove_label_file},
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
     setup::{
         labels::read_labels, log_host_and_app_snapshot, print_banner,
         system_info::start_cpu_monitor,
     },
-    state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData},
+    state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData, label_files_list::SelectedLabelFiles},
 };
 
 mod commandes;
@@ -86,6 +86,7 @@ pub fn run() -> Result<(), tauri::Error> {
         .manage(Arc::new(Mutex::new(CaptureState::new())))
         .manage(Arc::new(Mutex::new(FlowMatrix::new())))
         .manage(Arc::new(Mutex::new(GraphData::new())))
+        .manage(Arc::new(Mutex::new(SelectedLabelFiles::new())))
         .setup({
             move |app| {
                 info!("{}", print_banner());
@@ -161,7 +162,7 @@ pub fn run() -> Result<(), tauri::Error> {
             set_filter,
             import_label_files,
             read_label_files_list,
-            add_to_label_file_list,
+            add_selected_label_files_list,
             remove_label_file
         ])
         .run(tauri::generate_context!())

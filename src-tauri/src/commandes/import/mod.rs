@@ -2,21 +2,18 @@ use log::{error, info};
 use packet_parser::PacketFlow;
 use pcap::Capture;
 use std::{sync::{Arc, Mutex}, 
-    io::{ErrorKind, Write}, fs, 
+    io::ErrorKind, fs, 
     path::{Path, PathBuf},
     collections::HashSet
 };
 use tauri::{AppHandle, Manager, State, ipc::Channel};
 
 use crate::{
-    errors::{CaptureStateError, import::PcapImportError},
-    events::CaptureEvent,
-    state::{
+    errors::{CaptureStateError, import::PcapImportError}, events::CaptureEvent, setup::labels::parse_label_row, state::{
         capture::capture_handle::messages::capture::PacketMinimal, 
         flow_matrix::FlowMatrix,
-        graph::GraphData,
-    },
-    setup::labels::parse_label_row
+        graph::GraphData, label_files_list::SelectedLabelFiles,
+    }
 };
 
 fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
@@ -38,6 +35,8 @@ fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
 pub fn convert_from_pcap_list(
     matrice: State<'_, Arc<Mutex<FlowMatrix>>>,
     graph: State<'_, Arc<Mutex<GraphData>>>,
+    label : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+    app: tauri::AppHandle,
     pcap_paths: Vec<String>,
     on_event: Channel<CaptureEvent<'_>>,
 ) -> Result<(), CaptureStateError> {
@@ -61,6 +60,8 @@ pub fn convert_from_pcap_list(
     let mut graph_guard = graph.lock().unwrap();
     matrice_guard.clear();
     graph_guard.clear();
+
+    labels_to_matrix(app.clone(), &mut matrice_guard, label)?;
 
     info!("[convert_from_pcap_list] Matrice & GraphData reset");
 
@@ -188,10 +189,12 @@ fn handle_pcap_file(
 #[tauri::command(async)]
 pub fn read_label_files_list(
     app: tauri::AppHandle,
+    state : State<'_, Arc<Mutex<SelectedLabelFiles>>>
 ) -> Result<Vec<(String, bool)>, tauri::Error>{
+    let s = state.lock().unwrap();
+    let selected_label_files_names_list = s.get().clone();
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
-    let label_files_list_file = labels_folder.join("labels_file_list.txt");
     let mut label_files_list: Vec<(String, bool)> = Vec::new();
 
     if fs::exists(&labels_folder).unwrap_or(false){
@@ -203,11 +206,9 @@ pub fn read_label_files_list(
             .filter_map(|path| path.file_name()?.to_str().map(String::from))
             .collect();
 
-        let contenu = fs::read_to_string(label_files_list_file).unwrap_or_default();
-        let lignes: Vec<String> = contenu.lines().map(String::from).collect();
-
         let set1: HashSet<&String> = fichiers.iter().collect();
-        let set2: HashSet<&String> = lignes.iter().collect();
+        let set2: HashSet<&String> = selected_label_files_names_list.iter().collect();
+        println!{"set1 : {:?}\n", set1}
 
         for line in set1 {
             if set2.contains(line) {
@@ -217,40 +218,24 @@ pub fn read_label_files_list(
                 label_files_list.push((line.to_string(), false))
             }
         }
+            label_files_list.sort();
 
-        label_files_list.sort();
-        println!("label_files_list : {:?}\n", label_files_list);
-
-        return Ok(label_files_list);
+            return Ok(label_files_list);
     }
 
     Ok(vec![])
 }
 
 #[tauri::command(async)]
-pub fn add_to_label_file_list(
+pub fn add_selected_label_files_list(
     selected_files_names_list: Vec<String>,
-    app: tauri::AppHandle,
+    state : State<'_, Arc<Mutex<SelectedLabelFiles>>>
 )-> Result<(), tauri::Error> {
-    let data_folder = app.path().app_data_dir()?;
-    let labels_folder = data_folder.join("labels");
-    let label_files_list_file = labels_folder.join("labels_file_list.txt");
+    let mut selected_label_files_list = state.lock().unwrap();
 
-    if !fs::exists(&labels_folder).unwrap_or(false){
-        fs::create_dir(&labels_folder)?;
-    }
+    selected_label_files_list.set(selected_files_names_list);
 
-    let mut label_files_list_file = fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(label_files_list_file)?;
-
-    for name in selected_files_names_list {
-        label_files_list_file.write_all(format!("{}\n", name).as_bytes())?;
-    }
-
-    println!("Ajouté à la liste : {:?}", label_files_list_file);
+    println!("Ajouté à la liste : {:?}", selected_label_files_list);
     
     
     Ok(())
@@ -267,26 +252,25 @@ pub fn import_label_files(
     if !fs::exists(&labels_folder).unwrap_or(false){
         fs::create_dir(&labels_folder)?;
     }
-
-    for csv_path in csv_paths {
-        let path = Path::new(&csv_path);
-        fs::copy(&csv_path, &labels_folder.join(path.file_name().unwrap()))?;
-        println!("copie effectuée");
-    }
+    
+    for csv_path in &csv_paths {
+            fs::copy(csv_path, &labels_folder)?;
+            println!("copie de {:?} effectuée", csv_path);
+        }
 
     Ok(())
 }
 
 pub fn labels_to_matrix(
     app: tauri::AppHandle,
-    state_label: State<'_, Arc<Mutex<FlowMatrix>>>
+    matrice: &mut FlowMatrix,
+    label: State<'_, Arc<Mutex<SelectedLabelFiles>>>
 ) -> Result<(), std::io::Error> {
-    let mut state_label = state_label.lock().unwrap();
-    let selected_files = read_label_files_list(app.clone()).unwrap_or_default();
+    let label_files_names_list = read_label_files_list(app.clone(), label).unwrap_or_default();
     let data_folder = app.path().app_data_dir().unwrap();
     let labels_folder = data_folder.join("labels");
 
-    let selected_label_files_names: HashSet<String> = selected_files.into_iter().filter(|(_, actif)| *actif).map(|(nom, _)| nom).collect();
+    let selected_label_files_names: HashSet<String> = label_files_names_list.into_iter().filter(|(_, actif)| *actif).map(|(nom, _)| nom).collect();
 
     if fs::exists(&labels_folder).unwrap_or(false){
         let selected_label_files: Vec<PathBuf> = fs::read_dir(&labels_folder)?
@@ -301,10 +285,10 @@ pub fn labels_to_matrix(
         for label_file in &selected_label_files {
 
             let file = match std::fs::read_to_string(&label_file) {
-            Ok(csv_data) => csv_data,
-            Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
-            Err(error) => return Err(error.into()),
-        };
+                Ok(csv_data) => csv_data,
+                Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+                Err(error) => return Err(error.into()),
+            };
             let labels: Vec<String> = file
                 .lines()
                 .map(|l| l.to_string())
@@ -315,7 +299,7 @@ pub fn labels_to_matrix(
                     continue;
                 };
 
-                state_label.add_label(mac.to_string(), ip, label);
+                matrice.add_label(mac.to_string(), ip, label);
             }
         }
     }

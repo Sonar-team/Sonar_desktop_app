@@ -11,7 +11,7 @@ use crate::{
             capture_status::CaptureStatus,
         },
         flow_matrix::FlowMatrix,
-        graph::GraphData,
+        graph::GraphData, label_files_list::SelectedLabelFiles,
     }
 };
 
@@ -20,9 +20,11 @@ pub fn start_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
     app: AppHandle,
     on_event: Channel<CaptureEvent<'static>>,
-    state_label: State<'_, Arc<Mutex<FlowMatrix>>>
+    state_label: State<'_, Arc<Mutex<FlowMatrix>>>,
+    state_selected : State<'_, Arc<Mutex<SelectedLabelFiles>>>
 ) -> Result<CaptureStatus, CaptureStateError> {
-    labels_to_matrix(app.clone(), state_label)?;
+    let mut state_label = state_label.lock()?;
+    labels_to_matrix(app.clone(), &mut state_label, state_selected)?;
     let mut state_lock = state.lock()?;
     if state_lock.capture.is_some() {
         println!("Déjà en cours.");

@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="center-container">
-
+      
         <!-- Overlay de chargement -->
       <div class="overlay" v-if="isConverting">
         <div class="spinner"></div>
@@ -16,7 +16,7 @@
           <ul class="file-list">
             <li v-for="([file,], index) in labelFiles" :key="index">
               <label :for="String(index)">
-                <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" class="toggle" @change="addToLabelsFilesList">
+                <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" class="toggle" @change="addSelectedLabelFilesList">
                 <span class="text">{{ file }}</span>
                 <button class="image-btn" @click.prevent="RemoveLabelFile(file)" title="Supprimer"><img src="./Pictures/Poubelle.jpg" alt="Supprimer" /></button>
               </label>
@@ -58,7 +58,7 @@ import { displayCaptureError } from '../../../errors/capture';
 
 export default defineComponent({
   name: 'ImportPanel',
-  emits: ['update:visible','toggle-pcap'],
+  emits: ['update:visible','toggle-pcap', 'toggle-warning'],
   props: {
     mode: {
       type: String,
@@ -70,7 +70,9 @@ export default defineComponent({
       packetFiles: [] as string[],
       labelFiles: [] as [string, boolean][],
       selectedLabelFiles: [] as string[],
+      conflictualFiles: [] as [string, string][],
       isConverting: false,
+      showConflictPanel: false
     };
   },
 
@@ -177,9 +179,9 @@ export default defineComponent({
         }
       },
 
-    async addToLabelsFilesList(){
+    async addSelectedLabelFilesList(){
         try {
-          await invoke('add_to_label_file_list', { selectedFilesNamesList: this.selectedLabelFiles});
+          await invoke('add_selected_label_files_list', { selectedFilesNamesList: this.selectedLabelFiles});
           info('réponse invoke');
         } catch (err) {
           displayCaptureError(err);
