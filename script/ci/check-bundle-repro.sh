@@ -9,6 +9,9 @@ BUILD_ARGS="${BUILD_ARGS:-}"
 BUILD_TARGET="${BUILD_TARGET:-}"
 BUNDLE_KIND="${BUNDLE_KIND:-}"
 BUNDLE_FALLBACK_DIRS="${BUNDLE_FALLBACK_DIRS:-}"
+BINARY_DIR="${BINARY_DIR:-}"
+BINARY_FALLBACK_DIRS="${BINARY_FALLBACK_DIRS:-}"
+BINARY_PATTERN="${BINARY_PATTERN:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-bundle-repro}"
 
 hash_file() {
@@ -23,7 +26,9 @@ run_build() {
   local run="$1"
   local outdir="${OUTPUT_DIR}/${run}"
   local artifact_list="${outdir}/ARTIFACTS"
+  local binary_list="${outdir}/BINARIES"
   local search_dirs="${BUNDLE_DIR}"
+  local binary_search_dirs="${BINARY_DIR}"
 
   rm -rf dist src-tauri/target "$outdir"
   mkdir -p "$outdir"
@@ -45,6 +50,35 @@ run_build() {
   fi
 
   "${command[@]}"
+
+  if [[ -n "$BINARY_PATTERN" ]]; then
+    if [[ -n "$BINARY_FALLBACK_DIRS" ]]; then
+      binary_search_dirs="${binary_search_dirs}:${BINARY_FALLBACK_DIRS}"
+    fi
+
+    : > "$binary_list"
+    IFS=':' read -r -a binary_dirs <<< "$binary_search_dirs"
+    for dir in "${binary_dirs[@]}"; do
+      if [[ -d "$dir" ]]; then
+        find "$dir" -maxdepth 1 -type f -name "$BINARY_PATTERN" >> "$binary_list"
+      fi
+    done
+    sort -u "$binary_list" -o "$binary_list"
+
+    if [[ ! -s "$binary_list" ]]; then
+      echo "No binary artifact found for pattern $BINARY_PATTERN" >&2
+      echo "Searched binary directories:" >&2
+      printf '  %s\n' "${binary_dirs[@]}" >&2
+      exit 1
+    fi
+
+    while IFS= read -r binary; do
+      local hash
+      hash="$(hash_file "$binary")"
+      cp "$binary" "$outdir/"
+      printf '%s  %s\n' "$hash" "$(basename "$binary")" >> "$outdir/BINARY_SHA256SUMS"
+    done < "$binary_list"
+  fi
 
   if [[ -n "$BUNDLE_FALLBACK_DIRS" ]]; then
     search_dirs="${search_dirs}:${BUNDLE_FALLBACK_DIRS}"
@@ -78,6 +112,26 @@ run_build() {
 
 run_build run1
 run_build run2
+
+if [[ -n "$BINARY_PATTERN" ]]; then
+  echo "Run 1 binaries:"
+  cat "${OUTPUT_DIR}/run1/BINARIES"
+  echo "Run 2 binaries:"
+  cat "${OUTPUT_DIR}/run2/BINARIES"
+
+  echo "Run 1 binary hashes:"
+  cat "${OUTPUT_DIR}/run1/BINARY_SHA256SUMS"
+  echo "Run 2 binary hashes:"
+  cat "${OUTPUT_DIR}/run2/BINARY_SHA256SUMS"
+
+  if cmp -s "${OUTPUT_DIR}/run1/BINARY_SHA256SUMS" "${OUTPUT_DIR}/run2/BINARY_SHA256SUMS"; then
+    echo "Binary is reproducible for ${BUNDLE_LABEL}"
+  else
+    echo "Binary is not reproducible for ${BUNDLE_LABEL}" >&2
+    diff -u "${OUTPUT_DIR}/run1/BINARY_SHA256SUMS" "${OUTPUT_DIR}/run2/BINARY_SHA256SUMS" || true
+    exit 1
+  fi
+fi
 
 echo "Run 1 artifacts:"
 cat "${OUTPUT_DIR}/run1/ARTIFACTS"

@@ -96,21 +96,50 @@ The pinned digest is tracked in `config/build-versions.env` as
 
 ### Linux System Packages
 
-The Linux build environment must provide these apt packages:
+The Linux build environment must provide pinned apt package versions. The
+current CI package lists are tracked in `config/build-versions.env`:
+
+- `LINUX_APT_PACKAGES` for GitHub Actions Ubuntu jobs
+- `GITLAB_APT_PACKAGES` for GitLab Debian jobs
+- `DOCKER_APT_PACKAGES` for the Debian-based Rust Docker image
+
+All apt-based build jobs must run `script/ci/use-apt-snapshot.sh` before
+installing packages. The snapshot timestamp and base URLs are tracked in
+`config/build-versions.env`:
+
+- `APT_SNAPSHOT_TIMESTAMP`
+- `DEBIAN_SNAPSHOT_BASE_URL`
+- `UBUNTU_SNAPSHOT_BASE_URL`
+
+Current GitHub Actions Ubuntu package pins:
 
 ```bash
-libwebkit2gtk-4.1-dev
-libappindicator3-dev
-librsvg2-dev
-patchelf
-libpcap-dev
+libwebkit2gtk-4.1-dev=2.50.4-0ubuntu0.22.04.1
+libappindicator3-dev=12.10.1+20.10.20200706.1-0ubuntu1
+librsvg2-dev=2.52.5+dfsg-3ubuntu0.2
+patchelf=0.14.3-1
+libpcap-dev=1.10.1-4ubuntu1.22.04.1
 ```
 
-The current CI package list is tracked in `config/build-versions.env` as
-`LINUX_APT_PACKAGES`.
+Current Docker Debian package pins:
 
-Package versions should be pinned or sourced from a documented OS snapshot when
-the release container is finalized.
+```bash
+libgtk-3-dev=3.24.49-3
+pkg-config=1.8.1-4
+libjavascriptcoregtk-4.1-dev=2.52.3-2~deb13u1
+libsoup-3.0-dev=3.6.5-3
+libwebkit2gtk-4.1-dev=2.52.3-2~deb13u1
+libpcap-dev=1.10.5-2
+```
+
+Current GitLab Debian package pins match the Docker Debian pins and add:
+
+```bash
+xz-utils=5.8.1-1
+```
+
+The package version pins and dated snapshot must be bumped together when moving
+the canonical Linux build environment forward.
 
 ### Linux Canonical Build Commands
 
@@ -218,13 +247,21 @@ job to a protected GitHub Environment such as `release`.
 
 The first NSIS reproducibility probe runs through the manual GitHub Actions
 workflow `.github/workflows/bundle-repro-check.yml`. It builds the same revision
-twice on `windows-2022` and compares the generated installer hashes.
+twice on `windows-2022` and compares both the generated application binary hash
+and the generated installer hash.
 
 The hash comparison logic lives in `script/ci/check-bundle-repro.sh`.
 
-Before enforcing this target, document the exact runner image, Windows
+Current result: the GitHub Actions probe shows that the unsigned NSIS installer
+is not reproducible yet. Treat this workflow as a diagnostic check, not as a
+release gate, until the binary comparison is separated from the installer
+comparison and the installer source of nondeterminism is fixed.
+
+Before enforcing the NSIS target, document the exact runner image, Windows
 toolchain inputs, installer tooling, and whether NSIS can produce deterministic
-output with normalized timestamps and metadata.
+output with normalized timestamps and metadata. If Tauri's NSIS bundler does
+not expose enough control, build the installer through a project-owned packaging
+script instead of relying on the Tauri bundler as the reproducibility boundary.
 
 ## macOS Target
 
@@ -235,23 +272,30 @@ output with normalized timestamps and metadata.
 
 The first DMG reproducibility probe runs through the manual GitHub Actions
 workflow `.github/workflows/bundle-repro-check.yml`. It builds the same revision
-twice on `macos-14` for `x86_64-apple-darwin` and compares the generated DMG
-hashes.
+twice on `macos-14` for `x86_64-apple-darwin` and compares both the generated
+application binary hash and the generated DMG hash.
 
 The hash comparison logic lives in `script/ci/check-bundle-repro.sh`.
 
-Before enforcing this target, document the exact runner image, Xcode/toolchain
-inputs, code signing boundary, and whether the unsigned `.app` or `.dmg` can be
-made deterministic.
+Current result: the GitHub Actions probe shows that the unsigned DMG is not
+reproducible yet. Treat this workflow as a diagnostic check, not as a release
+gate, until the binary comparison, `.app` bundle comparison, and DMG comparison
+are separated and the packaging source of nondeterminism is fixed.
+
+Before enforcing the DMG target, document the exact runner image,
+Xcode/toolchain inputs, code signing boundary, and whether the unsigned `.app`
+or `.dmg` can be made deterministic. If Tauri's DMG bundler does not expose
+enough control, build the macOS package through a project-owned packaging script
+instead of relying on the Tauri bundler as the reproducibility boundary.
 
 ## Platform Rollout
 
 1. Enforce reproducibility for the Linux unsigned binary.
 2. Enforce reproducibility for the Linux unsigned Debian package.
 3. Document and test the Windows unsigned binary.
-4. Document and test the Windows unsigned NSIS installer.
+4. Diagnose the Windows unsigned NSIS installer nondeterminism.
 5. Document and test the macOS unsigned app bundle.
-6. Document and test the macOS unsigned `.dmg`.
+6. Diagnose the macOS unsigned `.dmg` nondeterminism.
 
 Each platform can have its own packaging implementation if the Tauri bundler
 does not expose enough control over timestamps, archive metadata, ownership, or

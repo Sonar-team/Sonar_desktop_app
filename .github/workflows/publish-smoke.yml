@@ -41,7 +41,7 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         shell: bash
         run: |
-          sudo apt-get update
+          sudo ./script/ci/use-apt-snapshot.sh
           sudo apt-get install -y $LINUX_APT_PACKAGES
 
       - name: install frontend dependencies deterministically

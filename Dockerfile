@@ -1,7 +1,7 @@
 FROM rust:1.95.0@sha256:5b1e3484ddcd22a3738c0ec34a5e98bf19382eb295fb6db54295e62379119040 AS builder
 ENV NODE_VERSION="24.14.0"
 ENV DENO_VERSION="2.7.13"
-RUN apt update
+ARG DOCKER_APT_PACKAGES="libgtk-3-dev=3.24.49-3 pkg-config=1.8.1-4 libjavascriptcoregtk-4.1-dev=2.52.3-2~deb13u1 libsoup-3.0-dev=3.6.5-3 libwebkit2gtk-4.1-dev=2.52.3-2~deb13u1 libpcap-dev=1.10.5-2"
 RUN cargo -V
 ENV PATH="/usr/local/node/bin:$PATH"
 
@@ -17,7 +17,10 @@ RUN arch="$(dpkg --print-architecture)" && \
     rm -f /tmp/node.tar.xz
 RUN npm install -g "deno@${DENO_VERSION}"
 
-RUN apt install -y libgtk-3-dev pkg-config libjavascriptcoregtk-4.1-dev libsoup-3.0-dev
+COPY config/build-versions.env /app/config/build-versions.env
+COPY script/ci/use-apt-snapshot.sh /app/script/ci/use-apt-snapshot.sh
+RUN /app/script/ci/use-apt-snapshot.sh
+RUN apt install -y ${DOCKER_APT_PACKAGES}
 
 WORKDIR /app
 COPY . .

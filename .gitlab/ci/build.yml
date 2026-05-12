@@ -7,8 +7,9 @@ build:
       - .deno/
       - src-tauri/target/
   script:
-    - apt update
-    - apt install -y libgtk-3-dev pkg-config libjavascriptcoregtk-4.1-dev libsoup-3.0-dev libwebkit2gtk-4.1-dev libpcap-dev xz-utils
+    - set -a && . ./config/build-versions.env && set +a
+    - ./script/ci/use-apt-snapshot.sh
+    - apt install -y ${GITLAB_APT_PACKAGES}
     - cargo -V
     - export PATH=/usr/local/node/bin:$PATH
     - arch="$(dpkg --print-architecture)" && case "$arch" in amd64) node_arch="x64" ;; arm64) node_arch="arm64" ;; *) echo "Unsupported architecture $arch" >&2; exit 1 ;; esac

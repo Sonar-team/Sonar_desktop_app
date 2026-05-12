@@ -72,11 +72,23 @@ Why:
 
 ### 6. Pin or snapshot OS package dependencies
 
-Status: Partially Done
+Status: Done
 
 - Pin apt package versions where practical, or build from a known image
   snapshot.
 - Document the expected Linux packaging dependencies.
+
+Implementation notes:
+
+- GitHub Actions Ubuntu package versions are pinned in
+  `config/build-versions.env` as `LINUX_APT_PACKAGES`.
+- GitLab and Docker Debian package versions are pinned in
+  `config/build-versions.env` as `GITLAB_APT_PACKAGES` and
+  `DOCKER_APT_PACKAGES` and mirrored in the Dockerfile build argument.
+- `script/ci/use-apt-snapshot.sh` configures Debian and Ubuntu jobs to use a
+  dated apt snapshot before package installation.
+- `script/ci/check-build-versions.sh` validates that the Dockerfile and CI
+  workflows keep using the centralized pinned package variables.
 
 Why:
 
@@ -190,16 +202,23 @@ Why:
 
 ### 14. Extend reproducibility checks to packaged outputs
 
-Status: Not Done
+Status: Partially Done
 
 - Start with the Linux binary and `.deb`.
 - Later extend to Windows and macOS packaging if feasible.
+- GitHub Actions probes have been added for Windows NSIS and macOS DMG.
+- Current Windows/macOS result: the generated NSIS and DMG bundles are not
+  reproducible yet.
+- Next step: compare the raw platform binary separately from the final bundle,
+  then fix or replace the packaging step that introduces nondeterminism.
 - Tracking issue: `#107` Debian package is not reproducible across rebuilds.
 
 Why:
 
 - raw binaries are easier to stabilize first
 - installer formats usually introduce extra nondeterminism
+- owning the packaging script may be required if Tauri's bundler does not expose
+  enough control over timestamps, metadata, ownership, or file ordering
 
 ### 15. Add provenance alongside reproducibility
 
