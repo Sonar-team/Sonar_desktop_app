@@ -1,4 +1,7 @@
-image: rust:1.94.1
+image: rust:1.95.0
+
+default:
+  timeout: 2 hours
 
 stages:
   - build
@@ -6,6 +9,8 @@ stages:
 
 variables:
   NODE_VERSION: 24.14.0
+  DENO_VERSION: 2.7.13
+  DENO_DIR: "${CI_PROJECT_DIR}/.deno"
 
 include:
   - local: ".gitlab/ci/build.yml"

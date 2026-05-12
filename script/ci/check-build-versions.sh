@@ -23,5 +23,8 @@ check_contains package.json "\"@tauri-apps/cli\": \"${TAURI_CLI_VERSION}\""
 check_contains Dockerfile "FROM rust:${RUST_VERSION} AS builder"
 check_contains Dockerfile "ENV NODE_VERSION=\"${NODE_VERSION}\""
 check_contains Dockerfile "ENV DENO_VERSION=\"${DENO_VERSION}\""
+check_contains .gitlab-ci.yml "image: rust:${RUST_VERSION}"
+check_contains .gitlab-ci.yml "NODE_VERSION: ${NODE_VERSION}"
+check_contains .gitlab-ci.yml "DENO_VERSION: ${DENO_VERSION}"
 
 echo "Build version references are aligned with config/build-versions.env"
