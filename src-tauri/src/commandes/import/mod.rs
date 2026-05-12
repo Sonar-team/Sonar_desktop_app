@@ -3,7 +3,7 @@ use packet_parser::PacketFlow;
 use pcap::Capture;
 use std::{sync::{Arc, Mutex}, 
     io::ErrorKind, fs, 
-    path::{Path, PathBuf},
+    path::{PathBuf},
     collections::HashSet
 };
 use tauri::{AppHandle, Manager, State, ipc::Channel};
@@ -245,41 +245,19 @@ pub fn add_selected_label_files_list(
 pub fn import_label_files(
     csv_paths: Vec<String>,
     app: tauri::AppHandle,
-) -> Result<Vec<(String, String)>, tauri::Error> {
+) -> Result<(), tauri::Error> {
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
-    let mut conflictual_files: Vec<(String, String)> = Vec::new();
 
     if !fs::exists(&labels_folder).unwrap_or(false){
         fs::create_dir(&labels_folder)?;
     }
-
     
     for csv_path in &csv_paths {
-        let path = Path::new(csv_path);
-        let filename = path.file_name().unwrap().to_string_lossy().to_string();
-        let dest = labels_folder.join(&filename);
-
-        if dest.exists() {
-            conflictual_files.push((filename, csv_path.to_string()));
-        } else {
-            fs::copy(csv_path, &dest)?;
-            println!("copie de {:?} effectuée", csv_path);
-        }
+        fs::copy(csv_path, &labels_folder)?;
+        println!("copie de {:?} effectuée", csv_path);
     }
 
-    Ok(conflictual_files)
-}
-
-#[tauri::command(async)]
-pub fn force_import(
-    csv_path: String,
-    app: AppHandle
-)->Result<(), tauri::Error> {
-    let data_folder = app.path().app_data_dir()?;
-    let labels_folder = data_folder.join("labels");
-    fs::copy(&csv_path, labels_folder)?;
-    println!("File {:?} force-copied", csv_path);
     Ok(())
 }
 

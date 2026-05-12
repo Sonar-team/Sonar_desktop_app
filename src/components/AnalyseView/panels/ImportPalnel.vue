@@ -1,8 +1,7 @@
 <template>
   <div class="container">
     <div class="center-container">
-      <ConflictPanel v-if="showConflictPanel" :files="conflictualFiles" @showConflictPanel="showConflictPanel = false"/>
-
+      
         <!-- Overlay de chargement -->
       <div class="overlay" v-if="isConverting">
         <div class="spinner"></div>
@@ -55,14 +54,10 @@ import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
 import { displayCaptureError } from '../../../errors/capture';
-import ConflictPanel from './ConflictPanel.vue'
 
 
 export default defineComponent({
   name: 'ImportPanel',
-  components: {
-    ConflictPanel  
-  },
   emits: ['update:visible','toggle-pcap', 'toggle-warning'],
   props: {
     mode: {
@@ -118,7 +113,7 @@ export default defineComponent({
 
       if (type === 'csv') {
         let labelFilesNames = list.map(((path): [string, boolean] => [path.split(/[\\/]/).pop() ?? path, true]));
-        info('' + labelFilesNames);
+        info('labelFilesNames :' + labelFilesNames);
         await this.convertLabelFile(list, labelFilesNames)
       } else {
         this.packetFiles.push(...list);
@@ -160,12 +155,8 @@ export default defineComponent({
       this.isConverting = true;
 
       try {
-        this.conflictualFiles = await invoke<[string, string][]>('import_label_files', { csvPaths: paths });
+        await invoke('import_label_files', { csvPaths: paths });
         info('réponse invoke');
-        if (this.conflictualFiles.length > 0 ){
-          info('Il y a des fichiers en conflits')
-          this.showConflictPanel = true
-        }
         this.labelFiles.push(...names.filter(([name]) => !this.labelFiles.some(([existing]) => existing === name)));
         this.labelFiles.sort();
       } catch (err) {
