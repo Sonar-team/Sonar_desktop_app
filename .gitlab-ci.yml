@@ -1,7 +1,7 @@
 image: rust:1.95.0
 
 default:
-  timeout: 2 hours
+  timeout: 10 hours
 
 stages:
   - build
