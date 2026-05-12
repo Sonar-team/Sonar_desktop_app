@@ -7,6 +7,7 @@ set -euo pipefail
 
 BUILD_ARGS="${BUILD_ARGS:-}"
 BUILD_TARGET="${BUILD_TARGET:-}"
+BUNDLE_FALLBACK_DIRS="${BUNDLE_FALLBACK_DIRS:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-bundle-repro}"
 
 hash_file() {
@@ -21,6 +22,7 @@ run_build() {
   local run="$1"
   local outdir="${OUTPUT_DIR}/${run}"
   local artifact_list="${outdir}/ARTIFACTS"
+  local search_dirs="${BUNDLE_DIR}"
 
   rm -rf dist src-tauri/target "$outdir"
   mkdir -p "$outdir"
@@ -35,9 +37,25 @@ run_build() {
     deno task tauri build
   fi
 
-  find "$BUNDLE_DIR" -maxdepth 1 -type f -name "$ARTIFACT_PATTERN" | sort > "$artifact_list"
+  if [[ -n "$BUNDLE_FALLBACK_DIRS" ]]; then
+    search_dirs="${search_dirs}:${BUNDLE_FALLBACK_DIRS}"
+  fi
+
+  : > "$artifact_list"
+  IFS=':' read -r -a bundle_dirs <<< "$search_dirs"
+  for dir in "${bundle_dirs[@]}"; do
+    if [[ -d "$dir" ]]; then
+      find "$dir" -maxdepth 1 -type f -name "$ARTIFACT_PATTERN" >> "$artifact_list"
+    fi
+  done
+  sort -u "$artifact_list" -o "$artifact_list"
+
   if [[ ! -s "$artifact_list" ]]; then
-    echo "No bundle artifact found in $BUNDLE_DIR" >&2
+    echo "No bundle artifact found for pattern $ARTIFACT_PATTERN" >&2
+    echo "Searched bundle directories:" >&2
+    printf '  %s\n' "${bundle_dirs[@]}" >&2
+    echo "Available bundle-like files under src-tauri/target:" >&2
+    find src-tauri/target -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.msi' -o -name '*.deb' -o -name '*.rpm' \) 2>/dev/null | sort >&2 || true
     exit 1
   fi
 

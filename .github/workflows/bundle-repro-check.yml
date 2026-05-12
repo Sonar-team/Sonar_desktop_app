@@ -20,7 +20,7 @@ jobs:
           - label: "macOS DMG"
             platform: "macos-14"
             args: ""
-            bundle_dir: ""
+            bundle_dir: "src-tauri/target/release/bundle/dmg"
             artifact_pattern: "*.dmg"
 
     steps:
@@ -55,7 +55,8 @@ jobs:
           BUNDLE_LABEL: ${{ matrix.label }}
           BUILD_ARGS: ${{ matrix.args }}
           BUILD_TARGET: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
-          BUNDLE_DIR: ${{ matrix.platform == 'macos-14' && format('src-tauri/target/{0}/release/bundle/dmg', steps.versions.outputs.MACOS_TARGET) || matrix.bundle_dir }}
+          BUNDLE_DIR: ${{ matrix.bundle_dir }}
+          BUNDLE_FALLBACK_DIRS: ${{ matrix.platform == 'macos-14' && format('src-tauri/target/{0}/release/bundle/dmg', steps.versions.outputs.MACOS_TARGET) || '' }}
           ARTIFACT_PATTERN: ${{ matrix.artifact_pattern }}
         run: ./script/ci/check-bundle-repro.sh
 
