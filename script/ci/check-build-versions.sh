@@ -20,7 +20,7 @@ check_contains() {
 check_contains src-tauri/rust-toolchain.toml "channel = \"${RUST_VERSION}\""
 check_contains package.json "\"node\": \"${NODE_VERSION}\""
 check_contains package.json "\"@tauri-apps/cli\": \"${TAURI_CLI_VERSION}\""
-check_contains Dockerfile "FROM rust:${RUST_VERSION} AS builder"
+check_contains Dockerfile "FROM rust:${RUST_VERSION}@${RUST_IMAGE_DIGEST} AS builder"
 check_contains Dockerfile "ENV NODE_VERSION=\"${NODE_VERSION}\""
 check_contains Dockerfile "ENV DENO_VERSION=\"${DENO_VERSION}\""
 check_contains .gitlab-ci.yml "image: rust:${RUST_VERSION}"

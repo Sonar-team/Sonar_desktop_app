@@ -86,11 +86,13 @@ The shared source of these settings is `security/repro-env.ts`.
 - OS: Ubuntu 22.04 for the Linux reproducibility check
 - Architecture: `x86_64` / `amd64`
 - Container base image: `rust:1.95.0`
+- Container image digest:
+  `sha256:5b1e3484ddcd22a3738c0ec34a5e98bf19382eb295fb6db54295e62379119040`
 - Binary target: `src-tauri/target/release/sonar`
 - Initial bundle target: Debian `.deb`
 
-The base image should eventually be pinned by digest once the release container
-is finalized.
+The pinned digest is tracked in `config/build-versions.env` as
+`RUST_IMAGE_DIGEST`.
 
 ### Linux System Packages
 
