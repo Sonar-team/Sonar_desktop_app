@@ -14,7 +14,7 @@ use crate::{
     commandes::{
         export::{csv::export_csv, logs::export_logs},
         flow_matrix::{add_label, get_label_list},
-        import::{add_selected_label_files_list, convert_from_pcap_list, import_label_files, read_label_files_list, remove_label_file},
+        import::{add_selected_label_files_list, convert_from_pcap_list, import_label_files, read_label_files_list, remove_label_file, force_import},
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
     setup::{
@@ -163,7 +163,8 @@ pub fn run() -> Result<(), tauri::Error> {
             import_label_files,
             read_label_files_list,
             add_selected_label_files_list,
-            remove_label_file
+            remove_label_file,
+            force_import
         ])
         .run(tauri::generate_context!())
 }
