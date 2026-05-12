@@ -48,7 +48,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { open } from '@tauri-apps/plugin-dialog';
+import { open, message } from '@tauri-apps/plugin-dialog';
 import { invoke, Channel } from '@tauri-apps/api/core';
 import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
@@ -155,8 +155,12 @@ export default defineComponent({
       this.isConverting = true;
 
       try {
-        await invoke('import_label_files', { csvPaths: paths });
+        const conflictualFiles = await invoke<[string, string][]>('import_label_files', { csvPaths: paths });
         info('réponse invoke');
+        if (conflictualFiles.length > 0) {
+          const filenames = conflictualFiles.map(([name]) => name).join('\n');
+          await message(`Ces fichiers existent déjà :\n${filenames}`, { title: 'Fichiers en conflit', kind: 'warning' });
+        }
         this.labelFiles.push(...names.filter(([name]) => !this.labelFiles.some(([existing]) => existing === name)));
         this.labelFiles.sort();
       } catch (err) {
