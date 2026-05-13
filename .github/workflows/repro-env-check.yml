@@ -42,6 +42,7 @@ jobs:
           set -euo pipefail
           deno run -A ./security/repro-env.ts run bash -lc 'test -n "$SOURCE_DATE_EPOCH"'
           deno run -A ./security/repro-env.ts run bash -lc 'printf "%s\n" "$RUSTFLAGS"' | grep -F -- '--remap-path-prefix='
+          SONAR_REPRO_WINDOWS_BREPRO=1 deno run -A ./security/repro-env.ts run bash -lc 'printf "%s\n" "$RUSTFLAGS"' | grep -F -- 'link-arg=/Brepro'
 
       - name: Ensure publish workflow uses helper
         shell: bash
