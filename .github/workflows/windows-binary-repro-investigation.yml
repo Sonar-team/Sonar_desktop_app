@@ -5,8 +5,17 @@ on:
 
 jobs:
   windows-binary-repro-investigation:
+    name: ${{ matrix.mode }}
     runs-on: windows-2022
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: baseline
+            extra_rustflags: ""
+          - mode: link-brepro
+            extra_rustflags: "-C link-arg=/Brepro"
 
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +35,10 @@ jobs:
         with:
           toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
 
+      - name: install Rust binary inspection tools
+        shell: bash
+        run: rustup component add llvm-tools-preview
+
       - name: install frontend dependencies deterministically
         run: deno install --frozen
 
@@ -35,12 +48,15 @@ jobs:
 
       - name: compare Windows binary stages
         shell: bash
+        env:
+          OUTPUT_DIR: windows-binary-repro-${{ matrix.mode }}
+          EXTRA_RUSTFLAGS: ${{ matrix.extra_rustflags }}
         run: ./script/ci/investigate-windows-binary-repro.sh
 
       - name: upload investigation artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: windows-binary-repro-investigation
-          path: windows-binary-repro/
+          name: windows-binary-repro-investigation-${{ matrix.mode }}
+          path: windows-binary-repro-${{ matrix.mode }}/
           if-no-files-found: ignore
