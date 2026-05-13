@@ -84,27 +84,27 @@ pub fn parse_label_row(row: &str) -> Option<(String, String, String)> {
     println!("parts: {:?}", parts);
     match parts.as_slice() {
         [mac, ip, label] if !mac.is_empty() && !ip.is_empty() && !label.is_empty() => { // si tous les arguments sont présents
-            println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
+            // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), ip.to_string(), label.to_string()))
         }
         [mac,ip, label] if mac.is_empty() && is_ip_address(ip) && !label.is_empty() => { // si il manque l'adresse mac
-            println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
+            // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((String::new(), ip.to_string(), label.to_string()))
         }
         [mac,ip, label] if !mac.is_empty() && !is_ip_address(ip) && !label.is_empty() => { // si il manque l'adresse IP
-            println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
+            // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), String::new(), label.to_string()))
         }
         [mac,ip, label] if !mac.is_empty() && is_ip_address(ip) && label.is_empty() => { //si il manque le label
-            println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
+            // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), ip.to_string(), String::from("Label?")))
         }
         [mac,ip, label] if !mac.is_empty() && !is_ip_address(ip) && label.is_empty() => { //si il manque l'adresse mac ET le label
-            println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
+            // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), String::new(), String::from("Label?")))
         }
         [mac,ip, label] if mac.is_empty() && is_ip_address(ip) && label.is_empty() => { //si il manque l'adresse ip ET le label
-            println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
+            // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((String::new(), ip.to_string(), String::from("Label?")))
         }
         _ => None,

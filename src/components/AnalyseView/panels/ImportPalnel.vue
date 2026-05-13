@@ -148,7 +148,7 @@ export default defineComponent({
     },
 
     async convertLabelFile(paths: string[], names: [string, boolean][]) {
-      if (paths.length === 0) return;
+      if (paths.length === 0 || names.length === 0) return;
 
       info('import_label_files: ' + paths);
 
@@ -159,7 +159,7 @@ export default defineComponent({
         info('réponse invoke');
         if (conflictualFiles.length > 0) {
           const filenames = conflictualFiles.map(([name]) => name).join('\n');
-          await message(`Ces fichiers existent déjà :\n${filenames}`, { title: 'Fichiers en conflit', kind: 'warning' });
+          await message(`Ces fichiers existent déjà :\n${filenames}\n\n<Import impossible>`, { title: 'Fichiers en conflit', kind: 'warning' });
         }
         this.labelFiles.push(...names.filter(([name]) => !this.labelFiles.some(([existing]) => existing === name)));
         this.labelFiles.sort();
@@ -185,7 +185,15 @@ export default defineComponent({
 
     async addSelectedLabelFilesList(){
         try {
-          await invoke('add_selected_label_files_list', { selectedFilesNamesList: this.selectedLabelFiles});
+          const [same_ip_diff_mac, same_ip_diff_label, same_mac_diff_ip, same_mac_diff_label] = await invoke<[[string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][]]>('add_selected_label_files_list', { selectedFilesNamesList: this.selectedLabelFiles});
+          if ([same_ip_diff_mac, same_ip_diff_label, same_mac_diff_ip, same_mac_diff_label].length > 0) {
+            for (const conflicts of same_ip_diff_label) {
+              info('ip_mac_conflicst: ' + conflicts)
+            }
+            await new Promise(resolve => setTimeout(resolve, 200));
+            this.selectedLabelFiles = this.selectedLabelFiles.filter((file) => !same_ip_diff_label.some(([,,name_i]) => name_i === file) );
+          }
+          
           info('réponse invoke');
         } catch (err) {
           displayCaptureError(err);
