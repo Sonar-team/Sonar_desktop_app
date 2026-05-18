@@ -30,7 +30,7 @@ jobs:
             artifact_pattern: "*.dmg"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: load build versions
         id: versions
@@ -38,12 +38,12 @@ jobs:
         run: ./script/ci/export-build-versions.sh
 
       - name: setup deno
-        uses: denoland/setup-deno@v2
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
         with:
           deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
       - name: install Rust pinned version
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
           targets: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
@@ -72,7 +72,7 @@ jobs:
 
       - name: upload compared artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: bundle-repro-${{ matrix.platform }}
           path: bundle-repro/
