@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@63eb9591781c46a70274cb3ebdf190fce92702e8
         with:
           profile: minimal
           toolchain: stable
