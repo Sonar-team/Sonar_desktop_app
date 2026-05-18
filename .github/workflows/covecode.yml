@@ -11,15 +11,15 @@ jobs:
       options: --security-opt seccomp=unconfined
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
 
       - name: Node.js setup
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@f1f314fca9dfce2769ece7d933488f076716723e
         with:
           node-version: 24
 
       - name: Rust setup
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@63eb9591781c46a70274cb3ebdf190fce92702e8
         with:
           toolchain: stable
 
@@ -57,7 +57,7 @@ jobs:
         shell: bash --noprofile --norc -e -o pipefail {0}
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           fail_ci_if_error: true
