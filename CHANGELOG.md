@@ -1,5 +1,16 @@
 # Changelog
 
+## **[3.13.6] - 2026-05-18**
+
+## 🛠 Corrections
+
+- Hotfix provenance Windows : normalisation du fichier
+  `release-attestation-subjects-*.sha256` au format `shasum` attendu par
+  `actions/attest`, sans marqueur binaire `*`.
+- Ajout d'une validation stricte des digests SHA256 avant écriture du manifest
+  d'attestation.
+- Mise à jour de la version de SONAR en **3.13.6** pour publier ce correctif.
+
 ## **[3.13.5] - 2026-05-18**
 
 ## ✨ Améliorations

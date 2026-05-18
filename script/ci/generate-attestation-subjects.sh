@@ -12,6 +12,20 @@ else
   hash_cmd=(shasum -a 256)
 fi
 
+write_subject_checksum() {
+  local artifact="${1:?artifact path is required}"
+  local digest
+
+  digest="$("${hash_cmd[@]}" "$artifact" | awk '{print $1}')"
+
+  if ! [[ "$digest" =~ ^[0-9a-fA-F]{64}$ ]]; then
+    echo "invalid SHA256 digest for ${artifact}" >&2
+    return 1
+  fi
+
+  printf '%s  %s\n' "$digest" "$artifact"
+}
+
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 
@@ -31,14 +45,14 @@ test -f "$hashes_file"
 
 {
   while IFS= read -r artifact; do
-    "${hash_cmd[@]}" "$artifact"
+    write_subject_checksum "$artifact"
   done < "${tmpdir}/binary-artifacts.txt"
 
   while IFS= read -r artifact; do
-    "${hash_cmd[@]}" "$artifact"
+    write_subject_checksum "$artifact"
   done < "${tmpdir}/bundle-artifacts.txt"
 
-  "${hash_cmd[@]}" "$hashes_file"
+  write_subject_checksum "$hashes_file"
 } > "$output_file"
 
-grep -Eq '^[0-9a-f]{64} ' "$output_file"
+grep -Eq '^[0-9a-f]{64}  ' "$output_file"
