@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-platform="${1:?usage: generate-attestation-subjects.sh <platform> [target-dir] [output-file]}"
+platform="${1:?usage: sign-release-artifacts.sh <platform> [target-dir]}"
 target_dir="${2:-src-tauri/target}"
-output_file="${3:-release-attestation-subjects-${platform}.txt}"
 hashes_file="release-hashes-${platform}.md"
+signature_dir="release-signatures"
 
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
+mkdir -p "$signature_dir"
 
 find "$target_dir" -type f \
   \( -path '*/release/sonar' -o -path '*/release/sonar.exe' \) \
@@ -23,18 +24,23 @@ test -s "${tmpdir}/binary-artifacts.txt"
 test -s "${tmpdir}/bundle-artifacts.txt"
 test -f "$hashes_file"
 
-{
-  cat "${tmpdir}/binary-artifacts.txt"
-  cat "${tmpdir}/bundle-artifacts.txt"
-  printf '%s\n' "$hashes_file"
-} > "$output_file"
+sign_artifact() {
+  local artifact="${1:?artifact path is required}"
+  local artifact_name
 
-test -s "$output_file"
+  artifact_name="$(basename "$artifact")"
 
-if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
-  {
-    echo 'subject-paths<<EOF'
-    cat "$output_file"
-    echo EOF
-  } >> "$GITHUB_OUTPUT"
-fi
+  cosign sign-blob --yes \
+    --bundle "${signature_dir}/${platform}-${artifact_name}.sigstore.json" \
+    "$artifact"
+}
+
+while IFS= read -r artifact; do
+  sign_artifact "$artifact"
+done < "${tmpdir}/binary-artifacts.txt"
+
+while IFS= read -r artifact; do
+  sign_artifact "$artifact"
+done < "${tmpdir}/bundle-artifacts.txt"
+
+sign_artifact "$hashes_file"

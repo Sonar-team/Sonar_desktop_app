@@ -1,5 +1,21 @@
 # Changelog
 
+## **[3.13.7] - 2026-05-18**
+
+## 🔐 Chaîne de confiance
+
+- Signature des artefacts de release avec `cosign sign-blob` et identité OIDC
+  GitHub Actions.
+- Publication des bundles Sigstore `.sigstore.json` dans la release GitHub et
+  comme artefacts CI.
+
+## 🛠 Corrections
+
+- Remplacement de `subject-checksums` par `subject-path` pour la provenance
+  GitHub Artifact Attestations afin d'éviter le parsing incorrect des manifests
+  multi-lignes sur Windows.
+- Mise à jour de la version de SONAR en **3.13.7** pour publier ce correctif.
+
 ## **[3.13.6] - 2026-05-18**
 
 ## 🛠 Corrections

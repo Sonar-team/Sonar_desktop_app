@@ -113,14 +113,36 @@ jobs:
         shell: bash
         run: ./script/ci/generate-release-hashes.sh "${{ matrix.platform }}"
 
-      - name: Generate attestation subject checksums
+      - name: List attestation subjects
+        id: attestation-subjects
         shell: bash
         run: ./script/ci/generate-attestation-subjects.sh "${{ matrix.platform }}"
 
       - name: Generate provenance attestation
         uses: actions/attest@v4
         with:
-          subject-checksums: release-attestation-subjects-${{ matrix.platform }}.sha256
+          subject-path: ${{ steps.attestation-subjects.outputs.subject-paths }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign release artifacts
+        shell: bash
+        run: ./script/ci/sign-release-artifacts.sh "${{ matrix.platform }}"
+
+      - name: Upload Sigstore bundles to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./script/ci/upload-sigstore-bundles.sh "${{ matrix.platform }}"
+
+      - name: Upload Sigstore bundles artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sigstore-bundles-${{ matrix.platform }}
+          path: |
+            release-signatures/${{ matrix.platform }}-*.sigstore.json
+          if-no-files-found: error
 
       - name: Upload release hashes artifact
         uses: actions/upload-artifact@v4
