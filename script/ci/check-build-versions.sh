@@ -35,5 +35,7 @@ check_contains .github/workflows/publish.yml 'sudo ./script/ci/use-apt-snapshot.
 check_contains .github/workflows/publish.yml 'apt-get install -y $LINUX_APT_PACKAGES'
 check_contains .github/workflows/publish-smoke.yml 'sudo ./script/ci/use-apt-snapshot.sh'
 check_contains .github/workflows/publish-smoke.yml 'apt-get install -y $LINUX_APT_PACKAGES'
+check_contains .github/workflows/covecode.yml './script/ci/export-build-versions.sh'
+check_contains .github/workflows/covecode.yml 'node-version: "v${{ steps.versions.outputs.NODE_VERSION }}"'
 
 echo "Build version references are aligned with config/build-versions.env"

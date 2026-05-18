@@ -13,10 +13,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
 
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
       - name: Node.js setup
         uses: actions/setup-node@f1f314fca9dfce2769ece7d933488f076716723e
         with:
-          node-version: 24
+          node-version: "v${{ steps.versions.outputs.NODE_VERSION }}"
 
       - name: Rust setup
         uses: actions-rs/toolchain@63eb9591781c46a70274cb3ebdf190fce92702e8
