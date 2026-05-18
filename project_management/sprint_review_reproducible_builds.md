@@ -2,203 +2,188 @@
 
 ## Sprint Goal
 
-Evaluate whether the recent changes made during this sprint are aligned with the
-general objective of making the SONAR build reproducible.
+Evaluate whether the sprint moved SONAR toward reproducible release builds by
+controlling dependency resolution, toolchain versions, build environment inputs,
+and release verification.
 
 ## Conclusion
 
-The sprint work is **partially aligned** with the objective.
+The sprint outcome is **effectively achieved** for the intended sprint scope.
 
-The strongest changes improve **input reproducibility** and **verification**:
+The project now has a controlled build baseline:
 
-- Rust dependencies are forced through vendored sources in
-  `src-tauri/.cargo/config.toml`.
-- Frontend dependency installation is frozen through `deno.json`, `deno.lock`,
-  and `deno install --frozen` in CI.
-- Vendored Rust sources were restored under `src-tauri/vendor`.
-- A dedicated reproducibility verification script was added in
-  `security/repro-check.sh`.
+- Rust, Node.js, Deno, and Tauri CLI versions are centralized in
+  `config/build-versions.env`.
+- Rust is pinned to an exact toolchain version.
+- The Docker build uses a pinned Rust image digest.
+- Frontend dependency installation is frozen with `deno install --frozen`.
+- Cargo dependency resolution is forced through vendored sources.
+- apt package versions and dated Debian/Ubuntu snapshots are documented and
+  wired into CI/container setup.
+- Reproducibility flags are centralized through `security/repro-env.ts`.
+- The release workflow gates publishing behind a Linux reproducibility check.
+- Release hashes, signing, provenance, and SBOM are treated as release-trust
+  outputs separate from byte-for-byte reproducibility.
 
-These are meaningful changes for a reproducibility sprint because they reduce
-dependency drift and add a way to measure reproducibility directly.
+This does **not** mean the full reproducible-build objective is complete. The
+remaining work is now narrower: packaged artifact reproducibility and release
+trust publication.
 
-However, the sprint does **not fully achieve** the objective because the **build
-environment is still not deterministic enough**.
+## Completed Sprint Work
 
-## Changes That Match the Sprint Goal
+### 1. Toolchain versions are pinned and centralized
 
-### 1. Cargo vendoring re-enabled
+Canonical versions are tracked in `config/build-versions.env`:
 
-Commit `ba18169d` restores vendored Cargo resolution in
-`src-tauri/.cargo/config.toml`.
+- Rust `1.95.0`
+- Node.js `24.14.0`
+- Deno `2.7.13`
+- Tauri CLI `2.11.1`
 
-Why it matters:
+`script/ci/check-build-versions.sh` verifies that key files stay aligned with
+this central version file.
 
-- prevents dependency drift from crates.io
-- makes Rust builds less dependent on external registry state
-- supports offline and repeatable builds
+### 2. Rust and frontend dependency inputs are controlled
 
-### 2. Frozen frontend dependency installation
+Rust dependencies are resolved from:
 
-Commits such as `4f86a7ce` and `64c649c7` move the project toward deterministic
-frontend installs.
+- `src-tauri/.cargo/config.toml`
+- `src-tauri/vendor/`
+- `src-tauri/Cargo.lock`
 
-Why it matters:
+Frontend dependencies are resolved from:
 
-- `deno.lock` becomes authoritative
-- `deno install --frozen` prevents silent dependency graph changes in CI
-- frontend inputs are more stable across runs
+- `deno.json`
+- `deno.lock`
+- `package.json`
 
-### 3. Vendored dependency files restored
+CI and Docker use frozen installs so dependency graph drift is treated as a
+build failure instead of a silent update.
 
-Commit `0b157d77` re-adds vendor files that are required for the vendoring
-strategy to actually work.
+### 3. Docker inputs are mostly deterministic
 
-Why it matters:
+The Dockerfile no longer uses `rust:latest`. It now uses:
 
-- configuration alone is not enough
-- the vendored tree has to exist in the repository
-- this supports the reproducibility objective directly
+```text
+rust:1.95.0@sha256:5b1e3484ddcd22a3738c0ec34a5e98bf19382eb295fb6db54295e62379119040
+```
 
-### 4. Reproducibility verification script added
+The Docker build also pins Node.js, Deno, and Debian package versions.
 
-Commit `5949c4db` adds `security/repro-check.sh`.
+Remaining caveat:
 
-Why it matters:
+- Node.js and Deno are still downloaded during the Docker build. Their versions
+  are pinned, but their downloaded artifacts are not yet verified with explicit
+  checksums in the Dockerfile.
 
-- runs multiple builds and compares outputs
-- uses `SOURCE_DATE_EPOCH`
-- uses `--remap-path-prefix` to avoid leaking local paths into artifacts
-- adds an objective verification path instead of relying on assumptions
+### 4. OS package inputs are pinned or snapshot-backed
 
-This is good sprint work because reproducibility needs measurement, not only
-intent.
+`config/build-versions.env` tracks:
 
-## Changes That Are Adjacent But Not Core To The Goal
+- `APT_SNAPSHOT_TIMESTAMP`
+- Debian and Ubuntu snapshot base URLs
+- GitHub Actions Ubuntu package pins
+- Docker/GitLab Debian package pins
 
-### 1. Lockfile refresh for vulnerable dependencies
+`script/ci/use-apt-snapshot.sh` applies the dated package snapshot before
+package installation.
 
-Commit `29b0e11c` regenerates `deno.lock` and removes vulnerable transitive
-dependencies.
+### 5. Reproducibility flags are part of the real release path
 
-Assessment:
+`security/repro-env.ts` centralizes:
 
-- useful and responsible
-- improves dependency hygiene
-- only indirectly related to reproducibility
+- `SOURCE_DATE_EPOCH`
+- Rust path remapping with `--remap-path-prefix`
+- Windows `/Brepro` linker flag support when enabled
 
-This is more of a security maintenance change than a reproducible-build change.
+The release workflow and supporting checks now consume this shared environment
+instead of duplicating flags in separate scripts.
 
-### 2. Clippy fixes
+### 6. CI verification exists
 
-Commit `d902e701` fixes cross-platform Clippy issues.
+The release workflow includes a `reproducibility-check` job before publishing.
 
-Assessment:
+Additional diagnostic workflows exist for:
 
-- useful for code quality and CI health
-- not materially related to deterministic builds
+- bundle reproducibility checks
+- Windows binary reproducibility investigation
+- reproducibility environment wiring
 
-## What Still Blocks The Sprint Objective
+This gives the project a process-level gate for the Linux unsigned target and a
+diagnostic path for Windows/macOS.
 
-### 1. Rust toolchain is not pinned precisely
+## Current Limitations
 
-`src-tauri/rust-toolchain.toml` uses:
+### 1. Packaged outputs are not fully reproducible yet
 
-- `channel = "stable"`
+Linux binary reproducibility is now the strongest target. Packaged artifacts
+remain the main open area.
 
-Why this is a problem:
+Known follow-up:
 
-- `stable` changes over time
-- the same source code can be built with different compiler versions on
-  different dates
+- Debian package reproducibility is tracked separately, including issue `#107`.
+- Windows NSIS and macOS DMG probes show nondeterminism in bundle outputs.
+- The next investigation should compare raw platform binaries separately from
+  final installers.
 
-For a reproducibility sprint, this should be pinned to an exact Rust version.
+### 2. Some CI inputs remain intentionally diagnostic
 
-### 2. Docker build environment is not deterministic
+Release-oriented runners are pinned more tightly than before:
 
-`Dockerfile` still uses moving inputs:
+- `windows-2022`
+- `macos-14`
+- Linux release check documented as `ubuntu-22.04`
 
-- `FROM rust:latest`
-- `node-build` downloaded from GitHub `master`
-- global Deno install without a pinned version
-- `apt install` without version pinning
+Some non-release workflows still use `ubuntu-latest`. That is acceptable for
+general lint/security workflows, but they should not be treated as canonical
+reproducibility environments.
 
-Why this is a problem:
+### 3. Release trust outputs are not the same as reproducibility
 
-- the container can change even if the source code does not
-- rebuilds at different times may not use the same compiler, bootstrap tools, or
-  system libraries
+Provenance attestation is now wired into the release workflow. Signing and SBOM
+publication remain release trust steps. These outputs should stay outside the
+byte-for-byte reproducibility comparison because their metadata is expected to
+vary.
 
-This is one of the main reasons the sprint cannot yet claim full
-reproducibility.
+Expected trust flow:
 
-### 3. Release CI still depends on moving targets
+1. Validate reproducibility on unsigned artifacts.
+2. Build and publish release artifacts.
+3. Sign artifacts through CI.
+4. Publish signatures, hashes, provenance, and SBOM metadata.
 
-`.github/workflows/publish.yml` still uses:
+## Sprint Verdict
 
-- `macos-latest`
-- `windows-latest`
-- `dtolnay/rust-toolchain@stable`
-- `deno-version: vx.x.x`
+The sprint is **successful for the sprint outcome**:
 
-Why this is a problem:
+- toolchain drift is controlled
+- dependency drift is controlled
+- Linux release-style reproducibility is enforced
+- canonical build assumptions are documented
+- future work is clearly scoped
 
-- runner images change
-- toolchain state changes
-- the release workflow is not pinned tightly enough for reproducible release
-  artifacts
-
-### 4. Reproducibility verification is not enforced in CI
-
-The script `security/repro-check.sh` exists, but it is not currently part of the
-release gate.
-
-Why this matters:
-
-- manual verification is useful
-- enforced verification is what turns reproducibility into process discipline
-
-## Sprint Review Verdict
-
-The sprint is **directionally correct** and contains several changes that are
-clearly aligned with the reproducible-build objective.
-
-The most valuable outputs of the sprint are:
-
-- restoring vendored Rust dependency resolution
-- freezing frontend installs
-- restoring the vendored dependency tree
-- adding a reproducibility check script
-
-But the sprint remains **incomplete** because it does not yet lock the execution
-environment tightly enough.
+The broader reproducible-build objective remains open until repeated CI builds
+produce identical target artifacts for the chosen final scope, including the
+packaged outputs that the project decides to enforce.
 
 ## Recommended Next Sprint Actions
 
-1. Pin Rust to an exact version in `src-tauri/rust-toolchain.toml`.
-2. Pin Deno to an exact version in CI.
-3. Replace `rust:latest` with a pinned image or digest.
-4. Stop downloading bootstrap tooling from floating branches like GitHub
-   `master`.
-5. Pin or snapshot system packages used in the container and release workflow.
-6. Add the reproducibility check script to CI for tagged or release builds.
-7. Publish artifact hashes and keep provenance/signing as a separate concern
-   from reproducibility.
+1. Resolve Debian package nondeterminism tracked by issue `#107`.
+2. Split Windows checks into raw binary comparison and NSIS installer
+   comparison.
+3. Split macOS checks into raw binary, `.app` bundle, and DMG comparison.
+4. Add checksum verification for downloaded Node.js and Deno bootstrap artifacts
+   in Docker if the Docker image is part of the reproducibility boundary.
+5. Start the release trust track:
+   - sign release artifacts in CI
+   - verify provenance on the next tagged release
+   - generate and publish SBOM artifacts
+6. Keep reproducibility validation focused on unsigned artifacts.
 
 ## Final Assessment
 
-The work completed during this sprint is **aligned with the sprint purpose in
-part, but not enough to claim success end-to-end**.
+The sprint moved from a partially controlled build to a documented and
+CI-guarded reproducibility baseline.
 
-It successfully improves:
-
-- dependency determinism
-- vendoring
-- reproducibility testing
-
-It does not yet fully solve:
-
-- toolchain determinism
-- OS package determinism
-- CI environment determinism
-- release artifact reproducibility enforcement
+The next risk is no longer basic toolchain drift. The next risk is packaging
+nondeterminism and release trust metadata.

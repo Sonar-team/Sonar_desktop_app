@@ -50,6 +50,8 @@ jobs:
     needs: reproducibility-check
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -110,6 +112,15 @@ jobs:
       - name: Generate SHA256 checksums
         shell: bash
         run: ./script/ci/generate-release-hashes.sh "${{ matrix.platform }}"
+
+      - name: Generate attestation subject checksums
+        shell: bash
+        run: ./script/ci/generate-attestation-subjects.sh "${{ matrix.platform }}"
+
+      - name: Generate provenance attestation
+        uses: actions/attest@v4
+        with:
+          subject-checksums: release-attestation-subjects-${{ matrix.platform }}.sha256
 
       - name: Upload release hashes artifact
         uses: actions/upload-artifact@v4

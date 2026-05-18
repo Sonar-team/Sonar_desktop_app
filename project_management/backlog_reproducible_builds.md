@@ -65,6 +65,16 @@ Status: Partially Done
 - Stop downloading bootstrap tools from floating branches like GitHub `master`.
 - Pin Deno and Node bootstrap sources explicitly.
 
+Recent progress:
+
+- Commit `c3b83ecd` pins the Rust Docker base image by digest.
+- Docker now pins Node.js and Deno versions through `config/build-versions.env`.
+
+Remaining:
+
+- Node.js and Deno bootstrap downloads are version-pinned, but the downloaded
+  artifacts are not yet verified with explicit checksums in the Dockerfile.
+
 Why:
 
 - current container inputs can change without any source code change
@@ -83,8 +93,8 @@ Implementation notes:
 - GitHub Actions Ubuntu package versions are pinned in
   `config/build-versions.env` as `LINUX_APT_PACKAGES`.
 - GitLab and Docker Debian package versions are pinned in
-  `config/build-versions.env` as `GITLAB_APT_PACKAGES` and
-  `DOCKER_APT_PACKAGES` and mirrored in the Dockerfile build argument.
+  `config/build-versions.env` as `GITLAB_APT_PACKAGES` and `DOCKER_APT_PACKAGES`
+  and mirrored in the Dockerfile build argument.
 - `script/ci/use-apt-snapshot.sh` configures Debian and Ubuntu jobs to use a
   dated apt snapshot before package installation.
 - `script/ci/check-build-versions.sh` validates that the Dockerfile and CI
@@ -159,13 +169,14 @@ Why:
 
 ### 11. Define the exact reproducibility target
 
-Status: Not Done
+Status: Done
 
-- Decide whether the target is:
-  - same binary on same machine
-  - same binary across machines
-  - same packaged installers
-  - same release artifacts after CI rebuild
+- The canonical target is documented in
+  `project_management/canonical_build_environment.md`.
+- Reproducibility validation targets unsigned platform binaries and unsigned
+  platform bundles.
+- Signing, provenance, and SBOM generation are explicitly outside the
+  byte-for-byte reproducibility comparison.
 
 Why:
 
@@ -174,10 +185,18 @@ Why:
 
 ### 12. Document the canonical build environment
 
-Status: Partially Done
+Status: Done
 
 - Write down the expected OS, toolchain, Deno version, Rust version, package
   dependencies, and release process.
+
+Implementation notes:
+
+- `project_management/canonical_build_environment.md` now documents the shared
+  baseline, Linux target, Windows target, macOS target, and platform rollout.
+- Commit `dac1e733` documents the keyless signing flow.
+- Commits `c3b83ecd` and `9cfc3b3b` update the canonical environment with the
+  pinned Rust image digest and apt snapshot/package inputs.
 
 Why:
 
@@ -195,6 +214,18 @@ Status: Partially Done
 - Review floating action references and pin them more tightly if needed (with a
   hash).
 
+Recent progress:
+
+- Release-oriented Windows and macOS workflows now use `windows-2022` and
+  `macos-14`.
+- Build versions are exported from `config/build-versions.env` in release and
+  diagnostic workflows.
+
+Remaining:
+
+- Some non-release workflows still use `ubuntu-latest`.
+- Several actions are still referenced by tag rather than immutable commit SHA.
+
 Why:
 
 - hosted runner environments evolve over time
@@ -207,10 +238,12 @@ Status: Partially Done
 - Start with the Linux binary and `.deb`.
 - Later extend to Windows and macOS packaging if feasible.
 - GitHub Actions probes have been added for Windows NSIS and macOS DMG.
-- Current Windows/macOS result: the generated NSIS and DMG bundles are not
-  reproducible yet.
-- Next step: compare the raw platform binary separately from the final bundle,
-  then fix or replace the packaging step that introduces nondeterminism.
+- Commit `e4f7ed6b` makes Windows release binaries reproducible.
+- Current bundle result: generated `.deb`, NSIS, and DMG artifacts still need
+  separate tracking before they can be treated as enforced reproducibility
+  targets.
+- Next step: keep comparing raw platform binaries separately from final bundles,
+  then fix or replace packaging steps that introduce nondeterminism.
 - Tracking issue: `#107` Debian package is not reproducible across rebuilds.
 
 Why:
@@ -222,11 +255,26 @@ Why:
 
 ### 15. Add provenance alongside reproducibility
 
-Status: Not Done
+Status: Partially Done
 
 - Keep artifact signing and provenance generation as a separate but related
   track.
 - Use them to prove origin after reproducibility is under control.
+
+Recent progress:
+
+- Commit `dac1e733` documents the keyless release signing flow.
+- Commit `d37dd5cb` adds CycloneDX SBOM artifacts.
+- Commit `9c2569a1` adds source manifest generation.
+- The release workflow now generates GitHub artifact provenance attestations for
+  the raw binary, platform bundle, and release hash manifest after each platform
+  build.
+
+Remaining:
+
+- Release artifact signing is not yet fully wired as a publishing step.
+- SBOM and manifest artifacts still need to be published consistently with
+  releases.
 
 Why:
 
@@ -263,8 +311,8 @@ The next delivery focus should shift toward supply-chain trust and release
 authenticity:
 
 - sign release artifacts in CI
-- generate and publish provenance for release builds
-- generate and publish an SBOM for release outputs
+- verify the published provenance path on the next tagged release
+- publish SBOM and source-manifest metadata with release outputs
 - keep reproducibility verification as the next enforcement step rather than
   mixing signing into the reproducibility target
 

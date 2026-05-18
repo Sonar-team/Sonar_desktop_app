@@ -8,6 +8,7 @@ use log::info;
 use std::sync::{Arc, Mutex};
 use tauri::{Manager, menu::MenuBuilder};
 use tauri_plugin_cli::CliExt;
+use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 use crate::{
@@ -18,7 +19,7 @@ use crate::{
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
     setup::{
-        labels::read_labels, log_host_and_app_snapshot, print_banner,
+        about::about_message, labels::read_labels, log_host_and_app_snapshot, print_banner,
         system_info::start_cpu_monitor,
     },
     state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData, label_files_list::SelectedLabelFiles},
@@ -87,6 +88,16 @@ pub fn run() -> Result<(), tauri::Error> {
         .manage(Arc::new(Mutex::new(FlowMatrix::new())))
         .manage(Arc::new(Mutex::new(GraphData::new())))
         .manage(Arc::new(Mutex::new(SelectedLabelFiles::new())))
+        .on_menu_event(|app, event| {
+            if event.id() == "apropos" {
+                app.dialog()
+                    .message(about_message())
+                    .title("A propos")
+                    .kind(MessageDialogKind::Info)
+                    .buttons(MessageDialogButtons::Ok)
+                    .show(|_| {});
+            }
+        })
         .setup({
             move |app| {
                 info!("{}", print_banner());

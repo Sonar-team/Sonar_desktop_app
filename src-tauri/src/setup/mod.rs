@@ -2,6 +2,7 @@ use colored::Colorize;
 use log::info;
 use tauri::AppHandle;
 
+pub mod about;
 pub mod labels;
 pub mod system_info;
 
