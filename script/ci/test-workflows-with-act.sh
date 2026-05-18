@@ -91,7 +91,7 @@ run_workflow push .github/workflows/rust-ci.yml
 run_workflow push .github/workflows/rust-clippy.yml
 run_workflow push .github/workflows/trivy.yml
 run_workflow push .github/workflows/sonarcube.yml
-run_workflow push .github/workflows/covecode.yml
+run_workflow push .github/workflows/covecode.yml --env YARN_IGNORE_ENGINES=1
 run_workflow workflow_dispatch .github/workflows/publish-smoke.yml --matrix platform:ubuntu-22.04
 
 echo "Local act suite completed."
