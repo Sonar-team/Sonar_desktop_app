@@ -1,5 +1,24 @@
 # Changelog
 
+## **[3.13.5] - 2026-05-18**
+
+## ✨ Améliorations
+
+- Ajout des versions de build canonique dans le menu `A propos` : Rust, Node.js,
+  Deno et Tauri CLI.
+- Injection des versions de build depuis `config/build-versions.env` au moment
+  de la compilation Rust.
+
+## 🔐 Chaîne de confiance
+
+- Ajout de la génération d'attestations de provenance GitHub Artifact
+  Attestations pour les artefacts de release.
+- Génération d'un manifest SHA256 dédié aux sujets d'attestation : binaire,
+  bundle plateforme et manifest de hashes de release.
+- Mise à jour de la documentation sprint/backlog sur la provenance et la
+  séparation entre reproductibilité, signature, SBOM et attestations.
+- Mise à jour de la version de SONAR en **3.13.5** pour publier ces changements.
+
 ## **[3.13.4] - 2026-05-07**
 
 ## 🛠 Corrections
