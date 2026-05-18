@@ -16,6 +16,7 @@
  * What this script does:
  * - resolves a stable `SOURCE_DATE_EPOCH`
  * - adds Rust path remapping so local absolute paths do not leak into outputs
+ * - enables the MSVC linker `/Brepro` flag on Windows release builds
  * - exposes the environment in a GitHub Actions-friendly format
  * - can also execute an arbitrary build command with that environment applied
  *
@@ -32,7 +33,7 @@
  */
 const repoRoot = Deno.cwd();
 
-// Preserve any existing flags while ensuring the reproducibility remap is present exactly once.
+// Preserve any existing flags while ensuring reproducibility flags are present exactly once.
 function appendFlag(existing: string | undefined, flag: string): string {
   const parts = (existing ?? "").split(/\s+/).filter(Boolean);
   if (parts.includes(flag)) {
@@ -40,6 +41,20 @@ function appendFlag(existing: string | undefined, flag: string): string {
   }
   parts.push(flag);
   return parts.join(" ");
+}
+
+function appendLinkArg(existing: string, linkArg: string): string {
+  const parts = existing.split(/\s+/).filter(Boolean);
+  if (parts.includes(linkArg)) {
+    return parts.join(" ");
+  }
+  parts.push("-C", linkArg);
+  return parts.join(" ");
+}
+
+function shouldEnableWindowsBrepro(): boolean {
+  return Deno.build.os === "windows" ||
+    Deno.env.get("SONAR_REPRO_WINDOWS_BREPRO") === "1";
 }
 
 async function resolveSourceDateEpoch(): Promise<string> {
@@ -72,7 +87,10 @@ async function buildEnv(): Promise<Record<string, string>> {
   const sourceDateEpoch = await resolveSourceDateEpoch();
   // Remap the local checkout path to a stable virtual path to avoid embedding machine-specific paths.
   const remapFlag = `--remap-path-prefix=${repoRoot}=/workspace`;
-  const rustflags = appendFlag(Deno.env.get("RUSTFLAGS"), remapFlag);
+  let rustflags = appendFlag(Deno.env.get("RUSTFLAGS"), remapFlag);
+  if (shouldEnableWindowsBrepro()) {
+    rustflags = appendLinkArg(rustflags, "link-arg=/Brepro");
+  }
 
   return {
     SOURCE_DATE_EPOCH: sourceDateEpoch,

@@ -3,7 +3,7 @@ set -euo pipefail
 
 PROJECT_ROOT="${PROJECT_ROOT:-$(pwd)}"
 APP_NAME="${APP_NAME:-sonar}"
-TAURI_BUILD_CMD="${TAURI_BUILD_CMD:-deno task tauri build}"
+TAURI_BUILD_CMD="${TAURI_BUILD_CMD:-deno task tauri build --ci --no-sign}"
 BIN_PATH="${BIN_PATH:-src-tauri/target/release/$APP_NAME}"
 DEB_PATH="${DEB_PATH:-}"
 WORKDIR="${WORKDIR:-/tmp/repro-check-${APP_NAME}}"

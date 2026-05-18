@@ -7,26 +7,33 @@ on:
 
 jobs:
   reproducibility-check:
+    name: verify unsigned reproducible artifacts
     permissions:
       contents: read
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
       - name: setup deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.7.13
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
-      - name: install Rust pinned version 1.95.0
+      - name: install Rust pinned version
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.95.0
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
 
       - name: install dependencies
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libpcap-dev
+          sudo ./script/ci/use-apt-snapshot.sh
+          sudo apt-get install -y $LINUX_APT_PACKAGES
 
       - name: install frontend dependencies deterministically
         run: deno install --frozen
@@ -39,6 +46,7 @@ jobs:
         run: ./security/repro-check.sh
 
   publish-tauri:
+    name: build and publish release artifacts
     needs: reproducibility-check
     permissions:
       contents: write
@@ -47,7 +55,7 @@ jobs:
       matrix:
         include:
           - platform: "macos-14"
-            args: "--target x86_64-apple-darwin"
+            args: ""
           - platform: "ubuntu-22.04"
             args: ""
           - platform: "windows-2022"
@@ -57,22 +65,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
       - name: setup deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.7.13
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
-      - name: install Rust pinned version 1.95.0
+      - name: install Rust pinned version
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.95.0
-          targets: ${{ matrix.platform == 'macos-14' && 'x86_64-apple-darwin' || '' }}
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+          targets: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libpcap-dev
+          sudo ./script/ci/use-apt-snapshot.sh
+          sudo apt-get install -y $LINUX_APT_PACKAGES
 
       - name: install frontend dependencies deterministically
         run: deno install --frozen
@@ -91,29 +105,37 @@ jobs:
           releaseBody: "Voir les assets ci-dessous pour télécharger cette version."
           releaseDraft: false
           prerelease: false
-          args: ${{ matrix.args }}
+          args: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
 
       - name: Generate SHA256 checksums
         shell: bash
-        run: |
-          set -euo pipefail
-          checksum_file="SHA256SUMS-${{ matrix.platform }}.txt"
+        run: ./script/ci/generate-release-hashes.sh "${{ matrix.platform }}"
 
-          if command -v sha256sum >/dev/null 2>&1; then
-            hash_cmd=(sha256sum)
-          else
-            hash_cmd=(shasum -a 256)
-          fi
+      - name: Upload release hashes artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-hashes-${{ matrix.platform }}
+          path: release-hashes-${{ matrix.platform }}.md
+          if-no-files-found: error
 
-          find src-tauri/target -type f \
-            \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.dmg' -o -name '*.msi' -o -name '*.exe' \) \
-            | sort | while IFS= read -r artifact; do
-              "${hash_cmd[@]}" "$artifact"
-            done > "$checksum_file"
-          test -s "$checksum_file"
+  update-release-body:
+    name: publish release hashes after artifact build
+    needs: publish-tauri
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Upload SHA256 checksums to release
+      - name: Download release hashes
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-hashes-*
+          path: release-hashes
+          merge-multiple: true
+
+      - name: Update GitHub release body with hashes
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${GITHUB_REF_NAME}" "SHA256SUMS-${{ matrix.platform }}.txt" --clobber
+        run: ./script/ci/update-release-body.sh "${GITHUB_REF_NAME}"

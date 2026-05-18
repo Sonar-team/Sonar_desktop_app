@@ -72,11 +72,23 @@ Why:
 
 ### 6. Pin or snapshot OS package dependencies
 
-Status: Partially Done
+Status: Done
 
 - Pin apt package versions where practical, or build from a known image
   snapshot.
 - Document the expected Linux packaging dependencies.
+
+Implementation notes:
+
+- GitHub Actions Ubuntu package versions are pinned in
+  `config/build-versions.env` as `LINUX_APT_PACKAGES`.
+- GitLab and Docker Debian package versions are pinned in
+  `config/build-versions.env` as `GITLAB_APT_PACKAGES` and
+  `DOCKER_APT_PACKAGES` and mirrored in the Dockerfile build argument.
+- `script/ci/use-apt-snapshot.sh` configures Debian and Ubuntu jobs to use a
+  dated apt snapshot before package installation.
+- `script/ci/check-build-versions.sh` validates that the Dockerfile and CI
+  workflows keep using the centralized pinned package variables.
 
 Why:
 
@@ -126,10 +138,19 @@ Why:
 
 ### 10. Separate signing from reproducibility validation
 
-Status: Not Done
+Status: Done
 
 - Validate reproducibility on unsigned artifacts first.
 - Apply signing after reproducibility checks pass.
+
+Implementation notes:
+
+- `security/repro-check.sh` defaults to `deno task tauri build --ci --no-sign`.
+- `script/ci/check-bundle-repro.sh` also uses `--no-sign` for NSIS/DMG probes.
+- The release workflow gates publishing behind the unsigned reproducibility
+  check.
+- Signing, provenance, and SBOM remain separate release-trust work after
+  reproducibility validation.
 
 Why:
 
@@ -181,16 +202,23 @@ Why:
 
 ### 14. Extend reproducibility checks to packaged outputs
 
-Status: Not Done
+Status: Partially Done
 
 - Start with the Linux binary and `.deb`.
 - Later extend to Windows and macOS packaging if feasible.
+- GitHub Actions probes have been added for Windows NSIS and macOS DMG.
+- Current Windows/macOS result: the generated NSIS and DMG bundles are not
+  reproducible yet.
+- Next step: compare the raw platform binary separately from the final bundle,
+  then fix or replace the packaging step that introduces nondeterminism.
 - Tracking issue: `#107` Debian package is not reproducible across rebuilds.
 
 Why:
 
 - raw binaries are easier to stabilize first
 - installer formats usually introduce extra nondeterminism
+- owning the packaging script may be required if Tauri's bundler does not expose
+  enough control over timestamps, metadata, ownership, or file ordering
 
 ### 15. Add provenance alongside reproducibility
 
@@ -245,6 +273,19 @@ Guiding rule:
 - reproducibility should target unsigned artifacts first
 - signing, provenance, and SBOM should prove origin and content after the build
   completes
+
+Release trust flow:
+
+1. Run reproducibility validation on unsigned artifacts.
+2. Build and publish release artifacts.
+3. Sign the released binary and bundle artifacts with Sigstore/cosign keyless
+   signing on GitHub Actions.
+4. Publish signatures, hashes, provenance, and SBOM metadata alongside the
+   release artifacts.
+
+The signing job should use GitHub Actions OIDC with `id-token: write`, run only
+on trusted release tags such as `app-v*`, and stay out of the reproducibility
+comparison path.
 
 ## User Stories
 

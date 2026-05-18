@@ -1,0 +1,1559 @@
+{
+    "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.6",
+    "serialNumber": "urn:uuid:f3ccc6d1-56ef-44e9-ba43-6af553d41fb1",
+    "version": 1,
+    "metadata": {
+        "timestamp": "2026-05-13T10:31:45+02:00",
+        "tools": {
+            "components": [
+                {
+                    "type": "application",
+                    "author": "anchore",
+                    "name": "syft",
+                    "version": "1.42.4"
+                }
+            ]
+        },
+        "component": {
+            "bom-ref": "af63bd4c8601b7f1",
+            "type": "file",
+            "name": "."
+        }
+    },
+    "components": [
+        {
+            "bom-ref": "pkg:github/sonarsource/sonarqube-scan-action@v6?package-id=15a5bf3554fb6f92",
+            "type": "library",
+            "name": "SonarSource/sonarqube-scan-action",
+            "version": "v6",
+            "cpe": "cpe:2.3:a:SonarSource\\/sonarqube-scan-action:SonarSource\\/sonarqube-scan-action:v6:*:*:*:*:*:*:*",
+            "purl": "pkg:github/SonarSource/sonarqube-scan-action@v6",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:SonarSource\\/sonarqube-scan-action:SonarSource\\/sonarqube_scan_action:v6:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:SonarSource\\/sonarqube_scan_action:SonarSource\\/sonarqube-scan-action:v6:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:SonarSource\\/sonarqube_scan_action:SonarSource\\/sonarqube_scan_action:v6:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:SonarSource\\/sonarqube-scan:SonarSource\\/sonarqube-scan-action:v6:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:SonarSource\\/sonarqube-scan:SonarSource\\/sonarqube_scan_action:v6:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:SonarSource\\/sonarqube_scan:SonarSource\\/sonarqube-scan-action:v6:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:SonarSource\\/sonarqube_scan:SonarSource\\/sonarqube_scan_action:v6:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:SonarSource\\/sonarqube:SonarSource\\/sonarqube-scan-action:v6:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:SonarSource\\/sonarqube:SonarSource\\/sonarqube_scan_action:v6:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/sonarcube.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af?package-id=b9d6f57f0dd7da7f",
+            "type": "library",
+            "name": "actions-rs/toolchain",
+            "version": "16499b5e05bf2e26879000db0c1d13f7e13fa3af",
+            "cpe": "cpe:2.3:a:actions-rs\\/toolchain:actions-rs\\/toolchain:16499b5e05bf2e26879000db0c1d13f7e13fa3af:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions-rs\\/toolchain:actions_rs\\/toolchain:16499b5e05bf2e26879000db0c1d13f7e13fa3af:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions_rs\\/toolchain:actions-rs\\/toolchain:16499b5e05bf2e26879000db0c1d13f7e13fa3af:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions_rs\\/toolchain:actions_rs\\/toolchain:16499b5e05bf2e26879000db0c1d13f7e13fa3af:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions:actions-rs\\/toolchain:16499b5e05bf2e26879000db0c1d13f7e13fa3af:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions:actions_rs\\/toolchain:16499b5e05bf2e26879000db0c1d13f7e13fa3af:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/rust-clippy.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions-rs/toolchain@v1?package-id=d312179240a5150a",
+            "type": "library",
+            "name": "actions-rs/toolchain",
+            "version": "v1",
+            "cpe": "cpe:2.3:a:actions-rs\\/toolchain:actions-rs\\/toolchain:v1:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions-rs/toolchain@v1",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions-rs\\/toolchain:actions_rs\\/toolchain:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions_rs\\/toolchain:actions-rs\\/toolchain:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions_rs\\/toolchain:actions_rs\\/toolchain:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions:actions-rs\\/toolchain:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions:actions_rs\\/toolchain:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/covecode.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions-rs/toolchain@v1?package-id=fee21a9d0a1e3190",
+            "type": "library",
+            "name": "actions-rs/toolchain",
+            "version": "v1",
+            "cpe": "cpe:2.3:a:actions-rs\\/toolchain:actions-rs\\/toolchain:v1:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions-rs/toolchain@v1",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions-rs\\/toolchain:actions_rs\\/toolchain:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions_rs\\/toolchain:actions-rs\\/toolchain:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions_rs\\/toolchain:actions_rs\\/toolchain:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions:actions-rs\\/toolchain:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions:actions_rs\\/toolchain:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/rust-ci.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/checkout@v2?package-id=43f72a7d286fdbe7",
+            "type": "library",
+            "name": "actions/checkout",
+            "version": "v2",
+            "cpe": "cpe:2.3:a:actions\\/checkout:actions\\/checkout:v2:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/checkout@v2",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/covecode.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/checkout@v2?package-id=ec11fc941be64ce6",
+            "type": "library",
+            "name": "actions/checkout",
+            "version": "v2",
+            "cpe": "cpe:2.3:a:actions\\/checkout:actions\\/checkout:v2:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/checkout@v2",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/rust-ci.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/checkout@v4?package-id=661f9ec6bc235ecf",
+            "type": "library",
+            "name": "actions/checkout",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/checkout:actions\\/checkout:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/checkout@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/bundle-repro-check.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/checkout@v4?package-id=0dcd233074ad4474",
+            "type": "library",
+            "name": "actions/checkout",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/checkout:actions\\/checkout:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/checkout@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/publish-smoke.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/checkout@v4?package-id=a14e91d06a2ebb93",
+            "type": "library",
+            "name": "actions/checkout",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/checkout:actions\\/checkout:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/checkout@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/publish.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/checkout@v4?package-id=358d5a4b3cde9e12",
+            "type": "library",
+            "name": "actions/checkout",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/checkout:actions\\/checkout:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/checkout@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/repro-env-check.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/checkout@v4?package-id=fffbbbff9ad6ec4f",
+            "type": "library",
+            "name": "actions/checkout",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/checkout:actions\\/checkout:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/checkout@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/rust-clippy.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/checkout@v4?package-id=0e79c7bf69a0a966",
+            "type": "library",
+            "name": "actions/checkout",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/checkout:actions\\/checkout:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/checkout@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/sonarcube.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/checkout@v4?package-id=3ecdcd50494f5c79",
+            "type": "library",
+            "name": "actions/checkout",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/checkout:actions\\/checkout:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/checkout@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/trivy.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/checkout@v4?package-id=3ce30ff3e96f770a",
+            "type": "library",
+            "name": "actions/checkout",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/checkout:actions\\/checkout:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/checkout@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/windows-binary-repro-investigation.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/download-artifact@v4?package-id=91452617336e3a70",
+            "type": "library",
+            "name": "actions/download-artifact",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/download-artifact:actions\\/download-artifact:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/download-artifact@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/download-artifact:actions\\/download_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/download_artifact:actions\\/download-artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/download_artifact:actions\\/download_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/download:actions\\/download-artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/download:actions\\/download_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/publish.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/setup-node@v1?package-id=ff2709bd92386ae0",
+            "type": "library",
+            "name": "actions/setup-node",
+            "version": "v1",
+            "cpe": "cpe:2.3:a:actions\\/setup-node:actions\\/setup-node:v1:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/setup-node@v1",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/setup-node:actions\\/setup_node:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/setup_node:actions\\/setup-node:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/setup_node:actions\\/setup_node:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/setup:actions\\/setup-node:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/setup:actions\\/setup_node:v1:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/covecode.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/upload-artifact@v4?package-id=2884fd6ec0189b88",
+            "type": "library",
+            "name": "actions/upload-artifact",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/upload-artifact:actions\\/upload-artifact:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/upload-artifact@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload-artifact:actions\\/upload_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload_artifact:actions\\/upload-artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload_artifact:actions\\/upload_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload:actions\\/upload-artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload:actions\\/upload_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/bundle-repro-check.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/upload-artifact@v4?package-id=092890fedc7682e2",
+            "type": "library",
+            "name": "actions/upload-artifact",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/upload-artifact:actions\\/upload-artifact:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/upload-artifact@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload-artifact:actions\\/upload_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload_artifact:actions\\/upload-artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload_artifact:actions\\/upload_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload:actions\\/upload-artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload:actions\\/upload_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/publish.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/actions/upload-artifact@v4?package-id=a16b1072fc8a8845",
+            "type": "library",
+            "name": "actions/upload-artifact",
+            "version": "v4",
+            "cpe": "cpe:2.3:a:actions\\/upload-artifact:actions\\/upload-artifact:v4:*:*:*:*:*:*:*",
+            "purl": "pkg:github/actions/upload-artifact@v4",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload-artifact:actions\\/upload_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload_artifact:actions\\/upload-artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload_artifact:actions\\/upload_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload:actions\\/upload-artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:actions\\/upload:actions\\/upload_artifact:v4:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/windows-binary-repro-investigation.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe?package-id=f5e45099718de857",
+            "type": "library",
+            "name": "aquasecurity/trivy-action",
+            "version": "7b7aa264d83dc58691451798b4d117d53d21edfe",
+            "cpe": "cpe:2.3:a:aquasecurity\\/trivy-action:aquasecurity\\/trivy-action:7b7aa264d83dc58691451798b4d117d53d21edfe:*:*:*:*:*:*:*",
+            "purl": "pkg:github/aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:aquasecurity\\/trivy-action:aquasecurity\\/trivy_action:7b7aa264d83dc58691451798b4d117d53d21edfe:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:aquasecurity\\/trivy_action:aquasecurity\\/trivy-action:7b7aa264d83dc58691451798b4d117d53d21edfe:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:aquasecurity\\/trivy_action:aquasecurity\\/trivy_action:7b7aa264d83dc58691451798b4d117d53d21edfe:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:aquasecurity\\/trivy:aquasecurity\\/trivy-action:7b7aa264d83dc58691451798b4d117d53d21edfe:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:aquasecurity\\/trivy:aquasecurity\\/trivy_action:7b7aa264d83dc58691451798b4d117d53d21edfe:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/trivy.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/codecov/codecov-action@v2?package-id=4b35fe24d0424fcc",
+            "type": "library",
+            "name": "codecov/codecov-action",
+            "version": "v2",
+            "cpe": "cpe:2.3:a:codecov\\/codecov-action:codecov\\/codecov-action:v2:*:*:*:*:*:*:*",
+            "purl": "pkg:github/codecov/codecov-action@v2",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:codecov\\/codecov-action:codecov\\/codecov_action:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:codecov\\/codecov_action:codecov\\/codecov-action:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:codecov\\/codecov_action:codecov\\/codecov_action:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:codecov\\/codecov:codecov\\/codecov-action:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:codecov\\/codecov:codecov\\/codecov_action:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/covecode.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/denoland/setup-deno@v2?package-id=3f02b2f4e918dfc7",
+            "type": "library",
+            "name": "denoland/setup-deno",
+            "version": "v2",
+            "cpe": "cpe:2.3:a:denoland\\/setup-deno:denoland\\/setup-deno:v2:*:*:*:*:*:*:*",
+            "purl": "pkg:github/denoland/setup-deno@v2",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup-deno:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup_deno:denoland\\/setup-deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup_deno:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup:denoland\\/setup-deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/bundle-repro-check.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/denoland/setup-deno@v2?package-id=e1f81682fef33fb4",
+            "type": "library",
+            "name": "denoland/setup-deno",
+            "version": "v2",
+            "cpe": "cpe:2.3:a:denoland\\/setup-deno:denoland\\/setup-deno:v2:*:*:*:*:*:*:*",
+            "purl": "pkg:github/denoland/setup-deno@v2",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup-deno:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup_deno:denoland\\/setup-deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup_deno:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup:denoland\\/setup-deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/publish-smoke.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/denoland/setup-deno@v2?package-id=fe1da73fd8d30e66",
+            "type": "library",
+            "name": "denoland/setup-deno",
+            "version": "v2",
+            "cpe": "cpe:2.3:a:denoland\\/setup-deno:denoland\\/setup-deno:v2:*:*:*:*:*:*:*",
+            "purl": "pkg:github/denoland/setup-deno@v2",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup-deno:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup_deno:denoland\\/setup-deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup_deno:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup:denoland\\/setup-deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/publish.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/denoland/setup-deno@v2?package-id=e36fdd86b0ece01d",
+            "type": "library",
+            "name": "denoland/setup-deno",
+            "version": "v2",
+            "cpe": "cpe:2.3:a:denoland\\/setup-deno:denoland\\/setup-deno:v2:*:*:*:*:*:*:*",
+            "purl": "pkg:github/denoland/setup-deno@v2",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup-deno:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup_deno:denoland\\/setup-deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup_deno:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup:denoland\\/setup-deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/repro-env-check.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/denoland/setup-deno@v2?package-id=cbf0eabd7c112de5",
+            "type": "library",
+            "name": "denoland/setup-deno",
+            "version": "v2",
+            "cpe": "cpe:2.3:a:denoland\\/setup-deno:denoland\\/setup-deno:v2:*:*:*:*:*:*:*",
+            "purl": "pkg:github/denoland/setup-deno@v2",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup-deno:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup_deno:denoland\\/setup-deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup_deno:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup:denoland\\/setup-deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:denoland\\/setup:denoland\\/setup_deno:v2:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/windows-binary-repro-investigation.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/dtolnay/rust-toolchain@stable?package-id=66228118144e7396",
+            "type": "library",
+            "name": "dtolnay/rust-toolchain",
+            "version": "stable",
+            "cpe": "cpe:2.3:a:dtolnay\\/rust-toolchain:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*",
+            "purl": "pkg:github/dtolnay/rust-toolchain@stable",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust-toolchain:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust_toolchain:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust_toolchain:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/bundle-repro-check.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/dtolnay/rust-toolchain@stable?package-id=3de17145aed32d97",
+            "type": "library",
+            "name": "dtolnay/rust-toolchain",
+            "version": "stable",
+            "cpe": "cpe:2.3:a:dtolnay\\/rust-toolchain:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*",
+            "purl": "pkg:github/dtolnay/rust-toolchain@stable",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust-toolchain:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust_toolchain:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust_toolchain:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/publish-smoke.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/dtolnay/rust-toolchain@stable?package-id=ad046268600b6523",
+            "type": "library",
+            "name": "dtolnay/rust-toolchain",
+            "version": "stable",
+            "cpe": "cpe:2.3:a:dtolnay\\/rust-toolchain:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*",
+            "purl": "pkg:github/dtolnay/rust-toolchain@stable",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust-toolchain:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust_toolchain:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust_toolchain:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/publish.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/dtolnay/rust-toolchain@stable?package-id=08f28931cb9fd50c",
+            "type": "library",
+            "name": "dtolnay/rust-toolchain",
+            "version": "stable",
+            "cpe": "cpe:2.3:a:dtolnay\\/rust-toolchain:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*",
+            "purl": "pkg:github/dtolnay/rust-toolchain@stable",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust-toolchain:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust_toolchain:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust_toolchain:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust:dtolnay\\/rust-toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:dtolnay\\/rust:dtolnay\\/rust_toolchain:stable:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/windows-binary-repro-investigation.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/github/codeql-action@v3?package-id=7546368dde697ceb#upload-sarif",
+            "type": "library",
+            "name": "github/codeql-action/upload-sarif",
+            "version": "v3",
+            "cpe": "cpe:2.3:a:github\\/codeql-action\\/upload-sarif:github\\/codeql-action\\/upload-sarif:v3:*:*:*:*:*:*:*",
+            "purl": "pkg:github/github/codeql-action@v3#upload-sarif",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql-action\\/upload-sarif:github\\/codeql_action\\/upload_sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql_action\\/upload_sarif:github\\/codeql-action\\/upload-sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql_action\\/upload_sarif:github\\/codeql_action\\/upload_sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql-action\\/upload:github\\/codeql-action\\/upload-sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql-action\\/upload:github\\/codeql_action\\/upload_sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql_action\\/upload:github\\/codeql-action\\/upload-sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql_action\\/upload:github\\/codeql_action\\/upload_sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql:github\\/codeql-action\\/upload-sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql:github\\/codeql_action\\/upload_sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/rust-clippy.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/github/codeql-action@v3?package-id=311ed3f7b213ec44#upload-sarif",
+            "type": "library",
+            "name": "github/codeql-action/upload-sarif",
+            "version": "v3",
+            "cpe": "cpe:2.3:a:github\\/codeql-action\\/upload-sarif:github\\/codeql-action\\/upload-sarif:v3:*:*:*:*:*:*:*",
+            "purl": "pkg:github/github/codeql-action@v3#upload-sarif",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql-action\\/upload-sarif:github\\/codeql_action\\/upload_sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql_action\\/upload_sarif:github\\/codeql-action\\/upload-sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql_action\\/upload_sarif:github\\/codeql_action\\/upload_sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql-action\\/upload:github\\/codeql-action\\/upload-sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql-action\\/upload:github\\/codeql_action\\/upload_sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql_action\\/upload:github\\/codeql-action\\/upload-sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql_action\\/upload:github\\/codeql_action\\/upload_sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql:github\\/codeql-action\\/upload-sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:github\\/codeql:github\\/codeql_action\\/upload_sarif:v3:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/trivy.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:github/tauri-apps/tauri-action@v0?package-id=04e6211713af0fa3",
+            "type": "library",
+            "name": "tauri-apps/tauri-action",
+            "version": "v0",
+            "cpe": "cpe:2.3:a:tauri-apps\\/tauri-action:tauri-apps\\/tauri-action:v0:*:*:*:*:*:*:*",
+            "purl": "pkg:github/tauri-apps/tauri-action@v0",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "github-actions-usage-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "github-action"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "github-actions-use-statement"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:tauri-apps\\/tauri-action:tauri_apps\\/tauri_action:v0:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:tauri_apps\\/tauri_action:tauri-apps\\/tauri-action:v0:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:tauri_apps\\/tauri_action:tauri_apps\\/tauri_action:v0:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:tauri-apps\\/tauri:tauri-apps\\/tauri-action:v0:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:tauri-apps\\/tauri:tauri_apps\\/tauri_action:v0:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:tauri_apps\\/tauri:tauri-apps\\/tauri-action:v0:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:tauri_apps\\/tauri:tauri_apps\\/tauri_action:v0:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:tauri:tauri-apps\\/tauri-action:v0:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:tauri:tauri_apps\\/tauri_action:v0:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/.github/workflows/publish.yml"
+                }
+            ]
+        },
+        {
+            "bom-ref": "1b25011d6d7ff666",
+            "type": "file",
+            "name": "/home/erdt-cyber/Sonar_desktop_app/.github/workflows/bundle-repro-check.yml",
+            "hashes": [
+                {
+                    "alg": "SHA-1",
+                    "content": "f550a274dfd582e980e8de87c53993b95c76d3c1"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "c03a15500d0c66bd1609ce4e3bed76719f3342903d3e09f808e864cbfbafb043"
+                }
+            ]
+        },
+        {
+            "bom-ref": "66eec0c78c824488",
+            "type": "file",
+            "name": "/home/erdt-cyber/Sonar_desktop_app/.github/workflows/covecode.yml",
+            "hashes": [
+                {
+                    "alg": "SHA-1",
+                    "content": "367b8462c5963ca29b218093af179c3a147cd33e"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "0c9d65fa29cc771086b54e2a26255e299dfb4c3363d6e0d4d5d01a3c1538023c"
+                }
+            ]
+        },
+        {
+            "bom-ref": "c0485bb846584977",
+            "type": "file",
+            "name": "/home/erdt-cyber/Sonar_desktop_app/.github/workflows/publish-smoke.yml",
+            "hashes": [
+                {
+                    "alg": "SHA-1",
+                    "content": "8ba7006350c975b2270e25fd677e91e1674d5c10"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "7fe3d22b7524f66ce71d87d26a92b6acd7f659d40b67a0b370ce96a373b9c7ef"
+                }
+            ]
+        },
+        {
+            "bom-ref": "c4f6fe4c99130525",
+            "type": "file",
+            "name": "/home/erdt-cyber/Sonar_desktop_app/.github/workflows/publish.yml",
+            "hashes": [
+                {
+                    "alg": "SHA-1",
+                    "content": "3ba1b6d74ddc1239fa37d0c8a17ca5d8dff5d644"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "edf139e72a3b43d79e207046003adf2854ed7052821dd7ec139e3aba74fac535"
+                }
+            ]
+        },
+        {
+            "bom-ref": "14ed2580a3ebdd56",
+            "type": "file",
+            "name": "/home/erdt-cyber/Sonar_desktop_app/.github/workflows/repro-env-check.yml",
+            "hashes": [
+                {
+                    "alg": "SHA-1",
+                    "content": "18b1de64defb37d12d982da45ad33d102f011057"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "03372086610f93481cd73329ca8a105df534de05e7a84354e1e8d75f70f7ad7e"
+                }
+            ]
+        },
+        {
+            "bom-ref": "f76d31eb0332de12",
+            "type": "file",
+            "name": "/home/erdt-cyber/Sonar_desktop_app/.github/workflows/rust-ci.yml",
+            "hashes": [
+                {
+                    "alg": "SHA-1",
+                    "content": "a23bc89a951cce7a694b7884cd01eb26ca241b60"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "eb87bff8275bb8a89c8c446f552912b8c0ed1d4ab8e76189f0c641aaa239699a"
+                }
+            ]
+        },
+        {
+            "bom-ref": "66e05a1d3ece6a53",
+            "type": "file",
+            "name": "/home/erdt-cyber/Sonar_desktop_app/.github/workflows/rust-clippy.yml",
+            "hashes": [
+                {
+                    "alg": "SHA-1",
+                    "content": "c1a8a6cd9ab483a1ade7bc6bd1caf30f7a871f37"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "e8b9468080b1458cc1b54369c968fc02ff9107dd05a1f4bfe82f175ff2c6cecb"
+                }
+            ]
+        },
+        {
+            "bom-ref": "b6ecfb840e65f772",
+            "type": "file",
+            "name": "/home/erdt-cyber/Sonar_desktop_app/.github/workflows/sonarcube.yml",
+            "hashes": [
+                {
+                    "alg": "SHA-1",
+                    "content": "bd87eae78469f5d6f5b8c3d172056b4e2c2941ba"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "a085bc9f68619465147faf0530b6e263b7a5e4c45689cc0772cda322ab1532b6"
+                }
+            ]
+        },
+        {
+            "bom-ref": "f287b9f91746621d",
+            "type": "file",
+            "name": "/home/erdt-cyber/Sonar_desktop_app/.github/workflows/trivy.yml",
+            "hashes": [
+                {
+                    "alg": "SHA-1",
+                    "content": "e030b327a1ef99560647968242079cd606eae133"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "3174a2f1f0fc0805566f7e85559b07eb8850f6b257ff91ad52881587142bdb6f"
+                }
+            ]
+        },
+        {
+            "bom-ref": "afa86347403a9dee",
+            "type": "file",
+            "name": "/home/erdt-cyber/Sonar_desktop_app/.github/workflows/windows-binary-repro-investigation.yml",
+            "hashes": [
+                {
+                    "alg": "SHA-1",
+                    "content": "a4ec42fe5a3a0d6c91b6072a8bcea2136032073f"
+                },
+                {
+                    "alg": "SHA-256",
+                    "content": "eba6b3f72edaace3ed5cf2d51de58dc5fd9f7b92bc0317d9c889fa44f10bae0f"
+                }
+            ]
+        }
+    ]
+}
