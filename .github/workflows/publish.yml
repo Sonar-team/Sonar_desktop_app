@@ -20,12 +20,12 @@ jobs:
         run: ./script/ci/export-build-versions.sh
 
       - name: setup deno
-        uses: denoland/setup-deno@e95548e
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
         with:
           deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
       - name: install Rust pinned version
-        uses: dtolnay/rust-toolchain@5ee21dc
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
 
@@ -73,12 +73,12 @@ jobs:
         run: ./script/ci/export-build-versions.sh
 
       - name: setup deno
-        uses: denoland/setup-deno@e95548e
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
         with:
           deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
       - name: install Rust pinned version
-        uses: dtolnay/rust-toolchain@5ee21dc
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
           targets: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
@@ -98,7 +98,7 @@ jobs:
         run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
 
       - name: Build and package with Tauri
-        uses: tauri-apps/tauri-action@84b9d35
+        uses: tauri-apps/tauri-action@1ddc7b49b13c3038297360482fcb3e058764d7c9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -119,12 +119,12 @@ jobs:
         run: ./script/ci/generate-attestation-subjects.sh "${{ matrix.platform }}"
 
       - name: Generate provenance attestation
-        uses: actions/attest@59d8942
+        uses: actions/attest@281a49d4cbb0a72c9575a50d18f6deb515a11deb
         with:
           subject-path: ${{ steps.attestation-subjects.outputs.subject-paths }}
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
 
       - name: Sign release artifacts
         shell: bash
@@ -137,7 +137,7 @@ jobs:
         run: ./script/ci/upload-sigstore-bundles.sh "${{ matrix.platform }}"
 
       - name: Upload Sigstore bundles artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: sigstore-bundles-${{ matrix.platform }}
           path: |
@@ -145,7 +145,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload release hashes artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: release-hashes-${{ matrix.platform }}
           path: release-hashes-${{ matrix.platform }}.md
@@ -158,10 +158,10 @@ jobs:
       contents: write
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Download release hashes
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           pattern: release-hashes-*
           path: release-hashes
