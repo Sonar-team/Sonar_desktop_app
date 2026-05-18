@@ -58,7 +58,7 @@ import { displayCaptureError } from '../../../errors/capture';
 
 export default defineComponent({
   name: 'ImportPanel',
-  emits: ['update:visible','toggle-pcap', 'toggle-warning'],
+  emits: ['update:visible','toggle-pcap', 'toggle-warning', 'showConflictDialog'],
   props: {
     mode: {
       type: String,
@@ -72,7 +72,7 @@ export default defineComponent({
       selectedLabelFiles: [] as string[],
       conflictualFiles: [] as [string, string][],
       isConverting: false,
-      showConflictPanel: false
+      showConflictDialog: false
     };
   },
 
@@ -189,7 +189,7 @@ export default defineComponent({
           if ([same_ip_diff_mac, same_ip_diff_label, same_mac_diff_ip, same_mac_diff_label].length > 0) {
             for (const conflicts of same_ip_diff_label) {
               info('ip_mac_conflicst: ' + conflicts)
-              await message("IP {} : MAC '{}' ({}) vs '{}' ({})", { title: 'Fichiers en conflit', kind: 'warning' });
+              this.$emit('showConflictDialog', same_ip_diff_label, same_ip_diff_mac, same_mac_diff_ip, same_mac_diff_label)
             }
             await new Promise(resolve => setTimeout(resolve, 200));
             this.selectedLabelFiles = this.selectedLabelFiles.filter((file) => !same_ip_diff_label.some(([,,name_i]) => name_i === file) );
