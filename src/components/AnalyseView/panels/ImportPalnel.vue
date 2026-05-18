@@ -1,13 +1,14 @@
 <template>
   <div class="container">
     <div class="center-container">
-      
+      <ConflictDialog v-if="showConflictDialog" :same_ip_diff_mac="same_ip_diff_mac" :same_ip_diff_label="same_ip_diff_label" :same_mac_diff_ip="same_mac_diff_ip" :same_mac_diff_label="same_mac_diff_label" @showConflictDialog="showConflictDialog = false"/>
+
         <!-- Overlay de chargement -->
       <div class="overlay" v-if="isConverting">
         <div class="spinner"></div>
         <p class="overlay-text">Conversion en cours…</p>
       </div>
-      <button class="btn image-btn" @click.prevent="windowClosed">❌</button>
+      <button class="btn image-btn cross" @click.prevent="windowClosed">❌</button>
       
       <div v-if="mode === 'csv'" class="csv-group">
           <button class="btn btn-add text" @click="addCsvFiles" :disabled="isConverting">
@@ -54,11 +55,15 @@ import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
 import { displayCaptureError } from '../../../errors/capture';
+import ConflictDialog from './ConflictDialog.vue'
 
 
 export default defineComponent({
   name: 'ImportPanel',
   emits: ['update:visible','toggle-pcap', 'toggle-warning', 'showConflictDialog'],
+  components: {
+    ConflictDialog
+  },
   props: {
     mode: {
       type: String,
@@ -70,9 +75,12 @@ export default defineComponent({
       packetFiles: [] as string[],
       labelFiles: [] as [string, boolean][],
       selectedLabelFiles: [] as string[],
-      conflictualFiles: [] as [string, string][],
       isConverting: false,
-      showConflictDialog: false
+      showConflictDialog: false,
+      same_ip_diff_mac: [] as [string, string, string, string, string][], 
+      same_ip_diff_label: [] as [string, string, string, string, string][],  
+      same_mac_diff_ip: [] as [string, string, string, string, string][],  
+      same_mac_diff_label: [] as [string, string, string, string, string][]
     };
   },
 
@@ -186,16 +194,29 @@ export default defineComponent({
     async addSelectedLabelFilesList(){
         try {
           const [same_ip_diff_mac, same_ip_diff_label, same_mac_diff_ip, same_mac_diff_label] = await invoke<[[string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][]]>('add_selected_label_files_list', { selectedFilesNamesList: this.selectedLabelFiles});
-          if ([same_ip_diff_mac, same_ip_diff_label, same_mac_diff_ip, same_mac_diff_label].length > 0) {
-            for (const conflicts of same_ip_diff_label) {
-              info('ip_mac_conflicst: ' + conflicts)
-              this.$emit('showConflictDialog', same_ip_diff_label, same_ip_diff_mac, same_mac_diff_ip, same_mac_diff_label)
-            }
-            await new Promise(resolve => setTimeout(resolve, 200));
-            this.selectedLabelFiles = this.selectedLabelFiles.filter((file) => !same_ip_diff_label.some(([,,name_i]) => name_i === file) );
-          }
           
-          info('réponse invoke');
+          this.same_ip_diff_label = same_ip_diff_label
+          this.same_ip_diff_mac = same_ip_diff_mac
+          this.same_mac_diff_ip = same_mac_diff_ip
+          this.same_mac_diff_label =same_mac_diff_label
+
+          if (this.same_ip_diff_mac.length > 0 || this.same_ip_diff_label.length > 0 || this.same_mac_diff_ip.length > 0 || this.same_mac_diff_label.length > 0) {
+            info('length > 0')
+            this.showConflictDialog =true
+
+            await new Promise(resolve => setTimeout(resolve, 200));
+            const conflictLists = [
+              this.same_ip_diff_label,
+              this.same_ip_diff_mac,
+              this.same_mac_diff_ip,
+              this.same_mac_diff_label
+            ]
+
+            this.selectedLabelFiles = this.selectedLabelFiles.filter((file) =>
+              !conflictLists.some((list) => list.some(([,,name_i]) => name_i === file))
+            )
+
+          }
         } catch (err) {
           displayCaptureError(err);
         }
@@ -322,6 +343,12 @@ export default defineComponent({
 .btn-add:active {
   border-color: #2596be;
   background-color: #2596be;
+}
+
+.cross {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
 }
 
 .image-btn {

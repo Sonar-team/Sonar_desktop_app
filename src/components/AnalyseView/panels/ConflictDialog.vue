@@ -1,56 +1,51 @@
 <template>
   <div class="container">
     <div class="center-container">
-      <div class="left-panel">
-
-      </div>
-      </div>
-      
-      <div class="separateur"></div>
-
-      <div class="right-panel">
-        <div class="file-group">
-          <label for="packetFiles"></label>
-          <div v-if="mode === 'csv'" class="file-group">
-            <button class="btn" @click="addCsvFiles" :disabled="isConverting">
-            Ajouter des fichiers de label
-            </button>
-            <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
-              Effacer
-            </button>
-          </div>
-          <div v-else-if="mode === 'pcap'" class="file-group">
-            <button class="btn" @click="addPcapFiles" :disabled="isConverting">
-              Ajouter des fichiers
-            </button>
-            <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
-              Effacer
-            </button>
-          </div>
+      <h1 class="dialog-title">Conflits détectés</h1>
+      <div class="panels">
+        <div class="left-panel">
+          <img class="image" src="/src/assets/images/warning-sign.png"/>
         </div>
-          
-        <ul class="file-list" v-if="packetFiles.length > 0">
-          <li v-for="(file, index) in packetFiles" :key="index">
-            {{ file }}
-          </li>
-        </ul>
-
-        <button v-show="mode === 'pcap'"
-          @click="convertPcap"
-          class="btn btn-open"
-          :disabled="isConverting || packetFiles.length === 0"
-        >
-          Ouvrir
-        </button>
-        <button v-show="mode === 'csv'"
-          @click="convertCsv"
-          class="btn btn-open"
-          :disabled="isConverting || packetFiles.length === 0"
-        >
-          Ouvrir
-        </button>
+        <div class="right-panel">
+              <ul v-show="same_ip_diff_mac.length > 0" class="file-list">
+                <h3 class="text">Conflits adresses IP -> MAC</h3>
+                <li v-for="([ip, ref_mac, name_i, mac, name_j], index) in same_ip_diff_mac" :key="index">
+                  <label :for="String(index)">
+                    <span class="text">IP '{{ ip }}' : MAC '{{ ref_mac }}' ({{ name_i }}) vs '{{ mac }}' ({{ name_j }})</span>
+                  </label>
+                </li>
+              </ul>
+              <ul v-show="same_ip_diff_label.length > 0" class="file-list">
+                <h3 class="text">Conflits adresses IP -> Label</h3>
+                <li v-for="([ip, ref_label, name_i, label, name_j], index) in same_ip_diff_label" :key="index">
+                  <label :for="String(index)">
+                    <span class="text">'{{ ip }}': '{{ ref_label }}'  ({{ name_i.length > 20 ? name_i.slice(0, 25) + '...' : name_i }})  <-> '{{ label }}'  ({{ name_j.length > 20 ? name_j.slice(0, 20) + '...' : name_j }}) </span>
+                  </label>
+                </li>
+              </ul>
+              <ul v-show="same_mac_diff_ip.length > 0" class="file-list">
+                <h3 class="text">Conflits adresses MAC -> IP</h3>
+                <li v-for="([mac, ref_ip, name_i, ip, name_j], index) in same_ip_diff_mac" :key="index">
+                  <label :for="String(index)">
+                    <span class="text">MAC '{{ mac }}' : IP '{{ ref_ip }}' ({{ name_i }}) vs '{{ ip }}' ({{ name_j }})</span>
+                  </label>
+                </li>
+              </ul>
+              <ul v-show="same_mac_diff_label.length > 0" class="file-list">
+                <h3 class="text">Conflits adresses MAC -> Label</h3>
+                <li v-for="([mac, ref_label, name_i, label, name_j], index) in same_ip_diff_mac" :key="index">
+                  <label :for="String(index)">
+                    <span class="text">IP '{{ mac }}' : MAC '{{ ref_label }}' ({{ name_i }}) vs '{{ label }}' ({{ name_j }})</span>
+                  </label>
+                </li>
+              </ul>
+          </div>
+        <div>
+          <button class="btn image-btn" @click.prevent="windowClosed">❌</button>
+        </div>
       </div>
     </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -59,23 +54,38 @@ import { invoke } from '@tauri-apps/api/core';
 import { info } from '@tauri-apps/plugin-log';
 import { displayCaptureError } from '../../../errors/capture';
 
+type ConflictRow = [string, string, string, string, string]
 
 export default defineComponent({
-  name: 'ConflictPanel',
-  emits: ['showConflictPanel'],
+  name: 'ConflictDialog',
+  emits: ['showConflictDialog'],
+
   props: {
-    files: {
-      type: Array as PropType<[string, string][]>,
-      required: true,
+    same_ip_diff_mac: {
+      type: Array as PropType<ConflictRow[]>,
+      required: true
     },
+    same_ip_diff_label: {
+      type: Array as PropType<ConflictRow[]>,
+      required: true
+    },
+    same_mac_diff_ip: {
+      type: Array as PropType<ConflictRow[]>,
+      required: true
+    },
+    same_mac_diff_label: {
+      type: Array as PropType<ConflictRow[]>,
+      required: true
+    }
   },
   data() {
     return {
-      conflictualFiles: [] as [string, string][],
-      localFiles: [...this.files]
+      //conflictualFiles: [] as [string, string][],
+      //localFiles: [...this.files]
     };
   },
 
+  /*
   watch: {
     localFiles: {
       immediate: true,
@@ -86,12 +96,13 @@ export default defineComponent({
       }
     }
   },
+  */
 
   methods: {
     windowClosed() {
-      this.$emit('showConflictPanel', false);
+      this.$emit('showConflictDialog', false);
     },
-
+    /*
     async forceCopy(path: string) {
 
       info('force_import: ' + path);
@@ -111,7 +122,7 @@ export default defineComponent({
         this.localFiles = this.localFiles.filter(([, file_path]) => file_path !== path);
     },
 
-
+  */
   }
 })
 </script>
@@ -133,34 +144,41 @@ export default defineComponent({
 .center-container {
   position: relative;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
   align-items: stretch;
   background-color: #1e1e2e;
   border-radius: 8px;
   padding: 2rem;
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.panels {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: stretch;
+}
+
+.dialog-title {
+  color: whitesmoke;
+  font-size: 2rem;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
 .left-panel {
-  width: 50%;
-  padding: 1rem;
-   display: flex;
+  justify-content: center;
+  width: 20%;
+  display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.separateur {
-  width: 2px;
-  background-color: #ccc;
-  align-self: stretch; /* prend toute la hauteur du conteneur */
-}
-
 .right-panel {
-  width: 50%;
-  padding: 1rem;
+  width: 75%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -177,6 +195,7 @@ export default defineComponent({
 
 .file-group {
   display: flex;
+  flex-direction:row;
   gap: 1rem;
   margin-bottom: 1.5rem;
   justify-content: center;
@@ -223,6 +242,37 @@ export default defineComponent({
   background-color: #2596be;
 }
 
+.image-btn {
+  background: none;
+  border:none;
+  padding: 0;
+  cursor: pointer;
+  margin-left: auto;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.image-btn:hover {
+  transform: translateY(-1px) translateZ(0);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-btn:active {
+  transform: translateY(1px) scale(0.99) translateZ(0);
+  transition: transform 0.1s ease, background-color 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+.image {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  object-fit: contain;
+  margin-right: auto;
+}
+
 .file-list label {
   display: flex;
   align-items: center;
@@ -234,7 +284,7 @@ export default defineComponent({
 }
 
 .file-list {
-  width: 90%;
+  width: 100%;
   max-height: 200px;
   overflow-y: auto;
   background-color: #2d3748;
