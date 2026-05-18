@@ -1,5 +1,13 @@
 # Changelog
 
+## **[3.13.8] - 2026-05-18**
+
+## 🛠 Corrections
+
+- Hotfix release macOS : remplacement de `mapfile` dans le script d'upload des
+  bundles Sigstore pour rester compatible avec Bash 3.2 sur les runners macOS.
+- Mise à jour de la version de SONAR en **3.13.8** pour publier ce correctif.
+
 ## **[3.13.7] - 2026-05-18**
 
 ## 🔐 Chaîne de confiance

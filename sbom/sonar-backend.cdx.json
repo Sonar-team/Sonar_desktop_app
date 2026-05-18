@@ -20,10 +20,10 @@
     ],
     "component": {
       "type": "application",
-      "bom-ref": "path+file:///home/erdt-cyber/Sonar_desktop_app/src-tauri#sonar@3.13.7",
+      "bom-ref": "path+file:///home/erdt-cyber/Sonar_desktop_app/src-tauri#sonar@3.13.8",
       "author": "Cyprien Avico <akmot9@proton.me>",
       "name": "sonar",
-      "version": "3.13.7",
+      "version": "3.13.8",
       "description": "A Tauri network analyzer App",
       "scope": "required",
       "licenses": [
@@ -31,7 +31,7 @@
           "expression": "AGPL-3.0"
         }
       ],
-      "purl": "pkg:cargo/sonar@3.13.7?download_url=file://.",
+      "purl": "pkg:cargo/sonar@3.13.8?download_url=file://.",
       "externalReferences": [
         {
           "type": "vcs",
@@ -41,17 +41,17 @@
       "components": [
         {
           "type": "library",
-          "bom-ref": "path+file:///home/erdt-cyber/Sonar_desktop_app/src-tauri#sonar@3.13.7 bin-target-0",
+          "bom-ref": "path+file:///home/erdt-cyber/Sonar_desktop_app/src-tauri#sonar@3.13.8 bin-target-0",
           "name": "sonar_lib",
-          "version": "3.13.7",
-          "purl": "pkg:cargo/sonar@3.13.7?download_url=file://.#src/lib.rs"
+          "version": "3.13.8",
+          "purl": "pkg:cargo/sonar@3.13.8?download_url=file://.#src/lib.rs"
         },
         {
           "type": "application",
-          "bom-ref": "path+file:///home/erdt-cyber/Sonar_desktop_app/src-tauri#sonar@3.13.7 bin-target-1",
+          "bom-ref": "path+file:///home/erdt-cyber/Sonar_desktop_app/src-tauri#sonar@3.13.8 bin-target-1",
           "name": "sonar",
-          "version": "3.13.7",
-          "purl": "pkg:cargo/sonar@3.13.7?download_url=file://.#src/main.rs"
+          "version": "3.13.8",
+          "purl": "pkg:cargo/sonar@3.13.8?download_url=file://.#src/main.rs"
         }
       ]
     },
@@ -13219,7 +13219,7 @@
   ],
   "dependencies": [
     {
-      "ref": "path+file:///home/erdt-cyber/Sonar_desktop_app/src-tauri#sonar@3.13.7",
+      "ref": "path+file:///home/erdt-cyber/Sonar_desktop_app/src-tauri#sonar@3.13.8",
       "dependsOn": [
         "registry+https://github.com/rust-lang/crates.io-index#chrono@0.4.44",
         "registry+https://github.com/rust-lang/crates.io-index#colored@3.1.1",
