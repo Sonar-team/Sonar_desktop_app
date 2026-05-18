@@ -5,9 +5,9 @@ on: [push]
 jobs:
   test:
     name: coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
-      image: xd009642/tarpaulin:develop-nightly
+      image: xd009642/tarpaulin:develop-nightly@sha256:aa50bb80d14cb1cf54f8f904508a2d69b18d8804b46c9ee0ab435ac53f6861e6
       options: --security-opt seccomp=unconfined
     steps:
       - name: Checkout repository

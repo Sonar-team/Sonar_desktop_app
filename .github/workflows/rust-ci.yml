@@ -8,7 +8,7 @@ on:
 
 jobs:
   rust_checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       RUSTUP_PERMIT_COPY_RENAME: "1"
 
