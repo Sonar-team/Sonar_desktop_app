@@ -18,7 +18,7 @@
               <label :for="String(index)">
                 <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" class="toggle" @change="addSelectedLabelFilesList">
                 <span class="text">{{ file }}</span>
-                <button class="image-btn" @click.prevent="RemoveLabelFile(file)" title="Supprimer"><img src="./Pictures/Poubelle.jpg" alt="Supprimer" /></button>
+                <button class="image-btn" @click.prevent="RemoveLabelFile(file)" title="Supprimer"><img src="/src/assets/images/Poubelle.jpg" alt="Supprimer" /></button>
               </label>
             </li>
           </ul>
@@ -189,6 +189,7 @@ export default defineComponent({
           if ([same_ip_diff_mac, same_ip_diff_label, same_mac_diff_ip, same_mac_diff_label].length > 0) {
             for (const conflicts of same_ip_diff_label) {
               info('ip_mac_conflicst: ' + conflicts)
+              await message("IP {} : MAC '{}' ({}) vs '{}' ({})", { title: 'Fichiers en conflit', kind: 'warning' });
             }
             await new Promise(resolve => setTimeout(resolve, 200));
             this.selectedLabelFiles = this.selectedLabelFiles.filter((file) => !same_ip_diff_label.some(([,,name_i]) => name_i === file) );

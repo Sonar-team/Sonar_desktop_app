@@ -15,7 +15,7 @@
     <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
 
     <button class="image-btn" @click="displayPcapOpener" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
-    <button class="image-btn" @click="displayCsvOpener" title="Ouvrir un fichier csv"><img src="./Pictures/import_csv.png" alt="Ouvrir un fichier csv" /></button>
+    <button class="image-btn" @click="displayCsvOpener" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
     
     <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">❌</button>
     <button class="image-btn" @click="export_logs" title="Logs (ctrl+)">📒</button>
