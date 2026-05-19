@@ -311,5 +311,19 @@ jobs:
           }
 
           if ($firstHash -ne $secondHash) {
+            if (Get-Command dark.exe -ErrorAction SilentlyContinue) {
+              $firstDark = Join-Path $outputDir "first.wxs"
+              $secondDark = Join-Path $outputDir "second.wxs"
+              dark.exe -nologo -x (Join-Path $outputDir "first-extract") -out $firstDark $firstMsi
+              dark.exe -nologo -x (Join-Path $outputDir "second-extract") -out $secondDark $secondMsi
+
+              if (-not (Compare-Object (Get-Content $firstDark) (Get-Content $secondDark) -SyncWindow 0)) {
+                Write-Output "Decompiled MSI metadata is identical"
+              } else {
+                Write-Output "Decompiled MSI metadata differs"
+                Compare-Object (Get-Content $firstDark) (Get-Content $secondDark) -SyncWindow 0 | Format-Table -AutoSize | Out-String | Write-Output
+              }
+            }
+
             throw "MSI hashes differ"
           }

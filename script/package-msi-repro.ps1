@@ -117,6 +117,59 @@ function Write-InputManifest {
     [System.IO.File]::WriteAllLines($ManifestPath, $lines, [System.Text.UTF8Encoding]::new($false))
 }
 
+function Invoke-ComMethod {
+    param(
+        [object]$Object,
+        [string]$Name,
+        [object[]]$Arguments = @()
+    )
+
+    return $Object.GetType().InvokeMember(
+        $Name,
+        [System.Reflection.BindingFlags]::InvokeMethod,
+        $null,
+        $Object,
+        $Arguments
+    )
+}
+
+function Set-ComIndexedProperty {
+    param(
+        [object]$Object,
+        [string]$Name,
+        [object[]]$Arguments
+    )
+
+    $Object.GetType().InvokeMember(
+        $Name,
+        [System.Reflection.BindingFlags]::SetProperty,
+        $null,
+        $Object,
+        $Arguments
+    ) | Out-Null
+}
+
+function Set-MsiSummaryInformation {
+    param(
+        [string]$MsiPath,
+        [string]$PackageCode,
+        [DateTime]$Timestamp
+    )
+
+    $installer = New-Object -ComObject WindowsInstaller.Installer
+    $database = Invoke-ComMethod -Object $installer -Name "OpenDatabase" -Arguments @($MsiPath, 1)
+    $summary = Invoke-ComMethod -Object $database -Name "SummaryInformation" -Arguments @(20)
+
+    # PID_REVNUMBER is the package code. PID_CREATE_DTM and PID_LASTSAVE_DTM
+    # otherwise carry build-time metadata and make byte-for-byte output drift.
+    Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(9, "{$PackageCode}")
+    Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(12, $Timestamp)
+    Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(13, $Timestamp)
+
+    Invoke-ComMethod -Object $summary -Name "Persist" | Out-Null
+    Invoke-ComMethod -Object $database -Name "Commit" | Out-Null
+}
+
 function Copy-NormalizedTree {
     param(
         [string]$Source,
@@ -288,6 +341,8 @@ function Main {
         if ($LASTEXITCODE -ne 0) {
             throw "light.exe failed with exit code $LASTEXITCODE"
         }
+
+        Set-MsiSummaryInformation -MsiPath $OutputMsi -PackageCode $packageCode -Timestamp $timestamp
 
         $outputItem = Get-Item -LiteralPath $OutputMsi
         $outputItem.LastWriteTimeUtc = $timestamp
