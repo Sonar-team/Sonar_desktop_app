@@ -17,7 +17,8 @@
           <ul class="file-list">
             <li v-for="([file,], index) in labelFiles" :key="index">
               <label :for="String(index)">
-                <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" class="toggle" @change="addSelectedLabelFilesList(file)">
+                <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" 
+                class="toggle" @change="(e) => (e.target as HTMLInputElement)?.checked ? addToSelectedLabelFilesNamesList(file) : removeFromSelectedLabelFilesNamesList(file)">
                 <span class="text">{{ file }}</span>
                 <button class="image-btn" @click.prevent="RemoveLabelFile(file)" title="Supprimer"><img src="/src/assets/images/Poubelle.jpg" alt="Supprimer" /></button>
               </label>
@@ -167,7 +168,7 @@ export default defineComponent({
         info('réponse invoke');
         if (conflictualFiles.length > 0) {
           const filenames = conflictualFiles.map(([name]) => name).join('\n');
-          await message(`Ces fichiers existent déjà :\n${filenames}\n\n<Import impossible>`, { title: 'Fichiers en conflit', kind: 'warning' });
+          await message(`Ces fichiers existent déjà :\n${filenames}\n\n<Importations impossibles>`, { title: 'Fichiers en conflit', kind: 'warning' });
         }
         this.labelFiles.push(...names.filter(([name]) => !this.labelFiles.some(([existing]) => existing === name)));
         this.labelFiles.sort();
@@ -191,26 +192,30 @@ export default defineComponent({
         }
       },
 
-    async addSelectedLabelFilesList(file: string){
-        try {
-          const [same_ip_diff_mac, same_ip_diff_label, same_mac_diff_ip, same_mac_diff_label] = await invoke<[[string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][]]>('add_selected_label_files_list', { selectedFilesNamesList: this.selectedLabelFiles});
-          
-          this.same_ip_diff_label = same_ip_diff_label
-          this.same_ip_diff_mac = same_ip_diff_mac
-          this.same_mac_diff_ip = same_mac_diff_ip
-          this.same_mac_diff_label =same_mac_diff_label
+    async addToSelectedLabelFilesNamesList(file: string){
+      try {
+        const [same_ip_diff_mac, same_ip_diff_label, same_mac_diff_ip, same_mac_diff_label] = await invoke<[[string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][]]>('add_to_selected_label_files_names_list', { file : file});
+        
+        this.same_ip_diff_label = same_ip_diff_label
+        this.same_ip_diff_mac = same_ip_diff_mac
+        this.same_mac_diff_ip = same_mac_diff_ip
+        this.same_mac_diff_label =same_mac_diff_label
 
-          if (this.same_ip_diff_mac.length > 0 || this.same_ip_diff_label.length > 0 || this.same_mac_diff_ip.length > 0 || this.same_mac_diff_label.length > 0) {
-            info('length > 0')
-            this.showConflictDialog =true
+        if (this.same_ip_diff_mac.length > 0 || this.same_ip_diff_label.length > 0 || this.same_mac_diff_ip.length > 0 || this.same_mac_diff_label.length > 0) {
+          info('length > 0')
+          this.showConflictDialog =true
 
-            this.selectedLabelFiles = this.selectedLabelFiles.filter((f) => f !== file);
+          this.selectedLabelFiles = this.selectedLabelFiles.filter((f) => f !== file);
 
-          }
-        } catch (err) {
-          displayCaptureError(err);
         }
-      },
+      } catch (err) {
+        displayCaptureError(err);
+      }
+    },
+
+    async removeFromSelectedLabelFilesNamesList(file: string) {
+      await invoke ('remove_from_selected_label_files_names_list', { file : file});
+    }
   }, 
 
   async mounted() {

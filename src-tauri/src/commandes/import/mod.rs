@@ -229,36 +229,81 @@ pub fn read_label_files_list(
 }
 
 #[tauri::command(async)]
-pub fn add_selected_label_files_list(
-    selected_files_names_list: Vec<String>,
+pub fn add_to_selected_label_files_names_list(
+    file: String,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
     app: tauri::AppHandle,
 )-> Result<(ConflictsList, ConflictsList, ConflictsList, ConflictsList), tauri::Error> {
-    let mut selected_label_files_list = state.lock().unwrap();
-
-    let all_conflicts = verif_labels_conflict(&selected_files_names_list, app)?;
+    let all_conflicts = verif_labels_conflict(file.clone(), state.clone(), app)?;
     if !all_conflicts.0.is_empty() || !all_conflicts.1.is_empty() || !all_conflicts.2.is_empty() || !all_conflicts.3.is_empty() {
-        println!(" {:?}", selected_label_files_list);
+        println!(" {:?}", &file);
         return Ok(all_conflicts);
     }
 
-    selected_label_files_list.set(selected_files_names_list);
 
-    println!("Ajouté à la liste : {:?}", selected_label_files_list);
+    let mut selected_label_files_names_list = state.lock().unwrap();
+    selected_label_files_names_list.add(file);
+
+    println!("Ajouté à la liste : {:?}", selected_label_files_names_list);
     
     
     Ok(all_conflicts)
 }
 
+#[tauri::command(async)]
+pub fn remove_from_selected_label_files_names_list (
+    file: String,
+    state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+)-> Result<(),CaptureStateError>  {
+    let mut selected_label_files_names_list = state.lock().unwrap();
+    selected_label_files_names_list.remove(&*file);
+    println!("Supprimé de la liste : {:?}", selected_label_files_names_list);
+    Ok(())
+}
+
 fn verif_labels_conflict(
-    selected_files_names_list: &Vec<String>,
+    new_file_name: String,
+    state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
     app: tauri::AppHandle,
 ) -> Result<(ConflictsList, ConflictsList, ConflictsList, ConflictsList), tauri::Error>{
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
 
-    let selected_files_names_list : HashSet<String> = selected_files_names_list.into_iter().cloned().collect();
+    let selected_files_names_list : HashSet<String> = { 
+        let selected_label_files_names_list = state.lock().unwrap();
+        selected_label_files_names_list.files_names.iter().cloned().collect()
     
+    };
+
+    let new_file: PathBuf = fs::read_dir(&labels_folder)?
+    .filter_map(|entry| entry.ok())
+    .map(|entry| entry.path())
+    .filter(|path| path.is_file())
+    .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("csv"))
+    .filter(|path| path.file_name().and_then(|e| e.to_str()) == Some(&*new_file_name))
+    .collect();
+
+    let new_file_with_name: (String, Vec<(String, String, String)>);
+
+    let file = match std::fs::read_to_string(&new_file) {
+            Ok(csv_data) => csv_data,
+            Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+            Err(error) => return Err(error.into()),
+        };
+
+    let name = new_file
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("inconnu")
+        .to_string();
+
+    let row: Vec<(String, String, String)> = file
+        .lines()
+        .filter_map(|l| parse_label_row(l))
+        .collect();
+
+    new_file_with_name = (name, row);
+
     let selected_label_files: Vec<PathBuf> = fs::read_dir(&labels_folder)?
     .filter_map(|entry| entry.ok())
     .map(|entry| entry.path())
@@ -296,41 +341,39 @@ fn verif_labels_conflict(
     let mut same_mac_different_label: ConflictsList = Vec::new();
 
     for i in 0..files_with_names.len() {
-        for j in (i + 1)..files_with_names.len() {
-            let (name_i, rows_i) = &files_with_names[i];
-            let (name_j, rows_j) = &files_with_names[j];
+        let (name_i, rows_i) = &files_with_names[i];
+        let (name_new_file, row_new_file) = &new_file_with_name;
 
-            let mut by_ip: HashMap<String, (String, String)> = HashMap::new();
-            let mut by_mac: HashMap<String, (String, String)> = HashMap::new();
+        let mut by_ip: HashMap<String, (String, String)> = HashMap::new();
+        let mut by_mac: HashMap<String, (String, String)> = HashMap::new();
 
-            for (mac, ip, label) in rows_i {
-                by_ip.insert(ip.clone(), (mac.clone(), label.clone()));
-                by_mac.insert(mac.clone(), (ip.clone(), label.clone()));
+        for (mac, ip, label) in rows_i {
+            by_ip.insert(ip.clone(), (mac.clone(), label.clone()));
+            by_mac.insert(mac.clone(), (ip.clone(), label.clone()));
+        }
+
+        for (mac, ip, label) in row_new_file {
+            if let Some((ref_mac, ref_label)) = by_ip.get(ip) && ip != "" {
+                if ref_mac != mac {
+                    eprintln!("⚠️  IP '{}' : MAC '{}' ({}) vs '{}' ({})", ip, ref_mac, name_i, mac, name_new_file);
+                    same_ip_different_mac.push((ip.to_string(), ref_mac.to_string(), name_i.to_string(), mac.to_string(), name_new_file.to_string()))
+                }
+                if ref_label != label {
+                    eprintln!("⚠️  IP '{}' : label '{}' ({}) vs '{}' ({})", ip, ref_label, name_i, label, name_new_file);
+                    same_ip_different_label.push((ip.to_string(), ref_label.to_string(), name_i.to_string(), label.to_string(), name_new_file.to_string()))
+                }
             }
 
-            for (mac, ip, label) in rows_j {
-                if let Some((ref_mac, ref_label)) = by_ip.get(ip) && ip != "" {
-                    if ref_mac != mac {
-                        eprintln!("⚠️  IP '{}' : MAC '{}' ({}) vs '{}' ({})", ip, ref_mac, name_i, mac, name_j);
-                        same_ip_different_mac.push((ip.to_string(), ref_mac.to_string(), name_i.to_string(), mac.to_string(), name_j.to_string()))
-                    }
+            if let Some((ref_ip, ref_label)) = by_mac.get(mac) && mac != ""{
+                if ref_ip != ip {
+                    eprintln!("⚠️  MAC '{}' : IP '{}' ({}) vs '{}' ({})", mac, ref_ip, name_i, ip, name_new_file);
+                    same_mac_different_ip.push((mac.to_string(), ref_ip.to_string(), name_i.to_string(), ip.to_string(), name_new_file.to_string()));
+
                     if ref_label != label {
-                        eprintln!("⚠️  IP '{}' : label '{}' ({}) vs '{}' ({})", ip, ref_label, name_i, label, name_j);
-                        same_ip_different_label.push((ip.to_string(), ref_label.to_string(), name_i.to_string(), label.to_string(), name_j.to_string()))
+                        eprintln!("⚠️  MAC '{}' : label '{}' ({}) vs '{}' ({})", mac, ref_label, name_i, label, name_new_file);
+                        same_mac_different_label.push((mac.to_string(), ref_label.to_string(), name_i.to_string(), label.to_string(), name_new_file.to_string()))
                     }
-                }
-
-                if let Some((ref_ip, ref_label)) = by_mac.get(mac) && mac != ""{
-                    if ref_ip != ip {
-                        eprintln!("⚠️  MAC '{}' : IP '{}' ({}) vs '{}' ({})", mac, ref_ip, name_i, ip, name_j);
-                        same_mac_different_ip.push((mac.to_string(), ref_ip.to_string(), name_i.to_string(), ip.to_string(), name_j.to_string()));
-
-                        if ref_label != label {
-                            eprintln!("⚠️  MAC '{}' : label '{}' ({}) vs '{}' ({})", mac, ref_label, name_i, label, name_j);
-                            same_mac_different_label.push((mac.to_string(), ref_label.to_string(), name_i.to_string(), label.to_string(), name_j.to_string()))
-                        }
-                    }  
-                }
+                }  
             }
         }
     }
@@ -416,11 +459,14 @@ pub fn labels_to_matrix(
 #[tauri::command(async)]
 pub fn remove_label_file(
     csv_file: String,
-    app: AppHandle
-)->Result<(), tauri::Error> {
-    let data_folder = app.path().app_data_dir()?;
+    app: AppHandle,
+    state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+)->Result<(), CaptureStateError> {
+    let data_folder = app.path().app_data_dir().unwrap_or_default();
     let labels_folder = data_folder.join("labels");
-    let label_file = labels_folder.join(csv_file);
+    let label_file = labels_folder.join(&csv_file);
+
+    remove_from_selected_label_files_names_list(csv_file, state)?;
     fs::remove_file(label_file)?;
     println!("File removed");
     Ok(())
