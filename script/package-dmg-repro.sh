@@ -66,11 +66,39 @@ normalize_tree() {
   done
 }
 
+write_manifest() {
+  local root="$1"
+  local manifest="$2"
+
+  (
+    cd "$root"
+
+    find . -type d -print | LC_ALL=C sort | while IFS= read -r dir; do
+      printf 'dir  %s\n' "${dir#./}"
+    done
+
+    find . -type f -print | LC_ALL=C sort | while IFS= read -r file; do
+      local checksum
+      checksum="$(shasum -a 256 "$file" | awk '{print $1}')"
+      printf 'file %s  %s\n' "$checksum" "${file#./}"
+    done
+
+    find . -type l -print | LC_ALL=C sort | while IFS= read -r link; do
+      local target checksum
+      target="$(readlink "$link")"
+      checksum="$(printf '%s' "$target" | shasum -a 256 | awk '{print $1}')"
+      printf 'link %s  %s -> %s\n' "$checksum" "${link#./}" "$target"
+    done
+  ) > "$manifest"
+}
+
 main() {
   require_cmd date
   require_cmd ditto
   require_cmd find
   require_cmd hdiutil
+  require_cmd readlink
+  require_cmd shasum
   require_cmd sort
   require_cmd touch
 
@@ -113,6 +141,7 @@ main() {
 
   log "Normalizing app bundle metadata"
   normalize_tree "$staging" "$timestamp"
+  write_manifest "$staging" "${OUTPUT_DMG}.input-sha256"
 
   rm -f "$OUTPUT_DMG"
 

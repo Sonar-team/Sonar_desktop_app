@@ -149,6 +149,22 @@ function Set-ComIndexedProperty {
     ) | Out-Null
 }
 
+function Get-ComIndexedProperty {
+    param(
+        [object]$Object,
+        [string]$Name,
+        [object[]]$Arguments
+    )
+
+    return $Object.GetType().InvokeMember(
+        $Name,
+        [System.Reflection.BindingFlags]::GetProperty,
+        $null,
+        $Object,
+        $Arguments
+    )
+}
+
 function Set-MsiSummaryInformation {
     param(
         [string]$MsiPath,
@@ -158,7 +174,7 @@ function Set-MsiSummaryInformation {
 
     $installer = New-Object -ComObject WindowsInstaller.Installer
     $database = Invoke-ComMethod -Object $installer -Name "OpenDatabase" -Arguments @($MsiPath, 1)
-    $summary = Invoke-ComMethod -Object $database -Name "SummaryInformation" -Arguments @(20)
+    $summary = Get-ComIndexedProperty -Object $database -Name "SummaryInformation" -Arguments @(20)
 
     # PID_REVNUMBER is the package code. PID_CREATE_DTM and PID_LASTSAVE_DTM
     # otherwise carry build-time metadata and make byte-for-byte output drift.

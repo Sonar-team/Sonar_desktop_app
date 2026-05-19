@@ -291,9 +291,11 @@ script instead of relying on the Tauri bundler as the reproducibility boundary.
 `script/package-msi-repro.ps1` is the project-owned Windows MSI packaging
 prototype. It builds a WiX v3 MSI from a normalized installation root using
 stable component GUIDs, stable product/package codes, sorted file traversal,
-and normalized file timestamps. It still needs to be validated on
-`windows-2022` with the exact WiX toolchain before it can replace the current
-NSIS diagnostic target.
+and normalized file timestamps. The `publish-smoke` MSI job fails if the
+normalized inputs differ, normalizes decompiled WiX source paths for comparison,
+and emits a warning if only the final MSI container hash differs. It still needs
+the remaining WiX/MSI container nondeterminism fixed before it can replace the
+current NSIS diagnostic target.
 
 ## macOS Target
 
@@ -323,8 +325,11 @@ instead of relying on the Tauri bundler as the reproducibility boundary.
 `script/package-dmg-repro.sh` is the project-owned DMG packaging prototype. It
 copies an unsigned `.app` with `ditto`, removes extended attributes where
 available, normalizes file modes and timestamps, adds the `/Applications`
-symlink, then creates a compressed HFS+ DMG through `hdiutil`. It still needs to
-be validated on `macos-14` before it can become a release gate.
+symlink, records a normalized input manifest, then creates a compressed HFS+
+DMG through `hdiutil`. The `publish-smoke` DMG job now fails if the normalized
+inputs differ and emits a warning if only the final DMG container hash differs,
+because `hdiutil` still produces nondeterministic container bytes on
+`macos-14`.
 
 ## Platform Rollout
 
