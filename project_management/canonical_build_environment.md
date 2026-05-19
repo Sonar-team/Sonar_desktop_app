@@ -187,12 +187,26 @@ metadata is expected to vary.
 
 ## Release Trust Flow
 
-The release trust flow must stay separate from reproducibility validation:
+The release trust flow must keep the reproducible payload separate from detached
+trust metadata:
 
-1. Validate reproducibility on unsigned artifacts.
-2. Build and publish release artifacts.
-3. Sign the released artifacts.
-4. Publish signatures, hashes, provenance, and SBOM metadata.
+1. Validate reproducibility on unsigned binaries and unsigned platform bundles.
+2. Build the release artifacts from the same pinned environment.
+3. Sign the released artifacts and release documents with detached signatures.
+4. Publish signatures, hashes, provenance, SBOMs, and manifests.
+
+For installer artifacts, the reproducibility boundary is the exact package file
+published to the release. For Windows this means the published MSI must be the
+byte-for-byte reproducible MSI. Do not apply an embedded Authenticode signature
+to the MSI if the client is expected to rebuild the same file hash, because
+embedded signing and timestamping change the MSI bytes. Release trust metadata
+must be published next to the artifact as detached Sigstore bundles,
+attestations, SBOMs, and checksum manifests.
+
+The release gate is satisfied only when the raw binary and the platform bundle
+are both reproducible. On Windows, the MSI must be treated like the executable:
+once the MSI is proven reproducible, the exact MSI file is published and signed
+with detached metadata.
 
 The signing step should use Sigstore/cosign keyless signing on GitHub Actions.
 GitHub Actions OIDC provides a short-lived workflow identity, so the project
@@ -238,11 +252,14 @@ After a tagged release, provenance can be verified from a clean checkout with:
 gh attestation verify <artifact-path> -R Sonar-team/Sonar_desktop_app
 ```
 
-The initial signed artifacts are:
+The initial detached-signature subjects are:
 
 - raw application binary for each platform
 - platform bundle for each platform
-- optional SHA256 manifest once generated
+- SBOM files
+- provenance or attestation metadata exported as files
+- SHA256 release hash manifest
+- release/source manifest
 
 Current platform bundle targets:
 
@@ -250,8 +267,8 @@ Current platform bundle targets:
 - Windows: NSIS installer `.exe`
 - macOS: `.dmg`
 
-The signing command should use blob signing and publish the Sigstore bundle
-alongside the artifact:
+The signing command should use blob signing and publish the detached Sigstore
+bundle alongside the artifact without modifying the artifact bytes:
 
 ```bash
 cosign sign-blob --yes \
@@ -299,6 +316,12 @@ embedded CAB hashes, and sector bytes so the remaining drift can be separated
 between logical installer content and low-level MSI container layout. The job
 fails when the final MSI hashes differ, even if the diagnostic shows identical
 logical streams, because bundle reproducibility is the gate.
+
+The Windows client verification target is therefore the exact MSI published in
+the release. It must remain byte-for-byte identical to the unsigned MSI produced
+from the tagged source and pinned build environment. Origin and integrity are
+proved by detached signatures, attestations, and published hashes, all stored
+next to the MSI rather than embedded into it.
 
 ## macOS Target
 

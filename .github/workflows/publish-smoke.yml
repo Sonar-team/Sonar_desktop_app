@@ -318,6 +318,11 @@ jobs:
           Write-Output "$firstHash  $firstMsi"
           Write-Output "$secondHash  $secondMsi"
 
+          Write-Output "first.msi CFB root timestamps"
+          pwsh -NoProfile -File "script/ci/read-msi-cfb-times.ps1" -MsiPath $firstMsi
+          Write-Output "second.msi CFB root timestamps"
+          pwsh -NoProfile -File "script/ci/read-msi-cfb-times.ps1" -MsiPath $secondMsi
+
           if (-not (Compare-Object (Get-Content $firstManifest) (Get-Content $secondManifest) -SyncWindow 0)) {
             Write-Output "MSI input roots are identical"
           } else {
