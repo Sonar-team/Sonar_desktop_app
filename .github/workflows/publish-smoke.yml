@@ -348,5 +348,10 @@ jobs:
               }
             }
 
+            pwsh -NoProfile -File "script/ci/compare-msi-internals.ps1" `
+              -FirstMsi $firstMsi `
+              -SecondMsi $secondMsi `
+              -OutputDir (Join-Path $outputDir "msi-internals")
+
             Write-Output "::warning::MSI hashes differ even though input roots and decompiled metadata are identical; WiX/MSI container output remains nondeterministic on this runner."
           }

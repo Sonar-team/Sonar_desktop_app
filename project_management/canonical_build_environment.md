@@ -293,9 +293,12 @@ prototype. It builds a WiX v3 MSI from a normalized installation root using
 stable component GUIDs, stable product/package codes, sorted file traversal,
 and normalized file timestamps. The `publish-smoke` MSI job fails if the
 normalized inputs differ, normalizes decompiled WiX source paths for comparison,
-and emits a warning if only the final MSI container hash differs. It still needs
-the remaining WiX/MSI container nondeterminism fixed before it can replace the
-current NSIS diagnostic target.
+then runs `script/ci/compare-msi-internals.ps1` when only the final MSI hashes
+differ. That diagnostic compares the MSI OLE/CFB directory, stream hashes,
+embedded CAB hashes, and sector bytes so the remaining drift can be separated
+between logical installer content and low-level MSI container layout. It still
+needs the remaining WiX/MSI container nondeterminism fixed before it can replace
+the current NSIS diagnostic target.
 
 ## macOS Target
 
