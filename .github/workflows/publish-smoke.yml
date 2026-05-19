@@ -296,9 +296,19 @@ jobs:
 
           $firstHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $firstMsi).Hash.ToLowerInvariant()
           $secondHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $secondMsi).Hash.ToLowerInvariant()
+          $firstManifest = "$firstMsi.input-sha256"
+          $secondManifest = "$secondMsi.input-sha256"
 
           Write-Output "$firstHash  $firstMsi"
           Write-Output "$secondHash  $secondMsi"
+
+          if (-not (Compare-Object (Get-Content $firstManifest) (Get-Content $secondManifest) -SyncWindow 0)) {
+            Write-Output "MSI input roots are identical"
+          } else {
+            Write-Output "MSI input roots differ"
+            Compare-Object (Get-Content $firstManifest) (Get-Content $secondManifest) -SyncWindow 0 | Format-Table -AutoSize | Out-String | Write-Output
+            throw "MSI input roots differ"
+          }
 
           if ($firstHash -ne $secondHash) {
             throw "MSI hashes differ"

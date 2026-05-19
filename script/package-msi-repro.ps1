@@ -100,6 +100,23 @@ function Normalize-Tree {
     $rootItem.LastAccessTimeUtc = $Timestamp
 }
 
+function Write-InputManifest {
+    param(
+        [string]$Root,
+        [string]$ManifestPath
+    )
+
+    $lines = Get-ChildItem -LiteralPath $Root -Recurse -File -Force |
+        Sort-Object FullName |
+        ForEach-Object {
+            $relative = [System.IO.Path]::GetRelativePath($Root, $_.FullName).Replace("\", "/")
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+            "$hash  $relative"
+        }
+
+    [System.IO.File]::WriteAllLines($ManifestPath, $lines, [System.Text.UTF8Encoding]::new($false))
+}
+
 function Copy-NormalizedTree {
     param(
         [string]$Source,
@@ -193,7 +210,7 @@ function Write-WixSource {
     $lines.Add('    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />')
     $lines.Add('    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />')
     $lines.Add('    <Directory Id="TARGETDIR" Name="SourceDir">')
-    $lines.Add('      <Directory Id="ProgramFilesFolder">')
+    $lines.Add('      <Directory Id="ProgramFiles64Folder">')
     $lines.Add("        <Directory Id=""INSTALLFOLDER"" Name=""$escapedProductName"" />")
     $lines.Add('      </Directory>')
     $lines.Add('    </Directory>')
@@ -243,9 +260,11 @@ function Main {
     $staging = Join-Path $workdir "root"
     $wxs = Join-Path $workdir "package.wxs"
     $wixobj = Join-Path $workdir "package.wixobj"
+    $manifest = "$OutputMsi.input-sha256"
 
     try {
         Copy-NormalizedTree -Source $source -Destination $staging -Timestamp $timestamp
+        Write-InputManifest -Root $staging -ManifestPath $manifest
 
         $manifestSeed = Get-ChildItem -LiteralPath $staging -Recurse -File -Force |
             Sort-Object FullName |
@@ -261,7 +280,14 @@ function Main {
         Write-WixSource -Root $staging -WxsPath $wxs -PackageCode $packageCode -ProductCode $productCode -StableUpgradeCode $UpgradeCode
 
         & $candle -nologo -arch x64 -out $wixobj $wxs
+        if ($LASTEXITCODE -ne 0) {
+            throw "candle.exe failed with exit code $LASTEXITCODE"
+        }
+
         & $light -nologo -sw1076 -out $OutputMsi $wixobj
+        if ($LASTEXITCODE -ne 0) {
+            throw "light.exe failed with exit code $LASTEXITCODE"
+        }
 
         $outputItem = Get-Item -LiteralPath $OutputMsi
         $outputItem.LastWriteTimeUtc = $timestamp
