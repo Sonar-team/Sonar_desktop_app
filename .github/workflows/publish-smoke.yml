@@ -67,3 +67,21 @@ jobs:
           else
             npm run tauri build
           fi
+
+      - name: verify reproducible Debian package
+        if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          set -euo pipefail
+          deb_path="$(find src-tauri/target/release/bundle/deb -maxdepth 2 -type f -name '*.deb' | sort | head -n 1)"
+          test -n "$deb_path"
+
+          output_dir="$(mktemp -d)"
+          first_deb="${output_dir}/first.deb"
+          second_deb="${output_dir}/second.deb"
+
+          ./script/package-deb-repro.sh "$deb_path" "$first_deb" >/dev/null
+          ./script/package-deb-repro.sh "$deb_path" "$second_deb" >/dev/null
+
+          sha256sum "$first_deb" "$second_deb"
+          cmp -s "$first_deb" "$second_deb"
