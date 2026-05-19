@@ -125,7 +125,7 @@ jobs:
           cmp -s "$first_deb" "$second_deb"
 
   dmg-repro-smoke:
-    name: diagnose reproducible DMG package
+    name: verify reproducible DMG package
     runs-on: macos-14
 
     steps:
@@ -203,13 +203,14 @@ jobs:
 
           if [[ "$first_hash" != "$second_hash" ]]; then
             echo "::warning::DMG hashes differ even though normalized input roots are identical; hdiutil container output remains nondeterministic on this runner."
-            exit 0
+            echo "::error::DMG package is not reproducible"
+            exit 1
           fi
 
           cmp -s "$first_dmg" "$second_dmg"
 
   msi-repro-smoke:
-    name: diagnose reproducible MSI package
+    name: verify reproducible MSI package
     runs-on: windows-2022
 
     steps:
@@ -354,4 +355,6 @@ jobs:
               -OutputDir (Join-Path $outputDir "msi-internals")
 
             Write-Output "::warning::MSI hashes differ even though input roots and decompiled metadata are identical; WiX/MSI container output remains nondeterministic on this runner."
+            Write-Output "::error::MSI package is not reproducible"
+            throw "MSI hashes differ"
           }

@@ -296,9 +296,9 @@ normalized inputs differ, normalizes decompiled WiX source paths for comparison,
 then runs `script/ci/compare-msi-internals.ps1` when only the final MSI hashes
 differ. That diagnostic compares the MSI OLE/CFB directory, stream hashes,
 embedded CAB hashes, and sector bytes so the remaining drift can be separated
-between logical installer content and low-level MSI container layout. It still
-needs the remaining WiX/MSI container nondeterminism fixed before it can replace
-the current NSIS diagnostic target.
+between logical installer content and low-level MSI container layout. The job
+fails when the final MSI hashes differ, even if the diagnostic shows identical
+logical streams, because bundle reproducibility is the gate.
 
 ## macOS Target
 
@@ -330,9 +330,9 @@ copies an unsigned `.app` with `ditto`, removes extended attributes where
 available, normalizes file modes and timestamps, adds the `/Applications`
 symlink, records a normalized input manifest, then creates a compressed HFS+
 DMG through `hdiutil`. The `publish-smoke` DMG job now fails if the normalized
-inputs differ and emits a warning if only the final DMG container hash differs,
-because `hdiutil` still produces nondeterministic container bytes on
-`macos-14`.
+inputs differ and also fails if only the final DMG container hash differs,
+because bundle reproducibility is the gate even while `hdiutil` still produces
+nondeterministic container bytes on `macos-14`.
 
 ## Platform Rollout
 
