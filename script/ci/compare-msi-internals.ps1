@@ -104,7 +104,8 @@ function Read-Chain {
         [uint32]$StartSector,
         [uint32[]]$Fat,
         [int]$SectorSize,
-        [int64]$MaxBytes = -1
+        [int64]$MaxBytes = -1,
+        [string]$ChainName = "CFB sector chain"
     )
 
     if ($StartSector -eq $script:ENDOFCHAIN) {
@@ -131,7 +132,7 @@ function Read-Chain {
 
         $key = $sector.ToString()
         if ($seen.ContainsKey($key)) {
-            throw "CFB sector chain contains a cycle at sector $sector"
+            throw "$ChainName contains a cycle at sector $sector"
         }
         $seen[$key] = $true
 
@@ -160,7 +161,8 @@ function Read-MiniChain {
         [uint32]$StartSector,
         [uint32[]]$MiniFat,
         [int]$MiniSectorSize,
-        [int64]$MaxBytes
+        [int64]$MaxBytes,
+        [string]$ChainName = "Mini FAT sector chain"
     )
 
     if ($StartSector -eq $script:ENDOFCHAIN -or $MaxBytes -eq 0) {
@@ -183,7 +185,7 @@ function Read-MiniChain {
 
         $key = $sector.ToString()
         if ($seen.ContainsKey($key)) {
-            throw "Mini FAT sector chain contains a cycle at sector $sector"
+            throw "$ChainName contains a cycle at sector $sector"
         }
         $seen[$key] = $true
 
@@ -320,7 +322,7 @@ function Convert-ToStreamManifest {
     param([object[]]$Streams)
 
     return @($Streams | Sort-Object Name | ForEach-Object {
-            "stream`t$(Convert-ToManifestValue $_.Name)`t$($_.Size)`t$($_.Sha256)`t$($_.IsCab)"
+            "stream`t$(Convert-ToManifestValue $_.Name)`t$($_.Size)`t$($_.Sha256)`t$($_.IsCab)`t$(Convert-ToManifestValue $_.ReadError)"
         })
 }
 
@@ -436,7 +438,8 @@ function Read-CfbFile {
         -Bytes $bytes `
         -StartSector $directoryStartSector `
         -Fat $fat `
-        -SectorSize $sectorSize
+        -SectorSize $sectorSize `
+        -ChainName "$Path directory stream"
 
     $entries = Read-DirectoryEntries -DirectoryBytes $directoryBytes
     $rootEntry = @($entries | Where-Object { $_.Type -eq 5 } | Select-Object -First 1)
@@ -446,12 +449,18 @@ function Read-CfbFile {
 
     $miniFatBytes = [byte[]]::new(0)
     if ($miniFatStartSector -ne $script:ENDOFCHAIN -and $miniFatSectorCount -gt 0) {
-        $miniFatBytes = Read-Chain `
-            -Bytes $bytes `
-            -StartSector $miniFatStartSector `
-            -Fat $fat `
-            -SectorSize $sectorSize `
-            -MaxBytes ([int64]$miniFatSectorCount * [int64]$sectorSize)
+        try {
+            $miniFatBytes = Read-Chain `
+                -Bytes $bytes `
+                -StartSector $miniFatStartSector `
+                -Fat $fat `
+                -SectorSize $sectorSize `
+                -MaxBytes ([int64]$miniFatSectorCount * [int64]$sectorSize) `
+                -ChainName "$Path mini FAT"
+        } catch {
+            Write-Output "::warning::Failed to read MSI mini FAT from ${Path}: $($_.Exception.Message)"
+            $miniFatBytes = [byte[]]::new(0)
+        }
     }
 
     $miniFat = [System.Collections.Generic.List[uint32]]::new()
@@ -461,40 +470,65 @@ function Read-CfbFile {
 
     $miniStream = [byte[]]::new(0)
     if ($rootEntry.StartSector -ne $script:ENDOFCHAIN -and $rootEntry.Size -gt 0) {
-        $miniStream = Read-Chain `
-            -Bytes $bytes `
-            -StartSector $rootEntry.StartSector `
-            -Fat $fat `
-            -SectorSize $sectorSize `
-            -MaxBytes ([int64]$rootEntry.Size)
+        try {
+            $miniStream = Read-Chain `
+                -Bytes $bytes `
+                -StartSector $rootEntry.StartSector `
+                -Fat $fat `
+                -SectorSize $sectorSize `
+                -MaxBytes ([int64]$rootEntry.Size) `
+                -ChainName "$Path root mini stream"
+        } catch {
+            Write-Output "::warning::Failed to read MSI root mini stream from ${Path}: $($_.Exception.Message)"
+            $miniStream = [byte[]]::new(0)
+        }
     }
 
     $streams = [System.Collections.Generic.List[object]]::new()
     foreach ($entry in ($entries | Where-Object { $_.Type -eq 2 })) {
-        if ($entry.Size -eq 0) {
-            $streamBytes = [byte[]]::new(0)
-        } elseif ($entry.Size -lt $miniStreamCutoff) {
-            $streamBytes = Read-MiniChain `
-                -MiniStream $miniStream `
-                -StartSector $entry.StartSector `
-                -MiniFat $miniFat.ToArray() `
-                -MiniSectorSize $miniSectorSize `
-                -MaxBytes ([int64]$entry.Size)
+        $streamBytes = [byte[]]::new(0)
+        $readError = ""
+
+        try {
+            if ($entry.Size -eq 0) {
+                $streamBytes = [byte[]]::new(0)
+            } elseif ($entry.Size -lt $miniStreamCutoff) {
+                $streamBytes = Read-MiniChain `
+                    -MiniStream $miniStream `
+                    -StartSector $entry.StartSector `
+                    -MiniFat $miniFat.ToArray() `
+                    -MiniSectorSize $miniSectorSize `
+                    -MaxBytes ([int64]$entry.Size) `
+                    -ChainName "$Path stream '$($entry.Name)' mini stream"
+            } else {
+                $streamBytes = Read-Chain `
+                    -Bytes $bytes `
+                    -StartSector $entry.StartSector `
+                    -Fat $fat `
+                    -SectorSize $sectorSize `
+                    -MaxBytes ([int64]$entry.Size) `
+                    -ChainName "$Path stream '$($entry.Name)'"
+            }
+        } catch {
+            $readError = $_.Exception.Message
+            Write-Output "::warning::Failed to read MSI stream '$($entry.Name)' from ${Path}: $readError"
+        }
+
+        if ($readError) {
+            $streamSha256 = "READ_ERROR"
+            $isCab = $false
         } else {
-            $streamBytes = Read-Chain `
-                -Bytes $bytes `
-                -StartSector $entry.StartSector `
-                -Fat $fat `
-                -SectorSize $sectorSize `
-                -MaxBytes ([int64]$entry.Size)
+            $streamSha256 = Get-Sha256Hex $streamBytes
+            $isCab = Test-CabBytes $streamBytes
         }
 
         $streams.Add([pscustomobject]@{
             Name = $entry.Name
             Size = [uint64]$entry.Size
             StartSector = $entry.StartSector
-            Sha256 = Get-Sha256Hex $streamBytes
-            IsCab = Test-CabBytes $streamBytes
+            Sha256 = $streamSha256
+            IsCab = $isCab
+            ReadError = $readError
         })
     }
 
@@ -617,4 +651,9 @@ function Main {
     }
 }
 
-Main
+try {
+    Main
+} catch {
+    Write-Output "::warning::MSI internal diagnostic failed: $($_.Exception.Message)"
+    exit 0
+}
