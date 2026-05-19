@@ -81,7 +81,7 @@ pub fn update_labels_in_state(app: &AppHandle, labels: Vec<String>) -> Result<()
 
 pub fn parse_label_row(row: &str) -> Option<(String, String, String)> {
     let parts: Vec<_> = row.split(',').map(clean_csv_field).collect();
-    println!("parts: {:?}", parts);
+    //println!("parts: {:?}", parts);
     match parts.as_slice() {
         [mac, ip, label] if !mac.is_empty() && !ip.is_empty() && !label.is_empty() => { // si tous les arguments sont présents
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );

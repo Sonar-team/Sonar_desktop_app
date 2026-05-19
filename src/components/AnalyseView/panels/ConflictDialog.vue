@@ -7,38 +7,48 @@
           <img class="image" src="/src/assets/images/warning-sign.png"/>
         </div>
         <div class="right-panel">
-              <ul v-show="same_ip_diff_mac.length > 0" class="file-list">
+          <div class="file-list">
+              <ul v-show="same_ip_diff_mac.length > 0">
                 <h3 class="text">Conflits adresses IP -> MAC</h3>
                 <li v-for="([ip, ref_mac, name_i, mac, name_j], index) in same_ip_diff_mac" :key="index">
                   <label :for="String(index)">
-                    <span class="text">IP '{{ ip }}' : MAC '{{ ref_mac }}' ({{ name_i }}) vs '{{ mac }}' ({{ name_j }})</span>
+                    <span class="text">'{{ ip }}'(IP):</span><br>
+                    <span class="text indented">MAC: '{{ ref_mac }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
+                    <span class="text indented">MAC: '{{ mac }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
                   </label>
                 </li>
               </ul>
-              <ul v-show="same_ip_diff_label.length > 0" class="file-list">
+              <ul v-show="same_ip_diff_label.length > 0">
                 <h3 class="text">Conflits adresses IP -> Label</h3>
                 <li v-for="([ip, ref_label, name_i, label, name_j], index) in same_ip_diff_label" :key="index">
                   <label :for="String(index)">
-                    <span class="text">'{{ ip }}': '{{ ref_label }}'  ({{ name_i.length > 20 ? name_i.slice(0, 25) + '...' : name_i }})  <-> '{{ label }}'  ({{ name_j.length > 20 ? name_j.slice(0, 20) + '...' : name_j }}) </span>
+                    <span class="text">'{{ ip }}'(IP):</span><br>
+                    <span class="text indented">Label: '{{ ref_label }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
+                    <span class="text indented">Label: '{{ label }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
                   </label>
                 </li>
               </ul>
-              <ul v-show="same_mac_diff_ip.length > 0" class="file-list">
+              <ul v-show="same_mac_diff_ip.length > 0">
                 <h3 class="text">Conflits adresses MAC -> IP</h3>
                 <li v-for="([mac, ref_ip, name_i, ip, name_j], index) in same_ip_diff_mac" :key="index">
                   <label :for="String(index)">
-                    <span class="text">MAC '{{ mac }}' : IP '{{ ref_ip }}' ({{ name_i }}) vs '{{ ip }}' ({{ name_j }})</span>
+                    <span class="text">'{{ mac }}'(MAC):</span><br>
+                    <span class="text indented">IP: '{{ ref_ip }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
+                    <span class="text indented">IP: '{{ ip }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
                   </label>
                 </li>
               </ul>
-              <ul v-show="same_mac_diff_label.length > 0" class="file-list">
+              <ul v-show="same_mac_diff_label.length > 0">
                 <h3 class="text">Conflits adresses MAC -> Label</h3>
                 <li v-for="([mac, ref_label, name_i, label, name_j], index) in same_ip_diff_mac" :key="index">
                   <label :for="String(index)">
-                    <span class="text">IP '{{ mac }}' : MAC '{{ ref_label }}' ({{ name_i }}) vs '{{ label }}' ({{ name_j }})</span>
+                    <span class="text">'{{ mac }}'(MAC):</span><br>
+                    <span class="text indented">Label: '{{ ref_label }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
+                    <span class="text indented">Label: '{{ label }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
                   </label>
                 </li>
               </ul>
+          </div>
           </div>
         <div>
           <button class="btn image-btn" @click.prevent="windowClosed">❌</button>
@@ -50,9 +60,6 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { invoke } from '@tauri-apps/api/core';
-import { info } from '@tauri-apps/plugin-log';
-import { displayCaptureError } from '../../../errors/capture';
 
 type ConflictRow = [string, string, string, string, string]
 
@@ -275,17 +282,22 @@ export default defineComponent({
 
 .file-list label {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;  /* ← ici */
+  align-items: flex-start;
 }
 
 .text {
   color: whitesmoke
 }
 
+.indented {
+  display: block;
+  padding-left: 2rem; /* ou 2rem selon l'effet voulu */
+}
+
 .file-list {
   width: 100%;
-  max-height: 200px;
+  max-height: 1000px;
   overflow-y: auto;
   background-color: #2d3748;
   border-radius: 4px;
@@ -294,6 +306,7 @@ export default defineComponent({
 }
 
 .file-list li {
+  list-style: none;
   padding: 0.5rem;
   margin: 0.25rem 0;
   border-radius: 4px;

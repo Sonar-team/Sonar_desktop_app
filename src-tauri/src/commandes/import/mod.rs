@@ -238,6 +238,7 @@ pub fn add_selected_label_files_list(
 
     let all_conflicts = verif_labels_conflict(&selected_files_names_list, app)?;
     if !all_conflicts.0.is_empty() || !all_conflicts.1.is_empty() || !all_conflicts.2.is_empty() || !all_conflicts.3.is_empty() {
+        println!(" {:?}", selected_label_files_list);
         return Ok(all_conflicts);
     }
 
@@ -322,12 +323,13 @@ fn verif_labels_conflict(
                 if let Some((ref_ip, ref_label)) = by_mac.get(mac) && mac != ""{
                     if ref_ip != ip {
                         eprintln!("⚠️  MAC '{}' : IP '{}' ({}) vs '{}' ({})", mac, ref_ip, name_i, ip, name_j);
-                        same_mac_different_ip.push((mac.to_string(), ref_ip.to_string(), name_i.to_string(), ip.to_string(), name_j.to_string()))
-                    }
-                    if ref_label != label {
-                        eprintln!("⚠️  MAC '{}' : label '{}' ({}) vs '{}' ({})", mac, ref_label, name_i, label, name_j);
-                        same_mac_different_label.push((mac.to_string(), ref_label.to_string(), name_i.to_string(), label.to_string(), name_j.to_string()))
-                    }
+                        same_mac_different_ip.push((mac.to_string(), ref_ip.to_string(), name_i.to_string(), ip.to_string(), name_j.to_string()));
+
+                        if ref_label != label {
+                            eprintln!("⚠️  MAC '{}' : label '{}' ({}) vs '{}' ({})", mac, ref_label, name_i, label, name_j);
+                            same_mac_different_label.push((mac.to_string(), ref_label.to_string(), name_i.to_string(), label.to_string(), name_j.to_string()))
+                        }
+                    }  
                 }
             }
         }

@@ -17,7 +17,7 @@
           <ul class="file-list">
             <li v-for="([file,], index) in labelFiles" :key="index">
               <label :for="String(index)">
-                <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" class="toggle" @change="addSelectedLabelFilesList">
+                <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" class="toggle" @change="addSelectedLabelFilesList(file)">
                 <span class="text">{{ file }}</span>
                 <button class="image-btn" @click.prevent="RemoveLabelFile(file)" title="Supprimer"><img src="/src/assets/images/Poubelle.jpg" alt="Supprimer" /></button>
               </label>
@@ -191,7 +191,7 @@ export default defineComponent({
         }
       },
 
-    async addSelectedLabelFilesList(){
+    async addSelectedLabelFilesList(file: string){
         try {
           const [same_ip_diff_mac, same_ip_diff_label, same_mac_diff_ip, same_mac_diff_label] = await invoke<[[string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][]]>('add_selected_label_files_list', { selectedFilesNamesList: this.selectedLabelFiles});
           
@@ -204,17 +204,7 @@ export default defineComponent({
             info('length > 0')
             this.showConflictDialog =true
 
-            await new Promise(resolve => setTimeout(resolve, 200));
-            const conflictLists = [
-              this.same_ip_diff_label,
-              this.same_ip_diff_mac,
-              this.same_mac_diff_ip,
-              this.same_mac_diff_label
-            ]
-
-            this.selectedLabelFiles = this.selectedLabelFiles.filter((file) =>
-              !conflictLists.some((list) => list.some(([,,name_i]) => name_i === file))
-            )
+            this.selectedLabelFiles = this.selectedLabelFiles.filter((f) => f !== file);
 
           }
         } catch (err) {
