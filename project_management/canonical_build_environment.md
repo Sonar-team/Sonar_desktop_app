@@ -288,6 +288,13 @@ output with normalized timestamps and metadata. If Tauri's NSIS bundler does not
 expose enough control, build the installer through a project-owned packaging
 script instead of relying on the Tauri bundler as the reproducibility boundary.
 
+`script/package-msi-repro.ps1` is the project-owned Windows MSI packaging
+prototype. It builds a WiX v3 MSI from a normalized installation root using
+stable component GUIDs, stable product/package codes, sorted file traversal,
+and normalized file timestamps. It still needs to be validated on
+`windows-2022` with the exact WiX toolchain before it can replace the current
+NSIS diagnostic target.
+
 ## macOS Target
 
 - OS: macOS runner version to be pinned
@@ -312,6 +319,12 @@ Xcode/toolchain inputs, code signing boundary, and whether the unsigned `.app`
 or `.dmg` can be made deterministic. If Tauri's DMG bundler does not expose
 enough control, build the macOS package through a project-owned packaging script
 instead of relying on the Tauri bundler as the reproducibility boundary.
+
+`script/package-dmg-repro.sh` is the project-owned DMG packaging prototype. It
+copies an unsigned `.app` with `ditto`, removes extended attributes where
+available, normalizes file modes and timestamps, adds the `/Applications`
+symlink, then creates a compressed HFS+ DMG through `hdiutil`. It still needs to
+be validated on `macos-14` before it can become a release gate.
 
 ## Platform Rollout
 

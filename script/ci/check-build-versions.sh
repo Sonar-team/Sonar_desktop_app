@@ -42,6 +42,12 @@ check_contains .github/workflows/publish-smoke.yml 'apt-get install -y $LINUX_AP
 check_contains .github/workflows/publish-smoke.yml 'debian-repro-smoke:'
 check_contains .github/workflows/publish-smoke.yml 'run: deno task tauri build --ci --no-sign --bundles deb'
 check_contains .github/workflows/publish-smoke.yml './script/package-deb-repro.sh "$deb_path" "$first_deb"'
+check_contains .github/workflows/publish-smoke.yml 'dmg-repro-smoke:'
+check_contains .github/workflows/publish-smoke.yml 'deno task tauri build --ci --no-sign --target "$MACOS_TARGET" --bundles app'
+check_contains .github/workflows/publish-smoke.yml './script/package-dmg-repro.sh "$app_path" "${outdir}/${run}.dmg"'
+check_contains .github/workflows/publish-smoke.yml 'msi-repro-smoke:'
+check_contains .github/workflows/publish-smoke.yml 'deno task tauri build --ci --no-sign --no-bundle'
+check_contains .github/workflows/publish-smoke.yml 'script/package-msi-repro.ps1'
 check_contains .github/workflows/covecode.yml './script/ci/export-build-versions.sh'
 check_contains .github/workflows/covecode.yml 'node-version: "v${{ steps.versions.outputs.NODE_VERSION }}"'
 
