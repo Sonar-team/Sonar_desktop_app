@@ -88,8 +88,8 @@ function Read-Sector {
         [int]$SectorSize
     )
 
-    $offset = 512 + ([int64]$SectorId * [int64]$SectorSize)
-    if ($offset -lt 512 -or ($offset + $SectorSize) -gt $Bytes.Length) {
+    $offset = [int64]$SectorSize + ([int64]$SectorId * [int64]$SectorSize)
+    if ($offset -lt $SectorSize -or ($offset + $SectorSize) -gt $Bytes.Length) {
         throw "CFB sector $SectorId is outside file bounds"
     }
 
@@ -343,6 +343,7 @@ function Convert-ToLayoutManifest {
     $lines = [System.Collections.Generic.List[string]]::new()
     $lines.Add("file`tSize`t$($Parsed.FileSize)")
     $lines.Add("header`tSha256`t$($Parsed.HeaderSha256)")
+    $lines.Add("header`tMajorVersion`t$($Parsed.MajorVersion)")
     $lines.Add("header`tSectorSize`t$($Parsed.SectorSize)")
     $lines.Add("header`tMiniSectorSize`t$($Parsed.MiniSectorSize)")
     $lines.Add("header`tFatSectorCount`t$($Parsed.FatSectorCount)")
@@ -370,11 +371,11 @@ function Convert-ToSectorManifest {
     )
 
     $lines = [System.Collections.Generic.List[string]]::new()
-    $header = [byte[]]::new(512)
-    [Buffer]::BlockCopy($Bytes, 0, $header, 0, 512)
+    $header = [byte[]]::new($SectorSize)
+    [Buffer]::BlockCopy($Bytes, 0, $header, 0, $SectorSize)
     $lines.Add("header`tsha256`t$(Get-Sha256Hex $header)")
 
-    $sectorCount = [int](($Bytes.Length - 512) / $SectorSize)
+    $sectorCount = [int](($Bytes.Length - $SectorSize) / $SectorSize)
     for ($sectorId = 0; $sectorId -lt $sectorCount; $sectorId++) {
         $sector = Read-Sector -Bytes $Bytes -SectorId ([uint32]$sectorId) -SectorSize $SectorSize
         $fatValue = ""
@@ -404,6 +405,7 @@ function Read-CfbFile {
         }
     }
 
+    $majorVersion = Read-UInt16LE -Bytes $bytes -Offset 26
     $byteOrder = Read-UInt16LE -Bytes $bytes -Offset 28
     if ($byteOrder -ne 0xfffe) {
         throw "$Path uses unsupported CFB byte order: $byteOrder"
@@ -532,13 +534,14 @@ function Read-CfbFile {
         })
     }
 
-    $header = [byte[]]::new(512)
-    [Buffer]::BlockCopy($bytes, 0, $header, 0, 512)
+    $header = [byte[]]::new($sectorSize)
+    [Buffer]::BlockCopy($bytes, 0, $header, 0, $sectorSize)
 
     return [pscustomobject]@{
         Path = $resolved
         FileSize = $bytes.Length
         HeaderSha256 = Get-Sha256Hex $header
+        MajorVersion = $majorVersion
         Bytes = $bytes
         SectorSize = $sectorSize
         MiniSectorSize = $miniSectorSize
