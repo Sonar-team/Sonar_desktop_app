@@ -26,6 +26,10 @@ check_contains Dockerfile 'RUN /app/script/ci/use-apt-snapshot.sh'
 check_contains Dockerfile 'RUN apt install -y ${DOCKER_APT_PACKAGES}'
 check_contains Dockerfile "ENV NODE_VERSION=\"${NODE_VERSION}\""
 check_contains Dockerfile "ENV DENO_VERSION=\"${DENO_VERSION}\""
+check_contains Dockerfile 'https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt'
+check_contains Dockerfile 'sha256sum --check --status node.sha256sum'
+check_contains Dockerfile 'https://github.com/denoland/deno/releases/download/v${DENO_VERSION}/${deno_archive}.sha256sum'
+check_contains Dockerfile 'sha256sum --check --status "${deno_archive}.sha256sum"'
 check_contains .gitlab-ci.yml "image: rust:${RUST_VERSION}"
 check_contains .gitlab-ci.yml "NODE_VERSION: ${NODE_VERSION}"
 check_contains .gitlab-ci.yml "DENO_VERSION: ${DENO_VERSION}"

@@ -140,6 +140,10 @@ xz-utils=5.8.1-1
 The package version pins and dated snapshot must be bumped together when moving
 the canonical Linux build environment forward.
 
+The Dockerfile also verifies the downloaded Node.js archive against the
+published `SHASUMS256.txt` file and the downloaded Deno archive against the
+published `.sha256sum` file before extraction.
+
 ### Linux Canonical Build Commands
 
 Build the frontend:
