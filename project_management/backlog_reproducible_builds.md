@@ -59,7 +59,7 @@ Why:
 
 ### 5. Make the Docker build deterministic
 
-Status: Partially Done
+Status: Done
 
 - Replace `rust:latest` with a pinned image or digest.
 - Stop downloading bootstrap tools from floating branches like GitHub `master`.
@@ -69,11 +69,10 @@ Recent progress:
 
 - Commit `c3b83ecd` pins the Rust Docker base image by digest.
 - Docker now pins Node.js and Deno versions through `config/build-versions.env`.
-
-Remaining:
-
-- Node.js and Deno bootstrap downloads are version-pinned, but the downloaded
-  artifacts are not yet verified with explicit checksums in the Dockerfile.
+- The Dockerfile now verifies the downloaded Node.js archive against the
+  published `SHASUMS256.txt` file.
+- The Dockerfile now verifies the downloaded Deno archive against the
+  published `.sha256sum` file.
 
 Why:
 

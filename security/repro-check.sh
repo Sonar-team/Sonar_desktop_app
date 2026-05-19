@@ -87,8 +87,9 @@ run_build() {
   sha256sum "${outdir}/${APP_NAME}" | tee "${outdir}/sha256-bin.txt"
 
   if [[ -n "$resolved_deb_path" && -f "$resolved_deb_path" ]]; then
-    cp "$resolved_deb_path" "${outdir}/$(basename "$resolved_deb_path")"
-    sha256sum "${outdir}/$(basename "$resolved_deb_path")" | tee "${outdir}/sha256-deb.txt"
+    local normalized_deb_path="${outdir}/$(basename "$resolved_deb_path")"
+    ./script/package-deb-repro.sh "$resolved_deb_path" "$normalized_deb_path" >/dev/null
+    sha256sum "$normalized_deb_path" | tee "${outdir}/sha256-deb.txt"
   fi
 }
 

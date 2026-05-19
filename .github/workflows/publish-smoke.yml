@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: load build versions
         id: versions
@@ -27,12 +27,12 @@ jobs:
         run: ./script/ci/export-build-versions.sh
 
       - name: setup deno
-        uses: denoland/setup-deno@v2
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
         with:
           deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
       - name: install Rust pinned version
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
           targets: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
@@ -67,3 +67,299 @@ jobs:
           else
             npm run tauri build
           fi
+
+  debian-repro-smoke:
+    name: verify reproducible Debian package
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: setup deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+
+      - name: install dependencies
+        shell: bash
+        run: |
+          sudo ./script/ci/use-apt-snapshot.sh
+          sudo apt-get install -y $LINUX_APT_PACKAGES
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: configure reproducible build environment
+        shell: bash
+        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
+
+      - name: build Debian package
+        shell: bash
+        run: deno task tauri build --ci --no-sign --bundles deb
+
+      - name: verify reproducible Debian package
+        shell: bash
+        run: |
+          set -euo pipefail
+          deb_path="$(find src-tauri/target/release/bundle/deb -maxdepth 2 -type f -name '*.deb' | sort | head -n 1)"
+          test -n "$deb_path"
+
+          output_dir="$(mktemp -d)"
+          first_deb="${output_dir}/first.deb"
+          second_deb="${output_dir}/second.deb"
+
+          ./script/package-deb-repro.sh "$deb_path" "$first_deb" >/dev/null
+          ./script/package-deb-repro.sh "$deb_path" "$second_deb" >/dev/null
+
+          sha256sum "$first_deb" "$second_deb"
+          cmp -s "$first_deb" "$second_deb"
+
+  dmg-repro-smoke:
+    name: verify reproducible DMG package
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: setup deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+          targets: ${{ steps.versions.outputs.MACOS_TARGET }}
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: configure reproducible build environment
+        shell: bash
+        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
+
+      - name: build and verify reproducible DMG twice
+        shell: bash
+        env:
+          MACOS_TARGET: ${{ steps.versions.outputs.MACOS_TARGET }}
+        run: |
+          set -euo pipefail
+
+          hash_file() {
+            shasum -a 256 "$1" | awk '{print $1}'
+          }
+
+          build_dmg() {
+            local run="$1"
+            local outdir="$2"
+
+            rm -rf dist src-tauri/target
+            deno task tauri build --ci --no-sign --target "$MACOS_TARGET" --bundles app
+
+            app_path="$(find src-tauri/target -type d -name '*.app' | sort | head -n 1)"
+            test -n "$app_path"
+
+            ./script/package-dmg-repro.sh "$app_path" "${outdir}/${run}.dmg" >/dev/null
+          }
+
+          output_dir="$(mktemp -d)"
+          first_dmg="${output_dir}/first.dmg"
+          second_dmg="${output_dir}/second.dmg"
+
+          build_dmg first "$output_dir"
+          build_dmg second "$output_dir"
+
+          first_hash="$(hash_file "$first_dmg")"
+          second_hash="$(hash_file "$second_dmg")"
+          first_manifest="${first_dmg}.input-sha256"
+          second_manifest="${second_dmg}.input-sha256"
+
+          printf '%s  %s\n' "$first_hash" "$first_dmg"
+          printf '%s  %s\n' "$second_hash" "$second_dmg"
+
+          if cmp -s "$first_manifest" "$second_manifest"; then
+            echo "DMG normalized input roots are identical"
+          else
+            echo "DMG normalized input roots differ"
+            diff -u "$first_manifest" "$second_manifest" || true
+            exit 1
+          fi
+
+          if [[ "$first_hash" != "$second_hash" ]]; then
+            echo "::warning::DMG hashes differ even though normalized input roots are identical; hdiutil container output remains nondeterministic on this runner."
+            echo "::error::DMG package is not reproducible"
+            exit 1
+          fi
+
+          cmp -s "$first_dmg" "$second_dmg"
+
+  msi-repro-smoke:
+    name: verify reproducible MSI package
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: setup deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: configure reproducible build environment
+        shell: bash
+        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
+
+      - name: locate WiX Toolset
+        shell: pwsh
+        run: |
+          $paths = @(
+            "${env:ProgramFiles(x86)}\WiX Toolset v3.14\bin",
+            "${env:ProgramFiles(x86)}\WiX Toolset v3.11\bin",
+            "${env:ProgramFiles}\WiX Toolset v3.14\bin",
+            "${env:ProgramFiles}\WiX Toolset v3.11\bin"
+          )
+
+          foreach ($path in $paths) {
+            if (Test-Path (Join-Path $path "candle.exe")) {
+              Add-Content -Path $env:GITHUB_PATH -Value $path
+              exit 0
+            }
+          }
+
+          if (Get-Command candle.exe -ErrorAction SilentlyContinue) {
+            exit 0
+          }
+
+          throw "WiX Toolset v3 was not found on this runner"
+
+      - name: build and verify reproducible MSI twice
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          function New-MsiInputRoot {
+            param(
+              [string]$RunName,
+              [string]$Root
+            )
+
+            Remove-Item -LiteralPath $Root -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path $Root | Out-Null
+
+            Copy-Item -LiteralPath "src-tauri\target\release\sonar.exe" -Destination (Join-Path $Root "sonar.exe") -Force
+
+            New-Item -ItemType Directory -Force -Path (Join-Path $Root "resources") | Out-Null
+            Copy-Item -LiteralPath "src-tauri\resources\labels.csv" -Destination (Join-Path $Root "resources\labels.csv") -Force
+
+            New-Item -ItemType Directory -Force -Path (Join-Path $Root "windows") | Out-Null
+            Copy-Item -LiteralPath "src-tauri\windows\npcap-1.87.exe" -Destination (Join-Path $Root "windows\npcap-1.87.exe") -Force
+          }
+
+          function Build-Msi {
+            param(
+              [string]$RunName,
+              [string]$OutputMsi
+            )
+
+            Remove-Item -LiteralPath "dist" -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath "src-tauri\target" -Recurse -Force -ErrorAction SilentlyContinue
+
+            deno task tauri build --ci --no-sign --no-bundle
+
+            $inputRoot = Join-Path ([System.IO.Path]::GetTempPath()) "sonar-msi-$RunName"
+            New-MsiInputRoot -RunName $RunName -Root $inputRoot
+
+            pwsh -NoProfile -File "script/package-msi-repro.ps1" -SourceDir $inputRoot -OutputMsi $OutputMsi -SourceDateEpoch $env:SOURCE_DATE_EPOCH
+          }
+
+          $outputDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.Guid]::NewGuid().ToString())
+          New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
+
+          $firstMsi = Join-Path $outputDir "first.msi"
+          $secondMsi = Join-Path $outputDir "second.msi"
+
+          Build-Msi -RunName "first" -OutputMsi $firstMsi
+          Build-Msi -RunName "second" -OutputMsi $secondMsi
+
+          $firstHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $firstMsi).Hash.ToLowerInvariant()
+          $secondHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $secondMsi).Hash.ToLowerInvariant()
+          $firstManifest = "$firstMsi.input-sha256"
+          $secondManifest = "$secondMsi.input-sha256"
+
+          Write-Output "$firstHash  $firstMsi"
+          Write-Output "$secondHash  $secondMsi"
+
+          Write-Output "first.msi CFB root timestamps"
+          pwsh -NoProfile -File "script/ci/read-msi-cfb-times.ps1" -MsiPath $firstMsi
+          Write-Output "second.msi CFB root timestamps"
+          pwsh -NoProfile -File "script/ci/read-msi-cfb-times.ps1" -MsiPath $secondMsi
+
+          if (-not (Compare-Object (Get-Content $firstManifest) (Get-Content $secondManifest) -SyncWindow 0)) {
+            Write-Output "MSI input roots are identical"
+          } else {
+            Write-Output "MSI input roots differ"
+            Compare-Object (Get-Content $firstManifest) (Get-Content $secondManifest) -SyncWindow 0 | Format-Table -AutoSize | Out-String | Write-Output
+            throw "MSI input roots differ"
+          }
+
+          if ($firstHash -ne $secondHash) {
+            if (Get-Command dark.exe -ErrorAction SilentlyContinue) {
+              $firstDark = Join-Path $outputDir "first.wxs"
+              $secondDark = Join-Path $outputDir "second.wxs"
+              $firstNormalizedDark = Join-Path $outputDir "first.normalized.wxs"
+              $secondNormalizedDark = Join-Path $outputDir "second.normalized.wxs"
+              $firstExtract = Join-Path $outputDir "first-extract"
+              $secondExtract = Join-Path $outputDir "second-extract"
+              dark.exe -nologo -x (Join-Path $outputDir "first-extract") -out $firstDark $firstMsi
+              dark.exe -nologo -x (Join-Path $outputDir "second-extract") -out $secondDark $secondMsi
+
+              (Get-Content -Raw $firstDark).Replace($firstExtract, "__EXTRACT_ROOT__").Replace("first-extract", "__EXTRACT_ROOT__") | Set-Content -NoNewline $firstNormalizedDark
+              (Get-Content -Raw $secondDark).Replace($secondExtract, "__EXTRACT_ROOT__").Replace("second-extract", "__EXTRACT_ROOT__") | Set-Content -NoNewline $secondNormalizedDark
+
+              if (-not (Compare-Object (Get-Content $firstNormalizedDark) (Get-Content $secondNormalizedDark) -SyncWindow 0)) {
+                Write-Output "Decompiled MSI metadata is identical"
+              } else {
+                Write-Output "Decompiled MSI metadata differs"
+                Compare-Object (Get-Content $firstNormalizedDark) (Get-Content $secondNormalizedDark) -SyncWindow 0 | Format-Table -AutoSize | Out-String | Write-Output
+                throw "MSI hashes differ"
+              }
+            }
+
+            pwsh -NoProfile -File "script/ci/compare-msi-internals.ps1" `
+              -FirstMsi $firstMsi `
+              -SecondMsi $secondMsi `
+              -OutputDir (Join-Path $outputDir "msi-internals")
+
+            Write-Output "::warning::MSI hashes differ even though input roots and decompiled metadata are identical; WiX/MSI container output remains nondeterministic on this runner."
+            Write-Output "::error::MSI package is not reproducible"
+            throw "MSI hashes differ"
+          }

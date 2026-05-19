@@ -8,10 +8,10 @@ on:
 
 jobs:
   repro_env_check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Load build versions
         id: versions
@@ -19,7 +19,7 @@ jobs:
         run: ./script/ci/export-build-versions.sh
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v2
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
         with:
           deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 

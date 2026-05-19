@@ -69,12 +69,9 @@ rust:1.95.0@sha256:5b1e3484ddcd22a3738c0ec34a5e98bf19382eb295fb6db54295e62379119
 ```
 
 The Docker build also pins Node.js, Deno, and Debian package versions.
-
-Remaining caveat:
-
-- Node.js and Deno are still downloaded during the Docker build. Their versions
-  are pinned, but their downloaded artifacts are not yet verified with explicit
-  checksums in the Dockerfile.
+The Docker build now also verifies the downloaded Node.js archive against the
+published `SHASUMS256.txt` file and the downloaded Deno archive against the
+published `.sha256sum` file before extraction.
 
 ### 4. OS package inputs are pinned or snapshot-backed
 
@@ -172,8 +169,8 @@ packaged outputs that the project decides to enforce.
 2. Split Windows checks into raw binary comparison and NSIS installer
    comparison.
 3. Split macOS checks into raw binary, `.app` bundle, and DMG comparison.
-4. Add checksum verification for downloaded Node.js and Deno bootstrap artifacts
-   in Docker if the Docker image is part of the reproducibility boundary.
+4. Keep the Docker bootstrap verification in sync with version bumps for
+   Node.js and Deno.
 5. Start the release trust track:
    - sign release artifacts in CI
    - verify provenance on the next tagged release
