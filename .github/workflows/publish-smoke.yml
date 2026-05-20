@@ -124,6 +124,56 @@ jobs:
           sha256sum "$first_deb" "$second_deb"
           cmp -s "$first_deb" "$second_deb"
 
+  rpm-repro-smoke:
+    name: verify reproducible RPM package
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: setup deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+
+      - name: install dependencies
+        shell: bash
+        run: |
+          sudo ./script/ci/use-apt-snapshot.sh
+          sudo apt-get install -y $LINUX_APT_PACKAGES
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: configure reproducible build environment
+        shell: bash
+        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
+
+      - name: build and verify reproducible RPM twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUNDLE_LABEL="rpm" \
+          BUNDLE_KIND="rpm" \
+          BUNDLE_DIR="src-tauri/target/release/bundle/rpm/x86_64" \
+          BUNDLE_FALLBACK_DIRS="src-tauri/target/release/bundle/rpm/aarch64:src-tauri/target/release/bundle/rpm" \
+          ARTIFACT_PATTERN="*.rpm" \
+          BINARY_DIR="src-tauri/target/release" \
+          BINARY_FALLBACK_DIRS="src-tauri/target/x86_64-unknown-linux-gnu/release" \
+          BINARY_PATTERN="sonar" \
+          OUTPUT_DIR="bundle-repro-rpm" \
+          ./script/ci/check-bundle-repro.sh
+
   dmg-repro-smoke:
     name: verify reproducible DMG package
     runs-on: macos-14
@@ -208,6 +258,50 @@ jobs:
           fi
 
           cmp -s "$first_dmg" "$second_dmg"
+
+  nsis-repro-smoke:
+    name: verify reproducible NSIS setup.exe package
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: setup deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: configure reproducible build environment
+        shell: bash
+        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
+
+      - name: build and verify reproducible NSIS setup.exe twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUNDLE_LABEL="nsis-setup-exe" \
+          BUNDLE_KIND="nsis" \
+          BUNDLE_DIR="src-tauri/target/release/bundle/nsis" \
+          BUNDLE_FALLBACK_DIRS="src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis" \
+          ARTIFACT_PATTERN="*.exe" \
+          BINARY_DIR="src-tauri/target/release" \
+          BINARY_FALLBACK_DIRS="src-tauri/target/x86_64-pc-windows-msvc/release" \
+          BINARY_PATTERN="sonar.exe" \
+          OUTPUT_DIR="bundle-repro-nsis" \
+          ./script/ci/check-bundle-repro.sh
 
   msi-repro-smoke:
     name: verify reproducible MSI package
