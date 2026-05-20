@@ -5,6 +5,8 @@ param(
     [string]$Manufacturer = "Sonar Team",
     [string]$Version = "",
     [string]$UpgradeCode = "",
+    [string]$PackageCode = "",
+    [string]$InternalMode = "",
     [string]$SourceDateEpoch = "1700000000",
     [switch]$Help
 )
@@ -183,7 +185,7 @@ function Set-MsiSummaryInformation {
 
     try {
         $installer = New-Object -ComObject WindowsInstaller.Installer
-        $database = Invoke-ComMethod -Object $installer -Name "OpenDatabase" -Arguments @($MsiPath, 1)
+        $database = Invoke-ComMethod -Object $installer -Name "OpenDatabase" -Arguments @($MsiPath, 2)
         $summary = Get-ComIndexedProperty -Object $database -Name "SummaryInformation" -Arguments @(20)
 
         # PID_REVNUMBER is the package code. PID_CREATE_DTM and PID_LASTSAVE_DTM
@@ -203,6 +205,26 @@ function Set-MsiSummaryInformation {
 
         [System.GC]::Collect()
         [System.GC]::WaitForPendingFinalizers()
+    }
+}
+
+function Invoke-SummaryInformationChildProcess {
+    param(
+        [string]$MsiPath,
+        [string]$PackageCode,
+        [string]$TimestampEpoch
+    )
+
+    & pwsh `
+        -NoProfile `
+        -File $PSCommandPath `
+        -InternalMode "set-summary" `
+        -OutputMsi $MsiPath `
+        -PackageCode $PackageCode `
+        -SourceDateEpoch $TimestampEpoch
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "MSI summary information update failed with exit code $LASTEXITCODE"
     }
 }
 
@@ -693,8 +715,13 @@ function Main {
         $outputItem.CreationTimeUtc = $timestamp
         $outputItem.LastAccessTimeUtc = $timestamp
 
-        Set-MsiSummaryInformation -MsiPath $OutputMsi -PackageCode $packageCode -Timestamp $timestamp
+        Invoke-SummaryInformationChildProcess -MsiPath $OutputMsi -PackageCode $packageCode -TimestampEpoch $SourceDateEpoch
         Normalize-MsiCfbDirectoryTimes -MsiPath $OutputMsi
+
+        $outputItem = Get-Item -LiteralPath $OutputMsi
+        $outputItem.LastWriteTimeUtc = $timestamp
+        $outputItem.CreationTimeUtc = $timestamp
+        $outputItem.LastAccessTimeUtc = $timestamp
 
         Write-Output $OutputMsi
     } finally {
@@ -702,6 +729,24 @@ function Main {
             Remove-Item -LiteralPath $workdir -Recurse -Force
         }
     }
+}
+
+if ($InternalMode) {
+    if ($InternalMode -eq "set-summary") {
+        if (-not $OutputMsi) {
+            throw "OutputMsi is required for set-summary mode."
+        }
+
+        if (-not $PackageCode) {
+            throw "PackageCode is required for set-summary mode."
+        }
+
+        $timestamp = [System.DateTimeOffset]::FromUnixTimeSeconds([int64]$SourceDateEpoch).UtcDateTime
+        Set-MsiSummaryInformation -MsiPath $OutputMsi -PackageCode $PackageCode -Timestamp $timestamp
+        exit 0
+    }
+
+    throw "Unknown internal mode: $InternalMode"
 }
 
 Main
