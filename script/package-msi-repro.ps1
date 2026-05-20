@@ -623,12 +623,6 @@ function Normalize-MsiCfbDirectoryTimes {
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
         $bytes = Read-AllBytesWithRetry -Path $resolved
         Assert-CfbSignature -Bytes $bytes -Path $resolved
-        $normalizedEntries = Update-CfbDirectoryTimes -Bytes $bytes
-        $memoryDriftEntries = @(Get-CfbDirectoryTimestampDriftEntries -Bytes $bytes)
-        if ($memoryDriftEntries.Count -ne 0) {
-            throw "Could not normalize MSI CFB directory timestamps in memory: $(Format-CfbTimestampDrift $memoryDriftEntries)"
-        }
-
         $normalizedEntries = Write-CfbDirectoryTimesInPlace -Path $resolved -Bytes $bytes
 
         Start-Sleep -Milliseconds 1000
