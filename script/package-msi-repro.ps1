@@ -455,13 +455,19 @@ function Update-CfbDirectoryTimes {
 function Get-CfbDirectoryTimestampDrift {
     param([byte[]]$Bytes)
 
+    return @(Get-CfbDirectoryTimestampDriftEntries -Bytes $Bytes).Count
+}
+
+function Get-CfbDirectoryTimestampDriftEntries {
+    param([byte[]]$Bytes)
+
     $sectorShift = Read-UInt16LE -Bytes $Bytes -Offset 30
     $sectorSize = 1 -shl $sectorShift
     $firstDirectorySector = Read-UInt32LE -Bytes $Bytes -Offset 48
     $fat = Read-CfbFat -Bytes $Bytes -SectorSize $sectorSize
     $seen = @{}
     $sector = $firstDirectorySector
-    $drift = 0
+    $driftEntries = [System.Collections.Generic.List[object]]::new()
 
     while ($sector -ne $script:ENDOFCHAIN) {
         if (
@@ -498,14 +504,113 @@ function Get-CfbDirectoryTimestampDrift {
             $creationTime = Read-UInt64LE -Bytes $Bytes -Offset ($entryBase + 100)
             $modifiedTime = Read-UInt64LE -Bytes $Bytes -Offset ($entryBase + 108)
             if ($creationTime -ne 0 -or $modifiedTime -ne 0) {
-                $drift += 1
+                $name = ""
+                if ($nameLength -gt 2 -and $nameLength -le 64) {
+                    $nameBytes = [byte[]]::new($nameLength - 2)
+                    [Buffer]::BlockCopy($Bytes, $entryBase, $nameBytes, 0, $nameBytes.Length)
+                    $name = [System.Text.Encoding]::Unicode.GetString($nameBytes)
+                }
+
+                $driftEntries.Add([pscustomobject]@{
+                    Sector = [uint32]$sector
+                    EntryOffset = [int64]$entryBase
+                    ObjectType = [int]$objectType
+                    Name = $name
+                    CreationFileTime = $creationTime
+                    ModifiedFileTime = $modifiedTime
+                })
             }
         }
 
         $sector = $fat[[int]$sector]
     }
 
-    return $drift
+    return $driftEntries.ToArray()
+}
+
+function Format-CfbTimestampDrift {
+    param([object[]]$Entries)
+
+    if (-not $Entries -or $Entries.Count -eq 0) {
+        return ""
+    }
+
+    return @($Entries | Select-Object -First 3 | ForEach-Object {
+            "sector=$($_.Sector) offset=$($_.EntryOffset) type=$($_.ObjectType) name='$($_.Name)' creation=$($_.CreationFileTime) modified=$($_.ModifiedFileTime)"
+        }) -join "; "
+}
+
+function Write-CfbDirectoryTimesInPlace {
+    param(
+        [string]$Path,
+        [byte[]]$Bytes
+    )
+
+    $sectorShift = Read-UInt16LE -Bytes $Bytes -Offset 30
+    $sectorSize = 1 -shl $sectorShift
+    $firstDirectorySector = Read-UInt32LE -Bytes $Bytes -Offset 48
+    $fat = Read-CfbFat -Bytes $Bytes -SectorSize $sectorSize
+    $seen = @{}
+    $sector = $firstDirectorySector
+    $normalizedEntries = 0
+    $zeroTimes = [byte[]]::new(16)
+    $stream = $null
+
+    try {
+        $stream = [System.IO.File]::Open(
+            $Path,
+            [System.IO.FileMode]::Open,
+            [System.IO.FileAccess]::ReadWrite,
+            [System.IO.FileShare]::None
+        )
+
+        while ($sector -ne $script:ENDOFCHAIN) {
+            if (
+                $sector -eq $script:FREESECT -or
+                $sector -eq $script:FATSECT -or
+                $sector -eq $script:DIFSECT
+            ) {
+                throw "Invalid CFB directory chain entry: $sector"
+            }
+
+            if ([int64]$sector -ge $fat.Length) {
+                throw "CFB directory sector $sector is outside FAT bounds"
+            }
+
+            $key = $sector.ToString()
+            if ($seen.ContainsKey($key)) {
+                throw "CFB directory chain contains a cycle at sector $sector"
+            }
+            $seen[$key] = $true
+
+            $sectorOffset = [int64]$sectorSize + ([int64]$sector * [int64]$sectorSize)
+            if ($sectorOffset -lt $sectorSize -or ($sectorOffset + $sectorSize) -gt $Bytes.Length) {
+                throw "CFB directory sector $sector is outside file bounds"
+            }
+
+            for ($entryOffset = 0; $entryOffset -lt $sectorSize; $entryOffset += 128) {
+                $entryBase = [int64]($sectorOffset + $entryOffset)
+                $nameLength = Read-UInt16LE -Bytes $Bytes -Offset ([int]($entryBase + 64))
+                $objectType = $Bytes[[int]($entryBase + 66)]
+                if ($nameLength -gt 0 -or $objectType -ne 0) {
+                    $normalizedEntries += 1
+                }
+
+                $stream.Seek($entryBase + 100, [System.IO.SeekOrigin]::Begin) | Out-Null
+                $stream.Write($zeroTimes, 0, $zeroTimes.Length)
+            }
+
+            $sector = $fat[[int]$sector]
+        }
+
+        $stream.Flush($true)
+    } finally {
+        if ($null -ne $stream) {
+            $stream.Dispose()
+        }
+    }
+
+    return $normalizedEntries
 }
 
 function Normalize-MsiCfbDirectoryTimes {
@@ -519,19 +624,24 @@ function Normalize-MsiCfbDirectoryTimes {
         $bytes = Read-AllBytesWithRetry -Path $resolved
         Assert-CfbSignature -Bytes $bytes -Path $resolved
         $normalizedEntries = Update-CfbDirectoryTimes -Bytes $bytes
-        Write-AllBytesWithRetry -Path $resolved -Bytes $bytes
+        $memoryDriftEntries = @(Get-CfbDirectoryTimestampDriftEntries -Bytes $bytes)
+        if ($memoryDriftEntries.Count -ne 0) {
+            throw "Could not normalize MSI CFB directory timestamps in memory: $(Format-CfbTimestampDrift $memoryDriftEntries)"
+        }
+
+        $normalizedEntries = Write-CfbDirectoryTimesInPlace -Path $resolved -Bytes $bytes
 
         Start-Sleep -Milliseconds 1000
 
         $verifiedBytes = Read-AllBytesWithRetry -Path $resolved
         Assert-CfbSignature -Bytes $verifiedBytes -Path $resolved
-        $drift = Get-CfbDirectoryTimestampDrift -Bytes $verifiedBytes
-        if ($drift -eq 0) {
+        $driftEntries = @(Get-CfbDirectoryTimestampDriftEntries -Bytes $verifiedBytes)
+        if ($driftEntries.Count -eq 0) {
             Write-Output "Normalized MSI CFB directory timestamps for $normalizedEntries entries"
             return
         }
 
-        Write-Output "MSI CFB directory timestamps still nonzero for $drift entries after attempt $attempt; retrying"
+        Write-Output "MSI CFB directory timestamps still nonzero for $($driftEntries.Count) entries after attempt ${attempt}: $(Format-CfbTimestampDrift $driftEntries); retrying"
         Start-Sleep -Milliseconds 1000
     }
 
