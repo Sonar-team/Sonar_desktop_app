@@ -1,7 +1,12 @@
 <template>
   <div class="container">
     <div class="center-container">
-      <ConflictDialog v-if="showConflictDialog" :same_ip_diff_mac="same_ip_diff_mac" :same_ip_diff_label="same_ip_diff_label" :same_mac_diff_ip="same_mac_diff_ip" :same_mac_diff_label="same_mac_diff_label" @showConflictDialog="showConflictDialog = false"/>
+      <ConflictDialog v-if="showConflictDialog" 
+      :same_ip_diff_mac="same_ip_diff_mac" 
+      :same_ip_diff_label="same_ip_diff_label" 
+      :same_mac_diff_ip="same_mac_diff_ip" 
+      :same_mac_diff_label="same_mac_diff_label" 
+      @showConflictDialog="showConflictDialog = false"/>
 
         <!-- Overlay de chargement -->
       <div class="overlay" v-if="isConverting">
@@ -14,7 +19,8 @@
           <button class="btn btn-add text" @click="addCsvFiles" :disabled="isConverting">
             Ajouter des fichiers
           </button>
-          <ul class="file-list">
+          <p v-show="labelFiles.length == 0" class="text">Aucun fichier de label enregistré</p>
+          <ul v-show="labelFiles.length > 0" class="file-list">
             <li v-for="([file,], index) in labelFiles" :key="index">
               <label :for="String(index)">
                 <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" 
@@ -425,7 +431,7 @@ export default defineComponent({
 
 .file-list {
   width: 90%;
-  max-height: 200px;
+  max-height: 250px;
   overflow-y: auto;
   background-color: #2d3748;
   border-radius: 4px;
