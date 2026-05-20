@@ -266,6 +266,15 @@ function Read-UInt32LE {
     return [BitConverter]::ToUInt32($Bytes, $Offset)
 }
 
+function Read-UInt64LE {
+    param(
+        [byte[]]$Bytes,
+        [int]$Offset
+    )
+
+    return [BitConverter]::ToUInt64($Bytes, $Offset)
+}
+
 function Write-UInt64LE {
     param(
         [byte[]]$Bytes,
@@ -352,23 +361,27 @@ function Read-CfbFat {
     return $fat.ToArray()
 }
 
-function Normalize-MsiCfbDirectoryTimes {
-    param([string]$MsiPath)
-
-    $resolved = (Resolve-Path -LiteralPath $MsiPath).Path
-    $bytes = Read-AllBytesWithRetry -Path $resolved
+function Assert-CfbSignature {
+    param(
+        [byte[]]$Bytes,
+        [string]$Path
+    )
 
     $signature = [byte[]](0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1)
     for ($i = 0; $i -lt $signature.Length; $i++) {
-        if ($bytes[$i] -ne $signature[$i]) {
-            throw "$resolved is not an MSI/CFB file"
+        if ($Bytes[$i] -ne $signature[$i]) {
+            throw "$Path is not an MSI/CFB file"
         }
     }
+}
 
-    $sectorShift = Read-UInt16LE -Bytes $bytes -Offset 30
+function Update-CfbDirectoryTimes {
+    param([byte[]]$Bytes)
+
+    $sectorShift = Read-UInt16LE -Bytes $Bytes -Offset 30
     $sectorSize = 1 -shl $sectorShift
-    $firstDirectorySector = Read-UInt32LE -Bytes $bytes -Offset 48
-    $fat = Read-CfbFat -Bytes $bytes -SectorSize $sectorSize
+    $firstDirectorySector = Read-UInt32LE -Bytes $Bytes -Offset 48
+    $fat = Read-CfbFat -Bytes $Bytes -SectorSize $sectorSize
     $seen = @{}
     $sector = $firstDirectorySector
     $normalizedEntries = 0
@@ -393,26 +406,114 @@ function Normalize-MsiCfbDirectoryTimes {
         $seen[$key] = $true
 
         $sectorOffset = [int64]$sectorSize + ([int64]$sector * [int64]$sectorSize)
-        if ($sectorOffset -lt $sectorSize -or ($sectorOffset + $sectorSize) -gt $bytes.Length) {
+        if ($sectorOffset -lt $sectorSize -or ($sectorOffset + $sectorSize) -gt $Bytes.Length) {
             throw "CFB directory sector $sector is outside file bounds"
         }
 
         for ($entryOffset = 0; $entryOffset -lt $sectorSize; $entryOffset += 128) {
             $entryBase = [int]($sectorOffset + $entryOffset)
-            $nameLength = Read-UInt16LE -Bytes $bytes -Offset ($entryBase + 64)
-            $objectType = $bytes[$entryBase + 66]
+            $nameLength = Read-UInt16LE -Bytes $Bytes -Offset ($entryBase + 64)
+            $objectType = $Bytes[$entryBase + 66]
             if ($nameLength -gt 0 -or $objectType -ne 0) {
-                Write-UInt64LE -Bytes $bytes -Offset ($entryBase + 100) -Value 0
-                Write-UInt64LE -Bytes $bytes -Offset ($entryBase + 108) -Value 0
                 $normalizedEntries += 1
+            }
+
+            # Also clear unused directory slots, because stale bytes in the
+            # directory sector are part of the MSI hash even when WiX ignores them.
+            Write-UInt64LE -Bytes $Bytes -Offset ($entryBase + 100) -Value 0
+            Write-UInt64LE -Bytes $Bytes -Offset ($entryBase + 108) -Value 0
+        }
+
+        $sector = $fat[[int]$sector]
+    }
+
+    return $normalizedEntries
+}
+
+function Get-CfbDirectoryTimestampDrift {
+    param([byte[]]$Bytes)
+
+    $sectorShift = Read-UInt16LE -Bytes $Bytes -Offset 30
+    $sectorSize = 1 -shl $sectorShift
+    $firstDirectorySector = Read-UInt32LE -Bytes $Bytes -Offset 48
+    $fat = Read-CfbFat -Bytes $Bytes -SectorSize $sectorSize
+    $seen = @{}
+    $sector = $firstDirectorySector
+    $drift = 0
+
+    while ($sector -ne $script:ENDOFCHAIN) {
+        if (
+            $sector -eq $script:FREESECT -or
+            $sector -eq $script:FATSECT -or
+            $sector -eq $script:DIFSECT
+        ) {
+            throw "Invalid CFB directory chain entry: $sector"
+        }
+
+        if ([int64]$sector -ge $fat.Length) {
+            throw "CFB directory sector $sector is outside FAT bounds"
+        }
+
+        $key = $sector.ToString()
+        if ($seen.ContainsKey($key)) {
+            throw "CFB directory chain contains a cycle at sector $sector"
+        }
+        $seen[$key] = $true
+
+        $sectorOffset = [int64]$sectorSize + ([int64]$sector * [int64]$sectorSize)
+        if ($sectorOffset -lt $sectorSize -or ($sectorOffset + $sectorSize) -gt $Bytes.Length) {
+            throw "CFB directory sector $sector is outside file bounds"
+        }
+
+        for ($entryOffset = 0; $entryOffset -lt $sectorSize; $entryOffset += 128) {
+            $entryBase = [int]($sectorOffset + $entryOffset)
+            $nameLength = Read-UInt16LE -Bytes $Bytes -Offset ($entryBase + 64)
+            $objectType = $Bytes[$entryBase + 66]
+            if ($nameLength -le 0 -and $objectType -eq 0) {
+                continue
+            }
+
+            $creationTime = Read-UInt64LE -Bytes $Bytes -Offset ($entryBase + 100)
+            $modifiedTime = Read-UInt64LE -Bytes $Bytes -Offset ($entryBase + 108)
+            if ($creationTime -ne 0 -or $modifiedTime -ne 0) {
+                $drift += 1
             }
         }
 
         $sector = $fat[[int]$sector]
     }
 
-    Write-AllBytesWithRetry -Path $resolved -Bytes $bytes
-    Write-Output "Normalized MSI CFB directory timestamps for $normalizedEntries entries"
+    return $drift
+}
+
+function Normalize-MsiCfbDirectoryTimes {
+    param([string]$MsiPath)
+
+    $resolved = (Resolve-Path -LiteralPath $MsiPath).Path
+    $maxAttempts = 20
+    $normalizedEntries = 0
+
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        $bytes = Read-AllBytesWithRetry -Path $resolved
+        Assert-CfbSignature -Bytes $bytes -Path $resolved
+        $normalizedEntries = Update-CfbDirectoryTimes -Bytes $bytes
+        Write-AllBytesWithRetry -Path $resolved -Bytes $bytes
+
+        Start-Sleep -Milliseconds 1000
+
+        $verifiedBytes = Read-AllBytesWithRetry -Path $resolved
+        Assert-CfbSignature -Bytes $verifiedBytes -Path $resolved
+        $drift = Get-CfbDirectoryTimestampDrift -Bytes $verifiedBytes
+        if ($drift -eq 0) {
+            Write-Output "Normalized MSI CFB directory timestamps for $normalizedEntries entries"
+            return
+        }
+
+        Write-Output "MSI CFB directory timestamps still nonzero for $drift entries after attempt $attempt; retrying"
+        Start-Sleep -Milliseconds 1000
+    }
+
+    throw "Could not normalize MSI CFB directory timestamps after $maxAttempts attempts"
 }
 
 function Copy-NormalizedTree {
@@ -587,13 +688,13 @@ function Main {
             throw "light.exe failed with exit code $LASTEXITCODE"
         }
 
-        Set-MsiSummaryInformation -MsiPath $OutputMsi -PackageCode $packageCode -Timestamp $timestamp
-        Normalize-MsiCfbDirectoryTimes -MsiPath $OutputMsi
-
         $outputItem = Get-Item -LiteralPath $OutputMsi
         $outputItem.LastWriteTimeUtc = $timestamp
         $outputItem.CreationTimeUtc = $timestamp
         $outputItem.LastAccessTimeUtc = $timestamp
+
+        Set-MsiSummaryInformation -MsiPath $OutputMsi -PackageCode $packageCode -Timestamp $timestamp
+        Normalize-MsiCfbDirectoryTimes -MsiPath $OutputMsi
 
         Write-Output $OutputMsi
     } finally {
