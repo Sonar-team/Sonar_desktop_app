@@ -28,26 +28,6 @@
                   </label>
                 </li>
               </ul>
-              <ul v-show="same_mac_diff_ip.length > 0">
-                <h3 class="text">Conflits MAC -> IP</h3>
-                <li v-for="([mac, ref_ip, name_i, ip, name_j], index) in same_mac_diff_ip" :key="index">
-                  <label>
-                    <span class="text">'{{ mac }}'(MAC):</span><br>
-                    <span class="text indented">ref_IP: '{{ ref_ip }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
-                    <span class="text indented">IP: '{{ ip }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
-                  </label>
-                </li>
-              </ul>
-              <ul v-show="same_mac_diff_label.length > 0">
-                <h3 class="text">Conflits MAC -> Label</h3>
-                <li v-for="([mac, ref_label, name_i, label, name_j], index) in same_mac_diff_label" :key="index">
-                  <label>
-                    <span class="text">'{{ mac }}'(MAC):</span><br>
-                    <span class="text indented">ref_Label: '{{ ref_label }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
-                    <span class="text indented">Label: '{{ label }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
-                  </label>
-                </li>
-              </ul>
           </div>
           </div>
         <div>
@@ -76,14 +56,6 @@ export default defineComponent({
       type: Array as PropType<ConflictRow[]>,
       required: true
     },
-    same_mac_diff_ip: {
-      type: Array as PropType<ConflictRow[]>,
-      required: true
-    },
-    same_mac_diff_label: {
-      type: Array as PropType<ConflictRow[]>,
-      required: true
-    }
   },
   data() {
     return {

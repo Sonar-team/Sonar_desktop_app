@@ -4,8 +4,6 @@
       <ConflictDialog v-if="showConflictDialog" 
       :same_ip_diff_mac="same_ip_diff_mac" 
       :same_ip_diff_label="same_ip_diff_label" 
-      :same_mac_diff_ip="same_mac_diff_ip" 
-      :same_mac_diff_label="same_mac_diff_label" 
       @showConflictDialog="showConflictDialog = false"/>
 
         <!-- Overlay de chargement -->
@@ -85,9 +83,7 @@ export default defineComponent({
       isConverting: false,
       showConflictDialog: false,
       same_ip_diff_mac: [] as [string, string, string, string, string][], 
-      same_ip_diff_label: [] as [string, string, string, string, string][],  
-      same_mac_diff_ip: [] as [string, string, string, string, string][],  
-      same_mac_diff_label: [] as [string, string, string, string, string][]
+      same_ip_diff_label: [] as [string, string, string, string, string][],
     };
   },
 
@@ -200,14 +196,12 @@ export default defineComponent({
 
     async addToSelectedLabelFilesNamesList(file: string){
       try {
-        const [same_ip_diff_mac, same_ip_diff_label, same_mac_diff_ip, same_mac_diff_label] = await invoke<[[string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][], [string, string, string, string, string][]]>('add_to_selected_label_files_names_list', { file : file});
+        const [same_ip_diff_mac, same_ip_diff_label] = await invoke<[[string, string, string, string, string][], [string, string, string, string, string][]]>('add_to_selected_label_files_names_list', { file : file});
         
         this.same_ip_diff_label = same_ip_diff_label
         this.same_ip_diff_mac = same_ip_diff_mac
-        this.same_mac_diff_ip = same_mac_diff_ip
-        this.same_mac_diff_label =same_mac_diff_label
 
-        if (this.same_ip_diff_mac.length > 0 || this.same_ip_diff_label.length > 0 || this.same_mac_diff_ip.length > 0 || this.same_mac_diff_label.length > 0) {
+        if (this.same_ip_diff_mac.length > 0 || this.same_ip_diff_label.length > 0) {
           info('length > 0')
           this.showConflictDialog =true
 

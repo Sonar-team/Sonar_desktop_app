@@ -233,9 +233,9 @@ pub fn add_to_selected_label_files_names_list(
     file: String,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
     app: tauri::AppHandle,
-)-> Result<(ConflictsList, ConflictsList, ConflictsList, ConflictsList), tauri::Error> {
+)-> Result<(ConflictsList, ConflictsList), tauri::Error> {
     let all_conflicts = verif_labels_conflict(file.clone(), state.clone(), app)?;
-    if !all_conflicts.0.is_empty() || !all_conflicts.1.is_empty() || !all_conflicts.2.is_empty() || !all_conflicts.3.is_empty() {
+    if !all_conflicts.0.is_empty() || !all_conflicts.1.is_empty() {
         println!(" {:?}", &file);
         return Ok(all_conflicts);
     }
@@ -265,7 +265,7 @@ fn verif_labels_conflict(
     new_file_name: String,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
     app: tauri::AppHandle,
-) -> Result<(ConflictsList, ConflictsList, ConflictsList, ConflictsList), tauri::Error>{
+) -> Result<(ConflictsList, ConflictsList), tauri::Error>{
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
 
@@ -337,19 +337,15 @@ fn verif_labels_conflict(
 
     let mut same_ip_different_mac: ConflictsList = Vec::new();
     let mut same_ip_different_label: ConflictsList = Vec::new();
-    let mut same_mac_different_ip: ConflictsList = Vec::new();
-    let mut same_mac_different_label: ConflictsList = Vec::new();
 
     for i in 0..files_with_names.len() {
         let (name_i, rows_i) = &files_with_names[i];
         let (name_new_file, row_new_file) = &new_file_with_name;
 
         let mut by_ip: HashMap<String, (String, String)> = HashMap::new();
-        let mut by_mac: HashMap<String, (String, String)> = HashMap::new();
 
         for (mac, ip, label) in rows_i {
             by_ip.insert(ip.clone(), (mac.clone(), label.clone()));
-            by_mac.insert(mac.clone(), (ip.clone(), label.clone()));
         }
 
         for (mac, ip, label) in row_new_file {
@@ -363,21 +359,9 @@ fn verif_labels_conflict(
                     same_ip_different_label.push((ip.to_string(), ref_label.to_string(), name_i.to_string(), label.to_string(), name_new_file.to_string()))
                 }
             }
-
-            if let Some((ref_ip, ref_label)) = by_mac.get(mac) && mac != ""{
-                if ref_ip != ip {
-                    eprintln!("⚠️  MAC '{}' : IP '{}' ({}) vs '{}' ({})", mac, ref_ip, name_i, ip, name_new_file);
-                    same_mac_different_ip.push((mac.to_string(), ref_ip.to_string(), name_i.to_string(), ip.to_string(), name_new_file.to_string()));
-
-                    if ref_label != label {
-                        eprintln!("⚠️  MAC '{}' : label '{}' ({}) vs '{}' ({})", mac, ref_label, name_i, label, name_new_file);
-                        same_mac_different_label.push((mac.to_string(), ref_label.to_string(), name_i.to_string(), label.to_string(), name_new_file.to_string()))
-                    }
-                }  
-            }
         }
     }
-    Ok((same_ip_different_mac, same_ip_different_label, same_mac_different_ip, same_mac_different_label))
+    Ok((same_ip_different_mac, same_ip_different_label))
 }
 
 
