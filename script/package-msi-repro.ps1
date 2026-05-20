@@ -21,6 +21,11 @@ The script must run on Windows with WiX Toolset v3 available as candle.exe and l
     exit 0
 }
 
+$script:FREESECT = [Convert]::ToUInt32("FFFFFFFF", 16)
+$script:ENDOFCHAIN = [Convert]::ToUInt32("FFFFFFFE", 16)
+$script:FATSECT = [Convert]::ToUInt32("FFFFFFFD", 16)
+$script:DIFSECT = [Convert]::ToUInt32("FFFFFFFC", 16)
+
 function Require-Command {
     param([string]$Name)
 
@@ -184,6 +189,173 @@ function Set-MsiSummaryInformation {
 
     Invoke-ComMethod -Object $summary -Name "Persist" | Out-Null
     Invoke-ComMethod -Object $database -Name "Commit" | Out-Null
+}
+
+function Read-UInt16LE {
+    param(
+        [byte[]]$Bytes,
+        [int]$Offset
+    )
+
+    return [BitConverter]::ToUInt16($Bytes, $Offset)
+}
+
+function Read-UInt32LE {
+    param(
+        [byte[]]$Bytes,
+        [int]$Offset
+    )
+
+    return [BitConverter]::ToUInt32($Bytes, $Offset)
+}
+
+function Write-UInt64LE {
+    param(
+        [byte[]]$Bytes,
+        [int]$Offset,
+        [uint64]$Value
+    )
+
+    $valueBytes = [BitConverter]::GetBytes($Value)
+    [Buffer]::BlockCopy($valueBytes, 0, $Bytes, $Offset, $valueBytes.Length)
+}
+
+function Read-CfbSector {
+    param(
+        [byte[]]$Bytes,
+        [uint32]$SectorId,
+        [int]$SectorSize
+    )
+
+    $offset = [int64]$SectorSize + ([int64]$SectorId * [int64]$SectorSize)
+    if ($offset -lt $SectorSize -or ($offset + $SectorSize) -gt $Bytes.Length) {
+        throw "CFB sector $SectorId is outside file bounds"
+    }
+
+    $sector = [byte[]]::new($SectorSize)
+    [Buffer]::BlockCopy($Bytes, [int]$offset, $sector, 0, $SectorSize)
+    return $sector
+}
+
+function Get-CfbDifatSectorIds {
+    param(
+        [byte[]]$Bytes,
+        [int]$SectorSize,
+        [uint32]$FirstDifatSector,
+        [uint32]$DifatSectorCount
+    )
+
+    $ids = [System.Collections.Generic.List[uint32]]::new()
+    for ($i = 0; $i -lt 109; $i++) {
+        $id = Read-UInt32LE -Bytes $Bytes -Offset (76 + ($i * 4))
+        if ($id -ne $script:FREESECT -and $id -ne $script:ENDOFCHAIN) {
+            $ids.Add($id)
+        }
+    }
+
+    $sector = $FirstDifatSector
+    $entriesPerSector = [int]($SectorSize / 4)
+    for ($i = 0; $i -lt $DifatSectorCount; $i++) {
+        if ($sector -eq $script:ENDOFCHAIN -or $sector -eq $script:FREESECT) {
+            break
+        }
+
+        $difatBytes = Read-CfbSector -Bytes $Bytes -SectorId $sector -SectorSize $SectorSize
+        for ($entryIndex = 0; $entryIndex -lt ($entriesPerSector - 1); $entryIndex++) {
+            $id = Read-UInt32LE -Bytes $difatBytes -Offset ($entryIndex * 4)
+            if ($id -ne $script:FREESECT -and $id -ne $script:ENDOFCHAIN) {
+                $ids.Add($id)
+            }
+        }
+
+        $sector = Read-UInt32LE -Bytes $difatBytes -Offset (($entriesPerSector - 1) * 4)
+    }
+
+    return $ids.ToArray()
+}
+
+function Read-CfbFat {
+    param(
+        [byte[]]$Bytes,
+        [int]$SectorSize
+    )
+
+    $firstDifatSector = Read-UInt32LE -Bytes $Bytes -Offset 68
+    $difatSectorCount = Read-UInt32LE -Bytes $Bytes -Offset 72
+    $difatSectorIds = Get-CfbDifatSectorIds -Bytes $Bytes -SectorSize $SectorSize -FirstDifatSector $firstDifatSector -DifatSectorCount $difatSectorCount
+
+    $fat = [System.Collections.Generic.List[uint32]]::new()
+    foreach ($sectorId in $difatSectorIds) {
+        $sectorBytes = Read-CfbSector -Bytes $Bytes -SectorId $sectorId -SectorSize $SectorSize
+        for ($offset = 0; $offset -lt $SectorSize; $offset += 4) {
+            $fat.Add((Read-UInt32LE -Bytes $sectorBytes -Offset $offset))
+        }
+    }
+
+    return $fat.ToArray()
+}
+
+function Normalize-MsiCfbDirectoryTimes {
+    param([string]$MsiPath)
+
+    $resolved = (Resolve-Path -LiteralPath $MsiPath).Path
+    $bytes = [System.IO.File]::ReadAllBytes($resolved)
+
+    $signature = [byte[]](0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1)
+    for ($i = 0; $i -lt $signature.Length; $i++) {
+        if ($bytes[$i] -ne $signature[$i]) {
+            throw "$resolved is not an MSI/CFB file"
+        }
+    }
+
+    $sectorShift = Read-UInt16LE -Bytes $bytes -Offset 30
+    $sectorSize = 1 -shl $sectorShift
+    $firstDirectorySector = Read-UInt32LE -Bytes $bytes -Offset 48
+    $fat = Read-CfbFat -Bytes $bytes -SectorSize $sectorSize
+    $seen = @{}
+    $sector = $firstDirectorySector
+    $normalizedEntries = 0
+
+    while ($sector -ne $script:ENDOFCHAIN) {
+        if (
+            $sector -eq $script:FREESECT -or
+            $sector -eq $script:FATSECT -or
+            $sector -eq $script:DIFSECT
+        ) {
+            throw "Invalid CFB directory chain entry: $sector"
+        }
+
+        if ([int64]$sector -ge $fat.Length) {
+            throw "CFB directory sector $sector is outside FAT bounds"
+        }
+
+        $key = $sector.ToString()
+        if ($seen.ContainsKey($key)) {
+            throw "CFB directory chain contains a cycle at sector $sector"
+        }
+        $seen[$key] = $true
+
+        $sectorOffset = [int64]$sectorSize + ([int64]$sector * [int64]$sectorSize)
+        if ($sectorOffset -lt $sectorSize -or ($sectorOffset + $sectorSize) -gt $bytes.Length) {
+            throw "CFB directory sector $sector is outside file bounds"
+        }
+
+        for ($entryOffset = 0; $entryOffset -lt $sectorSize; $entryOffset += 128) {
+            $entryBase = [int]($sectorOffset + $entryOffset)
+            $nameLength = Read-UInt16LE -Bytes $bytes -Offset ($entryBase + 64)
+            $objectType = $bytes[$entryBase + 66]
+            if ($nameLength -gt 0 -or $objectType -ne 0) {
+                Write-UInt64LE -Bytes $bytes -Offset ($entryBase + 100) -Value 0
+                Write-UInt64LE -Bytes $bytes -Offset ($entryBase + 108) -Value 0
+                $normalizedEntries += 1
+            }
+        }
+
+        $sector = $fat[[int]$sector]
+    }
+
+    [System.IO.File]::WriteAllBytes($resolved, $bytes)
+    Write-Output "Normalized MSI CFB directory timestamps for $normalizedEntries entries"
 }
 
 function Copy-NormalizedTree {
@@ -359,6 +531,7 @@ function Main {
         }
 
         Set-MsiSummaryInformation -MsiPath $OutputMsi -PackageCode $packageCode -Timestamp $timestamp
+        Normalize-MsiCfbDirectoryTimes -MsiPath $OutputMsi
 
         $outputItem = Get-Item -LiteralPath $OutputMsi
         $outputItem.LastWriteTimeUtc = $timestamp
