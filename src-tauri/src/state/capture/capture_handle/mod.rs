@@ -89,6 +89,7 @@ impl CaptureHandle {
             config.chan_capacity,
             app.clone(),
             arc_buffer_pool.clone(),
+            stop_flag.clone(),
         );
         spawn_capture_thread_with_pool(
             tx,
@@ -154,6 +155,7 @@ impl CaptureHandle {
             config.chan_capacity,
             app.clone(),
             arc_buffer_pool.clone(),
+            stop_flag.clone(),
         );
         spawn_capture_thread_with_pool(
             tx,
