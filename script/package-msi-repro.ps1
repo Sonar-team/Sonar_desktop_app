@@ -177,18 +177,75 @@ function Set-MsiSummaryInformation {
         [DateTime]$Timestamp
     )
 
-    $installer = New-Object -ComObject WindowsInstaller.Installer
-    $database = Invoke-ComMethod -Object $installer -Name "OpenDatabase" -Arguments @($MsiPath, 1)
-    $summary = Get-ComIndexedProperty -Object $database -Name "SummaryInformation" -Arguments @(20)
+    $installer = $null
+    $database = $null
+    $summary = $null
 
-    # PID_REVNUMBER is the package code. PID_CREATE_DTM and PID_LASTSAVE_DTM
-    # otherwise carry build-time metadata and make byte-for-byte output drift.
-    Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(9, "{$PackageCode}")
-    Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(12, $Timestamp)
-    Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(13, $Timestamp)
+    try {
+        $installer = New-Object -ComObject WindowsInstaller.Installer
+        $database = Invoke-ComMethod -Object $installer -Name "OpenDatabase" -Arguments @($MsiPath, 1)
+        $summary = Get-ComIndexedProperty -Object $database -Name "SummaryInformation" -Arguments @(20)
 
-    Invoke-ComMethod -Object $summary -Name "Persist" | Out-Null
-    Invoke-ComMethod -Object $database -Name "Commit" | Out-Null
+        # PID_REVNUMBER is the package code. PID_CREATE_DTM and PID_LASTSAVE_DTM
+        # otherwise carry build-time metadata and make byte-for-byte output drift.
+        Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(9, "{$PackageCode}")
+        Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(12, $Timestamp)
+        Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(13, $Timestamp)
+
+        Invoke-ComMethod -Object $summary -Name "Persist" | Out-Null
+        Invoke-ComMethod -Object $database -Name "Commit" | Out-Null
+    } finally {
+        foreach ($object in @($summary, $database, $installer)) {
+            if ($null -ne $object -and [System.Runtime.InteropServices.Marshal]::IsComObject($object)) {
+                [void][System.Runtime.InteropServices.Marshal]::FinalReleaseComObject($object)
+            }
+        }
+
+        [System.GC]::Collect()
+        [System.GC]::WaitForPendingFinalizers()
+    }
+}
+
+function Read-AllBytesWithRetry {
+    param(
+        [string]$Path,
+        [int]$MaxAttempts = 30,
+        [int]$DelayMilliseconds = 500
+    )
+
+    $lastError = $null
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        try {
+            return [System.IO.File]::ReadAllBytes($Path)
+        } catch [System.IO.IOException] {
+            $lastError = $_.Exception
+            Start-Sleep -Milliseconds $DelayMilliseconds
+        }
+    }
+
+    throw "Could not read $Path after $MaxAttempts attempts: $($lastError.Message)"
+}
+
+function Write-AllBytesWithRetry {
+    param(
+        [string]$Path,
+        [byte[]]$Bytes,
+        [int]$MaxAttempts = 30,
+        [int]$DelayMilliseconds = 500
+    )
+
+    $lastError = $null
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        try {
+            [System.IO.File]::WriteAllBytes($Path, $Bytes)
+            return
+        } catch [System.IO.IOException] {
+            $lastError = $_.Exception
+            Start-Sleep -Milliseconds $DelayMilliseconds
+        }
+    }
+
+    throw "Could not write $Path after $MaxAttempts attempts: $($lastError.Message)"
 }
 
 function Read-UInt16LE {
@@ -299,7 +356,7 @@ function Normalize-MsiCfbDirectoryTimes {
     param([string]$MsiPath)
 
     $resolved = (Resolve-Path -LiteralPath $MsiPath).Path
-    $bytes = [System.IO.File]::ReadAllBytes($resolved)
+    $bytes = Read-AllBytesWithRetry -Path $resolved
 
     $signature = [byte[]](0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1)
     for ($i = 0; $i -lt $signature.Length; $i++) {
@@ -354,7 +411,7 @@ function Normalize-MsiCfbDirectoryTimes {
         $sector = $fat[[int]$sector]
     }
 
-    [System.IO.File]::WriteAllBytes($resolved, $bytes)
+    Write-AllBytesWithRetry -Path $resolved -Bytes $bytes
     Write-Output "Normalized MSI CFB directory timestamps for $normalizedEntries entries"
 }
 
