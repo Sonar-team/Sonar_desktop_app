@@ -11,7 +11,7 @@
               <ul v-show="same_ip_diff_mac.length > 0">
                 <h3 class="text">Conflits IP -> MAC</h3>
                 <li v-for="([ip, ref_mac, name_i, mac, name_j], index) in same_ip_diff_mac" :key="index">
-                  <label :for="String(index)">
+                  <label>
                     <span class="text">'{{ ip }}'(IP):</span><br>
                     <span class="text indented">ref_MAC: '{{ ref_mac }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
                     <span class="text indented">MAC: '{{ mac }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
@@ -21,7 +21,7 @@
               <ul v-show="same_ip_diff_label.length > 0">
                 <h3 class="text">Conflits IP -> Label</h3>
                 <li v-for="([ip, ref_label, name_i, label, name_j], index) in same_ip_diff_label" :key="index">
-                  <label :for="String(index)">
+                  <label>
                     <span class="text">'{{ ip }}'(IP):</span><br>
                     <span class="text indented">ref_Label: '{{ ref_label }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
                     <span class="text indented">Label: '{{ label }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
@@ -31,7 +31,7 @@
               <ul v-show="same_mac_diff_ip.length > 0">
                 <h3 class="text">Conflits MAC -> IP</h3>
                 <li v-for="([mac, ref_ip, name_i, ip, name_j], index) in same_mac_diff_ip" :key="index">
-                  <label :for="String(index)">
+                  <label>
                     <span class="text">'{{ mac }}'(MAC):</span><br>
                     <span class="text indented">ref_IP: '{{ ref_ip }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
                     <span class="text indented">IP: '{{ ip }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
@@ -41,7 +41,7 @@
               <ul v-show="same_mac_diff_label.length > 0">
                 <h3 class="text">Conflits MAC -> Label</h3>
                 <li v-for="([mac, ref_label, name_i, label, name_j], index) in same_mac_diff_label" :key="index">
-                  <label :for="String(index)">
+                  <label>
                     <span class="text">'{{ mac }}'(MAC):</span><br>
                     <span class="text indented">ref_Label: '{{ ref_label }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
                     <span class="text indented">Label: '{{ label }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
