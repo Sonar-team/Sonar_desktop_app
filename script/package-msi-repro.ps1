@@ -681,6 +681,10 @@ function Write-WixSource {
         Sort-Object FullName
     $files = Get-ChildItem -LiteralPath $Root -Recurse -File -Force |
         Sort-Object FullName
+    $npcapInstallerPath = Join-Path $Root "windows\npcap-1.87.exe"
+    if (-not (Test-Path -LiteralPath $npcapInstallerPath -PathType Leaf)) {
+        throw "Npcap installer is required in MSI source root: $npcapInstallerPath"
+    }
 
     $directoryIds = @{}
     $directoryIds["."] = "INSTALLFOLDER"
@@ -726,6 +730,7 @@ function Write-WixSource {
 
     $escapedProductName = Convert-ToXmlValue $ProductName
     $escapedManufacturer = Convert-ToXmlValue $Manufacturer
+    $escapedNpcapInstallerPath = Convert-ToXmlValue $npcapInstallerPath
 
     $lines = New-Object System.Collections.Generic.List[string]
     $lines.Add('<?xml version="1.0" encoding="utf-8"?>')
@@ -734,6 +739,21 @@ function Write-WixSource {
     $lines.Add("    <Package Id=""$PackageCode"" InstallerVersion=""500"" Compressed=""yes"" InstallScope=""perMachine"" Platform=""x64"" />")
     $lines.Add('    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />')
     $lines.Add('    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />')
+    $lines.Add('    <Property Id="WPCAP_DLL_PATH">')
+    $lines.Add('      <DirectorySearch Id="SearchSystem64ForWpcap" Path="[System64Folder]">')
+    $lines.Add('        <FileSearch Id="SearchWpcapDll" Name="wpcap.dll" />')
+    $lines.Add('      </DirectorySearch>')
+    $lines.Add('    </Property>')
+    $lines.Add('    <Property Id="PACKET_DLL_PATH">')
+    $lines.Add('      <DirectorySearch Id="SearchSystem64ForPacket" Path="[System64Folder]">')
+    $lines.Add('        <FileSearch Id="SearchPacketDll" Name="Packet.dll" />')
+    $lines.Add('      </DirectorySearch>')
+    $lines.Add('    </Property>')
+    $lines.Add("    <Binary Id=""NpcapInstallerExe"" SourceFile=""$escapedNpcapInstallerPath"" />")
+    $lines.Add('    <CustomAction Id="CA_InstallNpcap" BinaryKey="NpcapInstallerExe" ExeCommand="/winpcap_mode=yes" Execute="deferred" Impersonate="no" Return="check" />')
+    $lines.Add('    <InstallExecuteSequence>')
+    $lines.Add('      <Custom Action="CA_InstallNpcap" After="InstallFiles"><![CDATA[((NOT WPCAP_DLL_PATH) OR (NOT PACKET_DLL_PATH)) AND (NOT Installed)]]></Custom>')
+    $lines.Add('    </InstallExecuteSequence>')
     $lines.Add('    <Directory Id="TARGETDIR" Name="SourceDir">')
     $lines.Add('      <Directory Id="ProgramFiles64Folder">')
     $lines.Add("        <Directory Id=""INSTALLFOLDER"" Name=""$escapedProductName"" />")

@@ -2,10 +2,15 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
   <Fragment>
-    <!-- 1) Détection WinPcap-compat : présence de wpcap.dll dans System32 -->
+    <!-- 1) Détection WinPcap-compat : wpcap.dll + Packet.dll dans System32 -->
     <Property Id="WPCAP_DLL_PATH">
-      <DirectorySearch Id="SearchSystem32" Path="[SystemFolder]">
+      <DirectorySearch Id="SearchSystem64ForWpcap" Path="[System64Folder]">
         <FileSearch Id="SearchWpcapDll" Name="wpcap.dll" />
+      </DirectorySearch>
+    </Property>
+    <Property Id="PACKET_DLL_PATH">
+      <DirectorySearch Id="SearchSystem64ForPacket" Path="[System64Folder]">
+        <FileSearch Id="SearchPacketDll" Name="Packet.dll" />
       </DirectorySearch>
     </Property>
 
@@ -16,13 +21,14 @@
   <Fragment>
     <!-- 3) Embarquer l'installeur Npcap dans le MSI -->
     <!-- Important : le chemin doit pointer vers ton fichier dans src-tauri/windows/ -->
-    <Binary Id="NpcapInstallerExe" SourceFile="$(var.ProjectDir)windows\npcap-1.85.exe" />
+    <Binary Id="NpcapInstallerExe" SourceFile="$(var.ProjectDir)windows\npcap-1.87.exe" />
 
     <!-- 4) CustomAction : exécuter l'installeur (admin requis) -->
     <!-- Execute=deferred + Impersonate=no => exécution en contexte système (élevé) -->
     <CustomAction
       Id="CA_InstallNpcap"
       BinaryKey="NpcapInstallerExe"
+      ExeCommand="/winpcap_mode=yes"
       Execute="deferred"
       Impersonate="no"
       Return="check"
@@ -38,7 +44,7 @@
                  Text="Npcap (mode WinPcap compatible) est requis pour la capture." />
         <Control Id="Body" Type="Text" X="15" Y="55" Width="340" Height="80"
                  Transparent="yes" NoPrefix="yes"
-                 Text="Npcap n'a pas été détecté (wpcap.dll absent). Souhaites-tu installer Npcap maintenant ?" />
+                 Text="Npcap n'a pas été détecté (wpcap.dll ou Packet.dll absent). Souhaites-tu installer Npcap maintenant ?" />
 
         <!-- Bouton NON : continuer sans installer -->
         <Control Id="NoBtn" Type="PushButton" X="180" Y="210" Width="80" Height="20" Text="Non">
@@ -53,9 +59,9 @@
       </Dialog>
 
       <!-- Injection dans le flow standard : on intercepte le "Next" du WelcomeDlg -->
-      <!-- Si wpcap.dll absent => afficher notre dialog, sinon comportement normal -->
+      <!-- Si la dépendance Npcap est absente => afficher notre dialog, sinon comportement normal -->
       <Publish Dialog="WelcomeDlg" Control="Next" Event="SpawnDialog" Value="NpcapRequiredDlg">
-        NOT WPCAP_DLL_PATH
+        (NOT WPCAP_DLL_PATH) OR (NOT PACKET_DLL_PATH)
       </Publish>
     </UI>
   </Fragment>
@@ -64,7 +70,7 @@
     <!-- 6) Exécuter Npcap après validation UI, pendant l'installation -->
     <InstallExecuteSequence>
       <Custom Action="CA_InstallNpcap" After="InstallFiles">
-        (INSTALL_NPCAP = "1") AND (NOT WPCAP_DLL_PATH) AND (NOT Installed)
+        (INSTALL_NPCAP = "1") AND ((NOT WPCAP_DLL_PATH) OR (NOT PACKET_DLL_PATH)) AND (NOT Installed)
       </Custom>
     </InstallExecuteSequence>
   </Fragment>

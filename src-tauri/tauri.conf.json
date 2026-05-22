@@ -55,7 +55,8 @@
         "installerHooks": "windows/hooks.nsh"
       },
       "wix": {
-        "language": "fr-FR"
+        "language": "fr-FR",
+        "fragmentPaths": ["./windows/fragments/npcap.wxs"]
       }
     },
 
