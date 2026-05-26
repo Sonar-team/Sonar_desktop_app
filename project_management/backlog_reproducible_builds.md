@@ -258,6 +258,33 @@ Status: Partially Done
 
 - Keep artifact signing and provenance generation as a separate but related
   track.
+
+### 16. Harden the capture engine concurrency model
+
+Status: Todo
+
+- Define and document buffer-pool ownership invariants (`in_pool`,
+  `in_channel`, `in_processing`) and assert them in debug builds.
+- Replace the boolean stop with a two-phase state (`Stopping` then `Stopped`)
+  to guarantee a clean drain path.
+- Add a `capture_session_id` to dropped-late-message protection, so stale
+  packets from previous sessions cannot mutate current state.
+- Add an explicit `Shutdown` message in the capture channel to stop processing
+  deterministically.
+- Add race-focused tests: rapid start/stop loops, burst+stop, and immediate
+  restart after stop.
+- Expose runtime metrics (queue depth, free buffers, dropped packets,
+  capture->process latency) for production diagnosis.
+- Reduce lock hold times around `FlowMatrix` / `GraphData` updates to minimize
+  contention.
+- Define controlled behavior when the pool is exhausted (drop+counter) to avoid
+  hidden stalls.
+
+Why:
+
+- the capture path is performance-critical and concurrent
+- correctness after stop and restart must be guaranteed
+- observability is required to debug production traffic spikes
 - Use them to prove origin after reproducibility is under control.
 
 Recent progress:
