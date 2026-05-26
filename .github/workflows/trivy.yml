@@ -14,6 +14,9 @@ on:
   schedule:
     - cron: "37 10 * * 5"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 permissions:
   contents: read
 
