@@ -193,7 +193,7 @@ fn handle_pcap_file(
 pub fn read_label_files_list(
     app: tauri::AppHandle,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>
-) -> Result<Vec<(String, bool)>, tauri::Error>{
+) -> Result<Vec<(String, bool)>, CaptureStateError>{
     let s = state.lock().unwrap();
     let selected_label_files_names_list = s.get().clone();
     let data_folder = app.path().app_data_dir()?;
@@ -233,7 +233,7 @@ pub fn add_to_selected_label_files_names_list(
     file: String,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
     app: tauri::AppHandle,
-)-> Result<(ConflictsList, ConflictsList), tauri::Error> {
+)-> Result<(ConflictsList, ConflictsList), CaptureStateError> {
     let all_conflicts = verif_labels_conflicts(file.clone(), state.clone(), app)?;
     if !all_conflicts.0.is_empty() || !all_conflicts.1.is_empty() {
         println!(" {:?}", &file);
@@ -267,7 +267,7 @@ pub fn remove_label_file(
     app: AppHandle,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
 )->Result<(), CaptureStateError> {
-    let data_folder = app.path().app_data_dir().unwrap_or_default();
+    let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
     let label_file = labels_folder.join(&csv_file);
 
@@ -281,7 +281,7 @@ fn verif_labels_conflicts(
     new_file_name: String,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
     app: tauri::AppHandle,
-) -> Result<(ConflictsList, ConflictsList), tauri::Error>{
+) -> Result<(ConflictsList, ConflictsList), CaptureStateError>{
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
 
@@ -315,8 +315,8 @@ fn verif_labels_conflicts(
 
     let row: Vec<(String, String, String)> = file
         .lines()
-        .filter_map(|l| parse_label_row(l))
-        .collect();
+        .filter_map(|l| parse_label_row(l).transpose())
+        .collect::<Result<Vec<_>, _>>()?;
 
     new_selected_file_with_name = (name, row);
 
@@ -345,8 +345,8 @@ fn verif_labels_conflicts(
 
         let rows: Vec<(String, String, String)> = file
             .lines()
-            .filter_map(|l| parse_label_row(l))
-            .collect();
+            .filter_map(|l| parse_label_row(l).transpose())
+            .collect::<Result<Vec<_>, _>>()?;
 
         files_with_names.push((name, rows));
     }
@@ -384,7 +384,7 @@ fn verif_labels_conflicts(
 pub fn import_label_files(
     csv_paths: Vec<String>,
     app: tauri::AppHandle,
-) -> Result<Vec<(String, String)> , tauri::Error> {
+) -> Result<Vec<(String, String)> , CaptureStateError> {
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
     let mut conflictual_files: Vec<(String, String)> = Vec::new();
@@ -414,8 +414,8 @@ pub fn labels_to_matrix(
     matrice: &mut FlowMatrix,
     label: State<'_, Arc<Mutex<SelectedLabelFiles>>>
 ) -> Result<(), CaptureStateError> {
-    let label_files_names_list = read_label_files_list(app.clone(), label).unwrap_or_default();
-    let data_folder = app.path().app_data_dir().unwrap();
+    let label_files_names_list = read_label_files_list(app.clone(), label)?;
+    let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
 
     let selected_label_files_names: HashSet<String> = label_files_names_list.into_iter().filter(|(_, actif)| *actif).map(|(nom, _)| nom).collect();
@@ -443,7 +443,7 @@ pub fn labels_to_matrix(
                 .collect();
 
             for label in labels {
-                let Some((mac, ip, label)) = parse_label_row(&label) else {
+                let Some((mac, ip, label)) = parse_label_row(&label)? else {
                     continue;
                 };
 

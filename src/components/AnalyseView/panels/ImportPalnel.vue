@@ -210,6 +210,7 @@ export default defineComponent({
         }
       } catch (err) {
         displayCaptureError(err);
+        this.selectedLabelFiles = this.selectedLabelFiles.filter((f) => f !== file);
       }
     },
 

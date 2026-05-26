@@ -13,11 +13,16 @@ export type ImportErrorKind =
   | { kind: "parseError"; message: string }
   | { kind: "other"; message: string };
 
+export type LabelErrorKind =
+  | { kind: "invalidMacAddress"; message: string }
+  | { kind: "invalidIpAddress"; message: string }
+
 export type CaptureStateErrorKind =
   | { kind: "io"; message: string }
   | { kind: "poisonError"; message: string }
   | { kind: "capture"; message: CaptureErrorKind }
   | { kind: "import"; message: ImportErrorKind }
+  | { kind: "label"; message: LabelErrorKind}
   | { kind: "other"; message: string };
 
 export async function displayCaptureError(err: unknown) {
@@ -59,6 +64,10 @@ export async function displayCaptureError(err: unknown) {
         userFriendlyMessage = handleImportError(captureError.message);
         break;
 
+      case "label":
+        userFriendlyMessage = handleLabelerror(captureError.message);
+        break;
+
       case "other":
         userFriendlyMessage = `Erreur inattendue : ${captureError.message}`;
         break;
@@ -93,4 +102,22 @@ function handleImportError(importError: ImportErrorKind): string {
     default:
       return `Erreur d'import inconnue : ${JSON.stringify(importError)}`;
   }
+}
+
+function handleLabelerror(labelError: LabelErrorKind): string {
+  if (
+    !labelError || typeof labelError !== "object" || !("kind" in labelError)
+  ) {
+    return `Erreur de label inconnue : ${JSON.stringify(labelError)}`;
+  }
+
+  switch(labelError.kind) {
+    case "invalidMacAddress":
+      return `Format d'adresse MAC invalide : ${labelError.message}`
+    case "invalidIpAddress":
+      return `Format d'adresse IP invalide : ${labelError.message}`
+    default:
+      return `Erreur de label inconnue : ${JSON.stringify(labelError)}`;
+  }
+
 }
