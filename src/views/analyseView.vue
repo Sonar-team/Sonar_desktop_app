@@ -6,7 +6,11 @@
         @toggle-pcap="togglePcap"
         @toggle-csv="toggleCsv"
         @toggle-filter="toggleFilter"
-        @toggle-graph="toggleGraph"  
+        @toggle-graph="toggleGraph"
+        :config-open="showConfig"
+        :filter-open="showFilter"
+        :csv-open="showCsv"
+        :pcap-open="showPcap"  
       />
       <div class="panels">
         <ConfigPanel v-if="showConfig" @update:ConfigPanel-visible="(val: any) => showConfig = val" />

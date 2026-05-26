@@ -234,7 +234,7 @@ pub fn add_to_selected_label_files_names_list(
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
     app: tauri::AppHandle,
 )-> Result<(ConflictsList, ConflictsList), tauri::Error> {
-    let all_conflicts = verif_labels_conflict(file.clone(), state.clone(), app)?;
+    let all_conflicts = verif_labels_conflicts(file.clone(), state.clone(), app)?;
     if !all_conflicts.0.is_empty() || !all_conflicts.1.is_empty() {
         println!(" {:?}", &file);
         return Ok(all_conflicts);
@@ -261,7 +261,23 @@ pub fn remove_from_selected_label_files_names_list (
     Ok(())
 }
 
-fn verif_labels_conflict(
+#[tauri::command(async)]
+pub fn remove_label_file(
+    csv_file: String,
+    app: AppHandle,
+    state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+)->Result<(), CaptureStateError> {
+    let data_folder = app.path().app_data_dir().unwrap_or_default();
+    let labels_folder = data_folder.join("labels");
+    let label_file = labels_folder.join(&csv_file);
+
+    remove_from_selected_label_files_names_list(csv_file, state)?;
+    fs::remove_file(label_file)?;
+    println!("File removed");
+    Ok(())
+}
+
+fn verif_labels_conflicts(
     new_file_name: String,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
     app: tauri::AppHandle,
@@ -283,7 +299,7 @@ fn verif_labels_conflict(
     .filter(|path| path.file_name().and_then(|e| e.to_str()) == Some(&*new_file_name))
     .collect();
 
-    let new_file_with_name: (String, Vec<(String, String, String)>);
+    let new_selected_file_with_name: (String, Vec<(String, String, String)>);
 
     let file = match std::fs::read_to_string(&new_file) {
             Ok(csv_data) => csv_data,
@@ -302,7 +318,7 @@ fn verif_labels_conflict(
         .filter_map(|l| parse_label_row(l))
         .collect();
 
-    new_file_with_name = (name, row);
+    new_selected_file_with_name = (name, row);
 
     let selected_label_files: Vec<PathBuf> = fs::read_dir(&labels_folder)?
     .filter_map(|entry| entry.ok())
@@ -340,7 +356,7 @@ fn verif_labels_conflict(
 
     for i in 0..files_with_names.len() {
         let (name_i, rows_i) = &files_with_names[i];
-        let (name_new_file, row_new_file) = &new_file_with_name;
+        let (name_new_selected_file, row_new_selected_file) = &new_selected_file_with_name;
 
         let mut by_ip: HashMap<String, (String, String)> = HashMap::new();
 
@@ -348,22 +364,21 @@ fn verif_labels_conflict(
             by_ip.insert(ip.clone(), (mac.clone(), label.clone()));
         }
 
-        for (mac, ip, label) in row_new_file {
+        for (mac, ip, label) in row_new_selected_file {
             if let Some((ref_mac, ref_label)) = by_ip.get(ip) && ip != "" {
                 if ref_mac != mac {
-                    eprintln!("⚠️  IP '{}' : MAC '{}' ({}) vs '{}' ({})", ip, ref_mac, name_i, mac, name_new_file);
-                    same_ip_different_mac.push((ip.to_string(), ref_mac.to_string(), name_i.to_string(), mac.to_string(), name_new_file.to_string()))
+                    eprintln!("⚠️  IP '{}' : MAC '{}' ({}) vs '{}' ({})", ip, ref_mac, name_i, mac, name_new_selected_file);
+                    same_ip_different_mac.push((ip.to_string(), ref_mac.to_string(), name_i.to_string(), mac.to_string(), name_new_selected_file.to_string()))
                 }
                 if ref_label != label {
-                    eprintln!("⚠️  IP '{}' : label '{}' ({}) vs '{}' ({})", ip, ref_label, name_i, label, name_new_file);
-                    same_ip_different_label.push((ip.to_string(), ref_label.to_string(), name_i.to_string(), label.to_string(), name_new_file.to_string()))
+                    eprintln!("⚠️  IP '{}' : label '{}' ({}) vs '{}' ({})", ip, ref_label, name_i, label, name_new_selected_file);
+                    same_ip_different_label.push((ip.to_string(), ref_label.to_string(), name_i.to_string(), label.to_string(), name_new_selected_file.to_string()))
                 }
             }
         }
     }
     Ok((same_ip_different_mac, same_ip_different_label))
 }
-
 
 #[tauri::command(async)]
 pub fn import_label_files(
@@ -398,7 +413,7 @@ pub fn labels_to_matrix(
     app: tauri::AppHandle,
     matrice: &mut FlowMatrix,
     label: State<'_, Arc<Mutex<SelectedLabelFiles>>>
-) -> Result<(), std::io::Error> {
+) -> Result<(), CaptureStateError> {
     let label_files_names_list = read_label_files_list(app.clone(), label).unwrap_or_default();
     let data_folder = app.path().app_data_dir().unwrap();
     let labels_folder = data_folder.join("labels");
@@ -437,21 +452,5 @@ pub fn labels_to_matrix(
         }
     }
 
-    Ok(())
-}
-
-#[tauri::command(async)]
-pub fn remove_label_file(
-    csv_file: String,
-    app: AppHandle,
-    state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
-)->Result<(), CaptureStateError> {
-    let data_folder = app.path().app_data_dir().unwrap_or_default();
-    let labels_folder = data_folder.join("labels");
-    let label_file = labels_folder.join(&csv_file);
-
-    remove_from_selected_label_files_names_list(csv_file, state)?;
-    fs::remove_file(label_file)?;
-    println!("File removed");
     Ok(())
 }

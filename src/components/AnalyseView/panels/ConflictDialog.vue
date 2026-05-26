@@ -13,17 +13,17 @@
                 <li v-for="([ip, ref_mac, name_i, mac, name_j], index) in same_ip_diff_mac" :key="index">
                   <label>
                     <span class="text">'{{ ip }}'(IP):</span><br>
-                    <span class="text indented">ref_MAC: '{{ ref_mac }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
+                    <span class="text indented">MAC: '{{ ref_mac }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
                     <span class="text indented">MAC: '{{ mac }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
                   </label>
                 </li>
               </ul>
               <ul v-show="same_ip_diff_label.length > 0">
                 <h3 class="text">Conflits IP -> Label</h3>
-                <li v-for="([ip, ref_label, name_i, label, name_j], index) in same_ip_diff_label" :key="index">
+                <li v-for="([ip, ref_label, name_i, label, name_j], index) in same_ip_diff_label.sort()" :key="index">
                   <label>
                     <span class="text">'{{ ip }}'(IP):</span><br>
-                    <span class="text indented">ref_Label: '{{ ref_label }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
+                    <span class="text indented">Label: '{{ ref_label }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
                     <span class="text indented">Label: '{{ label }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
                   </label>
                 </li>

@@ -1,25 +1,25 @@
 <template>
   <div class="top-bar">
-    <button class="image-btn" @click="start" title="Démarrer (ctrl+p)" :disabled="isRunning">
+    <button class="image-btn" @click="start" title="Démarrer (ctrl+p)" :disabled="isRunning || activePanel !== null">
       <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
     </button>
 
     <button class="image-btn" @click="stop" title="Arrêter (ctrl+shift+p)" :disabled="!isRunning">
       🛑
     </button>
-    <button class="image-btn" @click="reset" title="Réinitialiser (ctrl+shift+r)">🔄</button>
-    <button class="image-btn"  title="Config (ctrl+,)" :disabled="isRunning" @click="handleConfigClick">
+    <button class="image-btn" @click="reset" :disabled="activePanel !== null" title="Réinitialiser (ctrl+shift+r)">🔄</button>
+    <button class="image-btn"  title="Config (ctrl+,)" :disabled="isRunning || (activePanel !== null && activePanel !== 'config')" @click="handleConfigClick">
       <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
+    <button class="image-btn" @click="triggerSave" :disabled="isRunning || activePanel !== null" title="Sauvegarder (ctrl+s)">💾</button>
 
-    <button class="image-btn" @click="displayPcapOpener" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
-    <button class="image-btn" @click="displayCsvOpener" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
+    <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || (activePanel !== null && activePanel !== 'pcap' || hasData)" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
+    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning || (activePanel !== null && activePanel !== 'csv' || hasData)" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
     
     <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">❌</button>
-    <button class="image-btn" @click="export_logs" title="Logs (ctrl+)">📒</button>
-    <button class="image-btn" @click="handleFilterClick" title="Filtrer (ctrl+,)">🔍</button>
+    <button class="image-btn" @click="export_logs" :disabled="isRunning || (activePanel !== null)" title="Logs (ctrl+l)">📒</button>
+    <button class="image-btn" @click="handleFilterClick" :disabled="isRunning || (activePanel !== null && activePanel !== 'filter')" title="Filtrer (ctrl+f)">🔍</button>
   </div>
 </template>
 
@@ -43,6 +43,20 @@ export default {
   name: "TopBar",
   emits: ['toggle-config','toggle-pcap','toggle-csv','toggle-filter'],
 
+  props: {
+    configOpen: Boolean,
+    filterOpen: Boolean,
+    csvOpen: Boolean,
+    pcapOpen: Boolean,
+  },
+
+  watch: {
+    configOpen(val) { if (!val) this.activePanel = null; },
+    filterOpen(val) { if (!val) this.activePanel = null; },
+    csvOpen(val)   { if (!val) this.activePanel = null; },
+    pcapOpen(val)  { if (!val) this.activePanel = null; },
+  },
+
   computed: {
     buttonText(): string {
       return this.captureStore.showMatrice ? 'Graphique' : 'Matrice';
@@ -59,6 +73,8 @@ export default {
     return {
       showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
       shortcuts: [] as string[],
+      activePanel: null as string | null,
+      hasData: false,
     };
   },
   mounted() {
@@ -111,45 +127,60 @@ export default {
     },
     async export_logs() {
       info("export logs")
-      const response = await save({
-        filters: [{
-          name: '.log',
-          extensions: ['log']
-        }],
-        title: 'Sauvegarder les logs',
-        defaultPath: 'sonar.log'
-      });
+      if (this.activePanel !== null) return;
+      this.activePanel = 'logs';
 
-      if (response) {
-        // Attendez que l'invocation d'API pour sauvegarder soit terminée
-        const saveResponse = await invoke('export_logs', { destination: response });
-        info("Sauvegarde terminée:", saveResponse);
-        return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
-      } else {
-        info("Aucun chemin de fichier sélectionné");
-        throw new Error("Sauvegarde annulée ou chemin non sélectionné");
-      }
-    },
+      try{
+        const response = await save({
+          filters: [{
+            name: '.log',
+            extensions: ['log']
+          }],
+          title: 'Sauvegarder les logs',
+          defaultPath: 'sonar.log'
+        });
+
+        if (response) {
+          // Attendez que l'invocation d'API pour sauvegarder soit terminée
+          const saveResponse = await invoke('export_logs', { destination: response });
+          info("Sauvegarde terminée:", saveResponse);
+          return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
+        } else {
+          info("Aucun chemin de fichier sélectionné");
+          throw new Error("Sauvegarde annulée ou chemin non sélectionné");
+        } 
+      } finally {
+        this.activePanel = null;
+    }
+  },
 
     async SaveAsCsv() {
-      info("Save as csv")
-      save({
-        filters: [{
-          name: '.csv',
-          extensions: ['csv']
-        }],
-        title: 'Sauvegarder la matrice de flux',
-        defaultPath: getCurrentDate()+ '_DR_Matrice.csv' // Set the default file name here
-      
-      }).then((response) => 
-        invoke('export_csv', { path: response })
-          .then((response: any) => 
-            info("response: ", response))
-          .catch((error: any) => 
-            error("error: ", error))
-      )
+      info("Save as csv");
+      if (this.activePanel !== null) return;
+      this.activePanel = 'save'
+
+      try {
+        const response = await save({
+          filters: [{ name: '.csv', extensions: ['csv'] }],
+          title: 'Sauvegarder la matrice de flux',
+          defaultPath: getCurrentDate() + '_DR_Matrice.csv'
+        });
+
+        if (response) {
+          const saveResponse = await invoke('export_csv', { path: response });
+          info("response: ", saveResponse);
+        } else {
+          info("Aucun chemin sélectionné");
+        }
+      } catch (err) {
+        error("Erreur sauvegarde csv: ", err);
+      } finally {
+        this.activePanel = null;
+      }
     },
     async SaveAsXlsx() {
+      if (this.activePanel !== null) return;
+      this.activePanel = 'save'
       try {
         info("Début de la sauvegarde en xlsx");
         const response = await save({
@@ -173,6 +204,8 @@ export default {
       } catch (error) {
         error("Erreur lors de la sauvegarde en xlsx:", error);
         throw error; // Relancer l'erreur pour la gestion dans quit()
+      } finally {
+        this.activePanel = null;
       }
     },
     async triggerSave() {
@@ -183,30 +216,44 @@ export default {
     async reset() {
       info("reset")
       await invoke('reset_capture');
+      if (!this.isRunning) {
+        this.hasData = false;
+      }
       this.$bus.emit('reset');
     },
 
 
     handleConfigClick() {
       info("[TopBar] Bouton config cliqué");
+      if (this.activePanel !== null && this.activePanel !== 'config') return;
+      this.activePanel = 'config';
       this.$emit('toggle-config');
     },
     displayPcapOpener() {
       info("[TopBar] Bouton open cliqué");
+      if (this.activePanel !== null && this.activePanel !== 'pcap' || this.hasData) return;
+      this.activePanel = 'pcap';
       this.$emit('toggle-pcap');
     },
     displayCsvOpener() {
       info("[TopBar] Bouton open cliqué");
+      if (this.activePanel !== null && this.activePanel !== 'csv' || this.hasData) return;
+      this.activePanel = 'csv';
       this.$emit('toggle-csv');
     },
     handleFilterClick() {
       info("[TopBar] Bouton filter cliqué");
+      if (this.activePanel !== null && this.activePanel !== 'filter') return;
+      this.activePanel = 'filter';
       this.$emit('toggle-filter');
     },
     async start() {
+      if (this.activePanel !== null) return;
       if (this.captureStore.isRunning) {
         return;
       }
+      this.hasData = true;
+
       const onEvent = new Channel<CaptureEvent>();
       this.captureStore.setChannel(onEvent); // 🟢 rendre le Channel accessible
 
