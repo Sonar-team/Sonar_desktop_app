@@ -54,6 +54,11 @@ jobs:
         shell: bash
         run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
 
+      - name: configure reproducible NSIS wrapper
+        if: matrix.platform == 'windows-2022'
+        shell: bash
+        run: ./script/ci/configure-repro-makensis.sh
+
       - name: smoke build with Tauri
         shell: bash
         env:

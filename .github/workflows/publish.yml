@@ -100,6 +100,11 @@ jobs:
         shell: bash
         run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
 
+      - name: configure reproducible NSIS wrapper
+        if: matrix.platform == 'windows-2022'
+        shell: bash
+        run: ./script/ci/configure-repro-makensis.sh
+
       - name: Build and package with Tauri
         uses: tauri-apps/tauri-action@1ddc7b49b13c3038297360482fcb3e058764d7c9
         env:

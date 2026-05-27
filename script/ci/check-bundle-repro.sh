@@ -13,6 +13,49 @@ BINARY_DIR="${BINARY_DIR:-}"
 BINARY_FALLBACK_DIRS="${BINARY_FALLBACK_DIRS:-}"
 BINARY_PATTERN="${BINARY_PATTERN:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-bundle-repro}"
+MAKENSIS_WRAPPER_DIR=""
+
+append_flag() {
+  local existing="$1"
+  local flag="$2"
+
+  if [[ " ${existing} " == *" ${flag} "* ]]; then
+    printf '%s' "$existing"
+  elif [[ -n "$existing" ]]; then
+    printf '%s %s' "$existing" "$flag"
+  else
+    printf '%s' "$flag"
+  fi
+}
+
+append_link_arg() {
+  local existing="$1"
+  local link_arg="$2"
+
+  if [[ " ${existing} " == *" ${link_arg} "* ]]; then
+    printf '%s' "$existing"
+  elif [[ -n "$existing" ]]; then
+    printf '%s -C %s' "$existing" "$link_arg"
+  else
+    printf '%s %s' "-C" "$link_arg"
+  fi
+}
+
+ensure_repro_env() {
+  if [[ -z "${SOURCE_DATE_EPOCH:-}" ]]; then
+    SOURCE_DATE_EPOCH="$(git log -1 --format=%ct HEAD)"
+    export SOURCE_DATE_EPOCH
+  fi
+
+  local remap_flag="--remap-path-prefix=${PWD}=/workspace"
+  RUSTFLAGS="$(append_flag "${RUSTFLAGS:-}" "$remap_flag")"
+
+  if [[ "$BUNDLE_KIND" == "nsis" || "$BUILD_TARGET" == *"windows-msvc"* ]]; then
+    RUSTFLAGS="$(append_link_arg "$RUSTFLAGS" "link-arg=/Brepro")"
+  fi
+
+  export RUSTFLAGS
+}
 
 hash_file() {
   if command -v sha256sum >/dev/null 2>&1; then
@@ -62,6 +105,43 @@ with open(path, "r+b") as f:
 PY
 }
 
+remove_path() {
+  local path="$1"
+
+  if [[ ! -e "$path" ]]; then
+    return 0
+  fi
+
+  for attempt in 1 2 3; do
+    if rm -rf "$path"; then
+      return 0
+    fi
+
+    if [[ "$attempt" == 3 ]]; then
+      return 1
+    fi
+
+    sleep "$attempt"
+  done
+}
+
+cleanup() {
+  if [[ -n "$MAKENSIS_WRAPPER_DIR" ]]; then
+    remove_path "$MAKENSIS_WRAPPER_DIR"
+  fi
+}
+
+prepare_nsis_makensis_wrapper() {
+  if [[ "$BUNDLE_KIND" != "nsis" ]]; then
+    return 0
+  fi
+
+  MAKENSIS_WRAPPER_DIR="$(mktemp -d)"
+  ln -sf "${PWD}/script/ci/makensis-repro-wrapper.sh" "${MAKENSIS_WRAPPER_DIR}/makensis"
+  export SONAR_REPO_ROOT="$PWD"
+  export PATH="${MAKENSIS_WRAPPER_DIR}:$PATH"
+}
+
 run_build() {
   local run="$1"
   local outdir="${OUTPUT_DIR}/${run}"
@@ -70,7 +150,9 @@ run_build() {
   local search_dirs="${BUNDLE_DIR}"
   local binary_search_dirs="${BINARY_DIR}"
 
-  rm -rf dist src-tauri/target "$outdir"
+  remove_path dist
+  remove_path src-tauri/target
+  remove_path "$outdir"
   mkdir -p "$outdir"
 
   local command=(deno task tauri build --ci --no-sign --verbose)
@@ -158,6 +240,11 @@ run_build() {
     printf '%s  %s\n' "$hash" "$(basename "$artifact")" >> "$outdir/SHA256SUMS"
   done < "$artifact_list"
 }
+
+trap cleanup EXIT
+
+ensure_repro_env
+prepare_nsis_makensis_wrapper
 
 run_build run1
 run_build run2

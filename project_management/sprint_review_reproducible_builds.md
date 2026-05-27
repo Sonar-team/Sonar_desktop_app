@@ -1,186 +1,204 @@
-# Sprint Review: Reproducible Builds
+# Sprint Review: Reproducible Builds and Node 24 CI
+
+## Review Date
+
+2026-05-27
 
 ## Sprint Goal
 
-Evaluate whether the sprint moved SONAR toward reproducible release builds by
-controlling dependency resolution, toolchain versions, build environment inputs,
-and release verification.
+Move SONAR toward reproducible release builds by controlling dependency
+resolution, toolchain versions, build environment inputs, and release
+verification.
 
-## Conclusion
+The sprint also absorbed the CI runtime update to Node.js 24, because GitHub
+Actions JavaScript actions now need to run cleanly on the Node 24 runtime.
 
-The sprint outcome is **effectively achieved** for the intended sprint scope.
+## Outcome
+
+The sprint outcome is **achieved for the agreed scope**.
 
 The project now has a controlled build baseline:
 
 - Rust, Node.js, Deno, and Tauri CLI versions are centralized in
   `config/build-versions.env`.
-- Rust is pinned to an exact toolchain version.
-- The Docker build uses a pinned Rust image digest.
-- Frontend dependency installation is frozen with `deno install --frozen`.
-- Cargo dependency resolution is forced through vendored sources.
-- apt package versions and dated Debian/Ubuntu snapshots are documented and
-  wired into CI/container setup.
+- Node.js is pinned to `24.14.0` for project CI wiring.
+- GitHub Actions workflows force JavaScript actions onto Node 24 with
+  `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`.
+- Rust is pinned to `1.95.0`.
+- Deno is pinned to `2.7.13`.
+- Tauri CLI is pinned to `2.11.1`.
+- Frontend dependency installation uses `deno install --frozen`.
+- Cargo dependency resolution remains backed by vendored sources.
+- Linux apt inputs are pinned through dated Ubuntu/Debian snapshots and package
+  variables.
 - Reproducibility flags are centralized through `security/repro-env.ts`.
-- The release workflow gates publishing behind a Linux reproducibility check.
-- Release hashes, signing, provenance, and SBOM are treated as release-trust
-  outputs separate from byte-for-byte reproducibility.
 
 This does **not** mean the full reproducible-build objective is complete. The
-remaining work is now narrower: packaged artifact reproducibility and release
+remaining work is now focused on packaged artifact reproducibility and release
 trust publication.
 
-## Completed Sprint Work
+## Delivered Work
 
-### 1. Toolchain versions are pinned and centralized
+### Node 24 CI Runtime
 
-Canonical versions are tracked in `config/build-versions.env`:
+PR `#122` was merged into `main`:
 
-- Rust `1.95.0`
-- Node.js `24.14.0`
-- Deno `2.7.13`
-- Tauri CLI `2.11.1`
+- PR: `Force GitHub Actions onto Node 24`
+- Squash merge commit: `9926f8fe8387d5393d278ef6856eb5fca63cb207`
 
-`script/ci/check-build-versions.sh` verifies that key files stay aligned with
-this central version file.
+The migration added or validated:
 
-### 2. Rust and frontend dependency inputs are controlled
+- `NODE_VERSION=24.14.0` in `config/build-versions.env`
+- Node 24 runtime forcing across GitHub Actions workflows
+- CI validation through `script/ci/check-build-versions.sh`
+- build-version export support through `script/ci/export-build-versions.sh`
 
-Rust dependencies are resolved from:
+The Rust CI follow-ups needed for the migration were also completed:
 
-- `src-tauri/.cargo/config.toml`
-- `src-tauri/vendor/`
-- `src-tauri/Cargo.lock`
+- `cargo outdated` now bypasses vendored Cargo source configuration only for
+  the outdated-dependency probe.
+- `cargo udeps` runs with nightly, as required by the tool.
+- unused direct Rust dependencies `rayon` and `ouroboros` were removed.
+- `src-tauri/deny.toml` was added so `cargo deny check` has explicit advisory,
+  license, ban, and source policy.
 
-Frontend dependencies are resolved from:
+### Reproducible Build Baseline
 
-- `deno.json`
-- `deno.lock`
-- `package.json`
+The sprint kept the reproducibility baseline intact:
 
-CI and Docker use frozen installs so dependency graph drift is treated as a
-build failure instead of a silent update.
+- exact Rust toolchain
+- frozen frontend dependency install
+- vendored Rust dependency source
+- pinned Docker Rust image digest
+- pinned Node/Deno bootstrap versions
+- pinned or snapshot-backed Linux package inputs
+- release-style reproducibility flags
 
-### 3. Docker inputs are mostly deterministic
+### Smoke Test Validation
 
-The Dockerfile no longer uses `rust:latest`. It now uses:
+`publish-smoke.yml` was rerun manually on `main` after the Node 24 merge:
 
-```text
-rust:1.95.0@sha256:5b1e3484ddcd22a3738c0ec34a5e98bf19382eb295fb6db54295e62379119040
-```
+- Run: `26509144502`
+- Ref: `main`
+- Commit: `9926f8fe8387d5393d278ef6856eb5fca63cb207`
 
-The Docker build also pins Node.js, Deno, and Debian package versions.
-The Docker build now also verifies the downloaded Node.js archive against the
-published `SHASUMS256.txt` file and the downloaded Deno archive against the
-published `.sha256sum` file before extraction.
+Passing jobs:
 
-### 4. OS package inputs are pinned or snapshot-backed
+- `publish-smoke (ubuntu-22.04)`
+- `publish-smoke (macos-14)`
+- `verify reproducible Debian package`
+- `verify reproducible MSI package`
 
-`config/build-versions.env` tracks:
+The Debian package path is confirmed healthy:
 
-- `APT_SNAPSHOT_TIMESTAMP`
-- Debian and Ubuntu snapshot base URLs
-- GitHub Actions Ubuntu package pins
-- Docker/GitLab Debian package pins
+- built artifact: `sonar_3.13.8_amd64.deb`
+- reproducibility check rebuilt two `.deb` files with identical SHA256:
+  `e256acced3e8534395d277f84b6b4ef648e232105fc09074a036fe8ac5531b14`
 
-`script/ci/use-apt-snapshot.sh` applies the dated package snapshot before
-package installation.
+## Accepted Out Of Scope
 
-### 5. Reproducibility flags are part of the real release path
+The following checks are accepted as outside the Node 24 migration scope:
 
-`security/repro-env.ts` centralizes:
+- `codecov/project`
+- `publish-smoke` packaging failures for Windows, RPM, NSIS, and DMG
 
-- `SOURCE_DATE_EPOCH`
-- Rust path remapping with `--remap-path-prefix`
-- Windows `/Brepro` linker flag support when enabled
+Reason:
 
-The release workflow and supporting checks now consume this shared environment
-instead of duplicating flags in separate scripts.
+- the Node 24 migration itself is validated by the workflow/runtime checks
+- the remaining failures are packaging or coverage-baseline issues
+- packaged artifact reproducibility is already tracked as a broader backlog item
 
-### 6. CI verification exists
+## Remaining Failures
 
-The release workflow includes a `reproducibility-check` job before publishing.
+### Windows smoke
 
-Additional diagnostic workflows exist for:
+`publish-smoke (windows-2022)` compiles the Windows binary, then fails while
+bundling MSI through WiX:
 
-- bundle reproducibility checks
-- Windows binary reproducibility investigation
-- reproducibility environment wiring
+- failing tool: `candle.exe`
+- failing fragment: `src-tauri/./windows/fragments/npcap.wxs`
 
-This gives the project a process-level gate for the Linux unsigned target and a
-diagnostic path for Windows/macOS.
+This is a Windows packaging issue, not a Node 24 runtime failure.
 
-## Current Limitations
+### RPM reproducibility
 
-### 1. Packaged outputs are not fully reproducible yet
+The Linux binary is reproducible, but the RPM package is not:
 
-Linux binary reproducibility is now the strongest target. Packaged artifacts
-remain the main open area.
+- binary hash is identical across both runs
+- `.rpm` hashes differ between run 1 and run 2
 
-Known follow-up:
+This points to nondeterminism introduced by RPM packaging metadata or container
+layout.
 
-- Debian package reproducibility is tracked separately, including issue `#107`.
-- Windows NSIS and macOS DMG probes show nondeterminism in bundle outputs.
-- The next investigation should compare raw platform binaries separately from
-  final installers.
+### NSIS reproducibility
 
-### 2. Some CI inputs remain intentionally diagnostic
+Update after local NSIS focus:
 
-Release-oriented runners are pinned more tightly than before:
+- `check-bundle-repro.sh` now normalizes `SOURCE_DATE_EPOCH`, Rust PE
+  metadata, generated NSIS inputs, and the `makensis` invocation.
+- Local double-build validation with `cargo-xwin` now reports both
+  `sonar.exe` (`f7c051ae66d07bfd55a37ad65e860202884bcf3da36b74b0511e967f27e7926e`)
+  and `sonar_3.13.8_x64-setup.exe`
+  (`e9f8e4d814e25e717e3795f52caa533894bfc25b7b37ecf6c697a4f40c5dd06e`)
+  as reproducible.
 
-- `windows-2022`
-- `macos-14`
-- Linux release check documented as `ubuntu-22.04`
+GitHub Actions validation is still required before treating NSIS as enforced.
 
-Some non-release workflows still use `ubuntu-latest`. That is acceptable for
-general lint/security workflows, but they should not be treated as canonical
-reproducibility environments.
+### DMG reproducibility
 
-### 3. Release trust outputs are not the same as reproducibility
+The macOS app input root is stable, but the DMG container is not:
 
-Provenance attestation is now wired into the release workflow. Signing and SBOM
-publication remain release trust steps. These outputs should stay outside the
-byte-for-byte reproducibility comparison because their metadata is expected to
-vary.
+- normalized input roots are identical
+- `hdiutil` produces different DMG hashes on the runner
 
-Expected trust flow:
+This remains a macOS packaging-container issue.
 
-1. Validate reproducibility on unsigned artifacts.
-2. Build and publish release artifacts.
-3. Sign artifacts through CI.
-4. Publish signatures, hashes, provenance, and SBOM metadata.
+## Review Feedback Tracked
+
+Gemini review follow-ups from PR `#122` and duplicate PR `#123` were moved to
+issue `#124`.
+
+Tracked follow-ups:
+
+- make workflow discovery in `script/ci/check-build-versions.sh` top-level only
+- make the Node 24 workflow assertion less brittle
+- review whether `wildcards = "deny"` should be used in `src-tauri/deny.toml`
+- verify the advisory ignore `RUSTSEC-2026-0097`
+- move the misplaced provenance bullet in
+  `project_management/backlog_reproducible_builds.md`
 
 ## Sprint Verdict
 
-The sprint is **successful for the sprint outcome**:
+The sprint is successful for the planned outcome:
 
 - toolchain drift is controlled
-- dependency drift is controlled
-- Linux release-style reproducibility is enforced
-- canonical build assumptions are documented
-- future work is clearly scoped
+- Node 24 CI runtime migration is merged
+- Linux `.deb` smoke and reproducibility path pass
+- key Rust CI checks pass after the migration
+- non-Node packaging failures are clearly isolated
+- follow-up review feedback is tracked
 
-The broader reproducible-build objective remains open until repeated CI builds
-produce identical target artifacts for the chosen final scope, including the
-packaged outputs that the project decides to enforce.
+The broader reproducible-build objective remains open until the project chooses
+and enforces final packaged artifact targets across Linux, Windows, and macOS.
 
-## Recommended Next Sprint Actions
+## Recommended Next Sprint
 
-1. Resolve Debian package nondeterminism tracked by issue `#107`.
-2. Split Windows checks into raw binary comparison and NSIS installer
-   comparison.
-3. Split macOS checks into raw binary, `.app` bundle, and DMG comparison.
-4. Keep the Docker bootstrap verification in sync with version bumps for
-   Node.js and Deno.
-5. Start the release trust track:
-   - sign release artifacts in CI
-   - verify provenance on the next tagged release
-   - generate and publish SBOM artifacts
-6. Keep reproducibility validation focused on unsigned artifacts.
+1. Fix Windows MSI smoke around `npcap.wxs` and WiX `candle.exe`.
+2. Investigate RPM package nondeterminism by comparing package metadata,
+   payload ordering, timestamps, ownership, and compression headers.
+3. Validate the fixed NSIS setup reproducibility path on GitHub Actions.
+4. Decide whether DMG should be an enforced byte-for-byte target or replaced by
+   an `.app`-level reproducibility target plus signed release packaging.
+5. Complete issue `#124` review follow-ups.
+6. Keep release trust work separate from reproducibility:
+   - signing
+   - provenance
+   - SBOM publication
 
 ## Final Assessment
 
-The sprint moved from a partially controlled build to a documented and
-CI-guarded reproducibility baseline.
+The sprint moved the project from a partially controlled reproducibility setup
+to a documented CI-guarded baseline with Node 24 support merged.
 
-The next risk is no longer basic toolchain drift. The next risk is packaging
-nondeterminism and release trust metadata.
+The next risk is no longer basic toolchain drift. The next risk is platform
+packaging nondeterminism.

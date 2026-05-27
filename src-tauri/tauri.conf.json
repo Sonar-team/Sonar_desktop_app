@@ -7,6 +7,7 @@
     "beforeDevCommand": "deno task dev",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "deno task build",
+    "beforeBundleCommand": "deno run -A ./script/ci/normalize-bundle-inputs.ts",
     "frontendDist": "../dist"
   },
   "app": {
