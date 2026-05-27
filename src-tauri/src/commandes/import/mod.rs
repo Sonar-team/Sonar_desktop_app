@@ -313,12 +313,32 @@ fn verif_labels_conflicts(
         .unwrap_or("inconnu")
         .to_string();
 
-    let row: Vec<(String, String, String)> = file
+    let rows: Vec<(String, String, String)> = file
         .lines()
         .filter_map(|l| parse_label_row(l).transpose())
         .collect::<Result<Vec<_>, _>>()?;
 
-    new_selected_file_with_name = (name, row);
+    new_selected_file_with_name = (name, rows.clone());
+
+    let mut same_ip_different_mac: ConflictsList = Vec::new();
+    let mut same_ip_different_label: ConflictsList = Vec::new();
+
+    for (i,(mac1, ip1, label1)) in rows.iter().enumerate() {
+        for (mac2, ip2, label2) in rows[i+1..].iter() {
+            if ip1 == ip2 {
+                if mac1 != mac2 {
+                    eprintln!("⚠️  IP '{}' : MAC '{}' ({}) vs '{}' ({})", ip1, mac1, new_selected_file_with_name.0 , mac2, new_selected_file_with_name.0);
+                    same_ip_different_mac.push((ip1.to_string(), mac1.to_string(), new_selected_file_with_name.0.to_string(), mac2.to_string(), new_selected_file_with_name.0.to_string()))
+                }
+                
+                if label1 != label2 {
+                    eprintln!("⚠️  IP '{}' : label '{}' ({}) vs '{}' ({})", ip1, label1, new_selected_file_with_name.0, label2, new_selected_file_with_name.0);
+                    same_ip_different_label.push((ip1.to_string(), label1.to_string(), new_selected_file_with_name.0.to_string(), label2.to_string(), new_selected_file_with_name.0.to_string())) 
+                }
+            }
+        }
+    }
+    
 
     let selected_label_files: Vec<PathBuf> = fs::read_dir(&labels_folder)?
     .filter_map(|entry| entry.ok())
@@ -350,9 +370,6 @@ fn verif_labels_conflicts(
 
         files_with_names.push((name, rows));
     }
-
-    let mut same_ip_different_mac: ConflictsList = Vec::new();
-    let mut same_ip_different_label: ConflictsList = Vec::new();
 
     for i in 0..files_with_names.len() {
         let (name_i, rows_i) = &files_with_names[i];
