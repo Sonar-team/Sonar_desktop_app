@@ -27,6 +27,49 @@ const normalizeScript = joinPath(
   "normalize-bundle-inputs.ts",
 );
 
+function readBuildVersionsEnv(): Record<string, string> {
+  const path = joinPath(repoRoot, "config", "build-versions.env");
+  const values: Record<string, string> = {};
+
+  try {
+    const content = Deno.readTextFileSync(path);
+    for (const line of content.split(/\r?\n/)) {
+      const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
+      if (!match) {
+        continue;
+      }
+
+      const [, key, rawValue] = match;
+      values[key] = rawValue.replace(/^"|"$/g, "");
+    }
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) {
+      throw error;
+    }
+  }
+
+  return values;
+}
+
+const buildVersions = readBuildVersionsEnv();
+
+function buildVersion(name: string): string {
+  const value = Deno.env.get(name) ?? buildVersions[name];
+  if (!value) {
+    throw new Error(`Missing build version variable: ${name}`);
+  }
+  return value;
+}
+
+const tauriNsisVersion = buildVersion("NSIS_VERSION");
+const tauriNsisZipUrl =
+  `https://github.com/tauri-apps/binary-releases/releases/download/nsis-${tauriNsisVersion}/nsis-${tauriNsisVersion}.zip`;
+const tauriNsisZipSha256 = buildVersion("NSIS_ZIP_SHA256");
+const tauriNsisUtilsVersion = buildVersion("NSIS_TAURI_UTILS_VERSION");
+const tauriNsisUtilsUrl =
+  `https://github.com/tauri-apps/nsis-tauri-utils/releases/download/nsis_tauri_utils-v${tauriNsisUtilsVersion}/nsis_tauri_utils.dll`;
+const tauriNsisUtilsSha1 = buildVersion("NSIS_TAURI_UTILS_SHA1");
+
 async function exists(path: string): Promise<boolean> {
   try {
     await Deno.lstat(path);
@@ -57,6 +100,17 @@ async function runCommand(
     throw new Error(
       `${command} ${args.join(" ")} failed with exit code ${code}`,
     );
+  }
+}
+
+async function removeIfExists(path: string): Promise<void> {
+  try {
+    await Deno.remove(path, { recursive: true });
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      return;
+    }
+    throw error;
   }
 }
 
@@ -139,6 +193,111 @@ async function copyTree(source: string, destination: string): Promise<void> {
   }
 }
 
+async function digestHex(
+  algorithm: "SHA-1" | "SHA-256",
+  data: ArrayBuffer,
+): Promise<string> {
+  const hash = await crypto.subtle.digest(algorithm, data);
+  return Array.from(new Uint8Array(hash))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function downloadVerifiedFile(
+  url: string,
+  destination: string,
+  algorithm: "SHA-1" | "SHA-256",
+  expectedDigest: string,
+): Promise<void> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download ${url}: HTTP ${response.status}`);
+  }
+
+  const data = await response.arrayBuffer();
+  const actualDigest = await digestHex(algorithm, data);
+  if (actualDigest !== expectedDigest.toLowerCase()) {
+    throw new Error(
+      `${url} ${algorithm} mismatch: expected ${expectedDigest}, got ${actualDigest}`,
+    );
+  }
+
+  await Deno.writeFile(destination, new Uint8Array(data));
+}
+
+function tauriNsisCacheDirs(): string[] {
+  const localAppData = Deno.env.get("LOCALAPPDATA");
+  return [
+    localAppData ? joinPath(localAppData, "tauri", "NSIS") : "",
+    joinPath(repoRoot, "src-tauri", "target", ".tauri", "NSIS"),
+  ].filter(Boolean);
+}
+
+async function ensureWindowsNsisCache(): Promise<void> {
+  if (Deno.build.os !== "windows") {
+    return;
+  }
+
+  if (!Deno.env.get("SOURCE_DATE_EPOCH")) {
+    return;
+  }
+
+  const [cacheDir] = tauriNsisCacheDirs();
+  if (!cacheDir) {
+    return;
+  }
+
+  const makensisPath = joinPath(cacheDir, "makensis.exe");
+  const utilsPath = joinPath(
+    cacheDir,
+    "Plugins",
+    "x86-unicode",
+    "additional",
+    "nsis_tauri_utils.dll",
+  );
+
+  if ((await exists(makensisPath)) && (await exists(utilsPath))) {
+    return;
+  }
+
+  const tempDir = await Deno.makeTempDir({ prefix: "sonar-tauri-nsis-" });
+  try {
+    const nsisZipPath = joinPath(tempDir, `nsis-${tauriNsisVersion}.zip`);
+    const extractDir = joinPath(tempDir, "extract");
+
+    await downloadVerifiedFile(
+      tauriNsisZipUrl,
+      nsisZipPath,
+      "SHA-256",
+      tauriNsisZipSha256,
+    );
+    await runCommand("powershell", [
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-Command",
+      "$ErrorActionPreference = 'Stop'; Expand-Archive -LiteralPath $args[0] -DestinationPath $args[1] -Force",
+      nsisZipPath,
+      extractDir,
+    ]);
+
+    await removeIfExists(cacheDir);
+    await copyTree(joinPath(extractDir, `nsis-${tauriNsisVersion}`), cacheDir);
+
+    await Deno.mkdir(dirnamePath(utilsPath), { recursive: true });
+    await downloadVerifiedFile(
+      tauriNsisUtilsUrl,
+      utilsPath,
+      "SHA-1",
+      tauriNsisUtilsSha1,
+    );
+
+    console.log(`Primed Tauri NSIS cache at ${cacheDir}.`);
+  } finally {
+    await removeIfExists(tempDir);
+  }
+}
+
 async function installWindowsMakensisWrapper(): Promise<void> {
   if (Deno.build.os !== "windows") {
     return;
@@ -148,11 +307,9 @@ async function installWindowsMakensisWrapper(): Promise<void> {
     return;
   }
 
-  const localAppData = Deno.env.get("LOCALAPPDATA");
-  const candidates = [
-    localAppData ? joinPath(localAppData, "tauri", "NSIS", "makensis.exe") : "",
-    joinPath(repoRoot, "src-tauri", "target", ".tauri", "NSIS", "makensis.exe"),
-  ].filter(Boolean);
+  const candidates = tauriNsisCacheDirs().map((dir) =>
+    joinPath(dir, "makensis.exe")
+  );
 
   for (const makensisPath of candidates) {
     if (!(await exists(makensisPath))) {
@@ -192,4 +349,5 @@ async function installWindowsMakensisWrapper(): Promise<void> {
 }
 
 await normalizeBundleInputs();
+await ensureWindowsNsisCache();
 await installWindowsMakensisWrapper();

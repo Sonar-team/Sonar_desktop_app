@@ -20,6 +20,10 @@ check_contains() {
 check_contains src-tauri/rust-toolchain.toml "channel = \"${RUST_VERSION}\""
 check_contains package.json "\"node\": \"${NODE_VERSION}\""
 check_contains package.json "\"@tauri-apps/cli\": \"${TAURI_CLI_VERSION}\""
+check_contains script/ci/prepare-bundle-repro.ts 'buildVersion("NSIS_VERSION")'
+check_contains script/ci/prepare-bundle-repro.ts 'buildVersion("NSIS_ZIP_SHA256")'
+check_contains script/ci/prepare-bundle-repro.ts 'buildVersion("NSIS_TAURI_UTILS_VERSION")'
+check_contains script/ci/prepare-bundle-repro.ts 'buildVersion("NSIS_TAURI_UTILS_SHA1")'
 check_contains Dockerfile "FROM rust:${RUST_VERSION}@${RUST_IMAGE_DIGEST} AS builder"
 check_contains Dockerfile "ARG DOCKER_APT_PACKAGES=\"${DOCKER_APT_PACKAGES}\""
 check_contains Dockerfile 'RUN /app/script/ci/use-apt-snapshot.sh'
