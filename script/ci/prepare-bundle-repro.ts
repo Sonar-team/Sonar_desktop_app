@@ -271,15 +271,8 @@ async function ensureWindowsNsisCache(): Promise<void> {
       "SHA-256",
       tauriNsisZipSha256,
     );
-    await runCommand("powershell", [
-      "-NoProfile",
-      "-ExecutionPolicy",
-      "Bypass",
-      "-Command",
-      "$ErrorActionPreference = 'Stop'; Expand-Archive -LiteralPath $args[0] -DestinationPath $args[1] -Force",
-      nsisZipPath,
-      extractDir,
-    ]);
+    await Deno.mkdir(extractDir, { recursive: true });
+    await runCommand("tar", ["-xf", nsisZipPath, "-C", extractDir]);
 
     await removeIfExists(cacheDir);
     await copyTree(joinPath(extractDir, `nsis-${tauriNsisVersion}`), cacheDir);
