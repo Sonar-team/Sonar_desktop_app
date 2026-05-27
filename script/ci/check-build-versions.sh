@@ -58,7 +58,7 @@ check_contains .github/workflows/publish-smoke.yml 'deno task tauri build --ci -
 check_contains .github/workflows/publish-smoke.yml 'script/package-msi-repro.ps1'
 check_contains src-tauri/tauri.conf.json '"beforeBundleCommand": "deno run -A ./script/ci/prepare-bundle-repro.ts"'
 check_contains script/ci/check-bundle-repro.sh 'script/ci/makensis-repro-wrapper.sh'
-check_contains script/ci/prepare-bundle-repro.ts 'makensis-real.exe'
+check_contains script/ci/prepare-bundle-repro.ts 'NSIS-real'
 check_contains .github/workflows/covecode.yml './script/ci/export-build-versions.sh'
 check_contains .github/workflows/covecode.yml 'node-version: "v${{ steps.versions.outputs.NODE_VERSION }}"'
 check_contains .github/workflows/covecode.yml 'apt-get install -y $COVERAGE_APT_PACKAGES'

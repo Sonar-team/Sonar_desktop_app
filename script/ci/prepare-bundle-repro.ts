@@ -80,7 +80,10 @@ fn exit_from_status(status: std::process::ExitStatus) -> ! {
 
 fn main() {
     let current_exe = env::current_exe().expect("current executable path");
-    let real_makensis = current_exe.with_file_name("makensis-real.exe");
+    let current_dir = current_exe.parent().expect("current executable directory");
+    let real_makensis = current_dir
+        .with_file_name("NSIS-real")
+        .join("makensis.exe");
 
     if env::var_os("SOURCE_DATE_EPOCH").is_some() {
         let repo_root = env::var_os("SONAR_REPO_ROOT")
@@ -117,6 +120,25 @@ fn main() {
 }
 `;
 
+async function copyTree(source: string, destination: string): Promise<void> {
+  const info = await Deno.lstat(source);
+
+  if (info.isDirectory) {
+    await Deno.mkdir(destination, { recursive: true });
+    for await (const entry of Deno.readDir(source)) {
+      await copyTree(
+        joinPath(source, entry.name),
+        joinPath(destination, entry.name),
+      );
+    }
+    return;
+  }
+
+  if (info.isFile) {
+    await Deno.copyFile(source, destination);
+  }
+}
+
 async function installWindowsMakensisWrapper(): Promise<void> {
   if (Deno.build.os !== "windows") {
     return;
@@ -138,10 +160,16 @@ async function installWindowsMakensisWrapper(): Promise<void> {
     }
 
     const wrapperDir = dirnamePath(makensisPath);
-    const realMakensisPath = joinPath(wrapperDir, "makensis-real.exe");
+    const realWrapperDir = joinPath(dirnamePath(wrapperDir), "NSIS-real");
+    const realMakensisPath = joinPath(realWrapperDir, "makensis.exe");
 
     if (!(await exists(realMakensisPath))) {
-      await Deno.rename(makensisPath, realMakensisPath);
+      await copyTree(wrapperDir, realWrapperDir);
+
+      const legacyRealMakensisPath = joinPath(wrapperDir, "makensis-real.exe");
+      if (await exists(legacyRealMakensisPath)) {
+        await Deno.copyFile(legacyRealMakensisPath, realMakensisPath);
+      }
     }
 
     const sourcePath = joinPath(wrapperDir, "makensis-repro-wrapper.rs");
