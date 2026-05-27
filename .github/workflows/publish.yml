@@ -5,6 +5,9 @@ on:
     tags:
       - "app-v*"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   reproducibility-check:
     name: verify unsigned reproducible artifacts

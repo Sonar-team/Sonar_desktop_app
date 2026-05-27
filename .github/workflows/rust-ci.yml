@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   rust_checks:
     runs-on: ubuntu-22.04
@@ -64,9 +67,14 @@ jobs:
         working-directory: ./src-tauri
 
       - name: Check for outdated dependencies with cargo outdated
-        run: cargo outdated
+        run: |
+          mv .cargo/config.toml .cargo/config.toml.ci-disabled
+          trap 'mv .cargo/config.toml.ci-disabled .cargo/config.toml' EXIT
+          cargo outdated
         working-directory: ./src-tauri
 
       - name: Check unused dependencies with cargo udeps
-        run: cargo udeps --all-targets
+        run: |
+          rustup toolchain install nightly --profile minimal
+          cargo +nightly udeps --all-targets
         working-directory: ./src-tauri

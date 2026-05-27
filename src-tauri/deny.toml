@@ -1,0 +1,54 @@
+[advisories]
+ignore = [
+  { id = "RUSTSEC-2024-0370", reason = "Transitive proc-macro-error advisory; tracked separately from the Node 24 CI runtime migration." },
+  { id = "RUSTSEC-2024-0411", reason = "GTK3 stack is pulled through Tauri/wry on Linux; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0412", reason = "GTK3 stack is pulled through Tauri/wry on Linux; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0413", reason = "GTK3 stack is pulled through Tauri/wry on Linux; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0414", reason = "GTK3 stack is pulled through Tauri/wry on Linux; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0415", reason = "GTK3 stack is pulled through Tauri/wry on Linux; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0416", reason = "GTK3 stack is pulled through Tauri/wry on Linux; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0417", reason = "GTK3 stack is pulled through Tauri/wry on Linux; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0418", reason = "GTK3 stack is pulled through Tauri/wry on Linux; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0419", reason = "GTK3 stack is pulled through Tauri/wry on Linux; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0420", reason = "GTK3 stack is pulled through Tauri/wry on Linux; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0429", reason = "glib is pulled through the current Tauri Linux stack; migration is outside this CI runtime change." },
+  { id = "RUSTSEC-2024-0436", reason = "Transitive paste advisory; tracked separately from the Node 24 CI runtime migration." },
+  { id = "RUSTSEC-2025-0057", reason = "Transitive fxhash advisory through Tauri utilities; tracked separately from this CI runtime change." },
+  { id = "RUSTSEC-2025-0075", reason = "Transitive rust-unic advisory through urlpattern/Tauri utilities; tracked separately from this CI runtime change." },
+  { id = "RUSTSEC-2025-0080", reason = "Transitive rust-unic advisory through urlpattern/Tauri utilities; tracked separately from this CI runtime change." },
+  { id = "RUSTSEC-2025-0081", reason = "Transitive rust-unic advisory through urlpattern/Tauri utilities; tracked separately from this CI runtime change." },
+  { id = "RUSTSEC-2025-0098", reason = "Transitive rust-unic advisory through urlpattern/Tauri utilities; tracked separately from this CI runtime change." },
+  { id = "RUSTSEC-2025-0100", reason = "Transitive rust-unic advisory through urlpattern/Tauri utilities; tracked separately from this CI runtime change." },
+  { id = "RUSTSEC-2026-0097", reason = "Transitive rand advisory; tracked separately from the Node 24 CI runtime migration." },
+]
+
+[licenses]
+allow = [
+  "0BSD",
+  "AGPL-3.0",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "BSL-1.0",
+  "CC0-1.0",
+  "ISC",
+  "LGPL-2.1-or-later",
+  "MIT",
+  "MIT-0",
+  "MPL-2.0",
+  "Unicode-3.0",
+  "Unlicense",
+  "Zlib",
+]
+confidence-threshold = 0.8
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

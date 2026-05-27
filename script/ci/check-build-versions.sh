@@ -56,5 +56,10 @@ check_contains .github/workflows/publish-smoke.yml 'deno task tauri build --ci -
 check_contains .github/workflows/publish-smoke.yml 'script/package-msi-repro.ps1'
 check_contains .github/workflows/covecode.yml './script/ci/export-build-versions.sh'
 check_contains .github/workflows/covecode.yml 'node-version: "v${{ steps.versions.outputs.NODE_VERSION }}"'
+check_contains .github/workflows/covecode.yml 'apt-get install -y $COVERAGE_APT_PACKAGES'
+
+while IFS= read -r workflow_file; do
+  check_contains "$workflow_file" 'FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"'
+done < <(find .github/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) | sort)
 
 echo "Build version references are aligned with config/build-versions.env"
