@@ -311,6 +311,14 @@ jobs:
           OUTPUT_DIR="bundle-repro-nsis" \
           ./script/ci/check-bundle-repro.sh
 
+      - name: upload NSIS reproducibility outputs
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nsis-repro-outputs
+          path: bundle-repro-nsis
+          if-no-files-found: ignore
+
   msi-repro-smoke:
     name: verify reproducible MSI package
     runs-on: windows-2022

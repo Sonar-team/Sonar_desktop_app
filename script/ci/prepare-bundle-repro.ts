@@ -122,8 +122,11 @@ async function normalizeBundleInputs(): Promise<void> {
 
 const windowsMakensisWrapperSource = String.raw`
 use std::{
+    convert::TryFrom,
     env,
     ffi::OsString,
+    fs,
+    io,
     path::PathBuf,
     process::{exit, Command},
 };
@@ -132,8 +135,94 @@ fn exit_from_status(status: std::process::ExitStatus) -> ! {
     exit(status.code().unwrap_or(1));
 }
 
+fn read_u16_le(data: &[u8], offset: usize) -> Option<u16> {
+    let bytes = data.get(offset..offset.checked_add(2)?)?;
+    Some(u16::from_le_bytes([bytes[0], bytes[1]]))
+}
+
+fn read_u32_le(data: &[u8], offset: usize) -> Option<u32> {
+    let bytes = data.get(offset..offset.checked_add(4)?)?;
+    Some(u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
+}
+
+fn write_u32_le(data: &mut [u8], offset: usize, value: u32) -> Option<()> {
+    let bytes = data.get_mut(offset..offset.checked_add(4)?)?;
+    bytes.copy_from_slice(&value.to_le_bytes());
+    Some(())
+}
+
+fn normalize_pe(path: PathBuf) -> io::Result<()> {
+    let source_date_epoch = env::var("SOURCE_DATE_EPOCH")
+        .ok()
+        .and_then(|value| value.parse::<u32>().ok())
+        .unwrap_or(0);
+    let mut data = fs::read(&path)?;
+
+    if data.len() < 0x40 || data.get(0..2) != Some(b"MZ") {
+        return Ok(());
+    }
+
+    let pe_offset = match read_u32_le(&data, 0x3c)
+        .and_then(|value| usize::try_from(value).ok())
+    {
+        Some(value) => value,
+        None => return Ok(()),
+    };
+    if data.get(pe_offset..pe_offset.saturating_add(4)) != Some(b"PE\0\0") {
+        return Ok(());
+    }
+
+    let coff_header_offset = pe_offset.saturating_add(4);
+    let optional_header_offset = coff_header_offset.saturating_add(20);
+    let optional_header_size = read_u16_le(&data, coff_header_offset.saturating_add(16))
+        .map(usize::from)
+        .unwrap_or(0);
+
+    let _ = write_u32_le(
+        &mut data,
+        coff_header_offset.saturating_add(4),
+        source_date_epoch,
+    );
+    if optional_header_size >= 68 {
+        let _ = write_u32_le(&mut data, optional_header_offset.saturating_add(64), 0);
+    }
+
+    fs::write(path, data)
+}
+
+fn escape_nsis_define(value: &str) -> String {
+    value.replace('$', "$$")
+}
+
+fn patch_installer_script(script_path: PathBuf, wrapper_path: PathBuf) -> io::Result<()> {
+    let content = fs::read_to_string(&script_path)?;
+    if !content.contains("!define UNINSTALLERSIGNCOMMAND \"\"") {
+        return Ok(());
+    }
+
+    let wrapper = wrapper_path.to_string_lossy().replace('\\', "/");
+    let command = format!(
+        "!define UNINSTALLERSIGNCOMMAND '\"{}\" --sonar-normalize-pe \"%1\"'",
+        escape_nsis_define(&wrapper)
+    );
+    let patched = content.replacen("!define UNINSTALLERSIGNCOMMAND \"\"", &command, 1);
+
+    fs::write(script_path, patched)
+}
+
 fn main() {
     let current_exe = env::current_exe().expect("current executable path");
+    let args: Vec<OsString> = env::args_os().skip(1).collect();
+
+    if args.first().and_then(|arg| arg.to_str()) == Some("--sonar-normalize-pe") {
+        let Some(path) = args.get(1) else {
+            eprintln!("sonar reproducible makensis wrapper: missing PE path to normalize");
+            exit(2);
+        };
+        normalize_pe(PathBuf::from(path)).expect("failed to normalize PE file");
+        return;
+    }
+
     let current_dir = current_exe.parent().expect("current executable directory");
     let real_makensis = current_dir
         .with_file_name("NSIS-real")
@@ -162,9 +251,22 @@ fn main() {
         if !status.success() {
             exit_from_status(status);
         }
+
+        if let Some(script_path) = args
+            .iter()
+            .map(|arg| PathBuf::from(arg))
+            .find(|path| {
+                path
+                    .extension()
+                    .and_then(|extension| extension.to_str())
+                    .is_some_and(|extension| extension.eq_ignore_ascii_case("nsi"))
+            })
+        {
+            patch_installer_script(script_path, current_exe)
+                .expect("failed to patch NSIS installer script");
+        }
     }
 
-    let args: Vec<OsString> = env::args_os().skip(1).collect();
     let status = Command::new(real_makensis)
         .args(args)
         .status()
