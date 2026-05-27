@@ -201,11 +201,16 @@ fn patch_installer_script(script_path: PathBuf, wrapper_path: PathBuf) -> io::Re
     }
 
     let wrapper = wrapper_path.to_string_lossy().replace('\\', "/");
+    let quote = char::from(0x60);
     let command = format!(
-        "!define UNINSTALLERSIGNCOMMAND '\"{}\" --sonar-normalize-pe \"%1\"'",
-        escape_nsis_define(&wrapper)
+        "!define UNINSTALLERSIGNCOMMAND {}\"{}\" --sonar-normalize-pe \"%1\"{}",
+        quote,
+        escape_nsis_define(&wrapper),
+        quote
     );
     let patched = content.replacen("!define UNINSTALLERSIGNCOMMAND \"\"", &command, 1);
+
+    eprintln!("sonar reproducible makensis wrapper: patching NSIS uninstaller finalizer");
 
     fs::write(script_path, patched)
 }
