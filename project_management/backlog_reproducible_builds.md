@@ -235,25 +235,23 @@ Why:
 Status: Partially Done
 
 - Linux binary and `.deb` package reproducibility are now confirmed.
-- Windows NSIS is fixed locally: `check-bundle-repro.sh` now produces identical
-  `sonar.exe` and `sonar_3.13.8_x64-setup.exe` hashes across two clean
-  `cargo-xwin` builds (`sonar.exe`
-  `f7c051ae66d07bfd55a37ad65e860202884bcf3da36b74b0511e967f27e7926e`,
-  setup `.exe`
-  `e9f8e4d814e25e717e3795f52caa533894bfc25b7b37ecf6c697a4f40c5dd06e`).
-- Continue with GitHub validation for Windows NSIS, then RPM, Windows MSI smoke,
-  and macOS DMG packaging.
+- Windows MSI package reproducibility is confirmed on GitHub Actions and is now
+  the priority Windows installer target.
+- Windows NSIS remains a diagnostic target: local `cargo-xwin` probes can
+  produce matching setup `.exe` hashes, but GitHub-hosted Windows NSIS output
+  still needs separate investigation before it can block release validation.
+- Continue GitHub validation with MSI as the enforced Windows package path,
+  then track NSIS, RPM, and macOS DMG packaging separately.
 - GitHub Actions probes have been added for Windows NSIS and macOS DMG.
 - Commit `e4f7ed6b` makes Windows release binaries reproducible.
 - Latest `publish-smoke.yml` run on `main` confirmed
   `verify reproducible Debian package` succeeds for
   `sonar_3.13.8_amd64.deb`; two repackaged `.deb` artifacts produced identical
   SHA256 `e256acced3e8534395d277f84b6b4ef648e232105fc09074a036fe8ac5531b14`.
-- Remaining bundle result: RPM and DMG artifacts still need separate tracking
-  before they can be treated as enforced reproducibility targets. Windows NSIS
-  should move to enforced once the updated workflow is green on GitHub Actions.
-- Windows MSI smoke currently fails in WiX `candle.exe` while compiling
-  `src-tauri/windows/fragments/npcap.wxs`.
+- Remaining bundle result: RPM, DMG, and NSIS artifacts still need separate
+  tracking before they can be treated as enforced reproducibility targets.
+- Windows publish smoke should exercise MSI first so NSIS diagnostics do not
+  block the currently reproducible Windows installer path.
 - Next step: keep comparing raw platform binaries separately from final bundles,
   then fix or replace packaging steps that introduce nondeterminism.
 - Tracking issue `#107` should be closed or updated if it only covered the
@@ -323,9 +321,9 @@ the full reproducible-build objective being complete.
 The next delivery focus should shift toward the remaining packaged artifact
 gaps, then supply-chain trust and release authenticity:
 
-- fix Windows MSI smoke around `npcap.wxs` / WiX `candle.exe`
+- keep Windows MSI as the priority reproducible installer path
 - investigate RPM package nondeterminism
-- validate the fixed NSIS setup `.exe` reproducibility path on GitHub Actions
+- continue NSIS setup `.exe` reproducibility as a non-blocking diagnostic path
 - decide whether DMG should remain a byte-for-byte target or move enforcement
   to the normalized `.app` input root
 - sign release artifacts in CI

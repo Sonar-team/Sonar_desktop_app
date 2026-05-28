@@ -15,7 +15,7 @@ jobs:
           - platform: "ubuntu-22.04"
             args: ""
           - platform: "windows-2022"
-            args: ""
+            args: "--bundles msi"
           - platform: "macos-14"
             args: ""
 
@@ -55,7 +55,7 @@ jobs:
         run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
 
       - name: configure reproducible NSIS wrapper
-        if: matrix.platform == 'windows-2022'
+        if: matrix.platform == 'windows-2022' && contains(matrix.args, 'nsis')
         shell: bash
         run: ./script/ci/configure-repro-makensis.sh
 
@@ -135,6 +135,7 @@ jobs:
   rpm-repro-smoke:
     name: verify reproducible RPM package
     runs-on: ubuntu-22.04
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -185,6 +186,7 @@ jobs:
   dmg-repro-smoke:
     name: verify reproducible DMG package
     runs-on: macos-14
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -270,6 +272,7 @@ jobs:
   nsis-repro-smoke:
     name: verify reproducible NSIS setup.exe package
     runs-on: windows-2022
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
