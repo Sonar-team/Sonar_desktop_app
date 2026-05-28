@@ -196,19 +196,27 @@ fn escape_nsis_define(value: &str) -> String {
 
 fn patch_installer_script(script_path: PathBuf, wrapper_path: PathBuf) -> io::Result<()> {
     let content = fs::read_to_string(&script_path)?;
-    if !content.contains("!define UNINSTALLERSIGNCOMMAND \"\"") {
+    let uninstaller_sign_command = "$".to_owned() + "{UNINSTALLERSIGNCOMMAND}";
+    let finalizer_block = format!(
+        "!if \"{}\" != \"\"\n  !uninstfinalize '{}'\n!endif",
+        uninstaller_sign_command, uninstaller_sign_command
+    );
+    let finalizer_block_crlf = finalizer_block.replace('\n', "\r\n");
+
+    if !content.contains(&finalizer_block) && !content.contains(&finalizer_block_crlf) {
         return Ok(());
     }
 
     let wrapper = wrapper_path.to_string_lossy().replace('\\', "/");
-    let quote = char::from(0x60);
-    let command = format!(
-        "!define UNINSTALLERSIGNCOMMAND {}\"{}\" --sonar-normalize-pe \"%1\"{}",
-        quote,
-        escape_nsis_define(&wrapper),
-        quote
+    let finalizer = format!(
+        "!uninstfinalize '\"{}\" --sonar-normalize-pe \"%1\"'",
+        escape_nsis_define(&wrapper)
     );
-    let patched = content.replacen("!define UNINSTALLERSIGNCOMMAND \"\"", &command, 1);
+    let patched = if content.contains(&finalizer_block) {
+        content.replacen(&finalizer_block, &finalizer, 1)
+    } else {
+        content.replacen(&finalizer_block_crlf, &finalizer, 1)
+    };
 
     eprintln!("sonar reproducible makensis wrapper: patching NSIS uninstaller finalizer");
 
