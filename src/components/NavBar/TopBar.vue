@@ -8,18 +8,18 @@
       🛑
     </button>
     <button class="image-btn" @click="reset" :disabled="activePanel !== null" title="Réinitialiser (ctrl+shift+r)">🔄</button>
-    <button class="image-btn"  title="Config (ctrl+,)" :disabled="isRunning || (activePanel !== null && activePanel !== 'config')" @click="handleConfigClick">
+    <button class="image-btn"  title="Config (ctrl+,)" :disabled="isRunning" @click="handleConfigClick">
       <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="triggerSave" :disabled="isRunning || activePanel !== null" title="Sauvegarder (ctrl+s)">💾</button>
+    <button class="image-btn" @click="triggerSave" :disabled="isRunning" title="Sauvegarder (ctrl+s)">💾</button>
 
-    <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || (activePanel !== null && activePanel !== 'pcap' || hasData)" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
-    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning || (activePanel !== null && activePanel !== 'csv' || hasData)" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
+    <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || hasData" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
+    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning ||  hasData" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
     
     <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">❌</button>
-    <button class="image-btn" @click="export_logs" :disabled="isRunning || (activePanel !== null)" title="Logs (ctrl+l)">📒</button>
-    <button class="image-btn" @click="handleFilterClick" :disabled="isRunning || (activePanel !== null && activePanel !== 'filter')" title="Filtrer (ctrl+f)">🔍</button>
+    <button class="image-btn" @click="export_logs" :disabled="isRunning" title="Logs (ctrl+l)">📒</button>
+    <button class="image-btn" @click="handleFilterClick" :disabled="isRunning" title="Filtrer (ctrl+f)">🔍</button>
   </div>
 </template>
 
@@ -39,6 +39,8 @@ import { getCurrentDate } from '../../utils/time';
 import { useCaptureStore } from '../../store/capture';
 import { CaptureEvent } from '../../types/capture';
 
+type Panel = 'config' | 'pcap' | 'csv' | 'filter';
+
 export default {
   name: "TopBar",
   emits: ['toggle-config','toggle-pcap','toggle-csv','toggle-filter'],
@@ -51,11 +53,11 @@ export default {
   },
 
   watch: {
-    configOpen(val) { if (!val) this.activePanel = null; },
-    filterOpen(val) { if (!val) this.activePanel = null; },
-    csvOpen(val)   { if (!val) this.activePanel = null; },
-    pcapOpen(val)  { if (!val) this.activePanel = null; },
-  },
+  configOpen(val) { if (!val && this.activePanel === 'config') this.activePanel = null; },
+  filterOpen(val) { if (!val && this.activePanel === 'filter') this.activePanel = null; },
+  csvOpen(val)    { if (!val && this.activePanel === 'csv') this.activePanel = null; },
+  pcapOpen(val)   { if (!val && this.activePanel === 'pcap') this.activePanel = null; },
+},
 
   computed: {
     buttonText(): string {
@@ -73,7 +75,7 @@ export default {
     return {
       showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
       shortcuts: [] as string[],
-      activePanel: null as string | null,
+      activePanel: null as Panel | null,
       hasData: false,
     };
   },
@@ -127,8 +129,12 @@ export default {
     },
     async export_logs() {
       info("export logs")
-      if (this.activePanel !== null) return;
-      this.activePanel = 'logs';
+
+      if (this.activePanel !== null) {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      }
+      
+      useCaptureStore().isImporting = true;
 
       try{
         const response = await save({
@@ -150,14 +156,18 @@ export default {
           throw new Error("Sauvegarde annulée ou chemin non sélectionné");
         } 
       } finally {
-        this.activePanel = null;
+        useCaptureStore().isImporting = false;
     }
   },
 
     async SaveAsCsv() {
       info("Save as csv");
-      if (this.activePanel !== null) return;
-      this.activePanel = 'save'
+
+      if (this.activePanel !== null) {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      }
+
+      useCaptureStore().isImporting = true;
 
       try {
         const response = await save({
@@ -175,12 +185,17 @@ export default {
       } catch (err) {
         error("Erreur sauvegarde csv: ", err);
       } finally {
-        this.activePanel = null;
+        useCaptureStore().isImporting = false;
       }
     },
     async SaveAsXlsx() {
-      if (this.activePanel !== null) return;
-      this.activePanel = 'save'
+      
+      if (this.activePanel !== null) {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      }
+
+      useCaptureStore().isImporting = true;
+
       try {
         info("Début de la sauvegarde en xlsx");
         const response = await save({
@@ -206,6 +221,7 @@ export default {
         throw error; // Relancer l'erreur pour la gestion dans quit()
       } finally {
         this.activePanel = null;
+        useCaptureStore().isImporting = false;
       }
     },
     async triggerSave() {
@@ -225,25 +241,35 @@ export default {
 
     handleConfigClick() {
       info("[TopBar] Bouton config cliqué");
-      if (this.activePanel !== null && this.activePanel !== 'config') return;
+      if (this.activePanel !== null && this.activePanel !== 'config') {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      };
       this.activePanel = 'config';
       this.$emit('toggle-config');
     },
     displayPcapOpener() {
       info("[TopBar] Bouton open cliqué");
-      if (this.activePanel !== null && this.activePanel !== 'pcap' || this.hasData) return;
+      if (this.hasData) return;
+      if (this.activePanel !== null && this.activePanel !== 'pcap') {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      };
       this.activePanel = 'pcap';
       this.$emit('toggle-pcap');
     },
     displayCsvOpener() {
       info("[TopBar] Bouton open cliqué");
-      if (this.activePanel !== null && this.activePanel !== 'csv' || this.hasData) return;
+      if (this.hasData) return;
+      if (this.activePanel !== null && this.activePanel !== 'csv') {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      };
       this.activePanel = 'csv';
       this.$emit('toggle-csv');
     },
     handleFilterClick() {
       info("[TopBar] Bouton filter cliqué");
-      if (this.activePanel !== null && this.activePanel !== 'filter') return;
+      if (this.activePanel !== null && this.activePanel !== 'filter') {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      };
       this.activePanel = 'filter';
       this.$emit('toggle-filter');
     },

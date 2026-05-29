@@ -69,17 +69,17 @@ export default defineComponent({
     }
   },
   methods: {
-    toggleConfig() {
-      this.showConfig = !this.showConfig;
+    toggleConfig(val?: boolean) {
+      this.showConfig = val !== undefined ? val : !this.showConfig;
     },
-    togglePcap() {
-      this.showPcap = !this.showPcap;
+    togglePcap(val?: boolean) {
+      this.showPcap = val !== undefined ? val : !this.showPcap;
     },
-    toggleCsv(){
-      this.showCsv = !this.showCsv;
+    toggleCsv(val?: boolean) {
+      this.showCsv = val !== undefined ? val : !this.showCsv;
     },
-    toggleFilter() {
-      this.showFilter = !this.showFilter;
+    toggleFilter(val?: boolean) {
+      this.showFilter = val !== undefined ? val : !this.showFilter;
     },
     toggleGraph() {
       this.showGraph = !this.showGraph; // ✅ bascule affichage

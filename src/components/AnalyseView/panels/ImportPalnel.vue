@@ -117,6 +117,9 @@ export default defineComponent({
 
     async addFiles(type: 'pcap' | 'csv', extensions: string[]) {
         const label = type === 'csv' ? 'Label File' : 'Capture File';
+        useCaptureStore().isImporting = true;
+
+      try {
         const files = await open({
           multiple: true,
           filters: [{ name: label, extensions: extensions }],
@@ -132,6 +135,9 @@ export default defineComponent({
           await this.importLabelFiles(list, labelFilesNames);
         } else {
           this.packetFiles.push(...list);
+        }
+      } finally {
+        useCaptureStore().isImporting = false;
       }
     },
 
