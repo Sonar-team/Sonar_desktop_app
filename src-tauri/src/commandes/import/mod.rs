@@ -9,7 +9,7 @@ use std::{sync::{Arc, Mutex},
 use tauri::{AppHandle, Manager, State, ipc::Channel};
 
 use crate::{
-    errors::{CaptureStateError, import::PcapImportError}, events::CaptureEvent, setup::labels::parse_label_row, state::{
+    errors::{CaptureStateError, import::PcapImportError, label::LabelError}, events::CaptureEvent, setup::labels::{parse_label_row, is_ip_address, is_mac_address, clean_csv_field}, state::{
         capture::capture_handle::messages::capture::PacketMinimal, 
         flow_matrix::FlowMatrix,
         graph::GraphData, label_files_list::SelectedLabelFiles,
@@ -233,13 +233,8 @@ pub fn add_to_selected_label_files_names_list(
     file: String,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
     app: tauri::AppHandle,
-)-> Result<(ConflictsList, ConflictsList), CaptureStateError> {
-    let all_conflicts = verif_labels_conflicts(file.clone(), state.clone(), app)?;
-    if !all_conflicts.0.is_empty() || !all_conflicts.1.is_empty() {
-        println!(" {:?}", &file);
-        return Ok(all_conflicts);
-    }
-
+)-> Result<(), CaptureStateError> {
+    verif_labels_conflicts(file.clone(), state.clone(), app)?;
 
     let mut selected_label_files_names_list = state.lock().unwrap();
     selected_label_files_names_list.add(file);
@@ -247,7 +242,7 @@ pub fn add_to_selected_label_files_names_list(
     println!("Ajouté à la liste : {:?}", selected_label_files_names_list);
     
     
-    Ok(all_conflicts)
+    Ok(())
 }
 
 #[tauri::command(async)]
@@ -281,7 +276,7 @@ fn verif_labels_conflicts(
     new_file_name: String,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
     app: tauri::AppHandle,
-) -> Result<(ConflictsList, ConflictsList), CaptureStateError>{
+) -> Result<(), CaptureStateError>{
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
 
@@ -315,8 +310,8 @@ fn verif_labels_conflicts(
 
     let rows: Vec<(String, String, String)> = file
         .lines()
-        .filter_map(|l| parse_label_row(l).transpose())
-        .collect::<Result<Vec<_>, _>>()?;
+        .filter_map(|l| parse_label_row(l))
+        .collect();
 
     new_selected_file_with_name = (name, rows.clone());
 
@@ -365,8 +360,8 @@ fn verif_labels_conflicts(
 
         let rows: Vec<(String, String, String)> = file
             .lines()
-            .filter_map(|l| parse_label_row(l).transpose())
-            .collect::<Result<Vec<_>, _>>()?;
+            .filter_map(|l| parse_label_row(l))
+            .collect();
 
         files_with_names.push((name, rows));
     }
@@ -394,17 +389,61 @@ fn verif_labels_conflicts(
             }
         }
     }
-    Ok((same_ip_different_mac, same_ip_different_label))
+    if same_ip_different_label.len() > 0 || same_ip_different_mac.len() > 0 {
+        return Err(LabelError::LabelLinesConflicts { same_ip_diff_mac: same_ip_different_mac, same_ip_diff_label: same_ip_different_label }.into())
+    } else {
+        Ok(())
+    }
+}
+
+pub fn verif_mac_ip_format (csv_paths: Vec<String>) -> Result<(), CaptureStateError> {
+    let mut invalid_ip: Vec<(String, String)> = Vec::new();
+    let mut invalid_mac: Vec<(String, String)> = Vec::new();
+    println!("verif_mac_ip_format called with csv_paths: {:?}", csv_paths);
+
+    for csv_path in csv_paths {
+
+        let file = match std::fs::read_to_string(&csv_path){
+                Ok(csv_data) => csv_data,
+                Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+                Err(error) => return Err(error.into()),
+            };
+
+        let name = Path::new(&csv_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("inconnu")
+            .to_string();
+
+        for line in file.lines() {
+            let parts: Vec<_> = line.split(',').map(clean_csv_field).collect();
+            if let [mac, ip, _label] = parts.as_slice() {
+                if !is_ip_address(ip) && !ip.is_empty() {
+                    invalid_ip.push((name.clone(), ip.to_string()));
+                }
+                if !is_mac_address(mac) && !mac.is_empty() {
+                    invalid_mac.push((name.clone(), mac.to_string()));
+                }
+            }
+        }
+    }
+
+    if invalid_ip.len() > 0 || invalid_mac.len() > 0 {
+        return Err(LabelError::InvalidFormats { invalid_mac: invalid_mac, invalid_ip: invalid_ip }.into())
+    }
+    Ok(())
 }
 
 #[tauri::command(async)]
 pub fn import_label_files(
     csv_paths: Vec<String>,
     app: tauri::AppHandle,
-) -> Result<Vec<(String, String)> , CaptureStateError> {
+) -> Result<(), CaptureStateError> {
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
-    let mut conflictual_files: Vec<(String, String)> = Vec::new();
+    let mut conflictual_files: Vec<String> = Vec::new();
+
+    verif_mac_ip_format(csv_paths.clone())?;
 
     if !fs::exists(&labels_folder).unwrap_or(false){
         fs::create_dir(&labels_folder)?;
@@ -416,14 +455,17 @@ pub fn import_label_files(
         let dest = labels_folder.join(&filename);
 
         if dest.exists() {
-            conflictual_files.push((filename, csv_path.to_string()));
+            conflictual_files.push(filename);
         } else {
             fs::copy(csv_path, &dest)?;
             println!("copie de {:?} effectuée", csv_path);
         }
     }
-
-    Ok(conflictual_files)
+    if conflictual_files.len() > 0 {
+        Err(LabelError::FileNameConflicts { files_names: conflictual_files }.into())
+    }else {
+        Ok(())
+    }
 }
 
 pub fn labels_to_matrix(
@@ -460,7 +502,7 @@ pub fn labels_to_matrix(
                 .collect();
 
             for label in labels {
-                let Some((mac, ip, label)) = parse_label_row(&label)? else {
+                let Some((mac, ip, label)) = parse_label_row(&label) else {
                     continue;
                 };
 

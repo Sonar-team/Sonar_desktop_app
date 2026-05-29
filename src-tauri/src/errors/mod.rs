@@ -92,11 +92,14 @@ impl Serialize for CaptureStateError {
             }
             Self::Label(e) => {
                 let kind = match e {
-                    LabelError::InvalidMacAddress { mac } => {
-                        LabelErrorKind::InvalidMacAddress(mac.clone())
+                    LabelError::InvalidFormats { invalid_mac, invalid_ip } => {
+                        LabelErrorKind::InvalidFormats(invalid_mac.clone(), invalid_ip.clone())
                     }
-                    LabelError::InvalidIpAddress { ip } => {
-                        LabelErrorKind::InvalidIpAddress(ip.clone())
+                    LabelError::LabelLinesConflicts { same_ip_diff_mac, same_ip_diff_label } => {
+                        LabelErrorKind::LabelLinesConflicts(same_ip_diff_mac.clone(), same_ip_diff_label.clone())
+                    }
+                    LabelError::FileNameConflicts { files_names } => {
+                        LabelErrorKind::FileNameConflicts(files_names.clone())
                     }
                 };
                 CaptureStateErrorKind::Label(kind)

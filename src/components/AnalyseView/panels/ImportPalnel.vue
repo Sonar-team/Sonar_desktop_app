@@ -2,8 +2,11 @@
   <div class="container">
     <div class="center-container">
       <ConflictDialog v-if="showConflictDialog" 
-      :same_ip_diff_mac="same_ip_diff_mac" 
-      :same_ip_diff_label="same_ip_diff_label" 
+      :same_ip_diff_mac="sameIpDiffMac" 
+      :same_ip_diff_label="sameIpDiffLabel" 
+      :invalid_mac="invalidMac"
+      :invalid_ip="invalidIp"
+      :conflictual_files="conflictualFiles"
       @showConflictDialog="showConflictDialog = false"/>
 
         <!-- Overlay de chargement -->
@@ -11,7 +14,7 @@
         <div class="spinner"></div>
         <p class="overlay-text">Conversion en cours…</p>
       </div>
-      <button class="btn image-btn cross" @click.prevent="windowClosed">❌</button>
+      <button class="btn image-btn cross" @click.prevent="windowClosed" :disabled="isConverting">❌</button>
       
       <div v-if="mode === 'csv'" class="csv-group">
           <button class="btn btn-add text" @click="addCsvFiles" :disabled="isConverting">
@@ -54,12 +57,12 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { open, message } from '@tauri-apps/plugin-dialog';
+import { open } from '@tauri-apps/plugin-dialog';
 import { invoke, Channel } from '@tauri-apps/api/core';
 import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
-import { displayCaptureError } from '../../../errors/capture';
+import { displayCaptureError, CaptureStateErrorKind, LabelErrorKind } from '../../../errors/capture';
 import ConflictDialog from './ConflictDialog.vue'
 
 
@@ -82,8 +85,11 @@ export default defineComponent({
       selectedLabelFiles: [] as string[],
       isConverting: false,
       showConflictDialog: false,
-      same_ip_diff_mac: [] as [string, string, string, string, string][], 
-      same_ip_diff_label: [] as [string, string, string, string, string][],
+      sameIpDiffMac: [] as [string, string, string, string, string][], 
+      sameIpDiffLabel: [] as [string, string, string, string, string][],
+      invalidMac: [] as [string, string][],
+      invalidIp: [] as [string, string][],
+      conflictualFiles: [] as string[],
     };
   },
 
@@ -109,25 +115,23 @@ export default defineComponent({
       return this.addFiles('csv', ['csv']);
     },
 
-    async addFiles(type : 'pcap' | 'csv', extensions : string[]) {
+    async addFiles(type: 'pcap' | 'csv', extensions: string[]) {
+        const label = type === 'csv' ? 'Label File' : 'Capture File';
+        const files = await open({
+          multiple: true,
+          filters: [{ name: label, extensions: extensions }],
+        });
 
-      const label = type === 'csv' ? 'Label File' : 'Capture File';
-      
-      const files = await open({
-        multiple: true,
-        filters: [{ name: label, extensions: extensions }]
-      });
+        if (!files) return;
 
-      if (!files) return;
-
-      const list = Array.isArray(files) ? files : [files];
-
-      if (type === 'csv') {
-        let labelFilesNames = list.map(((path): [string, boolean] => [path.split(/[\\/]/).pop() ?? path, true]));
-        info('labelFilesNames :' + labelFilesNames);
-        await this.convertLabelFile(list, labelFilesNames)
-      } else {
-        this.packetFiles.push(...list);
+        const list = Array.isArray(files) ? files : [files];
+        if (type === 'csv') {
+          const labelFilesNames = list.map((path): [string, boolean] =>
+            [path.split(/[\\/]/).pop() ?? path, true]
+          );
+          await this.importLabelFiles(list, labelFilesNames);
+        } else {
+          this.packetFiles.push(...list);
       }
     },
 
@@ -158,26 +162,41 @@ export default defineComponent({
       this.packetFiles = [];
     },
 
-    async convertLabelFile(paths: string[], names: [string, boolean][]) {
+    async importLabelFiles(paths: string[], names: [string, boolean][]) {
       if (paths.length === 0 || names.length === 0) return;
 
       info('import_label_files: ' + paths);
 
       this.isConverting = true;
+      this.conflictualFiles = [];
+      this.invalidIp = [];
+      this.invalidMac = [];
+      this.sameIpDiffLabel = [];
+      this.sameIpDiffMac = [];
 
       try {
-        const conflictualFiles = await invoke<[string, string][]>('import_label_files', { csvPaths: paths });
+        await invoke('import_label_files', { csvPaths: paths });
         info('réponse invoke');
-        if (conflictualFiles.length > 0) {
-          const filenames = conflictualFiles.map(([name]) => name).join('\n');
-          await message(`Ces fichiers existent déjà :\n${filenames}\n\n<Importations impossibles>`, { title: 'Fichiers en conflit', kind: 'warning' });
-        }
-        this.labelFiles.push(...names.filter(([name]) => !this.labelFiles.some(([existing]) => existing === name)));
-        this.labelFiles.sort();
       } catch (err) {
-        displayCaptureError(err);
+        const error = err as CaptureStateErrorKind;
+        if (error.kind === "label" && (error.message as LabelErrorKind).kind === "invalidFormats") {
+          const labelError = error.message as Extract<LabelErrorKind, { kind: "invalidFormats" }>;
+          const [invalidMac, invalidIp] = labelError.message as any;
+          this.invalidMac = invalidMac;
+          this.invalidIp = invalidIp;
+          this.showConflictDialog = true;
+        } if (error.kind === "label" && (error.message as LabelErrorKind).kind === "fileNameConflicts") {
+          const labelError = error.message as Extract<LabelErrorKind, { kind: "fileNameConflicts" }>;
+          this.conflictualFiles = labelError.message as any;
+          this.showConflictDialog = true;
+        } else {
+          displayCaptureError(err);
+        }
+        
       } finally {
-        this.isConverting = false;
+        this.labelFiles = await invoke('read_label_files_list');
+        this.labelFiles.sort();
+        this.isConverting = false;      
       }
     },
   
@@ -187,7 +206,8 @@ export default defineComponent({
         try {
           await invoke('remove_label_file', { csvFile: fileRemoved});
           info('réponse invoke');
-          this.labelFiles = this.labelFiles.filter(([name]) => name !== fileRemoved);
+          this.labelFiles = await invoke('read_label_files_list');
+          this.labelFiles.sort();
           this.selectedLabelFiles = this.selectedLabelFiles.filter((name) => name !== fileRemoved);
         } catch (err) {
           displayCaptureError(err);
@@ -195,21 +215,27 @@ export default defineComponent({
       },
 
     async addToSelectedLabelFilesNamesList(file: string){
+
+      this.conflictualFiles = [];
+      this.invalidIp = [];
+      this.invalidMac = [];
+      this.sameIpDiffLabel = [];
+      this.sameIpDiffMac = [];
+      
       try {
-        const [same_ip_diff_mac, same_ip_diff_label] = await invoke<[[string, string, string, string, string][], [string, string, string, string, string][]]>('add_to_selected_label_files_names_list', { file : file});
-        
-        this.same_ip_diff_label = same_ip_diff_label
-        this.same_ip_diff_mac = same_ip_diff_mac
-
-        if (this.same_ip_diff_mac.length > 0 || this.same_ip_diff_label.length > 0) {
-          info('length > 0')
-          this.showConflictDialog =true
-
-          this.selectedLabelFiles = this.selectedLabelFiles.filter((f) => f !== file);
-
-        }
+        await invoke('add_to_selected_label_files_names_list', { file : file});
+        info('réponse invoke');
       } catch (err) {
-        displayCaptureError(err);
+        const error = err as CaptureStateErrorKind;
+        if (error.kind === "label" && (error.message as LabelErrorKind).kind === "labelLinesConflicts") {
+          const labelError = error.message as Extract<LabelErrorKind, { kind: "labelLinesConflicts" }>;
+          const [sameIpDiffMac, sameIpDiffLabel] = labelError.message as any;
+          this.sameIpDiffMac = sameIpDiffMac;
+          this.sameIpDiffLabel = sameIpDiffLabel;
+          this.showConflictDialog = true;
+        } else {
+          displayCaptureError(err);
+        } 
         this.selectedLabelFiles = this.selectedLabelFiles.filter((f) => f !== file);
       }
     },
@@ -239,6 +265,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+
 .container {
   position: fixed;
   top: 0;

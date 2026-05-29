@@ -14,8 +14,9 @@ export type ImportErrorKind =
   | { kind: "other"; message: string };
 
 export type LabelErrorKind =
-  | { kind: "invalidMacAddress"; message: string }
-  | { kind: "invalidIpAddress"; message: string }
+  | {kind: "fileNameConflicts"; message: { files_names: [string][] }}
+  | { kind: "invalidFormats"; message: { invalid_mac: [string, string, string, string, string][], invalid_ip: [string, string, string, string, string][] } }
+  | { kind: "labelLinesConflicts"; message: { same_ip_diff_mac: [string, string, string, string, string][], same_ip_diff_label: [string, string, string, string, string][] } }
 
 export type CaptureStateErrorKind =
   | { kind: "io"; message: string }
@@ -112,10 +113,10 @@ function handleLabelerror(labelError: LabelErrorKind): string {
   }
 
   switch(labelError.kind) {
-    case "invalidMacAddress":
-      return `Format d'adresse MAC invalide : ${labelError.message}`
-    case "invalidIpAddress":
-      return `Format d'adresse IP invalide : ${labelError.message}`
+    case "invalidFormats":
+      return `Formats invalides : MAC - ${labelError.message.invalid_mac.map(([file, mac]) => `${file} : ${mac}`).join('\n')}, IP - ${labelError.message.invalid_ip.map(([file, ip]) => `${file} : ${ip}`).join('\n')}`;
+    case "fileNameConflicts":
+      return `Ce(s) fichier(s) existe(nt) déjà : \n ${labelError.message} \n <Importation impossible>`
     default:
       return `Erreur de label inconnue : ${JSON.stringify(labelError)}`;
   }

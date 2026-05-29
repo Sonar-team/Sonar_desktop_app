@@ -1,13 +1,18 @@
 <template>
   <div class="container">
     <div class="center-container">
-      <h1 class="dialog-title">Conflits détectés</h1>
+
+      <h1 v-show="same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0" class="dialog-title">Conflits détectés</h1>
+      <h1 v-show="invalid_mac.length > 0 || invalid_ip.length > 0" class="dialog-title">MAC/IP invalide(s) détectée(s)</h1>
+      <h1 v-show="conflictual_files.length > 0" class="dialog-title">Fichiers en conflit détectés</h1>
+
       <div class="panels">
         <div class="left-panel">
           <img class="image" src="/src/assets/images/warning-sign.png"/>
         </div>
         <div class="right-panel">
-          <div class="file-list">
+
+          <div v-show="same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0" class="file-list">
               <ul v-show="same_ip_diff_mac.length > 0">
                 <h3 class="text">Conflits IP -> MAC</h3>
                 <li v-for="([ip, ref_mac, name_i, mac, name_j], index) in same_ip_diff_mac" :key="index">
@@ -29,11 +34,43 @@
                 </li>
               </ul>
           </div>
+
+          <div v-show="invalid_mac.length > 0 || invalid_ip.length > 0" class="file-list">
+              <ul v-show="invalid_mac.length > 0">
+                <h3 class="text">MAC invalides</h3>
+                <li v-for="([name, mac], index) in invalid_mac" :key="index">
+                  <label>
+                    <span class="text indented">MAC: '{{ mac }}' <---- {{ name.length > 60 ? name.slice(0, 60) + '...' : name }}</span>
+                  </label>
+                </li>
+              </ul>
+              <ul v-show="invalid_ip.length > 0">
+                <h3 class="text">IP invalides</h3>
+                <li v-for="([name, ip], index) in invalid_ip" :key="index">
+                  <label>
+                    <span class="text indented">IP: '{{ ip }}' <---- {{ name.length > 60 ? name.slice(0, 60) + '...' : name }}</span>
+                  </label>
+                </li>
+              </ul>
           </div>
-        <div>
-          <button class="btn image-btn" @click.prevent="windowClosed">❌</button>
+
+          <div v-show="conflictual_files.length > 0" class="file-list">
+              <ul>
+                <h3 class="text">Nom des fichiers en conflit</h3>
+                <li v-for="(name, index) in conflictual_files" :key="index">
+                  <label>
+                    <span class="text indented">{{ name.length > 100 ? name.slice(0, 100) + '...' : name }}</span>
+                  </label>
+                </li>
+              </ul>
+          </div>
         </div>
       </div>
+
+      <div>
+          <button class="btn image-btn" @click.prevent="windowClosed">❌</button>
+      </div>
+     
     </div>
   </div>
 </template>
@@ -56,6 +93,18 @@ export default defineComponent({
       type: Array as PropType<ConflictRow[]>,
       required: true
     },
+    invalid_mac: {
+      type: Array as PropType<[string, string][]>,
+      required: true
+    },
+    invalid_ip: {
+      type: Array as PropType<[string, string][]>,
+      required: true
+    },
+    conflictual_files: {
+      type: Array as PropType<string[]>,
+      required: true
+    }
   },
   data() {
     return {
@@ -254,7 +303,7 @@ export default defineComponent({
 
 .file-list label {
   display: flex;
-  flex-direction: column;  /* ← ici */
+  flex-direction: column;
   align-items: flex-start;
 }
 
@@ -264,7 +313,7 @@ export default defineComponent({
 
 .indented {
   display: block;
-  padding-left: 2rem; /* ou 2rem selon l'effet voulu */
+  padding-left: 2rem; 
 }
 
 .file-list {

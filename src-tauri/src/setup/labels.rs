@@ -7,7 +7,7 @@ use std::{
 
 use tauri::{AppHandle, Manager, path::BaseDirectory};
 
-use crate::{errors::{CaptureStateError, label::LabelError}, state::flow_matrix::FlowMatrix};
+use crate::{errors::{CaptureStateError}, state::flow_matrix::FlowMatrix};
 
 pub fn read_labels(app: &AppHandle) -> Result<(), tauri::Error> {
     let resource_path = app
@@ -69,7 +69,7 @@ pub fn update_labels_in_state(app: &AppHandle, labels: Vec<String>) -> Result<()
     let mut state_label = state_label.lock().unwrap();
 
     for label in labels {
-        let Some((mac, ip, label_name)) = parse_label_row(&label)? else {
+        let Some((mac, ip, label_name)) = parse_label_row(&label) else {
             continue;
         };
 
@@ -79,44 +79,38 @@ pub fn update_labels_in_state(app: &AppHandle, labels: Vec<String>) -> Result<()
     Ok(())
 }
 
-pub fn parse_label_row(row: &str) -> Result<Option<(String, String, String)>, CaptureStateError> {
+pub fn parse_label_row(row: &str) -> Option<(String, String, String)> {
     let parts: Vec<_> = row.split(',').map(clean_csv_field).collect();
     match parts.as_slice() {
         [mac, ip, label] if is_mac_address(mac) && is_ip_address(ip) && !label.is_empty() => { // si tous les arguments sont présents
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
-            Ok(Some((mac.to_string(), ip.to_string(), label.to_string())))
+            Some((mac.to_string(), ip.to_string(), label.to_string()))
         }
         [mac,ip, label] if mac.is_empty() && is_ip_address(ip) && !label.is_empty() => { // si il manque l'adresse mac
             println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
-            Ok(Some((String::new(), ip.to_string(), label.to_string())))
+            Some((String::new(), ip.to_string(), label.to_string()))
         }
         [mac,ip, label] if is_mac_address(mac) && ip.is_empty() && !label.is_empty() => { // si il manque l'adresse IP
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
-            Ok(Some((mac.to_string(), String::new(), label.to_string())))
+            Some((mac.to_string(), String::new(), label.to_string()))
         }
         [mac,ip, label] if is_mac_address(mac) && is_ip_address(ip) && label.is_empty() => { //si il manque le label
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
-            Ok(Some((mac.to_string(), ip.to_string(), String::from("Label?"))))
+            Some((mac.to_string(), ip.to_string(), String::from("Label?")))
         }
         [mac,ip, label] if is_mac_address(mac) && ip.is_empty() && label.is_empty() => { //si il manque l'adresse mac ET le label
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
-            Ok(Some((mac.to_string(), String::new(), String::from("Label?"))))
+            Some((mac.to_string(), String::new(), String::from("Label?")))
         }
         [mac,ip, label] if mac.is_empty() && is_ip_address(ip) && label.is_empty() => { //si il manque l'adresse ip ET le label
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
-            Ok(Some((String::new(), ip.to_string(), String::from("Label?"))))
+            Some((String::new(), ip.to_string(), String::from("Label?")))
         }
-        [mac, ip, label] if !is_mac_address(mac) && !mac.is_empty() => {
-            Err(LabelError::InvalidMacAddress { mac: mac.to_string() }.into())
-        }
-        [mac,ip, label] if !is_ip_address(ip) && !ip.is_empty() => {
-            Err(LabelError::InvalidIpAddress { ip: ip.to_string() }.into())
-        }
-        _ => Ok(None),
+        _ => None,
     }
 }
 
-fn clean_csv_field(value: &str) -> &str {
+pub fn clean_csv_field(value: &str) -> &str {
     value
         .trim()
         .trim_matches('"')
@@ -125,11 +119,11 @@ fn clean_csv_field(value: &str) -> &str {
         .unwrap()
 }
 
-fn is_ip_address(value: &str) -> bool {
+pub fn is_ip_address(value: &str) -> bool {
     value.parse::<IpAddr>().is_ok()
 }
 
-fn is_mac_address(value: &str) -> bool {
+pub fn is_mac_address(value: &str) -> bool {
     let parts: Vec<&str> = value.split(':').collect();
     parts.len() == 6 && parts.iter().all(|p| {
         p.len() == 2 && p.chars().all(|c| matches!(c, '0'..='9' | 'A'..='F' | 'a' ..='f'))
@@ -202,7 +196,7 @@ mod tests {
 
     #[test]
     fn parses_label_row_into_mac_ip_and_label() {
-        let parsed = parse_label_row("aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar").unwrap();
+        let parsed = parse_label_row("aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar");
 
         assert_eq!(
             parsed,
@@ -216,7 +210,7 @@ mod tests {
 
     #[test]
     fn parses_ip_only_label_row() {
-        let parsed = parse_label_row("8.8.8.8,google.com").unwrap();
+        let parsed = parse_label_row("8.8.8.8,google.com");
 
         assert_eq!(
             parsed,
@@ -230,7 +224,7 @@ mod tests {
 
     #[test]
     fn parses_quoted_ip_only_label_row() {
-        let parsed = parse_label_row("\"8.8.8.8\", \"google.com\"").unwrap();
+        let parsed = parse_label_row("\"8.8.8.8\", \"google.com\"");
 
         assert_eq!(
             parsed,
@@ -244,8 +238,8 @@ mod tests {
 
     #[test]
     fn rejects_invalid_label_rows() {
-        assert_eq!(parse_label_row("aa:bb:cc:dd:ee:ff,192.168.1.10").unwrap(), None);
-        assert_eq!(parse_label_row(",,pc sonar").unwrap(), None);
+        assert_eq!(parse_label_row("aa:bb:cc:dd:ee:ff,192.168.1.10"), None);
+        assert_eq!(parse_label_row(",,pc sonar"), None);
     }
 
     #[test]

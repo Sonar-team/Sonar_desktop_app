@@ -1,4 +1,5 @@
 <template>
+
   <div class="bg"></div>
   <router-view></router-view>
 </template>
@@ -38,6 +39,7 @@ import { info } from '@tauri-apps/plugin-log';
 const appWindow = getCurrentWebviewWindow()
 
 export default {
+
   data() {
     return {
       // Add a data property for the unlisten function
