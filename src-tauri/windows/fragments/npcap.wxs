@@ -17,7 +17,7 @@
 
   <Fragment>
     <!-- Embed the pinned Npcap installer in the MSI Binary table. -->
-    <Binary Id="NpcapInstallerExe" SourceFile="$(var.ProjectDir)windows\npcap-1.87.exe" />
+    <Binary Id="NpcapInstallerExe" SourceFile="$(sys.SOURCEFILEDIR)..\npcap-1.87.exe" />
 
     <CustomAction
       Id="CA_InstallNpcap"
