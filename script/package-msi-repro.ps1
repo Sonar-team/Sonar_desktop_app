@@ -1210,8 +1210,8 @@ function Set-MsiSummaryInformationNormalized {
     try {
         Set-MsiSummaryInformationPortable -MsiPath $MsiPath -PackageCode $PackageCode -Timestamp $Timestamp
     } catch {
-        $isWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
-        if (-not $isWindows) {
+        $runningOnWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
+        if (-not $runningOnWindows) {
             throw
         }
 
