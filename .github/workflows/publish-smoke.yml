@@ -351,9 +351,32 @@ jobs:
         shell: bash
         run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
 
+      - name: install WiX .NET tool
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
+          $toolDir = Join-Path $HOME ".dotnet/tools"
+          Add-Content -Path $env:GITHUB_PATH -Value $toolDir
+          $env:PATH = "$toolDir$([System.IO.Path]::PathSeparator)$env:PATH"
+
+          $installedTools = dotnet tool list --global | Out-String
+          if ($installedTools -match "(?m)^\s*wix\s") {
+            dotnet tool update --global wix --version "${env:WIX_VERSION}"
+          } else {
+            dotnet tool install --global wix --version "${env:WIX_VERSION}"
+          }
+
+          wix eula accept wix7
+          wix --version
+
       - name: locate WiX Toolset
         shell: pwsh
         run: |
+          if (Get-Command wix -ErrorAction SilentlyContinue) {
+            exit 0
+          }
+
           $paths = @(
             "${env:ProgramFiles(x86)}\WiX Toolset v3.14\bin",
             "${env:ProgramFiles(x86)}\WiX Toolset v3.11\bin",
@@ -372,7 +395,7 @@ jobs:
             exit 0
           }
 
-          throw "WiX Toolset v3 was not found on this runner"
+          throw "WiX .NET tool or WiX Toolset v3 was not found on this runner"
 
       - name: build and verify reproducible MSI twice
         shell: pwsh
@@ -389,13 +412,13 @@ jobs:
             Remove-Item -LiteralPath $Root -Recurse -Force -ErrorAction SilentlyContinue
             New-Item -ItemType Directory -Force -Path $Root | Out-Null
 
-            Copy-Item -LiteralPath "src-tauri\target\release\sonar.exe" -Destination (Join-Path $Root "sonar.exe") -Force
+            Copy-Item -LiteralPath ([System.IO.Path]::Combine("src-tauri", "target", "release", "sonar.exe")) -Destination (Join-Path $Root "sonar.exe") -Force
 
             New-Item -ItemType Directory -Force -Path (Join-Path $Root "resources") | Out-Null
-            Copy-Item -LiteralPath "src-tauri\resources\labels.csv" -Destination (Join-Path $Root "resources\labels.csv") -Force
+            Copy-Item -LiteralPath ([System.IO.Path]::Combine("src-tauri", "resources", "labels.csv")) -Destination ([System.IO.Path]::Combine($Root, "resources", "labels.csv")) -Force
 
             New-Item -ItemType Directory -Force -Path (Join-Path $Root "windows") | Out-Null
-            Copy-Item -LiteralPath "src-tauri\windows\npcap-1.87.exe" -Destination (Join-Path $Root "windows\npcap-1.87.exe") -Force
+            Copy-Item -LiteralPath ([System.IO.Path]::Combine("src-tauri", "windows", "npcap-1.87.exe")) -Destination ([System.IO.Path]::Combine($Root, "windows", "npcap-1.87.exe")) -Force
           }
 
           function Build-Msi {
@@ -405,7 +428,7 @@ jobs:
             )
 
             Remove-Item -LiteralPath "dist" -Recurse -Force -ErrorAction SilentlyContinue
-            Remove-Item -LiteralPath "src-tauri\target" -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath ([System.IO.Path]::Combine("src-tauri", "target")) -Recurse -Force -ErrorAction SilentlyContinue
 
             deno task tauri build --ci --no-sign --no-bundle
 
@@ -446,16 +469,33 @@ jobs:
           }
 
           if ($firstHash -ne $secondHash) {
+            $firstDark = Join-Path $outputDir "first.wxs"
+            $secondDark = Join-Path $outputDir "second.wxs"
+            $firstNormalizedDark = Join-Path $outputDir "first.normalized.wxs"
+            $secondNormalizedDark = Join-Path $outputDir "second.normalized.wxs"
+            $firstExtract = Join-Path $outputDir "first-extract"
+            $secondExtract = Join-Path $outputDir "second-extract"
+            $decompiled = $false
+
             if (Get-Command dark.exe -ErrorAction SilentlyContinue) {
-              $firstDark = Join-Path $outputDir "first.wxs"
-              $secondDark = Join-Path $outputDir "second.wxs"
-              $firstNormalizedDark = Join-Path $outputDir "first.normalized.wxs"
-              $secondNormalizedDark = Join-Path $outputDir "second.normalized.wxs"
-              $firstExtract = Join-Path $outputDir "first-extract"
-              $secondExtract = Join-Path $outputDir "second-extract"
               dark.exe -nologo -x (Join-Path $outputDir "first-extract") -out $firstDark $firstMsi
               dark.exe -nologo -x (Join-Path $outputDir "second-extract") -out $secondDark $secondMsi
+              $decompiled = $true
+            } elseif (Get-Command wix -ErrorAction SilentlyContinue) {
+              wix msi decompile -x $firstExtract -out $firstDark $firstMsi
+              if ($LASTEXITCODE -ne 0) {
+                throw "wix msi decompile failed for first MSI with exit code $LASTEXITCODE"
+              }
 
+              wix msi decompile -x $secondExtract -out $secondDark $secondMsi
+              if ($LASTEXITCODE -ne 0) {
+                throw "wix msi decompile failed for second MSI with exit code $LASTEXITCODE"
+              }
+
+              $decompiled = $true
+            }
+
+            if ($decompiled) {
               (Get-Content -Raw $firstDark).Replace($firstExtract, "__EXTRACT_ROOT__").Replace("first-extract", "__EXTRACT_ROOT__") | Set-Content -NoNewline $firstNormalizedDark
               (Get-Content -Raw $secondDark).Replace($secondExtract, "__EXTRACT_ROOT__").Replace("second-extract", "__EXTRACT_ROOT__") | Set-Content -NoNewline $secondNormalizedDark
 

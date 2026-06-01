@@ -306,9 +306,12 @@ expose enough control, build the installer through a project-owned packaging
 script instead of relying on the Tauri bundler as the reproducibility boundary.
 
 `script/package-msi-repro.ps1` is the project-owned Windows MSI packaging
-prototype. It builds a WiX v3 MSI from a normalized installation root using
-stable component GUIDs, stable product/package codes, sorted file traversal,
-normalized file timestamps, and normalized MSI OLE/CFB directory timestamps.
+prototype. It builds an MSI from a normalized installation root using the WiX
+.NET tool (`wix build`) pinned by `WIX_VERSION` when available, with a WiX v3
+`candle.exe`/`light.exe` fallback. The script uses stable component GUIDs,
+stable product/package codes, sorted file traversal, normalized file timestamps,
+portable SummaryInformation normalization, and normalized MSI OLE/CFB directory
+timestamps.
 The `publish-smoke` MSI job fails if the normalized inputs differ, normalizes
 decompiled WiX source paths for comparison, then runs
 `script/ci/compare-msi-internals.ps1` when only the final MSI hashes differ.

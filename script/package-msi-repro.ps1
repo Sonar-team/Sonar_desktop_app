@@ -18,7 +18,8 @@ if ($Help) {
 usage: pwsh -File script/package-msi-repro.ps1 -SourceDir <install-root> [-OutputMsi <out.msi>]
 
 Build a normalized Windows MSI from an installation root directory.
-The script must run on Windows with WiX Toolset v3 available as candle.exe and light.exe.
+The script prefers the WiX .NET tool (`wix build`) and falls back to WiX v3
+(`candle.exe` and `light.exe`) when available.
 "@ | Write-Output
     exit 0
 }
@@ -37,6 +38,70 @@ function Require-Command {
     }
 
     return $command.Source
+}
+
+function Resolve-WixToolchain {
+    $wix = Get-Command "wix" -ErrorAction SilentlyContinue
+    if ($wix) {
+        return [pscustomobject]@{
+            Kind = "wix"
+            Wix = $wix.Source
+            Candle = ""
+            Light = ""
+        }
+    }
+
+    $candle = Get-Command "candle.exe" -ErrorAction SilentlyContinue
+    $light = Get-Command "light.exe" -ErrorAction SilentlyContinue
+    if ($candle -and $light) {
+        return [pscustomobject]@{
+            Kind = "wix3"
+            Wix = ""
+            Candle = $candle.Source
+            Light = $light.Source
+        }
+    }
+
+    throw 'Missing WiX toolchain: install the WiX .NET tool (dotnet tool install --global wix) or WiX v3 (candle.exe and light.exe).'
+}
+
+function Invoke-WixBuild {
+    param(
+        [object]$Toolchain,
+        [string]$WxsPath,
+        [string]$WixObjPath,
+        [string]$OutputMsi,
+        [string]$WorkDir
+    )
+
+    if ($Toolchain.Kind -eq "wix") {
+        $convertedWxs = Join-Path $WorkDir "package.wix4.wxs"
+        $intermediateDir = Join-Path $WorkDir "wix-intermediate"
+        Copy-Item -LiteralPath $WxsPath -Destination $convertedWxs -Force
+        New-Item -ItemType Directory -Force -Path $intermediateDir | Out-Null
+
+        & $Toolchain.Wix convert -acceptEula wix7 $convertedWxs
+        if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 10) {
+            throw "wix convert failed with exit code $LASTEXITCODE"
+        }
+
+        & $Toolchain.Wix build -acceptEula wix7 -arch x64 -out $OutputMsi -intermediateFolder $intermediateDir -pdbtype none $convertedWxs
+        if ($LASTEXITCODE -ne 0) {
+            throw "wix build failed with exit code $LASTEXITCODE"
+        }
+
+        return
+    }
+
+    & $Toolchain.Candle -nologo -arch x64 -out $WixObjPath $WxsPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "candle.exe failed with exit code $LASTEXITCODE"
+    }
+
+    & $Toolchain.Light -nologo -sw1076 -out $OutputMsi $WixObjPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "light.exe failed with exit code $LASTEXITCODE"
+    }
 }
 
 function Convert-ToXmlValue {
@@ -74,8 +139,8 @@ function Resolve-SourceDir {
     }
 
     $candidates = @(
-        "src-tauri\target\release\repro-msi-root",
-        "src-tauri\target\release\bundle\msi\root"
+        ([System.IO.Path]::Combine("src-tauri", "target", "release", "repro-msi-root")),
+        ([System.IO.Path]::Combine("src-tauri", "target", "release", "bundle", "msi", "root"))
     )
 
     foreach ($candidate in $candidates) {
@@ -297,6 +362,17 @@ function Read-UInt64LE {
     return [BitConverter]::ToUInt64($Bytes, $Offset)
 }
 
+function Write-UInt32LE {
+    param(
+        [byte[]]$Bytes,
+        [int]$Offset,
+        [uint32]$Value
+    )
+
+    $valueBytes = [BitConverter]::GetBytes($Value)
+    [Buffer]::BlockCopy($valueBytes, 0, $Bytes, $Offset, $valueBytes.Length)
+}
+
 function Write-UInt64LE {
     param(
         [byte[]]$Bytes,
@@ -381,6 +457,344 @@ function Read-CfbFat {
     }
 
     return $fat.ToArray()
+}
+
+function Read-CfbSectorChainIds {
+    param(
+        [uint32[]]$Fat,
+        [uint32]$FirstSector,
+        [string]$ChainName
+    )
+
+    $ids = [System.Collections.Generic.List[uint32]]::new()
+    $seen = @{}
+    $sector = $FirstSector
+
+    while ($sector -ne $script:ENDOFCHAIN) {
+        if (
+            $sector -eq $script:FREESECT -or
+            $sector -eq $script:FATSECT -or
+            $sector -eq $script:DIFSECT
+        ) {
+            throw "Invalid CFB $ChainName chain entry: $sector"
+        }
+
+        if ([int64]$sector -ge $Fat.Length) {
+            throw "CFB $ChainName sector $sector is outside FAT bounds"
+        }
+
+        $key = $sector.ToString()
+        if ($seen.ContainsKey($key)) {
+            throw "CFB $ChainName chain contains a cycle at sector $sector"
+        }
+        $seen[$key] = $true
+        $ids.Add($sector)
+
+        $sector = $Fat[[int]$sector]
+    }
+
+    return $ids.ToArray()
+}
+
+function Read-CfbMiniSectorChainIds {
+    param(
+        [uint32[]]$MiniFat,
+        [uint32]$FirstSector,
+        [string]$ChainName
+    )
+
+    $ids = [System.Collections.Generic.List[uint32]]::new()
+    $seen = @{}
+    $sector = $FirstSector
+
+    while ($sector -ne $script:ENDOFCHAIN) {
+        if ($sector -eq $script:FREESECT) {
+            throw "Invalid CFB mini $ChainName chain entry: $sector"
+        }
+
+        if ([int64]$sector -ge $MiniFat.Length) {
+            throw "CFB mini $ChainName sector $sector is outside MiniFAT bounds"
+        }
+
+        $key = $sector.ToString()
+        if ($seen.ContainsKey($key)) {
+            throw "CFB mini $ChainName chain contains a cycle at sector $sector"
+        }
+        $seen[$key] = $true
+        $ids.Add($sector)
+
+        $sector = $MiniFat[[int]$sector]
+    }
+
+    return $ids.ToArray()
+}
+
+function Get-CfbDirectoryEntries {
+    param(
+        [byte[]]$Bytes,
+        [int]$SectorSize,
+        [uint32[]]$Fat
+    )
+
+    $firstDirectorySector = Read-UInt32LE -Bytes $Bytes -Offset 48
+    $directorySectors = Read-CfbSectorChainIds -Fat $Fat -FirstSector $firstDirectorySector -ChainName "directory"
+    $entries = [System.Collections.Generic.List[object]]::new()
+
+    foreach ($sector in $directorySectors) {
+        $sectorOffset = [int64]$SectorSize + ([int64]$sector * [int64]$SectorSize)
+        if ($sectorOffset -lt $SectorSize -or ($sectorOffset + $SectorSize) -gt $Bytes.Length) {
+            throw "CFB directory sector $sector is outside file bounds"
+        }
+
+        for ($entryOffset = 0; $entryOffset -lt $SectorSize; $entryOffset += 128) {
+            $entryBase = [int]($sectorOffset + $entryOffset)
+            $nameLength = Read-UInt16LE -Bytes $Bytes -Offset ($entryBase + 64)
+            $objectType = $Bytes[$entryBase + 66]
+            if ($nameLength -eq 0 -and $objectType -eq 0) {
+                continue
+            }
+
+            $name = ""
+            if ($nameLength -gt 2 -and $nameLength -le 64) {
+                $nameBytes = [byte[]]::new($nameLength - 2)
+                [Buffer]::BlockCopy($Bytes, $entryBase, $nameBytes, 0, $nameBytes.Length)
+                $name = [System.Text.Encoding]::Unicode.GetString($nameBytes)
+            }
+
+            $entries.Add([pscustomobject]@{
+                Name = $name
+                ObjectType = [int]$objectType
+                EntryOffset = $entryBase
+                StartSector = (Read-UInt32LE -Bytes $Bytes -Offset ($entryBase + 116))
+                StreamSize = (Read-UInt64LE -Bytes $Bytes -Offset ($entryBase + 120))
+            })
+        }
+    }
+
+    return $entries.ToArray()
+}
+
+function Read-CfbMiniFat {
+    param(
+        [byte[]]$Bytes,
+        [int]$SectorSize,
+        [uint32[]]$Fat
+    )
+
+    $firstMiniFatSector = Read-UInt32LE -Bytes $Bytes -Offset 60
+    $miniFatSectorCount = Read-UInt32LE -Bytes $Bytes -Offset 64
+    $miniFat = [System.Collections.Generic.List[uint32]]::new()
+    if ($miniFatSectorCount -eq 0 -or $firstMiniFatSector -eq $script:ENDOFCHAIN) {
+        return $miniFat.ToArray()
+    }
+
+    $miniFatSectors = Read-CfbSectorChainIds -Fat $Fat -FirstSector $firstMiniFatSector -ChainName "MiniFAT"
+    $sectorIndex = 0
+    foreach ($sector in $miniFatSectors) {
+        if ($sectorIndex -ge $miniFatSectorCount) {
+            break
+        }
+
+        $sectorBytes = Read-CfbSector -Bytes $Bytes -SectorId $sector -SectorSize $SectorSize
+        for ($offset = 0; $offset -lt $SectorSize; $offset += 4) {
+            $miniFat.Add((Read-UInt32LE -Bytes $sectorBytes -Offset $offset))
+        }
+
+        $sectorIndex += 1
+    }
+
+    return $miniFat.ToArray()
+}
+
+function Read-CfbNormalStreamBytes {
+    param(
+        [byte[]]$Bytes,
+        [int]$SectorSize,
+        [uint32[]]$Fat,
+        [uint32]$FirstSector,
+        [uint64]$StreamSize,
+        [string]$StreamName
+    )
+
+    if ($StreamSize -eq 0) {
+        return [byte[]]::new(0)
+    }
+
+    if ($StreamSize -gt [int]::MaxValue) {
+        throw "CFB stream '$StreamName' is too large to normalize"
+    }
+
+    $streamBytes = [byte[]]::new([int]$StreamSize)
+    $sectorIds = Read-CfbSectorChainIds -Fat $Fat -FirstSector $FirstSector -ChainName "stream '$StreamName'"
+    $written = 0
+
+    foreach ($sector in $sectorIds) {
+        if ($written -ge $streamBytes.Length) {
+            break
+        }
+
+        $sectorOffset = [int64]$SectorSize + ([int64]$sector * [int64]$SectorSize)
+        if ($sectorOffset -lt $SectorSize -or ($sectorOffset + $SectorSize) -gt $Bytes.Length) {
+            throw "CFB stream '$StreamName' sector $sector is outside file bounds"
+        }
+
+        $count = [int][Math]::Min($SectorSize, $streamBytes.Length - $written)
+        [Buffer]::BlockCopy($Bytes, [int]$sectorOffset, $streamBytes, $written, $count)
+        $written += $count
+    }
+
+    if ($written -lt $streamBytes.Length) {
+        throw "CFB stream '$StreamName' chain ended before reading $StreamSize bytes"
+    }
+
+    return $streamBytes
+}
+
+function Write-CfbNormalStreamBytes {
+    param(
+        [byte[]]$Bytes,
+        [int]$SectorSize,
+        [uint32[]]$Fat,
+        [uint32]$FirstSector,
+        [uint64]$StreamSize,
+        [byte[]]$Data,
+        [string]$StreamName
+    )
+
+    if ($Data.Length -gt $StreamSize) {
+        throw "CFB stream '$StreamName' replacement is larger than the original stream"
+    }
+
+    if ($Data.Length -eq 0) {
+        return
+    }
+
+    $sectorIds = Read-CfbSectorChainIds -Fat $Fat -FirstSector $FirstSector -ChainName "stream '$StreamName'"
+    $written = 0
+
+    foreach ($sector in $sectorIds) {
+        if ($written -ge $Data.Length) {
+            break
+        }
+
+        $sectorOffset = [int64]$SectorSize + ([int64]$sector * [int64]$SectorSize)
+        if ($sectorOffset -lt $SectorSize -or ($sectorOffset + $SectorSize) -gt $Bytes.Length) {
+            throw "CFB stream '$StreamName' sector $sector is outside file bounds"
+        }
+
+        $count = [int][Math]::Min($SectorSize, $Data.Length - $written)
+        [Buffer]::BlockCopy($Data, $written, $Bytes, [int]$sectorOffset, $count)
+        $written += $count
+    }
+
+    if ($written -lt $Data.Length) {
+        throw "CFB stream '$StreamName' chain ended before writing $($Data.Length) bytes"
+    }
+}
+
+function Get-CfbRootEntry {
+    param([object[]]$DirectoryEntries)
+
+    foreach ($entry in $DirectoryEntries) {
+        if ($entry.ObjectType -eq 5) {
+            return $entry
+        }
+    }
+
+    throw "CFB root storage entry was not found"
+}
+
+function Read-CfbStreamBytes {
+    param(
+        [byte[]]$Bytes,
+        [int]$SectorSize,
+        [int]$MiniSectorSize,
+        [uint32]$MiniStreamCutoff,
+        [uint32[]]$Fat,
+        [object[]]$DirectoryEntries,
+        [object]$Entry
+    )
+
+    if ($Entry.ObjectType -ne 5 -and $Entry.StreamSize -lt $MiniStreamCutoff) {
+        $miniFat = Read-CfbMiniFat -Bytes $Bytes -SectorSize $SectorSize -Fat $Fat
+        $rootEntry = Get-CfbRootEntry -DirectoryEntries $DirectoryEntries
+        $miniStream = Read-CfbNormalStreamBytes -Bytes $Bytes -SectorSize $SectorSize -Fat $Fat -FirstSector $rootEntry.StartSector -StreamSize $rootEntry.StreamSize -StreamName "Root Entry"
+        $streamBytes = [byte[]]::new([int]$Entry.StreamSize)
+        $miniSectors = Read-CfbMiniSectorChainIds -MiniFat $miniFat -FirstSector $Entry.StartSector -ChainName $Entry.Name
+        $written = 0
+
+        foreach ($miniSector in $miniSectors) {
+            if ($written -ge $streamBytes.Length) {
+                break
+            }
+
+            $miniOffset = [int64]$miniSector * [int64]$MiniSectorSize
+            if ($miniOffset -lt 0 -or ($miniOffset + $MiniSectorSize) -gt $miniStream.Length) {
+                throw "CFB mini stream sector $miniSector for '$($Entry.Name)' is outside root mini stream bounds"
+            }
+
+            $count = [int][Math]::Min($MiniSectorSize, $streamBytes.Length - $written)
+            [Buffer]::BlockCopy($miniStream, [int]$miniOffset, $streamBytes, $written, $count)
+            $written += $count
+        }
+
+        if ($written -lt $streamBytes.Length) {
+            throw "CFB mini stream '$($Entry.Name)' chain ended before reading $($Entry.StreamSize) bytes"
+        }
+
+        return $streamBytes
+    }
+
+    return Read-CfbNormalStreamBytes -Bytes $Bytes -SectorSize $SectorSize -Fat $Fat -FirstSector $Entry.StartSector -StreamSize $Entry.StreamSize -StreamName $Entry.Name
+}
+
+function Write-CfbStreamBytes {
+    param(
+        [byte[]]$Bytes,
+        [int]$SectorSize,
+        [int]$MiniSectorSize,
+        [uint32]$MiniStreamCutoff,
+        [uint32[]]$Fat,
+        [object[]]$DirectoryEntries,
+        [object]$Entry,
+        [byte[]]$Data
+    )
+
+    if ($Data.Length -gt $Entry.StreamSize) {
+        throw "CFB stream '$($Entry.Name)' replacement is larger than the original stream"
+    }
+
+    if ($Entry.ObjectType -ne 5 -and $Entry.StreamSize -lt $MiniStreamCutoff) {
+        $miniFat = Read-CfbMiniFat -Bytes $Bytes -SectorSize $SectorSize -Fat $Fat
+        $rootEntry = Get-CfbRootEntry -DirectoryEntries $DirectoryEntries
+        $miniStream = Read-CfbNormalStreamBytes -Bytes $Bytes -SectorSize $SectorSize -Fat $Fat -FirstSector $rootEntry.StartSector -StreamSize $rootEntry.StreamSize -StreamName "Root Entry"
+        $miniSectors = Read-CfbMiniSectorChainIds -MiniFat $miniFat -FirstSector $Entry.StartSector -ChainName $Entry.Name
+        $written = 0
+
+        foreach ($miniSector in $miniSectors) {
+            if ($written -ge $Data.Length) {
+                break
+            }
+
+            $miniOffset = [int64]$miniSector * [int64]$MiniSectorSize
+            if ($miniOffset -lt 0 -or ($miniOffset + $MiniSectorSize) -gt $miniStream.Length) {
+                throw "CFB mini stream sector $miniSector for '$($Entry.Name)' is outside root mini stream bounds"
+            }
+
+            $count = [int][Math]::Min($MiniSectorSize, $Data.Length - $written)
+            [Buffer]::BlockCopy($Data, $written, $miniStream, [int]$miniOffset, $count)
+            $written += $count
+        }
+
+        if ($written -lt $Data.Length) {
+            throw "CFB mini stream '$($Entry.Name)' chain ended before writing $($Data.Length) bytes"
+        }
+
+        Write-CfbNormalStreamBytes -Bytes $Bytes -SectorSize $SectorSize -Fat $Fat -FirstSector $rootEntry.StartSector -StreamSize $rootEntry.StreamSize -Data $miniStream -StreamName "Root Entry"
+        return
+    }
+
+    Write-CfbNormalStreamBytes -Bytes $Bytes -SectorSize $SectorSize -Fat $Fat -FirstSector $Entry.StartSector -StreamSize $Entry.StreamSize -Data $Data -StreamName $Entry.Name
 }
 
 function Assert-CfbSignature {
@@ -642,6 +1056,170 @@ function Normalize-MsiCfbDirectoryTimes {
     throw "Could not normalize MSI CFB directory timestamps after $maxAttempts attempts"
 }
 
+function Get-PropertySetValueOffset {
+    param(
+        [byte[]]$PropertySetBytes,
+        [uint32]$PropertyId
+    )
+
+    if ($PropertySetBytes.Length -lt 48) {
+        throw "MSI SummaryInformation stream is too small"
+    }
+
+    $propertySetCount = Read-UInt32LE -Bytes $PropertySetBytes -Offset 24
+    if ($propertySetCount -lt 1) {
+        throw "MSI SummaryInformation stream does not contain a property set"
+    }
+
+    $sectionOffset = Read-UInt32LE -Bytes $PropertySetBytes -Offset 44
+    if (($sectionOffset + 8) -gt $PropertySetBytes.Length) {
+        throw "MSI SummaryInformation section is outside stream bounds"
+    }
+
+    $propertyCount = Read-UInt32LE -Bytes $PropertySetBytes -Offset ([int]$sectionOffset + 4)
+    $propertyTableOffset = [int]$sectionOffset + 8
+    for ($i = 0; $i -lt $propertyCount; $i++) {
+        $entryOffset = $propertyTableOffset + ($i * 8)
+        if (($entryOffset + 8) -gt $PropertySetBytes.Length) {
+            throw "MSI SummaryInformation property table is outside stream bounds"
+        }
+
+        $id = Read-UInt32LE -Bytes $PropertySetBytes -Offset $entryOffset
+        $relativeValueOffset = Read-UInt32LE -Bytes $PropertySetBytes -Offset ($entryOffset + 4)
+        if ($id -eq $PropertyId) {
+            $valueOffset = [int]$sectionOffset + [int]$relativeValueOffset
+            if (($valueOffset + 4) -gt $PropertySetBytes.Length) {
+                throw "MSI SummaryInformation property $PropertyId is outside stream bounds"
+            }
+
+            return $valueOffset
+        }
+    }
+
+    throw "MSI SummaryInformation property $PropertyId was not found"
+}
+
+function Set-PropertySetStringValue {
+    param(
+        [byte[]]$PropertySetBytes,
+        [int]$ValueOffset,
+        [string]$Value
+    )
+
+    $type = Read-UInt32LE -Bytes $PropertySetBytes -Offset $ValueOffset
+    if ($type -eq 30) {
+        $existingLength = Read-UInt32LE -Bytes $PropertySetBytes -Offset ($ValueOffset + 4)
+        $valueBytes = [System.Text.Encoding]::ASCII.GetBytes($Value)
+        $newLength = $valueBytes.Length + 1
+        if ($newLength -gt $existingLength) {
+            throw "MSI SummaryInformation string property does not have room for '$Value'"
+        }
+
+        Write-UInt32LE -Bytes $PropertySetBytes -Offset ($ValueOffset + 4) -Value ([uint32]$newLength)
+        [Array]::Clear($PropertySetBytes, $ValueOffset + 8, [int]$existingLength)
+        [Buffer]::BlockCopy($valueBytes, 0, $PropertySetBytes, $ValueOffset + 8, $valueBytes.Length)
+        return
+    }
+
+    if ($type -eq 31) {
+        $existingLength = Read-UInt32LE -Bytes $PropertySetBytes -Offset ($ValueOffset + 4)
+        $valueBytes = [System.Text.Encoding]::Unicode.GetBytes($Value)
+        $newLength = $Value.Length + 1
+        if ($newLength -gt $existingLength) {
+            throw "MSI SummaryInformation wide string property does not have room for '$Value'"
+        }
+
+        Write-UInt32LE -Bytes $PropertySetBytes -Offset ($ValueOffset + 4) -Value ([uint32]$newLength)
+        [Array]::Clear($PropertySetBytes, $ValueOffset + 8, [int]$existingLength * 2)
+        [Buffer]::BlockCopy($valueBytes, 0, $PropertySetBytes, $ValueOffset + 8, $valueBytes.Length)
+        return
+    }
+
+    throw "MSI SummaryInformation string property has unsupported type $type"
+}
+
+function Set-PropertySetFileTimeValue {
+    param(
+        [byte[]]$PropertySetBytes,
+        [int]$ValueOffset,
+        [uint64]$FileTime
+    )
+
+    $type = Read-UInt32LE -Bytes $PropertySetBytes -Offset $ValueOffset
+    if ($type -ne 64) {
+        throw "MSI SummaryInformation timestamp property has unsupported type $type"
+    }
+
+    Write-UInt64LE -Bytes $PropertySetBytes -Offset ($ValueOffset + 4) -Value $FileTime
+}
+
+function Set-MsiSummaryInformationPortable {
+    param(
+        [string]$MsiPath,
+        [string]$PackageCode,
+        [DateTime]$Timestamp
+    )
+
+    $resolved = (Resolve-Path -LiteralPath $MsiPath).Path
+    $bytes = Read-AllBytesWithRetry -Path $resolved
+    Assert-CfbSignature -Bytes $bytes -Path $resolved
+
+    $sectorShift = Read-UInt16LE -Bytes $bytes -Offset 30
+    $sectorSize = 1 -shl $sectorShift
+    $miniSectorShift = Read-UInt16LE -Bytes $bytes -Offset 32
+    $miniSectorSize = 1 -shl $miniSectorShift
+    $miniStreamCutoff = Read-UInt32LE -Bytes $bytes -Offset 56
+    $fat = Read-CfbFat -Bytes $bytes -SectorSize $sectorSize
+    $directoryEntries = Get-CfbDirectoryEntries -Bytes $bytes -SectorSize $sectorSize -Fat $fat
+    $summaryName = "$([char]5)SummaryInformation"
+    $summaryEntry = $null
+    foreach ($entry in $directoryEntries) {
+        if ($entry.Name -eq $summaryName) {
+            $summaryEntry = $entry
+            break
+        }
+    }
+
+    if ($null -eq $summaryEntry) {
+        throw "MSI SummaryInformation stream was not found"
+    }
+
+    $summaryBytes = Read-CfbStreamBytes -Bytes $bytes -SectorSize $sectorSize -MiniSectorSize $miniSectorSize -MiniStreamCutoff $miniStreamCutoff -Fat $fat -DirectoryEntries $directoryEntries -Entry $summaryEntry
+    $packageCodeOffset = Get-PropertySetValueOffset -PropertySetBytes $summaryBytes -PropertyId 9
+    $createTimeOffset = Get-PropertySetValueOffset -PropertySetBytes $summaryBytes -PropertyId 12
+    $lastSaveTimeOffset = Get-PropertySetValueOffset -PropertySetBytes $summaryBytes -PropertyId 13
+    $fileTime = [uint64]$Timestamp.ToFileTimeUtc()
+
+    Set-PropertySetStringValue -PropertySetBytes $summaryBytes -ValueOffset $packageCodeOffset -Value "{$PackageCode}"
+    Set-PropertySetFileTimeValue -PropertySetBytes $summaryBytes -ValueOffset $createTimeOffset -FileTime $fileTime
+    Set-PropertySetFileTimeValue -PropertySetBytes $summaryBytes -ValueOffset $lastSaveTimeOffset -FileTime $fileTime
+
+    Write-CfbStreamBytes -Bytes $bytes -SectorSize $sectorSize -MiniSectorSize $miniSectorSize -MiniStreamCutoff $miniStreamCutoff -Fat $fat -DirectoryEntries $directoryEntries -Entry $summaryEntry -Data $summaryBytes
+    Write-AllBytesWithRetry -Path $resolved -Bytes $bytes
+    Write-Output "Normalized MSI SummaryInformation stream"
+}
+
+function Set-MsiSummaryInformationNormalized {
+    param(
+        [string]$MsiPath,
+        [string]$PackageCode,
+        [DateTime]$Timestamp,
+        [string]$TimestampEpoch
+    )
+
+    try {
+        Set-MsiSummaryInformationPortable -MsiPath $MsiPath -PackageCode $PackageCode -Timestamp $Timestamp
+    } catch {
+        $isWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
+        if (-not $isWindows) {
+            throw
+        }
+
+        Write-Output "Portable MSI SummaryInformation normalization failed, falling back to Windows Installer COM: $($_.Exception.Message)"
+        Invoke-SummaryInformationChildProcess -MsiPath $MsiPath -PackageCode $PackageCode -TimestampEpoch $TimestampEpoch
+    }
+}
+
 function Copy-NormalizedTree {
     param(
         [string]$Source,
@@ -681,7 +1259,7 @@ function Write-WixSource {
         Sort-Object FullName
     $files = Get-ChildItem -LiteralPath $Root -Recurse -File -Force |
         Sort-Object FullName
-    $npcapInstallerPath = Join-Path $Root "windows\npcap-1.87.exe"
+    $npcapInstallerPath = [System.IO.Path]::Combine($Root, "windows", "npcap-1.87.exe")
     if (-not (Test-Path -LiteralPath $npcapInstallerPath -PathType Leaf)) {
         throw "Npcap installer is required in MSI source root: $npcapInstallerPath"
     }
@@ -750,7 +1328,7 @@ function Write-WixSource {
     $lines.Add('      </DirectorySearch>')
     $lines.Add('    </Property>')
     $lines.Add("    <Binary Id=""NpcapInstallerExe"" SourceFile=""$escapedNpcapInstallerPath"" />")
-    $lines.Add('    <CustomAction Id="CA_InstallNpcap" BinaryKey="NpcapInstallerExe" ExeCommand="/winpcap_mode=yes" Execute="deferred" Impersonate="no" Return="check" />')
+    $lines.Add('    <CustomAction Id="CA_InstallNpcap" BinaryKey="NpcapInstallerExe" ExeCommand="/S /winpcap_mode=yes" Execute="deferred" Impersonate="no" Return="check" />')
     $lines.Add('    <InstallExecuteSequence>')
     $lines.Add('      <Custom Action="CA_InstallNpcap" After="InstallFiles"><![CDATA[((NOT WPCAP_DLL_PATH) OR (NOT PACKET_DLL_PATH)) AND (NOT Installed)]]></Custom>')
     $lines.Add('    </InstallExecuteSequence>')
@@ -779,8 +1357,7 @@ function Write-WixSource {
 }
 
 function Main {
-    $candle = Require-Command "candle.exe"
-    $light = Require-Command "light.exe"
+    $toolchain = Resolve-WixToolchain
 
     $source = Resolve-SourceDir
     if (-not $Version) {
@@ -793,7 +1370,7 @@ function Main {
     }
 
     if (-not $OutputMsi) {
-        $OutputMsi = Join-Path (Get-Location) "dist\repro-msi\$ProductName-$Version.msi"
+        $OutputMsi = [System.IO.Path]::Combine((Get-Location).Path, "dist", "repro-msi", "$ProductName-$Version.msi")
     } elseif (-not [System.IO.Path]::IsPathRooted($OutputMsi)) {
         $OutputMsi = Join-Path (Get-Location) $OutputMsi
     }
@@ -824,22 +1401,14 @@ function Main {
 
         Write-WixSource -Root $staging -WxsPath $wxs -PackageCode $packageCode -ProductCode $productCode -StableUpgradeCode $UpgradeCode
 
-        & $candle -nologo -arch x64 -out $wixobj $wxs
-        if ($LASTEXITCODE -ne 0) {
-            throw "candle.exe failed with exit code $LASTEXITCODE"
-        }
-
-        & $light -nologo -sw1076 -out $OutputMsi $wixobj
-        if ($LASTEXITCODE -ne 0) {
-            throw "light.exe failed with exit code $LASTEXITCODE"
-        }
+        Invoke-WixBuild -Toolchain $toolchain -WxsPath $wxs -WixObjPath $wixobj -OutputMsi $OutputMsi -WorkDir $workdir
 
         $outputItem = Get-Item -LiteralPath $OutputMsi
         $outputItem.LastWriteTimeUtc = $timestamp
         $outputItem.CreationTimeUtc = $timestamp
         $outputItem.LastAccessTimeUtc = $timestamp
 
-        Invoke-SummaryInformationChildProcess -MsiPath $OutputMsi -PackageCode $packageCode -TimestampEpoch $SourceDateEpoch
+        Set-MsiSummaryInformationNormalized -MsiPath $OutputMsi -PackageCode $packageCode -Timestamp $timestamp -TimestampEpoch $SourceDateEpoch
         Normalize-MsiCfbDirectoryTimes -MsiPath $OutputMsi
 
         $outputItem = Get-Item -LiteralPath $OutputMsi
