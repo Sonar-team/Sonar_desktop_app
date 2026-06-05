@@ -68,6 +68,36 @@ jobs:
             npm run tauri build
           fi
 
+      - name: collect Windows Tauri MSI artifacts
+        if: matrix.platform == 'windows-2022'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          output_dir="tauri-windows-msi-artifact"
+          mkdir -p "$output_dir"
+
+          mapfile -t msis < <(find src-tauri/target -type f -path '*/bundle/msi/*.msi' | sort)
+          printf '%s\n' "${msis[@]}" | tee "${output_dir}/msi-files.txt"
+          test "${#msis[@]}" -gt 0
+
+          for msi in "${msis[@]}"; do
+            cp "$msi" "${output_dir}/$(basename "$msi")"
+          done
+
+          (
+            cd "$output_dir"
+            sha256sum *.msi > sha256.txt
+          )
+
+      - name: upload Windows Tauri MSI artifacts
+        if: matrix.platform == 'windows-2022'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tauri-windows-msi-${{ github.run_id }}
+          path: tauri-windows-msi-artifact/
+          if-no-files-found: error
+
   debian-repro-smoke:
     name: verify reproducible Debian package
     runs-on: ubuntu-22.04
