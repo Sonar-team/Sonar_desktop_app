@@ -413,6 +413,17 @@ jobs:
           Write-Output "$firstHash  $firstMsi"
           Write-Output "$secondHash  $secondMsi"
 
+          $artifactDir = Join-Path $env:GITHUB_WORKSPACE "msi-smoke-artifact"
+          New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
+          Copy-Item -LiteralPath $firstMsi -Destination (Join-Path $artifactDir "first.msi") -Force
+          Copy-Item -LiteralPath $secondMsi -Destination (Join-Path $artifactDir "second.msi") -Force
+          Copy-Item -LiteralPath $firstManifest -Destination (Join-Path $artifactDir "first.msi.input-sha256") -Force
+          Copy-Item -LiteralPath $secondManifest -Destination (Join-Path $artifactDir "second.msi.input-sha256") -Force
+          Set-Content -Path (Join-Path $artifactDir "sha256.txt") -Value @(
+            "$firstHash  first.msi",
+            "$secondHash  second.msi"
+          )
+
           Write-Output "first.msi CFB root timestamps"
           pwsh -NoProfile -File "script/ci/read-msi-cfb-times.ps1" -MsiPath $firstMsi
           Write-Output "second.msi CFB root timestamps"
@@ -458,3 +469,11 @@ jobs:
             Write-Output "::error::MSI package is not reproducible"
             throw "MSI hashes differ"
           }
+
+      - name: upload MSI artifacts for VM testing
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: smoke-msi-vm-${{ github.run_id }}
+          path: msi-smoke-artifact/
+          if-no-files-found: error
