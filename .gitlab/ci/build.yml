@@ -1,0 +1,28 @@
+build:
+  stage: build
+  cache:
+    key: "gitlab-build-${CI_COMMIT_REF_SLUG}"
+    policy: pull-push
+    paths:
+      - .deno/
+      - src-tauri/target/
+  script:
+    - set -a && . ./config/build-versions.env && set +a
+    - ./script/ci/use-apt-snapshot.sh
+    - apt install -y ${GITLAB_APT_PACKAGES}
+    - cargo -V
+    - export PATH=/usr/local/node/bin:$PATH
+    - arch="$(dpkg --print-architecture)" && case "$arch" in amd64) node_arch="x64" ;; arm64) node_arch="arm64" ;; *) echo "Unsupported architecture $arch" >&2; exit 1 ;; esac
+    - curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${node_arch}.tar.xz" -o /tmp/node.tar.xz
+    - mkdir -p /usr/local/node
+    - tar -xJf /tmp/node.tar.xz --strip-components=1 -C /usr/local/node
+    - rm -f /tmp/node.tar.xz
+    - npm install -g "deno@${DENO_VERSION}"
+    - DENO_DIR="${CI_PROJECT_DIR}/.deno" deno install --frozen
+    - deno task tauri build
+
+  artifacts:
+    paths:
+      - src-tauri/target/release/bundle/deb/*.deb
+      - src-tauri/target/release/bundle/rpm/*.rpm
+    expire_in: 7 days

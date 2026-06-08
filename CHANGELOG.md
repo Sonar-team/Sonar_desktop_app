@@ -1,25 +1,158 @@
 # Changelog
 
-## **[3.10.0] – 2026-01-08**
-## ✨ Fonctionnalités
+## **[3.13.8] - 2026-05-18**
 
-* Ajout du parsing Modbus/TCP au niveau applicatif, permettant l’analyse et la restitution des communications industrielles OT.
+## 🛠 Corrections
 
-* Introduction d’un mode headless / CLI, permettant l’exécution de SONAR sans interface graphique (usage automatisé, serveurs, environnements contraints).
+- Hotfix release macOS : remplacement de `mapfile` dans le script d'upload des
+  bundles Sigstore pour rester compatible avec Bash 3.2 sur les runners macOS.
+- Mise à jour de la version de SONAR en **3.13.8** pour publier ce correctif.
+
+## **[3.13.7] - 2026-05-18**
+
+## 🔐 Chaîne de confiance
+
+- Signature des artefacts de release avec `cosign sign-blob` et identité OIDC
+  GitHub Actions.
+- Publication des bundles Sigstore `.sigstore.json` dans la release GitHub et
+  comme artefacts CI.
+
+## 🛠 Corrections
+
+- Remplacement de `subject-checksums` par `subject-path` pour la provenance
+  GitHub Artifact Attestations afin d'éviter le parsing incorrect des manifests
+  multi-lignes sur Windows.
+- Mise à jour de la version de SONAR en **3.13.7** pour publier ce correctif.
+
+## **[3.13.6] - 2026-05-18**
+
+## 🛠 Corrections
+
+- Hotfix provenance Windows : normalisation du fichier
+  `release-attestation-subjects-*.sha256` au format `shasum` attendu par
+  `actions/attest`, sans marqueur binaire `*`.
+- Ajout d'une validation stricte des digests SHA256 avant écriture du manifest
+  d'attestation.
+- Mise à jour de la version de SONAR en **3.13.6** pour publier ce correctif.
+
+## **[3.13.5] - 2026-05-18**
 
 ## ✨ Améliorations
 
-* Mise à jour et amélioration de l’installer Npcap pour Windows.
+- Ajout des versions de build canonique dans le menu `A propos` : Rust, Node.js,
+  Deno et Tauri CLI.
+- Injection des versions de build depuis `config/build-versions.env` au moment
+  de la compilation Rust.
 
-* Mise à jour du release log et du changelog.
+## 🔐 Chaîne de confiance
+
+- Ajout de la génération d'attestations de provenance GitHub Artifact
+  Attestations pour les artefacts de release.
+- Génération d'un manifest SHA256 dédié aux sujets d'attestation : binaire,
+  bundle plateforme et manifest de hashes de release.
+- Mise à jour de la documentation sprint/backlog sur la provenance et la
+  séparation entre reproductibilité, signature, SBOM et attestations.
+- Mise à jour de la version de SONAR en **3.13.5** pour publier ces changements.
+
+## **[3.13.4] - 2026-05-07**
+
+## 🛠 Corrections
+
+- Hotfix CI release : publication des hashes SHA256 des binaires et des bundles
+  directement dans le message de la release GitHub.
+- Suppression de l'upload des fichiers `SHA256SUMS-*` comme assets de release.
+- Extraction de la génération des hashes et de la mise à jour du message de
+  release dans des scripts CI dédiés.
+- Mise à jour de la version de SONAR en **3.13.4** pour publier ce correctif.
+
+## **[3.13.3] - 2026-05-07**
+
+## 🛠 Corrections
+
+- Hotfix CI release : génération des fichiers `SHA256SUMS-*` depuis tous les
+  répertoires `bundle` produits sous `src-tauri/target`, y compris les builds
+  macOS avec target explicite.
+- Compatibilité macOS pour le calcul SHA256 via `shasum -a 256` lorsque
+  `sha256sum` n'est pas disponible.
+- Mise à jour de la version de SONAR en **3.13.3** pour publier ce correctif.
+
+## **[3.13.2] - 2026-05-07**
+
+## 🛠 Corrections
+
+- Hotfix CI release : le contrôle reproductible reste bloquant pour le binaire
+  SONAR, mais un bundle `.deb` non reproductible est traité comme diagnostic
+  afin de ne pas empêcher la publication d'une nouvelle version.
+- Mise à jour de la version de SONAR en **3.13.2** pour publier ce correctif.
+
+## **[3.13.1] - 2026-05-07**
+
+## 🛠 Corrections
+
+- Hotfix vendoring : inclusion complète des fichiers `diagram.svg` et
+  `diagram.png` de `libdbus-sys` pour éviter les erreurs de checksum Cargo en
+  CI.
+- Mise à jour de la version de SONAR en **3.13.1** pour publier ce correctif.
+
+## **[3.13.0] - 2026-05-07**
+
+## ✨ Améliorations
+
+- Mise à jour de la version de SONAR en **3.13.0**.
+- Alignement des versions dans `package.json`, `tauri.conf.json`, `Cargo.toml`
+  et `Cargo.lock`.
+
+## 🔎 Analyse protocolaire
+
+- Mise à jour de `packet_parser` en **1.3.0** pour ajouter la détection du
+  protocole **OPC UA**.
+
+## **[3.12.3] – 2026-04-28**
+
+## 🧪 Build / Reproductibilité
+
+- Verrouillage explicite de la toolchain Rust sur **1.95.0**.
+- Ajout de `rust-version = "1.95.0"` dans le manifest Cargo.
+- Verrouillage de **Deno 2.7.13** dans le pipeline de release et dans le build
+  Docker.
+- Déclaration de la version cible de **Node 24.14.0** dans `package.json`.
+- Remplacement du bootstrap flottant Node/Deno dans Docker par des versions
+  explicitement fixées.
+- Ajout d’un `.dockerignore` pour stabiliser et réduire fortement le contexte de
+  build Docker.
+- Stabilisation partielle des runners GitHub Actions avec des labels plus
+  explicites pour macOS et Windows.
+
+## 🛠 Corrections
+
+- Correction de la condition du target macOS dans le workflow de publication
+  après changement du runner.
+- Mise à jour du backlog et de la revue de sprint liés à l’objectif de build
+  reproductible.
+
+## **[3.10.0] – 2026-01-08**
+
+## ✨ Fonctionnalités
+
+- Ajout du parsing Modbus/TCP au niveau applicatif, permettant l’analyse et la
+  restitution des communications industrielles OT.
+
+- Introduction d’un mode headless / CLI, permettant l’exécution de SONAR sans
+  interface graphique (usage automatisé, serveurs, environnements contraints).
+
+## ✨ Améliorations
+
+- Mise à jour et amélioration de l’installer Npcap pour Windows.
+
+- Mise à jour du release log et du changelog.
 
 ## **[3.9.6] – 2025-12-22**
 
 ## 🧪 Tests / Packaging
 
-* Tests et ajustements successifs des icônes de l’installer NSIS.
-* Corrections de format d’images (PNG → BMP) pour compatibilité NSIS.
-* Ajustements visuels et techniques des ressources d’installation.
+- Tests et ajustements successifs des icônes de l’installer NSIS.
+- Corrections de format d’images (PNG → BMP) pour compatibilité NSIS.
+- Ajustements visuels et techniques des ressources d’installation.
 
 ---
 
@@ -27,17 +160,18 @@
 
 ## ✨ Améliorations
 
-* Migration complète de l’installer Windows vers **NSIS**.
-* Ajout de **Npcap** dans les ressources de l’installer.
-* Support de l’installation de Npcap directement depuis l’installer.
-* Ajout du support de la langue **française** dans NSIS.
-* Nettoyage et stabilisation du pipeline d’installation Windows.
+- Migration complète de l’installer Windows vers **NSIS**.
+- Ajout de **Npcap** dans les ressources de l’installer.
+- Support de l’installation de Npcap directement depuis l’installer.
+- Ajout du support de la langue **française** dans NSIS.
+- Nettoyage et stabilisation du pipeline d’installation Windows.
 
 ## 🛠 Corrections
 
-* Correction de la détection de Npcap dans l’installer.
-* Corrections multiples sur les images utilisées par NSIS (format, compatibilité).
-* Corrections mineures sur le bundling et les scripts d’installation.
+- Correction de la détection de Npcap dans l’installer.
+- Corrections multiples sur les images utilisées par NSIS (format,
+  compatibilité).
+- Corrections mineures sur le bundling et les scripts d’installation.
 
 ---
 
@@ -45,8 +179,8 @@
 
 ## 🛠 Corrections
 
-* Suppression du mode **offline install** sur Windows.
-* Ajustements liés au bundling Windows.
+- Suppression du mode **offline install** sur Windows.
+- Ajustements liés au bundling Windows.
 
 ---
 
@@ -54,19 +188,20 @@
 
 ## ✨ Améliorations
 
-* Mise à jour de la version de l’application.
+- Mise à jour de la version de l’application.
 
 ## **[3.9.2] – 2025-12-03**
 
 ## ✨ Améliorations
 
-* Mise à jour de la version de l’application (`update version`).
-* Optimisation de la gestion CPU.
+- Mise à jour de la version de l’application (`update version`).
+- Optimisation de la gestion CPU.
 
 ## 🛠 Corrections
 
-* Correction du `.gitignore`.
-* Ajustements mineurs dans les statistiques de flux (clarification des logs, simplification de `update_flow`).
+- Correction du `.gitignore`.
+- Ajustements mineurs dans les statistiques de flux (clarification des logs,
+  simplification de `update_flow`).
 
 ---
 
@@ -74,11 +209,11 @@
 
 ## ✨ Améliorations
 
-* Mise à jour des dépendances.
+- Mise à jour des dépendances.
 
 ## 🖼 Interface
 
-* Correction de l'image CPU affichée dans la top bar.
+- Correction de l'image CPU affichée dans la top bar.
 
 ---
 
@@ -86,7 +221,7 @@
 
 ## ✨ Fonctionnalités
 
-* Ajout d’un système de **loading** lors de l’import PCAP.
+- Ajout d’un système de **loading** lors de l’import PCAP.
 
 ---
 
@@ -94,7 +229,7 @@
 
 ## ✨ Améliorations
 
-* Ajout du tag pour la version.
+- Ajout du tag pour la version.
 
 ---
 
@@ -102,8 +237,8 @@
 
 ## ✨ Fonctionnalités
 
-* **Amélioration majeure de l’import PCAP**.
-* **Refonte du graph processing** pour de meilleures performances et stabilité.
+- **Amélioration majeure de l’import PCAP**.
+- **Refonte du graph processing** pour de meilleures performances et stabilité.
 
 ---
 
@@ -111,7 +246,7 @@
 
 ## ✨ Améliorations
 
-* Mise à jour de la crate `packet-parser`.
+- Mise à jour de la crate `packet-parser`.
 
 ---
 
@@ -119,9 +254,9 @@
 
 ## ✨ Améliorations
 
-* Mise à jour de la version de l'application.
-* Amélioration des logs de démarrage.
-* Informations système enrichies.
+- Mise à jour de la version de l'application.
+- Amélioration des logs de démarrage.
+- Informations système enrichies.
 
 ---
 
@@ -129,8 +264,8 @@
 
 ## ✨ Améliorations
 
-* Mise à jour du parser réseau (`packet-parser`).
-* Stabilité accrue dans le traitement des protocoles.
+- Mise à jour du parser réseau (`packet-parser`).
+- Stabilité accrue dans le traitement des protocoles.
 
 ---
 
@@ -138,11 +273,11 @@
 
 ## ✨ Fonctionnalités
 
-* Ajout du **sélecteur d'interface réseau personnalisé**.
+- Ajout du **sélecteur d'interface réseau personnalisé**.
 
 ## 🎨 Interface
 
-* Ajout d’une **légende flottante** sur le graphe réseau.
+- Ajout d’une **légende flottante** sur le graphe réseau.
 
 ---
 
@@ -150,7 +285,7 @@
 
 ## 🎨 Interface
 
-* Ajout d’animations pour les boutons de la barre supérieure.
+- Ajout d’animations pour les boutons de la barre supérieure.
 
 ---
 
@@ -158,8 +293,8 @@
 
 ## ✨ Améliorations
 
-* Mise à jour des dépendances.
-* Mise à jour de la documentation.
+- Mise à jour des dépendances.
+- Mise à jour de la documentation.
 
 ---
 
@@ -167,11 +302,11 @@
 
 ## ✨ Fonctionnalités
 
-* Ajout d’un **système de filtres amélioré** pour la matrice.
+- Ajout d’un **système de filtres amélioré** pour la matrice.
 
 ## 🛠 Corrections
 
-* Nettoyage de code inutilisé.
+- Nettoyage de code inutilisé.
 
 ---
 
@@ -179,8 +314,8 @@
 
 ## ✨ Améliorations
 
-* Mise à jour des dépendances.
-* Ajustements mineurs du rendu.
+- Mise à jour des dépendances.
+- Ajustements mineurs du rendu.
 
 ---
 
@@ -188,11 +323,11 @@
 
 ## ✨ Fonctionnalités
 
-* Ajout de la **gestion des labels** sur les nœuds du graphe.
+- Ajout de la **gestion des labels** sur les nœuds du graphe.
 
 ## 🎨 Interface
 
-* Améliorations visuelles (zoom, level, clarity).
+- Améliorations visuelles (zoom, level, clarity).
 
 ---
 
@@ -200,7 +335,7 @@
 
 ## 🛠 Technique
 
-* Ajustements internes sur le format des données.
+- Ajustements internes sur le format des données.
 
 ---
 
@@ -208,7 +343,7 @@
 
 ## ✨ Améliorations
 
-* Mise à jour de la gestion des timestamps (`timeval`).
+- Mise à jour de la gestion des timestamps (`timeval`).
 
 ---
 
@@ -216,7 +351,7 @@
 
 ## ✨ Améliorations
 
-* Migration vers **Tauri 2.9**.
+- Migration vers **Tauri 2.9**.
 
 ---
 
@@ -224,7 +359,7 @@
 
 ## ✨ Fonctionnalités
 
-* Ajout de la **fonction de stop forcé** pour la capture réseau.
+- Ajout de la **fonction de stop forcé** pour la capture réseau.
 
 ---
 
@@ -232,7 +367,7 @@
 
 ## ✨ Fonctionnalités
 
-* Améliorations multiples de stabilité et configuration.
+- Améliorations multiples de stabilité et configuration.
 
 ---
 
@@ -240,7 +375,7 @@
 
 ## 🛠 Corrections
 
-* Corrections sur le cycle de release.
+- Corrections sur le cycle de release.
 
 ---
 
@@ -248,8 +383,8 @@
 
 ## ✨ Fonctionnalités
 
-* Refonte du graphe réseau.
-* Suppression de l'ancien système de graphe pour un modèle plus robuste.
+- Refonte du graphe réseau.
+- Suppression de l'ancien système de graphe pour un modèle plus robuste.
 
 ---
 

@@ -77,7 +77,7 @@ export default {
         // Cast si besoin
         this.netDevice = config.device_name;
         this.bufferSize = config.buffer_size;
-        this.chan_capacity = config.chan_capacity
+        this.chan_capacity = config.chan_capacity;
         this.timeout = config.timeout;
         this.snaplen = config.snaplen;
 

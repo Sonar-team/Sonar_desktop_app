@@ -10,5 +10,6 @@ pub fn get_devices_list() -> Result<Vec<NetDevice>, CaptureError> {
     info!("Récupération des interfaces réseau");
 
     let devices = Device::list()?;
+    info!("Interfaces réseau: {:#?}", devices);
     Ok(devices.into_iter().map(NetDevice::from).collect())
 }

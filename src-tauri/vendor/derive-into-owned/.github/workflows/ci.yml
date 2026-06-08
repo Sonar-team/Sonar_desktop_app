@@ -1,0 +1,39 @@
+name: CI
+
+# limit ci building to pushes to master not to get twice the notification email
+# from github.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    branches: '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install rust toolchain
+        uses: hecrj/setup-rust-action@v1.3.4
+        with:
+          rust-version: stable
+          components: clippy, rustfmt
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v1
+
+      - name: Build
+        run: cargo build --all-features --all-targets
+
+      - name: Cargo fmt
+        run: cargo fmt --all -- --check
+
+      - name: Cargo clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Test
+        run: timeout 15m cargo test --all --all-features

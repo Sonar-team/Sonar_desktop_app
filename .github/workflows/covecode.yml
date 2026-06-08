@@ -5,21 +5,26 @@ on: [push]
 jobs:
   test:
     name: coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
-      image: xd009642/tarpaulin:develop-nightly
+      image: xd009642/tarpaulin:develop-nightly@sha256:aa50bb80d14cb1cf54f8f904508a2d69b18d8804b46c9ee0ab435ac53f6861e6
       options: --security-opt seccomp=unconfined
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
 
       - name: Node.js setup
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@f1f314fca9dfce2769ece7d933488f076716723e
         with:
-          node-version: 20
+          node-version: "v${{ steps.versions.outputs.NODE_VERSION }}"
 
       - name: Rust setup
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@63eb9591781c46a70274cb3ebdf190fce92702e8
         with:
           toolchain: stable
 
@@ -57,7 +62,7 @@ jobs:
         shell: bash --noprofile --norc -e -o pipefail {0}
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           fail_ci_if_error: true

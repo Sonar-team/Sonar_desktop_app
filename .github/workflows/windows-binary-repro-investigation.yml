@@ -1,0 +1,62 @@
+name: Windows Binary Repro Investigation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows-binary-repro-investigation:
+    name: ${{ matrix.mode }}
+    runs-on: windows-2022
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: baseline
+            extra_rustflags: ""
+          - mode: link-brepro
+            extra_rustflags: "-C link-arg=/Brepro"
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: setup deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+
+      - name: install Rust binary inspection tools
+        shell: bash
+        run: rustup component add llvm-tools-preview
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: configure reproducible build environment
+        shell: bash
+        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
+
+      - name: compare Windows binary stages
+        shell: bash
+        env:
+          OUTPUT_DIR: windows-binary-repro-${{ matrix.mode }}
+          EXTRA_RUSTFLAGS: ${{ matrix.extra_rustflags }}
+        run: ./script/ci/investigate-windows-binary-repro.sh
+
+      - name: upload investigation artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-binary-repro-investigation-${{ matrix.mode }}
+          path: windows-binary-repro-${{ matrix.mode }}/
+          if-no-files-found: ignore

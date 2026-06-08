@@ -6,45 +6,99 @@ on:
       - "app-v*"
 
 jobs:
+  reproducibility-check:
+    name: verify unsigned reproducible artifacts
+    permissions:
+      contents: read
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: setup deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+
+      - name: install dependencies
+        shell: bash
+        run: |
+          sudo ./script/ci/use-apt-snapshot.sh
+          sudo apt-get install -y $LINUX_APT_PACKAGES
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: verify reproducible Linux build
+        shell: bash
+        env:
+          REQUIRE_DEB: "1"
+          ALLOW_BUNDLE_NON_REPRODUCIBLE: "1"
+        run: ./security/repro-check.sh
+
   publish-tauri:
+    name: build and publish release artifacts
+    needs: reproducibility-check
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: "macos-latest"
-            args: "--target x86_64-apple-darwin"
+          - platform: "macos-14"
+            args: ""
           - platform: "ubuntu-22.04"
             args: ""
-          - platform: "windows-latest"
+          - platform: "windows-2022"
             args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
 
       - name: setup deno
-        uses: denoland/setup-deno@v2
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
         with:
-          deno-version: vx.x.x
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'x86_64-apple-darwin' || '' }}
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+          targets: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libpcap-dev
+          sudo ./script/ci/use-apt-snapshot.sh
+          sudo apt-get install -y $LINUX_APT_PACKAGES
 
-      - name: install frontend dependencies
-        run: deno install # change this to npm, pnpm, or bun if necessary.
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: configure reproducible build environment
+        shell: bash
+        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
 
       - name: Build and package with Tauri
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@1ddc7b49b13c3038297360482fcb3e058764d7c9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -53,4 +107,68 @@ jobs:
           releaseBody: "Voir les assets ci-dessous pour télécharger cette version."
           releaseDraft: false
           prerelease: false
-          args: ${{ matrix.args }}
+          args: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
+
+      - name: Generate SHA256 checksums
+        shell: bash
+        run: ./script/ci/generate-release-hashes.sh "${{ matrix.platform }}"
+
+      - name: List attestation subjects
+        id: attestation-subjects
+        shell: bash
+        run: ./script/ci/generate-attestation-subjects.sh "${{ matrix.platform }}"
+
+      - name: Generate provenance attestation
+        uses: actions/attest@281a49d4cbb0a72c9575a50d18f6deb515a11deb
+        with:
+          subject-path: ${{ steps.attestation-subjects.outputs.subject-paths }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+
+      - name: Sign release artifacts
+        shell: bash
+        run: ./script/ci/sign-release-artifacts.sh "${{ matrix.platform }}"
+
+      - name: Upload Sigstore bundles to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./script/ci/upload-sigstore-bundles.sh "${{ matrix.platform }}"
+
+      - name: Upload Sigstore bundles artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sigstore-bundles-${{ matrix.platform }}
+          path: |
+            release-signatures/${{ matrix.platform }}-*.sigstore.json
+          if-no-files-found: error
+
+      - name: Upload release hashes artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-hashes-${{ matrix.platform }}
+          path: release-hashes-${{ matrix.platform }}.md
+          if-no-files-found: error
+
+  update-release-body:
+    name: publish release hashes after artifact build
+    needs: publish-tauri
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Download release hashes
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: release-hashes-*
+          path: release-hashes
+          merge-multiple: true
+
+      - name: Update GitHub release body with hashes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./script/ci/update-release-body.sh "${GITHUB_REF_NAME}"

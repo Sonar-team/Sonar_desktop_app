@@ -35,11 +35,11 @@ dist-ssr
 !src/assets/images/*.png
 
 # --- Rust vendoring: commit vendor as-is (sources only) ---
-# Keep everything in vendor (some crates legitimately contain src/target as source code)
+# Keep everything in vendor because Cargo validates vendored package checksums.
 !src-tauri/vendor/**
 
-# If you truly want to exclude accidental build artifacts inside vendor, do it narrowly:
-# (These are typical Cargo build outputs when someone builds *inside* a vendored crate, which should not happen.)
+# If build artifacts are accidentally produced inside a vendored crate, keep
+# those out without excluding source files that are part of package checksums.
 src-tauri/vendor/**/target/debug/
 src-tauri/vendor/**/target/release/
 src-tauri/vendor/**/target/.fingerprint/
@@ -56,5 +56,11 @@ src-tauri/vendor/**/target/**.exe
 vuln.txt
 
 # Tauri
-target
 /target
+
+# Cosign
+cosign.key
+cosign.pub
+*.sigstore.json
+*.sig
+*.pem

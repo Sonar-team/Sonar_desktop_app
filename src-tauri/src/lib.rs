@@ -8,6 +8,7 @@ use log::info;
 use std::sync::{Arc, Mutex};
 use tauri::{Manager, menu::MenuBuilder};
 use tauri_plugin_cli::CliExt;
+use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 use crate::{
@@ -18,7 +19,7 @@ use crate::{
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
     setup::{
-        labels::read_labels, log_host_and_app_snapshot, print_banner,
+        about::about_message, labels::read_labels, log_host_and_app_snapshot, print_banner,
         system_info::start_cpu_monitor,
     },
     state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData},
@@ -32,6 +33,7 @@ mod setup;
 mod state;
 mod utils;
 
+/// Main entry point for the application
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
     let now = Local::now();
@@ -84,10 +86,21 @@ pub fn run() -> Result<(), tauri::Error> {
         .manage(Arc::new(Mutex::new(CaptureState::new())))
         .manage(Arc::new(Mutex::new(FlowMatrix::new())))
         .manage(Arc::new(Mutex::new(GraphData::new())))
+        .on_menu_event(|app, event| {
+            if event.id() == "apropos" {
+                app.dialog()
+                    .message(about_message())
+                    .title("A propos")
+                    .kind(MessageDialogKind::Info)
+                    .buttons(MessageDialogButtons::Ok)
+                    .show(|_| {});
+            }
+        })
         .setup({
             move |app| {
                 info!("{}", print_banner());
                 log_host_and_app_snapshot(app.app_handle());
+                info!("Reading labels...");
                 read_labels(app.handle())?;
 
                 // CLI
@@ -108,7 +121,7 @@ pub fn run() -> Result<(), tauri::Error> {
 
                 // handle the capture state here
                 if !headless_enabled {
-                    start_cpu_monitor(app.handle().clone());
+                    let _ = start_cpu_monitor(app.handle().clone());
 
                     let menu = MenuBuilder::new(app)
                         .text("fichier", "Fichier")
@@ -126,6 +139,13 @@ pub fn run() -> Result<(), tauri::Error> {
                     .title("SONAR")
                     .inner_size(1800.0, 950.0)
                     .build()?;
+
+                    let interfaces = setup::system_info::get_interfaces();
+                    let labels = setup::labels::create_labels_from_network_interfaces(interfaces)?;
+                    println!("labels: {:#?}", labels);
+                    setup::labels::add_labels_to_file(app.handle(), labels.clone())?;
+                    read_labels(app.handle())?;
+                    setup::labels::update_labels_in_state(app.handle(), labels)?;
                 } else {
                     let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
                     let config = get_config_capture(capture_state.clone());

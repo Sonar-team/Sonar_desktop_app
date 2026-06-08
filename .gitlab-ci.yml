@@ -1,0 +1,17 @@
+image: rust:1.95.0
+
+default:
+  timeout: 10 hours
+
+stages:
+  - build
+  - sonarqube
+
+variables:
+  NODE_VERSION: 24.14.0
+  DENO_VERSION: 2.7.13
+  DENO_DIR: "${CI_PROJECT_DIR}/.deno"
+
+include:
+  - local: ".gitlab/ci/build.yml"
+  - local: ".gitlab/ci/sonarqube.yml"

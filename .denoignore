@@ -1,0 +1,5 @@
+src-tauri/vendor
+src-tauri/target
+node_modules
+dist
+coverage

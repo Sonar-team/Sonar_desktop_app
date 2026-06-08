@@ -1,0 +1,27 @@
+[package]
+name = "webview2-com-sys"
+description = "Bindings generated with the windows crate for the WebView2 COM APIs"
+
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+version.workspace = true
+
+[package.metadata.docs.rs]
+default-target = "x86_64-pc-windows-msvc"
+targets = [
+    "i686-pc-windows-msvc",
+    "aarch64-pc-windows-msvc",
+    "x86_64-pc-windows-gnu",
+    "i686-pc-windows-gnu",
+]
+
+[dependencies]
+windows-core.workspace = true
+windows.workspace = true
+
+[build-dependencies]
+thiserror.workspace = true

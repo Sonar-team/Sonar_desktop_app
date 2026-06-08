@@ -1,0 +1,51 @@
+name: Reproducibility Env Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  repro_env_check:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: Validate pinned build versions are aligned
+        shell: bash
+        run: ./script/ci/check-build-versions.sh
+
+      - name: Validate helper emits GitHub env entries
+        shell: bash
+        run: |
+          set -euo pipefail
+          deno run -A ./security/repro-env.ts github-env | tee /tmp/repro-env.txt
+          grep -q '^SOURCE_DATE_EPOCH<<__SONAR_REPRO_ENV__$' /tmp/repro-env.txt
+          grep -q '^RUSTFLAGS<<__SONAR_REPRO_ENV__$' /tmp/repro-env.txt
+          grep -Eq '^--remap-path-prefix=.+=/workspace$' /tmp/repro-env.txt
+
+      - name: Validate helper injects runtime env
+        shell: bash
+        run: |
+          set -euo pipefail
+          deno run -A ./security/repro-env.ts run bash -lc 'test -n "$SOURCE_DATE_EPOCH"'
+          deno run -A ./security/repro-env.ts run bash -lc 'printf "%s\n" "$RUSTFLAGS"' | grep -F -- '--remap-path-prefix='
+          SONAR_REPRO_WINDOWS_BREPRO=1 deno run -A ./security/repro-env.ts run bash -lc 'printf "%s\n" "$RUSTFLAGS"' | grep -F -- 'link-arg=/Brepro'
+
+      - name: Ensure publish workflow uses helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"' .github/workflows/publish.yml

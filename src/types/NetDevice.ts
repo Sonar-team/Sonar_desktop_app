@@ -6,8 +6,8 @@ export type Address = {
   dst_addr?: string | null;
 };
 
-export type IfFlags = { 
-    bits: number 
+export type IfFlags = {
+  bits: number;
 };
 
 export type ConnectionStatus =

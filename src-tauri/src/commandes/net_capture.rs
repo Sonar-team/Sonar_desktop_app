@@ -29,6 +29,7 @@ pub fn start_capture(
         return Ok(state_lock.status.clone());
     }
     let capture = CaptureHandle::new();
+    state_lock.on_event = Some(on_event.clone());
     capture.start(
         state_lock.config.clone(),
         app,
@@ -71,6 +72,7 @@ pub fn stop_capture(
     if let Some(capture) = app.capture.take() {
         capture.stop(on_event)?; // Suppose que stop() ne retourne pas d'erreur
         app.status.toggle();
+        app.on_event = None;
     } else {
         println!("Aucun thread à arrêter.");
     }

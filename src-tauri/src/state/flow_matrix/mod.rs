@@ -28,7 +28,7 @@ impl FlowMatrix {
     }
 
     pub fn update_flow(&mut self, pkt: &PacketOwnedStats) {
-        let ts = timeval_to_systemtime(pkt.ts_sec.into(), pkt.ts_usec.into());
+        let ts = timeval_to_systemtime(pkt.ts_sec, pkt.ts_usec);
 
         let entry = self.matrix.entry(pkt.flow.clone()).or_insert(FlowStats {
             count: 0,
@@ -42,7 +42,7 @@ impl FlowMatrix {
 
     /// Update the flow matrix from a PacketOwnedStats then return the new line in the matrice if it was not already there
     pub fn update_flow_cli(&mut self, pkt: &PacketOwnedStats) -> (FlowStats, PacketFlowOwned) {
-        let ts = timeval_to_systemtime(pkt.ts_sec.into(), pkt.ts_usec.into());
+        let ts = timeval_to_systemtime(pkt.ts_sec, pkt.ts_usec);
 
         let entry = self.matrix.entry(pkt.flow.clone()).or_insert(FlowStats {
             count: 0,
@@ -117,10 +117,7 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_source_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
-                let label_source = self
-                    .label
-                    .get(&(flow.data_link.source_mac.clone(), ip_source.clone()))
-                    .cloned();
+                let label_source = self.get_label(&flow.data_link.source_mac, &ip_source);
 
                 let ip_destination = flow
                     .internet
@@ -134,13 +131,8 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_destination_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
-                let label_destination = self
-                    .label
-                    .get(&(
-                        flow.data_link.destination_mac.clone(),
-                        ip_destination.clone(),
-                    ))
-                    .cloned();
+                let label_destination =
+                    self.get_label(&flow.data_link.destination_mac, &ip_destination);
 
                 let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
                     Ok(dur) => {
@@ -157,7 +149,7 @@ impl FlowMatrix {
                 FlowMatrixRow {
                     mac_source: flow.data_link.source_mac.clone(),
                     mac_destination: flow.data_link.destination_mac.clone(),
-                    vlan_id: flow.data_link.vlan.as_ref().map(|v| v.id.clone()),
+                    vlan_id: flow.data_link.vlan.as_ref().map(|v| v.id),
                     protocol_data_link: flow.data_link.ethertype.clone(),
                     ip_source,
                     ip_source_type,
@@ -168,10 +160,7 @@ impl FlowMatrix {
                     port_source: flow.transport.as_ref().and_then(|t| t.source_port),
                     port_destination: flow.transport.as_ref().and_then(|t| t.destination_port),
                     protocol_transport: flow.transport.as_ref().map(|t| t.protocol.clone()),
-                    application_protocol: flow
-                        .application
-                        .as_ref()
-                        .map(|a| a.protocol.clone()),
+                    application_protocol: flow.application.as_ref().map(|a| a.protocol.clone()),
                     count: stats.count,
                     total_bytes: stats.total_bytes,
                     last_seen,
@@ -196,6 +185,13 @@ impl FlowMatrix {
 
     pub fn add_label(&mut self, mac: String, ip: String, label: String) {
         self.label.insert((mac, ip), label);
+    }
+
+    pub fn get_label(&self, mac: &str, ip: &str) -> Option<String> {
+        self.label
+            .get(&(mac.to_string(), ip.to_string()))
+            .or_else(|| self.label.get(&(String::new(), ip.to_string())))
+            .cloned()
     }
 
     pub fn get_label_list(&self) -> Vec<String> {
@@ -239,8 +235,51 @@ use std::time::UNIX_EPOCH;
 
 use crate::state::capture::capture_handle::messages::capture::PacketOwnedStats;
 
-pub fn timeval_to_systemtime(tv_sec: i64, tv_usec: i64) -> SystemTime {
+pub fn timeval_to_systemtime(tv_sec: impl Into<i64>, tv_usec: impl Into<i64>) -> SystemTime {
+    let tv_sec = tv_sec.into();
+    let tv_usec = tv_usec.into();
+
     UNIX_EPOCH + std::time::Duration::new(tv_sec as u64, (tv_usec * 1000) as u32)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FlowMatrix;
+
+    #[test]
+    fn get_label_falls_back_to_ip_only_label() {
+        let mut matrix = FlowMatrix::new();
+        matrix.add_label(
+            String::new(),
+            "8.8.8.8".to_string(),
+            "google.com".to_string(),
+        );
+
+        assert_eq!(
+            matrix.get_label("aa:bb:cc:dd:ee:ff", "8.8.8.8"),
+            Some("google.com".to_string())
+        );
+    }
+
+    #[test]
+    fn get_label_prefers_exact_mac_ip_label() {
+        let mut matrix = FlowMatrix::new();
+        matrix.add_label(
+            String::new(),
+            "8.8.8.8".to_string(),
+            "google.com".to_string(),
+        );
+        matrix.add_label(
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            "8.8.8.8".to_string(),
+            "custom dns".to_string(),
+        );
+
+        assert_eq!(
+            matrix.get_label("aa:bb:cc:dd:ee:ff", "8.8.8.8"),
+            Some("custom dns".to_string())
+        );
+    }
 }
 
 // #[cfg(test)]
