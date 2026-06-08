@@ -1,5 +1,14 @@
 # Changelog
 
+## **[3.13.12] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Correction de la vérification de reproductibilité `--no-bundle` : l'absence de
+  paquet `.deb` est maintenant traitée comme normale lorsque les bundles ne sont
+  pas générés.
+- Mise à jour de la version de SONAR en **3.13.12** pour publier ce correctif.
+
 ## **[3.13.11] - 2026-06-08**
 
 ## 🛠 Corrections
@@ -23,8 +32,8 @@
 
 - Publication des releases sous forme de binaires reproductibles uniquement,
   sans bundle/installateur.
-- Ajout d'une note explicite dans la documentation et le corps de release :
-  sous Windows, Npcap doit être installé séparément avant d'utiliser la capture
+- Ajout d'une note explicite dans la documentation et le corps de release : sous
+  Windows, Npcap doit être installé séparément avant d'utiliser la capture
   réseau.
 - Mise à jour de la version de SONAR en **3.13.9** pour publier ce correctif.
 

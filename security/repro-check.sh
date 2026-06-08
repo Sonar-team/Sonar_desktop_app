@@ -46,7 +46,11 @@ resolve_deb_path() {
     return 0
   fi
 
-  find src-tauri/target/release/bundle/deb -maxdepth 1 -type f -name '*.deb' 2>/dev/null | sort | head -n 1
+  if [[ ! -d src-tauri/target/release/bundle/deb ]]; then
+    return 0
+  fi
+
+  find src-tauri/target/release/bundle/deb -maxdepth 1 -type f -name '*.deb' 2>/dev/null | sort | head -n 1 || true
 }
 
 run_build() {
@@ -167,14 +171,23 @@ main() {
   local bin_without_1="${WORKDIR}/without-flags/run1/${APP_NAME}"
   local bin_without_2="${WORKDIR}/without-flags/run2/${APP_NAME}"
 
-  local deb_name
-  deb_name="$(find "${WORKDIR}/with-flags/run1" -maxdepth 1 -type f -name '*.deb' 2>/dev/null | sort | head -n 1)"
-  deb_name="$(basename "$deb_name")"
+  local deb_name=""
+  local first_deb
+  first_deb="$(find "${WORKDIR}/with-flags/run1" -maxdepth 1 -type f -name '*.deb' 2>/dev/null | sort | head -n 1 || true)"
+  if [[ -n "$first_deb" ]]; then
+    deb_name="$(basename "$first_deb")"
+  fi
 
-  local deb_with_1="${WORKDIR}/with-flags/run1/${deb_name}"
-  local deb_with_2="${WORKDIR}/with-flags/run2/${deb_name}"
-  local deb_without_1="${WORKDIR}/without-flags/run1/${deb_name}"
-  local deb_without_2="${WORKDIR}/without-flags/run2/${deb_name}"
+  local deb_with_1=""
+  local deb_with_2=""
+  local deb_without_1=""
+  local deb_without_2=""
+  if [[ -n "$deb_name" ]]; then
+    deb_with_1="${WORKDIR}/with-flags/run1/${deb_name}"
+    deb_with_2="${WORKDIR}/with-flags/run2/${deb_name}"
+    deb_without_1="${WORKDIR}/without-flags/run1/${deb_name}"
+    deb_without_2="${WORKDIR}/without-flags/run2/${deb_name}"
+  fi
 
   compare_hashes "with-flags" \
     "$(extract_hash "${WORKDIR}/with-flags/run1/sha256-bin.txt")" \
@@ -206,7 +219,7 @@ main() {
   fi
 
   echo
-  if [[ -f "$deb_with_1" && -f "$deb_with_2" ]]; then
+  if [[ -n "$deb_name" && -f "$deb_with_1" && -f "$deb_with_2" ]]; then
     compare_hashes "with-flags" \
       "$(extract_hash "${WORKDIR}/with-flags/run1/sha256-deb.txt")" \
       "$(extract_hash "${WORKDIR}/with-flags/run2/sha256-deb.txt")" \
@@ -224,7 +237,7 @@ main() {
   fi
 
   echo
-  if [[ -f "$deb_without_1" && -f "$deb_without_2" ]]; then
+  if [[ -n "$deb_name" && -f "$deb_without_1" && -f "$deb_without_2" ]]; then
     compare_hashes "without-flags" \
       "$(extract_hash "${WORKDIR}/without-flags/run1/sha256-deb.txt")" \
       "$(extract_hash "${WORKDIR}/without-flags/run2/sha256-deb.txt")" \
