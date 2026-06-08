@@ -29,6 +29,18 @@ find "$target_dir" -type f \
 
 binary_count="$(wc -l < "$binary_list" | tr -d '[:space:]')"
 
+if [[ "$binary_count" -eq 0 ]]; then
+  find "$target_dir" -type f \
+    \( -path '*/release/deps/sonar-*' -o -path '*/release/deps/sonar-*.exe' \) \
+    ! -name '*.d' \
+    ! -name '*.rlib' \
+    ! -name '*.so' \
+    ! -path '*/bundle/*' \
+    -perm /111 \
+    | sort > "$binary_list"
+  binary_count="$(wc -l < "$binary_list" | tr -d '[:space:]')"
+fi
+
 if [[ "$binary_count" -ne 1 ]]; then
   echo "Expected exactly one release binary, found ${binary_count}:" >&2
   sed 's/^/  /' "$binary_list" >&2

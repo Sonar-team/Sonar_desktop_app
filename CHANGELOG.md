@@ -1,5 +1,18 @@
 # Changelog
 
+## **[3.13.13] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Remappage des chemins locaux `rustup` et `cargo` dans l'environnement de build
+  reproductible afin de réduire les différences entre un build local et GitHub
+  Actions.
+- Désactivation explicite des informations de debug et strip des symboles dans
+  le profil release Rust.
+- Robustesse de la collecte CI du binaire lorsque Cargo laisse l'exécutable dans
+  `target/release/deps` après un build Tauri sans bundle.
+- Mise à jour de la version de SONAR en **3.13.13** pour publier ce correctif.
+
 ## **[3.13.12] - 2026-06-08**
 
 ## 🛠 Corrections

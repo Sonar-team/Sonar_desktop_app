@@ -1,6 +1,6 @@
 [package]
 name = "sonar"
-version = "3.13.12"
+version = "3.13.13"
 description = "A Tauri network analyzer App"
 authors = ["Cyprien Avico <akmot9@proton.me>"]
 edition = "2024"
@@ -57,3 +57,7 @@ sysinfo = "0.38.4"
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-cli = "2"
 tauri-plugin-global-shortcut = "2"
+
+[profile.release]
+debug = false
+strip = "symbols"
