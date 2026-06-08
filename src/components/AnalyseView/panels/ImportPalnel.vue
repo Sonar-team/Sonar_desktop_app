@@ -129,10 +129,7 @@ export default defineComponent({
 
         const list = Array.isArray(files) ? files : [files];
         if (type === 'csv') {
-          const labelFilesNames = list.map((path): [string, boolean] =>
-            [path.split(/[\\/]/).pop() ?? path, true]
-          );
-          await this.importLabelFiles(list, labelFilesNames);
+          await this.importLabelFiles(list);
         } else {
           this.packetFiles.push(...list);
         }
@@ -168,8 +165,8 @@ export default defineComponent({
       this.packetFiles = [];
     },
 
-    async importLabelFiles(paths: string[], names: [string, boolean][]) {
-      if (paths.length === 0 || names.length === 0) return;
+    async importLabelFiles(paths: string[]) {
+      if (paths.length === 0) return;
 
       info('import_label_files: ' + paths);
 
@@ -200,7 +197,7 @@ export default defineComponent({
         }
         
       } finally {
-        this.labelFiles = await invoke('read_label_files_list');
+        this.labelFiles = await invoke('get_label_files_list');
         this.labelFiles.sort();
         this.isConverting = false;      
       }
@@ -212,7 +209,7 @@ export default defineComponent({
         try {
           await invoke('remove_label_file', { csvFile: fileRemoved});
           info('réponse invoke');
-          this.labelFiles = await invoke('read_label_files_list');
+          this.labelFiles = await invoke('get_label_files_list');
           this.labelFiles.sort();
           this.selectedLabelFiles = this.selectedLabelFiles.filter((name) => name !== fileRemoved);
         } catch (err) {
@@ -262,7 +259,7 @@ export default defineComponent({
       this.captureStore.updateStatus({ is_running: false });
     });
 
-    this.labelFiles = await invoke('read_label_files_list');
+    this.labelFiles = await invoke('get_label_files_list');
     this.selectedLabelFiles = this.labelFiles
             .filter(([_, checked]) => checked)
             .map(([file, _]) => file);
@@ -353,7 +350,7 @@ export default defineComponent({
   margin: 0 auto;
 }
 
-.btn-open:hover {
+.btn-open:enabled:hover{
     background-color: #313152;
 }
 

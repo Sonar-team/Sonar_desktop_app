@@ -130,6 +130,11 @@ export default {
     async export_logs() {
       info("export logs")
 
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
       if (this.activePanel !== null) {
         this.$emit(`toggle-${this.activePanel}`, false)
       }
@@ -163,8 +168,13 @@ export default {
     async SaveAsCsv() {
       info("Save as csv");
 
+       if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
       if (this.activePanel !== null) {
-        this.$emit(`toggle-${this.activePanel}`, false)
+        this.$emit(`toggle-${this.activePanel}`, false)  // Ferme le panneau ouvert avant de sauvegarder
       }
 
       useCaptureStore().isImporting = true;
@@ -189,6 +199,11 @@ export default {
       }
     },
     async SaveAsXlsx() {
+
+       if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
       
       if (this.activePanel !== null) {
         this.$emit(`toggle-${this.activePanel}`, false)
@@ -231,6 +246,12 @@ export default {
     },
     async reset() {
       info("reset")
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
       await invoke('reset_capture');
       if (!this.isRunning) {
         this.hasData = false;
@@ -241,6 +262,13 @@ export default {
 
     handleConfigClick() {
       info("[TopBar] Bouton config cliqué");
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
+
       if (this.activePanel !== null && this.activePanel !== 'config') {
         this.$emit(`toggle-${this.activePanel}`, false)
       };
@@ -249,6 +277,12 @@ export default {
     },
     displayPcapOpener() {
       info("[TopBar] Bouton open cliqué");
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
       if (this.hasData) return;
       if (this.activePanel !== null && this.activePanel !== 'pcap') {
         this.$emit(`toggle-${this.activePanel}`, false)
@@ -258,15 +292,27 @@ export default {
     },
     displayCsvOpener() {
       info("[TopBar] Bouton open cliqué");
-      if (this.hasData) return;
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
+      if (this.hasData) return; // Empêche d'ouvrir le panneau d'import CSV si la matrice de flux contient déjà des données
       if (this.activePanel !== null && this.activePanel !== 'csv') {
-        this.$emit(`toggle-${this.activePanel}`, false)
+        this.$emit(`toggle-${this.activePanel}`, false) // Ferme le panneau ouvert avant d'ouvrir le panneau d'import CSV
       };
       this.activePanel = 'csv';
       this.$emit('toggle-csv');
     },
     handleFilterClick() {
       info("[TopBar] Bouton filter cliqué");
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
       if (this.activePanel !== null && this.activePanel !== 'filter') {
         this.$emit(`toggle-${this.activePanel}`, false)
       };
@@ -274,7 +320,8 @@ export default {
       this.$emit('toggle-filter');
     },
     async start() {
-      if (this.activePanel !== null) return;
+      if (this.activePanel !== null || useCaptureStore().isImporting) return;
+
       if (this.captureStore.isRunning) {
         return;
       }
@@ -292,7 +339,7 @@ export default {
         .catch(displayCaptureError);
     },
     async stop() {
-      if (!this.captureStore.isRunning) {
+      if (!this.captureStore.isRunning || useCaptureStore().isImporting) {
         return;
       }
       const onEvent = this.captureStore.getChannel();

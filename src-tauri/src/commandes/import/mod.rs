@@ -190,7 +190,7 @@ fn handle_pcap_file(
 
 
 #[tauri::command(async)]
-pub fn read_label_files_list(
+pub fn get_label_files_list(
     app: tauri::AppHandle,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>
 ) -> Result<Vec<(String, bool)>, CaptureStateError>{
@@ -275,7 +275,7 @@ pub fn remove_label_file(
 fn verif_labels_conflicts(
     new_file_name: String,
     state : State<'_, Arc<Mutex<SelectedLabelFiles>>>,
-    app: tauri::AppHandle,
+    app: AppHandle,
 ) -> Result<(), CaptureStateError>{
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
@@ -302,18 +302,12 @@ fn verif_labels_conflicts(
             Err(error) => return Err(error.into()),
         };
 
-    let name = new_file
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("inconnu")
-        .to_string();
-
     let rows: Vec<(String, String, String)> = file
         .lines()
         .filter_map(|l| parse_label_row(l))
         .collect();
 
-    new_selected_file_with_name = (name, rows.clone());
+    new_selected_file_with_name = (new_file_name, rows.clone());
 
     let mut same_ip_different_mac: ConflictsList = Vec::new();
     let mut same_ip_different_label: ConflictsList = Vec::new();
@@ -473,7 +467,7 @@ pub fn labels_to_matrix(
     matrice: &mut FlowMatrix,
     label: State<'_, Arc<Mutex<SelectedLabelFiles>>>
 ) -> Result<(), CaptureStateError> {
-    let label_files_names_list = read_label_files_list(app.clone(), label)?;
+    let label_files_names_list = get_label_files_list(app.clone(), label)?;
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
 

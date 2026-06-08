@@ -56,7 +56,7 @@
 
           <div v-show="conflictual_files.length > 0" class="file-list">
               <ul>
-                <h3 class="text">Nom des fichiers en conflit</h3>
+                <h3 class="text">Fichiers non importés</h3>
                 <li v-for="(name, index) in conflictual_files" :key="index">
                   <label>
                     <span class="text indented">{{ name.length > 100 ? name.slice(0, 100) + '...' : name }}</span>

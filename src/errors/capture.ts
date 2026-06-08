@@ -117,6 +117,8 @@ function handleLabelerror(labelError: LabelErrorKind): string {
       return `Formats invalides : MAC - ${labelError.message.invalid_mac.map(([file, mac]) => `${file} : ${mac}`).join('\n')}, IP - ${labelError.message.invalid_ip.map(([file, ip]) => `${file} : ${ip}`).join('\n')}`;
     case "fileNameConflicts":
       return `Ce(s) fichier(s) existe(nt) déjà : \n ${labelError.message} \n <Importation impossible>`
+    case "labelLinesConflicts":
+      return `Conflits dans les lignes de labels : même IP, MAC différent - ${labelError.message.same_ip_diff_mac.map(([ip, ref_mac,name_1, mac, name_2]) => `${ip} : ${ref_mac} (${name_1}) <-> ${mac} (${name_2})`).join('\n')}, même IP, label différent - ${labelError.message.same_ip_diff_label.map(([ip, ref_label, name_1, label, name_2]) => `${ip} : ${ref_label} (${name_1}) <-> ${label} (${name_2})`).join('\n')} \n <Importation impossible>`;
     default:
       return `Erreur de label inconnue : ${JSON.stringify(labelError)}`;
   }
