@@ -18,6 +18,8 @@ set +a
 : "${DEBIAN_SNAPSHOT_BASE_URL:?DEBIAN_SNAPSHOT_BASE_URL is required}"
 : "${UBUNTU_SNAPSHOT_BASE_URL:?UBUNTU_SNAPSHOT_BASE_URL is required}"
 
+UBUNTU_ARCHIVE_BASE_URL="${UBUNTU_ARCHIVE_BASE_URL:-https://archive.ubuntu.com/ubuntu}"
+
 require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
     echo "This script must run as root. Use sudo in CI when needed." >&2
@@ -59,6 +61,25 @@ deb [check-valid-until=no] ${base}/${timestamp} ${codename}-security main univer
 EOF
 }
 
+write_ubuntu_archive_sources() {
+  local codename="$1"
+  local base="${UBUNTU_ARCHIVE_BASE_URL}"
+
+  cat > /etc/apt/sources.list <<EOF
+deb ${base} ${codename} main universe
+deb ${base} ${codename}-updates main universe
+deb ${base} ${codename}-security main universe
+EOF
+}
+
+run_apt_update() {
+  apt-get \
+    -o Acquire::Check-Valid-Until=false \
+    -o Acquire::Retries=5 \
+    -o APT::Update::Error-Mode=any \
+    update
+}
+
 main() {
   require_root
 
@@ -75,6 +96,8 @@ main() {
   mkdir -p /etc/apt/apt.conf.d
   printf '%s\n' 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot-no-check-valid-until
 
+  local allow_archive_fallback="${ALLOW_APT_ARCHIVE_FALLBACK:-${GITHUB_ACTIONS:-0}}"
+
   case "$os_id" in
     debian)
       write_debian_sources "$codename"
@@ -88,7 +111,18 @@ main() {
       ;;
   esac
 
-  apt-get -o Acquire::Check-Valid-Until=false update
+  if run_apt_update; then
+    return 0
+  fi
+
+  if [[ "$os_id" == "ubuntu" && ( "$allow_archive_fallback" == "true" || "$allow_archive_fallback" == "1" ) ]]; then
+    echo "Ubuntu snapshot update failed; falling back to ${UBUNTU_ARCHIVE_BASE_URL}" >&2
+    write_ubuntu_archive_sources "$codename"
+    run_apt_update
+    return 0
+  fi
+
+  exit 1
 }
 
 main "$@"

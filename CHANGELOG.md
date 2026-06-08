@@ -1,5 +1,14 @@
 # Changelog
 
+## **[3.13.10] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Ajout d'un fallback CI vers l'archive Ubuntu standard lorsque
+  `snapshot.ubuntu.com` est indisponible, tout en conservant les versions de
+  paquets apt pinées.
+- Mise à jour de la version de SONAR en **3.13.10** pour publier ce correctif.
+
 ## **[3.13.9] - 2026-06-08**
 
 ## 🛠 Corrections
