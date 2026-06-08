@@ -1,5 +1,13 @@
 # Changelog
 
+## **[3.13.11] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Activation du fallback apt vers l'archive Ubuntu même lorsque le script est
+  exécuté via `sudo`, qui ne préserve pas les variables d'environnement GitHub.
+- Mise à jour de la version de SONAR en **3.13.11** pour publier ce correctif.
+
 ## **[3.13.10] - 2026-06-08**
 
 ## 🛠 Corrections

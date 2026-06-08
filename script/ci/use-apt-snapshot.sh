@@ -96,7 +96,7 @@ main() {
   mkdir -p /etc/apt/apt.conf.d
   printf '%s\n' 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot-no-check-valid-until
 
-  local allow_archive_fallback="${ALLOW_APT_ARCHIVE_FALLBACK:-${GITHUB_ACTIONS:-0}}"
+  local allow_archive_fallback="${ALLOW_APT_ARCHIVE_FALLBACK:-1}"
 
   case "$os_id" in
     debian)
