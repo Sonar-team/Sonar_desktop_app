@@ -1,5 +1,16 @@
 # Changelog
 
+## **[3.13.9] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Publication des releases sous forme de binaires reproductibles uniquement,
+  sans bundle/installateur.
+- Ajout d'une note explicite dans la documentation et le corps de release :
+  sous Windows, Npcap doit être installé séparément avant d'utiliser la capture
+  réseau.
+- Mise à jour de la version de SONAR en **3.13.9** pour publier ce correctif.
+
 ## **[3.13.8] - 2026-05-18**
 
 ## 🛠 Corrections

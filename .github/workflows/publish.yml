@@ -41,13 +41,27 @@ jobs:
       - name: verify reproducible Linux build
         shell: bash
         env:
-          REQUIRE_DEB: "1"
-          ALLOW_BUNDLE_NON_REPRODUCIBLE: "1"
+          TAURI_BUILD_CMD: "deno task tauri build --ci --no-sign --no-bundle"
         run: ./security/repro-check.sh
 
-  publish-tauri:
-    name: build and publish release artifacts
+  create-release:
+    name: create GitHub release
     needs: reproducibility-check
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Create release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./script/ci/create-release.sh "${GITHUB_REF_NAME}"
+
+  publish-tauri:
+    name: build and publish release binaries
+    needs: create-release
     permissions:
       contents: write
       id-token: write
@@ -97,17 +111,21 @@ jobs:
         shell: bash
         run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
 
-      - name: Build and package with Tauri
-        uses: tauri-apps/tauri-action@1ddc7b49b13c3038297360482fcb3e058764d7c9
+      - name: Compile without bundling
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Sonar ${{ github.ref_name }}"
-          releaseBody: "Voir les assets ci-dessous pour télécharger cette version."
-          releaseDraft: false
-          prerelease: false
-          args: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
+          TAURI_BUILD_ARGS: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
+        run: deno task tauri build --ci --no-sign --no-bundle ${TAURI_BUILD_ARGS}
+
+      - name: Collect release binary
+        shell: bash
+        run: ./script/ci/collect-release-binary.sh "${{ matrix.platform }}"
+
+      - name: Upload release binary
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${GITHUB_REF_NAME}" release-artifacts/* --clobber
 
       - name: Generate SHA256 checksums
         shell: bash

@@ -18,11 +18,11 @@ API_BASE="https://api.github.com/repos/${OWNER}/${REPO}"
 classify_os() {
   local name="$1"
   shopt -s nocasematch
-  if [[ "$name" =~ \.msi$|\.exe$ ]]; then
+  if [[ "$name" =~ ^sonar-windows-|\.msi$|\.exe$ ]]; then
     echo "windows"
-  elif [[ "$name" =~ \.deb$|\.rpm$|\.appimage$ ]]; then
+  elif [[ "$name" =~ ^sonar-linux-|\.deb$|\.rpm$|\.appimage$ ]]; then
     echo "linux"
-  elif [[ "$name" =~ \.dmg$ ]]; then
+  elif [[ "$name" =~ ^sonar-macos-|\.dmg$ ]]; then
     echo "macos"
   elif [[ "$name" =~ \.tar\.gz$|\.zip$ ]]; then
     echo "source_or_archive"

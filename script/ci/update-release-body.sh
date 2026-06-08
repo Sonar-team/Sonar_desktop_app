@@ -6,7 +6,9 @@ hash_dir="${2:-release-hashes}"
 body_file="${3:-release-body.md}"
 
 {
-  printf 'Voir les assets ci-dessous pour télécharger cette version.\n\n'
+  printf 'Cette release publie les binaires reproductibles, pas des installateurs.\n\n'
+  printf '## Windows\n\n'
+  printf 'Avant de lancer `sonar.exe`, installez Npcap séparément depuis https://npcap.com/#download et activez le mode compatible WinPcap dans l'\''installateur Npcap. Sans Npcap, la capture réseau ne fonctionnera pas.\n\n'
   printf '## SHA256\n\n'
   find "$hash_dir" -type f -name 'release-hashes-*.md' \
     | sort | while IFS= read -r hash_file; do

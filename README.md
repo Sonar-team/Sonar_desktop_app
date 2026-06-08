@@ -80,14 +80,27 @@ SOC rules.
 
 ---
 
+## Release Binaries
+
+Release assets are raw binaries, not installers.
+
+### Windows
+
+- Install **Npcap** separately from the
+  [official Npcap download page](https://npcap.com/#download) before launching
+  `sonar.exe`.
+- During Npcap installation, enable **WinPcap API-compatible Mode**.
+- Without Npcap, Sonar can start but packet capture will not work.
+
 ## 🧰 System Dependencies
 
 ### Windows
 
-- **NPcap:** Required for packet capture. You must also install the **WinPcap
-  Developer Pack**.
+- **Npcap:** Required at runtime for packet capture.
+- **Build from source only:** You must also install the **WinPcap Developer
+  Pack**.
 - **Environment Variable:** Add the `/Lib` or `/Lib/x64` folder to your system
-  `LIB` environment variable.
+  `LIB` environment variable when building from source.
 
 ### Linux
 
