@@ -5,6 +5,8 @@ param(
     [string]$Manufacturer = "Sonar Team",
     [string]$Version = "",
     [string]$UpgradeCode = "",
+    [string]$PackageCode = "",
+    [string]$InternalMode = "",
     [string]$SourceDateEpoch = "1700000000",
     [switch]$Help
 )
@@ -20,6 +22,11 @@ The script must run on Windows with WiX Toolset v3 available as candle.exe and l
 "@ | Write-Output
     exit 0
 }
+
+$script:FREESECT = [Convert]::ToUInt32("FFFFFFFF", 16)
+$script:ENDOFCHAIN = [Convert]::ToUInt32("FFFFFFFE", 16)
+$script:FATSECT = [Convert]::ToUInt32("FFFFFFFD", 16)
+$script:DIFSECT = [Convert]::ToUInt32("FFFFFFFC", 16)
 
 function Require-Command {
     param([string]$Name)
@@ -172,18 +179,467 @@ function Set-MsiSummaryInformation {
         [DateTime]$Timestamp
     )
 
-    $installer = New-Object -ComObject WindowsInstaller.Installer
-    $database = Invoke-ComMethod -Object $installer -Name "OpenDatabase" -Arguments @($MsiPath, 1)
-    $summary = Get-ComIndexedProperty -Object $database -Name "SummaryInformation" -Arguments @(20)
+    $installer = $null
+    $database = $null
+    $summary = $null
 
-    # PID_REVNUMBER is the package code. PID_CREATE_DTM and PID_LASTSAVE_DTM
-    # otherwise carry build-time metadata and make byte-for-byte output drift.
-    Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(9, "{$PackageCode}")
-    Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(12, $Timestamp)
-    Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(13, $Timestamp)
+    try {
+        $installer = New-Object -ComObject WindowsInstaller.Installer
+        $database = Invoke-ComMethod -Object $installer -Name "OpenDatabase" -Arguments @($MsiPath, 2)
+        $summary = Get-ComIndexedProperty -Object $database -Name "SummaryInformation" -Arguments @(20)
 
-    Invoke-ComMethod -Object $summary -Name "Persist" | Out-Null
-    Invoke-ComMethod -Object $database -Name "Commit" | Out-Null
+        # PID_REVNUMBER is the package code. PID_CREATE_DTM and PID_LASTSAVE_DTM
+        # otherwise carry build-time metadata and make byte-for-byte output drift.
+        Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(9, "{$PackageCode}")
+        Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(12, $Timestamp)
+        Set-ComIndexedProperty -Object $summary -Name "Property" -Arguments @(13, $Timestamp)
+
+        Invoke-ComMethod -Object $summary -Name "Persist" | Out-Null
+        Invoke-ComMethod -Object $database -Name "Commit" | Out-Null
+    } finally {
+        foreach ($object in @($summary, $database, $installer)) {
+            if ($null -ne $object -and [System.Runtime.InteropServices.Marshal]::IsComObject($object)) {
+                [void][System.Runtime.InteropServices.Marshal]::FinalReleaseComObject($object)
+            }
+        }
+
+        [System.GC]::Collect()
+        [System.GC]::WaitForPendingFinalizers()
+    }
+}
+
+function Invoke-SummaryInformationChildProcess {
+    param(
+        [string]$MsiPath,
+        [string]$PackageCode,
+        [string]$TimestampEpoch
+    )
+
+    & pwsh `
+        -NoProfile `
+        -File $PSCommandPath `
+        -InternalMode "set-summary" `
+        -OutputMsi $MsiPath `
+        -PackageCode $PackageCode `
+        -SourceDateEpoch $TimestampEpoch
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "MSI summary information update failed with exit code $LASTEXITCODE"
+    }
+}
+
+function Read-AllBytesWithRetry {
+    param(
+        [string]$Path,
+        [int]$MaxAttempts = 30,
+        [int]$DelayMilliseconds = 500
+    )
+
+    $lastError = $null
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        try {
+            return [System.IO.File]::ReadAllBytes($Path)
+        } catch [System.IO.IOException] {
+            $lastError = $_.Exception
+            Start-Sleep -Milliseconds $DelayMilliseconds
+        }
+    }
+
+    throw "Could not read $Path after $MaxAttempts attempts: $($lastError.Message)"
+}
+
+function Write-AllBytesWithRetry {
+    param(
+        [string]$Path,
+        [byte[]]$Bytes,
+        [int]$MaxAttempts = 30,
+        [int]$DelayMilliseconds = 500
+    )
+
+    $lastError = $null
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        try {
+            [System.IO.File]::WriteAllBytes($Path, $Bytes)
+            return
+        } catch [System.IO.IOException] {
+            $lastError = $_.Exception
+            Start-Sleep -Milliseconds $DelayMilliseconds
+        }
+    }
+
+    throw "Could not write $Path after $MaxAttempts attempts: $($lastError.Message)"
+}
+
+function Read-UInt16LE {
+    param(
+        [byte[]]$Bytes,
+        [int]$Offset
+    )
+
+    return [BitConverter]::ToUInt16($Bytes, $Offset)
+}
+
+function Read-UInt32LE {
+    param(
+        [byte[]]$Bytes,
+        [int]$Offset
+    )
+
+    return [BitConverter]::ToUInt32($Bytes, $Offset)
+}
+
+function Read-UInt64LE {
+    param(
+        [byte[]]$Bytes,
+        [int]$Offset
+    )
+
+    return [BitConverter]::ToUInt64($Bytes, $Offset)
+}
+
+function Write-UInt64LE {
+    param(
+        [byte[]]$Bytes,
+        [int]$Offset,
+        [uint64]$Value
+    )
+
+    $valueBytes = [BitConverter]::GetBytes($Value)
+    [Buffer]::BlockCopy($valueBytes, 0, $Bytes, $Offset, $valueBytes.Length)
+}
+
+function Read-CfbSector {
+    param(
+        [byte[]]$Bytes,
+        [uint32]$SectorId,
+        [int]$SectorSize
+    )
+
+    $offset = [int64]$SectorSize + ([int64]$SectorId * [int64]$SectorSize)
+    if ($offset -lt $SectorSize -or ($offset + $SectorSize) -gt $Bytes.Length) {
+        throw "CFB sector $SectorId is outside file bounds"
+    }
+
+    $sector = [byte[]]::new($SectorSize)
+    [Buffer]::BlockCopy($Bytes, [int]$offset, $sector, 0, $SectorSize)
+    return $sector
+}
+
+function Get-CfbDifatSectorIds {
+    param(
+        [byte[]]$Bytes,
+        [int]$SectorSize,
+        [uint32]$FirstDifatSector,
+        [uint32]$DifatSectorCount
+    )
+
+    $ids = [System.Collections.Generic.List[uint32]]::new()
+    for ($i = 0; $i -lt 109; $i++) {
+        $id = Read-UInt32LE -Bytes $Bytes -Offset (76 + ($i * 4))
+        if ($id -ne $script:FREESECT -and $id -ne $script:ENDOFCHAIN) {
+            $ids.Add($id)
+        }
+    }
+
+    $sector = $FirstDifatSector
+    $entriesPerSector = [int]($SectorSize / 4)
+    for ($i = 0; $i -lt $DifatSectorCount; $i++) {
+        if ($sector -eq $script:ENDOFCHAIN -or $sector -eq $script:FREESECT) {
+            break
+        }
+
+        $difatBytes = Read-CfbSector -Bytes $Bytes -SectorId $sector -SectorSize $SectorSize
+        for ($entryIndex = 0; $entryIndex -lt ($entriesPerSector - 1); $entryIndex++) {
+            $id = Read-UInt32LE -Bytes $difatBytes -Offset ($entryIndex * 4)
+            if ($id -ne $script:FREESECT -and $id -ne $script:ENDOFCHAIN) {
+                $ids.Add($id)
+            }
+        }
+
+        $sector = Read-UInt32LE -Bytes $difatBytes -Offset (($entriesPerSector - 1) * 4)
+    }
+
+    return $ids.ToArray()
+}
+
+function Read-CfbFat {
+    param(
+        [byte[]]$Bytes,
+        [int]$SectorSize
+    )
+
+    $firstDifatSector = Read-UInt32LE -Bytes $Bytes -Offset 68
+    $difatSectorCount = Read-UInt32LE -Bytes $Bytes -Offset 72
+    $difatSectorIds = Get-CfbDifatSectorIds -Bytes $Bytes -SectorSize $SectorSize -FirstDifatSector $firstDifatSector -DifatSectorCount $difatSectorCount
+
+    $fat = [System.Collections.Generic.List[uint32]]::new()
+    foreach ($sectorId in $difatSectorIds) {
+        $sectorBytes = Read-CfbSector -Bytes $Bytes -SectorId $sectorId -SectorSize $SectorSize
+        for ($offset = 0; $offset -lt $SectorSize; $offset += 4) {
+            $fat.Add((Read-UInt32LE -Bytes $sectorBytes -Offset $offset))
+        }
+    }
+
+    return $fat.ToArray()
+}
+
+function Assert-CfbSignature {
+    param(
+        [byte[]]$Bytes,
+        [string]$Path
+    )
+
+    $signature = [byte[]](0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1)
+    for ($i = 0; $i -lt $signature.Length; $i++) {
+        if ($Bytes[$i] -ne $signature[$i]) {
+            throw "$Path is not an MSI/CFB file"
+        }
+    }
+}
+
+function Update-CfbDirectoryTimes {
+    param([byte[]]$Bytes)
+
+    $sectorShift = Read-UInt16LE -Bytes $Bytes -Offset 30
+    $sectorSize = 1 -shl $sectorShift
+    $firstDirectorySector = Read-UInt32LE -Bytes $Bytes -Offset 48
+    $fat = Read-CfbFat -Bytes $Bytes -SectorSize $sectorSize
+    $seen = @{}
+    $sector = $firstDirectorySector
+    $normalizedEntries = 0
+
+    while ($sector -ne $script:ENDOFCHAIN) {
+        if (
+            $sector -eq $script:FREESECT -or
+            $sector -eq $script:FATSECT -or
+            $sector -eq $script:DIFSECT
+        ) {
+            throw "Invalid CFB directory chain entry: $sector"
+        }
+
+        if ([int64]$sector -ge $fat.Length) {
+            throw "CFB directory sector $sector is outside FAT bounds"
+        }
+
+        $key = $sector.ToString()
+        if ($seen.ContainsKey($key)) {
+            throw "CFB directory chain contains a cycle at sector $sector"
+        }
+        $seen[$key] = $true
+
+        $sectorOffset = [int64]$sectorSize + ([int64]$sector * [int64]$sectorSize)
+        if ($sectorOffset -lt $sectorSize -or ($sectorOffset + $sectorSize) -gt $Bytes.Length) {
+            throw "CFB directory sector $sector is outside file bounds"
+        }
+
+        for ($entryOffset = 0; $entryOffset -lt $sectorSize; $entryOffset += 128) {
+            $entryBase = [int]($sectorOffset + $entryOffset)
+            $nameLength = Read-UInt16LE -Bytes $Bytes -Offset ($entryBase + 64)
+            $objectType = $Bytes[$entryBase + 66]
+            if ($nameLength -gt 0 -or $objectType -ne 0) {
+                $normalizedEntries += 1
+            }
+
+            # Also clear unused directory slots, because stale bytes in the
+            # directory sector are part of the MSI hash even when WiX ignores them.
+            Write-UInt64LE -Bytes $Bytes -Offset ($entryBase + 100) -Value 0
+            Write-UInt64LE -Bytes $Bytes -Offset ($entryBase + 108) -Value 0
+        }
+
+        $sector = $fat[[int]$sector]
+    }
+
+    return $normalizedEntries
+}
+
+function Get-CfbDirectoryTimestampDrift {
+    param([byte[]]$Bytes)
+
+    return @(Get-CfbDirectoryTimestampDriftEntries -Bytes $Bytes).Count
+}
+
+function Get-CfbDirectoryTimestampDriftEntries {
+    param([byte[]]$Bytes)
+
+    $sectorShift = Read-UInt16LE -Bytes $Bytes -Offset 30
+    $sectorSize = 1 -shl $sectorShift
+    $firstDirectorySector = Read-UInt32LE -Bytes $Bytes -Offset 48
+    $fat = Read-CfbFat -Bytes $Bytes -SectorSize $sectorSize
+    $seen = @{}
+    $sector = $firstDirectorySector
+    $driftEntries = [System.Collections.Generic.List[object]]::new()
+
+    while ($sector -ne $script:ENDOFCHAIN) {
+        if (
+            $sector -eq $script:FREESECT -or
+            $sector -eq $script:FATSECT -or
+            $sector -eq $script:DIFSECT
+        ) {
+            throw "Invalid CFB directory chain entry: $sector"
+        }
+
+        if ([int64]$sector -ge $fat.Length) {
+            throw "CFB directory sector $sector is outside FAT bounds"
+        }
+
+        $key = $sector.ToString()
+        if ($seen.ContainsKey($key)) {
+            throw "CFB directory chain contains a cycle at sector $sector"
+        }
+        $seen[$key] = $true
+
+        $sectorOffset = [int64]$sectorSize + ([int64]$sector * [int64]$sectorSize)
+        if ($sectorOffset -lt $sectorSize -or ($sectorOffset + $sectorSize) -gt $Bytes.Length) {
+            throw "CFB directory sector $sector is outside file bounds"
+        }
+
+        for ($entryOffset = 0; $entryOffset -lt $sectorSize; $entryOffset += 128) {
+            $entryBase = [int]($sectorOffset + $entryOffset)
+            $nameLength = Read-UInt16LE -Bytes $Bytes -Offset ($entryBase + 64)
+            $objectType = $Bytes[$entryBase + 66]
+            if ($nameLength -le 0 -and $objectType -eq 0) {
+                continue
+            }
+
+            $creationTime = Read-UInt64LE -Bytes $Bytes -Offset ($entryBase + 100)
+            $modifiedTime = Read-UInt64LE -Bytes $Bytes -Offset ($entryBase + 108)
+            if ($creationTime -ne 0 -or $modifiedTime -ne 0) {
+                $name = ""
+                if ($nameLength -gt 2 -and $nameLength -le 64) {
+                    $nameBytes = [byte[]]::new($nameLength - 2)
+                    [Buffer]::BlockCopy($Bytes, $entryBase, $nameBytes, 0, $nameBytes.Length)
+                    $name = [System.Text.Encoding]::Unicode.GetString($nameBytes)
+                }
+
+                $driftEntries.Add([pscustomobject]@{
+                    Sector = [uint32]$sector
+                    EntryOffset = [int64]$entryBase
+                    ObjectType = [int]$objectType
+                    Name = $name
+                    CreationFileTime = $creationTime
+                    ModifiedFileTime = $modifiedTime
+                })
+            }
+        }
+
+        $sector = $fat[[int]$sector]
+    }
+
+    return $driftEntries.ToArray()
+}
+
+function Format-CfbTimestampDrift {
+    param([object[]]$Entries)
+
+    if (-not $Entries -or $Entries.Count -eq 0) {
+        return ""
+    }
+
+    return @($Entries | Select-Object -First 3 | ForEach-Object {
+            "sector=$($_.Sector) offset=$($_.EntryOffset) type=$($_.ObjectType) name='$($_.Name)' creation=$($_.CreationFileTime) modified=$($_.ModifiedFileTime)"
+        }) -join "; "
+}
+
+function Write-CfbDirectoryTimesInPlace {
+    param(
+        [string]$Path,
+        [byte[]]$Bytes
+    )
+
+    $sectorShift = Read-UInt16LE -Bytes $Bytes -Offset 30
+    $sectorSize = 1 -shl $sectorShift
+    $firstDirectorySector = Read-UInt32LE -Bytes $Bytes -Offset 48
+    $fat = Read-CfbFat -Bytes $Bytes -SectorSize $sectorSize
+    $seen = @{}
+    $sector = $firstDirectorySector
+    $normalizedEntries = 0
+    $zeroTimes = [byte[]]::new(16)
+    $stream = $null
+
+    try {
+        $stream = [System.IO.File]::Open(
+            $Path,
+            [System.IO.FileMode]::Open,
+            [System.IO.FileAccess]::ReadWrite,
+            [System.IO.FileShare]::None
+        )
+
+        while ($sector -ne $script:ENDOFCHAIN) {
+            if (
+                $sector -eq $script:FREESECT -or
+                $sector -eq $script:FATSECT -or
+                $sector -eq $script:DIFSECT
+            ) {
+                throw "Invalid CFB directory chain entry: $sector"
+            }
+
+            if ([int64]$sector -ge $fat.Length) {
+                throw "CFB directory sector $sector is outside FAT bounds"
+            }
+
+            $key = $sector.ToString()
+            if ($seen.ContainsKey($key)) {
+                throw "CFB directory chain contains a cycle at sector $sector"
+            }
+            $seen[$key] = $true
+
+            $sectorOffset = [int64]$sectorSize + ([int64]$sector * [int64]$sectorSize)
+            if ($sectorOffset -lt $sectorSize -or ($sectorOffset + $sectorSize) -gt $Bytes.Length) {
+                throw "CFB directory sector $sector is outside file bounds"
+            }
+
+            for ($entryOffset = 0; $entryOffset -lt $sectorSize; $entryOffset += 128) {
+                $entryBase = [int64]($sectorOffset + $entryOffset)
+                $nameLength = Read-UInt16LE -Bytes $Bytes -Offset ([int]($entryBase + 64))
+                $objectType = $Bytes[[int]($entryBase + 66)]
+                if ($nameLength -gt 0 -or $objectType -ne 0) {
+                    $normalizedEntries += 1
+                }
+
+                $stream.Seek($entryBase + 100, [System.IO.SeekOrigin]::Begin) | Out-Null
+                $stream.Write($zeroTimes, 0, $zeroTimes.Length)
+            }
+
+            $sector = $fat[[int]$sector]
+        }
+
+        $stream.Flush($true)
+    } finally {
+        if ($null -ne $stream) {
+            $stream.Dispose()
+        }
+    }
+
+    return $normalizedEntries
+}
+
+function Normalize-MsiCfbDirectoryTimes {
+    param([string]$MsiPath)
+
+    $resolved = (Resolve-Path -LiteralPath $MsiPath).Path
+    $maxAttempts = 20
+    $normalizedEntries = 0
+
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        $bytes = Read-AllBytesWithRetry -Path $resolved
+        Assert-CfbSignature -Bytes $bytes -Path $resolved
+        $normalizedEntries = Write-CfbDirectoryTimesInPlace -Path $resolved -Bytes $bytes
+
+        Start-Sleep -Milliseconds 1000
+
+        $verifiedBytes = Read-AllBytesWithRetry -Path $resolved
+        Assert-CfbSignature -Bytes $verifiedBytes -Path $resolved
+        $driftEntries = @(Get-CfbDirectoryTimestampDriftEntries -Bytes $verifiedBytes)
+        if ($driftEntries.Count -eq 0) {
+            Write-Output "Normalized MSI CFB directory timestamps for $normalizedEntries entries"
+            return
+        }
+
+        Write-Output "MSI CFB directory timestamps still nonzero for $($driftEntries.Count) entries after attempt ${attempt}: $(Format-CfbTimestampDrift $driftEntries); retrying"
+        Start-Sleep -Milliseconds 1000
+    }
+
+    throw "Could not normalize MSI CFB directory timestamps after $maxAttempts attempts"
 }
 
 function Copy-NormalizedTree {
@@ -358,7 +814,13 @@ function Main {
             throw "light.exe failed with exit code $LASTEXITCODE"
         }
 
-        Set-MsiSummaryInformation -MsiPath $OutputMsi -PackageCode $packageCode -Timestamp $timestamp
+        $outputItem = Get-Item -LiteralPath $OutputMsi
+        $outputItem.LastWriteTimeUtc = $timestamp
+        $outputItem.CreationTimeUtc = $timestamp
+        $outputItem.LastAccessTimeUtc = $timestamp
+
+        Invoke-SummaryInformationChildProcess -MsiPath $OutputMsi -PackageCode $packageCode -TimestampEpoch $SourceDateEpoch
+        Normalize-MsiCfbDirectoryTimes -MsiPath $OutputMsi
 
         $outputItem = Get-Item -LiteralPath $OutputMsi
         $outputItem.LastWriteTimeUtc = $timestamp
@@ -371,6 +833,24 @@ function Main {
             Remove-Item -LiteralPath $workdir -Recurse -Force
         }
     }
+}
+
+if ($InternalMode) {
+    if ($InternalMode -eq "set-summary") {
+        if (-not $OutputMsi) {
+            throw "OutputMsi is required for set-summary mode."
+        }
+
+        if (-not $PackageCode) {
+            throw "PackageCode is required for set-summary mode."
+        }
+
+        $timestamp = [System.DateTimeOffset]::FromUnixTimeSeconds([int64]$SourceDateEpoch).UtcDateTime
+        Set-MsiSummaryInformation -MsiPath $OutputMsi -PackageCode $PackageCode -Timestamp $timestamp
+        exit 0
+    }
+
+    throw "Unknown internal mode: $InternalMode"
 }
 
 Main

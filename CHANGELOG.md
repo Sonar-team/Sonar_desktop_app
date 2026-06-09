@@ -1,5 +1,55 @@
 # Changelog
 
+## **[3.13.13] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Remappage des chemins locaux `rustup` et `cargo` dans l'environnement de build
+  reproductible afin de réduire les différences entre un build local et GitHub
+  Actions.
+- Désactivation explicite des informations de debug et strip des symboles dans
+  le profil release Rust.
+- Robustesse de la collecte CI du binaire lorsque Cargo laisse l'exécutable dans
+  `target/release/deps` après un build Tauri sans bundle.
+- Mise à jour de la version de SONAR en **3.13.13** pour publier ce correctif.
+
+## **[3.13.12] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Correction de la vérification de reproductibilité `--no-bundle` : l'absence de
+  paquet `.deb` est maintenant traitée comme normale lorsque les bundles ne sont
+  pas générés.
+- Mise à jour de la version de SONAR en **3.13.12** pour publier ce correctif.
+
+## **[3.13.11] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Activation du fallback apt vers l'archive Ubuntu même lorsque le script est
+  exécuté via `sudo`, qui ne préserve pas les variables d'environnement GitHub.
+- Mise à jour de la version de SONAR en **3.13.11** pour publier ce correctif.
+
+## **[3.13.10] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Ajout d'un fallback CI vers l'archive Ubuntu standard lorsque
+  `snapshot.ubuntu.com` est indisponible, tout en conservant les versions de
+  paquets apt pinées.
+- Mise à jour de la version de SONAR en **3.13.10** pour publier ce correctif.
+
+## **[3.13.9] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Publication des releases sous forme de binaires reproductibles uniquement,
+  sans bundle/installateur.
+- Ajout d'une note explicite dans la documentation et le corps de release : sous
+  Windows, Npcap doit être installé séparément avant d'utiliser la capture
+  réseau.
+- Mise à jour de la version de SONAR en **3.13.9** pour publier ce correctif.
+
 ## **[3.13.8] - 2026-05-18**
 
 ## 🛠 Corrections

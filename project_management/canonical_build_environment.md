@@ -308,14 +308,15 @@ script instead of relying on the Tauri bundler as the reproducibility boundary.
 `script/package-msi-repro.ps1` is the project-owned Windows MSI packaging
 prototype. It builds a WiX v3 MSI from a normalized installation root using
 stable component GUIDs, stable product/package codes, sorted file traversal,
-and normalized file timestamps. The `publish-smoke` MSI job fails if the
-normalized inputs differ, normalizes decompiled WiX source paths for comparison,
-then runs `script/ci/compare-msi-internals.ps1` when only the final MSI hashes
-differ. That diagnostic compares the MSI OLE/CFB directory, stream hashes,
-embedded CAB hashes, and sector bytes so the remaining drift can be separated
-between logical installer content and low-level MSI container layout. The job
-fails when the final MSI hashes differ, even if the diagnostic shows identical
-logical streams, because bundle reproducibility is the gate.
+normalized file timestamps, and normalized MSI OLE/CFB directory timestamps.
+The `publish-smoke` MSI job fails if the normalized inputs differ, normalizes
+decompiled WiX source paths for comparison, then runs
+`script/ci/compare-msi-internals.ps1` when only the final MSI hashes differ.
+That diagnostic compares the MSI OLE/CFB directory, stream hashes, embedded CAB
+hashes, and sector bytes so the remaining drift can be separated between
+logical installer content and low-level MSI container layout. The job fails when
+the final MSI hashes differ, even if the diagnostic shows identical logical
+streams, because bundle reproducibility is the gate.
 
 The Windows client verification target is therefore the exact MSI published in
 the release. It must remain byte-for-byte identical to the unsigned MSI produced

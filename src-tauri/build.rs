@@ -1,5 +1,7 @@
 fn main() {
     println!("cargo:rerun-if-changed=../config/build-versions.env");
+    println!("cargo:rerun-if-changed=windows/npcap-sdk/Lib/x64/Packet.lib");
+    println!("cargo:rerun-if-changed=windows/npcap-sdk/Lib/x64/wpcap.lib");
 
     let build_versions = std::fs::read_to_string("../config/build-versions.env")
         .expect("failed to read ../config/build-versions.env");
@@ -23,13 +25,11 @@ fn main() {
         );
     }
 
-    tauri_build::build();
-
-    // Only add the Packet.lib library on Windows
-    #[cfg(target_os = "windows")]
-    {
-        println!("cargo:rustc-link-search=native=./lib");
-        println!("cargo:rustc-link-lib=static=Packet");
-        println!("cargo:rustc-link-lib=static=wpcap");
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
+        println!("cargo:rustc-link-search=native=windows/npcap-sdk/Lib/x64");
+        println!("cargo:rustc-link-lib=Packet");
+        println!("cargo:rustc-link-lib=wpcap");
     }
+
+    tauri_build::build();
 }

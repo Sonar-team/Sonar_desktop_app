@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "sonar",
-  "version": "3.13.8",
+  "version": "3.13.13",
   "identifier": "fr.sonar.ssf",
   "build": {
     "beforeDevCommand": "deno task dev",
@@ -33,6 +33,7 @@
     "active": true,
     "licenseFile": "../LICENSE.md",
     "targets": [
+      "msi",
       "nsis",
       "deb",
       "rpm",
@@ -48,10 +49,13 @@
     "windows": {
       "nsis": {
         "languages": ["French"],
-        "installerIcon": "icons\\installer_icon.ico",
-        "headerImage": "windows\\header_image_nsis.bmp",
-        "sidebarImage": "windows\\sidebar_image_nsis.bmp",
-        "installerHooks": "windows\\hooks.nsh"
+        "installerIcon": "icons/installer_icon.ico",
+        "headerImage": "windows/header_image_nsis.bmp",
+        "sidebarImage": "windows/sidebar_image_nsis.bmp",
+        "installerHooks": "windows/hooks.nsh"
+      },
+      "wix": {
+        "language": "fr-FR"
       }
     },
 

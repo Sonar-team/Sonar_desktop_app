@@ -2,6 +2,7 @@ use crossbeam::channel::Receiver;
 use log::{debug, error, info};
 use std::{
     sync::{Arc, Mutex},
+    sync::atomic::{AtomicBool, Ordering},
     thread,
     time::{Duration, Instant},
 };
@@ -31,6 +32,7 @@ pub fn spawn_processing_thread(
     channel_capacity: i32,
     app: AppHandle,
     buffer_pool: Arc<PacketBufferPool>,
+    stop_flag: Arc<AtomicBool>,
 ) {
     thread::spawn(move || {
         debug!("Démarrage du thread de traitement");
@@ -45,6 +47,12 @@ pub fn spawn_processing_thread(
         loop {
             match rx.recv() {
                 Ok(CaptureMessage::Packet(pkt)) => {
+                    if stop_flag.load(Ordering::Relaxed) {
+                        // Drain quietly after stop: no packet event and no matrix update.
+                        buffer_pool.put(pkt);
+                        continue;
+                    }
+
                     let flow = match PacketFlow::try_from(pkt.as_ref()) {
                         Ok(flow) => flow,
                         Err(e) => {
@@ -128,6 +136,10 @@ pub fn spawn_processing_thread(
                 }
 
                 Ok(CaptureMessage::Stats(new_stats)) => {
+                    if stop_flag.load(Ordering::Relaxed) {
+                        continue;
+                    }
+
                     // new_stats: pcap::Stat
                     if let Err(e) = StatsPayload::maybe_send(
                         &mut stats, // <= ta variable déjà déclarée
@@ -169,6 +181,7 @@ pub fn spawn_processing_thread_cli(
     channel_capacity: i32,
     app: AppHandle,
     buffer_pool: Arc<PacketBufferPool>,
+    stop_flag: Arc<AtomicBool>,
 ) {
     thread::spawn(move || {
         debug!("Démarrage du thread de traitement");
@@ -183,6 +196,12 @@ pub fn spawn_processing_thread_cli(
         loop {
             match rx.recv() {
                 Ok(CaptureMessage::Packet(pkt)) => {
+                    if stop_flag.load(Ordering::Relaxed) {
+                        // Drain quietly after stop: no packet event and no matrix update.
+                        buffer_pool.put(pkt);
+                        continue;
+                    }
+
                     let flow = match PacketFlow::try_from(pkt.as_ref()) {
                         Ok(flow) => flow,
                         Err(e) => {
@@ -267,6 +286,10 @@ pub fn spawn_processing_thread_cli(
                 }
 
                 Ok(CaptureMessage::Stats(new_stats)) => {
+                    if stop_flag.load(Ordering::Relaxed) {
+                        continue;
+                    }
+
                     // new_stats: pcap::Stat
                     if let Err(e) = StatsPayload::maybe_send(
                         &mut stats, // <= ta variable déjà déclarée

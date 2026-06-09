@@ -88,6 +88,26 @@ async function buildEnv(): Promise<Record<string, string>> {
   // Remap the local checkout path to a stable virtual path to avoid embedding machine-specific paths.
   const remapFlag = `--remap-path-prefix=${repoRoot}=/workspace`;
   let rustflags = appendFlag(Deno.env.get("RUSTFLAGS"), remapFlag);
+
+  const home = Deno.env.get("HOME");
+  const rustupPath = Deno.env.get("RUSTUP_HOME") ??
+    (home ? `${home}/.rustup` : undefined);
+  if (rustupPath) {
+    rustflags = appendFlag(
+      rustflags,
+      `--remap-path-prefix=${rustupPath}=/rustup`,
+    );
+  }
+
+  const cargoPath = Deno.env.get("CARGO_HOME") ??
+    (home ? `${home}/.cargo` : undefined);
+  if (cargoPath) {
+    rustflags = appendFlag(
+      rustflags,
+      `--remap-path-prefix=${cargoPath}=/cargo`,
+    );
+  }
+
   if (shouldEnableWindowsBrepro()) {
     rustflags = appendLinkArg(rustflags, "link-arg=/Brepro");
   }

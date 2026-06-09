@@ -22,6 +22,46 @@ hash_file() {
   fi
 }
 
+normalize_nsis_exe_for_hash() {
+  local input="$1"
+  local output="$2"
+  local source_date_epoch="${SOURCE_DATE_EPOCH:-0}"
+
+  cp "$input" "$output"
+
+  python3 - "$output" "$source_date_epoch" <<'PY'
+import struct
+import sys
+
+path = sys.argv[1]
+source_date_epoch = int(sys.argv[2]) if len(sys.argv) > 2 else 0
+
+with open(path, "r+b") as f:
+    data = bytearray(f.read())
+
+    if len(data) < 0x40:
+        sys.exit(0)
+
+    pe_offset = struct.unpack_from("<I", data, 0x3C)[0]
+    if pe_offset + 4 > len(data):
+        sys.exit(0)
+    if data[pe_offset:pe_offset + 4] != b"PE\0\0":
+        sys.exit(0)
+
+    coff_header_offset = pe_offset + 4
+    if coff_header_offset + 8 <= len(data):
+        struct.pack_into("<I", data, coff_header_offset + 4, source_date_epoch)
+
+    optional_header_offset = coff_header_offset + 20
+    if optional_header_offset + 68 <= len(data):
+        struct.pack_into("<I", data, optional_header_offset + 64, 0)
+
+    f.seek(0)
+    f.write(data)
+    f.truncate()
+PY
+}
+
 run_build() {
   local run="$1"
   local outdir="${OUTPUT_DIR}/${run}"
@@ -103,9 +143,18 @@ run_build() {
   fi
 
   while IFS= read -r artifact; do
+    local file_to_hash="$artifact"
+    local copied_path="${outdir}/$(basename "$artifact")"
+
+    if [[ "$BUNDLE_KIND" == "nsis" && "$artifact" == *.exe ]]; then
+      normalize_nsis_exe_for_hash "$artifact" "$copied_path"
+      file_to_hash="$copied_path"
+    else
+      cp "$artifact" "$copied_path"
+    fi
+
     local hash
-    hash="$(hash_file "$artifact")"
-    cp "$artifact" "$outdir/"
+    hash="$(hash_file "$file_to_hash")"
     printf '%s  %s\n' "$hash" "$(basename "$artifact")" >> "$outdir/SHA256SUMS"
   done < "$artifact_list"
 }
