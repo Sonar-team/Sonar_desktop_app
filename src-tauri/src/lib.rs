@@ -9,7 +9,6 @@ use std::sync::{Arc, Mutex};
 use tauri::{Manager, menu::MenuBuilder};
 use tauri_plugin_cli::CliExt;
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 use crate::{
     commandes::{
@@ -43,28 +42,10 @@ pub fn run() -> Result<(), tauri::Error> {
         now.format("%H-%M-%S")
     );
 
-    let ctrl_c_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyC);
-
-    let exit_code = 0;
-
     tauri::Builder::default()
         .plugin(tauri_plugin_cli::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(move |app, shortcut, event| {
-                    println!("{:?}", shortcut);
-                    if shortcut == &ctrl_c_shortcut {
-                        match event.state() {
-                            ShortcutState::Pressed => {
-                                println!("Ctrl-C Pressed!");
-                                app.exit(exit_code);
-                            }
-                            ShortcutState::Released => {
-                                println!("Ctrl-C Released!");
-                            }
-                        }
-                    }
-                })
                 .build(),
         )
         .plugin(tauri_plugin_fs::init())
@@ -117,7 +98,8 @@ pub fn run() -> Result<(), tauri::Error> {
 
                 println!("headless_enabled = {}", headless_enabled);
                 println!("args: {:?}", cli_matches);
-                app.global_shortcut().register(ctrl_c_shortcut)?;
+
+                app.manage(Arc::new(Mutex::new(headless_enabled)));
 
                 // handle the capture state here
                 if !headless_enabled {
@@ -168,7 +150,13 @@ pub fn run() -> Result<(), tauri::Error> {
             convert_from_pcap_list,
             add_label,
             get_label_list,
-            set_filter
+            set_filter,
+            is_headless
         ])
         .run(tauri::generate_context!())
+}
+
+#[tauri::command]
+fn is_headless(state: tauri::State<Arc<Mutex<bool>>>) -> bool {
+    *state.lock().unwrap()
 }
