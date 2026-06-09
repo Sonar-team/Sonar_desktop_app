@@ -64,7 +64,10 @@ jobs:
         working-directory: ./src-tauri
 
       - name: Check for outdated dependencies with cargo outdated
-        run: cargo outdated
+        run: |
+          mv .cargo/config.toml .cargo/config.toml.bak
+          trap 'mv .cargo/config.toml.bak .cargo/config.toml' EXIT
+          cargo outdated
         working-directory: ./src-tauri
 
       - name: Check unused dependencies with cargo udeps
