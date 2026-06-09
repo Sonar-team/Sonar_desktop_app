@@ -15,14 +15,14 @@ use crate::{
     commandes::{
         export::{csv::export_csv, logs::export_logs},
         flow_matrix::{add_label, get_label_list},
-        import::{add_to_selected_label_files_names_list, remove_from_selected_label_files_names_list, convert_from_pcap_list, import_label_files, get_label_files_list, remove_label_file},
+        import::{add_to_selected_label_files_names_list, convert_from_pcap_list, get_label_files_list, import_label_files, remove_from_selected_label_files_names_list, remove_label_file},
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
     setup::{
         about::about_message, labels::read_labels, log_host_and_app_snapshot, print_banner,
         system_info::start_cpu_monitor,
     },
-    state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData, label_files_list::SelectedLabelFiles},
+    state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData, label_files_list::{PcInfoLabel, SelectedLabelFiles}},
 };
 
 mod commandes;
@@ -88,6 +88,7 @@ pub fn run() -> Result<(), tauri::Error> {
         .manage(Arc::new(Mutex::new(FlowMatrix::new())))
         .manage(Arc::new(Mutex::new(GraphData::new())))
         .manage(Arc::new(Mutex::new(SelectedLabelFiles::new())))
+        .manage(Arc::new(Mutex::new(PcInfoLabel::new())))
         .on_menu_event(|app, event| {
             if event.id() == "apropos" {
                 app.dialog()
@@ -143,11 +144,11 @@ pub fn run() -> Result<(), tauri::Error> {
                     .build()?;
 
                     let interfaces = setup::system_info::get_interfaces();
-                    let labels = setup::labels::create_labels_from_network_interfaces(interfaces)?;
-                    println!("labels: {:#?}", labels);
-                    setup::labels::add_labels_to_file(app.handle(), labels.clone())?;
-                    read_labels(app.handle())?;
-                    setup::labels::update_labels_in_state(app.handle(), labels)?;
+                    setup::labels::create_labels_from_network_interfaces(interfaces, app.handle())?;
+                    //println!("labels: {:#?}", labels);
+                    //setup::labels::add_labels_to_file(app.handle(), labels.clone())?;
+                    //read_labels(app.handle())?;
+                    //setup::labels::update_labels_in_state(app.handle())?;
                 } else {
                     let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
                     let config = get_config_capture(capture_state.clone());
