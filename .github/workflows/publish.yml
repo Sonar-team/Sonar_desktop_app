@@ -7,7 +7,7 @@ on:
 
 jobs:
   reproducibility-check:
-    name: verify unsigned reproducible artifacts
+    name: verify unsigned reproducible binary
     permissions:
       contents: read
     runs-on: ubuntu-22.04
@@ -60,7 +60,7 @@ jobs:
         run: ./script/ci/create-release.sh "${GITHUB_REF_NAME}"
 
   publish-tauri:
-    name: build and publish release binaries
+    name: build and publish release artifacts
     needs: create-release
     permissions:
       contents: write
@@ -107,15 +107,11 @@ jobs:
       - name: install frontend dependencies deterministically
         run: deno install --frozen
 
-      - name: configure reproducible build environment
-        shell: bash
-        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
-
       - name: Build release binary
         shell: bash
         env:
           TAURI_BUILD_ARGS: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
-        run: deno task tauri build --ci --no-sign --no-bundle ${TAURI_BUILD_ARGS}
+        run: deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign --no-bundle ${TAURI_BUILD_ARGS}'
 
       - name: Collect release binary
         shell: bash

@@ -21,10 +21,9 @@
  * - can also execute an arbitrary build command with that environment applied
  *
  * Expected usage:
- * - `github-env`: used by `.github/workflows/publish.yml` to append variables to
- *   `$GITHUB_ENV` before `tauri-action` runs
- * - `run ...`: used by local release commands and by `security/repro-check.sh`
- *   to execute a build with the same reproducibility settings
+ * - `github-env`: used by CI checks to validate the GitHub Actions env-file output.
+ * - `run ...`: used by release commands and by `security/repro-check.sh` to execute
+ *   a build with the same reproducibility settings.
  *
  * The goal is not to solve every source of non-determinism by itself. It
  * specifically handles the release-build flags that must be applied consistently

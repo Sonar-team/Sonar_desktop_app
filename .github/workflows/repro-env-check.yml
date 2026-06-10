@@ -52,4 +52,4 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"' .github/workflows/publish.yml
+          grep -Fq "deno run -A ./security/repro-env.ts run bash -lc" .github/workflows/publish.yml

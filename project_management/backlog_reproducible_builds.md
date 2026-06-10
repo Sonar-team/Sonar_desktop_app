@@ -154,8 +154,10 @@ Status: Done
 
 Implementation notes:
 
-- `security/repro-check.sh` defaults to `deno task tauri build --ci --no-sign`.
-- `script/ci/check-bundle-repro.sh` also uses `--no-sign` for NSIS/DMG probes.
+- `security/repro-check.sh` defaults to
+  `deno task tauri build --ci --no-sign --no-bundle`.
+- Native bundles are built with the Tauri bundler and are not part of the
+  byte-for-byte reproducibility gate.
 - The release workflow gates publishing behind the unsigned reproducibility
   check.
 - Signing, provenance, and SBOM remain separate release-trust work after
@@ -172,8 +174,8 @@ Status: Done
 
 - The canonical target is documented in
   `project_management/canonical_build_environment.md`.
-- Reproducibility validation targets unsigned platform binaries and unsigned
-  platform bundles.
+- Reproducibility validation targets the unsigned binary.
+- Native bundles are covered by release hashes, signatures, and attestations.
 - Signing, provenance, and SBOM generation are explicitly outside the
   byte-for-byte reproducibility comparison.
 
@@ -323,8 +325,8 @@ Guiding rule:
 
 Release trust flow:
 
-1. Run reproducibility validation on unsigned artifacts.
-2. Build and publish release artifacts.
+1. Run reproducibility validation on the unsigned binary.
+2. Build and publish release binaries and native bundles.
 3. Sign the released binary and bundle artifacts with Sigstore/cosign keyless
    signing on GitHub Actions.
 4. Publish signatures, hashes, provenance, and SBOM metadata alongside the
