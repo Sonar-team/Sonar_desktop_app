@@ -56,7 +56,7 @@ jobs:
       - name: Create release
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: ./script/ci/create-release.sh "${GITHUB_REF_NAME}"
 
   publish-tauri:
@@ -142,7 +142,7 @@ jobs:
       - name: Upload release artifacts
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: gh release upload "${GITHUB_REF_NAME}" release-artifacts/* --clobber
 
       - name: Generate SHA256 checksums
@@ -169,7 +169,7 @@ jobs:
       - name: Upload Sigstore bundles to release
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: ./script/ci/upload-sigstore-bundles.sh "${{ matrix.platform }}"
 
       - name: Upload Sigstore bundles artifact
@@ -206,5 +206,5 @@ jobs:
       - name: Update GitHub release body with hashes
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: ./script/ci/update-release-body.sh "${GITHUB_REF_NAME}"
