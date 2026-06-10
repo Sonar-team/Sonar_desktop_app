@@ -51,7 +51,7 @@ ac987738c9814e8feb6cf8a6f19e3ed5771d3ea8af27f6c69a49dcaf0190b331  script/ci/crea
 fdee4ee0be7e227f2d13fce5aaa7389fc08bf6b70c6b2479f89b0ad0bc386425  script/ci/investigate-windows-binary-repro.sh
 b66b97f5e5d1637568ba56b8dd7ad2283b321e3c44fc1aa0d9b802c95ee6d32e  script/ci/read-msi-cfb-times.ps1
 4d211f1b6ee37219040aa7666e8e96fb3eb0ba3498d7cd00bf9b25d4cea1801c  script/ci/sign-release-artifacts.sh
-ba48148597343e9a33365844446c360e0f733456a9be85f74a6eafa2b8f60625  script/ci/smoke-test-windows-exe.ps1
+abfde1f7a17ddc42dea5ae78b2a3b1a05898fc1f57fc98a5643ce04241bdcb0d  script/ci/smoke-test-windows-exe.ps1
 2d9653994e3beebfd530d23b5c821111c285e85d26acefbf73620a37c16c1174  script/ci/test-workflows-with-act.sh
 809c66a377b3a5c32a4864d7bf3ec8c8bb62080c0a1d8809e5a443100ac0d0c5  script/ci/update-release-body.sh
 532b42a5b5724c6738f3d210a5999f5321fe5fa4a00783cab5b08b1bad1afe23  script/ci/upload-sigstore-bundles.sh
