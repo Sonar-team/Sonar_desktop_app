@@ -68,6 +68,11 @@ jobs:
             npm run tauri build
           fi
 
+      - name: Smoke launch Windows executable
+        if: matrix.platform == 'windows-2022'
+        shell: pwsh
+        run: ./script/ci/smoke-test-windows-exe.ps1 -ExePath src-tauri/target/release/sonar.exe
+
   debian-repro-smoke:
     name: verify reproducible Debian package
     runs-on: ubuntu-22.04

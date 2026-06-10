@@ -121,6 +121,11 @@ jobs:
         shell: bash
         run: ./script/ci/collect-release-binary.sh "${{ matrix.platform }}"
 
+      - name: Smoke launch Windows executable
+        if: matrix.platform == 'windows-2022'
+        shell: pwsh
+        run: ./script/ci/smoke-test-windows-exe.ps1 -ExePath release-artifacts/sonar-windows-x86_64.exe
+
       - name: Upload release binary
         shell: bash
         env:
