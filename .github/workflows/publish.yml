@@ -114,8 +114,15 @@ jobs:
         run: deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign --no-bundle ${TAURI_BUILD_ARGS}'
 
       - name: Collect release binary
+        id: release-binary
         shell: bash
-        run: ./script/ci/collect-release-binary.sh "${{ matrix.platform }}"
+        run: |
+          binary_path="$(./script/ci/collect-release-binary.sh "${{ matrix.platform }}")"
+          echo "binary_path=${binary_path}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate release binary startup logs
+        shell: bash
+        run: ./script/ci/smoke-test-release-binary.sh "${{ steps.release-binary.outputs.binary_path }}"
 
       - name: Smoke launch Windows executable
         if: matrix.platform == 'windows-2022'

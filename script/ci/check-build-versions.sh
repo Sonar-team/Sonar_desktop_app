@@ -41,6 +41,7 @@ check_contains .github/workflows/publish-smoke.yml 'sudo ./script/ci/use-apt-sna
 check_contains .github/workflows/publish-smoke.yml 'apt-get install -y $LINUX_APT_PACKAGES'
 check_contains .github/workflows/publish-smoke.yml 'smoke build bundles with Tauri'
 check_contains .github/workflows/publish-smoke.yml 'npm run tauri build'
+check_contains .github/workflows/publish-smoke.yml './script/ci/smoke-test-release-binary.sh'
 check_contains .github/workflows/publish-smoke.yml './script/ci/smoke-test-windows-exe.ps1'
 check_contains .github/workflows/covecode.yml './script/ci/export-build-versions.sh'
 check_contains .github/workflows/covecode.yml 'node-version: "v${{ steps.versions.outputs.NODE_VERSION }}"'
