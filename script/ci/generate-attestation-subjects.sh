@@ -9,16 +9,13 @@ hashes_file="release-hashes-${platform}.md"
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 
-find "$target_dir" -type f \
-  \( -name 'sonar' -o -name 'sonar.exe' -o -name 'sonar-*' -o -name 'sonar-*.exe' \) \
-  ! -path '*/bundle/*' \
-  | sort > "${tmpdir}/binary-artifacts.txt"
+find "$target_dir" -type f | sort > "${tmpdir}/release-artifacts.txt"
 
-test -s "${tmpdir}/binary-artifacts.txt"
+test -s "${tmpdir}/release-artifacts.txt"
 test -f "$hashes_file"
 
 {
-  cat "${tmpdir}/binary-artifacts.txt"
+  cat "${tmpdir}/release-artifacts.txt"
   printf '%s\n' "$hashes_file"
 } > "$output_file"
 

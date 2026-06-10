@@ -111,7 +111,7 @@ jobs:
         shell: bash
         run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
 
-      - name: Compile without bundling
+      - name: Build release binary
         shell: bash
         env:
           TAURI_BUILD_ARGS: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
@@ -126,7 +126,17 @@ jobs:
         shell: pwsh
         run: ./script/ci/smoke-test-windows-exe.ps1 -ExePath release-artifacts/sonar-windows-x86_64.exe
 
-      - name: Upload release binary
+      - name: Build release bundles
+        shell: bash
+        env:
+          TAURI_BUILD_ARGS: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
+        run: deno task tauri build --ci --no-sign ${TAURI_BUILD_ARGS}
+
+      - name: Collect release bundles
+        shell: bash
+        run: ./script/ci/collect-release-bundles.sh "${{ matrix.platform }}"
+
+      - name: Upload release artifacts
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

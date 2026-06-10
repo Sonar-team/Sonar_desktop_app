@@ -11,20 +11,20 @@ else
   hash_cmd=(shasum -a 256)
 fi
 
-find "$target_dir" -type f \
-  \( -name 'sonar' -o -name 'sonar.exe' -o -name 'sonar-*' -o -name 'sonar-*.exe' \) \
-  ! -path '*/bundle/*' \
-  | sort > binary-artifacts.txt
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
 
-test -s binary-artifacts.txt
+find "$target_dir" -type f | sort > "${tmpdir}/release-artifacts.txt"
+
+test -s "${tmpdir}/release-artifacts.txt"
 
 {
   printf '### %s\n\n' "$platform"
-  printf '#### Binaire\n\n'
+  printf '#### Artifacts\n\n'
 
   while IFS= read -r artifact; do
     "${hash_cmd[@]}" "$artifact"
-  done < binary-artifacts.txt
+  done < "${tmpdir}/release-artifacts.txt"
 } > "$output_file"
 
 grep -Eq '^[0-9a-f]{64} ' "$output_file"
