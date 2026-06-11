@@ -71,6 +71,11 @@ jobs:
           binary_path="$(./script/ci/collect-release-binary.sh "${{ matrix.platform }}")"
           echo "binary_path=${binary_path}" >> "$GITHUB_OUTPUT"
 
+      - name: Install Npcap for Windows smoke
+        if: matrix.platform == 'windows-2022'
+        shell: pwsh
+        run: ./script/ci/install-npcap-windows.ps1
+
       - name: Validate release binary startup logs
         shell: bash
         run: ./script/ci/smoke-test-release-binary.sh "${{ steps.release-binary.outputs.binary_path }}"
