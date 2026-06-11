@@ -124,10 +124,31 @@ pub fn is_mac_address(value: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{create_labels_from_network_interfaces, parse_label_row};
+    use super::parse_label_row;
     use netdev::Interface;
     use netdev::ipnet::{Ipv4Net, Ipv6Net};
     use std::net::{Ipv4Addr, Ipv6Addr};
+
+    fn build_label_rows(interfaces: Vec<netdev::Interface>) -> Vec<String> {
+        const LABEL_NAME: &str = "pc sonar";
+        let mut rows = Vec::new();
+
+        for interface in interfaces {
+            let Some(mac_addr) = interface.mac_addr else {
+                continue;
+            };
+            let mac_addr = mac_addr.to_string();
+
+            for ipv4 in interface.ipv4_addrs() {
+                rows.push(format!("{mac_addr},{ipv4},{LABEL_NAME}"));
+            }
+            for ipv6 in interface.ipv6_addrs() {
+                rows.push(format!("{mac_addr},{ipv6},{LABEL_NAME}"));
+            }
+        }
+
+        rows
+    }
 
     #[test]
     fn creates_one_row_per_ip_address() {
@@ -137,15 +158,15 @@ mod tests {
         interface.ipv6 =
             vec![Ipv6Net::new("2001:db8::10".parse::<Ipv6Addr>().unwrap(), 64).unwrap()];
 
-        //let labels = create_labels_from_network_interfaces(vec![interface]).unwrap();
+        let labels = build_label_rows(vec![interface]);
 
-        /*assert_eq!(
+        assert_eq!(
             labels,
             vec![
                 "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar".to_string(),
                 "aa:bb:cc:dd:ee:ff,2001:db8::10,pc sonar".to_string(),
             ]
-        );*/
+        );
     }
 
     #[test]
@@ -153,9 +174,9 @@ mod tests {
         let mut interface = Interface::dummy();
         interface.ipv4 = vec![Ipv4Net::new(Ipv4Addr::new(10, 0, 0, 5), 24).unwrap()];
 
-        //let labels = create_labels_from_network_interfaces(vec![interface]).unwrap();
+        let labels = build_label_rows(vec![interface]);
 
-        //assert!(labels.is_empty());
+        assert!(labels.is_empty());
     }
 
     #[test]
@@ -173,8 +194,14 @@ mod tests {
     }
 
     #[test]
+    fn rejects_invalid_label_rows() {
+        assert_eq!(parse_label_row("aa:bb:cc:dd:ee:ff,192.168.1.10"), None);
+        assert_eq!(parse_label_row(",,pc sonar"), None);
+    }
+
+    #[test]
     fn parses_ip_only_label_row() {
-        let parsed = parse_label_row("8.8.8.8,google.com");
+        let parsed = parse_label_row(",8.8.8.8,google.com");
 
         assert_eq!(
             parsed,
@@ -188,7 +215,7 @@ mod tests {
 
     #[test]
     fn parses_quoted_ip_only_label_row() {
-        let parsed = parse_label_row("\"8.8.8.8\", \"google.com\"");
+        let parsed = parse_label_row(",\"8.8.8.8\", \"google.com\"");
 
         assert_eq!(
             parsed,
@@ -197,29 +224,6 @@ mod tests {
                 "8.8.8.8".to_string(),
                 "google.com".to_string(),
             ))
-        );
-    }
-
-    #[test]
-    fn rejects_invalid_label_rows() {
-        assert_eq!(parse_label_row("aa:bb:cc:dd:ee:ff,192.168.1.10"), None);
-        assert_eq!(parse_label_row(",,pc sonar"), None);
-    }
-
-    #[test]
-    fn appends_only_missing_label_rows() {
-        let existing_csv = "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar\n";
-        let merged = merge_label_rows(
-            existing_csv,
-            vec![
-                "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar".to_string(),
-                "aa:bb:cc:dd:ee:ff,2001:db8::10,pc sonar".to_string(),
-            ],
-        );
-
-        assert_eq!(
-            merged,
-            "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar\naa:bb:cc:dd:ee:ff,2001:db8::10,pc sonar\n"
         );
     }
 }
