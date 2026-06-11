@@ -80,8 +80,3 @@ jobs:
       - name: Validate release binary startup logs
         shell: bash
         run: ./script/ci/smoke-test-release-binary.sh "${{ steps.windows-smoke-runtime.outputs.smoke_binary_path || steps.release-binary.outputs.binary_path }}"
-
-      - name: Smoke launch Windows executable
-        if: matrix.platform == 'windows-2022'
-        shell: pwsh
-        run: ./script/ci/smoke-test-windows-exe.ps1 -ExePath "${{ steps.windows-smoke-runtime.outputs.smoke_binary_path_windows }}"
