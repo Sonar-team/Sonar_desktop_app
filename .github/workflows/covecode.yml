@@ -28,10 +28,23 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Deno setup
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
       - name: Install dependencies (ubuntu only)
         run: |
           apt-get update
-          apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf libpcap-dev
+          apt-get install -y \
+            pkg-config \
+            libglib2.0-dev \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libpcap-dev
 
       - name: Install app dependencies and build web
         run: |
@@ -55,14 +68,41 @@ jobs:
           ls -a # List contents to verify
         shell: bash --noprofile --norc -e -o pipefail {0}
 
-      - name: Generate code coverage
+      - name: Generate Rust coverage
         run: |
           cd src-tauri
-          cargo +nightly tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
+          cargo +nightly tarpaulin \
+            --verbose \
+            --all-features \
+            --workspace \
+            --timeout 120 \
+            --out xml \
+            --exclude-files 'vendor/*' '*/vendor/*'
         shell: bash --noprofile --norc -e -o pipefail {0}
 
-      - name: Upload to codecov.io
+      - name: Generate frontend coverage
+        run: |
+          deno test --coverage=coverage/frontend src/tests/*.test.js
+          deno coverage \
+            --lcov \
+            --include='^file:.*/src/' \
+            --exclude='test\.(js|mjs|ts|jsx|tsx)$' \
+            --output=coverage/frontend-lcov.info \
+            coverage/frontend
+        shell: bash --noprofile --norc -e -o pipefail {0}
+
+      - name: Upload Rust coverage to codecov.io
         uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b
         with:
           token: ${{secrets.CODECOV_TOKEN}}
+          files: src-tauri/cobertura.xml
+          flags: rust
+          fail_ci_if_error: true
+
+      - name: Upload frontend coverage to codecov.io
+        uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+          files: coverage/frontend-lcov.info
+          flags: frontend
           fail_ci_if_error: true

@@ -66,8 +66,6 @@ run_workflow() {
 
 workflows=(
   .github/workflows/publish.yml
-  .github/workflows/bundle-repro-check.yml
-  .github/workflows/windows-binary-repro-investigation.yml
   .github/workflows/publish-smoke.yml
   .github/workflows/repro-env-check.yml
   .github/workflows/trivy.yml
@@ -93,6 +91,5 @@ run_workflow push .github/workflows/trivy.yml
 run_workflow push .github/workflows/sonarcube.yml
 run_workflow push .github/workflows/covecode.yml --env YARN_IGNORE_ENGINES=1
 run_workflow workflow_dispatch .github/workflows/publish-smoke.yml -j publish-smoke --matrix platform:ubuntu-22.04
-run_workflow workflow_dispatch .github/workflows/publish-smoke.yml -j debian-repro-smoke
 
 echo "Local act suite completed."

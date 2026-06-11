@@ -1,5 +1,14 @@
 # Changelog
 
+## **[3.13.14] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Normalisation du chemin `rust-src` local vers `/rustc/<commit>` dans
+  l'environnement reproductible, afin d'aligner les chemins de la standard
+  library Rust entre un poste de dev avec `rust-src` installé et GitHub Actions.
+- Mise à jour de la version de SONAR en **3.13.14** pour publier ce correctif.
+
 ## **[3.13.13] - 2026-06-08**
 
 ## 🛠 Corrections

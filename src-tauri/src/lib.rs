@@ -38,6 +38,7 @@ mod dto;
 mod errors;
 mod events;
 mod setup;
+pub mod startup_smoke;
 mod state;
 mod utils;
 

@@ -7,7 +7,7 @@ on:
 
 jobs:
   reproducibility-check:
-    name: verify unsigned reproducible artifacts
+    name: verify unsigned reproducible binary
     permissions:
       contents: read
     runs-on: ubuntu-22.04
@@ -56,11 +56,11 @@ jobs:
       - name: Create release
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: ./script/ci/create-release.sh "${GITHUB_REF_NAME}"
 
   publish-tauri:
-    name: build and publish release binaries
+    name: build and publish release artifacts
     needs: create-release
     permissions:
       contents: write
@@ -107,24 +107,47 @@ jobs:
       - name: install frontend dependencies deterministically
         run: deno install --frozen
 
-      - name: configure reproducible build environment
-        shell: bash
-        run: deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"
-
-      - name: Compile without bundling
+      - name: Build release binary
         shell: bash
         env:
           TAURI_BUILD_ARGS: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
-        run: deno task tauri build --ci --no-sign --no-bundle ${TAURI_BUILD_ARGS}
+        run: deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign --no-bundle ${TAURI_BUILD_ARGS}'
 
       - name: Collect release binary
+        id: release-binary
         shell: bash
-        run: ./script/ci/collect-release-binary.sh "${{ matrix.platform }}"
+        run: |
+          binary_path="$(./script/ci/collect-release-binary.sh "${{ matrix.platform }}")"
+          echo "binary_path=${binary_path}" >> "$GITHUB_OUTPUT"
 
-      - name: Upload release binary
+      - name: Install Npcap for Windows smoke
+        if: matrix.platform == 'windows-2022'
+        shell: pwsh
+        run: ./script/ci/install-npcap-windows.ps1
+
+      - name: Validate release binary startup logs
+        shell: bash
+        run: ./script/ci/smoke-test-release-binary.sh "${{ steps.release-binary.outputs.binary_path }}"
+
+      - name: Smoke launch Windows executable
+        if: matrix.platform == 'windows-2022'
+        shell: pwsh
+        run: ./script/ci/smoke-test-windows-exe.ps1 -ExePath release-artifacts/sonar-windows-x86_64.exe
+
+      - name: Build release bundles
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_BUILD_ARGS: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
+        run: deno task tauri build --ci --no-sign ${TAURI_BUILD_ARGS}
+
+      - name: Collect release bundles
+        shell: bash
+        run: ./script/ci/collect-release-bundles.sh "${{ matrix.platform }}"
+
+      - name: Upload release artifacts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: gh release upload "${GITHUB_REF_NAME}" release-artifacts/* --clobber
 
       - name: Generate SHA256 checksums
@@ -151,7 +174,7 @@ jobs:
       - name: Upload Sigstore bundles to release
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: ./script/ci/upload-sigstore-bundles.sh "${{ matrix.platform }}"
 
       - name: Upload Sigstore bundles artifact
@@ -188,5 +211,5 @@ jobs:
       - name: Update GitHub release body with hashes
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: ./script/ci/update-release-body.sh "${GITHUB_REF_NAME}"

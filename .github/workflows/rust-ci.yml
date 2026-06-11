@@ -23,6 +23,9 @@ jobs:
           components: rustfmt, clippy
           override: true
 
+      - name: Install nightly Rust for cargo udeps
+        run: rustup toolchain install nightly --profile minimal
+
       - name: Install Linux system dependencies
         run: |
           sudo apt-get update
@@ -64,9 +67,12 @@ jobs:
         working-directory: ./src-tauri
 
       - name: Check for outdated dependencies with cargo outdated
-        run: cargo outdated
+        run: |
+          mv .cargo/config.toml .cargo/config.toml.bak
+          trap 'mv .cargo/config.toml.bak .cargo/config.toml' EXIT
+          cargo outdated
         working-directory: ./src-tauri
 
       - name: Check unused dependencies with cargo udeps
-        run: cargo udeps --all-targets
+        run: cargo +nightly udeps --all-targets --locked
         working-directory: ./src-tauri

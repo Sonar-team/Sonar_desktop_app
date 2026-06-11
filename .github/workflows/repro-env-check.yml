@@ -35,7 +35,7 @@ jobs:
           grep -q '^SOURCE_DATE_EPOCH<<__SONAR_REPRO_ENV__$' /tmp/repro-env.txt
           grep -q '^RUSTFLAGS<<__SONAR_REPRO_ENV__$' /tmp/repro-env.txt
           grep -F -- '=/workspace' /tmp/repro-env.txt
-          grep -F -- '=/rustup' /tmp/repro-env.txt
+          grep -F -- '=/rustc/' /tmp/repro-env.txt
           grep -F -- '=/cargo' /tmp/repro-env.txt
 
       - name: Validate helper injects runtime env
@@ -44,7 +44,7 @@ jobs:
           set -euo pipefail
           deno run -A ./security/repro-env.ts run bash -lc 'test -n "$SOURCE_DATE_EPOCH"'
           deno run -A ./security/repro-env.ts run bash -lc 'printf "%s\n" "$RUSTFLAGS"' | grep -F -- '--remap-path-prefix='
-          deno run -A ./security/repro-env.ts run bash -lc 'printf "%s\n" "$RUSTFLAGS"' | grep -F -- '=/rustup'
+          deno run -A ./security/repro-env.ts run bash -lc 'printf "%s\n" "$RUSTFLAGS"' | grep -F -- '=/rustc/'
           deno run -A ./security/repro-env.ts run bash -lc 'printf "%s\n" "$RUSTFLAGS"' | grep -F -- '=/cargo'
           SONAR_REPRO_WINDOWS_BREPRO=1 deno run -A ./security/repro-env.ts run bash -lc 'printf "%s\n" "$RUSTFLAGS"' | grep -F -- 'link-arg=/Brepro'
 
@@ -52,4 +52,4 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'deno run -A ./security/repro-env.ts github-env >> "$GITHUB_ENV"' .github/workflows/publish.yml
+          grep -Fq "deno run -A ./security/repro-env.ts run bash -lc" .github/workflows/publish.yml
