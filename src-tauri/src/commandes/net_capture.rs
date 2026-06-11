@@ -4,17 +4,19 @@ use log::info;
 use tauri::{AppHandle, State, command, ipc::Channel};
 
 use crate::{
-        commandes::import::labels_to_matrix, 
-        setup::labels::update_labels_in_state,
-        errors::CaptureStateError, events::CaptureEvent, state::{
+    commandes::import::labels_to_matrix,
+    errors::CaptureStateError,
+    events::CaptureEvent,
+    setup::labels::update_labels_in_state,
+    state::{
         capture::{
             CaptureState, capture_config::CaptureConfig, capture_handle::CaptureHandle,
             capture_status::CaptureStatus,
         },
         flow_matrix::FlowMatrix,
-        graph::GraphData, label_files_list::SelectedLabelFiles,
-        
-    }
+        graph::GraphData,
+        label_files_list::SelectedLabelFiles,
+    },
 };
 
 #[command(async)]
@@ -23,7 +25,7 @@ pub fn start_capture(
     app: AppHandle,
     on_event: Channel<CaptureEvent<'static>>,
     state_label: State<'_, Arc<Mutex<FlowMatrix>>>,
-    state_selected : State<'_, Arc<Mutex<SelectedLabelFiles>>>
+    state_selected: State<'_, Arc<Mutex<SelectedLabelFiles>>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
     let mut state_label = state_label.lock()?;
     labels_to_matrix(app.clone(), &mut state_label, state_selected)?;

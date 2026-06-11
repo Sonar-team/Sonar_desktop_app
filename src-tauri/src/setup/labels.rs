@@ -1,13 +1,14 @@
 use std::{
-    collections::HashSet,
-    io::ErrorKind,
     net::IpAddr,
     sync::{Arc, Mutex},
 };
 
 use tauri::{AppHandle, Manager, path::BaseDirectory};
 
-use crate::{errors::CaptureStateError, state::{flow_matrix::FlowMatrix, label_files_list::PcInfoLabel}};
+use crate::{
+    errors::CaptureStateError,
+    state::{flow_matrix::FlowMatrix, label_files_list::PcInfoLabel},
+};
 
 pub fn read_labels(app: &AppHandle) -> Result<(), tauri::Error> {
     let resource_path = app
@@ -47,25 +48,10 @@ pub fn create_labels_from_network_interfaces(
     Ok(())
 }
 
-pub fn add_labels_to_file(app: &AppHandle, labels: Vec<String>) -> Result<(), tauri::Error> {
-    let resource_path = app
-        .path()
-        .resolve("resources/labels.csv", BaseDirectory::Resource)?;
-    println!("resource_path: {:?}", resource_path);
-
-    let existing_csv = match std::fs::read_to_string(&resource_path) {
-        Ok(csv_data) => csv_data,
-        Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
-        Err(error) => return Err(error.into()),
-    };
-    let csv_data = merge_label_rows(&existing_csv, labels);
-    println!("csv_data : {}", csv_data);
-    std::fs::write(resource_path, csv_data)?;
-
-    Ok(())
-}
-
-pub fn update_labels_in_state(app: &AppHandle, state_label: &mut FlowMatrix) -> Result<(), CaptureStateError> {
+pub fn update_labels_in_state(
+    app: &AppHandle,
+    state_label: &mut FlowMatrix,
+) -> Result<(), CaptureStateError> {
     let pcinfo = app.state::<Arc<Mutex<PcInfoLabel>>>();
     let pcinfo = pcinfo.lock().unwrap().get_label().clone();
 
@@ -83,27 +69,36 @@ pub fn update_labels_in_state(app: &AppHandle, state_label: &mut FlowMatrix) -> 
 pub fn parse_label_row(row: &str) -> Option<(String, String, String)> {
     let parts: Vec<_> = row.split(',').map(clean_csv_field).collect();
     match parts.as_slice() {
-        [mac, ip, label] if is_mac_address(mac) && is_ip_address(ip) && !label.is_empty() => { // si tous les arguments sont présents
+        [mac, ip, label] if is_mac_address(mac) && is_ip_address(ip) && !label.is_empty() => {
+            // si tous les arguments sont présents
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), ip.to_string(), label.to_string()))
         }
-        [mac,ip, label] if mac.is_empty() && is_ip_address(ip) && !label.is_empty() => { // si il manque l'adresse mac
-            println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
+        [mac, ip, label] if mac.is_empty() && is_ip_address(ip) && !label.is_empty() => {
+            // si il manque l'adresse mac
+            println!(
+                "parse_label_row: mac: {0}, ip: {1}, label: {2}",
+                mac, ip, label
+            );
             Some((String::new(), ip.to_string(), label.to_string()))
         }
-        [mac,ip, label] if is_mac_address(mac) && ip.is_empty() && !label.is_empty() => { // si il manque l'adresse IP
+        [mac, ip, label] if is_mac_address(mac) && ip.is_empty() && !label.is_empty() => {
+            // si il manque l'adresse IP
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), String::new(), label.to_string()))
         }
-        [mac,ip, label] if is_mac_address(mac) && is_ip_address(ip) && label.is_empty() => { //si il manque le label
+        [mac, ip, label] if is_mac_address(mac) && is_ip_address(ip) && label.is_empty() => {
+            //si il manque le label
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), ip.to_string(), String::from("Label?")))
         }
-        [mac,ip, label] if is_mac_address(mac) && ip.is_empty() && label.is_empty() => { //si il manque l'adresse mac ET le label
+        [mac, ip, label] if is_mac_address(mac) && ip.is_empty() && label.is_empty() => {
+            //si il manque l'adresse mac ET le label
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), String::new(), String::from("Label?")))
         }
-        [mac,ip, label] if mac.is_empty() && is_ip_address(ip) && label.is_empty() => { //si il manque l'adresse ip ET le label
+        [mac, ip, label] if mac.is_empty() && is_ip_address(ip) && label.is_empty() => {
+            //si il manque l'adresse ip ET le label
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((String::new(), ip.to_string(), String::from("Label?")))
         }
@@ -112,12 +107,7 @@ pub fn parse_label_row(row: &str) -> Option<(String, String, String)> {
 }
 
 pub fn clean_csv_field(value: &str) -> &str {
-    value
-        .trim()
-        .trim_matches('"')
-        .split('/')
-        .next()
-        .unwrap()
+    value.trim().trim_matches('"').split('/').next().unwrap()
 }
 
 pub fn is_ip_address(value: &str) -> bool {
@@ -126,42 +116,15 @@ pub fn is_ip_address(value: &str) -> bool {
 
 pub fn is_mac_address(value: &str) -> bool {
     let parts: Vec<&str> = value.split(':').collect();
-    parts.len() == 6 && parts.iter().all(|p| {
-        p.len() == 2 && p.chars().all(|c| matches!(c, '0'..='9' | 'A'..='F' | 'a' ..='f'))
-    })
-}
-
-fn merge_label_rows(existing_csv: &str, labels: Vec<String>) -> String {
-    let mut seen = HashSet::new();
-    let mut rows = Vec::new();
-
-    for row in existing_csv
-        .lines()
-        .map(str::trim)
-        .filter(|row| !row.is_empty())
-    {
-        if seen.insert(row.to_string()) {
-            rows.push(row.to_string());
-        }
-    }
-
-    for label in labels {
-        let label = label.trim();
-        if !label.is_empty() && seen.insert(label.to_string()) {
-            rows.push(label.to_string());
-        }
-    }
-
-    if rows.is_empty() {
-        String::new()
-    } else {
-        format!("{}\n", rows.join("\n"))
-    }
+    parts.len() == 6
+        && parts
+            .iter()
+            .all(|p| p.len() == 2 && p.chars().all(|c| c.is_ascii_hexdigit()))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{create_labels_from_network_interfaces, merge_label_rows, parse_label_row};
+    use super::{create_labels_from_network_interfaces, parse_label_row};
     use netdev::Interface;
     use netdev::ipnet::{Ipv4Net, Ipv6Net};
     use std::net::{Ipv4Addr, Ipv6Addr};

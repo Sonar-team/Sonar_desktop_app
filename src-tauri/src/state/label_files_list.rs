@@ -6,9 +6,10 @@ pub struct SelectedLabelFiles {
 }
 
 impl SelectedLabelFiles {
-
     pub fn new() -> Self {
-        SelectedLabelFiles { files_names : Vec::new() }
+        SelectedLabelFiles {
+            files_names: Vec::new(),
+        }
     }
 
     /*pub fn set (&mut self, files_names: Vec<String>) {
@@ -16,7 +17,7 @@ impl SelectedLabelFiles {
         self.files_names = files_names;
     }*/
 
-    pub fn get (&self) -> &Vec<String> {
+    pub fn get(&self) -> &Vec<String> {
         &self.files_names
     }
 
@@ -32,22 +33,21 @@ impl SelectedLabelFiles {
 
 #[derive(Serialize, Default, Debug)]
 pub struct PcInfoLabel {
-    pub label_lines: Vec<String>
+    pub label_lines: Vec<String>,
 }
 
 impl PcInfoLabel {
-
     pub fn new() -> Self {
-        PcInfoLabel { label_lines: Vec::new() } 
+        PcInfoLabel {
+            label_lines: Vec::new(),
+        }
     }
 
-    pub fn get_label (&self) -> &Vec<String> {
+    pub fn get_label(&self) -> &Vec<String> {
         &self.label_lines
     }
 
-    pub fn push (&mut self, label_line : String) {
+    pub fn push(&mut self, label_line: String) {
         self.label_lines.push(label_line)
     }
-
-
 }

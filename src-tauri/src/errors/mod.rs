@@ -4,7 +4,7 @@ use serde::Serialize;
 use crate::errors::{
     export::{ExportError, ExportErrorKind},
     import::{PcapImportError, PcapImportErrorKind},
-    label::{LabelError, LabelErrorKind}
+    label::{LabelError, LabelErrorKind},
 };
 
 pub mod capture_error;
@@ -40,7 +40,7 @@ pub enum CaptureStateErrorKind {
     Export(ExportErrorKind),
     Import(PcapImportErrorKind),
     Label(LabelErrorKind),
-    Tauri(String)
+    Tauri(String),
 }
 
 impl Serialize for CaptureStateError {
@@ -92,12 +92,17 @@ impl Serialize for CaptureStateError {
             }
             Self::Label(e) => {
                 let kind = match e {
-                    LabelError::InvalidFormats { invalid_mac, invalid_ip } => {
-                        LabelErrorKind::InvalidFormats(invalid_mac.clone(), invalid_ip.clone())
-                    }
-                    LabelError::LabelLinesConflicts { same_ip_diff_mac, same_ip_diff_label } => {
-                        LabelErrorKind::LabelLinesConflicts(same_ip_diff_mac.clone(), same_ip_diff_label.clone())
-                    }
+                    LabelError::InvalidFormats {
+                        invalid_mac,
+                        invalid_ip,
+                    } => LabelErrorKind::InvalidFormats(invalid_mac.clone(), invalid_ip.clone()),
+                    LabelError::LabelLinesConflicts {
+                        same_ip_diff_mac,
+                        same_ip_diff_label,
+                    } => LabelErrorKind::LabelLinesConflicts(
+                        same_ip_diff_mac.clone(),
+                        same_ip_diff_label.clone(),
+                    ),
                     LabelError::FileNameConflicts { files_names } => {
                         LabelErrorKind::FileNameConflicts(files_names.clone())
                     }
@@ -105,7 +110,6 @@ impl Serialize for CaptureStateError {
                 CaptureStateErrorKind::Label(kind)
             }
             Self::Tauri(e) => CaptureStateErrorKind::Tauri(e.to_string()),
-            
         };
         kind.serialize(serializer)
     }

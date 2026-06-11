@@ -1,8 +1,8 @@
 use crossbeam::channel::Receiver;
 use log::{debug, error, info};
 use std::{
-    sync::{Arc, Mutex},
     sync::atomic::{AtomicBool, Ordering},
+    sync::{Arc, Mutex},
     thread,
     time::{Duration, Instant},
 };

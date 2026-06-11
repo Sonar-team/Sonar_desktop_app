@@ -15,14 +15,22 @@ use crate::{
     commandes::{
         export::{csv::export_csv, logs::export_logs},
         flow_matrix::{add_label, get_label_list},
-        import::{add_to_selected_label_files_names_list, convert_from_pcap_list, get_label_files_list, import_label_files, remove_from_selected_label_files_names_list, remove_label_file},
+        import::{
+            add_to_selected_label_files_names_list, convert_from_pcap_list, get_label_files_list,
+            import_label_files, remove_from_selected_label_files_names_list, remove_label_file,
+        },
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
     setup::{
         about::about_message, labels::read_labels, log_host_and_app_snapshot, print_banner,
         system_info::start_cpu_monitor,
     },
-    state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData, label_files_list::{PcInfoLabel, SelectedLabelFiles}},
+    state::{
+        capture::CaptureState,
+        flow_matrix::FlowMatrix,
+        graph::GraphData,
+        label_files_list::{PcInfoLabel, SelectedLabelFiles},
+    },
 };
 
 mod commandes;
