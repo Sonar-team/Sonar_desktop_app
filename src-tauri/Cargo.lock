@@ -4067,7 +4067,7 @@ dependencies = [
 
 [[package]]
 name = "sonar"
-version = "3.13.17"
+version = "3.13.18"
 dependencies = [
  "chrono",
  "colored",

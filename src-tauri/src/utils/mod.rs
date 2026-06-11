@@ -7,7 +7,14 @@ pub fn lookup_default_device() -> Result<Device, String> {
 }
 
 pub fn return_device_lookup() -> String {
-    let device = lookup_default_device().expect("default device lookup failed");
-    println!("Using device {}", device.name);
-    device.name
+    match lookup_default_device() {
+        Ok(device) => {
+            println!("Using device {}", device.name);
+            device.name
+        }
+        Err(err) => {
+            eprintln!("Using device unavailable ({err})");
+            String::new()
+        }
+    }
 }
