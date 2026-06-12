@@ -4,12 +4,17 @@ import { VNetworkGraph, VEdgeLabel } from "v-network-graph"
 import * as vNG from "v-network-graph"
 import { ForceLayout } from "v-network-graph/lib/force-layout"
 import { useCaptureStore } from "../../store/capture"
-import { save } from "@tauri-apps/plugin-dialog"
+import { message, open, save } from "@tauri-apps/plugin-dialog"
 import { writeTextFile, writeFile } from "@tauri-apps/plugin-fs"
 import { EdgeData, EdgeId, GraphData, GraphUpdate, NodeData, NodeId } from "../../types/capture"
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentDate } from '../../utils/time';
 import LegendComponent from './LegendComponent.vue';
+
+type LabelCsvImportResult = {
+  imported: number
+  graph_data: GraphData
+}
 
 // --- Colors ----------------------------------------------------------------
 const EDGE_COLORS_LC: Record<string, string> = Object.freeze({
@@ -255,6 +260,25 @@ export default defineComponent({
   },
 
   methods: {
+    async importLabelsCsv() {
+      const file = await open({
+        multiple: false,
+        filters: [{ name: "CSV", extensions: ["csv"] }],
+      })
+
+      if (!file || Array.isArray(file)) return
+
+      try {
+        const result = await invoke<LabelCsvImportResult>("import_label_csv", { path: file })
+        await this.loadFromGraphData(result.graph_data)
+      } catch (error) {
+        console.error("Erreur import_label_csv:", error)
+        await message(String(error), {
+          title: "Import labels CSV",
+          kind: "error",
+        })
+      }
+    },
     async printLabels() {
       await invoke('get_label_list').then((labels: any) => {
         console.log(labels)
@@ -607,6 +631,7 @@ async loadFromGraphData(snapshot: GraphData | null | undefined) {
   <div class="graph-container">
     <div class="top-buttons">
       <button class="download-button" @click="downloadPng" title="Exporter en PNG">⬇️ Export PNG</button>
+      <button class="download-button" @click="importLabelsCsv" title="Importer labels CSV">Labels CSV</button>
       <button
         class="force-button"
         :class="{ on: forceEnabled }"

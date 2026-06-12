@@ -13,6 +13,13 @@ pub struct FlowStats {
     pub last_seen: SystemTime, // Dernière apparition
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LabelEntry {
+    pub mac: String,
+    pub ip: String,
+    pub label: String,
+}
+
 pub struct FlowMatrix {
     // HashMap avec des clés de type PacketFlow et des valeurs de type FlowStats
     pub matrix: HashMap<PacketFlowOwned, FlowStats>,
@@ -58,7 +65,6 @@ impl FlowMatrix {
 
     pub fn clear(&mut self) {
         self.matrix.clear();
-        self.label.clear();
     }
 
     // pub fn print(&self) {
@@ -184,22 +190,47 @@ impl FlowMatrix {
     }
 
     pub fn add_label(&mut self, mac: String, ip: String, label: String) {
-        self.label.insert((mac, ip), label);
+        let (mac, ip) = normalize_label_key(&mac, &ip);
+
+        if let Some(label) = normalize_label_value(&label) {
+            self.label.insert((mac, ip), label);
+        } else {
+            self.label.remove(&(mac, ip));
+        }
+    }
+
+    pub fn replace_labels(&mut self, labels: Vec<LabelEntry>) {
+        self.label.clear();
+
+        for label in labels {
+            self.add_label(label.mac, label.ip, label.label);
+        }
     }
 
     pub fn get_label(&self, mac: &str, ip: &str) -> Option<String> {
+        let (mac, ip) = normalize_label_key(mac, ip);
+
         self.label
-            .get(&(mac.to_string(), ip.to_string()))
-            .or_else(|| self.label.get(&(String::new(), ip.to_string())))
+            .get(&(mac.clone(), ip.clone()))
+            .or_else(|| {
+                if ip.is_empty() {
+                    None
+                } else {
+                    self.label.get(&(String::new(), ip.clone()))
+                }
+            })
+            .or_else(|| {
+                if mac.is_empty() {
+                    None
+                } else {
+                    self.label.get(&(mac, String::new()))
+                }
+            })
             .cloned()
     }
 
     pub fn get_label_list(&self) -> Vec<String> {
-        println!("get_label_list");
-        println!("{:?}", self.label);
-        let debug_label = self.label.values().cloned().collect();
-        println!("{:?}", debug_label);
-        debug_label
+        self.label.values().cloned().collect()
     }
 
     // pub fn get_all_graph_data(&self) -> Vec<FlowMatrixRow> {
@@ -242,9 +273,22 @@ pub fn timeval_to_systemtime(tv_sec: impl Into<i64>, tv_usec: impl Into<i64>) ->
     UNIX_EPOCH + std::time::Duration::new(tv_sec as u64, (tv_usec * 1000) as u32)
 }
 
+fn normalize_label_key(mac: &str, ip: &str) -> (String, String) {
+    (mac.trim().to_ascii_lowercase(), ip.trim().to_string())
+}
+
+fn normalize_label_value(label: &str) -> Option<String> {
+    let label = label.trim();
+    if label.is_empty() {
+        None
+    } else {
+        Some(label.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::FlowMatrix;
+    use super::{FlowMatrix, LabelEntry};
 
     #[test]
     fn get_label_falls_back_to_ip_only_label() {
@@ -279,6 +323,49 @@ mod tests {
             matrix.get_label("aa:bb:cc:dd:ee:ff", "8.8.8.8"),
             Some("custom dns".to_string())
         );
+    }
+
+    #[test]
+    fn get_label_falls_back_to_mac_only_label() {
+        let mut matrix = FlowMatrix::new();
+        matrix.add_label(
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            String::new(),
+            "plc".to_string(),
+        );
+
+        assert_eq!(
+            matrix.get_label("AA:BB:CC:DD:EE:FF", "192.168.1.10"),
+            Some("plc".to_string())
+        );
+    }
+
+    #[test]
+    fn replace_labels_overwrites_previous_label_map() {
+        let mut matrix = FlowMatrix::new();
+        matrix.add_label(String::new(), "8.8.8.8".to_string(), "old".to_string());
+
+        matrix.replace_labels(vec![LabelEntry {
+            mac: String::new(),
+            ip: "1.1.1.1".to_string(),
+            label: "cloudflare".to_string(),
+        }]);
+
+        assert_eq!(matrix.get_label("", "8.8.8.8"), None);
+        assert_eq!(
+            matrix.get_label("", "1.1.1.1"),
+            Some("cloudflare".to_string())
+        );
+    }
+
+    #[test]
+    fn clear_keeps_active_labels() {
+        let mut matrix = FlowMatrix::new();
+        matrix.add_label(String::new(), "8.8.8.8".to_string(), "dns".to_string());
+
+        matrix.clear();
+
+        assert_eq!(matrix.get_label("", "8.8.8.8"), Some("dns".to_string()));
     }
 }
 
