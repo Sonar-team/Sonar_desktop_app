@@ -1,17 +1,28 @@
 use log::{error, info};
 use packet_parser::PacketFlow;
 use pcap::Capture;
-use std::sync::{Arc, Mutex};
-use tauri::{State, ipc::Channel};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    io::ErrorKind,
+    path::{Path, PathBuf},
+    sync::{Arc, Mutex},
+};
+use tauri::{AppHandle, Manager, State, ipc::Channel};
 
 use crate::{
-    errors::{CaptureStateError, import::PcapImportError},
+    errors::{CaptureStateError, import::PcapImportError, label::LabelError},
     events::CaptureEvent,
+    setup::labels::{clean_csv_field, is_ip_address, is_mac_address, parse_label_row},
     state::{
         capture::capture_handle::messages::capture::PacketMinimal, flow_matrix::FlowMatrix,
-        graph::GraphData,
+        graph::GraphData, label_files_list::SelectedLabelFiles,
     },
 };
+
+type ConflictsList = Vec<(String, String, String, String, String)>;
+type LabelRow = (String, String, String);
+type FileWithName = (String, Vec<LabelRow>);
 
 fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
     let mut cap = Capture::from_file(file_path).map_err(|e| {
@@ -32,6 +43,8 @@ fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
 pub fn convert_from_pcap_list(
     matrice: State<'_, Arc<Mutex<FlowMatrix>>>,
     graph: State<'_, Arc<Mutex<GraphData>>>,
+    label: State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+    app: tauri::AppHandle,
     pcap_paths: Vec<String>,
     on_event: Channel<CaptureEvent<'_>>,
 ) -> Result<(), CaptureStateError> {
@@ -55,6 +68,8 @@ pub fn convert_from_pcap_list(
     let mut graph_guard = graph.lock().unwrap();
     matrice_guard.clear();
     graph_guard.clear();
+
+    labels_to_matrix(app.clone(), &mut matrice_guard, label)?;
 
     info!("[convert_from_pcap_list] Matrice & GraphData reset");
 
@@ -172,5 +187,387 @@ fn handle_pcap_file(
         total,
         matrice.matrix.len()
     );
+    Ok(())
+}
+
+/*<----- Csv part -----> */
+
+#[tauri::command(async)]
+pub fn get_label_files_list(
+    app: tauri::AppHandle,
+    state: State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+) -> Result<Vec<(String, bool)>, CaptureStateError> {
+    let s = state.lock().unwrap();
+    let selected_label_files_names_list = s.get().clone();
+    let data_folder = app.path().app_data_dir()?;
+    let labels_folder = data_folder.join("labels");
+    let mut label_files_list: Vec<(String, bool)> = Vec::new();
+
+    if fs::exists(&labels_folder).unwrap_or(false) {
+        let fichiers: Vec<String> = fs::read_dir(&labels_folder)?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .filter(|path| path.is_file())
+            .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("csv"))
+            .filter_map(|path| path.file_name()?.to_str().map(String::from))
+            .collect();
+
+        let set1: HashSet<&String> = fichiers.iter().collect();
+        let set2: HashSet<&String> = selected_label_files_names_list.iter().collect();
+
+        for line in set1 {
+            if set2.contains(line) {
+                label_files_list.push((line.to_string(), true));
+            } else {
+                label_files_list.push((line.to_string(), false))
+            }
+        }
+        label_files_list.sort();
+
+        return Ok(label_files_list);
+    }
+
+    Ok(vec![])
+}
+
+#[tauri::command(async)]
+pub fn add_to_selected_label_files_names_list(
+    file: String,
+    state: State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+    app: tauri::AppHandle,
+) -> Result<(), CaptureStateError> {
+    verif_labels_conflicts(file.clone(), state.clone(), app)?;
+
+    let mut selected_label_files_names_list = state.lock().unwrap();
+    selected_label_files_names_list.add(file);
+
+    println!("Ajouté à la liste : {:?}", selected_label_files_names_list);
+
+    Ok(())
+}
+
+#[tauri::command(async)]
+pub fn remove_from_selected_label_files_names_list(
+    file: String,
+    state: State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+) -> Result<(), CaptureStateError> {
+    let mut selected_label_files_names_list = state.lock().unwrap();
+    selected_label_files_names_list.remove(&file);
+    println!(
+        "Supprimé de la liste : {:?}",
+        selected_label_files_names_list
+    );
+    Ok(())
+}
+
+#[tauri::command(async)]
+pub fn remove_label_file(
+    csv_file: String,
+    app: AppHandle,
+    state: State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+) -> Result<(), CaptureStateError> {
+    let data_folder = app.path().app_data_dir()?;
+    let labels_folder = data_folder.join("labels");
+    let label_file = labels_folder.join(&csv_file);
+
+    remove_from_selected_label_files_names_list(csv_file, state)?;
+    fs::remove_file(label_file)?;
+    println!("File removed");
+    Ok(())
+}
+
+fn verif_labels_conflicts(
+    new_file_name: String,
+    state: State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+    app: AppHandle,
+) -> Result<(), CaptureStateError> {
+    let data_folder = app.path().app_data_dir()?;
+    let labels_folder = data_folder.join("labels");
+
+    let selected_files_names_list: HashSet<String> = {
+        let selected_label_files_names_list = state.lock().unwrap();
+        selected_label_files_names_list
+            .files_names
+            .iter()
+            .cloned()
+            .collect()
+    };
+
+    let new_file: PathBuf = fs::read_dir(&labels_folder)?
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| path.is_file())
+        .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("csv"))
+        .filter(|path| path.file_name().and_then(|e| e.to_str()) == Some(&*new_file_name))
+        .collect();
+
+    let file = match std::fs::read_to_string(&new_file) {
+        Ok(csv_data) => csv_data,
+        Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+        Err(error) => return Err(error.into()),
+    };
+
+    let rows: Vec<(String, String, String)> = file.lines().filter_map(parse_label_row).collect();
+
+    let new_selected_file_with_name = (new_file_name, rows.clone());
+
+    let mut same_ip_different_mac: ConflictsList = Vec::new();
+    let mut same_ip_different_label: ConflictsList = Vec::new();
+
+    for (i, (mac1, ip1, label1)) in rows.iter().enumerate() {
+        for (mac2, ip2, label2) in rows[i + 1..].iter() {
+            if ip1 == ip2 {
+                if mac1 != mac2 {
+                    eprintln!(
+                        "⚠️  IP '{}' : MAC '{}' ({}) vs '{}' ({})",
+                        ip1,
+                        mac1,
+                        new_selected_file_with_name.0,
+                        mac2,
+                        new_selected_file_with_name.0
+                    );
+                    same_ip_different_mac.push((
+                        ip1.to_string(),
+                        mac1.to_string(),
+                        new_selected_file_with_name.0.to_string(),
+                        mac2.to_string(),
+                        new_selected_file_with_name.0.to_string(),
+                    ))
+                }
+
+                if label1 != label2 {
+                    eprintln!(
+                        "⚠️  IP '{}' : label '{}' ({}) vs '{}' ({})",
+                        ip1,
+                        label1,
+                        new_selected_file_with_name.0,
+                        label2,
+                        new_selected_file_with_name.0
+                    );
+                    same_ip_different_label.push((
+                        ip1.to_string(),
+                        label1.to_string(),
+                        new_selected_file_with_name.0.to_string(),
+                        label2.to_string(),
+                        new_selected_file_with_name.0.to_string(),
+                    ))
+                }
+            }
+        }
+    }
+
+    let selected_label_files: Vec<PathBuf> = fs::read_dir(&labels_folder)?
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| path.is_file())
+        .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("csv"))
+        .filter(|path| {
+            path.file_name()
+                .and_then(|e| e.to_str())
+                .map(|name| selected_files_names_list.contains(name))
+                .unwrap_or(false)
+        })
+        .collect();
+
+    let mut files_with_names: Vec<FileWithName> = Vec::new();
+
+    for label_file in &selected_label_files {
+        let file = match std::fs::read_to_string(label_file) {
+            Ok(csv_data) => csv_data,
+            Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+            Err(error) => return Err(error.into()),
+        };
+
+        let name = label_file
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("inconnu")
+            .to_string();
+
+        let rows: Vec<(String, String, String)> =
+            file.lines().filter_map(parse_label_row).collect();
+
+        files_with_names.push((name, rows));
+    }
+
+    for file_with_name in &files_with_names {
+        let (name, rows) = file_with_name;
+        let (name_new_selected_file, row_new_selected_file) = &new_selected_file_with_name;
+
+        let mut by_ip: HashMap<String, (String, String)> = HashMap::new();
+
+        for (mac, ip, label) in rows {
+            by_ip.insert(ip.clone(), (mac.clone(), label.clone()));
+        }
+
+        for (mac, ip, label) in row_new_selected_file {
+            if let Some((ref_mac, ref_label)) = by_ip.get(ip)
+                && !ip.is_empty()
+            {
+                if ref_mac != mac {
+                    eprintln!(
+                        "⚠️  IP '{}' : MAC '{}' ({}) vs '{}' ({})",
+                        ip, ref_mac, name, mac, name_new_selected_file
+                    );
+                    same_ip_different_mac.push((
+                        ip.to_string(),
+                        ref_mac.to_string(),
+                        name.to_string(),
+                        mac.to_string(),
+                        name_new_selected_file.to_string(),
+                    ))
+                }
+                if ref_label != label {
+                    eprintln!(
+                        "⚠️  IP '{}' : label '{}' ({}) vs '{}' ({})",
+                        ip, ref_label, name, label, name_new_selected_file
+                    );
+                    same_ip_different_label.push((
+                        ip.to_string(),
+                        ref_label.to_string(),
+                        name.to_string(),
+                        label.to_string(),
+                        name_new_selected_file.to_string(),
+                    ))
+                }
+            }
+        }
+    }
+    if !same_ip_different_label.is_empty() || !same_ip_different_mac.is_empty() {
+        Err(LabelError::LabelLinesConflicts {
+            same_ip_diff_mac: same_ip_different_mac,
+            same_ip_diff_label: same_ip_different_label,
+        }
+        .into())
+    } else {
+        Ok(())
+    }
+}
+
+pub fn verif_mac_ip_format(csv_paths: Vec<String>) -> Result<(), CaptureStateError> {
+    let mut invalid_ip: Vec<(String, String)> = Vec::new();
+    let mut invalid_mac: Vec<(String, String)> = Vec::new();
+    println!("verif_mac_ip_format called with csv_paths: {:?}", csv_paths);
+
+    for csv_path in csv_paths {
+        let file = match std::fs::read_to_string(&csv_path) {
+            Ok(csv_data) => csv_data,
+            Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+            Err(error) => return Err(error.into()),
+        };
+
+        let name = Path::new(&csv_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("inconnu")
+            .to_string();
+
+        for line in file.lines() {
+            let parts: Vec<_> = line.split(',').map(clean_csv_field).collect();
+            if let [mac, ip, _label] = parts.as_slice() {
+                if !is_ip_address(ip) && !ip.is_empty() {
+                    invalid_ip.push((name.clone(), ip.to_string()));
+                }
+                if !is_mac_address(mac) && !mac.is_empty() {
+                    invalid_mac.push((name.clone(), mac.to_string()));
+                }
+            }
+        }
+    }
+
+    if !invalid_ip.is_empty() || !invalid_mac.is_empty() {
+        return Err(LabelError::InvalidFormats {
+            invalid_mac,
+            invalid_ip,
+        }
+        .into());
+    }
+    Ok(())
+}
+
+#[tauri::command(async)]
+pub fn import_label_files(
+    csv_paths: Vec<String>,
+    app: tauri::AppHandle,
+) -> Result<(), CaptureStateError> {
+    let data_folder = app.path().app_data_dir()?;
+    let labels_folder = data_folder.join("labels");
+    let mut conflictual_files: Vec<String> = Vec::new();
+
+    verif_mac_ip_format(csv_paths.clone())?;
+
+    if !fs::exists(&labels_folder).unwrap_or(false) {
+        fs::create_dir(&labels_folder)?;
+    }
+
+    for csv_path in &csv_paths {
+        let path = Path::new(csv_path);
+        let filename = path.file_name().unwrap().to_string_lossy().to_string();
+        let dest = labels_folder.join(&filename);
+
+        if dest.exists() {
+            conflictual_files.push(filename);
+        } else {
+            fs::copy(csv_path, &dest)?;
+            println!("copie de {:?} effectuée", csv_path);
+        }
+    }
+    if !conflictual_files.is_empty() {
+        Err(LabelError::FileNameConflicts {
+            files_names: conflictual_files,
+        }
+        .into())
+    } else {
+        Ok(())
+    }
+}
+
+pub fn labels_to_matrix(
+    app: tauri::AppHandle,
+    matrice: &mut FlowMatrix,
+    label: State<'_, Arc<Mutex<SelectedLabelFiles>>>,
+) -> Result<(), CaptureStateError> {
+    let label_files_names_list = get_label_files_list(app.clone(), label)?;
+    let data_folder = app.path().app_data_dir()?;
+    let labels_folder = data_folder.join("labels");
+
+    let selected_label_files_names: HashSet<String> = label_files_names_list
+        .into_iter()
+        .filter(|(_, actif)| *actif)
+        .map(|(nom, _)| nom)
+        .collect();
+
+    if fs::exists(&labels_folder).unwrap_or(false) {
+        let selected_label_files: Vec<PathBuf> = fs::read_dir(&labels_folder)?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .filter(|path| path.is_file())
+            .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("csv"))
+            .filter(|path| {
+                path.file_name()
+                    .and_then(|e| e.to_str())
+                    .map(|name| selected_label_files_names.contains(name))
+                    .unwrap_or(false)
+            })
+            .collect();
+
+        for label_file in &selected_label_files {
+            let file = match std::fs::read_to_string(label_file) {
+                Ok(csv_data) => csv_data,
+                Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+                Err(error) => return Err(error.into()),
+            };
+            let labels: Vec<String> = file.lines().map(|l| l.to_string()).collect();
+
+            for label in labels {
+                let Some((mac, ip, label)) = parse_label_row(&label) else {
+                    continue;
+                };
+
+                matrice.add_label(mac.to_string(), ip, label);
+            }
+        }
+    }
+
     Ok(())
 }

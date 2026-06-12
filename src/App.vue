@@ -1,4 +1,8 @@
 <template>
+
+  <!-- Overlay bloquant -->
+  <div v-if="captureStore.isImporting" class="input-blocker"/> 
+  
   <div class="bg"></div>
   <router-view></router-view>
 </template>
@@ -27,6 +31,14 @@ html, body {
   background-color: #1a1a1a;
   z-index: -1;
 }
+
+.input-blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  cursor: wait;
+  background: transparent;
+}
 </style>
 
 <script>
@@ -34,10 +46,16 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { exit } from '@tauri-apps/plugin-process';
 import { info } from '@tauri-apps/plugin-log';
+import { useCaptureStore } from './store/capture'
 
 const appWindow = getCurrentWebviewWindow()
 
 export default {
+
+  setup() {
+    const captureStore = useCaptureStore();
+    return { captureStore };
+  },
   data() {
     return {
       // Add a data property for the unlisten function

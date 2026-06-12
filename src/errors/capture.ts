@@ -13,11 +13,17 @@ export type ImportErrorKind =
   | { kind: "parseError"; message: string }
   | { kind: "other"; message: string };
 
+export type LabelErrorKind =
+  | {kind: "fileNameConflicts"; message: { files_names: [string][] }}
+  | { kind: "invalidFormats"; message: { invalid_mac: [string, string, string, string, string][], invalid_ip: [string, string, string, string, string][] } }
+  | { kind: "labelLinesConflicts"; message: { same_ip_diff_mac: [string, string, string, string, string][], same_ip_diff_label: [string, string, string, string, string][] } }
+
 export type CaptureStateErrorKind =
   | { kind: "io"; message: string }
   | { kind: "poisonError"; message: string }
   | { kind: "capture"; message: CaptureErrorKind }
   | { kind: "import"; message: ImportErrorKind }
+  | { kind: "label"; message: LabelErrorKind}
   | { kind: "other"; message: string };
 
 export async function displayCaptureError(err: unknown) {
@@ -59,6 +65,10 @@ export async function displayCaptureError(err: unknown) {
         userFriendlyMessage = handleImportError(captureError.message);
         break;
 
+      case "label":
+        userFriendlyMessage = handleLabelerror(captureError.message);
+        break;
+
       case "other":
         userFriendlyMessage = `Erreur inattendue : ${captureError.message}`;
         break;
@@ -93,4 +103,24 @@ function handleImportError(importError: ImportErrorKind): string {
     default:
       return `Erreur d'import inconnue : ${JSON.stringify(importError)}`;
   }
+}
+
+function handleLabelerror(labelError: LabelErrorKind): string {
+  if (
+    !labelError || typeof labelError !== "object" || !("kind" in labelError)
+  ) {
+    return `Erreur de label inconnue : ${JSON.stringify(labelError)}`;
+  }
+
+  switch(labelError.kind) {
+    case "invalidFormats":
+      return `Formats invalides : MAC - ${labelError.message.invalid_mac.map(([file, mac]) => `${file} : ${mac}`).join('\n')}, IP - ${labelError.message.invalid_ip.map(([file, ip]) => `${file} : ${ip}`).join('\n')}`;
+    case "fileNameConflicts":
+      return `Ce(s) fichier(s) existe(nt) déjà : \n ${labelError.message} \n <Importation impossible>`
+    case "labelLinesConflicts":
+      return `Conflits dans les lignes de labels : même IP, MAC différent - ${labelError.message.same_ip_diff_mac.map(([ip, ref_mac,name_1, mac, name_2]) => `${ip} : ${ref_mac} (${name_1}) <-> ${mac} (${name_2})`).join('\n')}, même IP, label différent - ${labelError.message.same_ip_diff_label.map(([ip, ref_label, name_1, label, name_2]) => `${ip} : ${ref_label} (${name_1}) <-> ${label} (${name_2})`).join('\n')} \n <Importation impossible>`;
+    default:
+      return `Erreur de label inconnue : ${JSON.stringify(labelError)}`;
+  }
+
 }

@@ -10,6 +10,7 @@ export const useCaptureStore = defineStore("capture", {
   state: () => ({
     isRunning: false,
     showMatrice: true,
+    isImporting: false,
 
     // Listeners HMR-safe dans le state
     startedListeners: [] as Array<(d: any) => void>,

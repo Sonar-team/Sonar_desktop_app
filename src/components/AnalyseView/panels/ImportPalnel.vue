@@ -1,38 +1,57 @@
 <template>
   <div class="container">
     <div class="center-container">
+      <ConflictDialog v-if="showConflictDialog" 
+      :same_ip_diff_mac="sameIpDiffMac" 
+      :same_ip_diff_label="sameIpDiffLabel" 
+      :invalid_mac="invalidMac"
+      :invalid_ip="invalidIp"
+      :conflictual_files="conflictualFiles"
+      @showConflictDialog="showConflictDialog = false"/>
 
-      <!-- Overlay de chargement -->
+        <!-- Overlay de chargement -->
       <div class="overlay" v-if="isConverting">
         <div class="spinner"></div>
         <p class="overlay-text">Conversion en cours…</p>
       </div>
-
-      <div class="file-group">
-        <label for="packetFiles"></label>
-        <button class="btn" @click="addFiles" :disabled="isConverting">
-          Ajouter des fichiers
-        </button>
-        <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
-          Effacer
-        </button>
+      <button class="btn image-btn cross" @click.prevent="windowClosed" :disabled="isConverting">❌</button>
+      
+      <div v-if="mode === 'csv'" class="csv-group">
+          <button class="btn btn-add text" @click="addCsvFiles" :disabled="isConverting">
+            Ajouter des fichiers
+          </button>
+          <p v-show="labelFiles.length == 0" class="text">Aucun fichier de label enregistré</p>
+          <ul v-show="labelFiles.length > 0" class="file-list">
+            <li v-for="([file,], index) in labelFiles" :key="index">
+              <label :for="String(index)">
+                <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" 
+                class="toggle" @change="(e) => (e.target as HTMLInputElement)?.checked ? addToSelectedLabelFilesNamesList(file) : removeFromSelectedLabelFilesNamesList(file)">
+                <span class="text">{{ file }}</span>
+                <button class="image-btn" @click.prevent="RemoveLabelFile(file)" title="Supprimer"><img src="/src/assets/images/Poubelle.jpg" alt="Supprimer" /></button>
+              </label>
+            </li>
+          </ul>
       </div>
 
-      <ul class="file-list" v-if="packetFiles.length > 0">
-        <li v-for="(file, index) in packetFiles" :key="index">
-          {{ file }}
-        </li>
-      </ul>
-
-      <button
-        @click="convert"
-        class="btn btn-open"
-        :disabled="isConverting || packetFiles.length === 0"
-      >
-        Ouvrir
-      </button>
-
-    </div>
+      <div v-else-if="mode === 'pcap'">
+        <div class="file-group">
+          <button class="btn btn-add text" @click="addPcapFiles" :disabled="isConverting">
+            Ajouter des fichiers
+          </button>
+          <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
+            Effacer
+          </button>
+        </div>
+        <ul class="file-list" v-if="packetFiles.length > 0">
+          <li v-for="(file, index) in packetFiles" :key="index">
+            {{ file }}
+          </li>
+        </ul>
+        <button @click="convertPcap" class="btn btn-open" :disabled="isConverting || packetFiles.length === 0">
+          Ouvrir
+        </button>
+      </div>
+    </div> 
   </div>
 </template>
 
@@ -43,16 +62,34 @@ import { invoke, Channel } from '@tauri-apps/api/core';
 import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
-import { displayCaptureError } from '../../../errors/capture';
+import { displayCaptureError, CaptureStateErrorKind, LabelErrorKind } from '../../../errors/capture';
+import ConflictDialog from './ConflictDialog.vue'
+
 
 export default defineComponent({
   name: 'ImportPanel',
-  emits: ['update:visible'],
-
+  emits: ['update:visible','toggle-pcap', 'toggle-warning', 'showConflictDialog'],
+  components: {
+    ConflictDialog
+  },
+  props: {
+    mode: {
+      type: String,
+      default: 'pcap'
+    }
+  },
   data() {
     return {
       packetFiles: [] as string[],
+      labelFiles: [] as [string, boolean][],
+      selectedLabelFiles: [] as string[],
       isConverting: false,
+      showConflictDialog: false,
+      sameIpDiffMac: [] as [string, string, string, string, string][], 
+      sameIpDiffLabel: [] as [string, string, string, string, string][],
+      invalidMac: [] as [string, string][],
+      invalidIp: [] as [string, string][],
+      conflictualFiles: [] as string[],
     };
   },
 
@@ -66,15 +103,38 @@ export default defineComponent({
   },
 
   methods: {
-    async addFiles() {
-      const files = await open({
-        multiple: true,
-        filters: [{ name: 'Capture File', extensions: ['pcap', 'pcapng', 'cap'] }],
-      });
+    windowClosed() {
+      this.$emit('update:visible', false);
+    },
 
-      if (files) {
+    addPcapFiles() {
+      return this.addFiles('pcap', ['pcap', 'pcapng', 'cap']);
+    },
+
+    addCsvFiles() {
+      return this.addFiles('csv', ['csv']);
+    },
+
+    async addFiles(type: 'pcap' | 'csv', extensions: string[]) {
+        const label = type === 'csv' ? 'Label File' : 'Capture File';
+        useCaptureStore().isImporting = true;
+
+      try {
+        const files = await open({
+          multiple: true,
+          filters: [{ name: label, extensions: extensions }],
+        });
+
+        if (!files) return;
+
         const list = Array.isArray(files) ? files : [files];
-        this.packetFiles.push(...list);
+        if (type === 'csv') {
+          await this.importLabelFiles(list);
+        } else {
+          this.packetFiles.push(...list);
+        }
+      } finally {
+        useCaptureStore().isImporting = false;
       }
     },
 
@@ -82,7 +142,7 @@ export default defineComponent({
       this.packetFiles = [];
     },
 
-    async convert() {
+    async convertPcap() {
       if (this.packetFiles.length === 0) return;
 
       const onEvent = new Channel<CaptureEvent>();
@@ -101,10 +161,94 @@ export default defineComponent({
       } finally {
         this.isConverting = false;
       }
-    },
-  },
 
-  mounted() {
+      this.packetFiles = [];
+    },
+
+    async importLabelFiles(paths: string[]) {
+      if (paths.length === 0) return;
+
+      info('import_label_files: ' + paths);
+
+      this.isConverting = true;
+      this.conflictualFiles = [];
+      this.invalidIp = [];
+      this.invalidMac = [];
+      this.sameIpDiffLabel = [];
+      this.sameIpDiffMac = [];
+
+      try {
+        await invoke('import_label_files', { csvPaths: paths });
+        info('réponse invoke');
+      } catch (err) {
+        const error = err as CaptureStateErrorKind;
+        if (error.kind === "label" && (error.message as LabelErrorKind).kind === "invalidFormats") {
+          const labelError = error.message as Extract<LabelErrorKind, { kind: "invalidFormats" }>;
+          const [invalidMac, invalidIp] = labelError.message as any;
+          this.invalidMac = invalidMac;
+          this.invalidIp = invalidIp;
+          this.showConflictDialog = true;
+        } if (error.kind === "label" && (error.message as LabelErrorKind).kind === "fileNameConflicts") {
+          const labelError = error.message as Extract<LabelErrorKind, { kind: "fileNameConflicts" }>;
+          this.conflictualFiles = labelError.message as any;
+          this.showConflictDialog = true;
+        } else {
+          displayCaptureError(err);
+        }
+        
+      } finally {
+        this.labelFiles = await invoke('get_label_files_list');
+        this.labelFiles.sort();
+        this.isConverting = false;      
+      }
+    },
+  
+
+    async RemoveLabelFile(fileRemoved: string) {
+        info('fileRemoved : ' + fileRemoved);
+        try {
+          await invoke('remove_label_file', { csvFile: fileRemoved});
+          info('réponse invoke');
+          this.labelFiles = await invoke('get_label_files_list');
+          this.labelFiles.sort();
+          this.selectedLabelFiles = this.selectedLabelFiles.filter((name) => name !== fileRemoved);
+        } catch (err) {
+          displayCaptureError(err);
+        }
+      },
+
+    async addToSelectedLabelFilesNamesList(file: string){
+
+      this.conflictualFiles = [];
+      this.invalidIp = [];
+      this.invalidMac = [];
+      this.sameIpDiffLabel = [];
+      this.sameIpDiffMac = [];
+      
+      try {
+        await invoke('add_to_selected_label_files_names_list', { file : file});
+        info('réponse invoke');
+      } catch (err) {
+        const error = err as CaptureStateErrorKind;
+        if (error.kind === "label" && (error.message as LabelErrorKind).kind === "labelLinesConflicts") {
+          const labelError = error.message as Extract<LabelErrorKind, { kind: "labelLinesConflicts" }>;
+          const [sameIpDiffMac, sameIpDiffLabel] = labelError.message as any;
+          this.sameIpDiffMac = sameIpDiffMac;
+          this.sameIpDiffLabel = sameIpDiffLabel;
+          this.showConflictDialog = true;
+        } else {
+          displayCaptureError(err);
+        } 
+        this.selectedLabelFiles = this.selectedLabelFiles.filter((f) => f !== file);
+      }
+    },
+
+    async removeFromSelectedLabelFilesNamesList(file: string) {
+      await invoke ('remove_from_selected_label_files_names_list', { file : file});
+    }
+  }, 
+
+  async mounted() {
     this.captureStore.onStarted(() => {
       info("started hearded");
       this.captureStore.updateStatus({ is_running: true });
@@ -114,11 +258,17 @@ export default defineComponent({
       info("finished hearded");
       this.captureStore.updateStatus({ is_running: false });
     });
+
+    this.labelFiles = await invoke('get_label_files_list');
+    this.selectedLabelFiles = this.labelFiles
+            .filter(([_, checked]) => checked)
+            .map(([file, _]) => file);
   },
 });
 </script>
 
 <style scoped>
+
 .container {
   position: fixed;
   top: 0;
@@ -137,7 +287,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   background-color: #1e1e2e;
   border-radius: 8px;
   padding: 2rem;
@@ -146,19 +296,32 @@ export default defineComponent({
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.csv-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 .file-group {
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
+  justify-content: center;
 }
 
 .btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  border: 1px solid;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
   font-weight: 500;
+  font-family: inherit;
+  color: whitesmoke;
+  background-color: #181829;
+  transition: border-color 0.25s, background-color 0.25s;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .btn:disabled {
@@ -167,18 +330,133 @@ export default defineComponent({
 }
 
 .btn-clear {
-  background-color: #f56565;
+  background-color: #181829;
+  border-color: #d8392b;
   color: white;
+}
+
+.btn-clear:hover{
+  background-color:#313152 ;
+}
+
+.btn-clear:active {
+  background-color: #d8392b;
 }
 
 .btn-open {
+  background-color: #181829;
+  border-color: #48bb78;
+  display: block;
+  margin: 0 auto;
+}
+
+.btn-open:enabled:hover{
+    background-color: #313152;
+}
+
+.btn-open:active {
   background-color: #48bb78;
-  color: white;
+}
+
+.btn-add {
+  border-color: whitesmoke;
+}
+
+.btn-add:hover {
+  border-color: #2596be;
+  background-color:#313152 ;
+}
+.btn-add:active {
+  border-color: #2596be;
+  background-color: #2596be;
+}
+
+.cross {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.image-btn {
+  background: none;
+  border:none;
+  padding: 0;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.image-btn:hover {
+  transform: translateY(-1px) translateZ(0);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-btn:active {
+  transform: translateY(1px) scale(0.99) translateZ(0);
+  transition: transform 0.1s ease, background-color 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle {
+    /* On définit la hauteur de notre élément */
+    --toggle-height: 1.5rem;
+
+    /* On désactive le style par défaut du système d'exploitation */
+    appearance: none;
+
+    /* On définit les dimensions de la "piste" (le fond) */
+    width: 3rem;
+    height: var(--toggle-height);
+    border-radius: 99px; /* Un grand border-radius pour l'effet pilule */
+    background: #334155; /* Couleur quand c'est inactif (gris bleuté) */
+    position: relative;
+    cursor: pointer;
+    transition: 0.3s;
+
+    /* On crée la "pastille" (le bouton qui glisse) avec un pseudo-élément
+    * Le pseudo-élément est intéressant car le rond qui indique l'état n'a pas de sens sémantique,
+    * ajouter un élément juste graphique est de la responsabilité de CSS.
+    */
+    &::after {
+        /* On définit la hauteur et le placement de notre pastille */
+        --element-top-left: 2px;
+        --element-size: calc(var(--toggle-height) - var(--element-top-left) * 2);
+
+        content: '';
+        position: absolute;
+        left: var(--element-top-left);
+        top: var(--element-top-left);
+        width: var(--element-size);
+        height: var(--element-size);
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+
+    /* On gère l'état "Activé" grâce à la pseudo-classe :checked natif aux checkbox */
+    &:checked {
+        background: #2596be; /* Couleur quand c'est actif (vert néon) */
+
+
+        /* On déplace la pastille vers la droite */
+        &::after {
+            transform: translateX(var(--toggle-height));
+        }
+    }
+}
+
+.file-list label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.text {
+  color: whitesmoke
 }
 
 .file-list {
-  width: 100%;
-  max-height: 200px;
+  width: 90%;
+  max-height: 250px;
   overflow-y: auto;
   background-color: #2d3748;
   border-radius: 4px;
@@ -189,7 +467,6 @@ export default defineComponent({
 .file-list li {
   padding: 0.5rem;
   margin: 0.25rem 0;
-  background-color: #2d3748;
   border-radius: 4px;
   word-break: break-all;
   font-family: monospace;
