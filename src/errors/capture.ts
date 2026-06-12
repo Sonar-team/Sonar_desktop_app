@@ -14,9 +14,11 @@ export type ImportErrorKind =
   | { kind: "other"; message: string };
 
 export type LabelErrorKind =
-  | {kind: "fileNameConflicts"; message: { files_names: [string][] }}
-  | { kind: "invalidFormats"; message: { invalid_mac: [string, string, string, string, string][], invalid_ip: [string, string, string, string, string][] } }
-  | { kind: "labelLinesConflicts"; message: { same_ip_diff_mac: [string, string, string, string, string][], same_ip_diff_label: [string, string, string, string, string][] } }
+  | { kind: "fileNameConflicts"; message: [string][] }
+  | { kind: "invalidMacIpFormat"; message: [[string, string][], [string, string][]] }
+  | { kind: "labelLinesConflicts"; message: [[string, string, string, string, string][], [string, string, string, string, string][]] }
+  | { kind: "tooManyFiles"; message:  number  }
+  | { kind: "invalidFileFormat"; message: string[] }
 
 export type CaptureStateErrorKind =
   | { kind: "io"; message: string }
@@ -113,12 +115,18 @@ function handleLabelerror(labelError: LabelErrorKind): string {
   }
 
   switch(labelError.kind) {
-    case "invalidFormats":
-      return `Formats invalides : MAC - ${labelError.message.invalid_mac.map(([file, mac]) => `${file} : ${mac}`).join('\n')}, IP - ${labelError.message.invalid_ip.map(([file, ip]) => `${file} : ${ip}`).join('\n')}`;
+    case "invalidMacIpFormat":
+      const [invalidMac, invalidIp] = labelError.message;
+      return `Formats invalides : MAC - ${invalidMac.map(([file, mac]) => `${file} : ${mac}`).join('\n')}, IP - ${invalidIp.map(([file, ip]) => `${file} : ${ip}`).join('\n')}`;
     case "fileNameConflicts":
       return `Ce(s) fichier(s) existe(nt) déjà : \n ${labelError.message} \n <Importation impossible>`
     case "labelLinesConflicts":
-      return `Conflits dans les lignes de labels : même IP, MAC différent - ${labelError.message.same_ip_diff_mac.map(([ip, ref_mac,name_1, mac, name_2]) => `${ip} : ${ref_mac} (${name_1}) <-> ${mac} (${name_2})`).join('\n')}, même IP, label différent - ${labelError.message.same_ip_diff_label.map(([ip, ref_label, name_1, label, name_2]) => `${ip} : ${ref_label} (${name_1}) <-> ${label} (${name_2})`).join('\n')} \n <Importation impossible>`;
+      const [sameIpDiffMac, sameIpDiffLabel] = labelError.message;
+      return `Conflits dans les lignes de labels : même IP, MAC différent - ${sameIpDiffMac.map(([ip, ref_mac,name_1, mac, name_2]) => `${ip} : ${ref_mac} (${name_1}) <-> ${mac} (${name_2})`).join('\n')}, même IP, label différent - ${sameIpDiffLabel.map(([ip, ref_label, name_1, label, name_2]) => `${ip} : ${ref_label} (${name_1}) <-> ${label} (${name_2})`).join('\n')} \n <Importation impossible>`;
+    case "tooManyFiles":
+      return `Trop de fichiers enregistrés : ${labelError.message} (Max 1)`
+    case "invalidFileFormat":
+      return `Format de fichier invalide. Attendu "mac, ip, Label", trouvé ${labelError.message}`
     default:
       return `Erreur de label inconnue : ${JSON.stringify(labelError)}`;
   }

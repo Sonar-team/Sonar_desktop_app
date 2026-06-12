@@ -16,8 +16,8 @@ use crate::{
         export::{csv::export_csv, logs::export_logs},
         flow_matrix::{add_label, get_label_list},
         import::{
-            add_to_selected_label_files_names_list, convert_from_pcap_list, get_label_files_list,
-            import_label_files, remove_from_selected_label_files_names_list, remove_label_file,
+            convert_from_pcap_list, get_label_files_list, import_label_files, is_matrix_empty,
+            remove_label_file,
         },
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
@@ -26,10 +26,8 @@ use crate::{
         system_info::start_cpu_monitor,
     },
     state::{
-        capture::CaptureState,
-        flow_matrix::FlowMatrix,
-        graph::GraphData,
-        label_files_list::{PcInfoLabel, SelectedLabelFiles},
+        capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData,
+        label_files_list::PcInfoLabel,
     },
 };
 
@@ -96,7 +94,6 @@ pub fn run() -> Result<(), tauri::Error> {
         .manage(Arc::new(Mutex::new(CaptureState::new())))
         .manage(Arc::new(Mutex::new(FlowMatrix::new())))
         .manage(Arc::new(Mutex::new(GraphData::new())))
-        .manage(Arc::new(Mutex::new(SelectedLabelFiles::new())))
         .manage(Arc::new(Mutex::new(PcInfoLabel::new())))
         .on_menu_event(|app, event| {
             if event.id() == "apropos" {
@@ -183,9 +180,8 @@ pub fn run() -> Result<(), tauri::Error> {
             set_filter,
             import_label_files,
             get_label_files_list,
-            add_to_selected_label_files_names_list,
-            remove_from_selected_label_files_names_list,
-            remove_label_file
+            remove_label_file,
+            is_matrix_empty
         ])
         .run(tauri::generate_context!())
 }

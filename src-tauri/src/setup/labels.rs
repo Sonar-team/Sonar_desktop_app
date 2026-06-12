@@ -1,7 +1,4 @@
-use std::{
-    net::IpAddr,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use tauri::{AppHandle, Manager, path::BaseDirectory};
 
@@ -69,36 +66,33 @@ pub fn update_labels_in_state(
 pub fn parse_label_row(row: &str) -> Option<(String, String, String)> {
     let parts: Vec<_> = row.split(',').map(clean_csv_field).collect();
     match parts.as_slice() {
-        [mac, ip, label] if is_mac_address(mac) && is_ip_address(ip) && !label.is_empty() => {
+        [mac, ip, label] if !mac.is_empty() && !ip.is_empty() && !label.is_empty() => {
             // si tous les arguments sont présents
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), ip.to_string(), label.to_string()))
         }
-        [mac, ip, label] if mac.is_empty() && is_ip_address(ip) && !label.is_empty() => {
+        [mac, ip, label] if mac.is_empty() && !ip.is_empty() && !label.is_empty() => {
             // si il manque l'adresse mac
-            println!(
-                "parse_label_row: mac: {0}, ip: {1}, label: {2}",
-                mac, ip, label
-            );
+            //println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label);
             Some((String::new(), ip.to_string(), label.to_string()))
         }
-        [mac, ip, label] if is_mac_address(mac) && ip.is_empty() && !label.is_empty() => {
+        [mac, ip, label] if !mac.is_empty() && ip.is_empty() && !label.is_empty() => {
             // si il manque l'adresse IP
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), String::new(), label.to_string()))
         }
-        [mac, ip, label] if is_mac_address(mac) && is_ip_address(ip) && label.is_empty() => {
+        [mac, ip, label] if !mac.is_empty() && !ip.is_empty() && label.is_empty() => {
             //si il manque le label
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), ip.to_string(), String::from("Label?")))
         }
-        [mac, ip, label] if is_mac_address(mac) && ip.is_empty() && label.is_empty() => {
-            //si il manque l'adresse mac ET le label
+        [mac, ip, label] if !mac.is_empty() && ip.is_empty() && label.is_empty() => {
+            //si il manque l'adresse ip ET le label
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((mac.to_string(), String::new(), String::from("Label?")))
         }
-        [mac, ip, label] if mac.is_empty() && is_ip_address(ip) && label.is_empty() => {
-            //si il manque l'adresse ip ET le label
+        [mac, ip, label] if mac.is_empty() && !ip.is_empty() && label.is_empty() => {
+            //si il manque l'adresse mac ET le label
             // println!("parse_label_row: mac: {0}, ip: {1}, label: {2}", mac, ip, label );
             Some((String::new(), ip.to_string(), String::from("Label?")))
         }
@@ -108,18 +102,6 @@ pub fn parse_label_row(row: &str) -> Option<(String, String, String)> {
 
 pub fn clean_csv_field(value: &str) -> &str {
     value.trim().trim_matches('"').split('/').next().unwrap()
-}
-
-pub fn is_ip_address(value: &str) -> bool {
-    value.parse::<IpAddr>().is_ok()
-}
-
-pub fn is_mac_address(value: &str) -> bool {
-    let parts: Vec<&str> = value.split(':').collect();
-    parts.len() == 6
-        && parts
-            .iter()
-            .all(|p| p.len() == 2 && p.chars().all(|c| c.is_ascii_hexdigit()))
 }
 
 #[cfg(test)]

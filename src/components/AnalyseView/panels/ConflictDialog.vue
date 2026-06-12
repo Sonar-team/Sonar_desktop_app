@@ -4,7 +4,7 @@
 
       <h1 v-show="same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0" class="dialog-title">Conflits détectés</h1>
       <h1 v-show="invalid_mac.length > 0 || invalid_ip.length > 0" class="dialog-title">MAC/IP invalide(s) détectée(s)</h1>
-      <h1 v-show="conflictual_files.length > 0" class="dialog-title">Fichiers en conflit détectés</h1>
+      <h1 v-show="invalid_lines.length > 0" class="dialog-title">Format de fichier invalide</h1>
 
       <div class="panels">
         <div class="left-panel">
@@ -53,17 +53,17 @@
                 </li>
               </ul>
           </div>
-
-          <div v-show="conflictual_files.length > 0" class="file-list">
-              <ul>
-                <h3 class="text">Fichiers non importés</h3>
-                <li v-for="(name, index) in conflictual_files" :key="index">
-                  <label>
-                    <span class="text indented">{{ name.length > 100 ? name.slice(0, 100) + '...' : name }}</span>
-                  </label>
-                </li>
-              </ul>
+          <div v-show="invalid_lines.length > 0" class="file-list">
+            <ul>
+              <h3 class="text">Lignes concernées :</h3>
+              <li v-for="(line, index) in invalid_lines" :key="index">
+                <label>
+                  <span class="text indented">'{{ line }}'</span>
+                </label>
+              </li>
+            </ul>
           </div>
+          <p v-show="invalid_lines.length > 0 || invalid_mac.length > 0 || invalid_ip.length > 0" class="text">Format de fichier attendu : <code>mac, ip, label</code> — tous les champs peuvent être vides mais DOIVENT exister</p>
         </div>
       </div>
 
@@ -101,56 +101,16 @@ export default defineComponent({
       type: Array as PropType<[string, string][]>,
       required: true
     },
-    conflictual_files: {
-      type: Array as PropType<string[]>,
+    invalid_lines: {
+      type: Array as PropType<String[]>,
       required: true
     }
   },
-  data() {
-    return {
-      //conflictualFiles: [] as [string, string][],
-      //localFiles: [...this.files]
-    };
-  },
-
-  /*
-  watch: {
-    localFiles: {
-      immediate: true,
-      handler(newVal) {
-        if (newVal.length === 0) {
-          this.windowClosed();
-        }
-      }
-    }
-  },
-  */
 
   methods: {
     windowClosed() {
       this.$emit('showConflictDialog', false);
     },
-    /*
-    async forceCopy(path: string) {
-
-      info('force_import: ' + path);
-
-      try {
-        await invoke('force_import', { csvPath: path });
-        info('réponse invoke');
-        this.localFiles = this.localFiles.filter(([name]) => name !== path);
-      } catch (err) {
-        displayCaptureError(err);
-      }
-    },
-
-    async cancelCopy(path: string) {
-
-      info('cancel_copy: ' + path);
-        this.localFiles = this.localFiles.filter(([, file_path]) => file_path !== path);
-    },
-
-  */
   }
 })
 </script>

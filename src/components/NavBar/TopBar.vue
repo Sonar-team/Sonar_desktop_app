@@ -14,8 +14,8 @@
 
     <button class="image-btn" @click="triggerSave" :disabled="isRunning" title="Sauvegarder (ctrl+s)">💾</button>
 
-    <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || hasData" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
-    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning ||  hasData" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
+    <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
+    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning ||  captureStore.hasData" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
     
     <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">​❎</button>
     <button class="image-btn" @click="export_logs" :disabled="isRunning" title="Logs (ctrl+l)">📒</button>
@@ -76,7 +76,6 @@ export default {
       showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
       shortcuts: [] as string[],
       activePanel: null as Panel | null,
-      hasData: false,
     };
   },
   mounted() {
@@ -106,6 +105,8 @@ export default {
 
     // Quit
     this.bindShortcut('CommandOrControl+Q', () => this.quit());
+
+    useCaptureStore().refreshHasData(); // Vérifie s'il y a déjà des données au montage pour ajuster l'état de hasData
   },
 
   async beforeUnmount() {
@@ -253,9 +254,7 @@ export default {
       }
 
       await invoke('reset_capture');
-      if (!this.isRunning) {
-        this.hasData = false;
-      }
+      await useCaptureStore().refreshHasData();
       this.$bus.emit('reset');
     },
 
@@ -283,7 +282,7 @@ export default {
         return;
       }
 
-      if (this.hasData) return;
+      if (useCaptureStore().hasData) return;
       if (this.activePanel !== null && this.activePanel !== 'pcap') {
         this.$emit(`toggle-${this.activePanel}`, false)
       };
@@ -298,7 +297,7 @@ export default {
         return;
       }
 
-      if (this.hasData) return; // Empêche d'ouvrir le panneau d'import CSV si la matrice de flux contient déjà des données
+      if (useCaptureStore().hasData) return; // Empêche d'ouvrir le panneau d'import CSV si la matrice de flux contient déjà des données
       if (this.activePanel !== null && this.activePanel !== 'csv') {
         this.$emit(`toggle-${this.activePanel}`, false) // Ferme le panneau ouvert avant d'ouvrir le panneau d'import CSV
       };
@@ -325,7 +324,6 @@ export default {
       if (this.captureStore.isRunning) {
         return;
       }
-      this.hasData = true;
 
       const onEvent = new Channel<CaptureEvent>();
       this.captureStore.setChannel(onEvent); // 🟢 rendre le Channel accessible
@@ -338,6 +336,7 @@ export default {
         })
         .catch(displayCaptureError);
     },
+
     async stop() {
       if (!this.captureStore.isRunning || useCaptureStore().isImporting) {
         return;
@@ -349,15 +348,18 @@ export default {
           this.captureStore.updateStatus(typedStatus);
           info('Capture arrêtée : ' + this.captureStore.isRunning);
         })
-        .catch(displayCaptureError);
+        .catch(displayCaptureError)
+        .finally(() =>useCaptureStore().refreshHasData);
     },
     toggleView() {
       info('Vue basculée');
     },
+
     async quit() {
       info('Fermeture demandée');
       await exit(0);
     },
+
     toggleConfig() {
       info('Ouverture panneau config'); 
     }

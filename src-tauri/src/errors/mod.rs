@@ -92,10 +92,12 @@ impl Serialize for CaptureStateError {
             }
             Self::Label(e) => {
                 let kind = match e {
-                    LabelError::InvalidFormats {
+                    LabelError::InvalidMacIpFormat {
                         invalid_mac,
                         invalid_ip,
-                    } => LabelErrorKind::InvalidFormats(invalid_mac.clone(), invalid_ip.clone()),
+                    } => {
+                        LabelErrorKind::InvalidMacIpFormat(invalid_mac.clone(), invalid_ip.clone())
+                    }
                     LabelError::LabelLinesConflicts {
                         same_ip_diff_mac,
                         same_ip_diff_label,
@@ -103,8 +105,11 @@ impl Serialize for CaptureStateError {
                         same_ip_diff_mac.clone(),
                         same_ip_diff_label.clone(),
                     ),
-                    LabelError::FileNameConflicts { files_names } => {
-                        LabelErrorKind::FileNameConflicts(files_names.clone())
+                    LabelError::TooManyFiles { files_count } => {
+                        LabelErrorKind::TooManyFiles(*files_count)
+                    }
+                    LabelError::InvalidFileFormat { invalid_lines } => {
+                        LabelErrorKind::InvalidFileFormat(invalid_lines.clone())
                     }
                 };
                 CaptureStateErrorKind::Label(kind)

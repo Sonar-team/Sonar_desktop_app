@@ -6,7 +6,7 @@
       :same_ip_diff_label="sameIpDiffLabel" 
       :invalid_mac="invalidMac"
       :invalid_ip="invalidIp"
-      :conflictual_files="conflictualFiles"
+      :invalid_lines="invalidLines"
       @showConflictDialog="showConflictDialog = false"/>
 
         <!-- Overlay de chargement -->
@@ -20,17 +20,16 @@
           <button class="btn btn-add text" @click="addCsvFiles" :disabled="isConverting">
             Ajouter des fichiers
           </button>
-          <p v-show="labelFiles.length == 0" class="text">Aucun fichier de label enregistré</p>
-          <ul v-show="labelFiles.length > 0" class="file-list">
-            <li v-for="([file,], index) in labelFiles" :key="index">
-              <label :for="String(index)">
-                <input type="checkbox" v-model="selectedLabelFiles" :value="file" :id="String(index)" 
-                class="toggle" @change="(e) => (e.target as HTMLInputElement)?.checked ? addToSelectedLabelFilesNamesList(file) : removeFromSelectedLabelFilesNamesList(file)">
-                <span class="text">{{ file }}</span>
-                <button class="image-btn" @click.prevent="RemoveLabelFile(file)" title="Supprimer"><img src="/src/assets/images/Poubelle.jpg" alt="Supprimer" /></button>
+          <p v-show="labelFile === null" class="text">Aucun fichier de label enregistré</p>
+          <ul v-show="labelFile !== null" class="file-list">
+            <li>
+              <label>
+                <span class="text">{{ labelFile }}</span>
+                <button class="image-btn" @click.prevent="RemoveLabelFile(labelFile!)" title="Supprimer"><img src="/src/assets/images/Poubelle.jpg" alt="Supprimer" /></button>
               </label>
             </li>
           </ul>
+          <p class="text hint">Format : <code>mac, ip, label</code> — tous les champs peuvent être vides</p>
       </div>
 
       <div v-else-if="mode === 'pcap'">
@@ -81,15 +80,14 @@ export default defineComponent({
   data() {
     return {
       packetFiles: [] as string[],
-      labelFiles: [] as [string, boolean][],
-      selectedLabelFiles: [] as string[],
+      labelFile: null as string | null,
       isConverting: false,
       showConflictDialog: false,
       sameIpDiffMac: [] as [string, string, string, string, string][], 
       sameIpDiffLabel: [] as [string, string, string, string, string][],
       invalidMac: [] as [string, string][],
       invalidIp: [] as [string, string][],
-      conflictualFiles: [] as string[],
+      invalidLines: [] as string[]
     };
   },
 
@@ -117,20 +115,22 @@ export default defineComponent({
 
     async addFiles(type: 'pcap' | 'csv', extensions: string[]) {
         const label = type === 'csv' ? 'Label File' : 'Capture File';
+        const isPcap = type === 'pcap' ? true : false;
         useCaptureStore().isImporting = true;
 
       try {
         const files = await open({
-          multiple: true,
+          multiple: isPcap,
           filters: [{ name: label, extensions: extensions }],
         });
 
         if (!files) return;
 
-        const list = Array.isArray(files) ? files : [files];
+        
         if (type === 'csv') {
-          await this.importLabelFiles(list);
+          await this.importLabelFiles(files);
         } else {
+          const list = Array.isArray(files) ? files : [files];
           this.packetFiles.push(...list);
         }
       } finally {
@@ -159,94 +159,70 @@ export default defineComponent({
       } catch (err) {
         displayCaptureError(err);
       } finally {
+        await useCaptureStore().refreshHasData();
         this.isConverting = false;
       }
 
       this.packetFiles = [];
     },
 
-    async importLabelFiles(paths: string[]) {
-      if (paths.length === 0) return;
+    async importLabelFiles(path: string) {
+      if (path.length === 0) return;
 
-      info('import_label_files: ' + paths);
+      info('import_label_files: ' + path);
 
       this.isConverting = true;
-      this.conflictualFiles = [];
       this.invalidIp = [];
       this.invalidMac = [];
       this.sameIpDiffLabel = [];
       this.sameIpDiffMac = [];
 
       try {
-        await invoke('import_label_files', { csvPaths: paths });
+        await invoke('import_label_files', { csvPath: path });
         info('réponse invoke');
       } catch (err) {
         const error = err as CaptureStateErrorKind;
-        if (error.kind === "label" && (error.message as LabelErrorKind).kind === "invalidFormats") {
-          const labelError = error.message as Extract<LabelErrorKind, { kind: "invalidFormats" }>;
-          const [invalidMac, invalidIp] = labelError.message as any;
-          this.invalidMac = invalidMac;
-          this.invalidIp = invalidIp;
-          this.showConflictDialog = true;
-        } if (error.kind === "label" && (error.message as LabelErrorKind).kind === "fileNameConflicts") {
-          const labelError = error.message as Extract<LabelErrorKind, { kind: "fileNameConflicts" }>;
-          this.conflictualFiles = labelError.message as any;
-          this.showConflictDialog = true;
+        if (error.kind === "label") {
+          const labelError = error.message as LabelErrorKind;
+          if (labelError.kind === "invalidMacIpFormat") {
+            const [invalidMac, invalidIp] = labelError.message;
+            this.invalidMac = invalidMac;
+            this.invalidIp = invalidIp;
+            this.showConflictDialog = true;
+          } else if (labelError.kind === "labelLinesConflicts") {
+            const [sameIpDiffMac, sameIpDiffLabel] = labelError.message;
+            this.sameIpDiffMac = sameIpDiffMac;
+            this.sameIpDiffLabel = sameIpDiffLabel;
+            this.showConflictDialog = true;
+          } else if (labelError.kind === "invalidFileFormat") {
+            this.invalidLines = labelError.message;
+            this.showConflictDialog = true;
+          } else {
+            displayCaptureError(err);
+          }
         } else {
           displayCaptureError(err);
-        }
-        
+        }  
       } finally {
-        this.labelFiles = await invoke('get_label_files_list');
-        this.labelFiles.sort();
+        this.labelFile = await invoke('get_label_files_list');
         this.isConverting = false;      
       }
     },
   
 
     async RemoveLabelFile(fileRemoved: string) {
+        if (this.labelFile === null) return;
         info('fileRemoved : ' + fileRemoved);
         try {
           await invoke('remove_label_file', { csvFile: fileRemoved});
           info('réponse invoke');
-          this.labelFiles = await invoke('get_label_files_list');
-          this.labelFiles.sort();
-          this.selectedLabelFiles = this.selectedLabelFiles.filter((name) => name !== fileRemoved);
+          this.labelFile = await invoke('get_label_files_list');
         } catch (err) {
           displayCaptureError(err);
         }
       },
 
-    async addToSelectedLabelFilesNamesList(file: string){
-
-      this.conflictualFiles = [];
-      this.invalidIp = [];
-      this.invalidMac = [];
-      this.sameIpDiffLabel = [];
-      this.sameIpDiffMac = [];
-      
-      try {
-        await invoke('add_to_selected_label_files_names_list', { file : file});
-        info('réponse invoke');
-      } catch (err) {
-        const error = err as CaptureStateErrorKind;
-        if (error.kind === "label" && (error.message as LabelErrorKind).kind === "labelLinesConflicts") {
-          const labelError = error.message as Extract<LabelErrorKind, { kind: "labelLinesConflicts" }>;
-          const [sameIpDiffMac, sameIpDiffLabel] = labelError.message as any;
-          this.sameIpDiffMac = sameIpDiffMac;
-          this.sameIpDiffLabel = sameIpDiffLabel;
-          this.showConflictDialog = true;
-        } else {
-          displayCaptureError(err);
-        } 
-        this.selectedLabelFiles = this.selectedLabelFiles.filter((f) => f !== file);
-      }
-    },
-
-    async removeFromSelectedLabelFilesNamesList(file: string) {
-      await invoke ('remove_from_selected_label_files_names_list', { file : file});
-    }
-  }, 
+  },
 
   async mounted() {
     this.captureStore.onStarted(() => {
@@ -259,12 +235,10 @@ export default defineComponent({
       this.captureStore.updateStatus({ is_running: false });
     });
 
-    this.labelFiles = await invoke('get_label_files_list');
-    this.selectedLabelFiles = this.labelFiles
-            .filter(([_, checked]) => checked)
-            .map(([file, _]) => file);
+    this.labelFile = await invoke('get_label_files_list');
   },
-});
+
+})
 </script>
 
 <style scoped>
@@ -396,54 +370,6 @@ export default defineComponent({
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.toggle {
-    /* On définit la hauteur de notre élément */
-    --toggle-height: 1.5rem;
-
-    /* On désactive le style par défaut du système d'exploitation */
-    appearance: none;
-
-    /* On définit les dimensions de la "piste" (le fond) */
-    width: 3rem;
-    height: var(--toggle-height);
-    border-radius: 99px; /* Un grand border-radius pour l'effet pilule */
-    background: #334155; /* Couleur quand c'est inactif (gris bleuté) */
-    position: relative;
-    cursor: pointer;
-    transition: 0.3s;
-
-    /* On crée la "pastille" (le bouton qui glisse) avec un pseudo-élément
-    * Le pseudo-élément est intéressant car le rond qui indique l'état n'a pas de sens sémantique,
-    * ajouter un élément juste graphique est de la responsabilité de CSS.
-    */
-    &::after {
-        /* On définit la hauteur et le placement de notre pastille */
-        --element-top-left: 2px;
-        --element-size: calc(var(--toggle-height) - var(--element-top-left) * 2);
-
-        content: '';
-        position: absolute;
-        left: var(--element-top-left);
-        top: var(--element-top-left);
-        width: var(--element-size);
-        height: var(--element-size);
-        background: white;
-        border-radius: 50%;
-        transition: 0.3s;
-    }
-
-    /* On gère l'état "Activé" grâce à la pseudo-classe :checked natif aux checkbox */
-    &:checked {
-        background: #2596be; /* Couleur quand c'est actif (vert néon) */
-
-
-        /* On déplace la pastille vers la droite */
-        &::after {
-            transform: translateX(var(--toggle-height));
-        }
-    }
-}
-
 .file-list label {
   display: flex;
   align-items: center;
@@ -471,6 +397,18 @@ export default defineComponent({
   word-break: break-all;
   font-family: monospace;
   font-size: 0.9rem;
+}
+
+.hint {
+  font-size: 0.8em;
+  color: rgba(245, 245, 245, 0.5);
+  margin-top: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.hint code {
+  font-family: monospace;
+  color: rgba(245, 245, 245, 0.75);
 }
 
 /* Overlay + Spinner */
