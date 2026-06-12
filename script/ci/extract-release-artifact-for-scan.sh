@@ -24,11 +24,22 @@ case "$artifact_lower" in
     ;;
   *.rpm)
     mkdir -p "${scan_root}/rootfs" "${scan_root}/metadata"
+    payload="${scan_root}/metadata/payload.cpio"
+    if ! rpm2cpio "$artifact_abs" > "$payload"; then
+      if [[ ! -s "$payload" ]]; then
+        echo "Unable to convert RPM payload to CPIO: ${artifact_name}" >&2
+        exit 1
+      fi
+      echo "rpm2cpio returned a non-zero exit code but produced a payload; continuing" >&2
+    fi
     (
       cd "${scan_root}/rootfs"
-      rpm2cpio "$artifact_abs" | cpio -idm --quiet
+      cpio -idm --quiet < "../metadata/payload.cpio"
     )
-    rpm -qip "$artifact_abs" > "${scan_root}/metadata/rpm-info.txt" 2>/dev/null || true
+    rm -f "$payload"
+    if command -v rpm >/dev/null 2>&1; then
+      rpm -qip "$artifact_abs" > "${scan_root}/metadata/rpm-info.txt" 2>/dev/null || true
+    fi
     ;;
   *.msi | *.exe)
     mkdir -p "${scan_root}/extracted"
