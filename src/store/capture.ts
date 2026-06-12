@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { markRaw } from "vue";
 import type { Channel } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import type { CaptureEvent, GraphData, GraphUpdate } from "../types/capture";
 
 // ⚠️ Channel hors réactivité pour éviter le proxy de Vue
@@ -10,6 +11,8 @@ export const useCaptureStore = defineStore("capture", {
   state: () => ({
     isRunning: false,
     showMatrice: true,
+    isImporting: false,
+    hasData: false,
 
     // Listeners HMR-safe dans le state
     startedListeners: [] as Array<(d: any) => void>,
@@ -48,6 +51,7 @@ export const useCaptureStore = defineStore("capture", {
             for (const cb of this.finishedListeners) cb(msg.data);
             break;
           case "packet":
+            if (!this.hasData) this.hasData = true;
             for (const cb of this.packetListeners) cb(msg.data.packet);
             break;
           case "stats":
@@ -99,6 +103,11 @@ export const useCaptureStore = defineStore("capture", {
     onGraphSnapshot(cb: (d: GraphData) => void) {
       console.log("[CaptureStore] GraphSnapshot abonné");
       this.graphSnapshotListeners.push(cb);
+    },
+
+    async refreshHasData() {
+      const empty = await invoke<boolean>('is_matrix_empty');
+      this.hasData = !empty;
     },
   },
 });
