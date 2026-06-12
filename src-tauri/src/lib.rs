@@ -14,13 +14,12 @@ use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut,
 use crate::{
     commandes::{
         export::{csv::export_csv, logs::export_logs},
-        flow_matrix::{add_label, get_label_list},
+        flow_matrix::{add_label, get_label_list, import_label_csv},
         import::convert_from_pcap_list,
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
     setup::{
-        about::about_message, labels::read_labels, log_host_and_app_snapshot, print_banner,
-        system_info::start_cpu_monitor,
+        about::about_message, log_host_and_app_snapshot, print_banner, system_info::start_cpu_monitor,
     },
     state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData},
 };
@@ -102,8 +101,6 @@ pub fn run() -> Result<(), tauri::Error> {
             move |app| {
                 info!("{}", print_banner());
                 log_host_and_app_snapshot(app.app_handle());
-                info!("Reading labels...");
-                read_labels(app.handle())?;
 
                 // CLI
                 let Ok(cli_matches) = app.cli().matches() else {
@@ -141,13 +138,6 @@ pub fn run() -> Result<(), tauri::Error> {
                     .title("SONAR")
                     .inner_size(1800.0, 950.0)
                     .build()?;
-
-                    let interfaces = setup::system_info::get_interfaces();
-                    let labels = setup::labels::create_labels_from_network_interfaces(interfaces)?;
-                    println!("labels: {:#?}", labels);
-                    setup::labels::add_labels_to_file(app.handle(), labels.clone())?;
-                    read_labels(app.handle())?;
-                    setup::labels::update_labels_in_state(app.handle(), labels)?;
                 } else {
                     let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
                     let config = get_config_capture(capture_state.clone());
@@ -170,6 +160,7 @@ pub fn run() -> Result<(), tauri::Error> {
             convert_from_pcap_list,
             add_label,
             get_label_list,
+            import_label_csv,
             set_filter
         ])
         .run(tauri::generate_context!())
