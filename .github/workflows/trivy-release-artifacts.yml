@@ -1,0 +1,113 @@
+name: trivy-release-artifacts
+
+on:
+  schedule:
+    - cron: "19 3 * * *"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to scan. Empty means latest release."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    name: discover release artifacts
+    runs-on: ubuntu-22.04
+    outputs:
+      found: ${{ steps.release-artifacts.outputs.found }}
+      matrix: ${{ steps.release-artifacts.outputs.matrix }}
+      tag_name: ${{ steps.release-artifacts.outputs.tag_name }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: List scannable release artifacts
+        id: release-artifacts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || '' }}
+        run: ./script/ci/list-release-scan-artifacts.sh
+
+  no-assets:
+    name: no scannable release artifacts
+    needs: discover
+    if: needs.discover.outputs.found != 'true'
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Report empty release artifact set
+        shell: bash
+        run: |
+          echo "No scannable release artifacts found for '${{ needs.discover.outputs.tag_name || 'latest release' }}'."
+
+  scan:
+    name: scan ${{ matrix.asset_name }}
+    needs: discover
+    if: needs.discover.outputs.found == 'true'
+    runs-on: ubuntu-22.04
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover.outputs.matrix || '{"include":[]}') }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Install artifact extraction tools
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cpio p7zip-full rpm
+
+      - name: Download release artifact
+        shell: bash
+        env:
+          ASSET_ID: ${{ matrix.asset_id }}
+          SAFE_NAME: ${{ matrix.safe_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release-artifacts
+          gh api \
+            -H "Accept: application/octet-stream" \
+            "repos/${GITHUB_REPOSITORY}/releases/assets/${ASSET_ID}" \
+            > "release-artifacts/${SAFE_NAME}"
+          test -s "release-artifacts/${SAFE_NAME}"
+
+      - name: Extract release artifact
+        shell: bash
+        env:
+          SAFE_NAME: ${{ matrix.safe_name }}
+        run: ./script/ci/extract-release-artifact-for-scan.sh "release-artifacts/${SAFE_NAME}" scan-root
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+        with:
+          scan-type: "fs"
+          scan-ref: "scan-root"
+          scanners: "vuln"
+          format: "template"
+          template: "@/contrib/sarif.tpl"
+          output: "trivy-${{ matrix.safe_name }}.sarif"
+          severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Upload Trivy SARIF to GitHub Security tab
+        if: always() && hashFiles(format('trivy-{0}.sarif', matrix.safe_name)) != ''
+        uses: github/codeql-action/upload-sarif@78ed0c7291d93e40c51b085850dc669a4c3ab73b
+        with:
+          sarif_file: "trivy-${{ matrix.safe_name }}.sarif"
+          category: "trivy-release-${{ matrix.safe_name }}"
+
+      - name: Upload Trivy SARIF artifact
+        if: always() && hashFiles(format('trivy-{0}.sarif', matrix.safe_name)) != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: "trivy-release-${{ matrix.safe_name }}"
+          path: "trivy-${{ matrix.safe_name }}.sarif"
+          if-no-files-found: error

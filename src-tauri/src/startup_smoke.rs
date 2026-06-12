@@ -32,9 +32,17 @@ fn run_inner() -> Result<(), String> {
     logger.line("SONAR_STARTUP_VALIDATION=BEGIN")?;
     logger.line(&print_banner())?;
 
-    let device = lookup_default_device()?;
-    logger.line(&format!("Using device {}", device.name))?;
-    logger.line(&format!("SONAR_SMOKE_DEVICE={}", device.name))?;
+    match lookup_default_device() {
+        Ok(device) => {
+            logger.line(&format!("Using device {}", device.name))?;
+            logger.line(&format!("SONAR_SMOKE_DEVICE={}", device.name))?;
+        }
+        Err(err) => {
+            logger.line(&format!("Using device unavailable ({err})"))?;
+            logger.line(&format!("SONAR_SMOKE_DEVICE_UNAVAILABLE={err}"))?;
+        }
+    }
+
     logger.line(&format!(
         "SONAR_SMOKE_TARGET={} {}",
         env::consts::OS,

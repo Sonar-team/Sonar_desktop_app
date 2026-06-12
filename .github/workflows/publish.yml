@@ -120,19 +120,15 @@ jobs:
           binary_path="$(./script/ci/collect-release-binary.sh "${{ matrix.platform }}")"
           echo "binary_path=${binary_path}" >> "$GITHUB_OUTPUT"
 
-      - name: Install Npcap for Windows smoke
+      - name: Prepare Windows smoke runtime
+        id: windows-smoke-runtime
         if: matrix.platform == 'windows-2022'
         shell: pwsh
-        run: ./script/ci/install-npcap-windows.ps1
+        run: ./script/ci/prepare-windows-smoke-runtime.ps1 -BinaryPath "${{ steps.release-binary.outputs.binary_path }}"
 
       - name: Validate release binary startup logs
         shell: bash
-        run: ./script/ci/smoke-test-release-binary.sh "${{ steps.release-binary.outputs.binary_path }}"
-
-      - name: Smoke launch Windows executable
-        if: matrix.platform == 'windows-2022'
-        shell: pwsh
-        run: ./script/ci/smoke-test-windows-exe.ps1 -ExePath release-artifacts/sonar-windows-x86_64.exe
+        run: ./script/ci/smoke-test-release-binary.sh "${{ steps.windows-smoke-runtime.outputs.smoke_binary_path || steps.release-binary.outputs.binary_path }}"
 
       - name: Build release bundles
         shell: bash
