@@ -1,116 +1,232 @@
-use csv::StringRecord;
+use std::{
+    collections::HashSet,
+    io::ErrorKind,
+    net::IpAddr,
+    sync::{Arc, Mutex},
+};
 
-use crate::state::flow_matrix::LabelEntry;
+use tauri::{AppHandle, Manager, path::BaseDirectory};
 
-const LABEL_CSV_FORMAT_ERROR: &str = "CSV labels invalide : format attendu mac,ip,label";
+use crate::state::flow_matrix::FlowMatrix;
 
-pub fn parse_label_csv(csv_data: &str) -> Result<Vec<LabelEntry>, String> {
-    let mut reader = csv::ReaderBuilder::new()
-        .has_headers(false)
-        .flexible(true)
-        .trim(csv::Trim::All)
-        .from_reader(csv_data.as_bytes());
+pub fn read_labels(app: &AppHandle) -> Result<(), tauri::Error> {
+    let resource_path = app
+        .path()
+        .resolve("resources/labels.csv", BaseDirectory::Resource)?;
+    println!("resource_path: {:?}", resource_path);
+    // read in file and display :
+    let csv_data = std::fs::read_to_string(resource_path.clone())?;
+    println!("{}", csv_data);
+    Ok(())
+}
+
+pub fn create_labels_from_network_interfaces(
+    interfaces: Vec<netdev::Interface>,
+) -> Result<Vec<String>, tauri::Error> {
+    const LABEL_NAME: &str = "pc sonar";
 
     let mut labels = Vec::new();
-    let mut first_data_row = true;
 
-    for record in reader.records() {
-        let record = record.map_err(|_| label_csv_format_error())?;
-
-        if record.iter().all(|field| field.trim().is_empty()) {
+    for interface in interfaces {
+        let Some(mac_addr) = interface.mac_addr else {
             continue;
+        };
+
+        let mac_addr = mac_addr.to_string();
+
+        for ipv4 in interface.ipv4_addrs() {
+            labels.push(format!("{mac_addr},{ipv4},{LABEL_NAME}"));
         }
 
-        if first_data_row && is_header(&record) {
-            first_data_row = false;
-            continue;
+        for ipv6 in interface.ipv6_addrs() {
+            labels.push(format!("{mac_addr},{ipv6},{LABEL_NAME}"));
         }
-        first_data_row = false;
-
-        if record.len() != 3 {
-            return Err(label_csv_format_error());
-        }
-
-        let mac = clean_label_field(record.get(0).unwrap_or_default()).to_ascii_lowercase();
-        let ip = clean_label_field(record.get(1).unwrap_or_default()).to_string();
-        let label = clean_label_field(record.get(2).unwrap_or_default()).to_string();
-
-        if label.is_empty() || (mac.is_empty() && ip.is_empty()) {
-            return Err(label_csv_format_error());
-        }
-
-        labels.push(LabelEntry { mac, ip, label });
     }
 
     Ok(labels)
 }
 
-fn label_csv_format_error() -> String {
-    LABEL_CSV_FORMAT_ERROR.to_string()
+pub fn add_labels_to_file(app: &AppHandle, labels: Vec<String>) -> Result<(), tauri::Error> {
+    let resource_path = app
+        .path()
+        .resolve("resources/labels.csv", BaseDirectory::Resource)?;
+    println!("resource_path: {:?}", resource_path);
+
+    let existing_csv = match std::fs::read_to_string(&resource_path) {
+        Ok(csv_data) => csv_data,
+        Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+        Err(error) => return Err(error.into()),
+    };
+    let csv_data = merge_label_rows(&existing_csv, labels);
+
+    std::fs::write(resource_path, csv_data)?;
+
+    Ok(())
 }
 
-fn clean_label_field(field: &str) -> &str {
-    field.trim()
-}
+pub fn update_labels_in_state(app: &AppHandle, labels: Vec<String>) -> Result<(), tauri::Error> {
+    let state_label = app.state::<Arc<Mutex<FlowMatrix>>>();
+    let mut state_label = state_label.lock().unwrap();
 
-fn is_header(record: &StringRecord) -> bool {
-    if record.len() != 3 {
-        return false;
+    for label in labels {
+        let Some((mac, ip, label_name)) = parse_label_row(&label) else {
+            continue;
+        };
+
+        state_label.add_label(mac.to_string(), ip, label_name);
     }
 
-    record
-        .iter()
-        .map(|field| field.trim().to_ascii_lowercase())
-        .eq(["mac", "ip", "label"].into_iter().map(String::from))
+    Ok(())
+}
+
+fn parse_label_row(row: &str) -> Option<(String, String, String)> {
+    let parts: Vec<_> = row.split(',').map(clean_csv_field).collect();
+
+    match parts.as_slice() {
+        [mac, ip, label] if !mac.is_empty() && !ip.is_empty() && !label.is_empty() => {
+            Some((mac.to_string(), ip.to_string(), label.to_string()))
+        }
+        [ip, label] if is_ip_address(ip) && !label.is_empty() => {
+            Some((String::new(), ip.to_string(), label.to_string()))
+        }
+        _ => None,
+    }
+}
+
+fn clean_csv_field(value: &str) -> &str {
+    value.trim().trim_matches('"')
+}
+
+fn is_ip_address(value: &str) -> bool {
+    value.parse::<IpAddr>().is_ok()
+}
+
+fn merge_label_rows(existing_csv: &str, labels: Vec<String>) -> String {
+    let mut seen = HashSet::new();
+    let mut rows = Vec::new();
+
+    for row in existing_csv
+        .lines()
+        .map(str::trim)
+        .filter(|row| !row.is_empty())
+    {
+        if seen.insert(row.to_string()) {
+            rows.push(row.to_string());
+        }
+    }
+
+    for label in labels {
+        let label = label.trim();
+        if !label.is_empty() && seen.insert(label.to_string()) {
+            rows.push(label.to_string());
+        }
+    }
+
+    if rows.is_empty() {
+        String::new()
+    } else {
+        format!("{}\n", rows.join("\n"))
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::parse_label_csv;
+    use super::{create_labels_from_network_interfaces, merge_label_rows, parse_label_row};
+    use netdev::Interface;
+    use netdev::ipnet::{Ipv4Net, Ipv6Net};
+    use std::net::{Ipv4Addr, Ipv6Addr};
 
     #[test]
-    fn parses_required_mac_ip_label_format() {
-        let labels = parse_label_csv("mac,ip,label\naa:bb:cc:dd:ee:ff,192.168.1.10,PLC\n")
-            .unwrap();
+    fn creates_one_row_per_ip_address() {
+        let mut interface = Interface::dummy();
+        interface.mac_addr = Some("aa:bb:cc:dd:ee:ff".parse().unwrap());
+        interface.ipv4 = vec![Ipv4Net::new(Ipv4Addr::new(192, 168, 1, 10), 24).unwrap()];
+        interface.ipv6 =
+            vec![Ipv6Net::new("2001:db8::10".parse::<Ipv6Addr>().unwrap(), 64).unwrap()];
 
-        assert_eq!(labels.len(), 1);
-        assert_eq!(labels[0].mac, "aa:bb:cc:dd:ee:ff");
-        assert_eq!(labels[0].ip, "192.168.1.10");
-        assert_eq!(labels[0].label, "PLC");
+        let labels = create_labels_from_network_interfaces(vec![interface]).unwrap();
+
+        assert_eq!(
+            labels,
+            vec![
+                "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar".to_string(),
+                "aa:bb:cc:dd:ee:ff,2001:db8::10,pc sonar".to_string(),
+            ]
+        );
     }
 
     #[test]
-    fn accepts_ip_only_and_mac_only_rows() {
-        let labels = parse_label_csv(
-            "mac,ip,label\n,8.8.8.8,DNS\nAA:BB:CC:DD:EE:FF,,automate\n",
-        )
-        .unwrap();
+    fn skips_interfaces_without_mac_address() {
+        let mut interface = Interface::dummy();
+        interface.ipv4 = vec![Ipv4Net::new(Ipv4Addr::new(10, 0, 0, 5), 24).unwrap()];
 
-        assert_eq!(labels.len(), 2);
-        assert_eq!(labels[0].mac, "");
-        assert_eq!(labels[0].ip, "8.8.8.8");
-        assert_eq!(labels[0].label, "DNS");
-        assert_eq!(labels[1].mac, "aa:bb:cc:dd:ee:ff");
-        assert_eq!(labels[1].ip, "");
-        assert_eq!(labels[1].label, "automate");
+        let labels = create_labels_from_network_interfaces(vec![interface]).unwrap();
+
+        assert!(labels.is_empty());
     }
 
     #[test]
-    fn accepts_headerless_csv() {
-        let labels = parse_label_csv("aa:bb:cc:dd:ee:ff,192.168.1.10,PLC\n").unwrap();
+    fn parses_label_row_into_mac_ip_and_label() {
+        let parsed = parse_label_row("aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar");
 
-        assert_eq!(labels.len(), 1);
-        assert_eq!(labels[0].label, "PLC");
+        assert_eq!(
+            parsed,
+            Some((
+                "aa:bb:cc:dd:ee:ff".to_string(),
+                "192.168.1.10".to_string(),
+                "pc sonar".to_string(),
+            ))
+        );
     }
 
     #[test]
-    fn rejects_rows_without_three_columns() {
-        assert!(parse_label_csv("8.8.8.8,DNS\n").is_err());
+    fn parses_ip_only_label_row() {
+        let parsed = parse_label_row("8.8.8.8,google.com");
+
+        assert_eq!(
+            parsed,
+            Some((
+                String::new(),
+                "8.8.8.8".to_string(),
+                "google.com".to_string(),
+            ))
+        );
     }
 
     #[test]
-    fn rejects_rows_without_label_or_match_key() {
-        assert!(parse_label_csv("mac,ip,label\n,,orphan\n").is_err());
-        assert!(parse_label_csv("mac,ip,label\n8.8.8.8,,\n").is_err());
+    fn parses_quoted_ip_only_label_row() {
+        let parsed = parse_label_row("\"8.8.8.8\", \"google.com\"");
+
+        assert_eq!(
+            parsed,
+            Some((
+                String::new(),
+                "8.8.8.8".to_string(),
+                "google.com".to_string(),
+            ))
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_label_rows() {
+        assert_eq!(parse_label_row("aa:bb:cc:dd:ee:ff,192.168.1.10"), None);
+        assert_eq!(parse_label_row(",,pc sonar"), None);
+    }
+
+    #[test]
+    fn appends_only_missing_label_rows() {
+        let existing_csv = "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar\n";
+        let merged = merge_label_rows(
+            existing_csv,
+            vec![
+                "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar".to_string(),
+                "aa:bb:cc:dd:ee:ff,2001:db8::10,pc sonar".to_string(),
+            ],
+        );
+
+        assert_eq!(
+            merged,
+            "aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar\naa:bb:cc:dd:ee:ff,2001:db8::10,pc sonar\n"
+        );
     }
 }

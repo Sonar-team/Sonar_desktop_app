@@ -218,17 +218,14 @@ impl GraphData {
 
         // Nœud source (MAC)
         let src_node_id = match self.nodes.entry(src_key.clone()) {
-            Entry::Occupied(mut e) => {
-                maybe_update_node_label(e.get_mut(), source_label.clone(), &mut updates);
-                e.get().id.clone()
-            }
+            Entry::Occupied(e) => e.get().id.clone(),
             Entry::Vacant(v) => {
                 let node = Node::new(
                     src_mac.clone(),
                     src_mac.clone(),
                     L2_COLOR,
                     "".to_string(),
-                    source_label.clone(),
+                    None,
                 );
                 let node_id = node.id.clone();
                 v.insert(node.clone());
@@ -239,17 +236,14 @@ impl GraphData {
 
         // Nœud destination (MAC)
         let dst_node_id = match self.nodes.entry(dst_key.clone()) {
-            Entry::Occupied(mut e) => {
-                maybe_update_node_label(e.get_mut(), destination_label.clone(), &mut updates);
-                e.get().id.clone()
-            }
+            Entry::Occupied(e) => e.get().id.clone(),
             Entry::Vacant(v) => {
                 let node = Node::new(
                     dst_mac.clone(),
                     dst_mac.clone(),
                     L2_COLOR,
                     "".to_string(),
-                    destination_label.clone(),
+                    None,
                 );
                 let node_id = node.id.clone();
                 v.insert(node.clone());
@@ -310,23 +304,6 @@ impl GraphData {
         }
 
         None
-    }
-
-    pub fn apply_labels<F>(&mut self, mut get_label: F) -> Vec<GraphUpdate>
-    where
-        F: FnMut(&str, &str) -> Option<String>,
-    {
-        let mut updates = Vec::new();
-
-        for node in self.nodes.values_mut() {
-            let label = get_label(&node.mac, &node.ip);
-            if node.label != label {
-                node.label = label;
-                updates.push(GraphUpdate::NodeUpdated(node.clone()));
-            }
-        }
-
-        updates
     }
 }
 
