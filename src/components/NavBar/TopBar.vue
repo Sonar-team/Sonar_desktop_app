@@ -349,7 +349,7 @@ export default {
           info('Capture arrêtée : ' + this.captureStore.isRunning);
         })
         .catch(displayCaptureError)
-        .finally(() =>useCaptureStore().refreshHasData);
+        .finally(() =>useCaptureStore().refreshHasData());
     },
     toggleView() {
       info('Vue basculée');

@@ -194,6 +194,10 @@ pub fn get_label_files_list(app: tauri::AppHandle) -> Result<Option<String>, Cap
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
 
+    if !labels_folder.exists() {
+        return Ok(None);
+    }
+
     let count = fs::read_dir(&labels_folder)?
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.path().is_file())
@@ -222,7 +226,11 @@ pub fn get_label_files_list(app: tauri::AppHandle) -> Result<Option<String>, Cap
 pub fn remove_label_file(csv_file: String, app: AppHandle) -> Result<(), CaptureStateError> {
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
-    let label_file = labels_folder.join(&csv_file);
+
+    let file_name = Path::new(&csv_file).file_name().ok_or_else(|| {
+        std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid file name")
+    })?;
+    let label_file = labels_folder.join(file_name);
 
     fs::remove_file(label_file)?;
     println!("File removed");
@@ -240,7 +248,7 @@ fn verif_file_format(file: String) -> Result<(), CaptureStateError> {
 
     for line in file.lines() {
         let parts: Vec<_> = line.split(',').map(clean_csv_field).collect();
-        if let [_unknown1, _unknown2] = parts.as_slice() {
+        if parts.len() != 3 {
             invalid_lines.push(line.to_string())
         }
     }
@@ -275,7 +283,7 @@ fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
 
     for (i, (mac1, ip1, label1)) in rows.iter().enumerate() {
         for (mac2, ip2, label2) in rows[i + 1..].iter() {
-            if ip1 == ip2 {
+            if ip1 == ip2 && !ip1.is_empty() {
                 if mac1 != mac2 {
                     eprintln!(
                         "⚠️  IP '{}' : MAC '{}' ({}) vs '{}' ({})",
@@ -390,14 +398,21 @@ pub fn import_label_files(csv_path: String, app: AppHandle) -> Result<(), Captur
     Ok(())
 }
 
-pub fn labels_to_matrix(
-    app: tauri::AppHandle,
-    matrice: &mut FlowMatrix,
-) -> Result<(), CaptureStateError> {
+pub fn labels_to_matrix(app: AppHandle, matrice: &mut FlowMatrix) -> Result<(), CaptureStateError> {
     let data_folder = app.path().app_data_dir()?;
     let labels_folder = data_folder.join("labels");
+    load_labels_from_folder(&labels_folder, matrice)
+}
 
-    let count = fs::read_dir(&labels_folder)?
+pub fn load_labels_from_folder(
+    labels_folder: &Path,
+    matrice: &mut FlowMatrix,
+) -> Result<(), CaptureStateError> {
+    if !labels_folder.exists() {
+        return Ok(());
+    }
+
+    let count = fs::read_dir(labels_folder)?
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.path().is_file())
         .count();
@@ -406,14 +421,13 @@ pub fn labels_to_matrix(
         return Err(LabelError::TooManyFiles { files_count: count }.into());
     }
 
-    if fs::exists(&labels_folder).unwrap_or(false) {
-        let label_file: PathBuf = fs::read_dir(&labels_folder)?
-            .filter_map(|entry| entry.ok())
-            .map(|entry| entry.path())
-            .filter(|path| path.is_file())
-            .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("csv"))
-            .collect();
+    let label_file = fs::read_dir(labels_folder)?
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| path.is_file())
+        .find(|path| path.extension().and_then(|e| e.to_str()) == Some("csv"));
 
+    if let Some(label_file) = label_file {
         let file = match std::fs::read_to_string(label_file) {
             Ok(csv_data) => csv_data,
             Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
@@ -436,4 +450,210 @@ pub fn labels_to_matrix(
 #[tauri::command]
 pub fn is_matrix_empty(state: tauri::State<'_, Arc<Mutex<FlowMatrix>>>) -> bool {
     state.lock().unwrap().matrix.is_empty()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::path::{Path, PathBuf};
+
+    struct TempDir(PathBuf);
+
+    impl TempDir {
+        fn new(name: &str) -> Self {
+            let path = std::env::temp_dir().join(name);
+            fs::create_dir_all(&path).unwrap();
+            Self(path)
+        }
+        fn path(&self) -> &Path {
+            &self.0
+        }
+    }
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn valid_csv_format_returns_ok() {
+        let dir = TempDir::new("sonar_test_valid_csv_format");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(&file_path, "aa:bb:cc:dd:ee:ff,192.168.1.1,mon-pc\n").unwrap();
+
+        let result = verif_file_format(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn missing_column_returns_invalid_file_format_error() {
+        let dir = TempDir::new("sonar_test_missing_column");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(&file_path, "192.168.1.1,mon-pc\n").unwrap();
+
+        let result = verif_file_format(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn extra_column_returns_invalid_file_format_error() {
+        let dir = TempDir::new("sonar_test_extra_column");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(
+            &file_path,
+            "aa:bb:cc:dd:ee:ff,192.168.1.1,mon-pc,réseau-2\n",
+        )
+        .unwrap();
+
+        let result = verif_file_format(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn empty_file_returns_ok() {
+        let dir = TempDir::new("sonar_test_empty_file");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(&file_path, "").unwrap();
+
+        let result = verif_file_format(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn valid_mac_and_ip_returns_ok() {
+        let dir = TempDir::new("sonar_test_valid_mac_ip");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(&file_path, "aa:bb:cc:dd:ee:ff,192.168.1.1,mon-pc\n").unwrap();
+
+        let result = verif_mac_ip_format(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn malformed_ip_returns_error() {
+        let dir = TempDir::new("sonar_test_malformed_ip");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(&file_path, "aa:bb:cc:dd:ee:ff,192.168.11,mon-pc\n").unwrap();
+
+        let result = verif_mac_ip_format(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn malformed_mac_returns_error() {
+        let dir = TempDir::new("sonar_test_malformed_mac");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(&file_path, "aa:bb:cc:dd:e:ff,192.168.1.1,mon-pc\n").unwrap();
+
+        let result = verif_mac_ip_format(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn empty_mac_and_ip_are_accepted() {
+        let dir = TempDir::new("sonar_test_empty_mac_ip");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(
+            &file_path,
+            "aa:bb:cc:dd:ee:ff,,mon-pc\n,192.168.1.1,mon-pc\n,,mon-pc\n",
+        )
+        .unwrap();
+
+        let result = verif_mac_ip_format(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn no_conflict_returns_ok() {
+        let dir = TempDir::new("sonar_test_no_conflict");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(&file_path, "aa:bb:cc:dd:ee:ff,192.168.1.1,mon-pc\naa:bb:cc:dd:ee:1f,192.168.1.2,ma-tablette\naa:bb:cc:dd:ee:ff,192.168.1.3,mon-tel\n").unwrap();
+
+        let result = verif_labels_conflicts(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_ok())
+    }
+
+    #[test]
+    fn same_ip_different_mac_returns_conflict_error() {
+        let dir = TempDir::new("sonar_test_same_ip_diff_mac");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(
+            &file_path,
+            "aa:bb:cc:dd:ee:ff,192.168.1.1,mon-pc\naa:bb:cc:dd:ee:1f,192.168.1.1,mon-pc\n",
+        )
+        .unwrap();
+
+        let result = verif_labels_conflicts(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_err())
+    }
+
+    #[test]
+    fn same_ip_different_label_returns_conflict_error() {
+        let dir = TempDir::new("sonar_test_same_ip_diff_label");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(
+            &file_path,
+            "aa:bb:cc:dd:ee:ff,192.168.1.1,mon-pc\naa:bb:cc:dd:ee:ff,192.168.1.1,ma-tablette\n",
+        )
+        .unwrap();
+
+        let result = verif_labels_conflicts(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_err())
+    }
+
+    #[test]
+    fn empty_ip_does_not_trigger_conflict() {
+        let dir = TempDir::new("sonar_test_empty_ip_no_conflict");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(
+            &file_path,
+            "aa:bb:cc:dd:ee:f1,,mon-pc\naa:bb:cc:dd:ee:ff,,ma-tablette\n",
+        )
+        .unwrap();
+
+        let result = verif_labels_conflicts(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_ok())
+    }
+
+    #[test]
+    fn new_matrix_is_empty() {
+        let matrix = FlowMatrix::new();
+        assert!(matrix.matrix.is_empty());
+    }
+
+    #[test]
+    fn labels_to_matrix_returns_ok_when_no_labels_folder() {
+        let dir = Path::new("/tmp/sonar_dossier_qui_n_existe_pas");
+        let mut matrix = FlowMatrix::new();
+
+        let result = load_labels_from_folder(dir, &mut matrix);
+
+        assert!(result.is_ok())
+    }
+
+    #[test]
+    fn labels_to_matrix_loads_labels_into_matrix() {
+        let dir = TempDir::new("sonar_test_labels_to_matrix");
+        let file_path = dir.path().join("labels.csv");
+        let mut matrix = FlowMatrix::new();
+        fs::write(&file_path, "aa:bb:cc:dd:ee:ff,192.168.1.1,mon-pc\naa:bb:cc:d5:ee:ff,192.168.1.10,ma-télé\naa:bb:cc:dd:ee:55,192.168.1.100,mon-aspi\n").unwrap();
+
+        load_labels_from_folder(dir.path(), &mut matrix).unwrap();
+
+        assert_eq!(matrix.get_label_list().len(), 3)
+    }
 }
