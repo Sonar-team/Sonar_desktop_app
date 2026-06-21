@@ -1,4 +1,4 @@
-image: rust:1.95.0
+image: rust:1.96.0
 
 default:
   timeout: 10 hours
@@ -8,8 +8,8 @@ stages:
   - sonarqube
 
 variables:
-  NODE_VERSION: 24.14.0
-  DENO_VERSION: 2.7.13
+  NODE_VERSION: 24.15.0
+  DENO_VERSION: 2.8.3
   DENO_DIR: "${CI_PROJECT_DIR}/.deno"
 
 include:
