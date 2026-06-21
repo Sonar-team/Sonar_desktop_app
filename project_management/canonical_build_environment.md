@@ -42,9 +42,9 @@ bundle for that platform is reproducible.
 Canonical toolchain versions are tracked in `config/build-versions.env`.
 
 - Rust: `1.95.0`
-- Node.js: `24.14.0`
-- Deno: `2.7.13`
-- Tauri CLI: `2.11.1`
+- Node.js: `24.15.0`
+- Deno: `2.8.3`
+- Tauri CLI: `2.11.3`
 - Vite: `8.0.16`
 
 Rust is pinned in `src-tauri/rust-toolchain.toml`. Node.js is declared in
