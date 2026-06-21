@@ -234,7 +234,7 @@ checksum = "a210d160f08b701c8721ba1c726c11662f877ea6b7094007e1ca9a1041945034"
 
 [[package]]
 name = "web_atoms"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "phf",
  "phf_codegen",

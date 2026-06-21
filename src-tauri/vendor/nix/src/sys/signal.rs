@@ -426,9 +426,7 @@ pub const SIGPOLL : Signal = SIGIO;
 pub const SIGUNUSED : Signal = SIGSYS;
 
 cfg_if! {
-    if #[cfg(target_os = "redox")] {
-        type SaFlags_t = libc::c_ulong;
-    } else if #[cfg(target_env = "uclibc")] {
+    if #[cfg(target_env = "uclibc")] {
         type SaFlags_t = libc::c_ulong;
     } else {
         type SaFlags_t = libc::c_int;
@@ -444,25 +442,25 @@ libc_bitflags! {
         /// When catching a [`Signal::SIGCHLD`] signal, the signal will be
         /// generated only when a child process exits, not when a child process
         /// stops.
-        SA_NOCLDSTOP;
+        SA_NOCLDSTOP as SaFlags_t;
         /// When catching a [`Signal::SIGCHLD`] signal, the system will not
         /// create zombie processes when children of the calling process exit.
         #[cfg(not(target_os = "hurd"))]
-        SA_NOCLDWAIT;
+        SA_NOCLDWAIT as SaFlags_t;
         /// Further occurrences of the delivered signal are not masked during
         /// the execution of the handler.
-        SA_NODEFER;
+        SA_NODEFER as SaFlags_t;
         /// The system will deliver the signal to the process on a signal stack,
         /// specified by each thread with sigaltstack(2).
-        SA_ONSTACK;
+        SA_ONSTACK as SaFlags_t;
         /// The handler is reset back to the default at the moment the signal is
         /// delivered.
-        SA_RESETHAND;
+        SA_RESETHAND as SaFlags_t;
         /// Requests that certain system calls restart if interrupted by this
         /// signal.  See the man page for complete details.
-        SA_RESTART;
+        SA_RESTART as SaFlags_t;
         /// This flag is controlled internally by Nix.
-        SA_SIGINFO;
+        SA_SIGINFO as SaFlags_t;
     }
 }
 
@@ -752,8 +750,38 @@ impl<'a> IntoIterator for &'a SigSet {
     }
 }
 
-/// A signal handler.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+/// A signal handler used with [`sigaction`] or [`signal`].
+///
+/// Signal handlers have very limited functionality.  A signal handler must
+/// only call async-signal-safe functions.  A list of async-signal-safe
+/// functions can be found in
+/// [signal-safety(7)](https://man7.org/linux/man-pages/man7/signal-safety.7.html).
+///
+/// In particular, signal handlers should only set a flag using an atomic type
+/// (such as [`std::sync::atomic::AtomicBool`]) and do nothing else.  Any more
+/// complex logic should be performed outside the signal handler.
+///
+/// # Examples
+///
+/// Catch `SIGINT` and record it with an atomic flag:
+///
+/// ```no_run
+/// # use std::convert::TryFrom;
+/// # use std::sync::atomic::{AtomicBool, Ordering};
+/// # use nix::sys::signal::{self, Signal, SigHandler};
+/// static SIGNALED: AtomicBool = AtomicBool::new(false);
+///
+/// extern "C" fn handle_sigint(signal: libc::c_int) {
+///     let signal = Signal::try_from(signal).unwrap();
+///     SIGNALED.store(signal == Signal::SIGINT, Ordering::Relaxed);
+/// }
+///
+/// fn main() {
+///     let handler = SigHandler::Handler(handle_sigint);
+///     unsafe { signal::signal(Signal::SIGINT, handler) }.unwrap();
+/// }
+/// ```
+#[derive(Clone, Copy, Debug, Hash)]
 pub enum SigHandler {
     /// Default signal handling.
     SigDfl,
@@ -767,7 +795,29 @@ pub enum SigHandler {
     SigAction(extern "C" fn(libc::c_int, *mut libc::siginfo_t, *mut libc::c_void))
 }
 
-/// Action to take on receipt of a signal. Corresponds to `sigaction`.
+/// Action to take on receipt of a signal.
+///
+/// `SigAction` wraps `libc::sigaction`, which defines the full signal
+/// disposition: the handler, flags controlling delivery behavior, and the set
+/// of signals to block while the handler runs.  Construct one with
+/// [`SigAction::new`] and install it with [`sigaction`].
+///
+/// # Examples
+///
+/// Install a handler for `SIGINT`:
+///
+/// ```no_run
+/// # use nix::sys::signal::{self, SaFlags, SigAction, SigHandler, SigSet, Signal};
+/// extern "C" fn handle_sigint(signal: libc::c_int) {
+///     // handle signal
+/// }
+///
+/// fn main() {
+///     let handler = SigHandler::Handler(handle_sigint);
+///     let action = SigAction::new(handler, SaFlags::empty(), SigSet::empty());
+///     unsafe { signal::sigaction(Signal::SIGINT, &action) }.unwrap();
+/// }
+/// ```
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct SigAction {
@@ -929,7 +979,7 @@ pub unsafe fn sigaction(signal: Signal, sigaction: &SigAction) -> Result<SigActi
 ///
 /// # Errors
 ///
-/// Returns [`Error(Errno::EOPNOTSUPP)`] if `handler` is
+/// Returns [`Error(Errno::EOPNOTSUPP)`](Errno::EOPNOTSUPP) if `handler` is
 /// [`SigAction`][SigActionStruct]. Use [`sigaction`][SigActionFn] instead.
 ///
 /// `signal` also returns any error from `libc::signal`, such as when an attempt
@@ -1035,7 +1085,7 @@ pub fn sigprocmask(how: SigmaskHow, set: Option<&SigSet>, oldset: Option<&mut Si
 ///   - If less than `-1`, the signal is sent to all processes whose
 ///     process group ID is equal to the absolute value of `pid`.
 /// * `signal` - Signal to send. If `None`, error checking is performed
-///              but no signal is actually sent.
+///   but no signal is actually sent.
 ///
 /// See Also
 /// [`kill(2)`](https://pubs.opengroup.org/onlinepubs/9699919799/functions/kill.html)

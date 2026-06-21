@@ -484,7 +484,7 @@ impl ClientBuilder {
 
     /// Sets the `SETTINGS_INITIAL_WINDOW_SIZE` option for HTTP2 stream-level flow control.
     ///
-    /// Default is currently 65,535 but may change internally to optimize for common uses.
+    /// Default may change internally to optimize for common uses.
     #[cfg(feature = "http2")]
     #[cfg_attr(docsrs, doc(cfg(feature = "http2")))]
     pub fn http2_initial_stream_window_size(self, sz: impl Into<Option<u32>>) -> ClientBuilder {
@@ -493,7 +493,7 @@ impl ClientBuilder {
 
     /// Sets the max connection-level flow control for HTTP2
     ///
-    /// Default is currently 65,535 but may change internally to optimize for common uses.
+    /// Default may change internally to optimize for common uses.
     #[cfg(feature = "http2")]
     #[cfg_attr(docsrs, doc(cfg(feature = "http2")))]
     pub fn http2_initial_connection_window_size(self, sz: impl Into<Option<u32>>) -> ClientBuilder {
@@ -526,6 +526,39 @@ impl ClientBuilder {
     #[cfg_attr(docsrs, doc(cfg(feature = "http2")))]
     pub fn http2_max_header_list_size(self, max_header_size_bytes: u32) -> ClientBuilder {
         self.with_inner(|inner| inner.http2_max_header_list_size(max_header_size_bytes))
+    }
+
+    /// Sets an interval for HTTP2 Ping frames should be sent to keep a connection alive.
+    ///
+    /// Pass `None` to disable HTTP2 keep-alive.
+    /// Default is currently disabled.
+    #[cfg(feature = "http2")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "http2")))]
+    pub fn http2_keep_alive_interval(self, interval: impl Into<Option<Duration>>) -> ClientBuilder {
+        self.with_inner(|inner| inner.http2_keep_alive_interval(interval))
+    }
+
+    /// Sets a timeout for receiving an acknowledgement of the keep-alive ping.
+    ///
+    /// If the ping is not acknowledged within the timeout, the connection will be closed.
+    /// Does nothing if `http2_keep_alive_interval` is disabled.
+    /// Default is currently disabled.
+    #[cfg(feature = "http2")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "http2")))]
+    pub fn http2_keep_alive_timeout(self, timeout: Duration) -> ClientBuilder {
+        self.with_inner(|inner| inner.http2_keep_alive_timeout(timeout))
+    }
+
+    /// Sets whether HTTP2 keep-alive should apply while the connection is idle.
+    ///
+    /// If disabled, keep-alive pings are only sent while there are open request/responses streams.
+    /// If enabled, pings are also sent when no streams are active.
+    /// Does nothing if `http2_keep_alive_interval` is disabled.
+    /// Default is `false`.
+    #[cfg(feature = "http2")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "http2")))]
+    pub fn http2_keep_alive_while_idle(self, enabled: bool) -> ClientBuilder {
+        self.with_inner(|inner| inner.http2_keep_alive_while_idle(enabled))
     }
 
     /// This requires the optional `http3` feature to be
@@ -944,6 +977,23 @@ impl ClientBuilder {
     )]
     pub fn tls_sni(self, tls_sni: bool) -> ClientBuilder {
         self.with_inner(|inner| inner.tls_sni(tls_sni))
+    }
+
+    /// Controls if the SSLKEYLOGFILE environment variable is respected.
+    ///
+    /// When enabled, if the environment variable `SSLKEYLOGFILE` is present at runtime,
+    /// TLS keys will be logged to the file at the path described in the variable.
+    /// This can be used by end-users to allow debugging TLS connections.
+    ///
+    /// Defaults to `false`.
+    ///
+    /// # Optional
+    ///
+    /// This requires the `rustls(-...)` Cargo feature enabled.
+    #[cfg(feature = "__rustls")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rustls")))]
+    pub fn tls_sslkeylogfile(self, on: bool) -> ClientBuilder {
+        self.with_inner(|inner| inner.tls_sslkeylogfile(on))
     }
 
     /// Set the minimum required TLS version for connections.

@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "zerocopy-derive"
-version = "0.8.48"
+version = "0.8.52"
 authors = [
     "Joshua Liebow-Feeser <joshlf@google.com>",
     "Jack Wrenn <jswrenn@amazon.com>",
@@ -205,5 +205,5 @@ level = "warn"
 priority = 0
 check-cfg = [
     "cfg(zerocopy_derive_union_into_bytes)",
-    "cfg(zerocopy_unstable_derive_on_error)",
+    "cfg(zerocopy_unstable_linux)",
 ]

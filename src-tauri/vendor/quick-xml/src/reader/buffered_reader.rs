@@ -6,7 +6,7 @@ use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 
 use crate::errors::{Error, Result};
-use crate::events::Event;
+use crate::events::{BytesText, Event};
 use crate::name::QName;
 use crate::parser::Parser;
 use crate::reader::{BangType, ReadRefResult, ReadTextResult, Reader, Span, XmlSource};
@@ -73,21 +73,15 @@ macro_rules! impl_buffered_source {
                 match memchr::memchr2(b'<', b'&', available) {
                     // Special handling is needed only on the first iteration.
                     // On next iterations we already read something and should emit Text event
-                    Some(0) if read == 0 && available[0] == b'<' => {
-                        self $(.$reader)? .consume(1);
-                        *position += 1;
-                        return ReadTextResult::Markup(buf);
-                    }
+                    Some(0) if read == 0 && available[0] == b'<' => return ReadTextResult::Markup(buf),
                     // Do not consume `&` because it may be lone and we would be need to
                     // return it as part of Text event
                     Some(0) if read == 0 => return ReadTextResult::Ref(buf),
                     Some(i) if available[i] == b'<' => {
                         buf.extend_from_slice(&available[..i]);
 
-                        // +1 to skip `<`
-                        let used = i + 1;
-                        self $(.$reader)? .consume(used);
-                        read += used as u64;
+                        self $(.$reader)? .consume(i);
+                        read += i as u64;
 
                         *position += read;
                         return ReadTextResult::UpToMarkup(&buf[start..]);
@@ -137,10 +131,10 @@ macro_rules! impl_buffered_source {
                 // should explicitly skip it at first iteration lest we confuse
                 // it with the end
                 if read == 0 {
-                    debug_assert_eq!(
-                        available.first(),
-                        Some(&b'&'),
-                        "`read_ref` must be called at `&`"
+                    debug_assert!(
+                        available.starts_with(b"&"),
+                        "`read_ref` must be called at `&`:\n{:?}",
+                        crate::utils::Bytes(available)
                     );
                     // If that ampersand is lone, then it will be part of text
                     // and we should keep it
@@ -151,9 +145,22 @@ macro_rules! impl_buffered_source {
                 }
 
                 match memchr::memchr3(b';', b'&', b'<', available) {
+                    Some(i) if available[i] == b';' => {
+                        // +1 -- skip the end `;`
+                        let used = i + 1;
+
+                        buf.extend_from_slice(&available[..used]);
+                        self $(.$reader)? .consume(used);
+                        read += used as u64;
+
+                        *position += read;
+
+                        return ReadRefResult::Ref(&buf[start..]);
+                    }
                     // Do not consume `&` because it may be lone and we would be need to
                     // return it as part of Text event
-                    Some(i) if available[i] == b'&' => {
+                    Some(i) => {
+                        let is_amp = available[i] == b'&';
                         buf.extend_from_slice(&available[..i]);
 
                         self $(.$reader)? .consume(i);
@@ -161,21 +168,8 @@ macro_rules! impl_buffered_source {
 
                         *position += read;
 
-                        return ReadRefResult::UpToRef(&buf[start..]);
-                    }
-                    Some(i) => {
-                        let is_end = available[i] == b';';
-                        buf.extend_from_slice(&available[..i]);
-
-                        // +1 -- skip the end `;` or `<`
-                        let used = i + 1;
-                        self $(.$reader)? .consume(used);
-                        read += used as u64;
-
-                        *position += read;
-
-                        return if is_end {
-                            ReadRefResult::Ref(&buf[start..])
+                        return if is_amp {
+                            ReadRefResult::UpToRef(&buf[start..])
                         } else {
                             ReadRefResult::UpToMarkup(&buf[start..])
                         };
@@ -201,8 +195,10 @@ macro_rules! impl_buffered_source {
             buf: &'b mut Vec<u8>,
             position: &mut u64,
         ) -> Result<&'b [u8]> {
-            let mut read = 0;
+            let mut read = 1;
             let start = buf.len();
+            // '<' was consumed in peek_one(), but not placed in buf
+            buf.push(b'<');
             loop {
                 let available = match self $(.$reader)? .fill_buf() $(.$await)? {
                     Ok(n) if n.is_empty() => break,
@@ -215,11 +211,11 @@ macro_rules! impl_buffered_source {
                 };
 
                 if let Some(i) = parser.feed(available) {
-                    buf.extend_from_slice(&available[..i]);
+                    let used = i + 1; // +1 for `>`
+                    buf.extend_from_slice(&available[..used]);
 
-                    // +1 for `>` which we do not include
-                    self $(.$reader)? .consume(i + 1);
-                    read += i as u64 + 1;
+                    self $(.$reader)? .consume(used);
+                    read += used as u64;
 
                     *position += read;
                     return Ok(&buf[start..]);
@@ -234,7 +230,7 @@ macro_rules! impl_buffered_source {
             }
 
             *position += read;
-            Err(Error::Syntax(P::eof_error()))
+            Err(Error::Syntax(parser.eof_error(&buf[start..])))
         }
 
         #[inline]
@@ -243,49 +239,55 @@ macro_rules! impl_buffered_source {
             buf: &'b mut Vec<u8>,
             position: &mut u64,
         ) -> Result<(BangType, &'b [u8])> {
-            // Peeked one bang ('!') before being called, so it's guaranteed to
-            // start with it.
+            // Peeked '<!' before being called, so it's guaranteed to start with it.
             let start = buf.len();
-            let mut read = 1;
+            let mut read = 2;
+            // '<' was consumed in peek_one(), but not placed in buf
+            buf.push(b'<');
             buf.push(b'!');
             self $(.$reader)? .consume(1);
 
-            let mut bang_type = BangType::new(self.peek_one() $(.$await)? ?)?;
+            let mut bang_type = loop {
+                break match self $(.$reader)? .fill_buf() $(.$await)? {
+                    Ok(n) => BangType::new(n.first().cloned())?,
+                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => continue,
+                    Err(e) => return Err(Error::Io(e.into())),
+                };
+            };
 
             loop {
-                match self $(.$reader)? .fill_buf() $(.$await)? {
-                    // Note: Do not update position, so the error points to
-                    // somewhere sane rather than at the EOF
+                let available = match self $(.$reader)? .fill_buf() $(.$await)? {
                     Ok(n) if n.is_empty() => break,
-                    Ok(available) => {
-                        // We only parse from start because we don't want to consider
-                        // whatever is in the buffer before the bang element
-                        if let Some((consumed, used)) = bang_type.parse(&buf[start..], available) {
-                            buf.extend_from_slice(consumed);
-
-                            self $(.$reader)? .consume(used);
-                            read += used as u64;
-
-                            *position += read;
-                            return Ok((bang_type, &buf[start..]));
-                        } else {
-                            buf.extend_from_slice(available);
-
-                            let used = available.len();
-                            self $(.$reader)? .consume(used);
-                            read += used as u64;
-                        }
-                    }
+                    Ok(n) => n,
                     Err(ref e) if e.kind() == io::ErrorKind::Interrupted => continue,
                     Err(e) => {
                         *position += read;
                         return Err(Error::Io(e.into()));
                     }
+                };
+                // We only parse from start because we don't want to consider
+                // whatever is in the buffer before the bang element
+                if let Some(i) = bang_type.feed(&buf[start..], available) {
+                    let consumed = i + 1; // +1 for `>`
+                    buf.extend_from_slice(&available[..consumed]);
+
+                    self $(.$reader)? .consume(consumed);
+                    read += consumed as u64;
+
+                    *position += read;
+                    return Ok((bang_type, &buf[start..]));
                 }
+
+                // The `>` symbol not yet found, continue reading
+                buf.extend_from_slice(available);
+
+                let used = available.len();
+                self $(.$reader)? .consume(used);
+                read += used as u64;
             }
 
             *position += read;
-            Err(bang_type.to_err().into())
+            Err(Error::Syntax(bang_type.to_err()))
         }
 
         #[inline]
@@ -310,13 +312,17 @@ macro_rules! impl_buffered_source {
 
         #[inline]
         $($async)? fn peek_one(&mut self) -> io::Result<Option<u8>> {
-            loop {
+            // That method is called only when available buffer starts from '<'
+            // We need to consume it
+            self $(.$reader)? .consume(1);
+            let available = loop {
                 break match self $(.$reader)? .fill_buf() $(.$await)? {
-                    Ok(n) => Ok(n.first().cloned()),
+                    Ok(n) => n,
                     Err(ref e) if e.kind() == io::ErrorKind::Interrupted => continue,
-                    Err(e) => Err(e),
+                    Err(e) => return Err(e),
                 };
-            }
+            };
+            Ok(available.first().cloned())
         }
     };
 }
@@ -480,6 +486,88 @@ impl<R: BufRead> Reader<R> {
             buf.clear();
         }))
     }
+
+    /// Reads content between start and end tags, including any markup using
+    /// provided buffer as intermediate storage for events content. This function
+    /// is supposed to be called after you already read a [`Start`] event.
+    ///
+    /// Manages nested cases where parent and child elements have the _literally_
+    /// same name.
+    ///
+    /// This method does not unescape read data, instead it returns content
+    /// "as is" of the XML document. This is because it has no idea what text
+    /// it reads, and if, for example, it contains CDATA section, attempt to
+    /// unescape it content will spoil data.
+    ///
+    /// If your reader created from a string slice or byte array slice, it is
+    /// better to use [`read_text()`] method, because it will not copy bytes
+    /// into intermediate buffer.
+    ///
+    /// # Examples
+    ///
+    /// This example shows, how you can read a HTML content from your XML document.
+    ///
+    /// ```
+    /// # use pretty_assertions::assert_eq;
+    /// # use std::borrow::Cow;
+    /// use quick_xml::events::{BytesStart, Event};
+    /// use quick_xml::reader::Reader;
+    ///
+    /// let mut reader = Reader::from_reader("
+    ///     <html>
+    ///         <title>This is a HTML text</title>
+    ///         <p>Usual XML rules does not apply inside it
+    ///         <p>For example, elements not needed to be &quot;closed&quot;
+    ///     </html>
+    /// ".as_bytes());
+    /// reader.config_mut().trim_text(true);
+    ///
+    /// let start = BytesStart::new("html");
+    /// let end   = start.to_end().into_owned();
+    ///
+    /// let mut buf = Vec::new();
+    ///
+    /// // First, we read a start event...
+    /// assert_eq!(reader.read_event_into(&mut buf).unwrap(), Event::Start(start));
+    /// // ...and disable checking of end names because we expect HTML further...
+    /// reader.config_mut().check_end_names = false;
+    ///
+    /// // ...then, we could read text content until close tag.
+    /// // This call will correctly handle nested <html> elements.
+    /// let text = reader.read_text_into(end.name(), &mut buf).unwrap();
+    /// let text = text.decode().unwrap();
+    /// assert_eq!(text, r#"
+    ///         <title>This is a HTML text</title>
+    ///         <p>Usual XML rules does not apply inside it
+    ///         <p>For example, elements not needed to be &quot;closed&quot;
+    ///     "#);
+    /// assert!(matches!(text, Cow::Borrowed(_)));
+    ///
+    /// // Now we can enable checks again
+    /// reader.config_mut().check_end_names = true;
+    ///
+    /// // At the end we should get an Eof event, because we ate the whole XML
+    /// assert_eq!(reader.read_event_into(&mut buf).unwrap(), Event::Eof);
+    /// ```
+    ///
+    /// [`Start`]: Event::Start
+    /// [`read_text()`]: Self::read_text()
+    pub fn read_text_into<'b>(
+        &mut self,
+        end: QName,
+        buf: &'b mut Vec<u8>,
+    ) -> Result<BytesText<'b>> {
+        let start = buf.len();
+        let span = read_to_end!(self, end, buf, read_event_impl, {});
+
+        let len = span.end - span.start;
+        // SAFETY: `buf` may contain not more than isize::MAX bytes and because it is
+        // not cleared when reading event, length of the returned span should fit into
+        // usize (because otherwise we panic at appending to the buffer before that point)
+        let end = start + len as usize;
+
+        Ok(BytesText::wrap(&buf[start..end], self.decoder()))
+    }
 }
 
 impl Reader<BufReader<File>> {
@@ -506,6 +594,7 @@ mod test {
         read_event_impl,
         read_until_close,
         identity,
+        1,
         &mut Vec::new()
     );
 }

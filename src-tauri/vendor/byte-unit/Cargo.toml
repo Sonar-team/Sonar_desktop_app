@@ -10,10 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2021"
-rust-version = "1.82"
+edition = "2024"
+rust-version = "1.85"
 name = "byte-unit"
-version = "5.2.0"
+version = "5.2.3"
 authors = ["Magic Len <len@magiclen.org>"]
 build = false
 include = [

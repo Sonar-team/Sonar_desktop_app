@@ -46,6 +46,10 @@
     feature(allow_internal_unstable),
     allow(internal_features)
 )]
+#![cfg_attr(
+    all(not(debug_assertions), not(feature = "std"), target_arch = "wasm64"),
+    feature(simd_wasm64)
+)]
 #![doc(html_root_url = "https://docs.rs/wasm-bindgen/0.2")]
 
 extern crate alloc;
@@ -88,14 +92,14 @@ const _: () = {
 
 macro_rules! externs {
     ($(#[$attr:meta])* extern "C" { $(fn $name:ident($($args:tt)*) -> $ret:ty;)* }) => (
-        #[cfg(target_family = "wasm")]
+        #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
         $(#[$attr])*
         extern "C" {
             $(fn $name($($args)*) -> $ret;)*
         }
 
         $(
-            #[cfg(not(target_family = "wasm"))]
+            #[cfg(not(all(target_family = "wasm", not(target_os = "wasi"))))]
             #[allow(unused_variables)]
             unsafe extern "C" fn $name($($args)*) -> $ret {
                 panic!("function not implemented on non-wasm32 targets")
@@ -136,13 +140,16 @@ mod externref;
 use externref::__wbindgen_externref_heap_live_count;
 
 pub use crate::__rt::marker::ErasableGeneric;
-pub use crate::convert::JsGeneric;
+pub use crate::convert::{IntoJsGeneric, JsGeneric};
 
 #[doc(hidden)]
 pub mod handler;
 
 mod cast;
 pub use crate::cast::JsCast;
+
+mod parent;
+pub use crate::parent::Parent;
 
 mod cache;
 pub use cache::intern::{intern, unintern};
@@ -1139,34 +1146,52 @@ impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
     }
 }
 
-// `usize` and `isize` have to be treated a bit specially, because we know that
-// they're 32-bit but the compiler conservatively assumes they might be bigger.
-// So, we have to manually forward to the `u32`/`i32` versions.
+// Converts a JS `Array` whose elements all convert via `T::try_from_js_value`.
+// Rejects non-array values and arrays containing any element that fails to
+// convert. Mirrors the `Array`-shaped representation used by the static ABI
+// path in `js_value_vector_from_abi`.
+impl<T: TryFromJsValue> TryFromJsValue for Vec<T> {
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        if !__wbindgen_is_array(value) {
+            return None;
+        }
+        let len = __wbindgen_reflect_get(value, &JsValue::from_str("length")).as_f64()? as u32;
+        let mut out = Vec::with_capacity(len as usize);
+        for i in 0..len {
+            let elem = __wbindgen_reflect_get(value, &JsValue::from_f64(i as f64));
+            out.push(T::try_from_js_value(elem).ok()?);
+        }
+        Some(out)
+    }
+}
+
+// `usize` and `isize` use the public pointer-sized JS number ABI, which is
+// `u32`/`i32` on wasm32 and `f64` on wasm64.
 impl PartialEq<usize> for JsValue {
     #[inline]
     fn eq(&self, other: &usize) -> bool {
-        *self == (*other as u32)
+        *self == (*other as crate::__rt::WasmWordRepr)
     }
 }
 
 impl From<usize> for JsValue {
     #[inline]
     fn from(n: usize) -> Self {
-        Self::from(n as u32)
+        Self::from(n as crate::__rt::WasmWordRepr)
     }
 }
 
 impl PartialEq<isize> for JsValue {
     #[inline]
     fn eq(&self, other: &isize) -> bool {
-        *self == (*other as i32)
+        *self == (*other as crate::__rt::WasmSignedWordRepr)
     }
 }
 
 impl From<isize> for JsValue {
     #[inline]
     fn from(n: isize) -> Self {
-        Self::from(n as i32)
+        Self::from(n as crate::__rt::WasmSignedWordRepr)
     }
 }
 
@@ -1191,6 +1216,9 @@ impl TryFromJsValue for usize {
 extern "C" {
     #[wasm_bindgen(js_namespace = Array, js_name = isArray)]
     fn __wbindgen_is_array(v: &JsValue) -> bool;
+
+    #[wasm_bindgen(js_namespace = Reflect, js_name = get)]
+    fn __wbindgen_reflect_get(target: &JsValue, key: &JsValue) -> JsValue;
 
     #[wasm_bindgen(js_name = BigInt)]
     fn __wbindgen_bigint_from_str(s: &str) -> JsValue;
@@ -1272,6 +1300,7 @@ extern "C" {
     fn __wbindgen_exports() -> JsValue;
     fn __wbindgen_memory() -> JsValue;
     fn __wbindgen_module() -> JsValue;
+    fn __wbindgen_instance() -> JsValue;
     fn __wbindgen_function_table() -> JsValue;
 
     fn __wbindgen_reinit();
@@ -1541,9 +1570,18 @@ pub fn anyref_heap_live_count() -> u32 {
 pub trait UnwrapThrowExt<T>: Sized {
     /// Unwrap this `Option` or `Result`, but instead of panicking on failure,
     /// throw an exception to JavaScript.
-    #[cfg_attr(any(debug_assertions, not(target_family = "wasm")), track_caller)]
+    #[cfg_attr(
+        any(
+            debug_assertions,
+            not(all(target_family = "wasm", not(target_os = "wasi")))
+        ),
+        track_caller
+    )]
     fn unwrap_throw(self) -> T {
-        if cfg!(all(debug_assertions, target_family = "wasm")) {
+        if cfg!(all(
+            debug_assertions,
+            all(target_family = "wasm", not(target_os = "wasi"))
+        )) {
             let loc = core::panic::Location::caller();
             let msg = alloc::format!(
                 "called `{}::unwrap_throw()` ({}:{}:{})",
@@ -1561,7 +1599,13 @@ pub trait UnwrapThrowExt<T>: Sized {
     /// Unwrap this container's `T` value, or throw an error to JS with the
     /// given message if the `T` value is unavailable (e.g. an `Option<T>` is
     /// `None`).
-    #[cfg_attr(any(debug_assertions, not(target_family = "wasm")), track_caller)]
+    #[cfg_attr(
+        any(
+            debug_assertions,
+            not(all(target_family = "wasm", not(target_os = "wasi")))
+        ),
+        track_caller
+    )]
     fn expect_throw(self, message: &str) -> T;
 }
 
@@ -1569,7 +1613,7 @@ impl<T> UnwrapThrowExt<T> for Option<T> {
     fn unwrap_throw(self) -> T {
         const MSG: &str = "called `Option::unwrap_throw()` on a `None` value";
 
-        if cfg!(target_family = "wasm") {
+        if cfg!(all(target_family = "wasm", not(target_os = "wasi"))) {
             if let Some(val) = self {
                 val
             } else if cfg!(debug_assertions) {
@@ -1586,7 +1630,7 @@ impl<T> UnwrapThrowExt<T> for Option<T> {
     }
 
     fn expect_throw(self, message: &str) -> T {
-        if cfg!(target_family = "wasm") {
+        if cfg!(all(target_family = "wasm", not(target_os = "wasi"))) {
             if let Some(val) = self {
                 val
             } else if cfg!(debug_assertions) {
@@ -1611,7 +1655,7 @@ where
     fn unwrap_throw(self) -> T {
         const MSG: &str = "called `Result::unwrap_throw()` on an `Err` value";
 
-        if cfg!(target_family = "wasm") {
+        if cfg!(all(target_family = "wasm", not(target_os = "wasi"))) {
             match self {
                 Ok(val) => val,
                 Err(err) => {
@@ -1636,7 +1680,7 @@ where
     }
 
     fn expect_throw(self, message: &str) -> T {
-        if cfg!(target_family = "wasm") {
+        if cfg!(all(target_family = "wasm", not(target_os = "wasi"))) {
             match self {
                 Ok(val) => val,
                 Err(err) => {
@@ -1669,6 +1713,15 @@ pub fn module() -> JsValue {
     __wbindgen_module()
 }
 
+/// Returns a handle to this Wasm instance's `WebAssembly.Instance`.
+/// This is only available when the final Wasm app is built with
+/// `--target no-modules`, `--target web`, `--target deno` or `--target nodejs`.
+/// It is unavailable for `--target bundler`.
+pub fn instance() -> JsValue {
+    __wbindgen_instance()
+}
+
+// TODO: deprecate next major
 /// Returns a handle to this Wasm instance's `WebAssembly.Instance.prototype.exports`
 pub fn exports() -> JsValue {
     __wbindgen_exports()
@@ -1771,6 +1824,7 @@ impl<T> DerefMut for Clamped<T> {
 ///
 /// ```
 #[derive(Clone, Debug)]
+#[repr(transparent)]
 pub struct JsError {
     value: JsValue,
 }

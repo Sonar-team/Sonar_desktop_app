@@ -142,9 +142,28 @@ impl BroCatli {
         if 16 + NUM_STREAM_HEADER_BYTES > buffer.len() {
             return Err(());
         }
+        let last_bytes_len = buffer[8];
+        let last_byte_bit_offset = buffer[10];
+        let window_size = buffer[11];
+        let has_new_stream_pending = (buffer[9] & (1 << 6)) != 0;
+        let has_num_bytes_written = (buffer[9] & (1 << 7)) != 0;
+        if last_bytes_len > 2 || last_byte_bit_offset >= 8 {
+            return Err(());
+        }
+        if window_size != 0 && BroCatli::try_new_with_window_size(window_size).is_err() {
+            return Err(());
+        }
+        if has_new_stream_pending {
+            if usize::from(buffer[12]) > NUM_STREAM_HEADER_BYTES {
+                return Err(());
+            }
+            if has_num_bytes_written && buffer[13] > buffer[12] {
+                return Err(());
+            }
+        }
         let mut possible_new_stream_pending = NewStreamData {
             num_bytes_read: buffer[12],
-            num_bytes_written: if (buffer[9] & (1 << 7)) != 0 {
+            num_bytes_written: if has_num_bytes_written {
                 Some(buffer[13])
             } else {
                 None
@@ -155,18 +174,18 @@ impl BroCatli {
         possible_new_stream_pending
             .bytes_so_far
             .clone_from_slice(&buffer[16..16 + xlen]);
-        let new_stream_pending: Option<NewStreamData> = if (buffer[9] & (1 << 6)) != 0 {
+        let new_stream_pending: Option<NewStreamData> = if has_new_stream_pending {
             Some(possible_new_stream_pending)
         } else {
             None
         };
         let mut ret = BroCatli {
             last_bytes: [0, 0],
-            last_bytes_len: buffer[8],
+            last_bytes_len,
             last_byte_sanitized: (buffer[9] & 0x1) != 0,
-            last_byte_bit_offset: buffer[10],
+            last_byte_bit_offset,
             any_bytes_emitted: (buffer[9] & (1 << 5)) != 0,
-            window_size: buffer[11],
+            window_size,
             new_stream_pending,
         };
         if ret.last_bytes.len() > 8 {
@@ -200,7 +219,16 @@ impl BroCatli {
         }
         Ok(())
     }
+    /// Creates a `BroCatli` with an initial window size.
+    ///
+    /// Panics for invalid window sizes. Use `try_new_with_window_size` to detect
+    /// invalid input without panicking.
     pub fn new_with_window_size(log_window_size: u8) -> BroCatli {
+        Self::try_new_with_window_size(log_window_size).expect("invalid brotli window size")
+    }
+
+    /// Creates a `BroCatli` with an initial window size, or returns an error for invalid sizes.
+    pub fn try_new_with_window_size(log_window_size: u8) -> Result<BroCatli, BroCatliResult> {
         // in this case setup the last_bytes of the stream to perfectly mimic what would
         // appear in an empty stream with the selected window size...
         // this means the window size followed by 2 sequential 1 bits (LAST_METABLOCK, EMPTY)
@@ -227,14 +255,12 @@ impl BroCatli {
                 12 => last_bytes = [0x41 | 0x80, 1],
                 11 => last_bytes = [0x31 | 0x80, 1],
                 10 => last_bytes = [0x21 | 0x80, 1],
-                _ => {
-                    assert_eq!(log_window_size, 17);
-                    last_bytes = [0x1 | 0x80, 1];
-                } // 17
+                17 => last_bytes = [0x1 | 0x80, 1],
+                _ => return Err(BroCatliResult::InvalidWindowSize),
             }
             last_bytes_len = 2;
         }
-        BroCatli {
+        Ok(BroCatli {
             last_bytes,
             last_bytes_len,
             last_byte_bit_offset: 0,
@@ -242,7 +268,7 @@ impl BroCatli {
             any_bytes_emitted: false,
             new_stream_pending: None,
             window_size: log_window_size,
-        }
+        })
     }
 
     pub fn new_brotli_file(&mut self) {
@@ -358,6 +384,9 @@ impl BroCatli {
                     ((usize::from(self.last_byte_bit_offset) + varlen_offset - window_offset) + 7)
                         / 8;
                 let whole_byte_source = (varlen_offset + 7) / 8;
+                if whole_byte_source > usize::from(new_stream_pending.num_bytes_read) {
+                    return BroCatliResult::BrotliFileNotCraftedForConcatenation;
+                }
                 let num_whole_bytes_to_copy =
                     usize::from(new_stream_pending.num_bytes_read) - whole_byte_source;
                 for aligned_index in 0..num_whole_bytes_to_copy {
@@ -579,12 +608,21 @@ impl BroCatli {
 mod test {
     use super::BroCatli;
 
+    fn make_valid_serialized_buffer(buffer: &mut [u8]) {
+        buffer[8] = 2;
+        buffer[9] = (1 << 6) | (1 << 7);
+        buffer[10] = 7;
+        buffer[11] = 22;
+        buffer[12] = super::NUM_STREAM_HEADER_BYTES as u8;
+        buffer[13] = 3;
+    }
+
     #[test]
     fn test_deserialization() {
         let broccoli = BroCatli {
             new_stream_pending: Some(super::NewStreamData {
                 bytes_so_far: [0x33; super::NUM_STREAM_HEADER_BYTES],
-                num_bytes_read: 16,
+                num_bytes_read: super::NUM_STREAM_HEADER_BYTES as u8,
                 num_bytes_written: Some(3),
             }),
             last_bytes: [0x45, 0x46],
@@ -620,7 +658,7 @@ mod test {
         let broccoli = BroCatli {
             new_stream_pending: Some(super::NewStreamData {
                 bytes_so_far: [0x33; super::NUM_STREAM_HEADER_BYTES],
-                num_bytes_read: 16,
+                num_bytes_read: super::NUM_STREAM_HEADER_BYTES as u8,
                 num_bytes_written: Some(3),
             }),
             last_bytes: [0x45, 0x46],
@@ -661,6 +699,7 @@ mod test {
         for (index, item) in buffer.iter_mut().enumerate() {
             *item = index as u8;
         }
+        make_valid_serialized_buffer(&mut buffer[..]);
         broccoli = BroCatli::deserialize_from_buffer(&buffer).unwrap();
         broccoli.serialize_to_buffer(&mut buffer2[..]).unwrap();
         broccoli = BroCatli::deserialize_from_buffer(&buffer2).unwrap();
@@ -672,6 +711,7 @@ mod test {
         for (index, item) in buffer.iter_mut().enumerate() {
             *item = 0xff ^ index as u8;
         }
+        make_valid_serialized_buffer(&mut buffer[..]);
         broccoli = BroCatli::deserialize_from_buffer(&buffer).unwrap();
         broccoli.serialize_to_buffer(&mut buffer2[..]).unwrap();
         broccoli = BroCatli::deserialize_from_buffer(&buffer2).unwrap();
@@ -680,6 +720,31 @@ mod test {
         }
         broccoli.serialize_to_buffer(&mut buffer[..]).unwrap();
         assert_eq!(&buffer[..], &buffer2[..]);
+    }
+    #[test]
+    fn test_deserialization_rejects_invalid_state_fields() {
+        let mut buffer = [0u8; 248];
+        make_valid_serialized_buffer(&mut buffer[..]);
+
+        let mut invalid = buffer;
+        invalid[8] = 3;
+        assert!(BroCatli::deserialize_from_buffer(&invalid[..]).is_err());
+
+        invalid = buffer;
+        invalid[10] = 8;
+        assert!(BroCatli::deserialize_from_buffer(&invalid[..]).is_err());
+
+        invalid = buffer;
+        invalid[11] = 9;
+        assert!(BroCatli::deserialize_from_buffer(&invalid[..]).is_err());
+
+        invalid = buffer;
+        invalid[12] = super::NUM_STREAM_HEADER_BYTES as u8 + 1;
+        assert!(BroCatli::deserialize_from_buffer(&invalid[..]).is_err());
+
+        invalid = buffer;
+        invalid[13] = buffer[12] + 1;
+        assert!(BroCatli::deserialize_from_buffer(&invalid[..]).is_err());
     }
     #[test]
     fn test_cat_empty_stream() {
@@ -709,5 +774,65 @@ mod test {
         assert_eq!(res, super::BroCatliResult::Success);
         assert_ne!(out_offset, 0);
         assert_eq!(&out_bytes[..out_offset], &[b';']);
+    }
+    #[test]
+    fn test_cat_truncated_metadata_header_fails() {
+        let empty_catable = [b';'];
+        let mut bcat = super::BroCatli::new_with_window_size(22);
+        let mut in_offset = 0usize;
+        let mut out_bytes = [0u8; 32];
+        let mut out_offset = 0usize;
+        let mut res = bcat.stream(
+            &empty_catable[..],
+            &mut in_offset,
+            &mut out_bytes[..],
+            &mut out_offset,
+        );
+        assert_eq!(res, super::BroCatliResult::NeedsMoreInput);
+
+        let truncated_metadata = [0x71, 0x1b, 0, 0];
+        bcat.new_brotli_file();
+        in_offset = 0;
+        out_offset = 0;
+        res = bcat.stream(
+            &truncated_metadata[..],
+            &mut in_offset,
+            &mut out_bytes[..],
+            &mut out_offset,
+        );
+        assert_eq!(
+            res,
+            super::BroCatliResult::BrotliFileNotCraftedForConcatenation
+        );
+    }
+    #[test]
+    fn test_try_new_with_window_size_invalid_returns_error() {
+        use super::BroCatliResult;
+        // Values 0..=9 are invalid window sizes and must return an error, not panic.
+        for ws in 0u8..=9 {
+            match BroCatli::try_new_with_window_size(ws) {
+                Err(BroCatliResult::InvalidWindowSize) => {}
+                Err(_) => panic!("window_size {} returned wrong error variant", ws),
+                Ok(_) => panic!("window_size {} should be rejected", ws),
+            }
+            #[cfg(feature = "std")]
+            assert!(
+                std::panic::catch_unwind(|| BroCatli::new_with_window_size(ws)).is_err(),
+                "window_size {} should panic through the legacy constructor",
+                ws
+            );
+        }
+    }
+    #[test]
+    fn test_new_with_window_size_valid() {
+        // Values 10..=24 and >24 are valid window sizes.
+        for ws in 10u8..=30 {
+            let _ = BroCatli::new_with_window_size(ws);
+            assert!(
+                BroCatli::try_new_with_window_size(ws).is_ok(),
+                "window_size {} should be accepted",
+                ws
+            );
+        }
     }
 }

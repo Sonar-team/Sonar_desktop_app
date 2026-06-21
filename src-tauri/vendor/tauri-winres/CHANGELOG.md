@@ -1,5 +1,16 @@
 # Changelog
 
+## \[0.3.6]
+
+- `compile_for` didn't work at all
+  - [119cb8a](https://github.com/tauri-apps/winres/commit/119cb8a98952a4b19f49cfba9e7c5fcd35e81e4f) fix: `compile_for` doesn't work at all ([#41](https://github.com/tauri-apps/winres/pull/41)) on 2026-04-27
+- Update toml to 1.0 and increased the MSRV from 1.66 to 1.76 to match it
+  - [1ad418b](https://github.com/tauri-apps/winres/commit/1ad418b6e510097187d8ca7d1fb0f1ca4ec2f829) chore(deps): update toml to 0.9 and bump MSRV ([#26](https://github.com/tauri-apps/winres/pull/26)) on 2025-07-31
+  - [fc844a3](https://github.com/tauri-apps/winres/commit/fc844a35b130d00596e0c737c13572eec1ea8174) publish new versions ([#27](https://github.com/tauri-apps/winres/pull/27)) on 2025-07-31
+  - [fca959a](https://github.com/tauri-apps/winres/commit/fca959ad5f5f1207eb1d75cf685db14a50e672d1) chore(deps): update rust crate toml to v1 and bump MSRV ([#37](https://github.com/tauri-apps/winres/pull/37)) on 2026-04-25
+- Relaxed `windows-sys` dependency to `>=0.59, <=0.61` instead of `0.59`
+  - [2832773](https://github.com/tauri-apps/winres/commit/2832773c1eaa0088bcf47139e446bd0c16c583be) chore(deps): relax windows-sys versions to a range `>=0.59, <=0.61` ([#33](https://github.com/tauri-apps/winres/pull/33)) on 2026-04-25
+
 ## \[0.3.5]
 
 - llvm-rc doesn't support UNC path, so de-UNC as a workaround

@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.81"
+rust-version = "1.88.0"
 name = "plist"
-version = "1.8.0"
+version = "1.9.0"
 authors = ["Ed Barnard <eabarnard@gmail.com>"]
 build = false
 exclude = ["/tests/data"]
@@ -56,7 +56,7 @@ version = "0.22.0"
 version = "2.1.0"
 
 [dependencies.quick_xml]
-version = "0.38.0"
+version = "0.39.2"
 package = "quick-xml"
 
 [dependencies.serde]
@@ -64,7 +64,7 @@ version = "1.0.2"
 optional = true
 
 [dependencies.time]
-version = "0.3.30"
+version = "0.3.47"
 features = [
     "parsing",
     "formatting",

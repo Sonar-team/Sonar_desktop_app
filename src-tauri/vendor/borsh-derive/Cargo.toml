@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.77.0"
 name = "borsh-derive"
-version = "1.6.1"
+version = "1.7.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 build = false
 exclude = ["*.snap"]
