@@ -462,7 +462,7 @@ mod recvfrom {
         assert_eq!(AddressFamily::Inet, from.unwrap().family().unwrap());
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(linux_android)]
     mod udp_offload {
         use super::*;
         use nix::sys::socket::sockopt::{UdpGroSegment, UdpGsoSegment};
@@ -921,11 +921,21 @@ pub fn test_scm_rights() {
 
 // 1. Disable the test on emulated platforms due to not enabled support of
 //    AF_ALG in QEMU from rust cross
-// 2. Disable the test on aarch64/Linux CI because bind() fails with ENOENT
+// 2. Disable the test on aarch64/Linux, s390x/Linux, and powerpc64le/Linux
+//    because bind() fails with ENOENT:
 //    https://github.com/nix-rust/nix/issues/1352
 #[cfg(linux_android)]
 #[cfg_attr(
-    any(qemu, all(target_os = "linux", target_arch = "aarch64")),
+    any(
+        qemu,
+        all(target_os = "linux", target_arch = "aarch64"),
+        all(target_os = "linux", target_arch = "s390x"),
+        all(
+            target_os = "linux",
+            target_arch = "powerpc64",
+            target_endian = "little"
+        ),
+    ),
     ignore
 )]
 #[test]
@@ -1036,7 +1046,6 @@ pub fn test_af_alg_aead() {
     use nix::unistd::read;
     use std::io::IoSlice;
 
-    skip_if_cirrus!("Fails for an unknown reason Cirrus CI.  Bug #1352");
     // Travis's seccomp profile blocks AF_ALG
     // https://docs.docker.com/engine/security/seccomp/
     skip_if_seccomp!(test_af_alg_aead);
@@ -2108,7 +2117,10 @@ pub fn test_recvif_ipv4() {
     }
 }
 
-#[cfg(any(linux_android, target_os = "freebsd"))]
+#[cfg(any(
+    all(linux_android, not(target_env = "uclibc")),
+    target_os = "freebsd"
+))]
 #[cfg_attr(qemu, ignore)]
 #[test]
 pub fn test_recvif_ipv6() {

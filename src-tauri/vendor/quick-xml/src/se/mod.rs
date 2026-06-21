@@ -25,10 +25,8 @@ macro_rules! write_primitive {
         write_primitive!(serialize_u32(u32));
         write_primitive!(serialize_u64(u64));
 
-        serde_if_integer128! {
-            write_primitive!(serialize_i128(i128));
-            write_primitive!(serialize_u128(u128));
-        }
+        write_primitive!(serialize_i128(i128));
+        write_primitive!(serialize_u128(u128));
 
         write_primitive!(serialize_f32(f32));
         write_primitive!(serialize_f64(f64));
@@ -84,7 +82,6 @@ use self::element::{ElementSerializer, Map, Struct, Tuple};
 use crate::de::TEXT_KEY;
 use crate::writer::{Indentation, ToFmtWrite};
 use serde::ser::{self, Serialize};
-use serde::serde_if_integer128;
 use std::fmt::Write;
 use std::str::from_utf8;
 
@@ -376,6 +373,26 @@ pub enum QuoteLevel {
     Minimal,
 }
 
+/// Specifies how empty elements are serialized.
+/// The default is self-closed with no space before the slash.
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
+pub enum EmptyElementHandling {
+    /// Empty elements will be written as `<element/>`. This is the default behavior.
+    #[default]
+    SelfClosed,
+
+    /// The same, as [`SelfClosed`], but an extra space will be written before
+    /// the slash, so empty elements will be written as `<element />`.
+    /// This is recommended by the [W3C guidelines] for XHTML.
+    ///
+    /// [`SelfClosed`]: Self::SelfClosed
+    /// [W3C guidelines]: https://www.w3.org/TR/xhtml1/#guidelines
+    SelfClosedWithSpace,
+
+    /// Empty elements will be expanded, as in: `<element></element>`.
+    Expanded,
+}
+
 /// Classification of the type written by the serializer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WriteResult {
@@ -571,7 +588,7 @@ impl<'w, 'r, W: Write> Serializer<'w, 'r, W> {
                 write_indent: false,
                 text_format: TextFormat::Text,
                 allow_primitive: true,
-                expand_empty_elements: false,
+                empty_element_handling: EmptyElementHandling::SelfClosed,
             },
             root_tag: None,
         }
@@ -638,13 +655,72 @@ impl<'w, 'r, W: Write> Serializer<'w, 'r, W> {
                 write_indent: false,
                 text_format: TextFormat::Text,
                 allow_primitive: true,
-                expand_empty_elements: false,
+                empty_element_handling: EmptyElementHandling::SelfClosed,
             },
             root_tag: root_tag.map(XmlName::try_from).transpose()?,
         })
     }
 
-    /// Enable or disable expansion of empty elements. Defaults to `false`.
+    /// Enable or disable expansion of empty elements. Defaults to [`EmptyElementHandling::SelfClosed`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use pretty_assertions::assert_eq;
+    /// # use serde::Serialize;
+    /// # use quick_xml::se::{Serializer, EmptyElementHandling};
+    /// #
+    /// #[derive(Debug, PartialEq, Serialize)]
+    /// struct Struct {
+    ///     question: Option<String>,
+    /// }
+    ///
+    /// let data = Struct {
+    ///     question: None,
+    /// };
+    ///
+    /// {
+    ///     let mut buffer = String::new();
+    ///     let mut ser = Serializer::new(&mut buffer);
+    ///     ser.empty_element_handling(EmptyElementHandling::SelfClosed);
+    ///     data.serialize(ser).unwrap();
+    ///     assert_eq!(
+    ///         buffer,
+    ///         "<Struct><question/></Struct>"
+    ///     );
+    /// }
+    ///
+    /// {
+    ///     let mut buffer = String::new();
+    ///     let mut ser = Serializer::new(&mut buffer);
+    ///     ser.empty_element_handling(EmptyElementHandling::SelfClosedWithSpace);
+    ///     data.serialize(ser).unwrap();
+    ///     assert_eq!(
+    ///         buffer,
+    ///         "<Struct><question /></Struct>"
+    ///     );
+    /// }
+    ///
+    /// {
+    ///     let mut buffer = String::new();
+    ///     let mut ser = Serializer::new(&mut buffer);
+    ///     ser.empty_element_handling(EmptyElementHandling::Expanded);
+    ///     data.serialize(ser).unwrap();
+    ///     assert_eq!(
+    ///         buffer,
+    ///         "<Struct><question></question></Struct>"
+    ///     );
+    /// }
+    /// ```
+    pub fn empty_element_handling(&mut self, handling: EmptyElementHandling) -> &mut Self {
+        self.ser.empty_element_handling = handling;
+        self
+    }
+
+    /// Enable or disable expansion of empty elements (without adding space before `/>`).
+    ///
+    /// This is the historycally first way to configure empty element handling. You can use
+    /// [`empty_element_handling`](Self::empty_element_handling) for more control.
     ///
     /// # Examples
     ///
@@ -652,7 +728,7 @@ impl<'w, 'r, W: Write> Serializer<'w, 'r, W> {
     /// # use pretty_assertions::assert_eq;
     /// # use serde::Serialize;
     /// # use quick_xml::se::Serializer;
-    ///
+    /// #
     /// #[derive(Debug, PartialEq, Serialize)]
     /// struct Struct {
     ///     question: Option<String>,
@@ -663,7 +739,7 @@ impl<'w, 'r, W: Write> Serializer<'w, 'r, W> {
     /// ser.expand_empty_elements(true);
     ///
     /// let data = Struct {
-    ///   question: None,
+    ///     question: None,
     /// };
     ///
     /// data.serialize(ser).unwrap();
@@ -673,8 +749,11 @@ impl<'w, 'r, W: Write> Serializer<'w, 'r, W> {
     /// );
     /// ```
     pub fn expand_empty_elements(&mut self, expand: bool) -> &mut Self {
-        self.ser.expand_empty_elements = expand;
-        self
+        self.empty_element_handling(if expand {
+            EmptyElementHandling::Expanded
+        } else {
+            EmptyElementHandling::SelfClosed
+        })
     }
 
     /// Set the text format used for serializing text content.
@@ -781,10 +860,8 @@ impl<'w, 'r, W: Write> ser::Serializer for Serializer<'w, 'r, W> {
     forward!(serialize_u32(u32));
     forward!(serialize_u64(u64));
 
-    serde_if_integer128! {
-        forward!(serialize_i128(i128));
-        forward!(serialize_u128(u128));
-    }
+    forward!(serialize_i128(i128));
+    forward!(serialize_u128(u128));
 
     forward!(serialize_f32(f32));
     forward!(serialize_f64(f64));

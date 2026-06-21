@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.74"
 name = "tao"
-version = "0.35.2"
+version = "0.35.3"
 authors = [
     "Tauri Programme within The Commons Conservancy",
     "The winit contributors",

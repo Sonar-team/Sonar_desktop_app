@@ -10,8 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
+edition = "2021"
+rust-version = "1.76"
 name = "embed-resource"
-version = "3.0.8"
+version = "3.0.9"
 authors = [
     "наб <nabijaczleweli@nabijaczleweli.xyz>",
     "Cat Plus Plus <piotrlegnica@piotrl.pl>",
@@ -40,6 +42,7 @@ authors = [
     "Rene Leonhardt",
     "ssrlive",
     "Kan-Ru Chen <kanru@kanru.info>",
+    "Tony <legendmastertony@gmail.com>",
 ]
 build = false
 exclude = ["*.enc"]
@@ -76,7 +79,7 @@ path = "src/main.rs"
 version = "0.4"
 
 [dependencies.toml]
-version = "0.9"
+version = "1"
 
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies.cc]
 version = "1.2"

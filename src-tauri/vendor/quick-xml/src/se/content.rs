@@ -3,11 +3,12 @@
 use crate::de::TEXT_KEY;
 use crate::se::element::{ElementSerializer, Struct, Tuple};
 use crate::se::simple_type::{QuoteTarget, SimpleTypeSerializer};
-use crate::se::{Indent, QuoteLevel, SeError, TextFormat, WriteResult, XmlName};
+use crate::se::{
+    EmptyElementHandling, Indent, QuoteLevel, SeError, TextFormat, WriteResult, XmlName,
+};
 use serde::ser::{
     Impossible, Serialize, SerializeSeq, SerializeTuple, SerializeTupleStruct, Serializer,
 };
-use serde::serde_if_integer128;
 use std::fmt::Write;
 
 macro_rules! write_primitive {
@@ -49,7 +50,7 @@ macro_rules! write_primitive {
 ///     [`SimpleTypeSerializer`] (`$text` fields). In particular, the empty struct
 ///     is serialized as `<variant/>`;
 ///
-/// Usage of empty tags depends on the [`Self::expand_empty_elements`] setting.
+/// Usage of empty tags depends on the [`Self::empty_element_handling`] setting.
 ///
 /// The difference between this serializer and [`SimpleTypeSerializer`] is in how
 /// sequences and maps are serialized. Unlike `SimpleTypeSerializer` it supports
@@ -81,9 +82,8 @@ pub struct ContentSerializer<'w, 'i, W: Write> {
     /// as a text that makes it impossible to distinguish between them during
     /// deserialization. Instead of ambiguous serialization the error is returned.
     pub allow_primitive: bool,
-    // If `true`, then empty elements will be serialized as `<element></element>`
-    // instead of `<element/>`.
-    pub expand_empty_elements: bool,
+    /// Specifies how empty elements are written.
+    pub empty_element_handling: EmptyElementHandling,
 }
 
 impl<'w, 'i, W: Write> ContentSerializer<'w, 'i, W> {
@@ -125,7 +125,7 @@ impl<'w, 'i, W: Write> ContentSerializer<'w, 'i, W> {
             write_indent: self.write_indent,
             text_format: self.text_format,
             allow_primitive,
-            expand_empty_elements: self.expand_empty_elements,
+            empty_element_handling: self.empty_element_handling,
         }
     }
 
@@ -133,17 +133,27 @@ impl<'w, 'i, W: Write> ContentSerializer<'w, 'i, W> {
     #[inline]
     pub(super) fn write_empty(mut self, name: XmlName) -> Result<WriteResult, SeError> {
         self.write_indent()?;
-        if self.expand_empty_elements {
-            self.writer.write_char('<')?;
-            self.writer.write_str(name.0)?;
-            self.writer.write_str("></")?;
-            self.writer.write_str(name.0)?;
-            self.writer.write_char('>')?;
-        } else {
-            self.writer.write_str("<")?;
-            self.writer.write_str(name.0)?;
-            self.writer.write_str("/>")?;
+
+        match self.empty_element_handling {
+            EmptyElementHandling::SelfClosed => {
+                self.writer.write_char('<')?;
+                self.writer.write_str(name.0)?;
+                self.writer.write_str("/>")?;
+            }
+            EmptyElementHandling::SelfClosedWithSpace => {
+                self.writer.write_char('<')?;
+                self.writer.write_str(name.0)?;
+                self.writer.write_str(" />")?;
+            }
+            EmptyElementHandling::Expanded => {
+                self.writer.write_char('<')?;
+                self.writer.write_str(name.0)?;
+                self.writer.write_str("></")?;
+                self.writer.write_str(name.0)?;
+                self.writer.write_char('>')?;
+            }
         }
+
         Ok(WriteResult::Element)
     }
 
@@ -202,10 +212,8 @@ impl<'w, 'i, W: Write> Serializer for ContentSerializer<'w, 'i, W> {
     write_primitive!(serialize_u32(u32));
     write_primitive!(serialize_u64(u64));
 
-    serde_if_integer128! {
-        write_primitive!(serialize_i128(i128));
-        write_primitive!(serialize_u128(u128));
-    }
+    write_primitive!(serialize_i128(i128));
+    write_primitive!(serialize_u128(u128));
 
     write_primitive!(serialize_f32(f32));
     write_primitive!(serialize_f64(f64));
@@ -607,7 +615,7 @@ pub(super) mod tests {
                         write_indent: false,
                         text_format: TextFormat::Text,
                         allow_primitive: true,
-                        expand_empty_elements: false,
+                        empty_element_handling: EmptyElementHandling::SelfClosed,
                     };
 
                     let result = $data.serialize(ser).unwrap();
@@ -631,7 +639,7 @@ pub(super) mod tests {
                         write_indent: false,
                         text_format: TextFormat::Text,
                         allow_primitive: true,
-                        expand_empty_elements: false,
+                        empty_element_handling: EmptyElementHandling::SelfClosed,
                     };
 
                     match $data.serialize(ser).unwrap_err() {
@@ -665,10 +673,8 @@ pub(super) mod tests {
         serialize_as!(u64_:   42000000000000u64   => "42000000000000", Text);
         serialize_as!(usize_: 42000000usize       => "42000000", Text);
 
-        serde_if_integer128! {
-            serialize_as!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000", Text);
-            serialize_as!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000", Text);
-        }
+        serialize_as!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000", Text);
+        serialize_as!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000", Text);
 
         serialize_as!(f32_: 4.2f32 => "4.2", Text);
         serialize_as!(f64_: 4.2f64 => "4.2", Text);
@@ -800,10 +806,8 @@ pub(super) mod tests {
             text!(u64_:   42000000000000u64   => "42000000000000");
             text!(usize_: 42000000usize       => "42000000");
 
-            serde_if_integer128! {
-                text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-            }
+            text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+            text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
             text!(f32_: 4.2f32 => "4.2");
             text!(f64_: 4.2f64 => "4.2");
@@ -925,10 +929,8 @@ pub(super) mod tests {
             value!(u64_:   42000000000000u64   => "42000000000000");
             value!(usize_: 42000000usize       => "42000000");
 
-            serde_if_integer128! {
-                value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-            }
+            value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+            value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
             value!(f32_: 4.2f32 => "4.2");
             value!(f64_: 4.2f64 => "4.2");
@@ -1079,7 +1081,7 @@ pub(super) mod tests {
                         write_indent: false,
                         text_format: TextFormat::Text,
                         allow_primitive: true,
-                        expand_empty_elements: false,
+                        empty_element_handling: EmptyElementHandling::SelfClosed,
                     };
 
                     let result = $data.serialize(ser).unwrap();
@@ -1103,7 +1105,7 @@ pub(super) mod tests {
                         write_indent: false,
                         text_format: TextFormat::Text,
                         allow_primitive: true,
-                        expand_empty_elements: false,
+                        empty_element_handling: EmptyElementHandling::SelfClosed,
                     };
 
                     match $data.serialize(ser).unwrap_err() {
@@ -1136,10 +1138,8 @@ pub(super) mod tests {
         serialize_as!(u64_:   42000000000000u64   => "42000000000000", Text);
         serialize_as!(usize_: 42000000usize       => "42000000", Text);
 
-        serde_if_integer128! {
-            serialize_as!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000", Text);
-            serialize_as!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000", Text);
-        }
+        serialize_as!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000", Text);
+        serialize_as!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000", Text);
 
         serialize_as!(f32_: 4.2f32 => "4.2", Text);
         serialize_as!(f64_: 4.2f64 => "4.2", Text);
@@ -1264,10 +1264,8 @@ pub(super) mod tests {
             text!(u64_:   42000000000000u64   => "42000000000000");
             text!(usize_: 42000000usize       => "42000000");
 
-            serde_if_integer128! {
-                text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-            }
+            text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+            text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
             text!(f32_: 4.2f32 => "4.2");
             text!(f64_: 4.2f64 => "4.2");
@@ -1389,10 +1387,8 @@ pub(super) mod tests {
             value!(u64_:   42000000000000u64   => "42000000000000");
             value!(usize_: 42000000usize => "42000000");
 
-            serde_if_integer128! {
-                value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-            }
+            value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+            value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
             value!(f32_: 4.2f32 => "4.2");
             value!(f64_: 4.2f64 => "4.2");

@@ -40,7 +40,7 @@ import { requestAppExit } from '../../utils/appExit';
 
 export default {
   name: "TopBar",
-  emits: ['toggle-config','toggle-pcap','toggle-filter'],
+  emits: ['toggle-config', 'toggle-pcap', 'toggle-filter', 'toggle-graph'],
 
   computed: {
     buttonText(): string {
@@ -231,9 +231,6 @@ export default {
     },
     async quit() {
       await requestAppExit();
-    },
-    toggleConfig() {
-      info('Ouverture panneau config'); 
     }
   }
 }

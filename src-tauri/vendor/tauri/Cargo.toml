@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.77.2"
 name = "tauri"
-version = "2.11.1"
+version = "2.11.3"
 authors = ["Tauri Programme within The Commons Conservancy"]
 build = "build.rs"
 links = "Tauri"
@@ -220,18 +220,18 @@ optional = true
 default-features = false
 
 [dependencies.tauri-macros]
-version = "2.6.1"
+version = "2.6.3"
 
 [dependencies.tauri-runtime]
-version = "2.11.1"
+version = "2.11.3"
 
 [dependencies.tauri-runtime-wry]
-version = "2.11.1"
+version = "2.11.3"
 optional = true
 default-features = false
 
 [dependencies.tauri-utils]
-version = "2.9.1"
+version = "2.9.3"
 features = ["resources"]
 
 [dependencies.thiserror]
@@ -292,11 +292,11 @@ version = "0.3"
 version = "0.5"
 
 [build-dependencies.tauri-build]
-version = "2.6.1"
+version = "2.6.3"
 default-features = false
 
 [build-dependencies.tauri-utils]
-version = "2.9.1"
+version = "2.9.3"
 features = ["build-2"]
 
 [target.'cfg(all(target_vendor = "apple", not(target_os = "macos")))'.dependencies.libc]
@@ -350,8 +350,11 @@ features = [
 default-features = false
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd", target_os = "windows", target_os = "macos"))'.dependencies.tray-icon]
-version = "0.23"
-features = ["serde"]
+version = "0.24"
+features = [
+    "serde",
+    "gtk",
+]
 optional = true
 default-features = false
 

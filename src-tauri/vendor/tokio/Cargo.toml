@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "tokio"
-version = "1.52.1"
+version = "1.52.3"
 authors = ["Tokio Contributors <team@tokio.rs>"]
 build = false
 autolib = false
@@ -511,6 +511,10 @@ path = "tests/rt_poll_callbacks.rs"
 [[test]]
 name = "rt_shutdown_err"
 path = "tests/rt_shutdown_err.rs"
+
+[[test]]
+name = "rt_spawn_blocking"
+path = "tests/rt_spawn_blocking.rs"
 
 [[test]]
 name = "rt_threaded"

@@ -12,10 +12,11 @@ use crate::Error;
 
 #[cfg(any(feature = "formatting", feature = "parsing"))]
 pub(crate) fn get_string_literal(
+    permit_byte_strings: bool,
     mut tokens: impl Iterator<Item = TokenTree>,
 ) -> Result<(Span, Vec<u8>), Error> {
     match (tokens.next(), tokens.next()) {
-        (Some(TokenTree::Literal(literal)), None) => string::parse(&literal),
+        (Some(TokenTree::Literal(literal)), None) => string::parse(permit_byte_strings, &literal),
         (Some(tree), None) => Err(Error::ExpectedString {
             span_start: Some(tree.span()),
             span_end: Some(tree.span()),
@@ -102,7 +103,7 @@ fn jan_weekday(year: i32, ordinal: i32) -> u8 {
 }
 
 pub(crate) fn days_in_year_month(year: i32, month: u8) -> u8 {
-    [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month.extend::<usize>() - 1]
+    [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month.widen::<usize>() - 1]
         + u8::from(month == 2 && is_leap_year(year))
 }
 
@@ -124,7 +125,7 @@ pub(crate) fn ywd_to_yo(year: i32, week: u8, iso_weekday_number: u8) -> (i32, u1
 
 pub(crate) fn ymd_to_yo(year: i32, month: u8, day: u8) -> (i32, u16) {
     let ordinal = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
-        [month.extend::<usize>() - 1]
+        [month.widen::<usize>() - 1]
         + u16::from(month > 2 && is_leap_year(year));
 
     (year, ordinal + u16::from(day))

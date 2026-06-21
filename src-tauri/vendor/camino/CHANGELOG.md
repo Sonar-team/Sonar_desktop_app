@@ -3,6 +3,15 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- next-header -->
+## Unreleased - ReleaseDate
+
+## [1.2.3] - 2026-06-18
+
+### Performance improvements
+
+- `Utf8Path::hash` now delegates to `std::path::Path::hash`, resulting in hashing requiring ~2x fewer instructions. Thanks [stormslowly](https://github.com/stormslowly) for your first contribution!
+
 ## [1.2.2] - 2025-12-14
 
 ### Added
@@ -195,6 +204,8 @@ Thanks to [BenjaminBrienen](https://github.com/BenjaminBrienen) for your first c
 
 Initial release.
 
+<!-- next-url -->
+[1.2.3]: https://github.com/camino-rs/camino/releases/tag/camino-1.2.3
 [1.2.2]: https://github.com/camino-rs/camino/releases/tag/camino-1.2.2
 [1.2.1]: https://github.com/camino-rs/camino/releases/tag/camino-1.2.1
 [1.2.0]: https://github.com/camino-rs/camino/releases/tag/camino-1.2.0

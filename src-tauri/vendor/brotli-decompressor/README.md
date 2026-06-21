@@ -3,6 +3,18 @@
 [![crates.io](https://img.shields.io/crates/v/brotli-decompressor.svg)](https://crates.io/crates/brotli-decompressor)
 [![Build Status](https://travis-ci.org/dropbox/rust-brotli-decompressor.svg?branch=master)](https://travis-ci.org/dropbox/rust-brotli-decompressor)
 
+## What's new in version 5.0.3
+Stricter downstream for alloc-no-stdlib and alloc-stdlib so they don't span
+versions.
+
+## What's new in version 5.0.2
+forbid(unsafe)
+Fixes for seccomp features.
+
+## What's new in version 5.0.1
+Fix PADDING_2 error being silently dropped at end of stream
+Fix --no-default-features tests
+
 ## What's new in version 5.0.0
 No longer seed the context by the end of the lz77 dictionary. Instead use
 zero for the seed as would happen without a dictionary. This matches the

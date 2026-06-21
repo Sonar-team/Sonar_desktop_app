@@ -21,7 +21,7 @@ const CHUNKED_EXTENSIONS_LIMIT: u64 = 1024 * 16;
 
 /// Maximum number of bytes allowed for all trailer fields.
 ///
-/// TODO: remove this when we land h1_max_header_size support
+/// TODO: remove this when we land `h1_max_header_size` support.
 const TRAILER_LIMIT: usize = 1024 * 16;
 
 /// Decoders to handle different Transfer-Encodings.
@@ -152,7 +152,7 @@ impl Decoder {
                 if *remaining == 0 {
                     Poll::Ready(Ok(Frame::data(Bytes::new())))
                 } else {
-                    let to_read = *remaining as usize;
+                    let to_read = usize::try_from(*remaining).unwrap_or(usize::MAX);
                     let buf = ready!(body.read_mem(cx, to_read))?;
                     let num = buf.as_ref().len() as u64;
                     if num > *remaining {
@@ -489,12 +489,7 @@ impl ChunkedState {
         trace!("Chunked read, remaining={:?}", rem);
 
         // cap remaining bytes at the max capacity of usize
-        let rem_cap = match *rem {
-            r if r > usize::MAX as u64 => usize::MAX,
-            r => r as usize,
-        };
-
-        let to_read = rem_cap;
+        let to_read = usize::try_from(*rem).unwrap_or(usize::MAX);
         let slice = ready!(rdr.read_mem(cx, to_read))?;
         let count = slice.len();
 

@@ -16,6 +16,8 @@ tys! {
     U32
     I64
     U64
+    I64_AS_F64
+    U64_AS_F64
     I128
     U128
     F32
@@ -34,6 +36,7 @@ tys! {
     NAMED_EXTERNREF
     ENUM
     STRING_ENUM
+    DYNAMIC_UNION
     RUST_STRUCT
     CHAR
     OPTIONAL
@@ -41,4 +44,5 @@ tys! {
     UNIT
     CLAMPED
     NONNULL
+    RAW_POINTER
 }

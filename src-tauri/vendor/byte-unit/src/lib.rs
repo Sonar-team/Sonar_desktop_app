@@ -215,8 +215,7 @@ features = ["rocket"]
 #![allow(unexpected_cfgs)]
 #![cfg_attr(docsrs_1_92, feature(doc_cfg))]
 
-#[cfg(all(feature = "serde", any(feature = "byte", feature = "bit")))]
-#[macro_use]
+#[cfg(all(any(feature = "serde", feature = "schemars"), any(feature = "byte", feature = "bit")))]
 extern crate alloc;
 #[cfg(feature = "rust_decimal")]
 pub extern crate rust_decimal;
