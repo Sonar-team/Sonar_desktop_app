@@ -27,6 +27,7 @@ These inputs must stay consistent across all platforms:
 - Node.js version
 - Deno version
 - Tauri CLI version
+- Vite version
 - frontend lockfile
 - Cargo lockfile
 - vendored Cargo dependencies
@@ -44,10 +45,11 @@ Canonical toolchain versions are tracked in `config/build-versions.env`.
 - Node.js: `24.14.0`
 - Deno: `2.7.13`
 - Tauri CLI: `2.11.1`
+- Vite: `8.0.16`
 
 Rust is pinned in `src-tauri/rust-toolchain.toml`. Node.js is declared in
 `package.json` under `engines.node`. Deno is pinned in `Dockerfile`. The Tauri
-CLI version is pinned in `package.json`.
+CLI version and Vite version are pinned in `package.json`.
 
 When bumping one of these versions, update `config/build-versions.env` first,
 then keep the files above aligned. CI validates the alignment with
