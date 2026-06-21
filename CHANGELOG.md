@@ -1,5 +1,14 @@
 # Changelog
 
+## **[3.13.22] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Hotfix CI release : mise à jour du snapshot Ubuntu apt de
+  `20260510T000000Z` vers `20260621T000000Z`, afin d'aligner les dépendances
+  Linux avec les paquets Mesa présents sur les runners GitHub Actions récents.
+- Mise à jour de la version de SONAR en **3.13.22** pour publier ce correctif.
+
 ## **[3.13.21] - 2026-06-21**
 
 ## 🛠 Corrections
