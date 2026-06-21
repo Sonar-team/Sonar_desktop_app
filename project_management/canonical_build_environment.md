@@ -41,7 +41,7 @@ bundle for that platform is reproducible.
 
 Canonical toolchain versions are tracked in `config/build-versions.env`.
 
-- Rust: `1.95.0`
+- Rust: `1.96.0`
 - Node.js: `24.15.0`
 - Deno: `2.8.3`
 - Tauri CLI: `2.11.3`
@@ -86,7 +86,7 @@ The shared source of these settings is `security/repro-env.ts`.
 
 - OS: Ubuntu 22.04 for the Linux reproducibility check
 - Architecture: `x86_64` / `amd64`
-- Container base image: `rust:1.95.0`
+- Container base image: `rust:1.96.0`
 - Container image digest:
   `sha256:5b1e3484ddcd22a3738c0ec34a5e98bf19382eb295fb6db54295e62379119040`
 - Binary target: `src-tauri/target/release/sonar`
