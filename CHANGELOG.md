@@ -1,5 +1,33 @@
 # Changelog
 
+## **[3.13.24] - 2026-06-22**
+
+## ✨ Améliorations
+
+- Refonte complète de l'UX du panneau filtre BPF : nouvelle interface plus claire
+  avec affichage de l'état du filtre actif, badge "En attente" (orange) lorsqu'un
+  filtre est appliqué pendant une capture, et bouton "Annuler" pour revenir au
+  filtre précédent.
+
+## 🛠 Corrections
+
+- Panneau filtre BPF : les presets rapides ne réinitialisent plus le filtre
+  backend actif ; seul le formulaire local est remis à zéro avant d'appliquer le
+  preset.
+- Panneau filtre BPF : appliquer un filtre pendant une capture active le marque
+  désormais comme « en attente » plutôt que « actif » ; il passe en actif
+  automatiquement au prochain démarrage de capture.
+- Thread de capture : suppression du `println!("TimeoutExpired")` parasite qui
+  polluait la console lors de chaque tick pcap sans paquet.
+
+## 🔧 Maintenance
+
+- Mise à jour de Rust de 1.95.0 vers 1.96.0.
+- Mise à jour de toutes les dépendances Rust (vendor regenerated).
+- Mise à jour de toutes les dépendances frontend (Vite 8.0.9 → 8.0.16, Vue,
+  Tauri plugins, etc.).
+- Alignement des versions `.gitlab-ci.yml` avec `build-versions.env`.
+
 ## **[3.13.23] - 2026-06-21**
 
 ## 🛠 Corrections
