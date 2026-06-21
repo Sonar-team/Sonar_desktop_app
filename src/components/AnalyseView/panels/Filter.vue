@@ -15,6 +15,13 @@
         <button class="btn ghost active-filter-clear" @click="resetAll">Supprimer</button>
       </div>
 
+      <!-- Filtre en attente (appliqué au prochain démarrage) -->
+      <div class="pending-filter-bar" v-if="captureStore.pendingFilter">
+        <span class="pending-filter-label">Prochain démarrage</span>
+        <code class="active-filter-expr">{{ captureStore.pendingFilter }}</code>
+        <button class="btn ghost active-filter-clear" @click="cancelPending">Annuler</button>
+      </div>
+
       <!-- Presets rapides -->
       <section class="card">
         <h3>Presets rapides</h3>
@@ -262,14 +269,18 @@ async function apply() {
   const filter = previewText.value.trim();
   try {
     await invoke('set_filter', { filter });
-    captureStore.setActiveFilter(filter);
+    if (captureStore.isRunning) {
+      captureStore.setPendingFilter(filter);
+    } else {
+      captureStore.setActiveFilter(filter);
+    }
     emit('update:visible', false);
   } catch (e) {
     console.error('set_filter failed:', e);
   }
 }
 
-async function resetAll() {
+function resetForm() {
   opt.value = { vlan: false, onlyIp4: false, excludeIpv6: false, excludeArp: false };
   proto.value = { tcp: false, udp: false, icmp: false, icmp6: false };
   ip.value = { includeHost: '', excludeHost: '', includeNet: '', excludeNet: '', direction: 'any' };
@@ -277,16 +288,30 @@ async function resetAll() {
   advancedRaw.value = '';
   isManualPreview.value = false;
   previewText.value = '';
+}
+
+async function resetAll() {
+  resetForm();
   try {
     await invoke('set_filter', { filter: '' });
     captureStore.setActiveFilter('');
+    captureStore.setPendingFilter('');
   } catch (e) {
     console.error('clear filter failed:', e);
   }
 }
 
+async function cancelPending() {
+  try {
+    await invoke('set_filter', { filter: captureStore.activeFilter });
+    captureStore.setPendingFilter('');
+  } catch (e) {
+    console.error('cancel pending failed:', e);
+  }
+}
+
 function preset(name: string) {
-  resetAll();
+  resetForm();
   switch (name) {
     case 'ipv4':
       opt.value.onlyIp4 = true;
@@ -364,6 +389,25 @@ function preset(name: string) {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #4a7cff;
+  flex-shrink: 0;
+}
+
+/* Pending filter bar */
+.pending-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(240, 160, 48, 0.07);
+  border: 1px solid rgba(240, 160, 48, 0.28);
+  border-radius: 8px;
+}
+.pending-filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #f0a030;
   flex-shrink: 0;
 }
 .active-filter-expr {

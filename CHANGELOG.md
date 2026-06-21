@@ -1,5 +1,19 @@
 # Changelog
 
+## **[3.13.23] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Panneau filtre BPF : les presets rapides ne réinitialisent plus le filtre
+  backend actif ; seul le formulaire local est remis à zéro avant d'appliquer le
+  preset.
+- Panneau filtre BPF : appliquer un filtre pendant une capture active le marque
+  désormais comme « en attente » (badge orange « Prochain démarrage ») plutôt que
+  « actif » ; il passe en actif automatiquement au prochain démarrage de capture.
+  Un bouton « Annuler » permet de revenir au filtre actif précédent.
+- Thread de capture : suppression du `println!("TimeoutExpired")` parasite qui
+  polluait la console lors de chaque tick pcap sans paquet.
+
 ## **[3.13.22] - 2026-06-21**
 
 ## 🛠 Corrections
