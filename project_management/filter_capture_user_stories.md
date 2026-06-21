@@ -70,6 +70,45 @@ Critères d'acceptation:
 - L'aperçu est lisible et contrasté.
 - Les messages d'erreur ou de confirmation sont visibles dans le panneau.
 
+## Implémentation en cours — branche `filter-fix-ux` (non commité)
+
+### `src/store/capture.ts`
+- Ajout de `activeFilter: string` dans le state Pinia.
+- Ajout de l'action `setActiveFilter(filter)` pour mettre à jour la valeur globalement.
+
+### `src/components/AnalyseView/panels/Filter.vue`
+- Conversion Options API → `<script setup>` (Composition API).
+- Refonte UI : header avec titre et bouton ✕ de fermeture, presets déplacés en haut du panneau, section "Expression BPF brute" séparée des champs structurés.
+- `apply()` et `resetAll()` appellent désormais `captureStore.setActiveFilter()` pour synchroniser l'état global.
+- Ajout du bouton "↺ Sync auto" pour reprendre la génération automatique après une édition manuelle du textarea (couvre US-04).
+- Badge "édition manuelle" visible dans le header de l'aperçu lorsque le mode manuel est actif.
+- Styles dark theme refaits : `.filter-overlay`, `.filter-panel`, `.field`, `.btn`, `.chip`, `.raw-input`, etc.
+
+### `src/components/NavBar/status-bar/StatusBar.vue`
+- Ajout d'un badge filtre actif dans la barre de statut : affiche le texte du filtre tronqué (max 320 px), avec un bouton ✕ pour le supprimer.
+- Le ✕ appelle `invoke('set_filter', { filter: '' })` + `captureStore.setActiveFilter('')` (couvre US-03).
+- Couvre partiellement US-02 : le badge apparaît/disparaît selon `captureStore.activeFilter`.
+
+### `src/components/NavBar/TopBar.vue`
+- Ajout de `toggle-graph` dans les emits déclarés.
+- Suppression de la méthode `toggleConfig()` inutilisée.
+
+### `src/components/AnalyseView/panels/Filter.vue` — bandeau filtre actif
+- Ajout d'un bandeau "Filtre actif" entre le header et les presets, visible uniquement quand `captureStore.activeFilter` est non vide.
+- Affiche l'expression BPF courante (tronquée si longue) avec un bouton "Supprimer" qui appelle `resetAll()`.
+- Couvre US-02 côté panel : l'utilisateur voit immédiatement le filtre en vigueur en ouvrant le panel.
+
+### `src/components/AnalyseView/panels/Filter.vue` — backdrop et comportement modal
+- Correction d'un bug visuel : l'overlay sans fond faisait paraître l'app plus sombre à la fermeture du panel (le fond `#1e1e2e` du panel était plus clair que le contenu en dessous).
+- Ajout de `background: rgba(0,0,0,0.5)` sur `.filter-overlay` : le fond de l'app est assombri quand le panel est ouvert, comme un modal standard.
+- Suppression de `pointer-events: none` sur l'overlay ; l'overlay capture maintenant les clics.
+- Clic en dehors du panel ferme le panel (`@click` sur l'overlay + `@click.stop` sur le panel).
+
+### Ce qui reste à faire (US-02 partiel)
+- Distinguer filtre *actif* (capture en cours avec ce filtre) de filtre *en attente* (configuré mais capture pas encore redémarrée) — le badge panel et le badge status bar ne font pas encore cette distinction.
+
+---
+
 ## Risques et suite
 
 - Le filtre n'est pas encore appliqué en live sur une capture déjà ouverte, car le handle `pcap` est possédé par le thread de capture.

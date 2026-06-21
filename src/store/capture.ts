@@ -10,6 +10,7 @@ export const useCaptureStore = defineStore("capture", {
   state: () => ({
     isRunning: false,
     showMatrice: true,
+    activeFilter: '' as string,
 
     // Listeners HMR-safe dans le state
     startedListeners: [] as Array<(d: any) => void>,
@@ -28,6 +29,9 @@ export const useCaptureStore = defineStore("capture", {
     },
     toggleView() {
       this.showMatrice = !this.showMatrice;
+    },
+    setActiveFilter(filter: string) {
+      this.activeFilter = filter;
     },
 
     setChannel(channel: Channel<CaptureEvent>) {

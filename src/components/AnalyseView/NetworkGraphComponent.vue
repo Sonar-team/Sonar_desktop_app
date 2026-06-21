@@ -140,7 +140,7 @@ export default defineComponent({
           },
           label: { 
             text: (node: NodeData) => node.label || node.name, 
-            fontSize: 10, 
+            fontSize: 20, 
             color: "#ffffff", 
             direction: "north" as const,
             lineHeight: 2.0,
