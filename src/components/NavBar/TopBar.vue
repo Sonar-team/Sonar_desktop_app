@@ -24,7 +24,6 @@
 
 <script lang="ts">
 import { Channel, invoke } from '@tauri-apps/api/core';
-import { exit } from '@tauri-apps/plugin-process';
 import { info, error } from '@tauri-apps/plugin-log';
 import { save } from '@tauri-apps/plugin-dialog';
 import { register, unregister } from '@tauri-apps/plugin-global-shortcut';
@@ -37,6 +36,7 @@ import { displayCaptureError } from '../../errors/capture'; // Gestion des erreu
 import { getCurrentDate } from '../../utils/time';
 import { useCaptureStore } from '../../store/capture';
 import { CaptureEvent } from '../../types/capture';
+import { requestAppExit } from '../../utils/appExit';
 
 export default {
   name: "TopBar",
@@ -230,8 +230,7 @@ export default {
       info('Vue basculée');
     },
     async quit() {
-      info('Fermeture demandée');
-      await exit(0);
+      await requestAppExit();
     },
     toggleConfig() {
       info('Ouverture panneau config'); 

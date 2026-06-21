@@ -1,5 +1,16 @@
 # Changelog
 
+## **[3.13.20] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Correction de la fermeture de l'application depuis la croix de fenêtre, le
+  bouton `Quitter`, le raccourci `Ctrl+Q` et le menu natif `Fichier > Fermer`.
+- Centralisation de la confirmation de fermeture avec le plugin Tauri `dialog`
+  via `ask()`, puis fermeture explicite avec le plugin Tauri `process` via
+  `exit(0)`.
+- Mise à jour de la version de SONAR en **3.13.20** pour publier ce correctif.
+
 ## **[3.13.14] - 2026-06-08**
 
 ## 🛠 Corrections

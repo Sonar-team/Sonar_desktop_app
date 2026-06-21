@@ -3,7 +3,7 @@ use commandes::{
     net_capture::{config_capture, get_config_capture, start_capture, stop_capture},
     net_interface::get_devices_list,
 };
-use log::info;
+use log::{error, info};
 
 use std::sync::{Arc, Mutex};
 use tauri::{Manager, menu::MenuBuilder};
@@ -96,6 +96,14 @@ pub fn run() -> Result<(), tauri::Error> {
                     .kind(MessageDialogKind::Info)
                     .buttons(MessageDialogButtons::Ok)
                     .show(|_| {});
+            } else if event.id() == "fermer" {
+                if let Some(window) = app.get_webview_window("main") {
+                    if let Err(close_error) = window.close() {
+                        error!("Failed to close main window: {close_error}");
+                    }
+                } else {
+                    app.exit(0);
+                }
             }
         })
         .setup({
