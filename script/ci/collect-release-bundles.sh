@@ -7,23 +7,18 @@ output_dir="${3:-release-artifacts}"
 
 case "$platform" in
   macos-14)
-    artifact_prefix="sonar-macos-aarch64"
     patterns=("*.dmg")
     suffixes=("dmg")
     ;;
   ubuntu-22.04)
-    artifact_prefix="sonar-linux-x86_64"
     patterns=("*.deb" "*.rpm")
     suffixes=("deb" "rpm")
     ;;
   windows-2022)
-    artifact_prefix="sonar-windows-x86_64"
     patterns=("*.msi" "*setup.exe")
     suffixes=("msi" "setup.exe")
     ;;
   *)
-    safe_platform="$(printf '%s' "$platform" | tr -cs 'A-Za-z0-9._-' '-')"
-    artifact_prefix="sonar-${safe_platform}"
     patterns=("*.dmg" "*.deb" "*.rpm" "*.msi" "*setup.exe")
     suffixes=("dmg" "deb" "rpm" "msi" "setup.exe")
     ;;
@@ -58,11 +53,7 @@ for index in "${!patterns[@]}"; do
   bundle_path="$(cat "$bundle_list")"
   rm -f "$bundle_list"
 
-  output_path="${output_dir}/${artifact_prefix}.${suffix}"
-  if [[ "$suffix" == "setup.exe" ]]; then
-    output_path="${output_dir}/${artifact_prefix}-setup.exe"
-  fi
-
+  output_path="${output_dir}/$(basename "$bundle_path")"
   cp "$bundle_path" "$output_path"
   printf '%s\n' "$output_path"
   bundle_count=$((bundle_count + 1))
