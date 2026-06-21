@@ -1,5 +1,15 @@
 # Changelog
 
+## **[3.13.21] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Hotfix CI release : autorisation explicite des downgrades apt lors de
+  l'installation des dépendances Linux depuis le snapshot Ubuntu, afin d'éviter
+  les conflits avec les paquets Mesa plus récents déjà présents sur les runners
+  GitHub Actions.
+- Mise à jour de la version de SONAR en **3.13.21** pour publier ce correctif.
+
 ## **[3.13.20] - 2026-06-21**
 
 ## 🛠 Corrections
