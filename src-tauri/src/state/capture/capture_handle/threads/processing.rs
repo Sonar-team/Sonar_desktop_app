@@ -1,4 +1,4 @@
-use crossbeam::channel::Receiver;
+use crossbeam::channel::{Receiver, RecvTimeoutError};
 use log::{debug, error, info};
 use std::{
     sync::atomic::{AtomicBool, Ordering},
@@ -14,7 +14,7 @@ use crate::{
         capture::capture_handle::{
             messages::{
                 CaptureMessage,
-                capture::PacketMinimal,
+                capture::{PacketMinimal, PacketOwnedStats},
                 channel::ChannelCapacityPayload,
                 stats::{StatTriple, StatsPayload},
             },
@@ -25,6 +25,25 @@ use crate::{
     },
 };
 use packet_parser::PacketFlow;
+
+// Flush le batch de paquets vers le frontend. Retourne false si le canal est cassé.
+macro_rules! flush_batch {
+    ($batch:expr, $on_event:expr, $last_flush:expr) => {{
+        if $batch.is_empty() {
+            true
+        } else {
+            let packets = std::mem::take(&mut $batch);
+            $last_flush = Instant::now();
+            match $on_event.send(CaptureEvent::PacketBatch { packets }) {
+                Ok(_) => true,
+                Err(e) => {
+                    error!("[TAURI] Erreur envoi PacketBatch: {}", e);
+                    false
+                }
+            }
+        }
+    }};
+}
 
 pub fn spawn_processing_thread(
     rx: Receiver<CaptureMessage>,
@@ -43,12 +62,18 @@ pub fn spawn_processing_thread(
         let mut last_len = 0usize;
         static TEMPO: Duration = Duration::from_millis(40);
         let mut stats = StatTriple::default();
+        let batch_max: usize = 64;
+        let batch_interval = Duration::from_millis(50);
+        let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(batch_max);
+        let mut last_batch_flush = Instant::now();
 
         loop {
-            match rx.recv() {
+            let timeout = batch_interval.saturating_sub(last_batch_flush.elapsed());
+            match rx.recv_timeout(timeout.max(Duration::from_millis(1))) {
                 Ok(CaptureMessage::Packet(pkt)) => {
                     if stop_flag.load(Ordering::Relaxed) {
                         // Drain quietly after stop: no packet event and no matrix update.
+                        packet_batch.clear();
                         buffer_pool.put(pkt);
                         continue;
                     }
@@ -69,13 +94,6 @@ pub fn spawn_processing_thread(
                         len: pkt.header.len,
                         flow,
                     };
-
-                    // envoi des packets lue en temps réel
-                    if let Err(e) = on_event.send(CaptureEvent::Packet { packet: &packet }) {
-                        error!("[TAURI] Erreur envoi Packet: {}", e);
-                        buffer_pool.put(pkt);
-                        break; // évite spammer d’erreurs si le canal est cassé
-                    }
 
                     // ajout les paquets à la matrice de flux
                     let record_owned = packet.to_owned_packet();
@@ -115,23 +133,33 @@ pub fn spawn_processing_thread(
 
                     let graph = app.state::<Arc<Mutex<GraphData>>>();
                     if let Ok(mut g) = graph.lock() {
-                        // record_owned.flow est un PacketFlowOwned
                         let updates =
                             g.add_packet_flow(&record_owned.flow, source_label, destination_label);
-                        // Envoi 1 par 1 (simple)
                         if !updates.is_empty() {
                             for update in updates {
                                 if let Err(e) =
                                     on_event.send(CaptureEvent::Graph { update: &update })
                                 {
                                     error!("[TAURI] Erreur envoi GraphUpdate: {}", e);
-                                    break; // évite spammer d’erreurs si le canal est cassé
+                                    break;
                                 }
                             }
                         }
                     };
 
-                    // Rendre le buffer au pool après traitement
+                    // Accumuler dans le batch
+                    packet_batch.push(record_owned);
+
+                    // Flush si le batch est plein ou si l'intervalle est écoulé
+                    if packet_batch.len() >= batch_max
+                        || last_batch_flush.elapsed() >= batch_interval
+                    {
+                        if !flush_batch!(packet_batch, on_event, last_batch_flush) {
+                            buffer_pool.put(pkt);
+                            break;
+                        }
+                    }
+
                     buffer_pool.put(pkt);
                 }
 
@@ -140,18 +168,24 @@ pub fn spawn_processing_thread(
                         continue;
                     }
 
-                    // new_stats: pcap::Stat
                     if let Err(e) = StatsPayload::maybe_send(
-                        &mut stats, // <= ta variable déjà déclarée
+                        &mut stats,
                         new_stats, processed,
-                        &on_event, // <= passe une référence, pas un move
+                        &on_event,
                     ) {
                         error!("[TAURI] Erreur envoi Stats: {}", e);
-                        // on NE fait pas `break` ici, on continue la boucle
                     }
                 }
-                Err(err) => {
-                    error!("Erreur réception canal : {}", err);
+
+                Err(RecvTimeoutError::Timeout) => {
+                    // Flush le batch restant après inactivité
+                    if !flush_batch!(packet_batch, on_event, last_batch_flush) {
+                        break;
+                    }
+                }
+
+                Err(RecvTimeoutError::Disconnected) => {
+                    error!("Erreur réception canal : canal déconnecté");
                     break;
                 }
             }
@@ -192,12 +226,17 @@ pub fn spawn_processing_thread_cli(
         let mut last_len = 0usize;
         static TEMPO: Duration = Duration::from_millis(40);
         let mut stats = StatTriple::default();
+        let batch_max: usize = 64;
+        let batch_interval = Duration::from_millis(50);
+        let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(batch_max);
+        let mut last_batch_flush = Instant::now();
 
         loop {
-            match rx.recv() {
+            let timeout = batch_interval.saturating_sub(last_batch_flush.elapsed());
+            match rx.recv_timeout(timeout.max(Duration::from_millis(1))) {
                 Ok(CaptureMessage::Packet(pkt)) => {
                     if stop_flag.load(Ordering::Relaxed) {
-                        // Drain quietly after stop: no packet event and no matrix update.
+                        packet_batch.clear();
                         buffer_pool.put(pkt);
                         continue;
                     }
@@ -219,14 +258,6 @@ pub fn spawn_processing_thread_cli(
                         flow,
                     };
 
-                    // envoi des packets lue en temps réel
-                    if let Err(e) = on_event.send(CaptureEvent::Packet { packet: &packet }) {
-                        error!("[TAURI] Erreur envoi Packet: {}", e);
-                        buffer_pool.put(pkt);
-                        break; // évite spammer d’erreurs si le canal est cassé
-                    }
-
-                    // ajout les paquets à la matrice de flux
                     let record_owned = packet.to_owned_packet();
                     let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
                     let (source_label, destination_label) =
@@ -265,23 +296,31 @@ pub fn spawn_processing_thread_cli(
 
                     let graph = app.state::<Arc<Mutex<GraphData>>>();
                     if let Ok(mut g) = graph.lock() {
-                        // record_owned.flow est un PacketFlowOwned
                         let updates =
                             g.add_packet_flow(&record_owned.flow, source_label, destination_label);
-                        // Envoi 1 par 1 (simple)
                         if !updates.is_empty() {
                             for update in updates {
                                 if let Err(e) =
                                     on_event.send(CaptureEvent::Graph { update: &update })
                                 {
                                     error!("[TAURI] Erreur envoi GraphUpdate: {}", e);
-                                    break; // évite spammer d’erreurs si le canal est cassé
+                                    break;
                                 }
                             }
                         }
                     };
 
-                    // Rendre le buffer au pool après traitement
+                    packet_batch.push(record_owned);
+
+                    if packet_batch.len() >= batch_max
+                        || last_batch_flush.elapsed() >= batch_interval
+                    {
+                        if !flush_batch!(packet_batch, on_event, last_batch_flush) {
+                            buffer_pool.put(pkt);
+                            break;
+                        }
+                    }
+
                     buffer_pool.put(pkt);
                 }
 
@@ -290,18 +329,23 @@ pub fn spawn_processing_thread_cli(
                         continue;
                     }
 
-                    // new_stats: pcap::Stat
                     if let Err(e) = StatsPayload::maybe_send(
-                        &mut stats, // <= ta variable déjà déclarée
+                        &mut stats,
                         new_stats, processed,
-                        &on_event, // <= passe une référence, pas un move
+                        &on_event,
                     ) {
                         error!("[TAURI] Erreur envoi Stats: {}", e);
-                        // on NE fait pas `break` ici, on continue la boucle
                     }
                 }
-                Err(err) => {
-                    error!("Erreur réception canal : {}", err);
+
+                Err(RecvTimeoutError::Timeout) => {
+                    if !flush_batch!(packet_batch, on_event, last_batch_flush) {
+                        break;
+                    }
+                }
+
+                Err(RecvTimeoutError::Disconnected) => {
+                    error!("Erreur réception canal : canal déconnecté");
                     break;
                 }
             }

@@ -147,6 +147,12 @@ export type CaptureEvent =
     };
   }
   | {
+    event: "packetBatch";
+    data: {
+      packets: PacketMinimal[];
+    };
+  }
+  | {
     event: "flowMatrixLen";
     data: {
       flowMatrixLen: number;

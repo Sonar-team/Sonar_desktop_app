@@ -62,6 +62,11 @@ export const useCaptureStore = defineStore("capture", {
           case "packet":
             for (const cb of this.packetListeners) cb(msg.data.packet);
             break;
+          case "packetBatch":
+            for (const packet of msg.data.packets) {
+              for (const cb of this.packetListeners) cb(packet);
+            }
+            break;
           case "stats":
             for (const cb of this.statsListeners) cb(msg.data);
             break;
