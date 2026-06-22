@@ -2,6 +2,7 @@
 
 This page lists the transformations implemented in this crate and supported by `serde_as`.
 
+1. [Base58 encode bytes](#base58-encode-bytes)
 1. [Base64 encode bytes](#base64-encode-bytes)
 2. [Big Array support](#big-array-support)
 3. [`bool` from integer](#bool-from-integer)
@@ -32,6 +33,25 @@ This page lists the transformations implemented in this crate and supported by `
 28. [`Vec` of tuples to `Maps`](#vec-of-tuples-to-maps)
 29. [Well-known time formats for `OffsetDateTime`](#well-known-time-formats-for-offsetdatetime)
 30. [De/Serialize depending on `De/Serializer::is_human_readable`](#deserialize-depending-on-deserializeris_human_readable)
+
+## Base58 encode bytes
+
+[`Base58`]
+
+Requires the `base58` feature.
+The character set and padding behavior can be configured.
+
+```ignore
+// Rust
+#[serde_as(as = "serde_with::base58::Base58")]
+value: Vec<u8>,
+#[serde_as(as = "Base58<Flickr>")]
+charset_flickr: Vec<u8>,
+
+// JSON
+"value": "JxF12TrwUP45BMd",
+"charset_flickr": "iXf12sRWto45bmC",
+```
 
 ## Base64 encode bytes
 
@@ -382,6 +402,21 @@ value: Option<String>,
 "value": "Hello World!", // converts to Some
 ```
 
+## `None` as zero for `Option<NonZero*>`
+
+[`NoneAsZero`]
+
+```ignore
+// Rust
+#[serde_as(as = "serde_with::NoneAsZero")]
+value: Option<core::num::NonZeroU32>,
+
+// JSON
+"value": 0, // converts to None
+
+"value": 42, // converts to Some(NonZeroU32::new(42).unwrap())
+```
+
 ## One or many elements into `Vec`
 
 [`OneOrMany`]
@@ -598,6 +633,7 @@ value: u128,
 "value": "340282366920938463463374607431768211455",
 ```
 
+[`Base58`]: crate::base58::Base58
 [`Base64`]: crate::base64::Base64
 [`BoolFromInt<Flexible>`]: crate::BoolFromInt
 [`BoolFromInt<Strict>`]: crate::BoolFromInt
@@ -620,6 +656,7 @@ value: u128,
 [`MapFirstKeyWins`]: crate::MapFirstKeyWins
 [`MapPreventDuplicates`]: crate::MapPreventDuplicates
 [`NoneAsEmptyString`]: crate::NoneAsEmptyString
+[`NoneAsZero`]: crate::NoneAsZero
 [`OneOrMany`]: crate::OneOrMany
 [`PickFirst`]: crate::PickFirst
 [`SetLastValueWins`]: crate::SetLastValueWins

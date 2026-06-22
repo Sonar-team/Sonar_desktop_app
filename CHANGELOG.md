@@ -1,5 +1,77 @@
 # Changelog
 
+## **[3.13.24] - 2026-06-22**
+
+## ✨ Améliorations
+
+- Refonte complète de l'UX du panneau filtre BPF : nouvelle interface plus claire
+  avec affichage de l'état du filtre actif, badge "En attente" (orange) lorsqu'un
+  filtre est appliqué pendant une capture, et bouton "Annuler" pour revenir au
+  filtre précédent.
+
+## 🛠 Corrections
+
+- Panneau filtre BPF : les presets rapides ne réinitialisent plus le filtre
+  backend actif ; seul le formulaire local est remis à zéro avant d'appliquer le
+  preset.
+- Panneau filtre BPF : appliquer un filtre pendant une capture active le marque
+  désormais comme « en attente » plutôt que « actif » ; il passe en actif
+  automatiquement au prochain démarrage de capture.
+- Thread de capture : suppression du `println!("TimeoutExpired")` parasite qui
+  polluait la console lors de chaque tick pcap sans paquet.
+
+## 🔧 Maintenance
+
+- Mise à jour de Rust de 1.95.0 vers 1.96.0.
+- Mise à jour de toutes les dépendances Rust (vendor regenerated).
+- Mise à jour de toutes les dépendances frontend (Vite 8.0.9 → 8.0.16, Vue,
+  Tauri plugins, etc.).
+- Alignement des versions `.gitlab-ci.yml` avec `build-versions.env`.
+
+## **[3.13.23] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Panneau filtre BPF : les presets rapides ne réinitialisent plus le filtre
+  backend actif ; seul le formulaire local est remis à zéro avant d'appliquer le
+  preset.
+- Panneau filtre BPF : appliquer un filtre pendant une capture active le marque
+  désormais comme « en attente » (badge orange « Prochain démarrage ») plutôt que
+  « actif » ; il passe en actif automatiquement au prochain démarrage de capture.
+  Un bouton « Annuler » permet de revenir au filtre actif précédent.
+- Thread de capture : suppression du `println!("TimeoutExpired")` parasite qui
+  polluait la console lors de chaque tick pcap sans paquet.
+
+## **[3.13.22] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Hotfix CI release : mise à jour du snapshot Ubuntu apt de
+  `20260510T000000Z` vers `20260621T000000Z`, afin d'aligner les dépendances
+  Linux avec les paquets Mesa présents sur les runners GitHub Actions récents.
+- Mise à jour de la version de SONAR en **3.13.22** pour publier ce correctif.
+
+## **[3.13.21] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Hotfix CI release : autorisation explicite des downgrades apt lors de
+  l'installation des dépendances Linux depuis le snapshot Ubuntu, afin d'éviter
+  les conflits avec les paquets Mesa plus récents déjà présents sur les runners
+  GitHub Actions.
+- Mise à jour de la version de SONAR en **3.13.21** pour publier ce correctif.
+
+## **[3.13.20] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Correction de la fermeture de l'application depuis la croix de fenêtre, le
+  bouton `Quitter`, le raccourci `Ctrl+Q` et le menu natif `Fichier > Fermer`.
+- Centralisation de la confirmation de fermeture avec le plugin Tauri `dialog`
+  via `ask()`, puis fermeture explicite avec le plugin Tauri `process` via
+  `exit(0)`.
+- Mise à jour de la version de SONAR en **3.13.20** pour publier ce correctif.
+
 ## **[3.13.14] - 2026-06-08**
 
 ## 🛠 Corrections

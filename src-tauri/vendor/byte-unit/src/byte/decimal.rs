@@ -1,7 +1,7 @@
 use rust_decimal::prelude::*;
 
 use super::Byte;
-use crate::{common::is_zero_remainder_decimal, Unit};
+use crate::{Unit, common::is_zero_remainder_decimal};
 
 const DECIMAL_EIGHT: Decimal = Decimal::from_parts(8, 0, 0, false, 0);
 

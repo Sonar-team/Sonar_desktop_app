@@ -351,10 +351,7 @@ impl<'h, 'n> Iterator for FindRevIter<'h, 'n> {
     type Item = usize;
 
     fn next(&mut self) -> Option<usize> {
-        let pos = match self.pos {
-            None => return None,
-            Some(pos) => pos,
-        };
+        let pos = self.pos?;
         let result = self.finder.rfind(&self.haystack[..pos]);
         match result {
             None => None,
@@ -471,10 +468,7 @@ impl<'n> Finder<'n> {
     #[cfg(feature = "alloc")]
     #[inline]
     pub fn into_owned(self) -> Finder<'static> {
-        Finder {
-            needle: self.needle.into_owned(),
-            searcher: self.searcher.clone(),
-        }
+        Finder { needle: self.needle.into_owned(), searcher: self.searcher }
     }
 
     /// Convert this finder into its borrowed variant.
@@ -609,10 +603,7 @@ impl<'n> FinderRev<'n> {
     #[cfg(feature = "alloc")]
     #[inline]
     pub fn into_owned(self) -> FinderRev<'static> {
-        FinderRev {
-            needle: self.needle.into_owned(),
-            searcher: self.searcher.clone(),
-        }
+        FinderRev { needle: self.needle.into_owned(), searcher: self.searcher }
     }
 
     /// Convert this finder into its borrowed variant.

@@ -122,6 +122,24 @@ fn it_parses_big_float_string() {
 }
 
 #[test]
+fn it_parses_scientific_notation_from_str() {
+    let a = Decimal::from_str("1.23e4").unwrap();
+    assert_eq!("12300", a.to_string());
+
+    let b = Decimal::from_str("6.7e-1").unwrap();
+    assert_eq!("0.67", b.to_string());
+
+    let c = Decimal::from_str("1E2").unwrap();
+    assert_eq!("100", c.to_string());
+
+    let d = Decimal::from_str("-2.5E-3").unwrap();
+    assert_eq!("-0.0025", d.to_string());
+
+    let e = Decimal::from_str("5e0").unwrap();
+    assert_eq!("5", e.to_string());
+}
+
+#[test]
 fn it_can_serialize_deserialize() {
     let tests = [
         "12.3456789",
@@ -4801,6 +4819,28 @@ mod issues {
         // =
         // - 714606667614253123173036.85120
         assert_eq!("-714606667614253123173036.85120", c.unwrap().to_string());
+    }
+
+    #[test]
+    fn subtract_borrow_propagation_into_upper_words() {
+        // In `unaligned_add`'s subtract path the borrow-propagation loop had an
+        // inverted stop condition, so when a large integer has a small high-scale
+        // fraction subtracted from it (the scaled operand spilling into the Buf24
+        // upper words with bits 96..128 equal to 0 or 1) the borrow out of the low
+        // 96 bits was either dropped or applied spuriously, leaving the result
+        // wrong by ~2^128.
+        fn sub(a: &str, b: &str, expected: &str) {
+            let a = Decimal::from_str(a).unwrap();
+            let b = Decimal::from_str(b).unwrap();
+            let expected = Decimal::from_str(expected).unwrap();
+            // Value-equality is scale-independent, which is what we care about here.
+            assert_eq!(expected, a - b, "{a} - {b}");
+        }
+
+        // word3 == 0: borrow was lost -> result ~2^128 too large.
+        sub("34028236693", "7.0000000000000000000000000000", "34028236686");
+        // word3 == 1: spurious borrow -> result ~2^128 too small.
+        sub("34028236701", "7.0000000000000000000000000000", "34028236694");
     }
 
     #[test]

@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.66"
+rust-version = "1.76"
 name = "tauri-winres"
-version = "0.3.5"
+version = "0.3.6"
 authors = [
     "Tauri Programme within The Commons Conservancy",
     "Max Resch <resch.max@gmail.com>",
@@ -41,4 +41,4 @@ version = "1"
 version = "3"
 
 [dependencies.toml]
-version = "0.9"
+version = "1.0"

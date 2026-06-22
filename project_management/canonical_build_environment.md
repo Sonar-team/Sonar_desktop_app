@@ -27,6 +27,7 @@ These inputs must stay consistent across all platforms:
 - Node.js version
 - Deno version
 - Tauri CLI version
+- Vite version
 - frontend lockfile
 - Cargo lockfile
 - vendored Cargo dependencies
@@ -40,14 +41,15 @@ bundle for that platform is reproducible.
 
 Canonical toolchain versions are tracked in `config/build-versions.env`.
 
-- Rust: `1.95.0`
-- Node.js: `24.14.0`
-- Deno: `2.7.13`
-- Tauri CLI: `2.11.1`
+- Rust: `1.96.0`
+- Node.js: `24.15.0`
+- Deno: `2.8.3`
+- Tauri CLI: `2.11.3`
+- Vite: `8.0.16`
 
 Rust is pinned in `src-tauri/rust-toolchain.toml`. Node.js is declared in
 `package.json` under `engines.node`. Deno is pinned in `Dockerfile`. The Tauri
-CLI version is pinned in `package.json`.
+CLI version and Vite version are pinned in `package.json`.
 
 When bumping one of these versions, update `config/build-versions.env` first,
 then keep the files above aligned. CI validates the alignment with
@@ -84,7 +86,7 @@ The shared source of these settings is `security/repro-env.ts`.
 
 - OS: Ubuntu 22.04 for the Linux reproducibility check
 - Architecture: `x86_64` / `amd64`
-- Container base image: `rust:1.95.0`
+- Container base image: `rust:1.96.0`
 - Container image digest:
   `sha256:5b1e3484ddcd22a3738c0ec34a5e98bf19382eb295fb6db54295e62379119040`
 - Binary target: `src-tauri/target/release/sonar`

@@ -52,22 +52,20 @@
 //!   Libraries should never enable this feature, as the decision of what format to use should be up
 //!   to the user.
 //!
-//! - `rand` (_implicitly enables `rand08` and `rand09`_)
+//! - `rand` (_implicitly enables `rand08`, `rand09`, and `rand010`_)
 //!
 //!   Previously, this would enable support for `rand` 0.8. Since the release of `rand` 0.9, the
-//!   feature has been split into `rand08` and `rand09` to allow support for both versions. For
-//!   backwards compatibility and simplicity, this feature enables support for _both_ series.
+//!   feature has been split into `rand08` and `rand09` to allow support for both versions. `rand`
+//!   0.10 has since been added. For backwards compatibility and simplicity, this feature enables
+//!   support for _all_ series.
 //!
-//!   It is strongly recommended to enable `rand08` or `rand09` directly, as enabling `rand` will
-//!   needlessly pull in both versions.
+//!   It is strongly recommended to enable the version you need directly, as enabling `rand` will
+//!   needlessly pull in all versions.
 //!
-//! - `rand08`
+//! - `rand08`, `rand09`, `rand010`
 //!
-//!   Enables [`rand` 0.8](https://docs.rs/rand/0.8) support for all types.
-//!
-//! - `rand09`
-//!
-//!   Enables [`rand` 0.9](https://docs.rs/rand/0.9) support for all types.
+//!   Enables [`rand` 0.8](https://docs.rs/rand/0.8), [`rand` 0.9](https://docs.rs/rand/0.9), and
+//!   [`rand` 0.10](https://docs.rs/rand/0.10) support for all types, respectively.
 //!
 //! - `quickcheck` (_implicitly enables `alloc`_)
 //!
@@ -93,6 +91,11 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+/// Deprecated module for units of time.
+#[deprecated(note = "import from `time::unit` instead")]
+pub mod convert {
+    pub use time_core::unit::*;
+}
 mod date;
 mod duration;
 pub mod error;
@@ -109,12 +112,15 @@ mod interop;
 #[cfg(feature = "macros")]
 pub mod macros;
 mod month;
+mod num_fmt;
 mod offset_date_time;
 #[cfg(feature = "parsing")]
 pub mod parsing;
 mod primitive_date_time;
 #[cfg(feature = "quickcheck")]
 mod quickcheck;
+#[cfg(feature = "rand010")]
+mod rand010;
 #[cfg(feature = "rand08")]
 mod rand08;
 #[cfg(feature = "rand09")]
@@ -130,7 +136,7 @@ mod utc_offset;
 pub mod util;
 mod weekday;
 
-pub use time_core::convert;
+pub use time_core::unit;
 
 pub use crate::date::Date;
 pub use crate::duration::Duration;

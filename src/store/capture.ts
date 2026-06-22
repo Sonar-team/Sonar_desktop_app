@@ -13,6 +13,8 @@ export const useCaptureStore = defineStore("capture", {
     showMatrice: true,
     isImporting: false,
     hasData: false,
+    activeFilter: '' as string,
+    pendingFilter: '' as string,
 
     // Listeners HMR-safe dans le state
     startedListeners: [] as Array<(d: any) => void>,
@@ -32,6 +34,12 @@ export const useCaptureStore = defineStore("capture", {
     toggleView() {
       this.showMatrice = !this.showMatrice;
     },
+    setActiveFilter(filter: string) {
+      this.activeFilter = filter;
+    },
+    setPendingFilter(filter: string) {
+      this.pendingFilter = filter;
+    },
 
     setChannel(channel: Channel<CaptureEvent>) {
       console.log("[CaptureStore] Channel attaché");
@@ -45,6 +53,10 @@ export const useCaptureStore = defineStore("capture", {
         // console.log("[CaptureStore] Message reçu :", msg.data)
         switch (msg.event) {
           case "started":
+            if (this.pendingFilter) {
+              this.activeFilter = this.pendingFilter;
+              this.pendingFilter = '';
+            }
             for (const cb of this.startedListeners) cb(msg.data);
             break;
           case "finished":

@@ -5,7 +5,7 @@
 
 use crate::events::attributes::Attribute;
 use crate::events::{BytesStart, Event};
-use crate::utils::write_byte_string;
+use crate::utils::{write_byte_string, Bytes};
 use memchr::memchr;
 use std::fmt::{self, Debug, Formatter};
 use std::iter::FusedIterator;
@@ -365,13 +365,11 @@ impl<'a> AsRef<[u8]> for Namespace<'a> {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Result of [prefix] resolution which creates by [`NamespaceResolver::resolve`], [`NsReader::resolve_attribute`],
-/// [`NsReader::resolve_element`], [`NsReader::read_resolved_event`] and
+/// Result of [prefix] resolution which creates by [`NamespaceResolver::resolve`],
+/// [`NsReader::read_resolved_event`] and
 /// [`NsReader::read_resolved_event_into`] methods.
 ///
 /// [prefix]: Prefix
-/// [`NsReader::resolve_attribute`]: crate::reader::NsReader::resolve_attribute
-/// [`NsReader::resolve_element`]: crate::reader::NsReader::resolve_element
 /// [`NsReader::read_resolved_event`]: crate::reader::NsReader::read_resolved_event
 /// [`NsReader::read_resolved_event_into`]: crate::reader::NsReader::read_resolved_event_into
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -482,7 +480,7 @@ impl NamespaceBinding {
 /// prefixes into namespaces.
 ///
 /// Holds all internal logic to push/pop namespaces with their levels.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct NamespaceResolver {
     /// Buffer that contains names of namespace prefixes (the part between `xmlns:`
     /// and an `=`) and namespace values.
@@ -492,6 +490,16 @@ pub struct NamespaceResolver {
     /// The number of open tags at the moment. We need to keep track of this to know which namespace
     /// declarations to remove when we encounter an `End` event.
     nesting_level: u16,
+}
+
+impl Debug for NamespaceResolver {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NamespaceResolver")
+            .field("buffer", &Bytes(&self.buffer))
+            .field("bindings", &self.bindings)
+            .field("nesting_level", &self.nesting_level)
+            .finish()
+    }
 }
 
 /// That constant define the one of [reserved namespaces] for the xml standard.
@@ -676,11 +684,54 @@ impl NamespaceResolver {
     /// last call to [`Self::push()`] and [`Self::add()`].
     ///
     /// [namespace bindings]: https://www.w3.org/TR/xml-names11/#dt-NSDecl
+    #[inline]
     pub fn pop(&mut self) {
-        self.nesting_level = self.nesting_level.saturating_sub(1);
-        let current_level = self.nesting_level;
+        self.set_level(self.nesting_level.saturating_sub(1));
+    }
+
+    /// Sets new number of [`push`] calls that were not followed by [`pop`] calls.
+    ///
+    /// When set to value lesser than current [`level`], behaves as if [`pop`]
+    /// will be called until the level reaches the corresponding value.
+    ///
+    /// When set to value bigger than current [`level`] just increases internal
+    /// counter. You may need to call [`pop`] more times that required before.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use pretty_assertions::assert_eq;
+    /// # use quick_xml::events::BytesStart;
+    /// # use quick_xml::name::{Namespace, NamespaceResolver, PrefixDeclaration, QName, ResolveResult};
+    /// #
+    /// let mut resolver = NamespaceResolver::default();
+    ///
+    /// assert_eq!(resolver.level(), 0);
+    ///
+    /// resolver.push(&BytesStart::new("tag"));
+    /// assert_eq!(resolver.level(), 1);
+    ///
+    /// resolver.set_level(10);
+    /// assert_eq!(resolver.level(), 10);
+    ///
+    /// resolver.pop();
+    /// assert_eq!(resolver.level(), 9);
+    ///
+    /// resolver.set_level(0);
+    /// assert_eq!(resolver.level(), 0);
+    ///
+    /// // pop from empty resolver does nothing
+    /// resolver.pop();
+    /// assert_eq!(resolver.level(), 0);
+    /// ```
+    ///
+    /// [`push`]: Self::push
+    /// [`pop`]: Self::pop
+    /// [`level`]: Self::level
+    pub fn set_level(&mut self, level: u16) {
+        self.nesting_level = level;
         // from the back (most deeply nested scope), look for the first scope that is still valid
-        match self.bindings.iter().rposition(|n| n.level <= current_level) {
+        match self.bindings.iter().rposition(|n| n.level <= level) {
             // none of the namespaces are valid, remove all of them
             None => {
                 self.buffer.clear();
@@ -1084,6 +1135,7 @@ impl<'a> Iterator for NamespaceBindingsIter<'a> {
 impl<'a> FusedIterator for NamespaceBindingsIter<'a> {}
 
 /// The previous name for [`NamespaceBindingsIter`].
+#[deprecated = "Use NamespaceBindingsIter instead. This alias will be removed in 0.40.0"]
 pub type PrefixIter<'a> = NamespaceBindingsIter<'a>;
 
 /// Iterator on the declared namespace bindings on specified level. Returns pairs of the _(prefix, namespace)_.

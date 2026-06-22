@@ -16,8 +16,8 @@ pub use adjusted::*;
 use rust_decimal::prelude::*;
 
 use crate::{
-    common::{ceil_f32, ceil_f64},
     Unit,
+    common::{ceil_f32, ceil_f64},
 };
 
 #[cfg(feature = "u128")]
@@ -158,20 +158,12 @@ impl Byte {
     pub const fn from_u128(size: u128) -> Option<Self> {
         #[cfg(feature = "u128")]
         {
-            if size < RONNABYTE {
-                Some(Byte(size))
-            } else {
-                None
-            }
+            if size < RONNABYTE { Some(Byte(size)) } else { None }
         }
 
         #[cfg(not(feature = "u128"))]
         {
-            if size <= u64::MAX as u128 {
-                Some(Byte(size as u64))
-            } else {
-                None
-            }
+            if size <= u64::MAX as u128 { Some(Byte(size as u64)) } else { None }
         }
     }
 
@@ -240,22 +232,14 @@ impl Byte {
             {
                 let size = ceil_f64(size) as u128;
 
-                if size < RONNABYTE {
-                    Some(Byte(size))
-                } else {
-                    None
-                }
+                if size < RONNABYTE { Some(Byte(size)) } else { None }
             }
 
             #[cfg(not(feature = "u128"))]
             {
                 let size = ceil_f64(size) as u64;
 
-                if size < u64::MAX {
-                    Some(Byte(size))
-                } else {
-                    None
-                }
+                if size < u64::MAX { Some(Byte(size)) } else { None }
             }
         } else {
             None
@@ -282,22 +266,14 @@ impl Byte {
             {
                 let size = ceil_f32(size) as u128;
 
-                if size < RONNABYTE {
-                    Some(Byte(size))
-                } else {
-                    None
-                }
+                if size < RONNABYTE { Some(Byte(size)) } else { None }
             }
 
             #[cfg(not(feature = "u128"))]
             {
                 let size = ceil_f32(size) as u64;
 
-                if size < u64::MAX {
-                    Some(Byte(size))
-                } else {
-                    None
-                }
+                if size < u64::MAX { Some(Byte(size)) } else { None }
             }
         } else {
             None
@@ -318,11 +294,7 @@ impl Byte {
     /// * If the input **size** is too large (the maximum is **10<sup>27</sup> - 1** if the `u128` feature is enabled, or **2<sup>64</sup> - 1** otherwise) or negative, this function will return `None`.
     #[inline]
     pub const fn from_i128(size: i128) -> Option<Self> {
-        if size >= 0 {
-            Self::from_u128(size as u128)
-        } else {
-            None
-        }
+        if size >= 0 { Self::from_u128(size as u128) } else { None }
     }
 
     /// Create a new `Byte` instance from a size in bytes.
@@ -339,11 +311,7 @@ impl Byte {
     /// * If the input **size** is negative, this function will return `None`.
     #[inline]
     pub const fn from_i64(size: i64) -> Option<Self> {
-        if size >= 0 {
-            Some(Self::from_u64(size as u64))
-        } else {
-            None
-        }
+        if size >= 0 { Some(Self::from_u64(size as u64)) } else { None }
     }
 }
 
@@ -368,7 +336,7 @@ impl Byte {
         let v = {
             match unit {
                 Unit::Bit => {
-                    if size & 11 > 0 {
+                    if size & 7 > 0 {
                         (size >> 3) + 1
                     } else {
                         size >> 3
@@ -411,7 +379,7 @@ impl Byte {
             let v = {
                 match unit {
                     Unit::Bit => {
-                        if size & 11 > 0 {
+                        if size & 7 > 0 {
                             (size >> 3) + 1
                         } else {
                             size >> 3
@@ -489,11 +457,7 @@ impl Byte {
     /// * The calculated byte will be rounded up.
     #[inline]
     pub const fn from_i128_with_unit(size: i128, unit: Unit) -> Option<Self> {
-        if size >= 0 {
-            Self::from_u128_with_unit(size as u128, unit)
-        } else {
-            None
-        }
+        if size >= 0 { Self::from_u128_with_unit(size as u128, unit) } else { None }
     }
 
     /// Create a new `Byte` instance from a size of bytes with a unit.
@@ -512,11 +476,7 @@ impl Byte {
     /// * The calculated byte will be rounded up.
     #[inline]
     pub const fn from_i64_with_unit(size: i64, unit: Unit) -> Option<Self> {
-        if size >= 0 {
-            Self::from_u64_with_unit(size as u64, unit)
-        } else {
-            None
-        }
+        if size >= 0 { Self::from_u64_with_unit(size as u64, unit) } else { None }
     }
 }
 
@@ -588,11 +548,7 @@ impl Byte {
     pub const fn as_u64(self) -> u64 {
         #[cfg(feature = "u128")]
         {
-            if self.0 <= u64::MAX as u128 {
-                self.0 as u64
-            } else {
-                u64::MAX
-            }
+            if self.0 <= u64::MAX as u128 { self.0 as u64 } else { u64::MAX }
         }
 
         #[cfg(not(feature = "u128"))]
@@ -631,11 +587,7 @@ impl Byte {
     pub const fn as_u64_checked(self) -> Option<u64> {
         #[cfg(feature = "u128")]
         {
-            if self.0 <= u64::MAX as u128 {
-                Some(self.0 as u64)
-            } else {
-                None
-            }
+            if self.0 <= u64::MAX as u128 { Some(self.0 as u64) } else { None }
         }
 
         #[cfg(not(feature = "u128"))]

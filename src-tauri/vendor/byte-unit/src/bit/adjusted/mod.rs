@@ -12,7 +12,7 @@ use core::{
 };
 
 use super::{Bit, Unit};
-use crate::{common::round_fractional_part_f64, UnitType};
+use crate::{UnitType, common::round_fractional_part_f64};
 
 /// Generated from the [`Bit::get_adjusted_unit`](./struct.Bit.html#method.get_adjusted_unit) method or the the [`Bit::get_appropriate_unit`](./struct.Bit.html#method.get_appropriate_unit) method.
 ///
@@ -255,8 +255,8 @@ impl Bit {
         let bit_v = self.as_u128();
 
         let value = match unit {
-            Unit::Bit => (bit_v << 3) as f64,
-            Unit::B => bit_v as f64,
+            Unit::Bit => bit_v as f64,
+            Unit::B => bit_v as f64 / 8.0,
             _ => bit_v as f64 / unit.as_bits_u128() as f64,
         };
 
@@ -306,6 +306,6 @@ impl Bit {
             }
         }
 
-        self.get_adjusted_unit(Unit::B)
+        self.get_adjusted_unit(Unit::Bit)
     }
 }

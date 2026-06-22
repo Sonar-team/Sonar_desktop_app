@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.71"
+rust-version = "1.77"
 name = "global-hotkey"
-version = "0.7.0"
+version = "0.8.0"
 build = false
 autolib = false
 autobins = false
@@ -31,7 +31,7 @@ keywords = [
 ]
 categories = ["gui"]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/amrbashir/global-hotkey"
+repository = "https://github.com/tauri-apps/global-hotkey"
 
 [features]
 serde = ["dep:serde"]

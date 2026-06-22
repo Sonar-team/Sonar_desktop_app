@@ -7,6 +7,9 @@
 #![allow(non_upper_case_globals)]
 #![cfg_attr(feature="no-stdlib-ffi-binding",cfg_attr(not(feature="std"), feature(lang_items)))]
 #![cfg_attr(feature="no-stdlib-ffi-binding",cfg_attr(not(feature="std"), feature(panic_handler)))]
+// Assert at compile time that the default build contains no unsafe code:
+// the only unsafe in this crate lives behind the "unsafe" and "ffi-api" features.
+#![cfg_attr(not(any(feature="unsafe", feature="ffi-api")), forbid(unsafe_code))]
 
 
 #[macro_use]

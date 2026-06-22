@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71.1"
 name = "bumpalo"
-version = "3.20.2"
+version = "3.20.3"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 build = false
 exclude = [
@@ -31,6 +31,11 @@ autobenches = false
 description = "A fast bump allocation arena for Rust."
 documentation = "https://docs.rs/bumpalo"
 readme = "README.md"
+keywords = [
+    "arena",
+    "bump",
+    "allocator",
+]
 categories = [
     "memory-management",
     "rust-patterns",

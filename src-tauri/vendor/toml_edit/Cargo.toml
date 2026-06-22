@@ -13,16 +13,16 @@
 edition = "2024"
 rust-version = "1.85"
 name = "toml_edit"
-version = "0.25.11+spec-1.1.0"
+version = "0.25.12+spec-1.1.0"
 build = false
 include = [
-    "build.rs",
-    "src/**/*",
-    "Cargo.toml",
-    "Cargo.lock",
-    "LICENSE*",
-    "README.md",
-    "examples/**/*",
+    "/build.rs",
+    "/src/**/*",
+    "/Cargo.toml",
+    "/Cargo.lock",
+    "/LICENSE*",
+    "/README.md",
+    "/examples/**/*",
 ]
 autolib = false
 autobins = false
@@ -175,10 +175,10 @@ version = "1.0.149"
 version = "1.1.0"
 
 [dev-dependencies.toml-test-data]
-version = "2.4.0"
+version = "2.10.0"
 
 [dev-dependencies.toml-test-harness]
-version = "1.4.0"
+version = "1.10.0"
 features = ["snapshot"]
 
 [dev-dependencies.walkdir]
@@ -189,6 +189,7 @@ bool_assert_comparison = "allow"
 branches_sharing_code = "allow"
 checked_conversions = "warn"
 collapsible_else_if = "allow"
+collapsible_match = "allow"
 create_dir = "warn"
 dbg_macro = "warn"
 debug_assert_with_mut_call = "warn"

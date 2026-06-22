@@ -70,10 +70,7 @@ pub fn spawn_capture_thread_with_pool(
                 Err(pcap::Error::PcapError(e)) if e.contains("Packets are not available") => {
                     thread::sleep(Duration::from_millis(1));
                 }
-                Err(pcap::Error::TimeoutExpired) => {
-                    println!("TimeoutExpired");
-                    continue;
-                }
+                Err(pcap::Error::TimeoutExpired) => continue,
                 Err(e) => {
                     error!("Erreur capture : {:?}", e);
                     break;

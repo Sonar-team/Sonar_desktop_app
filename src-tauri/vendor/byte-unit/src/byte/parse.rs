@@ -1,7 +1,7 @@
 use rust_decimal::prelude::*;
 
 use super::Byte;
-use crate::{common::get_char_from_bytes, unit::parse::read_xib, ParseError, ValueParseError};
+use crate::{ParseError, ValueParseError, common::get_char_from_bytes, unit::parse::read_xib};
 
 /// Associated functions for parsing strings.
 impl Byte {

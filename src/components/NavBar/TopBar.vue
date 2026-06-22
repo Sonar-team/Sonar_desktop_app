@@ -25,7 +25,6 @@
 
 <script lang="ts">
 import { Channel, invoke } from '@tauri-apps/api/core';
-import { exit } from '@tauri-apps/plugin-process';
 import { info, error } from '@tauri-apps/plugin-log';
 import { save } from '@tauri-apps/plugin-dialog';
 import { register, unregister } from '@tauri-apps/plugin-global-shortcut';
@@ -38,12 +37,13 @@ import { displayCaptureError } from '../../errors/capture'; // Gestion des erreu
 import { getCurrentDate } from '../../utils/time';
 import { useCaptureStore } from '../../store/capture';
 import { CaptureEvent } from '../../types/capture';
+import { requestAppExit } from '../../utils/appExit';
 
 type Panel = 'config' | 'pcap' | 'csv' | 'filter';
 
 export default {
   name: "TopBar",
-  emits: ['toggle-config','toggle-pcap','toggle-csv','toggle-filter'],
+  emits: ['toggle-config', 'toggle-pcap','toggle-csv', 'toggle-filter', 'toggle-graph'],
 
   props: {
     configOpen: Boolean,

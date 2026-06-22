@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           sudo ./script/ci/use-apt-snapshot.sh
-          sudo apt-get install -y $LINUX_APT_PACKAGES
+          sudo apt-get install -y --allow-downgrades $LINUX_APT_PACKAGES
 
       - name: install frontend dependencies deterministically
         run: deno install --frozen
@@ -102,7 +102,7 @@ jobs:
         shell: bash
         run: |
           sudo ./script/ci/use-apt-snapshot.sh
-          sudo apt-get install -y $LINUX_APT_PACKAGES
+          sudo apt-get install -y --allow-downgrades $LINUX_APT_PACKAGES
 
       - name: install frontend dependencies deterministically
         run: deno install --frozen

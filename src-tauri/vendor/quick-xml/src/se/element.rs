@@ -5,12 +5,11 @@ use crate::se::content::ContentSerializer;
 use crate::se::key::QNameSerializer;
 use crate::se::simple_type::{QuoteTarget, SimpleSeq, SimpleTypeSerializer};
 use crate::se::text::TextSerializer;
-use crate::se::{SeError, WriteResult, XmlName};
+use crate::se::{EmptyElementHandling, SeError, WriteResult, XmlName};
 use serde::ser::{
     Impossible, Serialize, SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant,
     SerializeTuple, SerializeTupleStruct, SerializeTupleVariant, Serializer,
 };
-use serde::serde_if_integer128;
 use std::fmt::Write;
 
 /// Writes simple type content between [`ElementSerializer::key`] tags.
@@ -56,7 +55,7 @@ macro_rules! write_primitive {
 ///   - unit variants are serialized as `<key>variant</key>`;
 ///   - other variants are not supported ([`SeError::Unsupported`] is returned);
 ///
-/// Usage of empty tags depends on the [`ContentSerializer::expand_empty_elements`] setting.
+/// Usage of empty tags depends on the [`ContentSerializer::empty_element_handling`] setting.
 pub struct ElementSerializer<'w, 'k, W: Write> {
     /// The inner serializer that contains the settings and mostly do the actual work
     pub ser: ContentSerializer<'w, 'k, W>,
@@ -88,10 +87,8 @@ impl<'w, 'k, W: Write> Serializer for ElementSerializer<'w, 'k, W> {
     write_primitive!(serialize_u32(u32));
     write_primitive!(serialize_u64(u64));
 
-    serde_if_integer128! {
-        write_primitive!(serialize_i128(i128));
-        write_primitive!(serialize_u128(u128));
-    }
+    write_primitive!(serialize_i128(i128));
+    write_primitive!(serialize_u128(u128));
 
     write_primitive!(serialize_f32(f32));
     write_primitive!(serialize_f64(f64));
@@ -445,7 +442,7 @@ impl<'w, 'k, W: Write> Struct<'w, 'k, W> {
             write_indent: self.write_indent,
             text_format: self.ser.ser.text_format,
             allow_primitive: true,
-            expand_empty_elements: self.ser.ser.expand_empty_elements,
+            empty_element_handling: self.ser.ser.empty_element_handling,
         };
 
         if key == TEXT_KEY {
@@ -482,12 +479,18 @@ impl<'w, 'k, W: Write> SerializeStruct for Struct<'w, 'k, W> {
         self.ser.ser.indent.decrease();
 
         if self.children.is_empty() {
-            if self.ser.ser.expand_empty_elements {
-                self.ser.ser.writer.write_str("></")?;
-                self.ser.ser.writer.write_str(self.ser.key.0)?;
-                self.ser.ser.writer.write_char('>')?;
-            } else {
-                self.ser.ser.writer.write_str("/>")?;
+            match self.ser.ser.empty_element_handling {
+                EmptyElementHandling::SelfClosed => {
+                    self.ser.ser.writer.write_str("/>")?;
+                }
+                EmptyElementHandling::SelfClosedWithSpace => {
+                    self.ser.ser.writer.write_str(" />")?;
+                }
+                EmptyElementHandling::Expanded => {
+                    self.ser.ser.writer.write_str("></")?;
+                    self.ser.ser.writer.write_str(self.ser.key.0)?;
+                    self.ser.ser.writer.write_char('>')?;
+                }
             }
         } else {
             self.ser.ser.writer.write_char('>')?;
@@ -638,7 +641,7 @@ mod tests {
                             write_indent: false,
                             text_format: TextFormat::Text,
                             allow_primitive: true,
-                            expand_empty_elements: false,
+                            empty_element_handling: EmptyElementHandling::SelfClosed,
                         },
                         key: XmlName("root"),
                     };
@@ -665,7 +668,7 @@ mod tests {
                             write_indent: false,
                             text_format: TextFormat::Text,
                             allow_primitive: true,
-                            expand_empty_elements: false,
+                            empty_element_handling: EmptyElementHandling::SelfClosed,
                         },
                         key: XmlName("root"),
                     };
@@ -700,10 +703,8 @@ mod tests {
         serialize_as!(u64_:   42000000000000u64   => "<root>42000000000000</root>");
         serialize_as!(usize_: 42000000usize       => "<root>42000000</root>");
 
-        serde_if_integer128! {
-            serialize_as!(i128_: -420000000000000000000000000000i128 => "<root>-420000000000000000000000000000</root>");
-            serialize_as!(u128_:  420000000000000000000000000000u128 => "<root>420000000000000000000000000000</root>");
-        }
+        serialize_as!(i128_: -420000000000000000000000000000i128 => "<root>-420000000000000000000000000000</root>");
+        serialize_as!(u128_:  420000000000000000000000000000u128 => "<root>420000000000000000000000000000</root>");
 
         serialize_as!(f32_: 4.2f32 => "<root>4.2</root>");
         serialize_as!(f64_: 4.2f64 => "<root>4.2</root>");
@@ -802,10 +803,8 @@ mod tests {
                 text!(u64_:   42000000000000u64   => "42000000000000");
                 text!(usize_: 42000000usize       => "42000000");
 
-                serde_if_integer128! {
-                    text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                    text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-                }
+                text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+                text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
                 text!(f32_: 4.2f32 => "4.2");
                 text!(f64_: 4.2f64 => "4.2");
@@ -927,10 +926,8 @@ mod tests {
                 text!(u64_:   42000000000000u64   => "42000000000000");
                 text!(usize_: 42000000usize       => "42000000");
 
-                serde_if_integer128! {
-                    text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                    text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-                }
+                text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+                text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
                 text!(f32_: 4.2f32 => "4.2");
                 text!(f64_: 4.2f64 => "4.2");
@@ -1056,10 +1053,8 @@ mod tests {
                 value!(u64_:   42000000000000u64   => "42000000000000");
                 value!(usize_: 42000000usize       => "42000000");
 
-                serde_if_integer128! {
-                    value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                    value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-                }
+                value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+                value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
                 value!(f32_: 4.2f32 => "4.2");
                 value!(f64_: 4.2f64 => "4.2");
@@ -1167,10 +1162,8 @@ mod tests {
                 value!(u64_:   42000000000000u64   => "42000000000000");
                 value!(usize_: 42000000usize       => "42000000");
 
-                serde_if_integer128! {
-                    value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                    value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-                }
+                value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+                value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
                 value!(f32_: 4.2f32 => "4.2");
                 value!(f64_: 4.2f64 => "4.2");
@@ -1361,7 +1354,7 @@ mod tests {
                             write_indent: false,
                             text_format: TextFormat::Text,
                             allow_primitive: true,
-                            expand_empty_elements: false,
+                            empty_element_handling: EmptyElementHandling::SelfClosed,
                         },
                         key: XmlName("root"),
                     };
@@ -1388,7 +1381,7 @@ mod tests {
                             write_indent: false,
                             text_format: TextFormat::Text,
                             allow_primitive: true,
-                            expand_empty_elements: false,
+                            empty_element_handling: EmptyElementHandling::SelfClosed,
                         },
                         key: XmlName("root"),
                     };
@@ -1423,10 +1416,8 @@ mod tests {
         serialize_as!(u64_:   42000000000000u64   => "<root>42000000000000</root>");
         serialize_as!(usize_: 42000000usize       => "<root>42000000</root>");
 
-        serde_if_integer128! {
-            serialize_as!(i128_: -420000000000000000000000000000i128 => "<root>-420000000000000000000000000000</root>");
-            serialize_as!(u128_:  420000000000000000000000000000u128 => "<root>420000000000000000000000000000</root>");
-        }
+        serialize_as!(i128_: -420000000000000000000000000000i128 => "<root>-420000000000000000000000000000</root>");
+        serialize_as!(u128_:  420000000000000000000000000000u128 => "<root>420000000000000000000000000000</root>");
 
         serialize_as!(f32_: 4.2f32 => "<root>4.2</root>");
         serialize_as!(f64_: 4.2f64 => "<root>4.2</root>");
@@ -1528,10 +1519,8 @@ mod tests {
                 text!(u64_:   42000000000000u64   => "42000000000000");
                 text!(usize_: 42000000usize       => "42000000");
 
-                serde_if_integer128! {
-                    text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                    text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-                }
+                text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+                text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
                 text!(f32_: 4.2f32 => "4.2");
                 text!(f64_: 4.2f64 => "4.2");
@@ -1654,10 +1643,8 @@ mod tests {
                 text!(u64_:   42000000000000u64   => "42000000000000");
                 text!(usize_: 42000000usize       => "42000000");
 
-                serde_if_integer128! {
-                    text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                    text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-                }
+                text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+                text!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
                 text!(f32_: 4.2f32 => "4.2");
                 text!(f64_: 4.2f64 => "4.2");
@@ -1785,10 +1772,8 @@ mod tests {
                 value!(u64_:   42000000000000u64   => "42000000000000");
                 value!(usize_: 42000000usize       => "42000000");
 
-                serde_if_integer128! {
-                    value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                    value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-                }
+                value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+                value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
                 value!(f32_: 4.2f32 => "4.2");
                 value!(f64_: 4.2f64 => "4.2");
@@ -1899,10 +1884,8 @@ mod tests {
                 value!(u64_:   42000000000000u64   => "42000000000000");
                 value!(usize_: 42000000usize       => "42000000");
 
-                serde_if_integer128! {
-                    value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-                    value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
-                }
+                value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
+                value!(u128_:  420000000000000000000000000000u128 => "420000000000000000000000000000");
 
                 value!(f32_: 4.2f32 => "4.2");
                 value!(f64_: 4.2f64 => "4.2");
@@ -2106,7 +2089,7 @@ mod tests {
                             write_indent: false,
                             text_format: TextFormat::Text,
                             allow_primitive: true,
-                            expand_empty_elements: true,
+                            empty_element_handling: EmptyElementHandling::Expanded,
                         },
                         key: XmlName("root"),
                     };

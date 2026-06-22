@@ -1,15 +1,15 @@
 [package]
 name = "global-hotkey"
-version = "0.7.0"
+version = "0.8.0"
 description = "Global hotkeys for Desktop Applications"
 edition = "2021"
 keywords = ["windowing", "global", "global-hotkey", "hotkey"]
 license = "Apache-2.0 OR MIT"
 readme = "README.md"
-repository = "https://github.com/amrbashir/global-hotkey"
+repository = "https://github.com/tauri-apps/global-hotkey"
 documentation = "https://docs.rs/global-hotkey"
 categories = ["gui"]
-rust-version = "1.71"
+rust-version = "1.77"
 
 [features]
 serde = ["dep:serde"]

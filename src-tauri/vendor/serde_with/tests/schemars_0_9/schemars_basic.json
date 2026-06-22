@@ -43,6 +43,24 @@
       "description": "A vector of bytes that's serialized as an uppercase hex string.",
       "type": "string",
       "pattern": "^(?:[0-9A-Fa-f]{2})*$"
+    },
+    "base58": {
+      "description": "A vector of bytes that's serialized as a base58 string.",
+      "type": "string"
+    },
+    "base58_flickr": {
+      "description": "A vector of bytes that's serialized as a base58 string in `Flickr`\n charset.",
+      "type": "string"
+    },
+    "base64": {
+      "description": "A vector of bytes that's serialized as a base64 string.",
+      "type": "string",
+      "contentEncoding": "base64"
+    },
+    "base64_urlsafe": {
+      "description": "A vector of bytes that's serialized as a base64 string in URL-safe\n charset.",
+      "type": "string",
+      "contentEncoding": "base64"
     }
   },
   "required": [
@@ -52,6 +70,10 @@
     "box_same",
     "vec_same",
     "lowercase_hex",
-    "uppercase_hex"
+    "uppercase_hex",
+    "base58",
+    "base58_flickr",
+    "base64",
+    "base64_urlsafe"
   ]
 }

@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.21.0] - 2026-06-04
+
+### Security
+
+* [GHSA-7gcf-g7xr-8hxj](https://github.com/jonasbb/serde_with/security/advisories/GHSA-7gcf-g7xr-8hxj): KeyValueMap serialization panics on empty sequence or map entries
+    Bad or attacker controlled values could cause a panic while allocating too large values.
+    Fixed in #966 by setting a maximum allocation size during the creation of collections like `Vec` or sets.
+
+    Thanks to @7thParkk for reporting the issue.
+
+### Added
+
+* Add `NoneAsZero` adapter that maps `Option<NonZero*>` to a plain integer, encoding `None` as `0` by @SAY-5 (#486)
+
+### Changed
+
+* Re-enable link-to-definition on docs.rs (#964)
+
+### Fixed
+
+* Fix some doc links to point to the correct types (#963)
+* Re-enable `unused_qualifications` and fix the resulting findings by @lms0806 (#962)
+
+## [3.20.0] - 2026-05-10
+
+### Added
+
+* Add support for `base58` encoding, similar to the existing `base64` setup by @mitinarseny (#943)
+
+### Fixed
+
+* Extend `base64` with `schemars` support by @mitinarseny (#9949)
+
+## [3.19.0] - 2026-05-02
+
+### Added
+
+* Add support for `hashbrown` v0.17 (#940)
+
+    This extends the existing support for `hashbrown` to the newly released version.
+
 ## [3.18.0] - 2026-03-13
 
 ### Added

@@ -113,6 +113,12 @@ pub struct Inotify {
 pub struct WatchDescriptor {
     wd: i32,
 }
+impl WatchDescriptor {
+    /// Raw WatchDescriptor, from libc.
+    pub fn as_raw(self) -> i32 {
+        self.wd
+    }
+}
 
 /// A single inotify event.
 ///

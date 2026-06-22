@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.77.0"
 name = "borsh"
-version = "1.6.1"
+version = "1.7.0"
 authors = ["Near Inc <hello@near.org>"]
 build = "build.rs"
 exclude = ["*.snap"]
@@ -90,7 +90,7 @@ version = "1.1"
 optional = true
 
 [dependencies.borsh-derive]
-version = "~1.6.1"
+version = "~1.7.0"
 optional = true
 
 [dependencies.bson]
@@ -109,6 +109,11 @@ optional = true
 [dependencies.indexmap]
 version = "2"
 optional = true
+
+[dependencies.uuid]
+version = "1"
+optional = true
+default-features = false
 
 [dev-dependencies.insta]
 version = "1.29.0"
