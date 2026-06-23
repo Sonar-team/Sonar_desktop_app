@@ -1,5 +1,24 @@
 # Changelog
 
+## **[3.13.25] - 2026-06-23**
+
+## ⚡ Performances
+
+- Capture live : regroupement des événements paquets côté IPC pour réduire la
+  pression sur le frontend lors des captures à fort débit.
+- Bottom log : bufferisation non réactive des paquets et rafraîchissement limité
+  à 10 fois par seconde, afin d'éviter les ralentissements autour de 1000
+  paquets/seconde.
+
+## 🛠 Corrections
+
+- Bottom log : pré-formatage des lignes affichées et limitation stricte aux 5
+  dernières trames visibles.
+- Store capture : ajout d'un désabonnement effectif aux callbacks `onPacket`
+  pour éviter l'accumulation de listeners après démontage/remontage du composant.
+- Documentation : ajout de la configuration minimale recommandée dans le README.
+- Mise à jour de la version de SONAR en **3.13.25** pour publier ces correctifs.
+
 ## **[3.13.24] - 2026-06-22**
 
 ## ✨ Améliorations

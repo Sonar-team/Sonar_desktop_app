@@ -84,6 +84,19 @@ SOC rules.
 
 Release assets are raw binaries, not installers.
 
+## Configuration minimale
+
+- **Systeme 64 bits:** Windows 10/11, Linux x86_64 recent ou macOS recent.
+- **Processeur:** 2 coeurs minimum.
+- **Memoire:** 4 Go de RAM minimum, 8 Go recommandes pour les captures a fort
+  debit ou les analyses longues.
+- **Stockage:** 500 Mo libres pour l'application, plus l'espace necessaire aux
+  exports et fichiers de capture.
+- **Capture reseau:** droits administrateur/root ou capabilities Linux
+  `cap_net_raw` et `cap_net_admin` sur le binaire.
+- **Pilote/librairie de capture:** Npcap sous Windows, libpcap sous Linux,
+  libpcap systeme sous macOS.
+
 ### Windows
 
 - Install **Npcap** separately from the

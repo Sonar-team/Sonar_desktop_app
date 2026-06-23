@@ -18,19 +18,19 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(packet, index) in safePackets" :key="index">
-          <td>{{ packet?.flow?.source_mac ?? '-' }}</td>
-          <td>{{ packet?.flow?.destination_mac ?? '-' }}</td>
-          <td>{{ packet?.flow?.vlan?.id ?? '-' }}</td>
-          <td>{{ packet?.flow?.ethertype ?? '-' }}</td>
-          <td>{{ packet?.flow?.source ?? '-' }}</td>
-          <td>{{ packet?.flow?.destination ?? '-' }}</td>
-          <td>{{ packet?.flow?.protocol ?? '-' }}</td>
-          <td>{{ packet?.flow?.source_port ?? '-' }}</td>
-          <td>{{ packet?.flow?.destination_port ?? '-' }}</td>
-          <td>{{ packet?.flow?.application_protocol ?? '-' }}</td>
-          <td>{{ packet?.len ?? '-' }}</td>
-          <td>{{ formatTimestamp(packet?.ts_sec, packet?.ts_usec) }}</td>
+        <tr v-for="(row, index) in rows" :key="index">
+          <td>{{ row.sourceMac }}</td>
+          <td>{{ row.destinationMac }}</td>
+          <td>{{ row.vlan }}</td>
+          <td>{{ row.ethertype }}</td>
+          <td>{{ row.source }}</td>
+          <td>{{ row.destination }}</td>
+          <td>{{ row.protocol }}</td>
+          <td>{{ row.sourcePort }}</td>
+          <td>{{ row.destinationPort }}</td>
+          <td>{{ row.applicationProtocol }}</td>
+          <td>{{ row.length }}</td>
+          <td>{{ row.time }}</td>
         </tr>
       </tbody>
     </table>
@@ -42,70 +42,148 @@ import { defineComponent } from 'vue'
 import { useCaptureStore } from '../../store/capture'
 import type { PacketMinimal } from '../../types/capture'
 
+const LOG_FLUSH_INTERVAL_MS = 100
+const MAX_LOG_ROWS = 5
+const MAX_BUFFERED_ROWS = MAX_LOG_ROWS * 4
+
+type PacketLogRow = {
+  sourceMac: string
+  destinationMac: string
+  vlan: string
+  ethertype: string
+  source: string
+  destination: string
+  protocol: string
+  sourcePort: string
+  destinationPort: string
+  applicationProtocol: string
+  length: string
+  time: string
+}
+
+type PacketFlowLogFields = {
+  source_mac?: unknown
+  destination_mac?: unknown
+  vlan?: { id?: unknown } | null
+  ethertype?: unknown
+  source?: unknown
+  destination?: unknown
+  protocol?: unknown
+  source_port?: unknown
+  destination_port?: unknown
+  application_protocol?: unknown
+}
+
+type ResetBus = {
+  on?: (event: 'reset', handler: () => void) => void
+  off?: (event: 'reset', handler?: () => void) => void
+}
+
+type ComponentWithResetBus = {
+  $bus?: ResetBus
+}
+
 export default defineComponent({
   data() {
     return {
-      packets: [] as PacketMinimal[],
+      rows: [] as PacketLogRow[],
       offPacket: null as null | (() => void),
       resetHandler: null as null | (() => void),
-      MAX_ROWS: 5, // ajuste si besoin
+      flushTimer: null as number | null,
     }
   },
   computed: {
     captureStore() {
       return useCaptureStore()
     },
-    // Ne conserve que des objets valides et limite l'affichage
-    safePackets(): PacketMinimal[] {
-      const arr = this.packets.filter((p) => !!p && typeof p === 'object')
-      return arr.slice(Math.max(0, arr.length - this.MAX_ROWS))
-    },
   },
   mounted() {
-    // Abonnement aux paquets
+    const pendingPackets: PacketMinimal[] = []
+
+    const flushPackets = () => {
+      this.flushTimer = null
+      if (pendingPackets.length === 0) return
+
+      const nextPackets = pendingPackets.slice(-MAX_LOG_ROWS)
+      pendingPackets.length = 0
+      this.rows = [
+        ...this.rows,
+        ...nextPackets.map((packet) => this.createLogRow(packet)),
+      ].slice(-MAX_LOG_ROWS)
+    }
+
+    const scheduleFlush = () => {
+      if (this.flushTimer !== null) return
+      this.flushTimer = window.setTimeout(flushPackets, LOG_FLUSH_INTERVAL_MS)
+    }
+
     const onPacket = (packet: PacketMinimal | undefined | null) => {
       if (!packet || typeof packet !== 'object') return
-      this.packets.push(packet)
-      // garde une taille raisonnable même en interne
-      if (this.packets.length > 200) this.packets.shift()
+
+      pendingPackets.push(packet)
+      if (pendingPackets.length > MAX_BUFFERED_ROWS) {
+        pendingPackets.splice(0, pendingPackets.length - MAX_LOG_ROWS)
+      }
+      scheduleFlush()
     }
-    // Si ton store renvoie une fonction d’unsubscribe, garde-la
+
     const maybeOff = this.captureStore.onPacket(onPacket)
     if (typeof maybeOff === 'function') this.offPacket = maybeOff
 
-    // Handler reset conservé pour off() symétrique si nécessaire
-    const reset = () => { this.packets = [] }
+    const reset = () => {
+      pendingPackets.length = 0
+      this.rows = []
+    }
     this.resetHandler = reset
-    this.$bus?.on?.('reset', reset)
+    const bus = (this as unknown as ComponentWithResetBus).$bus
+    bus?.on?.('reset', reset)
   },
   beforeUnmount() {
+    if (this.flushTimer !== null) {
+      window.clearTimeout(this.flushTimer)
+      this.flushTimer = null
+    }
     if (this.offPacket) {
       try { this.offPacket() } catch {}
     }
+    const bus = (this as unknown as ComponentWithResetBus).$bus
     if (this.resetHandler) {
-      this.$bus?.off?.('reset', this.resetHandler)
+      bus?.off?.('reset', this.resetHandler)
     } else {
-      // fallback si ton bus accepte off(event) sans callback
-      this.$bus?.off?.('reset')
+      bus?.off?.('reset')
     }
   },
   methods: {
+    createLogRow(packet: PacketMinimal): PacketLogRow {
+      const flow = packet.flow as PacketFlowLogFields | null
+
+      return {
+        sourceMac: this.formatValue(flow?.source_mac),
+        destinationMac: this.formatValue(flow?.destination_mac),
+        vlan: this.formatValue(flow?.vlan?.id),
+        ethertype: this.formatValue(flow?.ethertype),
+        source: this.formatValue(flow?.source),
+        destination: this.formatValue(flow?.destination),
+        protocol: this.formatValue(flow?.protocol),
+        sourcePort: this.formatValue(flow?.source_port),
+        destinationPort: this.formatValue(flow?.destination_port),
+        applicationProtocol: this.formatValue(flow?.application_protocol),
+        length: this.formatValue(packet.len),
+        time: this.formatTimestamp(packet.ts_sec, packet.ts_usec),
+      }
+    },
+    formatValue(value: unknown): string {
+      if (value === null || value === undefined || value === '') return '-'
+      return String(value)
+    },
     formatTimestamp(sec?: number, usec?: number): string {
       if (typeof sec !== 'number' || typeof usec !== 'number') return '-'
       const date = new Date(sec * 1000 + Math.floor(usec / 1000))
-      try {
-        return date.toLocaleTimeString('fr-FR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          fractionalSecondDigits: 3,
-        })
-      } catch {
-        // older runtimes sans fractionalSecondDigits
-        const ms = String(Math.floor((usec % 1_000_000) / 1000)).padStart(3, '0')
-        const base = date.toLocaleTimeString('fr-FR', { hour12: false })
-        return `${base}.${ms}`
-      }
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+      const ms = String(Math.floor((usec % 1_000_000) / 1000)).padStart(3, '0')
+      return `${hours}:${minutes}:${seconds}.${ms}`
     },
   },
 })

@@ -99,6 +99,10 @@ export const useCaptureStore = defineStore("capture", {
     },
     onPacket(cb: (p: any) => void) {
       this.packetListeners.push(cb);
+      return () => {
+        const index = this.packetListeners.indexOf(cb);
+        if (index !== -1) this.packetListeners.splice(index, 1);
+      };
     },
     onStats(cb: (d: any) => void) {
       this.statsListeners.push(cb);
