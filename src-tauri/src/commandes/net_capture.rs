@@ -15,6 +15,7 @@ use crate::{
         },
         flow_matrix::FlowMatrix,
         graph::GraphData,
+        labels_list::LabelStore
     },
 };
 
@@ -24,9 +25,10 @@ pub fn start_capture(
     app: AppHandle,
     on_event: Channel<CaptureEvent<'static>>,
     state_label: State<'_, Arc<Mutex<FlowMatrix>>>,
+    label_store: State<'_, Arc<Mutex<LabelStore>>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
     let mut state_label = state_label.lock()?;
-    labels_to_matrix(app.clone(), &mut state_label)?;
+    labels_to_matrix(label_store, &mut state_label)?;
     update_labels_in_state(&app, &mut state_label)?;
     let mut state_lock = state.lock()?;
     if state_lock.capture.is_some() {

@@ -18,20 +18,31 @@
       
       <div v-if="mode === 'csv'" class="csv-group">
           <button class="btn btn-add text" @click="addCsvFiles" :disabled="isConverting">
-            Ajouter des fichiers
+            Ajouter un fichier
           </button>
-          <p v-show="labelFile === null" class="text">Aucun fichier de label enregistré</p>
-          <ul v-show="labelFile !== null" class="file-list">
-            <li>
-              <label>
-                <span class="text">{{ labelFile }}</span>
-                <button class="image-btn" @click.prevent="RemoveLabelFile(labelFile!)" title="Supprimer"><img src="/src/assets/images/Poubelle.jpg" alt="Supprimer" /></button>
-              </label>
-            </li>
-          </ul>
+          <p v-show="labelRows.length == 0" class="text">Aucun label importé pour le moment</p>
+          <div v-show="labelRows.length > 0" style="display: flex; width: 90%; margin-top: 25px;">
+            <h2 class="text" style="margin: 0 auto 0 0; margin-bottom: 6px;">Contenu importé</h2>
+            <button class="btn image-btn" style="margin-bottom: 0px;" @click.prevent="clearLabelStore()" title="Réinitialiser le contenu">🔄</button>
+          </div>
+          <div v-show="labelRows.length > 0" class="data-table">
+            <div class="data-table-header">
+              <div class="col text">Adresse MAC</div>
+              <div class="col text">Adresse IP</div>
+              <div class="col text">Label</div>
+            </div>
+            <div class="separator"></div>
+            <div class="data-table-body">
+              <div v-for="([mac, ip, label], index) in labelRows" :key="index" class="data-table-row">
+                <div class="col text">{{ mac || "-" }}</div>
+                <div class="col text">{{ ip || "-" }}</div>
+                <div class="col text">{{ label || "-" }}</div>
+              </div>
+            </div>
+          </div>
           <p class="text hint">Format : <code>mac, ip, label</code> — tous les champs peuvent être vides</p>
       </div>
-
+      
       <div v-else-if="mode === 'pcap'">
         <div class="file-group">
           <button class="btn btn-add text" @click="addPcapFiles" :disabled="isConverting">
@@ -80,13 +91,13 @@ export default defineComponent({
   data() {
     return {
       packetFiles: [] as string[],
-      labelFile: null as string | null,
+      labelRows: [] as [string, string, string][],
       isConverting: false,
       showConflictDialog: false,
-      sameIpDiffMac: [] as [string, string, string, string, string][], 
-      sameIpDiffLabel: [] as [string, string, string, string, string][],
-      invalidMac: [] as [string, string][],
-      invalidIp: [] as [string, string][],
+      sameIpDiffMac: [] as [string, string, string][], 
+      sameIpDiffLabel: [] as [string, string, string][],
+      invalidMac: [] as string[],
+      invalidIp: [] as string[],
       invalidLines: [] as string[]
     };
   },
@@ -128,7 +139,7 @@ export default defineComponent({
 
         
         if (type === 'csv') {
-          await this.importLabelFiles(files);
+          await this.importLabelFile(files);
         } else {
           const list = Array.isArray(files) ? files : [files];
           this.packetFiles.push(...list);
@@ -166,10 +177,10 @@ export default defineComponent({
       this.packetFiles = [];
     },
 
-    async importLabelFiles(path: string) {
+    async importLabelFile(path: string) {
       if (path.length === 0) return;
 
-      info('import_label_files: ' + path);
+      info('import_label_file: ' + path);
 
       this.isConverting = true;
       this.invalidIp = [];
@@ -178,7 +189,7 @@ export default defineComponent({
       this.sameIpDiffMac = [];
 
       try {
-        await invoke('import_label_files', { csvPath: path });
+        await invoke('import_label_file', { incomingFilePath: path });
         info('réponse invoke');
       } catch (err) {
         const error = err as CaptureStateErrorKind;
@@ -194,7 +205,7 @@ export default defineComponent({
             this.sameIpDiffMac = sameIpDiffMac;
             this.sameIpDiffLabel = sameIpDiffLabel;
             this.showConflictDialog = true;
-          } else if (labelError.kind === "invalidFileFormat") {
+          } else if (labelError.kind === "invalidRowsFormat") {
             this.invalidLines = labelError.message;
             this.showConflictDialog = true;
           } else {
@@ -204,19 +215,17 @@ export default defineComponent({
           displayCaptureError(err);
         }  
       } finally {
-        this.labelFile = await invoke('get_label_files_list');
-        this.isConverting = false;      
+        this.labelRows = await invoke('get_label_rows');
+        this.isConverting = false;    
       }
     },
   
 
-    async RemoveLabelFile(fileRemoved: string) {
-        if (this.labelFile === null) return;
-        info('fileRemoved : ' + fileRemoved);
+    async clearLabelStore() {
         try {
-          await invoke('remove_label_file', { csvFile: fileRemoved});
+          await invoke('clear_label_store');
           info('réponse invoke');
-          this.labelFile = await invoke('get_label_files_list');
+          this.labelRows = await invoke('get_label_rows');
         } catch (err) {
           displayCaptureError(err);
         }
@@ -235,7 +244,8 @@ export default defineComponent({
       this.captureStore.updateStatus({ is_running: false });
     });
 
-    this.labelFile = await invoke('get_label_files_list');
+    this.labelRows = await invoke('get_label_rows');
+
   },
 
 })
@@ -409,6 +419,50 @@ export default defineComponent({
 .hint code {
   font-family: monospace;
   color: rgba(245, 245, 245, 0.75);
+}
+
+.separator {
+  height: 1px;
+  width: 95%;
+  background-color: whitesmoke;
+  margin: 0 auto 16px auto;
+}
+
+.data-table {
+  width: 90%;
+  background-color: #2d3748;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  overflow: hidden; 
+  text-align: center;
+}
+
+.data-table-header {
+  display: flex;
+  padding: 0.5rem;
+  margin-top: 5px;
+}
+
+.data-table-header .col {
+  font-weight: 600;
+}
+
+.data-table-body {
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.data-table-row {
+  display: flex;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.col {
+  width: 33.33%;
+  padding-left: 8px;
+  box-sizing: border-box;
 }
 
 /* Overlay + Spinner */

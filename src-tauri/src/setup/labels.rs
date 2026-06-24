@@ -4,7 +4,7 @@ use tauri::{AppHandle, Manager, path::BaseDirectory};
 
 use crate::{
     errors::CaptureStateError,
-    state::{flow_matrix::FlowMatrix, label_files_list::PcInfoLabel},
+    state::{flow_matrix::FlowMatrix, labels_list::PcInfoLabel},
 };
 
 pub fn read_labels(app: &AppHandle) -> Result<(), tauri::Error> {

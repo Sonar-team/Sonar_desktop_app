@@ -105,11 +105,8 @@ impl Serialize for CaptureStateError {
                         same_ip_diff_mac.clone(),
                         same_ip_diff_label.clone(),
                     ),
-                    LabelError::TooManyFiles { files_count } => {
-                        LabelErrorKind::TooManyFiles(*files_count)
-                    }
-                    LabelError::InvalidFileFormat { invalid_lines } => {
-                        LabelErrorKind::InvalidFileFormat(invalid_lines.clone())
+                    LabelError::InvalidRowsFormat { invalid_lines } => {
+                        LabelErrorKind::InvalidRowsFormat(invalid_lines.clone())
                     }
                 };
                 CaptureStateErrorKind::Label(kind)

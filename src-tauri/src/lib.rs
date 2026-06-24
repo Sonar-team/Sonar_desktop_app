@@ -16,8 +16,7 @@ use crate::{
         export::{csv::export_csv, logs::export_logs},
         flow_matrix::{add_label, get_label_list},
         import::{
-            convert_from_pcap_list, get_label_files_list, import_label_files, is_matrix_empty,
-            remove_label_file,
+            convert_from_pcap_list, import_label_file, is_matrix_empty, clear_label_store, get_label_rows
         },
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
@@ -27,7 +26,7 @@ use crate::{
     },
     state::{
         capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData,
-        label_files_list::PcInfoLabel,
+        labels_list::{LabelStore, PcInfoLabel},
     },
 };
 
@@ -95,6 +94,7 @@ pub fn run() -> Result<(), tauri::Error> {
         .manage(Arc::new(Mutex::new(FlowMatrix::new())))
         .manage(Arc::new(Mutex::new(GraphData::new())))
         .manage(Arc::new(Mutex::new(PcInfoLabel::new())))
+        .manage(Arc::new(Mutex::new(LabelStore::new())))
         .on_menu_event(|app, event| {
             if event.id() == "apropos" {
                 app.dialog()
@@ -186,9 +186,9 @@ pub fn run() -> Result<(), tauri::Error> {
             add_label,
             get_label_list,
             set_filter,
-            import_label_files,
-            get_label_files_list,
-            remove_label_file,
+            get_label_rows,
+            import_label_file,
+            clear_label_store,
             is_matrix_empty
         ])
         .run(tauri::generate_context!())

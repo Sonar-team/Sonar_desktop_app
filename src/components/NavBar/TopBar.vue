@@ -357,7 +357,7 @@ export default {
 
     async quit() {
       info('Fermeture demandée');
-      await exit(0);
+      await requestAppExit();
     },
 
     toggleConfig() {

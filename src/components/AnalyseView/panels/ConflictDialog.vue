@@ -15,21 +15,21 @@
           <div v-show="same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0" class="file-list">
               <ul v-show="same_ip_diff_mac.length > 0">
                 <h3 class="text">Conflits IP -> MAC</h3>
-                <li v-for="([ip, ref_mac, name_i, mac, name_j], index) in same_ip_diff_mac" :key="index">
+                <li v-for="([ip, ref_mac, mac], index) in same_ip_diff_mac" :key="index">
                   <label>
                     <span class="text">'{{ ip }}'(IP):</span><br>
-                    <span class="text indented">MAC: '{{ ref_mac }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
-                    <span class="text indented">MAC: '{{ mac }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
+                    <span class="text indented">MAC: '{{ ref_mac }}'</span>
+                    <span class="text indented">MAC: '{{ mac }}'</span>
                   </label>
                 </li>
               </ul>
               <ul v-show="same_ip_diff_label.length > 0">
                 <h3 class="text">Conflits IP -> Label</h3>
-                <li v-for="([ip, ref_label, name_i, label, name_j], index) in same_ip_diff_label.sort()" :key="index">
+                <li v-for="([ip, ref_label, label], index) in same_ip_diff_label.sort()" :key="index">
                   <label>
                     <span class="text">'{{ ip }}'(IP):</span><br>
-                    <span class="text indented">Label: '{{ ref_label }}' <---- {{ name_i.length > 60 ? name_i.slice(0, 60) + '...' : name_i }}</span>
-                    <span class="text indented">Label: '{{ label }}' <---- {{ name_j.length > 60 ? name_j.slice(0, 60) + '...' : name_j }}</span>
+                    <span class="text indented">Label: '{{ ref_label }}'</span>
+                    <span class="text indented">Label: '{{ label }}'</span>
                   </label>
                 </li>
               </ul>
@@ -38,17 +38,17 @@
           <div v-show="invalid_mac.length > 0 || invalid_ip.length > 0" class="file-list">
               <ul v-show="invalid_mac.length > 0">
                 <h3 class="text">MAC invalides</h3>
-                <li v-for="([name, mac], index) in invalid_mac" :key="index">
+                <li v-for="(mac, index) in invalid_mac" :key="index">
                   <label>
-                    <span class="text indented">MAC: '{{ mac }}' <---- {{ name.length > 60 ? name.slice(0, 60) + '...' : name }}</span>
+                    <span class="text indented">MAC: '{{ mac }}'</span>
                   </label>
                 </li>
               </ul>
               <ul v-show="invalid_ip.length > 0">
                 <h3 class="text">IP invalides</h3>
-                <li v-for="([name, ip], index) in invalid_ip" :key="index">
+                <li v-for="(ip, index) in invalid_ip" :key="index">
                   <label>
-                    <span class="text indented">IP: '{{ ip }}' <---- {{ name.length > 60 ? name.slice(0, 60) + '...' : name }}</span>
+                    <span class="text indented">IP: '{{ ip }}'</span>
                   </label>
                 </li>
               </ul>
@@ -78,7 +78,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-type ConflictRow = [string, string, string, string, string]
+type ConflictRow = [string, string, string]
 
 export default defineComponent({
   name: 'ConflictDialog',
@@ -94,11 +94,11 @@ export default defineComponent({
       required: true
     },
     invalid_mac: {
-      type: Array as PropType<[string, string][]>,
+      type: Array as PropType<string[]>,
       required: true
     },
     invalid_ip: {
-      type: Array as PropType<[string, string][]>,
+      type: Array as PropType<string[]>,
       required: true
     },
     invalid_lines: {
