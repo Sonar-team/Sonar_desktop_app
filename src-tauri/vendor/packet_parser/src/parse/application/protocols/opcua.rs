@@ -1,9 +1,31 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 use core::convert::TryFrom;
 
-use thiserror::Error;
+use crate::{
+    checks::application::opcua::{
+        OPCUA_TCP_HEADER_LEN, validate_body_len, validate_message_size, validate_tcp_header_length,
+        validate_ua_string_available, validate_ua_string_len,
+    },
+    errors::application::opcua::OpcuaParseError,
+};
 
-pub const OPCUA_TCP_HEADER_LEN: usize = 8;
-
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// OPC UA TCP Packet
+///
+/// ```mermaid
+/// ---
+/// title: OpcuaPacket
+/// ---
+/// packet-beta
+/// 0-23: "Message Type bytes[3]"
+/// 24-31: "Chunk Type u8"
+/// 32-63: "Message Size u32"
+/// 64-127: "Payload variable"
+/// ```
 #[derive(Debug)]
 pub struct OpcuaPacket<'a> {
     pub chunks: Vec<OpcuaChunk<'a>>,
@@ -87,36 +109,6 @@ pub struct OpcuaSecureConversation<'a> {
     pub data: &'a [u8],
 }
 
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum OpcuaParseError {
-    #[error("OPC UA packet too short: expected at least {expected} bytes, got {actual}")]
-    PacketTooShort { expected: usize, actual: usize },
-
-    #[error("unknown OPC UA message type: {0:?}")]
-    UnknownMessageType([u8; 3]),
-
-    #[error("unknown OPC UA chunk type: 0x{0:02x}")]
-    UnknownChunkType(u8),
-
-    #[error("invalid OPC UA message size: {size}")]
-    InvalidMessageSize { size: u32 },
-
-    #[error("truncated OPC UA chunk: expected {expected} bytes, got {actual}")]
-    TruncatedChunk { expected: usize, actual: usize },
-
-    #[error("OPC UA body too short: expected at least {expected} bytes, got {actual}")]
-    BodyTooShort { expected: usize, actual: usize },
-
-    #[error("invalid OPC UA string length: {length}")]
-    InvalidStringLength { length: i32 },
-
-    #[error("truncated OPC UA string: expected {expected} bytes, got {actual}")]
-    TruncatedString { expected: usize, actual: usize },
-
-    #[error("invalid UTF-8 in OPC UA string")]
-    InvalidUtf8,
-}
-
 impl TryFrom<[u8; 3]> for OpcuaMessageType {
     type Error = OpcuaParseError;
 
@@ -151,20 +143,13 @@ impl TryFrom<&[u8]> for OpcuaTcpHeader {
     type Error = OpcuaParseError;
 
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        if bytes.len() < OPCUA_TCP_HEADER_LEN {
-            return Err(OpcuaParseError::PacketTooShort {
-                expected: OPCUA_TCP_HEADER_LEN,
-                actual: bytes.len(),
-            });
-        }
+        validate_tcp_header_length(bytes.len())?;
 
         let message_type = OpcuaMessageType::try_from([bytes[0], bytes[1], bytes[2]])?;
         let chunk_type = OpcuaChunkType::try_from(bytes[3])?;
         let message_size = u32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
 
-        if message_size < OPCUA_TCP_HEADER_LEN as u32 {
-            return Err(OpcuaParseError::InvalidMessageSize { size: message_size });
-        }
+        validate_message_size(message_size)?;
 
         Ok(OpcuaTcpHeader {
             message_type,
@@ -178,24 +163,14 @@ impl<'a> TryFrom<&'a [u8]> for OpcuaPacket<'a> {
     type Error = OpcuaParseError;
 
     fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
-        if bytes.len() < OPCUA_TCP_HEADER_LEN {
-            return Err(OpcuaParseError::PacketTooShort {
-                expected: OPCUA_TCP_HEADER_LEN,
-                actual: bytes.len(),
-            });
-        }
+        validate_tcp_header_length(bytes.len())?;
 
         let mut chunks = Vec::new();
         let mut offset = 0usize;
 
         while offset < bytes.len() {
             let remaining = &bytes[offset..];
-            if remaining.len() < OPCUA_TCP_HEADER_LEN {
-                return Err(OpcuaParseError::PacketTooShort {
-                    expected: OPCUA_TCP_HEADER_LEN,
-                    actual: remaining.len(),
-                });
-            }
+            validate_tcp_header_length(remaining.len())?;
 
             let header = OpcuaTcpHeader::try_from(remaining)?;
             let message_size = header.message_size as usize;
@@ -235,12 +210,7 @@ fn parse_payload<'a>(
 
 fn parse_hello(bytes: &[u8]) -> Result<OpcuaHello<'_>, OpcuaParseError> {
     const FIXED_LEN: usize = 20;
-    if bytes.len() < FIXED_LEN {
-        return Err(OpcuaParseError::BodyTooShort {
-            expected: FIXED_LEN,
-            actual: bytes.len(),
-        });
-    }
+    validate_body_len(bytes.len(), FIXED_LEN)?;
 
     let (endpoint_url, _) = parse_ua_string(&bytes[FIXED_LEN..])?;
 
@@ -256,12 +226,7 @@ fn parse_hello(bytes: &[u8]) -> Result<OpcuaHello<'_>, OpcuaParseError> {
 
 fn parse_acknowledge(bytes: &[u8]) -> Result<OpcuaAcknowledge, OpcuaParseError> {
     const ACK_LEN: usize = 20;
-    if bytes.len() < ACK_LEN {
-        return Err(OpcuaParseError::BodyTooShort {
-            expected: ACK_LEN,
-            actual: bytes.len(),
-        });
-    }
+    validate_body_len(bytes.len(), ACK_LEN)?;
 
     Ok(OpcuaAcknowledge {
         protocol_version: read_u32_le(bytes, 0),
@@ -274,12 +239,7 @@ fn parse_acknowledge(bytes: &[u8]) -> Result<OpcuaAcknowledge, OpcuaParseError> 
 
 fn parse_error(bytes: &[u8]) -> Result<OpcuaError<'_>, OpcuaParseError> {
     const STATUS_LEN: usize = 4;
-    if bytes.len() < STATUS_LEN {
-        return Err(OpcuaParseError::BodyTooShort {
-            expected: STATUS_LEN,
-            actual: bytes.len(),
-        });
-    }
+    validate_body_len(bytes.len(), STATUS_LEN)?;
 
     let (reason, _) = parse_ua_string(&bytes[STATUS_LEN..])?;
 
@@ -301,12 +261,7 @@ fn parse_reverse_hello(bytes: &[u8]) -> Result<OpcuaReverseHello<'_>, OpcuaParse
 
 fn parse_secure_conversation(bytes: &[u8]) -> Result<OpcuaSecureConversation<'_>, OpcuaParseError> {
     const SECURE_CHANNEL_ID_LEN: usize = 4;
-    if bytes.len() < SECURE_CHANNEL_ID_LEN {
-        return Err(OpcuaParseError::BodyTooShort {
-            expected: SECURE_CHANNEL_ID_LEN,
-            actual: bytes.len(),
-        });
-    }
+    validate_body_len(bytes.len(), SECURE_CHANNEL_ID_LEN)?;
 
     Ok(OpcuaSecureConversation {
         secure_channel_id: read_u32_le(bytes, 0),
@@ -316,29 +271,17 @@ fn parse_secure_conversation(bytes: &[u8]) -> Result<OpcuaSecureConversation<'_>
 
 fn parse_ua_string(bytes: &[u8]) -> Result<(Option<&str>, usize), OpcuaParseError> {
     const LEN_FIELD: usize = 4;
-    if bytes.len() < LEN_FIELD {
-        return Err(OpcuaParseError::BodyTooShort {
-            expected: LEN_FIELD,
-            actual: bytes.len(),
-        });
-    }
+    validate_body_len(bytes.len(), LEN_FIELD)?;
 
     let length = i32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
     if length == -1 {
         return Ok((None, LEN_FIELD));
     }
-    if length < -1 {
-        return Err(OpcuaParseError::InvalidStringLength { length });
-    }
+    validate_ua_string_len(length)?;
 
     let length = length as usize;
     let end = LEN_FIELD + length;
-    if bytes.len() < end {
-        return Err(OpcuaParseError::TruncatedString {
-            expected: end,
-            actual: bytes.len(),
-        });
-    }
+    validate_ua_string_available(bytes.len(), end)?;
 
     let value =
         core::str::from_utf8(&bytes[LEN_FIELD..end]).map_err(|_| OpcuaParseError::InvalidUtf8)?;

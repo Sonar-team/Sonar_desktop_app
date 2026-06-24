@@ -1,8 +1,34 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 use core::fmt;
 use std::convert::TryFrom;
 
-use crate::errors::application::mqtt::MqttError;
+use crate::{
+    checks::application::mqtt::{
+        decode_remaining_length, parse_packet_type, validate_fixed_header_flags,
+        validate_mqtt_header_available, validate_mqtt_min_length,
+        validate_remaining_length_available, variable_header_len,
+    },
+    errors::application::mqtt::MqttError,
+};
 
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// MQTT Control Packet
+///
+/// ```mermaid
+/// ---
+/// title: MqttPacket
+/// ---
+/// packet-beta
+/// 0-3: "Packet Type u4"
+/// 4-7: "Fixed Header Flags u4"
+/// 8-39: "Remaining Length varint"
+/// 40-103: "Variable Header variable"
+/// 104-167: "Payload variable"
+/// ```
 #[derive(Debug)]
 pub struct MqttPacket {
     pub fixed_header: MqttFixedHeader,
@@ -76,146 +102,11 @@ impl fmt::Display for MqttPacket {
     }
 }
 
-fn parse_packet_type(first_byte: u8) -> Result<MqttPacketType, MqttError> {
-    let nibble = first_byte >> 4;
-    match nibble {
-        1 => Ok(MqttPacketType::Connect),
-        2 => Ok(MqttPacketType::Connack),
-        3 => Ok(MqttPacketType::Publish),
-        4 => Ok(MqttPacketType::Puback),
-        5 => Ok(MqttPacketType::Pubrec),
-        6 => Ok(MqttPacketType::Pubrel),
-        7 => Ok(MqttPacketType::Pubcomp),
-        8 => Ok(MqttPacketType::Subscribe),
-        9 => Ok(MqttPacketType::Suback),
-        10 => Ok(MqttPacketType::Unsubscribe),
-        11 => Ok(MqttPacketType::Unsuback),
-        12 => Ok(MqttPacketType::Pingreq),
-        13 => Ok(MqttPacketType::Pingresp),
-        14 => Ok(MqttPacketType::Disconnect),
-        _ => Err(MqttError::InvalidPacketType { raw: nibble }),
-    }
-}
-
-fn validate_fixed_header_flags(
-    packet_type: MqttPacketType,
-    first_byte: u8,
-) -> Result<(), MqttError> {
-    let flags = first_byte & 0x0F;
-    let type_nibble = first_byte >> 4;
-
-    match packet_type {
-        MqttPacketType::Publish => {
-            // PUBLISH flags are used (DUP/QoS/RETAIN). Here we accept any 4-bit value.
-            Ok(())
-        }
-        MqttPacketType::Pubrel | MqttPacketType::Subscribe | MqttPacketType::Unsubscribe => {
-            if flags == 0b0010 {
-                Ok(())
-            } else {
-                Err(MqttError::InvalidHeaderFlags {
-                    packet_type: type_nibble,
-                    flags,
-                })
-            }
-        }
-        _ => {
-            if flags == 0 {
-                Ok(())
-            } else {
-                Err(MqttError::InvalidHeaderFlags {
-                    packet_type: type_nibble,
-                    flags,
-                })
-            }
-        }
-    }
-}
-
-fn decode_remaining_length(buf: &[u8]) -> Result<(u32, usize), MqttError> {
-    // buf starts at byte 1 (after first fixed header byte)
-    let mut multiplier: u32 = 1;
-    let mut value: u32 = 0;
-
-    for (i, &byte) in buf.iter().take(4).enumerate() {
-        value = value
-            .checked_add(((byte & 127) as u32).saturating_mul(multiplier))
-            .ok_or(MqttError::MalformedRemainingLength)?;
-
-        if (byte & 128) == 0 {
-            // bytes consumed = i + 1
-            return Ok((value, i + 1));
-        }
-
-        multiplier = multiplier
-            .checked_mul(128)
-            .ok_or(MqttError::MalformedRemainingLength)?;
-    }
-
-    Err(MqttError::RemainingLengthOverflow)
-}
-
-fn variable_header_len(packet_type: MqttPacketType, body: &[u8]) -> Result<usize, MqttError> {
-    match packet_type {
-        MqttPacketType::Connect => {
-            // Protocol Name + Level + Flags + KeepAlive = 10 bytes MIN for your current model.
-            // Strictly, CONNECT variable header is:
-            // 2 + "MQTT"(4) + 1 + 1 + 2 = 10
-            if body.len() < 10 {
-                return Err(MqttError::VariableHeaderTooShort {
-                    packet_type,
-                    actual: body.len(),
-                    min: 10,
-                });
-            }
-            Ok(10)
-        }
-        MqttPacketType::Connack => {
-            if body.len() < 2 {
-                return Err(MqttError::VariableHeaderTooShort {
-                    packet_type,
-                    actual: body.len(),
-                    min: 2,
-                });
-            }
-            Ok(2)
-        }
-        MqttPacketType::Publish => {
-            // topic length (2) + topic + (optional packet identifier if QoS>0)
-            if body.len() < 2 {
-                return Err(MqttError::VariableHeaderTooShort {
-                    packet_type,
-                    actual: body.len(),
-                    min: 2,
-                });
-            }
-            let topic_len = u16::from_be_bytes([body[0], body[1]]) as usize;
-            let needed = 2 + topic_len;
-            if body.len() < needed {
-                return Err(MqttError::InvalidTopicLength {
-                    declared: topic_len,
-                    available: body.len().saturating_sub(2),
-                });
-            }
-            // NOTE: strict QoS handling (Packet Identifier) can be added later.
-            Ok(needed)
-        }
-        MqttPacketType::Disconnect | MqttPacketType::Pingreq | MqttPacketType::Pingresp => Ok(0),
-        // Pour le reste, tu peux soit retourner 0 (parser minimal), soit "unsupported" en strict.
-        _ => Ok(0),
-    }
-}
-
 impl TryFrom<&[u8]> for MqttPacket {
     type Error = MqttError;
 
     fn try_from(packet: &[u8]) -> Result<Self, Self::Error> {
-        if packet.len() < 2 {
-            return Err(MqttError::PacketTooShort {
-                actual: packet.len(),
-                min: 2,
-            });
-        }
+        validate_mqtt_min_length(packet)?;
 
         let first = packet[0];
         let packet_type = parse_packet_type(first)?;
@@ -224,20 +115,10 @@ impl TryFrom<&[u8]> for MqttPacket {
         let (remaining_length, rl_bytes) = decode_remaining_length(&packet[1..])?;
         let header_len = 1 + rl_bytes;
 
-        if packet.len() < header_len {
-            return Err(MqttError::PacketTooShort {
-                actual: packet.len(),
-                min: header_len,
-            });
-        }
+        validate_mqtt_header_available(packet.len(), header_len)?;
 
         let available = packet.len() - header_len;
-        if available < remaining_length as usize {
-            return Err(MqttError::RemainingLengthExceedsBuffer {
-                remaining_length,
-                available,
-            });
-        }
+        validate_remaining_length_available(remaining_length, available)?;
 
         let body = &packet[header_len..header_len + remaining_length as usize];
         let vh_len = variable_header_len(packet_type, body)?;

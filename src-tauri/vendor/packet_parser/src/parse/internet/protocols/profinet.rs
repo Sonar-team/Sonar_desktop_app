@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 //! Module de parsing des paquets Profinet DCP.
 //!
 //! Ce module permet d’identifier et de parser des paquets Profinet DCP (Discovery and Configuration Protocol).
@@ -31,7 +36,13 @@
 
 use serde::Serialize;
 use std::convert::TryFrom;
-use thiserror::Error;
+
+use crate::{
+    checks::internet::profinet::{
+        extract_name_of_station, validate_dcp_block, validate_frame_id, validate_packet_length,
+    },
+    errors::internet::profinet::ProfinetPacketError,
+};
 
 /// Représente les types de trames Profinet DCP (FrameId).
 ///
@@ -58,7 +69,7 @@ pub enum FrameId {
 
 impl FrameId {
     /// Convertit une valeur `u16` en `FrameId` si elle est connue.
-    fn from_u16(value: u16) -> Option<FrameId> {
+    pub(crate) fn from_u16(value: u16) -> Option<FrameId> {
         match value {
             0xC000..=0xF7FF => Some(FrameId::Unicast),
             0xF800..=0xFBFF => Some(FrameId::Multicast),
@@ -68,26 +79,6 @@ impl FrameId {
             _ => None,
         }
     }
-}
-
-/// Liste des erreurs possibles lors du parsing d’un paquet Profinet.
-#[derive(Error, Debug, Clone, Eq, PartialEq)]
-pub enum ProfinetPacketError {
-    /// Le paquet est trop court pour être valide (moins de 16 octets).
-    #[error("Packet too short: minimum length required is 16 bytes, found {0} bytes")]
-    PacketTooShort(usize),
-
-    /// Le Frame ID est inconnu ou invalide.
-    #[error("Unknown Frame ID: {0:#06x}")]
-    UnknownFrameId(u16),
-
-    /// Le bloc DCP est trop court pour contenir un nom de station valide.
-    #[error("Invalid DCP block length: expected at least 4 bytes, found {0} bytes")]
-    InvalidDcpBlockLength(usize),
-
-    /// Le nom de station est mal encodé (UTF-8 invalide).
-    #[error("Invalid name of station encoding")]
-    InvalidNameOfStation,
 }
 
 /// Structure représentant un paquet Profinet DCP parsé.
@@ -174,46 +165,6 @@ impl<'a> TryFrom<&'a [u8]> for ProfinetPacket<'a> {
             name_of_station,
         })
     }
-}
-
-/// Validate the length of the packet.
-fn validate_packet_length(data: &[u8]) -> Result<(), ProfinetPacketError> {
-    if data.len() < 16 {
-        Err(ProfinetPacketError::PacketTooShort(data.len()))
-    } else {
-        Ok(())
-    }
-}
-
-/// Validate and extract the Frame ID.
-fn validate_frame_id(data: &[u8]) -> Result<FrameId, ProfinetPacketError> {
-    let frame_id_value = u16::from_be_bytes([data[0], data[1]]);
-    FrameId::from_u16(frame_id_value).ok_or(ProfinetPacketError::UnknownFrameId(frame_id_value))
-}
-
-/// Validate the DCP block length.
-fn validate_dcp_block(data: &[u8]) -> Result<(), ProfinetPacketError> {
-    if data.len() < 16 {
-        return Err(ProfinetPacketError::PacketTooShort(data.len()));
-    }
-    let block = &data[12..];
-    if block.len() < 4 {
-        return Err(ProfinetPacketError::InvalidDcpBlockLength(block.len()));
-    }
-    Ok(())
-}
-
-/// Extract the name of station from the DCP block.
-fn extract_name_of_station(data: &[u8]) -> Result<&str, ProfinetPacketError> {
-    let block = &data[12..];
-    let dcp_block_length = u16::from_be_bytes([block[2], block[3]]) as usize;
-
-    if block.len() < (4 + dcp_block_length) {
-        return Err(ProfinetPacketError::InvalidDcpBlockLength(block.len()));
-    }
-
-    std::str::from_utf8(&block[4..4 + dcp_block_length])
-        .map_err(|_| ProfinetPacketError::InvalidNameOfStation)
 }
 
 // impl fmt::Display for ProfinetPacket {

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 mod dns_additional;
 mod dns_answers;
 mod dns_authoritative;
@@ -5,7 +10,9 @@ mod dns_header;
 mod dns_queries;
 pub mod utils;
 
-use crate::errors::application::dns::DnsPacketError;
+use crate::{
+    checks::application::dns::check_dns_minimum_size, errors::application::dns::DnsPacketError,
+};
 use dns_additional::AdditionalRecord;
 use dns_answers::Answer;
 use dns_authoritative::AuthoritativeNameServer;
@@ -13,6 +20,23 @@ use dns_header::DnsHeader;
 use dns_queries::DnsQueries;
 use std::fmt;
 
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// DNS Packet
+///
+/// ```mermaid
+/// ---
+/// title: DnsPacket
+/// ---
+/// packet-beta
+/// 0-15: "Transaction ID u16"
+/// 16-31: "Flags u16"
+/// 32-47: "Question Count u16"
+/// 48-63: "Answer Count u16"
+/// 64-79: "Authority Count u16"
+/// 80-95: "Additional Count u16"
+/// 96-159: "Questions variable"
+/// 160-223: "Answers / Authority / Additional variable"
+/// ```
 #[derive(Debug)]
 pub struct DnsPacket {
     pub header: DnsHeader,
@@ -42,17 +66,6 @@ impl TryFrom<&[u8]> for DnsPacket {
             additionals,
         })
     }
-}
-
-fn check_dns_minimum_size(bytes: &[u8]) -> Result<(), DnsPacketError> {
-    const DNS_MINIMUM_SIZE: usize = 12; // Taille minimale pour un en-tête DNS
-    if bytes.len() < DNS_MINIMUM_SIZE {
-        return Err(DnsPacketError::InsufficientData {
-            expected: DNS_MINIMUM_SIZE,
-            actual: bytes.len(),
-        });
-    }
-    Ok(())
 }
 
 impl fmt::Display for DnsPacket {

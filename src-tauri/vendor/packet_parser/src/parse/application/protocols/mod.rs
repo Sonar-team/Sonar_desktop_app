@@ -8,12 +8,14 @@ use copt::CotpHeader;
 use dhcp::DhcpPacket;
 use dhcpv6::Dhcpv6Packet;
 use dns::DnsPacket;
+use ethernet_ip::EtherNetIpPacket;
 use http::HttpRequest;
 use modbus_tcp::ModbusTcpPacket;
 use mqtt::MqttPacket;
 use ntp::NtpPacket;
 use opcua::OpcuaPacket;
 use s7comm::S7CommPacket;
+use snmp::SnmpPacket;
 use tls::TlsPacket;
 
 use crate::parse::application::protocols::{
@@ -26,6 +28,7 @@ pub mod copt;
 pub mod dhcp;
 pub mod dhcpv6;
 pub mod dns;
+pub mod ethernet_ip;
 pub mod giop;
 pub mod http;
 pub mod modbus_tcp;
@@ -34,6 +37,7 @@ pub mod ntp;
 pub mod opcua;
 pub mod quic;
 pub mod s7comm;
+pub mod snmp;
 pub mod srvloc;
 pub mod tls;
 
@@ -48,7 +52,9 @@ pub enum ApplicationProtocol<'a> {
     Dhcpv6(Dhcpv6Packet<'a>),
     Bitcoin(BitcoinPacket),
     Dns(DnsPacket),
+    EtherNetIp(EtherNetIpPacket<'a>),
     S7Comm(S7CommPacket<'a>),
+    Snmp(SnmpPacket<'a>),
     Cotp(CotpHeader),
     Quic(QuicPacket),
     Giop(GiopPacket),

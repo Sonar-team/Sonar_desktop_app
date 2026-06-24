@@ -1,15 +1,32 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 use std::convert::TryFrom;
 use std::fmt;
 
-/// Erreurs possibles lors du parsing d'un enregistrement TLS.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TlsError {
-    TooShort,
-    InvalidContentType(u8),
-    InvalidVersion { major: u8, minor: u8 },
-    InconsistentLength { declared: u16, available: usize },
-}
+use crate::{
+    checks::application::tls::{
+        TLS_RECORD_HEADER_LEN, validate_tls_header_length, validate_tls_payload_length,
+    },
+    errors::application::tls::TlsError,
+};
 
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// TLS Record Packet
+///
+/// ```mermaid
+/// ---
+/// title: TlsPacket
+/// ---
+/// packet-beta
+/// 0-7: "Content Type u8"
+/// 8-23: "Protocol Version u16"
+/// 24-39: "Length u16"
+/// 40-103: "Payload variable"
+/// ```
+///
 /// Représente un enregistrement TLS (TLS Record Layer).
 #[derive(Debug)]
 pub struct TlsPacket<'a> {
@@ -102,23 +119,16 @@ impl<'a> TryFrom<&'a [u8]> for TlsPacket<'a> {
     type Error = TlsError;
 
     fn try_from(buf: &'a [u8]) -> Result<Self, Self::Error> {
-        if buf.len() < 5 {
-            return Err(TlsError::TooShort);
-        }
+        validate_tls_header_length(buf)?;
 
         let content_type = TlsContentType::try_from(buf[0])?;
         let version = TlsVersion::new(buf[1], buf[2])?;
         let length = u16::from_be_bytes([buf[3], buf[4]]);
 
-        let header_len = 5usize;
+        let header_len = TLS_RECORD_HEADER_LEN;
         let available = buf.len().saturating_sub(header_len);
 
-        if available < length as usize {
-            return Err(TlsError::InconsistentLength {
-                declared: length,
-                available,
-            });
-        }
+        validate_tls_payload_length(length, available)?;
 
         let start = header_len;
         let end = start + length as usize;
@@ -144,12 +154,12 @@ pub fn parse_tls_records<'a>(buf: &'a [u8]) -> Vec<TlsPacket<'a>> {
     let mut records = Vec::new();
     let mut offset = 0usize;
 
-    while buf.len().saturating_sub(offset) >= 5 {
+    while buf.len().saturating_sub(offset) >= TLS_RECORD_HEADER_LEN {
         let slice = &buf[offset..];
 
         match TlsPacket::try_from(slice) {
             Ok(packet) => {
-                let record_total_len = 5 + packet.length as usize;
+                let record_total_len = TLS_RECORD_HEADER_LEN + packet.length as usize;
                 if buf.len().saturating_sub(offset) < record_total_len {
                     // Record annoncé mais tronqué → on s'arrête, on ne le compte pas.
                     break;

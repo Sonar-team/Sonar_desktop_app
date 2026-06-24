@@ -5,9 +5,25 @@
 
 //! Module for parsing DHCPv6 packets.
 
-use crate::errors::application::dhcpv6::Dhcpv6PacketParseError;
+use crate::{
+    checks::application::dhcpv6::{validate_dhcpv6_message_type, validate_dhcpv6_min_length},
+    errors::application::dhcpv6::Dhcpv6PacketParseError,
+};
 use std::fmt;
 
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// DHCPv6 Packet
+///
+/// ```mermaid
+/// ---
+/// title: Dhcpv6Packet
+/// ---
+/// packet-beta
+/// 0-7: "Message Type u8"
+/// 8-31: "Transaction ID u24"
+/// 32-95: "Options variable"
+/// ```
+///
 /// The `Dhcpv6Packet` struct represents a parsed DHCPv6 packet.
 #[derive(Debug, PartialEq)]
 pub struct Dhcpv6Packet<'a> {
@@ -30,18 +46,10 @@ impl<'a> TryFrom<&'a [u8]> for Dhcpv6Packet<'a> {
     type Error = Dhcpv6PacketParseError;
 
     fn try_from(payload: &'a [u8]) -> Result<Self, Self::Error> {
-        // The standard DHCPv6 Client/Server message is at least 4 bytes long.
-        // (1 byte message type + 3 bytes transaction ID)
-        if payload.len() < 4 {
-            return Err(Dhcpv6PacketParseError::PacketLength);
-        }
+        validate_dhcpv6_min_length(payload)?;
 
         let message_type = payload[0];
-
-        // Allowed message types in DHCPv6 go from 1 to 13 (including Relay Agents 12 and 13)
-        if !(1..=13).contains(&message_type) {
-            return Err(Dhcpv6PacketParseError::MessageType { message_type });
-        }
+        validate_dhcpv6_message_type(message_type)?;
 
         // Transaction ID is 24 bits (3 bytes), so we pad it with a 0 to make a u32
         let transaction_id = u32::from_be_bytes([0, payload[1], payload[2], payload[3]]);

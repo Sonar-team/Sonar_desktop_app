@@ -1,5 +1,30 @@
-use crate::errors::application::bitcoin::BitcoinError;
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
 
+use crate::{
+    checks::application::bitcoin::{
+        check_magic_number, check_minimum_length, validate_command_bytes, validate_total_length,
+    },
+    errors::application::bitcoin::BitcoinError,
+};
+
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// Bitcoin Network Packet
+///
+/// ```mermaid
+/// ---
+/// title: BitcoinPacket
+/// ---
+/// packet-beta
+/// 0-31: "Magic u32"
+/// 32-127: "Command bytes[12]"
+/// 128-159: "Payload Length u32"
+/// 160-191: "Checksum bytes[4]"
+/// 192-255: "Payload variable"
+/// ```
+///
 /// The `BitcoinPacket` struct represents a parsed Bitcoin packet.
 #[derive(Debug)]
 pub struct BitcoinPacket {
@@ -10,54 +35,10 @@ pub struct BitcoinPacket {
     pub payload: Vec<u8>,
 }
 
-/// List of valid magic numbers for different Bitcoin networks
-const VALID_MAGIC_NUMBERS: [u32; 5] = [
-    0xD9B4BEF9, // Mainnet
-    0x0709110B, // Testnet
-    0x0B110907, // Testnet3
-    0xFABFB5DA, // Regtest
-    0x40CF030A, // Signet
-];
-
-/// Checks if the payload length is at least 24 bytes (minimum length of a Bitcoin packet header)
-fn check_minimum_length(payload: &[u8]) -> Result<(), BitcoinError> {
-    if payload.len() < 24 {
-        // println!("Payload too short: {}", payload.len());
-        return Err(BitcoinError::PacketTooShort {
-            actual: (payload.len()),
-        });
-    }
-    Ok(())
-}
-
-/// Checks if the first 4 bytes match any known Bitcoin network magic number
-fn check_magic_number(payload: &[u8]) -> Result<u32, BitcoinError> {
-    let magic = u32::from_le_bytes([payload[0], payload[1], payload[2], payload[3]]);
-    if VALID_MAGIC_NUMBERS.contains(&magic) {
-        Ok(magic)
-    } else {
-        // println!("Invalid magic number: {:02X?}", magic);
-        Err(BitcoinError::InvalidMagic { magic })
-    }
-}
-
 /// Extracts the command string from the payload (12 bytes, null-padded ASCII)
 fn extract_command(payload: &[u8]) -> Result<String, BitcoinError> {
     let bytes = &payload[4..16];
-
-    let mut saw_nul = false;
-    for &b in bytes {
-        if b == 0 {
-            saw_nul = true;
-            continue;
-        }
-        if saw_nul {
-            return Err(BitcoinError::NonZeroPaddingAfterNull);
-        }
-        if !b.is_ascii_alphanumeric() {
-            return Err(BitcoinError::InvalidCommandBytes);
-        }
-    }
+    validate_command_bytes(bytes)?;
 
     let end = bytes.iter().position(|&b| b == 0).unwrap_or(bytes.len());
     let command = std::str::from_utf8(&bytes[..end])
@@ -77,19 +58,6 @@ fn extract_checksum(payload: &[u8]) -> [u8; 4] {
     [payload[20], payload[21], payload[22], payload[23]]
 }
 
-/// Ensures the payload length is consistent with the actual data length
-fn validate_total_length(packet: &[u8], payload_len: u32) -> Result<(), BitcoinError> {
-    let expected = 24usize + payload_len as usize;
-    if packet.len() != expected {
-        return Err(BitcoinError::LengthMismatch {
-            declared: payload_len,
-            actual_payload_len: packet.len() - 24,
-            actual_total_len: packet.len(),
-        });
-    }
-    Ok(())
-}
-
 /// Extracts the actual payload data
 fn extract_payload(payload: &[u8]) -> Vec<u8> {
     payload[24..].to_vec()
@@ -103,8 +71,8 @@ fn extract_payload(payload: &[u8]) -> Vec<u8> {
 ///
 /// # Returns
 ///
-/// * `Result<BitcoinPacket, bool>` - Returns `Ok(BitcoinPacket)` if parsing is successful,
-///   otherwise returns `Err(false)` indicating an invalid Bitcoin packet.
+/// * `Result<BitcoinPacket, BitcoinError>` - Returns `Ok(BitcoinPacket)` if parsing is successful,
+///   otherwise returns a typed `BitcoinError`.
 impl TryFrom<&[u8]> for BitcoinPacket {
     type Error = BitcoinError;
 

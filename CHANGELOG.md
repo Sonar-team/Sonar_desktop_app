@@ -1,5 +1,37 @@
 # Changelog
 
+## **[3.14.0] - 2026-06-24**
+
+## ✨ Améliorations
+
+- Mise à jour de `packet_parser` en **1.5.0**.
+- Ajout du parsing **SNMP v1/v2c/v3** avec détection UDP 161/162, PDU
+  standards et varbinds.
+- Ajout du parsing **EtherNet/IP encapsulation**, détecté sans dépendance au
+  port.
+- Ajout d'une boîte de dialogue de conflits pour l'import de labels, avec
+  affichage des conflits IP/MAC, IP/label, des formats MAC/IP invalides et des
+  fichiers non importés.
+
+## 🛠 Corrections
+
+- Renforcement des validations du parser sur les couches data link, internet,
+  transport et application.
+- Remplacement progressif des erreurs non typées du parser par des erreurs
+  dédiées par protocole.
+- Migration de plusieurs parseurs vers une interface `TryFrom<&[u8]>` plus
+  cohérente pour les usages temps réel.
+
+## 🔧 Maintenance
+
+- Réorganisation des validations et erreurs du parser dans des modules dédiés
+  `checks` et `errors`.
+- Ajout de documentation interne pour la méthode d'ajout de protocole dans
+  `packet_parser`.
+- Ajout du changelog interne de `packet_parser` et alignement du vendor sur la
+  version **1.5.0**.
+- Mise à jour de la version de SONAR en **3.14.0** pour publier ces changements.
+
 ## **[3.13.25] - 2026-06-23**
 
 ## ⚡ Performances

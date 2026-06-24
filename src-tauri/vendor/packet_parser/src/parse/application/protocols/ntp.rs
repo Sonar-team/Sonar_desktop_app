@@ -90,6 +90,29 @@ use chrono::{DateTime, Utc};
 
 use crate::{checks::application::ntp::*, errors::application::ntp::NtpPacketParseError};
 
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// NTP Packet
+///
+/// ```mermaid
+/// ---
+/// title: NtpPacket
+/// ---
+/// packet-beta
+/// 0-1: "Leap Indicator u2"
+/// 2-4: "Version u3"
+/// 5-7: "Mode u3"
+/// 8-15: "Stratum u8"
+/// 16-23: "Poll u8"
+/// 24-31: "Precision i8"
+/// 32-63: "Root Delay u32"
+/// 64-95: "Root Dispersion u32"
+/// 96-127: "Reference ID bytes[4]"
+/// 128-191: "Reference Timestamp u64"
+/// 192-255: "Originate Timestamp u64"
+/// 256-319: "Receive Timestamp u64"
+/// 320-383: "Transmit Timestamp u64"
+/// ```
+///
 /// The `NtpPacket` struct represents a parsed NTP packet.
 #[derive(Debug)]
 pub struct NtpPacket {

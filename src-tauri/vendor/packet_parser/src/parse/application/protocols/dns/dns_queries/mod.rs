@@ -1,6 +1,14 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 use std::fmt;
 
 use crate::{
+    checks::application::dns::{
+        check_dns_label_bounds, check_dns_name_offset, check_dns_query_size,
+    },
     errors::application::dns::DnsQueryParseError,
     parse::application::protocols::dns::utils::{dns_class::DnsClass, dns_types::DnsType},
 };
@@ -20,21 +28,6 @@ impl DnsQueries {
         }
         Ok(DnsQueries { queries })
     }
-}
-
-fn check_dns_query_size(
-    bytes: &[u8],
-    offset: usize,
-    required_size: usize,
-) -> Result<(), DnsQueryParseError> {
-    if offset + required_size > bytes.len() {
-        return Err(DnsQueryParseError::InsufficientData {
-            required: required_size,
-            offset,
-            available: bytes.len() - offset,
-        });
-    }
-    Ok(())
 }
 
 impl fmt::Display for DnsQueries {
@@ -102,10 +95,7 @@ fn parse_name(bytes: &[u8], mut offset: usize) -> Result<(String, usize), DnsQue
     let mut labels = Vec::new(); // Stocke chaque label extrait du nom de domaine
 
     loop {
-        // Vérifie que l'offset ne dépasse pas la longueur du tableau, sinon retourne une erreur
-        if offset >= bytes.len() {
-            return Err(DnsQueryParseError::OutOfBoundParse);
-        }
+        check_dns_name_offset(bytes, offset)?;
 
         // Lit la longueur du prochain label (octet actuel)
         let len = bytes[offset] as usize;
@@ -119,10 +109,7 @@ fn parse_name(bytes: &[u8], mut offset: usize) -> Result<(String, usize), DnsQue
         // Avance l'offset d'un octet pour pointer au début du label
         offset += 1;
 
-        // Vérifie que le label complet est dans les limites de `bytes`, sinon retourne une erreur
-        if offset + len > bytes.len() {
-            return Err(DnsQueryParseError::OutOfBoundParse);
-        }
+        check_dns_label_bounds(bytes, offset, len)?;
 
         // Convertit le label en UTF-8 ; retourne une erreur si la conversion échoue
         let label = String::from_utf8(bytes[offset..offset + len].to_vec())?;

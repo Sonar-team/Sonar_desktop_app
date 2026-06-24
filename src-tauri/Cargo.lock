@@ -2664,9 +2664,9 @@ dependencies = [
 
 [[package]]
 name = "packet_parser"
-version = "1.3.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f77d3676c72fab43408cf473abcc8ff00e463d284d7404a0623d30eda96ca9f1"
+checksum = "57fa333e73bcf451d2985475afefc7c62c20a13afb626f6073faec4479b5fad6"
 dependencies = [
  "aquamarine",
  "chrono",
@@ -3682,7 +3682,7 @@ dependencies = [
 
 [[package]]
 name = "sonar"
-version = "3.13.25"
+version = "3.14.0"
 dependencies = [
  "chrono",
  "colored",

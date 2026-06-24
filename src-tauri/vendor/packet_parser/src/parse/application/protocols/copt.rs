@@ -1,4 +1,17 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 use std::fmt;
+
+use crate::{
+    checks::application::copt::{
+        validate_connection_header_len, validate_declared_len, validate_min_len,
+        validate_parameter_header, validate_parameter_len, validate_tpdu_number_not_empty,
+    },
+    errors::application::copt::CotpParseError,
+};
 
 /// COTP PDU Types
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -27,6 +40,21 @@ impl From<u8> for CotpPduType {
     }
 }
 
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// COTP Header
+///
+/// ```mermaid
+/// ---
+/// title: CotpHeader
+/// ---
+/// packet-beta
+/// 0-7: "Header Length u8"
+/// 8-15: "PDU Type u8"
+/// 16-31: "Destination Reference u16"
+/// 32-47: "Source Reference u16"
+/// 48-55: "Class / Options u8"
+/// 56-127: "Parameters variable"
+/// ```
 #[derive(Debug, Clone)]
 pub struct CotpHeader {
     pub length: u8,
@@ -54,17 +82,14 @@ impl CotpHeader {
     pub const MIN_SIZE: usize = 7; // 1 + 1 + 2 + 2 + 1 (for CR/CC)
 
     /// Parse a COTP header from a byte slice
-    pub fn from_bytes(data: &[u8]) -> Result<(Self, usize), &'static str> {
-        if data.len() < 3 {
-            return Err("Packet too short for COTP header");
-        }
+    pub fn from_bytes(data: &[u8]) -> Result<(Self, usize), CotpParseError> {
+        validate_min_len(data)?;
 
         let length = data[0];
         let pdu_type = CotpPduType::from(data[1]);
+        let declared_end = length as usize + 1;
 
-        if data.len() < length as usize + 1 {
-            return Err("Packet shorter than indicated by COTP length");
-        }
+        validate_declared_len(data.len(), declared_end)?;
 
         let mut offset = 2; // Skip length and PDU type
         let (dst_ref, src_ref, class, extended_formats, no_explicit_flow_control) = match pdu_type {
@@ -73,9 +98,8 @@ impl CotpHeader {
             | CotpPduType::DisconnectRequest
             | CotpPduType::DisconnectConfirm
             | CotpPduType::TpduError => {
-                if data.len() < offset + 6 {
-                    return Err("Packet too short for COTP connection header");
-                }
+                let expected = offset + 5;
+                validate_connection_header_len(declared_end, expected)?;
                 let dst_ref = u16::from_be_bytes([data[offset], data[offset + 1]]);
                 let src_ref = u16::from_be_bytes([data[offset + 2], data[offset + 3]]);
                 let class = data[offset + 4] >> 4;
@@ -95,17 +119,13 @@ impl CotpHeader {
 
         // Parse parameters
         let mut parameters = Vec::new();
-        while offset < length as usize + 1 {
-            if offset + 1 >= data.len() {
-                break;
-            }
+        while offset < declared_end {
+            validate_parameter_header(declared_end, offset)?;
 
             let param_type = data[offset];
             let param_len = data[offset + 1] as usize;
 
-            if offset + 2 + param_len > data.len() {
-                break;
-            }
+            validate_parameter_len(declared_end, offset, param_len)?;
 
             let param_data = &data[offset + 2..offset + 2 + param_len];
 
@@ -113,6 +133,7 @@ impl CotpHeader {
                 0xC0 => {
                     // TPDU size or TPDU number
                     if pdu_type == CotpPduType::Data {
+                        validate_tpdu_number_not_empty(offset, param_data.len())?;
                         CotpParameter::TpduNumber(param_data[0])
                     } else if param_len == 1 {
                         CotpParameter::TpduSize(param_data[0])
@@ -152,6 +173,15 @@ impl CotpHeader {
             },
             offset,
         ))
+    }
+}
+
+impl TryFrom<&[u8]> for CotpHeader {
+    type Error = CotpParseError;
+
+    fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
+        let (header, _) = Self::from_bytes(data)?;
+        Ok(header)
     }
 }
 

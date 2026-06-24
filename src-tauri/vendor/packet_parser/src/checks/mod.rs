@@ -7,6 +7,7 @@ use crate::errors::ParsedPacketError;
 
 pub mod application;
 pub mod data_link;
+pub mod internet;
 pub mod transport;
 
 pub fn validate_packet_length(packets: &[u8]) -> Result<(), ParsedPacketError> {

@@ -1,9 +1,29 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 // src/parse/data_link/vlan_tag.rs (par ex.)
 
 use serde::Serialize;
 
+use crate::checks::data_link::validate_vlan_tag_length;
+
 use super::ethertype::Ethertype; // adapte le chemin si besoin
 
+#[cfg_attr(doc, aquamarine::aquamarine)]
+/// IEEE 802.1Q VLAN Tag
+///
+/// ```mermaid
+/// ---
+/// title: VlanTag
+/// ---
+/// packet-beta
+/// 0-2: "PCP u3"
+/// 3-3: "DEI u1"
+/// 4-15: "VLAN ID u12"
+/// 16-31: "Inner EtherType u16"
+/// ```
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, Hash)]
 pub struct VlanTag {
     /// VLAN ID sur 12 bits (0–4095)
@@ -28,10 +48,7 @@ impl TryFrom<&[u8]> for VlanTag {
     type Error = crate::errors::data_link::DataLinkError; // adapte si tu as un VlanError
 
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        // On attend au moins TCI (2 octets) + EtherType interne (2 octets)
-        if bytes.len() < 4 {
-            return Err(Self::Error::DataLinkTooShort(bytes.len() as u8));
-        }
+        validate_vlan_tag_length(bytes)?;
 
         let tci = u16::from_be_bytes([bytes[0], bytes[1]]);
         let pcp = ((tci & 0b1110_0000_0000_0000) >> 13) as u8;
