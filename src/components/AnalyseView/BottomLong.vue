@@ -25,7 +25,7 @@
           <td>{{ row.ethertype }}</td>
           <td>{{ row.source }}</td>
           <td>{{ row.destination }}</td>
-          <td>{{ row.protocol }}</td>
+          <td>{{ row.transportProtocol }}</td>
           <td>{{ row.sourcePort }}</td>
           <td>{{ row.destinationPort }}</td>
           <td>{{ row.applicationProtocol }}</td>
@@ -53,7 +53,7 @@ type PacketLogRow = {
   ethertype: string
   source: string
   destination: string
-  protocol: string
+  transportProtocol: string
   sourcePort: string
   destinationPort: string
   applicationProtocol: string
@@ -66,8 +66,12 @@ type PacketFlowLogFields = {
   destination_mac?: unknown
   vlan?: { id?: unknown } | null
   ethertype?: unknown
+  source_ip?: unknown
+  destination_ip?: unknown
   source?: unknown
   destination?: unknown
+  protocol_internet?: unknown
+  protocol_transport?: unknown
   protocol?: unknown
   source_port?: unknown
   destination_port?: unknown
@@ -162,15 +166,43 @@ export default defineComponent({
         destinationMac: this.formatValue(flow?.destination_mac),
         vlan: this.formatValue(flow?.vlan?.id),
         ethertype: this.formatValue(flow?.ethertype),
-        source: this.formatValue(flow?.source),
-        destination: this.formatValue(flow?.destination),
-        protocol: this.formatValue(flow?.protocol),
+        source: this.formatValue(flow?.source_ip ?? flow?.source),
+        destination: this.formatValue(flow?.destination_ip ?? flow?.destination),
+        transportProtocol: this.formatTransportProtocol(flow),
         sourcePort: this.formatValue(flow?.source_port),
         destinationPort: this.formatValue(flow?.destination_port),
-        applicationProtocol: this.formatValue(flow?.application_protocol),
+        applicationProtocol: this.formatApplicationProtocol(flow),
         length: this.formatValue(packet.len),
         time: this.formatTimestamp(packet.ts_sec, packet.ts_usec),
       }
+    },
+    formatTransportProtocol(flow: PacketFlowLogFields | null): string {
+      const explicitProtocol = this.formatValue(flow?.protocol_transport)
+      if (explicitProtocol !== '-') return this.normalizeTransportProtocol(explicitProtocol)
+
+      const legacyProtocol = this.formatValue(flow?.protocol)
+      if (this.isTcpOrUdp(legacyProtocol)) return this.normalizeTransportProtocol(legacyProtocol)
+
+      return '-'
+    },
+    formatApplicationProtocol(flow: PacketFlowLogFields | null): string {
+      const explicitProtocol = this.formatValue(flow?.application_protocol)
+      if (explicitProtocol !== '-') return explicitProtocol
+
+      const legacyProtocol = this.formatValue(flow?.protocol)
+      if (legacyProtocol !== '-' && !this.isTcpOrUdp(legacyProtocol)) return legacyProtocol
+
+      return '-'
+    },
+    normalizeTransportProtocol(value: string): string {
+      const protocol = value.trim().toLowerCase()
+      if (protocol === 'tcp') return 'TCP'
+      if (protocol === 'udp') return 'UDP'
+      return value
+    },
+    isTcpOrUdp(value: string): boolean {
+      const protocol = value.trim().toLowerCase()
+      return protocol === 'tcp' || protocol === 'udp'
     },
     formatValue(value: unknown): string {
       if (value === null || value === undefined || value === '') return '-'

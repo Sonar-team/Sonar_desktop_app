@@ -6,6 +6,12 @@ Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-06-24
+
+### Corrige
+
+- Renommage des champs `protocol` aplatis dans `PacketFlowOwned` pour eviter les collisions JSON entre les couches internet, transport et application.
+
 ## [1.5.0] - 2026-06-23
 
 ### Ajoute
