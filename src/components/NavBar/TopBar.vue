@@ -12,13 +12,13 @@
       <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="triggerSave" :disabled="isRunning" title="Sauvegarder (ctrl+s)">💾</button>
+    <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
 
     <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
     <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning ||  captureStore.hasData" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
     
     <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">​❎</button>
-    <button class="image-btn" @click="export_logs" :disabled="isRunning" title="Logs (ctrl+l)">📒</button>
+    <button class="image-btn" @click="export_logs" title="Logs (ctrl+l)">📒</button>
     <button class="image-btn" @click="handleFilterClick" :disabled="isRunning" title="Filtrer (ctrl+f)">🔍</button>
   </div>
 </template>
@@ -262,6 +262,9 @@ export default {
     handleConfigClick() {
       info("[TopBar] Bouton config cliqué");
 
+      if (this.captureStore.isRunning) {
+        return;
+      }
       if (useCaptureStore().isImporting) {
         info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
         return;
@@ -282,7 +285,7 @@ export default {
         return;
       }
 
-      if (useCaptureStore().hasData) return;
+      if (useCaptureStore().hasData || this.captureStore.isRunning) return;
       if (this.activePanel !== null && this.activePanel !== 'pcap') {
         this.$emit(`toggle-${this.activePanel}`, false)
       };
@@ -297,7 +300,7 @@ export default {
         return;
       }
 
-      if (useCaptureStore().hasData) return; // Empêche d'ouvrir le panneau d'import CSV si la matrice de flux contient déjà des données
+      if (useCaptureStore().hasData || this.captureStore.isRunning) return; // Empêche d'ouvrir le panneau d'import CSV si la matrice de flux contient déjà des données ou si une capture est en cours
       if (this.activePanel !== null && this.activePanel !== 'csv') {
         this.$emit(`toggle-${this.activePanel}`, false) // Ferme le panneau ouvert avant d'ouvrir le panneau d'import CSV
       };
@@ -305,6 +308,11 @@ export default {
       this.$emit('toggle-csv');
     },
     handleFilterClick() {
+
+      if (this.captureStore.isRunning) {
+        return;
+      }
+
       info("[TopBar] Bouton filter cliqué");
 
       if (useCaptureStore().isImporting) {
