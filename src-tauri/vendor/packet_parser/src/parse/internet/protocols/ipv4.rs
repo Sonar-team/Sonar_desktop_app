@@ -100,6 +100,21 @@ impl<'a> Ipv4Packet<'a> {
     pub fn fragment_offset(&self) -> u16 {
         self.flags_fragment & 0x1FFF
     }
+
+    /// Returns true when the More Fragments flag is set.
+    pub fn more_fragments(&self) -> bool {
+        (self.flags() & 0b001) != 0
+    }
+
+    /// Returns true when this packet belongs to a fragmented IPv4 datagram.
+    pub fn is_fragmented(&self) -> bool {
+        self.more_fragments() || self.fragment_offset() != 0
+    }
+
+    /// Returns true when the payload cannot start with a complete L4 header.
+    pub fn is_non_initial_fragment(&self) -> bool {
+        self.fragment_offset() != 0
+    }
 }
 
 impl<'a> TryFrom<&'a [u8]> for Ipv4Packet<'a> {
@@ -225,5 +240,20 @@ mod tests {
 
         let result = Ipv4Packet::try_from(&data[..]);
         assert!(matches!(result, Err(Ipv4Error::InvalidHeaderLength(4))));
+    }
+
+    #[test]
+    fn test_fragment_helpers() {
+        let data = [
+            0x45, 0x00, 0x00, 0x18, 0x1c, 0x46, 0x20, 0x01, 0x40, 0x11, 0x00, 0x00, 0xc0, 0xa8,
+            0x01, 0x01, 0xc0, 0xa8, 0x01, 0x02, 0xde, 0xad, 0xbe, 0xef,
+        ];
+
+        let packet = Ipv4Packet::try_from(&data[..]).unwrap();
+
+        assert_eq!(packet.fragment_offset(), 1);
+        assert!(packet.more_fragments());
+        assert!(packet.is_fragmented());
+        assert!(packet.is_non_initial_fragment());
     }
 }

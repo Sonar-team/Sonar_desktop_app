@@ -52,6 +52,7 @@ export default {
     return {
       stats: { received: 0, dropped: 0, if_dropped: 0, processed: 0 },
       _unsub: [], // pour garder les unsubscribe si nécessaires
+      _resetHandler: null,
     };
   },
   computed: {
@@ -59,22 +60,23 @@ export default {
   },
   mounted() {
     // Stats live de la capture
-    this.captureStore.onStats((s) => {
+    this._unsub.push(this.captureStore.onStats((s) => {
       this.stats.received   = s.received ?? 0;
       this.stats.dropped    = s.dropped ?? 0;
       this.stats.if_dropped = s.if_dropped ?? 0;
       this.stats.processed  = s.processed ?? 0;
-    });
-    this.captureStore.onFinished((f) => {
+    }));
+    this._unsub.push(this.captureStore.onFinished((f) => {
       this.stats.processed = f.matrix_total_count;
       this.stats.received = f.packet_total_count;
-    });
+    }));
 
     // Reset global
-    this.$bus.on('reset', () => {
+    this._resetHandler = () => {
       this.stats = { received: 0, dropped: 0, if_dropped: 0, processed: 0 };
       this.matrice_len = 0;
-    });
+    };
+    this.$bus.on('reset', this._resetHandler);
   },
   methods: {
     async clearFilter() {
@@ -87,7 +89,7 @@ export default {
     },
   },
   beforeUnmount() {
-    this.$bus.off('reset');
+    if (this._resetHandler) this.$bus.off('reset', this._resetHandler);
     // si tes onXxx() renvoient une fonction d’unsubscribe, tu peux les stocker dans _unsub et les appeler ici
     for (const u of this._unsub) { try { u(); } catch {} }
     this._unsub = [];

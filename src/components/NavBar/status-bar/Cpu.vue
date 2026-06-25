@@ -20,6 +20,7 @@
     data() {
       return {
         cpuUsage: 0,
+        unlisten: undefined as undefined | (() => void),
       };
     },
     mounted() {
@@ -37,10 +38,14 @@
           warn('[CPU.vue] Invalid cpu_usage:', cpu_usage);
         }
       }).then(unlisten => {
+        this.unlisten = unlisten;
         info('[CPU.vue] Listener registered');
       }).catch(err => {
         error('[CPU.vue] Failed to register listener', err);
       });
+    },
+    beforeUnmount() {
+      this.unlisten?.();
     },
   });
   </script>

@@ -212,6 +212,7 @@ export default defineComponent({
 
       // Handlers pour cleanup
       resetHandler: null as (() => void) | null,
+      graphUnsubs: [] as Array<() => void>,
     }
   },
 
@@ -232,7 +233,7 @@ export default defineComponent({
     clearReactiveMap(this.graphData.nodes)
     clearReactiveMap(this.graphData.edges)
 
-    this.captureStore.onGraphUpdate((update: GraphUpdate) => {
+    this.graphUnsubs.push(this.captureStore.onGraphUpdate((update: GraphUpdate) => {
       this._queue.push(update)
       if (!this._raf) {
         this._raf = requestAnimationFrame(() => {
@@ -240,18 +241,39 @@ export default defineComponent({
           this._raf = 0
         })
       }
-    })
+    }))
 
-    this.captureStore.onGraphSnapshot((graphData) => {
+    this.graphUnsubs.push(this.captureStore.onGraphSnapshot((graphData) => {
       console.log("[NetworkGraphComponent] GraphSnapshot reçu -> reload");
       this.loadFromGraphData(graphData);
-    });
+    }));
 
     // Abonnement au reset via le bus global
     this.resetHandler = () => this.resetGraph()
     this.$bus?.on?.('reset', this.resetHandler)
 
     if (this.forceEnabled && isFn(this.forceLayout, "start")) this.forceLayout.start()
+  },
+
+  beforeUnmount() {
+    for (const unsub of this.graphUnsubs) {
+      try { unsub() } catch {}
+    }
+    this.graphUnsubs = []
+
+    if (this._raf) {
+      cancelAnimationFrame(this._raf)
+      this._raf = 0
+    }
+
+    if (this.resetHandler) {
+      this.$bus?.off?.('reset', this.resetHandler)
+      this.resetHandler = null
+    }
+
+    if (this.forceLayout && isFn(this.forceLayout, "stop")) {
+      this.forceLayout.stop()
+    }
   },
 
   methods: {

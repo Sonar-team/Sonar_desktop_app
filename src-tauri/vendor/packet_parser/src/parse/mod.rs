@@ -188,45 +188,68 @@ impl<'a> PacketFlow<'a> {
 
         let total_t0 = now();
 
-        let t0 = now();
-        let data_link = DataLink::try_from(packets)?;
-        timing.l2_ns = elapsed_ns(t0);
-
-        let t0 = now();
-        let internet = match Internet::try_from(data_link.payload) {
-            Ok(internet) => Some(internet),
-            Err(InternetError::UnsupportedProtocol) => None,
-            Err(e) => return Err(e.into()),
-        };
-        timing.l3_ns = elapsed_ns(t0);
-
-        let t0 = now();
-        let transport = match internet.as_ref() {
-            Some(internet) => {
-                match Transport::try_from_parts(internet.payload_protocol, internet.payload) {
-                    Ok(transport) => Some(transport),
-                    Err(TransportError::UnsupportedProtocol) => None,
-                    Err(e) => return Err(e.into()),
+        let result = (|| {
+            let t0 = now();
+            let data_link = match DataLink::try_from(packets) {
+                Ok(data_link) => data_link,
+                Err(e) => {
+                    timing.l2_ns = elapsed_ns(t0);
+                    return Err(e.into());
                 }
-            }
-            None => None,
-        };
-        timing.l4_ns = elapsed_ns(t0);
+            };
+            timing.l2_ns = elapsed_ns(t0);
 
-        let t0 = now();
-        let application = transport
-            .as_ref()
-            .and_then(Self::parse_application_from_transport);
-        timing.l7_ns = elapsed_ns(t0);
+            let t0 = now();
+            let internet = match Internet::try_from(data_link.payload) {
+                Ok(internet) => Some(internet),
+                Err(InternetError::UnsupportedProtocol) => None,
+                Err(e) => {
+                    timing.l3_ns = elapsed_ns(t0);
+                    return Err(e.into());
+                }
+            };
+            timing.l3_ns = elapsed_ns(t0);
+
+            let transport = match internet.as_ref() {
+                Some(internet) => {
+                    let t0 = now();
+                    let transport = match Transport::try_from_parts(
+                        internet.payload_protocol,
+                        internet.payload,
+                    ) {
+                        Ok(transport) => Some(transport),
+                        Err(TransportError::UnsupportedProtocol) => None,
+                        Err(e) => {
+                            timing.l4_ns = elapsed_ns(t0);
+                            return Err(e.into());
+                        }
+                    };
+                    timing.l4_ns = elapsed_ns(t0);
+                    transport
+                }
+                None => None,
+            };
+
+            let application = match transport.as_ref() {
+                Some(transport) => {
+                    let t0 = now();
+                    let application = Self::parse_application_from_transport(transport);
+                    timing.l7_ns = elapsed_ns(t0);
+                    application
+                }
+                None => None,
+            };
+
+            Ok(PacketFlow {
+                data_link,
+                internet,
+                transport,
+                application,
+            })
+        })();
 
         timing.total_ns = elapsed_ns(total_t0);
-
-        Ok(PacketFlow {
-            data_link,
-            internet,
-            transport,
-            application,
-        })
+        result
     }
 
     /// Parses a raw packet buffer into a [`PacketFlow`] and fills timing data.
@@ -272,6 +295,60 @@ mod tests {
             "00112233445566778899aabb0800450000440001400040060000c0a8000ac0a80014303904d20000000100000000501820000000000065000400000000000000000001020304050607080000000001000000",
         )
         .expect("invalid test hex fixture")
+    }
+
+    fn ethernet_ipv4_udp_packet(ip_flags_fragment: u16, udp_length: u16) -> Vec<u8> {
+        let udp_payload = [0xde, 0xad, 0xbe, 0xef];
+        let udp_actual_len = 8 + udp_payload.len();
+        let ip_total_len = 20 + udp_actual_len;
+
+        let mut packet = Vec::with_capacity(14 + ip_total_len);
+        packet.extend_from_slice(&[
+            0x00,
+            0x11,
+            0x22,
+            0x33,
+            0x44,
+            0x55, // Destination MAC
+            0x66,
+            0x77,
+            0x88,
+            0x99,
+            0xaa,
+            0xbb, // Source MAC
+            0x08,
+            0x00, // IPv4 EtherType
+            0x45, // Version + IHL
+            0x00, // DSCP/ECN
+            (ip_total_len >> 8) as u8,
+            ip_total_len as u8,
+            0x12,
+            0x34, // Identification
+            (ip_flags_fragment >> 8) as u8,
+            ip_flags_fragment as u8,
+            64, // TTL
+            17, // UDP
+            0x00,
+            0x00, // Header checksum
+            192,
+            168,
+            1,
+            10, // Source IP
+            192,
+            168,
+            1,
+            20, // Destination IP
+            0x30,
+            0x39, // UDP source port
+            0x00,
+            0x35, // UDP destination port
+            (udp_length >> 8) as u8,
+            udp_length as u8,
+            0x00,
+            0x00, // UDP checksum
+        ]);
+        packet.extend_from_slice(&udp_payload);
+        packet
     }
 
     // fn sample_ipv6_udp_dhcpv6_silicit() -> Vec<u8> {
@@ -432,5 +509,118 @@ mod tests {
         }
 
         assert_eq!(owned.application, flow.to_owned().application);
+    }
+
+    #[cfg(feature = "parse_timing")]
+    fn timed_parse(
+        packet: &[u8],
+    ) -> (
+        Result<PacketFlow<'_>, ParsedPacketError>,
+        crate::timing::ParseTiming,
+    ) {
+        let mut timing = crate::timing::ParseTiming::default();
+        let result = PacketFlow::try_from_timed(packet, &mut timing);
+
+        (result, timing)
+    }
+
+    #[cfg(feature = "parse_timing")]
+    fn assert_total_timing_is_recorded(timing: crate::timing::ParseTiming) {
+        assert!(timing.total_ns > 0);
+    }
+
+    #[cfg(feature = "parse_timing")]
+    #[test]
+    fn packetflow_timing_records_total_on_success() {
+        let packet = ethernet_ipv4_udp_packet(0, 12);
+        let (result, timing) = timed_parse(packet.as_slice());
+
+        assert!(result.is_ok());
+        assert_total_timing_is_recorded(timing);
+        assert!(timing.l2_ns > 0);
+        assert!(timing.l3_ns > 0);
+        assert!(timing.l4_ns > 0);
+        assert!(timing.l7_ns > 0);
+    }
+
+    #[cfg(feature = "parse_timing")]
+    #[test]
+    fn packetflow_timing_records_total_on_l2_error() {
+        let (result, timing) = timed_parse(&[]);
+
+        assert!(matches!(result, Err(ParsedPacketError::InvalidDataLink(_))));
+        assert_total_timing_is_recorded(timing);
+        assert!(timing.l2_ns > 0);
+        assert_eq!(timing.l3_ns, 0);
+        assert_eq!(timing.l4_ns, 0);
+        assert_eq!(timing.l7_ns, 0);
+    }
+
+    #[cfg(feature = "parse_timing")]
+    #[test]
+    fn packetflow_timing_records_total_on_l3_error() {
+        let packet = [
+            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // Destination MAC
+            0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, // Source MAC
+            0x08, 0x00, // IPv4 EtherType, but no IP payload
+        ];
+        let (result, timing) = timed_parse(&packet);
+
+        assert!(matches!(result, Err(ParsedPacketError::InvalidInternet(_))));
+        assert_total_timing_is_recorded(timing);
+        assert!(timing.l2_ns > 0);
+        assert!(timing.l3_ns > 0);
+        assert_eq!(timing.l4_ns, 0);
+        assert_eq!(timing.l7_ns, 0);
+    }
+
+    #[cfg(feature = "parse_timing")]
+    #[test]
+    fn packetflow_timing_records_total_on_l4_error() {
+        let packet = ethernet_ipv4_udp_packet(0, 16);
+        let (result, timing) = timed_parse(packet.as_slice());
+
+        assert!(matches!(result, Err(ParsedPacketError::Transport(_))));
+        assert_total_timing_is_recorded(timing);
+        assert!(timing.l2_ns > 0);
+        assert!(timing.l3_ns > 0);
+        assert!(timing.l4_ns > 0);
+        assert_eq!(timing.l7_ns, 0);
+    }
+
+    #[test]
+    fn packetflow_parses_transport_for_non_fragmented_ipv4_udp() {
+        let packet = ethernet_ipv4_udp_packet(0, 12);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let internet = flow.internet.as_ref().expect("internet layer");
+        assert_eq!(internet.payload_protocol, Some(TransportProtocol::Udp));
+        assert!(flow.transport.is_some());
+    }
+
+    #[test]
+    fn packetflow_skips_transport_for_initial_ipv4_fragment() {
+        let more_fragments = 0x2000;
+        let packet = ethernet_ipv4_udp_packet(more_fragments, 16);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let internet = flow.internet.as_ref().expect("internet layer");
+        assert_eq!(internet.protocol_name, "IPv4");
+        assert_eq!(internet.payload_protocol, None);
+        assert!(flow.transport.is_none());
+    }
+
+    #[test]
+    fn packetflow_skips_transport_for_non_initial_ipv4_fragment() {
+        let packet = ethernet_ipv4_udp_packet(1, 16);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let internet = flow.internet.as_ref().expect("internet layer");
+        assert_eq!(internet.protocol_name, "IPv4");
+        assert_eq!(internet.payload_protocol, None);
+        assert!(flow.transport.is_none());
     }
 }

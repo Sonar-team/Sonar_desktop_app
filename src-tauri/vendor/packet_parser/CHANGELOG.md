@@ -6,6 +6,36 @@ Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ## [Unreleased]
 
+### Change
+
+- Le pipeline benchmark/ingestion/dashboard identifie maintenant le code de la crate avec une empreinte BLAKE3 de `src/` (`crate_code`) au lieu d'un numero de version hardcode.
+- Les fichiers JSONL de benchmark incluent `crate_code` et sont nommes par PCAP, code de crate et `run_id`, pour que l'ingestor voie immediatement chaque nouveau run.
+
+## [1.5.3] - 2026-06-25
+
+### Corrige
+
+- `ParseTiming.total_ns` est maintenant renseigne pour toute tentative de parsing, y compris quand le parsing echoue en L2, L3 ou L4.
+- Les paquets IPv4 fragmentes ne declenchent plus de tentative de parsing L4; la couche internet est conservee avec `payload_protocol: None`.
+- Le parsing L4 sur fragment IPv4 necessite un reassemblage IP, non fourni par la crate.
+
+### Validation
+
+- `cargo test` passe avec 278 tests unitaires et 13 doctests.
+- `cargo test --features parse_timing` passe avec 286 tests unitaires et 13 doctests.
+
+## [1.5.2] - 2026-06-25
+
+### Corrige
+
+- `ParseTiming.total_ns` mesure maintenant toute tentative de parsing, y compris quand le parsing echoue en L2, L3 ou L4.
+- Les fragments IPv4 non initiaux ne sont plus interpretes comme des paquets de transport complets; la couche internet est conservee avec `payload_protocol: None`.
+
+### Validation
+
+- `cargo test` passe avec 274 tests unitaires et 13 doctests.
+- `cargo test --features parse_timing` passe avec 282 tests unitaires et 13 doctests.
+
 ## [1.5.1] - 2026-06-24
 
 ### Corrige

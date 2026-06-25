@@ -7,6 +7,7 @@
         @toggle-filter="toggleFilter"
         @toggle-graph="toggleGraph"  
       />
+
       <div class="panels">
         <ConfigPanel v-if="showConfig" @update:ConfigPanel-visible="(val: any) => showConfig = val" />
         <ImportPanel v-if="showPcap" @update:visible="(val: any) => showPcap = val"/>
