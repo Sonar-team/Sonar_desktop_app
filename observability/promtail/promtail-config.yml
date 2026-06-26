@@ -21,10 +21,12 @@ scrape_configs:
       - json:
           expressions:
             event: event
+            run_id: run_id
             file_path: file_path
             ts_unix_ns: ts_unix_ns
       - labels:
           event:
+          run_id:
           file_path:
       - timestamp:
           source: ts_unix_ns
@@ -44,10 +46,12 @@ scrape_configs:
       - json:
           expressions:
             event: event
+            run_id: run_id
             file_path: file_path
             ts_unix_ns: ts_unix_ns
       - labels:
           event:
+          run_id:
           file_path:
           source:
       - timestamp:

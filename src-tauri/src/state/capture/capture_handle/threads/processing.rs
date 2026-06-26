@@ -35,6 +35,13 @@ use packet_parser::PacketFlow;
 #[cfg(feature = "capture_timing")]
 use packet_parser::timing::ParseTiming;
 
+const PACKET_BATCH_MAX: usize = 256;
+const PACKET_BATCH_INTERVAL_MS: u64 = 75;
+
+#[cfg(feature = "capture_timing")]
+static CAPTURE_TIMING_RUN_COUNTER: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(1);
+
 // Flush le batch de paquets vers le frontend. Retourne false si le canal est cassé.
 macro_rules! flush_batch {
     ($batch:expr, $on_event:expr, $last_flush:expr, $timing_logger:ident) => {{
@@ -129,9 +136,17 @@ struct CapturePipelineTiming {
 #[cfg(feature = "capture_timing")]
 struct CaptureTimingLogger {
     writer: BufWriter<File>,
+    run_id: String,
     sample_rate: u64,
     seen: u64,
     batch_seen: u64,
+    batch_first_ts_unix_ns: Option<u128>,
+    batch_last_ts_unix_ns: Option<u128>,
+    batch_packet_total: u64,
+    batch_full_total: u64,
+    batch_ipc_total_ns: u128,
+    batch_ipc_values: Vec<u64>,
+    summary_written: bool,
     pending_flush: u64,
     last_flush: Instant,
 }
@@ -150,18 +165,28 @@ impl CaptureTimingLogger {
             .and_then(|value| value.parse::<u64>().ok())
             .filter(|value| *value > 0)
             .unwrap_or(100);
+        let run_id = capture_timing_run_id();
 
         info!(
-            "Capture timing log enabled: path={} sample_rate={}",
+            "Capture timing log enabled: path={} run_id={} sample_rate={}",
             path.display(),
+            run_id,
             sample_rate
         );
 
         Ok(Self {
             writer: BufWriter::new(file),
+            run_id,
             sample_rate,
             seen: 0,
             batch_seen: 0,
+            batch_first_ts_unix_ns: None,
+            batch_last_ts_unix_ns: None,
+            batch_packet_total: 0,
+            batch_full_total: 0,
+            batch_ipc_total_ns: 0,
+            batch_ipc_values: Vec::new(),
+            summary_written: false,
             pending_flush: 0,
             last_flush: Instant::now(),
         })
@@ -184,15 +209,13 @@ impl CaptureTimingLogger {
         sample: CaptureTimingSample,
         timing: CapturePipelineTiming,
     ) -> io::Result<()> {
-        let ts_unix_ns = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|duration| duration.as_nanos())
-            .unwrap_or_default();
+        let ts_unix_ns = unix_now_ns();
 
         writeln!(
             self.writer,
-            "{{\"event\":\"capture_pipeline_timing\",\"ts_unix_ns\":{},\"seq\":{},\"sample_rate\":{},\"caplen\":{},\"len\":{},\"parse_l2_ns\":{},\"parse_l3_ns\":{},\"parse_l4_ns\":{},\"parse_l7_ns\":{},\"parse_total_ns\":{},\"packet_owned_ns\":{},\"label_lookup_ns\":{},\"matrix_update_ns\":{},\"graph_update_ns\":{},\"graph_ipc_ns\":{},\"graph_updates\":{},\"graph_ipc_failures\":{},\"pipeline_total_ns\":{}}}",
+            "{{\"event\":\"capture_pipeline_timing\",\"ts_unix_ns\":{},\"run_id\":\"{}\",\"seq\":{},\"sample_rate\":{},\"caplen\":{},\"len\":{},\"parse_l2_ns\":{},\"parse_l3_ns\":{},\"parse_l4_ns\":{},\"parse_l7_ns\":{},\"parse_total_ns\":{},\"packet_owned_ns\":{},\"label_lookup_ns\":{},\"matrix_update_ns\":{},\"graph_update_ns\":{},\"graph_ipc_ns\":{},\"graph_updates\":{},\"graph_ipc_failures\":{},\"pipeline_total_ns\":{}}}",
             ts_unix_ns,
+            self.run_id,
             sample.seq,
             sample.sample_rate,
             timing.caplen,
@@ -229,15 +252,32 @@ impl CaptureTimingLogger {
         ok: bool,
     ) -> io::Result<()> {
         self.batch_seen = self.batch_seen.saturating_add(1);
-        let ts_unix_ns = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|duration| duration.as_nanos())
-            .unwrap_or_default();
+        let ts_unix_ns = unix_now_ns();
+        let batch_full = usize::from(batch_len >= PACKET_BATCH_MAX);
+
+        self.batch_first_ts_unix_ns.get_or_insert(ts_unix_ns);
+        self.batch_last_ts_unix_ns = Some(ts_unix_ns);
+        self.batch_packet_total = self
+            .batch_packet_total
+            .saturating_add(batch_len.try_into().unwrap_or(u64::MAX));
+        self.batch_full_total = self
+            .batch_full_total
+            .saturating_add(batch_full.try_into().unwrap_or(0));
+        self.batch_ipc_total_ns = self.batch_ipc_total_ns.saturating_add(ipc_ns as u128);
+        self.batch_ipc_values.push(ipc_ns);
 
         writeln!(
             self.writer,
-            "{{\"event\":\"capture_packet_batch_ipc_timing\",\"ts_unix_ns\":{},\"batch_seq\":{},\"batch_len\":{},\"ipc_ns\":{},\"ok\":{}}}",
-            ts_unix_ns, self.batch_seen, batch_len, ipc_ns, ok
+            "{{\"event\":\"capture_packet_batch_ipc_timing\",\"ts_unix_ns\":{},\"run_id\":\"{}\",\"batch_seq\":{},\"batch_len\":{},\"batch_max\":{},\"batch_interval_ms\":{},\"batch_full\":{},\"ipc_ns\":{},\"ok\":{}}}",
+            ts_unix_ns,
+            self.run_id,
+            self.batch_seen,
+            batch_len,
+            PACKET_BATCH_MAX,
+            PACKET_BATCH_INTERVAL_MS,
+            batch_full,
+            ipc_ns,
+            ok
         )?;
 
         self.pending_flush = self.pending_flush.saturating_add(1);
@@ -249,11 +289,98 @@ impl CaptureTimingLogger {
 
         Ok(())
     }
+
+    fn write_run_summary(&mut self) -> io::Result<()> {
+        if self.summary_written {
+            return self.writer.flush();
+        }
+
+        let ts_unix_ns = unix_now_ns();
+        let batch_count = self.batch_seen;
+        let active_duration_ns = match (self.batch_first_ts_unix_ns, self.batch_last_ts_unix_ns) {
+            (Some(first), Some(last)) => last.saturating_sub(first) as u64,
+            _ => 0,
+        };
+        let avg_packets_per_second = if active_duration_ns > 0 {
+            (self.batch_packet_total as f64 * 1_000_000_000f64) / active_duration_ns as f64
+        } else {
+            0.0
+        };
+        let packet_batch_ipc_avg_ns = if batch_count > 0 {
+            (self.batch_ipc_total_ns / batch_count as u128) as u64
+        } else {
+            0
+        };
+        let mut sorted_ipc = self.batch_ipc_values.clone();
+        sorted_ipc.sort_unstable();
+        let packet_batch_ipc_p95_ns = percentile_ns(&sorted_ipc, 0.95);
+        let packet_batch_ipc_p99_ns = percentile_ns(&sorted_ipc, 0.99);
+
+        writeln!(
+            self.writer,
+            "{{\"event\":\"capture_run_summary\",\"ts_unix_ns\":{},\"run_id\":\"{}\",\"packet_total\":{},\"avg_packets_per_second\":{:.3},\"batch_count\":{},\"batch_max\":{},\"batch_interval_ms\":{},\"full_batch_count\":{},\"packet_batch_ipc_avg_ns\":{},\"packet_batch_ipc_p95_ns\":{},\"packet_batch_ipc_p99_ns\":{},\"active_duration_ns\":{}}}",
+            ts_unix_ns,
+            self.run_id,
+            self.batch_packet_total,
+            avg_packets_per_second,
+            batch_count,
+            PACKET_BATCH_MAX,
+            PACKET_BATCH_INTERVAL_MS,
+            self.batch_full_total,
+            packet_batch_ipc_avg_ns,
+            packet_batch_ipc_p95_ns,
+            packet_batch_ipc_p99_ns,
+            active_duration_ns
+        )?;
+        self.summary_written = true;
+        self.writer.flush()
+    }
 }
 
 #[cfg(feature = "capture_timing")]
 fn elapsed_ns_since(start: Instant) -> u64 {
     start.elapsed().as_nanos() as u64
+}
+
+#[cfg(feature = "capture_timing")]
+fn unix_now_ns() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or_default()
+}
+
+#[cfg(feature = "capture_timing")]
+fn capture_timing_run_id() -> String {
+    let run_index = CAPTURE_TIMING_RUN_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let raw_prefix = std::env::var("SONAR_CAPTURE_TIMING_RUN_ID")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| format!("capture-{}-{}", std::process::id(), unix_now_ns()));
+
+    let sanitized_prefix: String = raw_prefix
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.') {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+
+    format!("{sanitized_prefix}-run{run_index:02}")
+}
+
+#[cfg(feature = "capture_timing")]
+fn percentile_ns(sorted_values: &[u64], quantile: f64) -> u64 {
+    if sorted_values.is_empty() {
+        return 0;
+    }
+
+    let last_index = sorted_values.len() - 1;
+    let index = (last_index as f64 * quantile).ceil() as usize;
+    sorted_values[index.min(last_index)]
 }
 
 #[cfg(feature = "capture_timing")]
@@ -310,9 +437,8 @@ pub fn spawn_processing_thread(
         let mut last_len = 0usize;
         static TEMPO: Duration = Duration::from_millis(40);
         let mut stats = StatTriple::default();
-        let batch_max: usize = 64;
-        let batch_interval = Duration::from_millis(50);
-        let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(batch_max);
+        let batch_interval = Duration::from_millis(PACKET_BATCH_INTERVAL_MS);
+        let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(PACKET_BATCH_MAX);
         let mut last_batch_flush = Instant::now();
         #[cfg(feature = "capture_timing")]
         let mut timing_logger = match CaptureTimingLogger::new() {
@@ -324,6 +450,10 @@ pub fn spawn_processing_thread(
         };
 
         loop {
+            if stop_flag.load(Ordering::Relaxed) {
+                break;
+            }
+
             let timeout = batch_interval.saturating_sub(last_batch_flush.elapsed());
             match rx.recv_timeout(timeout.max(Duration::from_millis(1))) {
                 Ok(CaptureMessage::Packet(pkt)) => {
@@ -331,7 +461,7 @@ pub fn spawn_processing_thread(
                         // Drain quietly after stop: no packet event and no matrix update.
                         packet_batch.clear();
                         buffer_pool.put(pkt);
-                        continue;
+                        break;
                     }
 
                     #[cfg(feature = "capture_timing")]
@@ -494,7 +624,7 @@ pub fn spawn_processing_thread(
                     packet_batch.push(record_owned);
 
                     // Flush si le batch est plein ou si l'intervalle est écoulé
-                    if packet_batch.len() >= batch_max
+                    if packet_batch.len() >= PACKET_BATCH_MAX
                         || last_batch_flush.elapsed() >= batch_interval
                     {
                         #[cfg(feature = "capture_timing")]
@@ -514,7 +644,7 @@ pub fn spawn_processing_thread(
 
                 Ok(CaptureMessage::Stats(new_stats)) => {
                     if stop_flag.load(Ordering::Relaxed) {
-                        continue;
+                        break;
                     }
 
                     if let Err(e) =
@@ -559,6 +689,13 @@ pub fn spawn_processing_thread(
                 }
             }
         }
+
+        #[cfg(feature = "capture_timing")]
+        if let Some(mut logger) = timing_logger {
+            if let Err(e) = logger.write_run_summary() {
+                error!("Capture timing summary write failed: {}", e);
+            }
+        }
     });
 }
 
@@ -579,19 +716,22 @@ pub fn spawn_processing_thread_cli(
         let mut last_len = 0usize;
         static TEMPO: Duration = Duration::from_millis(40);
         let mut stats = StatTriple::default();
-        let batch_max: usize = 64;
-        let batch_interval = Duration::from_millis(50);
-        let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(batch_max);
+        let batch_interval = Duration::from_millis(PACKET_BATCH_INTERVAL_MS);
+        let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(PACKET_BATCH_MAX);
         let mut last_batch_flush = Instant::now();
 
         loop {
+            if stop_flag.load(Ordering::Relaxed) {
+                break;
+            }
+
             let timeout = batch_interval.saturating_sub(last_batch_flush.elapsed());
             match rx.recv_timeout(timeout.max(Duration::from_millis(1))) {
                 Ok(CaptureMessage::Packet(pkt)) => {
                     if stop_flag.load(Ordering::Relaxed) {
                         packet_batch.clear();
                         buffer_pool.put(pkt);
-                        continue;
+                        break;
                     }
 
                     let flow = match PacketFlow::try_from(pkt.as_ref()) {
@@ -665,7 +805,7 @@ pub fn spawn_processing_thread_cli(
 
                     packet_batch.push(record_owned);
 
-                    if packet_batch.len() >= batch_max
+                    if packet_batch.len() >= PACKET_BATCH_MAX
                         || last_batch_flush.elapsed() >= batch_interval
                     {
                         if !flush_batch!(packet_batch, on_event, last_batch_flush) {
@@ -679,7 +819,7 @@ pub fn spawn_processing_thread_cli(
 
                 Ok(CaptureMessage::Stats(new_stats)) => {
                     if stop_flag.load(Ordering::Relaxed) {
-                        continue;
+                        break;
                     }
 
                     if let Err(e) =

@@ -1,0 +1,576 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"sonar-timing\", event=\"capture_run_summary\", run_id=~\"${run_id:regex}\"} | json | unwrap packet_total [$__range])",
+          "legendFormat": "{{run_id}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Paquets par run",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"sonar-timing\", event=\"capture_run_summary\", run_id=~\"${run_id:regex}\"} | json | unwrap avg_packets_per_second [$__range])",
+          "legendFormat": "{{run_id}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Débit moyen par run",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"sonar-timing\", event=\"capture_run_summary\", run_id=~\"${run_id:regex}\"} | json | unwrap batch_count [$__range])",
+          "legendFormat": "{{run_id}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Batchs IPC par run",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"sonar-timing\", event=\"capture_run_summary\", run_id=~\"${run_id:regex}\"} | json | unwrap full_batch_count [$__range])",
+          "legendFormat": "{{run_id}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Batchs pleins par run",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"sonar-timing\", event=\"capture_run_summary\", run_id=~\"${run_id:regex}\"} | json | unwrap packet_batch_ipc_avg_ns [$__range]) / 1000000",
+          "legendFormat": "{{run_id}} avg",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"sonar-timing\", event=\"capture_run_summary\", run_id=~\"${run_id:regex}\"} | json | unwrap packet_batch_ipc_p95_ns [$__range]) / 1000000",
+          "legendFormat": "{{run_id}} p95",
+          "queryType": "range",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"sonar-timing\", event=\"capture_run_summary\", run_id=~\"${run_id:regex}\"} | json | unwrap packet_batch_ipc_p99_ns [$__range]) / 1000000",
+          "legendFormat": "{{run_id}} p99",
+          "queryType": "range",
+          "refId": "C"
+        }
+      ],
+      "title": "PacketBatch IPC résumé",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (run_id) (rate({job=\"sonar-timing\", event=\"capture_packet_batch_ipc_timing\", run_id=~\"${run_id:regex}\"} | json | unwrap batch_len [$__rate_interval]))",
+          "legendFormat": "{{run_id}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Débit live par run",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "avg by (run_id) (avg_over_time({job=\"sonar-timing\", event=\"capture_packet_batch_ipc_timing\", run_id=~\"${run_id:regex}\"} | json | unwrap ipc_ns [$__interval])) / 1000000",
+          "legendFormat": "{{run_id}} avg",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.95, {job=\"sonar-timing\", event=\"capture_packet_batch_ipc_timing\", run_id=~\"${run_id:regex}\"} | json | unwrap ipc_ns [$__interval]) by (run_id) / 1000000",
+          "legendFormat": "{{run_id}} p95",
+          "queryType": "range",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.99, {job=\"sonar-timing\", event=\"capture_packet_batch_ipc_timing\", run_id=~\"${run_id:regex}\"} | json | unwrap ipc_ns [$__interval]) by (run_id) / 1000000",
+          "legendFormat": "{{run_id}} p99",
+          "queryType": "range",
+          "refId": "C"
+        }
+      ],
+      "title": "PacketBatch IPC live par run",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 8,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": true,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"sonar-timing\", event=\"capture_run_summary\", run_id=~\"${run_id:regex}\"} | json",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Synthèses brutes par run",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 22
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"sonar-timing\", event=\"capture_run_summary\", run_id=~\"${run_id:regex}\"} | json | unwrap batch_interval_ms [$__range])",
+          "legendFormat": "{{run_id}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Fenêtre batch par run",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 22
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"sonar-timing\", event=\"capture_run_summary\", run_id=~\"${run_id:regex}\"} | json | unwrap batch_max [$__range])",
+          "legendFormat": "{{run_id}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Taille batch max par run",
+      "type": "stat"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [
+    "sonar",
+    "profiling",
+    "capture",
+    "run"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "Loki"
+        },
+        "definition": "label_values({job=\"sonar-timing\", event=~\"capture_run_summary|capture_packet_batch_ipc_timing\"}, run_id)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Run",
+        "multi": true,
+        "name": "run_id",
+        "options": [],
+        "query": "label_values({job=\"sonar-timing\", event=~\"capture_run_summary|capture_packet_batch_ipc_timing\"}, run_id)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SONAR Capture Run Summary",
+  "uid": "sonar-capture-run-summary",
+  "version": 1,
+  "weekStart": ""
+}

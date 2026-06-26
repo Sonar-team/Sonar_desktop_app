@@ -102,6 +102,38 @@ UI réactive même quand le débit réseau est élevé.
 - La UI reste réactive, même si les rafraîchissements sont moins fréquents.
 - Les stats et l’état de backpressure restent cohérents.
 
+## Décision validée: batching frontend live
+- Réglage retenu pour `PacketBatch` live:
+  - taille max: `256` paquets;
+  - fenêtre de flush: `75 ms`.
+- Mesure de référence avant réglage:
+  - taille max: `64`;
+  - fenêtre de flush: `50 ms`;
+  - débit moyen: environ `1 524 paquets/s`;
+  - batchs IPC: `18 400`;
+  - PacketBatch IPC avg: `1,78 ms`;
+  - p95: `2,72 ms`;
+  - p99: `3,07 ms`;
+  - batchs pleins: `15 173`.
+- Mesure intermédiaire `256 / 50 ms`:
+  - débit moyen: environ `2 910 paquets/s`;
+  - batchs IPC: `7 500`;
+  - PacketBatch IPC avg: `3,80 ms`;
+  - p95: `6,84 ms`;
+  - p99: `8,73 ms`;
+  - batchs pleins: `152`.
+- Mesure validée `256 / 75 ms`:
+  - débit moyen: environ `2 894 paquets/s`;
+  - batchs IPC: `5 219`;
+  - PacketBatch IPC avg: `5,47 ms`;
+  - p95: `8,54 ms`;
+  - p99: `9,89 ms`;
+  - batchs pleins: `920`.
+- Conclusion:
+  - le débit reste stable par rapport au réglage `256 / 50 ms`;
+  - le nombre d'appels IPC baisse d'environ `30%`;
+  - l'augmentation de latence par batch reste acceptable si l'UI reste fluide.
+
 ## Tâches de sprint
 ### SP-01 - Mesurer le pipeline de capture
 - Ajouter des mesures de temps sur le parsing, la matrice, le graphe et l'IPC.
