@@ -24,6 +24,7 @@
 //! It expects a complete packet buffer (e.g. from PCAP capture).
 
 use application::Application;
+use application::protocols::postgresql::PostgreSqlPacket;
 use application::protocols::snmp::SnmpPacket;
 use internet::Internet;
 use serde::Serialize;
@@ -110,6 +111,15 @@ impl<'a> PacketFlow<'a> {
         {
             return Some(Application {
                 application_protocol: "SNMP".to_string(),
+            });
+        }
+
+        if (is_postgresql_tcp_port(transport.source_port)
+            || is_postgresql_tcp_port(transport.destination_port))
+            && PostgreSqlPacket::try_from(payload).is_ok()
+        {
+            return Some(Application {
+                application_protocol: "PostgreSQL".to_string(),
             });
         }
 
@@ -277,6 +287,10 @@ fn is_snmp_udp_port(port: Option<u16>) -> bool {
     matches!(port, Some(161 | 162))
 }
 
+fn is_postgresql_tcp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(5432))
+}
+
 #[cfg(test)]
 mod tests {
     use crate::parse::transport::protocols::TransportProtocol;
@@ -348,6 +362,98 @@ mod tests {
             0x00, // UDP checksum
         ]);
         packet.extend_from_slice(&udp_payload);
+        packet
+    }
+
+    fn postgresql_parse_bind_execute_sync_payload() -> Vec<u8> {
+        let mut payload = Vec::new();
+
+        payload.push(b'P');
+        payload.extend_from_slice(&81u32.to_be_bytes());
+        payload.push(0);
+        payload.extend_from_slice(
+            b"SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ COMMITTED",
+        );
+        payload.push(0);
+        payload.extend_from_slice(&0u16.to_be_bytes());
+
+        payload.push(b'B');
+        payload.extend_from_slice(&12u32.to_be_bytes());
+        payload.push(0);
+        payload.push(0);
+        payload.extend_from_slice(&0u16.to_be_bytes());
+        payload.extend_from_slice(&0u16.to_be_bytes());
+        payload.extend_from_slice(&0u16.to_be_bytes());
+
+        payload.push(b'E');
+        payload.extend_from_slice(&9u32.to_be_bytes());
+        payload.push(0);
+        payload.extend_from_slice(&1u32.to_be_bytes());
+
+        payload.push(b'S');
+        payload.extend_from_slice(&4u32.to_be_bytes());
+
+        payload
+    }
+
+    fn ethernet_ipv4_tcp_packet(
+        source_port: u16,
+        destination_port: u16,
+        tcp_payload: &[u8],
+    ) -> Vec<u8> {
+        let tcp_header_len = 20usize;
+        let ip_total_len = 20 + tcp_header_len + tcp_payload.len();
+
+        let mut packet = Vec::with_capacity(14 + ip_total_len);
+        packet.extend_from_slice(&[
+            0x00,
+            0x10,
+            0x6f,
+            0x19,
+            0x02,
+            0xe4, // Destination MAC
+            0x00,
+            0x10,
+            0x6f,
+            0x1a,
+            0xe4,
+            0x42, // Source MAC
+            0x08,
+            0x00, // IPv4 EtherType
+            0x45, // Version + IHL
+            0x00, // DSCP/ECN
+            (ip_total_len >> 8) as u8,
+            ip_total_len as u8,
+            0x34,
+            0x18, // Identification
+            0x40,
+            0x00, // Don't fragment
+            64,   // TTL
+            6,    // TCP
+            0x00,
+            0x00, // Header checksum
+            172,
+            19,
+            90,
+            10, // Source IP
+            172,
+            19,
+            90,
+            2, // Destination IP
+        ]);
+
+        packet.extend_from_slice(&source_port.to_be_bytes());
+        packet.extend_from_slice(&destination_port.to_be_bytes());
+        packet.extend_from_slice(&15526u32.to_be_bytes());
+        packet.extend_from_slice(&5876u32.to_be_bytes());
+        packet.extend_from_slice(&[
+            0x50, 0x18, // Data offset 5, ACK+PSH
+            0x20, 0x00, // Window size
+            0x00, 0x00, // Checksum
+            0x00, 0x00, // Urgent pointer
+        ]);
+        packet.extend_from_slice(tcp_payload);
+
         packet
     }
 
@@ -440,6 +546,23 @@ mod tests {
 
         let application = flow.application.as_ref().expect("application layer");
         assert_eq!(application.application_protocol, "EtherNet/IP");
+    }
+
+    #[test]
+    fn packetflow_detects_postgresql_on_standard_port() {
+        let payload = postgresql_parse_bind_execute_sync_payload();
+        let packet = ethernet_ipv4_tcp_packet(51845, 5432, &payload);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.protocol, TransportProtocol::Tcp);
+        assert_eq!(transport.source_port, Some(51845));
+        assert_eq!(transport.destination_port, Some(5432));
+        assert_eq!(transport.payload, Some(payload.as_slice()));
+
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "PostgreSQL");
     }
 
     #[test]

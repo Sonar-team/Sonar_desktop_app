@@ -14,6 +14,7 @@ use modbus_tcp::ModbusTcpPacket;
 use mqtt::MqttPacket;
 use ntp::NtpPacket;
 use opcua::OpcuaPacket;
+use postgresql::PostgreSqlPacket;
 use s7comm::S7CommPacket;
 use snmp::SnmpPacket;
 use tls::TlsPacket;
@@ -35,6 +36,7 @@ pub mod modbus_tcp;
 pub mod mqtt;
 pub mod ntp;
 pub mod opcua;
+pub mod postgresql;
 pub mod quic;
 pub mod s7comm;
 pub mod snmp;
@@ -62,6 +64,7 @@ pub enum ApplicationProtocol<'a> {
     Ams(ams::AmsPacket<'a>),
     ModbusTcp(ModbusTcpPacket<'a>),
     Opcua(OpcuaPacket<'a>),
+    PostgreSql(PostgreSqlPacket<'a>),
     Raw(&'a [u8]),
     None,
 }

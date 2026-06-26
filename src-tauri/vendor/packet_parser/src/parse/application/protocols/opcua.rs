@@ -13,7 +13,7 @@ use crate::{
     errors::application::opcua::OpcuaParseError,
 };
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// OPC UA TCP Packet
 ///
 /// ```mermaid

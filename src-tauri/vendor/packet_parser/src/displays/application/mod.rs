@@ -28,6 +28,7 @@ impl<'a> fmt::Display for ApplicationProtocol<'a> {
             ApplicationProtocol::Srvloc(_) => write!(f, "SRVLOC"),
             ApplicationProtocol::Ams(_) => write!(f, "AMS"),
             ApplicationProtocol::Opcua(_) => write!(f, "OPC UA"),
+            ApplicationProtocol::PostgreSql(_) => write!(f, "PostgreSQL"),
             ApplicationProtocol::Raw(data) => {
                 let preview_len = 16.min(data.len());
                 let hex_preview: String = data[..preview_len]

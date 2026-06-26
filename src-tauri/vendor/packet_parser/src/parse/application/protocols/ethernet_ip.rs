@@ -16,7 +16,7 @@ use crate::{
     errors::application::ethernet_ip::EtherNetIpError,
 };
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// EtherNet/IP Encapsulation Packet
 ///
 /// ```mermaid

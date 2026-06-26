@@ -8,7 +8,7 @@ use crate::checks::application::quic::{
     validate_version,
 };
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// QUIC Long Header Packet
 ///
 /// ```mermaid

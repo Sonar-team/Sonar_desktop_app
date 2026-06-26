@@ -15,7 +15,7 @@ use crate::{
     errors::application::mqtt::MqttError,
 };
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// MQTT Control Packet
 ///
 /// ```mermaid

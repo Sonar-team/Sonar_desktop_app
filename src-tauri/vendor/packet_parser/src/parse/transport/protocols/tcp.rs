@@ -37,7 +37,7 @@ pub struct TcpHeader<'a> {
     pub options: &'a [u8],
 }
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// TCP Packet
 ///
 /// ```mermaid

@@ -24,6 +24,7 @@ export const useCaptureStore = defineStore("capture", {
     startedListeners: [] as Array<(d: any) => void>,
     finishedListeners: [] as Array<(d: any) => void>,
     packetListeners: [] as Array<(p: any) => void>,
+    packetBatchListeners: [] as Array<(packets: any[]) => void>,
     statsListeners: [] as Array<(d: any) => void>,
     lenFlowMatrixListeners: [] as Array<(d: any) => void>,
     channelCapacityPayloadListeners: [] as Array<(d: any) => void>,
@@ -69,11 +70,18 @@ export const useCaptureStore = defineStore("capture", {
           case "packet":
             for (const cb of this.packetListeners) cb(msg.data.packet);
             break;
-          case "packetBatch":
-            for (const packet of msg.data.packets) {
-              for (const cb of this.packetListeners) cb(packet);
+          case "packetBatch": {
+            const packets = Array.isArray(msg.data?.packets) ? msg.data.packets : [];
+
+            for (const cb of this.packetBatchListeners) cb(packets);
+
+            if (this.packetListeners.length > 0) {
+              for (const packet of packets) {
+                for (const cb of this.packetListeners) cb(packet);
+              }
             }
             break;
+          }
           case "stats":
             for (const cb of this.statsListeners) cb(msg.data);
             break;
@@ -109,6 +117,10 @@ export const useCaptureStore = defineStore("capture", {
     onPacket(cb: (p: any) => void) {
       this.packetListeners.push(cb);
       return unsubscribe(this.packetListeners, cb);
+    },
+    onPacketBatch(cb: (packets: any[]) => void) {
+      this.packetBatchListeners.push(cb);
+      return unsubscribe(this.packetBatchListeners, cb);
     },
     onStats(cb: (d: any) => void) {
       this.statsListeners.push(cb);

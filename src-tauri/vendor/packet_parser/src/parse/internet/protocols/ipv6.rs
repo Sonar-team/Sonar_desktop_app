@@ -13,7 +13,7 @@ use crate::{
 use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// IPv6 Packet Structure
 ///
 /// Represents an Internet Protocol version 6 packet

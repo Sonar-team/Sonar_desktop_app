@@ -90,7 +90,7 @@ use chrono::{DateTime, Utc};
 
 use crate::{checks::application::ntp::*, errors::application::ntp::NtpPacketParseError};
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// NTP Packet
 ///
 /// ```mermaid

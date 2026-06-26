@@ -19,6 +19,7 @@ pub mod modbus_tcp;
 pub mod mqtt;
 pub mod ntp;
 pub mod opcua;
+pub mod postgresql;
 pub mod s7comm;
 pub mod snmp;
 pub mod srvloc;
@@ -55,4 +56,7 @@ pub enum ApplicationError {
 
     #[error("Failed to parse EtherNet/IP packet")]
     EtherNetIpParseError,
+
+    #[error("Failed to parse PostgreSQL packet")]
+    PostgreSqlParseError,
 }

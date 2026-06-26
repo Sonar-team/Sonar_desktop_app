@@ -11,7 +11,7 @@ use crate::checks::data_link::validate_vlan_tag_length;
 
 use super::ethertype::Ethertype; // adapte le chemin si besoin
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// IEEE 802.1Q VLAN Tag
 ///
 /// ```mermaid

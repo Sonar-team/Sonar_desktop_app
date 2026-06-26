@@ -13,7 +13,7 @@ use crate::{
     errors::application::ams::AmsParseError,
 };
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// AMS Packet
 ///
 /// ```mermaid

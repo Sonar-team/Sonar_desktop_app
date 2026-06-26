@@ -16,6 +16,7 @@ pub mod modbus_tcp;
 pub mod mqtt;
 pub mod ntp;
 pub mod opcua;
+pub mod postgresql;
 pub mod quic;
 pub mod s7comm;
 pub mod snmp;

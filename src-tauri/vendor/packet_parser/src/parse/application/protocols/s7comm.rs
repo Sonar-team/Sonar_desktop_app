@@ -38,7 +38,7 @@ use crate::{
     errors::application::s7comm::S7CommParseError,
 };
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// S7Comm Protocol Packet
 ///
 /// ```mermaid

@@ -48,7 +48,7 @@ use crate::{checks::data_link::validate_mac_length, errors::data_link::mac_addre
 /// The fixed length of a MAC address (6 bytes).
 pub const MAC_LEN: usize = 6;
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// Represents a Media Access Control (MAC) address.
 ///
 /// A MAC address is a unique identifier assigned to a network interface

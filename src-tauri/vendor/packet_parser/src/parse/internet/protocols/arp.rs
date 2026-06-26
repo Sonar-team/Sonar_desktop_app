@@ -14,7 +14,7 @@ use crate::{
 use std::convert::TryFrom;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// ARP Packet Structure
 ///
 /// Represents an Address Resolution Protocol (ARP) packet

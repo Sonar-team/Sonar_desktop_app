@@ -6,10 +6,20 @@ Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ## [Unreleased]
 
+## [1.5.4] - 2026-06-26
+
+### Ajoute
+
+- Ajout du parsing PostgreSQL, detecte sur le port standard et expose via les couches application, erreurs et validations dediees.
+
 ### Change
 
 - Le pipeline benchmark/ingestion/dashboard identifie maintenant le code de la crate avec une empreinte BLAKE3 de `src/` (`crate_code`) au lieu d'un numero de version hardcode.
 - Les fichiers JSONL de benchmark incluent `crate_code` et sont nommes par PCAP, code de crate et `run_id`, pour que l'ingestor voie immediatement chaque nouveau run.
+
+### Validation
+
+- `cargo test` passe avec 283 tests unitaires et 13 doctests.
 
 ## [1.5.3] - 2026-06-25
 

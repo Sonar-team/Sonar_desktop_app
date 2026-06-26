@@ -40,7 +40,7 @@ impl From<u8> for CotpPduType {
     }
 }
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// COTP Header
 ///
 /// ```mermaid

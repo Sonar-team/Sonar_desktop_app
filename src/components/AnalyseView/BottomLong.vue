@@ -92,6 +92,7 @@ export default defineComponent({
     return {
       rows: [] as PacketLogRow[],
       offPacket: null as null | (() => void),
+      offPacketBatch: null as null | (() => void),
       resetHandler: null as null | (() => void),
       flushTimer: null as number | null,
     }
@@ -121,18 +122,29 @@ export default defineComponent({
       this.flushTimer = window.setTimeout(flushPackets, LOG_FLUSH_INTERVAL_MS)
     }
 
-    const onPacket = (packet: PacketMinimal | undefined | null) => {
-      if (!packet || typeof packet !== 'object') return
-
-      pendingPackets.push(packet)
+    const enqueuePackets = (packets: PacketMinimal[]) => {
+      if (packets.length === 0) return
+      pendingPackets.push(...packets.slice(-MAX_LOG_ROWS))
       if (pendingPackets.length > MAX_BUFFERED_ROWS) {
         pendingPackets.splice(0, pendingPackets.length - MAX_LOG_ROWS)
       }
       scheduleFlush()
     }
 
+    const onPacket = (packet: PacketMinimal | undefined | null) => {
+      if (!packet || typeof packet !== 'object') return
+      enqueuePackets([packet])
+    }
+
+    const onPacketBatch = (packets: PacketMinimal[] | undefined | null) => {
+      if (!Array.isArray(packets)) return
+      enqueuePackets(packets.filter((packet) => packet && typeof packet === 'object'))
+    }
+
     const maybeOff = this.captureStore.onPacket(onPacket)
     if (typeof maybeOff === 'function') this.offPacket = maybeOff
+    const maybeOffBatch = this.captureStore.onPacketBatch(onPacketBatch)
+    if (typeof maybeOffBatch === 'function') this.offPacketBatch = maybeOffBatch
 
     const reset = () => {
       pendingPackets.length = 0
@@ -149,6 +161,9 @@ export default defineComponent({
     }
     if (this.offPacket) {
       try { this.offPacket() } catch {}
+    }
+    if (this.offPacketBatch) {
+      try { this.offPacketBatch() } catch {}
     }
     const bus = (this as unknown as ComponentWithResetBus).$bus
     if (this.resetHandler) {

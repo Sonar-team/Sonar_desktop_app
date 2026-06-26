@@ -10,7 +10,7 @@ use crate::{
     errors::transport::udp::UdpError,
 };
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// UDP Packet
 ///
 /// ```mermaid

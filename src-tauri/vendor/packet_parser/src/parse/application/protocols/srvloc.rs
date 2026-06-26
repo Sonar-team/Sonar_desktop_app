@@ -10,7 +10,7 @@ use crate::{
     errors::application::srvloc::SrvlocPacketParseError,
 };
 
-#[cfg_attr(doc, aquamarine::aquamarine)]
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// Service Location Protocol Packet
 ///
 /// ```mermaid
