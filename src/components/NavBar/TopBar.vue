@@ -4,9 +4,7 @@
       <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="stop" title="Arrêter (ctrl+shift+p)" :disabled="!isRunning">
-      🛑
-    </button>
+    <button class="image-btn" @click="stop" title="Arrêter (ctrl+shift+p)" :disabled="!isRunning">🛑</button>
     <button class="image-btn" @click="reset" :disabled="activePanel !== null" title="Réinitialiser (ctrl+shift+r)">🔄</button>
     <button class="image-btn"  title="Config (ctrl+,)" :disabled="isRunning" @click="handleConfigClick">
       <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
@@ -15,7 +13,7 @@
     <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
 
     <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
-    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning ||  captureStore.hasData" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
+    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
     
     <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">​❎</button>
     <button class="image-btn" @click="export_logs" title="Logs (ctrl+l)">📒</button>
@@ -300,7 +298,7 @@ export default {
         return;
       }
 
-      if (useCaptureStore().hasData || this.captureStore.isRunning) return; // Empêche d'ouvrir le panneau d'import CSV si la matrice de flux contient déjà des données ou si une capture est en cours
+      if (this.captureStore.isRunning) return; // Empêche d'ouvrir le panneau d'import CSV si la matrice de flux contient déjà des données ou si une capture est en cours
       if (this.activePanel !== null && this.activePanel !== 'csv') {
         this.$emit(`toggle-${this.activePanel}`, false) // Ferme le panneau ouvert avant d'ouvrir le panneau d'import CSV
       };

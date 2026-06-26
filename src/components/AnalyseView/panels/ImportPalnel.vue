@@ -21,9 +21,12 @@
             Ajouter un fichier
           </button>
           <p v-show="labelRows.length == 0" class="text">Aucun label importé pour le moment</p>
-          <div v-show="labelRows.length > 0" style="display: flex; width: 90%; margin-top: 25px;">
-            <h2 class="text" style="margin: 0 auto 0 0; margin-bottom: 6px;">Contenu importé</h2>
-            <button class="btn image-btn" style="margin-bottom: 0px;" @click.prevent="clearLabelStore()" title="Réinitialiser le contenu">🔄</button>
+          <div v-show="labelRows.length > 0" class="table-header-row">
+            <h2 class="text table-title">Contenu importé</h2>
+            <div class="search-group">
+              <input class="input-search" v-model="searchInput" @input="listFilter"/>
+              <button class="btn image-btn icon-lg" @click.prevent="clearLabelStore()" title="Réinitialiser le contenu">🔄</button>
+            </div>
           </div>
           <div v-show="labelRows.length > 0" class="data-table">
             <div class="data-table-header">
@@ -33,7 +36,7 @@
             </div>
             <div class="separator"></div>
             <div class="data-table-body">
-              <div v-for="([mac, ip, label], index) in labelRows" :key="index" class="data-table-row">
+              <div v-for="([mac, ip, label], index) in filteredlabelRows" :key="index" class="data-table-row">
                 <div class="col text">{{ mac || "-" }}</div>
                 <div class="col text">{{ ip || "-" }}</div>
                 <div class="col text">{{ label || "-" }}</div>
@@ -92,6 +95,8 @@ export default defineComponent({
     return {
       packetFiles: [] as string[],
       labelRows: [] as [string, string, string][],
+      filteredlabelRows: [] as [string, string, string][],
+      searchInput: "",
       isConverting: false,
       showConflictDialog: false,
       sameIpDiffMac: [] as [string, string, string][], 
@@ -177,6 +182,10 @@ export default defineComponent({
       this.packetFiles = [];
     },
 
+    listFilter() {
+      this.filteredlabelRows = this.labelRows.filter((row) => row.some((field) => field.toLowerCase().includes(this.searchInput.toLowerCase())))
+    },
+
     async importLabelFile(path: string) {
       if (path.length === 0) return;
 
@@ -216,6 +225,7 @@ export default defineComponent({
         }  
       } finally {
         this.labelRows = await invoke('get_label_rows');
+        this.filteredlabelRows =this.labelRows;
         this.isConverting = false;    
       }
     },
@@ -226,6 +236,7 @@ export default defineComponent({
           await invoke('clear_label_store');
           info('réponse invoke');
           this.labelRows = await invoke('get_label_rows');
+          this.filteredlabelRows = this.labelRows;
         } catch (err) {
           displayCaptureError(err);
         }
@@ -245,6 +256,7 @@ export default defineComponent({
     });
 
     this.labelRows = await invoke('get_label_rows');
+    this.filteredlabelRows = this.labelRows;
 
   },
 
@@ -380,10 +392,51 @@ export default defineComponent({
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.file-list label {
+.table-header-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  width: 90%;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.table-title {
+  margin: 0 auto 0 0;
+}
+
+.search-group {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.input-search {
+  width: 140px;
+  border-radius: 8px;
+  border: 1px solid whitesmoke;
+  padding: 0.2em 0.8em;
+  font-size: 1em;
+  font-family: inherit;
+  color: whitesmoke;
+  background-color: #2d3748;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.25s, background-color 0.25s;
+}
+.input-search::placeholder {
+  color: rgba(245, 245, 245, 0.5);
+}
+.input-search:hover {
+  background-color: #313152;
+}
+.input-search:focus {
+  outline: none;
+  border-color: #2596be;
+  background-color: #313152;
+}
+
+.icon-lg {
+  font-size: 1.6rem;
+  line-height: 1;
 }
 
 .text {
@@ -407,6 +460,12 @@ export default defineComponent({
   word-break: break-all;
   font-family: monospace;
   font-size: 0.9rem;
+}
+
+.file-list label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .hint {

@@ -278,7 +278,7 @@ export default defineComponent({
 
 .file-list {
   width: 100%;
-  max-height: 1000px;
+  max-height: 250px;
   overflow-y: auto;
   background-color: #2d3748;
   border-radius: 4px;
