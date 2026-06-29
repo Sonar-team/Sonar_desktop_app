@@ -351,31 +351,37 @@ fn is_mac_address(value: &str) -> bool {
 }
 
 #[tauri::command(async)]
-pub fn import_label_file(incoming_file_path: String, label_store: State<'_, Arc<Mutex<LabelStore>>>) -> Result<(), CaptureStateError> {
-    let mut label_store = label_store.lock().unwrap();
-    label_store.clear();
+pub fn import_label_file(incoming_file_path: String, label_store: State<'_, Arc<Mutex<LabelStore>>>, state_label: State<'_, Arc<Mutex<FlowMatrix>>>) -> Result<(), CaptureStateError> {
+    {
+        let mut label_store = label_store.lock().unwrap();
 
-    verif_label_rows_format(incoming_file_path.clone())?;
-    verif_mac_ip_format(incoming_file_path.clone())?;
-    verif_labels_conflicts(incoming_file_path.clone())?;
+        verif_label_rows_format(incoming_file_path.clone())?;
+        verif_mac_ip_format(incoming_file_path.clone())?;
+        verif_labels_conflicts(incoming_file_path.clone())?;
 
-    let file = match std::fs::read_to_string(&incoming_file_path) {
-        Ok(csv_data) => csv_data,
-        Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
-        Err(error) => return Err(error.into()),
-    };
+        label_store.clear();
 
-    let labels: Vec<String> = file.lines().map(|l| l.to_string()).collect();
-
-    for label in labels {
-        let Some((mac, ip, label)) = parse_label_row(&label) else {
-            continue;
+        let file = match std::fs::read_to_string(&incoming_file_path) {
+            Ok(csv_data) => csv_data,
+            Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+            Err(error) => return Err(error.into()),
         };
 
-        label_store.add((mac, ip, label))
-    };
+        let labels: Vec<String> = file.lines().map(|l| l.to_string()).collect();
 
-    println!("copie du contenu de {:?} dans l'état partagé 'LabelStore' effectuée", &incoming_file_path);
+        for label in labels {
+            let Some((mac, ip, label)) = parse_label_row(&label) else {
+                continue;
+            };
+
+            label_store.add((mac, ip, label))
+        };
+
+        println!("copie du contenu de {:?} dans l'état partagé 'LabelStore' effectuée", &incoming_file_path);
+    }
+
+    let mut state_label = state_label.lock().unwrap();
+    labels_to_matrix(label_store, &mut state_label)?;
 
     Ok(())
 }
