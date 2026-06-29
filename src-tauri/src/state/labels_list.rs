@@ -3,14 +3,12 @@ use serde::Serialize;
 #[derive(Serialize, Default, Debug)]
 
 pub struct LabelStore {
-    pub rows: Vec<(String, String, String)>
+    pub rows: Vec<(String, String, String)>,
 }
 
 impl LabelStore {
     pub fn new() -> Self {
-        LabelStore {
-            rows: Vec::new(),
-        }
+        LabelStore { rows: Vec::new() }
     }
 
     pub fn add(&mut self, row: (String, String, String)) {

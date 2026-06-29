@@ -4,7 +4,7 @@ use pcap::Capture;
 use std::{
     io::ErrorKind,
     net::IpAddr,
-    path::{PathBuf},
+    path::PathBuf,
     sync::{Arc, Mutex},
 };
 use tauri::{State, ipc::Channel};
@@ -15,7 +15,7 @@ use crate::{
     setup::labels::{clean_csv_field, parse_label_row},
     state::{
         capture::capture_handle::messages::capture::PacketMinimal, flow_matrix::FlowMatrix,
-        graph::GraphData, labels_list::LabelStore
+        graph::GraphData, labels_list::LabelStore,
     },
 };
 
@@ -186,23 +186,21 @@ fn handle_pcap_file(
     Ok(())
 }
 
-
-
-
 /*<----- Csv part -----> */
 
-
-
-
 #[tauri::command(async)]
-pub fn get_label_rows(label_store: State<'_, Arc<Mutex<LabelStore>>>) -> Result<Vec<(String, String, String)>, CaptureStateError> {
+pub fn get_label_rows(
+    label_store: State<'_, Arc<Mutex<LabelStore>>>,
+) -> Result<Vec<(String, String, String)>, CaptureStateError> {
     let label_store = label_store.lock().unwrap();
     let label_rows = label_store.get();
     Ok(label_rows.clone())
 }
 
 #[tauri::command(async)]
-pub fn clear_label_store(label_store: State<'_, Arc<Mutex<LabelStore>>>) -> Result<(), CaptureStateError> {
+pub fn clear_label_store(
+    label_store: State<'_, Arc<Mutex<LabelStore>>>,
+) -> Result<(), CaptureStateError> {
     let mut labels = label_store.lock().unwrap();
     labels.clear();
     println!("LabelStore cleared");
@@ -213,18 +211,17 @@ fn verif_label_rows_format(file: String) -> Result<(), CaptureStateError> {
     let mut invalid_lines: Vec<String> = Vec::new();
 
     let file = match std::fs::read_to_string(&file) {
-            Ok(csv_data) => csv_data,
-            Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
-            Err(error) => return Err(error.into()),
-        };
+        Ok(csv_data) => csv_data,
+        Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+        Err(error) => return Err(error.into()),
+    };
 
     for line in file.lines() {
         let parts: Vec<_> = line.split(',').map(clean_csv_field).collect();
-        if parts.len() != 3 && parts.len() != 0{
+        if parts.len() != 3 && !parts.is_empty() {
             invalid_lines.push(line.to_string())
         }
     }
-
 
     if !invalid_lines.is_empty() {
         Err(LabelError::InvalidRowsFormat { invalid_lines }.into())
@@ -247,22 +244,17 @@ fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
     let mut same_ip_different_mac: ConflictsList = Vec::new();
     let mut same_ip_different_label: ConflictsList = Vec::new();
 
-    let x;
-
-    if is_mac_address(&rows[0].0) || is_ip_address(&rows[0].1)  {
-        x = 0
+    let x = if is_mac_address(&rows[0].0) || is_ip_address(&rows[0].1) {
+        0
     } else {
-        x = 1
-    }
+        1
+    };
     println!("{}", x);
     for (i, (mac1, ip1, label1)) in rows.iter().enumerate().skip(x) {
         for (mac2, ip2, label2) in rows[i + 1..].iter() {
             if ip1 == ip2 && !ip1.is_empty() {
                 if mac1 != mac2 {
-                    eprintln!(
-                        "⚠️  IP '{}' : MAC '{}' vs '{}'",
-                        ip1, mac1, mac2
-                    );
+                    eprintln!("⚠️  IP '{}' : MAC '{}' vs '{}'", ip1, mac1, mac2);
                     same_ip_different_mac.push((
                         ip1.to_string(),
                         mac1.to_string(),
@@ -271,10 +263,7 @@ fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
                 }
 
                 if label1 != label2 {
-                    eprintln!(
-                        "⚠️  IP '{}' : label '{}' vs '{}'",
-                        ip1, label1, label2
-                    );
+                    eprintln!("⚠️  IP '{}' : label '{}' vs '{}'", ip1, label1, label2);
                     same_ip_different_label.push((
                         ip1.to_string(),
                         label1.to_string(),
@@ -310,20 +299,17 @@ pub fn verif_mac_ip_format(csv_path: String) -> Result<(), CaptureStateError> {
     let rows: Vec<(String, String, String)> = file.lines().filter_map(parse_label_row).collect();
     println!("rows in verif_mac_ip_format: {:?}", rows);
 
-    let x;
-
-    if is_mac_address(&rows[0].0) || is_ip_address(&rows[0].1)  {
-        x = 0
+    let x = if is_mac_address(&rows[0].0) || is_ip_address(&rows[0].1) {
+        0
     } else {
-        x = 1
-    }
-
+        1
+    };
 
     for (mac, ip, _label) in rows.iter().skip(x) {
-        if !is_ip_address(&ip) && !ip.is_empty() {
+        if !is_ip_address(ip) && !ip.is_empty() {
             invalid_ip.push(ip.to_string());
         }
-        if !is_mac_address(&mac) && !mac.is_empty() {
+        if !is_mac_address(mac) && !mac.is_empty() {
             invalid_mac.push(mac.to_string());
         }
     }
@@ -351,7 +337,11 @@ fn is_mac_address(value: &str) -> bool {
 }
 
 #[tauri::command(async)]
-pub fn import_label_file(incoming_file_path: String, label_store: State<'_, Arc<Mutex<LabelStore>>>, state_label: State<'_, Arc<Mutex<FlowMatrix>>>) -> Result<(), CaptureStateError> {
+pub fn import_label_file(
+    incoming_file_path: String,
+    label_store: State<'_, Arc<Mutex<LabelStore>>>,
+    state_label: State<'_, Arc<Mutex<FlowMatrix>>>,
+) -> Result<(), CaptureStateError> {
     {
         let mut label_store = label_store.lock().unwrap();
 
@@ -375,9 +365,12 @@ pub fn import_label_file(incoming_file_path: String, label_store: State<'_, Arc<
             };
 
             label_store.add((mac, ip, label))
-        };
+        }
 
-        println!("copie du contenu de {:?} dans l'état partagé 'LabelStore' effectuée", &incoming_file_path);
+        println!(
+            "copie du contenu de {:?} dans l'état partagé 'LabelStore' effectuée",
+            &incoming_file_path
+        );
     }
 
     let mut state_label = state_label.lock().unwrap();
@@ -386,7 +379,10 @@ pub fn import_label_file(incoming_file_path: String, label_store: State<'_, Arc<
     Ok(())
 }
 
-pub fn labels_to_matrix(label_store: State<'_, Arc<Mutex<LabelStore>>>, matrice: &mut FlowMatrix) -> Result<(), CaptureStateError> {
+pub fn labels_to_matrix(
+    label_store: State<'_, Arc<Mutex<LabelStore>>>,
+    matrice: &mut FlowMatrix,
+) -> Result<(), CaptureStateError> {
     let mut label_store = label_store.lock().unwrap();
     load_labels_from_folder(&mut label_store, matrice)
 }
@@ -400,7 +396,6 @@ pub fn load_labels_from_folder(
     for (mac, ip, label) in rows {
         matrice.add_label(mac.to_string(), ip.to_string(), label.to_string());
     }
-    
 
     Ok(())
 }
@@ -598,9 +593,21 @@ mod tests {
         let mut matrix = FlowMatrix::new();
         let mut label_store = LabelStore::new();
         let tab_test = [
-            (String::from("aa:bb:cc:dd:ee:ff"), String::from("192.168.1.1"), String::from("mon-pc")),
-            (String::from("aa:bb:cc:d5:ee:ff"), String::from("192.168.1.10"), String::from("ma-télé")),
-            (String::from("aa:bb:cc:dd:ee:55"), String::from("aa:bb:cc:dd:ee:55"), String::from("mon-aspi")),
+            (
+                String::from("aa:bb:cc:dd:ee:ff"),
+                String::from("192.168.1.1"),
+                String::from("mon-pc"),
+            ),
+            (
+                String::from("aa:bb:cc:d5:ee:ff"),
+                String::from("192.168.1.10"),
+                String::from("ma-télé"),
+            ),
+            (
+                String::from("aa:bb:cc:dd:ee:55"),
+                String::from("aa:bb:cc:dd:ee:55"),
+                String::from("mon-aspi"),
+            ),
         ];
 
         for row in tab_test {

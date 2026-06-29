@@ -15,7 +15,7 @@ use crate::{
         },
         flow_matrix::FlowMatrix,
         graph::GraphData,
-        labels_list::LabelStore
+        labels_list::LabelStore,
     },
 };
 

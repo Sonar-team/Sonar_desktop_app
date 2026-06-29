@@ -22,8 +22,5 @@ pub enum LabelError {
 pub enum LabelErrorKind {
     InvalidMacIpFormat(Vec<String>, Vec<String>),
     InvalidRowsFormat(Vec<String>),
-    LabelLinesConflicts(
-        Vec<(String, String, String)>,
-        Vec<(String, String, String)>,
-    ),
+    LabelLinesConflicts(Vec<(String, String, String)>, Vec<(String, String, String)>),
 }

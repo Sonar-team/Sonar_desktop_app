@@ -16,7 +16,8 @@ use crate::{
         export::{csv::export_csv, logs::export_logs},
         flow_matrix::{add_label, get_label_list},
         import::{
-            convert_from_pcap_list, import_label_file, is_matrix_empty, clear_label_store, get_label_rows
+            clear_label_store, convert_from_pcap_list, get_label_rows, import_label_file,
+            is_matrix_empty,
         },
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
@@ -25,7 +26,9 @@ use crate::{
         system_info::start_cpu_monitor,
     },
     state::{
-        capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData,
+        capture::CaptureState,
+        flow_matrix::FlowMatrix,
+        graph::GraphData,
         labels_list::{LabelStore, PcInfoLabel},
     },
 };
