@@ -1,5 +1,21 @@
 # Changelog
 
+## **[3.14.6] - 2026-06-29**
+
+## 📊 Observabilité
+
+- Ajout d'un jeu de mesures `sonar-timing.jsonl` pour les tests de performance
+  capture, avec timings IPC par batch, timings détaillés du pipeline de parsing
+  et résumés de runs.
+- Ajout de données de référence pour comparer les runs `batch256`,
+  `batch256-75ms` et `parser154` sur un volume d'environ 1,09 million de
+  paquets.
+
+## 🔧 Maintenance
+
+- Mise à jour de la version de SONAR en **3.14.6** pour publier ces données
+  d'observabilité.
+
 ## **[3.14.0] - 2026-06-24**
 
 ## ✨ Améliorations
