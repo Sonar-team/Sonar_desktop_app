@@ -4,11 +4,13 @@ use serde::Serialize;
 use crate::errors::{
     export::{ExportError, ExportErrorKind},
     import::{PcapImportError, PcapImportErrorKind},
+    label::{LabelError, LabelErrorKind},
 };
 
 pub mod capture_error;
 pub mod export;
 pub mod import;
+pub mod label;
 
 #[derive(Debug, thiserror::Error)]
 pub enum CaptureStateError {
@@ -22,6 +24,10 @@ pub enum CaptureStateError {
     Export(#[from] ExportError),
     #[error(transparent)]
     Import(#[from] PcapImportError),
+    #[error(transparent)]
+    Label(#[from] LabelError),
+    #[error(transparent)]
+    Tauri(#[from] tauri::Error),
 }
 
 #[derive(serde::Serialize)]
@@ -33,6 +39,8 @@ pub enum CaptureStateErrorKind {
     Capture(CaptureErrorKind),
     Export(ExportErrorKind),
     Import(PcapImportErrorKind),
+    Label(LabelErrorKind),
+    Tauri(String),
 }
 
 impl Serialize for CaptureStateError {
@@ -82,6 +90,28 @@ impl Serialize for CaptureStateError {
                 };
                 CaptureStateErrorKind::Import(kind)
             }
+            Self::Label(e) => {
+                let kind = match e {
+                    LabelError::InvalidMacIpFormat {
+                        invalid_mac,
+                        invalid_ip,
+                    } => {
+                        LabelErrorKind::InvalidMacIpFormat(invalid_mac.clone(), invalid_ip.clone())
+                    }
+                    LabelError::LabelLinesConflicts {
+                        same_ip_diff_mac,
+                        same_ip_diff_label,
+                    } => LabelErrorKind::LabelLinesConflicts(
+                        same_ip_diff_mac.clone(),
+                        same_ip_diff_label.clone(),
+                    ),
+                    LabelError::InvalidRowsFormat { invalid_lines } => {
+                        LabelErrorKind::InvalidRowsFormat(invalid_lines.clone())
+                    }
+                };
+                CaptureStateErrorKind::Label(kind)
+            }
+            Self::Tauri(e) => CaptureStateErrorKind::Tauri(e.to_string()),
         };
         kind.serialize(serializer)
     }
