@@ -616,14 +616,15 @@ pub fn get_label_rows(
     let label_rows = label_store.get();
 
     if label_rows.is_empty() {
-        return Ok(label_rows.clone())
+        return Ok(label_rows.clone());
     }
 
-    let filtered_label_rows = if !is_mac_address(&label_rows[0].0) && !is_ip_address(&label_rows[0].1) {
-        label_rows.iter().skip(1).cloned().collect()
-    } else {
-        label_rows.clone()
-    };
+    let filtered_label_rows =
+        if !is_mac_address(&label_rows[0].0) && !is_ip_address(&label_rows[0].1) {
+            label_rows.iter().skip(1).cloned().collect()
+        } else {
+            label_rows.clone()
+        };
     Ok(filtered_label_rows)
 }
 
