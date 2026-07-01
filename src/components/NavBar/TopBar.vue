@@ -58,56 +58,64 @@ export default {
     return {
       showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
       shortcuts: [] as string[],
+      localHandler: null as ((e: KeyboardEvent) => void) | null,
     };
   },
-  mounted() {
-    // Sauvegardes
-    this.bindShortcut('CommandOrControl+S', () => this.SaveAsCsv());
-    this.bindShortcut('CommandOrControl+Shift+S', () => this.SaveAsXlsx());
+  async mounted() {
+    const headless: boolean = await invoke('is_headless');
 
-    // Reset
-    this.bindShortcut('CommandOrControl+Shift+R', () => this.reset());
+    if (headless) {
+      // Global shortcuts
+      const bindings: [string, () => void][] = [
+        ['CommandOrControl+S',       () => this.SaveAsCsv()],
+        ['CommandOrControl+Shift+S', () => this.SaveAsXlsx()],
+        ['CommandOrControl+Shift+R', () => this.reset()],
+        ['CommandOrControl+P',       () => this.start()],
+        ['CommandOrControl+Shift+P', () => this.stop()],
+        ['CommandOrControl+O',       () => this.displayPcapOpener()],
+        ['CommandOrControl+,',       () => this.handleConfigClick()],
+        ['CommandOrControl+F',       () => this.handleFilterClick()],
+        ['CommandOrControl+L',       () => this.export_logs()],
+        ['CommandOrControl+Q',       () => this.quit()],
+      ];
+      for (const [shortcut, handler] of bindings) {
+        this.shortcuts.push(shortcut);
+        await register(shortcut, (event) => {
+          if (event.state === 'Released') handler();
+        });
+      }
+    } else {
+      // Local shortcuts
+      this.localHandler = (e: KeyboardEvent) => {
+        const ctrl = e.ctrlKey || e.metaKey;
+        if (!ctrl) return;
 
-    // Start / Stop
-    // Choix 1 (classique "Play/Stop")
-    this.bindShortcut('CommandOrControl+P', () => this.start());
-    this.bindShortcut('CommandOrControl+Shift+P', () => this.stop());
-
-    // Ouvrir (pcap opener)
-    this.bindShortcut('CommandOrControl+O', () => this.displayPcapOpener());
-
-    // Config
-    this.bindShortcut('CommandOrControl+,', () => this.handleConfigClick());
-
-    // Filtre
-    this.bindShortcut('CommandOrControl+F', () => this.handleFilterClick());
-
-    // Logs
-    this.bindShortcut('CommandOrControl+L', () => this.export_logs());
-
-    // Quit
-    this.bindShortcut('CommandOrControl+Q', () => this.quit());
+        if (e.key === 's' && !e.shiftKey) { e.preventDefault(); this.SaveAsCsv(); }
+        if (e.key === 'S' &&  e.shiftKey) { e.preventDefault(); this.SaveAsXlsx(); }
+        if (e.key === 'p' && !e.shiftKey) { e.preventDefault(); this.start(); }
+        if (e.key === 'P' &&  e.shiftKey) { e.preventDefault(); this.stop(); }
+        if (e.key === 'R' &&  e.shiftKey) { e.preventDefault(); this.reset(); }
+        if (e.key === 'o')                { e.preventDefault(); this.displayPcapOpener(); }
+        if (e.key === ',')                { e.preventDefault(); this.handleConfigClick(); }
+        if (e.key === 'f')                { e.preventDefault(); this.handleFilterClick(); }
+        if (e.key === 'l')                { e.preventDefault(); this.export_logs(); }
+        if (e.key === 'q')                { e.preventDefault(); this.quit(); }
+      };
+      window.addEventListener('keydown', this.localHandler);
+    }
   },
 
   async beforeUnmount() {
-  // recommandé en dev/hot reload
-    await this.unbindAllShortcuts();
+    if (this.shortcuts.length > 0) {
+      await unregister(this.shortcuts);
+      this.shortcuts = [];
+    }
+    if (this.localHandler) {
+      window.removeEventListener('keydown', this.localHandler);
+      this.localHandler = null;
+    }
   },
   methods: {
-    bindShortcut(shortcut: string, handler: () => void) {
-      this.shortcuts.push(shortcut);
-      register(shortcut, (event) => {
-        if (event.state === 'Released') handler();
-      });
-    },
-
-    async unbindAllShortcuts() {
-      // unregister accepte string | string[]
-      if (this.shortcuts.length > 0) {
-        await unregister(this.shortcuts);
-      }
-      this.shortcuts = [];
-    },
     async export_logs() {
       info("export logs")
       const response = await save({
@@ -122,7 +130,7 @@ export default {
       if (response) {
         // Attendez que l'invocation d'API pour sauvegarder soit terminée
         const saveResponse = await invoke('export_logs', { destination: response });
-        info("Sauvegarde terminée:", saveResponse);
+        info(`Sauvegarde terminée: ${JSON.stringify(saveResponse)}`);
         return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
       } else {
         info("Aucun chemin de fichier sélectionné");
@@ -163,15 +171,15 @@ export default {
         if (response) {
           // Attendez que l'invocation d'API pour sauvegarder soit terminée
           const saveResponse = await invoke('save_packets_to_excel', { file_path: response });
-          info("Sauvegarde terminée:", saveResponse);
+          info(`Sauvegarde terminée: ${JSON.stringify(saveResponse)}`);
           return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
         } else {
           info("Aucun chemin de fichier sélectionné");
           throw new Error("Sauvegarde annulée ou chemin non sélectionné");
         }
-      } catch (error) {
-        error("Erreur lors de la sauvegarde en xlsx:", error);
-        throw error; // Relancer l'erreur pour la gestion dans quit()
+      } catch (err) {
+        error(`Erreur lors de la sauvegarde en xlsx: ${JSON.stringify(err)}`);
+        throw err; // Relancer l'erreur pour la gestion dans quit()
       }
     },
     async triggerSave() {
