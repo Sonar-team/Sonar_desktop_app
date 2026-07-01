@@ -1,6 +1,17 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 use std::convert::TryFrom;
 
-use crate::{checks::transport::tcp::validate_tcp_min_length, errors::transport::tcp::TcpError};
+use crate::{
+    checks::transport::tcp::{
+        validate_tcp_data_offset_available, validate_tcp_data_offset_words, validate_tcp_flags,
+        validate_tcp_min_length, validate_tcp_reserved,
+    },
+    errors::transport::tcp::TcpError,
+};
 
 /// Represents a TCP header
 #[derive(Debug, PartialEq)]
@@ -26,7 +37,26 @@ pub struct TcpHeader<'a> {
     pub options: &'a [u8],
 }
 
-/// Represents a TCP packet
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
+/// TCP Packet
+///
+/// ```mermaid
+/// ---
+/// title: TcpPacket
+/// ---
+/// packet-beta
+/// 0-15: "Source Port u16"
+/// 16-31: "Destination Port u16"
+/// 32-63: "Sequence Number u32"
+/// 64-95: "Acknowledgment Number u32"
+/// 96-99: "Data Offset u4"
+/// 100-103: "Reserved/NS u4"
+/// 104-111: "Flags u8"
+/// 112-127: "Window Size u16"
+/// 128-143: "Checksum u16"
+/// 144-159: "Urgent Pointer u16"
+/// 160-191: "Options / Payload variable"
+/// ```
 #[derive(Debug)]
 pub struct TcpPacket<'a> {
     pub header: TcpHeader<'a>,
@@ -40,26 +70,16 @@ impl<'a> TryFrom<&'a [u8]> for TcpPacket<'a> {
         validate_tcp_min_length(packet)?;
 
         let data_offset_words = packet[12] >> 4;
-        if !(5..=15).contains(&data_offset_words) {
-            return Err(TcpError::InvalidDataOffset(data_offset_words));
-        }
+        validate_tcp_data_offset_words(data_offset_words)?;
 
         let data_offset = (data_offset_words as usize) * 4;
-        if packet.len() < data_offset {
-            return Err(TcpError::PacketTooShort);
-        }
+        validate_tcp_data_offset_available(packet.len(), data_offset)?;
 
         let reserved = (packet[12] >> 1) & 0x07;
-        if reserved != 0 {
-            return Err(TcpError::InvalidHeaderLength);
-        }
+        validate_tcp_reserved(reserved)?;
 
         let flags = packet[13];
-
-        // Seule combinaison franchement invalide au niveau structurel
-        if (flags & 0x03) == 0x03 {
-            return Err(TcpError::InvalidHeaderLength);
-        }
+        validate_tcp_flags(flags)?;
 
         let header = TcpHeader {
             source_port: u16::from_be_bytes([packet[0], packet[1]]),

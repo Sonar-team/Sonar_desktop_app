@@ -291,9 +291,16 @@ impl WindowsResource {
     ///
     /// Equivalent to `set_icon_with_id(path, "32512")`.
     ///
-    /// Windows uses `32512` as the default icon ID. See
-    /// [here](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-loadicona)
-    /// for Windows docs demonstrating this.
+    /// The reason for `32512` is that we misunderstood `IDI_APPLICATION` (`MAKEINTRESOURCE(32512)`)
+    /// should be used for the application icon, which is not true.
+    /// See <https://github.com/mxre/winres/issues/28>
+    ///
+    /// Quote from [Old New Things](https://devblogs.microsoft.com/oldnewthing/20250423-00/?p=111106)
+    ///
+    /// > Recall the algorithm by which Explorer finds the “first” icon in a file.
+    /// >
+    /// > - Choose the alphabetically first named group icon, if available.
+    /// > - Else, choose the group icon with the numerically lowest identifier.
     pub fn set_icon(&mut self, path: &str) -> &mut Self {
         self.set_icon_with_id(path, "32512")
     }
@@ -552,13 +559,13 @@ impl WindowsResource {
         let rc = output.join("resource.rc");
 
         if let Some(s) = self.rc_file.as_ref() {
-            fs::write(&output, s)?;
+            fs::write(&rc, s)?;
         } else {
-            self.write_resource_file(rc)?;
+            self.write_resource_file(&rc)?;
         }
 
         // This matches v2 behavior
-        embed_resource::compile_for("resource.rc", binaries, embed_resource::NONE)
+        embed_resource::compile_for(rc, binaries, embed_resource::NONE)
             .manifest_required()
             .unwrap();
 

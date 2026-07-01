@@ -1,6 +1,14 @@
-use crossbeam::channel::Receiver;
+use crossbeam::channel::{Receiver, RecvTimeoutError};
 use log::{debug, error, info};
+#[cfg(feature = "capture_timing")]
 use std::{
+    fs::{self, File, OpenOptions},
+    io::{self, BufWriter, Write},
+    path::PathBuf,
+    time::{SystemTime, UNIX_EPOCH},
+};
+use std::{
+    sync::atomic::{AtomicBool, Ordering},
     sync::{Arc, Mutex},
     thread,
     time::{Duration, Instant},
@@ -13,7 +21,7 @@ use crate::{
         capture::capture_handle::{
             messages::{
                 CaptureMessage,
-                capture::PacketMinimal,
+                capture::{PacketMinimal, PacketOwnedStats},
                 channel::ChannelCapacityPayload,
                 stats::{StatTriple, StatsPayload},
             },
@@ -24,6 +32,393 @@ use crate::{
     },
 };
 use packet_parser::PacketFlow;
+#[cfg(feature = "capture_timing")]
+use packet_parser::timing::ParseTiming;
+
+const PACKET_BATCH_MAX: usize = 256;
+const PACKET_BATCH_INTERVAL_MS: u64 = 75;
+
+#[cfg(feature = "capture_timing")]
+static CAPTURE_TIMING_RUN_COUNTER: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(1);
+
+// Flush le batch de paquets vers le frontend. Retourne false si le canal est cassé.
+macro_rules! flush_batch {
+    ($batch:expr, $on_event:expr, $last_flush:expr, $timing_logger:ident) => {{
+        if $batch.is_empty() {
+            true
+        } else {
+            let batch_len = $batch.len();
+            let packets = std::mem::take(&mut $batch);
+            $last_flush = Instant::now();
+            #[cfg(feature = "capture_timing")]
+            let ipc_start = Instant::now();
+            let send_result = $on_event.send(CaptureEvent::PacketBatch { packets });
+            #[cfg(feature = "capture_timing")]
+            {
+                if let Some(logger) = $timing_logger.as_mut() {
+                    if let Err(e) = logger.write_packet_batch_ipc(
+                        batch_len,
+                        elapsed_ns_since(ipc_start),
+                        send_result.is_ok(),
+                    ) {
+                        error!(
+                            "Capture timing log disabled after batch IPC write error: {}",
+                            e
+                        );
+                        $timing_logger = None;
+                    }
+                }
+            }
+
+            match send_result {
+                Ok(_) => true,
+                Err(e) => {
+                    error!("[TAURI] Erreur envoi PacketBatch: {}", e);
+                    false
+                }
+            }
+        }
+    }};
+    ($batch:expr, $on_event:expr, $last_flush:expr) => {{
+        if $batch.is_empty() {
+            true
+        } else {
+            let packets = std::mem::take(&mut $batch);
+            $last_flush = Instant::now();
+            match $on_event.send(CaptureEvent::PacketBatch { packets }) {
+                Ok(_) => true,
+                Err(e) => {
+                    error!("[TAURI] Erreur envoi PacketBatch: {}", e);
+                    false
+                }
+            }
+        }
+    }};
+}
+
+#[cfg(feature = "capture_timing")]
+fn parse_packet_flow_with_timing<'a>(
+    bytes: &'a [u8],
+) -> Result<(PacketFlow<'a>, ParseTiming), packet_parser::ParsedPacketError> {
+    let mut timing = ParseTiming::default();
+    let flow = PacketFlow::try_from_timed(bytes, &mut timing)?;
+    Ok((flow, timing))
+}
+
+#[cfg(feature = "capture_timing")]
+#[derive(Clone, Copy)]
+struct CaptureTimingSample {
+    seq: u64,
+    sample_rate: u64,
+}
+
+#[cfg(feature = "capture_timing")]
+#[derive(Default)]
+struct CapturePipelineTiming {
+    caplen: u32,
+    len: u32,
+    parse_l2_ns: u64,
+    parse_l3_ns: u64,
+    parse_l4_ns: u64,
+    parse_l7_ns: u64,
+    parse_total_ns: u64,
+    packet_owned_ns: u64,
+    label_lookup_ns: u64,
+    matrix_update_ns: u64,
+    graph_update_ns: u64,
+    graph_ipc_ns: u64,
+    graph_updates: usize,
+    graph_ipc_failures: usize,
+    pipeline_total_ns: u64,
+}
+
+#[cfg(feature = "capture_timing")]
+struct CaptureTimingLogger {
+    writer: BufWriter<File>,
+    run_id: String,
+    sample_rate: u64,
+    seen: u64,
+    batch_seen: u64,
+    batch_first_ts_unix_ns: Option<u128>,
+    batch_last_ts_unix_ns: Option<u128>,
+    batch_packet_total: u64,
+    batch_full_total: u64,
+    batch_ipc_total_ns: u128,
+    batch_ipc_values: Vec<u64>,
+    summary_written: bool,
+    pending_flush: u64,
+    last_flush: Instant,
+}
+
+#[cfg(feature = "capture_timing")]
+impl CaptureTimingLogger {
+    fn new() -> io::Result<Self> {
+        let path = capture_timing_log_path();
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
+        let file = OpenOptions::new().create(true).append(true).open(&path)?;
+        let sample_rate = std::env::var("SONAR_CAPTURE_TIMING_SAMPLE_RATE")
+            .ok()
+            .and_then(|value| value.parse::<u64>().ok())
+            .filter(|value| *value > 0)
+            .unwrap_or(100);
+        let run_id = capture_timing_run_id();
+
+        info!(
+            "Capture timing log enabled: path={} run_id={} sample_rate={}",
+            path.display(),
+            run_id,
+            sample_rate
+        );
+
+        Ok(Self {
+            writer: BufWriter::new(file),
+            run_id,
+            sample_rate,
+            seen: 0,
+            batch_seen: 0,
+            batch_first_ts_unix_ns: None,
+            batch_last_ts_unix_ns: None,
+            batch_packet_total: 0,
+            batch_full_total: 0,
+            batch_ipc_total_ns: 0,
+            batch_ipc_values: Vec::new(),
+            summary_written: false,
+            pending_flush: 0,
+            last_flush: Instant::now(),
+        })
+    }
+
+    fn next_sample(&mut self) -> Option<CaptureTimingSample> {
+        self.seen = self.seen.saturating_add(1);
+        if self.seen % self.sample_rate != 0 {
+            return None;
+        }
+
+        Some(CaptureTimingSample {
+            seq: self.seen,
+            sample_rate: self.sample_rate,
+        })
+    }
+
+    fn write_pipeline(
+        &mut self,
+        sample: CaptureTimingSample,
+        timing: CapturePipelineTiming,
+    ) -> io::Result<()> {
+        let ts_unix_ns = unix_now_ns();
+
+        writeln!(
+            self.writer,
+            "{{\"event\":\"capture_pipeline_timing\",\"ts_unix_ns\":{},\"run_id\":\"{}\",\"seq\":{},\"sample_rate\":{},\"caplen\":{},\"len\":{},\"parse_l2_ns\":{},\"parse_l3_ns\":{},\"parse_l4_ns\":{},\"parse_l7_ns\":{},\"parse_total_ns\":{},\"packet_owned_ns\":{},\"label_lookup_ns\":{},\"matrix_update_ns\":{},\"graph_update_ns\":{},\"graph_ipc_ns\":{},\"graph_updates\":{},\"graph_ipc_failures\":{},\"pipeline_total_ns\":{}}}",
+            ts_unix_ns,
+            self.run_id,
+            sample.seq,
+            sample.sample_rate,
+            timing.caplen,
+            timing.len,
+            timing.parse_l2_ns,
+            timing.parse_l3_ns,
+            timing.parse_l4_ns,
+            timing.parse_l7_ns,
+            timing.parse_total_ns,
+            timing.packet_owned_ns,
+            timing.label_lookup_ns,
+            timing.matrix_update_ns,
+            timing.graph_update_ns,
+            timing.graph_ipc_ns,
+            timing.graph_updates,
+            timing.graph_ipc_failures,
+            timing.pipeline_total_ns
+        )?;
+
+        self.pending_flush = self.pending_flush.saturating_add(1);
+        if self.pending_flush >= 256 || self.last_flush.elapsed() >= Duration::from_secs(1) {
+            self.writer.flush()?;
+            self.pending_flush = 0;
+            self.last_flush = Instant::now();
+        }
+
+        Ok(())
+    }
+
+    fn write_packet_batch_ipc(
+        &mut self,
+        batch_len: usize,
+        ipc_ns: u64,
+        ok: bool,
+    ) -> io::Result<()> {
+        self.batch_seen = self.batch_seen.saturating_add(1);
+        let ts_unix_ns = unix_now_ns();
+        let batch_full = usize::from(batch_len >= PACKET_BATCH_MAX);
+
+        self.batch_first_ts_unix_ns.get_or_insert(ts_unix_ns);
+        self.batch_last_ts_unix_ns = Some(ts_unix_ns);
+        self.batch_packet_total = self
+            .batch_packet_total
+            .saturating_add(batch_len.try_into().unwrap_or(u64::MAX));
+        self.batch_full_total = self
+            .batch_full_total
+            .saturating_add(batch_full.try_into().unwrap_or(0));
+        self.batch_ipc_total_ns = self.batch_ipc_total_ns.saturating_add(ipc_ns as u128);
+        self.batch_ipc_values.push(ipc_ns);
+
+        writeln!(
+            self.writer,
+            "{{\"event\":\"capture_packet_batch_ipc_timing\",\"ts_unix_ns\":{},\"run_id\":\"{}\",\"batch_seq\":{},\"batch_len\":{},\"batch_max\":{},\"batch_interval_ms\":{},\"batch_full\":{},\"ipc_ns\":{},\"ok\":{}}}",
+            ts_unix_ns,
+            self.run_id,
+            self.batch_seen,
+            batch_len,
+            PACKET_BATCH_MAX,
+            PACKET_BATCH_INTERVAL_MS,
+            batch_full,
+            ipc_ns,
+            ok
+        )?;
+
+        self.pending_flush = self.pending_flush.saturating_add(1);
+        if self.pending_flush >= 256 || self.last_flush.elapsed() >= Duration::from_secs(1) {
+            self.writer.flush()?;
+            self.pending_flush = 0;
+            self.last_flush = Instant::now();
+        }
+
+        Ok(())
+    }
+
+    fn write_run_summary(&mut self) -> io::Result<()> {
+        if self.summary_written {
+            return self.writer.flush();
+        }
+
+        let ts_unix_ns = unix_now_ns();
+        let batch_count = self.batch_seen;
+        let active_duration_ns = match (self.batch_first_ts_unix_ns, self.batch_last_ts_unix_ns) {
+            (Some(first), Some(last)) => last.saturating_sub(first) as u64,
+            _ => 0,
+        };
+        let avg_packets_per_second = if active_duration_ns > 0 {
+            (self.batch_packet_total as f64 * 1_000_000_000f64) / active_duration_ns as f64
+        } else {
+            0.0
+        };
+        let packet_batch_ipc_avg_ns = if batch_count > 0 {
+            (self.batch_ipc_total_ns / batch_count as u128) as u64
+        } else {
+            0
+        };
+        let mut sorted_ipc = self.batch_ipc_values.clone();
+        sorted_ipc.sort_unstable();
+        let packet_batch_ipc_p95_ns = percentile_ns(&sorted_ipc, 0.95);
+        let packet_batch_ipc_p99_ns = percentile_ns(&sorted_ipc, 0.99);
+
+        writeln!(
+            self.writer,
+            "{{\"event\":\"capture_run_summary\",\"ts_unix_ns\":{},\"run_id\":\"{}\",\"packet_total\":{},\"avg_packets_per_second\":{:.3},\"batch_count\":{},\"batch_max\":{},\"batch_interval_ms\":{},\"full_batch_count\":{},\"packet_batch_ipc_avg_ns\":{},\"packet_batch_ipc_p95_ns\":{},\"packet_batch_ipc_p99_ns\":{},\"active_duration_ns\":{}}}",
+            ts_unix_ns,
+            self.run_id,
+            self.batch_packet_total,
+            avg_packets_per_second,
+            batch_count,
+            PACKET_BATCH_MAX,
+            PACKET_BATCH_INTERVAL_MS,
+            self.batch_full_total,
+            packet_batch_ipc_avg_ns,
+            packet_batch_ipc_p95_ns,
+            packet_batch_ipc_p99_ns,
+            active_duration_ns
+        )?;
+        self.summary_written = true;
+        self.writer.flush()
+    }
+}
+
+#[cfg(feature = "capture_timing")]
+fn elapsed_ns_since(start: Instant) -> u64 {
+    start.elapsed().as_nanos() as u64
+}
+
+#[cfg(feature = "capture_timing")]
+fn unix_now_ns() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or_default()
+}
+
+#[cfg(feature = "capture_timing")]
+fn capture_timing_run_id() -> String {
+    let run_index = CAPTURE_TIMING_RUN_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let raw_prefix = std::env::var("SONAR_CAPTURE_TIMING_RUN_ID")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| format!("capture-{}-{}", std::process::id(), unix_now_ns()));
+
+    let sanitized_prefix: String = raw_prefix
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.') {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+
+    format!("{sanitized_prefix}-run{run_index:02}")
+}
+
+#[cfg(feature = "capture_timing")]
+fn percentile_ns(sorted_values: &[u64], quantile: f64) -> u64 {
+    if sorted_values.is_empty() {
+        return 0;
+    }
+
+    let last_index = sorted_values.len() - 1;
+    let index = (last_index as f64 * quantile).ceil() as usize;
+    sorted_values[index.min(last_index)]
+}
+
+#[cfg(feature = "capture_timing")]
+fn capture_timing_log_path() -> PathBuf {
+    if let Ok(path) = std::env::var("SONAR_CAPTURE_TIMING_LOG") {
+        return PathBuf::from(path);
+    }
+
+    let file_name = format!("capture-timing-{}.jsonl", std::process::id());
+
+    #[cfg(target_os = "linux")]
+    {
+        let base = std::env::var("XDG_DATA_HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                dirs::home_dir()
+                    .unwrap_or_else(|| PathBuf::from("/"))
+                    .join(".local/share")
+            });
+        return base.join("fr.sonar.app/logs").join(file_name);
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        return dirs::data_local_dir()
+            .unwrap_or_else(|| PathBuf::from("C:\\Users\\Default\\AppData\\Local"))
+            .join("fr.sonar.app\\logs")
+            .join(file_name);
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        return dirs::home_dir()
+            .unwrap_or_else(|| PathBuf::from("/Users/Shared"))
+            .join("Library/Logs/fr.sonar.app")
+            .join(file_name);
+    }
+}
 
 pub fn spawn_processing_thread(
     rx: Receiver<CaptureMessage>,
@@ -31,6 +426,7 @@ pub fn spawn_processing_thread(
     channel_capacity: i32,
     app: AppHandle,
     buffer_pool: Arc<PacketBufferPool>,
+    stop_flag: Arc<AtomicBool>,
 ) {
     thread::spawn(move || {
         debug!("Démarrage du thread de traitement");
@@ -41,10 +437,62 @@ pub fn spawn_processing_thread(
         let mut last_len = 0usize;
         static TEMPO: Duration = Duration::from_millis(40);
         let mut stats = StatTriple::default();
+        let batch_interval = Duration::from_millis(PACKET_BATCH_INTERVAL_MS);
+        let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(PACKET_BATCH_MAX);
+        let mut last_batch_flush = Instant::now();
+        #[cfg(feature = "capture_timing")]
+        let mut timing_logger = match CaptureTimingLogger::new() {
+            Ok(logger) => Some(logger),
+            Err(e) => {
+                error!("Capture timing log disabled: {}", e);
+                None
+            }
+        };
 
         loop {
-            match rx.recv() {
+            if stop_flag.load(Ordering::Relaxed) {
+                break;
+            }
+
+            let timeout = batch_interval.saturating_sub(last_batch_flush.elapsed());
+            match rx.recv_timeout(timeout.max(Duration::from_millis(1))) {
                 Ok(CaptureMessage::Packet(pkt)) => {
+                    if stop_flag.load(Ordering::Relaxed) {
+                        // Drain quietly after stop: no packet event and no matrix update.
+                        packet_batch.clear();
+                        buffer_pool.put(pkt);
+                        break;
+                    }
+
+                    #[cfg(feature = "capture_timing")]
+                    let timing_sample = timing_logger
+                        .as_mut()
+                        .and_then(CaptureTimingLogger::next_sample);
+                    #[cfg(feature = "capture_timing")]
+                    let pipeline_start = timing_sample.map(|_| Instant::now());
+
+                    #[cfg(feature = "capture_timing")]
+                    let (flow, parse_timing) = if timing_sample.is_some() {
+                        match parse_packet_flow_with_timing(pkt.as_ref()) {
+                            Ok(parsed) => parsed,
+                            Err(e) => {
+                                error!("Failed to parse PacketFlow: {}", e);
+                                buffer_pool.put(pkt);
+                                continue;
+                            }
+                        }
+                    } else {
+                        match PacketFlow::try_from(pkt.as_ref()) {
+                            Ok(flow) => (flow, ParseTiming::default()),
+                            Err(e) => {
+                                error!("Failed to parse PacketFlow: {}", e);
+                                buffer_pool.put(pkt);
+                                continue;
+                            }
+                        }
+                    };
+
+                    #[cfg(not(feature = "capture_timing"))]
                     let flow = match PacketFlow::try_from(pkt.as_ref()) {
                         Ok(flow) => flow,
                         Err(e) => {
@@ -62,16 +510,16 @@ pub fn spawn_processing_thread(
                         flow,
                     };
 
-                    // envoi des packets lue en temps réel
-                    if let Err(e) = on_event.send(CaptureEvent::Packet { packet: &packet }) {
-                        error!("[TAURI] Erreur envoi Packet: {}", e);
-                        buffer_pool.put(pkt);
-                        break; // évite spammer d’erreurs si le canal est cassé
-                    }
-
                     // ajout les paquets à la matrice de flux
+                    #[cfg(feature = "capture_timing")]
+                    let packet_owned_start = timing_sample.map(|_| Instant::now());
                     let record_owned = packet.to_owned_packet();
+                    #[cfg(feature = "capture_timing")]
+                    let packet_owned_ns = packet_owned_start.map(elapsed_ns_since).unwrap_or(0);
+
                     let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
+                    #[cfg(feature = "capture_timing")]
+                    let label_lookup_start = timing_sample.map(|_| Instant::now());
                     let (source_label, destination_label) =
                         if let Ok(locked_state) = flow_matrix.lock() {
                             let source_ip = record_owned
@@ -100,46 +548,127 @@ pub fn spawn_processing_thread(
                         } else {
                             (None, None)
                         };
+                    #[cfg(feature = "capture_timing")]
+                    let label_lookup_ns = label_lookup_start.map(elapsed_ns_since).unwrap_or(0);
+
+                    #[cfg(feature = "capture_timing")]
+                    let matrix_update_start = timing_sample.map(|_| Instant::now());
                     if let Ok(mut locked_state) = flow_matrix.lock() {
                         locked_state.update_flow(&record_owned);
                         processed = locked_state.matrix.len() as u32;
                     };
+                    #[cfg(feature = "capture_timing")]
+                    let matrix_update_ns = matrix_update_start.map(elapsed_ns_since).unwrap_or(0);
 
                     let graph = app.state::<Arc<Mutex<GraphData>>>();
-                    if let Ok(mut g) = graph.lock() {
-                        // record_owned.flow est un PacketFlowOwned
-                        let updates =
-                            g.add_packet_flow(&record_owned.flow, source_label, destination_label);
-                        // Envoi 1 par 1 (simple)
-                        if !updates.is_empty() {
-                            for update in updates {
-                                if let Err(e) =
-                                    on_event.send(CaptureEvent::Graph { update: &update })
+                    #[cfg(feature = "capture_timing")]
+                    let graph_update_start = timing_sample.map(|_| Instant::now());
+                    let graph_updates = if let Ok(mut g) = graph.lock() {
+                        g.add_packet_flow(&record_owned.flow, source_label, destination_label)
+                    } else {
+                        Vec::new()
+                    };
+                    #[cfg(feature = "capture_timing")]
+                    let graph_update_ns = graph_update_start.map(elapsed_ns_since).unwrap_or(0);
+
+                    #[cfg(feature = "capture_timing")]
+                    let graph_ipc_start = timing_sample.map(|_| Instant::now());
+                    #[cfg(feature = "capture_timing")]
+                    let graph_update_count = graph_updates.len();
+                    #[cfg(feature = "capture_timing")]
+                    let mut graph_ipc_failures = 0usize;
+                    if !graph_updates.is_empty() {
+                        for update in graph_updates {
+                            if let Err(e) = on_event.send(CaptureEvent::Graph { update: &update }) {
+                                #[cfg(feature = "capture_timing")]
                                 {
-                                    error!("[TAURI] Erreur envoi GraphUpdate: {}", e);
-                                    break; // évite spammer d’erreurs si le canal est cassé
+                                    graph_ipc_failures += 1;
                                 }
+                                error!("[TAURI] Erreur envoi GraphUpdate: {}", e);
+                                break;
                             }
                         }
-                    };
+                    }
+                    #[cfg(feature = "capture_timing")]
+                    let graph_ipc_ns = graph_ipc_start.map(elapsed_ns_since).unwrap_or(0);
 
-                    // Rendre le buffer au pool après traitement
+                    #[cfg(feature = "capture_timing")]
+                    if let (Some(sample), Some(start), Some(logger)) =
+                        (timing_sample, pipeline_start, timing_logger.as_mut())
+                    {
+                        let pipeline_timing = CapturePipelineTiming {
+                            caplen: pkt.header.caplen,
+                            len: pkt.header.len,
+                            parse_l2_ns: parse_timing.l2_ns,
+                            parse_l3_ns: parse_timing.l3_ns,
+                            parse_l4_ns: parse_timing.l4_ns,
+                            parse_l7_ns: parse_timing.l7_ns,
+                            parse_total_ns: parse_timing.total_ns,
+                            packet_owned_ns,
+                            label_lookup_ns,
+                            matrix_update_ns,
+                            graph_update_ns,
+                            graph_ipc_ns,
+                            graph_updates: graph_update_count,
+                            graph_ipc_failures,
+                            pipeline_total_ns: elapsed_ns_since(start),
+                        };
+
+                        if let Err(e) = logger.write_pipeline(sample, pipeline_timing) {
+                            error!("Capture timing log disabled after write error: {}", e);
+                            timing_logger = None;
+                        }
+                    }
+
+                    // Accumuler dans le batch
+                    packet_batch.push(record_owned);
+
+                    // Flush si le batch est plein ou si l'intervalle est écoulé
+                    if packet_batch.len() >= PACKET_BATCH_MAX
+                        || last_batch_flush.elapsed() >= batch_interval
+                    {
+                        #[cfg(feature = "capture_timing")]
+                        let flush_ok =
+                            flush_batch!(packet_batch, on_event, last_batch_flush, timing_logger);
+                        #[cfg(not(feature = "capture_timing"))]
+                        let flush_ok = flush_batch!(packet_batch, on_event, last_batch_flush);
+
+                        if !flush_ok {
+                            buffer_pool.put(pkt);
+                            break;
+                        }
+                    }
+
                     buffer_pool.put(pkt);
                 }
 
                 Ok(CaptureMessage::Stats(new_stats)) => {
-                    // new_stats: pcap::Stat
-                    if let Err(e) = StatsPayload::maybe_send(
-                        &mut stats, // <= ta variable déjà déclarée
-                        new_stats, processed,
-                        &on_event, // <= passe une référence, pas un move
-                    ) {
+                    if stop_flag.load(Ordering::Relaxed) {
+                        break;
+                    }
+
+                    if let Err(e) =
+                        StatsPayload::maybe_send(&mut stats, new_stats, processed, &on_event)
+                    {
                         error!("[TAURI] Erreur envoi Stats: {}", e);
-                        // on NE fait pas `break` ici, on continue la boucle
                     }
                 }
-                Err(err) => {
-                    error!("Erreur réception canal : {}", err);
+
+                Err(RecvTimeoutError::Timeout) => {
+                    // Flush le batch restant après inactivité
+                    #[cfg(feature = "capture_timing")]
+                    let flush_ok =
+                        flush_batch!(packet_batch, on_event, last_batch_flush, timing_logger);
+                    #[cfg(not(feature = "capture_timing"))]
+                    let flush_ok = flush_batch!(packet_batch, on_event, last_batch_flush);
+
+                    if !flush_ok {
+                        break;
+                    }
+                }
+
+                Err(RecvTimeoutError::Disconnected) => {
+                    error!("Erreur réception canal : canal déconnecté");
                     break;
                 }
             }
@@ -154,10 +683,17 @@ pub fn spawn_processing_thread(
                     &mut last_channel,
                     current_len,
                     channel_capacity as usize,
-                    &app,
+                    &on_event,
                 ) {
                     error!("[TAURI] Erreur émission canal : {}", e);
                 }
+            }
+        }
+
+        #[cfg(feature = "capture_timing")]
+        if let Some(mut logger) = timing_logger {
+            if let Err(e) = logger.write_run_summary() {
+                error!("Capture timing summary write failed: {}", e);
             }
         }
     });
@@ -169,6 +705,7 @@ pub fn spawn_processing_thread_cli(
     channel_capacity: i32,
     app: AppHandle,
     buffer_pool: Arc<PacketBufferPool>,
+    stop_flag: Arc<AtomicBool>,
 ) {
     thread::spawn(move || {
         debug!("Démarrage du thread de traitement");
@@ -179,10 +716,24 @@ pub fn spawn_processing_thread_cli(
         let mut last_len = 0usize;
         static TEMPO: Duration = Duration::from_millis(40);
         let mut stats = StatTriple::default();
+        let batch_interval = Duration::from_millis(PACKET_BATCH_INTERVAL_MS);
+        let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(PACKET_BATCH_MAX);
+        let mut last_batch_flush = Instant::now();
 
         loop {
-            match rx.recv() {
+            if stop_flag.load(Ordering::Relaxed) {
+                break;
+            }
+
+            let timeout = batch_interval.saturating_sub(last_batch_flush.elapsed());
+            match rx.recv_timeout(timeout.max(Duration::from_millis(1))) {
                 Ok(CaptureMessage::Packet(pkt)) => {
+                    if stop_flag.load(Ordering::Relaxed) {
+                        packet_batch.clear();
+                        buffer_pool.put(pkt);
+                        break;
+                    }
+
                     let flow = match PacketFlow::try_from(pkt.as_ref()) {
                         Ok(flow) => flow,
                         Err(e) => {
@@ -200,14 +751,6 @@ pub fn spawn_processing_thread_cli(
                         flow,
                     };
 
-                    // envoi des packets lue en temps réel
-                    if let Err(e) = on_event.send(CaptureEvent::Packet { packet: &packet }) {
-                        error!("[TAURI] Erreur envoi Packet: {}", e);
-                        buffer_pool.put(pkt);
-                        break; // évite spammer d’erreurs si le canal est cassé
-                    }
-
-                    // ajout les paquets à la matrice de flux
                     let record_owned = packet.to_owned_packet();
                     let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
                     let (source_label, destination_label) =
@@ -246,39 +789,54 @@ pub fn spawn_processing_thread_cli(
 
                     let graph = app.state::<Arc<Mutex<GraphData>>>();
                     if let Ok(mut g) = graph.lock() {
-                        // record_owned.flow est un PacketFlowOwned
                         let updates =
                             g.add_packet_flow(&record_owned.flow, source_label, destination_label);
-                        // Envoi 1 par 1 (simple)
                         if !updates.is_empty() {
                             for update in updates {
                                 if let Err(e) =
                                     on_event.send(CaptureEvent::Graph { update: &update })
                                 {
                                     error!("[TAURI] Erreur envoi GraphUpdate: {}", e);
-                                    break; // évite spammer d’erreurs si le canal est cassé
+                                    break;
                                 }
                             }
                         }
                     };
 
-                    // Rendre le buffer au pool après traitement
+                    packet_batch.push(record_owned);
+
+                    if packet_batch.len() >= PACKET_BATCH_MAX
+                        || last_batch_flush.elapsed() >= batch_interval
+                    {
+                        if !flush_batch!(packet_batch, on_event, last_batch_flush) {
+                            buffer_pool.put(pkt);
+                            break;
+                        }
+                    }
+
                     buffer_pool.put(pkt);
                 }
 
                 Ok(CaptureMessage::Stats(new_stats)) => {
-                    // new_stats: pcap::Stat
-                    if let Err(e) = StatsPayload::maybe_send(
-                        &mut stats, // <= ta variable déjà déclarée
-                        new_stats, processed,
-                        &on_event, // <= passe une référence, pas un move
-                    ) {
+                    if stop_flag.load(Ordering::Relaxed) {
+                        break;
+                    }
+
+                    if let Err(e) =
+                        StatsPayload::maybe_send(&mut stats, new_stats, processed, &on_event)
+                    {
                         error!("[TAURI] Erreur envoi Stats: {}", e);
-                        // on NE fait pas `break` ici, on continue la boucle
                     }
                 }
-                Err(err) => {
-                    error!("Erreur réception canal : {}", err);
+
+                Err(RecvTimeoutError::Timeout) => {
+                    if !flush_batch!(packet_batch, on_event, last_batch_flush) {
+                        break;
+                    }
+                }
+
+                Err(RecvTimeoutError::Disconnected) => {
+                    error!("Erreur réception canal : canal déconnecté");
                     break;
                 }
             }
@@ -293,7 +851,7 @@ pub fn spawn_processing_thread_cli(
                     &mut last_channel,
                     current_len,
                     channel_capacity as usize,
-                    &app,
+                    &on_event,
                 ) {
                     error!("[TAURI] Erreur émission canal : {}", e);
                 }

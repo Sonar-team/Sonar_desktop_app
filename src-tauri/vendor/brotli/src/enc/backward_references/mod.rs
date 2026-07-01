@@ -39,11 +39,14 @@ pub enum BrotliEncoderMode {
 ///  "ring_buffer_break"point. This marks where a backwards reference cannot pull data through.
 /// A match must stop at the end of the dictionary and cannot span the end of the dictionary
 /// and beginning of the file.  ring_buffer_break is only set true for custom LZ77 dictionary.
-fn fix_unbroken_len(unbroken_len: usize, prev_ix: usize, _cur_ix_masked: usize, ring_buffer_break: Option<core::num::NonZeroUsize>) -> usize
-{
+fn fix_unbroken_len(
+    unbroken_len: usize,
+    prev_ix: usize,
+    _cur_ix_masked: usize,
+    ring_buffer_break: Option<core::num::NonZeroUsize>,
+) -> usize {
     if let Some(br) = ring_buffer_break {
-        if prev_ix < usize::from(br) && prev_ix + unbroken_len > usize::from(br)
-        {
+        if prev_ix < usize::from(br) && prev_ix + unbroken_len > usize::from(br) {
             return usize::from(br) - prev_ix;
         }
     }
@@ -102,6 +105,12 @@ pub struct BrotliEncoderParams {
     pub large_window: bool,
     /// avoid search for the best ndirect vs npostfix parameters for distance
     pub avoid_distance_prefix_search: bool,
+    /// inserts an extra empty metadata block before the final empty metablock in
+    /// catable/appendable mode so concatination tools can just remove the last byte
+    pub byte_align: bool,
+    /// do not emit a empty last block at end of data - if not appendable, this
+    /// will also supress the stream header
+    pub bare_stream: bool,
     /// construct brotli in such a way that it may be concatenated with another brotli file using appropriate bit ops
     pub catable: bool,
     /// can use the dictionary (default yes unless catable is set)
@@ -380,7 +389,8 @@ impl<T: SliceWrapperMut<u32> + SliceWrapper<u32> + BasicHashComputer> AnyHasher 
                     max_length,
                 );
                 if unbroken_len != 0 {
-                    let len = fix_unbroken_len(unbroken_len, prev_ix, cur_ix_masked, ring_buffer_break);
+                    let len =
+                        fix_unbroken_len(unbroken_len, prev_ix, cur_ix_masked, ring_buffer_break);
                     best_score = BackwardReferenceScoreUsingLastDistance(len, opts);
                     best_len = len;
                     out.len = len;
@@ -435,9 +445,10 @@ impl<T: SliceWrapperMut<u32> + SliceWrapper<u32> + BasicHashComputer> AnyHasher 
                     &data[cur_ix_masked..],
                     max_length,
                 );
-                
+
                 if unbroken_len != 0 {
-                    let len = fix_unbroken_len(unbroken_len, prev_ix, cur_ix_masked, ring_buffer_break);
+                    let len =
+                        fix_unbroken_len(unbroken_len, prev_ix, cur_ix_masked, ring_buffer_break);
                     let score: u64 = BackwardReferenceScore(len, backward, opts);
                     if best_score < score {
                         best_score = score;
@@ -767,7 +778,8 @@ impl<Alloc: alloc::Allocator<u16> + alloc::Allocator<u32>> AnyHasher for H9<Allo
                 let unbroken_len: usize =
                     FindMatchLengthWithLimit(&data[prev_ix..], &data[cur_ix_masked..], max_length);
                 if unbroken_len >= 3 || (unbroken_len == 2 && i < 2) {
-                    let len = fix_unbroken_len(unbroken_len, prev_ix, cur_ix_masked, ring_buffer_break);
+                    let len =
+                        fix_unbroken_len(unbroken_len, prev_ix, cur_ix_masked, ring_buffer_break);
                     let score = BackwardReferenceScoreUsingLastDistanceH9(len, i, self.h9_opts);
                     if best_score < score {
                         best_score = score;
@@ -819,7 +831,12 @@ impl<Alloc: alloc::Allocator<u16> + alloc::Allocator<u32>> AnyHasher for H9<Allo
                         max_length,
                     );
                     if (unbroken_len >= 4) {
-                        let len = fix_unbroken_len(unbroken_len, prev_ix, cur_ix_masked, ring_buffer_break);
+                        let len = fix_unbroken_len(
+                            unbroken_len,
+                            prev_ix,
+                            cur_ix_masked,
+                            ring_buffer_break,
+                        );
                         /* Comparing for >= 3 does not change the semantics, but just saves
                         for a few unnecessary binary logarithms in backward reference
                         score, since we are not interested in such short matches. */
@@ -1760,7 +1777,8 @@ impl<
                 let prev_data = data.split_at(prev_ix).1;
                 let unbroken_len = FindMatchLengthWithLimitMin4(prev_data, cur_data, max_length);
                 if unbroken_len != 0 {
-                    let len = fix_unbroken_len(unbroken_len, prev_ix, cur_ix_masked, ring_buffer_break);
+                    let len =
+                        fix_unbroken_len(unbroken_len, prev_ix, cur_ix_masked, ring_buffer_break);
                     let score: u64 = BackwardReferenceScore(len, backward, opts);
                     if best_score < score {
                         best_score = score;
@@ -2545,8 +2563,7 @@ pub fn BrotliCreateBackwardReferences<
     position: usize,
     ringbuffer: &[u8],
     ringbuffer_mask: usize,
-    ringbuffer_break: Option<core::num::NonZeroUsize>
-,
+    ringbuffer_break: Option<core::num::NonZeroUsize>,
     params: &BrotliEncoderParams,
     hasher_union: &mut UnionHasher<Alloc>,
     dist_cache: &mut [i32],

@@ -211,16 +211,22 @@ macro_rules! const_try_opt {
 }
 
 /// `unreachable!()`, but better.
-#[cfg(any(feature = "formatting", feature = "parsing"))]
 macro_rules! bug {
     () => {
         compile_error!("provide an error message to help fix a possible bug")
     };
-    ($descr:literal) => {
+    ($descr:literal) => {{
+        $crate::hint::cold_path();
         panic!(concat!("internal error: ", $descr))
-    };
+    }};
 }
 
+pub(crate) use bug;
+pub(crate) use carry;
+pub(crate) use cascade;
+pub(crate) use const_try;
+pub(crate) use const_try_opt;
+pub(crate) use div_floor;
+pub(crate) use ensure_ranged;
 #[cfg(any(feature = "formatting", feature = "parsing"))]
-pub(crate) use {bug, try_likely_ok};
-pub(crate) use {carry, cascade, const_try, const_try_opt, div_floor, ensure_ranged};
+pub(crate) use try_likely_ok;

@@ -21,10 +21,9 @@
  * - can also execute an arbitrary build command with that environment applied
  *
  * Expected usage:
- * - `github-env`: used by `.github/workflows/publish.yml` to append variables to
- *   `$GITHUB_ENV` before `tauri-action` runs
- * - `run ...`: used by local release commands and by `security/repro-check.sh`
- *   to execute a build with the same reproducibility settings
+ * - `github-env`: used by CI checks to validate the GitHub Actions env-file output.
+ * - `run ...`: used by release commands and by `security/repro-check.sh` to execute
+ *   a build with the same reproducibility settings.
  *
  * The goal is not to solve every source of non-determinism by itself. It
  * specifically handles the release-build flags that must be applied consistently
@@ -32,6 +31,7 @@
  * chance of producing identical artifacts.
  */
 const repoRoot = Deno.cwd();
+const rustProjectRoot = `${repoRoot}/src-tauri`;
 
 // Preserve any existing flags while ensuring reproducibility flags are present exactly once.
 function appendFlag(existing: string | undefined, flag: string): string {
@@ -83,11 +83,70 @@ async function resolveSourceDateEpoch(): Promise<string> {
   return epoch;
 }
 
+async function commandOutput(
+  commandName: string,
+  args: string[],
+  cwd = repoRoot,
+): Promise<string | undefined> {
+  const command = new Deno.Command(commandName, {
+    args,
+    cwd,
+    stdout: "piped",
+    stderr: "null",
+  });
+  const { code, stdout } = await command.output();
+  if (code !== 0) {
+    return undefined;
+  }
+
+  const value = new TextDecoder().decode(stdout).trim();
+  return value || undefined;
+}
+
+async function resolveRustcSourceRemap(): Promise<string | undefined> {
+  const versionInfo = await commandOutput("rustc", ["-vV"], rustProjectRoot);
+  const commitHash = versionInfo?.match(/^commit-hash: ([0-9a-f]+)$/m)?.[1];
+  const sysroot = await commandOutput("rustc", [
+    "--print",
+    "sysroot",
+  ], rustProjectRoot);
+  if (!commitHash || !sysroot) {
+    return undefined;
+  }
+
+  return `--remap-path-prefix=${sysroot}/lib/rustlib/src/rust=/rustc/${commitHash}`;
+}
+
 async function buildEnv(): Promise<Record<string, string>> {
   const sourceDateEpoch = await resolveSourceDateEpoch();
   // Remap the local checkout path to a stable virtual path to avoid embedding machine-specific paths.
   const remapFlag = `--remap-path-prefix=${repoRoot}=/workspace`;
   let rustflags = appendFlag(Deno.env.get("RUSTFLAGS"), remapFlag);
+
+  const home = Deno.env.get("HOME");
+  const rustcSourceRemap = await resolveRustcSourceRemap();
+  if (rustcSourceRemap) {
+    rustflags = appendFlag(rustflags, rustcSourceRemap);
+  }
+
+  const rustupPath = Deno.env.get("RUSTUP_HOME") ??
+    (home ? `${home}/.rustup` : undefined);
+  if (rustupPath && !rustcSourceRemap) {
+    rustflags = appendFlag(
+      rustflags,
+      `--remap-path-prefix=${rustupPath}=/rustup`,
+    );
+  }
+
+  const cargoPath = Deno.env.get("CARGO_HOME") ??
+    (home ? `${home}/.cargo` : undefined);
+  if (cargoPath) {
+    rustflags = appendFlag(
+      rustflags,
+      `--remap-path-prefix=${cargoPath}=/cargo`,
+    );
+  }
+
   if (shouldEnableWindowsBrepro()) {
     rustflags = appendLinkArg(rustflags, "link-arg=/Brepro");
   }

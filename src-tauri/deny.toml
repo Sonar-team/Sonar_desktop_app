@@ -1,0 +1,36 @@
+# https://embarkstudios.github.io/cargo-deny/
+
+[advisories]
+unmaintained = "workspace"
+yanked = "warn"
+ignore = [
+  { id = "RUSTSEC-2024-0429", reason = "Transitive via the Linux GTK/WebKit stack; no local code uses glib VariantStrIter and upgrading requires upstream GTK/WebKit/Tauri migration." },
+  { id = "RUSTSEC-2026-0097", reason = "Transitive rand 0.7 dependency; the reported issue requires a custom logger calling rand::rng during reseed and has no local dependency-only upgrade path." },
+]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+
+[licenses]
+confidence-threshold = 0.8
+allow = [
+  "0BSD",
+  "AGPL-3.0-only",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "BSL-1.0",
+  "CC0-1.0",
+  "ISC",
+  "MIT",
+  "MPL-2.0",
+  "Unicode-3.0",
+  "Unlicense",
+  "Zlib",
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

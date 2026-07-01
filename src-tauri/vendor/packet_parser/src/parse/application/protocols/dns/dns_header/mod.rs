@@ -1,8 +1,14 @@
-use std::fmt;
-mod dns_flags;
-use dns_flags::verify_dns_flags;
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
 
-use crate::errors::application::dns::DnsHeaderError;
+use std::fmt;
+
+use crate::{
+    checks::application::dns::{check_packet_length, validate_and_parse_count, verify_dns_flags},
+    errors::application::dns::DnsHeaderError,
+};
 
 #[derive(Debug)]
 pub struct DnsHeader {
@@ -44,32 +50,6 @@ impl fmt::Display for DnsHeader {
             self.counts[3],
         )
     }
-}
-
-fn check_packet_length(bytes: &[u8]) -> Result<(), DnsHeaderError> {
-    if bytes.len() < 12 {
-        return Err(DnsHeaderError::PacketTooShort);
-    }
-    Ok(())
-}
-
-fn validate_and_parse_count(bytes: &[u8]) -> Result<[u16; 4], DnsHeaderError> {
-    let questions_count = u16::from_be_bytes([bytes[0], bytes[1]]);
-    let answers_count = u16::from_be_bytes([bytes[2], bytes[3]]);
-    let authorities_count = u16::from_be_bytes([bytes[4], bytes[5]]);
-    let additionals_count = u16::from_be_bytes([bytes[6], bytes[7]]);
-
-    if questions_count == 0 && (answers_count > 0 || authorities_count > 0 || additionals_count > 0)
-    {
-        return Err(DnsHeaderError::InvalidCounts);
-    }
-
-    Ok([
-        questions_count,
-        answers_count,
-        authorities_count,
-        additionals_count,
-    ])
 }
 
 #[cfg(test)]

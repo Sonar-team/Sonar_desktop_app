@@ -1,9 +1,38 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 use std::convert::TryFrom;
-use thiserror::Error;
 
-/// Taille fixe de l'entête AMS (en octets)
-pub const AMS_HEADER_LEN: usize = 32;
+use crate::{
+    checks::application::ams::{
+        AMS_HEADER_LEN, validate_ams_header_length, validate_cb_data_length, validate_cmd_id,
+        validate_state_flags,
+    },
+    errors::application::ams::AmsParseError,
+};
 
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
+/// AMS Packet
+///
+/// ```mermaid
+/// ---
+/// title: AmsPacket
+/// ---
+/// packet-beta
+/// 0-47: "Target Net ID u48"
+/// 48-63: "Target Port u16"
+/// 64-111: "Sender Net ID u48"
+/// 112-127: "Sender Port u16"
+/// 128-143: "Command ID u16"
+/// 144-159: "State Flags u16"
+/// 160-191: "Data Length u32"
+/// 192-223: "Error Code u32"
+/// 224-255: "Invoke ID u32"
+/// 256-319: "Data variable"
+/// ```
+///
 /// Représente un paquet AMS (header + payload)
 #[derive(Debug)]
 pub struct AmsPacket<'a> {
@@ -26,35 +55,6 @@ pub struct AmsPacket<'a> {
     pub data: &'a [u8],
 }
 
-/// Commandes AMS/ADS connues.
-/// (Tu peux compléter si besoin)
-fn is_known_cmd_id(cmd_id: u16) -> bool {
-    matches!(cmd_id, 0x0001..=0x0009)
-}
-
-/// Bits réservés dans state_flags.
-/// Ici on suppose que seuls les 4 bits de poids faible sont utilisés.
-/// (Tu peux adapter le masque selon la spec que tu suis.)
-fn has_reserved_state_bits(flags: u16) -> bool {
-    let reserved_mask: u16 = !0x000F; // tout sauf les 4 bits LSB
-    flags & reserved_mask != 0
-}
-
-#[derive(Debug, Error)]
-pub enum AmsParseError {
-    #[error("AMS header too short: expected at least {expected} bytes, got {actual}")]
-    HeaderTooShort { expected: usize, actual: usize },
-
-    #[error("AMS payload length ({cb_data}) does not match actual data length ({actual})")]
-    InvalidCbDataLength { cb_data: u32, actual: usize },
-
-    #[error("Unknown AMS command id: 0x{0:04x}")]
-    UnknownCommand(u16),
-
-    #[error("Invalid AMS state flags: reserved bits set (0x{0:04x})")]
-    InvalidStateFlags(u16),
-}
-
 impl<'a> TryFrom<&'a [u8]> for AmsPacket<'a> {
     type Error = AmsParseError;
 
@@ -62,12 +62,7 @@ impl<'a> TryFrom<&'a [u8]> for AmsPacket<'a> {
         let len = bytes.len();
 
         // 1) Longueur minimale
-        if len < AMS_HEADER_LEN {
-            return Err(AmsParseError::HeaderTooShort {
-                expected: AMS_HEADER_LEN,
-                actual: len,
-            });
-        }
+        validate_ams_header_length(len)?;
 
         // Layout AMS (32 octets, little-endian) :
         //  0..=5   TargetNetId (6 octets)
@@ -98,22 +93,13 @@ impl<'a> TryFrom<&'a [u8]> for AmsPacket<'a> {
         let actual_data_len = len - data_start;
 
         // 2) Validation cb_data : la longueur déclarée doit coller à la réalité
-        if actual_data_len != cb_data as usize {
-            return Err(AmsParseError::InvalidCbDataLength {
-                cb_data,
-                actual: actual_data_len,
-            });
-        }
+        validate_cb_data_length(cb_data, actual_data_len)?;
 
         // 3) Validation cmd_id : doit faire partie des commandes connues
-        if !is_known_cmd_id(cmd_id) {
-            return Err(AmsParseError::UnknownCommand(cmd_id));
-        }
+        validate_cmd_id(cmd_id)?;
 
         // 4) Validation des state_flags : pas de bits réservés
-        if has_reserved_state_bits(state_flags) {
-            return Err(AmsParseError::InvalidStateFlags(state_flags));
-        }
+        validate_state_flags(state_flags)?;
 
         let data = &bytes[data_start..data_start + actual_data_len];
 

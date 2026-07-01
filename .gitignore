@@ -64,3 +64,8 @@ cosign.pub
 *.sigstore.json
 *.sig
 *.pem
+
+# Local CI/repro test artifacts
+.cache/
+.cargo-home/
+bundle-repro-*/

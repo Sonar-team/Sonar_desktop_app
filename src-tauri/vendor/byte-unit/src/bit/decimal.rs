@@ -1,7 +1,7 @@
 use rust_decimal::prelude::*;
 
 use super::Bit;
-use crate::{common::is_zero_remainder_decimal, Unit};
+use crate::{Unit, common::is_zero_remainder_decimal};
 
 /// Associated functions for building `Bit` instances using `Decimal`.
 impl Bit {

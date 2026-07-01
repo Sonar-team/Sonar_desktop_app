@@ -13,7 +13,7 @@
 edition = "2015"
 rust-version = "1.59.0"
 name = "brotli"
-version = "8.0.2"
+version = "8.0.4"
 authors = [
     "Daniel Reiter Horn <danielrh@dropbox.com>",
     "The Brotli Authors",
@@ -24,6 +24,7 @@ include = [
     "/examples/**/*.rs",
     "/Cargo.toml",
     "/README.md",
+    "/LICENSE.BSD-3-Clause",
     "/LICENSE.MIT",
 ]
 autolib = false
@@ -93,7 +94,7 @@ name = "decompress"
 path = "examples/decompress.rs"
 
 [dependencies.alloc-no-stdlib]
-version = "2.0"
+version = ">=2.0.4, <3"
 
 [dependencies.alloc-stdlib]
 version = "~0.2"
@@ -106,6 +107,10 @@ default-features = false
 [dependencies.sha2]
 version = "~0.10"
 optional = true
+
+[dev-dependencies.alloc-no-stdlib]
+version = ">=2.0.4, <3"
+features = ["unsafe"]
 
 [profile.release]
 lto = true

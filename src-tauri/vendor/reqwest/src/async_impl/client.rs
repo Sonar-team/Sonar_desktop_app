@@ -167,6 +167,8 @@ struct Config {
     certs_verification: bool,
     #[cfg(feature = "__tls")]
     tls_sni: bool,
+    #[cfg(feature = "__rustls")]
+    tls_sslkeylogfile: bool,
     connect_timeout: Option<Duration>,
     connection_verbose: bool,
     pool_idle_timeout: Option<Duration>,
@@ -292,6 +294,8 @@ impl ClientBuilder {
                 certs_verification: true,
                 #[cfg(feature = "__tls")]
                 tls_sni: true,
+                #[cfg(feature = "__rustls")]
+                tls_sslkeylogfile: false,
                 connect_timeout: None,
                 connection_verbose: false,
                 pool_idle_timeout: Some(Duration::from_secs(90)),
@@ -568,9 +572,11 @@ impl ClientBuilder {
 
                     if let Some(min_tls_version) = config.min_tls_version {
                         let protocol = min_tls_version.to_native_tls().ok_or_else(|| {
-                            // TLS v1.3. This would be entirely reasonable,
-                            // native-tls just doesn't support it.
-                            // https://github.com/sfackler/rust-native-tls/issues/140
+                            // native-tls added support for TLS v1.3 in 0.2.16 🎉
+                            // `to_native_tls` could arguably return the value directly
+                            // instead of making us check for an impossible None here,
+                            // but given that 1.4 does not exist yet, that might get
+                            // messy in the future.
                             crate::error::builder("invalid minimum TLS version for backend")
                         })?;
                         tls.min_protocol_version(Some(protocol));
@@ -578,7 +584,6 @@ impl ClientBuilder {
 
                     if let Some(max_tls_version) = config.max_tls_version {
                         let protocol = max_tls_version.to_native_tls().ok_or_else(|| {
-                            // TLS v1.3.
                             // We could arguably do max_protocol_version(None), given
                             // that 1.4 does not exist yet, but that'd get messy in the
                             // future.
@@ -809,6 +814,10 @@ impl ClientBuilder {
                     };
 
                     tls.enable_sni = config.tls_sni;
+
+                    if config.tls_sslkeylogfile {
+                        tls.key_log = Arc::new(rustls::KeyLogFile::new());
+                    }
 
                     // ALPN protocol
                     match config.http_version_pref {
@@ -1566,7 +1575,7 @@ impl ClientBuilder {
 
     /// Sets the `SETTINGS_INITIAL_WINDOW_SIZE` option for HTTP2 stream-level flow control.
     ///
-    /// Default is currently 65,535 but may change internally to optimize for common uses.
+    /// Default may change internally to optimize for common uses.
     #[cfg(feature = "http2")]
     #[cfg_attr(docsrs, doc(cfg(feature = "http2")))]
     pub fn http2_initial_stream_window_size(mut self, sz: impl Into<Option<u32>>) -> ClientBuilder {
@@ -1576,7 +1585,7 @@ impl ClientBuilder {
 
     /// Sets the max connection-level flow control for HTTP2
     ///
-    /// Default is currently 65,535 but may change internally to optimize for common uses.
+    /// Default may change internally to optimize for common uses.
     #[cfg(feature = "http2")]
     #[cfg_attr(docsrs, doc(cfg(feature = "http2")))]
     pub fn http2_initial_connection_window_size(
@@ -2031,16 +2040,31 @@ impl ClientBuilder {
         self
     }
 
+    /// Controls if the SSLKEYLOGFILE environment variable is respected.
+    ///
+    /// When enabled, if the environment variable `SSLKEYLOGFILE` is present at runtime,
+    /// TLS keys will be logged to the file at the path described in the variable.
+    /// This can be used by end-users to allow debugging TLS connections.
+    ///
+    /// Defaults to `false`.
+    ///
+    /// # Optional
+    ///
+    /// This requires the `rustls(-...)` Cargo feature enabled.
+    #[cfg(feature = "__rustls")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rustls")))]
+    pub fn tls_sslkeylogfile(mut self, on: bool) -> ClientBuilder {
+        self.config.tls_sslkeylogfile = on;
+        self
+    }
+
     /// Set the minimum required TLS version for connections.
     ///
     /// By default, the TLS backend's own default is used.
     ///
-    /// # Errors
-    ///
-    /// A value of `tls::Version::TLS_1_3` will cause an error with the
-    /// `native-tls` backend. This does not mean the version
-    /// isn't supported, just that it can't be set as a minimum due to
-    /// technical limitations.
+    /// On Apple platforms, a value of `tls::Version::TLS_1_3` may cause requests
+    /// to fail (with error -9830) with the `native-tls` backend due to lack of
+    /// TLS 1.3 support.
     ///
     /// # Optional
     ///
@@ -2066,12 +2090,11 @@ impl ClientBuilder {
     ///
     /// By default, there's no maximum.
     ///
-    /// # Errors
+    /// On Apple platforms, a value of `tls::Version::TLS_1_3` may cause requests
+    /// to fall back to TLS 1.2 if allowed by `tls_version_min`, or fail (with error
+    /// -9830) with the `native-tls` backend due to lack of TLS 1.3 support.
     ///
-    /// A value of `tls::Version::TLS_1_3` will cause an error with the
-    /// `native-tls` backend. This does not mean the version
-    /// isn't supported, just that it can't be set as a maximum due to
-    /// technical limitations.
+    /// # Errors
     ///
     /// Cannot set a maximum outside the protocol versions supported by
     /// `rustls` with the `rustls` backend.
@@ -2458,7 +2481,13 @@ impl Default for Client {
 #[cfg(feature = "__rustls")]
 fn default_rustls_crypto_provider() -> Arc<rustls::crypto::CryptoProvider> {
     #[cfg(not(feature = "__rustls-aws-lc-rs"))]
-    panic!("No provider set");
+    panic!(
+        "No rustls crypto provider is configured. \
+        When using the `rustls-no-provider` feature you must install a \
+        crypto provider before building a Client. For example: \
+        `rustls::crypto::aws_lc_rs::default_provider().install_default().unwrap();` \
+        See https://docs.rs/rustls/latest/rustls/#cryptography-providers for details."
+    );
 
     #[cfg(feature = "__rustls-aws-lc-rs")]
     Arc::new(rustls::crypto::aws_lc_rs::default_provider())
@@ -2848,6 +2877,11 @@ impl Config {
             f.field("tls_sni", &self.tls_sni);
 
             f.field("tls_info", &self.tls_info);
+        }
+
+        #[cfg(feature = "__rustls")]
+        {
+            f.field("tls_sslkeylogfile", &self.tls_sslkeylogfile);
         }
 
         #[cfg(all(feature = "default-tls", feature = "__rustls"))]

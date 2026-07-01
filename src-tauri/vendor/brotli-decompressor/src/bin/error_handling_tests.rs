@@ -165,3 +165,56 @@ fn would_block_more() {
     // Ensure incremental decoding matches original input after brotli decompressor is finished.
     assert_eq!(decoded, reference_decoded);
 }
+
+// Regression test for a missing `break` in the BROTLI_STATE_METABLOCK_DONE arm
+// of BrotliDecompressStream that caused PADDING_2 errors (RFC 7932 §9.3:
+// "the unused bits in the last byte must be zeros") to be silently dropped:
+// the error code was set, control fell through into BROTLI_STATE_DONE, and
+// WriteRingBuffer's return overwrote `result` with SUCCESS.
+//
+// This is the same valid 69-byte brotli stream encoding "the quick brown fox
+// jumps over the lazy dog twice for redundancy and length" used by the C
+// reference (`libbrotlidec`) and Go implementations (cbrotli / andybalholm)
+// in their corresponding tests; both reject all corruptions below as
+// PADDING_2 / _ERROR_FORMAT_PADDING_2.
+#[test]
+fn test_padding_2_rejection() {
+    // Valid encoding of "the quick brown fox jumps over the lazy dog twice
+    // for redundancy and length" produced by libbrotlidec at quality 5.
+    let valid: &[u8] = &[
+        0x1b, 0x4a, 0x00, 0x00, 0xc4, 0xf4, 0xa4, 0x69, 0xbd, 0x79, 0x25, 0x2d, 0x22, 0xb4, 0x52,
+        0xea, 0x83, 0x0d, 0x38, 0x70, 0x68, 0xb2, 0x71, 0xc0, 0x41, 0x76, 0x1e, 0x36, 0xc6, 0xce,
+        0x13, 0x84, 0xe8, 0x36, 0xf2, 0x2a, 0x0c, 0xe7, 0x89, 0x68, 0x7a, 0x04, 0x49, 0x2f, 0xaa,
+        0xf7, 0x31, 0xa1, 0x9b, 0x0d, 0x48, 0xb7, 0xf0, 0x1f, 0x48, 0x33, 0x42, 0xa5, 0x9c, 0x31,
+        0x26, 0x97, 0xa9, 0xc6, 0xbe, 0x67, 0x85, 0x52, 0x02,
+    ];
+
+    // Sanity: the unmodified stream decodes successfully.
+    let mut d = brotli_decompressor::Decompressor::new(Cursor::new(valid), 4096);
+    let mut decoded = Vec::new();
+    d.read_to_end(&mut decoded).unwrap();
+    assert_eq!(
+        decoded,
+        b"the quick brown fox jumps over the lazy dog twice for redundancy and length",
+    );
+
+    // Each of these single-bit flips lands in the final metablock's
+    // byte-alignment padding region. A spec-conformant decoder must return
+    // BROTLI_DECODER_ERROR_FORMAT_PADDING_2 for all of them.
+    for &(offset, xor) in &[(13usize, 0x01u8), (23, 0x01), (33, 0x55)] {
+        let mut corrupted = valid.to_vec();
+        corrupted[offset] ^= xor;
+
+        let mut d = brotli_decompressor::Decompressor::new(Cursor::new(corrupted.clone()), 4096);
+        let mut sink = Vec::new();
+        let err = d.read_to_end(&mut sink).map(|_| sink.clone()).err();
+        let kind = err.as_ref().map(|e| e.kind());
+        assert_eq!(
+            kind,
+            Some(io::ErrorKind::InvalidData),
+            "decoder must reject padding-bit corruption at offset {} xor {:#x} \
+             with InvalidData; got {:?}",
+            offset, xor, err.as_ref().map_or_else(|| format!("Ok({:?})", sink), |e| format!("{:?}", e)),
+        );
+    }
+}

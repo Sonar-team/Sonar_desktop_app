@@ -23,6 +23,7 @@
 //! [`cancel`](trait.Aio.html#method.cancel) or
 //! [`aio_cancel_all`](fn.aio_cancel_all.html), though the operating system may
 //! not support this for all filesystems and devices.
+#![allow(clippy::doc_overindented_list_items)] // It looks better this way
 #[cfg(target_os = "freebsd")]
 use std::io::{IoSlice, IoSliceMut};
 use std::{
@@ -313,7 +314,7 @@ pub trait Aio {
     fn error(self: Pin<&mut Self>) -> Result<()>;
 
     /// Returns the underlying file descriptor associated with the operation.
-    fn fd(&self) -> BorrowedFd;
+    fn fd(&self) -> BorrowedFd<'_>;
 
     /// Does this operation currently have any in-kernel state?
     ///
@@ -455,7 +456,7 @@ impl<'a> AioFsync<'a> {
     /// * `fd`:           File descriptor to sync.
     /// * `mode`:         Whether to sync file metadata too, or just data.
     /// * `prio`:         If POSIX Prioritized IO is supported, then the
-    ///   operation will be prioritized at the process's priority level minus 
+    ///   operation will be prioritized at the process's priority level minus
     ///   `prio`.
     /// * `sigev_notify`: Determines how you will be notified of event completion.
     pub fn new(
@@ -572,8 +573,9 @@ impl<'a> AioRead<'a> {
     /// * `fd`:           File descriptor to read from
     /// * `offs`:         File offset
     /// * `buf`:          A memory buffer.  It must outlive the `AioRead`.
-    /// * `prio`:         If POSIX Prioritized IO is supported, then the operation
-    ///   will be prioritized at the process's priority level minus `prio`
+    /// * `prio`:         If POSIX Prioritized IO is supported, then the
+    ///                   operation will be prioritized at the process's
+    ///                   priority level minus `prio`.
     /// * `sigev_notify`: Determines how you will be notified of event completion.
     pub fn new(
         fd: BorrowedFd<'a>,
@@ -802,8 +804,9 @@ impl<'a> AioWrite<'a> {
     /// * `fd`:           File descriptor to write to
     /// * `offs`:         File offset
     /// * `buf`:          A memory buffer.  It must outlive the `AioWrite`.
-    /// * `prio`:         If POSIX Prioritized IO is supported, then the operation
-    ///   will be prioritized at the process's priority level minus `prio`
+    /// * `prio`:         If POSIX Prioritized IO is supported, then the
+    ///                   operation will be prioritized at the process's
+    ///                   priority level minus `prio`
     /// * `sigev_notify`: Determines how you will be notified of event completion.
     pub fn new(
         fd: BorrowedFd<'a>,
@@ -1138,7 +1141,39 @@ pub fn aio_suspend(
 /// `EINTR`, in which case some but not all operations may have been submitted.
 /// In that case, you must check the status of each individual operation, and
 /// possibly resubmit some.
-/// ```
+///
+// Do not run this doc test on:
+//   * aarch64-unknown-linux-musl
+//   * i686-unknown-linux-musl
+//   * x86_64-unknown-linux-musl
+// because it hangs on these targets. After further debugging, we think this is
+// likely a bug of musl. Since we only test our bindings and do not intend to
+// fix the underlying libc bug, we skip this test here.
+// See this thread for the discussion of this issue:
+// 1. https://github.com/nix-rust/nix/pull/2689#issuecomment-3419813159
+// 2. https://github.com/nix-rust/nix/issues/2788
+#[cfg_attr(
+    all(
+        target_env = "musl",
+        any(
+            target_arch = "aarch64",
+            target_arch = "x86",
+            target_arch = "x86_64"
+        )
+    ),
+    doc = " ```no_run"
+)]
+#[cfg_attr(
+    not(all(
+        target_env = "musl",
+        any(
+            target_arch = "aarch64",
+            target_arch = "x86",
+            target_arch = "x86_64"
+        )
+    )),
+    doc = " ```"
+)]
 /// # use libc::c_int;
 /// # use std::os::unix::io::AsFd;
 /// # use std::sync::atomic::{AtomicBool, Ordering};

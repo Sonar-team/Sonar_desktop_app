@@ -1,4 +1,7 @@
 #![allow(unused_imports)]
+// Assert at compile time that the default build contains no unsafe code:
+// the only unsafe in this binary lives behind the "unsafe" and "seccomp" features.
+#![cfg_attr(not(any(feature="unsafe", feature="seccomp")), forbid(unsafe_code))]
 
 mod integration_tests;
 mod error_handling_tests;
@@ -213,8 +216,9 @@ declare_stack_allocator_struct!(CallocAllocatedFreelist, 8192, calloc);
 
 #[cfg(feature="seccomp")]
 pub fn decompress<InputType, OutputType>(r: &mut InputType,
-                                         mut w: &mut OutputType,
-                                         buffer_size: usize)
+                                         w: &mut OutputType,
+                                         buffer_size: usize,
+                                         dict: Vec<u8>)
                                          -> Result<(), io::Error>
   where InputType: Read,
         OutputType: Write
@@ -226,20 +230,34 @@ pub fn decompress<InputType, OutputType>(r: &mut InputType,
   let mut alloc_u8 = CallocAllocatedFreelist::<u8>::new_allocator(u8_buffer.data, bzero);
   let alloc_u32 = CallocAllocatedFreelist::<u32>::new_allocator(u32_buffer.data, bzero);
   let alloc_hc = CallocAllocatedFreelist::<HuffmanCode>::new_allocator(hc_buffer.data, bzero);
+  // Allocate the dictionary cell first, while the pool is one contiguous slice,
+  // so the stack allocator splits it to exactly dict.len(): the custom dictionary
+  // length is taken from the cell's slice length, so any trailing slack would
+  // corrupt the dictionary.
+  let mut custom_dict = alloc_u8.alloc_cell(dict.len());
+  custom_dict.slice_mut().clone_from_slice(&dict[..]);
+  let mut input_buffer = alloc_u8.alloc_cell(buffer_size);
+  let mut output_buffer = alloc_u8.alloc_cell(buffer_size);
   let ret = unsafe{prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT)};
   if ret != 0 {
      panic!("Unable to activate seccomp");
   }
-  match brotli_decompressor::BrotliDecompressCustomIo(&mut IoReaderWrapper::<InputType>(r),
-                                          &mut IoWriterWrapper::<OutputType>(w),
-                                          &mut alloc_u8.alloc_cell(buffer_size).slice_mut(),
-                                          &mut alloc_u8.alloc_cell(buffer_size).slice_mut(),
+  // Reborrow w so it survives the call: the success path exits via a raw
+  // syscall(60) that bypasses the writer flush a normal main() return would do,
+  // so we must flush the output buffer ourselves before exiting.
+  let result = brotli_decompressor::BrotliDecompressCustomIoCustomDict(&mut IoReaderWrapper::<InputType>(r),
+                                          &mut IoWriterWrapper::<OutputType>(&mut *w),
+                                          input_buffer.slice_mut(),
+                                          output_buffer.slice_mut(),
                                           alloc_u8,
                                           alloc_u32,
                                           alloc_hc,
-                                          Error::new(ErrorKind::UnexpectedEof, "Unexpected EOF")) {
+                                          custom_dict,
+                                          Error::new(ErrorKind::UnexpectedEof, "Unexpected EOF"));
+  match result {
       Err(e) => Err(e),
       Ok(()) => {
+        w.flush()?;
         unsafe{syscall(60);};
         unreachable!()
       },

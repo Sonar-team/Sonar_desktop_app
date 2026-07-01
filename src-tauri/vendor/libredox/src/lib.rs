@@ -115,7 +115,7 @@ pub mod flag {
         O_NONBLOCK, O_PATH, O_RDONLY, O_RDWR, O_TRUNC, O_WRONLY,
     };
 
-    pub use libc::{MSG_DONTROUTE, MSG_OOB, MSG_PEEK, MSG_DONTWAIT, MSG_EOR, };
+    pub use libc::{MSG_DONTROUTE, MSG_DONTWAIT, MSG_EOR, MSG_OOB, MSG_PEEK};
 
     pub use libc::{CLOCK_MONOTONIC, CLOCK_REALTIME};
 
@@ -257,6 +257,7 @@ extern "C" {
     fn redox_unlinkat_v0(fd: usize, buf: *const u8, path_len: usize, flags: u32) -> RawResult;
     */
     fn redox_fpath_v1(fd: usize, dst_base: *mut u8, dst_len: usize) -> RawResult;
+    fn redox_relpathat_v0(dirfd: usize, fd: usize, dst_base: *mut u8, dst_len: usize) -> RawResult;
     fn redox_close_v1(fd: usize) -> RawResult;
 
     // NOTE: While the Redox kernel currently doesn't distinguish between threads and processes,
@@ -412,6 +413,10 @@ impl Fd {
         call::fpath(self.raw(), path)
     }
     #[inline]
+    pub fn relpathat(&self, fd: usize, path: &mut [u8]) -> Result<usize> {
+        call::relpathat(self.raw(), fd, path)
+    }
+    #[inline]
     pub fn close(self) -> Result<()> {
         call::close(self.into_raw())
     }
@@ -562,6 +567,10 @@ pub mod call {
     #[inline]
     pub fn fpath(raw_fd: usize, buf: &mut [u8]) -> Result<usize> {
         Error::demux(unsafe { redox_fpath_v1(raw_fd, buf.as_mut_ptr(), buf.len()) })
+    }
+    #[inline]
+    pub fn relpathat(raw_fd: usize, fd: usize, buf: &mut [u8]) -> Result<usize> {
+        Error::demux(unsafe { redox_relpathat_v0(raw_fd, fd, buf.as_mut_ptr(), buf.len()) })
     }
     #[inline]
     pub fn close(raw_fd: usize) -> Result<()> {

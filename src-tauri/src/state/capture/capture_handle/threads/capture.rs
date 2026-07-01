@@ -7,7 +7,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 use tauri::ipc::Channel;
 
@@ -17,6 +17,8 @@ use crate::{
         messages::CaptureMessage, threads::packet_buffer::PacketBufferPool,
     },
 };
+
+const STATS_POLL_INTERVAL_MS: u64 = 250;
 
 pub fn spawn_capture_thread_with_pool(
     tx: Sender<CaptureMessage>,
@@ -28,12 +30,19 @@ pub fn spawn_capture_thread_with_pool(
 ) {
     thread::spawn(move || {
         debug!("Démarrage du thread de capture avec pool");
+        let stats_poll_interval = Duration::from_millis(STATS_POLL_INTERVAL_MS);
+        let mut last_stats_poll = Instant::now()
+            .checked_sub(stats_poll_interval)
+            .unwrap_or_else(Instant::now);
 
         while !stop_flag.load(Ordering::Relaxed) {
-            if let Ok(stats) = cap.stats()
-                && let Err(e) = tx.try_send(CaptureMessage::Stats(stats))
-            {
-                error!("Erreur try_send stats: {}", e);
+            if last_stats_poll.elapsed() >= stats_poll_interval {
+                last_stats_poll = Instant::now();
+                if let Ok(stats) = cap.stats()
+                    && let Err(e) = tx.try_send(CaptureMessage::Stats(stats))
+                {
+                    error!("Erreur try_send stats: {}", e);
+                }
             }
 
             match cap.next_packet() {
@@ -70,10 +79,7 @@ pub fn spawn_capture_thread_with_pool(
                 Err(pcap::Error::PcapError(e)) if e.contains("Packets are not available") => {
                     thread::sleep(Duration::from_millis(1));
                 }
-                Err(pcap::Error::TimeoutExpired) => {
-                    println!("TimeoutExpired");
-                    continue;
-                }
+                Err(pcap::Error::TimeoutExpired) => continue,
                 Err(e) => {
                     error!("Erreur capture : {:?}", e);
                     break;

@@ -1,7 +1,35 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 //! Module for parsing HTTP packets.
 
+use std::convert::TryFrom;
 use std::fmt;
 
+use crate::{
+    checks::application::http::{
+        parse_payload_as_utf8, require_header_part, require_method, require_request_line,
+        require_uri, require_version,
+    },
+    errors::application::http::HttpParseError,
+};
+
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
+/// HTTP Request
+///
+/// ```mermaid
+/// ---
+/// title: HttpRequest
+/// ---
+/// packet-beta
+/// 0-63: "Request Line variable"
+/// 64-127: "Headers variable"
+/// 128-143: "CRLF separator"
+/// 144-207: "Body variable"
+/// ```
+///
 /// The `HttpRequest` struct represents a parsed HTTP request.
 #[derive(Debug)]
 pub struct HttpRequest {
@@ -22,42 +50,26 @@ impl fmt::Display for HttpRequest {
     }
 }
 
+impl TryFrom<&[u8]> for HttpRequest {
+    type Error = HttpParseError;
+
+    fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
+        parse_http_request(payload)
+    }
+}
+
 /// Parses an HTTP request from a given payload.
-///
-/// # Arguments
-///
-/// * `payload` - A byte slice representing the raw HTTP packet data.
-///
-/// # Returns
-///
-/// * `Result<HttpRequest, bool>` - Returns `Ok(HttpRequest)` if parsing is successful,
-///   otherwise returns `Err(false)` indicating an invalid HTTP request.
-pub fn parse_http_request(payload: &[u8]) -> Result<HttpRequest, bool> {
-    let payload_str = match std::str::from_utf8(payload) {
-        Ok(s) => s,
-        Err(_) => return Err(false),
-    };
+pub fn parse_http_request(payload: &[u8]) -> Result<HttpRequest, HttpParseError> {
+    let payload_str = parse_payload_as_utf8(payload)?;
 
     let mut lines = payload_str.split("\r\n");
 
-    let request_line = match lines.next() {
-        Some(line) => line,
-        None => return Err(false),
-    };
+    let request_line = require_request_line(lines.next())?;
 
     let mut request_parts = request_line.split_whitespace();
-    let method = match request_parts.next() {
-        Some(part) => part.to_string(),
-        None => return Err(false),
-    };
-    let uri = match request_parts.next() {
-        Some(part) => part.to_string(),
-        None => return Err(false),
-    };
-    let version = match request_parts.next() {
-        Some(part) => part.to_string(),
-        None => return Err(false),
-    };
+    let method = require_method(request_parts.next())?.to_string();
+    let uri = require_uri(request_parts.next())?.to_string();
+    let version = require_version(request_parts.next())?.to_string();
 
     let mut headers = Vec::new();
     for line in lines.by_ref() {
@@ -65,14 +77,8 @@ pub fn parse_http_request(payload: &[u8]) -> Result<HttpRequest, bool> {
             break;
         }
         let mut header_parts = line.splitn(2, ':');
-        let name = match header_parts.next() {
-            Some(part) => part.trim().to_string(),
-            None => return Err(false),
-        };
-        let value = match header_parts.next() {
-            Some(part) => part.trim().to_string(),
-            None => return Err(false),
-        };
+        let name = require_header_part(header_parts.next())?.trim().to_string();
+        let value = require_header_part(header_parts.next())?.trim().to_string();
         headers.push((name, value));
     }
 
@@ -94,7 +100,7 @@ mod tests {
     #[test]
     fn test_parse_http_request() {
         let http_payload = b"GET /index.html HTTP/1.1\r\nHost: www.example.com\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\n\r\n";
-        match parse_http_request(http_payload) {
+        match HttpRequest::try_from(&http_payload[..]) {
             Ok(request) => {
                 assert_eq!(request.method, "GET");
                 assert_eq!(request.uri, "/index.html");
@@ -121,7 +127,7 @@ mod tests {
     #[test]
     fn test_parse_http_request_with_body() {
         let http_payload = b"POST /submit HTTP/1.1\r\nHost: www.example.com\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 13\r\n\r\nfield1=value1";
-        match parse_http_request(http_payload) {
+        match HttpRequest::try_from(&http_payload[..]) {
             Ok(request) => {
                 assert_eq!(request.method, "POST");
                 assert_eq!(request.uri, "/submit");
@@ -151,9 +157,9 @@ mod tests {
     #[test]
     fn test_parse_http_request_invalid() {
         let http_payload = b"INVALID REQUEST\r\n\r\n";
-        match parse_http_request(http_payload) {
+        match HttpRequest::try_from(&http_payload[..]) {
             Ok(_) => panic!("Expected invalid HTTP request"),
-            Err(is_http) => assert!(!is_http),
+            Err(err) => assert_eq!(err, HttpParseError::MissingVersion),
         }
     }
 }

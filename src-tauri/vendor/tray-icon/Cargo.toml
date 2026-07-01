@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.73"
 name = "tray-icon"
-version = "0.23.1"
+version = "0.24.1"
 build = false
 include = [
     "README.md",
@@ -37,7 +37,14 @@ repository = "https://github.com/tauri-apps/tray-icon"
 
 [features]
 common-controls-v6 = ["muda/common-controls-v6"]
-default = ["libxdo"]
+default = [
+    "libxdo",
+    "gtk",
+]
+gtk = [
+    "muda/gtk",
+    "dep:libappindicator",
+]
 libxdo = ["muda/libxdo"]
 serde = [
     "muda/serde",
@@ -53,7 +60,6 @@ version = "0.5"
 
 [dependencies.muda]
 version = "0.19.1"
-features = ["gtk"]
 default-features = false
 
 [dependencies.once_cell]
@@ -88,6 +94,7 @@ version = "6"
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))'.dependencies.libappindicator]
 version = "0.9"
+optional = true
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))'.dev-dependencies.gtk]
 version = "0.18"

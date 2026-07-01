@@ -1,7 +1,7 @@
 use core::str::Bytes;
 
 use super::Unit;
-use crate::{common::get_char_from_bytes, UnitParseError};
+use crate::{UnitParseError, common::get_char_from_bytes};
 
 /// Associated functions for parsing strings.
 impl Unit {
@@ -47,21 +47,13 @@ pub(crate) fn read_xib(
             b'B' => {
                 let byte = read_b(bytes, if ignore_case { true } else { e == b'B' })?;
 
-                if byte {
-                    Ok(Unit::B)
-                } else {
-                    Ok(Unit::Bit)
-                }
+                if byte { Ok(Unit::B) } else { Ok(Unit::Bit) }
             },
             b'K' => {
                 let (i, byte) = read_ib(bytes, ignore_case, prefer_byte)?;
 
                 if i {
-                    if byte {
-                        Ok(Unit::KiB)
-                    } else {
-                        Ok(Unit::Kibit)
-                    }
+                    if byte { Ok(Unit::KiB) } else { Ok(Unit::Kibit) }
                 } else if byte {
                     Ok(Unit::KB)
                 } else {
@@ -72,11 +64,7 @@ pub(crate) fn read_xib(
                 let (i, byte) = read_ib(bytes, ignore_case, prefer_byte)?;
 
                 if i {
-                    if byte {
-                        Ok(Unit::MiB)
-                    } else {
-                        Ok(Unit::Mibit)
-                    }
+                    if byte { Ok(Unit::MiB) } else { Ok(Unit::Mibit) }
                 } else if byte {
                     Ok(Unit::MB)
                 } else {
@@ -87,11 +75,7 @@ pub(crate) fn read_xib(
                 let (i, byte) = read_ib(bytes, ignore_case, prefer_byte)?;
 
                 if i {
-                    if byte {
-                        Ok(Unit::GiB)
-                    } else {
-                        Ok(Unit::Gibit)
-                    }
+                    if byte { Ok(Unit::GiB) } else { Ok(Unit::Gibit) }
                 } else if byte {
                     Ok(Unit::GB)
                 } else {
@@ -102,11 +86,7 @@ pub(crate) fn read_xib(
                 let (i, byte) = read_ib(bytes, ignore_case, prefer_byte)?;
 
                 if i {
-                    if byte {
-                        Ok(Unit::TiB)
-                    } else {
-                        Ok(Unit::Tibit)
-                    }
+                    if byte { Ok(Unit::TiB) } else { Ok(Unit::Tibit) }
                 } else if byte {
                     Ok(Unit::TB)
                 } else {
@@ -117,11 +97,7 @@ pub(crate) fn read_xib(
                 let (i, byte) = read_ib(bytes, ignore_case, prefer_byte)?;
 
                 if i {
-                    if byte {
-                        Ok(Unit::PiB)
-                    } else {
-                        Ok(Unit::Pibit)
-                    }
+                    if byte { Ok(Unit::PiB) } else { Ok(Unit::Pibit) }
                 } else if byte {
                     Ok(Unit::PB)
                 } else {
@@ -132,11 +108,7 @@ pub(crate) fn read_xib(
                 let (i, byte) = read_ib(bytes, ignore_case, prefer_byte)?;
 
                 if i {
-                    if byte {
-                        Ok(Unit::EiB)
-                    } else {
-                        Ok(Unit::Eibit)
-                    }
+                    if byte { Ok(Unit::EiB) } else { Ok(Unit::Eibit) }
                 } else if byte {
                     Ok(Unit::EB)
                 } else {
@@ -148,11 +120,7 @@ pub(crate) fn read_xib(
                 let (i, byte) = read_ib(bytes, ignore_case, prefer_byte)?;
 
                 if i {
-                    if byte {
-                        Ok(Unit::ZiB)
-                    } else {
-                        Ok(Unit::Zibit)
-                    }
+                    if byte { Ok(Unit::ZiB) } else { Ok(Unit::Zibit) }
                 } else if byte {
                     Ok(Unit::ZB)
                 } else {
@@ -164,11 +132,7 @@ pub(crate) fn read_xib(
                 let (i, byte) = read_ib(bytes, ignore_case, prefer_byte)?;
 
                 if i {
-                    if byte {
-                        Ok(Unit::YiB)
-                    } else {
-                        Ok(Unit::Yibit)
-                    }
+                    if byte { Ok(Unit::YiB) } else { Ok(Unit::Yibit) }
                 } else if byte {
                     Ok(Unit::YB)
                 } else {
@@ -217,11 +181,7 @@ fn read_ib(
                 b'b' | b'B' => Ok((i, read_b(bytes, if ignore_case { true } else { e == b'B' })?)),
                 _ => {
                     let expected_characters: &[char] = if ignore_case {
-                        if default_upper_case {
-                            &['B']
-                        } else {
-                            &['b']
-                        }
+                        if default_upper_case { &['B'] } else { &['b'] }
                     } else {
                         &['B', 'b']
                     };

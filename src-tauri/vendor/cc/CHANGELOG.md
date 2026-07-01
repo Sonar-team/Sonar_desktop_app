@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.65](https://github.com/rust-lang/cc-rs/compare/cc-v1.2.64...cc-v1.2.65) - 2026-06-19
+
+### Other
+
+- Regenerate target info ([#1763](https://github.com/rust-lang/cc-rs/pull/1763))
+
+## [1.2.64](https://github.com/rust-lang/cc-rs/compare/cc-v1.2.63...cc-v1.2.64) - 2026-06-12
+
+### Other
+
+- Add more bare-metal 32-bit Arm support ([#1753](https://github.com/rust-lang/cc-rs/pull/1753))
+- Remove unnecessary clone ([#1748](https://github.com/rust-lang/cc-rs/pull/1748))
+- Add default compiler prefixes for thumbv7a/thumbv7r/thumbv8r bare-metal targets ([#1742](https://github.com/rust-lang/cc-rs/pull/1742))
+
+## [1.2.63](https://github.com/rust-lang/cc-rs/compare/cc-v1.2.62...cc-v1.2.63) - 2026-05-29
+
+### Other
+
+- Update shlex requirement from 1.3.0 to 2.0.1 ([#1736](https://github.com/rust-lang/cc-rs/pull/1736))
+
+## [1.2.62](https://github.com/rust-lang/cc-rs/compare/cc-v1.2.61...cc-v1.2.62) - 2026-05-08
+
+### Other
+
+- Regenerate target info ([#1721](https://github.com/rust-lang/cc-rs/pull/1721))
+- Allow exceptions on wasm platforms ([#1714](https://github.com/rust-lang/cc-rs/pull/1714))
+- Add relibc env ([#1710](https://github.com/rust-lang/cc-rs/pull/1710))
+- recognize sh4 architecture in parse_arch() ([#1712](https://github.com/rust-lang/cc-rs/pull/1712))
+
+## [1.2.61](https://github.com/rust-lang/cc-rs/compare/cc-v1.2.60...cc-v1.2.61) - 2026-04-24
+
+### Other
+
+- fix `OutputKind::Capture` documentation ([#1705](https://github.com/rust-lang/cc-rs/pull/1705))
+
 ## [1.2.60](https://github.com/rust-lang/cc-rs/compare/cc-v1.2.59...cc-v1.2.60) - 2026-04-10
 
 ### Fixed

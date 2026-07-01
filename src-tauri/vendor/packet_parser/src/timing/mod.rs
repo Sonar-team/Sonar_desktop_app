@@ -1,6 +1,3 @@
-#[cfg(feature = "parse_timing")]
-use std::default;
-
 // packet_parser/src/timing.rs
 #[cfg(feature = "parse_timing")]
 #[derive(Debug, Clone, Copy, Default)]
@@ -170,14 +167,16 @@ mod tests {
     #[cfg(feature = "parse_timing")]
     #[test]
     fn test_time_block_ns_with_unit_return() {
+        use std::cell::Cell;
+
         let mut measured = 0u64;
-        let mut value = 0u32;
+        let value = Cell::new(0u32);
 
         time_block_ns!(&mut measured, {
-            value = 42;
+            value.set(42);
         });
 
-        assert_eq!(value, 42);
+        assert_eq!(value.get(), 42);
         assert!(measured > 0);
     }
 

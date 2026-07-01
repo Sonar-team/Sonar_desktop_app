@@ -1,10 +1,39 @@
-use crate::errors::internet::arp::ArpError;
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
+use crate::{
+    checks::internet::arp::{
+        ARP_IPV4_PROTOCOL_TYPE, ARP_IPV6_PROTOCOL_TYPE, validate_arp_min_length,
+        validate_dynamic_arp_length, validate_hardware_len, validate_hardware_type,
+        validate_operation, validate_protocol_len, validate_protocol_type,
+    },
+    errors::internet::arp::ArpError,
+};
 use std::convert::TryFrom;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// ARP Packet Structure
 ///
 /// Represents an Address Resolution Protocol (ARP) packet
+///
+/// ```mermaid
+/// ---
+/// title: ArpPacket
+/// ---
+/// packet-beta
+/// 0-15: "Hardware Type u16"
+/// 16-31: "Protocol Type u16"
+/// 32-39: "Hardware Length u8"
+/// 40-47: "Protocol Length u8"
+/// 48-63: "Operation u16"
+/// 64-111: "Sender Hardware Address"
+/// 112-143: "Sender Protocol Address"
+/// 144-191: "Target Hardware Address"
+/// 192-223: "Target Protocol Address"
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct ArpPacket {
     /// Hardware type (e.g., 1 for Ethernet)
@@ -38,67 +67,36 @@ impl TryFrom<&[u8]> for ArpPacket {
     /// # Returns
     /// * `Result<Arp, InternetError>` - The parsed ARP packet or an error
     fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
-        // Minimum ARP packet size is 28 bytes (for IPv4 over Ethernet)
-        let min_len = 28;
-
-        if data.len() < min_len {
-            return Err(ArpError::InvalidLength {
-                expected: min_len,
-                actual: data.len(),
-            });
-        }
+        validate_arp_min_length(data)?;
 
         let hardware_type = u16::from_be_bytes([data[0], data[1]]);
-        if hardware_type != 1 {
-            return Err(ArpError::UnsupportedHardwareType(hardware_type));
-        }
-        let protocol_type = u16::from_be_bytes([data[2], data[3]]);
-        let hardware_len = data[4];
-        if hardware_len != 6 {
-            return Err(ArpError::InvalidHardwareLength {
-                expected: 6,
-                actual: hardware_len,
-            });
-        }
-        let protocol_len = data[5];
+        validate_hardware_type(hardware_type)?;
 
-        // Check for minimum length based on protocol type
-        let min_len = 8 + (2 * hardware_len as usize) + (2 * protocol_len as usize);
-        if data.len() < min_len {
-            return Err(ArpError::InvalidLength {
-                expected: min_len,
-                actual: data.len(),
-            });
-        }
+        let protocol_type = u16::from_be_bytes([data[2], data[3]]);
+        validate_protocol_type(protocol_type)?;
+
+        let hardware_len = data[4];
+        validate_hardware_len(hardware_len)?;
+
+        let protocol_len = data[5];
+        validate_dynamic_arp_length(data.len(), hardware_len, protocol_len)?;
+        validate_protocol_len(protocol_type, protocol_len)?;
+
         let operation = u16::from_be_bytes([data[6], data[7]]);
-        if operation != 1 && operation != 2 {
-            return Err(ArpError::UnsupportedOperation(operation));
-        }
+        validate_operation(operation)?;
 
         let sender_hardware_addr = [data[8], data[9], data[10], data[11], data[12], data[13]];
 
         let sender_protocol_addr = match protocol_type {
-            0x0800 => {
-                if protocol_len != 4 {
-                    return Err(ArpError::InvalidProtocolLength {
-                        expected: 4,
-                        actual: protocol_len,
-                    });
-                }
+            ARP_IPV4_PROTOCOL_TYPE => {
                 IpAddr::V4(Ipv4Addr::new(data[14], data[15], data[16], data[17]))
             }
-            0x86DD => {
-                if protocol_len != 16 {
-                    return Err(ArpError::InvalidProtocolLength {
-                        expected: 16,
-                        actual: protocol_len,
-                    });
-                }
+            ARP_IPV6_PROTOCOL_TYPE => {
                 let mut addr = [0u8; 16];
                 addr.copy_from_slice(&data[14..30]);
                 IpAddr::V6(Ipv6Addr::from(addr))
             }
-            _ => return Err(ArpError::UnsupportedProtocolType(protocol_type)),
+            _ => unreachable!(),
         };
 
         let target_hardware_addr = [
@@ -111,13 +109,13 @@ impl TryFrom<&[u8]> for ArpPacket {
         ];
 
         let target_protocol_addr = match protocol_type {
-            0x0800 => IpAddr::V4(Ipv4Addr::new(
+            ARP_IPV4_PROTOCOL_TYPE => IpAddr::V4(Ipv4Addr::new(
                 data[20 + protocol_len as usize],
                 data[21 + protocol_len as usize],
                 data[22 + protocol_len as usize],
                 data[23 + protocol_len as usize],
             )),
-            0x86DD => {
+            ARP_IPV6_PROTOCOL_TYPE => {
                 let start = 20 + protocol_len as usize;
                 let end = start + 16;
                 let mut addr = [0u8; 16];

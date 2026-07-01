@@ -5,7 +5,7 @@ use expect_test::expect_file;
 use schemars::JsonSchema;
 use serde::Serialize;
 use serde_json::json;
-use serde_with::{hex::*, *};
+use serde_with::{base58::*, base64::*, hex::*, *};
 use std::collections::{BTreeMap, BTreeSet};
 
 // This avoids us having to add `#[schemars(crate = "::schemars_0_8")]` all
@@ -98,6 +98,24 @@ fn schemars_basic() {
         /// A vector of bytes that's serialized as an uppercase hex string.
         #[serde_as(as = "Hex<formats::Uppercase>")]
         uppercase_hex: Vec<u8>,
+
+        /// A vector of bytes that's serialized as a base58 string.
+        #[serde_as(as = "Base58")]
+        base58: Vec<u8>,
+
+        /// A vector of bytes that's serialized as a base58 string in `Flickr`
+        /// charset.
+        #[serde_as(as = "Base58<Flickr>")]
+        base58_flickr: Vec<u8>,
+
+        /// A vector of bytes that's serialized as a base64 string.
+        #[serde_as(as = "Base64")]
+        base64: Vec<u8>,
+
+        /// A vector of bytes that's serialized as a base64 string in URL-safe
+        /// charset.
+        #[serde_as(as = "Base64<UrlSafe>")]
+        base64_urlsafe: Vec<u8>,
     }
 
     let schema = schemars::schema_for!(Basic);
@@ -188,6 +206,7 @@ fn schemars_deserialize_only_bug_735() {
 }
 
 #[test]
+#[allow(unused_qualifications)]
 fn schemars_custom_schema_with() {
     fn custom_int(_: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
         use schemars::schema::*;
@@ -1170,4 +1189,49 @@ fn test_set_prevent_duplicates() {
     struct S(#[serde_as(as = "SetPreventDuplicates<DisplayFromStr>")] BTreeSet<u32>);
 
     check_valid_json_schema(&S(BTreeSet::from_iter([1, 2, 3])));
+}
+
+#[test]
+fn test_nonzero() {
+    use core::num::{NonZeroI16, NonZeroI64, NonZeroU32, NonZeroU8, NonZeroUsize};
+
+    #[serde_as]
+    #[derive(JsonSchema, Serialize)]
+    #[serde(transparent)]
+    struct SU8(#[serde_as(as = "NoneAsZero")] Option<NonZeroU8>);
+
+    check_valid_json_schema(&SU8(NonZeroU8::new(0)));
+    check_valid_json_schema(&SU8(NonZeroU8::new(5)));
+
+    #[serde_as]
+    #[derive(JsonSchema, Serialize)]
+    #[serde(transparent)]
+    struct SI16(#[serde_as(as = "NoneAsZero")] Option<NonZeroI16>);
+
+    check_valid_json_schema(&SI16(NonZeroI16::new(0)));
+    check_valid_json_schema(&SI16(NonZeroI16::new(-16)));
+
+    #[serde_as]
+    #[derive(JsonSchema, Serialize)]
+    #[serde(transparent)]
+    struct SU32(#[serde_as(as = "NoneAsZero")] Option<NonZeroU32>);
+
+    check_valid_json_schema(&SU32(NonZeroU32::new(0)));
+    check_valid_json_schema(&SU32(NonZeroU32::new(98765)));
+
+    #[serde_as]
+    #[derive(JsonSchema, Serialize)]
+    #[serde(transparent)]
+    struct SI64(#[serde_as(as = "NoneAsZero")] Option<NonZeroI64>);
+
+    check_valid_json_schema(&SI64(NonZeroI64::new(0)));
+    check_valid_json_schema(&SI64(NonZeroI64::new(-987654321)));
+
+    #[serde_as]
+    #[derive(JsonSchema, Serialize)]
+    #[serde(transparent)]
+    struct SUsize(#[serde_as(as = "NoneAsZero")] Option<NonZeroUsize>);
+
+    check_valid_json_schema(&SUsize(NonZeroUsize::new(0)));
+    check_valid_json_schema(&SUsize(NonZeroUsize::new(123)));
 }

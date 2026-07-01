@@ -1,5 +1,203 @@
 # Changelog
 
+## **[3.14.6] - 2026-06-29**
+
+## 📊 Observabilité
+
+- Ajout d'un jeu de mesures `sonar-timing.jsonl` pour les tests de performance
+  capture, avec timings IPC par batch, timings détaillés du pipeline de parsing
+  et résumés de runs.
+- Ajout de données de référence pour comparer les runs `batch256`,
+  `batch256-75ms` et `parser154` sur un volume d'environ 1,09 million de
+  paquets.
+
+## 🔧 Maintenance
+
+- Mise à jour de la version de SONAR en **3.14.6** pour publier ces données
+  d'observabilité.
+
+## **[3.14.0] - 2026-06-24**
+
+## ✨ Améliorations
+
+- Mise à jour de `packet_parser` en **1.5.0**.
+- Ajout du parsing **SNMP v1/v2c/v3** avec détection UDP 161/162, PDU
+  standards et varbinds.
+- Ajout du parsing **EtherNet/IP encapsulation**, détecté sans dépendance au
+  port.
+- Ajout d'une boîte de dialogue de conflits pour l'import de labels, avec
+  affichage des conflits IP/MAC, IP/label, des formats MAC/IP invalides et des
+  fichiers non importés.
+
+## 🛠 Corrections
+
+- Renforcement des validations du parser sur les couches data link, internet,
+  transport et application.
+- Remplacement progressif des erreurs non typées du parser par des erreurs
+  dédiées par protocole.
+- Migration de plusieurs parseurs vers une interface `TryFrom<&[u8]>` plus
+  cohérente pour les usages temps réel.
+
+## 🔧 Maintenance
+
+- Réorganisation des validations et erreurs du parser dans des modules dédiés
+  `checks` et `errors`.
+- Ajout de documentation interne pour la méthode d'ajout de protocole dans
+  `packet_parser`.
+- Ajout du changelog interne de `packet_parser` et alignement du vendor sur la
+  version **1.5.0**.
+- Mise à jour de la version de SONAR en **3.14.0** pour publier ces changements.
+
+## **[3.13.25] - 2026-06-23**
+
+## ⚡ Performances
+
+- Capture live : regroupement des événements paquets côté IPC pour réduire la
+  pression sur le frontend lors des captures à fort débit.
+- Bottom log : bufferisation non réactive des paquets et rafraîchissement limité
+  à 10 fois par seconde, afin d'éviter les ralentissements autour de 1000
+  paquets/seconde.
+
+## 🛠 Corrections
+
+- Bottom log : pré-formatage des lignes affichées et limitation stricte aux 5
+  dernières trames visibles.
+- Store capture : ajout d'un désabonnement effectif aux callbacks `onPacket`
+  pour éviter l'accumulation de listeners après démontage/remontage du composant.
+- Documentation : ajout de la configuration minimale recommandée dans le README.
+- Mise à jour de la version de SONAR en **3.13.25** pour publier ces correctifs.
+
+## **[3.13.24] - 2026-06-22**
+
+## ✨ Améliorations
+
+- Refonte complète de l'UX du panneau filtre BPF : nouvelle interface plus claire
+  avec affichage de l'état du filtre actif, badge "En attente" (orange) lorsqu'un
+  filtre est appliqué pendant une capture, et bouton "Annuler" pour revenir au
+  filtre précédent.
+
+## 🛠 Corrections
+
+- Panneau filtre BPF : les presets rapides ne réinitialisent plus le filtre
+  backend actif ; seul le formulaire local est remis à zéro avant d'appliquer le
+  preset.
+- Panneau filtre BPF : appliquer un filtre pendant une capture active le marque
+  désormais comme « en attente » plutôt que « actif » ; il passe en actif
+  automatiquement au prochain démarrage de capture.
+- Thread de capture : suppression du `println!("TimeoutExpired")` parasite qui
+  polluait la console lors de chaque tick pcap sans paquet.
+
+## 🔧 Maintenance
+
+- Mise à jour de Rust de 1.95.0 vers 1.96.0.
+- Mise à jour de toutes les dépendances Rust (vendor regenerated).
+- Mise à jour de toutes les dépendances frontend (Vite 8.0.9 → 8.0.16, Vue,
+  Tauri plugins, etc.).
+- Alignement des versions `.gitlab-ci.yml` avec `build-versions.env`.
+
+## **[3.13.23] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Panneau filtre BPF : les presets rapides ne réinitialisent plus le filtre
+  backend actif ; seul le formulaire local est remis à zéro avant d'appliquer le
+  preset.
+- Panneau filtre BPF : appliquer un filtre pendant une capture active le marque
+  désormais comme « en attente » (badge orange « Prochain démarrage ») plutôt que
+  « actif » ; il passe en actif automatiquement au prochain démarrage de capture.
+  Un bouton « Annuler » permet de revenir au filtre actif précédent.
+- Thread de capture : suppression du `println!("TimeoutExpired")` parasite qui
+  polluait la console lors de chaque tick pcap sans paquet.
+
+## **[3.13.22] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Hotfix CI release : mise à jour du snapshot Ubuntu apt de
+  `20260510T000000Z` vers `20260621T000000Z`, afin d'aligner les dépendances
+  Linux avec les paquets Mesa présents sur les runners GitHub Actions récents.
+- Mise à jour de la version de SONAR en **3.13.22** pour publier ce correctif.
+
+## **[3.13.21] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Hotfix CI release : autorisation explicite des downgrades apt lors de
+  l'installation des dépendances Linux depuis le snapshot Ubuntu, afin d'éviter
+  les conflits avec les paquets Mesa plus récents déjà présents sur les runners
+  GitHub Actions.
+- Mise à jour de la version de SONAR en **3.13.21** pour publier ce correctif.
+
+## **[3.13.20] - 2026-06-21**
+
+## 🛠 Corrections
+
+- Correction de la fermeture de l'application depuis la croix de fenêtre, le
+  bouton `Quitter`, le raccourci `Ctrl+Q` et le menu natif `Fichier > Fermer`.
+- Centralisation de la confirmation de fermeture avec le plugin Tauri `dialog`
+  via `ask()`, puis fermeture explicite avec le plugin Tauri `process` via
+  `exit(0)`.
+- Mise à jour de la version de SONAR en **3.13.20** pour publier ce correctif.
+
+## **[3.13.14] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Normalisation du chemin `rust-src` local vers `/rustc/<commit>` dans
+  l'environnement reproductible, afin d'aligner les chemins de la standard
+  library Rust entre un poste de dev avec `rust-src` installé et GitHub Actions.
+- Mise à jour de la version de SONAR en **3.13.14** pour publier ce correctif.
+
+## **[3.13.13] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Remappage des chemins locaux `rustup` et `cargo` dans l'environnement de build
+  reproductible afin de réduire les différences entre un build local et GitHub
+  Actions.
+- Désactivation explicite des informations de debug et strip des symboles dans
+  le profil release Rust.
+- Robustesse de la collecte CI du binaire lorsque Cargo laisse l'exécutable dans
+  `target/release/deps` après un build Tauri sans bundle.
+- Mise à jour de la version de SONAR en **3.13.13** pour publier ce correctif.
+
+## **[3.13.12] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Correction de la vérification de reproductibilité `--no-bundle` : l'absence de
+  paquet `.deb` est maintenant traitée comme normale lorsque les bundles ne sont
+  pas générés.
+- Mise à jour de la version de SONAR en **3.13.12** pour publier ce correctif.
+
+## **[3.13.11] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Activation du fallback apt vers l'archive Ubuntu même lorsque le script est
+  exécuté via `sudo`, qui ne préserve pas les variables d'environnement GitHub.
+- Mise à jour de la version de SONAR en **3.13.11** pour publier ce correctif.
+
+## **[3.13.10] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Ajout d'un fallback CI vers l'archive Ubuntu standard lorsque
+  `snapshot.ubuntu.com` est indisponible, tout en conservant les versions de
+  paquets apt pinées.
+- Mise à jour de la version de SONAR en **3.13.10** pour publier ce correctif.
+
+## **[3.13.9] - 2026-06-08**
+
+## 🛠 Corrections
+
+- Publication des releases sous forme de binaires reproductibles uniquement,
+  sans bundle/installateur.
+- Ajout d'une note explicite dans la documentation et le corps de release : sous
+  Windows, Npcap doit être installé séparément avant d'utiliser la capture
+  réseau.
+- Mise à jour de la version de SONAR en **3.13.9** pour publier ce correctif.
+
 ## **[3.13.8] - 2026-05-18**
 
 ## 🛠 Corrections

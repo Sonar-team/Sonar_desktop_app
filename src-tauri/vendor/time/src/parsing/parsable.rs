@@ -11,7 +11,7 @@ use crate::error::TryFromParsed;
 use crate::format_description::OwnedFormatItem;
 use crate::format_description::well_known::iso8601::EncodedConfig;
 use crate::format_description::well_known::{Iso8601, Rfc2822, Rfc3339};
-use crate::format_description::{BorrowedFormatItem, modifier};
+use crate::format_description::{BorrowedFormatItem, FormatDescriptionV3, modifier};
 use crate::internal_macros::{bug, try_likely_ok};
 use crate::parsing::combinator::{
     ExactlyNDigits, Sign, any_digit, ascii_char, ascii_char_ignore_case, one_or_two_digits, opt,
@@ -24,6 +24,7 @@ use crate::{Date, Month, OffsetDateTime, Time, UtcOffset, error};
 #[cfg_attr(docsrs, doc(notable_trait))]
 #[doc(alias = "Parseable")]
 pub trait Parsable: sealed::Sealed {}
+impl Parsable for FormatDescriptionV3<'_> {}
 impl Parsable for BorrowedFormatItem<'_> {}
 impl Parsable for [BorrowedFormatItem<'_>] {}
 #[cfg(feature = "alloc")]
@@ -39,7 +40,7 @@ impl<T> Parsable for T where T: Deref<Target: Parsable> {}
 /// exist in generic bounds.
 mod sealed {
     use super::*;
-    use crate::{PrimitiveDateTime, UtcDateTime};
+    use crate::{PrimitiveDateTime, Timestamp, UtcDateTime};
 
     /// Parse the item using a format description and an input.
     pub trait Sealed {
@@ -106,6 +107,23 @@ mod sealed {
         fn parse_offset_date_time(&self, input: &[u8]) -> Result<OffsetDateTime, error::Parse> {
             Ok(self.parse(input)?.try_into()?)
         }
+
+        /// Parse a [`Timestamp`] from the format description.
+        #[inline]
+        fn parse_timestamp(&self, input: &[u8]) -> Result<Timestamp, error::Parse> {
+            Ok(self.parse(input)?.try_into()?)
+        }
+    }
+}
+
+impl sealed::Sealed for FormatDescriptionV3<'_> {
+    #[inline]
+    fn parse_into<'a>(
+        &self,
+        input: &'a [u8],
+        parsed: &mut Parsed,
+    ) -> Result<&'a [u8], error::Parse> {
+        Ok(parsed.parse_v3_inner(input, &self.inner)?)
     }
 }
 
@@ -181,11 +199,9 @@ impl sealed::Sealed for Rfc2822 {
         let comma = ascii_char::<b','>;
 
         let input = opt(cfws)(input).into_inner();
-        let weekday = component::parse_weekday(
+        let weekday = component::parse_weekday_short(
             input,
-            modifier::Weekday {
-                repr: modifier::WeekdayRepr::Short,
-                one_indexed: false,
+            modifier::WeekdayShort {
                 case_sensitive: false,
             },
         );
@@ -206,11 +222,9 @@ impl sealed::Sealed for Rfc2822 {
         );
         let input = try_likely_ok!(cfws(input).ok_or(InvalidLiteral)).into_inner();
         let input = try_likely_ok!(
-            component::parse_month(
+            component::parse_month_short(
                 input,
-                modifier::Month {
-                    padding: modifier::Padding::None,
-                    repr: modifier::MonthRepr::Short,
+                modifier::MonthShort {
                     case_sensitive: false,
                 },
             )
@@ -223,9 +237,7 @@ impl sealed::Sealed for Rfc2822 {
                 let input = try_likely_ok!(
                     item.flat_map(|year| if year >= 1900 { Some(year) } else { None })
                         .and_then(|item| {
-                            item.consume_value(|value| {
-                                parsed.set_year(value.cast_signed().extend())
-                            })
+                            item.consume_value(|value| parsed.set_year(value.cast_signed().widen()))
                         })
                         .ok_or(InvalidComponent("year"))
                 );
@@ -235,7 +247,7 @@ impl sealed::Sealed for Rfc2822 {
                 let input = try_likely_ok!(
                     ExactlyNDigits::<2>::parse(input)
                         .and_then(|item| {
-                            item.map(|year| year.extend::<u32>())
+                            item.map(|year| year.widen::<u32>())
                                 .map(|year| if year < 50 { year + 2000 } else { year + 1900 })
                                 .map(|year| year.cast_signed())
                                 .consume_value(|value| parsed.set_year(value))
@@ -277,6 +289,7 @@ impl sealed::Sealed for Rfc2822 {
         parsed.leap_second_allowed = true;
 
         if let Some(zone_literal) = zone_literal(input) {
+            crate::hint::cold_path();
             let input = try_likely_ok!(
                 zone_literal
                     .consume_value(|value| parsed.set_offset_hour(value))
@@ -328,11 +341,9 @@ impl sealed::Sealed for Rfc2822 {
         let comma = ascii_char::<b','>;
 
         let input = opt(cfws)(input).into_inner();
-        let weekday = component::parse_weekday(
+        let weekday = component::parse_weekday_short(
             input,
-            modifier::Weekday {
-                repr: modifier::WeekdayRepr::Short,
-                one_indexed: false,
+            modifier::WeekdayShort {
                 case_sensitive: false,
             },
         );
@@ -347,11 +358,9 @@ impl sealed::Sealed for Rfc2822 {
             try_likely_ok!(one_or_two_digits(input).ok_or(InvalidComponent("day")));
         let input = try_likely_ok!(cfws(input).ok_or(InvalidLiteral)).into_inner();
         let ParsedItem(input, month) = try_likely_ok!(
-            component::parse_month(
+            component::parse_month_short(
                 input,
-                modifier::Month {
-                    padding: modifier::Padding::None,
-                    repr: modifier::MonthRepr::Short,
+                modifier::MonthShort {
                     case_sensitive: false,
                 },
             )
@@ -371,7 +380,7 @@ impl sealed::Sealed for Rfc2822 {
                 let ParsedItem(input, year) = try_likely_ok!(
                     ExactlyNDigits::<2>::parse(input)
                         .map(|item| {
-                            item.map(|year| year.extend::<u16>())
+                            item.map(|year| year.widen::<u16>())
                                 .map(|year| if year < 50 { year + 2000 } else { year + 1900 })
                         })
                         .ok_or(InvalidComponent("year"))
@@ -403,26 +412,29 @@ impl sealed::Sealed for Rfc2822 {
             )
         };
 
-        let (input, offset_hour, offset_minute) = if let Some(zone_literal) = zone_literal(input) {
-            let ParsedItem(input, offset_hour) = zone_literal;
-            (input, offset_hour, 0)
-        } else {
-            let ParsedItem(input, offset_sign) =
-                try_likely_ok!(sign(input).ok_or(InvalidComponent("offset hour")));
-            let ParsedItem(input, offset_hour) = try_likely_ok!(
-                ExactlyNDigits::<2>::parse(input)
-                    .map(|item| {
-                        item.map(|offset_hour| match offset_sign {
-                            Sign::Negative => -offset_hour.cast_signed(),
-                            Sign::Positive => offset_hour.cast_signed(),
+        let sign = sign(input);
+        let (input, offset_hour, offset_minute) = match sign {
+            None => {
+                let ParsedItem(input, offset_hour) =
+                    zone_literal(input).ok_or(InvalidComponent("offset hour"))?;
+                (input, offset_hour, 0)
+            }
+            Some(ParsedItem(input, offset_sign)) => {
+                let ParsedItem(input, offset_hour) = try_likely_ok!(
+                    ExactlyNDigits::<2>::parse(input)
+                        .map(|item| {
+                            item.map(|offset_hour| match offset_sign {
+                                Sign::Negative => -offset_hour.cast_signed(),
+                                Sign::Positive => offset_hour.cast_signed(),
+                            })
                         })
-                    })
-                    .ok_or(InvalidComponent("offset hour"))
-            );
-            let ParsedItem(input, offset_minute) = try_likely_ok!(
-                ExactlyNDigits::<2>::parse(input).ok_or(InvalidComponent("offset minute"))
-            );
-            (input, offset_hour, offset_minute.cast_signed())
+                        .ok_or(InvalidComponent("offset hour"))
+                );
+                let ParsedItem(input, offset_minute) = try_likely_ok!(
+                    ExactlyNDigits::<2>::parse(input).ok_or(InvalidComponent("offset minute"))
+                );
+                (input, offset_hour, offset_minute.cast_signed())
+            }
         };
 
         let input = opt(cfws)(input).into_inner();
@@ -445,7 +457,7 @@ impl sealed::Sealed for Rfc2822 {
         let dt = try_likely_ok!(
             (|| {
                 let date = try_likely_ok!(Date::from_calendar_date(
-                    year.cast_signed().extend(),
+                    year.cast_signed().widen(),
                     month,
                     day
                 ));
@@ -478,7 +490,7 @@ impl sealed::Sealed for Rfc3339 {
         let input = try_likely_ok!(
             ExactlyNDigits::<4>::parse(input)
                 .and_then(|item| {
-                    item.consume_value(|value| parsed.set_year(value.cast_signed().extend()))
+                    item.consume_value(|value| parsed.set_year(value.cast_signed().widen()))
                 })
                 .ok_or(InvalidComponent("year"))
         );
@@ -527,11 +539,11 @@ impl sealed::Sealed for Rfc3339 {
         let input = if let Some(ParsedItem(input, ())) = ascii_char::<b'.'>(input) {
             let ParsedItem(mut input, mut value) =
                 try_likely_ok!(any_digit(input).ok_or(InvalidComponent("subsecond")))
-                    .map(|v| (v - b'0').extend::<u32>() * 100_000_000);
+                    .map(|v| (v - b'0').widen::<u32>() * 100_000_000);
 
             let mut multiplier = 10_000_000;
             while let Some(ParsedItem(new_input, digit)) = any_digit(input) {
-                value += (digit - b'0').extend::<u32>() * multiplier;
+                value += (digit - b'0').widen::<u32>() * multiplier;
                 input = new_input;
                 multiplier /= 10;
             }
@@ -635,11 +647,11 @@ impl sealed::Sealed for Rfc3339 {
             if let Some(ParsedItem(input, ())) = ascii_char::<b'.'>(input) {
                 let ParsedItem(mut input, mut value) =
                     try_likely_ok!(any_digit(input).ok_or(InvalidComponent("subsecond")))
-                        .map(|v| (v - b'0').extend::<u32>() * 100_000_000);
+                        .map(|v| (v - b'0').widen::<u32>() * 100_000_000);
 
                 let mut multiplier = 10_000_000;
                 while let Some(ParsedItem(new_input, digit)) = any_digit(input) {
-                    value += (digit - b'0').extend::<u32>() * multiplier;
+                    value += (digit - b'0').widen::<u32>() * multiplier;
                     input = new_input;
                     multiplier /= 10;
                 }
@@ -701,7 +713,7 @@ impl sealed::Sealed for Rfc3339 {
 
         let date = try_likely_ok!(
             Month::from_number(month)
-                .and_then(|month| Date::from_calendar_date(year.cast_signed().extend(), month, day))
+                .and_then(|month| Date::from_calendar_date(year.cast_signed().widen(), month, day))
                 .map_err(TryFromParsed::ComponentRange)
         );
         let time = try_likely_ok!(

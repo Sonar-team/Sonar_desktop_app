@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71.0"
 name = "web_atoms"
-version = "0.2.4"
+version = "0.2.5"
 authors = ["The html5ever Project Developers"]
 build = "build.rs"
 autolib = false

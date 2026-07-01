@@ -31,9 +31,8 @@ html, body {
 
 <script>
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { confirm } from '@tauri-apps/plugin-dialog';
-import { exit } from '@tauri-apps/plugin-process';
 import { info } from '@tauri-apps/plugin-log';
+import { requestAppExit } from './utils/appExit';
 
 const appWindow = getCurrentWebviewWindow()
 
@@ -50,17 +49,9 @@ export default {
 
     // Set up the close event listener
     this.unlistenCloseEvent = await appWindow.onCloseRequested(async (event) => {
-      info("close resquested")
-      const confirmed = await confirm('Etes-vous sûr de vouloir quitter ?');
-      if (!confirmed) {
-        // User did not confirm closing the window; let's prevent it
-        info("anule exit")
-        event.preventDefault();
-      }
-      else {
-        info("exit")
-        await exit(1);
-      }
+      info("close requested")
+      event.preventDefault();
+      await requestAppExit();
     });
   },
 
@@ -72,5 +63,3 @@ export default {
   }
 };
 </script>
-
-

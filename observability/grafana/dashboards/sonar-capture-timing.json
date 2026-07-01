@@ -1,0 +1,316 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "avg_over_time({job=\"sonar-timing\", event=\"import_packet_timing\"} | json | unwrap pipeline_total_ns [$__interval]) / 1000000",
+          "legendFormat": "pipeline avg",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.95, {job=\"sonar-timing\", event=\"import_packet_timing\"} | json | unwrap pipeline_total_ns [$__interval]) / 1000000",
+          "legendFormat": "pipeline p95",
+          "queryType": "range",
+          "refId": "B"
+        }
+      ],
+      "title": "Import packet pipeline latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "avg_over_time({job=\"sonar-timing\", event=\"import_packet_timing\"} | json | unwrap parse_total_ns [$__interval]) / 1000000",
+          "legendFormat": "parse",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "avg_over_time({job=\"sonar-timing\", event=\"import_packet_timing\"} | json | unwrap matrix_update_ns [$__interval]) / 1000000",
+          "legendFormat": "matrix",
+          "queryType": "range",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "avg_over_time({job=\"sonar-timing\", event=\"import_packet_timing\"} | json | unwrap graph_update_ns [$__interval]) / 1000000",
+          "legendFormat": "graph",
+          "queryType": "range",
+          "refId": "C"
+        }
+      ],
+      "title": "Import packet phase cost",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "avg_over_time({job=\"sonar-timing\", event=\"import_file_timing\"} | json | unwrap file_total_ns [$__interval]) / 1000000",
+          "legendFormat": "file total",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "avg_over_time({job=\"sonar-timing\", event=\"import_file_timing\"} | json | unwrap process_ns [$__interval]) / 1000000",
+          "legendFormat": "file process",
+          "queryType": "range",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "avg_over_time({job=\"sonar-timing\", event=\"import_snapshot_timing\"} | json | unwrap snapshot_build_ns [$__interval]) / 1000000",
+          "legendFormat": "snapshot build",
+          "queryType": "range",
+          "refId": "C"
+        }
+      ],
+      "title": "Import file and snapshot latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "avg_over_time({job=\"sonar-timing\", event=\"capture_packet_batch_ipc_timing\"} | json | unwrap ipc_ns [$__interval]) / 1000000",
+          "legendFormat": "packet batch IPC",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "avg_over_time({job=\"sonar-timing\", event=\"capture_pipeline_timing\"} | json | unwrap graph_ipc_ns [$__interval]) / 1000000",
+          "legendFormat": "graph IPC",
+          "queryType": "range",
+          "refId": "B"
+        }
+      ],
+      "title": "Live capture IPC latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": true,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"sonar-timing\"} | json",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Raw SONAR timing logs",
+      "type": "logs"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [
+    "sonar",
+    "profiling",
+    "loki"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SONAR Capture Timing",
+  "uid": "sonar-capture-timing",
+  "version": 1,
+  "weekStart": ""
+}

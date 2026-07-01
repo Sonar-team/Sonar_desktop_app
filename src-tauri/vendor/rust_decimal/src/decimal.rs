@@ -96,6 +96,21 @@ pub struct UnpackedDecimal {
     pub lo: u32,
 }
 
+impl From<UnpackedDecimal> for Decimal {
+    #[inline(always)]
+    fn from(value: UnpackedDecimal) -> Self {
+        let UnpackedDecimal {
+            negative,
+            scale,
+            hi,
+            mid,
+            lo,
+        } = value;
+
+        Decimal::from_parts(lo, mid, hi, negative, scale)
+    }
+}
+
 /// `Decimal` represents a 128 bit representation of a fixed-precision decimal number.
 /// The finite set of values of type `Decimal` are of the form m / 10<sup>e</sup>,
 /// where m is an integer such that -2<sup>96</sup> < m < 2<sup>96</sup>, and e is an integer
@@ -549,6 +564,13 @@ impl Decimal {
     }
 
     #[must_use]
+    /// Constructs a Decimal without any zero-sign normalization.
+    /// Caller must guarantee that if lo|mid|hi == 0, the sign bit in flags is cleared.
+    #[inline(always)]
+    pub(crate) const fn from_parts_raw_unchecked(lo: u32, mid: u32, hi: u32, flags: u32) -> Decimal {
+        Decimal { flags, hi, lo, mid }
+    }
+
     pub(crate) const fn from_parts_raw(lo: u32, mid: u32, hi: u32, flags: u32) -> Decimal {
         if lo == 0 && mid == 0 && hi == 0 {
             Decimal {
@@ -1544,10 +1566,8 @@ impl Decimal {
         match strategy {
             RoundingStrategy::BankersRounding | RoundingStrategy::MidpointNearestEven => {
                 match order {
-                    Ordering::Equal => {
-                        if (value[0] & 1) == 1 {
-                            ops::array::add_one_internal(&mut value);
-                        }
+                    Ordering::Equal if (value[0] & 1) == 1 => {
+                        ops::array::add_one_internal(&mut value);
                     }
                     Ordering::Greater => {
                         // Doesn't matter about the decimal portion
@@ -1898,8 +1918,8 @@ pub(crate) enum CalculationResult {
     DivByZero,
 }
 
-#[inline]
-const fn flags(neg: bool, scale: u32) -> u32 {
+#[inline(always)]
+pub(crate) const fn flags(neg: bool, scale: u32) -> u32 {
     (scale << SCALE_SHIFT) | ((neg as u32) << SIGN_SHIFT)
 }
 
@@ -2066,8 +2086,13 @@ impl Num for Decimal {
 impl FromStr for Decimal {
     type Err = Error;
 
+    #[inline]
     fn from_str(value: &str) -> Result<Decimal, Self::Err> {
-        crate::str::parse_str_radix_10(value)
+        match crate::str::parse_str_radix_10(value) {
+            Ok(d) => Ok(d),
+            Err(_) if value.as_bytes().iter().any(|&b| b == b'e' || b == b'E') => Decimal::from_scientific_lossy(value),
+            Err(e) => Err(e),
+        }
     }
 }
 

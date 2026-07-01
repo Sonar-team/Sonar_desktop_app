@@ -1,6 +1,6 @@
-FROM rust:1.95.0@sha256:5b1e3484ddcd22a3738c0ec34a5e98bf19382eb295fb6db54295e62379119040 AS builder
-ENV NODE_VERSION="24.14.0"
-ENV DENO_VERSION="2.7.13"
+FROM rust:1.96.0@sha256:f4d1e78866618fe7155aa6eaea26f9f6270d105e4918ee2c2f2dd5b2c11cc815 AS builder
+ENV NODE_VERSION="24.15.0"
+ENV DENO_VERSION="2.8.3"
 ARG DOCKER_APT_PACKAGES="libgtk-3-dev=3.24.49-3 pkg-config=1.8.1-4 libjavascriptcoregtk-4.1-dev=2.52.3-2~deb13u1 libsoup-3.0-dev=3.6.5-3 libwebkit2gtk-4.1-dev=2.52.3-2~deb13u1 libpcap-dev=1.10.5-2 unzip"
 RUN cargo -V
 

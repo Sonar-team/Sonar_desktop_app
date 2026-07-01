@@ -24,6 +24,8 @@
 //! It expects a complete packet buffer (e.g. from PCAP capture).
 
 use application::Application;
+use application::protocols::postgresql::PostgreSqlPacket;
+use application::protocols::snmp::SnmpPacket;
 use internet::Internet;
 use serde::Serialize;
 use transport::Transport;
@@ -104,6 +106,23 @@ impl<'a> PacketFlow<'a> {
             return None;
         }
 
+        if (is_snmp_udp_port(transport.source_port) || is_snmp_udp_port(transport.destination_port))
+            && SnmpPacket::try_from(payload).is_ok()
+        {
+            return Some(Application {
+                application_protocol: "SNMP".to_string(),
+            });
+        }
+
+        if (is_postgresql_tcp_port(transport.source_port)
+            || is_postgresql_tcp_port(transport.destination_port))
+            && PostgreSqlPacket::try_from(payload).is_ok()
+        {
+            return Some(Application {
+                application_protocol: "PostgreSQL".to_string(),
+            });
+        }
+
         let parsed = Application::try_from(payload).ok();
         if matches!(
             parsed.as_ref().map(|app| app.application_protocol.as_str()),
@@ -179,45 +198,68 @@ impl<'a> PacketFlow<'a> {
 
         let total_t0 = now();
 
-        let t0 = now();
-        let data_link = DataLink::try_from(packets)?;
-        timing.l2_ns = elapsed_ns(t0);
-
-        let t0 = now();
-        let internet = match Internet::try_from(data_link.payload) {
-            Ok(internet) => Some(internet),
-            Err(InternetError::UnsupportedProtocol) => None,
-            Err(e) => return Err(e.into()),
-        };
-        timing.l3_ns = elapsed_ns(t0);
-
-        let t0 = now();
-        let transport = match internet.as_ref() {
-            Some(internet) => {
-                match Transport::try_from_parts(internet.payload_protocol, internet.payload) {
-                    Ok(transport) => Some(transport),
-                    Err(TransportError::UnsupportedProtocol) => None,
-                    Err(e) => return Err(e.into()),
+        let result = (|| {
+            let t0 = now();
+            let data_link = match DataLink::try_from(packets) {
+                Ok(data_link) => data_link,
+                Err(e) => {
+                    timing.l2_ns = elapsed_ns(t0);
+                    return Err(e.into());
                 }
-            }
-            None => None,
-        };
-        timing.l4_ns = elapsed_ns(t0);
+            };
+            timing.l2_ns = elapsed_ns(t0);
 
-        let t0 = now();
-        let application = transport
-            .as_ref()
-            .and_then(Self::parse_application_from_transport);
-        timing.l7_ns = elapsed_ns(t0);
+            let t0 = now();
+            let internet = match Internet::try_from(data_link.payload) {
+                Ok(internet) => Some(internet),
+                Err(InternetError::UnsupportedProtocol) => None,
+                Err(e) => {
+                    timing.l3_ns = elapsed_ns(t0);
+                    return Err(e.into());
+                }
+            };
+            timing.l3_ns = elapsed_ns(t0);
+
+            let transport = match internet.as_ref() {
+                Some(internet) => {
+                    let t0 = now();
+                    let transport = match Transport::try_from_parts(
+                        internet.payload_protocol,
+                        internet.payload,
+                    ) {
+                        Ok(transport) => Some(transport),
+                        Err(TransportError::UnsupportedProtocol) => None,
+                        Err(e) => {
+                            timing.l4_ns = elapsed_ns(t0);
+                            return Err(e.into());
+                        }
+                    };
+                    timing.l4_ns = elapsed_ns(t0);
+                    transport
+                }
+                None => None,
+            };
+
+            let application = match transport.as_ref() {
+                Some(transport) => {
+                    let t0 = now();
+                    let application = Self::parse_application_from_transport(transport);
+                    timing.l7_ns = elapsed_ns(t0);
+                    application
+                }
+                None => None,
+            };
+
+            Ok(PacketFlow {
+                data_link,
+                internet,
+                transport,
+                application,
+            })
+        })();
 
         timing.total_ns = elapsed_ns(total_t0);
-
-        Ok(PacketFlow {
-            data_link,
-            internet,
-            transport,
-            application,
-        })
+        result
     }
 
     /// Parses a raw packet buffer into a [`PacketFlow`] and fills timing data.
@@ -241,6 +283,14 @@ fn is_opcua_tcp_port(port: Option<u16>) -> bool {
     matches!(port, Some(4840 | 12001))
 }
 
+fn is_snmp_udp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(161 | 162))
+}
+
+fn is_postgresql_tcp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(5432))
+}
+
 #[cfg(test)]
 mod tests {
     use crate::parse::transport::protocols::TransportProtocol;
@@ -252,6 +302,159 @@ mod tests {
     fn sample_ipv6_tcp_packet() -> Vec<u8> {
         hex::decode("646ee0eafa83feaa818ec86486dd6500000004d8063d2a0014504007080a00000000000020012a04cec011a3a3971842f3918f5dec7d01bbe8007dc6e5a6f851bd128018007a628400000101080abd9295c7f7f13851edd897cab0251b0fcd0ce6976e5ffc596564fa9d1986ad4dcd59e5481c0ffa357590175e992da0a3ec8d32403b4ebb23b181e8916f5aa518eef4e126efe31b847f56868867cf26b0acd92680833ceefa8fb7fe1c3f1d96d1693b677b26d76acc7ff4e0e9ff9f5a6b5176689100891de5596ed15c93ec2d87570b13c73c95881562dcebad7acacf6dee4f8872ab2e07dacc00abf8534f8465b3f70a9362dd466bed097dd3943c49e60254c2d1d11e8a43db7b2bb20fac75bd2d12e61a135fc08fb817cf2779363052d5b8698712a0681510513bcd0d3095af28c63ae243006d44d792faa21d5a866c88e8948074e1bf9969d6bf965a796346553d7b64384ccf6a8ac5203aa1820ed3f46a3b656c5bb4670c6240da14f82c8e27cb1be60439c9aa0f9f58f716194deaf5ca10bba3f71d3beb73d878e0768f8ac20e7d1d984bdcdcd44bf861ae99c12a7307fc4ede845580bb97903da6b640403bdfd317b65b97d279d8b9ca5df881b305cf0ebe82d1aa4fd32fb9463653d11ede2327dbbf82453870017c4b6f69daeca416bbe5a1138c62e0da69dd8568b017b1c6b9def2ad9f5ae04bab9add00ddc790ebda970a5c80d44334c1a0a03ce1428efa2d6c260cf78e6442313fd5eacdf578572ef6ab4df6d6b6d9b889b2be67f0c8ae5d87923ce89df59386b8ecb29aeb1e6c5c5be465e3ad4b62c167443068a268ff6067be0f637f5e9994635c09d73c2bc5c5bc76f8fb2b1f00417ee67792cea34ab05451468de91524dbfe127463824e1d3fcc03fda2ff01ae8d21c242b996bc9b138a0ce211166af40b21a32b0b202aa8587430f03a46e9fe87f5991c132cc9c09ce36757888d913da28261e07e537d66f8c76abbd0cfd60236c880dfe49ad48a8ba9dfefe0efede8b004c7fc86b914fc4f4dd067f8dee3c8ecd89a47eafd438523d8ffd9fd1fa5797cd446fe019f8b5cd4cf0bb6e6800f1c06f04dafbc009b558abeb5821cd5c5a6f9b24fe47606ca098290845ba5ac42aa994844553f7522efa08f99b7e62a858cdd1d7376b552fa2ddd87d4f8945292a31654f4032a9e6dc86584bc882bfd063e439fb701da038b23791a0706a1672bd6d70234ceef5340c975a473f8f524743672a284e22098d525b6ff48c54c0d79fe2d67ea4b5619536ef182fe181def5c640961138ed1e7bbb795475295ca3418b8ab5b594307f7338e5689b2fea6aed83a08c356f4e4d072dad9b5b3e38bd9a4c5a632c5f024e892e85341da285eb2098a7d1d114ba8662e6f5c33513cc0d5d0d0186ae7aadab3334d03a8644c3774a16bd985cc198f48012bbe5d9c952472936e7b06c9e663ddb0cdc0fdbcf07e19d11064fe5f9e6f81d7440981331f2faab3f69466af1cd7d8a28c99f680ed88a24e27e53ae2b6d2323aa7592a0d169094eaf5134d421f66934a21e75a6d6532caa0c2c86697ba0b4c3cc484081ef8c94f2609a8b648527ae6926d72eecba718f51e61ce405f36c25e20978e40d5d9dc76dec606e73d2056c15a69fbe16963a09e1ac0a4fcbf922d747d8f29e708f241f565b5a18832a65ff7e41a7ec7ec8b903d7ce05cf298beac641d1c94d8f8eeb7c3622b84a50dfb8df3db8d121ebda13838104f129150d8e8f07804295d30e59e184c4f4b007e3e62420a4fc8e293144f38f828de4ff74c888589252d1de11bc017fc772a183240f682")
             .expect("invalid test hex fixture")
+    }
+
+    fn sample_ipv4_tcp_ethernet_ip_register_session_non_standard_port() -> Vec<u8> {
+        hex::decode(
+            "00112233445566778899aabb0800450000440001400040060000c0a8000ac0a80014303904d20000000100000000501820000000000065000400000000000000000001020304050607080000000001000000",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    fn ethernet_ipv4_udp_packet(ip_flags_fragment: u16, udp_length: u16) -> Vec<u8> {
+        let udp_payload = [0xde, 0xad, 0xbe, 0xef];
+        let udp_actual_len = 8 + udp_payload.len();
+        let ip_total_len = 20 + udp_actual_len;
+
+        let mut packet = Vec::with_capacity(14 + ip_total_len);
+        packet.extend_from_slice(&[
+            0x00,
+            0x11,
+            0x22,
+            0x33,
+            0x44,
+            0x55, // Destination MAC
+            0x66,
+            0x77,
+            0x88,
+            0x99,
+            0xaa,
+            0xbb, // Source MAC
+            0x08,
+            0x00, // IPv4 EtherType
+            0x45, // Version + IHL
+            0x00, // DSCP/ECN
+            (ip_total_len >> 8) as u8,
+            ip_total_len as u8,
+            0x12,
+            0x34, // Identification
+            (ip_flags_fragment >> 8) as u8,
+            ip_flags_fragment as u8,
+            64, // TTL
+            17, // UDP
+            0x00,
+            0x00, // Header checksum
+            192,
+            168,
+            1,
+            10, // Source IP
+            192,
+            168,
+            1,
+            20, // Destination IP
+            0x30,
+            0x39, // UDP source port
+            0x00,
+            0x35, // UDP destination port
+            (udp_length >> 8) as u8,
+            udp_length as u8,
+            0x00,
+            0x00, // UDP checksum
+        ]);
+        packet.extend_from_slice(&udp_payload);
+        packet
+    }
+
+    fn postgresql_parse_bind_execute_sync_payload() -> Vec<u8> {
+        let mut payload = Vec::new();
+
+        payload.push(b'P');
+        payload.extend_from_slice(&81u32.to_be_bytes());
+        payload.push(0);
+        payload.extend_from_slice(
+            b"SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ COMMITTED",
+        );
+        payload.push(0);
+        payload.extend_from_slice(&0u16.to_be_bytes());
+
+        payload.push(b'B');
+        payload.extend_from_slice(&12u32.to_be_bytes());
+        payload.push(0);
+        payload.push(0);
+        payload.extend_from_slice(&0u16.to_be_bytes());
+        payload.extend_from_slice(&0u16.to_be_bytes());
+        payload.extend_from_slice(&0u16.to_be_bytes());
+
+        payload.push(b'E');
+        payload.extend_from_slice(&9u32.to_be_bytes());
+        payload.push(0);
+        payload.extend_from_slice(&1u32.to_be_bytes());
+
+        payload.push(b'S');
+        payload.extend_from_slice(&4u32.to_be_bytes());
+
+        payload
+    }
+
+    fn ethernet_ipv4_tcp_packet(
+        source_port: u16,
+        destination_port: u16,
+        tcp_payload: &[u8],
+    ) -> Vec<u8> {
+        let tcp_header_len = 20usize;
+        let ip_total_len = 20 + tcp_header_len + tcp_payload.len();
+
+        let mut packet = Vec::with_capacity(14 + ip_total_len);
+        packet.extend_from_slice(&[
+            0x00,
+            0x10,
+            0x6f,
+            0x19,
+            0x02,
+            0xe4, // Destination MAC
+            0x00,
+            0x10,
+            0x6f,
+            0x1a,
+            0xe4,
+            0x42, // Source MAC
+            0x08,
+            0x00, // IPv4 EtherType
+            0x45, // Version + IHL
+            0x00, // DSCP/ECN
+            (ip_total_len >> 8) as u8,
+            ip_total_len as u8,
+            0x34,
+            0x18, // Identification
+            0x40,
+            0x00, // Don't fragment
+            64,   // TTL
+            6,    // TCP
+            0x00,
+            0x00, // Header checksum
+            172,
+            19,
+            90,
+            10, // Source IP
+            172,
+            19,
+            90,
+            2, // Destination IP
+        ]);
+
+        packet.extend_from_slice(&source_port.to_be_bytes());
+        packet.extend_from_slice(&destination_port.to_be_bytes());
+        packet.extend_from_slice(&15526u32.to_be_bytes());
+        packet.extend_from_slice(&5876u32.to_be_bytes());
+        packet.extend_from_slice(&[
+            0x50, 0x18, // Data offset 5, ACK+PSH
+            0x20, 0x00, // Window size
+            0x00, 0x00, // Checksum
+            0x00, 0x00, // Urgent pointer
+        ]);
+        packet.extend_from_slice(tcp_payload);
+
+        packet
     }
 
     // fn sample_ipv6_udp_dhcpv6_silicit() -> Vec<u8> {
@@ -331,6 +534,38 @@ mod tests {
     }
 
     #[test]
+    fn packetflow_detects_ethernet_ip_without_standard_port() {
+        let packet = sample_ipv4_tcp_ethernet_ip_register_session_non_standard_port();
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.protocol, TransportProtocol::Tcp);
+        assert_eq!(transport.source_port, Some(12345));
+        assert_eq!(transport.destination_port, Some(1234));
+
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "EtherNet/IP");
+    }
+
+    #[test]
+    fn packetflow_detects_postgresql_on_standard_port() {
+        let payload = postgresql_parse_bind_execute_sync_payload();
+        let packet = ethernet_ipv4_tcp_packet(51845, 5432, &payload);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.protocol, TransportProtocol::Tcp);
+        assert_eq!(transport.source_port, Some(51845));
+        assert_eq!(transport.destination_port, Some(5432));
+        assert_eq!(transport.payload, Some(payload.as_slice()));
+
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "PostgreSQL");
+    }
+
+    #[test]
     fn packetflow_partial_eq_same_packet_should_be_equal() {
         let packet = sample_ipv6_tcp_packet();
 
@@ -397,5 +632,118 @@ mod tests {
         }
 
         assert_eq!(owned.application, flow.to_owned().application);
+    }
+
+    #[cfg(feature = "parse_timing")]
+    fn timed_parse(
+        packet: &[u8],
+    ) -> (
+        Result<PacketFlow<'_>, ParsedPacketError>,
+        crate::timing::ParseTiming,
+    ) {
+        let mut timing = crate::timing::ParseTiming::default();
+        let result = PacketFlow::try_from_timed(packet, &mut timing);
+
+        (result, timing)
+    }
+
+    #[cfg(feature = "parse_timing")]
+    fn assert_total_timing_is_recorded(timing: crate::timing::ParseTiming) {
+        assert!(timing.total_ns > 0);
+    }
+
+    #[cfg(feature = "parse_timing")]
+    #[test]
+    fn packetflow_timing_records_total_on_success() {
+        let packet = ethernet_ipv4_udp_packet(0, 12);
+        let (result, timing) = timed_parse(packet.as_slice());
+
+        assert!(result.is_ok());
+        assert_total_timing_is_recorded(timing);
+        assert!(timing.l2_ns > 0);
+        assert!(timing.l3_ns > 0);
+        assert!(timing.l4_ns > 0);
+        assert!(timing.l7_ns > 0);
+    }
+
+    #[cfg(feature = "parse_timing")]
+    #[test]
+    fn packetflow_timing_records_total_on_l2_error() {
+        let (result, timing) = timed_parse(&[]);
+
+        assert!(matches!(result, Err(ParsedPacketError::InvalidDataLink(_))));
+        assert_total_timing_is_recorded(timing);
+        assert!(timing.l2_ns > 0);
+        assert_eq!(timing.l3_ns, 0);
+        assert_eq!(timing.l4_ns, 0);
+        assert_eq!(timing.l7_ns, 0);
+    }
+
+    #[cfg(feature = "parse_timing")]
+    #[test]
+    fn packetflow_timing_records_total_on_l3_error() {
+        let packet = [
+            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // Destination MAC
+            0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, // Source MAC
+            0x08, 0x00, // IPv4 EtherType, but no IP payload
+        ];
+        let (result, timing) = timed_parse(&packet);
+
+        assert!(matches!(result, Err(ParsedPacketError::InvalidInternet(_))));
+        assert_total_timing_is_recorded(timing);
+        assert!(timing.l2_ns > 0);
+        assert!(timing.l3_ns > 0);
+        assert_eq!(timing.l4_ns, 0);
+        assert_eq!(timing.l7_ns, 0);
+    }
+
+    #[cfg(feature = "parse_timing")]
+    #[test]
+    fn packetflow_timing_records_total_on_l4_error() {
+        let packet = ethernet_ipv4_udp_packet(0, 16);
+        let (result, timing) = timed_parse(packet.as_slice());
+
+        assert!(matches!(result, Err(ParsedPacketError::Transport(_))));
+        assert_total_timing_is_recorded(timing);
+        assert!(timing.l2_ns > 0);
+        assert!(timing.l3_ns > 0);
+        assert!(timing.l4_ns > 0);
+        assert_eq!(timing.l7_ns, 0);
+    }
+
+    #[test]
+    fn packetflow_parses_transport_for_non_fragmented_ipv4_udp() {
+        let packet = ethernet_ipv4_udp_packet(0, 12);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let internet = flow.internet.as_ref().expect("internet layer");
+        assert_eq!(internet.payload_protocol, Some(TransportProtocol::Udp));
+        assert!(flow.transport.is_some());
+    }
+
+    #[test]
+    fn packetflow_skips_transport_for_initial_ipv4_fragment() {
+        let more_fragments = 0x2000;
+        let packet = ethernet_ipv4_udp_packet(more_fragments, 16);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let internet = flow.internet.as_ref().expect("internet layer");
+        assert_eq!(internet.protocol_name, "IPv4");
+        assert_eq!(internet.payload_protocol, None);
+        assert!(flow.transport.is_none());
+    }
+
+    #[test]
+    fn packetflow_skips_transport_for_non_initial_ipv4_fragment() {
+        let packet = ethernet_ipv4_udp_packet(1, 16);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let internet = flow.internet.as_ref().expect("internet layer");
+        assert_eq!(internet.protocol_name, "IPv4");
+        assert_eq!(internet.payload_protocol, None);
+        assert!(flow.transport.is_none());
     }
 }

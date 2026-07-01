@@ -1,9 +1,8 @@
 use core::{fmt, fmt::Formatter, str::FromStr};
 
 use serde::{
-    self,
+    self, Deserialize, Deserializer, Serialize, Serializer,
     de::{Error as DeError, Visitor},
-    Deserialize, Deserializer, Serialize, Serializer,
 };
 
 use super::Unit;

@@ -112,7 +112,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  run_id,\n  MIN(to_timestamp(ts_ms / 1000.0)) AS run_start,\n  MAX(to_timestamp(ts_ms / 1000.0)) AS run_end,\n  AVG(l2_ns)::bigint                 AS avg_l2_ns,\n  AVG(l3_ns)::bigint                 AS avg_l3_ns,\n  AVG(l4_ns)::bigint                 AS avg_l4_ns,\n  AVG(l7_ns)::bigint                 AS avg_l7_ns\nFROM packet_parse_events\nWHERE l2_ns IS NOT NULL\n  OR l3_ns IS NOT NULL\n  OR l4_ns IS NOT NULL\n  OR l7_ns IS NOT NULL\nGROUP BY run_id\nORDER BY run_id ASC;\n",
+          "rawSql": "SELECT\n  COALESCE(crate_code, crate_version) AS crate_code,\n  run_id,\n  MIN(to_timestamp(ts_ms / 1000.0)) AS run_start,\n  MAX(to_timestamp(ts_ms / 1000.0)) AS run_end,\n  AVG(l2_ns)::bigint                 AS avg_l2_ns,\n  AVG(l3_ns)::bigint                 AS avg_l3_ns,\n  AVG(l4_ns)::bigint                 AS avg_l4_ns,\n  AVG(l7_ns)::bigint                 AS avg_l7_ns\nFROM packet_parse_events\nWHERE l2_ns IS NOT NULL\n  OR l3_ns IS NOT NULL\n  OR l4_ns IS NOT NULL\n  OR l7_ns IS NOT NULL\nGROUP BY COALESCE(crate_code, crate_version), run_id\nORDER BY run_start ASC;\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -133,7 +133,7 @@
           }
         }
       ],
-      "title": "avg parsing ime over version ",
+      "title": "avg parsing time over crate code",
       "type": "barchart"
     }
   ],
@@ -150,7 +150,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "avg time per layer overt version",
+  "title": "avg time per layer over crate code",
   "uid": "ad8ch9p",
   "version": 4
 }

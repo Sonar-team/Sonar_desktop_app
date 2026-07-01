@@ -6,15 +6,25 @@ import type { CaptureEvent, GraphData, GraphUpdate } from "../types/capture";
 // ⚠️ Channel hors réactivité pour éviter le proxy de Vue
 let __channel: Channel<CaptureEvent> | undefined;
 
+function unsubscribe<T>(listeners: Array<(d: T) => void>, cb: (d: T) => void) {
+  return () => {
+    const index = listeners.indexOf(cb);
+    if (index !== -1) listeners.splice(index, 1);
+  };
+}
+
 export const useCaptureStore = defineStore("capture", {
   state: () => ({
     isRunning: false,
     showMatrice: true,
+    activeFilter: '' as string,
+    pendingFilter: '' as string,
 
     // Listeners HMR-safe dans le state
     startedListeners: [] as Array<(d: any) => void>,
     finishedListeners: [] as Array<(d: any) => void>,
     packetListeners: [] as Array<(p: any) => void>,
+    packetBatchListeners: [] as Array<(packets: any[]) => void>,
     statsListeners: [] as Array<(d: any) => void>,
     lenFlowMatrixListeners: [] as Array<(d: any) => void>,
     channelCapacityPayloadListeners: [] as Array<(d: any) => void>,
@@ -29,6 +39,12 @@ export const useCaptureStore = defineStore("capture", {
     toggleView() {
       this.showMatrice = !this.showMatrice;
     },
+    setActiveFilter(filter: string) {
+      this.activeFilter = filter;
+    },
+    setPendingFilter(filter: string) {
+      this.pendingFilter = filter;
+    },
 
     setChannel(channel: Channel<CaptureEvent>) {
       console.log("[CaptureStore] Channel attaché");
@@ -42,6 +58,10 @@ export const useCaptureStore = defineStore("capture", {
         // console.log("[CaptureStore] Message reçu :", msg.data)
         switch (msg.event) {
           case "started":
+            if (this.pendingFilter) {
+              this.activeFilter = this.pendingFilter;
+              this.pendingFilter = '';
+            }
             for (const cb of this.startedListeners) cb(msg.data);
             break;
           case "finished":
@@ -50,6 +70,18 @@ export const useCaptureStore = defineStore("capture", {
           case "packet":
             for (const cb of this.packetListeners) cb(msg.data.packet);
             break;
+          case "packetBatch": {
+            const packets = Array.isArray(msg.data?.packets) ? msg.data.packets : [];
+
+            for (const cb of this.packetBatchListeners) cb(packets);
+
+            if (this.packetListeners.length > 0) {
+              for (const packet of packets) {
+                for (const cb of this.packetListeners) cb(packet);
+              }
+            }
+            break;
+          }
           case "stats":
             for (const cb of this.statsListeners) cb(msg.data);
             break;
@@ -76,29 +108,41 @@ export const useCaptureStore = defineStore("capture", {
     },
     onStarted(cb: (d: any) => void) {
       this.startedListeners.push(cb);
+      return unsubscribe(this.startedListeners, cb);
     },
     onFinished(cb: (d: any) => void) {
       this.finishedListeners.push(cb);
+      return unsubscribe(this.finishedListeners, cb);
     },
     onPacket(cb: (p: any) => void) {
       this.packetListeners.push(cb);
+      return unsubscribe(this.packetListeners, cb);
+    },
+    onPacketBatch(cb: (packets: any[]) => void) {
+      this.packetBatchListeners.push(cb);
+      return unsubscribe(this.packetBatchListeners, cb);
     },
     onStats(cb: (d: any) => void) {
       this.statsListeners.push(cb);
+      return unsubscribe(this.statsListeners, cb);
     },
     onFlowMatrixLen(cb: (d: any) => void) {
       this.lenFlowMatrixListeners.push(cb);
+      return unsubscribe(this.lenFlowMatrixListeners, cb);
     },
     onChannelCapacityPayload(cb: (d: any) => void) {
       this.channelCapacityPayloadListeners.push(cb);
+      return unsubscribe(this.channelCapacityPayloadListeners, cb);
     },
     onGraphUpdate(cb: (u: GraphUpdate) => void) {
       console.log("[CaptureStore] GraphUpdate abonné");
       this.graphUpdateListeners.push(cb);
+      return unsubscribe(this.graphUpdateListeners, cb);
     },
     onGraphSnapshot(cb: (d: GraphData) => void) {
       console.log("[CaptureStore] GraphSnapshot abonné");
       this.graphSnapshotListeners.push(cb);
+      return unsubscribe(this.graphSnapshotListeners, cb);
     },
   },
 });

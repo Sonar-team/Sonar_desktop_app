@@ -1,40 +1,17 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 use std::convert::TryFrom;
 use std::str;
 
-use thiserror::Error;
-
-//
-// =========================
-//   Erreurs de parsing
-// =========================
-//
-
-#[derive(Debug, Error, PartialEq)]
-pub enum GiopParseError {
-    #[error("Invalid GIOP packet length")]
-    InvalidSize,
-
-    #[error("Invalid GIOP magic (expected 'GIOP')")]
-    InvalidMagic,
-
-    #[error("Unsupported GIOP version {0}.{1}")]
-    UnsupportedVersion(u8, u8),
-
-    #[error("Unknown GIOP message type {0}")]
-    UnknownMessageType(u8),
-
-    #[error("Truncated GIOP body (expected {expected} bytes, got {actual})")]
-    TruncatedBody { expected: usize, actual: usize },
-
-    #[error("Invalid UTF-8 in string field")]
-    InvalidUtf8,
-
-    #[error("Unexpected end of buffer")]
-    UnexpectedEof,
-
-    #[error("Other GIOP parsing error: {0}")]
-    Other(&'static str),
-}
+use crate::{
+    checks::application::giop::{
+        GIOP_HEADER_LEN, ensure_min_len, parse_magic, validate_total_length, validate_version,
+    },
+    errors::application::giop::GiopParseError,
+};
 
 //
 // =========================
@@ -90,40 +67,20 @@ pub struct GiopHeader {
 }
 
 impl GiopHeader {
-    pub const HEADER_LEN: usize = 12;
-
-    fn ensure_min_len(payload: &[u8]) -> Result<(), GiopParseError> {
-        if payload.len() < Self::HEADER_LEN {
-            return Err(GiopParseError::InvalidSize);
-        }
-        Ok(())
-    }
-
-    fn parse_magic(payload: &[u8]) -> Result<[u8; 4], GiopParseError> {
-        let magic: [u8; 4] = payload[0..4].try_into().unwrap();
-        if &magic != b"GIOP" {
-            return Err(GiopParseError::InvalidMagic);
-        }
-        Ok(magic)
-    }
+    pub const HEADER_LEN: usize = GIOP_HEADER_LEN;
 }
 
 impl TryFrom<&[u8]> for GiopHeader {
     type Error = GiopParseError;
 
     fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
-        GiopHeader::ensure_min_len(payload)?;
+        ensure_min_len(payload)?;
 
-        let magic = GiopHeader::parse_magic(payload)?;
+        let magic = parse_magic(payload)?;
         let major_version = payload[4];
         let minor_version = payload[5];
 
-        if major_version != 1 || minor_version > 2 {
-            return Err(GiopParseError::UnsupportedVersion(
-                major_version,
-                minor_version,
-            ));
-        }
+        validate_version(major_version, minor_version)?;
 
         let flags = payload[6];
         let message_type_raw = payload[7];
@@ -148,6 +105,22 @@ impl TryFrom<&[u8]> for GiopHeader {
 // =========================
 //
 
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
+/// GIOP Packet
+///
+/// ```mermaid
+/// ---
+/// title: GiopPacket
+/// ---
+/// packet-beta
+/// 0-31: "Magic bytes[4]"
+/// 32-39: "Major Version u8"
+/// 40-47: "Minor Version u8"
+/// 48-55: "Flags u8"
+/// 56-63: "Message Type u8"
+/// 64-95: "Message Length u32"
+/// 96-159: "Body variable"
+/// ```
 #[derive(Debug)]
 pub struct GiopPacket {
     pub header: GiopHeader,
@@ -205,12 +178,7 @@ impl TryFrom<&[u8]> for GiopPacket {
     fn try_from(buf: &[u8]) -> Result<Self, Self::Error> {
         let header = GiopHeader::try_from(buf)?;
         let total_needed = GiopHeader::HEADER_LEN + header.message_length as usize;
-        if buf.len() < total_needed {
-            return Err(GiopParseError::TruncatedBody {
-                expected: total_needed,
-                actual: buf.len(),
-            });
-        }
+        validate_total_length(total_needed, buf.len())?;
 
         // let body = &buf[GiopHeader::HEADER_LEN..total_needed];
         // println!("giop body parsed");

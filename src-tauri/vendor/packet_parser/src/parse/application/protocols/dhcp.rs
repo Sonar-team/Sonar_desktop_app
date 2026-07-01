@@ -1,7 +1,46 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 //! Module for parsing DHCP packets.
 
+use std::convert::TryFrom;
 use std::fmt;
 
+use crate::{
+    checks::application::dhcp::{
+        validate_dhcp_min_length, validate_hardware_address_length, validate_hardware_type,
+        validate_operation,
+    },
+    errors::application::dhcp::DhcpParseError,
+};
+
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
+/// DHCP Packet
+///
+/// ```mermaid
+/// ---
+/// title: DhcpPacket
+/// ---
+/// packet-beta
+/// 0-7: "Operation u8"
+/// 8-15: "Hardware Type u8"
+/// 16-23: "Hardware Address Length u8"
+/// 24-31: "Hops u8"
+/// 32-63: "Transaction ID u32"
+/// 64-79: "Seconds u16"
+/// 80-95: "Flags u16"
+/// 96-127: "Client IP Address u32"
+/// 128-159: "Your IP Address u32"
+/// 160-191: "Server IP Address u32"
+/// 192-223: "Gateway IP Address u32"
+/// 224-351: "Client Hardware Address bytes[16]"
+/// 352-863: "Server Host Name bytes[64]"
+/// 864-1887: "Boot File Name bytes[128]"
+/// 1888-1951: "Options variable"
+/// ```
+///
 /// The `DhcpPacket` struct represents a parsed DHCP packet.
 #[derive(Debug)]
 pub struct DhcpPacket {
@@ -46,21 +85,18 @@ impl fmt::Display for DhcpPacket {
     }
 }
 
-/// Parses a DHCP packet from a given payload.
-///
-/// # Arguments
-///
-/// * `payload` - A byte slice representing the raw DHCP packet data.
-///
-/// # Returns
-///
-/// * `Result<DhcpPacket, bool>` - Returns `Ok(DhcpPacket)` if parsing is successful,
-///   otherwise returns `Err(false)` indicating an invalid DHCP packet.
-pub fn parse_dhcp_packet(payload: &[u8]) -> Result<DhcpPacket, bool> {
-    // Check minimum length
-    if payload.len() < 236 {
-        return Err(false);
+impl TryFrom<&[u8]> for DhcpPacket {
+    type Error = DhcpParseError;
+
+    fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
+        parse_dhcp_packet(payload)
     }
+}
+
+/// Parses a DHCP packet from a given payload.
+pub fn parse_dhcp_packet(payload: &[u8]) -> Result<DhcpPacket, DhcpParseError> {
+    // Check minimum length
+    validate_dhcp_min_length(payload)?;
 
     let op = payload[0];
     let htype = payload[1];
@@ -83,15 +119,9 @@ pub fn parse_dhcp_packet(payload: &[u8]) -> Result<DhcpPacket, bool> {
     let options = payload[236..].to_vec();
 
     // Validate DHCP packet fields
-    if !(op == 1 || op == 2) {
-        return Err(false);
-    }
-    if htype != 1 {
-        return Err(false);
-    }
-    if hlen != 6 {
-        return Err(false);
-    }
+    validate_operation(op)?;
+    validate_hardware_type(htype)?;
+    validate_hardware_address_length(hlen)?;
 
     Ok(DhcpPacket {
         op,
@@ -145,7 +175,7 @@ mod tests {
         )
         .collect::<Vec<u8>>();
 
-        match parse_dhcp_packet(&dhcp_payload) {
+        match DhcpPacket::try_from(dhcp_payload.as_slice()) {
             Ok(packet) => {
                 assert_eq!(packet.op, 1);
                 assert_eq!(packet.htype, 1);
@@ -179,9 +209,15 @@ mod tests {
     #[test]
     fn test_parse_dhcp_packet_short_payload() {
         let short_payload = vec![0x01, 0x01, 0x06, 0x00, 0x39, 0x03, 0xF3, 0x26];
-        match parse_dhcp_packet(&short_payload) {
+        match DhcpPacket::try_from(short_payload.as_slice()) {
             Ok(_) => panic!("Expected invalid DHCP packet due to short payload"),
-            Err(is_dhcp) => assert!(!is_dhcp),
+            Err(err) => assert_eq!(
+                err,
+                DhcpParseError::PacketTooShort {
+                    expected: 236,
+                    actual: 8
+                }
+            ),
         }
     }
 
@@ -204,9 +240,9 @@ mod tests {
         )
         .collect::<Vec<u8>>();
 
-        match parse_dhcp_packet(&invalid_op_payload) {
+        match DhcpPacket::try_from(invalid_op_payload.as_slice()) {
             Ok(_) => panic!("Expected invalid DHCP packet due to invalid op code"),
-            Err(is_dhcp) => assert!(!is_dhcp),
+            Err(err) => assert_eq!(err, DhcpParseError::InvalidOperation { op: 3 }),
         }
     }
 }

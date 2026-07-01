@@ -13,9 +13,8 @@
   </template>
   
   <script lang="ts">
-  import { listen } from '@tauri-apps/api/event'
-
   import { defineComponent } from 'vue'
+  import { useCaptureStore } from '../../../store/capture'
   
   interface ChannelPayload {
     channel_size: number
@@ -25,17 +24,23 @@
   export default defineComponent({
     data() {
       return {
-        progress: 0
+        progress: 0,
+        unlisten: undefined as undefined | (() => void),
       }
     },
     mounted() {
-      listen<ChannelPayload>('channel', (event) => {
-        const { channel_size, current_size } = event.payload
-  
-        const computed = Math.min(100, (current_size * 100) / channel_size)
+      const captureStore = useCaptureStore()
+      this.unlisten = captureStore.onChannelCapacityPayload((payload: ChannelPayload) => {
+        const { channel_size, current_size } = payload
+
+        const computed = channel_size > 0
+          ? Math.min(100, (current_size * 100) / channel_size)
+          : 0
         this.progress = Math.round(computed)
-  
       })
+    },
+    beforeUnmount() {
+      this.unlisten?.()
     }
   })
   </script>

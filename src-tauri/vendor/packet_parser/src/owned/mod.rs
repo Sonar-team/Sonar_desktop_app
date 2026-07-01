@@ -95,6 +95,7 @@ pub struct InternetOwned {
     pub ip_source_type: Option<IpType>,
     pub destination_ip: Option<IpAddr>,
     pub ip_destination_type: Option<IpType>,
+    #[serde(rename = "protocol_internet")]
     pub protocol: String,
 }
 
@@ -102,11 +103,13 @@ pub struct InternetOwned {
 pub struct TransportOwned {
     pub source_port: Option<u16>,
     pub destination_port: Option<u16>,
+    #[serde(rename = "protocol_transport")]
     pub protocol: String,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
 pub struct ApplicationOwned {
+    #[serde(rename = "application_protocol")]
     pub protocol: String,
 }
 
@@ -355,6 +358,7 @@ mod tests {
     fn test_packet_flow_owned_serialize() {
         let flow = sample_packet_flow_owned();
         let json = serde_json::to_string(&flow).unwrap();
+        let value: serde_json::Value = serde_json::from_str(&json).unwrap();
 
         assert!(json.contains("\"destination_mac\":\"AA:BB:CC:DD:EE:FF\""));
         assert!(json.contains("\"source_mac\":\"11:22:33:44:55:66\""));
@@ -363,7 +367,10 @@ mod tests {
         assert!(json.contains("\"destination_ip\":\"8.8.8.8\""));
         assert!(json.contains("\"source_port\":12345"));
         assert!(json.contains("\"destination_port\":80"));
-        assert!(json.contains("\"protocol\":\"HTTP\"") || json.contains("\"protocol\":\"TCP\""));
+        assert_eq!(value["protocol_internet"], "TCP");
+        assert_eq!(value["protocol_transport"], "TCP");
+        assert_eq!(value["application_protocol"], "HTTP");
+        assert!(value.get("protocol").is_none());
     }
 
     #[test]
@@ -380,6 +387,7 @@ mod tests {
 
         assert!(json.contains("\"source_ip\":null"));
         assert!(json.contains("\"destination_ip\":null"));
-        assert!(json.contains("\"protocol\":\"UDP\""));
+        assert!(json.contains("\"protocol_internet\":\"UDP\""));
+        assert!(!json.contains("\"protocol\":\"UDP\""));
     }
 }

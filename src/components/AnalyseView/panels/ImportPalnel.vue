@@ -53,6 +53,7 @@ export default defineComponent({
     return {
       packetFiles: [] as string[],
       isConverting: false,
+      unsubs: [] as Array<() => void>,
     };
   },
 
@@ -105,15 +106,20 @@ export default defineComponent({
   },
 
   mounted() {
-    this.captureStore.onStarted(() => {
+    this.unsubs.push(this.captureStore.onStarted(() => {
       info("started hearded");
       this.captureStore.updateStatus({ is_running: true });
-    });
+    }));
 
-    this.captureStore.onFinished(() => {
+    this.unsubs.push(this.captureStore.onFinished(() => {
       info("finished hearded");
       this.captureStore.updateStatus({ is_running: false });
-    });
+    }));
+  },
+
+  beforeUnmount() {
+    for (const unsub of this.unsubs) unsub();
+    this.unsubs = [];
   },
 });
 </script>

@@ -1,7 +1,7 @@
 [package]
 name = "libredox"
 authors = ["4lDO2 <4lDO2@protonmail.com>"]
-version = "0.1.16"
+version = "0.1.17"
 edition = "2021"
 license = "MIT"
 description = "Redox stable ABI"
@@ -21,6 +21,6 @@ mkns = ["ioslice"]
 [dependencies]
 bitflags = { version = "2", optional = true }
 libc = { version = "0.2", optional = true }
-redox_syscall = { version = "0.7", optional = true }
+redox_syscall = { version = "0.8", optional = true }
 ioslice = { version = "0.6", optional = true }
 plain = { version = "0.2", optional = true }
