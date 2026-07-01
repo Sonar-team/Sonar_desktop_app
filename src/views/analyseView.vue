@@ -12,6 +12,7 @@
         :csv-open="showCsv"
         :pcap-open="showPcap"  
       />
+
       <div class="panels">
         <ConfigPanel v-if="showConfig" @update:ConfigPanel-visible="(val: any) => showConfig = val" />
         <ImportPanel v-if="showPcap" :mode="'pcap'" @update:visible="(val: any) => showPcap = val"/>

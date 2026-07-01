@@ -1,5 +1,7 @@
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::ipc::Channel;
+
+use crate::events::CaptureEvent;
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 pub struct ChannelCapacityPayload {
@@ -23,7 +25,7 @@ impl ChannelCapacityPayload {
         last: &mut Self,
         current_size: usize,
         max_size: usize,
-        app: &AppHandle,
+        on_event: &Channel<CaptureEvent<'static>>,
     ) -> Result<(), tauri::Error> {
         let backpressure = current_size >= (max_size as f32 * 0.9).floor() as usize;
 
@@ -35,7 +37,11 @@ impl ChannelCapacityPayload {
 
         if current != *last {
             *last = current.clone();
-            app.emit_to("main", "channel", current)?;
+            on_event.send(CaptureEvent::ChannelCapacityPayload {
+                channel_size: current.channel_size,
+                current_size: current.current_size,
+                backpressure: current.backpressure,
+            })?;
         }
 
         if backpressure {

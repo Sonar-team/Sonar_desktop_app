@@ -19,13 +19,16 @@ impl<'a> fmt::Display for ApplicationProtocol<'a> {
             ApplicationProtocol::Dhcpv6(_) => write!(f, "DHCPv6"),
             ApplicationProtocol::Bitcoin(_) => write!(f, "Bitcoin"),
             ApplicationProtocol::Dns(_) => write!(f, "DNS"),
+            ApplicationProtocol::EtherNetIp(_) => write!(f, "EtherNet/IP"),
             ApplicationProtocol::S7Comm(_) => write!(f, "S7Comm"),
+            ApplicationProtocol::Snmp(_) => write!(f, "SNMP"),
             ApplicationProtocol::Cotp(_) => write!(f, "COTP"),
             ApplicationProtocol::Quic(_) => write!(f, "QUIC"),
             ApplicationProtocol::Giop(_) => write!(f, "GIOP"),
             ApplicationProtocol::Srvloc(_) => write!(f, "SRVLOC"),
             ApplicationProtocol::Ams(_) => write!(f, "AMS"),
             ApplicationProtocol::Opcua(_) => write!(f, "OPC UA"),
+            ApplicationProtocol::PostgreSql(_) => write!(f, "PostgreSQL"),
             ApplicationProtocol::Raw(data) => {
                 let preview_len = 16.min(data.len());
                 let hex_preview: String = data[..preview_len]

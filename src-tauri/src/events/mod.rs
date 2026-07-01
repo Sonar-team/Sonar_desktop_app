@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use crate::state::{
-    capture::capture_handle::messages::capture::PacketMinimal,
+    capture::capture_handle::messages::capture::{PacketMinimal, PacketOwnedStats},
     graph::{GraphData, GraphUpdate},
 };
 
@@ -28,6 +28,9 @@ pub enum CaptureEvent<'a> {
     },
     Packet {
         packet: &'a PacketMinimal<'a>,
+    },
+    PacketBatch {
+        packets: Vec<PacketOwnedStats>,
     },
     Graph {
         update: &'a GraphUpdate,

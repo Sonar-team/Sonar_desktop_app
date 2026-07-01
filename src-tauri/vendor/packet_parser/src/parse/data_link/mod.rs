@@ -55,14 +55,31 @@ pub mod ethertype;
 pub mod vlan_tag;
 
 use crate::{
-    checks::data_link::validate_data_link_length, errors::data_link::DataLinkError,
+    checks::data_link::{validate_data_link_length, validate_data_link_vlan_length},
+    errors::data_link::DataLinkError,
     parse::data_link::vlan_tag::VlanTag,
 };
 
 use ethertype::Ethertype;
 
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
+/// Ethernet Frame
+///
+/// ```mermaid
+/// ---
+/// title: DataLink
+/// ---
+/// packet-beta
+/// 0-47: "Destination MAC u48"
+/// 48-95: "Source MAC u48"
+/// 96-111: "EtherType / VLAN TPID u16"
+/// 112-127: "VLAN TCI u16 if present"
+/// 128-143: "Inner EtherType u16 if VLAN"
+/// 144-191: "Payload variable"
+/// ```
+///
 /// Represents a parsed Ethernet frame, containing source and destination MAC addresses,
-/// an Ethertype, and the payload.
+/// an Ethertype, an optional VLAN tag, and the payload.
 #[derive(Debug, Clone, Serialize, Eq)]
 pub struct DataLink<'a> {
     /// The destination MAC address as a string.
@@ -95,11 +112,7 @@ impl<'a> TryFrom<&'a [u8]> for DataLink<'a> {
         let payload: &'a [u8];
 
         if raw_ethertype == 0x8100 {
-            // On a un tag 802.1Q.
-            // Il nous faut au minimum 18 octets : header Ethernet + TCI + inner EtherType
-            if packets.len() < 18 {
-                return Err(DataLinkError::DataLinkTooShort(packets.len() as u8));
-            }
+            validate_data_link_vlan_length(packets)?;
 
             // TCI + inner EtherType : [14..18]
             let vlan_tag = VlanTag::try_from(&packets[14..18])?;

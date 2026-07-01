@@ -1,5 +1,32 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 use core::convert::TryFrom;
 
+use crate::{
+    checks::application::srvloc::{ensure_len, validate_packet_not_empty},
+    errors::application::srvloc::SrvlocPacketParseError,
+};
+
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
+/// Service Location Protocol Packet
+///
+/// ```mermaid
+/// ---
+/// title: SrvlocPacket
+/// ---
+/// packet-beta
+/// 0-7: "Version u8"
+/// 8-15: "Function u8"
+/// 16-39: "Packet Length u16/u24"
+/// 40-55: "Flags / Dialect"
+/// 56-79: "Extension Offset / Language"
+/// 80-95: "Transaction ID u16"
+/// 96-111: "Language Tag Length u16"
+/// 112-175: "Language Tag / Payload variable"
+/// ```
 #[derive(Debug)]
 pub struct SrvlocPacket {
     pub header: SrvlocHeader,
@@ -63,61 +90,6 @@ pub enum SrvlocMessage {
     Raw(Vec<u8>),
 }
 
-/// Erreurs de parsing SRVLOC
-#[derive(Debug)]
-pub enum SrvlocPacketParseError {
-    /// Le buffer ne contient même pas une version
-    InvalidPacketLength,
-    /// Buffer tronqué alors qu’on attendait plus de données
-    Truncated {
-        expected_at_least: usize,
-        actual: usize,
-    },
-    /// Version non supportée (≠ 1 ou 2)
-    UnsupportedVersion(u8),
-    /// Erreur UTF-8 dans un champ texte
-    InvalidUtf8(&'static str),
-}
-
-impl core::fmt::Display for SrvlocPacketParseError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            SrvlocPacketParseError::InvalidPacketLength => {
-                write!(f, "SRVLOC packet too short")
-            }
-            SrvlocPacketParseError::Truncated {
-                expected_at_least,
-                actual,
-            } => {
-                write!(
-                    f,
-                    "SRVLOC packet truncated: expected at least {} bytes, got {}",
-                    expected_at_least, actual
-                )
-            }
-            SrvlocPacketParseError::UnsupportedVersion(v) => {
-                write!(f, "Unsupported SRVLOC version {}", v)
-            }
-            SrvlocPacketParseError::InvalidUtf8(field) => {
-                write!(f, "Invalid UTF-8 in SRVLOC field '{}'", field)
-            }
-        }
-    }
-}
-
-impl std::error::Error for SrvlocPacketParseError {}
-
-fn ensure_len(buf: &[u8], needed: usize) -> Result<(), SrvlocPacketParseError> {
-    if buf.len() < needed {
-        Err(SrvlocPacketParseError::Truncated {
-            expected_at_least: needed,
-            actual: buf.len(),
-        })
-    } else {
-        Ok(())
-    }
-}
-
 fn read_u16(buf: &[u8], offset: &mut usize) -> Result<u16, SrvlocPacketParseError> {
     ensure_len(buf, *offset + 2)?;
     let v = u16::from_be_bytes([buf[*offset], buf[*offset + 1]]);
@@ -150,10 +122,7 @@ impl TryFrom<&[u8]> for SrvlocPacket {
     type Error = SrvlocPacketParseError;
 
     fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
-        // 1) taille minimale : au moins la version
-        if payload.is_empty() {
-            return Err(SrvlocPacketParseError::InvalidPacketLength);
-        }
+        validate_packet_not_empty(payload)?;
 
         let version = payload[0];
 
@@ -205,10 +174,10 @@ fn parse_v1_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseErro
     let transaction_id = read_u16(payload, &mut offset)?;
     let error_code = read_u16(payload, &mut offset)?;
 
-    let url_length = read_u16(payload, &mut offset)? as u16;
+    let url_length = read_u16(payload, &mut offset)?;
     let url = read_string(payload, &mut offset, url_length as usize, "url")?;
 
-    let scope_list_lengh = read_u16(payload, &mut offset)? as u16;
+    let scope_list_lengh = read_u16(payload, &mut offset)?;
     let scope_list = read_string(
         payload,
         &mut offset,
@@ -270,7 +239,7 @@ fn parse_v2_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseErro
     let flags = read_u16(payload, &mut offset)?;
     let next_extension_offset = read_u24(payload, &mut offset)?;
     let xid = read_u16(payload, &mut offset)?;
-    let lang_tag_len = read_u16(payload, &mut offset)? as u16;
+    let lang_tag_len = read_u16(payload, &mut offset)?;
     let lang_tag = read_string(payload, &mut offset, lang_tag_len as usize, "lang_tag")?;
 
     let header_v2 = SrvlocHeaderV2 {

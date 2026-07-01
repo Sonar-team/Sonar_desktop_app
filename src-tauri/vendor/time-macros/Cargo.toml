@@ -13,7 +13,7 @@
 edition = "2024"
 rust-version = "1.88.0"
 name = "time-macros"
-version = "0.2.29"
+version = "0.2.30"
 authors = [
     "Jacob Pratt <open-source@jhpratt.dev>",
     "Time contributors",

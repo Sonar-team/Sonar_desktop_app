@@ -29,25 +29,46 @@ pub(crate) fn get_string_literal(
     }
 }
 
+pub(crate) fn parse_number<T: FromStr>(
+    component_name: &'static str,
+    chars: &str,
+) -> Result<T, Error> {
+    chars
+        .replace('_', "")
+        .parse()
+        .map_err(|_| Error::InvalidComponent {
+            name: component_name,
+            value: chars.to_string(),
+            span_start: None,
+            span_end: None,
+        })
+}
+
 pub(crate) fn consume_number<T: FromStr>(
     component_name: &'static str,
     chars: &mut Peekable<token_stream::IntoIter>,
 ) -> Result<(Span, T), Error> {
-    let (span, digits) = match chars.next() {
-        Some(TokenTree::Literal(literal)) => (literal.span(), literal.to_string()),
-        Some(tree) => return Err(Error::UnexpectedToken { tree }),
-        None => return Err(Error::UnexpectedEndOfInput),
-    };
-
-    if let Ok(value) = digits.replace('_', "").parse() {
-        Ok((span, value))
-    } else {
-        Err(Error::InvalidComponent {
-            name: component_name,
-            value: digits,
-            span_start: Some(span),
-            span_end: Some(span),
-        })
+    match chars.next() {
+        Some(TokenTree::Literal(literal)) => {
+            let span = literal.span();
+            match parse_number(component_name, &literal.to_string()) {
+                Ok(val) => Ok((span, val)),
+                Err(Error::InvalidComponent {
+                    name,
+                    value,
+                    span_start: _,
+                    span_end: _,
+                }) => Err(Error::InvalidComponent {
+                    name,
+                    value,
+                    span_start: Some(span.start()),
+                    span_end: Some(span.end()),
+                }),
+                Err(e) => Err(e),
+            }
+        }
+        Some(tree) => Err(Error::UnexpectedToken { tree }),
+        None => Err(Error::UnexpectedEndOfInput),
     }
 }
 

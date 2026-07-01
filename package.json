@@ -1,7 +1,7 @@
 {
   "name": "sonar",
   "private": true,
-  "version": "3.13.24",
+  "version": "3.14.6",
   "type": "module",
   "scripts": {
     "dev": "vite",

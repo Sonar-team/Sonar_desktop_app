@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import { info } from '@tauri-apps/plugin-log';
-import { CaptureConfig, useCaptureConfigStore, useCaptureStore } from '../../../store/capture';
+import { CaptureConfig, useCaptureConfigStore } from '../../../store/capture';
 import { invoke } from '@tauri-apps/api/core';
 import { displayCaptureError } from '../../../errors/capture';
 
@@ -32,10 +32,6 @@ export default {
     config() {
       return this.configStore.interface;
     },
-    captureStore() {
-      return useCaptureStore();
-    },
-
   },
 
   methods: {
@@ -52,12 +48,6 @@ export default {
   },
   mounted() { 
     this.getconfig();
-    this.captureStore.onFinished((f) => {
-      
-    });
-    this.captureStore.onStarted((f) => {
-      
-    });
   },
 };
 </script>

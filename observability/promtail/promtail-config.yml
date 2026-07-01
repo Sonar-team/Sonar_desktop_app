@@ -1,0 +1,60 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: sonar-timing
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: sonar-timing
+          app: sonar
+          __path__: /sonar-logs/*.jsonl
+    pipeline_stages:
+      - json:
+          expressions:
+            event: event
+            run_id: run_id
+            file_path: file_path
+            ts_unix_ns: ts_unix_ns
+      - labels:
+          event:
+          run_id:
+          file_path:
+      - timestamp:
+          source: ts_unix_ns
+          format: UnixNs
+          action_on_failure: skip
+
+  - job_name: sonar-timing-tmp
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: sonar-timing
+          app: sonar
+          source: tmp
+          __path__: /host-tmp/sonar-*.jsonl
+    pipeline_stages:
+      - json:
+          expressions:
+            event: event
+            run_id: run_id
+            file_path: file_path
+            ts_unix_ns: ts_unix_ns
+      - labels:
+          event:
+          run_id:
+          file_path:
+          source:
+      - timestamp:
+          source: ts_unix_ns
+          format: UnixNs
+          action_on_failure: skip

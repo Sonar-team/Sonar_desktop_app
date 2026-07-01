@@ -1,10 +1,38 @@
-use crate::errors::internet::ipv6::Ipv6Error;
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
+use crate::{
+    checks::internet::ipv6::{
+        IPV6_HEADER_LEN, validate_ipv6_header_length, validate_ipv6_payload_length,
+        validate_ipv6_version,
+    },
+    errors::internet::ipv6::Ipv6Error,
+};
 use std::convert::TryFrom;
 use std::net::Ipv6Addr;
 
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// IPv6 Packet Structure
 ///
 /// Represents an Internet Protocol version 6 packet
+///
+/// ```mermaid
+/// ---
+/// title: Ipv6Packet
+/// ---
+/// packet-beta
+/// 0-3: "Version u4"
+/// 4-11: "Traffic Class u8"
+/// 12-31: "Flow Label u20"
+/// 32-47: "Payload Length u16"
+/// 48-55: "Next Header u8"
+/// 56-63: "Hop Limit u8"
+/// 64-191: "Source IPv6 u128"
+/// 192-319: "Destination IPv6 u128"
+/// 320-383: "Extension Headers / Payload variable"
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct Ipv6Packet<'a> {
     /// Version (6 for IPv6), Traffic Class, and Flow Label
@@ -55,20 +83,10 @@ impl<'a> TryFrom<&'a [u8]> for Ipv6Packet<'a> {
     /// # Returns
     /// * `Result<Ipv6Packet, Ipv6Error>` - The parsed IPv6 packet or an error
     fn try_from(data: &'a [u8]) -> Result<Self, Self::Error> {
-        // IPv6 header is fixed at 40 bytes
-        const IPV6_HEADER_LEN: usize = 40;
-
-        if data.len() < IPV6_HEADER_LEN {
-            return Err(Ipv6Error::InvalidLength {
-                expected: IPV6_HEADER_LEN,
-                actual: data.len(),
-            });
-        }
+        validate_ipv6_header_length(data)?;
 
         let version = data[0] >> 4;
-        if version != 6 {
-            return Err(Ipv6Error::InvalidVersion(version));
-        }
+        validate_ipv6_version(version)?;
 
         let version_tc_flow = [data[0], data[1], data[2], data[3]];
         let payload_length = u16::from_be_bytes([data[4], data[5]]);
@@ -98,14 +116,7 @@ impl<'a> TryFrom<&'a [u8]> for Ipv6Packet<'a> {
             u16::from_be_bytes([data[38], data[39]]),
         );
 
-        // Check if we have enough data for the payload
-        let total_expected_len = IPV6_HEADER_LEN + payload_length as usize;
-        if data.len() < total_expected_len {
-            return Err(Ipv6Error::InvalidPayloadLength {
-                expected: payload_length,
-                actual: data.len().saturating_sub(IPV6_HEADER_LEN),
-            });
-        }
+        let total_expected_len = validate_ipv6_payload_length(data.len(), payload_length)?;
 
         // For simplicity, we're not parsing extension headers here
         // In a real implementation, you would parse them based on next_header

@@ -98,6 +98,7 @@ export default defineComponent({
       filteredlabelRows: [] as [string, string, string][],
       searchInput: "",
       isConverting: false,
+      unsubs: [] as Array<() => void>,
       showConflictDialog: false,
       sameIpDiffMac: [] as [string, string, string][], 
       sameIpDiffLabel: [] as [string, string, string][],
@@ -244,16 +245,21 @@ export default defineComponent({
 
   },
 
-  async mounted() {
-    this.captureStore.onStarted(() => {
+  mounted() {
+    this.unsubs.push(this.captureStore.onStarted(() => {
       info("started hearded");
       this.captureStore.updateStatus({ is_running: true });
-    });
+    }));
 
-    this.captureStore.onFinished(() => {
+    this.unsubs.push(this.captureStore.onFinished(() => {
       info("finished hearded");
       this.captureStore.updateStatus({ is_running: false });
-    });
+    }));
+  },
+
+  async beforeUnmount() {
+    for (const unsub of this.unsubs) unsub();
+    this.unsubs = [];
 
     this.labelRows = await invoke('get_label_rows');
     this.filteredlabelRows = this.labelRows;

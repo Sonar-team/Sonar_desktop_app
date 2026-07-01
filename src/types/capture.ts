@@ -27,10 +27,20 @@ export type PacketMinimal = {
 };
 
 export type PacketFlow = {
-  data_link?: DataLinkLayer;
-  internet?: InternetLayer;
-  transport?: TransportLayer;
-  application?: ApplicationLayer;
+  source_mac?: string;
+  destination_mac?: string;
+  ethertype?: string;
+  vlan?: { id?: number | null } | null;
+  source_ip?: string | null;
+  ip_source_type?: string | null;
+  destination_ip?: string | null;
+  ip_destination_type?: string | null;
+  protocol_internet?: string | null;
+  source_port?: number | null;
+  destination_port?: number | null;
+  protocol_transport?: string | null;
+  application_protocol?: string | null;
+  protocol?: string | null;
 };
 
 export type DataLinkLayer = {
@@ -144,6 +154,12 @@ export type CaptureEvent =
     event: "packet";
     data: {
       packet: PacketMinimal;
+    };
+  }
+  | {
+    event: "packetBatch";
+    data: {
+      packets: PacketMinimal[];
     };
   }
   | {

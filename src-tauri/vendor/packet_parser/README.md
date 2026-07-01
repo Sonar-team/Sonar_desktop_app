@@ -22,6 +22,12 @@ Documentation
 
 For full documentation and explanations, check out the [Packet Parser Book](https://akmot9.github.io/packet-parser-book/).
 
+Rustdoc Mermaid diagrams are optional. Maintainers can render them with:
+
+```bash
+cargo doc --features doc-diagrams --no-deps
+```
+
 
 ## 🚀 Installation
 
@@ -29,7 +35,7 @@ Add the dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-packet_parser = "1.3.0"
+packet_parser = "1.5.4"
 ```
 
 Then, import the crate in your project:
@@ -69,7 +75,7 @@ println!("OUI: {}", mac.get_oui()); // Expected output: Intel
 - **data_link**: Handles Ethernet frame parsing (MAC addresses, Ethertype, etc.).
 - **network**: Supports IPv4, IPv6, and other network-layer protocols.
 - **transport**: Parses transport layer protocols (TCP, UDP, etc.).
-- **application**: Recognizes application layer protocols such as HTTP and DNS.
+- **application**: Recognizes application layer protocols such as HTTP, DNS and PostgreSQL.
 
 ### `errors`
 Provides structured error handling for each network layer.
@@ -123,4 +129,3 @@ This crate is distributed under the MIT license. See the [LICENSE](LICENSE) file
 ---
 
 **Packet Parser** is designed to make network frame analysis efficient and extensible in complex environments. If you have any suggestions or feedback, feel free to reach out! 🚀
-
