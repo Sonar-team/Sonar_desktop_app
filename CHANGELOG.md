@@ -1,5 +1,20 @@
 # Changelog
 
+## **[3.14.7] - 2026-07-03**
+
+## 🛠 Corrections
+
+- Fiabilisation de l'import des labels CSV : l'en-tête est écarté du store,
+  les fichiers vides ne provoquent plus d'accès invalide, les IP CIDR sont
+  normalisées et les labels absents utilisent la valeur `Label?`.
+- Ajout d'un test d'import complet sur des fichiers CSV réels couvrant les
+  résolutions par MAC/IP, IP seule, MAC seule, CIDR et label vide.
+
+## 🔧 Maintenance
+
+- Mise à jour de la version de SONAR en **3.14.7** pour publier le correctif
+  d'import des labels.
+
 ## **[3.14.6] - 2026-06-29**
 
 ## 📊 Observabilité
