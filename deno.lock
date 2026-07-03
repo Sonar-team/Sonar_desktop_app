@@ -1,6 +1,9 @@
 {
   "version": "5",
   "specifiers": {
+    "npm:@sigma/edge-curve@3.1.0": "3.1.0_sigma@3.0.3__graphology-types@0.24.8_graphology-types@0.24.8",
+    "npm:@sigma/export-image@3.0.0": "3.0.0_sigma@3.0.3__graphology-types@0.24.8_graphology-types@0.24.8",
+    "npm:@sigma/node-border@3.0.0": "3.0.0_sigma@3.0.3__graphology-types@0.24.8_graphology-types@0.24.8",
     "npm:@tauri-apps/api@2.11.1": "2.11.1",
     "npm:@tauri-apps/cli@2.11.3": "2.11.3",
     "npm:@tauri-apps/plugin-cli@2.4.1": "2.4.1",
@@ -14,10 +17,11 @@
     "npm:@vitejs/plugin-vue@6.0.7": "6.0.7_vite@8.0.16__yaml@2.9.0_vue@3.5.38__typescript@6.0.3_typescript@6.0.3",
     "npm:chart.js@4.5.1": "4.5.1",
     "npm:color-convert@3.1.3": "3.1.3",
-    "npm:cytoscape-cola@2.5.1": "2.5.1_cytoscape@3.34.0",
-    "npm:cytoscape@3.34.0": "3.34.0",
+    "npm:graphology-layout-forceatlas2@0.10.1": "0.10.1_graphology-types@0.24.8",
+    "npm:graphology@0.26.0": "0.26.0_graphology-types@0.24.8",
     "npm:html2canvas@1.4.1": "1.4.1",
     "npm:pinia@3.0.4": "3.0.4_typescript@6.0.3_vue@3.5.38__typescript@6.0.3",
+    "npm:sigma@3.0.3": "3.0.3_graphology-types@0.24.8",
     "npm:typescript@6.0.3": "6.0.3",
     "npm:vite@8.0.16": "8.0.16_yaml@2.9.0",
     "npm:vue-router@5.1.0": "5.1.0_pinia@3.0.4__typescript@6.0.3__vue@3.5.38___typescript@6.0.3_vite@8.0.16__yaml@2.9.0_vue@3.5.38__typescript@6.0.3_typescript@6.0.3",
@@ -217,6 +221,25 @@
     },
     "@rolldown/pluginutils@1.0.1": {
       "integrity": "sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw=="
+    },
+    "@sigma/edge-curve@3.1.0_sigma@3.0.3__graphology-types@0.24.8_graphology-types@0.24.8": {
+      "integrity": "sha512-OFWkfAXEsm+X8l1K4K49cC0psB0gQ+gqxKA08HG5piNPdzrDZ5gG9Gza6htZ5AirOVwd/4/uq/gPpD5En+H+3Q==",
+      "dependencies": [
+        "sigma"
+      ]
+    },
+    "@sigma/export-image@3.0.0_sigma@3.0.3__graphology-types@0.24.8_graphology-types@0.24.8": {
+      "integrity": "sha512-6JmWle7byUzAOGE3P3ttDqn2PbdnNETyFU13i4R0G3PIZcIiVqPRpRWBkz11E89oxKEzEf1XdwQKa9VxHDMD0w==",
+      "dependencies": [
+        "file-saver",
+        "sigma"
+      ]
+    },
+    "@sigma/node-border@3.0.0_sigma@3.0.3__graphology-types@0.24.8_graphology-types@0.24.8": {
+      "integrity": "sha512-mE3zUfjvJVuAMhSjiP/zdlkqe0OVTETxd04XHUwof01YqdzTk0OB4ACJIhWrwgsBXl7tTd9lPuKoroafLh8MtQ==",
+      "dependencies": [
+        "sigma"
+      ]
     },
     "@tauri-apps/api@2.11.1": {
       "integrity": "sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA=="
@@ -584,41 +607,6 @@
     "csstype@3.2.3": {
       "integrity": "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ=="
     },
-    "cytoscape-cola@2.5.1_cytoscape@3.34.0": {
-      "integrity": "sha512-4/2S9bW1LvdsEPmxXN1OEAPFPbk7DvCx2c9d+TblkQAAvptGaSgtPWCByTEGgT8UxCxcVqes2aFPO5pzwo7R2w==",
-      "dependencies": [
-        "cytoscape",
-        "webcola"
-      ]
-    },
-    "cytoscape@3.34.0": {
-      "integrity": "sha512-62rNSrioXw93uliKFBwjukeQyeWwH2PqDrTac31r2P6464u3AUvTk0xS4LVvT251g7IgkFunrI48ZEZGjywSOg=="
-    },
-    "d3-dispatch@1.0.6": {
-      "integrity": "sha512-fVjoElzjhCEy+Hbn8KygnmMS7Or0a9sI2UzGwoB7cCtvI1XpVN9GpoYlnb3xt2YV66oXYb1fLJ8GMvP4hdU1RA=="
-    },
-    "d3-drag@1.2.5": {
-      "integrity": "sha512-rD1ohlkKQwMZYkQlYVCrSFxsWPzI97+W+PaEIBNTMxRuxz9RF0Hi5nJWHGVJ3Om9d2fRTe1yOBINJyy/ahV95w==",
-      "dependencies": [
-        "d3-dispatch",
-        "d3-selection"
-      ]
-    },
-    "d3-path@1.0.9": {
-      "integrity": "sha512-VLaYcn81dtHVTjEHd8B+pbe9yHWpXKZUC87PzoFmsFrJqgFwDe/qxfp5MlfsfM1V5E/iVt0MmEbWQ7FVIXh/bg=="
-    },
-    "d3-selection@1.4.2": {
-      "integrity": "sha512-SJ0BqYihzOjDnnlfyeHT0e30k0K1+5sR3d5fNueCNeuhZTnGw4M4o8mqJchSwgKMXCNFo+e2VTChiSJ0vYtXkg=="
-    },
-    "d3-shape@1.3.7": {
-      "integrity": "sha512-EUkvKjqPFUAZyOlhY5gzCxCeI0Aep04LwIRpsZ/mLFelJiUfnK56jo5JMDSE7yyP2kLSb6LtF+S5chMk7uqPqw==",
-      "dependencies": [
-        "d3-path"
-      ]
-    },
-    "d3-timer@1.0.10": {
-      "integrity": "sha512-B1JDm0XDaQC+uvo4DT79H0XmBskgS3l6Ve+1SBCfxgmtIb1AVrPIoqd+nPSv+loMX8szQ0sVUhGngL7D5QPiXw=="
-    },
     "detect-libc@2.1.2": {
       "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ=="
     },
@@ -627,6 +615,9 @@
     },
     "estree-walker@2.0.2": {
       "integrity": "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="
+    },
+    "events@3.3.0": {
+      "integrity": "sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q=="
     },
     "exsolve@1.0.8": {
       "integrity": "sha512-LmDxfWXwcTArk8fUEnOfSZpHOJ6zOMUJKOtFLFqJLoKJetuQG874Uc7/Kki7zFLzYybmZhp1M7+98pfMqeX8yA=="
@@ -640,10 +631,36 @@
         "picomatch"
       ]
     },
+    "file-saver@2.0.5": {
+      "integrity": "sha512-P9bmyZ3h/PRG+Nzga+rbdI4OEpNDzAVyy74uVO9ATgzLK6VtAsYybF/+TOCvrc0MO793d6+42lLyZTw7/ArVzA=="
+    },
     "fsevents@2.3.3": {
       "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
       "os": ["darwin"],
       "scripts": true
+    },
+    "graphology-layout-forceatlas2@0.10.1_graphology-types@0.24.8": {
+      "integrity": "sha512-ogzBeF1FvWzjkikrIFwxhlZXvD2+wlY54lqhsrWprcdPjopM2J9HoMweUmIgwaTvY4bUYVimpSsOdvDv1gPRFQ==",
+      "dependencies": [
+        "graphology-types",
+        "graphology-utils"
+      ]
+    },
+    "graphology-types@0.24.8": {
+      "integrity": "sha512-hDRKYXa8TsoZHjgEaysSRyPdT6uB78Ci8WnjgbStlQysz7xR52PInxNsmnB7IBOM1BhikxkNyCVEFgmPKnpx3Q=="
+    },
+    "graphology-utils@2.5.2_graphology-types@0.24.8": {
+      "integrity": "sha512-ckHg8MXrXJkOARk56ZaSCM1g1Wihe2d6iTmz1enGOz4W/l831MBCKSayeFQfowgF8wd+PQ4rlch/56Vs/VZLDQ==",
+      "dependencies": [
+        "graphology-types"
+      ]
+    },
+    "graphology@0.26.0_graphology-types@0.24.8": {
+      "integrity": "sha512-8SSImzgUUYC89Z042s+0r/vMibY7GX/Emz4LDO5e7jYXhuoWfHISPFJYjpRLUSJGq6UQ6xlenvX1p/hJdfXuXg==",
+      "dependencies": [
+        "events",
+        "graphology-types"
+      ]
     },
     "hookable@5.5.3": {
       "integrity": "sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ=="
@@ -869,6 +886,13 @@
     "scule@1.3.0": {
       "integrity": "sha512-6FtHJEvt+pVMIB9IBY+IcCJ6Z5f1iQnytgyfKMhDKgmzYG+TeH/wx1y3l27rshSbLiSanrR9ffZDrEsmjlQF2g=="
     },
+    "sigma@3.0.3_graphology-types@0.24.8": {
+      "integrity": "sha512-5H0zFlx6/NTQpqBg4Rm569ZOpnBOXMaS25UQThIWMU3XyzI5AhmorK/gnl87BvJBLhQd0tW4C0LIp3enWzMoNw==",
+      "dependencies": [
+        "events",
+        "graphology-utils"
+      ]
+    },
     "source-map-js@1.2.1": {
       "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="
     },
@@ -998,15 +1022,6 @@
         "typescript"
       ]
     },
-    "webcola@3.4.0": {
-      "integrity": "sha512-4BiLXjXw3SJHo3Xd+rF+7fyClT6n7I+AR6TkBqyQ4kTsePSAMDLRCXY1f3B/kXJeP9tYn4G1TblxTO+jAt0gaw==",
-      "dependencies": [
-        "d3-dispatch",
-        "d3-drag",
-        "d3-shape",
-        "d3-timer"
-      ]
-    },
     "webpack-virtual-modules@0.6.2": {
       "integrity": "sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ=="
     },
@@ -1018,6 +1033,9 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@sigma/edge-curve@3.1.0",
+        "npm:@sigma/export-image@3.0.0",
+        "npm:@sigma/node-border@3.0.0",
         "npm:@tauri-apps/api@2.11.1",
         "npm:@tauri-apps/cli@2.11.3",
         "npm:@tauri-apps/plugin-cli@2.4.1",
@@ -1031,10 +1049,11 @@
         "npm:@vitejs/plugin-vue@6.0.7",
         "npm:chart.js@4.5.1",
         "npm:color-convert@3.1.3",
-        "npm:cytoscape-cola@2.5.1",
-        "npm:cytoscape@3.34.0",
+        "npm:graphology-layout-forceatlas2@0.10.1",
+        "npm:graphology@0.26.0",
         "npm:html2canvas@1.4.1",
         "npm:pinia@3.0.4",
+        "npm:sigma@3.0.3",
         "npm:typescript@6.0.3",
         "npm:vite@8.0.16",
         "npm:vue-router@5.1.0",

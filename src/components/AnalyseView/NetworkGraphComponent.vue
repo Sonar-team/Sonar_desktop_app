@@ -1,7 +1,13 @@
 <script lang="ts">
 import { defineComponent, markRaw } from "vue"
-import cytoscape from "cytoscape"
-import cola from "cytoscape-cola"
+import Graph from "graphology"
+import Sigma from "sigma"
+import { EdgeArrowProgram } from "sigma/rendering"
+import forceAtlas2 from "graphology-layout-forceatlas2"
+import FA2Layout from "graphology-layout-forceatlas2/worker"
+import { EdgeCurvedArrowProgram, indexParallelEdgesIndex, DEFAULT_EDGE_CURVATURE } from "@sigma/edge-curve"
+import { NodeBorderProgram } from "@sigma/node-border"
+import { toBlob } from "@sigma/export-image"
 import { useCaptureStore } from "../../store/capture"
 import { save } from "@tauri-apps/plugin-dialog"
 import { writeFile } from "@tauri-apps/plugin-fs"
@@ -9,8 +15,6 @@ import { EdgeData, EdgeId, GraphData, GraphUpdate, NodeData } from "../../types/
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentDate } from '../../utils/time';
 import LegendComponent from './LegendComponent.vue';
-
-cytoscape.use(cola)
 
 // --- Colors ----------------------------------------------------------------
 const EDGE_COLORS_LC: Record<string, string> = Object.freeze({
@@ -59,116 +63,59 @@ function jitterAround(x: number, y: number, radius = 120) {
   return { x: x + Math.cos(angle) * r, y: y + Math.sin(angle) * r }
 }
 
-// Seuils de zoom pour l'affichage des labels d'arêtes (identiques à l'ancien rendu)
+// Seuils de zoom pour l'affichage des labels d'arêtes (zoom = 1 / camera.ratio)
 const EDGE_LABEL_ZOOM = 1.2
 const PORT_LABEL_ZOOM = 1.8
 
-// Layout force continu (équivalent du ForceLayout d3-force de v-network-graph)
-const FORCE_LAYOUT_OPTIONS = {
-  name: "cola",
-  animate: true,
-  infinite: true,
-  fit: false,
-  // Repart des positions courantes à chaque redémarrage : sans ça, cola
-  // recentre tout le graphe dès qu'un nœud apparaît (effet "focus").
-  centerGraph: false,
-  randomize: false,
-  nodeSpacing: 30,
-  edgeLength: 150,
-} as cytoscape.LayoutOptions
+const NODE_SIZE = 10
 
-const GRAPH_STYLE = [
-  {
-    selector: "node",
-    style: {
-      width: 40,
-      height: 40,
-      "background-color": "data(color)",
-      "border-width": 3,
-      "border-color": "data(stroke)",
-      label: "data(displayLabel)",
-      "font-size": 20,
-      color: "#ffffff",
-      "text-valign": "top",
-      "text-halign": "center",
-      "text-margin-y": -6,
-      "text-background-color": "#000000",
-      "text-background-opacity": 1,
-      "text-background-padding": "3px",
-      "text-background-shape": "roundrectangle",
-    },
-  },
-  {
-    selector: "node.hover",
-    style: { "background-color": "data(hover)" },
-  },
-  {
-    selector: "node:selected",
-    style: { "border-color": "#1de9b6" },
-  },
-  {
-    selector: "edge",
-    style: {
-      width: 2,
-      "curve-style": "bezier",
-      "control-point-step-size": 20,
-      "line-color": "data(color)",
-      "target-arrow-shape": "triangle",
-      "target-arrow-color": "data(color)",
-      "arrow-scale": 1,
-    },
-  },
-  // Label protocole au centre (visible à partir de EDGE_LABEL_ZOOM)
-  {
-    selector: "edge.lbl",
-    style: {
-      label: "data(label)",
-      "font-size": 16,
-      color: "#ffffff",
-      "text-rotation": "autorotate",
-      "text-background-color": "#000000",
-      "text-background-opacity": 1,
-      "text-background-padding": "2px",
-      "text-background-shape": "roundrectangle",
-    },
-  },
-  // Ports source/destination aux extrémités (visibles à partir de PORT_LABEL_ZOOM)
-  {
-    selector: "edge.ports",
-    style: {
-      "source-label": "data(sourcePortLabel)",
-      "target-label": "data(targetPortLabel)",
-      "source-text-offset": 30,
-      "target-text-offset": 30,
-    },
-  },
-] as unknown as cytoscape.StylesheetJson
+// Courbure des arêtes parallèles (repris de l'exemple officiel @sigma/edge-curve)
+function getCurvature(index: number, maxIndex: number): number {
+  if (maxIndex <= 0) return DEFAULT_EDGE_CURVATURE
+  const amplitude = 3.5
+  const maxCurvature = amplitude * (1 - Math.exp(-maxIndex / amplitude)) * DEFAULT_EDGE_CURVATURE
+  return (maxCurvature * index) / maxIndex
+}
 
-function nodeElementData(node: any) {
+// Label de nœud : texte blanc sur fond noir, au-dessus du nœud.
+// Sert aussi au rendu du hover (fond blanc par défaut, illisible sur fond noir).
+function drawNodeLabel(context: CanvasRenderingContext2D, data: any, settings: any) {
+  if (!data.label) return
+  const size = settings.labelSize
+  context.font = `${settings.labelWeight} ${size}px ${settings.labelFont}`
+  const width = context.measureText(data.label).width + 10
+  const x = data.x - width / 2
+  const y = data.y - data.size - size - 8
+  context.fillStyle = "#000000CC"
+  context.fillRect(x, y, width, size + 6)
+  context.fillStyle = "#ffffff"
+  context.fillText(data.label, x + 5, y + size)
+}
+
+function nodeAttributes(node: any) {
   const color = node.color || "#2196F3"
-  const label = node.label || ""
+  const rawLabel = node.label || ""
   return {
-    id: node.id,
     name: node.name || node.id,
     mac: node.mac || "",
     ip: node.ip || "",
+    rawLabel,
+    label: rawLabel || node.name || node.id,
     color,
-    label,
-    displayLabel: label || node.name || node.id,
-    stroke: darken(color, 0.25),
-    hover: brighten(color, 0.18),
+    borderColor: darken(color, 0.25),
+    hoverColor: brighten(color, 0.18),
+    size: NODE_SIZE,
   }
 }
 
-function edgeElementData(e: any) {
+function edgeAttributes(e: any) {
   return {
-    label: e.label || "",
+    protocol: e.label || "",
     source_port: e.source_port ?? null,
     destination_port: e.destination_port ?? null,
-    sourcePortLabel: `${e.source_port ?? ""}`,
-    targetPortLabel: `${e.destination_port ?? ""}`,
     bidir: !!e.bidir,
     color: e._color || colorForLabel(e.label || ""),
+    size: 2,
   }
 }
 
@@ -179,11 +126,13 @@ export default defineComponent({
 
   data() {
     return {
-      cy: null as cytoscape.Core | null,
-      layout: null as cytoscape.Layouts | null,
+      graph: null as Graph | null,
+      renderer: null as Sigma | null,
+      layout: null as InstanceType<typeof FA2Layout> | null,
 
       forceEnabled: true,
       zoomLevel: 1,
+      hoveredNode: null as string | null,
 
       // Bandeau bas
       selectedNodeInfos: [] as string[],
@@ -200,10 +149,6 @@ export default defineComponent({
       _edgeLabelsShown: false,
       _portLabelsShown: false,
 
-      // Throttle du redémarrage du layout pendant une capture
-      _layoutTimer: 0 as number,
-      _layoutPending: false,
-
       // Handlers pour cleanup
       resetHandler: null as (() => void) | null,
       graphUnsubs: [] as Array<() => void>,
@@ -215,7 +160,7 @@ export default defineComponent({
   },
 
   mounted() {
-    this.initCy()
+    this.initSigma()
 
     this.graphUnsubs.push(this.captureStore.onGraphUpdate((update: GraphUpdate) => {
       this._queue.push(update)
@@ -236,7 +181,8 @@ export default defineComponent({
     this.resetHandler = () => this.resetGraph()
     this.$bus?.on?.('reset', this.resetHandler)
 
-    if (this.forceEnabled) this.restartLayout()
+    this.startLayout()
+    if (!this.forceEnabled) this.layout?.stop()
   },
 
   beforeUnmount() {
@@ -249,10 +195,6 @@ export default defineComponent({
       cancelAnimationFrame(this._raf)
       this._raf = 0
     }
-    if (this._layoutTimer) {
-      window.clearTimeout(this._layoutTimer)
-      this._layoutTimer = 0
-    }
 
     if (this.resetHandler) {
       this.$bus?.off?.('reset', this.resetHandler)
@@ -260,13 +202,14 @@ export default defineComponent({
     }
 
     if (this.layout) {
-      try { this.layout.stop() } catch {}
+      try { this.layout.kill() } catch {}
       this.layout = null
     }
-    if (this.cy) {
-      this.cy.destroy()
-      this.cy = null
+    if (this.renderer) {
+      this.renderer.kill()
+      this.renderer = null
     }
+    this.graph = null
   },
 
   methods: {
@@ -276,103 +219,159 @@ export default defineComponent({
       })
     },
 
-    // === Initialisation Cytoscape ==========================================
-    initCy() {
-      const container = this.$refs.cyContainer as HTMLElement
-      const cy = cytoscape({
-        container,
-        style: GRAPH_STYLE,
-        minZoom: 0.1,
-        maxZoom: 5,
-      })
-      this.cy = markRaw(cy)
+    // === Initialisation Sigma ==============================================
+    initSigma() {
+      const container = this.$refs.sigmaContainer as HTMLElement
+      const graph = new Graph({ multi: true, type: "directed" })
+      this.graph = markRaw(graph)
 
-      cy.on("tap", "node", (evt) => this.onNodeClick(evt.target.id()))
-      cy.on("tap", (evt) => { if (evt.target === cy) this.clearNodeInfos() })
-      cy.on("mouseover", "node", (evt) => evt.target.addClass("hover"))
-      cy.on("mouseout", "node", (evt) => evt.target.removeClass("hover"))
-      cy.on("zoom", () => this.onZoom())
+      const renderer = new Sigma(graph, container, {
+        allowInvalidContainer: true,
+        // zoom = 1 / ratio : bornes équivalentes à l'ancien minZoom 0.1 / maxZoom 5
+        minCameraRatio: 0.2,
+        maxCameraRatio: 10,
+        defaultNodeType: "bordered",
+        defaultEdgeType: "straight",
+        nodeProgramClasses: { bordered: NodeBorderProgram },
+        edgeProgramClasses: { straight: EdgeArrowProgram, curved: EdgeCurvedArrowProgram },
+        renderEdgeLabels: true,
+        labelSize: 13,
+        labelColor: { color: "#ffffff" },
+        edgeLabelSize: 11,
+        edgeLabelColor: { color: "#E0E0E0" },
+        defaultDrawNodeLabel: drawNodeLabel,
+        defaultDrawNodeHover: drawNodeLabel,
+        nodeReducer: (node, data) => {
+          const res: any = { ...data }
+          if (node === this.hoveredNode) res.color = data.hoverColor ?? res.color
+          if (node === this.selectedNodeId) res.highlighted = true
+          return res
+        },
+        edgeReducer: (_edge, data) => {
+          const res: any = { ...data }
+          if (!this._edgeLabelsShown) {
+            res.label = null
+            return res
+          }
+          let label = data.protocol ?? ""
+          if (this._portLabelsShown && (data.source_port != null || data.destination_port != null)) {
+            label += ` ${data.source_port ?? ""}→${data.destination_port ?? ""}`
+          }
+          res.label = label
+          return res
+        },
+      })
+      this.renderer = markRaw(renderer)
+
+      renderer.on("clickNode", ({ node }) => this.onNodeClick(node))
+      renderer.on("clickStage", () => this.clearNodeInfos())
+      renderer.on("enterNode", ({ node }) => { this.hoveredNode = node; renderer.refresh() })
+      renderer.on("leaveNode", () => { this.hoveredNode = null; renderer.refresh() })
+
+      renderer.getCamera().on("updated", (state) => this.onZoom(1 / state.ratio))
     },
 
-    onZoom() {
-      if (!this.cy) return
-      const z = this.cy.zoom()
-      this.zoomLevel = z
+    onZoom(zoom: number) {
+      this.zoomLevel = zoom
 
-      const showLabels = z >= EDGE_LABEL_ZOOM
+      let changed = false
+      const showLabels = zoom >= EDGE_LABEL_ZOOM
       if (showLabels !== this._edgeLabelsShown) {
         this._edgeLabelsShown = showLabels
-        this.cy.edges().toggleClass("lbl", showLabels)
+        changed = true
       }
-      const showPorts = z >= PORT_LABEL_ZOOM
+      const showPorts = zoom >= PORT_LABEL_ZOOM
       if (showPorts !== this._portLabelsShown) {
         this._portLabelsShown = showPorts
-        this.cy.edges().toggleClass("ports", showPorts)
+        changed = true
       }
+      if (changed) this.renderer?.refresh()
     },
 
     // === Réinitialisation ==================================================
     resetGraph() {
-      if (this.layout) {
-        try { this.layout.stop() } catch {}
-        this.layout = null
-      }
-      this.cy?.elements().remove()
+      this.graph?.clear()
       this.clearNodeInfos()
     },
 
     // === Upserts ===========================================================
+    /** Barycentre des nœuds existants (point d'apparition des nouveaux). */
+    _spawnAnchor(): { x: number; y: number } {
+      const g = this.graph
+      if (!g || g.order === 0) return { x: 0, y: 0 }
+      let sx = 0, sy = 0
+      g.forEachNode((_n, attrs) => { sx += attrs.x; sy += attrs.y })
+      return { x: sx / g.order, y: sy / g.order }
+    },
+
     /** Ajoute ou met à jour un nœud. Retourne true si un élément a été ajouté. */
     upsertNode(node: any): boolean {
-      if (!this.cy || !node?.id) return false
-      const data = nodeElementData(node)
-      const ele = this.cy.getElementById(data.id)
-      if (ele.nonempty()) {
-        ele.data(data)
+      if (!this.graph || !node?.id) return false
+      const attrs = nodeAttributes(node)
+      if (this.graph.hasNode(node.id)) {
+        this.graph.mergeNodeAttributes(node.id, attrs)
         return false
       }
-      // Spawn autour du barycentre des nœuds existants ; sera raccroché à son
-      // voisin dans upsertEdge dès que sa première arête arrive.
-      const bb = this.cy.nodes().boundingBox()
-      const anchor = this.cy.nodes().empty()
-        ? { x: 0, y: 0 }
-        : { x: (bb.x1 + bb.x2) / 2, y: (bb.y1 + bb.y2) / 2 }
-      const added = this.cy.add({ group: "nodes", data, position: jitterAround(anchor.x, anchor.y, 200) })
-      added.scratch("_spawned", true)
+      const anchor = this._spawnAnchor()
+      const pos = jitterAround(anchor.x, anchor.y, 200)
+      this.graph.addNode(node.id, { ...attrs, ...pos, _spawned: true })
       return true
     },
 
     /** Ajoute ou met à jour une arête. Retourne true si un élément a été ajouté. */
     upsertEdge(e: any): boolean {
-      if (!this.cy || !e?.source || !e?.target) return false
+      if (!this.graph || !e?.source || !e?.target) return false
       // Arête orpheline : les deux extrémités doivent exister
-      if (this.cy.getElementById(e.source).empty() || this.cy.getElementById(e.target).empty()) return false
+      if (!this.graph.hasNode(e.source) || !this.graph.hasNode(e.target)) return false
 
-      const id = edgeKey(e)
-      const data = edgeElementData(e)
-      const ele = this.cy.getElementById(id)
-      if (ele.nonempty()) {
-        ele.data(data)
+      const key = edgeKey(e)
+      const attrs = edgeAttributes(e)
+      if (this.graph.hasEdge(key)) {
+        this.graph.mergeEdgeAttributes(key, attrs)
         return false
       }
-      const added = this.cy.add({ group: "edges", data: { id, source: e.source, target: e.target, ...data } })
-      added.toggleClass("lbl", this._edgeLabelsShown)
-      added.toggleClass("ports", this._portLabelsShown)
+      this.graph.addEdgeWithKey(key, e.source, e.target, attrs)
 
       // Un nœud fraîchement apparu est déplacé à côté de son premier voisin
-      // déjà placé : cola n'a plus qu'un ajustement local à faire.
-      const src = this.cy.getElementById(e.source)
-      const dst = this.cy.getElementById(e.target)
-      const srcSpawned = !!src.scratch("_spawned")
-      const dstSpawned = !!dst.scratch("_spawned")
+      // déjà placé : ForceAtlas2 n'a plus qu'un ajustement local à faire.
+      const srcSpawned = !!this.graph.getNodeAttribute(e.source, "_spawned")
+      const dstSpawned = !!this.graph.getNodeAttribute(e.target, "_spawned")
       if (srcSpawned !== dstSpawned) {
-        const fresh = srcSpawned ? src : dst
-        const settled = srcSpawned ? dst : src
-        const p = settled.position()
-        fresh.position(jitterAround(p.x, p.y))
-        fresh.removeScratch("_spawned")
+        const fresh = srcSpawned ? e.source : e.target
+        const settled = srcSpawned ? e.target : e.source
+        const p = jitterAround(
+          this.graph.getNodeAttribute(settled, "x"),
+          this.graph.getNodeAttribute(settled, "y")
+        )
+        this.graph.mergeNodeAttributes(fresh, { x: p.x, y: p.y, _spawned: false })
       }
       return true
+    },
+
+    /** Recalcule type/courbure des arêtes parallèles (multi-protocoles). */
+    refreshParallelEdges() {
+      if (!this.graph) return
+      indexParallelEdgesIndex(this.graph, {
+        edgeIndexAttribute: "parallelIndex",
+        edgeMinIndexAttribute: "parallelMinIndex",
+        edgeMaxIndexAttribute: "parallelMaxIndex",
+      })
+      this.graph.forEachEdge((edge, attrs) => {
+        const { parallelIndex, parallelMinIndex, parallelMaxIndex } = attrs as any
+        if (typeof parallelMinIndex === "number") {
+          this.graph!.mergeEdgeAttributes(edge, {
+            type: parallelIndex ? "curved" : "straight",
+            curvature: parallelIndex ? getCurvature(parallelIndex, parallelMaxIndex) : 0,
+          })
+        } else if (typeof parallelIndex === "number") {
+          this.graph!.mergeEdgeAttributes(edge, {
+            type: "curved",
+            curvature: getCurvature(parallelIndex, parallelMaxIndex),
+          })
+        } else {
+          this.graph!.setEdgeAttribute(edge, "type", "straight")
+        }
+      })
     },
 
     /**
@@ -394,7 +393,7 @@ export default defineComponent({
           });
           return;
         }
-        if (!this.cy) return
+        if (!this.graph) return
 
         this.resetGraph()
 
@@ -404,29 +403,39 @@ export default defineComponent({
         const edgeEntries = Object.entries(snapshot.edges || {});
         console.log(`[NetworkGraphComponent] Chargement de ${edgeEntries.length} arêtes`);
 
-        this.cy.batch(() => {
-          for (const [nodeId, node] of nodeEntries) {
-            if (!node) continue;
-            this.upsertNode({ ...node, id: node.id || nodeId })
-          }
-          for (const [edgeId, edge] of edgeEntries) {
-            if (!edge) continue;
-            if (!edge.source || !edge.target) {
-              console.warn(`[NetworkGraphComponent] Arête ${edgeId} invalide: source ou target manquante`);
-              continue;
-            }
-            if (!this.upsertEdge(edge)) {
-              console.warn(`[NetworkGraphComponent] Arête orpheline ignorée: ${edge.source} -> ${edge.target} (${edge.label})`);
-            }
-          }
-        })
+        // Positions initiales en couronne : ForceAtlas2 démêle ensuite.
+        let i = 0
+        const n = Math.max(nodeEntries.length, 1)
+        for (const [nodeId, node] of nodeEntries) {
+          if (!node) continue;
+          const id = node.id || nodeId
+          const angle = (2 * Math.PI * i++) / n
+          const radius = 100 + Math.sqrt(n) * 40
+          this.graph.addNode(id, {
+            ...nodeAttributes({ ...node, id }),
+            x: Math.cos(angle) * radius + (Math.random() - 0.5) * 30,
+            y: Math.sin(angle) * radius + (Math.random() - 0.5) * 30,
+          })
+        }
 
-        // Le snapshot est disposé par le layout complet : inutile de garder
-        // les marqueurs de spawn pour le raccrochage au voisin.
-        this.cy.nodes().removeScratch("_spawned")
+        for (const [edgeId, edge] of edgeEntries) {
+          if (!edge) continue;
+          if (!edge.source || !edge.target) {
+            console.warn(`[NetworkGraphComponent] Arête ${edgeId} invalide: source ou target manquante`);
+            continue;
+          }
+          if (!this.upsertEdge(edge)) {
+            console.warn(`[NetworkGraphComponent] Arête orpheline ignorée: ${edge.source} -> ${edge.target} (${edge.label})`);
+          }
+        }
 
-        this.cy.fit(undefined, 50)
-        if (this.forceEnabled) this.restartLayout()
+        this.refreshParallelEdges()
+
+        // Layout recréé avec des réglages adaptés à la taille du graphe.
+        this.startLayout()
+        if (!this.forceEnabled) this.layout?.stop()
+
+        this.renderer?.getCamera().animatedReset()
 
       } catch (error) {
         console.error("[NetworkGraphComponent] Erreur critique dans loadFromGraphData:", error);
@@ -435,39 +444,48 @@ export default defineComponent({
 
     // === Gestion label =====================================================
     onNodeClick(nodeId: string) {
-      const ele = this.cy?.getElementById(nodeId)
-      if (!ele || ele.empty()) return
+      if (!this.graph?.hasNode(nodeId)) return
+      const attrs = this.graph.getNodeAttributes(nodeId)
       this.selectedNodeId = nodeId
-      this.selectedNode = { ...ele.data() } as NodeData
-      this.editedLabel = ele.data("label") ?? ""
+      this.selectedNode = {
+        id: nodeId,
+        name: attrs.name,
+        mac: attrs.mac,
+        ip: attrs.ip,
+        color: attrs.color,
+        label: attrs.rawLabel,
+      }
+      this.editedLabel = attrs.rawLabel ?? ""
       this.selectedNodeInfos = this._buildNodeInfos(nodeId)
+      this.renderer?.refresh()
     },
     clearNodeInfos() {
       this.selectedNodeInfos = []
       this.selectedNode = null
       this.selectedNodeId = null
       this.editedLabel = ""
+      this.renderer?.refresh()
     },
     async editNodeLabel() {
-      if (!this.selectedNode || !this.selectedNodeId || !this.cy) return
-      const ele = this.cy.getElementById(this.selectedNodeId)
-      if (ele.empty()) return
+      if (!this.selectedNode || !this.selectedNodeId || !this.graph) return
+      if (!this.graph.hasNode(this.selectedNodeId)) return
       const newLabel = String(this.editedLabel ?? "").trim()
 
       // MAJ UI immédiate
-      ele.data({
-        label: newLabel,
-        displayLabel: newLabel || ele.data("name") || this.selectedNodeId,
+      const attrs = this.graph.getNodeAttributes(this.selectedNodeId)
+      this.graph.mergeNodeAttributes(this.selectedNodeId, {
+        rawLabel: newLabel,
+        label: newLabel || attrs.name || this.selectedNodeId,
       })
-      this.selectedNode = { ...ele.data() } as NodeData
+      this.selectedNode = { ...this.selectedNode, label: newLabel }
       this.selectedNodeInfos = this._buildNodeInfos(this.selectedNodeId)
 
       // Appel backend avec mac/ip/label
       try {
         this.isSavingLabel = true
         await invoke("add_label", {
-          mac: ele.data("mac") ?? "",
-          ip: ele.data("ip") ?? "",
+          mac: attrs.mac ?? "",
+          ip: attrs.ip ?? "",
           label: newLabel,
         })
       } catch (e) {
@@ -489,76 +507,67 @@ export default defineComponent({
 
     // === Bandeau infos =====================================================
     _buildNodeInfos(nodeId: string): string[] {
-      const ele = this.cy?.getElementById(nodeId)
-      if (!ele || ele.empty()) return ["Nœud introuvable"]
-      const n = ele.data()
+      if (!this.graph?.hasNode(nodeId)) return ["Nœud introuvable"]
+      const n = this.graph.getNodeAttributes(nodeId)
 
-      const connected = ele.connectedEdges()
       const protos = new Set<string>()
-      connected.forEach((e) => {
-        const label = e.data("label")
-        if (label) protos.add(String(label))
+      let degree = 0
+      this.graph.forEachEdge(nodeId, (_edge, attrs) => {
+        degree++
+        if (attrs.protocol) protos.add(String(attrs.protocol))
       })
 
       return [
-        `ID: ${n.id}`,
+        `ID: ${nodeId}`,
         `Nom: ${n.name ?? ""}`,
-        `Label: ${n.label || "N/A"}`,
+        `Label: ${n.rawLabel || "N/A"}`,
         `MAC: ${n.mac ?? ""}`,
         `IP: ${n.ip ?? ""}`,
         `Couleur: ${n.color}`,
-        `Degré: ${connected.length}`,
+        `Degré: ${degree}`,
         `Protocoles: ${[...protos].join(", ") || "—"}`,
       ]
     },
 
     // === Force Layout ======================================================
-    restartLayout() {
-      if (!this.cy) return
+    /** (Re)crée le superviseur ForceAtlas2 (worker) et le démarre. */
+    startLayout() {
+      if (!this.graph) return
       if (this.layout) {
-        try { this.layout.stop() } catch {}
+        try { this.layout.kill() } catch {}
+        this.layout = null
       }
-      this.layout = markRaw(this.cy.layout(FORCE_LAYOUT_OPTIONS))
-      this.layout.run()
-    },
-    /** Redémarre le layout au plus une fois toutes les 500 ms pendant une capture. */
-    scheduleLayoutRestart() {
-      if (!this.forceEnabled) return
-      if (this._layoutTimer) {
-        this._layoutPending = true
-        return
-      }
-      this.restartLayout()
-      this._layoutTimer = window.setTimeout(() => {
-        this._layoutTimer = 0
-        if (this._layoutPending) {
-          this._layoutPending = false
-          this.scheduleLayoutRestart()
-        }
-      }, 500)
+      const settings = forceAtlas2.inferSettings(this.graph)
+      this.layout = markRaw(new FA2Layout(this.graph, { settings }))
+      this.layout.start()
     },
     toggleForce() {
       if (this.forceEnabled) {
         this.forceEnabled = false
-        if (this.layout) {
-          try { this.layout.stop() } catch {}
-        }
+        this.layout?.stop()
       } else {
         this.forceEnabled = true
-        this.restartLayout()
+        if (this.layout) this.layout.start()
+        else this.startLayout()
       }
     },
 
     // === Export PNG ========================================================
     async downloadPng() {
-      if (!this.cy) return
+      if (!this.renderer) return
       const filePath = await save({
         filters: [{ name: "PNG File", extensions: ["png"] }],
         defaultPath: getCurrentDate() + "_network_graph_DR_Matrice.png",
       })
       if (!filePath) return
 
-      const blob = this.cy.png({ output: "blob", full: true, scale: 2, bg: "#ffffff" })
+      const { width, height } = this.renderer.getDimensions()
+      const blob = await toBlob(this.renderer, {
+        format: "png",
+        backgroundColor: "#ffffff",
+        width: width * 2,
+        height: height * 2,
+      })
       const ab = await blob.arrayBuffer()
       await writeFile(filePath, new Uint8Array(ab))
       console.log(`PNG exporté dans ${filePath}`)
@@ -577,45 +586,52 @@ export default defineComponent({
     },
     flushQueue() {
       const q = this._queue
-      if (!q.length || !this.cy) return
+      if (!q.length || !this.graph) return
 
-      let added = false
-      this.cy.batch(() => {
-        for (let i = 0; i < q.length; i++) {
-          if (this.applyUpdate(q[i])) added = true
-        }
-      })
+      let addedEdges = false
+      for (let i = 0; i < q.length; i++) {
+        if (this.applyUpdate(q[i]) === "edge") addedEdges = true
+      }
       this._queue.length = 0
 
-      if (added) this.scheduleLayoutRestart()
+      // Le superviseur ForceAtlas2 suit les ajouts tout seul ; il ne reste
+      // qu'à recalculer la courbure des arêtes parallèles.
+      if (addedEdges) this.refreshParallelEdges()
     },
-    /** Retourne true si un élément a été ajouté au graphe. */
-    applyUpdate(update: GraphUpdate | any): boolean {
-      if (!update) return false
+    /** Retourne "node" | "edge" si un élément a été ajouté au graphe. */
+    applyUpdate(update: GraphUpdate | any): "node" | "edge" | null {
+      if (!update) return null
       const u = this.normalizeGraphUpdate(update)
-      if (!u) return false
+      if (!u) return null
 
       switch (u.type) {
         case "NodeAdded":
-          return this.upsertNode(u.payload)
+          return this.upsertNode(u.payload) ? "node" : null
         case "NodeUpdated": {
           const node = u.payload
-          if (!node) return false
+          if (!node) return null
           const added = this.upsertNode(node)
 
-          if (this.selectedNodeId === node.id) {
-            const ele = this.cy!.getElementById(node.id)
-            this.selectedNode = { ...ele.data() } as NodeData
-            this.editedLabel = ele.data("label") ?? ""
+          if (this.selectedNodeId === node.id && this.graph?.hasNode(node.id)) {
+            const attrs = this.graph.getNodeAttributes(node.id)
+            this.selectedNode = {
+              id: node.id,
+              name: attrs.name,
+              mac: attrs.mac,
+              ip: attrs.ip,
+              color: attrs.color,
+              label: attrs.rawLabel,
+            }
+            this.editedLabel = attrs.rawLabel ?? ""
             this.selectedNodeInfos = this._buildNodeInfos(node.id)
           }
-          return added
+          return added ? "node" : null
         }
         case "EdgeAdded":
         case "EdgeUpdated":
-          return this.upsertEdge(u.payload)
+          return this.upsertEdge(u.payload) ? "edge" : null
       }
-      return false
+      return null
     },
   },
 })
@@ -636,7 +652,7 @@ export default defineComponent({
     </div>
 
     <!-- Graph -->
-    <div class="graph" ref="cyContainer"></div>
+    <div class="graph" ref="sigmaContainer"></div>
 
     <!-- Bandeau d'infos en bas -->
     <div class="bottom-info">
