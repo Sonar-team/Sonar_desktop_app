@@ -67,7 +67,24 @@ function jitterAround(x: number, y: number, radius = 120) {
 const EDGE_LABEL_ZOOM = 1.2
 const PORT_LABEL_ZOOM = 1.8
 
-const NODE_SIZE = 10
+// Tailles proportionnelles au trafic, en échelle log : les gros parleurs
+// ressortent sans écraser les hôtes discrets.
+const NODE_SIZE_MIN = 7
+const NODE_SIZE_MAX = 18
+function nodeSizeFor(bytes: number) {
+  return Math.min(NODE_SIZE_MAX, NODE_SIZE_MIN + 1.1 * Math.log2(1 + bytes / 2000))
+}
+const EDGE_SIZE_MIN = 1.2
+const EDGE_SIZE_MAX = 7
+function edgeSizeFor(bytes: number) {
+  return Math.min(EDGE_SIZE_MAX, EDGE_SIZE_MIN + 0.55 * Math.log2(1 + bytes / 1500))
+}
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} o`
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} ko`
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} Mo`
+  return `${(bytes / 1024 ** 3).toFixed(2)} Go`
+}
 
 // Courbure des arêtes parallèles (repris de l'exemple officiel @sigma/edge-curve)
 function getCurvature(index: number, maxIndex: number): number {
@@ -104,18 +121,20 @@ function nodeAttributes(node: any) {
     color,
     borderColor: darken(color, 0.25),
     hoverColor: brighten(color, 0.18),
-    size: NODE_SIZE,
   }
 }
 
 function edgeAttributes(e: any) {
+  const totalBytes = Number(e.total_bytes) || 0
   return {
     protocol: e.label || "",
     source_port: e.source_port ?? null,
     destination_port: e.destination_port ?? null,
     bidir: !!e.bidir,
+    count: Number(e.count) || 0,
+    total_bytes: totalBytes,
     color: e._color || colorForLabel(e.label || ""),
-    size: 2,
+    size: edgeSizeFor(totalBytes),
   }
 }
 
@@ -148,6 +167,9 @@ export default defineComponent({
       // Affichage des labels d'arêtes selon le zoom
       _edgeLabelsShown: false,
       _portLabelsShown: false,
+
+      // Taille du graphe lors du dernier inferSettings du layout
+      _layoutOrder: 0,
 
       // Handlers pour cleanup
       resetHandler: null as (() => void) | null,
@@ -290,6 +312,11 @@ export default defineComponent({
 
     // === Réinitialisation ==================================================
     resetGraph() {
+      if (this.layout) {
+        try { this.layout.kill() } catch {}
+        this.layout = null
+      }
+      this._layoutOrder = 0
       this.graph?.clear()
       this.clearNodeInfos()
     },
@@ -314,8 +341,16 @@ export default defineComponent({
       }
       const anchor = this._spawnAnchor()
       const pos = jitterAround(anchor.x, anchor.y, 200)
-      this.graph.addNode(node.id, { ...attrs, ...pos, _spawned: true })
+      this.graph.addNode(node.id, { ...attrs, ...pos, size: NODE_SIZE_MIN, _spawned: true })
       return true
+    },
+
+    /** Taille du nœud proportionnelle (log) au trafic cumulé de ses arêtes. */
+    updateNodeTrafficSize(nodeId: string) {
+      if (!this.graph?.hasNode(nodeId)) return
+      let bytes = 0
+      this.graph.forEachEdge(nodeId, (_edge, attrs) => { bytes += attrs.total_bytes || 0 })
+      this.graph.setNodeAttribute(nodeId, "size", nodeSizeFor(bytes))
     },
 
     /** Ajoute ou met à jour une arête. Retourne true si un élément a été ajouté. */
@@ -328,9 +363,13 @@ export default defineComponent({
       const attrs = edgeAttributes(e)
       if (this.graph.hasEdge(key)) {
         this.graph.mergeEdgeAttributes(key, attrs)
+        this.updateNodeTrafficSize(e.source)
+        this.updateNodeTrafficSize(e.target)
         return false
       }
       this.graph.addEdgeWithKey(key, e.source, e.target, attrs)
+      this.updateNodeTrafficSize(e.source)
+      this.updateNodeTrafficSize(e.target)
 
       // Un nœud fraîchement apparu est déplacé à côté de son premier voisin
       // déjà placé : ForceAtlas2 n'a plus qu'un ajustement local à faire.
@@ -512,9 +551,13 @@ export default defineComponent({
 
       const protos = new Set<string>()
       let degree = 0
+      let packets = 0
+      let bytes = 0
       this.graph.forEachEdge(nodeId, (_edge, attrs) => {
         degree++
         if (attrs.protocol) protos.add(String(attrs.protocol))
+        packets += attrs.count || 0
+        bytes += attrs.total_bytes || 0
       })
 
       return [
@@ -525,21 +568,38 @@ export default defineComponent({
         `IP: ${n.ip ?? ""}`,
         `Couleur: ${n.color}`,
         `Degré: ${degree}`,
+        `Trafic: ${formatBytes(bytes)} (${packets} paquets)`,
         `Protocoles: ${[...protos].join(", ") || "—"}`,
       ]
     },
 
     // === Force Layout ======================================================
-    /** (Re)crée le superviseur ForceAtlas2 (worker) et le démarre. */
+    /**
+     * (Re)crée le superviseur ForceAtlas2 (worker) et le démarre.
+     * ⚠️ Jamais sur un graphe vide : inferSettings y produit
+     * slowDown = 1 + log(0) = -Infinity et fige la simulation pour toujours.
+     */
     startLayout() {
-      if (!this.graph) return
+      if (!this.graph || this.graph.order === 0) return
       if (this.layout) {
         try { this.layout.kill() } catch {}
         this.layout = null
       }
+      this._layoutOrder = this.graph.order
       const settings = forceAtlas2.inferSettings(this.graph)
       this.layout = markRaw(new FA2Layout(this.graph, { settings }))
       this.layout.start()
+    },
+    /**
+     * Recrée le layout quand le graphe vient de se peupler ou a beaucoup
+     * grandi depuis le dernier inferSettings (slowDown/BarnesHut dépendent
+     * de la taille). Le superviseur suit les ajouts intermédiaires tout seul.
+     */
+    ensureLayoutSettings() {
+      if (!this.forceEnabled || !this.graph || this.graph.order === 0) return
+      if (!this.layout || this._layoutOrder === 0 || this.graph.order >= this._layoutOrder * 4) {
+        this.startLayout()
+      }
     },
     toggleForce() {
       if (this.forceEnabled) {
@@ -547,7 +607,7 @@ export default defineComponent({
         this.layout?.stop()
       } else {
         this.forceEnabled = true
-        if (this.layout) this.layout.start()
+        if (this.layout && this._layoutOrder > 0) this.layout.start()
         else this.startLayout()
       }
     },
@@ -597,6 +657,7 @@ export default defineComponent({
       // Le superviseur ForceAtlas2 suit les ajouts tout seul ; il ne reste
       // qu'à recalculer la courbure des arêtes parallèles.
       if (addedEdges) this.refreshParallelEdges()
+      this.ensureLayoutSettings()
     },
     /** Retourne "node" | "edge" si un élément a été ajouté au graphe. */
     applyUpdate(update: GraphUpdate | any): "node" | "edge" | null {

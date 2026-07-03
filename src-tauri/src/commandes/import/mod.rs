@@ -416,8 +416,13 @@ fn handle_pcap_file(
                 let label_lookup_ns = label_lookup_start.map(elapsed_ns_since).unwrap_or(0);
 
                 let graph_update_start = timing_sample.map(|_| Instant::now());
-                let graph_updates =
-                    graph.add_packet_flow(&owned_packet.flow, source_label, destination_label);
+                let graph_updates = graph.add_packet_flow(
+                    &owned_packet.flow,
+                    source_label,
+                    destination_label,
+                    1,
+                    owned_packet.len as u64,
+                );
                 let graph_update_ns = graph_update_start.map(elapsed_ns_since).unwrap_or(0);
 
                 let mut stats_ipc_ns = 0;
@@ -550,7 +555,13 @@ fn handle_pcap_file(
             //     matrix_count
             // );
 
-            graph.add_packet_flow(&owned_packet.flow, source_label, destination_label);
+            graph.add_packet_flow(
+                &owned_packet.flow,
+                source_label,
+                destination_label,
+                1,
+                owned_packet.len as u64,
+            );
 
             // Stats périodiques (optionnel)
             if (packet_count.is_multiple_of(1000) || packet_count == total)
@@ -926,7 +937,13 @@ pub fn import_matrix_file(
         let source_label = matrice_guard.get_label(&flow.data_link.source_mac, &row.ip_source);
         let destination_label =
             matrice_guard.get_label(&flow.data_link.destination_mac, &row.ip_destination);
-        graph_guard.add_packet_flow(&flow, source_label, destination_label);
+        graph_guard.add_packet_flow(
+            &flow,
+            source_label,
+            destination_label,
+            stats.count,
+            stats.total_bytes as u64,
+        );
     }
 
     info!(
@@ -1203,11 +1220,12 @@ mod tests {
 
         for row in rows {
             let (flow, stats) = row.to_flow_and_stats();
+            let (packets, bytes) = (stats.count, stats.total_bytes as u64);
             matrix.matrix.entry(flow.clone()).or_insert(stats);
             let source_label = matrix.get_label(&flow.data_link.source_mac, &row.ip_source);
             let destination_label =
                 matrix.get_label(&flow.data_link.destination_mac, &row.ip_destination);
-            graph.add_packet_flow(&flow, source_label, destination_label);
+            graph.add_packet_flow(&flow, source_label, destination_label, packets, bytes);
         }
 
         (matrix, graph)
@@ -1264,6 +1282,12 @@ mod tests {
         assert_eq!(matrix.matrix.len(), 1000, "1000 flux distincts");
         assert_eq!(graph.nodes.len(), 232, "un nœud par adresse IP distincte");
         assert!(graph.edges.len() > 100, "arêtes: {}", graph.edges.len());
+
+        // Les poids de trafic du fichier sont reportés sur les arêtes.
+        assert!(
+            graph.edges.values().all(|e| e.count > 0 && e.total_bytes > 0),
+            "chaque arête doit porter son trafic cumulé"
+        );
 
         let labelled = graph.nodes.values().filter(|n| n.label.is_some()).count();
         assert!(labelled >= 20, "nœuds labellisés: {labelled}");

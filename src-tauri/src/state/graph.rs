@@ -65,7 +65,9 @@ pub struct Edge {
     pub label: String,  // protocole (ex: "DNS", "TCP", "IPv6"...)
     pub source_port: Option<u16>,
     pub destination_port: Option<u16>,
-    pub bidir: bool, // true si trafic observé dans les deux sens
+    pub bidir: bool,      // true si trafic observé dans les deux sens
+    pub count: u64,       // paquets cumulés sur ce flux
+    pub total_bytes: u64, // octets cumulés sur ce flux
 }
 
 impl Edge {
@@ -79,7 +81,15 @@ impl Edge {
             source_port: None,
             destination_port: None,
             bidir: false,
+            count: 0,
+            total_bytes: 0,
         }
+    }
+
+    pub fn with_traffic(mut self, count: u64, total_bytes: u64) -> Self {
+        self.count = count;
+        self.total_bytes = total_bytes;
+        self
     }
 
     pub fn with_label(mut self, label: String) -> Self {
@@ -104,6 +114,8 @@ impl GraphData {
         packet: &PacketFlowOwned,
         source_label: Option<String>,
         destination_label: Option<String>,
+        packets: u64,
+        bytes: u64,
     ) -> Vec<GraphUpdate> {
         use std::collections::hash_map::Entry;
         let mut updates = Vec::new();
@@ -177,15 +189,24 @@ impl GraphData {
 
                 match self.edges.get_mut(&edge_key) {
                     Some(edge) => {
-                        // Arête existe déjà (A—B:proto). Si on observe le sens inverse pour la
-                        // première fois, on passe bidir=true et on notifie le front.
-                        if !edge.bidir {
-                            // À la création, edge.source == a_id et edge.target == b_id.
-                            // Si current_is_a_to_b == false -> on a vu b->a -> bidir.
-                            if !current_is_a_to_b {
-                                edge.bidir = true;
-                                updates.push(GraphUpdate::EdgeUpdated(edge.clone()));
-                            }
+                        // Arête existe déjà (A—B:proto).
+                        let mut notify = false;
+
+                        // Si on observe le sens inverse pour la première fois,
+                        // on passe bidir=true et on notifie le front.
+                        // À la création, edge.source == a_id et edge.target == b_id.
+                        // Si current_is_a_to_b == false -> on a vu b->a -> bidir.
+                        if !edge.bidir && !current_is_a_to_b {
+                            edge.bidir = true;
+                            notify = true;
+                        }
+
+                        if accumulate_traffic(edge, packets, bytes) {
+                            notify = true;
+                        }
+
+                        if notify {
+                            updates.push(GraphUpdate::EdgeUpdated(edge.clone()));
                         }
                     }
                     None => {
@@ -195,7 +216,8 @@ impl GraphData {
                             .with_ports(
                                 packet.transport.as_ref().and_then(|t| t.source_port),
                                 packet.transport.as_ref().and_then(|t| t.destination_port),
-                            );
+                            )
+                            .with_traffic(packets, bytes);
                         self.edges.insert(edge_key, edge.clone());
                         updates.push(GraphUpdate::NewEdge(edge));
                     }
@@ -258,15 +280,23 @@ impl GraphData {
 
         match self.edges.get_mut(&edge_key) {
             Some(edge) => {
+                let mut notify = false;
                 if !edge.bidir && !current_is_a_to_b {
                     edge.bidir = true;
+                    notify = true;
+                }
+                if accumulate_traffic(edge, packets, bytes) {
+                    notify = true;
+                }
+                if notify {
                     updates.push(GraphUpdate::EdgeUpdated(edge.clone()));
                 }
             }
             None => {
                 let edge = Edge::new(a_id.clone(), b_id.clone())
                     .with_label(l2_proto)
-                    .with_ports(None, None); // pas de ports en L2
+                    .with_ports(None, None) // pas de ports en L2
+                    .with_traffic(packets, bytes);
                 self.edges.insert(edge_key, edge.clone());
                 updates.push(GraphUpdate::NewEdge(edge));
             }
@@ -337,6 +367,16 @@ impl GraphData {
 }
 
 // ————— helpers —————
+
+/// Cumule paquets/octets sur une arête. Retourne true quand le volume change
+/// d'ordre de grandeur (log2) : l'épaisseur au rendu étant logarithmique,
+/// inutile de notifier le front à chaque paquet.
+fn accumulate_traffic(edge: &mut Edge, packets: u64, bytes: u64) -> bool {
+    let bucket_before = 64 - edge.total_bytes.leading_zeros();
+    edge.count = edge.count.saturating_add(packets);
+    edge.total_bytes = edge.total_bytes.saturating_add(bytes);
+    (64 - edge.total_bytes.leading_zeros()) != bucket_before
+}
 
 fn is_valid_ip(ip_type: Option<&IpType>) -> bool {
     // invalide si None ou Unknown

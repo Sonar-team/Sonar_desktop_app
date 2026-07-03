@@ -564,7 +564,13 @@ pub fn spawn_processing_thread(
                     #[cfg(feature = "capture_timing")]
                     let graph_update_start = timing_sample.map(|_| Instant::now());
                     let graph_updates = if let Ok(mut g) = graph.lock() {
-                        g.add_packet_flow(&record_owned.flow, source_label, destination_label)
+                        g.add_packet_flow(
+                            &record_owned.flow,
+                            source_label,
+                            destination_label,
+                            1,
+                            record_owned.len as u64,
+                        )
                     } else {
                         Vec::new()
                     };
@@ -789,8 +795,13 @@ pub fn spawn_processing_thread_cli(
 
                     let graph = app.state::<Arc<Mutex<GraphData>>>();
                     if let Ok(mut g) = graph.lock() {
-                        let updates =
-                            g.add_packet_flow(&record_owned.flow, source_label, destination_label);
+                        let updates = g.add_packet_flow(
+                            &record_owned.flow,
+                            source_label,
+                            destination_label,
+                            1,
+                            record_owned.len as u64,
+                        );
                         if !updates.is_empty() {
                             for update in updates {
                                 if let Err(e) =

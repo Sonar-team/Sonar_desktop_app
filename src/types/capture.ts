@@ -98,6 +98,8 @@ export interface EdgeData {
   source_port?: string | number | null;
   destination_port?: string | number | null;
   bidir?: boolean;
+  count?: number;
+  total_bytes?: number;
   _color?: string;
 }
 
