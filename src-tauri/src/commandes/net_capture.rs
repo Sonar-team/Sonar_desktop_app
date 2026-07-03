@@ -4,8 +4,10 @@ use log::info;
 use tauri::{AppHandle, State, command, ipc::Channel};
 
 use crate::{
+    commandes::import::labels_to_matrix,
     errors::CaptureStateError,
     events::CaptureEvent,
+    setup::labels::update_labels_in_state,
     state::{
         capture::{
             CaptureState, capture_config::CaptureConfig, capture_handle::CaptureHandle,
@@ -13,6 +15,7 @@ use crate::{
         },
         flow_matrix::FlowMatrix,
         graph::GraphData,
+        labels_list::LabelStore,
     },
 };
 
@@ -21,9 +24,13 @@ pub fn start_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
     app: AppHandle,
     on_event: Channel<CaptureEvent<'static>>,
+    state_label: State<'_, Arc<Mutex<FlowMatrix>>>,
+    label_store: State<'_, Arc<Mutex<LabelStore>>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
+    let mut state_label = state_label.lock()?;
+    labels_to_matrix(label_store, &mut state_label)?;
+    update_labels_in_state(&app, &mut state_label)?;
     let mut state_lock = state.lock()?;
-
     if state_lock.capture.is_some() {
         println!("Déjà en cours.");
         return Ok(state_lock.status.clone());

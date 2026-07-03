@@ -1,24 +1,23 @@
 <template>
   <div class="top-bar">
-    <button class="image-btn" @click="start" title="Démarrer (ctrl+p)" :disabled="isRunning">
+    <button class="image-btn" @click="start" title="Démarrer (ctrl+p)" :disabled="isRunning || activePanel !== null">
       <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="stop" title="Arrêter (ctrl+shift+p)" :disabled="!isRunning">
-      🛑
-    </button>
-    <button class="image-btn" @click="reset" title="Réinitialiser (ctrl+shift+r)">🔄</button>
+    <button class="image-btn" @click="stop" title="Arrêter (ctrl+shift+p)" :disabled="!isRunning">🛑</button>
+    <button class="image-btn" @click="reset" :disabled="activePanel !== null" title="Réinitialiser (ctrl+shift+r)">🔄</button>
     <button class="image-btn"  title="Config (ctrl+,)" :disabled="isRunning" @click="handleConfigClick">
       <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
 
     <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
-    <button class="image-btn" @click="displayPcapOpener" title="Ouvrir (ctrl+o)">📄</button>
-    <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">❌</button>
+
+    <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
+    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
+    
+    <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">​❎</button>
     <button class="image-btn" @click="export_logs" title="Logs (ctrl+l)">📒</button>
-    <button class="image-btn" @click="handleFilterClick" title="Filtrer (ctrl+f)">
-      <img src="/src/assets/filter-solid-full.svg" alt="Flux" class="icon-img" />
-    </button>
+    <button class="image-btn" @click="handleFilterClick" :disabled="isRunning" title="Filtrer (ctrl+f)">🔍</button>
   </div>
 </template>
 
@@ -38,9 +37,25 @@ import { useCaptureStore } from '../../store/capture';
 import { CaptureEvent } from '../../types/capture';
 import { requestAppExit } from '../../utils/appExit';
 
+type Panel = 'config' | 'pcap' | 'csv' | 'filter';
+
 export default {
   name: "TopBar",
-  emits: ['toggle-config', 'toggle-pcap', 'toggle-filter', 'toggle-graph'],
+  emits: ['toggle-config', 'toggle-pcap','toggle-csv', 'toggle-filter', 'toggle-graph'],
+
+  props: {
+    configOpen: Boolean,
+    filterOpen: Boolean,
+    csvOpen: Boolean,
+    pcapOpen: Boolean,
+  },
+
+  watch: {
+  configOpen(val) { if (!val && this.activePanel === 'config') this.activePanel = null; },
+  filterOpen(val) { if (!val && this.activePanel === 'filter') this.activePanel = null; },
+  csvOpen(val)    { if (!val && this.activePanel === 'csv') this.activePanel = null; },
+  pcapOpen(val)   { if (!val && this.activePanel === 'pcap') this.activePanel = null; },
+},
 
   computed: {
     buttonText(): string {
@@ -58,6 +73,7 @@ export default {
     return {
       showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
       shortcuts: [] as string[],
+      activePanel: null as Panel | null,
     };
   },
   mounted() {
@@ -87,6 +103,8 @@ export default {
 
     // Quit
     this.bindShortcut('CommandOrControl+Q', () => this.quit());
+
+    useCaptureStore().refreshHasData(); // Vérifie s'il y a déjà des données au montage pour ajuster l'état de hasData
   },
 
   async beforeUnmount() {
@@ -110,45 +128,88 @@ export default {
     },
     async export_logs() {
       info("export logs")
-      const response = await save({
-        filters: [{
-          name: '.log',
-          extensions: ['log']
-        }],
-        title: 'Sauvegarder les logs',
-        defaultPath: 'sonar.log'
-      });
 
-      if (response) {
-        // Attendez que l'invocation d'API pour sauvegarder soit terminée
-        const saveResponse = await invoke('export_logs', { destination: response });
-        info("Sauvegarde terminée:", saveResponse);
-        return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
-      } else {
-        info("Aucun chemin de fichier sélectionné");
-        throw new Error("Sauvegarde annulée ou chemin non sélectionné");
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
       }
-    },
+
+      if (this.activePanel !== null) {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      }
+      
+      useCaptureStore().isImporting = true;
+
+      try{
+        const response = await save({
+          filters: [{
+            name: '.log',
+            extensions: ['log']
+          }],
+          title: 'Sauvegarder les logs',
+          defaultPath: 'sonar.log'
+        });
+
+        if (response) {
+          // Attendez que l'invocation d'API pour sauvegarder soit terminée
+          const saveResponse = await invoke('export_logs', { destination: response });
+          info("Sauvegarde terminée:", saveResponse);
+          return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
+        } else {
+          info("Aucun chemin de fichier sélectionné");
+          throw new Error("Sauvegarde annulée ou chemin non sélectionné");
+        } 
+      } finally {
+        useCaptureStore().isImporting = false;
+    }
+  },
 
     async SaveAsCsv() {
-      info("Save as csv")
-      save({
-        filters: [{
-          name: '.csv',
-          extensions: ['csv']
-        }],
-        title: 'Sauvegarder la matrice de flux',
-        defaultPath: getCurrentDate()+ '_DR_Matrice.csv' // Set the default file name here
-      
-      }).then((response) => 
-        invoke('export_csv', { path: response })
-          .then((response: any) => 
-            info("response: ", response))
-          .catch((error: any) => 
-            error("error: ", error))
-      )
+      info("Save as csv");
+
+       if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
+      if (this.activePanel !== null) {
+        this.$emit(`toggle-${this.activePanel}`, false)  // Ferme le panneau ouvert avant de sauvegarder
+      }
+
+      useCaptureStore().isImporting = true;
+
+      try {
+        const response = await save({
+          filters: [{ name: '.csv', extensions: ['csv'] }],
+          title: 'Sauvegarder la matrice de flux',
+          defaultPath: getCurrentDate() + '_DR_Matrice.csv'
+        });
+
+        if (response) {
+          const saveResponse = await invoke('export_csv', { path: response });
+          info("response: ", saveResponse);
+        } else {
+          info("Aucun chemin sélectionné");
+        }
+      } catch (err) {
+        error("Erreur sauvegarde csv: ", err);
+      } finally {
+        useCaptureStore().isImporting = false;
+      }
     },
     async SaveAsXlsx() {
+
+       if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+      
+      if (this.activePanel !== null) {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      }
+
+      useCaptureStore().isImporting = true;
+
       try {
         info("Début de la sauvegarde en xlsx");
         const response = await save({
@@ -172,6 +233,9 @@ export default {
       } catch (error) {
         error("Erreur lors de la sauvegarde en xlsx:", error);
         throw error; // Relancer l'erreur pour la gestion dans quit()
+      } finally {
+        this.activePanel = null;
+        useCaptureStore().isImporting = false;
       }
     },
     async triggerSave() {
@@ -181,27 +245,92 @@ export default {
     },
     async reset() {
       info("reset")
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
       await invoke('reset_capture');
+      await useCaptureStore().refreshHasData();
       this.$bus.emit('reset');
     },
 
 
     handleConfigClick() {
       info("[TopBar] Bouton config cliqué");
+
+      if (this.captureStore.isRunning) {
+        return;
+      }
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
+
+      if (this.activePanel !== null && this.activePanel !== 'config') {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      };
+      this.activePanel = 'config';
       this.$emit('toggle-config');
     },
     displayPcapOpener() {
       info("[TopBar] Bouton open cliqué");
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
+      if (useCaptureStore().hasData || this.captureStore.isRunning) return;
+      if (this.activePanel !== null && this.activePanel !== 'pcap') {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      };
+      this.activePanel = 'pcap';
       this.$emit('toggle-pcap');
     },
-    handleFilterClick() {
-      info("[TopBar] Bouton filter cliqué");
-      this.$emit('toggle-filter');
+    displayCsvOpener() {
+      info("[TopBar] Bouton open cliqué");
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
+      if (this.captureStore.isRunning) return; // Empêche d'ouvrir le panneau d'import CSV si la matrice de flux contient déjà des données ou si une capture est en cours
+      if (this.activePanel !== null && this.activePanel !== 'csv') {
+        this.$emit(`toggle-${this.activePanel}`, false) // Ferme le panneau ouvert avant d'ouvrir le panneau d'import CSV
+      };
+      this.activePanel = 'csv';
+      this.$emit('toggle-csv');
     },
-    async start() {
+    handleFilterClick() {
+
       if (this.captureStore.isRunning) {
         return;
       }
+
+      info("[TopBar] Bouton filter cliqué");
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
+      if (this.activePanel !== null && this.activePanel !== 'filter') {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      };
+      this.activePanel = 'filter';
+      this.$emit('toggle-filter');
+    },
+    async start() {
+      if (this.activePanel !== null || useCaptureStore().isImporting) return;
+
+      if (this.captureStore.isRunning) {
+        return;
+      }
+
       const onEvent = new Channel<CaptureEvent>();
       this.captureStore.setChannel(onEvent); // 🟢 rendre le Channel accessible
 
@@ -213,8 +342,9 @@ export default {
         })
         .catch(displayCaptureError);
     },
+
     async stop() {
-      if (!this.captureStore.isRunning) {
+      if (!this.captureStore.isRunning || useCaptureStore().isImporting) {
         return;
       }
       const onEvent = this.captureStore.getChannel();
@@ -224,13 +354,20 @@ export default {
           this.captureStore.updateStatus(typedStatus);
           info('Capture arrêtée : ' + this.captureStore.isRunning);
         })
-        .catch(displayCaptureError);
+        .catch(displayCaptureError)
+        .finally(() =>useCaptureStore().refreshHasData());
     },
     toggleView() {
       info('Vue basculée');
     },
+
     async quit() {
+      info('Fermeture demandée');
       await requestAppExit();
+    },
+
+    toggleConfig() {
+      info('Ouverture panneau config'); 
     }
   }
 }

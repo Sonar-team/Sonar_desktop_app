@@ -191,6 +191,7 @@ impl FlowMatrix {
         self.label
             .get(&(mac.to_string(), ip.to_string()))
             .or_else(|| self.label.get(&(String::new(), ip.to_string())))
+            .or_else(|| self.label.get(&(mac.to_string(), String::new())))
             .cloned()
     }
 
@@ -257,6 +258,21 @@ mod tests {
 
         assert_eq!(
             matrix.get_label("aa:bb:cc:dd:ee:ff", "8.8.8.8"),
+            Some("google.com".to_string())
+        );
+    }
+
+    #[test]
+    fn get_label_falls_back_to_mac_only_label() {
+        let mut matrix = FlowMatrix::new();
+        matrix.add_label(
+            "bc:24:11:ff:3e:15".to_string(),
+            String::new(),
+            "google.com".to_string(),
+        );
+
+        assert_eq!(
+            matrix.get_label("bc:24:11:ff:3e:15", "192.168.1.105"),
             Some("google.com".to_string())
         );
     }
