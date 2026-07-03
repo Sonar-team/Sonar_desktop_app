@@ -1,0 +1,31 @@
+mac_source,mac_destination,vlan_id,protocol_data_link,ip_source,ip_source_type,label_source,ip_destination,ip_destination_type,label_destination,port_source,port_destination,protocol_transport,application_protocol,count,total_bytes,last_seen
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,2607:6bc0::10,Publique,,34390,443,Tcp,,5,516,2026-07-03 15:09:34
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,2607:6bc0::10,Publique,,34386,443,Tcp,TLS,6,770,2026-07-03 15:09:40
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,2607:6bc0::10,Publique,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,443,34390,Tcp,,3,344,2026-07-03 15:09:34
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,ARP,192.168.1.181,Privée,pc sonar,192.168.1.254,Privée,,,,,,1,84,2026-07-03 15:09:37
+44:15:24:20:a5:64,01:80:c2:00:00:0e,,LLDP,,,,,,,,,,,3,240,2026-07-03 15:09:40
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,fe80::4615:24ff:fe20:a564,Link-Local,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,,,ICMPv6,,1,172,2026-07-03 15:09:38
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,fe80::4615:24ff:fe20:a564,Link-Local,,,,ICMPv6,,1,156,2026-07-03 15:09:38
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,2607:6bc0::10,Publique,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,443,34410,Tcp,,9,860,2026-07-03 15:09:40
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,2607:6bc0::10,Publique,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,443,34390,Tcp,TLS,1,220,2026-07-03 15:09:34
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,2607:6bc0::10,Publique,,34394,443,Tcp,TLS,1,220,2026-07-03 15:09:35
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,2607:6bc0::10,Publique,,34394,443,Tcp,,6,602,2026-07-03 15:09:35
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,2607:6bc0::10,Publique,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,443,34394,Tcp,TLS,1,220,2026-07-03 15:09:35
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,2607:6bc0::10,Publique,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,443,34394,Tcp,,6,590,2026-07-03 15:09:35
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,2600:1901:0:3084::,Publique,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,443,55918,Tcp,TLS,1,220,2026-07-03 15:09:33
+44:15:24:20:a5:64,01:80:c2:00:00:00,,Unknown (0x0026),,,,,,,,,,,5,360,2026-07-03 15:09:40
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,2600:1901:0:3084::,Publique,,55918,443,Tcp,TLS,1,220,2026-07-03 15:09:33
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,fe80::b861:e852:5fa3:d3e5,Link-Local,pc sonar,fe80::4615:24ff:fe20:a564,Link-Local,,,,ICMPv6,,1,156,2026-07-03 15:09:36
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,2607:6bc0::10,Publique,,34390,443,Tcp,TLS,6,770,2026-07-03 15:09:40
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,2607:6bc0::10,Publique,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,443,34386,Tcp,,3,344,2026-07-03 15:09:33
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,2607:6bc0::10,Publique,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,443,34386,Tcp,TLS,1,220,2026-07-03 15:09:33
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,2607:6bc0::10,Publique,,34386,443,Tcp,,6,602,2026-07-03 15:09:33
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,2606:50c0:8002::154,Publique,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,443,42718,Tcp,,9,860,2026-07-03 15:09:40
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,2600:1901:0:3084::,Publique,,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,443,55918,Tcp,,4,418,2026-07-03 15:09:33
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,ARP,192.168.1.254,Privée,,192.168.1.181,Privée,pc sonar,,,,,1,120,2026-07-03 15:09:37
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,2600:1901:0:3084::,Publique,,55918,443,Tcp,,4,430,2026-07-03 15:09:33
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv4,192.168.1.181,Privée,pc sonar,35.190.46.17,Publique,,52744,443,Tcp,,9,660,2026-07-03 15:09:40
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,2607:6bc0::10,Publique,,34410,443,Tcp,,9,860,2026-07-03 15:09:40
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv4,35.190.46.17,Publique,,192.168.1.181,Privée,pc sonar,443,52744,Tcp,,9,660,2026-07-03 15:09:40
+44:15:24:20:a5:64,e0:d5:5e:28:9b:d4,,IPv6,fe80::4615:24ff:fe20:a564,Link-Local,,fe80::b861:e852:5fa3:d3e5,Link-Local,pc sonar,,,ICMPv6,,1,172,2026-07-03 15:09:36
+e0:d5:5e:28:9b:d4,44:15:24:20:a5:64,,IPv6,2001:861:3fc7:9b00:e09f:22b:19f7:888e,Publique,pc sonar,2606:50c0:8002::154,Publique,,42718,443,Tcp,,9,860,2026-07-03 15:09:40

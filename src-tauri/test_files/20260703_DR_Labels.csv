@@ -1,0 +1,10 @@
+mac,ip,label
+e0:d5:5e:28:9b:d4,192.168.1.181,PC Sonar
+44:15:24:20:a5:64,192.168.1.254,Passerelle
+44:15:24:20:a5:64,fe80::4615:24ff:fe20:a564,Passerelle link-local
+e0:d5:5e:28:9b:d4,,Machine de capture
+,2001:861:3fc7:9b00:e09f:22b:19f7:888e,PC Sonar public
+,35.190.46.17,Google Cloud
+,2600:1901:0:3084::/64,Serveur GCP (CIDR)
+"01:80:c2:00:00:0e","",LLDP multicast
+,2606:50c0:8002::154,

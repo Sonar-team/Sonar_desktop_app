@@ -41,7 +41,7 @@ import TopBar from '../components/NavBar/TopBar.vue';
 import StatusBar from '../components/NavBar/status-bar/StatusBar.vue';
 import ConfigPanel from '../components/AnalyseView/panels/ConfigPanel.vue';
 import BottomLong from '../components/AnalyseView/BottomLong.vue';
-import ImportPanel from '../components/AnalyseView/panels/ImportPalnel.vue';
+import ImportPanel from '../components/AnalyseView/panels/ImportPanel.vue';
 import Filter from '../components/AnalyseView/panels/Filter.vue';
 
 export default defineComponent({

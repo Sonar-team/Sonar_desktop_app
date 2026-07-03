@@ -52,6 +52,7 @@ src-tauri/vendor/**/target/**.so
 src-tauri/vendor/**/target/**.dylib
 src-tauri/vendor/**/target/**.dll
 src-tauri/vendor/**/target/**.exe
+!src-tauri/test_files/*.csv
 
 vuln.txt
 

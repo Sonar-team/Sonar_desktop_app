@@ -613,19 +613,7 @@ pub fn get_label_rows(
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
 ) -> Result<Vec<(String, String, String)>, CaptureStateError> {
     let label_store = label_store.lock().unwrap();
-    let label_rows = label_store.get();
-
-    if label_rows.is_empty() {
-        return Ok(label_rows.clone());
-    }
-
-    let filtered_label_rows =
-        if !is_mac_address(&label_rows[0].0) && !is_ip_address(&label_rows[0].1) {
-            label_rows.iter().skip(1).cloned().collect()
-        } else {
-            label_rows.clone()
-        };
-    Ok(filtered_label_rows)
+    Ok(label_store.get().clone())
 }
 
 #[tauri::command(async)]
@@ -634,7 +622,6 @@ pub fn clear_label_store(
 ) -> Result<(), CaptureStateError> {
     let mut labels = label_store.lock().unwrap();
     labels.clear();
-    println!("LabelStore cleared");
     Ok(())
 }
 
@@ -675,17 +662,11 @@ fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
     let mut same_ip_different_mac: ConflictsList = Vec::new();
     let mut same_ip_different_label: ConflictsList = Vec::new();
 
-    let x = if is_mac_address(&rows[0].0) || is_ip_address(&rows[0].1) {
-        0
-    } else {
-        1
-    };
-    println!("{}", x);
-    for (i, (mac1, ip1, label1)) in rows.iter().enumerate().skip(x) {
+    let skip = usize::from(rows.first().is_some_and(is_header_row));
+    for (i, (mac1, ip1, label1)) in rows.iter().enumerate().skip(skip) {
         for (mac2, ip2, label2) in rows[i + 1..].iter() {
             if ip1 == ip2 && !ip1.is_empty() {
                 if mac1 != mac2 {
-                    eprintln!("⚠️  IP '{}' : MAC '{}' vs '{}'", ip1, mac1, mac2);
                     same_ip_different_mac.push((
                         ip1.to_string(),
                         mac1.to_string(),
@@ -694,7 +675,6 @@ fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
                 }
 
                 if label1 != label2 {
-                    eprintln!("⚠️  IP '{}' : label '{}' vs '{}'", ip1, label1, label2);
                     same_ip_different_label.push((
                         ip1.to_string(),
                         label1.to_string(),
@@ -719,7 +699,6 @@ fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
 pub fn verif_mac_ip_format(csv_path: String) -> Result<(), CaptureStateError> {
     let mut invalid_ip: Vec<String> = Vec::new();
     let mut invalid_mac: Vec<String> = Vec::new();
-    println!("verif_mac_ip_format called with csv_path: {:?}", csv_path);
 
     let file = match std::fs::read_to_string(&csv_path) {
         Ok(csv_data) => csv_data,
@@ -728,15 +707,9 @@ pub fn verif_mac_ip_format(csv_path: String) -> Result<(), CaptureStateError> {
     };
 
     let rows: Vec<(String, String, String)> = file.lines().filter_map(parse_label_row).collect();
-    println!("rows in verif_mac_ip_format: {:?}", rows);
 
-    let x = if is_mac_address(&rows[0].0) || is_ip_address(&rows[0].1) {
-        0
-    } else {
-        1
-    };
-
-    for (mac, ip, _label) in rows.iter().skip(x) {
+    let skip = usize::from(rows.first().is_some_and(is_header_row));
+    for (mac, ip, _label) in rows.iter().skip(skip) {
         if !is_ip_address(ip) && !ip.is_empty() {
             invalid_ip.push(ip.to_string());
         }
@@ -767,6 +740,12 @@ fn is_mac_address(value: &str) -> bool {
             .all(|p| p.len() == 2 && p.chars().all(|c| c.is_ascii_hexdigit()))
 }
 
+// Une ligne d'en-tête ("mac,ip,label") ne peut être que la première du fichier :
+// on la reconnaît parce que ni son champ MAC ni son champ IP ne sont des adresses valides.
+fn is_header_row((mac, ip, _label): &(String, String, String)) -> bool {
+    !is_mac_address(mac) && !is_ip_address(ip)
+}
+
 #[tauri::command(async)]
 pub fn import_label_file(
     incoming_file_path: String,
@@ -788,20 +767,17 @@ pub fn import_label_file(
             Err(error) => return Err(error.into()),
         };
 
-        let labels: Vec<String> = file.lines().map(|l| l.to_string()).collect();
+        let mut rows: Vec<(String, String, String)> =
+            file.lines().filter_map(parse_label_row).collect();
 
-        for label in labels {
-            let Some((mac, ip, label)) = parse_label_row(&label) else {
-                continue;
-            };
-
-            label_store.add((mac, ip, label))
+        // L'en-tête éventuel est écarté ici pour que le store ne contienne que des données.
+        if rows.first().is_some_and(is_header_row) {
+            rows.remove(0);
         }
 
-        println!(
-            "copie du contenu de {:?} dans l'état partagé 'LabelStore' effectuée",
-            &incoming_file_path
-        );
+        for row in rows {
+            label_store.add(row)
+        }
     }
 
     let mut state_label = state_label.lock().unwrap();
@@ -814,17 +790,15 @@ pub fn labels_to_matrix(
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
     matrice: &mut FlowMatrix,
 ) -> Result<(), CaptureStateError> {
-    let mut label_store = label_store.lock().unwrap();
-    load_labels_from_folder(&mut label_store, matrice)
+    let label_store = label_store.lock().unwrap();
+    copy_labels_to_matrix(&label_store, matrice)
 }
 
-pub fn load_labels_from_folder(
-    label_store: &mut LabelStore,
+pub fn copy_labels_to_matrix(
+    label_store: &LabelStore,
     matrice: &mut FlowMatrix,
 ) -> Result<(), CaptureStateError> {
-    let rows = label_store.get();
-
-    for (mac, ip, label) in rows {
+    for (mac, ip, label) in label_store.get() {
         matrice.add_label(mac.to_string(), ip.to_string(), label.to_string());
     }
 
@@ -958,6 +932,28 @@ mod tests {
     }
 
     #[test]
+    fn empty_file_mac_ip_format_returns_ok() {
+        let dir = TempDir::new("sonar_test_empty_file_mac_ip");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(&file_path, "").unwrap();
+
+        let result = verif_mac_ip_format(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn empty_file_conflicts_returns_ok() {
+        let dir = TempDir::new("sonar_test_empty_file_conflicts");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(&file_path, "").unwrap();
+
+        let result = verif_labels_conflicts(file_path.to_str().unwrap().to_string());
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
     fn no_conflict_returns_ok() {
         let dir = TempDir::new("sonar_test_no_conflict");
         let file_path = dir.path().join("labels.csv");
@@ -1045,8 +1041,72 @@ mod tests {
             label_store.add(row);
         }
 
-        load_labels_from_folder(&mut label_store, &mut matrix).unwrap();
+        copy_labels_to_matrix(&label_store, &mut matrix).unwrap();
 
         assert_eq!(matrix.get_label_list().len(), 3)
+    }
+
+    /// Rejoue la chaîne complète de `import_label_file` sur les fichiers réels
+    /// de `test_files/` : vérifications, écart de l'en-tête, remplissage du
+    /// store puis résolution des labels comme le ferait la matrice de flux.
+    #[test]
+    fn import_real_label_file_resolves_labels_for_matrix_hosts() {
+        let label_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("test_files/20260703_DR_Labels.csv")
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        verif_label_rows_format(label_path.clone()).unwrap();
+        verif_mac_ip_format(label_path.clone()).unwrap();
+        verif_labels_conflicts(label_path.clone()).unwrap();
+
+        let file = fs::read_to_string(&label_path).unwrap();
+        let mut rows: Vec<(String, String, String)> =
+            file.lines().filter_map(parse_label_row).collect();
+        if rows.first().is_some_and(is_header_row) {
+            rows.remove(0);
+        }
+
+        let mut label_store = LabelStore::new();
+        for row in rows {
+            label_store.add(row);
+        }
+        assert_eq!(label_store.get().len(), 9, "l'en-tête doit être écarté");
+
+        let mut matrix = FlowMatrix::new();
+        copy_labels_to_matrix(&label_store, &mut matrix).unwrap();
+
+        // Correspondance exacte MAC + IP.
+        assert_eq!(
+            matrix.get_label("e0:d5:5e:28:9b:d4", "192.168.1.181"),
+            Some(String::from("PC Sonar"))
+        );
+        assert_eq!(
+            matrix.get_label("44:15:24:20:a5:64", "192.168.1.254"),
+            Some(String::from("Passerelle"))
+        );
+        // Repli sur l'IP seule, prioritaire sur la MAC seule.
+        assert_eq!(
+            matrix.get_label("e0:d5:5e:28:9b:d4", "2001:861:3fc7:9b00:e09f:22b:19f7:888e"),
+            Some(String::from("PC Sonar public"))
+        );
+        // Repli sur la MAC seule quand l'IP est inconnue du fichier.
+        assert_eq!(
+            matrix.get_label("e0:d5:5e:28:9b:d4", "fe80::b861:e852:5fa3:d3e5"),
+            Some(String::from("Machine de capture"))
+        );
+        // La notation CIDR du fichier est ramenée à l'adresse seule.
+        assert_eq!(
+            matrix.get_label("44:15:24:20:a5:64", "2600:1901:0:3084::"),
+            Some(String::from("Serveur GCP (CIDR)"))
+        );
+        // Un label vide devient "Label?".
+        assert_eq!(
+            matrix.get_label("44:15:24:20:a5:64", "2606:50c0:8002::154"),
+            Some(String::from("Label?"))
+        );
+        // Hôte absent du fichier de labels : aucun label.
+        assert_eq!(matrix.get_label("44:15:24:20:a5:64", "2607:6bc0::10"), None);
     }
 }
