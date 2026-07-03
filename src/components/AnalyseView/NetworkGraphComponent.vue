@@ -52,9 +52,11 @@ function edgeKey(e: EdgeData): EdgeId {
   return `${e.source}${EDGE_SEP}${e.target}${EDGE_SEP}${e.label}`
 }
 
-// Position de départ aléatoire pour les nouveaux nœuds (évite l'empilement en (0,0))
-function randomPos() {
-  return { x: (Math.random() - 0.5) * 600, y: (Math.random() - 0.5) * 600 }
+// Jitter autour d'un point d'ancrage pour les nouveaux nœuds (évite l'empilement)
+function jitterAround(x: number, y: number, radius = 120) {
+  const angle = Math.random() * 2 * Math.PI
+  const r = radius * (0.4 + 0.6 * Math.random())
+  return { x: x + Math.cos(angle) * r, y: y + Math.sin(angle) * r }
 }
 
 // Seuils de zoom pour l'affichage des labels d'arêtes (identiques à l'ancien rendu)
@@ -67,6 +69,10 @@ const FORCE_LAYOUT_OPTIONS = {
   animate: true,
   infinite: true,
   fit: false,
+  // Repart des positions courantes à chaque redémarrage : sans ça, cola
+  // recentre tout le graphe dès qu'un nœud apparaît (effet "focus").
+  centerGraph: false,
+  randomize: false,
   nodeSpacing: 30,
   edgeLength: 150,
 } as cytoscape.LayoutOptions
@@ -325,7 +331,14 @@ export default defineComponent({
         ele.data(data)
         return false
       }
-      this.cy.add({ group: "nodes", data, position: randomPos() })
+      // Spawn autour du barycentre des nœuds existants ; sera raccroché à son
+      // voisin dans upsertEdge dès que sa première arête arrive.
+      const bb = this.cy.nodes().boundingBox()
+      const anchor = this.cy.nodes().empty()
+        ? { x: 0, y: 0 }
+        : { x: (bb.x1 + bb.x2) / 2, y: (bb.y1 + bb.y2) / 2 }
+      const added = this.cy.add({ group: "nodes", data, position: jitterAround(anchor.x, anchor.y, 200) })
+      added.scratch("_spawned", true)
       return true
     },
 
@@ -345,6 +358,20 @@ export default defineComponent({
       const added = this.cy.add({ group: "edges", data: { id, source: e.source, target: e.target, ...data } })
       added.toggleClass("lbl", this._edgeLabelsShown)
       added.toggleClass("ports", this._portLabelsShown)
+
+      // Un nœud fraîchement apparu est déplacé à côté de son premier voisin
+      // déjà placé : cola n'a plus qu'un ajustement local à faire.
+      const src = this.cy.getElementById(e.source)
+      const dst = this.cy.getElementById(e.target)
+      const srcSpawned = !!src.scratch("_spawned")
+      const dstSpawned = !!dst.scratch("_spawned")
+      if (srcSpawned !== dstSpawned) {
+        const fresh = srcSpawned ? src : dst
+        const settled = srcSpawned ? dst : src
+        const p = settled.position()
+        fresh.position(jitterAround(p.x, p.y))
+        fresh.removeScratch("_spawned")
+      }
       return true
     },
 
@@ -393,6 +420,10 @@ export default defineComponent({
             }
           }
         })
+
+        // Le snapshot est disposé par le layout complet : inutile de garder
+        // les marqueurs de spawn pour le raccrochage au voisin.
+        this.cy.nodes().removeScratch("_spawned")
 
         this.cy.fit(undefined, 50)
         if (this.forceEnabled) this.restartLayout()

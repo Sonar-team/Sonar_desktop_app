@@ -1,10 +1,15 @@
 use std::collections::HashMap;
 use std::fs::File;
+use std::net::IpAddr;
 use std::time::SystemTime;
 
 use log::info;
-use packet_parser::owned::PacketFlowOwned;
-use serde::Serialize;
+use packet_parser::IpType;
+use packet_parser::owned::{
+    ApplicationOwned, DataLinkOwned, InternetOwned, PacketFlowOwned, TransportOwned,
+};
+use packet_parser::parse::data_link::{ethertype::Ethertype, vlan_tag::VlanTag};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct FlowStats {
@@ -211,7 +216,7 @@ impl FlowMatrix {
     // }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FlowMatrixRow {
     pub mac_source: String,
     pub mac_destination: String,
@@ -230,6 +235,73 @@ pub struct FlowMatrixRow {
     pub count: u64,
     pub total_bytes: u32,
     pub last_seen: String,
+}
+
+impl FlowMatrixRow {
+    /// Reconstruit le flux et ses statistiques depuis une ligne de CSV exporté
+    /// (chemin inverse de `to_flat_vec`). Les types d'IP sont recalculés depuis
+    /// les adresses ; le VLAN ne conserve que son id (pcp/dei non exportés).
+    pub fn to_flow_and_stats(&self) -> (PacketFlowOwned, FlowStats) {
+        let source_ip = self.ip_source.parse::<IpAddr>().ok();
+        let destination_ip = self.ip_destination.parse::<IpAddr>().ok();
+
+        let internet = (source_ip.is_some() || destination_ip.is_some()).then(|| InternetOwned {
+            source_ip,
+            ip_source_type: source_ip.map(|_| IpType::from_ip(&self.ip_source)),
+            destination_ip,
+            ip_destination_type: destination_ip.map(|_| IpType::from_ip(&self.ip_destination)),
+            protocol: self.protocol_data_link.clone(),
+        });
+
+        let transport = self
+            .protocol_transport
+            .as_ref()
+            .filter(|p| !p.is_empty())
+            .map(|p| TransportOwned {
+                source_port: self.port_source,
+                destination_port: self.port_destination,
+                protocol: p.clone(),
+            });
+
+        let application = self
+            .application_protocol
+            .as_ref()
+            .filter(|p| !p.is_empty())
+            .map(|p| ApplicationOwned { protocol: p.clone() });
+
+        let vlan = self.vlan_id.map(|id| VlanTag {
+            id,
+            pcp: 0,
+            dei: false,
+            inner_ethertype: Ethertype(0),
+        });
+
+        let flow = PacketFlowOwned {
+            data_link: DataLinkOwned {
+                destination_mac: self.mac_destination.clone(),
+                source_mac: self.mac_source.clone(),
+                ethertype: self.protocol_data_link.clone(),
+                vlan,
+            },
+            internet,
+            transport,
+            application,
+        };
+
+        let last_seen = chrono::NaiveDateTime::parse_from_str(&self.last_seen, "%Y-%m-%d %H:%M:%S")
+            .map(|dt| {
+                UNIX_EPOCH + std::time::Duration::from_secs(dt.and_utc().timestamp().max(0) as u64)
+            })
+            .unwrap_or(UNIX_EPOCH);
+
+        let stats = FlowStats {
+            count: self.count,
+            total_bytes: self.total_bytes,
+            last_seen,
+        };
+
+        (flow, stats)
+    }
 }
 
 use std::time::UNIX_EPOCH;

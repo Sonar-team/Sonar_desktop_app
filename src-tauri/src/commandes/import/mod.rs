@@ -27,10 +27,23 @@ use crate::{
     events::CaptureEvent,
     setup::labels::{clean_csv_field, parse_label_row},
     state::{
-        capture::capture_handle::messages::capture::PacketMinimal, flow_matrix::FlowMatrix,
-        graph::GraphData, labels_list::LabelStore,
+        capture::{CaptureState, capture_handle::messages::capture::PacketMinimal},
+        flow_matrix::{FlowMatrix, FlowMatrixRow, FlowStats},
+        graph::GraphData,
+        labels_list::LabelStore,
     },
 };
+
+/// Un `Channel` Tauri est lié à une seule commande ; pendant une capture live
+/// les événements doivent passer par le channel de la capture pour arriver au
+/// front. Retourne ce dernier s'il existe, sinon celui passé à la commande.
+fn event_channel(
+    capture_state: &State<'_, Arc<Mutex<CaptureState>>>,
+    on_event: Channel<CaptureEvent<'static>>,
+) -> Channel<CaptureEvent<'static>> {
+    let live = capture_state.lock().unwrap().on_event.clone();
+    live.unwrap_or(on_event)
+}
 
 #[cfg(feature = "capture_timing")]
 #[derive(Clone, Copy)]
@@ -751,7 +764,11 @@ pub fn import_label_file(
     incoming_file_path: String,
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
     state_label: State<'_, Arc<Mutex<FlowMatrix>>>,
+    graph: State<'_, Arc<Mutex<GraphData>>>,
+    capture_state: State<'_, Arc<Mutex<CaptureState>>>,
+    on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<(), CaptureStateError> {
+    let on_event = event_channel(&capture_state, on_event);
     {
         let mut label_store = label_store.lock().unwrap();
 
@@ -783,6 +800,25 @@ pub fn import_label_file(
     let mut state_label = state_label.lock().unwrap();
     labels_to_matrix(label_store, &mut state_label)?;
 
+    // Réapplique les labels sur les nœuds du graphe (même résolution que la
+    // capture) et notifie le front nœud par nœud : pas de snapshot complet,
+    // pour préserver la disposition du graphe côté UI.
+    let updates = {
+        let mut graph_guard = graph.lock().unwrap();
+        graph_guard.refresh_labels(|mac, ip| state_label.get_label(mac, ip))
+    };
+
+    info!(
+        "[import_label_file] {} label(s) de nœud mis à jour dans le graphe",
+        updates.len()
+    );
+
+    for update in &updates {
+        if let Err(e) = on_event.send(CaptureEvent::Graph { update }) {
+            error!("Erreur lors de l'envoi du GraphUpdate label: {:?}", e);
+        }
+    }
+
     Ok(())
 }
 
@@ -808,6 +844,107 @@ pub fn copy_labels_to_matrix(
 #[tauri::command]
 pub fn is_matrix_empty(state: tauri::State<'_, Arc<Mutex<FlowMatrix>>>) -> bool {
     state.lock().unwrap().matrix.is_empty()
+}
+
+/*<----- Import matrice -----> */
+
+/// Lit un CSV de matrice de flux (format de `FlowMatrix::export_to_csv`).
+/// Le fichier est entièrement validé avant de toucher à l'état.
+fn read_matrix_rows(csv_path: &str) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
+    let mut rdr = csv::ReaderBuilder::new()
+        .trim(csv::Trim::All)
+        .from_path(csv_path)
+        .map_err(|e| std::io::Error::other(format!("Ouverture de {csv_path}: {e}")))?;
+
+    let mut rows = Vec::new();
+    for (i, result) in rdr.deserialize::<FlowMatrixRow>().enumerate() {
+        let row = result
+            .map_err(|e| std::io::Error::other(format!("Ligne {} invalide: {e}", i + 2)))?;
+        rows.push(row);
+    }
+    Ok(rows)
+}
+
+#[tauri::command(async)]
+pub fn import_matrix_file(
+    incoming_file_path: String,
+    matrice: State<'_, Arc<Mutex<FlowMatrix>>>,
+    graph: State<'_, Arc<Mutex<GraphData>>>,
+    label_store: State<'_, Arc<Mutex<LabelStore>>>,
+    capture_state: State<'_, Arc<Mutex<CaptureState>>>,
+    on_event: Channel<CaptureEvent<'static>>,
+) -> Result<(), CaptureStateError> {
+    let on_event = event_channel(&capture_state, on_event);
+
+    info!(
+        "[import_matrix_file] COMMAND CALLED avec {}",
+        incoming_file_path
+    );
+
+    // Un fichier invalide ne doit pas effacer la matrice courante.
+    let rows = read_matrix_rows(&incoming_file_path)?;
+
+    let mut matrice_guard = matrice.lock().unwrap();
+    let mut graph_guard = graph.lock().unwrap();
+    matrice_guard.clear();
+    graph_guard.clear();
+
+    // Labels du store courant, puis ceux portés par le fichier (prioritaires
+    // à clé égale puisque insérés après).
+    labels_to_matrix(label_store, &mut matrice_guard)?;
+    for row in &rows {
+        if let Some(label) = row.label_source.as_ref().filter(|l| !l.is_empty()) {
+            matrice_guard.add_label(row.mac_source.clone(), row.ip_source.clone(), label.clone());
+        }
+        if let Some(label) = row.label_destination.as_ref().filter(|l| !l.is_empty()) {
+            matrice_guard.add_label(
+                row.mac_destination.clone(),
+                row.ip_destination.clone(),
+                label.clone(),
+            );
+        }
+    }
+
+    for row in &rows {
+        let (flow, stats) = row.to_flow_and_stats();
+
+        // Les doublons éventuels du fichier sont fusionnés.
+        let entry = matrice_guard
+            .matrix
+            .entry(flow.clone())
+            .or_insert(FlowStats {
+                count: 0,
+                total_bytes: 0,
+                last_seen: stats.last_seen,
+            });
+        entry.count += stats.count;
+        entry.total_bytes = entry.total_bytes.saturating_add(stats.total_bytes);
+        if stats.last_seen > entry.last_seen {
+            entry.last_seen = stats.last_seen;
+        }
+
+        let source_label = matrice_guard.get_label(&flow.data_link.source_mac, &row.ip_source);
+        let destination_label =
+            matrice_guard.get_label(&flow.data_link.destination_mac, &row.ip_destination);
+        graph_guard.add_packet_flow(&flow, source_label, destination_label);
+    }
+
+    info!(
+        "[import_matrix_file] {} ligne(s) importée(s) -> {} flux, {} nœuds, {} arêtes",
+        rows.len(),
+        matrice_guard.matrix.len(),
+        graph_guard.nodes.len(),
+        graph_guard.edges.len()
+    );
+
+    let snapshot = graph_guard.get_all_graph_data();
+    if let Err(e) = on_event.send(CaptureEvent::GraphSnapshot {
+        graph_data: &snapshot,
+    }) {
+        error!("Erreur lors de l'envoi de GraphSnapshot: {:?}", e);
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -1044,6 +1181,92 @@ mod tests {
         copy_labels_to_matrix(&label_store, &mut matrix).unwrap();
 
         assert_eq!(matrix.get_label_list().len(), 3)
+    }
+
+    /// Reproduit la construction de `import_matrix_file` (labels puis flux).
+    fn build_matrix_and_graph(rows: &[FlowMatrixRow]) -> (FlowMatrix, GraphData) {
+        let mut matrix = FlowMatrix::new();
+        let mut graph = GraphData::new();
+
+        for row in rows {
+            if let Some(label) = row.label_source.as_ref().filter(|l| !l.is_empty()) {
+                matrix.add_label(row.mac_source.clone(), row.ip_source.clone(), label.clone());
+            }
+            if let Some(label) = row.label_destination.as_ref().filter(|l| !l.is_empty()) {
+                matrix.add_label(
+                    row.mac_destination.clone(),
+                    row.ip_destination.clone(),
+                    label.clone(),
+                );
+            }
+        }
+
+        for row in rows {
+            let (flow, stats) = row.to_flow_and_stats();
+            matrix.matrix.entry(flow.clone()).or_insert(stats);
+            let source_label = matrix.get_label(&flow.data_link.source_mac, &row.ip_source);
+            let destination_label =
+                matrix.get_label(&flow.data_link.destination_mac, &row.ip_destination);
+            graph.add_packet_flow(&flow, source_label, destination_label);
+        }
+
+        (matrix, graph)
+    }
+
+    /// Rejoue la chaîne de `import_matrix_file` sur le fichier réel de
+    /// `test_files/` : lecture CSV, reconstruction des flux, remplissage de la
+    /// matrice et du graphe.
+    #[test]
+    fn import_real_matrix_file_rebuilds_matrix_and_graph() {
+        let matrix_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("test_files/20260703_DR_Matrice.csv")
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        let rows = read_matrix_rows(&matrix_path).unwrap();
+        assert_eq!(rows.len(), 30, "30 lignes de données (l'en-tête est écarté)");
+
+        let (matrix, graph) = build_matrix_and_graph(&rows);
+
+        assert_eq!(matrix.matrix.len(), 30, "un flux par ligne du fichier");
+        assert!(!graph.nodes.is_empty(), "le graphe doit contenir des nœuds");
+        assert!(!graph.edges.is_empty(), "le graphe doit contenir des arêtes");
+
+        // Les labels du fichier sont réappliqués sur les nœuds du graphe.
+        let labelled = graph
+            .nodes
+            .values()
+            .filter(|n| n.label.as_deref() == Some("pc sonar"))
+            .count();
+        assert!(labelled > 0, "au moins un nœud doit porter le label du fichier");
+
+        // Le CSV survit à un aller-retour export -> import (mêmes flux).
+        let reexported = matrix.to_flat_vec();
+        assert_eq!(reexported.len(), 30);
+    }
+
+    /// Même chaîne sur la matrice générée de 1000 lignes : vérifie la tenue
+    /// en charge du parseur et la construction d'un graphe complet.
+    #[test]
+    fn import_1000_row_matrix_builds_full_graph() {
+        let matrix_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("test_files/20260703_DR_Matrice_1000.csv")
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        let rows = read_matrix_rows(&matrix_path).unwrap();
+        assert_eq!(rows.len(), 1000);
+
+        let (matrix, graph) = build_matrix_and_graph(&rows);
+
+        assert_eq!(matrix.matrix.len(), 1000, "1000 flux distincts");
+        assert_eq!(graph.nodes.len(), 232, "un nœud par adresse IP distincte");
+        assert!(graph.edges.len() > 100, "arêtes: {}", graph.edges.len());
+
+        let labelled = graph.nodes.values().filter(|n| n.label.is_some()).count();
+        assert!(labelled >= 20, "nœuds labellisés: {labelled}");
     }
 
     /// Rejoue la chaîne complète de `import_label_file` sur les fichiers réels

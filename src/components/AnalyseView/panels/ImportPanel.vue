@@ -63,6 +63,10 @@
         <button @click="convertPcap" class="btn btn-open" :disabled="isConverting || packetFiles.length === 0">
           Ouvrir
         </button>
+        <div class="separator matrix-separator"></div>
+        <button @click="importMatrixFile" class="btn btn-open" :disabled="isConverting">
+          Importer une matrice (CSV)
+        </button>
       </div>
     </div> 
   </div>
@@ -183,6 +187,37 @@ export default defineComponent({
       this.packetFiles = [];
     },
 
+    async importMatrixFile() {
+      const file = await open({
+        multiple: false,
+        filters: [{ name: 'Matrice CSV', extensions: ['csv'] }],
+      });
+      if (!file) return;
+
+      info('import_matrix_file: ' + file);
+
+      // Un Channel Tauri est à usage unique (index d'ordre par commande +
+      // cleanup à la fin) : on en crée un neuf à chaque invoke. Pendant une
+      // capture live on n'écrase pas le channel attaché — le backend passe
+      // alors par celui de la capture.
+      const onEvent = new Channel<CaptureEvent>();
+      if (!this.isRunning) {
+        this.captureStore.setChannel(onEvent);
+      }
+
+      this.isConverting = true;
+      try {
+        await invoke('import_matrix_file', { incomingFilePath: file, onEvent });
+        info('réponse invoke');
+        this.$emit('update:visible', false);
+      } catch (err) {
+        displayCaptureError(err);
+      } finally {
+        await useCaptureStore().refreshHasData();
+        this.isConverting = false;
+      }
+    },
+
     listFilter() {
       this.filteredlabelRows = this.labelRows.filter((row) => row.some((field) => field.toLowerCase().includes(this.searchInput.toLowerCase())))
     },
@@ -198,8 +233,17 @@ export default defineComponent({
       this.sameIpDiffLabel = [];
       this.sameIpDiffMac = [];
 
+      // Un Channel Tauri est à usage unique (index d'ordre par commande +
+      // cleanup à la fin) : on en crée un neuf à chaque invoke. Pendant une
+      // capture live on n'écrase pas le channel attaché — le backend passe
+      // alors par celui de la capture.
+      const onEvent = new Channel<CaptureEvent>();
+      if (!this.isRunning) {
+        this.captureStore.setChannel(onEvent);
+      }
+
       try {
-        await invoke('import_label_file', { incomingFilePath: path });
+        await invoke('import_label_file', { incomingFilePath: path, onEvent });
         info('réponse invoke');
       } catch (err) {
         const error = err as CaptureStateErrorKind;
@@ -491,6 +535,11 @@ export default defineComponent({
   width: 95%;
   background-color: whitesmoke;
   margin: 0 auto 16px auto;
+}
+
+.matrix-separator {
+  margin-top: 16px;
+  opacity: 0.3;
 }
 
 .data-table {

@@ -305,6 +305,35 @@ impl GraphData {
 
         None
     }
+
+    /// Réapplique les labels de tous les nœuds via `resolve(mac, ip)`
+    /// (typiquement `FlowMatrix::get_label` et ses replis IP seule / MAC seule).
+    /// Retourne un `NodeUpdated` par nœud effectivement modifié.
+    pub fn refresh_labels<F>(&mut self, resolve: F) -> Vec<GraphUpdate>
+    where
+        F: Fn(&str, &str) -> Option<String>,
+    {
+        let mut updates = Vec::new();
+
+        for node in self.nodes.values_mut() {
+            let Some(label) = resolve(&node.mac, &node.ip) else {
+                continue;
+            };
+
+            let normalized = if label.trim().is_empty() {
+                None
+            } else {
+                Some(label)
+            };
+
+            if node.label != normalized {
+                node.label = normalized;
+                updates.push(GraphUpdate::NodeUpdated(node.clone()));
+            }
+        }
+
+        updates
+    }
 }
 
 // ————— helpers —————

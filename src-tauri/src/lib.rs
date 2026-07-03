@@ -17,7 +17,7 @@ use crate::{
         flow_matrix::{add_label, get_label_list},
         import::{
             clear_label_store, convert_from_pcap_list, get_label_rows, import_label_file,
-            is_matrix_empty,
+            import_matrix_file, is_matrix_empty,
         },
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
@@ -191,6 +191,7 @@ pub fn run() -> Result<(), tauri::Error> {
             set_filter,
             get_label_rows,
             import_label_file,
+            import_matrix_file,
             clear_label_store,
             is_matrix_empty
         ])
