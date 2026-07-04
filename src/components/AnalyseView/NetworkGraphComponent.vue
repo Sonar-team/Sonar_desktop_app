@@ -15,19 +15,7 @@ import { EdgeData, EdgeId, GraphData, GraphUpdate, NodeData } from "../../types/
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentDate } from '../../utils/time';
 import LegendComponent from './LegendComponent.vue';
-
-// --- Colors ----------------------------------------------------------------
-const EDGE_COLORS_LC: Record<string, string> = Object.freeze({
-  arp: "#FFFF00",
-  ipv4: "#FFA500",
-  ipv6: "#EE82EE",
-  profinet_rt: "#008000",
-  tls: "#0000FF",
-  dns: "#FF0000",
-  ntp: "#FFA500",
-})
-const colorForLabel = (label: string) =>
-  EDGE_COLORS_LC[label?.toLowerCase?.() ?? ""] || "#ffffff"
+import { colorForProtocol } from "../../utils/protocolColors"
 
 // --- Helpers ---------------------------------------------------------------
 function clamp01(x: number) { return x < 0 ? 0 : x > 1 ? 1 : x }
@@ -133,7 +121,7 @@ function edgeAttributes(e: any) {
     bidir: !!e.bidir,
     count: Number(e.count) || 0,
     total_bytes: totalBytes,
-    color: e._color || colorForLabel(e.label || ""),
+    color: e._color || colorForProtocol(e.label || ""),
     size: edgeSizeFor(totalBytes),
   }
 }

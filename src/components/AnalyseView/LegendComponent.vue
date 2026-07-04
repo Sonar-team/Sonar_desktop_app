@@ -16,33 +16,13 @@
 
     <div class="legend-section">
       <h4>Couleurs des arêtes (protocoles)</h4>
-      <div class="legend-item">
-        <div class="color-box edge-color" style="background-color: #FFFF00;"></div>
-        <span>ARP</span>
-      </div>
-      <div class="legend-item">
-        <div class="color-box edge-color" style="background-color: #FFA500;"></div>
-        <span>IPv4 / NTP</span>
-      </div>
-      <div class="legend-item">
-        <div class="color-box edge-color" style="background-color: #EE82EE;"></div>
-        <span>IPv6</span>
-      </div>
-      <div class="legend-item">
-        <div class="color-box edge-color" style="background-color: #008000;"></div>
-        <span>Profinet RT</span>
-      </div>
-      <div class="legend-item">
-        <div class="color-box edge-color" style="background-color: #0000FF;"></div>
-        <span>TLS</span>
-      </div>
-      <div class="legend-item">
-        <div class="color-box edge-color" style="background-color: #FF0000;"></div>
-        <span>DNS</span>
-      </div>
-      <div class="legend-item">
-        <div class="color-box edge-color" style="background-color: #ffffff;"></div>
-        <span>Autre</span>
+      <div
+        v-for="item in PROTOCOL_COLOR_LEGEND"
+        :key="item.label"
+        class="legend-item"
+      >
+        <div class="color-box edge-color" :style="{ backgroundColor: item.color }"></div>
+        <span>{{ item.label }}</span>
       </div>
     </div>
 
@@ -61,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-// Composant de légende pour le graphe réseau
+import { PROTOCOL_COLOR_LEGEND } from "../../utils/protocolColors"
 </script>
 
 <style scoped>
