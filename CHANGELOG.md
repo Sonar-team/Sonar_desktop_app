@@ -1,5 +1,52 @@
 # Changelog
 
+## **[4.0.0] - 2026-07-05**
+
+## 💥 Changements majeurs
+
+- Mise à jour de `packet_parser` en **2.0.2** : structure des paquets parsés
+  typée (MAC, Ethertype, protocoles en `&'static str`), détection PostgreSQL
+  par heuristique de payload et nouveaux parseurs applicatifs. La sérialisation
+  vers le frontend reste compatible.
+- Refonte du moteur de capture : nouveaux événements IPC `graphBatch` et
+  `stopped`, nouveau champ `app_dropped` dans l'événement `stats`.
+
+## ✨ Améliorations
+
+- Pool de buffers à allocation paresseuse avec deux classes de tailles
+  (2 KiB standard / snaplen jumbo) : mémoire de capture réduite de ~640 Mio
+  préalloués à quelques Mio suivant la charge réelle (bench : RSS 464 → 13 Mio,
+  débit ×2,7).
+- Un seul verrouillage de la matrice de flux par paquet (labels + update dans
+  le même scope) et états Tauri résolus hors de la boucle de traitement.
+- Updates graphe coalescées par nœud/arête et envoyées par lot au rythme du
+  batch de paquets, au lieu d'un événement IPC par paquet.
+- Le flux n'est cloné dans la matrice qu'à sa première apparition, plus à
+  chaque paquet.
+- Stats pcap sorties du canal de données (état partagé atomique) : elles
+  restent fiables sous backpressure.
+- Pertes applicatives comptées (pool épuisé / canal plein), affichées dans la
+  barre de statut (⚠️) et logs de perte agrégés à 1/s.
+- Événement `stopped` émis sur erreur pcap fatale et à l'arrêt ; `stop()`
+  attend la fin des threads pour éviter deux pipelines lors d'un redémarrage
+  rapide.
+- Résumé de run `capture_timing` enrichi des compteurs du pool
+  (`pool_small_allocated`, `pool_large_allocated`, `pool_allocated_bytes`,
+  `pool_exhausted`) et benchmark reproductible `examples/pool_bench.rs`.
+
+## 🛠 Corrections
+
+- Les octets du premier paquet de chaque flux n'étaient comptés qu'une fois
+  au lieu de deux dans la matrice et le CSV exporté.
+- Compilation `--features capture_timing` réparée (import `PathBuf` dupliqué).
+- Artefacts de build des crates vendorées retirés du suivi git.
+
+## 🔧 Maintenance
+
+- Suppression du thread de traitement CLI dupliqué (~200 lignes) : le mode
+  headless partage le pipeline principal et son instrumentation.
+- Mise à jour de la version de SONAR en **4.0.0**.
+
 ## **[3.14.7] - 2026-07-03**
 
 ## 🛠 Corrections
