@@ -449,6 +449,7 @@ fn capture_timing_log_path() -> PathBuf {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn spawn_processing_thread(
     rx: Receiver<CaptureMessage>,
     on_event: Channel<CaptureEvent<'static>>,

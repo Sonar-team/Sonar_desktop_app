@@ -40,6 +40,7 @@ impl DropReport {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn spawn_capture_thread_with_pool(
     tx: Sender<CaptureMessage>,
     on_event: Channel<CaptureEvent<'static>>,

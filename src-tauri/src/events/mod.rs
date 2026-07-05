@@ -29,6 +29,10 @@ pub enum CaptureEvent<'a> {
         current_size: usize,
         backpressure: bool,
     },
+    /// Émission mono-paquet désactivée au profit de `PacketBatch` ; le
+    /// variant reste dans le contrat d'événements du frontend
+    /// (`src/store/capture.ts`) pour pouvoir être réactivé.
+    #[allow(dead_code)]
     Packet {
         packet: &'a PacketMinimal<'a>,
     },

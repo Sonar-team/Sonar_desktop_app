@@ -171,6 +171,12 @@ impl PacketBufferPool {
     pub fn len(&self) -> usize {
         self.small.len() + self.large.len()
     }
+
+    /// Optionnel : debug seulement (O(n))
+    #[allow(dead_code)]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 #[cfg(test)]
