@@ -70,3 +70,4 @@ cosign.pub
 .cache/
 .cargo-home/
 bundle-repro-*/
+src-tauri/vendor/**/target/
