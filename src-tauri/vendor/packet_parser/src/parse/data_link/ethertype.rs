@@ -3,10 +3,10 @@
 // Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
 // This file may not be copied, modified, or distributed except according to those terms.
 
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 
 // ethertype.rs
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Hash)]
 pub struct Ethertype(pub u16);
 
 impl Ethertype {
@@ -14,33 +14,53 @@ impl Ethertype {
         Ethertype(code)
     }
 
-    pub fn name(&self) -> String {
+    /// Nom statique de l'Ethertype s'il est connu, sans allocation.
+    pub fn static_name(&self) -> Option<&'static str> {
         match self.0 {
-            0x0800 => "IPv4".to_string(),
-            0x86DD => "IPv6".to_string(),
-            0x0806 => "ARP".to_string(),
-            0x8100 => "VLAN-tagged frame".to_string(),
-            0x88CC => "LLDP".to_string(),
-            0x8892 => "Profinet".to_string(),
-            0x88E3 => "MRP".to_string(),
-            0x88F7 => "PTP".to_string(),
-            0x9100 => "Q-in-Q".to_string(),
-            0x88A8 => "PBridge".to_string(),
-            0x22F3 => "Trill".to_string(),
-            0x6003 => "DECnet".to_string(),
-            0x8035 => "Rarp".to_string(),
-            0x809B => "AppleTalk".to_string(),
-            0x80F3 => "Aarp".to_string(),
-            0x8137 => "Ipx".to_string(),
-            0x8204 => "Qnx".to_string(),
-            0x8847 => "MPLS Unicast".to_string(),
-            0x8848 => "MPLS Multicast".to_string(),
-            0x8863 => "Pppoe Discovery Stage".to_string(),
-            0x8864 => "Pppoe Session Stage".to_string(),
-            0x8819 => "CobraNet".to_string(),
-            0x8902 => "cfm".to_string(),
-            _ => format!("Unknown (0x{:04X})", self.0),
+            0x0800 => Some("IPv4"),
+            0x86DD => Some("IPv6"),
+            0x0806 => Some("ARP"),
+            0x8100 => Some("VLAN-tagged frame"),
+            0x88CC => Some("LLDP"),
+            0x8892 => Some("Profinet"),
+            0x88E3 => Some("MRP"),
+            0x88F7 => Some("PTP"),
+            0x9100 => Some("Q-in-Q"),
+            0x88A8 => Some("PBridge"),
+            0x22F3 => Some("Trill"),
+            0x6003 => Some("DECnet"),
+            0x8035 => Some("Rarp"),
+            0x809B => Some("AppleTalk"),
+            0x80F3 => Some("Aarp"),
+            0x8137 => Some("Ipx"),
+            0x8204 => Some("Qnx"),
+            0x8847 => Some("MPLS Unicast"),
+            0x8848 => Some("MPLS Multicast"),
+            0x8863 => Some("Pppoe Discovery Stage"),
+            0x8864 => Some("Pppoe Session Stage"),
+            0x8819 => Some("CobraNet"),
+            0x8902 => Some("cfm"),
+            _ => None,
         }
+    }
+
+    pub fn name(&self) -> String {
+        match self.static_name() {
+            Some(name) => name.to_string(),
+            None => format!("Unknown (0x{:04X})", self.0),
+        }
+    }
+}
+
+/// Sérialise un Ethertype sous forme de nom lisible ("IPv4", "Unknown (0xABCD)"…),
+/// comme l'ancien champ `String` de `DataLink`.
+pub fn serialize_name<S: Serializer>(
+    ethertype: &Ethertype,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    match ethertype.static_name() {
+        Some(name) => serializer.serialize_str(name),
+        None => serializer.collect_str(&format_args!("Unknown (0x{:04X})", ethertype.0)),
     }
 }
 

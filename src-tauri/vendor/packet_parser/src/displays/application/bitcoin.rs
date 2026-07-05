@@ -16,3 +16,25 @@ impl Display for BitcoinPacket {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parse::application::protocols::bitcoin::BitcoinPacket;
+
+    #[test]
+    fn test_bitcoin_packet_display() {
+        let packet = BitcoinPacket {
+            magic: 0xF9BEB4D9,
+            command: "version".to_string(),
+            length: 2,
+            checksum: [0xAB, 0xCD, 0xEF, 0x01],
+            payload: vec![0xDE, 0xAD],
+        };
+
+        let rendered = packet.to_string();
+        assert!(rendered.starts_with("Bitcoin Packet:"));
+        assert!(rendered.contains("command=version"));
+        assert!(rendered.contains("length=2"));
+        assert!(rendered.contains("payload=[DE, AD]"));
+    }
+}

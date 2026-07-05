@@ -1,6 +1,6 @@
 [package]
 name = "packet_parser"
-version = "1.5.4"
+version = "2.0.2"
 edition = "2024"
 authors = ["Cyprien Avico avicocyprien@yahoo.com"]
 description = "A powerful and modular Rust crate for network packet parsing."
@@ -10,7 +10,7 @@ categories = ["network-programming", "parsing", "development-tools"]
 readme = "README.md"
 homepage = "https://github.com/Akmot9/Packet-parser"
 keywords = ["network", "packets", "parser", "cybersecurity", "Rust"]
-exclude = [".github/", ".gitignore", "tests/", "benches/"]
+exclude = [".github/", ".gitignore", "tests/", "benches/", "tools/", "perf_by_version.json"]
 
 
 [dependencies]
@@ -31,6 +31,7 @@ pcap = "2.4.0"
 
 [workspace]
 members = ["benchmark_db", "ingestor","integration_test", "see_unparsable"] # Spécifie que ta crate a un workspace avec d'autres projets
+exclude = ["tools/verbench"] # Harnais de bench multi-versions : son Cargo.toml est généré par run.sh
 
 [profile.release]
 opt-level = 3         # Highest speed optimization

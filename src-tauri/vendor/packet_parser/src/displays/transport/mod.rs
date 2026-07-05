@@ -303,4 +303,13 @@ mod tests {
     fn test_transport_protocol_display_ethernet() {
         assert_eq!(TransportProtocol::Ethernet.to_string(), "ETHERNET");
     }
+
+    #[test]
+    fn test_transport_protocol_display_exhaustive() {
+        // Chaque numéro IANA doit produire un nom non vide et sans panique.
+        for value in 0..=255u8 {
+            let name = TransportProtocol::from_u8(value).to_string();
+            assert!(!name.is_empty(), "Display vide pour le protocole {value}");
+        }
+    }
 }

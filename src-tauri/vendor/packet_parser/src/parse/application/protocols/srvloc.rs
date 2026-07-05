@@ -266,3 +266,172 @@ fn parse_v2_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseErro
         payload: SrvlocMessage::Raw(remaining),
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// DA Advert SLP v1 : url "svc" et scope "sc"
+    fn build_v1_packet() -> Vec<u8> {
+        let mut bytes = Vec::new();
+        bytes.push(1); // version
+        bytes.push(8); // function : DA Advert
+        bytes.extend_from_slice(&24u16.to_be_bytes()); // packet length
+        bytes.push(0x20); // flags
+        bytes.push(0); // dialect
+        bytes.extend_from_slice(b"en"); // language
+        bytes.push(3); // encoding
+        bytes.extend_from_slice(&0x1234u16.to_be_bytes()); // transaction id
+        bytes.extend_from_slice(&0u16.to_be_bytes()); // error code
+        bytes.extend_from_slice(&3u16.to_be_bytes()); // url length
+        bytes.extend_from_slice(b"svc");
+        bytes.extend_from_slice(&2u16.to_be_bytes()); // scope list length
+        bytes.extend_from_slice(b"sc");
+        bytes
+    }
+
+    /// Header SLP v2 : lang tag "en" + body brut
+    fn build_v2_packet(body: &[u8]) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        bytes.push(2); // version
+        bytes.push(8); // function
+        let total = (16 + body.len()) as u32;
+        bytes.extend_from_slice(&total.to_be_bytes()[1..]); // packet length u24
+        bytes.extend_from_slice(&0x2000u16.to_be_bytes()); // flags
+        bytes.extend_from_slice(&[0, 0, 0]); // next extension offset u24
+        bytes.extend_from_slice(&0x4242u16.to_be_bytes()); // xid
+        bytes.extend_from_slice(&2u16.to_be_bytes()); // lang tag len
+        bytes.extend_from_slice(b"en");
+        bytes.extend_from_slice(body);
+        bytes
+    }
+
+    #[test]
+    fn test_parse_v1_packet() {
+        let bytes = build_v1_packet();
+        let packet = SrvlocPacket::try_from(bytes.as_slice()).expect("paquet v1 valide");
+
+        match &packet.header {
+            SrvlocHeader::V1(header) => {
+                assert_eq!(header.version, 1);
+                assert_eq!(header.function, 8);
+                assert_eq!(header.packet_length, 24);
+                assert_eq!(header.flags, 0x20);
+                assert_eq!(header.dialect, 0);
+                assert_eq!(header.language, "en");
+                assert_eq!(header.encoding, 3);
+                assert_eq!(header.transaction_id, 0x1234);
+                assert_eq!(header.error_code, 0);
+                assert_eq!(header.url_length, 3);
+                assert_eq!(header.url, "svc");
+                assert_eq!(header.scope_list_lengh, 2);
+                assert_eq!(header.scope_list, "sc");
+            }
+            other => panic!("attendu header V1, obtenu {other:?}"),
+        }
+
+        let SrvlocMessage::Raw(rest) = &packet.payload;
+        assert!(rest.is_empty());
+    }
+
+    #[test]
+    fn test_parse_v1_packet_with_trailing_bytes() {
+        let mut bytes = build_v1_packet();
+        bytes.extend_from_slice(&[0xCA, 0xFE]);
+
+        let packet = SrvlocPacket::try_from(bytes.as_slice()).expect("paquet v1 valide");
+        let SrvlocMessage::Raw(rest) = &packet.payload;
+        assert_eq!(rest, &vec![0xCA, 0xFE]);
+    }
+
+    #[test]
+    fn test_parse_v2_packet() {
+        let bytes = build_v2_packet(&[]);
+        let packet = SrvlocPacket::try_from(bytes.as_slice()).expect("paquet v2 valide");
+
+        match &packet.header {
+            SrvlocHeader::V2(header) => {
+                assert_eq!(header.version, 2);
+                assert_eq!(header.function, 8);
+                assert_eq!(header.packet_length, 16);
+                assert_eq!(header.flags, 0x2000);
+                assert_eq!(header.next_extension_offset, 0);
+                assert_eq!(header.xid, 0x4242);
+                assert_eq!(header.lang_tag_len, 2);
+                assert_eq!(header.lang_tag, "en");
+            }
+            other => panic!("attendu header V2, obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_parse_v2_packet_with_body() {
+        let bytes = build_v2_packet(&[0x01, 0x02, 0x03]);
+        let packet = SrvlocPacket::try_from(bytes.as_slice()).expect("paquet v2 valide");
+        let SrvlocMessage::Raw(rest) = &packet.payload;
+        assert_eq!(rest, &vec![0x01, 0x02, 0x03]);
+    }
+
+    #[test]
+    fn test_empty_packet() {
+        assert!(SrvlocPacket::try_from(&[][..]).is_err());
+    }
+
+    #[test]
+    fn test_unsupported_version() {
+        assert!(matches!(
+            SrvlocPacket::try_from(&[3u8, 0, 0, 0][..]),
+            Err(SrvlocPacketParseError::UnsupportedVersion(3))
+        ));
+    }
+
+    #[test]
+    fn test_v1_truncated_header() {
+        // version 1 mais seulement 4 octets
+        assert!(matches!(
+            SrvlocPacket::try_from(&[1u8, 8, 0, 24][..]),
+            Err(SrvlocPacketParseError::Truncated { .. })
+        ));
+    }
+
+    #[test]
+    fn test_v1_truncated_url() {
+        // url_length annonce 100 octets absents
+        let mut bytes = build_v1_packet();
+        let url_len_offset = 13;
+        bytes[url_len_offset] = 0;
+        bytes[url_len_offset + 1] = 100;
+        assert!(matches!(
+            SrvlocPacket::try_from(bytes.as_slice()),
+            Err(SrvlocPacketParseError::Truncated { .. })
+        ));
+    }
+
+    #[test]
+    fn test_v1_invalid_utf8_url() {
+        let mut bytes = build_v1_packet();
+        bytes[15] = 0xFF; // premier octet de l'url
+        assert!(matches!(
+            SrvlocPacket::try_from(bytes.as_slice()),
+            Err(SrvlocPacketParseError::InvalidUtf8("url"))
+        ));
+    }
+
+    #[test]
+    fn test_v2_truncated_header() {
+        assert!(matches!(
+            SrvlocPacket::try_from(&[2u8, 8, 0, 0, 20][..]),
+            Err(SrvlocPacketParseError::Truncated { .. })
+        ));
+    }
+
+    #[test]
+    fn test_v2_invalid_utf8_lang_tag() {
+        let mut bytes = build_v2_packet(&[]);
+        bytes[14] = 0xFF; // premier octet du lang tag
+        assert!(matches!(
+            SrvlocPacket::try_from(bytes.as_slice()),
+            Err(SrvlocPacketParseError::InvalidUtf8("lang_tag"))
+        ));
+    }
+}

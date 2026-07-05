@@ -32,3 +32,32 @@ impl fmt::Display for Answer {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parse::application::protocols::dns::utils::{
+        dns_class::DnsClasses, dns_types::DnsTypes,
+    };
+
+    #[test]
+    fn test_display() {
+        let record = Answer {
+            name: "example.com".to_string(),
+            answer_type: DnsTypes::A,
+            answer_class: DnsClasses::IN,
+            ttl: 300,
+            data_length: 4,
+            address: vec![93, 184, 216, 34],
+        };
+
+        let rendered = record.to_string();
+        assert!(rendered.starts_with("Answer {"));
+        assert!(rendered.contains("name: example.com"));
+        assert!(rendered.contains("answer_type: A"));
+        assert!(rendered.contains("answer_class: IN"));
+        assert!(rendered.contains("ttl: 300"));
+        assert!(rendered.contains("data_length: 4"));
+        assert!(rendered.contains("address: [93, 184, 216, 34]"));
+    }
+}

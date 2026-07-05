@@ -35,30 +35,34 @@ impl FlowMatrix {
     pub fn update_flow(&mut self, pkt: &PacketOwnedStats) {
         let ts = timeval_to_systemtime(pkt.ts_sec, pkt.ts_usec);
 
-        let entry = self.matrix.entry(pkt.flow.clone()).or_insert(FlowStats {
-            count: 0,
-            total_bytes: pkt.len,
-            last_seen: ts,
-        });
-        entry.count += 1;
-        entry.total_bytes += pkt.len;
-        entry.last_seen = ts;
+        // Lookup par référence : le flow (et ses ~8 String) n'est cloné
+        // qu'au premier paquet du flux, pas à chaque paquet.
+        if let Some(entry) = self.matrix.get_mut(&pkt.flow) {
+            entry.count += 1;
+            entry.total_bytes += pkt.len;
+            entry.last_seen = ts;
+        } else {
+            self.matrix.insert(
+                pkt.flow.clone(),
+                FlowStats {
+                    count: 1,
+                    total_bytes: pkt.len,
+                    last_seen: ts,
+                },
+            );
+        }
     }
 
     /// Update the flow matrix from a PacketOwnedStats then return the new line in the matrice if it was not already there
     pub fn update_flow_cli(&mut self, pkt: &PacketOwnedStats) -> (FlowStats, PacketFlowOwned) {
-        let ts = timeval_to_systemtime(pkt.ts_sec, pkt.ts_usec);
+        self.update_flow(pkt);
+        let stats = self
+            .matrix
+            .get(&pkt.flow)
+            .cloned()
+            .expect("flow inséré par update_flow");
 
-        let entry = self.matrix.entry(pkt.flow.clone()).or_insert(FlowStats {
-            count: 0,
-            total_bytes: pkt.len,
-            last_seen: ts,
-        });
-        entry.count += 1;
-        entry.total_bytes += pkt.len;
-        entry.last_seen = ts;
-
-        (entry.clone(), pkt.flow.clone())
+        (stats, pkt.flow.clone())
     }
 
     pub fn clear(&mut self) {
@@ -318,6 +322,68 @@ pub fn timeval_to_systemtime(tv_sec: impl Into<i64>, tv_usec: impl Into<i64>) ->
 #[cfg(test)]
 mod tests {
     use super::FlowMatrix;
+    use crate::state::capture::capture_handle::messages::capture::PacketOwnedStats;
+    use packet_parser::owned::{DataLinkOwned, PacketFlowOwned};
+
+    fn sample_packet(len: u32) -> PacketOwnedStats {
+        PacketOwnedStats {
+            ts_sec: 1_000,
+            ts_usec: 0,
+            caplen: len,
+            len,
+            flow: PacketFlowOwned {
+                data_link: DataLinkOwned {
+                    destination_mac: "aa:bb:cc:dd:ee:ff".to_string(),
+                    source_mac: "11:22:33:44:55:66".to_string(),
+                    ethertype: "IPv4".to_string(),
+                    vlan: None,
+                },
+                internet: None,
+                transport: None,
+                application: None,
+            },
+        }
+    }
+
+    #[test]
+    fn update_flow_counts_first_packet_bytes_once() {
+        let mut matrix = FlowMatrix::new();
+        let pkt = sample_packet(100);
+
+        matrix.update_flow(&pkt);
+
+        let stats = matrix.matrix.get(&pkt.flow).expect("flux inséré");
+        assert_eq!(stats.count, 1);
+        assert_eq!(stats.total_bytes, 100);
+    }
+
+    #[test]
+    fn update_flow_accumulates_on_existing_flow() {
+        let mut matrix = FlowMatrix::new();
+        let pkt = sample_packet(100);
+
+        matrix.update_flow(&pkt);
+        matrix.update_flow(&pkt);
+        matrix.update_flow(&pkt);
+
+        assert_eq!(matrix.matrix.len(), 1, "un seul flux");
+        let stats = matrix.matrix.get(&pkt.flow).expect("flux inséré");
+        assert_eq!(stats.count, 3);
+        assert_eq!(stats.total_bytes, 300);
+    }
+
+    #[test]
+    fn update_flow_cli_returns_current_stats_and_flow() {
+        let mut matrix = FlowMatrix::new();
+        let pkt = sample_packet(50);
+
+        matrix.update_flow_cli(&pkt);
+        let (stats, flow) = matrix.update_flow_cli(&pkt);
+
+        assert_eq!(stats.count, 2);
+        assert_eq!(stats.total_bytes, 100);
+        assert_eq!(flow, pkt.flow);
+    }
 
     #[test]
     fn get_label_falls_back_to_ip_only_label() {

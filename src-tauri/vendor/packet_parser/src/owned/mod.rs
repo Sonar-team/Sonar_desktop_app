@@ -117,9 +117,9 @@ impl<'a> From<PacketFlow<'a>> for PacketFlowOwned {
     fn from(flow: PacketFlow<'a>) -> Self {
         Self {
             data_link: DataLinkOwned {
-                destination_mac: flow.data_link.destination_mac,
-                source_mac: flow.data_link.source_mac,
-                ethertype: flow.data_link.ethertype,
+                destination_mac: flow.data_link.destination_mac.to_string(),
+                source_mac: flow.data_link.source_mac.to_string(),
+                ethertype: flow.data_link.ethertype.name(),
                 vlan: flow.data_link.vlan,
             },
             internet: flow.internet.map(|internet| InternetOwned {
@@ -127,7 +127,7 @@ impl<'a> From<PacketFlow<'a>> for PacketFlowOwned {
                 ip_source_type: internet.source_type,
                 destination_ip: internet.destination,
                 ip_destination_type: internet.destination_type,
-                protocol: internet.protocol_name,
+                protocol: internet.protocol_name.to_string(),
             }),
             transport: flow.transport.map(|transport| TransportOwned {
                 source_port: transport.source_port,

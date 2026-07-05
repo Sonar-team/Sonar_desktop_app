@@ -12,8 +12,8 @@
 //! # Overview
 //!
 //! The `DataLink` structure represents an Ethernet frame with the following fields:
-//! - `destination_mac`: The destination MAC address of the packet as a string.
-//! - `source_mac`: The source MAC address of the packet as a string.
+//! - `destination_mac`: The destination MAC address of the packet.
+//! - `source_mac`: The source MAC address of the packet.
 //! - `ethertype`: The Ethertype value, which indicates the protocol used in the payload.
 //! - `payload`: The remaining packet data after the Ethernet header.
 //!
@@ -82,14 +82,16 @@ use ethertype::Ethertype;
 /// an Ethertype, an optional VLAN tag, and the payload.
 #[derive(Debug, Clone, Serialize, Eq)]
 pub struct DataLink<'a> {
-    /// The destination MAC address as a string.
-    pub destination_mac: String,
-    /// The source MAC address as a string.
-    pub source_mac: String,
+    /// The destination MAC address (serialized as a string).
+    pub destination_mac: MacAddress,
+    /// The source MAC address (serialized as a string).
+    pub source_mac: MacAddress,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vlan: Option<VlanTag>,
-    /// The Ethertype of the packet, indicating the protocol in the payload.
-    pub ethertype: String,
+    /// The Ethertype of the packet, indicating the protocol in the payload
+    /// (serialized as its name, e.g. "IPv4").
+    #[serde(serialize_with = "ethertype::serialize_name")]
+    pub ethertype: Ethertype,
     /// The payload of the Ethernet frame.
     #[serde(skip_serializing)]
     pub payload: &'a [u8],
@@ -108,7 +110,7 @@ impl<'a> TryFrom<&'a [u8]> for DataLink<'a> {
         let raw_ethertype = u16::from_be_bytes([packets[12], packets[13]]);
 
         let mut vlan: Option<VlanTag> = None;
-        let ethertype: String;
+        let ethertype: Ethertype;
         let payload: &'a [u8];
 
         if raw_ethertype == 0x8100 {
@@ -117,18 +119,18 @@ impl<'a> TryFrom<&'a [u8]> for DataLink<'a> {
             // TCI + inner EtherType : [14..18]
             let vlan_tag = VlanTag::try_from(&packets[14..18])?;
 
-            ethertype = vlan_tag.inner_ethertype_name().to_string();
+            ethertype = vlan_tag.inner_ethertype;
             payload = &packets[18..];
             vlan = Some(vlan_tag);
         } else {
             // Pas de VLAN
-            ethertype = Ethertype::from(raw_ethertype).name().to_string();
+            ethertype = Ethertype::from(raw_ethertype);
             payload = &packets[14..];
         }
 
         Ok(DataLink {
-            destination_mac: destination_mac.to_string(),
-            source_mac: source_mac.to_string(),
+            destination_mac,
+            source_mac,
             vlan,
             ethertype,
             payload,
@@ -177,17 +179,13 @@ mod tests {
 
         assert_eq!(
             datalink.destination_mac,
-            MacAddress::try_from(&raw_packet[0..6])
-                .unwrap()
-                .display_with_oui()
+            MacAddress::try_from(&raw_packet[0..6]).unwrap()
         );
         assert_eq!(
             datalink.source_mac,
-            MacAddress::try_from(&raw_packet[6..12])
-                .unwrap()
-                .display_with_oui()
+            MacAddress::try_from(&raw_packet[6..12]).unwrap()
         );
-        assert_eq!(datalink.ethertype, "IPv4"); // IPv4 Ethertype
+        assert_eq!(datalink.ethertype.name(), "IPv4"); // IPv4 Ethertype
     }
 
     #[test]
@@ -208,7 +206,7 @@ mod tests {
         ];
 
         let datalink = DataLink::try_from(raw_packet.as_ref()).unwrap();
-        assert_eq!(datalink.ethertype, "IPv6"); // IPv6 Ethertype
+        assert_eq!(datalink.ethertype.name(), "IPv6"); // IPv6 Ethertype
     }
 
     #[test]
@@ -221,7 +219,7 @@ mod tests {
         ];
 
         let datalink = DataLink::try_from(raw_packet.as_ref()).unwrap();
-        assert_eq!(datalink.ethertype, "Unknown (0xABCD)"); // Ethertype inconnu, mais accepté
+        assert_eq!(datalink.ethertype.name(), "Unknown (0xABCD)"); // Ethertype inconnu, mais accepté
     }
     #[test]
     fn test_datalink_try_from_empty_payload() {
@@ -232,7 +230,7 @@ mod tests {
         ];
 
         let datalink = DataLink::try_from(raw_packet.as_ref()).unwrap();
-        assert_eq!(datalink.ethertype, "Unknown (0xABCD)"); // Ethertype inconnu, mais accepté
+        assert_eq!(datalink.ethertype.name(), "Unknown (0xABCD)"); // Ethertype inconnu, mais accepté
     }
 
     #[test]
@@ -249,7 +247,7 @@ mod tests {
 
         let datalink = DataLink::try_from(raw_packet.as_ref()).unwrap();
 
-        assert_eq!(datalink.ethertype, "IPv4");
+        assert_eq!(datalink.ethertype.name(), "IPv4");
         assert!(datalink.vlan.is_some());
         let vlan = datalink.vlan.unwrap();
         assert_eq!(vlan.id, 10);

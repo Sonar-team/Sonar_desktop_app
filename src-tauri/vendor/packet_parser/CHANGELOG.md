@@ -6,6 +6,21 @@ Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ## [Unreleased]
 
+## [1.5.5] - 2026-06-29
+
+### Change
+
+- Detection PostgreSQL basee sur la structure du payload TCP au lieu du port 5432.
+- Alignement du parseur PostgreSQL sur les formats de messages frontend/backend pour les StartupMessage 3.0/3.2 et les CancelRequest a cle secrete variable.
+
+### Corrige
+
+- Reduction des faux positifs PostgreSQL en exigeant une signature applicative forte avant de labelliser le payload.
+
+### Validation
+
+- `cargo test` passe avec 297 tests unitaires et 13 doctests.
+
 ## [1.5.4] - 2026-06-26
 
 ### Ajoute

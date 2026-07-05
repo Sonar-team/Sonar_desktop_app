@@ -645,3 +645,277 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod extra_tests {
+    use super::*;
+
+    fn tlv(tag: u8, body: &[u8]) -> Vec<u8> {
+        assert!(body.len() < 128, "helper limité à la forme courte");
+        let mut out = vec![tag, body.len() as u8];
+        out.extend_from_slice(body);
+        out
+    }
+
+    fn int(value: &[u8]) -> Vec<u8> {
+        tlv(ASN1_INTEGER_TAG, value)
+    }
+
+    fn varbind(oid: &[u8], value_tlv: &[u8]) -> Vec<u8> {
+        let mut body = tlv(ASN1_OBJECT_IDENTIFIER_TAG, oid);
+        body.extend_from_slice(value_tlv);
+        tlv(ASN1_SEQUENCE_TAG, &body)
+    }
+
+    #[test]
+    fn parses_trap_v1_pdu() {
+        let mut varbinds = Vec::new();
+        varbinds.extend_from_slice(&varbind(&[0x2B, 6, 1], &tlv(ASN1_NULL_TAG, &[])));
+
+        let mut pdu_body = tlv(ASN1_OBJECT_IDENTIFIER_TAG, &[0x2B, 6, 1, 4, 1]); // enterprise
+        pdu_body.extend_from_slice(&tlv(SNMP_IP_ADDRESS_TAG, &[192, 168, 1, 1]));
+        pdu_body.extend_from_slice(&int(&[6])); // generic trap
+        pdu_body.extend_from_slice(&int(&[1])); // specific trap
+        pdu_body.extend_from_slice(&tlv(SNMP_TIMETICKS_TAG, &[0x01, 0x00])); // 256
+        pdu_body.extend_from_slice(&tlv(ASN1_SEQUENCE_TAG, &varbinds));
+
+        let mut message = int(&[0]); // version 1
+        message.extend_from_slice(&tlv(ASN1_OCTET_STRING_TAG, b"public"));
+        message.extend_from_slice(&tlv(0xA4, &pdu_body)); // Trap v1
+
+        let packet_bytes = tlv(ASN1_SEQUENCE_TAG, &message);
+        let packet = SnmpPacket::try_from(packet_bytes.as_slice()).expect("trap v1 valide");
+
+        assert!(matches!(packet.version, SnmpVersion::V1));
+        let SnmpMessage::V1V2c(msg) = &packet.message else {
+            panic!("attendu message v1/v2c");
+        };
+        assert_eq!(msg.community, b"public");
+        assert!(matches!(msg.pdu.pdu_type, SnmpPduType::TrapV1));
+        match &msg.pdu.payload {
+            SnmpPduPayload::TrapV1 {
+                enterprise,
+                agent_address,
+                generic_trap,
+                specific_trap,
+                timestamp,
+                variable_bindings,
+            } => {
+                assert_eq!(*enterprise, &[0x2B, 6, 1, 4, 1]);
+                assert_eq!(*agent_address, [192, 168, 1, 1]);
+                assert_eq!(*generic_trap, 6);
+                assert_eq!(*specific_trap, 1);
+                assert_eq!(*timestamp, 256);
+                assert_eq!(variable_bindings.len(), 1);
+                assert!(matches!(variable_bindings[0].value, SnmpValue::Null));
+            }
+            other => panic!("attendu TrapV1, obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn trap_v1_rejects_bad_agent_address_length() {
+        let mut pdu_body = tlv(ASN1_OBJECT_IDENTIFIER_TAG, &[0x2B]);
+        pdu_body.extend_from_slice(&tlv(SNMP_IP_ADDRESS_TAG, &[192, 168, 1])); // 3 octets
+
+        let mut message = int(&[0]);
+        message.extend_from_slice(&tlv(ASN1_OCTET_STRING_TAG, b"public"));
+        message.extend_from_slice(&tlv(0xA4, &pdu_body));
+
+        let packet_bytes = tlv(ASN1_SEQUENCE_TAG, &message);
+        assert!(matches!(
+            SnmpPacket::try_from(packet_bytes.as_slice()),
+            Err(SnmpError::InvalidIpAddressLength { actual: 3 })
+        ));
+    }
+
+    fn v2c_response_with_value(value_tlv: &[u8]) -> Vec<u8> {
+        let varbinds = varbind(&[0x2B, 6, 1], value_tlv);
+
+        let mut pdu_body = int(&[1]); // request id
+        pdu_body.extend_from_slice(&int(&[0])); // error status
+        pdu_body.extend_from_slice(&int(&[0])); // error index
+        pdu_body.extend_from_slice(&tlv(ASN1_SEQUENCE_TAG, &varbinds));
+
+        let mut message = int(&[1]); // version 2c
+        message.extend_from_slice(&tlv(ASN1_OCTET_STRING_TAG, b"public"));
+        message.extend_from_slice(&tlv(0xA2, &pdu_body)); // Response
+
+        tlv(ASN1_SEQUENCE_TAG, &message)
+    }
+
+    fn first_value(packet_bytes: &[u8]) -> String {
+        let packet = SnmpPacket::try_from(packet_bytes).expect("paquet valide");
+        let SnmpMessage::V1V2c(msg) = &packet.message else {
+            panic!("attendu v1/v2c");
+        };
+        let SnmpPduPayload::Standard {
+            variable_bindings, ..
+        } = &msg.pdu.payload
+        else {
+            panic!("attendu Standard");
+        };
+        format!("{:?}", variable_bindings[0].value)
+    }
+
+    #[test]
+    fn parses_all_snmp_value_types() {
+        let cases: &[(Vec<u8>, &str)] = &[
+            (int(&[0x2A]), "Integer(42)"),
+            (int(&[0xFF]), "Integer(-1)"), // entier négatif
+            (tlv(ASN1_OCTET_STRING_TAG, b"hi"), "OctetString([104, 105])"),
+            (tlv(ASN1_NULL_TAG, &[]), "Null"),
+            (
+                tlv(ASN1_OBJECT_IDENTIFIER_TAG, &[0x2B, 6]),
+                "ObjectIdentifier([43, 6])",
+            ),
+            (
+                tlv(SNMP_IP_ADDRESS_TAG, &[10, 0, 0, 1]),
+                "IpAddress([10, 0, 0, 1])",
+            ),
+            (tlv(SNMP_COUNTER32_TAG, &[0x05]), "Counter32(5)"),
+            (tlv(SNMP_GAUGE32_TAG, &[0x07]), "Gauge32(7)"),
+            (tlv(SNMP_TIMETICKS_TAG, &[0x0A]), "TimeTicks(10)"),
+            (tlv(SNMP_OPAQUE_TAG, &[0xAB]), "Opaque([171])"),
+            (tlv(SNMP_COUNTER64_TAG, &[0x01, 0x00]), "Counter64(256)"),
+            (tlv(SNMP_NO_SUCH_OBJECT_TAG, &[]), "NoSuchObject"),
+            (tlv(SNMP_NO_SUCH_INSTANCE_TAG, &[]), "NoSuchInstance"),
+            (tlv(SNMP_END_OF_MIB_VIEW_TAG, &[]), "EndOfMibView"),
+        ];
+
+        for (value_tlv, expected) in cases {
+            let rendered = first_value(&v2c_response_with_value(value_tlv));
+            assert_eq!(&rendered, expected);
+        }
+
+        // Tag inconnu -> Unsupported
+        let rendered = first_value(&v2c_response_with_value(&tlv(0x45, &[0x01])));
+        assert!(rendered.starts_with("Unsupported"));
+    }
+
+    #[test]
+    fn rejects_invalid_values() {
+        // NULL non vide
+        assert!(SnmpPacket::try_from(
+            v2c_response_with_value(&tlv(ASN1_NULL_TAG, &[1])).as_slice()
+        )
+        .is_err());
+        // IpAddress de 5 octets
+        assert!(SnmpPacket::try_from(
+            v2c_response_with_value(&tlv(SNMP_IP_ADDRESS_TAG, &[1, 2, 3, 4, 5])).as_slice()
+        )
+        .is_err());
+        // Counter32 qui déborde u32
+        assert!(SnmpPacket::try_from(
+            v2c_response_with_value(&tlv(SNMP_COUNTER32_TAG, &[1, 0, 0, 0, 0])).as_slice()
+        )
+        .is_err());
+        // exception avec contenu
+        assert!(SnmpPacket::try_from(
+            v2c_response_with_value(&tlv(SNMP_NO_SUCH_OBJECT_TAG, &[1])).as_slice()
+        )
+        .is_err());
+    }
+
+    fn v3_packet(data_tlv: &[u8]) -> Vec<u8> {
+        let mut header = int(&[0x12]); // message id
+        header.extend_from_slice(&int(&[0x7F])); // max size
+        header.extend_from_slice(&tlv(ASN1_OCTET_STRING_TAG, &[0x04])); // flags
+        header.extend_from_slice(&int(&[3])); // security model USM
+
+        let mut message = int(&[3]); // version 3
+        message.extend_from_slice(&tlv(ASN1_SEQUENCE_TAG, &header));
+        message.extend_from_slice(&tlv(ASN1_OCTET_STRING_TAG, &[0xAA, 0xBB])); // security params
+        message.extend_from_slice(data_tlv);
+
+        tlv(ASN1_SEQUENCE_TAG, &message)
+    }
+
+    #[test]
+    fn parses_v3_scoped_pdu() {
+        let varbinds = varbind(&[0x2B, 6, 1], &tlv(ASN1_NULL_TAG, &[]));
+        let mut pdu_body = int(&[9]);
+        pdu_body.extend_from_slice(&int(&[0]));
+        pdu_body.extend_from_slice(&int(&[0]));
+        pdu_body.extend_from_slice(&tlv(ASN1_SEQUENCE_TAG, &varbinds));
+
+        let mut scoped = tlv(ASN1_OCTET_STRING_TAG, &[0x80, 0x01]); // engine id
+        scoped.extend_from_slice(&tlv(ASN1_OCTET_STRING_TAG, b"ctx"));
+        scoped.extend_from_slice(&tlv(0xA0, &pdu_body)); // GetRequest
+
+        let packet_bytes = v3_packet(&tlv(ASN1_SEQUENCE_TAG, &scoped));
+        let packet = SnmpPacket::try_from(packet_bytes.as_slice()).expect("v3 valide");
+
+        assert!(matches!(packet.version, SnmpVersion::V3));
+        let SnmpMessage::V3(msg) = &packet.message else {
+            panic!("attendu message v3");
+        };
+        assert_eq!(msg.message_id, 0x12);
+        assert_eq!(msg.max_size, 0x7F);
+        assert_eq!(msg.flags, &[0x04]);
+        assert_eq!(msg.security_model, 3);
+        assert_eq!(msg.security_parameters, &[0xAA, 0xBB]);
+        match &msg.data {
+            SnmpV3Data::ScopedPdu(scoped) => {
+                assert_eq!(scoped.context_engine_id, &[0x80, 0x01]);
+                assert_eq!(scoped.context_name, b"ctx");
+                assert!(matches!(scoped.pdu.pdu_type, SnmpPduType::GetRequest));
+            }
+            other => panic!("attendu ScopedPdu, obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_v3_encrypted_pdu() {
+        let packet_bytes = v3_packet(&tlv(ASN1_OCTET_STRING_TAG, &[0xDE, 0xAD]));
+        let packet = SnmpPacket::try_from(packet_bytes.as_slice()).expect("v3 chiffré valide");
+
+        let SnmpMessage::V3(msg) = &packet.message else {
+            panic!("attendu message v3");
+        };
+        assert!(matches!(msg.data, SnmpV3Data::EncryptedPdu(&[0xDE, 0xAD])));
+    }
+
+    #[test]
+    fn v3_rejects_invalid_data_tag() {
+        let packet_bytes = v3_packet(&int(&[1]));
+        assert!(matches!(
+            SnmpPacket::try_from(packet_bytes.as_slice()),
+            Err(SnmpError::InvalidTag {
+                field: "v3_data",
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn read_tlv_long_form_length() {
+        // Longueur en forme longue : 0x81 puis 1 octet
+        let mut data = vec![ASN1_OCTET_STRING_TAG, 0x81, 130];
+        data.extend_from_slice(&[0xAB; 130]);
+
+        let mut offset = 0;
+        let parsed = read_tlv(&data, &mut offset, "test").unwrap();
+        assert_eq!(parsed.value.len(), 130);
+        assert_eq!(offset, data.len());
+    }
+
+    #[test]
+    fn read_tlv_rejects_indefinite_and_oversized_lengths() {
+        let mut offset = 0;
+        assert!(matches!(
+            read_tlv(&[0x04, 0x80, 0x00], &mut offset, "test"),
+            Err(SnmpError::UnsupportedIndefiniteLength { .. })
+        ));
+
+        let mut offset = 0;
+        assert!(matches!(
+            read_tlv(&[0x04, 0x89, 0, 0, 0, 0, 0, 0, 0, 0, 0], &mut offset, "test"),
+            Err(SnmpError::UnsupportedLengthSize { actual: 9, .. })
+        ));
+
+        // longueur déclarée au-delà du buffer
+        let mut offset = 0;
+        assert!(read_tlv(&[0x04, 0x05, 0x01], &mut offset, "test").is_err());
+    }
+}

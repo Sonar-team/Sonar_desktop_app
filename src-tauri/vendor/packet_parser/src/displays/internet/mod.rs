@@ -42,7 +42,7 @@ mod tests {
     #[test]
     fn test_display_internet_with_all_fields() {
         let internet = Internet {
-            protocol_name: "IPv4".to_string(),
+            protocol_name: "IPv4",
             payload_protocol: Some(TransportProtocol::Tcp),
             source: Some(IpAddr::V4(Ipv4Addr::new(192, 168, 1, 10))),
             source_type: Some(IpType::Private),
@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn test_display_internet_with_none_fields() {
         let internet = Internet {
-            protocol_name: "IPv4".to_string(),
+            protocol_name: "IPv4",
             payload_protocol: None,
             source: None,
             source_type: None,

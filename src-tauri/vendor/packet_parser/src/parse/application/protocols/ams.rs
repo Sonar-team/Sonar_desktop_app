@@ -117,3 +117,99 @@ impl<'a> TryFrom<&'a [u8]> for AmsPacket<'a> {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Header AMS valide : cmd_id 1, state_flags 0x04, cb_data = data.len()
+    fn build_ams(cmd_id: u16, state_flags: u16, cb_data: u32, data: &[u8]) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(32 + data.len());
+        bytes.extend_from_slice(&[0, 0, 0, 0, 0, 130]); // target net id
+        bytes.extend_from_slice(&851u16.to_le_bytes()); // target port
+        bytes.extend_from_slice(&[192, 168, 1, 1, 1, 1]); // sender net id
+        bytes.extend_from_slice(&33000u16.to_le_bytes()); // sender port
+        bytes.extend_from_slice(&cmd_id.to_le_bytes());
+        bytes.extend_from_slice(&state_flags.to_le_bytes());
+        bytes.extend_from_slice(&cb_data.to_le_bytes());
+        bytes.extend_from_slice(&0u32.to_le_bytes()); // error code
+        bytes.extend_from_slice(&7u32.to_le_bytes()); // invoke id
+        bytes.extend_from_slice(data);
+        bytes
+    }
+
+    #[test]
+    fn test_parse_valid_ams_packet() {
+        let data = [0xDE, 0xAD, 0xBE, 0xEF];
+        let bytes = build_ams(0x0002, 0x0004, 4, &data);
+
+        let ams = AmsPacket::try_from(bytes.as_slice()).expect("paquet AMS valide");
+        assert_eq!(ams.ams_target_net_id, [0, 0, 0, 0, 0, 130]);
+        assert_eq!(ams.ams_target_port, 851);
+        assert_eq!(ams.ams_sender_net_id, [192, 168, 1, 1, 1, 1]);
+        assert_eq!(ams.ams_sender_port, 33000);
+        assert_eq!(ams.cmd_id, 2);
+        assert_eq!(ams.state_flags, 4);
+        assert_eq!(ams.cb_data, 4);
+        assert_eq!(ams.error_code, 0);
+        assert_eq!(ams.invoke_id, 7);
+        assert_eq!(ams.data, &data);
+    }
+
+    #[test]
+    fn test_parse_valid_ams_packet_without_data() {
+        let bytes = build_ams(0x0001, 0x0000, 0, &[]);
+        let ams = AmsPacket::try_from(bytes.as_slice()).expect("paquet AMS sans data");
+        assert!(ams.data.is_empty());
+    }
+
+    #[test]
+    fn test_header_too_short() {
+        let bytes = [0u8; 31];
+        assert!(matches!(
+            AmsPacket::try_from(&bytes[..]),
+            Err(AmsParseError::HeaderTooShort {
+                expected: 32,
+                actual: 31
+            })
+        ));
+    }
+
+    #[test]
+    fn test_cb_data_mismatch() {
+        // cb_data annonce 10 octets mais 4 fournis
+        let bytes = build_ams(0x0001, 0x0004, 10, &[1, 2, 3, 4]);
+        assert!(matches!(
+            AmsPacket::try_from(bytes.as_slice()),
+            Err(AmsParseError::InvalidCbDataLength {
+                cb_data: 10,
+                actual: 4
+            })
+        ));
+    }
+
+    #[test]
+    fn test_unknown_command() {
+        let bytes = build_ams(0x0000, 0x0004, 0, &[]);
+        assert!(matches!(
+            AmsPacket::try_from(bytes.as_slice()),
+            Err(AmsParseError::UnknownCommand(0))
+        ));
+
+        let bytes = build_ams(0x000A, 0x0004, 0, &[]);
+        assert!(matches!(
+            AmsPacket::try_from(bytes.as_slice()),
+            Err(AmsParseError::UnknownCommand(0x000A))
+        ));
+    }
+
+    #[test]
+    fn test_invalid_state_flags() {
+        // bit réservé (0x0010) positionné
+        let bytes = build_ams(0x0001, 0x0010, 0, &[]);
+        assert!(matches!(
+            AmsPacket::try_from(bytes.as_slice()),
+            Err(AmsParseError::InvalidStateFlags(0x0010))
+        ));
+    }
+}

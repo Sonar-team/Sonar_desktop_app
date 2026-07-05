@@ -816,6 +816,24 @@ mod tests {
         ));
     }
 
+    #[test]
+    fn test_protocol_conversion_exhaustive() {
+        for value in 0..=255u8 {
+            let protocol = TransportProtocol::from_u8(value);
+            match value {
+                // 148-252 : plage non assignée
+                148..=252 => assert!(
+                    matches!(protocol, TransportProtocol::Unknown(v) if v == value),
+                    "attendu Unknown({value}), obtenu {protocol:?}"
+                ),
+                _ => assert!(
+                    !matches!(protocol, TransportProtocol::Unknown(_)),
+                    "numéro assigné {value} mappé sur Unknown"
+                ),
+            }
+        }
+    }
+
     // test the to_transport method
     #[test]
     fn test_to_transport() {

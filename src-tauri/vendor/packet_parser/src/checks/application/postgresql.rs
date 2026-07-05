@@ -8,6 +8,8 @@ use crate::errors::application::postgresql::PostgreSqlError;
 pub const POSTGRESQL_TYPED_HEADER_LEN: usize = 5;
 pub const POSTGRESQL_UNTYPED_HEADER_LEN: usize = 8;
 pub const POSTGRESQL_LENGTH_FIELD_LEN: usize = 4;
+pub const POSTGRESQL_SECRET_KEY_MIN_LEN: usize = 4;
+pub const POSTGRESQL_SECRET_KEY_MAX_LEN: usize = 256;
 
 pub fn validate_packet_not_empty(payload: &[u8]) -> Result<(), PostgreSqlError> {
     if payload.is_empty() {
@@ -106,6 +108,20 @@ pub fn validate_no_trailing_bytes(
         return Err(PostgreSqlError::TrailingBytes {
             message_type,
             remaining,
+        });
+    }
+
+    Ok(())
+}
+
+pub fn validate_secret_key_length(
+    length: usize,
+    field: &'static str,
+) -> Result<(), PostgreSqlError> {
+    if !(POSTGRESQL_SECRET_KEY_MIN_LEN..=POSTGRESQL_SECRET_KEY_MAX_LEN).contains(&length) {
+        return Err(PostgreSqlError::InvalidFieldLength {
+            field,
+            got: length as i32,
         });
     }
 

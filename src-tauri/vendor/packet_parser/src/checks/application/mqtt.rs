@@ -166,3 +166,117 @@ pub fn variable_header_len(packet_type: MqttPacketType, body: &[u8]) -> Result<u
         _ => Ok(0),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_packet_type_all_nibbles() {
+        let cases: &[(u8, MqttPacketType)] = &[
+            (1, MqttPacketType::Connect),
+            (2, MqttPacketType::Connack),
+            (3, MqttPacketType::Publish),
+            (4, MqttPacketType::Puback),
+            (5, MqttPacketType::Pubrec),
+            (6, MqttPacketType::Pubrel),
+            (7, MqttPacketType::Pubcomp),
+            (8, MqttPacketType::Subscribe),
+            (9, MqttPacketType::Suback),
+            (10, MqttPacketType::Unsubscribe),
+            (11, MqttPacketType::Unsuback),
+            (12, MqttPacketType::Pingreq),
+            (13, MqttPacketType::Pingresp),
+            (14, MqttPacketType::Disconnect),
+        ];
+
+        for (nibble, expected) in cases {
+            assert_eq!(parse_packet_type(nibble << 4).unwrap(), *expected);
+        }
+
+        assert!(matches!(
+            parse_packet_type(0x00),
+            Err(MqttError::InvalidPacketType { raw: 0 })
+        ));
+        assert!(matches!(
+            parse_packet_type(0xF0),
+            Err(MqttError::InvalidPacketType { raw: 15 })
+        ));
+    }
+
+    #[test]
+    fn test_fixed_header_flags_rules() {
+        // PUBLISH accepte tous les flags
+        assert!(validate_fixed_header_flags(MqttPacketType::Publish, 0x3F).is_ok());
+
+        // PUBREL / SUBSCRIBE / UNSUBSCRIBE exigent 0b0010
+        for packet_type in [
+            MqttPacketType::Pubrel,
+            MqttPacketType::Subscribe,
+            MqttPacketType::Unsubscribe,
+        ] {
+            assert!(validate_fixed_header_flags(packet_type, 0x62).is_ok());
+            assert!(matches!(
+                validate_fixed_header_flags(packet_type, 0x60),
+                Err(MqttError::InvalidHeaderFlags { .. })
+            ));
+        }
+
+        // Les autres exigent 0
+        assert!(validate_fixed_header_flags(MqttPacketType::Connect, 0x10).is_ok());
+        assert!(matches!(
+            validate_fixed_header_flags(MqttPacketType::Connect, 0x11),
+            Err(MqttError::InvalidHeaderFlags { .. })
+        ));
+    }
+
+    #[test]
+    fn test_decode_remaining_length_multi_byte() {
+        // 321 = 0xC1 0x02 en varint MQTT
+        assert_eq!(decode_remaining_length(&[0xC1, 0x02]).unwrap(), (321, 2));
+        // continuation sans fin sur 4 octets
+        assert!(matches!(
+            decode_remaining_length(&[0x80, 0x80, 0x80, 0x80]),
+            Err(MqttError::RemainingLengthOverflow)
+        ));
+    }
+
+    #[test]
+    fn test_variable_header_len_rules() {
+        // CONNACK : 2 octets requis
+        assert_eq!(
+            variable_header_len(MqttPacketType::Connack, &[0, 0]).unwrap(),
+            2
+        );
+        assert!(matches!(
+            variable_header_len(MqttPacketType::Connack, &[0]),
+            Err(MqttError::VariableHeaderTooShort { .. })
+        ));
+
+        // PUBLISH : trop court
+        assert!(matches!(
+            variable_header_len(MqttPacketType::Publish, &[0]),
+            Err(MqttError::VariableHeaderTooShort { .. })
+        ));
+
+        // Types sans variable header
+        assert_eq!(
+            variable_header_len(MqttPacketType::Disconnect, &[]).unwrap(),
+            0
+        );
+        assert_eq!(
+            variable_header_len(MqttPacketType::Pingresp, &[]).unwrap(),
+            0
+        );
+        assert_eq!(variable_header_len(MqttPacketType::Puback, &[0, 0]).unwrap(), 0);
+    }
+
+    #[test]
+    fn test_header_available() {
+        assert!(validate_mqtt_header_available(10, 5).is_ok());
+        assert!(matches!(
+            validate_mqtt_header_available(3, 5),
+            Err(MqttError::PacketTooShort { actual: 3, min: 5 })
+        ));
+    }
+}

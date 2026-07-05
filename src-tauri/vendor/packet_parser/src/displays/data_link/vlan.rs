@@ -12,3 +12,21 @@ impl Display for VlanTag {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parse::data_link::ethertype::Ethertype;
+    use crate::parse::data_link::vlan_tag::VlanTag;
+
+    #[test]
+    fn test_vlan_tag_display() {
+        let vlan = VlanTag {
+            id: 100,
+            pcp: 5,
+            dei: true,
+            inner_ethertype: Ethertype(0x0800),
+        };
+
+        assert_eq!(vlan.to_string(), "ID: 64, PCP: 05, DEI: true");
+    }
+}

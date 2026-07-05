@@ -85,3 +85,90 @@ pub fn validate_protocol_len(protocol_type: u16, protocol_len: u8) -> Result<(),
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validate_hardware_type() {
+        assert!(validate_hardware_type(ARP_ETHERNET_HARDWARE_TYPE).is_ok());
+        assert!(matches!(
+            validate_hardware_type(6),
+            Err(ArpError::UnsupportedHardwareType(6))
+        ));
+    }
+
+    #[test]
+    fn test_validate_hardware_len() {
+        assert!(validate_hardware_len(ARP_ETHERNET_HARDWARE_LEN).is_ok());
+        assert!(matches!(
+            validate_hardware_len(8),
+            Err(ArpError::InvalidHardwareLength {
+                expected: 6,
+                actual: 8
+            })
+        ));
+    }
+
+    #[test]
+    fn test_validate_dynamic_arp_length() {
+        // IPv4/Ethernet : 8 + 2*6 + 2*4 = 28
+        assert!(validate_dynamic_arp_length(28, 6, 4).is_ok());
+        assert!(matches!(
+            validate_dynamic_arp_length(27, 6, 4),
+            Err(ArpError::InvalidLength {
+                expected: 28,
+                actual: 27
+            })
+        ));
+        // IPv6 : 8 + 2*6 + 2*16 = 52
+        assert!(validate_dynamic_arp_length(52, 6, 16).is_ok());
+    }
+
+    #[test]
+    fn test_validate_operation() {
+        assert!(validate_operation(1).is_ok());
+        assert!(validate_operation(2).is_ok());
+        assert!(matches!(
+            validate_operation(3),
+            Err(ArpError::UnsupportedOperation(3))
+        ));
+    }
+
+    #[test]
+    fn test_validate_protocol_type() {
+        assert!(validate_protocol_type(ARP_IPV4_PROTOCOL_TYPE).is_ok());
+        assert!(validate_protocol_type(ARP_IPV6_PROTOCOL_TYPE).is_ok());
+        assert!(matches!(
+            validate_protocol_type(0x1234),
+            Err(ArpError::UnsupportedProtocolType(0x1234))
+        ));
+    }
+
+    #[test]
+    fn test_validate_protocol_len() {
+        assert!(validate_protocol_len(ARP_IPV4_PROTOCOL_TYPE, 4).is_ok());
+        assert!(validate_protocol_len(ARP_IPV6_PROTOCOL_TYPE, 16).is_ok());
+        assert!(matches!(
+            validate_protocol_len(ARP_IPV4_PROTOCOL_TYPE, 16),
+            Err(ArpError::InvalidProtocolLength {
+                expected: 4,
+                actual: 16
+            })
+        ));
+        assert!(matches!(
+            validate_protocol_len(0x1234, 4),
+            Err(ArpError::UnsupportedProtocolType(0x1234))
+        ));
+    }
+
+    #[test]
+    fn test_validate_arp_min_length() {
+        assert!(validate_arp_min_length(&[0u8; 28]).is_ok());
+        assert!(matches!(
+            validate_arp_min_length(&[0u8; 27]),
+            Err(ArpError::InvalidLength { .. })
+        ));
+    }
+}

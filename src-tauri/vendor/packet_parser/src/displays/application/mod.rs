@@ -47,3 +47,60 @@ impl<'a> fmt::Display for ApplicationProtocol<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_application_display() {
+        let app = Application {
+            application_protocol: "NTP",
+        };
+        assert_eq!(app.to_string(), "NTP ");
+    }
+
+    #[test]
+    fn test_application_protocol_display_simple_variants() {
+        use crate::parse::application::protocols::{
+            ams::AmsPacket, mqtt::MqttPacket, ntp::NtpPacket,
+        };
+
+        // NTP : fixture minimale valide (48 octets)
+        let ntp_bytes: &[u8] = &[
+            0x23, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        ];
+        let ntp = NtpPacket::try_from(ntp_bytes).unwrap();
+        assert_eq!(ApplicationProtocol::Ntp(ntp).to_string(), "NTP");
+
+        // MQTT : PINGREQ
+        let mqtt = MqttPacket::try_from(&[0xC0u8, 0x00][..]).unwrap();
+        assert_eq!(ApplicationProtocol::Mqtt(mqtt).to_string(), "MQTT");
+
+        // AMS : header valide sans data
+        let mut ams_bytes = vec![0u8; 32];
+        ams_bytes[16] = 0x01; // cmd_id = 1
+        let ams = AmsPacket::try_from(ams_bytes.as_slice()).unwrap();
+        assert_eq!(ApplicationProtocol::Ams(ams).to_string(), "AMS");
+
+        assert_eq!(ApplicationProtocol::None.to_string(), "None");
+    }
+
+    #[test]
+    fn test_application_protocol_display_raw_short() {
+        let data = [0xDE, 0xAD];
+        let rendered = ApplicationProtocol::Raw(&data).to_string();
+        assert_eq!(rendered, "Raw [2 bytes]: DE AD");
+    }
+
+    #[test]
+    fn test_application_protocol_display_raw_truncated() {
+        let data = [0xAA; 20];
+        let rendered = ApplicationProtocol::Raw(&data).to_string();
+        assert!(rendered.starts_with("Raw [20 bytes]:"));
+        assert!(rendered.ends_with("..."));
+    }
+}

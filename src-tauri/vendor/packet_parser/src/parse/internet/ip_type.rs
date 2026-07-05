@@ -20,22 +20,28 @@ pub enum IpType {
 impl IpType {
     pub fn from_ip(ip: &str) -> Self {
         match ip.parse::<IpAddr>() {
-            Ok(IpAddr::V4(ipv4_addr)) if ipv4_addr.is_private() => Self::Private,
-            Ok(IpAddr::V4(ipv4_addr)) if ipv4_addr.is_loopback() => Self::Loopback,
-            Ok(IpAddr::V4(ipv4_addr)) if is_apipa_ip(&ipv4_addr) => Self::Apipa,
-            Ok(IpAddr::V4(ipv4_addr)) if ipv4_addr.is_multicast() => Self::Multicast,
-            Ok(IpAddr::V4(ipv4_addr)) if ipv4_addr.is_documentation() => Self::Documentation,
-            Ok(IpAddr::V4(ipv4_addr)) if ipv4_addr.is_link_local() => Self::LinkLocal,
-            Ok(IpAddr::V4(ipv4_addr)) if ipv4_addr.is_unspecified() => Self::Unknown,
-
-            Ok(IpAddr::V6(ipv6_addr)) if ipv6_addr.is_multicast() => Self::Multicast,
-            Ok(IpAddr::V6(ipv6_addr)) if ipv6_addr.is_loopback() => Self::Loopback,
-            Ok(IpAddr::V6(ipv6_addr)) if is_ipv6_unicast_link_local(&ipv6_addr) => Self::LinkLocal,
-            Ok(IpAddr::V6(ipv6_addr)) if is_ula(&ipv6_addr) => Self::Ula,
-            Ok(IpAddr::V6(ipv6_addr)) if ipv6_addr.is_unspecified() => Self::Unknown,
-            Ok(IpAddr::V6(ipv6_addr)) if ipv6_addr.is_unique_local() => Self::Ula,
-            Ok(_) => Self::Public, // Cette ligne devrait être la dernière condition pour IPv6
+            Ok(addr) => Self::from_addr(&addr),
             Err(_) => Self::Unknown,
+        }
+    }
+
+    pub fn from_addr(ip: &IpAddr) -> Self {
+        match ip {
+            IpAddr::V4(ipv4_addr) if ipv4_addr.is_private() => Self::Private,
+            IpAddr::V4(ipv4_addr) if ipv4_addr.is_loopback() => Self::Loopback,
+            IpAddr::V4(ipv4_addr) if is_apipa_ip(ipv4_addr) => Self::Apipa,
+            IpAddr::V4(ipv4_addr) if ipv4_addr.is_multicast() => Self::Multicast,
+            IpAddr::V4(ipv4_addr) if ipv4_addr.is_documentation() => Self::Documentation,
+            IpAddr::V4(ipv4_addr) if ipv4_addr.is_link_local() => Self::LinkLocal,
+            IpAddr::V4(ipv4_addr) if ipv4_addr.is_unspecified() => Self::Unknown,
+
+            IpAddr::V6(ipv6_addr) if ipv6_addr.is_multicast() => Self::Multicast,
+            IpAddr::V6(ipv6_addr) if ipv6_addr.is_loopback() => Self::Loopback,
+            IpAddr::V6(ipv6_addr) if is_ipv6_unicast_link_local(ipv6_addr) => Self::LinkLocal,
+            IpAddr::V6(ipv6_addr) if is_ula(ipv6_addr) => Self::Ula,
+            IpAddr::V6(ipv6_addr) if ipv6_addr.is_unspecified() => Self::Unknown,
+            IpAddr::V6(ipv6_addr) if ipv6_addr.is_unique_local() => Self::Ula,
+            _ => Self::Public, // Cette ligne devrait être la dernière condition pour IPv6
         }
     }
 }

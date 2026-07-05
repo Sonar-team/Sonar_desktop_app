@@ -40,3 +40,28 @@ impl fmt::Display for DnsClass {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_wraps_value() {
+        assert_eq!(DnsClass::new(1), DnsClasses::IN);
+        assert_eq!(DnsClass::new(42).0, 42);
+    }
+
+    #[test]
+    fn test_display_known_classes() {
+        assert_eq!(DnsClasses::IN.to_string(), "IN");
+        assert_eq!(DnsClasses::CS.to_string(), "CS");
+        assert_eq!(DnsClasses::CH.to_string(), "CH");
+        assert_eq!(DnsClasses::HS.to_string(), "HS");
+    }
+
+    #[test]
+    fn test_display_unknown_class() {
+        assert_eq!(DnsClass(0).to_string(), "unknown");
+        assert_eq!(DnsClass(255).to_string(), "unknown");
+    }
+}

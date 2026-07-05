@@ -370,3 +370,230 @@ fn parse_service_context_list(cur: &mut Cursor<'_>) -> Result<Vec<ServiceContext
 
     Ok(contexts)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn build_giop_header(msg_type: u8, message_length: u32) -> Vec<u8> {
+        let mut bytes = b"GIOP".to_vec();
+        bytes.extend_from_slice(&[1, 2]); // version 1.2
+        bytes.push(0); // flags : big-endian
+        bytes.push(msg_type);
+        bytes.extend_from_slice(&message_length.to_be_bytes());
+        bytes
+    }
+
+    #[test]
+    fn test_parse_valid_header_and_packet() {
+        let mut bytes = build_giop_header(1, 4); // Reply avec 4 octets de body
+        bytes.extend_from_slice(&[0xDE, 0xAD, 0xBE, 0xEF]);
+
+        let packet = GiopPacket::try_from(bytes.as_slice()).expect("paquet GIOP valide");
+        assert_eq!(&packet.header.magic, b"GIOP");
+        assert_eq!(packet.header.major_version, 1);
+        assert_eq!(packet.header.minor_version, 2);
+        assert_eq!(packet.header.flags, 0);
+        assert!(matches!(packet.header.message_type, GiopMessageType::Reply));
+        assert_eq!(packet.header.message_length, 4);
+        assert!(matches!(packet.payload, GiopMessage::Other));
+    }
+
+    #[test]
+    fn test_all_message_types() {
+        for (raw, expected) in [
+            (0u8, "Request"),
+            (1, "Reply"),
+            (2, "CancelRequest"),
+            (3, "LocateRequest"),
+            (4, "LocateReply"),
+            (5, "CloseConnection"),
+            (6, "MessageError"),
+            (7, "Fragment"),
+        ] {
+            let msg_type = GiopMessageType::try_from(raw).expect("type valide");
+            assert_eq!(format!("{msg_type:?}"), expected);
+        }
+
+        assert!(matches!(
+            GiopMessageType::try_from(8),
+            Err(GiopParseError::UnknownMessageType(8))
+        ));
+    }
+
+    #[test]
+    fn test_header_too_short() {
+        assert!(matches!(
+            GiopHeader::try_from(&b"GIOP"[..]),
+            Err(GiopParseError::InvalidSize)
+        ));
+    }
+
+    #[test]
+    fn test_invalid_magic() {
+        let bytes = [b'N', b'O', b'P', b'E', 1, 0, 0, 0, 0, 0, 0, 0];
+        assert!(matches!(
+            GiopHeader::try_from(&bytes[..]),
+            Err(GiopParseError::InvalidMagic)
+        ));
+    }
+
+    #[test]
+    fn test_unsupported_version() {
+        let mut bytes = build_giop_header(0, 0);
+        bytes[4] = 2; // major 2 non supporté
+        assert!(matches!(
+            GiopHeader::try_from(bytes.as_slice()),
+            Err(GiopParseError::UnsupportedVersion(2, 2))
+        ));
+
+        let mut bytes = build_giop_header(0, 0);
+        bytes[5] = 3; // minor 3 non supporté
+        assert!(matches!(
+            GiopHeader::try_from(bytes.as_slice()),
+            Err(GiopParseError::UnsupportedVersion(1, 3))
+        ));
+    }
+
+    #[test]
+    fn test_truncated_body() {
+        // message_length annonce 10 octets mais rien derrière le header
+        let bytes = build_giop_header(0, 10);
+        assert!(matches!(
+            GiopPacket::try_from(bytes.as_slice()),
+            Err(GiopParseError::TruncatedBody {
+                expected: 22,
+                actual: 12
+            })
+        ));
+    }
+
+    /// Body CDR d'un Request big-endian : target KeyAddr, opération "op",
+    /// un service context, puis stub data.
+    fn build_request_body_be() -> Vec<u8> {
+        let mut body = Vec::new();
+        body.extend_from_slice(&7u32.to_be_bytes()); // request_id
+        body.push(3); // response_flags
+        body.extend_from_slice(&[0, 0, 0]); // reserved
+        body.push(0); // discriminator KeyAddr
+        body.extend_from_slice(&3u32.to_be_bytes()); // key len
+        body.extend_from_slice(b"key");
+        body.extend_from_slice(&3u32.to_be_bytes()); // operation len ("op" + NUL)
+        body.extend_from_slice(b"op\0");
+        body.extend_from_slice(&1u32.to_be_bytes()); // 1 service context
+        body.extend_from_slice(&17u32.to_be_bytes()); // context_id
+        body.extend_from_slice(&2u32.to_be_bytes()); // context len
+        body.extend_from_slice(&[0xAA, 0xBB]);
+        body.extend_from_slice(&[0x01, 0x02, 0x03]); // stub data
+        body
+    }
+
+    #[test]
+    fn test_parse_request_big_endian() {
+        let request =
+            GiopRequest::parse(&build_request_body_be(), false).expect("request valide");
+
+        assert_eq!(request.request_id, 7);
+        assert_eq!(request.response_flags, 3);
+        match &request.target {
+            TargetAddress::KeyAddr(key) => assert_eq!(key, b"key"),
+            other => panic!("attendu KeyAddr, obtenu {other:?}"),
+        }
+        assert_eq!(request.operation, "op");
+        assert_eq!(request.service_contexts.len(), 1);
+        assert_eq!(request.service_contexts[0].context_id, 17);
+        assert_eq!(request.service_contexts[0].context_data, vec![0xAA, 0xBB]);
+        assert_eq!(request.stub_data, vec![0x01, 0x02, 0x03]);
+    }
+
+    #[test]
+    fn test_parse_request_little_endian_without_stub() {
+        let mut body = Vec::new();
+        body.extend_from_slice(&42u32.to_le_bytes()); // request_id
+        body.push(0); // response_flags
+        body.extend_from_slice(&[0, 0, 0]); // reserved
+        body.push(1); // discriminator ProfileAddr
+        body.extend_from_slice(&2u32.to_le_bytes());
+        body.extend_from_slice(&[0x10, 0x20]);
+        body.extend_from_slice(&5u32.to_le_bytes()); // operation "ping" + NUL
+        body.extend_from_slice(b"ping\0");
+        body.extend_from_slice(&0u32.to_le_bytes()); // 0 service context
+
+        let request = GiopRequest::parse(&body, true).expect("request LE valide");
+        assert_eq!(request.request_id, 42);
+        assert!(matches!(request.target, TargetAddress::ProfileAddr(_)));
+        assert_eq!(request.operation, "ping");
+        assert!(request.service_contexts.is_empty());
+        assert!(request.stub_data.is_empty());
+    }
+
+    #[test]
+    fn test_parse_request_reference_addr() {
+        let mut body = Vec::new();
+        body.extend_from_slice(&1u32.to_be_bytes());
+        body.push(0);
+        body.extend_from_slice(&[0, 0, 0]);
+        body.push(2); // discriminator ReferenceAddr
+        body.extend_from_slice(&1u32.to_be_bytes());
+        body.push(0xFF);
+        body.extend_from_slice(&1u32.to_be_bytes()); // operation : chaîne vide NUL
+        body.push(0);
+        body.extend_from_slice(&0u32.to_be_bytes());
+
+        let request = GiopRequest::parse(&body, false).expect("request valide");
+        assert!(matches!(request.target, TargetAddress::ReferenceAddr(_)));
+        assert_eq!(request.operation, "");
+    }
+
+    #[test]
+    fn test_parse_request_unknown_target_discriminator() {
+        let mut body = Vec::new();
+        body.extend_from_slice(&1u32.to_be_bytes());
+        body.push(0);
+        body.extend_from_slice(&[0, 0, 0]);
+        body.push(9); // discriminator inconnu
+
+        assert!(matches!(
+            GiopRequest::parse(&body, false),
+            Err(GiopParseError::Other(_))
+        ));
+    }
+
+    #[test]
+    fn test_parse_request_invalid_utf8_operation() {
+        let mut body = Vec::new();
+        body.extend_from_slice(&1u32.to_be_bytes());
+        body.push(0);
+        body.extend_from_slice(&[0, 0, 0]);
+        body.push(0); // KeyAddr
+        body.extend_from_slice(&0u32.to_be_bytes()); // key vide
+        body.extend_from_slice(&2u32.to_be_bytes()); // operation : 2 octets invalides
+        body.extend_from_slice(&[0xFF, 0xFE]);
+
+        assert!(matches!(
+            GiopRequest::parse(&body, false),
+            Err(GiopParseError::InvalidUtf8)
+        ));
+    }
+
+    #[test]
+    fn test_parse_request_unexpected_eof() {
+        assert!(matches!(
+            GiopRequest::parse(&[0x00, 0x01], false),
+            Err(GiopParseError::UnexpectedEof)
+        ));
+
+        // EOF au milieu de la target
+        let mut body = Vec::new();
+        body.extend_from_slice(&1u32.to_be_bytes());
+        body.push(0);
+        body.extend_from_slice(&[0, 0, 0]);
+        body.push(0); // KeyAddr
+        body.extend_from_slice(&100u32.to_be_bytes()); // len 100 mais rien derrière
+
+        assert!(matches!(
+            GiopRequest::parse(&body, false),
+            Err(GiopParseError::UnexpectedEof)
+        ));
+    }
+}

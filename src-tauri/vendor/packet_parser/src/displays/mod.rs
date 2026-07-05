@@ -34,6 +34,8 @@ impl Display for PacketFlow<'_> {
 #[cfg(test)]
 mod tests {
     use crate::parse::PacketFlow;
+    use crate::parse::data_link::ethertype::Ethertype;
+    use crate::parse::data_link::mac_addres::MacAddress;
 
     #[test]
     fn test_packet_flow_display_only_data_link() {
@@ -41,9 +43,9 @@ mod tests {
 
         let packet = PacketFlow {
             data_link: crate::parse::data_link::DataLink {
-                destination_mac: "AA:BB:CC:DD:EE:FF".to_string(),
-                source_mac: "11:22:33:44:55:66".to_string(),
-                ethertype: "IPv4".to_string(),
+                destination_mac: MacAddress([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]),
+                source_mac: MacAddress([0x11, 0x22, 0x33, 0x44, 0x55, 0x66]),
+                ethertype: Ethertype(0x0800),
                 vlan: None,
                 payload: &payload,
             },
@@ -55,7 +57,7 @@ mod tests {
         let expected = concat!(
             "ParsedPacket :\n",
             "  Data Link Layer: \n",
-            "    Destination MAC: AA:BB:CC:DD:EE:FF,\n",
+            "    Destination MAC: aa:bb:cc:dd:ee:ff,\n",
             "    Source MAC: 11:22:33:44:55:66,\n",
             "    Ethertype: IPv4,\n",
             "    VLAN: None,\n",
@@ -72,9 +74,9 @@ mod tests {
 
         let packet = PacketFlow {
             data_link: crate::parse::data_link::DataLink {
-                destination_mac: "FF:FF:FF:FF:FF:FF".to_string(),
-                source_mac: "00:00:00:00:00:00".to_string(),
-                ethertype: "ARP".to_string(),
+                destination_mac: MacAddress([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]),
+                source_mac: MacAddress([0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
+                ethertype: Ethertype(0x0806),
                 vlan: None,
                 payload: &payload,
             },

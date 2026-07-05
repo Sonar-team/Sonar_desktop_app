@@ -37,8 +37,8 @@
 //! ```text
 //! Packet
 //! ├── DataLink (Ethernet II)
-//! │   ├── source_mac: String
-//! │   ├── destination_mac: String
+//! │   ├── source_mac: MacAddress
+//! │   ├── destination_mac: MacAddress
 //! │   └── ether_type: EtherType
 //! │
 //! ├── Network (IPv4/IPv6)

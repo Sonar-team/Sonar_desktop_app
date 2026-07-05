@@ -210,3 +210,124 @@ impl fmt::Display for DnsType {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_wraps_value() {
+        assert_eq!(DnsType::new(1), DnsTypes::A);
+        assert_eq!(DnsType::new(65535).0, 65535);
+    }
+
+    #[test]
+    fn test_display_known_types() {
+        let cases: &[(DnsType, &str)] = &[
+            (DnsTypes::A, "A"),
+            (DnsTypes::NS, "NS"),
+            (DnsTypes::MD, "MD"),
+            (DnsTypes::MF, "MF"),
+            (DnsTypes::CNAME, "CNAME"),
+            (DnsTypes::SOA, "SOA"),
+            (DnsTypes::MB, "MB"),
+            (DnsTypes::MG, "MG"),
+            (DnsTypes::MR, "MR"),
+            (DnsTypes::NULL, "NULL"),
+            (DnsTypes::WKS, "WKS"),
+            (DnsTypes::PTR, "PTR"),
+            (DnsTypes::HINFO, "HINFO"),
+            (DnsTypes::MINFO, "MINFO"),
+            (DnsTypes::MX, "MX"),
+            (DnsTypes::TXT, "TXT"),
+            (DnsTypes::RP, "RP"),
+            (DnsTypes::AFSDB, "AFSDB"),
+            (DnsTypes::X25, "X25"),
+            (DnsTypes::ISDN, "ISDN"),
+            (DnsTypes::RT, "RT"),
+            (DnsTypes::NSAP, "NSAP"),
+            (DnsTypes::NSAP_PTR, "NSAP_PTR"),
+            (DnsTypes::SIG, "SIG"),
+            (DnsTypes::KEY, "KEY"),
+            (DnsTypes::PX, "PX"),
+            (DnsTypes::GPOS, "GPOS"),
+            (DnsTypes::AAAA, "AAAA"),
+            (DnsTypes::LOC, "LOC"),
+            (DnsTypes::NXT, "NXT"),
+            (DnsTypes::EID, "EID"),
+            (DnsTypes::NIMLOC, "NIMLOC"),
+            (DnsTypes::SRV, "SRV"),
+            (DnsTypes::ATMA, "ATMA"),
+            (DnsTypes::NAPTR, "NAPTR"),
+            (DnsTypes::KX, "KX"),
+            (DnsTypes::CERT, "CERT"),
+            (DnsTypes::A6, "A6"),
+            (DnsTypes::DNAME, "DNAME"),
+            (DnsTypes::SINK, "SINK"),
+            (DnsTypes::OPT, "OPT"),
+            (DnsTypes::APL, "APL"),
+            (DnsTypes::DS, "DS"),
+            (DnsTypes::SSHFP, "SSHFP"),
+            (DnsTypes::IPSECKEY, "IPSECKEY"),
+            (DnsTypes::RRSIG, "RRSIG"),
+            (DnsTypes::NSEC, "NSEC"),
+            (DnsTypes::DNSKEY, "DNSKEY"),
+            (DnsTypes::DHCID, "DHCID"),
+            (DnsTypes::NSEC3, "NSEC3"),
+            (DnsTypes::NSEC3PARAM, "NSEC3PARAM"),
+            (DnsTypes::TLSA, "TLSA"),
+            (DnsTypes::SMIMEA, "SMIMEA"),
+            (DnsTypes::HIP, "HIP"),
+            (DnsTypes::NINFO, "NINFO"),
+            (DnsTypes::RKEY, "RKEY"),
+            (DnsTypes::TALINK, "TALINK"),
+            (DnsTypes::CDS, "CDS"),
+            (DnsTypes::CDNSKEY, "CDNSKEY"),
+            (DnsTypes::OPENPGPKEY, "OPENPGPKEY"),
+            (DnsTypes::CSYNC, "CSYNC"),
+            (DnsTypes::ZONEMD, "ZONEMD"),
+            (DnsTypes::SVCB, "SVCB"),
+            (DnsTypes::HTTPS, "HTTPS"),
+            (DnsTypes::SPF, "SPF"),
+            (DnsTypes::UINFO, "UINFO"),
+            (DnsTypes::UID, "UID"),
+            (DnsTypes::GID, "GID"),
+            (DnsTypes::UNSPEC, "UNSPEC"),
+            (DnsTypes::NID, "NID"),
+            (DnsTypes::L32, "L32"),
+            (DnsTypes::L64, "L64"),
+            (DnsTypes::LP, "LP"),
+            (DnsTypes::EUI48, "EUI48"),
+            (DnsTypes::EUI64, "EUI64"),
+            (DnsTypes::TKEY, "TKEY"),
+            (DnsTypes::TSIG, "TSIG"),
+            (DnsTypes::IXFR, "IXFR"),
+            (DnsTypes::AXFR, "AXFR"),
+            (DnsTypes::MAILB, "MAILB"),
+            (DnsTypes::MAILA, "MAILA"),
+            (DnsTypes::ANY, "ANY"),
+            (DnsTypes::URI, "URI"),
+            (DnsTypes::CAA, "CAA"),
+            (DnsTypes::AVC, "AVC"),
+            (DnsTypes::DOA, "DOA"),
+            (DnsTypes::AMTRELAY, "AMTRELAY"),
+            (DnsTypes::TA, "TA"),
+            (DnsTypes::DLV, "DLV"),
+        ];
+
+        for (dns_type, expected) in cases {
+            assert_eq!(
+                dns_type.to_string(),
+                *expected,
+                "Display incorrect pour DnsType({})",
+                dns_type.0
+            );
+        }
+    }
+
+    #[test]
+    fn test_display_unknown_type() {
+        assert_eq!(DnsType(54).to_string(), "unknown"); // trou dans la numérotation
+        assert_eq!(DnsType(40000).to_string(), "unknown");
+    }
+}

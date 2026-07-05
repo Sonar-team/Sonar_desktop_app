@@ -1,7 +1,7 @@
 use hex::decode;
 use packet_parser::PacketFlow;
-use std::convert::TryFrom;
 use packet_parser::parse::application::protocols::postgresql::PostgreSqlPacket;
+use std::convert::TryFrom;
 
 fn main() {
     println!("=======================================================");
@@ -15,30 +15,30 @@ fn main() {
     let full_packet = decode(full_pgsql_hex).expect("Failed to decode hex");
 
     match PacketFlow::try_from(full_packet.as_slice()) {
-    Ok(flow) => {
-        println!("✅ Packet parsé");
+        Ok(flow) => {
+            println!("✅ Packet parsé");
 
-        if let Some(transport) = &flow.transport {
-            if let Some(payload) = transport.payload {
-                match PostgreSqlPacket::try_from(payload) {
-                    Ok(pg) => {
-                        println!("{:#?}", pg);
+            if let Some(transport) = &flow.transport {
+                if let Some(payload) = transport.payload {
+                    match PostgreSqlPacket::try_from(payload) {
+                        Ok(pg) => {
+                            println!("{:#?}", pg);
 
-                        for (i, msg) in pg.messages.iter().enumerate() {
-                            println!("--------------------------------");
-                            println!("Message {}", i);
-                            println!("Type   : {:?}", msg.message_type);
-                            println!("Length : {}", msg.length);
-                            println!("Body   : {:#?}", msg.body);
+                            for (i, msg) in pg.messages.iter().enumerate() {
+                                println!("--------------------------------");
+                                println!("Message {}", i);
+                                println!("Type   : {:?}", msg.message_type);
+                                println!("Length : {}", msg.length);
+                                println!("Body   : {:#?}", msg.body);
+                            }
                         }
-                    }
-                    Err(e) => {
-                        println!("Erreur PostgreSQL : {:?}", e);
+                        Err(e) => {
+                            println!("Erreur PostgreSQL : {:?}", e);
+                        }
                     }
                 }
             }
         }
+        Err(e) => println!("{:?}", e),
     }
-    Err(e) => println!("{:?}", e),
-}
 }

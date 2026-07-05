@@ -293,4 +293,174 @@ mod tests {
         assert!(has_src_tsap);
         assert!(has_dst_tsap);
     }
+
+    #[test]
+    fn test_pdu_type_from_u8() {
+        assert!(matches!(CotpPduType::from(0xF0), CotpPduType::Data));
+        assert!(matches!(CotpPduType::from(0xE0), CotpPduType::ConnectionRequest));
+        assert!(matches!(CotpPduType::from(0xD0), CotpPduType::ConnectionConfirm));
+        assert!(matches!(CotpPduType::from(0x80), CotpPduType::DisconnectRequest));
+        assert!(matches!(CotpPduType::from(0xC0), CotpPduType::DisconnectConfirm));
+        assert!(matches!(CotpPduType::from(0x70), CotpPduType::TpduError));
+        assert!(matches!(CotpPduType::from(0x42), CotpPduType::Other(0x42)));
+    }
+
+    #[test]
+    fn test_parse_data_packet_with_eot_and_tpdu_number() {
+        let data = [
+            0x06, // Length : 6 octets après ce champ
+            0xF0, // DT (Data)
+            0xC0, 0x01, 0x05, // TPDU number = 5
+            0x80, 0x00, // EOT
+        ];
+
+        let (header, bytes_parsed) = CotpHeader::from_bytes(&data).unwrap();
+        assert_eq!(bytes_parsed, data.len());
+        assert!(matches!(header.pdu_type, CotpPduType::Data));
+        assert_eq!(header.dst_ref, 0);
+        assert_eq!(header.src_ref, 0);
+        assert!(matches!(header.parameters[0], CotpParameter::TpduNumber(5)));
+        assert!(matches!(header.parameters[1], CotpParameter::Eot(true)));
+    }
+
+    #[test]
+    fn test_parse_connection_request_with_class_and_flags() {
+        let data = [
+            0x06, // Length
+            0xE0, // CR
+            0x00, 0x01, // dst_ref
+            0x00, 0x02, // src_ref
+            0x45, // class 4, extended formats, no explicit flow control
+        ];
+
+        let header = CotpHeader::try_from(&data[..]).unwrap();
+        assert!(matches!(header.pdu_type, CotpPduType::ConnectionRequest));
+        assert_eq!(header.class, 4);
+        assert!(header.extended_formats);
+        assert!(header.no_explicit_flow_control);
+    }
+
+    #[test]
+    fn test_parse_unknown_parameter() {
+        let data = [
+            0x0A, // Length
+            0xD0, // CC
+            0x00, 0x01, 0x00, 0x03, 0x00, // refs + class
+            0xC5, 0x02, 0xAB, 0xCD, // paramètre inconnu 0xC5
+        ];
+
+        let (header, _) = CotpHeader::from_bytes(&data).unwrap();
+        match &header.parameters[0] {
+            CotpParameter::Other(0xC5, data) => assert_eq!(data, &vec![0xAB, 0xCD]),
+            other => panic!("attendu Other(0xC5, ..), obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_parse_c0_with_unusual_length_maps_to_other() {
+        // 0xC0 avec param_len 2 sur un CC : ni TpduNumber ni TpduSize
+        let data = [
+            0x0A, // Length
+            0xD0, // CC
+            0x00, 0x01, 0x00, 0x03, 0x00, // refs + class
+            0xC0, 0x02, 0x09, 0x0A,
+        ];
+
+        let (header, _) = CotpHeader::from_bytes(&data).unwrap();
+        assert!(matches!(header.parameters[0], CotpParameter::Other(0xC0, _)));
+    }
+
+    #[test]
+    fn test_packet_too_short() {
+        assert!(matches!(
+            CotpHeader::from_bytes(&[0x02, 0xF0]),
+            Err(CotpParseError::PacketTooShort { .. })
+        ));
+    }
+
+    #[test]
+    fn test_declared_length_exceeds_packet() {
+        // length déclare 0x20 octets, paquet bien plus court
+        let data = [0x20, 0xF0, 0xC0, 0x01, 0x05, 0x80, 0x00];
+        assert!(matches!(
+            CotpHeader::from_bytes(&data),
+            Err(CotpParseError::LengthExceedsPacket { .. })
+        ));
+    }
+
+    #[test]
+    fn test_connection_header_too_short() {
+        // CR avec length trop courte pour contenir refs + class
+        let data = [0x04, 0xE0, 0x00, 0x01, 0x00, 0x02, 0x00];
+        assert!(matches!(
+            CotpHeader::from_bytes(&data),
+            Err(CotpParseError::ConnectionHeaderTooShort { .. })
+        ));
+    }
+
+    #[test]
+    fn test_parameter_length_exceeds_packet() {
+        let data = [
+            0x08, // Length
+            0xD0, // CC
+            0x00, 0x01, 0x00, 0x03, 0x00, // refs + class
+            0xC1, 0x0A, // param annonce 10 octets absents
+        ];
+        assert!(matches!(
+            CotpHeader::from_bytes(&data),
+            Err(CotpParseError::ParameterLengthExceedsPacket { .. })
+        ));
+    }
+
+    #[test]
+    fn test_display_connection_confirm() {
+        let data = [
+            0x11, 0xD0, 0x00, 0x01, 0x00, 0x03, 0x00, 0xC0, 0x01, 0x09, 0xC1, 0x02, 0x01, 0x00,
+            0xC2, 0x02, 0x01, 0x02,
+        ];
+        let header = CotpHeader::try_from(&data[..]).unwrap();
+        let rendered = header.to_string();
+
+        assert!(rendered.contains("COTP: Connection Confirm (CC)"));
+        assert!(rendered.contains("Destination reference: 0x0001"));
+        assert!(rendered.contains("Source reference: 0x0003"));
+        assert!(rendered.contains("TPDU size: 512 bytes"));
+        assert!(rendered.contains("Source TSAP: 0x0100"));
+        assert!(rendered.contains("Destination TSAP: 0x0102"));
+    }
+
+    #[test]
+    fn test_display_data_with_parameters_and_other() {
+        let data = [
+            0x09, 0xF0, // DT
+            0xC0, 0x01, 0x07, // TPDU number
+            0x80, 0x00, // EOT
+            0xC5, 0x01, 0xFF, // paramètre inconnu
+        ];
+        let header = CotpHeader::try_from(&data[..]).unwrap();
+        let rendered = header.to_string();
+
+        assert!(rendered.contains("COTP: Data (DT)"));
+        assert!(rendered.contains("TPDU Number: 7"));
+        assert!(rendered.contains("End of TSDU: Yes"));
+        assert!(rendered.contains("Parameter 0xC5: FF"));
+    }
+
+    #[test]
+    fn test_display_unknown_pdu_type() {
+        let data = [0x01, 0x42, 0x00];
+        let (header, _) = CotpHeader::from_bytes(&data).unwrap();
+        assert_eq!(header.to_string(), "Unknown PDU Type: 0x42");
+    }
+
+    #[test]
+    fn test_display_class_and_flags() {
+        let data = [0x06, 0xE0, 0x00, 0x01, 0x00, 0x02, 0x45];
+        let header = CotpHeader::try_from(&data[..]).unwrap();
+        let rendered = header.to_string();
+
+        assert!(rendered.contains("Class: 4"));
+        assert!(rendered.contains("Extended formats: True"));
+        assert!(rendered.contains("No explicit flow control: True"));
+    }
 }
