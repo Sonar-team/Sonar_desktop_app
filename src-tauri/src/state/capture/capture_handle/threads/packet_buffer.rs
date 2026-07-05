@@ -261,6 +261,10 @@ mod tests {
         let buffer = pool.get(1500).unwrap();
         assert_eq!(pool.allocated_bytes(), SMALL_BUFFER_SIZE);
         pool.put(buffer);
-        assert_eq!(pool.allocated_bytes(), SMALL_BUFFER_SIZE, "recyclé, pas libéré");
+        assert_eq!(
+            pool.allocated_bytes(),
+            SMALL_BUFFER_SIZE,
+            "recyclé, pas libéré"
+        );
     }
 }

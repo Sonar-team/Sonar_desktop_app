@@ -259,7 +259,9 @@ impl FlowMatrixRow {
             .application_protocol
             .as_ref()
             .filter(|p| !p.is_empty())
-            .map(|p| ApplicationOwned { protocol: p.clone() });
+            .map(|p| ApplicationOwned {
+                protocol: p.clone(),
+            });
 
         let vlan = self.vlan_id.map(|id| VlanTag {
             id,

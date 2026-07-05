@@ -586,7 +586,11 @@ mod graph_update_batch_tests {
         batch.push(GraphUpdate::NodeUpdated(node("1", Some("serveur"))));
 
         let updates = batch.take();
-        assert_eq!(updates.len(), 3, "nœud 1 coalescé, nœud 2 et arête 1 gardés");
+        assert_eq!(
+            updates.len(),
+            3,
+            "nœud 1 coalescé, nœud 2 et arête 1 gardés"
+        );
         match &updates[0] {
             GraphUpdate::NewNode(n) => {
                 assert_eq!(n.id, "1");

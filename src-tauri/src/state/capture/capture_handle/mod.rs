@@ -23,8 +23,7 @@ use crate::{
             },
             setup::{setup_capture, setup_filter},
             threads::{
-                capture::spawn_capture_thread_with_pool,
-                packet_buffer::PacketBufferPool,
+                capture::spawn_capture_thread_with_pool, packet_buffer::PacketBufferPool,
                 processing::spawn_processing_thread,
             },
         },

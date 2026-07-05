@@ -1,7 +1,7 @@
 use crossbeam::channel::{Receiver, RecvTimeoutError};
-use log::{debug, error};
 #[cfg(feature = "capture_timing")]
 use log::info;
+use log::{debug, error};
 #[cfg(feature = "capture_timing")]
 use std::{
     fs::{self, File, OpenOptions},
@@ -560,53 +560,53 @@ pub fn spawn_processing_thread(
                     let mut label_lookup_ns = 0u64;
                     #[cfg(feature = "capture_timing")]
                     let mut matrix_update_ns = 0u64;
-                    let (source_label, destination_label) =
-                        if let Ok(mut locked_state) = flow_matrix.lock() {
-                            #[cfg(feature = "capture_timing")]
-                            let label_lookup_start = timing_sample.map(|_| Instant::now());
-                            let source_ip = record_owned
-                                .flow
-                                .internet
-                                .as_ref()
-                                .and_then(|i| i.source_ip)
-                                .map(|ip| ip.to_string())
-                                .unwrap_or_default();
-                            let destination_ip = record_owned
-                                .flow
-                                .internet
-                                .as_ref()
-                                .and_then(|i| i.destination_ip)
-                                .map(|ip| ip.to_string())
-                                .unwrap_or_default();
+                    let (source_label, destination_label) = if let Ok(mut locked_state) =
+                        flow_matrix.lock()
+                    {
+                        #[cfg(feature = "capture_timing")]
+                        let label_lookup_start = timing_sample.map(|_| Instant::now());
+                        let source_ip = record_owned
+                            .flow
+                            .internet
+                            .as_ref()
+                            .and_then(|i| i.source_ip)
+                            .map(|ip| ip.to_string())
+                            .unwrap_or_default();
+                        let destination_ip = record_owned
+                            .flow
+                            .internet
+                            .as_ref()
+                            .and_then(|i| i.destination_ip)
+                            .map(|ip| ip.to_string())
+                            .unwrap_or_default();
 
-                            let labels = (
-                                locked_state
-                                    .get_label(&record_owned.flow.data_link.source_mac, &source_ip),
-                                locked_state.get_label(
-                                    &record_owned.flow.data_link.destination_mac,
-                                    &destination_ip,
-                                ),
-                            );
-                            #[cfg(feature = "capture_timing")]
-                            {
-                                label_lookup_ns =
-                                    label_lookup_start.map(elapsed_ns_since).unwrap_or(0);
-                            }
+                        let labels = (
+                            locked_state
+                                .get_label(&record_owned.flow.data_link.source_mac, &source_ip),
+                            locked_state.get_label(
+                                &record_owned.flow.data_link.destination_mac,
+                                &destination_ip,
+                            ),
+                        );
+                        #[cfg(feature = "capture_timing")]
+                        {
+                            label_lookup_ns = label_lookup_start.map(elapsed_ns_since).unwrap_or(0);
+                        }
 
-                            #[cfg(feature = "capture_timing")]
-                            let matrix_update_start = timing_sample.map(|_| Instant::now());
-                            locked_state.update_flow(&record_owned);
-                            processed = locked_state.matrix.len() as u32;
-                            #[cfg(feature = "capture_timing")]
-                            {
-                                matrix_update_ns =
-                                    matrix_update_start.map(elapsed_ns_since).unwrap_or(0);
-                            }
+                        #[cfg(feature = "capture_timing")]
+                        let matrix_update_start = timing_sample.map(|_| Instant::now());
+                        locked_state.update_flow(&record_owned);
+                        processed = locked_state.matrix.len() as u32;
+                        #[cfg(feature = "capture_timing")]
+                        {
+                            matrix_update_ns =
+                                matrix_update_start.map(elapsed_ns_since).unwrap_or(0);
+                        }
 
-                            labels
-                        } else {
-                            (None, None)
-                        };
+                        labels
+                    } else {
+                        (None, None)
+                    };
                     #[cfg(feature = "capture_timing")]
                     let graph_update_start = timing_sample.map(|_| Instant::now());
                     let graph_updates = if let Ok(mut g) = graph.lock() {

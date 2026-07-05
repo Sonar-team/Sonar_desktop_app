@@ -870,8 +870,8 @@ fn read_matrix_rows(csv_path: &str) -> Result<Vec<FlowMatrixRow>, CaptureStateEr
 
     let mut rows = Vec::new();
     for (i, result) in rdr.deserialize::<FlowMatrixRow>().enumerate() {
-        let row = result
-            .map_err(|e| std::io::Error::other(format!("Ligne {} invalide: {e}", i + 2)))?;
+        let row =
+            result.map_err(|e| std::io::Error::other(format!("Ligne {} invalide: {e}", i + 2)))?;
         rows.push(row);
     }
     Ok(rows)
@@ -1244,13 +1244,20 @@ mod tests {
             .to_string();
 
         let rows = read_matrix_rows(&matrix_path).unwrap();
-        assert_eq!(rows.len(), 30, "30 lignes de données (l'en-tête est écarté)");
+        assert_eq!(
+            rows.len(),
+            30,
+            "30 lignes de données (l'en-tête est écarté)"
+        );
 
         let (matrix, graph) = build_matrix_and_graph(&rows);
 
         assert_eq!(matrix.matrix.len(), 30, "un flux par ligne du fichier");
         assert!(!graph.nodes.is_empty(), "le graphe doit contenir des nœuds");
-        assert!(!graph.edges.is_empty(), "le graphe doit contenir des arêtes");
+        assert!(
+            !graph.edges.is_empty(),
+            "le graphe doit contenir des arêtes"
+        );
 
         // Les labels du fichier sont réappliqués sur les nœuds du graphe.
         let labelled = graph
@@ -1258,7 +1265,10 @@ mod tests {
             .values()
             .filter(|n| n.label.as_deref() == Some("pc sonar"))
             .count();
-        assert!(labelled > 0, "au moins un nœud doit porter le label du fichier");
+        assert!(
+            labelled > 0,
+            "au moins un nœud doit porter le label du fichier"
+        );
 
         // Le CSV survit à un aller-retour export -> import (mêmes flux).
         let reexported = matrix.to_flat_vec();
@@ -1286,7 +1296,10 @@ mod tests {
 
         // Les poids de trafic du fichier sont reportés sur les arêtes.
         assert!(
-            graph.edges.values().all(|e| e.count > 0 && e.total_bytes > 0),
+            graph
+                .edges
+                .values()
+                .all(|e| e.count > 0 && e.total_bytes > 0),
             "chaque arête doit porter son trafic cumulé"
         );
 
