@@ -435,6 +435,7 @@ fn handle_pcap_file(
                             received: packet_count as u32,
                             dropped: 0,
                             if_dropped: 0,
+                            app_dropped: 0,
                             processed: matrix_count as u32,
                         })
                         .map_err(|e| {
@@ -568,6 +569,7 @@ fn handle_pcap_file(
                     received: packet_count as u32,
                     dropped: 0,
                     if_dropped: 0,
+                    app_dropped: 0,
                     processed: matrix_count as u32,
                 })
             {

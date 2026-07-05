@@ -27,6 +27,83 @@ pub enum GraphUpdate {
 static NODE_COUNTER: AtomicU64 = AtomicU64::new(1);
 static EDGE_COUNTER: AtomicU64 = AtomicU64::new(1);
 
+/// Accumulateur d'updates graphe avec coalescence par entité : au sein d'une
+/// fenêtre de batch, une seule entrée par nœud/arête (la dernière valeur gagne,
+/// le variant `New*` d'origine est conservé). Les payloads étant des snapshots
+/// complets, aucune information n'est perdue.
+#[derive(Default)]
+pub struct GraphUpdateBatch {
+    updates: Vec<GraphUpdate>,
+    node_index: HashMap<String, usize>,
+    edge_index: HashMap<String, usize>,
+}
+
+impl GraphUpdateBatch {
+    pub fn push(&mut self, update: GraphUpdate) {
+        match update {
+            GraphUpdate::NewNode(node) => self.upsert_node(node, true),
+            GraphUpdate::NodeUpdated(node) => self.upsert_node(node, false),
+            GraphUpdate::NewEdge(edge) => self.upsert_edge(edge, true),
+            GraphUpdate::EdgeUpdated(edge) => self.upsert_edge(edge, false),
+        }
+    }
+
+    fn upsert_node(&mut self, node: Node, is_new: bool) {
+        match self.node_index.get(&node.id) {
+            Some(&index) => {
+                if let GraphUpdate::NewNode(existing) | GraphUpdate::NodeUpdated(existing) =
+                    &mut self.updates[index]
+                {
+                    *existing = node;
+                }
+            }
+            None => {
+                self.node_index.insert(node.id.clone(), self.updates.len());
+                self.updates.push(if is_new {
+                    GraphUpdate::NewNode(node)
+                } else {
+                    GraphUpdate::NodeUpdated(node)
+                });
+            }
+        }
+    }
+
+    fn upsert_edge(&mut self, edge: Edge, is_new: bool) {
+        match self.edge_index.get(&edge.id) {
+            Some(&index) => {
+                if let GraphUpdate::NewEdge(existing) | GraphUpdate::EdgeUpdated(existing) =
+                    &mut self.updates[index]
+                {
+                    *existing = edge;
+                }
+            }
+            None => {
+                self.edge_index.insert(edge.id.clone(), self.updates.len());
+                self.updates.push(if is_new {
+                    GraphUpdate::NewEdge(edge)
+                } else {
+                    GraphUpdate::EdgeUpdated(edge)
+                });
+            }
+        }
+    }
+
+    /// Vide le batch et retourne les updates coalescées, dans l'ordre d'arrivée.
+    pub fn take(&mut self) -> Vec<GraphUpdate> {
+        self.node_index.clear();
+        self.edge_index.clear();
+        std::mem::take(&mut self.updates)
+    }
+
+    pub fn len(&self) -> usize {
+        self.updates.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.updates.is_empty()
+    }
+}
+
 #[derive(Serialize, Clone, Debug)]
 pub struct Node {
     pub id: String,
@@ -441,6 +518,97 @@ fn best_protocol_label(flow: &PacketFlowOwned) -> String {
     }
 
     "Unknown".to_string()
+}
+
+#[cfg(test)]
+mod graph_update_batch_tests {
+    use super::*;
+
+    fn node(id: &str, label: Option<&str>) -> Node {
+        Node {
+            id: id.to_string(),
+            name: "10.0.0.1".to_string(),
+            color: "#8BC34A".to_string(),
+            mac: "aa:bb:cc:dd:ee:ff".to_string(),
+            ip: "10.0.0.1".to_string(),
+            label: label.map(str::to_string),
+        }
+    }
+
+    fn edge(id: &str, count: u64) -> Edge {
+        Edge {
+            id: id.to_string(),
+            source: "1".to_string(),
+            target: "2".to_string(),
+            label: "TCP".to_string(),
+            source_port: None,
+            destination_port: None,
+            bidir: false,
+            count,
+            total_bytes: count * 100,
+        }
+    }
+
+    #[test]
+    fn coalesces_edge_updates_keeping_last_payload() {
+        let mut batch = GraphUpdateBatch::default();
+        batch.push(GraphUpdate::EdgeUpdated(edge("7", 1)));
+        batch.push(GraphUpdate::EdgeUpdated(edge("7", 5)));
+
+        let updates = batch.take();
+        assert_eq!(updates.len(), 1);
+        match &updates[0] {
+            GraphUpdate::EdgeUpdated(e) => assert_eq!(e.count, 5),
+            other => panic!("attendu EdgeUpdated, obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn new_edge_variant_survives_later_updates() {
+        let mut batch = GraphUpdateBatch::default();
+        batch.push(GraphUpdate::NewEdge(edge("7", 1)));
+        batch.push(GraphUpdate::EdgeUpdated(edge("7", 9)));
+
+        let updates = batch.take();
+        assert_eq!(updates.len(), 1);
+        match &updates[0] {
+            GraphUpdate::NewEdge(e) => assert_eq!(e.count, 9),
+            other => panic!("attendu NewEdge, obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn distinct_entities_are_kept_in_arrival_order() {
+        let mut batch = GraphUpdateBatch::default();
+        batch.push(GraphUpdate::NewNode(node("1", None)));
+        batch.push(GraphUpdate::NewNode(node("2", None)));
+        batch.push(GraphUpdate::NewEdge(edge("1", 1)));
+        batch.push(GraphUpdate::NodeUpdated(node("1", Some("serveur"))));
+
+        let updates = batch.take();
+        assert_eq!(updates.len(), 3, "nœud 1 coalescé, nœud 2 et arête 1 gardés");
+        match &updates[0] {
+            GraphUpdate::NewNode(n) => {
+                assert_eq!(n.id, "1");
+                assert_eq!(n.label.as_deref(), Some("serveur"));
+            }
+            other => panic!("attendu NewNode, obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn take_resets_the_batch() {
+        let mut batch = GraphUpdateBatch::default();
+        batch.push(GraphUpdate::NewNode(node("1", None)));
+        assert_eq!(batch.len(), 1);
+
+        let _ = batch.take();
+        assert!(batch.is_empty());
+
+        // Réutilisable après take : nouvel index, pas de collision
+        batch.push(GraphUpdate::NodeUpdated(node("1", Some("après"))));
+        assert_eq!(batch.take().len(), 1);
+    }
 }
 
 /// Retourne (edge_key, a_id, b_id, current_is_a_to_b)

@@ -35,7 +35,7 @@ pub fn start_capture(
         println!("Déjà en cours.");
         return Ok(state_lock.status.clone());
     }
-    let capture = CaptureHandle::new();
+    let mut capture = CaptureHandle::new();
     state_lock.on_event = Some(on_event.clone());
     capture.start(
         state_lock.config.clone(),
@@ -59,7 +59,7 @@ pub fn start_capture_core(
         return Ok(st.status.clone());
     }
 
-    let capture = CaptureHandle::new();
+    let mut capture = CaptureHandle::new();
 
     // Variante start sans event : start_no_event()
     capture.start_no_event(st.config.clone(), app, st.filter.clone())?;

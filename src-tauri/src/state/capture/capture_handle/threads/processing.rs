@@ -1,5 +1,7 @@
 use crossbeam::channel::{Receiver, RecvTimeoutError};
-use log::{debug, error, info};
+use log::{debug, error};
+#[cfg(feature = "capture_timing")]
+use log::info;
 #[cfg(feature = "capture_timing")]
 use std::{
     fs::{self, File, OpenOptions},
@@ -23,12 +25,12 @@ use crate::{
                 CaptureMessage,
                 capture::{PacketMinimal, PacketOwnedStats},
                 channel::ChannelCapacityPayload,
-                stats::{StatTriple, StatsPayload},
+                stats::{AppDropCounters, SharedCaptureStats, StatTriple, StatsPayload},
             },
             threads::packet_buffer::PacketBufferPool,
         },
         flow_matrix::FlowMatrix,
-        graph::GraphData,
+        graph::{GraphData, GraphUpdateBatch},
     },
 };
 use packet_parser::PacketFlow;
@@ -37,6 +39,28 @@ use packet_parser::timing::ParseTiming;
 
 const PACKET_BATCH_MAX: usize = 256;
 const PACKET_BATCH_INTERVAL_MS: u64 = 75;
+/// Cadence d'émission des stats vers le frontend (dédupliquées par maybe_send).
+const STATS_EMIT_INTERVAL_MS: u64 = 250;
+/// Flush anticipé du batch graphe (rafales de nouveaux flux, ex. début de capture).
+const GRAPH_BATCH_MAX: usize = 512;
+
+// Envoie les updates graphe coalescées. Retourne false si le canal est cassé.
+fn flush_graph_batch(
+    batch: &mut GraphUpdateBatch,
+    on_event: &Channel<CaptureEvent<'static>>,
+) -> bool {
+    if batch.is_empty() {
+        return true;
+    }
+    let updates = batch.take();
+    match on_event.send(CaptureEvent::GraphBatch { updates }) {
+        Ok(_) => true,
+        Err(e) => {
+            error!("[TAURI] Erreur envoi GraphBatch: {}", e);
+            false
+        }
+    }
+}
 
 #[cfg(feature = "capture_timing")]
 static CAPTURE_TIMING_RUN_COUNTER: std::sync::atomic::AtomicU64 =
@@ -431,8 +455,10 @@ pub fn spawn_processing_thread(
     channel_capacity: i32,
     app: AppHandle,
     buffer_pool: Arc<PacketBufferPool>,
+    drop_counters: Arc<AppDropCounters>,
+    shared_stats: Arc<SharedCaptureStats>,
     stop_flag: Arc<AtomicBool>,
-) {
+) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         debug!("Démarrage du thread de traitement");
 
@@ -442,8 +468,11 @@ pub fn spawn_processing_thread(
         let mut last_len = 0usize;
         static TEMPO: Duration = Duration::from_millis(40);
         let mut stats = StatTriple::default();
+        let stats_emit_interval = Duration::from_millis(STATS_EMIT_INTERVAL_MS);
+        let mut last_stats_emit = Instant::now();
         let batch_interval = Duration::from_millis(PACKET_BATCH_INTERVAL_MS);
         let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(PACKET_BATCH_MAX);
+        let mut graph_batch = GraphUpdateBatch::default();
         let mut last_batch_flush = Instant::now();
         // Résolus une seule fois : le lookup d'état Tauri par paquet est inutile.
         let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>().inner().clone();
@@ -594,26 +623,29 @@ pub fn spawn_processing_thread(
                     #[cfg(feature = "capture_timing")]
                     let graph_update_ns = graph_update_start.map(elapsed_ns_since).unwrap_or(0);
 
+                    // Les updates graphe sont coalescées puis envoyées par lot,
+                    // au même rythme que le batch de paquets.
                     #[cfg(feature = "capture_timing")]
                     let graph_ipc_start = timing_sample.map(|_| Instant::now());
                     #[cfg(feature = "capture_timing")]
                     let graph_update_count = graph_updates.len();
                     #[cfg(feature = "capture_timing")]
                     let mut graph_ipc_failures = 0usize;
-                    if !graph_updates.is_empty() {
-                        for update in graph_updates {
-                            if let Err(e) = on_event.send(CaptureEvent::Graph { update: &update }) {
-                                #[cfg(feature = "capture_timing")]
-                                {
-                                    graph_ipc_failures += 1;
-                                }
-                                error!("[TAURI] Erreur envoi GraphUpdate: {}", e);
-                                break;
-                            }
-                        }
+                    for update in graph_updates {
+                        graph_batch.push(update);
+                    }
+                    let graph_flush_ok = graph_batch.len() < GRAPH_BATCH_MAX
+                        || flush_graph_batch(&mut graph_batch, &on_event);
+                    #[cfg(feature = "capture_timing")]
+                    if !graph_flush_ok {
+                        graph_ipc_failures += 1;
                     }
                     #[cfg(feature = "capture_timing")]
                     let graph_ipc_ns = graph_ipc_start.map(elapsed_ns_since).unwrap_or(0);
+                    if !graph_flush_ok {
+                        buffer_pool.put(pkt);
+                        break;
+                    }
 
                     #[cfg(feature = "capture_timing")]
                     if let (Some(sample), Some(start), Some(logger)) =
@@ -655,6 +687,7 @@ pub fn spawn_processing_thread(
                             flush_batch!(packet_batch, on_event, last_batch_flush, timing_logger);
                         #[cfg(not(feature = "capture_timing"))]
                         let flush_ok = flush_batch!(packet_batch, on_event, last_batch_flush);
+                        let flush_ok = flush_ok && flush_graph_batch(&mut graph_batch, &on_event);
 
                         if !flush_ok {
                             buffer_pool.put(pkt);
@@ -665,25 +698,14 @@ pub fn spawn_processing_thread(
                     buffer_pool.put(pkt);
                 }
 
-                Ok(CaptureMessage::Stats(new_stats)) => {
-                    if stop_flag.load(Ordering::Relaxed) {
-                        break;
-                    }
-
-                    if let Err(e) =
-                        StatsPayload::maybe_send(&mut stats, new_stats, processed, &on_event)
-                    {
-                        error!("[TAURI] Erreur envoi Stats: {}", e);
-                    }
-                }
-
                 Err(RecvTimeoutError::Timeout) => {
-                    // Flush le batch restant après inactivité
+                    // Flush les batches restants après inactivité
                     #[cfg(feature = "capture_timing")]
                     let flush_ok =
                         flush_batch!(packet_batch, on_event, last_batch_flush, timing_logger);
                     #[cfg(not(feature = "capture_timing"))]
                     let flush_ok = flush_batch!(packet_batch, on_event, last_batch_flush);
+                    let flush_ok = flush_ok && flush_graph_batch(&mut graph_batch, &on_event);
 
                     if !flush_ok {
                         break;
@@ -693,6 +715,21 @@ pub fn spawn_processing_thread(
                 Err(RecvTimeoutError::Disconnected) => {
                     error!("Erreur réception canal : canal déconnecté");
                     break;
+                }
+            }
+
+            // Stats lues depuis l'état partagé (hors canal de données) :
+            // fiables même quand le canal est saturé.
+            if last_stats_emit.elapsed() >= stats_emit_interval {
+                last_stats_emit = Instant::now();
+                if let Err(e) = StatsPayload::maybe_send(
+                    &mut stats,
+                    shared_stats.load(),
+                    drop_counters.total(),
+                    processed,
+                    &on_event,
+                ) {
+                    error!("[TAURI] Erreur envoi Stats: {}", e);
                 }
             }
 
@@ -719,175 +756,5 @@ pub fn spawn_processing_thread(
                 error!("Capture timing summary write failed: {}", e);
             }
         }
-    });
-}
-
-pub fn spawn_processing_thread_cli(
-    rx: Receiver<CaptureMessage>,
-    on_event: Channel<CaptureEvent<'static>>,
-    channel_capacity: i32,
-    app: AppHandle,
-    buffer_pool: Arc<PacketBufferPool>,
-    stop_flag: Arc<AtomicBool>,
-) {
-    thread::spawn(move || {
-        debug!("Démarrage du thread de traitement");
-
-        let mut processed = 0;
-        let mut last_channel = ChannelCapacityPayload::default();
-        let mut last_update = Instant::now();
-        let mut last_len = 0usize;
-        static TEMPO: Duration = Duration::from_millis(40);
-        let mut stats = StatTriple::default();
-        let batch_interval = Duration::from_millis(PACKET_BATCH_INTERVAL_MS);
-        let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(PACKET_BATCH_MAX);
-        let mut last_batch_flush = Instant::now();
-        // Résolus une seule fois : le lookup d'état Tauri par paquet est inutile.
-        let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>().inner().clone();
-        let graph = app.state::<Arc<Mutex<GraphData>>>().inner().clone();
-
-        loop {
-            if stop_flag.load(Ordering::Relaxed) {
-                break;
-            }
-
-            let timeout = batch_interval.saturating_sub(last_batch_flush.elapsed());
-            match rx.recv_timeout(timeout.max(Duration::from_millis(1))) {
-                Ok(CaptureMessage::Packet(pkt)) => {
-                    if stop_flag.load(Ordering::Relaxed) {
-                        packet_batch.clear();
-                        buffer_pool.put(pkt);
-                        break;
-                    }
-
-                    let flow = match PacketFlow::try_from(pkt.as_ref()) {
-                        Ok(flow) => flow,
-                        Err(e) => {
-                            error!("Failed to parse PacketFlow: {}", e);
-                            buffer_pool.put(pkt);
-                            continue;
-                        }
-                    };
-
-                    let packet = PacketMinimal {
-                        ts_sec: pkt.header.ts.tv_sec,
-                        ts_usec: pkt.header.ts.tv_usec,
-                        caplen: pkt.header.caplen,
-                        len: pkt.header.len,
-                        flow,
-                    };
-
-                    let record_owned = packet.to_owned_packet();
-                    // Un seul verrouillage de la matrice par paquet : lookup des
-                    // labels puis update du flux dans le même scope.
-                    let (source_label, destination_label) =
-                        if let Ok(mut locked_state) = flow_matrix.lock() {
-                            let source_ip = record_owned
-                                .flow
-                                .internet
-                                .as_ref()
-                                .and_then(|i| i.source_ip)
-                                .map(|ip| ip.to_string())
-                                .unwrap_or_default();
-                            let destination_ip = record_owned
-                                .flow
-                                .internet
-                                .as_ref()
-                                .and_then(|i| i.destination_ip)
-                                .map(|ip| ip.to_string())
-                                .unwrap_or_default();
-
-                            let labels = (
-                                locked_state
-                                    .get_label(&record_owned.flow.data_link.source_mac, &source_ip),
-                                locked_state.get_label(
-                                    &record_owned.flow.data_link.destination_mac,
-                                    &destination_ip,
-                                ),
-                            );
-
-                            let (flow_stats, flow) = locked_state.update_flow_cli(&record_owned);
-                            info!("flow_stats: {:?}, {:?}", flow_stats, flow);
-                            processed = locked_state.matrix.len() as u32;
-
-                            labels
-                        } else {
-                            (None, None)
-                        };
-
-                    if let Ok(mut g) = graph.lock() {
-                        let updates = g.add_packet_flow(
-                            &record_owned.flow,
-                            source_label,
-                            destination_label,
-                            1,
-                            record_owned.len as u64,
-                        );
-                        if !updates.is_empty() {
-                            for update in updates {
-                                if let Err(e) =
-                                    on_event.send(CaptureEvent::Graph { update: &update })
-                                {
-                                    error!("[TAURI] Erreur envoi GraphUpdate: {}", e);
-                                    break;
-                                }
-                            }
-                        }
-                    };
-
-                    packet_batch.push(record_owned);
-
-                    if packet_batch.len() >= PACKET_BATCH_MAX
-                        || last_batch_flush.elapsed() >= batch_interval
-                    {
-                        if !flush_batch!(packet_batch, on_event, last_batch_flush) {
-                            buffer_pool.put(pkt);
-                            break;
-                        }
-                    }
-
-                    buffer_pool.put(pkt);
-                }
-
-                Ok(CaptureMessage::Stats(new_stats)) => {
-                    if stop_flag.load(Ordering::Relaxed) {
-                        break;
-                    }
-
-                    if let Err(e) =
-                        StatsPayload::maybe_send(&mut stats, new_stats, processed, &on_event)
-                    {
-                        error!("[TAURI] Erreur envoi Stats: {}", e);
-                    }
-                }
-
-                Err(RecvTimeoutError::Timeout) => {
-                    if !flush_batch!(packet_batch, on_event, last_batch_flush) {
-                        break;
-                    }
-                }
-
-                Err(RecvTimeoutError::Disconnected) => {
-                    error!("Erreur réception canal : canal déconnecté");
-                    break;
-                }
-            }
-
-            let current_len = rx.len();
-
-            if last_len != current_len || last_update.elapsed() >= TEMPO {
-                last_update = Instant::now();
-                last_len = current_len;
-
-                if let Err(e) = ChannelCapacityPayload::send_if_changed(
-                    &mut last_channel,
-                    current_len,
-                    channel_capacity as usize,
-                    &on_event,
-                ) {
-                    error!("[TAURI] Erreur émission canal : {}", e);
-                }
-            }
-        }
-    });
+    })
 }

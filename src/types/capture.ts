@@ -10,6 +10,7 @@ export type Stats = {
   received: number;
   dropped: number;
   ifDropped: number;
+  appDropped?: number;
 };
 
 export type PacketMinimal = {
@@ -168,6 +169,18 @@ export type CaptureEvent =
     event: "graph";
     data: {
       update: GraphUpdate;
+    };
+  }
+  | {
+    event: "graphBatch";
+    data: {
+      updates: GraphUpdate[];
+    };
+  }
+  | {
+    event: "stopped";
+    data: {
+      reason: string;
     };
   }
   | {

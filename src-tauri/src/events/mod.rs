@@ -19,6 +19,9 @@ pub enum CaptureEvent<'a> {
         received: u32,
         dropped: u32,
         if_dropped: u32,
+        /// Pertes côté application (pool de buffers épuisé ou canal plein),
+        /// en plus des drops kernel remontés par pcap.
+        app_dropped: u64,
         processed: u32,
     },
     ChannelCapacityPayload {
@@ -34,6 +37,16 @@ pub enum CaptureEvent<'a> {
     },
     Graph {
         update: &'a GraphUpdate,
+    },
+    /// Updates graphe coalescées sur la fenêtre de batch (voir `GraphUpdateBatch`).
+    GraphBatch {
+        updates: Vec<GraphUpdate>,
+    },
+    /// Fin du pipeline de capture, normale ou sur erreur fatale (ex. pcap).
+    /// Sans cet événement, le frontend croirait capturer indéfiniment après
+    /// une erreur.
+    Stopped {
+        reason: String,
     },
     Finished {
         file_name: &'a str,

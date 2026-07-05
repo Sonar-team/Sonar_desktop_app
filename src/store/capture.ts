@@ -26,6 +26,7 @@ export const useCaptureStore = defineStore("capture", {
     // Listeners HMR-safe dans le state
     startedListeners: [] as Array<(d: any) => void>,
     finishedListeners: [] as Array<(d: any) => void>,
+    stoppedListeners: [] as Array<(d: any) => void>,
     packetListeners: [] as Array<(p: any) => void>,
     packetBatchListeners: [] as Array<(packets: any[]) => void>,
     statsListeners: [] as Array<(d: any) => void>,
@@ -70,6 +71,10 @@ export const useCaptureStore = defineStore("capture", {
           case "finished":
             for (const cb of this.finishedListeners) cb(msg.data);
             break;
+          case "stopped":
+            console.log("[CaptureStore] Capture arrêtée :", msg.data?.reason);
+            for (const cb of this.stoppedListeners) cb(msg.data);
+            break;
           case "packet":
             if (!this.hasData) this.hasData = true;
             for (const cb of this.packetListeners) cb(msg.data.packet);
@@ -97,6 +102,15 @@ export const useCaptureStore = defineStore("capture", {
             for (const cb of this.graphUpdateListeners) cb(update);
             break;
           }
+          case "graphBatch": {
+            const updates = Array.isArray(msg.data?.updates)
+              ? (msg.data.updates as GraphUpdate[])
+              : [];
+            for (const update of updates) {
+              for (const cb of this.graphUpdateListeners) cb(update);
+            }
+            break;
+          }
           case "graphSnapshot": {
             const graphData = msg.data.graph_data as GraphData;
             console.log("[CaptureStore] GraphSnapshot reçu");
@@ -113,6 +127,10 @@ export const useCaptureStore = defineStore("capture", {
     onStarted(cb: (d: any) => void) {
       this.startedListeners.push(cb);
       return unsubscribe(this.startedListeners, cb);
+    },
+    onStopped(cb: (d: any) => void) {
+      this.stoppedListeners.push(cb);
+      return unsubscribe(this.stoppedListeners, cb);
     },
     onFinished(cb: (d: any) => void) {
       this.finishedListeners.push(cb);

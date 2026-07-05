@@ -53,18 +53,6 @@ impl FlowMatrix {
         }
     }
 
-    /// Update the flow matrix from a PacketOwnedStats then return the new line in the matrice if it was not already there
-    pub fn update_flow_cli(&mut self, pkt: &PacketOwnedStats) -> (FlowStats, PacketFlowOwned) {
-        self.update_flow(pkt);
-        let stats = self
-            .matrix
-            .get(&pkt.flow)
-            .cloned()
-            .expect("flow inséré par update_flow");
-
-        (stats, pkt.flow.clone())
-    }
-
     pub fn clear(&mut self) {
         self.matrix.clear();
         self.label.clear();
@@ -370,19 +358,6 @@ mod tests {
         let stats = matrix.matrix.get(&pkt.flow).expect("flux inséré");
         assert_eq!(stats.count, 3);
         assert_eq!(stats.total_bytes, 300);
-    }
-
-    #[test]
-    fn update_flow_cli_returns_current_stats_and_flow() {
-        let mut matrix = FlowMatrix::new();
-        let pkt = sample_packet(50);
-
-        matrix.update_flow_cli(&pkt);
-        let (stats, flow) = matrix.update_flow_cli(&pkt);
-
-        assert_eq!(stats.count, 2);
-        assert_eq!(stats.total_bytes, 100);
-        assert_eq!(flow, pkt.flow);
     }
 
     #[test]
