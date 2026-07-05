@@ -24,9 +24,9 @@ jobs:
           node-version: "v${{ steps.versions.outputs.NODE_VERSION }}"
 
       - name: Rust setup
-        uses: actions-rs/toolchain@63eb9591781c46a70274cb3ebdf190fce92702e8
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
-          toolchain: stable
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
 
       - name: Deno setup
         uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
