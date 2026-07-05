@@ -290,7 +290,7 @@ impl CaptureTimingLogger {
         Ok(())
     }
 
-    fn write_run_summary(&mut self) -> io::Result<()> {
+    fn write_run_summary(&mut self, buffer_pool: &PacketBufferPool) -> io::Result<()> {
         if self.summary_written {
             return self.writer.flush();
         }
@@ -316,9 +316,10 @@ impl CaptureTimingLogger {
         let packet_batch_ipc_p95_ns = percentile_ns(&sorted_ipc, 0.95);
         let packet_batch_ipc_p99_ns = percentile_ns(&sorted_ipc, 0.99);
 
+        let pool_stats = buffer_pool.stats();
         writeln!(
             self.writer,
-            "{{\"event\":\"capture_run_summary\",\"ts_unix_ns\":{},\"run_id\":\"{}\",\"packet_total\":{},\"avg_packets_per_second\":{:.3},\"batch_count\":{},\"batch_max\":{},\"batch_interval_ms\":{},\"full_batch_count\":{},\"packet_batch_ipc_avg_ns\":{},\"packet_batch_ipc_p95_ns\":{},\"packet_batch_ipc_p99_ns\":{},\"active_duration_ns\":{}}}",
+            "{{\"event\":\"capture_run_summary\",\"ts_unix_ns\":{},\"run_id\":\"{}\",\"packet_total\":{},\"avg_packets_per_second\":{:.3},\"batch_count\":{},\"batch_max\":{},\"batch_interval_ms\":{},\"full_batch_count\":{},\"packet_batch_ipc_avg_ns\":{},\"packet_batch_ipc_p95_ns\":{},\"packet_batch_ipc_p99_ns\":{},\"active_duration_ns\":{},\"pool_small_allocated\":{},\"pool_large_allocated\":{},\"pool_allocated_bytes\":{},\"pool_exhausted\":{}}}",
             ts_unix_ns,
             self.run_id,
             self.batch_packet_total,
@@ -330,7 +331,11 @@ impl CaptureTimingLogger {
             packet_batch_ipc_avg_ns,
             packet_batch_ipc_p95_ns,
             packet_batch_ipc_p99_ns,
-            active_duration_ns
+            active_duration_ns,
+            pool_stats.small_allocated,
+            pool_stats.large_allocated,
+            buffer_pool.allocated_bytes(),
+            pool_stats.exhausted
         )?;
         self.summary_written = true;
         self.writer.flush()
@@ -440,6 +445,9 @@ pub fn spawn_processing_thread(
         let batch_interval = Duration::from_millis(PACKET_BATCH_INTERVAL_MS);
         let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(PACKET_BATCH_MAX);
         let mut last_batch_flush = Instant::now();
+        // Résolus une seule fois : le lookup d'état Tauri par paquet est inutile.
+        let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>().inner().clone();
+        let graph = app.state::<Arc<Mutex<GraphData>>>().inner().clone();
         #[cfg(feature = "capture_timing")]
         let mut timing_logger = match CaptureTimingLogger::new() {
             Ok(logger) => Some(logger),
@@ -517,11 +525,16 @@ pub fn spawn_processing_thread(
                     #[cfg(feature = "capture_timing")]
                     let packet_owned_ns = packet_owned_start.map(elapsed_ns_since).unwrap_or(0);
 
-                    let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
+                    // Un seul verrouillage de la matrice par paquet : lookup des
+                    // labels puis update du flux dans le même scope.
                     #[cfg(feature = "capture_timing")]
-                    let label_lookup_start = timing_sample.map(|_| Instant::now());
+                    let mut label_lookup_ns = 0u64;
+                    #[cfg(feature = "capture_timing")]
+                    let mut matrix_update_ns = 0u64;
                     let (source_label, destination_label) =
-                        if let Ok(locked_state) = flow_matrix.lock() {
+                        if let Ok(mut locked_state) = flow_matrix.lock() {
+                            #[cfg(feature = "capture_timing")]
+                            let label_lookup_start = timing_sample.map(|_| Instant::now());
                             let source_ip = record_owned
                                 .flow
                                 .internet
@@ -537,30 +550,34 @@ pub fn spawn_processing_thread(
                                 .map(|ip| ip.to_string())
                                 .unwrap_or_default();
 
-                            (
+                            let labels = (
                                 locked_state
                                     .get_label(&record_owned.flow.data_link.source_mac, &source_ip),
                                 locked_state.get_label(
                                     &record_owned.flow.data_link.destination_mac,
                                     &destination_ip,
                                 ),
-                            )
+                            );
+                            #[cfg(feature = "capture_timing")]
+                            {
+                                label_lookup_ns =
+                                    label_lookup_start.map(elapsed_ns_since).unwrap_or(0);
+                            }
+
+                            #[cfg(feature = "capture_timing")]
+                            let matrix_update_start = timing_sample.map(|_| Instant::now());
+                            locked_state.update_flow(&record_owned);
+                            processed = locked_state.matrix.len() as u32;
+                            #[cfg(feature = "capture_timing")]
+                            {
+                                matrix_update_ns =
+                                    matrix_update_start.map(elapsed_ns_since).unwrap_or(0);
+                            }
+
+                            labels
                         } else {
                             (None, None)
                         };
-                    #[cfg(feature = "capture_timing")]
-                    let label_lookup_ns = label_lookup_start.map(elapsed_ns_since).unwrap_or(0);
-
-                    #[cfg(feature = "capture_timing")]
-                    let matrix_update_start = timing_sample.map(|_| Instant::now());
-                    if let Ok(mut locked_state) = flow_matrix.lock() {
-                        locked_state.update_flow(&record_owned);
-                        processed = locked_state.matrix.len() as u32;
-                    };
-                    #[cfg(feature = "capture_timing")]
-                    let matrix_update_ns = matrix_update_start.map(elapsed_ns_since).unwrap_or(0);
-
-                    let graph = app.state::<Arc<Mutex<GraphData>>>();
                     #[cfg(feature = "capture_timing")]
                     let graph_update_start = timing_sample.map(|_| Instant::now());
                     let graph_updates = if let Ok(mut g) = graph.lock() {
@@ -698,7 +715,7 @@ pub fn spawn_processing_thread(
 
         #[cfg(feature = "capture_timing")]
         if let Some(mut logger) = timing_logger {
-            if let Err(e) = logger.write_run_summary() {
+            if let Err(e) = logger.write_run_summary(&buffer_pool) {
                 error!("Capture timing summary write failed: {}", e);
             }
         }
@@ -725,6 +742,9 @@ pub fn spawn_processing_thread_cli(
         let batch_interval = Duration::from_millis(PACKET_BATCH_INTERVAL_MS);
         let mut packet_batch: Vec<PacketOwnedStats> = Vec::with_capacity(PACKET_BATCH_MAX);
         let mut last_batch_flush = Instant::now();
+        // Résolus une seule fois : le lookup d'état Tauri par paquet est inutile.
+        let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>().inner().clone();
+        let graph = app.state::<Arc<Mutex<GraphData>>>().inner().clone();
 
         loop {
             if stop_flag.load(Ordering::Relaxed) {
@@ -758,9 +778,10 @@ pub fn spawn_processing_thread_cli(
                     };
 
                     let record_owned = packet.to_owned_packet();
-                    let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>();
+                    // Un seul verrouillage de la matrice par paquet : lookup des
+                    // labels puis update du flux dans le même scope.
                     let (source_label, destination_label) =
-                        if let Ok(locked_state) = flow_matrix.lock() {
+                        if let Ok(mut locked_state) = flow_matrix.lock() {
                             let source_ip = record_owned
                                 .flow
                                 .internet
@@ -776,24 +797,24 @@ pub fn spawn_processing_thread_cli(
                                 .map(|ip| ip.to_string())
                                 .unwrap_or_default();
 
-                            (
+                            let labels = (
                                 locked_state
                                     .get_label(&record_owned.flow.data_link.source_mac, &source_ip),
                                 locked_state.get_label(
                                     &record_owned.flow.data_link.destination_mac,
                                     &destination_ip,
                                 ),
-                            )
+                            );
+
+                            let (flow_stats, flow) = locked_state.update_flow_cli(&record_owned);
+                            info!("flow_stats: {:?}, {:?}", flow_stats, flow);
+                            processed = locked_state.matrix.len() as u32;
+
+                            labels
                         } else {
                             (None, None)
                         };
-                    if let Ok(mut locked_state) = flow_matrix.lock() {
-                        let (flow_stats, flow) = locked_state.update_flow_cli(&record_owned);
-                        info!("flow_stats: {:?}, {:?}", flow_stats, flow);
-                        processed = locked_state.matrix.len() as u32;
-                    };
 
-                    let graph = app.state::<Arc<Mutex<GraphData>>>();
                     if let Ok(mut g) = graph.lock() {
                         let updates = g.add_packet_flow(
                             &record_owned.flow,

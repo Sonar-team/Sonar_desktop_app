@@ -11,7 +11,6 @@ use std::time::Instant;
 use std::{
     fs::{self, File, OpenOptions},
     io::{self, BufWriter, Write},
-    path::PathBuf,
     time::{SystemTime, UNIX_EPOCH},
 };
 use std::{

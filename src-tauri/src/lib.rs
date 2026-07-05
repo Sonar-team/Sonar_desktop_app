@@ -42,6 +42,9 @@ pub mod startup_smoke;
 mod state;
 mod utils;
 
+// Exposé pour le benchmark `examples/pool_bench.rs`.
+pub use state::capture::capture_handle::threads::packet_buffer;
+
 /// Main entry point for the application
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
