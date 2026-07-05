@@ -188,9 +188,95 @@ jobs:
           path: release-hashes-${{ matrix.platform }}.md
           if-no-files-found: error
 
+  publish-sbom:
+    name: generate and publish SBOM artifacts
+    needs: create-release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+
+      - name: install SBOM tooling
+        shell: bash
+        run: ./script/ci/install-sbom-tools.sh
+
+      - name: Generate SBOM artifacts
+        shell: bash
+        run: ./script/ci/generate-sbom-artifacts.sh
+
+      - name: Collect SBOM release artifacts
+        shell: bash
+        run: |
+          version="$(jq -r '.version' package.json)"
+          mkdir -p sbom-release-artifacts
+          cp "sbom/sonar-backend-${version}.cdx.json" \
+            "sbom/sonar-frontend-${version}.cdx.json" \
+            sbom-release-artifacts/
+
+      - name: Upload SBOM artifacts to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" sbom-release-artifacts/* --clobber
+
+      - name: Generate SHA256 checksums
+        shell: bash
+        run: ./script/ci/generate-release-hashes.sh sbom sbom-release-artifacts
+
+      - name: List attestation subjects
+        id: attestation-subjects
+        shell: bash
+        run: ./script/ci/generate-attestation-subjects.sh sbom sbom-release-artifacts
+
+      - name: Generate provenance attestation
+        uses: actions/attest@281a49d4cbb0a72c9575a50d18f6deb515a11deb
+        with:
+          subject-path: ${{ steps.attestation-subjects.outputs.subject-paths }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+
+      - name: Sign SBOM artifacts
+        shell: bash
+        run: ./script/ci/sign-release-artifacts.sh sbom sbom-release-artifacts
+
+      - name: Upload Sigstore bundles to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./script/ci/upload-sigstore-bundles.sh sbom
+
+      - name: Upload Sigstore bundles artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sigstore-bundles-sbom
+          path: |
+            release-signatures/sbom-*.sigstore.json
+          if-no-files-found: error
+
+      - name: Upload release hashes artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-hashes-sbom
+          path: release-hashes-sbom.md
+          if-no-files-found: error
+
   update-release-body:
     name: publish release hashes after artifact build
-    needs: publish-tauri
+    needs: [publish-tauri, publish-sbom]
     permissions:
       contents: write
     runs-on: ubuntu-22.04
