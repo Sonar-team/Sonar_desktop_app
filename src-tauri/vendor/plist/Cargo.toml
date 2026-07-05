@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.88.0"
 name = "plist"
-version = "1.9.0"
+version = "1.10.0"
 authors = ["Ed Barnard <eabarnard@gmail.com>"]
 build = false
 exclude = ["/tests/data"]
@@ -49,6 +49,10 @@ path = "src/lib.rs"
 name = "fuzzer"
 path = "tests/fuzzer.rs"
 
+[[test]]
+name = "macros"
+path = "tests/macros.rs"
+
 [dependencies.base64]
 version = "0.22.0"
 
@@ -56,7 +60,7 @@ version = "0.22.0"
 version = "2.1.0"
 
 [dependencies.quick_xml]
-version = "0.39.2"
+version = "0.41.0"
 package = "quick-xml"
 
 [dependencies.serde]
@@ -70,8 +74,15 @@ features = [
     "formatting",
 ]
 
+[dev-dependencies.macrotest]
+version = "1.2.1"
+
 [dev-dependencies.serde_derive]
 version = "1.0.2"
 
 [dev-dependencies.serde_yaml]
 version = "0.8.21"
+
+[dev-dependencies.trybuild]
+version = "1.0.116"
+features = ["diff"]
