@@ -64,10 +64,26 @@ pub fn update_labels_in_state(
 }
 
 pub fn parse_label_row(row: &str) -> Option<(String, String, String)> {
-    let parts: Vec<_> = row.split(',').map(clean_csv_field).collect();
-    let [mac, ip, label] = parts.as_slice() else {
+    parse_label_fields(row.split(','))
+}
+
+pub fn parse_label_fields<I, S>(fields: I) -> Option<(String, String, String)>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let parts: Vec<String> = fields
+        .into_iter()
+        .map(|value| clean_csv_field(value.as_ref()).to_string())
+        .collect();
+
+    if parts.len() < 3 {
         return None;
-    };
+    }
+
+    let mac = &parts[0];
+    let ip = &parts[1];
+    let label_parts = &parts[2..];
 
     // Une ligne doit porter au moins une adresse (MAC ou IP) pour être exploitable.
     if mac.is_empty() && ip.is_empty() {
@@ -76,9 +92,19 @@ pub fn parse_label_row(row: &str) -> Option<(String, String, String)> {
 
     // Une IP en notation CIDR ("192.168.1.0/24") est ramenée à sa seule adresse.
     let ip = ip.split('/').next().unwrap_or(ip);
-    let label = if label.is_empty() { "Label?" } else { label };
+    let label = label_parts
+        .iter()
+        .filter(|value| !value.is_empty())
+        .cloned()
+        .collect::<Vec<_>>()
+        .join(" ");
+    let label = if label.is_empty() {
+        "Label?".to_string()
+    } else {
+        label
+    };
 
-    Some((mac.to_string(), ip.to_string(), label.to_string()))
+    Some((mac.to_string(), ip.to_string(), label))
 }
 
 pub fn clean_csv_field(value: &str) -> &str {
@@ -186,6 +212,34 @@ mod tests {
                 String::new(),
                 "8.8.8.8".to_string(),
                 "google.com".to_string(),
+            ))
+        );
+    }
+
+    #[test]
+    fn parses_trailing_empty_column() {
+        let parsed = parse_label_row("aa:bb:cc:dd:ee:ff,192.168.1.10,pc sonar,");
+
+        assert_eq!(
+            parsed,
+            Some((
+                "aa:bb:cc:dd:ee:ff".to_string(),
+                "192.168.1.10".to_string(),
+                "pc sonar".to_string(),
+            ))
+        );
+    }
+
+    #[test]
+    fn merges_extra_columns_into_label() {
+        let parsed = parse_label_row(",8.8.8.8,google,public dns");
+
+        assert_eq!(
+            parsed,
+            Some((
+                String::new(),
+                "8.8.8.8".to_string(),
+                "google public dns".to_string(),
             ))
         );
     }

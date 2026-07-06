@@ -63,7 +63,7 @@
               </li>
             </ul>
           </div>
-          <p v-show="invalid_lines.length > 0 || invalid_mac.length > 0 || invalid_ip.length > 0" class="text">Format de fichier attendu : <code>mac, ip, label</code> — tous les champs peuvent être vides mais DOIVENT exister</p>
+          <p v-show="invalid_lines.length > 0 || invalid_mac.length > 0 || invalid_ip.length > 0" class="text">Format attendu : <code>mac, ip, label</code> — les colonnes suivantes sont ajoutées au label</p>
         </div>
       </div>
 

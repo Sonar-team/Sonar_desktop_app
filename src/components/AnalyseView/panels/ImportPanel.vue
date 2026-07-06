@@ -43,7 +43,7 @@
               </div>
             </div>
           </div>
-          <p class="text hint">Format : <code>mac, ip, label</code> — tous les champs peuvent être vides</p>
+          <p class="text hint">Format : <code>mac, ip, label</code> — les colonnes suivantes sont ajoutées au label</p>
       </div>
       
       <div v-else-if="mode === 'pcap'">

@@ -6,6 +6,8 @@ use pcap::Capture;
 #[cfg(feature = "capture_timing")]
 use serde_json::json;
 #[cfg(feature = "capture_timing")]
+use std::path::PathBuf;
+#[cfg(feature = "capture_timing")]
 use std::time::Instant;
 #[cfg(feature = "capture_timing")]
 use std::{
@@ -16,7 +18,6 @@ use std::{
 use std::{
     io::ErrorKind,
     net::IpAddr,
-    path::PathBuf,
     sync::{Arc, Mutex},
 };
 use tauri::{State, ipc::Channel};
@@ -24,7 +25,7 @@ use tauri::{State, ipc::Channel};
 use crate::{
     errors::{CaptureStateError, import::PcapImportError, label::LabelError},
     events::CaptureEvent,
-    setup::labels::{clean_csv_field, parse_label_row},
+    setup::labels::{clean_csv_field, parse_label_fields},
     state::{
         capture::{CaptureState, capture_handle::messages::capture::PacketMinimal},
         flow_matrix::{FlowMatrix, FlowMatrixRow, FlowStats},
@@ -174,6 +175,14 @@ fn now_unix_ns() -> u128 {
 }
 
 type ConflictsList = Vec<(String, String, String)>;
+
+fn read_label_file(csv_path: &str) -> Result<String, CaptureStateError> {
+    match std::fs::read_to_string(csv_path) {
+        Ok(csv_data) => Ok(csv_data),
+        Err(error) if error.kind() == ErrorKind::NotFound => Ok(String::new()),
+        Err(error) => Err(error.into()),
+    }
+}
 
 fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
     let mut cap = Capture::from_file(file_path).map_err(|e| {
@@ -650,39 +659,58 @@ pub fn clear_label_store(
     Ok(())
 }
 
-fn verif_label_rows_format(file: String) -> Result<(), CaptureStateError> {
-    let mut invalid_lines: Vec<String> = Vec::new();
+fn label_record_to_display(record: &csv::StringRecord) -> String {
+    record.iter().collect::<Vec<_>>().join(",")
+}
 
-    let file = match std::fs::read_to_string(&file) {
-        Ok(csv_data) => csv_data,
-        Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
-        Err(error) => return Err(error.into()),
-    };
+fn read_label_records(csv_path: &str) -> Result<Vec<csv::StringRecord>, CaptureStateError> {
+    let file = read_label_file(csv_path)?;
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .flexible(true)
+        .trim(csv::Trim::All)
+        .from_reader(file.as_bytes());
 
-    for line in file.lines() {
-        let parts: Vec<_> = line.split(',').map(clean_csv_field).collect();
-        if parts.len() != 3 && !parts.is_empty() {
-            invalid_lines.push(line.to_string())
+    let mut records = Vec::new();
+    let mut invalid_lines = Vec::new();
+
+    for result in rdr.records() {
+        match result {
+            Ok(record) => {
+                if record.iter().all(|field| clean_csv_field(field).is_empty()) {
+                    continue;
+                }
+                if record.len() < 3 {
+                    invalid_lines.push(label_record_to_display(&record));
+                } else {
+                    records.push(record);
+                }
+            }
+            Err(error) => invalid_lines.push(error.to_string()),
         }
     }
 
-    if !invalid_lines.is_empty() {
-        Err(LabelError::InvalidRowsFormat { invalid_lines }.into())
+    if invalid_lines.is_empty() {
+        Ok(records)
     } else {
-        Ok(())
+        Err(LabelError::InvalidRowsFormat { invalid_lines }.into())
     }
 }
 
+fn read_label_rows(csv_path: &str) -> Result<Vec<(String, String, String)>, CaptureStateError> {
+    Ok(read_label_records(csv_path)?
+        .iter()
+        .filter_map(|record| parse_label_fields(record.iter()))
+        .collect())
+}
+
+fn verif_label_rows_format(file: String) -> Result<(), CaptureStateError> {
+    read_label_records(&file)?;
+    Ok(())
+}
+
 fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
-    let file: PathBuf = PathBuf::from(file_path);
-
-    let file = match std::fs::read_to_string(&file) {
-        Ok(csv_data) => csv_data,
-        Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
-        Err(error) => return Err(error.into()),
-    };
-
-    let rows: Vec<(String, String, String)> = file.lines().filter_map(parse_label_row).collect();
+    let rows = read_label_rows(&file_path)?;
 
     let mut same_ip_different_mac: ConflictsList = Vec::new();
     let mut same_ip_different_label: ConflictsList = Vec::new();
@@ -725,13 +753,7 @@ pub fn verif_mac_ip_format(csv_path: String) -> Result<(), CaptureStateError> {
     let mut invalid_ip: Vec<String> = Vec::new();
     let mut invalid_mac: Vec<String> = Vec::new();
 
-    let file = match std::fs::read_to_string(&csv_path) {
-        Ok(csv_data) => csv_data,
-        Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
-        Err(error) => return Err(error.into()),
-    };
-
-    let rows: Vec<(String, String, String)> = file.lines().filter_map(parse_label_row).collect();
+    let rows = read_label_rows(&csv_path)?;
 
     let skip = usize::from(rows.first().is_some_and(is_header_row));
     for (mac, ip, _label) in rows.iter().skip(skip) {
@@ -790,14 +812,7 @@ pub fn import_label_file(
 
         label_store.clear();
 
-        let file = match std::fs::read_to_string(&incoming_file_path) {
-            Ok(csv_data) => csv_data,
-            Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
-            Err(error) => return Err(error.into()),
-        };
-
-        let mut rows: Vec<(String, String, String)> =
-            file.lines().filter_map(parse_label_row).collect();
+        let mut rows = read_label_rows(&incoming_file_path)?;
 
         // L'en-tête éventuel est écarté ici pour que le store ne contienne que des données.
         if rows.first().is_some_and(is_header_row) {
@@ -1013,7 +1028,7 @@ mod tests {
     }
 
     #[test]
-    fn extra_column_returns_invalid_file_format_error() {
+    fn extra_column_is_merged_into_label() {
         let dir = TempDir::new("sonar_test_extra_column");
         let file_path = dir.path().join("labels.csv");
         fs::write(
@@ -1023,8 +1038,17 @@ mod tests {
         .unwrap();
 
         let result = verif_label_rows_format(file_path.to_str().unwrap().to_string());
+        assert!(result.is_ok());
 
-        assert!(result.is_err());
+        let rows = read_label_rows(file_path.to_str().unwrap()).unwrap();
+        assert_eq!(
+            rows,
+            vec![(
+                "aa:bb:cc:dd:ee:ff".to_string(),
+                "192.168.1.1".to_string(),
+                "mon-pc réseau-2".to_string()
+            )]
+        );
     }
 
     #[test]
@@ -1322,9 +1346,7 @@ mod tests {
         verif_mac_ip_format(label_path.clone()).unwrap();
         verif_labels_conflicts(label_path.clone()).unwrap();
 
-        let file = fs::read_to_string(&label_path).unwrap();
-        let mut rows: Vec<(String, String, String)> =
-            file.lines().filter_map(parse_label_row).collect();
+        let mut rows = read_label_rows(&label_path).unwrap();
         if rows.first().is_some_and(is_header_row) {
             rows.remove(0);
         }

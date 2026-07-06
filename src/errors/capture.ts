@@ -120,7 +120,7 @@ function handleLabelerror(labelError: LabelErrorKind): string {
       const [sameIpDiffMac, sameIpDiffLabel] = labelError.message;
       return `Conflits dans les lignes de labels : même IP, MAC différent - ${sameIpDiffMac.map(([ip, ref_mac, mac]) => `${ip} : ${ref_mac} <-> ${mac}`).join('\n')}, même IP, label différent - ${sameIpDiffLabel.map(([ip, ref_label, label]) => `${ip} : ${ref_label} <-> ${label}`).join('\n')} \n <Importation impossible>`;
     case "invalidRowsFormat":
-      return `Format de ligne invalide. Attendu "mac, ip, Label", trouvé ${labelError.message}`
+      return `Format de ligne invalide. Attendu au moins "mac, ip, label"; les colonnes suivantes sont ajoutées au label. Trouvé ${labelError.message}`
     default:
       return `Erreur de label inconnue : ${JSON.stringify(labelError)}`;
   }

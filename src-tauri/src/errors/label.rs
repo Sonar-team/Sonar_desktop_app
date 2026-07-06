@@ -5,7 +5,9 @@ pub enum LabelError {
         invalid_mac: Vec<String>,
         invalid_ip: Vec<String>,
     },
-    #[error("Format de fichier invalide. Attendu : mac, ip, label, trouvé : {invalid_lines:?}")]
+    #[error(
+        "Format de fichier invalide. Attendu : au moins mac, ip, label ; colonnes suivantes fusionnées dans le label. Trouvé : {invalid_lines:?}"
+    )]
     InvalidRowsFormat { invalid_lines: Vec<String> },
     #[error(
         "Conflits détectés : IP -> Mac : {same_ip_diff_mac:?}, IP -> Label : {same_ip_diff_label:?}"
