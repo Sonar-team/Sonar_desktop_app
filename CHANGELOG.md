@@ -1,5 +1,15 @@
 # Changelog
 
+## **[4.0.1] - 2026-07-06**
+
+## 🔧 Maintenance
+
+- Mise à jour de Npcap embarqué en **1.88** pour les bundles Windows et le
+  smoke runtime Windows.
+- Ajout de la méthodologie de build sécurisé Tauri dans la documentation de
+  gestion de projet.
+- Mise à jour de la version de SONAR en **4.0.1**.
+
 ## **[4.0.0] - 2026-07-05**
 
 ## 💥 Changements majeurs

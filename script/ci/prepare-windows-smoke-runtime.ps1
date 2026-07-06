@@ -2,7 +2,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string] $BinaryPath,
 
-  [string] $InstallerPath = "src-tauri/windows/npcap-1.87.exe"
+  [string] $InstallerPath = "src-tauri/windows/npcap-1.88.exe"
 )
 
 $ErrorActionPreference = "Stop"

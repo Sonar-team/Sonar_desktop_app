@@ -16,7 +16,7 @@
   <Fragment>
     <!-- 3) Embarquer l'installeur Npcap dans le MSI -->
     <!-- Important : le chemin doit pointer vers ton fichier dans src-tauri/windows/ -->
-    <Binary Id="NpcapInstallerExe" SourceFile="$(var.ProjectDir)windows\npcap-1.85.exe" />
+    <Binary Id="NpcapInstallerExe" SourceFile="$(var.ProjectDir)windows\npcap-1.88.exe" />
 
     <!-- 4) CustomAction : exécuter l'installeur (admin requis) -->
     <!-- Execute=deferred + Impersonate=no => exécution en contexte système (élevé) -->

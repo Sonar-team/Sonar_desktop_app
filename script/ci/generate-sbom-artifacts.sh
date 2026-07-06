@@ -45,6 +45,11 @@ cp "$BACKEND_VERSIONED_OUTPUT" "$BACKEND_OUTPUT"
 
 echo "Generating frontend SBOM: $FRONTEND_VERSIONED_OUTPUT"
 SYFT_CHECK_FOR_APP_UPDATE=false syft scan dir:. \
+  --exclude './.cache/**' \
+  --exclude './.cargo-home/**' \
+  --exclude './target/**' \
+  --exclude './dist/**' \
+  --exclude './bundle-repro-*/**' \
   --exclude './src-tauri/vendor/**' \
   --exclude './src-tauri/target/**' \
   --exclude './node_modules/**' \
