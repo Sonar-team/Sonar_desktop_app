@@ -34,5 +34,5 @@ if ! command -v syft >/dev/null 2>&1; then
   sudo install -m 0755 "${tmpdir}/syft" /usr/local/bin/syft
 fi
 
-cargo-cyclonedx --version
+cargo cyclonedx --version
 syft version
