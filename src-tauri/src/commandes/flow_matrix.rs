@@ -48,3 +48,14 @@ pub fn get_label_list(
     let guard = matrix.lock()?;
     Ok(guard.get_label_list())
 }
+
+/// Labels réellement appliqués à la matrice de flux, au format `(mac, ip, label)`,
+/// avec les champs manquants (MAC ou IP) complétés depuis la matrice — même
+/// vue que l'export de labels.
+#[command]
+pub fn get_matrix_labels(
+    matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
+) -> Result<Vec<(String, String, String)>, CaptureStateError> {
+    let guard = matrix.lock()?;
+    Ok(guard.export_labels())
+}

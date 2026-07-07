@@ -13,9 +13,13 @@ pub enum LabelError {
         "Format de fichier invalide. Attendu : au moins mac, ip, label ; colonnes suivantes fusionnées dans le label. Trouvé : {invalid_lines:?}"
     )]
     InvalidRowsFormat { invalid_lines: Vec<LabelInvalidRow> },
+    // Les conflits de labels ne bloquent plus l'import (résolus « premier
+    // gagné » et rapportés via LabelImportReport). Variante conservée pour la
+    // compatibilité de l'API d'erreur et le futur module d'arbitrage.
     #[error(
         "Conflits détectés : IP -> Mac : {same_ip_diff_mac:?}, IP -> Label : {same_ip_diff_label:?}"
     )]
+    #[allow(dead_code)]
     LabelLinesConflicts {
         same_ip_diff_mac: Vec<LabelConflict>,
         same_ip_diff_label: Vec<LabelConflict>,

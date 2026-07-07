@@ -11,6 +11,7 @@
     </button>
 
     <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
+    <button class="image-btn" @click="SaveLabels" title="Exporter les labels">🏷️</button>
 
     <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
     <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
@@ -193,6 +194,40 @@ export default {
         }
       } catch (err) {
         error("Erreur sauvegarde csv: ", err);
+      } finally {
+        useCaptureStore().isImporting = false;
+      }
+    },
+    async SaveLabels() {
+      info("Export des labels");
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
+      if (this.activePanel !== null) {
+        this.$emit(`toggle-${this.activePanel}`, false)  // Ferme le panneau ouvert avant de sauvegarder
+      }
+
+      useCaptureStore().isImporting = true;
+
+      try {
+        const response = await save({
+          filters: [{ name: '.csv', extensions: ['csv'] }],
+          title: 'Exporter les labels',
+          defaultPath: getCurrentDate() + '_labels.csv'
+        });
+
+        if (response) {
+          await invoke('export_label_file', { path: response });
+          info("Labels exportés");
+        } else {
+          info("Aucun chemin sélectionné");
+        }
+      } catch (err) {
+        error(`Erreur export labels: ${err}`);
+        displayCaptureError(err);
       } finally {
         useCaptureStore().isImporting = false;
       }

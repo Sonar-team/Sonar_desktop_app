@@ -11,6 +11,24 @@ use packet_parser::owned::{
 use packet_parser::parse::data_link::{ethertype::Ethertype, vlan_tag::VlanTag};
 use serde::{Deserialize, Serialize};
 
+/// Vrai pour les IP « non spécifiées »/broadcast qui ne désignent pas un
+/// équipement précis : `0.0.0.0`, `::`, `255.255.255.255`. Elles peuvent être
+/// partagées par plusieurs machines et ne doivent donc pas servir de clé de
+/// label ni déclencher de conflit.
+pub fn is_placeholder_ip(ip: &str) -> bool {
+    matches!(ip.trim(), "0.0.0.0" | "::" | "255.255.255.255")
+}
+
+/// Vrai pour une MAC de broadcast (`ff:ff:ff:ff:ff:ff`) ou multicast : le bit
+/// de poids faible du premier octet vaut 1 (ex. `01:00:5e:*`, `33:33:*`). Ces
+/// adresses ne sont pas l'identité d'un équipement.
+pub fn is_non_unicast_mac(mac: &str) -> bool {
+    mac.split(':')
+        .next()
+        .and_then(|octet| u8::from_str_radix(octet.trim(), 16).ok())
+        .is_some_and(|first| first & 0x01 == 1)
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct FlowStats {
     pub count: u64,            // Nombre de paquets vus pour ce flow
@@ -180,6 +198,124 @@ impl FlowMatrix {
         Ok(())
     }
 
+    /// Construit les lignes de labels prêtes pour l'export au format
+    /// `mac, ip, label`.
+    ///
+    /// Les labels édités à la main pendant la capture sont souvent partiels
+    /// (MAC seule ou IP seule). Plutôt que d'étendre chaque label partiel
+    /// indépendamment — ce qui produisait des doublons contradictoires pour un
+    /// même couple `(mac, ip)` — on émet **un seul label résolu par endpoint
+    /// réel** de la matrice, via la même précédence que [`Self::get_label`]
+    /// (exact > IP seule > MAC seule). Cela complète les champs manquants sans
+    /// jamais créer deux labels pour la même clé.
+    ///
+    /// Les endpoints non identifiants (IP `0.0.0.0`/`::`, MAC broadcast ou
+    /// multicast) sont exclus : ce ne sont pas des équipements et ils
+    /// provoquaient de faux conflits au réimport. Les labels stockés qui ne
+    /// correspondent à aucun endpoint courant sont conservés (champs
+    /// placeholder normalisés à vide).
+    pub fn export_labels(&self) -> Vec<(String, String, String)> {
+        use std::collections::{BTreeSet, HashSet};
+
+        // Endpoints réels : MAC unicast + IP non-placeholder observés dans la matrice.
+        let mut endpoints: BTreeSet<(String, String)> = BTreeSet::new();
+        for flow in self.matrix.keys() {
+            let src_ip = flow
+                .internet
+                .as_ref()
+                .and_then(|i| i.source_ip)
+                .map(|ip| ip.to_string())
+                .unwrap_or_default();
+            let dst_ip = flow
+                .internet
+                .as_ref()
+                .and_then(|i| i.destination_ip)
+                .map(|ip| ip.to_string())
+                .unwrap_or_default();
+
+            for (mac, ip) in [
+                (&flow.data_link.source_mac, &src_ip),
+                (&flow.data_link.destination_mac, &dst_ip),
+            ] {
+                if !mac.is_empty()
+                    && !ip.is_empty()
+                    && !is_non_unicast_mac(mac)
+                    && !is_placeholder_ip(ip)
+                {
+                    endpoints.insert((mac.clone(), ip.clone()));
+                }
+            }
+        }
+
+        // BTreeSet : déduplication + sortie déterministe.
+        let mut rows: BTreeSet<(String, String, String)> = BTreeSet::new();
+        let mut covered_ips: HashSet<String> = HashSet::new();
+        let mut covered_macs: HashSet<String> = HashSet::new();
+
+        // 1) Un label résolu par endpoint réel (précédence exact > IP > MAC).
+        for (mac, ip) in &endpoints {
+            if let Some(label) = self.get_label(mac, ip) {
+                rows.insert((mac.clone(), ip.clone(), label));
+                covered_ips.insert(ip.clone());
+                covered_macs.insert(mac.clone());
+            }
+        }
+
+        // 2) Labels stockés non couverts par un endpoint (équipements absents de
+        //    la matrice) : préservés, champs placeholder/non-unicast écartés.
+        for ((mac, ip), label) in &self.label {
+            let mac_eff = if is_non_unicast_mac(mac) {
+                ""
+            } else {
+                mac.as_str()
+            };
+            let ip_eff = if is_placeholder_ip(ip) {
+                ""
+            } else {
+                ip.as_str()
+            };
+
+            match (mac_eff.is_empty(), ip_eff.is_empty()) {
+                // Clé complète absente des endpoints : on la conserve.
+                (false, false) => {
+                    if !endpoints.contains(&(mac_eff.to_string(), ip_eff.to_string())) {
+                        rows.insert((mac_eff.to_string(), ip_eff.to_string(), label.clone()));
+                    }
+                }
+                // Label IP seule : conservé si l'IP n'a pas déjà été couverte.
+                (true, false) => {
+                    if !covered_ips.contains(ip_eff) {
+                        rows.insert((String::new(), ip_eff.to_string(), label.clone()));
+                    }
+                }
+                // Label MAC seule : conservé si la MAC n'a pas déjà été couverte.
+                (false, true) => {
+                    if !covered_macs.contains(mac_eff) {
+                        rows.insert((mac_eff.to_string(), String::new(), label.clone()));
+                    }
+                }
+                // Rien d'identifiant : ignoré.
+                (true, true) => {}
+            }
+        }
+
+        rows.into_iter().collect()
+    }
+
+    /// Exporte les labels (complétés depuis la matrice) vers un fichier CSV
+    /// `mac,ip,label`, réimportable tel quel par `import_label_file`.
+    pub fn export_labels_to_csv(&self, path: String) -> std::io::Result<()> {
+        let file = File::create(&path)?;
+        let mut wtr = csv::Writer::from_writer(file);
+        wtr.write_record(["mac", "ip", "label"])?;
+        for (mac, ip, label) in self.export_labels() {
+            wtr.write_record([&mac, &ip, &label])?;
+        }
+        wtr.flush()?;
+        info!("✅ Labels exportés avec succès vers {}", path);
+        Ok(())
+    }
+
     pub fn add_label(&mut self, mac: String, ip: String, label: String) {
         self.label.insert((mac, ip), label);
     }
@@ -311,7 +447,7 @@ pub fn timeval_to_systemtime(tv_sec: impl Into<i64>, tv_usec: impl Into<i64>) ->
 
 #[cfg(test)]
 mod tests {
-    use super::FlowMatrix;
+    use super::{FlowMatrix, is_non_unicast_mac, is_placeholder_ip};
     use crate::state::capture::capture_handle::messages::capture::PacketOwnedStats;
     use packet_parser::owned::{DataLinkOwned, PacketFlowOwned};
 
@@ -409,6 +545,167 @@ mod tests {
         assert_eq!(
             matrix.get_label("aa:bb:cc:dd:ee:ff", "8.8.8.8"),
             Some("custom dns".to_string())
+        );
+    }
+
+    fn packet_with_ips(
+        src_mac: &str,
+        src_ip: &str,
+        dst_mac: &str,
+        dst_ip: &str,
+    ) -> PacketOwnedStats {
+        use packet_parser::IpType;
+        use packet_parser::owned::InternetOwned;
+        use std::net::IpAddr;
+
+        PacketOwnedStats {
+            ts_sec: 1_000,
+            ts_usec: 0,
+            caplen: 100,
+            len: 100,
+            flow: PacketFlowOwned {
+                data_link: DataLinkOwned {
+                    destination_mac: dst_mac.to_string(),
+                    source_mac: src_mac.to_string(),
+                    ethertype: "IPv4".to_string(),
+                    vlan: None,
+                },
+                internet: Some(InternetOwned {
+                    source_ip: Some(src_ip.parse::<IpAddr>().unwrap()),
+                    ip_source_type: Some(IpType::from_ip(src_ip)),
+                    destination_ip: Some(dst_ip.parse::<IpAddr>().unwrap()),
+                    ip_destination_type: Some(IpType::from_ip(dst_ip)),
+                    protocol: "IPv4".to_string(),
+                }),
+                transport: None,
+                application: None,
+            },
+        }
+    }
+
+    #[test]
+    fn export_labels_completes_missing_fields_from_matrix() {
+        let mut matrix = FlowMatrix::new();
+        // MAC unicast valides (premier octet pair -> bit multicast à 0).
+        matrix.update_flow(&packet_with_ips(
+            "10:22:33:44:55:66",
+            "192.168.1.10",
+            "aa:bb:cc:dd:ee:ff",
+            "192.168.1.20",
+        ));
+
+        // Label saisi par IP seule pendant la capture -> MAC complétée.
+        matrix.add_label(
+            String::new(),
+            "192.168.1.10".to_string(),
+            "poste-A".to_string(),
+        );
+        // Label saisi par MAC seule -> IP complétée.
+        matrix.add_label(
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            String::new(),
+            "serveur-B".to_string(),
+        );
+
+        let rows = matrix.export_labels();
+
+        assert!(rows.contains(&(
+            "10:22:33:44:55:66".to_string(),
+            "192.168.1.10".to_string(),
+            "poste-A".to_string()
+        )));
+        assert!(rows.contains(&(
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            "192.168.1.20".to_string(),
+            "serveur-B".to_string()
+        )));
+        assert!(
+            rows.iter().all(|(m, i, _)| !m.is_empty() && !i.is_empty()),
+            "les champs manquants doivent être complétés : {rows:?}"
+        );
+    }
+
+    #[test]
+    fn export_labels_keeps_partial_label_when_matrix_has_no_match() {
+        let mut matrix = FlowMatrix::new();
+        // Label par IP seule, mais aucune IP correspondante dans la matrice.
+        matrix.add_label(
+            String::new(),
+            "10.0.0.99".to_string(),
+            "inconnu".to_string(),
+        );
+
+        let rows = matrix.export_labels();
+
+        assert_eq!(
+            rows,
+            vec![(
+                String::new(),
+                "10.0.0.99".to_string(),
+                "inconnu".to_string()
+            )]
+        );
+    }
+
+    #[test]
+    fn export_labels_emits_single_label_per_endpoint() {
+        // Un même endpoint porte un label MAC-seule ET un label IP-seule
+        // différents : l'export ne doit produire qu'une seule ligne (précédence),
+        // pas deux lignes contradictoires pour la même clé (mac, ip).
+        let mut matrix = FlowMatrix::new();
+        matrix.update_flow(&packet_with_ips(
+            "48:21:0b:41:45:65",
+            "192.168.1.182",
+            "aa:bb:cc:dd:ee:ff",
+            "192.168.1.20",
+        ));
+        matrix.add_label(
+            "48:21:0b:41:45:65".to_string(),
+            String::new(),
+            "TVD09".to_string(),
+        );
+        matrix.add_label(
+            String::new(),
+            "192.168.1.182".to_string(),
+            "pc sonar".to_string(),
+        );
+
+        let rows = matrix.export_labels();
+
+        let for_endpoint: Vec<_> = rows
+            .iter()
+            .filter(|(m, i, _)| m == "48:21:0b:41:45:65" && i == "192.168.1.182")
+            .collect();
+        assert_eq!(
+            for_endpoint.len(),
+            1,
+            "un seul label par couple (mac, ip) : {rows:?}"
+        );
+    }
+
+    #[test]
+    fn export_labels_excludes_placeholder_ip_and_broadcast_mac() {
+        let mut matrix = FlowMatrix::new();
+        // Endpoint avec IP placeholder et MAC broadcast : ne doit rien produire
+        // d'identifiant à l'export.
+        matrix.update_flow(&packet_with_ips(
+            "48:21:0b:41:45:65",
+            "0.0.0.0",
+            "ff:ff:ff:ff:ff:ff",
+            "100.180.65.40",
+        ));
+        matrix.add_label(
+            "48:21:0b:41:45:65".to_string(),
+            "0.0.0.0".to_string(),
+            "x".to_string(),
+        );
+
+        let rows = matrix.export_labels();
+
+        assert!(
+            rows.iter()
+                .all(|(m, i, _)| !is_placeholder_ip(i) && !is_non_unicast_mac(m)),
+            "ni IP placeholder ni MAC broadcast/multicast : {rows:?}"
         );
     }
 }

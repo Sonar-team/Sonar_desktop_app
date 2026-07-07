@@ -16,11 +16,12 @@ use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut,
 
 use crate::{
     commandes::{
-        export::{csv::export_csv, logs::export_logs},
-        flow_matrix::{add_label, get_label_list},
+        export::{csv::export_csv, labels::export_label_file, logs::export_logs},
+        flow_matrix::{add_label, get_label_list, get_matrix_labels},
         import::{
-            clear_label_store, convert_from_pcap_list, get_label_rows, import_label_file,
-            import_matrix_file, import_matrix_files, is_matrix_empty,
+            LabelConflictStore, clear_label_store, convert_from_pcap_list, get_label_conflicts,
+            get_label_rows, import_label_file, import_matrix_file, import_matrix_files,
+            is_matrix_empty, resolve_label_conflict,
         },
         net_capture::{reset_capture, set_filter, start_capture_core},
     },
@@ -106,6 +107,7 @@ pub fn run() -> Result<(), tauri::Error> {
         .manage(Arc::new(Mutex::new(GraphData::new())))
         .manage(Arc::new(Mutex::new(PcInfoLabel::new())))
         .manage(Arc::new(Mutex::new(LabelStore::new())))
+        .manage(Arc::new(Mutex::new(LabelConflictStore::default())))
         .on_menu_event(|app, event| {
             if event.id() == "version" {
                 app.dialog()
@@ -203,13 +205,17 @@ pub fn run() -> Result<(), tauri::Error> {
             config_capture,
             get_config_capture,
             export_csv,
+            export_label_file,
             reset_capture,
             export_logs,
             convert_from_pcap_list,
             add_label,
             get_label_list,
+            get_matrix_labels,
             set_filter,
             get_label_rows,
+            get_label_conflicts,
+            resolve_label_conflict,
             import_label_file,
             import_matrix_file,
             import_matrix_files,

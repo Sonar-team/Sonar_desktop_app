@@ -2,10 +2,14 @@
   <div class="container">
     <div class="center-container">
 
-      <h1 v-show="same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0" class="dialog-title">Conflits détectés</h1>
+      <h1 v-show="(same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0) && !resolved" class="dialog-title">Conflits détectés</h1>
+      <h1 v-show="(same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0) && resolved" class="dialog-title">Conflits de labels résolus</h1>
       <h1 v-show="invalid_mac.length > 0 || invalid_ip.length > 0" class="dialog-title">MAC/IP invalide(s) détectée(s)</h1>
       <h1 v-show="invalid_lines.length > 0" class="dialog-title">Format de fichier invalide</h1>
-      <p v-show="totalErrors > 0" class="text error-count">
+      <p v-show="totalErrors > 0 && resolved" class="text error-count resolved-note">
+        {{ totalErrors }} doublon{{ totalErrors > 1 ? "s" : "" }} de label résolu{{ totalErrors > 1 ? "s" : "" }} automatiquement (premier gardé). À arbitrer si besoin.
+      </p>
+      <p v-show="totalErrors > 0 && !resolved" class="text error-count">
         Total : {{ totalErrors }} erreur{{ totalErrors > 1 ? "s" : "" }} détectée{{ totalErrors > 1 ? "s" : "" }} dans le CSV
       </p>
 
@@ -115,6 +119,12 @@ export default defineComponent({
     invalid_lines: {
       type: Array as PropType<LineValue[]>,
       required: true
+    },
+    // true : les "conflits" ont été résolus automatiquement (import non
+    // bloquant, premier gardé) et sont affichés à titre informatif.
+    resolved: {
+      type: Boolean,
+      default: false
     }
   },
 
@@ -186,6 +196,12 @@ export default defineComponent({
   font-weight: 700;
   margin: 0 0 1rem 0;
   padding: 0.45rem 0.75rem;
+}
+
+/* Conflits résolus (non bloquants) : ton informatif plutôt qu'alerte. */
+.error-count.resolved-note {
+  background-color: #26333a;
+  border-color: #2596be;
 }
 
 .left-panel {

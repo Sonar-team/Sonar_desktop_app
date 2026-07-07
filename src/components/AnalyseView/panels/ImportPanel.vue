@@ -1,13 +1,19 @@
 <template>
   <div class="container">
     <div class="center-container">
-      <ConflictDialog v-if="showConflictDialog" 
-      :same_ip_diff_mac="sameIpDiffMac" 
-      :same_ip_diff_label="sameIpDiffLabel" 
+      <ConflictDialog v-if="showConflictDialog"
+      :same_ip_diff_mac="sameIpDiffMac"
+      :same_ip_diff_label="sameIpDiffLabel"
       :invalid_mac="invalidMac"
       :invalid_ip="invalidIp"
       :invalid_lines="invalidLines"
+      :resolved="conflictsResolved"
       @showConflictDialog="showConflictDialog = false"/>
+
+      <ArbitrationDialog v-if="showArbitration"
+      :conflicts="arbitrationConflicts"
+      @close="showArbitration = false"
+      @resolved="onArbitrationResolved"/>
 
         <!-- Overlay de chargement -->
       <div class="overlay" v-if="isConverting">
@@ -19,6 +25,9 @@
       <div v-if="mode === 'csv'" class="csv-group">
           <button class="btn btn-add text" @click="addCsvFiles" :disabled="isConverting">
             Ajouter un fichier
+          </button>
+          <button v-if="pendingConflicts > 0" class="btn btn-arbitrate" @click="openArbitration" :disabled="isConverting">
+            ⚖️ Arbitrer les conflits ({{ pendingConflicts }})
           </button>
           <p v-show="labelRows.length == 0" class="text">Aucun label importé pour le moment</p>
           <div v-show="labelRows.length > 0" class="table-header-row">
@@ -94,13 +103,20 @@ import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
 import { displayCaptureError, CaptureStateErrorKind, LabelErrorKind } from '../../../errors/capture';
 import ConflictDialog from './ConflictDialog.vue'
+import ArbitrationDialog from './ArbitrationDialog.vue'
+
+// (n° de ligne, label, ligne brute)
+type LabelChoice = [number, string, string];
+type LabelConflictReport = { mac: string; ip: string; kept: LabelChoice; dropped: LabelChoice[] };
+type LabelImportReport = { applied: number; conflicts: LabelConflictReport[] };
 
 
 export default defineComponent({
   name: 'ImportPanel',
   emits: ['update:visible','toggle-pcap', 'toggle-warning', 'showConflictDialog'],
   components: {
-    ConflictDialog
+    ConflictDialog,
+    ArbitrationDialog
   },
   props: {
     mode: {
@@ -118,6 +134,10 @@ export default defineComponent({
       isConverting: false,
       unsubs: [] as Array<() => void>,
       showConflictDialog: false,
+      conflictsResolved: false,
+      showArbitration: false,
+      arbitrationConflicts: [] as LabelConflictReport[],
+      pendingConflicts: 0,
       sameIpDiffMac: [] as [number, number, string, string, string, string, string][],
       sameIpDiffLabel: [] as [number, number, string, string, string, string, string][],
       invalidMac: [] as [number, string, string][],
@@ -257,6 +277,7 @@ export default defineComponent({
       this.invalidMac = [];
       this.sameIpDiffLabel = [];
       this.sameIpDiffMac = [];
+      this.conflictsResolved = false;
 
       // Un Channel Tauri est à usage unique (index d'ordre par commande +
       // cleanup à la fin) : on en crée un neuf à chaque invoke. Pendant une
@@ -268,8 +289,18 @@ export default defineComponent({
       }
 
       try {
-        await invoke('import_label_file', { incomingFilePath: path, onEvent });
-        info('réponse invoke');
+        // Les conflits ne bloquent plus : le backend garde le premier label par
+        // clé (mac, ip) et renvoie les doublons écartés pour arbitrage.
+        const report = await invoke<LabelImportReport>('import_label_file', { incomingFilePath: path, onEvent });
+        info(`réponse invoke: ${report.applied} label(s), ${report.conflicts.length} conflit(s) résolu(s)`);
+
+        this.pendingConflicts = report.conflicts.length;
+        if (report.conflicts.length > 0) {
+          // Les doublons sont appliqués « premier gardé » ; on ouvre le module
+          // d'arbitrage pour que l'utilisateur choisisse le bon label.
+          this.arbitrationConflicts = report.conflicts;
+          this.showArbitration = true;
+        }
       } catch (err) {
         const error = err as CaptureStateErrorKind;
         if (error.kind === "label") {
@@ -312,6 +343,22 @@ export default defineComponent({
         }
       },
 
+    async onArbitrationResolved() {
+      this.showArbitration = false;
+      this.arbitrationConflicts = [];
+      this.pendingConflicts = 0;
+      // Rafraîchit la table de labels après arbitrage.
+      this.labelRows = await invoke('get_label_rows');
+      this.filteredlabelRows = this.labelRows;
+    },
+
+    async openArbitration() {
+      this.arbitrationConflicts = await invoke<LabelConflictReport[]>('get_label_conflicts');
+      if (this.arbitrationConflicts.length > 0) {
+        this.showArbitration = true;
+      }
+    },
+
   },
 
   mounted() {
@@ -324,6 +371,11 @@ export default defineComponent({
       info("finished hearded");
       this.captureStore.updateStatus({ is_running: false });
     }));
+
+    // Conflits de labels en attente d'arbitrage (import précédent).
+    invoke<LabelConflictReport[]>('get_label_conflicts')
+      .then((c) => { this.pendingConflicts = c.length; })
+      .catch(() => { /* ignoré */ });
   },
 
   async beforeUnmount() {
@@ -427,6 +479,15 @@ export default defineComponent({
 
 .btn-open:active {
   background-color: #48bb78;
+}
+
+.btn-arbitrate {
+  border-color: #f0a020;
+  color: whitesmoke;
+  margin-top: 0.6rem;
+}
+.btn-arbitrate:hover {
+  background-color: #313152;
 }
 
 .btn-add {

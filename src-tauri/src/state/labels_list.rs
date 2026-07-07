@@ -19,6 +19,17 @@ impl LabelStore {
         &self.rows
     }
 
+    /// Fixe le label pour la clé `(mac, ip)` : met à jour la ligne existante,
+    /// ou l'ajoute si absente. Utilisé par l'arbitrage des conflits.
+    pub fn set(&mut self, mac: &str, ip: &str, label: &str) {
+        if let Some(row) = self.rows.iter_mut().find(|r| r.0 == mac && r.1 == ip) {
+            row.2 = label.to_string();
+        } else {
+            self.rows
+                .push((mac.to_string(), ip.to_string(), label.to_string()));
+        }
+    }
+
     pub fn clear(&mut self) {
         self.rows.clear()
     }

@@ -1,5 +1,29 @@
 # Changelog
 
+## **[4.1.1] - 2026-07-07**
+
+## ✨ Améliorations
+
+- Ajout de l'export des labels au format CSV réimportable `mac, ip, label`.
+- Ajout d'une vue des labels réellement appliqués à la matrice, avec recherche
+  par MAC, IP ou libellé.
+- Ajout d'un module d'arbitrage des conflits de labels : l'import garde le
+  premier label par clé `(mac, ip)` et laisse l'utilisateur choisir le bon label
+  en cas de doublon.
+
+## 🛠 Corrections
+
+- L'import de labels ne bloque plus sur les doublons non destructifs et ignore
+  les faux conflits liés aux IP placeholder ou aux MAC broadcast/multicast.
+- L'export de labels complète les champs MAC/IP manquants à partir de la
+  matrice de flux et évite de produire plusieurs labels contradictoires pour le
+  même endpoint.
+
+## 🔧 Maintenance
+
+- Régénération des SBOM CycloneDX backend et frontend pour SONAR **4.1.1**.
+- Mise à jour de la version de SONAR en **4.1.1**.
+
 ## **[4.1.0] - 2026-07-07**
 
 ## ✨ Améliorations
