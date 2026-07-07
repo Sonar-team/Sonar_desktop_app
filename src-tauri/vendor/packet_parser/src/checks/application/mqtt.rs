@@ -268,7 +268,10 @@ mod tests {
             variable_header_len(MqttPacketType::Pingresp, &[]).unwrap(),
             0
         );
-        assert_eq!(variable_header_len(MqttPacketType::Puback, &[0, 0]).unwrap(), 0);
+        assert_eq!(
+            variable_header_len(MqttPacketType::Puback, &[0, 0]).unwrap(),
+            0
+        );
     }
 
     #[test]

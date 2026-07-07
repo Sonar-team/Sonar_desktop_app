@@ -1,6 +1,14 @@
 <template>
   <div class="container">
-    <div class="center-container">
+    <div class="center-container" :class="{ 'drag-over': isDragOver }">
+      <!-- Retour visuel de drag & drop -->
+      <div class="drop-hint" v-if="isDragOver">
+        <div class="drop-hint-inner">
+          <span class="drop-icon">📥</span>
+          <span class="text">{{ dropHint }}</span>
+        </div>
+      </div>
+
       <ConflictDialog v-if="showConflictDialog"
       :same_ip_diff_mac="sameIpDiffMac"
       :same_ip_diff_label="sameIpDiffLabel"
@@ -98,6 +106,7 @@
 import { defineComponent } from 'vue';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke, Channel } from '@tauri-apps/api/core';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
@@ -138,6 +147,8 @@ export default defineComponent({
       showArbitration: false,
       arbitrationConflicts: [] as LabelConflictReport[],
       pendingConflicts: 0,
+      isDragOver: false,
+      unlistenDrop: null as (() => void) | null,
       sameIpDiffMac: [] as [number, number, string, string, string, string, string][],
       sameIpDiffLabel: [] as [number, number, string, string, string, string, string][],
       invalidMac: [] as [number, string, string][],
@@ -153,11 +164,50 @@ export default defineComponent({
     isRunning(): boolean {
       return this.captureStore.isRunning;
     },
+    dropHint(): string {
+      return this.mode === 'csv'
+        ? 'Déposez un fichier de labels (.csv)'
+        : 'Déposez des captures (.pcap, .pcapng, .cap) ou des matrices (.csv)';
+    },
   },
 
   methods: {
     windowClosed() {
       this.$emit('update:visible', false);
+    },
+
+    // Route les fichiers déposés (drag & drop) selon le mode du panneau et
+    // l'extension : labels en mode csv ; captures/matrices en mode pcap.
+    async handleDroppedPaths(paths: string[]) {
+      if (this.isConverting) return;
+      const ext = (p: string) => (p.split('.').pop() ?? '').toLowerCase();
+      const pcapExts = ['pcap', 'pcapng', 'cap'];
+
+      if (this.mode === 'csv') {
+        const csv = paths.find((p) => ext(p) === 'csv');
+        if (!csv) { info('drop ignoré : aucun fichier .csv'); return; }
+        useCaptureStore().isImporting = true;
+        try {
+          await this.importLabelFile(csv);
+        } finally {
+          useCaptureStore().isImporting = false;
+        }
+        return;
+      }
+
+      // Mode pcap : .pcap -> liste captures, .csv -> liste matrices.
+      const pcaps = paths.filter((p) => pcapExts.includes(ext(p)));
+      const matrices = paths.filter((p) => ext(p) === 'csv');
+      if (pcaps.length === 0 && matrices.length === 0) {
+        info('drop ignoré : ni .pcap ni .csv');
+        return;
+      }
+      if (pcaps.length > 0) {
+        this.packetFiles = Array.from(new Set([...this.packetFiles, ...pcaps]));
+      }
+      if (matrices.length > 0) {
+        this.matrixFiles = Array.from(new Set([...this.matrixFiles, ...matrices]));
+      }
     },
 
     addPcapFiles() {
@@ -376,11 +426,32 @@ export default defineComponent({
     invoke<LabelConflictReport[]>('get_label_conflicts')
       .then((c) => { this.pendingConflicts = c.length; })
       .catch(() => { /* ignoré */ });
+
+    // Drag & drop de fichiers sur le panneau (labels, matrices, pcap).
+    getCurrentWebviewWindow()
+      .onDragDropEvent((event) => {
+        const payload = event.payload;
+        if (payload.type === 'enter' || payload.type === 'over') {
+          this.isDragOver = true;
+        } else if (payload.type === 'leave') {
+          this.isDragOver = false;
+        } else if (payload.type === 'drop') {
+          this.isDragOver = false;
+          this.handleDroppedPaths(payload.paths);
+        }
+      })
+      .then((unlisten) => { this.unlistenDrop = unlisten; })
+      .catch((e) => { info(`onDragDropEvent indisponible: ${e}`); });
   },
 
   async beforeUnmount() {
     for (const unsub of this.unsubs) unsub();
     this.unsubs = [];
+
+    if (this.unlistenDrop) {
+      this.unlistenDrop();
+      this.unlistenDrop = null;
+    }
 
     this.labelRows = await invoke('get_label_rows');
     this.filteredlabelRows = this.labelRows;
@@ -417,7 +488,38 @@ export default defineComponent({
   width: 90%;
   max-width: 600px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
 }
+
+.center-container.drag-over {
+  border-color: #2596be;
+}
+
+.drop-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 2500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(30, 30, 46, 0.92);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.drop-hint-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.5rem 2rem;
+  border: 2px dashed #2596be;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.drop-icon { font-size: 2.5rem; }
 
 .csv-group {
   display: flex;

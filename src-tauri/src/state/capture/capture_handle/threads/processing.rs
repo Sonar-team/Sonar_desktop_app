@@ -679,6 +679,58 @@ pub fn spawn_processing_thread(
                     // Accumuler dans le batch
                     packet_batch.push(record_owned);
 
+                    // Tunnels (ex. CAPWAP) : chaque niveau interne devient une
+                    // ligne de flux supplémentaire. La garde `inner.is_some()`
+                    // assure un coût nul pour le trafic normal (non tunnelé).
+                    if packet.flow.inner.is_some() {
+                        for inner_owned in packet.to_owned_packets().into_iter().skip(1) {
+                            let (inner_src_label, inner_dst_label) =
+                                if let Ok(mut locked_state) = flow_matrix.lock() {
+                                    let source_ip = inner_owned
+                                        .flow
+                                        .internet
+                                        .as_ref()
+                                        .and_then(|i| i.source_ip)
+                                        .map(|ip| ip.to_string())
+                                        .unwrap_or_default();
+                                    let destination_ip = inner_owned
+                                        .flow
+                                        .internet
+                                        .as_ref()
+                                        .and_then(|i| i.destination_ip)
+                                        .map(|ip| ip.to_string())
+                                        .unwrap_or_default();
+                                    let labels = (
+                                        locked_state.get_label(
+                                            &inner_owned.flow.data_link.source_mac,
+                                            &source_ip,
+                                        ),
+                                        locked_state.get_label(
+                                            &inner_owned.flow.data_link.destination_mac,
+                                            &destination_ip,
+                                        ),
+                                    );
+                                    locked_state.update_flow(&inner_owned);
+                                    processed = locked_state.matrix.len() as u32;
+                                    labels
+                                } else {
+                                    (None, None)
+                                };
+                            if let Ok(mut g) = graph.lock() {
+                                for update in g.add_packet_flow(
+                                    &inner_owned.flow,
+                                    inner_src_label,
+                                    inner_dst_label,
+                                    1,
+                                    inner_owned.len as u64,
+                                ) {
+                                    graph_batch.push(update);
+                                }
+                            }
+                            packet_batch.push(inner_owned);
+                        }
+                    }
+
                     // Flush si le batch est plein ou si l'intervalle est écoulé
                     if packet_batch.len() >= PACKET_BATCH_MAX
                         || last_batch_flush.elapsed() >= batch_interval

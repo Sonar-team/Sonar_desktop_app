@@ -636,7 +636,9 @@ mod extra_tests {
         match packet {
             QuicPacket::Handshake { header, payload } => {
                 assert_eq!(header.packet_number, Some(9));
-                assert!(matches!(payload, QuicPayload::EncryptedPayload(ref b) if b == &[0x01, 0x02]));
+                assert!(
+                    matches!(payload, QuicPayload::EncryptedPayload(ref b) if b == &[0x01, 0x02])
+                );
             }
             other => panic!("attendu Handshake, obtenu {other:?}"),
         }
@@ -662,7 +664,9 @@ mod extra_tests {
         match packet {
             QuicPacket::OtherLong { header, payload } => {
                 assert!(matches!(header.packet_type, QuicPacketType::Retry));
-                assert!(matches!(payload, QuicPayload::EncryptedPayload(ref b) if b == &[0x11, 0x22, 0x33]));
+                assert!(
+                    matches!(payload, QuicPayload::EncryptedPayload(ref b) if b == &[0x11, 0x22, 0x33])
+                );
             }
             other => panic!("attendu OtherLong, obtenu {other:?}"),
         }

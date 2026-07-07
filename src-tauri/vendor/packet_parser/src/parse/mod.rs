@@ -41,6 +41,7 @@ pub mod application;
 pub mod data_link;
 pub mod internet;
 pub mod transport;
+pub(crate) mod tunnel;
 
 /// A fully or partially parsed network packet flow.
 ///
@@ -69,6 +70,13 @@ pub struct PacketFlow<'a> {
     /// Application layer (optional, best-effort).
     #[serde(flatten)]
     pub application: Option<Application>,
+
+    /// Encapsulated packet (optional). When this flow is a tunnel (e.g. CAPWAP,
+    /// carried as the application protocol), `inner` holds the packet parsed
+    /// from inside the tunnel — recursively, from the outermost to the
+    /// innermost. See [`PacketFlow::flatten`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inner: Option<Box<PacketFlow<'a>>>,
 }
 
 impl<'a> TryFrom<&'a [u8]> for PacketFlow<'a> {
@@ -86,6 +94,7 @@ impl<'a> PartialEq for PacketFlow<'a> {
             && self.internet == other.internet
             && self.transport == other.transport
             && self.application == other.application
+            && self.inner == other.inner
     }
 }
 
@@ -97,6 +106,7 @@ impl<'a> Hash for PacketFlow<'a> {
         self.internet.hash(state);
         self.transport.hash(state);
         self.application.hash(state);
+        self.inner.hash(state);
     }
 }
 
@@ -148,10 +158,35 @@ impl<'a> PacketFlow<'a> {
         PacketFlowOwned::from(self.clone())
     }
 
+    /// Returns this flow and every encapsulated flow, from the outermost to the
+    /// innermost. A non-tunneled packet yields a single entry; a tunneled one
+    /// yields several (outer tunnel + inner conversation(s)).
+    pub fn flatten(&self) -> Vec<&PacketFlow<'a>> {
+        let mut out = Vec::new();
+        let mut current = self;
+        loop {
+            out.push(current);
+            match current.inner.as_deref() {
+                Some(next) => current = next,
+                None => break,
+            }
+        }
+        out
+    }
+
     #[inline(always)]
     fn parse_impl(packets: &'a [u8]) -> Result<Self, ParsedPacketError> {
         let data_link = DataLink::try_from(packets)?;
+        Self::parse_layers(data_link, 0)
+    }
 
+    /// Parses the L3/L4/L7 layers from a data-link layer, then recurses into any
+    /// tunnel. `depth` bounds tunnel nesting. Shared by the top-level entry and
+    /// by tunnel peeling (which supplies a rebuilt inner data-link layer).
+    pub(crate) fn parse_layers(
+        data_link: DataLink<'a>,
+        depth: u8,
+    ) -> Result<Self, ParsedPacketError> {
         let internet = match Internet::try_from(data_link.payload) {
             Ok(internet) => Some(internet),
             Err(InternetError::UnsupportedProtocol) => None,
@@ -169,15 +204,28 @@ impl<'a> PacketFlow<'a> {
             None => None,
         };
 
-        let application = transport
-            .as_ref()
-            .and_then(Self::parse_application_from_transport);
+        // If the transport layer encapsulates a tunnel (e.g. CAPWAP), record the
+        // tunnel name as THIS flow's application protocol and parse the inner
+        // packet into `inner`. Otherwise, best-effort application detection.
+        let (application, inner) = match transport.as_ref() {
+            Some(transport) => match tunnel::detect_inner(transport, depth) {
+                Some((tunnel_name, inner_flow)) => (
+                    Some(Application {
+                        application_protocol: tunnel_name,
+                    }),
+                    Some(Box::new(inner_flow)),
+                ),
+                None => (Self::parse_application_from_transport(transport), None),
+            },
+            None => (None, None),
+        };
 
         Ok(PacketFlow {
             data_link,
             internet,
             transport,
             application,
+            inner,
         })
     }
 
@@ -253,6 +301,8 @@ impl<'a> PacketFlow<'a> {
                 internet,
                 transport,
                 application,
+                // Tunnel recursion is not instrumented in the timing path.
+                inner: None,
             })
         })();
 
@@ -869,5 +919,139 @@ mod tests {
         assert_eq!(internet.protocol_name, "IPv4");
         assert_eq!(internet.payload_protocol, None);
         assert!(flow.transport.is_none());
+    }
+
+    /// Trame réelle : Ethernet → IPv4 → UDP:5247 → CAPWAP-Data → IEEE 802.11 →
+    /// LLC/SNAP → IPv4 → TCP:445 (SMB2). Un seul paquet, deux niveaux de flux.
+    fn sample_capwap_ieee80211_inner_tcp() -> Vec<u8> {
+        hex::decode(
+            "c464138f9e04442b0302172c080045080138b7e04000ff115967ac18086aac1808ca2174147f0124000000200320000000000104e5440000000001082c00003a9a5af450e0c2642fa3b4000c29967ca43980aaaa030000000800453800eca89440008006651464ac911e64ac91b4dd7b01bda58ecb952483ab67501800fec87e0000000000c0fe534d4240000100030000000500000030000000000000006704090000000000fffe0000966e611ec3ba49eb000000000000000000000000000000000000000039000000020000000000000000000000000000000000000080000000000000000700000001000000000020007800120090000000300000005200530058005f00440052002d0053004600000000000000180000001000040000001800000000004d78416300000000000000001000040000001800000000005146696400000000",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    #[test]
+    fn packetflow_recurses_into_capwap_ieee80211_tunnel() {
+        use crate::parse::data_link::mac_addres::MacAddress;
+
+        let packet = sample_capwap_ieee80211_inner_tcp();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        // --- Flux externe : le tunnel CAPWAP ---
+        let outer_ip = flow.internet.as_ref().expect("outer internet");
+        assert_eq!(
+            outer_ip.source,
+            Some(IpAddr::V4(Ipv4Addr::new(172, 24, 8, 106)))
+        );
+        assert_eq!(
+            outer_ip.destination,
+            Some(IpAddr::V4(Ipv4Addr::new(172, 24, 8, 202)))
+        );
+        let outer_udp = flow.transport.as_ref().expect("outer transport");
+        assert_eq!(outer_udp.protocol, TransportProtocol::Udp);
+        assert_eq!(outer_udp.destination_port, Some(5247));
+        assert_eq!(
+            flow.application
+                .as_ref()
+                .expect("outer application")
+                .application_protocol,
+            "CAPWAP",
+            "le tunnel est reporté comme protocole applicatif de la ligne externe"
+        );
+
+        // --- Flux interne : la vraie conversation, extraite du tunnel ---
+        let inner = flow.inner.as_deref().expect("inner tunnel flow");
+        let inner_ip = inner.internet.as_ref().expect("inner internet");
+        assert_eq!(
+            inner_ip.source,
+            Some(IpAddr::V4(Ipv4Addr::new(100, 172, 145, 30)))
+        );
+        assert_eq!(
+            inner_ip.destination,
+            Some(IpAddr::V4(Ipv4Addr::new(100, 172, 145, 180)))
+        );
+        let inner_tcp = inner.transport.as_ref().expect("inner transport");
+        assert_eq!(inner_tcp.protocol, TransportProtocol::Tcp);
+        assert_eq!(inner_tcp.source_port, Some(56699));
+        assert_eq!(inner_tcp.destination_port, Some(445));
+
+        // MAC internes = adresses 802.11 (station Intel -> destination VMware).
+        assert_eq!(
+            inner.data_link.source_mac,
+            MacAddress([0xe0, 0xc2, 0x64, 0x2f, 0xa3, 0xb4])
+        );
+        assert_eq!(
+            inner.data_link.destination_mac,
+            MacAddress([0x00, 0x0c, 0x29, 0x96, 0x7c, 0xa4])
+        );
+
+        // Un paquet -> deux niveaux de flux aplatis.
+        assert_eq!(flow.flatten().len(), 2);
+    }
+
+    /// Sens retour de la même conversation : CAPWAP avec en-tête minimal
+    /// (HLEN = 8 octets, pas d'info sans-fil) et 802.11 **FromDS** (descente
+    /// vers la station). Complète le premier test qui était ToDS / HLEN 16.
+    fn sample_capwap_ieee80211_fromds_inner_tcp() -> Vec<u8> {
+        hex::decode(
+            "442b0302172cc464138f9e04080045100160751a4000ff119bfdac1808caac18086a147f2174014c000000100300751a000002080000e0c2642fa3b4003a9a5af450000c29967ca40000aaaa0300000008004510011ce9f54000400663ab64ac91b464ac911e01bddd7b22759d73a3a432b450187ed43e350000000000f0fe534d424000010000000000050001003100000000000000120a060000000000fffe0000966e611ec3ba49eb0000000000000000000000000000000000000000590000000100000080a3cbc22d69d80100e1f6d4ba47db0100437f0f2e46db0100437f0f2e46db01000000000000000000000000000000001000000000000000c8edb59c0000000058d03e7b000000009800000058000000200000001000040000001800080000004d7841630000000000000000a9001200000000001000040000001800200000005146696400000000500158020000000001fe00000000000000000000000000000000000000000000",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    #[test]
+    fn packetflow_recurses_into_capwap_fromds_short_header() {
+        use crate::parse::data_link::mac_addres::MacAddress;
+
+        let packet = sample_capwap_ieee80211_fromds_inner_tcp();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        // Flux externe : tunnel CAPWAP, sens serveur -> AP (UDP src 5247).
+        let outer_ip = flow.internet.as_ref().expect("outer internet");
+        assert_eq!(
+            outer_ip.source,
+            Some(IpAddr::V4(Ipv4Addr::new(172, 24, 8, 202)))
+        );
+        assert_eq!(
+            outer_ip.destination,
+            Some(IpAddr::V4(Ipv4Addr::new(172, 24, 8, 106)))
+        );
+        let outer_udp = flow.transport.as_ref().expect("outer transport");
+        assert_eq!(outer_udp.source_port, Some(5247));
+        assert_eq!(
+            flow.application
+                .as_ref()
+                .expect("outer application")
+                .application_protocol,
+            "CAPWAP"
+        );
+
+        // Flux interne : réponse SMB (TCP src 445), IP inversées vs le test ToDS.
+        let inner = flow.inner.as_deref().expect("inner tunnel flow");
+        let inner_ip = inner.internet.as_ref().expect("inner internet");
+        assert_eq!(
+            inner_ip.source,
+            Some(IpAddr::V4(Ipv4Addr::new(100, 172, 145, 180)))
+        );
+        assert_eq!(
+            inner_ip.destination,
+            Some(IpAddr::V4(Ipv4Addr::new(100, 172, 145, 30)))
+        );
+        let inner_tcp = inner.transport.as_ref().expect("inner transport");
+        assert_eq!(inner_tcp.protocol, TransportProtocol::Tcp);
+        assert_eq!(inner_tcp.source_port, Some(445));
+        assert_eq!(inner_tcp.destination_port, Some(56699));
+
+        // FromDS : DA = Address1 (station), SA = Address3 (hôte serveur).
+        assert_eq!(
+            inner.data_link.destination_mac,
+            MacAddress([0xe0, 0xc2, 0x64, 0x2f, 0xa3, 0xb4])
+        );
+        assert_eq!(
+            inner.data_link.source_mac,
+            MacAddress([0x00, 0x0c, 0x29, 0x96, 0x7c, 0xa4])
+        );
+
+        assert_eq!(flow.flatten().len(), 2);
     }
 }

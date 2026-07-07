@@ -532,6 +532,28 @@ fn handle_pcap_file(
                 );
                 let graph_update_ns = graph_update_start.map(elapsed_ns_since).unwrap_or(0);
 
+                // Niveaux internes des tunnels (non instrumentés).
+                for inner in packet_min.to_owned_packets().into_iter().skip(1) {
+                    matrice.update_flow(&inner);
+                    let sip = inner
+                        .flow
+                        .internet
+                        .as_ref()
+                        .and_then(|i| i.source_ip)
+                        .map(|ip| ip.to_string())
+                        .unwrap_or_default();
+                    let dip = inner
+                        .flow
+                        .internet
+                        .as_ref()
+                        .and_then(|i| i.destination_ip)
+                        .map(|ip| ip.to_string())
+                        .unwrap_or_default();
+                    let sl = matrice.get_label(&inner.flow.data_link.source_mac, &sip);
+                    let dl = matrice.get_label(&inner.flow.data_link.destination_mac, &dip);
+                    graph.add_packet_flow(&inner.flow, sl, dl, 1, inner.len as u64);
+                }
+
                 let mut stats_ipc_ns = 0;
                 let mut stats_ipc_sent = false;
                 let mut stats_ipc_ok = false;
@@ -632,44 +654,40 @@ fn handle_pcap_file(
                 flow,
             };
 
-            let owned_packet = packet_min.to_owned_packet();
-            matrice.update_flow(&owned_packet);
-            let matrix_count = matrice.matrix.len();
-            let source_ip = owned_packet
-                .flow
-                .internet
-                .as_ref()
-                .and_then(|i| i.source_ip)
-                .map(|ip| ip.to_string())
-                .unwrap_or_default();
-            let destination_ip = owned_packet
-                .flow
-                .internet
-                .as_ref()
-                .and_then(|i| i.destination_ip)
-                .map(|ip| ip.to_string())
-                .unwrap_or_default();
-            let source_label =
-                matrice.get_label(&owned_packet.flow.data_link.source_mac, &source_ip);
-            let destination_label = matrice.get_label(
-                &owned_packet.flow.data_link.destination_mac,
-                &destination_ip,
-            );
-            // info!(
-            //     "[handle_pcap_file] {} : paquet {}/{} ; lignes matrice = {}",
-            //     file_path,
-            //     packet_count,
-            //     total,
-            //     matrix_count
-            // );
+            // Un paquet tunnelé (ex. CAPWAP) produit plusieurs niveaux de flux :
+            // la ligne externe (tunnel) puis la (les) conversation(s) interne(s).
+            for owned_packet in packet_min.to_owned_packets() {
+                matrice.update_flow(&owned_packet);
+                let source_ip = owned_packet
+                    .flow
+                    .internet
+                    .as_ref()
+                    .and_then(|i| i.source_ip)
+                    .map(|ip| ip.to_string())
+                    .unwrap_or_default();
+                let destination_ip = owned_packet
+                    .flow
+                    .internet
+                    .as_ref()
+                    .and_then(|i| i.destination_ip)
+                    .map(|ip| ip.to_string())
+                    .unwrap_or_default();
+                let source_label =
+                    matrice.get_label(&owned_packet.flow.data_link.source_mac, &source_ip);
+                let destination_label = matrice.get_label(
+                    &owned_packet.flow.data_link.destination_mac,
+                    &destination_ip,
+                );
 
-            graph.add_packet_flow(
-                &owned_packet.flow,
-                source_label,
-                destination_label,
-                1,
-                owned_packet.len as u64,
-            );
+                graph.add_packet_flow(
+                    &owned_packet.flow,
+                    source_label,
+                    destination_label,
+                    1,
+                    owned_packet.len as u64,
+                );
+            }
+            let matrix_count = matrice.matrix.len();
 
             // Stats périodiques (optionnel)
             if (packet_count.is_multiple_of(1000) || packet_count == total)
@@ -1148,11 +1166,15 @@ fn rebuild_matrix_and_graph_from_rows(
             count: 0,
             total_bytes: 0,
             last_seen: stats.last_seen,
+            encap_id: stats.encap_id,
         });
         entry.count += stats.count;
         entry.total_bytes = entry.total_bytes.saturating_add(stats.total_bytes);
         if stats.last_seen > entry.last_seen {
             entry.last_seen = stats.last_seen;
+        }
+        if entry.encap_id.is_none() {
+            entry.encap_id = stats.encap_id;
         }
 
         let source_label = matrice.get_label(&flow.data_link.source_mac, &row.ip_source);

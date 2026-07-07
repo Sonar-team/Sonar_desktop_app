@@ -1231,34 +1231,98 @@ mod detection_tests {
     #[test]
     fn message_type_mapping_is_complete() {
         let cases: &[(u8, PostgreSqlMessageType, &str)] = &[
-            (b'R', PostgreSqlMessageType::Authentication, "Authentication"),
-            (b'K', PostgreSqlMessageType::BackendKeyData, "BackendKeyData"),
+            (
+                b'R',
+                PostgreSqlMessageType::Authentication,
+                "Authentication",
+            ),
+            (
+                b'K',
+                PostgreSqlMessageType::BackendKeyData,
+                "BackendKeyData",
+            ),
             (b'B', PostgreSqlMessageType::Bind, "Bind"),
             (b'2', PostgreSqlMessageType::BindComplete, "BindComplete"),
-            (b'C', PostgreSqlMessageType::CloseOrCommandComplete, "CloseOrCommandComplete"),
+            (
+                b'C',
+                PostgreSqlMessageType::CloseOrCommandComplete,
+                "CloseOrCommandComplete",
+            ),
             (b'3', PostgreSqlMessageType::CloseComplete, "CloseComplete"),
-            (b'W', PostgreSqlMessageType::CopyBothResponse, "CopyBothResponse"),
+            (
+                b'W',
+                PostgreSqlMessageType::CopyBothResponse,
+                "CopyBothResponse",
+            ),
             (b'd', PostgreSqlMessageType::CopyData, "CopyData"),
             (b'c', PostgreSqlMessageType::CopyDone, "CopyDone"),
             (b'f', PostgreSqlMessageType::CopyFail, "CopyFail"),
-            (b'G', PostgreSqlMessageType::CopyInResponse, "CopyInResponse"),
-            (b'D', PostgreSqlMessageType::DataRowOrDescribe, "DataRowOrDescribe"),
-            (b'I', PostgreSqlMessageType::EmptyQueryResponse, "EmptyQueryResponse"),
-            (b'E', PostgreSqlMessageType::ErrorResponseOrExecute, "ErrorResponseOrExecute"),
-            (b'H', PostgreSqlMessageType::FlushOrCopyOutResponse, "FlushOrCopyOutResponse"),
+            (
+                b'G',
+                PostgreSqlMessageType::CopyInResponse,
+                "CopyInResponse",
+            ),
+            (
+                b'D',
+                PostgreSqlMessageType::DataRowOrDescribe,
+                "DataRowOrDescribe",
+            ),
+            (
+                b'I',
+                PostgreSqlMessageType::EmptyQueryResponse,
+                "EmptyQueryResponse",
+            ),
+            (
+                b'E',
+                PostgreSqlMessageType::ErrorResponseOrExecute,
+                "ErrorResponseOrExecute",
+            ),
+            (
+                b'H',
+                PostgreSqlMessageType::FlushOrCopyOutResponse,
+                "FlushOrCopyOutResponse",
+            ),
             (b'F', PostgreSqlMessageType::FunctionCall, "FunctionCall"),
-            (b'V', PostgreSqlMessageType::FunctionCallResponse, "FunctionCallResponse"),
+            (
+                b'V',
+                PostgreSqlMessageType::FunctionCallResponse,
+                "FunctionCallResponse",
+            ),
             (b'n', PostgreSqlMessageType::NoData, "NoData"),
-            (b'N', PostgreSqlMessageType::NoticeResponse, "NoticeResponse"),
-            (b'A', PostgreSqlMessageType::NotificationResponse, "NotificationResponse"),
-            (b't', PostgreSqlMessageType::ParameterDescription, "ParameterDescription"),
-            (b'S', PostgreSqlMessageType::ParameterStatusOrSync, "ParameterStatusOrSync"),
+            (
+                b'N',
+                PostgreSqlMessageType::NoticeResponse,
+                "NoticeResponse",
+            ),
+            (
+                b'A',
+                PostgreSqlMessageType::NotificationResponse,
+                "NotificationResponse",
+            ),
+            (
+                b't',
+                PostgreSqlMessageType::ParameterDescription,
+                "ParameterDescription",
+            ),
+            (
+                b'S',
+                PostgreSqlMessageType::ParameterStatusOrSync,
+                "ParameterStatusOrSync",
+            ),
             (b'P', PostgreSqlMessageType::Parse, "Parse"),
             (b'1', PostgreSqlMessageType::ParseComplete, "ParseComplete"),
-            (b's', PostgreSqlMessageType::PortalSuspended, "PortalSuspended"),
+            (
+                b's',
+                PostgreSqlMessageType::PortalSuspended,
+                "PortalSuspended",
+            ),
             (b'Q', PostgreSqlMessageType::Query, "Query"),
             (b'Z', PostgreSqlMessageType::ReadyForQuery, "ReadyForQuery"),
-            (b'T', PostgreSqlMessageType::RowDescription, "RowDescription"),
+            (
+                b'T',
+                PostgreSqlMessageType::RowDescription,
+                "RowDescription",
+            ),
             (b'X', PostgreSqlMessageType::Terminate, "Terminate"),
         ];
 
@@ -1277,7 +1341,10 @@ mod detection_tests {
         assert_eq!(PostgreSqlMessageType::CancelRequest.name(), "CancelRequest");
         assert_eq!(PostgreSqlMessageType::GssEncRequest.name(), "GssEncRequest");
         assert_eq!(PostgreSqlMessageType::SslRequest.name(), "SslRequest");
-        assert_eq!(PostgreSqlMessageType::StartupMessage.name(), "StartupMessage");
+        assert_eq!(
+            PostgreSqlMessageType::StartupMessage.name(),
+            "StartupMessage"
+        );
     }
 
     #[test]
@@ -1313,8 +1380,14 @@ mod detection_tests {
     #[test]
     fn parses_ssl_and_gssenc_requests() {
         for (code, expected) in [
-            (POSTGRESQL_SSL_REQUEST_CODE, PostgreSqlMessageType::SslRequest),
-            (POSTGRESQL_GSSENC_REQUEST_CODE, PostgreSqlMessageType::GssEncRequest),
+            (
+                POSTGRESQL_SSL_REQUEST_CODE,
+                PostgreSqlMessageType::SslRequest,
+            ),
+            (
+                POSTGRESQL_GSSENC_REQUEST_CODE,
+                PostgreSqlMessageType::GssEncRequest,
+            ),
         ] {
             let mut payload = 8u32.to_be_bytes().to_vec();
             payload.extend_from_slice(&code.to_be_bytes());

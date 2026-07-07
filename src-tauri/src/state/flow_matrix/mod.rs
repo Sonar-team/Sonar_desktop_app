@@ -34,6 +34,9 @@ pub struct FlowStats {
     pub count: u64,            // Nombre de paquets vus pour ce flow
     pub total_bytes: u64,      // Total des octets passés dans ce flow
     pub last_seen: SystemTime, // Dernière apparition
+    // Identifiant du tunnel encapsulant, partagé entre la ligne externe et ses
+    // lignes internes (None si le flux n'est pas tunnelé).
+    pub encap_id: Option<u64>,
 }
 
 pub struct FlowMatrix {
@@ -59,6 +62,10 @@ impl FlowMatrix {
             entry.count += 1;
             entry.total_bytes = entry.total_bytes.saturating_add(pkt.len as u64);
             entry.last_seen = ts;
+            // Renseigne l'id de tunnel si on ne l'avait pas encore vu pour ce flux.
+            if entry.encap_id.is_none() {
+                entry.encap_id = pkt.encap_id;
+            }
         } else {
             self.matrix.insert(
                 pkt.flow.clone(),
@@ -66,6 +73,7 @@ impl FlowMatrix {
                     count: 1,
                     total_bytes: pkt.len as u64,
                     last_seen: ts,
+                    encap_id: pkt.encap_id,
                 },
             );
         }
@@ -179,6 +187,10 @@ impl FlowMatrix {
                     count: stats.count,
                     total_bytes: stats.total_bytes,
                     last_seen,
+                    encap_id: stats
+                        .encap_id
+                        .map(|id| format!("{id:016x}"))
+                        .unwrap_or_default(),
                 }
             })
             .collect()
@@ -363,6 +375,11 @@ pub struct FlowMatrixRow {
     pub count: u64,
     pub total_bytes: u64,
     pub last_seen: String,
+    // Identifiant de tunnel (extension SFMS) : hex partagé par la ligne externe
+    // et ses lignes internes ; vide pour un flux non tunnelé. `serde(default)`
+    // pour rester compatible avec les matrices exportées avant cette colonne.
+    #[serde(default)]
+    pub encap_id: String,
 }
 
 impl FlowMatrixRow {
@@ -428,6 +445,7 @@ impl FlowMatrixRow {
             count: self.count,
             total_bytes: self.total_bytes,
             last_seen,
+            encap_id: u64::from_str_radix(self.encap_id.trim(), 16).ok(),
         };
 
         (flow, stats)
@@ -468,6 +486,7 @@ mod tests {
                 transport: None,
                 application: None,
             },
+            encap_id: None,
         }
     }
 
@@ -580,6 +599,7 @@ mod tests {
                 transport: None,
                 application: None,
             },
+            encap_id: None,
         }
     }
 

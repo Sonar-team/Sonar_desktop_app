@@ -796,25 +796,31 @@ mod extra_tests {
     #[test]
     fn rejects_invalid_values() {
         // NULL non vide
-        assert!(SnmpPacket::try_from(
-            v2c_response_with_value(&tlv(ASN1_NULL_TAG, &[1])).as_slice()
-        )
-        .is_err());
+        assert!(
+            SnmpPacket::try_from(v2c_response_with_value(&tlv(ASN1_NULL_TAG, &[1])).as_slice())
+                .is_err()
+        );
         // IpAddress de 5 octets
-        assert!(SnmpPacket::try_from(
-            v2c_response_with_value(&tlv(SNMP_IP_ADDRESS_TAG, &[1, 2, 3, 4, 5])).as_slice()
-        )
-        .is_err());
+        assert!(
+            SnmpPacket::try_from(
+                v2c_response_with_value(&tlv(SNMP_IP_ADDRESS_TAG, &[1, 2, 3, 4, 5])).as_slice()
+            )
+            .is_err()
+        );
         // Counter32 qui déborde u32
-        assert!(SnmpPacket::try_from(
-            v2c_response_with_value(&tlv(SNMP_COUNTER32_TAG, &[1, 0, 0, 0, 0])).as_slice()
-        )
-        .is_err());
+        assert!(
+            SnmpPacket::try_from(
+                v2c_response_with_value(&tlv(SNMP_COUNTER32_TAG, &[1, 0, 0, 0, 0])).as_slice()
+            )
+            .is_err()
+        );
         // exception avec contenu
-        assert!(SnmpPacket::try_from(
-            v2c_response_with_value(&tlv(SNMP_NO_SUCH_OBJECT_TAG, &[1])).as_slice()
-        )
-        .is_err());
+        assert!(
+            SnmpPacket::try_from(
+                v2c_response_with_value(&tlv(SNMP_NO_SUCH_OBJECT_TAG, &[1])).as_slice()
+            )
+            .is_err()
+        );
     }
 
     fn v3_packet(data_tlv: &[u8]) -> Vec<u8> {
@@ -910,7 +916,11 @@ mod extra_tests {
 
         let mut offset = 0;
         assert!(matches!(
-            read_tlv(&[0x04, 0x89, 0, 0, 0, 0, 0, 0, 0, 0, 0], &mut offset, "test"),
+            read_tlv(
+                &[0x04, 0x89, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                &mut offset,
+                "test"
+            ),
             Err(SnmpError::UnsupportedLengthSize { actual: 9, .. })
         ));
 

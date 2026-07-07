@@ -290,7 +290,11 @@ mod serde_tests {
     #[test]
     fn deserialize_rejects_invalid_strings() {
         // trop court, trop long, hex invalide, pas une chaîne
-        for bad in ["\"2c:fd:a1:3c:4d\"", "\"2c:fd:a1:3c:4d:5e:6f\"", "\"zz:fd:a1:3c:4d:5e\""] {
+        for bad in [
+            "\"2c:fd:a1:3c:4d\"",
+            "\"2c:fd:a1:3c:4d:5e:6f\"",
+            "\"zz:fd:a1:3c:4d:5e\"",
+        ] {
             assert!(
                 serde_json::from_str::<MacAddress>(bad).is_err(),
                 "aurait dû échouer : {bad}"

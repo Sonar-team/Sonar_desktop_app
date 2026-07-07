@@ -297,10 +297,22 @@ mod tests {
     #[test]
     fn test_pdu_type_from_u8() {
         assert!(matches!(CotpPduType::from(0xF0), CotpPduType::Data));
-        assert!(matches!(CotpPduType::from(0xE0), CotpPduType::ConnectionRequest));
-        assert!(matches!(CotpPduType::from(0xD0), CotpPduType::ConnectionConfirm));
-        assert!(matches!(CotpPduType::from(0x80), CotpPduType::DisconnectRequest));
-        assert!(matches!(CotpPduType::from(0xC0), CotpPduType::DisconnectConfirm));
+        assert!(matches!(
+            CotpPduType::from(0xE0),
+            CotpPduType::ConnectionRequest
+        ));
+        assert!(matches!(
+            CotpPduType::from(0xD0),
+            CotpPduType::ConnectionConfirm
+        ));
+        assert!(matches!(
+            CotpPduType::from(0x80),
+            CotpPduType::DisconnectRequest
+        ));
+        assert!(matches!(
+            CotpPduType::from(0xC0),
+            CotpPduType::DisconnectConfirm
+        ));
         assert!(matches!(CotpPduType::from(0x70), CotpPduType::TpduError));
         assert!(matches!(CotpPduType::from(0x42), CotpPduType::Other(0x42)));
     }
@@ -367,7 +379,10 @@ mod tests {
         ];
 
         let (header, _) = CotpHeader::from_bytes(&data).unwrap();
-        assert!(matches!(header.parameters[0], CotpParameter::Other(0xC0, _)));
+        assert!(matches!(
+            header.parameters[0],
+            CotpParameter::Other(0xC0, _)
+        ));
     }
 
     #[test]

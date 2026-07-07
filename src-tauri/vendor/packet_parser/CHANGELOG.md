@@ -6,6 +6,34 @@ Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-07-07
+
+### Ajoute
+
+- Decapsulation recursive des tunnels : un paquet encapsule produit desormais
+  plusieurs niveaux de flux via le nouveau champ `PacketFlow.inner`
+  (`Option<Box<PacketFlow>>`) et la methode `PacketFlow::flatten()`.
+- Support **CAPWAP-Data** (UDP 5247) transportant **IEEE 802.11** (ToDS/FromDS,
+  WDS, QoS, gestion du byte-swap Frame Control des captures Cisco) puis
+  **LLC/SNAP** jusqu'a la couche L3 interne.
+- Le tunnel detecte est reporte comme protocole applicatif de la ligne externe
+  (ex. `"CAPWAP"`).
+- Garde-fou de profondeur (`MAX_TUNNEL_DEPTH = 4`) et degradation gracieuse :
+  un contenu interne illisible (DTLS chiffre, tronque, non-SNAP) ne fait jamais
+  echouer le parsing, seule la ligne externe est produite.
+- Deux tests de reference sur trames reelles (CAPWAP ToDS/en-tete 16 octets et
+  FromDS/en-tete 8 octets).
+
+### Rupture
+
+- `PacketFlow` gagne un champ public `inner` : toute construction par litteral
+  de `PacketFlow` doit desormais renseigner ce champ (`inner: None` par defaut).
+
+### Validation
+
+- `cargo test` passe (435 tests unitaires + 13 doctests), `cargo fmt` et
+  `cargo clippy` propres.
+
 ## [1.5.5] - 2026-06-29
 
 ### Change

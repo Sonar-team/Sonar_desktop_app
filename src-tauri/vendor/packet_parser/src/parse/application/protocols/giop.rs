@@ -490,8 +490,7 @@ mod tests {
 
     #[test]
     fn test_parse_request_big_endian() {
-        let request =
-            GiopRequest::parse(&build_request_body_be(), false).expect("request valide");
+        let request = GiopRequest::parse(&build_request_body_be(), false).expect("request valide");
 
         assert_eq!(request.request_id, 7);
         assert_eq!(request.response_flags, 3);
