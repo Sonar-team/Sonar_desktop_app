@@ -1,6 +1,6 @@
 [package]
 name = "sonar"
-version = "4.0.1"
+version = "4.1.0"
 description = "A Tauri network analyzer App"
 authors = ["Cyprien Avico <akmot9@proton.me>"]
 edition = "2024"
@@ -26,7 +26,7 @@ default = []
 capture_timing = ["packet_parser/parse_timing"]
 
 [dependencies]
-tauri = { version = "2.11.3", features = [] }
+tauri = { version = "2.11.5", features = [] }
 tauri-plugin-shell = "2.3.5"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.150"

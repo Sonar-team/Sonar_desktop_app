@@ -1,5 +1,35 @@
 # Changelog
 
+## **[4.1.0] - 2026-07-07**
+
+## ✨ Améliorations
+
+- Ajout de l'import multiple de matrices CSV : plusieurs matrices exportées
+  peuvent être sélectionnées puis fusionnées en une seule analyse.
+- Fusion automatique des flux identiques lors de l'import de matrices :
+  cumul du nombre de paquets, cumul des octets et conservation de la date
+  `last_seen` la plus récente.
+- Passage du compteur d'octets de la matrice en `u64` afin de mieux supporter
+  les fusions volumineuses.
+- Amélioration du panneau d'import de matrices : les fichiers sélectionnés sont
+  listés avant ouverture et peuvent être effacés avant import.
+- Ajout d'un menu `A propos` avec accès séparé aux informations de version et
+  au changelog embarqué.
+- Affichage de la version Npcap utilisée dans les informations de version.
+
+## 🛠 Corrections
+
+- Amélioration des erreurs d'import de labels CSV : numéro de ligne, ligne
+  complète et compteur total d'erreurs affichés pour faciliter la correction
+  des fichiers.
+- Tolérance accrue de l'import de labels CSV pour les colonnes supplémentaires
+  et les colonnes finales vides.
+
+## 🔧 Maintenance
+
+- Ajout de `NPCAP_VERSION` dans les versions de build contrôlées par la CI.
+- Mise à jour de la version de SONAR en **4.1.0**.
+
 ## **[4.0.1] - 2026-07-06**
 
 ## 🔧 Maintenance
