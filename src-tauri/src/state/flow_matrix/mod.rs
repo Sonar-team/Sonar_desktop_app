@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize)]
 pub struct FlowStats {
     pub count: u64,            // Nombre de paquets vus pour ce flow
-    pub total_bytes: u32,      // Total des octets passés dans ce flow
+    pub total_bytes: u64,      // Total des octets passés dans ce flow
     pub last_seen: SystemTime, // Dernière apparition
 }
 
@@ -39,14 +39,14 @@ impl FlowMatrix {
         // qu'au premier paquet du flux, pas à chaque paquet.
         if let Some(entry) = self.matrix.get_mut(&pkt.flow) {
             entry.count += 1;
-            entry.total_bytes += pkt.len;
+            entry.total_bytes = entry.total_bytes.saturating_add(pkt.len as u64);
             entry.last_seen = ts;
         } else {
             self.matrix.insert(
                 pkt.flow.clone(),
                 FlowStats {
                     count: 1,
-                    total_bytes: pkt.len,
+                    total_bytes: pkt.len as u64,
                     last_seen: ts,
                 },
             );
@@ -225,7 +225,7 @@ pub struct FlowMatrixRow {
     pub protocol_transport: Option<String>,
     pub application_protocol: Option<String>,
     pub count: u64,
-    pub total_bytes: u32,
+    pub total_bytes: u64,
     pub last_seen: String,
 }
 

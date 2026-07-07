@@ -13,10 +13,14 @@ export type ImportErrorKind =
   | { kind: "parseError"; message: string }
   | { kind: "other"; message: string };
 
+export type InvalidLineValue = [number, string];
+export type InvalidFieldValue = [number, string, string];
+export type LabelConflictRow = [number, number, string, string, string, string, string];
+
 export type LabelErrorKind =
-  | { kind: "invalidMacIpFormat"; message: [string[], string[]] }
-  | { kind: "labelLinesConflicts"; message: [[string, string, string][], [string, string, string][]] }
-  | { kind: "invalidRowsFormat"; message: string[] }
+  | { kind: "invalidMacIpFormat"; message: [InvalidFieldValue[], InvalidFieldValue[]] }
+  | { kind: "labelLinesConflicts"; message: [LabelConflictRow[], LabelConflictRow[]] }
+  | { kind: "invalidRowsFormat"; message: InvalidLineValue[] }
 
 export type CaptureStateErrorKind =
   | { kind: "io"; message: string }
@@ -115,12 +119,12 @@ function handleLabelerror(labelError: LabelErrorKind): string {
   switch(labelError.kind) {
     case "invalidMacIpFormat":
       const [invalidMac, invalidIp] = labelError.message;
-      return `Formats invalides : MAC - ${invalidMac.map((mac) => `${mac}`).join('\n')}, IP - ${invalidIp.map((ip) => `${ip}`).join('\n')}`;
+      return `Formats invalides : MAC - ${invalidMac.map(([line, mac, row]) => `ligne ${line}: ${mac} | ${row}`).join('\n')}, IP - ${invalidIp.map(([line, ip, row]) => `ligne ${line}: ${ip} | ${row}`).join('\n')}`;
     case "labelLinesConflicts":
       const [sameIpDiffMac, sameIpDiffLabel] = labelError.message;
-      return `Conflits dans les lignes de labels : même IP, MAC différent - ${sameIpDiffMac.map(([ip, ref_mac, mac]) => `${ip} : ${ref_mac} <-> ${mac}`).join('\n')}, même IP, label différent - ${sameIpDiffLabel.map(([ip, ref_label, label]) => `${ip} : ${ref_label} <-> ${label}`).join('\n')} \n <Importation impossible>`;
+      return `Conflits dans les lignes de labels : même IP, MAC différent - ${sameIpDiffMac.map(([lineA, lineB, ip, ref_mac, mac, rowA, rowB]) => `lignes ${lineA}/${lineB} - ${ip} : ${ref_mac} <-> ${mac}\nligne ${lineA}: ${rowA}\nligne ${lineB}: ${rowB}`).join('\n')}, même IP, label différent - ${sameIpDiffLabel.map(([lineA, lineB, ip, ref_label, label, rowA, rowB]) => `lignes ${lineA}/${lineB} - ${ip} : ${ref_label} <-> ${label}\nligne ${lineA}: ${rowA}\nligne ${lineB}: ${rowB}`).join('\n')} \n <Importation impossible>`;
     case "invalidRowsFormat":
-      return `Format de ligne invalide. Attendu au moins "mac, ip, label"; les colonnes suivantes sont ajoutées au label. Trouvé ${labelError.message}`
+      return `Format de ligne invalide. Attendu au moins "mac, ip, label"; les colonnes suivantes sont ajoutées au label. Trouvé ${labelError.message.map(([line, value]) => `ligne ${line}: ${value}`).join('\n')}`
     default:
       return `Erreur de label inconnue : ${JSON.stringify(labelError)}`;
   }

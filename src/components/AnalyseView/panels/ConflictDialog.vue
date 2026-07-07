@@ -5,6 +5,9 @@
       <h1 v-show="same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0" class="dialog-title">Conflits détectés</h1>
       <h1 v-show="invalid_mac.length > 0 || invalid_ip.length > 0" class="dialog-title">MAC/IP invalide(s) détectée(s)</h1>
       <h1 v-show="invalid_lines.length > 0" class="dialog-title">Format de fichier invalide</h1>
+      <p v-show="totalErrors > 0" class="text error-count">
+        Total : {{ totalErrors }} erreur{{ totalErrors > 1 ? "s" : "" }} détectée{{ totalErrors > 1 ? "s" : "" }} dans le CSV
+      </p>
 
       <div class="panels">
         <div class="left-panel">
@@ -15,21 +18,25 @@
           <div v-show="same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0" class="file-list">
               <ul v-show="same_ip_diff_mac.length > 0">
                 <h3 class="text">Conflits IP -> MAC</h3>
-                <li v-for="([ip, ref_mac, mac], index) in same_ip_diff_mac" :key="index">
+                <li v-for="([lineA, lineB, ip, ref_mac, mac, rowA, rowB], index) in same_ip_diff_mac" :key="index">
                   <label>
-                    <span class="text">'{{ ip }}'(IP):</span><br>
-                    <span class="text indented">MAC: '{{ ref_mac }}'</span>
-                    <span class="text indented">MAC: '{{ mac }}'</span>
+                    <span class="text">'{{ ip }}'(IP) — lignes {{ lineA }} / {{ lineB }}:</span><br>
+                    <span class="text indented">ligne {{ lineA }} MAC: '{{ ref_mac || "-" }}'</span>
+                    <span class="text indented line-context">ligne {{ lineA }} complète : '{{ rowA }}'</span>
+                    <span class="text indented">ligne {{ lineB }} MAC: '{{ mac || "-" }}'</span>
+                    <span class="text indented line-context">ligne {{ lineB }} complète : '{{ rowB }}'</span>
                   </label>
                 </li>
               </ul>
               <ul v-show="same_ip_diff_label.length > 0">
                 <h3 class="text">Conflits IP -> Label</h3>
-                <li v-for="([ip, ref_label, label], index) in same_ip_diff_label.sort()" :key="index">
+                <li v-for="([lineA, lineB, ip, ref_label, label, rowA, rowB], index) in same_ip_diff_label" :key="index">
                   <label>
-                    <span class="text">'{{ ip }}'(IP):</span><br>
-                    <span class="text indented">Label: '{{ ref_label }}'</span>
-                    <span class="text indented">Label: '{{ label }}'</span>
+                    <span class="text">'{{ ip }}'(IP) — lignes {{ lineA }} / {{ lineB }}:</span><br>
+                    <span class="text indented">ligne {{ lineA }} Label: '{{ ref_label || "-" }}'</span>
+                    <span class="text indented line-context">ligne {{ lineA }} complète : '{{ rowA }}'</span>
+                    <span class="text indented">ligne {{ lineB }} Label: '{{ label || "-" }}'</span>
+                    <span class="text indented line-context">ligne {{ lineB }} complète : '{{ rowB }}'</span>
                   </label>
                 </li>
               </ul>
@@ -38,17 +45,19 @@
           <div v-show="invalid_mac.length > 0 || invalid_ip.length > 0" class="file-list">
               <ul v-show="invalid_mac.length > 0">
                 <h3 class="text">MAC invalides</h3>
-                <li v-for="(mac, index) in invalid_mac" :key="index">
+                <li v-for="([line, mac, row], index) in invalid_mac" :key="index">
                   <label>
-                    <span class="text indented">MAC: '{{ mac }}'</span>
+                    <span class="text indented">ligne {{ line }} — MAC: '{{ mac }}'</span>
+                    <span class="text indented line-context">ligne complète : '{{ row }}'</span>
                   </label>
                 </li>
               </ul>
               <ul v-show="invalid_ip.length > 0">
                 <h3 class="text">IP invalides</h3>
-                <li v-for="(ip, index) in invalid_ip" :key="index">
+                <li v-for="([line, ip, row], index) in invalid_ip" :key="index">
                   <label>
-                    <span class="text indented">IP: '{{ ip }}'</span>
+                    <span class="text indented">ligne {{ line }} — IP: '{{ ip }}'</span>
+                    <span class="text indented line-context">ligne complète : '{{ row }}'</span>
                   </label>
                 </li>
               </ul>
@@ -56,9 +65,9 @@
           <div v-show="invalid_lines.length > 0" class="file-list">
             <ul>
               <h3 class="text">Lignes concernées :</h3>
-              <li v-for="(line, index) in invalid_lines" :key="index">
+              <li v-for="([line, value], index) in invalid_lines" :key="index">
                 <label>
-                  <span class="text indented">'{{ line }}'</span>
+                  <span class="text indented">ligne {{ line }} : '{{ value }}'</span>
                 </label>
               </li>
             </ul>
@@ -78,7 +87,9 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-type ConflictRow = [string, string, string]
+type ConflictRow = [number, number, string, string, string, string, string]
+type FieldLineValue = [number, string, string]
+type LineValue = [number, string]
 
 export default defineComponent({
   name: 'ConflictDialog',
@@ -94,16 +105,26 @@ export default defineComponent({
       required: true
     },
     invalid_mac: {
-      type: Array as PropType<string[]>,
+      type: Array as PropType<FieldLineValue[]>,
       required: true
     },
     invalid_ip: {
-      type: Array as PropType<string[]>,
+      type: Array as PropType<FieldLineValue[]>,
       required: true
     },
     invalid_lines: {
-      type: Array as PropType<String[]>,
+      type: Array as PropType<LineValue[]>,
       required: true
+    }
+  },
+
+  computed: {
+    totalErrors(): number {
+      return this.same_ip_diff_mac.length
+        + this.same_ip_diff_label.length
+        + this.invalid_mac.length
+        + this.invalid_ip.length
+        + this.invalid_lines.length;
     }
   },
 
@@ -153,8 +174,18 @@ export default defineComponent({
 .dialog-title {
   color: whitesmoke;
   font-size: 2rem;
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
   text-align: center;
+}
+
+.error-count {
+  align-self: center;
+  background-color: #3a2630;
+  border: 1px solid #d8392b;
+  border-radius: 4px;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  padding: 0.45rem 0.75rem;
 }
 
 .left-panel {
@@ -273,7 +304,14 @@ export default defineComponent({
 
 .indented {
   display: block;
-  padding-left: 2rem; 
+  padding-left: 2rem;
+}
+
+.line-context {
+  color: #d5d7e2;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .file-list {

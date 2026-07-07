@@ -174,7 +174,22 @@ fn now_unix_ns() -> u128 {
         .unwrap_or_default()
 }
 
-type ConflictsList = Vec<(String, String, String)>;
+type ConflictsList = Vec<(usize, usize, String, String, String, String, String)>;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct LabelRow {
+    line: usize,
+    raw: String,
+    mac: String,
+    ip: String,
+    label: String,
+}
+
+impl LabelRow {
+    fn into_tuple(self) -> (String, String, String) {
+        (self.mac, self.ip, self.label)
+    }
+}
 
 fn read_label_file(csv_path: &str) -> Result<String, CaptureStateError> {
     match std::fs::read_to_string(csv_path) {
@@ -659,11 +674,27 @@ pub fn clear_label_store(
     Ok(())
 }
 
+fn label_record_line(record: &csv::StringRecord, fallback: usize) -> usize {
+    record
+        .position()
+        .map(|position| position.line() as usize)
+        .unwrap_or(fallback)
+}
+
+fn label_error_line(error: &csv::Error, fallback: usize) -> usize {
+    error
+        .position()
+        .map(|position| position.line() as usize)
+        .unwrap_or(fallback)
+}
+
 fn label_record_to_display(record: &csv::StringRecord) -> String {
     record.iter().collect::<Vec<_>>().join(",")
 }
 
-fn read_label_records(csv_path: &str) -> Result<Vec<csv::StringRecord>, CaptureStateError> {
+fn read_label_records(
+    csv_path: &str,
+) -> Result<Vec<(usize, csv::StringRecord)>, CaptureStateError> {
     let file = read_label_file(csv_path)?;
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(false)
@@ -674,19 +705,23 @@ fn read_label_records(csv_path: &str) -> Result<Vec<csv::StringRecord>, CaptureS
     let mut records = Vec::new();
     let mut invalid_lines = Vec::new();
 
-    for result in rdr.records() {
+    for (index, result) in rdr.records().enumerate() {
+        let fallback_line = index + 1;
         match result {
             Ok(record) => {
+                let line = label_record_line(&record, fallback_line);
                 if record.iter().all(|field| clean_csv_field(field).is_empty()) {
                     continue;
                 }
                 if record.len() < 3 {
-                    invalid_lines.push(label_record_to_display(&record));
+                    invalid_lines.push((line, label_record_to_display(&record)));
                 } else {
-                    records.push(record);
+                    records.push((line, record));
                 }
             }
-            Err(error) => invalid_lines.push(error.to_string()),
+            Err(error) => {
+                invalid_lines.push((label_error_line(&error, fallback_line), error.to_string()))
+            }
         }
     }
 
@@ -697,10 +732,19 @@ fn read_label_records(csv_path: &str) -> Result<Vec<csv::StringRecord>, CaptureS
     }
 }
 
-fn read_label_rows(csv_path: &str) -> Result<Vec<(String, String, String)>, CaptureStateError> {
+fn read_label_rows(csv_path: &str) -> Result<Vec<LabelRow>, CaptureStateError> {
     Ok(read_label_records(csv_path)?
-        .iter()
-        .filter_map(|record| parse_label_fields(record.iter()))
+        .into_iter()
+        .filter_map(|(line, record)| {
+            let raw = label_record_to_display(&record);
+            parse_label_fields(record.iter()).map(|(mac, ip, label)| LabelRow {
+                line,
+                raw,
+                mac,
+                ip,
+                label,
+            })
+        })
         .collect())
 }
 
@@ -716,22 +760,30 @@ fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
     let mut same_ip_different_label: ConflictsList = Vec::new();
 
     let skip = usize::from(rows.first().is_some_and(is_header_row));
-    for (i, (mac1, ip1, label1)) in rows.iter().enumerate().skip(skip) {
-        for (mac2, ip2, label2) in rows[i + 1..].iter() {
-            if ip1 == ip2 && !ip1.is_empty() {
-                if mac1 != mac2 {
+    for (i, row1) in rows.iter().enumerate().skip(skip) {
+        for row2 in rows[i + 1..].iter() {
+            if row1.ip == row2.ip && !row1.ip.is_empty() {
+                if row1.mac != row2.mac {
                     same_ip_different_mac.push((
-                        ip1.to_string(),
-                        mac1.to_string(),
-                        mac2.to_string(),
+                        row1.line,
+                        row2.line,
+                        row1.ip.clone(),
+                        row1.mac.clone(),
+                        row2.mac.clone(),
+                        row1.raw.clone(),
+                        row2.raw.clone(),
                     ))
                 }
 
-                if label1 != label2 {
+                if row1.label != row2.label {
                     same_ip_different_label.push((
-                        ip1.to_string(),
-                        label1.to_string(),
-                        label2.to_string(),
+                        row1.line,
+                        row2.line,
+                        row1.ip.clone(),
+                        row1.label.clone(),
+                        row2.label.clone(),
+                        row1.raw.clone(),
+                        row2.raw.clone(),
                     ))
                 }
             }
@@ -750,18 +802,18 @@ fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
 }
 
 pub fn verif_mac_ip_format(csv_path: String) -> Result<(), CaptureStateError> {
-    let mut invalid_ip: Vec<String> = Vec::new();
-    let mut invalid_mac: Vec<String> = Vec::new();
+    let mut invalid_ip: Vec<(usize, String, String)> = Vec::new();
+    let mut invalid_mac: Vec<(usize, String, String)> = Vec::new();
 
     let rows = read_label_rows(&csv_path)?;
 
     let skip = usize::from(rows.first().is_some_and(is_header_row));
-    for (mac, ip, _label) in rows.iter().skip(skip) {
-        if !is_ip_address(ip) && !ip.is_empty() {
-            invalid_ip.push(ip.to_string());
+    for row in rows.iter().skip(skip) {
+        if !is_ip_address(&row.ip) && !row.ip.is_empty() {
+            invalid_ip.push((row.line, row.ip.clone(), row.raw.clone()));
         }
-        if !is_mac_address(mac) && !mac.is_empty() {
-            invalid_mac.push(mac.to_string());
+        if !is_mac_address(&row.mac) && !row.mac.is_empty() {
+            invalid_mac.push((row.line, row.mac.clone(), row.raw.clone()));
         }
     }
 
@@ -789,8 +841,8 @@ fn is_mac_address(value: &str) -> bool {
 
 // Une ligne d'en-tête ("mac,ip,label") ne peut être que la première du fichier :
 // on la reconnaît parce que ni son champ MAC ni son champ IP ne sont des adresses valides.
-fn is_header_row((mac, ip, _label): &(String, String, String)) -> bool {
-    !is_mac_address(mac) && !is_ip_address(ip)
+fn is_header_row(row: &LabelRow) -> bool {
+    !is_mac_address(&row.mac) && !is_ip_address(&row.ip)
 }
 
 #[tauri::command(async)]
@@ -820,7 +872,7 @@ pub fn import_label_file(
         }
 
         for row in rows {
-            label_store.add(row)
+            label_store.add(row.into_tuple())
         }
     }
 
@@ -892,6 +944,75 @@ fn read_matrix_rows(csv_path: &str) -> Result<Vec<FlowMatrixRow>, CaptureStateEr
     Ok(rows)
 }
 
+fn read_matrix_rows_from_files(
+    incoming_file_paths: &[String],
+) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
+    if incoming_file_paths.is_empty() {
+        return Err(std::io::Error::other("Aucun fichier de matrice sélectionné").into());
+    }
+
+    let mut rows = Vec::new();
+    for path in incoming_file_paths {
+        rows.extend(read_matrix_rows(path)?);
+    }
+    Ok(rows)
+}
+
+fn rebuild_matrix_and_graph_from_rows(
+    rows: &[FlowMatrixRow],
+    label_store: &LabelStore,
+    matrice: &mut FlowMatrix,
+    graph: &mut GraphData,
+) -> Result<(), CaptureStateError> {
+    matrice.clear();
+    graph.clear();
+
+    // Labels du store courant, puis ceux portés par les fichiers (prioritaires
+    // à clé égale puisque insérés après).
+    copy_labels_to_matrix(label_store, matrice)?;
+    for row in rows {
+        if let Some(label) = row.label_source.as_ref().filter(|l| !l.is_empty()) {
+            matrice.add_label(row.mac_source.clone(), row.ip_source.clone(), label.clone());
+        }
+        if let Some(label) = row.label_destination.as_ref().filter(|l| !l.is_empty()) {
+            matrice.add_label(
+                row.mac_destination.clone(),
+                row.ip_destination.clone(),
+                label.clone(),
+            );
+        }
+    }
+
+    for row in rows {
+        let (flow, stats) = row.to_flow_and_stats();
+
+        // Les doublons éventuels des fichiers sont fusionnés.
+        let entry = matrice.matrix.entry(flow.clone()).or_insert(FlowStats {
+            count: 0,
+            total_bytes: 0,
+            last_seen: stats.last_seen,
+        });
+        entry.count += stats.count;
+        entry.total_bytes = entry.total_bytes.saturating_add(stats.total_bytes);
+        if stats.last_seen > entry.last_seen {
+            entry.last_seen = stats.last_seen;
+        }
+
+        let source_label = matrice.get_label(&flow.data_link.source_mac, &row.ip_source);
+        let destination_label =
+            matrice.get_label(&flow.data_link.destination_mac, &row.ip_destination);
+        graph.add_packet_flow(
+            &flow,
+            source_label,
+            destination_label,
+            stats.count,
+            stats.total_bytes,
+        );
+    }
+
+    Ok(())
+}
+
 #[tauri::command(async)]
 pub fn import_matrix_file(
     incoming_file_path: String,
@@ -901,69 +1022,51 @@ pub fn import_matrix_file(
     capture_state: State<'_, Arc<Mutex<CaptureState>>>,
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<(), CaptureStateError> {
+    import_matrix_files(
+        vec![incoming_file_path],
+        matrice,
+        graph,
+        label_store,
+        capture_state,
+        on_event,
+    )
+}
+
+#[tauri::command(async)]
+pub fn import_matrix_files(
+    incoming_file_paths: Vec<String>,
+    matrice: State<'_, Arc<Mutex<FlowMatrix>>>,
+    graph: State<'_, Arc<Mutex<GraphData>>>,
+    label_store: State<'_, Arc<Mutex<LabelStore>>>,
+    capture_state: State<'_, Arc<Mutex<CaptureState>>>,
+    on_event: Channel<CaptureEvent<'static>>,
+) -> Result<(), CaptureStateError> {
     let on_event = event_channel(&capture_state, on_event);
 
     info!(
-        "[import_matrix_file] COMMAND CALLED avec {}",
-        incoming_file_path
+        "[import_matrix_files] COMMAND CALLED avec {} fichier(s): {:?}",
+        incoming_file_paths.len(),
+        incoming_file_paths
     );
 
     // Un fichier invalide ne doit pas effacer la matrice courante.
-    let rows = read_matrix_rows(&incoming_file_path)?;
+    let rows = read_matrix_rows_from_files(&incoming_file_paths)?;
 
+    // Même ordre de verrouillage que convert_from_pcap_list et net_capture
+    // (matrice -> graph -> label_store) pour éviter un interblocage ABBA.
     let mut matrice_guard = matrice.lock().unwrap();
     let mut graph_guard = graph.lock().unwrap();
-    matrice_guard.clear();
-    graph_guard.clear();
-
-    // Labels du store courant, puis ceux portés par le fichier (prioritaires
-    // à clé égale puisque insérés après).
-    labels_to_matrix(label_store, &mut matrice_guard)?;
-    for row in &rows {
-        if let Some(label) = row.label_source.as_ref().filter(|l| !l.is_empty()) {
-            matrice_guard.add_label(row.mac_source.clone(), row.ip_source.clone(), label.clone());
-        }
-        if let Some(label) = row.label_destination.as_ref().filter(|l| !l.is_empty()) {
-            matrice_guard.add_label(
-                row.mac_destination.clone(),
-                row.ip_destination.clone(),
-                label.clone(),
-            );
-        }
-    }
-
-    for row in &rows {
-        let (flow, stats) = row.to_flow_and_stats();
-
-        // Les doublons éventuels du fichier sont fusionnés.
-        let entry = matrice_guard
-            .matrix
-            .entry(flow.clone())
-            .or_insert(FlowStats {
-                count: 0,
-                total_bytes: 0,
-                last_seen: stats.last_seen,
-            });
-        entry.count += stats.count;
-        entry.total_bytes = entry.total_bytes.saturating_add(stats.total_bytes);
-        if stats.last_seen > entry.last_seen {
-            entry.last_seen = stats.last_seen;
-        }
-
-        let source_label = matrice_guard.get_label(&flow.data_link.source_mac, &row.ip_source);
-        let destination_label =
-            matrice_guard.get_label(&flow.data_link.destination_mac, &row.ip_destination);
-        graph_guard.add_packet_flow(
-            &flow,
-            source_label,
-            destination_label,
-            stats.count,
-            stats.total_bytes as u64,
-        );
-    }
+    let label_store_guard = label_store.lock().unwrap();
+    rebuild_matrix_and_graph_from_rows(
+        &rows,
+        &label_store_guard,
+        &mut matrice_guard,
+        &mut graph_guard,
+    )?;
 
     info!(
-        "[import_matrix_file] {} ligne(s) importée(s) -> {} flux, {} nœuds, {} arêtes",
+        "[import_matrix_files] {} fichier(s), {} ligne(s) importée(s) -> {} flux fusionné(s), {} nœuds, {} arêtes",
+        incoming_file_paths.len(),
         rows.len(),
         matrice_guard.matrix.len(),
         graph_guard.nodes.len(),
@@ -1024,7 +1127,12 @@ mod tests {
 
         let result = verif_label_rows_format(file_path.to_str().unwrap().to_string());
 
-        assert!(result.is_err());
+        match result.unwrap_err() {
+            CaptureStateError::Label(LabelError::InvalidRowsFormat { invalid_lines }) => {
+                assert_eq!(invalid_lines, vec![(1, "192.168.1.1,mon-pc".to_string())]);
+            }
+            error => panic!("erreur inattendue: {error:?}"),
+        }
     }
 
     #[test]
@@ -1042,7 +1150,9 @@ mod tests {
 
         let rows = read_label_rows(file_path.to_str().unwrap()).unwrap();
         assert_eq!(
-            rows,
+            rows.into_iter()
+                .map(LabelRow::into_tuple)
+                .collect::<Vec<_>>(),
             vec![(
                 "aa:bb:cc:dd:ee:ff".to_string(),
                 "192.168.1.1".to_string(),
@@ -1077,11 +1187,31 @@ mod tests {
     fn malformed_ip_returns_error() {
         let dir = TempDir::new("sonar_test_malformed_ip");
         let file_path = dir.path().join("labels.csv");
-        fs::write(&file_path, "aa:bb:cc:dd:ee:ff,192.168.11,mon-pc\n").unwrap();
+        fs::write(
+            &file_path,
+            "mac,ip,label\naa:bb:cc:dd:ee:ff,192.168.11,mon-pc\n",
+        )
+        .unwrap();
 
         let result = verif_mac_ip_format(file_path.to_str().unwrap().to_string());
 
-        assert!(result.is_err());
+        match result.unwrap_err() {
+            CaptureStateError::Label(LabelError::InvalidMacIpFormat {
+                invalid_mac,
+                invalid_ip,
+            }) => {
+                assert!(invalid_mac.is_empty());
+                assert_eq!(
+                    invalid_ip,
+                    vec![(
+                        2,
+                        "192.168.11".to_string(),
+                        "aa:bb:cc:dd:ee:ff,192.168.11,mon-pc".to_string()
+                    )]
+                );
+            }
+            error => panic!("erreur inattendue: {error:?}"),
+        }
     }
 
     #[test]
@@ -1155,7 +1285,27 @@ mod tests {
 
         let result = verif_labels_conflicts(file_path.to_str().unwrap().to_string());
 
-        assert!(result.is_err())
+        match result.unwrap_err() {
+            CaptureStateError::Label(LabelError::LabelLinesConflicts {
+                same_ip_diff_mac,
+                same_ip_diff_label,
+            }) => {
+                assert_eq!(
+                    same_ip_diff_mac,
+                    vec![(
+                        1,
+                        2,
+                        "192.168.1.1".to_string(),
+                        "aa:bb:cc:dd:ee:ff".to_string(),
+                        "aa:bb:cc:dd:ee:1f".to_string(),
+                        "aa:bb:cc:dd:ee:ff,192.168.1.1,mon-pc".to_string(),
+                        "aa:bb:cc:dd:ee:1f,192.168.1.1,mon-pc".to_string()
+                    )]
+                );
+                assert!(same_ip_diff_label.is_empty());
+            }
+            error => panic!("erreur inattendue: {error:?}"),
+        }
     }
 
     #[test]
@@ -1229,31 +1379,46 @@ mod tests {
     fn build_matrix_and_graph(rows: &[FlowMatrixRow]) -> (FlowMatrix, GraphData) {
         let mut matrix = FlowMatrix::new();
         let mut graph = GraphData::new();
-
-        for row in rows {
-            if let Some(label) = row.label_source.as_ref().filter(|l| !l.is_empty()) {
-                matrix.add_label(row.mac_source.clone(), row.ip_source.clone(), label.clone());
-            }
-            if let Some(label) = row.label_destination.as_ref().filter(|l| !l.is_empty()) {
-                matrix.add_label(
-                    row.mac_destination.clone(),
-                    row.ip_destination.clone(),
-                    label.clone(),
-                );
-            }
-        }
-
-        for row in rows {
-            let (flow, stats) = row.to_flow_and_stats();
-            let (packets, bytes) = (stats.count, stats.total_bytes as u64);
-            matrix.matrix.entry(flow.clone()).or_insert(stats);
-            let source_label = matrix.get_label(&flow.data_link.source_mac, &row.ip_source);
-            let destination_label =
-                matrix.get_label(&flow.data_link.destination_mac, &row.ip_destination);
-            graph.add_packet_flow(&flow, source_label, destination_label, packets, bytes);
-        }
+        let label_store = LabelStore::new();
+        rebuild_matrix_and_graph_from_rows(rows, &label_store, &mut matrix, &mut graph).unwrap();
 
         (matrix, graph)
+    }
+
+    #[test]
+    fn import_matrix_rows_merges_duplicate_flows() {
+        let mut rows = read_matrix_rows(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("test_files/20260703_DR_Matrice.csv")
+                .to_str()
+                .unwrap(),
+        )
+        .unwrap();
+
+        let mut duplicate = rows[0].clone();
+        duplicate.count = 7;
+        duplicate.total_bytes = 1234;
+        duplicate.last_seen = "2099-01-01 00:00:00".to_string();
+        rows.push(duplicate);
+
+        let (flow, _stats) = rows[0].to_flow_and_stats();
+        let (matrix, graph) = build_matrix_and_graph(&rows);
+        let merged = matrix.matrix.get(&flow).unwrap();
+
+        assert_eq!(
+            matrix.matrix.len(),
+            30,
+            "le flux dupliqué doit être fusionné"
+        );
+        assert_eq!(merged.count, rows[0].count + 7);
+        assert_eq!(merged.total_bytes, rows[0].total_bytes.saturating_add(1234));
+        assert!(
+            graph
+                .edges
+                .values()
+                .any(|edge| edge.count >= rows[0].count + 7),
+            "le graphe doit recevoir le trafic fusionné"
+        );
     }
 
     /// Rejoue la chaîne de `import_matrix_file` sur le fichier réel de
@@ -1353,7 +1518,7 @@ mod tests {
 
         let mut label_store = LabelStore::new();
         for row in rows {
-            label_store.add(row);
+            label_store.add(row.into_tuple());
         }
         assert_eq!(label_store.get().len(), 9, "l'en-tête doit être écarté");
 

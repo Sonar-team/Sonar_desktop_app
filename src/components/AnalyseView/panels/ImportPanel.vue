@@ -65,7 +65,7 @@
         </button>
         <div class="separator matrix-separator"></div>
         <button @click="importMatrixFile" class="btn btn-open" :disabled="isConverting">
-          Importer une matrice (CSV)
+          Importer une ou plusieurs matrices (CSV)
         </button>
       </div>
     </div> 
@@ -104,11 +104,11 @@ export default defineComponent({
       isConverting: false,
       unsubs: [] as Array<() => void>,
       showConflictDialog: false,
-      sameIpDiffMac: [] as [string, string, string][], 
-      sameIpDiffLabel: [] as [string, string, string][],
-      invalidMac: [] as string[],
-      invalidIp: [] as string[],
-      invalidLines: [] as string[]
+      sameIpDiffMac: [] as [number, number, string, string, string, string, string][],
+      sameIpDiffLabel: [] as [number, number, string, string, string, string, string][],
+      invalidMac: [] as [number, string, string][],
+      invalidIp: [] as [number, string, string][],
+      invalidLines: [] as [number, string][]
     };
   },
 
@@ -188,13 +188,16 @@ export default defineComponent({
     },
 
     async importMatrixFile() {
-      const file = await open({
-        multiple: false,
+      const files = await open({
+        multiple: true,
         filters: [{ name: 'Matrice CSV', extensions: ['csv'] }],
       });
-      if (!file) return;
+      if (!files) return;
 
-      info('import_matrix_file: ' + file);
+      const matrixFiles = Array.isArray(files) ? files : [files];
+      if (matrixFiles.length === 0) return;
+
+      info('import_matrix_files: ' + matrixFiles.join(', '));
 
       // Un Channel Tauri est à usage unique (index d'ordre par commande +
       // cleanup à la fin) : on en crée un neuf à chaque invoke. Pendant une
@@ -207,7 +210,7 @@ export default defineComponent({
 
       this.isConverting = true;
       try {
-        await invoke('import_matrix_file', { incomingFilePath: file, onEvent });
+        await invoke('import_matrix_files', { incomingFilePaths: matrixFiles, onEvent });
         info('réponse invoke');
         this.$emit('update:visible', false);
       } catch (err) {
