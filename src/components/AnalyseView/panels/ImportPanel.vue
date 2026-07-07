@@ -49,9 +49,9 @@
       <div v-else-if="mode === 'pcap'">
         <div class="file-group">
           <button class="btn btn-add text" @click="addPcapFiles" :disabled="isConverting">
-            Ajouter des fichiers
+            Ajouter des fichiers .pcap
           </button>
-          <button class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
+          <button v-if="packetFiles.length > 0" class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
             Effacer
           </button>
         </div>
@@ -60,12 +60,25 @@
             {{ file }}
           </li>
         </ul>
-        <button @click="convertPcap" class="btn btn-open" :disabled="isConverting || packetFiles.length === 0">
+        <button v-if="packetFiles.length > 0" @click="convertPcap" class="btn btn-open" :disabled="isConverting">
           Ouvrir
         </button>
         <div class="separator matrix-separator"></div>
-        <button @click="importMatrixFile" class="btn btn-open" :disabled="isConverting">
-          Importer une ou plusieurs matrices (CSV)
+        <div class="file-group">
+          <button class="btn btn-add text" @click="addMatrixFiles" :disabled="isConverting">
+            Ajouter une ou plusieurs matrices (CSV)
+          </button>
+          <button v-if="matrixFiles.length > 0" class="btn btn-clear" @click="clearMatrixFiles" :disabled="isConverting">
+            Effacer
+          </button>
+        </div>
+        <ul class="file-list" v-if="matrixFiles.length > 0">
+          <li v-for="(file, index) in matrixFiles" :key="index">
+            {{ file }}
+          </li>
+        </ul>
+        <button v-if="matrixFiles.length > 0" @click="importMatrixFiles" class="btn btn-open" :disabled="isConverting">
+          Ouvrir
         </button>
       </div>
     </div> 
@@ -98,6 +111,7 @@ export default defineComponent({
   data() {
     return {
       packetFiles: [] as string[],
+      matrixFiles: [] as string[],
       labelRows: [] as [string, string, string][],
       filteredlabelRows: [] as [string, string, string][],
       searchInput: "",
@@ -134,25 +148,35 @@ export default defineComponent({
       return this.addFiles('csv', ['csv']);
     },
 
-    async addFiles(type: 'pcap' | 'csv', extensions: string[]) {
-        const label = type === 'csv' ? 'Label File' : 'Capture File';
-        const isPcap = type === 'pcap' ? true : false;
+    addMatrixFiles() {
+      return this.addFiles('matrix', ['csv']);
+    },
+
+    async addFiles(type: 'pcap' | 'csv' | 'matrix', extensions: string[]) {
+        const label = type === 'csv' ? 'Label File'
+          : type === 'matrix' ? 'Matrice CSV'
+          : 'Capture File';
         useCaptureStore().isImporting = true;
 
       try {
         const files = await open({
-          multiple: isPcap,
+          // Seul l'import de labels remplace le store : un fichier à la fois.
+          multiple: type !== 'csv',
           filters: [{ name: label, extensions: extensions }],
         });
 
         if (!files) return;
 
-        
+
         if (type === 'csv') {
           await this.importLabelFile(files);
         } else {
           const list = Array.isArray(files) ? files : [files];
-          this.packetFiles.push(...list);
+          if (type === 'matrix') {
+            this.matrixFiles.push(...list);
+          } else {
+            this.packetFiles.push(...list);
+          }
         }
       } finally {
         useCaptureStore().isImporting = false;
@@ -161,6 +185,10 @@ export default defineComponent({
 
     clearFiles() {
       this.packetFiles = [];
+    },
+
+    clearMatrixFiles() {
+      this.matrixFiles = [];
     },
 
     async convertPcap() {
@@ -187,17 +215,10 @@ export default defineComponent({
       this.packetFiles = [];
     },
 
-    async importMatrixFile() {
-      const files = await open({
-        multiple: true,
-        filters: [{ name: 'Matrice CSV', extensions: ['csv'] }],
-      });
-      if (!files) return;
+    async importMatrixFiles() {
+      if (this.matrixFiles.length === 0) return;
 
-      const matrixFiles = Array.isArray(files) ? files : [files];
-      if (matrixFiles.length === 0) return;
-
-      info('import_matrix_files: ' + matrixFiles.join(', '));
+      info('import_matrix_files: ' + this.matrixFiles.join(', '));
 
       // Un Channel Tauri est à usage unique (index d'ordre par commande +
       // cleanup à la fin) : on en crée un neuf à chaque invoke. Pendant une
@@ -210,8 +231,9 @@ export default defineComponent({
 
       this.isConverting = true;
       try {
-        await invoke('import_matrix_files', { incomingFilePaths: matrixFiles, onEvent });
+        await invoke('import_matrix_files', { incomingFilePaths: this.matrixFiles, onEvent });
         info('réponse invoke');
+        this.matrixFiles = [];
         this.$emit('update:visible', false);
       } catch (err) {
         displayCaptureError(err);

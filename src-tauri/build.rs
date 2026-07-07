@@ -16,6 +16,7 @@ fn main() {
             "NODE_VERSION" => "SONAR_NODE_VERSION",
             "DENO_VERSION" => "SONAR_DENO_VERSION",
             "TAURI_CLI_VERSION" => "SONAR_TAURI_CLI_VERSION",
+            "NPCAP_VERSION" => "SONAR_NPCAP_VERSION",
             _ => continue,
         };
 
