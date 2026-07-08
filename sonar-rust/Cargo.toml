@@ -1,0 +1,19 @@
+[workspace]
+members = [
+  "crates/sonar-core",
+  "crates/sonar-cli",
+]
+resolver = "3"
+
+[workspace.package]
+authors = ["Sonar Team"]
+edition = "2024"
+license = "AGPL-3.0-only"
+repository = "https://github.com/Sonar-team/Sonar_desktop_app"
+rust-version = "1.96.0"
+version = "0.1.0"
+
+[workspace.dependencies]
+clap = { version = "4.5.53", features = ["derive"] }
+sonar-core = { path = "crates/sonar-core" }
+thiserror = "2.0.18"

@@ -1,0 +1,17 @@
+[package]
+name = "sonar-cli"
+description = "Command-line interface for Sonar batch analysis"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[[bin]]
+name = "sonar-cli"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+sonar-core.workspace = true
