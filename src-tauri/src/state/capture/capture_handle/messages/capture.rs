@@ -95,13 +95,18 @@ impl<'a> PacketMinimal<'a> {
     // }
 
     pub fn to_owned_packet(&self) -> PacketOwnedStats {
+        let flow = self.flow.to_owned();
+        // La ligne externe d'un tunnel doit porter le même `encap_id` que ses
+        // lignes internes (celui calculé dans `to_owned_packets`), sinon la
+        // jointure externe <-> interne est impossible côté SOC.
+        let encap_id = self.flow.inner.is_some().then(|| flow_encap_id(&flow));
         PacketOwnedStats {
             ts_sec: self.ts_sec,
             ts_usec: self.ts_usec,
             caplen: self.caplen,
             len: self.len,
-            flow: self.flow.to_owned(),
-            encap_id: None,
+            flow,
+            encap_id,
         }
     }
 
@@ -213,6 +218,10 @@ mod tests {
         // encap_id : présent et IDENTIQUE entre l'externe et l'interne (jointure SOC).
         assert!(levels[0].encap_id.is_some());
         assert_eq!(levels[0].encap_id, levels[1].encap_id);
+
+        // Le pipeline construit la ligne externe via `to_owned_packet` : elle
+        // doit porter le même encap_id que les niveaux issus de `to_owned_packets`.
+        assert_eq!(packet.to_owned_packet().encap_id, levels[0].encap_id);
     }
 
     #[test]
@@ -233,5 +242,6 @@ mod tests {
         let levels = packet.to_owned_packets();
         assert_eq!(levels.len(), 1);
         assert_eq!(levels[0].encap_id, None);
+        assert_eq!(packet.to_owned_packet().encap_id, None);
     }
 }
