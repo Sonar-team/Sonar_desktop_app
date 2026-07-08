@@ -145,6 +145,11 @@ pub struct Edge {
     pub bidir: bool,      // true si trafic observé dans les deux sens
     pub count: u64,       // paquets cumulés sur ce flux
     pub total_bytes: u64, // octets cumulés sur ce flux
+    // Tunnels auxquels ce flux participe (hash de paire en hex, cf. TUNNELS.md) :
+    // l'arête externe CAPWAP porte l'id de son tunnel, les arêtes internes
+    // celui des tunnels qui les transportent. Sert à surligner la parenté
+    // père/fils dans le graphe. Trié, sans doublon.
+    pub encap_ids: Vec<String>,
 }
 
 impl Edge {
@@ -160,6 +165,7 @@ impl Edge {
             bidir: false,
             count: 0,
             total_bytes: 0,
+            encap_ids: Vec::new(),
         }
     }
 
@@ -193,6 +199,7 @@ impl GraphData {
         destination_label: Option<String>,
         packets: u64,
         bytes: u64,
+        encap_ids: &[u64],
     ) -> Vec<GraphUpdate> {
         use std::collections::hash_map::Entry;
         let mut updates = Vec::new();
@@ -282,19 +289,24 @@ impl GraphData {
                             notify = true;
                         }
 
+                        if merge_encap_ids(edge, encap_ids) {
+                            notify = true;
+                        }
+
                         if notify {
                             updates.push(GraphUpdate::EdgeUpdated(edge.clone()));
                         }
                     }
                     None => {
                         // Première observation de {A,B,proto} → création de l'arête canonique (A->B)
-                        let edge = Edge::new(a_id.clone(), b_id.clone())
+                        let mut edge = Edge::new(a_id.clone(), b_id.clone())
                             .with_label(protocol)
                             .with_ports(
                                 packet.transport.as_ref().and_then(|t| t.source_port),
                                 packet.transport.as_ref().and_then(|t| t.destination_port),
                             )
                             .with_traffic(packets, bytes);
+                        merge_encap_ids(&mut edge, encap_ids);
                         self.edges.insert(edge_key, edge.clone());
                         updates.push(GraphUpdate::NewEdge(edge));
                     }
@@ -365,15 +377,19 @@ impl GraphData {
                 if accumulate_traffic(edge, packets, bytes) {
                     notify = true;
                 }
+                if merge_encap_ids(edge, encap_ids) {
+                    notify = true;
+                }
                 if notify {
                     updates.push(GraphUpdate::EdgeUpdated(edge.clone()));
                 }
             }
             None => {
-                let edge = Edge::new(a_id.clone(), b_id.clone())
+                let mut edge = Edge::new(a_id.clone(), b_id.clone())
                     .with_label(l2_proto)
                     .with_ports(None, None) // pas de ports en L2
                     .with_traffic(packets, bytes);
+                merge_encap_ids(&mut edge, encap_ids);
                 self.edges.insert(edge_key, edge.clone());
                 updates.push(GraphUpdate::NewEdge(edge));
             }
@@ -453,6 +469,21 @@ fn accumulate_traffic(edge: &mut Edge, packets: u64, bytes: u64) -> bool {
     edge.count = edge.count.saturating_add(packets);
     edge.total_bytes = edge.total_bytes.saturating_add(bytes);
     (64 - edge.total_bytes.leading_zeros()) != bucket_before
+}
+
+/// Ajoute à l'arête les ids de tunnel (format hex, celui de la colonne
+/// `encap_id` du CSV) qu'elle ne portait pas encore. Retourne true si la
+/// liste a changé (le front doit être notifié).
+fn merge_encap_ids(edge: &mut Edge, encap_ids: &[u64]) -> bool {
+    let mut changed = false;
+    for id in encap_ids {
+        let hex = format!("{id:016x}");
+        if let Err(pos) = edge.encap_ids.binary_search(&hex) {
+            edge.encap_ids.insert(pos, hex);
+            changed = true;
+        }
+    }
+    changed
 }
 
 fn is_valid_ip(ip_type: Option<&IpType>) -> bool {
@@ -546,6 +577,7 @@ mod graph_update_batch_tests {
             bidir: false,
             count,
             total_bytes: count * 100,
+            encap_ids: Vec::new(),
         }
     }
 

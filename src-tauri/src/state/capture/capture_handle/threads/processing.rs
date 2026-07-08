@@ -597,7 +597,7 @@ pub fn spawn_processing_thread(
                         #[cfg(feature = "capture_timing")]
                         let matrix_update_start = timing_sample.map(|_| Instant::now());
                         locked_state.update_flow(&record_owned);
-                        processed = locked_state.matrix.len() as u32;
+                        processed = locked_state.row_count() as u32;
                         #[cfg(feature = "capture_timing")]
                         {
                             matrix_update_ns =
@@ -617,6 +617,7 @@ pub fn spawn_processing_thread(
                             destination_label,
                             1,
                             record_owned.len as u64,
+                            record_owned.encap_id.as_slice(),
                         )
                     } else {
                         Vec::new()
@@ -711,7 +712,7 @@ pub fn spawn_processing_thread(
                                         ),
                                     );
                                     locked_state.update_flow(&inner_owned);
-                                    processed = locked_state.matrix.len() as u32;
+                                    processed = locked_state.row_count() as u32;
                                     labels
                                 } else {
                                     (None, None)
@@ -723,6 +724,7 @@ pub fn spawn_processing_thread(
                                     inner_dst_label,
                                     1,
                                     inner_owned.len as u64,
+                                    inner_owned.encap_id.as_slice(),
                                 ) {
                                     graph_batch.push(update);
                                 }

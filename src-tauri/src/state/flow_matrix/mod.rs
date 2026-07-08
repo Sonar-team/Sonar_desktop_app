@@ -34,14 +34,83 @@ pub struct FlowStats {
     pub count: u64,            // Nombre de paquets vus pour ce flow
     pub total_bytes: u64,      // Total des octets passés dans ce flow
     pub last_seen: SystemTime, // Dernière apparition
-    // Identifiant du tunnel encapsulant, partagé entre la ligne externe et ses
-    // lignes internes (None si le flux n'est pas tunnelé).
-    pub encap_id: Option<u64>,
+}
+
+/// Sérialise la colonne `encap_id` d'une ligne de matrice :
+/// - `""` : flux jamais vu dans un tunnel ;
+/// - `id` : un seul tunnel, qui porte tous les paquets de la ligne ;
+/// - `id:n|id:n|…` : comptes par tunnel (flux répliqué dans plusieurs
+///   tunnels, ou partiellement hors tunnel). La somme des `n` d'un tunnel
+///   sur les lignes filles égale le compteur de sa ligne externe.
+pub fn format_encap_list(entries: &[(Option<u64>, FlowStats)]) -> String {
+    let tunnels: Vec<(u64, u64)> = entries
+        .iter()
+        .filter_map(|(id, stats)| id.map(|id| (id, stats.count)))
+        .collect();
+
+    match tunnels.as_slice() {
+        [] => String::new(),
+        [(id, _)] if entries.len() == 1 => format!("{id:016x}"),
+        _ => tunnels
+            .iter()
+            .map(|(id, count)| format!("{id:016x}:{count}"))
+            .collect::<Vec<_>>()
+            .join("|"),
+    }
+}
+
+/// Chemin inverse de [`format_encap_list`] : redistribue le compteur d'une
+/// ligne de CSV entre ses tunnels. Les paquets non couverts par la liste
+/// (part hors tunnel) vont sur une entrée `None`. Les octets ne sont pas
+/// ventilés par tunnel dans le CSV : ils sont portés par la première entrée,
+/// l'export refusionnant de toute façon les entrées d'un même flux.
+pub fn parse_encap_list(
+    encap: &str,
+    count: u64,
+    total_bytes: u64,
+    last_seen: SystemTime,
+) -> Vec<(Option<u64>, FlowStats)> {
+    let mut counts: Vec<(Option<u64>, u64)> = Vec::new();
+
+    for element in encap.split('|').map(str::trim).filter(|e| !e.is_empty()) {
+        let (id, tunnel_count) = match element.split_once(':') {
+            Some((id, n)) => (id, n.trim().parse::<u64>().unwrap_or(0)),
+            // `id` sans `:n` : le tunnel porte tous les paquets de la ligne.
+            None => (element, count),
+        };
+        if let Ok(id) = u64::from_str_radix(id.trim(), 16) {
+            counts.push((Some(id), tunnel_count));
+        }
+    }
+
+    let in_tunnels: u64 = counts.iter().map(|(_, n)| *n).sum();
+    if counts.is_empty() || in_tunnels < count {
+        counts.push((None, count.saturating_sub(in_tunnels)));
+    }
+
+    counts
+        .into_iter()
+        .enumerate()
+        .map(|(i, (id, n))| {
+            (
+                id,
+                FlowStats {
+                    count: n,
+                    total_bytes: if i == 0 { total_bytes } else { 0 },
+                    last_seen,
+                },
+            )
+        })
+        .collect()
 }
 
 pub struct FlowMatrix {
-    // HashMap avec des clés de type PacketFlow et des valeurs de type FlowStats
-    pub matrix: HashMap<PacketFlowOwned, FlowStats>,
+    // Une entrée de statistiques par couple (flux, tunnel encapsulant), pour
+    // que la somme des compteurs internes d'un tunnel soit égale au compteur
+    // de sa ligne externe. `None` = paquets vus hors tunnel. À l'export, un
+    // flux redonne UNE ligne : ses tunnels sont sérialisés dans la colonne
+    // `encap_id` (voir `format_encap_list`).
+    pub matrix: HashMap<PacketFlowOwned, Vec<(Option<u64>, FlowStats)>>,
     pub label: HashMap<(String, String), String>,
 }
 
@@ -53,29 +122,58 @@ impl FlowMatrix {
         }
     }
 
+    /// Nombre de lignes de la matrice exportée (une par flux distinct).
+    pub fn row_count(&self) -> usize {
+        self.matrix.len()
+    }
+
     pub fn update_flow(&mut self, pkt: &PacketOwnedStats) {
         let ts = timeval_to_systemtime(pkt.ts_sec, pkt.ts_usec);
 
         // Lookup par référence : le flow (et ses ~8 String) n'est cloné
         // qu'au premier paquet du flux, pas à chaque paquet.
-        if let Some(entry) = self.matrix.get_mut(&pkt.flow) {
-            entry.count += 1;
-            entry.total_bytes = entry.total_bytes.saturating_add(pkt.len as u64);
-            entry.last_seen = ts;
-            // Renseigne l'id de tunnel si on ne l'avait pas encore vu pour ce flux.
-            if entry.encap_id.is_none() {
-                entry.encap_id = pkt.encap_id;
+        if let Some(entries) = self.matrix.get_mut(&pkt.flow) {
+            if let Some((_, stats)) = entries.iter_mut().find(|(id, _)| *id == pkt.encap_id) {
+                stats.count += 1;
+                stats.total_bytes = stats.total_bytes.saturating_add(pkt.len as u64);
+                stats.last_seen = ts;
+            } else {
+                entries.push((
+                    pkt.encap_id,
+                    FlowStats {
+                        count: 1,
+                        total_bytes: pkt.len as u64,
+                        last_seen: ts,
+                    },
+                ));
             }
         } else {
             self.matrix.insert(
                 pkt.flow.clone(),
-                FlowStats {
-                    count: 1,
-                    total_bytes: pkt.len as u64,
-                    last_seen: ts,
-                    encap_id: pkt.encap_id,
-                },
+                vec![(
+                    pkt.encap_id,
+                    FlowStats {
+                        count: 1,
+                        total_bytes: pkt.len as u64,
+                        last_seen: ts,
+                    },
+                )],
             );
+        }
+    }
+
+    /// Fusionne une ligne déjà agrégée (import de matrice CSV) : cumule les
+    /// compteurs si la ligne (flux, tunnel) existe, la crée sinon.
+    pub fn merge_row(&mut self, flow: PacketFlowOwned, encap_id: Option<u64>, stats: FlowStats) {
+        let entries = self.matrix.entry(flow).or_default();
+        if let Some((_, existing)) = entries.iter_mut().find(|(id, _)| *id == encap_id) {
+            existing.count += stats.count;
+            existing.total_bytes = existing.total_bytes.saturating_add(stats.total_bytes);
+            if stats.last_seen > existing.last_seen {
+                existing.last_seen = stats.last_seen;
+            }
+        } else {
+            entries.push((encap_id, stats));
         }
     }
 
@@ -127,7 +225,24 @@ impl FlowMatrix {
     pub fn to_flat_vec(&self) -> Vec<FlowMatrixRow> {
         self.matrix
             .iter()
-            .map(|(flow, stats)| {
+            .map(|(flow, entries)| {
+                // Une seule ligne par flux : les compteurs par tunnel sont
+                // refusionnés, la ventilation reste lisible dans `encap_id`.
+                let stats = FlowStats {
+                    count: entries.iter().map(|(_, s)| s.count).sum(),
+                    total_bytes: entries
+                        .iter()
+                        .fold(0u64, |acc, (_, s)| acc.saturating_add(s.total_bytes)),
+                    last_seen: entries
+                        .iter()
+                        .map(|(_, s)| s.last_seen)
+                        .max()
+                        .unwrap_or(UNIX_EPOCH),
+                };
+                let encap_id = format_encap_list(entries);
+                (flow, encap_id, stats)
+            })
+            .map(|(flow, encap_id, stats)| {
                 let ip_source = flow
                     .internet
                     .as_ref()
@@ -187,10 +302,7 @@ impl FlowMatrix {
                     count: stats.count,
                     total_bytes: stats.total_bytes,
                     last_seen,
-                    encap_id: stats
-                        .encap_id
-                        .map(|id| format!("{id:016x}"))
-                        .unwrap_or_default(),
+                    encap_id,
                 }
             })
             .collect()
@@ -375,18 +487,21 @@ pub struct FlowMatrixRow {
     pub count: u64,
     pub total_bytes: u64,
     pub last_seen: String,
-    // Identifiant de tunnel (extension SFMS) : hex partagé par la ligne externe
-    // et ses lignes internes ; vide pour un flux non tunnelé. `serde(default)`
-    // pour rester compatible avec les matrices exportées avant cette colonne.
+    // Tunnels traversés (extension SFMS) : vide (hors tunnel), `id` hex (un
+    // seul tunnel) ou `id:n|id:n|…` (comptes par tunnel, voir
+    // `format_encap_list`). L'id est partagé par la ligne externe et ses
+    // lignes internes, dans les deux sens du tunnel. `serde(default)` pour
+    // rester compatible avec les matrices exportées avant cette colonne.
     #[serde(default)]
     pub encap_id: String,
 }
 
 impl FlowMatrixRow {
-    /// Reconstruit le flux et ses statistiques depuis une ligne de CSV exporté
-    /// (chemin inverse de `to_flat_vec`). Les types d'IP sont recalculés depuis
-    /// les adresses ; le VLAN ne conserve que son id (pcp/dei non exportés).
-    pub fn to_flow_and_stats(&self) -> (PacketFlowOwned, FlowStats) {
+    /// Reconstruit le flux et ses statistiques par tunnel depuis une ligne de
+    /// CSV exporté (chemin inverse de `to_flat_vec`). Les types d'IP sont
+    /// recalculés depuis les adresses ; le VLAN ne conserve que son id
+    /// (pcp/dei non exportés).
+    pub fn to_flow_and_rows(&self) -> (PacketFlowOwned, Vec<(Option<u64>, FlowStats)>) {
         let source_ip = self.ip_source.parse::<IpAddr>().ok();
         let destination_ip = self.ip_destination.parse::<IpAddr>().ok();
 
@@ -441,14 +556,9 @@ impl FlowMatrixRow {
             })
             .unwrap_or(UNIX_EPOCH);
 
-        let stats = FlowStats {
-            count: self.count,
-            total_bytes: self.total_bytes,
-            last_seen,
-            encap_id: u64::from_str_radix(self.encap_id.trim(), 16).ok(),
-        };
+        let rows = parse_encap_list(&self.encap_id, self.count, self.total_bytes, last_seen);
 
-        (flow, stats)
+        (flow, rows)
     }
 }
 
@@ -497,7 +607,9 @@ mod tests {
 
         matrix.update_flow(&pkt);
 
-        let stats = matrix.matrix.get(&pkt.flow).expect("flux inséré");
+        let entries = matrix.matrix.get(&pkt.flow).expect("flux inséré");
+        let (encap_id, stats) = &entries[0];
+        assert_eq!(*encap_id, None);
         assert_eq!(stats.count, 1);
         assert_eq!(stats.total_bytes, 100);
     }
@@ -511,10 +623,115 @@ mod tests {
         matrix.update_flow(&pkt);
         matrix.update_flow(&pkt);
 
-        assert_eq!(matrix.matrix.len(), 1, "un seul flux");
-        let stats = matrix.matrix.get(&pkt.flow).expect("flux inséré");
+        assert_eq!(matrix.row_count(), 1, "un seul flux");
+        let entries = matrix.matrix.get(&pkt.flow).expect("flux inséré");
+        let (_, stats) = &entries[0];
         assert_eq!(stats.count, 3);
         assert_eq!(stats.total_bytes, 300);
+    }
+
+    /// Le même flux interne vu à travers deux tunnels différents garde UNE
+    /// seule ligne à l'export ; les compteurs par tunnel restent exacts dans
+    /// la colonne `encap_id` (somme des fils d'un tunnel == compteur du père).
+    #[test]
+    fn update_flow_keeps_one_row_with_per_tunnel_counts() {
+        let mut matrix = FlowMatrix::new();
+        let mut in_tunnel_a = sample_packet(100);
+        in_tunnel_a.encap_id = Some(0xaaaa);
+        let mut in_tunnel_b = sample_packet(100);
+        in_tunnel_b.encap_id = Some(0xbbbb);
+
+        matrix.update_flow(&in_tunnel_a);
+        matrix.update_flow(&in_tunnel_a);
+        matrix.update_flow(&in_tunnel_b);
+
+        assert_eq!(matrix.row_count(), 1, "une seule ligne pour ce flux");
+
+        let rows = matrix.to_flat_vec();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].count, 3, "compteur total du flux");
+        assert_eq!(
+            rows[0].encap_id, "000000000000aaaa:2|000000000000bbbb:1",
+            "ventilation par tunnel dans la colonne encap_id"
+        );
+    }
+
+    /// Un flux dans un seul tunnel exporte l'id nu (sans `:n`), comme la
+    /// ligne externe du tunnel : la jointure directe reste possible.
+    #[test]
+    fn single_tunnel_flow_exports_bare_id() {
+        let mut matrix = FlowMatrix::new();
+        let mut pkt = sample_packet(100);
+        pkt.encap_id = Some(0xaaaa);
+
+        matrix.update_flow(&pkt);
+        matrix.update_flow(&pkt);
+
+        let rows = matrix.to_flat_vec();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].encap_id, "000000000000aaaa");
+        assert_eq!(rows[0].count, 2);
+    }
+
+    /// Aller-retour export -> import de la colonne `encap_id`, dans ses trois
+    /// formes : vide, id nu, liste `id:n`.
+    #[test]
+    fn encap_list_roundtrips_through_format_and_parse() {
+        use super::{format_encap_list, parse_encap_list};
+        use std::time::UNIX_EPOCH;
+
+        for encap in [
+            "",
+            "000000000000aaaa",
+            "000000000000aaaa:2|000000000000bbbb:1",
+        ] {
+            let entries = parse_encap_list(encap, 3, 300, UNIX_EPOCH);
+            assert_eq!(
+                entries.iter().map(|(_, s)| s.count).sum::<u64>(),
+                3,
+                "le compteur total doit être conservé pour {encap:?}"
+            );
+            assert_eq!(
+                entries.iter().map(|(_, s)| s.total_bytes).sum::<u64>(),
+                300,
+                "les octets totaux doivent être conservés pour {encap:?}"
+            );
+            assert_eq!(format_encap_list(&entries), encap, "aller-retour");
+        }
+
+        // Liste partielle : 2 paquets sur 3 en tunnel, le reste hors tunnel.
+        let entries = parse_encap_list("000000000000aaaa:2", 3, 300, UNIX_EPOCH);
+        assert_eq!(entries.len(), 2, "part hors tunnel sur une entrée None");
+        assert!(entries.iter().any(|(id, s)| id.is_none() && s.count == 1));
+    }
+
+    /// L'import CSV fusionne les doublons tunnel par tunnel.
+    #[test]
+    fn merge_row_accumulates_per_tunnel() {
+        use super::FlowStats;
+        use std::time::UNIX_EPOCH;
+
+        let mut matrix = FlowMatrix::new();
+        let flow = sample_packet(100).flow;
+        let stats = |count: u64| FlowStats {
+            count,
+            total_bytes: count * 10,
+            last_seen: UNIX_EPOCH,
+        };
+
+        matrix.merge_row(flow.clone(), Some(0xaaaa), stats(2));
+        matrix.merge_row(flow.clone(), Some(0xaaaa), stats(3));
+        matrix.merge_row(flow.clone(), Some(0xbbbb), stats(1));
+
+        assert_eq!(matrix.row_count(), 1, "une seule ligne pour ce flux");
+        let entries = matrix.matrix.get(&flow).unwrap();
+        let merged = entries
+            .iter()
+            .find(|(id, _)| *id == Some(0xaaaa))
+            .map(|(_, s)| s)
+            .unwrap();
+        assert_eq!(merged.count, 5);
+        assert_eq!(merged.total_bytes, 50);
     }
 
     #[test]

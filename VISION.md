@@ -25,7 +25,9 @@ résultat ? »*.
 ## 🧩 Ce que SONAR est aujourd'hui
 
 Capture **passive** → **matrice de flux** (format SFMS) → **graphe + labels** →
-import / export / fusion.
+import / export / fusion. Le trafic tunnelé (CAPWAP, …) est décapsulé et
+restitué en lignes père/fils reliées par un identifiant de tunnel — modèle et
+choix techniques dans [`TUNNELS.md`](./TUNNELS.md).
 
 Quatre choix techniques trahissent l'identité réelle du produit :
 

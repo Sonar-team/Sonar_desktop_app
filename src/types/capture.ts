@@ -101,6 +101,8 @@ export interface EdgeData {
   bidir?: boolean;
   count?: number;
   total_bytes?: number;
+  /** Tunnels (encap_id hex) auxquels ce flux participe, cf. TUNNELS.md */
+  encap_ids?: string[];
   _color?: string;
 }
 

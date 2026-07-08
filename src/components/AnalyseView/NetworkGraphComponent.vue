@@ -121,10 +121,17 @@ function edgeAttributes(e: any) {
     bidir: !!e.bidir,
     count: Number(e.count) || 0,
     total_bytes: totalBytes,
+    // Tunnels (encap_id hex) auxquels ce flux participe : le backend envoie
+    // la liste cumulative, on remplace donc simplement à chaque update.
+    encapIds: Array.isArray(e.encap_ids) ? e.encap_ids : [],
     color: e._color || colorForProtocol(e.label || ""),
     size: edgeSizeFor(totalBytes),
   }
 }
+
+// Couleurs d'estompage pendant la surbrillance d'un tunnel (fond noir)
+const DIM_EDGE_COLOR = "#2a2a2a"
+const DIM_NODE_COLOR = "#3a3a3a"
 
 // --- Component -------------------------------------------------------------
 export default defineComponent({
@@ -140,6 +147,15 @@ export default defineComponent({
       forceEnabled: true,
       zoomLevel: 1,
       hoveredNode: null as string | null,
+
+      // Surbrillance de la famille d'un tunnel (survol d'une arête) :
+      // arêtes/nœuds partageant un encap_id avec l'arête survolée.
+      hoveredTunnelEdges: null as Set<string> | null,
+      hoveredTunnelNodes: null as Set<string> | null,
+      tunnelHoverInfo: "" as string,
+      // Arête épinglée au clic : la surbrillance reste après le survol
+      // (re-clic sur l'arête ou clic sur le fond pour libérer).
+      pinnedTunnelEdge: null as string | null,
 
       // Bandeau bas
       selectedNodeInfos: [] as string[],
@@ -272,15 +288,35 @@ export default defineComponent({
         edgeLabelColor: { color: "#E0E0E0" },
         defaultDrawNodeLabel: drawNodeLabel,
         defaultDrawNodeHover: drawNodeLabel,
+        // Survol d'arête (surbrillance des tunnels) + zIndex pour faire
+        // passer la famille surlignée au-dessus des arêtes estompées.
+        enableEdgeEvents: true,
+        zIndex: true,
         nodeReducer: (node, data) => {
           const res: any = { ...data }
+          const tunnelNodes = this.hoveredTunnelNodes
+          if (tunnelNodes && !tunnelNodes.has(node)) {
+            res.color = DIM_NODE_COLOR
+            res.label = null
+          }
           if (node === this.hoveredNode) res.color = data.hoverColor ?? res.color
           if (node === this.selectedNodeId) res.highlighted = true
           return res
         },
-        edgeReducer: (_edge, data) => {
+        edgeReducer: (edge, data) => {
           const res: any = { ...data }
-          if (!this._edgeLabelsShown) {
+          const tunnelEdges = this.hoveredTunnelEdges
+          const dimmed = !!tunnelEdges && !tunnelEdges.has(edge)
+          if (tunnelEdges) {
+            if (dimmed) {
+              res.color = DIM_EDGE_COLOR
+              res.zIndex = 0
+            } else {
+              res.zIndex = 1
+              res.size = (data.size || 1) + 1
+            }
+          }
+          if (!this._edgeLabelsShown || dimmed) {
             res.label = null
             return res
           }
@@ -295,11 +331,85 @@ export default defineComponent({
       this.renderer = markRaw(renderer)
 
       renderer.on("clickNode", ({ node }) => this.onNodeClick(node))
-      renderer.on("clickStage", () => this.clearNodeInfos())
+      renderer.on("clickStage", () => { this.clearNodeInfos(); this.unpinTunnelHighlight() })
       renderer.on("enterNode", ({ node }) => { this.hoveredNode = node; renderer.refresh() })
       renderer.on("leaveNode", () => { this.hoveredNode = null; renderer.refresh() })
+      renderer.on("enterEdge", ({ edge }) => this.onTunnelEdgeEnter(edge))
+      renderer.on("leaveEdge", () => this.clearTunnelHighlight())
+      renderer.on("clickEdge", ({ edge }) => this.onTunnelEdgeClick(edge))
 
       renderer.getCamera().on("updated", (state) => this.onZoom(1 / state.ratio))
+    },
+
+    // === Surbrillance des tunnels ==========================================
+    /**
+     * Surligne la famille de tunnel(s) d'une arête : si elle participe à un
+     * ou plusieurs tunnels (encapIds non vide), la (les) arête(s) externe(s)
+     * du tunnel ET les flux internes qu'il transporte passent au premier
+     * plan, le reste du graphe est estompé. Fonctionne dans les deux sens :
+     * le CAPWAP montre son contenu, un flux interne montre par quel(s)
+     * tunnel(s) il est passé. Retourne true si une famille a été surlignée.
+     */
+    applyTunnelHighlight(edgeId: string): boolean {
+      if (!this.graph?.hasEdge(edgeId)) return false
+      const ids: string[] = this.graph.getEdgeAttribute(edgeId, "encapIds") || []
+      if (!ids.length) return false
+
+      const wanted = new Set(ids)
+      const edges = new Set<string>()
+      const nodes = new Set<string>()
+      this.graph.forEachEdge((edge, attrs, source, target) => {
+        const edgeIds: string[] = attrs.encapIds || []
+        if (!edgeIds.some((id) => wanted.has(id))) return
+        edges.add(edge)
+        nodes.add(source)
+        nodes.add(target)
+      })
+
+      this.hoveredTunnelEdges = edges
+      this.hoveredTunnelNodes = nodes
+      const idLabel = ids.length === 1 ? `tunnel ${ids[0].slice(0, 8)}…` : `${ids.length} tunnels`
+      const pin = this.pinnedTunnelEdge === edgeId ? "📌 " : ""
+      this.tunnelHoverInfo = `${pin}${idLabel} — ${edges.size} flux liés`
+      this.renderer?.refresh()
+      return true
+    },
+
+    onTunnelEdgeEnter(edgeId: string) {
+      if (!this.applyTunnelHighlight(edgeId)) this.clearTunnelHighlight()
+    },
+
+    /** Clic sur une arête : épingle sa famille de tunnel (re-clic = libère). */
+    onTunnelEdgeClick(edgeId: string) {
+      if (this.pinnedTunnelEdge === edgeId) {
+        this.pinnedTunnelEdge = null
+        this.clearTunnelHighlight()
+        return
+      }
+      if (this.graph?.hasEdge(edgeId) && (this.graph.getEdgeAttribute(edgeId, "encapIds") || []).length) {
+        this.pinnedTunnelEdge = edgeId
+        this.applyTunnelHighlight(edgeId)
+      } else {
+        this.pinnedTunnelEdge = null
+        this.clearTunnelHighlight()
+      }
+    },
+
+    /** Fin de survol : revient à la famille épinglée s'il y en a une, sinon efface. */
+    clearTunnelHighlight() {
+      if (this.pinnedTunnelEdge && this.applyTunnelHighlight(this.pinnedTunnelEdge)) return
+      this.pinnedTunnelEdge = null
+      if (!this.hoveredTunnelEdges) return
+      this.hoveredTunnelEdges = null
+      this.hoveredTunnelNodes = null
+      this.tunnelHoverInfo = ""
+      this.renderer?.refresh()
+    },
+
+    /** Efface tout, épinglage compris (clic sur le fond, reset du graphe). */
+    unpinTunnelHighlight() {
+      this.pinnedTunnelEdge = null
+      this.clearTunnelHighlight()
     },
 
     onZoom(zoom: number) {
@@ -328,6 +438,7 @@ export default defineComponent({
       this._layoutOrder = 0
       this.graph?.clear()
       this.clearNodeInfos()
+      this.unpinTunnelHighlight()
     },
 
     // === Upserts ===========================================================
@@ -727,6 +838,10 @@ export default defineComponent({
     <!-- Bandeau d'infos en bas -->
     <div class="bottom-info">
       <div class="zoom">Zoom: {{ zoomLevel.toPrecision(2) }}</div>
+      <template v-if="tunnelHoverInfo">
+        <div class="sep" />
+        <div class="tunnel-info">🚇 {{ tunnelHoverInfo }}</div>
+      </template>
       <div class="sep" />
       <button class="download-button" @click="printLabels" title="afficher les labels">Afficher les labels</button>
       <div class="sep" />
@@ -857,6 +972,11 @@ export default defineComponent({
   z-index: 20;
 }
 .bottom-info .zoom { font-variant-numeric: tabular-nums; }
+.bottom-info .tunnel-info {
+  color: #1de9b6;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 .bottom-info .sep {
   width: 1px;
   height: 20px;

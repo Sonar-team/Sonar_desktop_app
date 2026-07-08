@@ -33,7 +33,7 @@ use crate::{
     setup::labels::{clean_csv_field, parse_label_fields},
     state::{
         capture::{CaptureState, capture_handle::messages::capture::PacketMinimal},
-        flow_matrix::{FlowMatrix, FlowMatrixRow, FlowStats},
+        flow_matrix::{FlowMatrix, FlowMatrixRow},
         graph::GraphData,
         labels_list::LabelStore,
     },
@@ -392,7 +392,7 @@ pub fn convert_from_pcap_list(
                 "event": "import_snapshot_timing",
                 "ts_unix_ns": now_unix_ns(),
                 "files": pcap_paths.len(),
-                "matrix_count": matrice_guard.matrix.len(),
+                "matrix_count": matrice_guard.row_count(),
                 "graph_nodes": snapshot.nodes.len(),
                 "graph_edges": snapshot.edges.len(),
                 "snapshot_build_ns": snapshot_build_ns,
@@ -496,7 +496,7 @@ fn handle_pcap_file(
 
                 let matrix_update_start = timing_sample.map(|_| Instant::now());
                 matrice.update_flow(&owned_packet);
-                let matrix_count = matrice.matrix.len();
+                let matrix_count = matrice.row_count();
                 let matrix_update_ns = matrix_update_start.map(elapsed_ns_since).unwrap_or(0);
 
                 let label_lookup_start = timing_sample.map(|_| Instant::now());
@@ -529,6 +529,7 @@ fn handle_pcap_file(
                     destination_label,
                     1,
                     owned_packet.len as u64,
+                    owned_packet.encap_id.as_slice(),
                 );
                 let graph_update_ns = graph_update_start.map(elapsed_ns_since).unwrap_or(0);
 
@@ -551,7 +552,14 @@ fn handle_pcap_file(
                         .unwrap_or_default();
                     let sl = matrice.get_label(&inner.flow.data_link.source_mac, &sip);
                     let dl = matrice.get_label(&inner.flow.data_link.destination_mac, &dip);
-                    graph.add_packet_flow(&inner.flow, sl, dl, 1, inner.len as u64);
+                    graph.add_packet_flow(
+                        &inner.flow,
+                        sl,
+                        dl,
+                        1,
+                        inner.len as u64,
+                        inner.encap_id.as_slice(),
+                    );
                 }
 
                 let mut stats_ipc_ns = 0;
@@ -685,9 +693,10 @@ fn handle_pcap_file(
                     destination_label,
                     1,
                     owned_packet.len as u64,
+                    owned_packet.encap_id.as_slice(),
                 );
             }
-            let matrix_count = matrice.matrix.len();
+            let matrix_count = matrice.row_count();
 
             // Stats périodiques (optionnel)
             if (packet_count.is_multiple_of(1000) || packet_count == total)
@@ -714,7 +723,7 @@ fn handle_pcap_file(
     let finished_send_result = on_event.send(CaptureEvent::Finished {
         file_name: file_path,
         packet_total_count: total,
-        matrix_total_count: matrice.matrix.len(),
+        matrix_total_count: matrice.row_count(),
     });
     if let Err(e) = &finished_send_result {
         error!("Erreur lors de l'envoi de Finished: {:?}", e);
@@ -733,7 +742,7 @@ fn handle_pcap_file(
                 "read_packets": packet_count,
                 "parse_ok": parse_ok_count,
                 "parse_errors": parse_error_count,
-                "matrix_count": matrice.matrix.len(),
+                "matrix_count": matrice.row_count(),
                 "graph_nodes": graph.nodes.len(),
                 "graph_edges": graph.edges.len(),
                 "count_packets_ns": count_packets_ns,
@@ -752,7 +761,7 @@ fn handle_pcap_file(
     info!(
         "[handle_pcap_file] Finised with {} paquets lu, {} lignes matrice",
         total,
-        matrice.matrix.len()
+        matrice.row_count()
     );
     Ok(())
 }
@@ -1159,22 +1168,13 @@ fn rebuild_matrix_and_graph_from_rows(
     }
 
     for row in rows {
-        let (flow, stats) = row.to_flow_and_stats();
+        let (flow, tunnel_rows) = row.to_flow_and_rows();
+        let encap_ids: Vec<u64> = tunnel_rows.iter().filter_map(|(id, _)| *id).collect();
 
-        // Les doublons éventuels des fichiers sont fusionnés.
-        let entry = matrice.matrix.entry(flow.clone()).or_insert(FlowStats {
-            count: 0,
-            total_bytes: 0,
-            last_seen: stats.last_seen,
-            encap_id: stats.encap_id,
-        });
-        entry.count += stats.count;
-        entry.total_bytes = entry.total_bytes.saturating_add(stats.total_bytes);
-        if stats.last_seen > entry.last_seen {
-            entry.last_seen = stats.last_seen;
-        }
-        if entry.encap_id.is_none() {
-            entry.encap_id = stats.encap_id;
+        // Les doublons éventuels des fichiers sont fusionnés, tunnel par
+        // tunnel, pour préserver la comptabilité père/fils.
+        for (encap_id, stats) in tunnel_rows {
+            matrice.merge_row(flow.clone(), encap_id, stats);
         }
 
         let source_label = matrice.get_label(&flow.data_link.source_mac, &row.ip_source);
@@ -1184,8 +1184,9 @@ fn rebuild_matrix_and_graph_from_rows(
             &flow,
             source_label,
             destination_label,
-            stats.count,
-            stats.total_bytes,
+            row.count,
+            row.total_bytes,
+            &encap_ids,
         );
     }
 
@@ -1247,7 +1248,7 @@ pub fn import_matrix_files(
         "[import_matrix_files] {} fichier(s), {} ligne(s) importée(s) -> {} flux fusionné(s), {} nœuds, {} arêtes",
         incoming_file_paths.len(),
         rows.len(),
-        matrice_guard.matrix.len(),
+        matrice_guard.row_count(),
         graph_guard.nodes.len(),
         graph_guard.edges.len()
     );
@@ -1669,23 +1670,187 @@ mod tests {
         duplicate.last_seen = "2099-01-01 00:00:00".to_string();
         rows.push(duplicate);
 
-        let (flow, _stats) = rows[0].to_flow_and_stats();
+        let (flow, _tunnel_rows) = rows[0].to_flow_and_rows();
         let (matrix, graph) = build_matrix_and_graph(&rows);
-        let merged = matrix.matrix.get(&flow).unwrap();
+        let entries = matrix.matrix.get(&flow).unwrap();
+        let merged_count: u64 = entries.iter().map(|(_, stats)| stats.count).sum();
+        let merged_bytes: u64 = entries.iter().map(|(_, stats)| stats.total_bytes).sum();
 
         assert_eq!(
-            matrix.matrix.len(),
+            matrix.row_count(),
             30,
             "le flux dupliqué doit être fusionné"
         );
-        assert_eq!(merged.count, rows[0].count + 7);
-        assert_eq!(merged.total_bytes, rows[0].total_bytes.saturating_add(1234));
+        assert_eq!(merged_count, rows[0].count + 7);
+        assert_eq!(merged_bytes, rows[0].total_bytes.saturating_add(1234));
         assert!(
             graph
                 .edges
                 .values()
                 .any(|edge| edge.count >= rows[0].count + 7),
             "le graphe doit recevoir le trafic fusionné"
+        );
+    }
+
+    /// Capture réelle utilisée par les tests de tunnels, volontairement non
+    /// versionnée (données de mission, dépôt public). Retourne `None` quand
+    /// elle est absente (ex. CI) : le test se saute proprement.
+    fn local_tunnel_pcap() -> Option<PathBuf> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/LOC42.pcapng");
+        if path.exists() {
+            Some(path)
+        } else {
+            eprintln!(
+                "test sauté : test_files/LOC42.pcapng absent (capture locale non versionnée)"
+            );
+            None
+        }
+    }
+
+    /// Rejoue l'import PCAP réel et vérifie la comptabilité des tunnels :
+    /// pour chaque tunnel, la somme des paquets attribués aux lignes internes
+    /// (via la colonne `encap_id`, forme `id` ou `id:n|…`) doit être égale au
+    /// compteur des lignes externes CAPWAP (aller + retour), sans orphelin.
+    #[test]
+    fn import_pcap_tunnel_counts_are_balanced() {
+        let Some(pcap_path) = local_tunnel_pcap() else {
+            return;
+        };
+        let mut matrix = FlowMatrix::new();
+        let mut graph = GraphData::new();
+        let on_event = Channel::new(|_| Ok(()));
+
+        handle_pcap_file(
+            pcap_path.to_str().unwrap(),
+            &mut matrix,
+            &mut graph,
+            &on_event,
+            &mut None,
+        )
+        .unwrap();
+
+        // Ventile la colonne `encap_id` d'une ligne : `id` nu = tout le
+        // compteur de la ligne, `id:n` = n paquets pour ce tunnel.
+        fn tunnel_counts(row: &FlowMatrixRow) -> Vec<(String, u64)> {
+            row.encap_id
+                .split('|')
+                .filter(|e| !e.is_empty())
+                .map(|element| match element.split_once(':') {
+                    Some((id, n)) => (id.to_string(), n.parse::<u64>().unwrap()),
+                    None => (element.to_string(), row.count),
+                })
+                .collect()
+        }
+
+        let rows = matrix.to_flat_vec();
+        assert_eq!(rows.len(), matrix.row_count(), "une ligne par flux");
+
+        let mut outer: std::collections::HashMap<String, u64> = std::collections::HashMap::new();
+        let mut inner: std::collections::HashMap<String, u64> = std::collections::HashMap::new();
+        for row in &rows {
+            let target = if row.application_protocol.as_deref() == Some("CAPWAP") {
+                &mut outer
+            } else {
+                &mut inner
+            };
+            for (id, count) in tunnel_counts(row) {
+                *target.entry(id).or_default() += count;
+            }
+        }
+
+        assert!(!outer.is_empty(), "le pcap contient des tunnels CAPWAP");
+        for (id, outer_count) in &outer {
+            assert_eq!(
+                inner.get(id),
+                Some(outer_count),
+                "tunnel {id} : la somme des paquets fils doit égaler le compteur du père"
+            );
+        }
+        for id in inner.keys() {
+            assert!(
+                outer.contains_key(id),
+                "tunnel {id} : lignes internes sans ligne externe"
+            );
+        }
+
+        // Le graphe porte la parenté père/fils : chaque arête CAPWAP connaît
+        // l'id de son tunnel, et des arêtes internes portent les ids des
+        // tunnels qui les transportent (surbrillance au survol côté front).
+        let capwap_edges: Vec<_> = graph
+            .edges
+            .values()
+            .filter(|e| e.label == "CAPWAP")
+            .collect();
+        assert!(!capwap_edges.is_empty(), "arêtes CAPWAP attendues");
+        assert!(
+            capwap_edges.iter().all(|e| !e.encap_ids.is_empty()),
+            "chaque arête CAPWAP doit porter au moins un id de tunnel"
+        );
+        let linked_inner = graph
+            .edges
+            .values()
+            .filter(|e| e.label != "CAPWAP" && !e.encap_ids.is_empty())
+            .count();
+        assert!(
+            linked_inner > 0,
+            "des arêtes internes doivent être reliées à leur tunnel"
+        );
+    }
+
+    /// Aller-retour complet sur le pcap réel : import PCAP -> export CSV ->
+    /// réimport -> réexport. Les lignes (flux + ventilation par tunnel)
+    /// doivent survivre au cycle à l'identique.
+    #[test]
+    fn pcap_matrix_survives_csv_roundtrip() {
+        let Some(pcap_path) = local_tunnel_pcap() else {
+            return;
+        };
+        let mut matrix = FlowMatrix::new();
+        let mut graph = GraphData::new();
+        let on_event = Channel::new(|_| Ok(()));
+        handle_pcap_file(
+            pcap_path.to_str().unwrap(),
+            &mut matrix,
+            &mut graph,
+            &on_event,
+            &mut None,
+        )
+        .unwrap();
+
+        let dir = TempDir::new("sonar_test_matrix_roundtrip");
+        let csv_path = dir.path().join("matrice.csv");
+        matrix
+            .export_to_csv(csv_path.to_str().unwrap().to_string())
+            .unwrap();
+
+        let rows = read_matrix_rows(csv_path.to_str().unwrap()).unwrap();
+        assert_eq!(rows.len(), matrix.row_count(), "une ligne CSV par flux");
+
+        let (reimported, _graph) = build_matrix_and_graph(&rows);
+        let normalize = |m: &FlowMatrix| {
+            let mut v: Vec<String> = m
+                .to_flat_vec()
+                .into_iter()
+                .map(|r| {
+                    format!(
+                        "{}|{}|{:?}|{:?}|{}|{}|{}",
+                        r.mac_source,
+                        r.mac_destination,
+                        r.port_source,
+                        r.port_destination,
+                        r.count,
+                        r.total_bytes,
+                        r.encap_id
+                    )
+                })
+                .collect();
+            v.sort();
+            v
+        };
+        assert_eq!(
+            normalize(&matrix),
+            normalize(&reimported),
+            "compteurs et ventilation par tunnel identiques après réimport"
         );
     }
 
@@ -1709,7 +1874,7 @@ mod tests {
 
         let (matrix, graph) = build_matrix_and_graph(&rows);
 
-        assert_eq!(matrix.matrix.len(), 30, "un flux par ligne du fichier");
+        assert_eq!(matrix.row_count(), 30, "un flux par ligne du fichier");
         assert!(!graph.nodes.is_empty(), "le graphe doit contenir des nœuds");
         assert!(
             !graph.edges.is_empty(),
@@ -1747,7 +1912,7 @@ mod tests {
 
         let (matrix, graph) = build_matrix_and_graph(&rows);
 
-        assert_eq!(matrix.matrix.len(), 1000, "1000 flux distincts");
+        assert_eq!(matrix.row_count(), 1000, "1000 flux distincts");
         assert_eq!(graph.nodes.len(), 232, "un nœud par adresse IP distincte");
         assert!(graph.edges.len() > 100, "arêtes: {}", graph.edges.len());
 

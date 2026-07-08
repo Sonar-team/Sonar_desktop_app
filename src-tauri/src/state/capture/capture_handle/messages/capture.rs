@@ -5,11 +5,44 @@ use packet_parser::owned::PacketFlowOwned;
 
 use serde::Serialize;
 
-/// Identifiant déterministe d'un flux (hash de sa clé), utilisé comme
-/// `encap_id` pour relier une ligne de tunnel externe à ses lignes internes.
-fn flow_encap_id(flow: &PacketFlowOwned) -> u64 {
+/// Identifiant déterministe d'une paire de tunnel, utilisé comme `encap_id`
+/// pour relier la ligne de tunnel externe à ses lignes internes. Les deux
+/// sens d'un même tunnel (A -> B et B -> A) partagent le même identifiant :
+/// les extrémités sont ordonnées avant hachage.
+fn tunnel_pair_id(flow: &PacketFlowOwned) -> u64 {
+    let source = (
+        &flow.data_link.source_mac,
+        flow.internet.as_ref().and_then(|i| i.source_ip),
+        flow.transport.as_ref().and_then(|t| t.source_port),
+    );
+    let destination = (
+        &flow.data_link.destination_mac,
+        flow.internet.as_ref().and_then(|i| i.destination_ip),
+        flow.transport.as_ref().and_then(|t| t.destination_port),
+    );
+    let (first, second) = if source <= destination {
+        (source, destination)
+    } else {
+        (destination, source)
+    };
+
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    flow.hash(&mut hasher);
+    first.hash(&mut hasher);
+    second.hash(&mut hasher);
+    flow.data_link.ethertype.hash(&mut hasher);
+    flow.data_link.vlan.hash(&mut hasher);
+    flow.internet
+        .as_ref()
+        .map(|i| &i.protocol)
+        .hash(&mut hasher);
+    flow.transport
+        .as_ref()
+        .map(|t| &t.protocol)
+        .hash(&mut hasher);
+    flow.application
+        .as_ref()
+        .map(|a| &a.protocol)
+        .hash(&mut hasher);
     hasher.finish()
 }
 
@@ -99,7 +132,7 @@ impl<'a> PacketMinimal<'a> {
         // La ligne externe d'un tunnel doit porter le même `encap_id` que ses
         // lignes internes (celui calculé dans `to_owned_packets`), sinon la
         // jointure externe <-> interne est impossible côté SOC.
-        let encap_id = self.flow.inner.is_some().then(|| flow_encap_id(&flow));
+        let encap_id = self.flow.inner.is_some().then(|| tunnel_pair_id(&flow));
         PacketOwnedStats {
             ts_sec: self.ts_sec,
             ts_usec: self.ts_usec,
@@ -145,7 +178,7 @@ impl<'a> PacketMinimal<'a> {
         // partagent le même identifiant : le hash du flux le plus externe.
         // Le SOC peut ainsi joindre externe <-> interne (GROUP BY encap_id).
         if tunneled {
-            let id = flow_encap_id(&owned[0].flow);
+            let id = tunnel_pair_id(&owned[0].flow);
             for packet in &mut owned {
                 packet.encap_id = Some(id);
             }
@@ -222,6 +255,37 @@ mod tests {
         // Le pipeline construit la ligne externe via `to_owned_packet` : elle
         // doit porter le même encap_id que les niveaux issus de `to_owned_packets`.
         assert_eq!(packet.to_owned_packet().encap_id, levels[0].encap_id);
+    }
+
+    /// Les deux sens d'un même tunnel doivent porter le même `encap_id`,
+    /// sinon les fils de l'aller et du retour ne se joignent pas au même père.
+    #[test]
+    fn tunnel_pair_id_is_direction_agnostic() {
+        let bytes = decode_hex(
+            "c464138f9e04442b0302172c080045080138b7e04000ff115967ac18086aac1808ca2174147f0124000000200320000000000104e5440000000001082c00003a9a5af450e0c2642fa3b4000c29967ca43980aaaa030000000800453800eca89440008006651464ac911e64ac91b4dd7b01bda58ecb952483ab67501800fec87e0000000000c0fe534d4240000100030000000500000030000000000000006704090000000000fffe0000966e611ec3ba49eb000000000000000000000000000000000000000039000000020000000000000000000000000000000000000080000000000000000700000001000000000020007800120090000000300000005200530058005f00440052002d0053004600000000000000180000001000040000001800000000004d78416300000000000000001000040000001800000000005146696400000000",
+        );
+        let flow = PacketFlow::try_from(bytes.as_slice()).expect("parse CAPWAP frame");
+        let forward = flow.to_owned();
+
+        // Retour : mêmes extrémités, sens inversé.
+        let mut reverse = forward.clone();
+        std::mem::swap(
+            &mut reverse.data_link.source_mac,
+            &mut reverse.data_link.destination_mac,
+        );
+        if let Some(internet) = reverse.internet.as_mut() {
+            std::mem::swap(&mut internet.source_ip, &mut internet.destination_ip);
+            std::mem::swap(
+                &mut internet.ip_source_type,
+                &mut internet.ip_destination_type,
+            );
+        }
+        if let Some(transport) = reverse.transport.as_mut() {
+            std::mem::swap(&mut transport.source_port, &mut transport.destination_port);
+        }
+
+        assert_ne!(forward, reverse, "les deux sens sont des flux distincts");
+        assert_eq!(tunnel_pair_id(&forward), tunnel_pair_id(&reverse));
     }
 
     #[test]
