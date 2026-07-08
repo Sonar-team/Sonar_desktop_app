@@ -3,7 +3,8 @@ name: "publish"
 on:
   push:
     tags:
-      - "app-v*"
+      # Tags de release au format vX.Y.Z (ex. v4.2.0)
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   reproducibility-check:
