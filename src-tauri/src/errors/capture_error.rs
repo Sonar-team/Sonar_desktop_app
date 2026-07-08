@@ -5,6 +5,12 @@ use crate::state::capture::capture_handle::messages::CaptureMessage;
 
 #[derive(Debug, Error)]
 pub enum CaptureError {
+    #[error("Configuration de capture invalide : {0}")]
+    InvalidConfig(String),
+
+    #[error("Erreur de persistance de la configuration : {0}")]
+    ConfigPersistence(String),
+
     #[error("Interface réseau introuvable : {0}")]
     InterfaceNotFound(String),
 
@@ -27,6 +33,8 @@ pub enum CaptureError {
 #[serde(tag = "kind", content = "message")]
 #[serde(rename_all = "camelCase")]
 pub enum CaptureErrorKind {
+    InvalidConfig(String),
+    ConfigPersistence(String),
     InterfaceNotFound(String),
     DeviceListError(String),
     CaptureInitError(String),
@@ -41,6 +49,8 @@ impl serde::Serialize for CaptureError {
         S: serde::ser::Serializer,
     {
         let kind = match self {
+            Self::InvalidConfig(msg) => CaptureErrorKind::InvalidConfig(msg.clone()),
+            Self::ConfigPersistence(msg) => CaptureErrorKind::ConfigPersistence(msg.clone()),
             Self::InterfaceNotFound(msg) => CaptureErrorKind::InterfaceNotFound(msg.clone()),
             Self::DeviceListError(e) => CaptureErrorKind::DeviceListError(e.to_string()),
             Self::CaptureInitError(e) => CaptureErrorKind::CaptureInitError(e.to_string()),

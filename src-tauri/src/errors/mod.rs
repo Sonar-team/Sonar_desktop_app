@@ -54,6 +54,12 @@ impl Serialize for CaptureStateError {
             Self::Capture(e) => {
                 // Convert `CaptureError` into `CaptureErrorKind`
                 let kind = match e {
+                    CaptureError::InvalidConfig(msg) => {
+                        CaptureErrorKind::InvalidConfig(msg.clone())
+                    }
+                    CaptureError::ConfigPersistence(msg) => {
+                        CaptureErrorKind::ConfigPersistence(msg.clone())
+                    }
                     CaptureError::InterfaceNotFound(msg) => {
                         CaptureErrorKind::InterfaceNotFound(msg.clone())
                     }

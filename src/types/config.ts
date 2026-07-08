@@ -5,3 +5,10 @@ export type CaptureConfig = {
   timeout: number;
   snaplen: number;
 };
+
+export const DEFAULT_CAPTURE_CONFIG = {
+  buffer_size: 18_000_000,
+  chan_capacity: 10_000,
+  timeout: 25,
+  snaplen: 65_536,
+} satisfies Omit<CaptureConfig, "device_name">;

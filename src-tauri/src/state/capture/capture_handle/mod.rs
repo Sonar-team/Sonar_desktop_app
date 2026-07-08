@@ -53,6 +53,7 @@ impl CaptureHandle {
         on_event: Channel<CaptureEvent<'static>>,
         filter: Option<String>,
     ) -> Result<(), CaptureError> {
+        config.validate()?;
         debug!(
             "Démarrage de la capture sur l'interface {}...",
             config.device_name
@@ -144,6 +145,7 @@ impl CaptureHandle {
         app: AppHandle,
         filter: Option<String>,
     ) -> Result<(), CaptureError> {
+        config.validate()?;
         debug!(
             "Démarrage de la capture sur l'interface {}...",
             config.device_name

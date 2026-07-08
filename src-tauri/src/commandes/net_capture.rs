@@ -89,6 +89,7 @@ pub fn stop_capture(
 #[command(async, rename_all = "snake_case")]
 pub fn config_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
+    app_handle: AppHandle,
     device_name: String,
     buffer_size: i32,
     chan_capacity: i32,
@@ -96,8 +97,10 @@ pub fn config_capture(
     snaplen: i32,
 ) -> Result<CaptureConfig, CaptureStateError> {
     let mut app = state.lock()?; // Gestion d'erreur ici
-    app.config
-        .setup(device_name, buffer_size, chan_capacity, timeout, snaplen);
+    let mut next_config = app.config.clone();
+    next_config.setup(device_name, buffer_size, chan_capacity, timeout, snaplen)?;
+    next_config.save_persisted(&app_handle)?;
+    app.config = next_config;
     info!(
         "[get_config_capture] app.config {:?}",
         app.config.device_name

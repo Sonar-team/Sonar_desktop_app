@@ -32,7 +32,7 @@ use crate::{
         system_info::start_cpu_monitor,
     },
     state::{
-        capture::CaptureState,
+        capture::{CaptureState, capture_config::CaptureConfig},
         flow_matrix::FlowMatrix,
         graph::GraphData,
         labels_list::{LabelStore, PcInfoLabel},
@@ -139,6 +139,19 @@ pub fn run() -> Result<(), tauri::Error> {
                 log_host_and_app_snapshot(app.app_handle());
                 info!("Reading labels...");
                 read_labels(app.handle())?;
+
+                let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
+                match CaptureConfig::load_persisted(app.handle()) {
+                    Ok(Some(config)) => match capture_state.lock() {
+                        Ok(mut state) => {
+                            info!("Configuration capture chargée depuis le disque");
+                            state.config = config;
+                        }
+                        Err(err) => error!("Impossible de charger la configuration capture: {err}"),
+                    },
+                    Ok(None) => {}
+                    Err(err) => error!("Configuration capture persistée ignorée: {err}"),
+                }
 
                 // CLI
                 let Ok(cli_matches) = app.cli().matches() else {

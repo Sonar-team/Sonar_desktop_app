@@ -2,10 +2,13 @@ import { message } from "@tauri-apps/plugin-dialog";
 import { error } from "@tauri-apps/plugin-log";
 
 export type CaptureErrorKind =
+  | { kind: "invalidConfig"; message: string }
+  | { kind: "configPersistence"; message: string }
   | { kind: "interfaceNotFound"; message: string }
   | { kind: "deviceListError"; message: string }
   | { kind: "captureInitError"; message: string }
-  | { kind: "channelSendError"; message: string };
+  | { kind: "channelSendError"; message: string }
+  | { kind: "eventSendError"; message: string };
 
 export type ImportErrorKind =
   | { kind: "openFileError"; file: string; message: string }
@@ -46,6 +49,14 @@ export async function displayCaptureError(err: unknown) {
         const captureKind = captureError.message as CaptureErrorKind;
         if ("kind" in captureKind) {
           switch (captureKind.kind) {
+            case "invalidConfig":
+              userFriendlyMessage =
+                `Configuration invalide : ${captureKind.message}`;
+              break;
+            case "configPersistence":
+              userFriendlyMessage =
+                `Erreur persistance configuration : ${captureKind.message}`;
+              break;
             case "interfaceNotFound":
               userFriendlyMessage =
                 `Interface non trouvée : ${captureKind.message}`;
@@ -61,6 +72,10 @@ export async function displayCaptureError(err: unknown) {
             case "channelSendError":
               userFriendlyMessage =
                 `Erreur envoi canal capture : ${captureKind.message}`;
+              break;
+            case "eventSendError":
+              userFriendlyMessage =
+                `Erreur envoi evenement capture : ${captureKind.message}`;
               break;
           }
         }

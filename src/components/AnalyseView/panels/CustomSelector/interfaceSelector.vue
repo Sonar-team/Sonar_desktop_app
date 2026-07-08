@@ -65,7 +65,7 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const selectedInterface = ref<NetDevice | null>(props.modelValue || null)
+const selectedInterface = ref<NetDevice | null>(props.modelValue ?? null)
 
 const formatInterfaceDisplay = (netInterface: NetDevice): string => {
   if (netInterface.desc) {
@@ -113,7 +113,7 @@ const onInterfaceChange = () => {
 
 // Synchroniser avec le modelValue externe
 watch(() => props.modelValue, (newValue) => {
-  selectedInterface.value = newValue
+  selectedInterface.value = newValue ?? null
 })
 
 // Sélectionner automatiquement la première interface disponible si aucune n'est sélectionnée

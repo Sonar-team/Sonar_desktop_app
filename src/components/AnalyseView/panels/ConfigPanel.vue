@@ -3,168 +3,151 @@
     <h2>Configuration Capture</h2>
 
     <InterfaceSelector 
-      v-model="netDevice"
+      v-model="selectedInterface"
       :net-interfaces="netInterfaces"
       class="config-item"
     />
 
     <div class="config-item">
       <label>Taille du buffer :</label>
-      <input type="number" v-model.number="bufferSize" />
+      <input type="number" v-model.number="bufferSize" min="65536" max="536870912" step="1024" />
     </div>
 
     <div class="config-item">
       <label>Nombre de buffers:</label>
-      <input type="number" v-model.number="chan_capacity" />
+      <input type="number" v-model.number="chanCapacity" min="1" max="1000000" />
     </div>
 
     <div class="config-item">
       <label>Timeout (ms) :</label>
-      <input type="number" v-model.number="timeout" />
+      <input type="number" v-model.number="timeout" min="1" max="10000" />
     </div>
 
     <div class="config-item">
       <label>Taille du snaplen :</label>
-      <input type="number" v-model.number="snaplen" />
+      <input type="number" v-model.number="snaplen" min="64" max="262144" />
     </div>
 
     <div class="actions">
-      <button @click="save">Sauvegarder</button>
+      <button @click="save" :disabled="!selectedInterface">Sauvegarder</button>
       <button @click="close">Fermer</button>
     </div>
   </div>
 </template>
 
 <script>
-import { info } from '@tauri-apps/plugin-log';
-import { invoke } from '@tauri-apps/api/core';
-import { displayCaptureError } from '../../../errors/capture';
-import { useCaptureConfigStore } from '../../../store/capture';
-import InterfaceSelector from './CustomSelector/interfaceSelector.vue';
+import { info } from "@tauri-apps/plugin-log";
+import { invoke } from "@tauri-apps/api/core";
+import { displayCaptureError } from "../../../errors/capture";
+import { useCaptureConfigStore } from "../../../store/capture";
+import { DEFAULT_CAPTURE_CONFIG } from "../../../types/config";
+import InterfaceSelector from "./CustomSelector/interfaceSelector.vue";
 
 export default {
   name: "ConfigPanel",
-  components: {
-    InterfaceSelector
-  },
-  emits: ['update:ConfigPanel-visible'],
+  components: { InterfaceSelector },
+  emits: ["update:ConfigPanel-visible"],
 
   data() {
     return {
       netInterfaces: [],
-      selectedNetInterface: '',
-
-      netDevice: '',
-      bufferSize: '',
-      chan_capacity: '',
-      timeout: '',
-      snaplen: '',
+      selectedInterface: null,
+      deviceName: "",
+      bufferSize: DEFAULT_CAPTURE_CONFIG.buffer_size,
+      chanCapacity: DEFAULT_CAPTURE_CONFIG.chan_capacity,
+      timeout: DEFAULT_CAPTURE_CONFIG.timeout,
+      snaplen: DEFAULT_CAPTURE_CONFIG.snaplen,
     };
   },
 
   computed: {
     configStore() {
       return useCaptureConfigStore();
-    }
+    },
   },
 
   methods: {
+    syncSelectedInterface() {
+      if (!this.deviceName || !this.netInterfaces.length) return;
+      this.selectedInterface = this.netInterfaces.find((iface) => iface.name === this.deviceName) || null;
+    },
+
     async getConfig() {
       try {
-        const config = await invoke('get_config_capture');
-        info("[ConfigPanel] invoke response =", config);
+        const config = await invoke("get_config_capture");
+        info(`[ConfigPanel] config=${JSON.stringify(config)}`);
 
-        // Cast si besoin
-        this.netDevice = config.device_name;
+        this.deviceName = config.device_name || "";
         this.bufferSize = config.buffer_size;
-        this.chan_capacity = config.chan_capacity;
+        this.chanCapacity = config.chan_capacity;
         this.timeout = config.timeout;
         this.snaplen = config.snaplen;
 
         this.configStore.updateConfig(config);
-        info("[ConfigPanel] configStore =", this.configStore);
+        this.syncSelectedInterface();
       } catch (err) {
-        console.error("[ConfigPanel] erreur get_config_capture :", err);
+        await displayCaptureError(err);
+      }
+    },
+
+    async loadInterfaces() {
+      try {
+        this.netInterfaces = await invoke("get_devices_list");
+        this.syncSelectedInterface();
+      } catch (err) {
+        await displayCaptureError(err);
       }
     },
 
     async save() {
-      info("Configuration sauvegardée : " + JSON.stringify({
-        netDevice: this.netDevice,
-        bufferSize: this.bufferSize,
-        chan_capacity: this.chan_capacity,
-        timeout: this.timeout,
-        snaplen: this.snaplen,
-      }));
-      try {
-        if (!this.netDevice) {
-          console.error("Aucune interface réseau sélectionnée");
-          return;
-        }
-        
-        const config = await invoke('config_capture', { 
-          device_name: this.netDevice.name, 
-          buffer_size: this.bufferSize, 
-          chan_capacity: this.chan_capacity, 
-          timeout: this.timeout, 
-          snaplen: this.snaplen 
+      if (!this.selectedInterface?.name) {
+        await displayCaptureError({
+          kind: "capture",
+          message: { kind: "invalidConfig", message: "interface réseau obligatoire" },
         });
-        
-        // Cast si besoin - config.device_name est une chaîne, nous devons trouver l'objet NetDevice correspondant
-        if (typeof config.device_name === 'string') {
-          this.netDevice = this.netInterfaces.find(iface => iface.name === config.device_name) || null;
-        } else {
-          this.netDevice = config.device_name;
-        }
+        return;
+      }
+
+      try {
+        const config = await invoke("config_capture", {
+          device_name: this.selectedInterface.name,
+          buffer_size: Number(this.bufferSize),
+          chan_capacity: Number(this.chanCapacity),
+          timeout: Number(this.timeout),
+          snaplen: Number(this.snaplen),
+        });
+
+        this.deviceName = config.device_name || "";
         this.bufferSize = config.buffer_size;
-        this.chan_capacity = config.chan_capacity;
+        this.chanCapacity = config.chan_capacity;
         this.timeout = config.timeout;
         this.snaplen = config.snaplen;
-
         this.configStore.updateConfig(config);
+        this.syncSelectedInterface();
+        this.close();
       } catch (err) {
-        console.error("[ConfigPanel] erreur get_config_capture :", err);
+        await displayCaptureError(err);
       }
-      this.close();
     },
 
     close() {
-      this.$emit('update:ConfigPanel-visible', false);
-    }
-  },
-
-  async mounted() {
-    info("[ConfigPanel] Monté avec visible =", this.visible);
-    this.getConfig();
-
-    invoke('get_devices_list').then((interfaces) => {
-      this.netInterfaces = interfaces;
-      if (interfaces.length > 0) {
-        this.selectedNetInterface = interfaces[interfaces.length - 1]; // Set the last item as default
-      }
-    }).catch(error => {
-      console.error("Failed to load interfaces:", error);
-    });
-  },
-  watch: {
-    visible(newVal) {
-      info("[ConfigPanel] Changement de visible :", newVal);
-      if (newVal) {
-        this.getConfig();
-      }
+      this.$emit("update:ConfigPanel-visible", false);
     },
-    netInterfaces(newInterfaces) {
-      // Convertir netDevice de string vers NetDevice si nécessaire
-      if (newInterfaces.length > 0 && typeof this.netDevice === 'string') {
-        const found = newInterfaces.find(iface => iface.name === this.netDevice);
-        if (found) {
-          this.netDevice = found;
-        } else {
-          this.netDevice = null;
-        }
-      }
-    }
-  }
+  },
+
+  mounted() {
+    this.loadInterfaces();
+    this.getConfig();
+  },
+
+  watch: {
+    selectedInterface(nextInterface) {
+      this.deviceName = nextInterface?.name || "";
+    },
+    netInterfaces() {
+      this.syncSelectedInterface();
+    },
+  },
 };
 </script>
 
@@ -290,6 +273,11 @@ select:focus {
 
 .actions button:hover {
   opacity: 0.9;
+}
+
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 </style>

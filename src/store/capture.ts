@@ -3,6 +3,7 @@ import { markRaw } from "vue";
 import type { Channel } from "@tauri-apps/api/core";
 import { invoke } from "@tauri-apps/api/core";
 import type { CaptureEvent, GraphData, GraphUpdate } from "../types/capture";
+import { DEFAULT_CAPTURE_CONFIG, type CaptureConfig } from "../types/config";
 
 // ⚠️ Channel hors réactivité pour éviter le proxy de Vue
 let __channel: Channel<CaptureEvent> | undefined;
@@ -177,21 +178,13 @@ export const useCaptureStore = defineStore("capture", {
 export const useCaptureConfigStore = defineStore("captureConfig", {
   state: () => ({
     interface: "",
-    buffer_size: 18000000,
-    chan_capacity: 1000,
-    timeout: 25,
-    snaplen: 65536,
+    buffer_size: DEFAULT_CAPTURE_CONFIG.buffer_size,
+    chan_capacity: DEFAULT_CAPTURE_CONFIG.chan_capacity,
+    timeout: DEFAULT_CAPTURE_CONFIG.timeout,
+    snaplen: DEFAULT_CAPTURE_CONFIG.snaplen,
   }),
   actions: {
-    updateConfig(
-      config: {
-        device_name: string;
-        buffer_size: number;
-        chan_capacity: number;
-        timeout: number;
-        snaplen: number;
-      },
-    ) {
+    updateConfig(config: CaptureConfig) {
       this.interface = config.device_name;
       this.buffer_size = config.buffer_size;
       this.chan_capacity = config.chan_capacity;

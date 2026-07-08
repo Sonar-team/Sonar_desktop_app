@@ -10,8 +10,8 @@
 </template>
 
 <script lang="ts">
-import { info } from '@tauri-apps/plugin-log';
-import { CaptureConfig, useCaptureConfigStore } from '../../../store/capture';
+import { useCaptureConfigStore } from "../../../store/capture";
+import type { CaptureConfig } from "../../../types/config";
 import { invoke } from '@tauri-apps/api/core';
 import { displayCaptureError } from '../../../errors/capture';
 
