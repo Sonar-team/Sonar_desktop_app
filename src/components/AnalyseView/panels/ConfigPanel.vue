@@ -9,22 +9,54 @@
     />
 
     <div class="config-item">
-      <label>Taille du buffer :</label>
+      <label>
+        Taille du buffer :
+        <span
+          class="help-tooltip"
+          tabindex="0"
+          aria-label="Taille du buffer kernel pcap, en octets. Plus il est grand, plus SONAR absorbe les pics de trafic sans perte côté système."
+          data-tooltip="Buffer kernel pcap, en octets. Plus il est grand, plus SONAR absorbe les pics de trafic sans perte côté système."
+        >?</span>
+      </label>
       <input type="number" v-model.number="bufferSize" min="65536" max="536870912" step="1024" />
     </div>
 
     <div class="config-item">
-      <label>Nombre de buffers:</label>
+      <label>
+        Nombre de buffers:
+        <span
+          class="help-tooltip"
+          tabindex="0"
+          aria-label="Capacité du canal interne entre capture et traitement. Trop petit, l'application peut perdre des paquets sous charge; trop grand, elle consomme plus de mémoire."
+          data-tooltip="Capacité du canal interne entre capture et traitement. Trop petit, l'application peut perdre des paquets sous charge; trop grand, elle consomme plus de mémoire."
+        >?</span>
+      </label>
       <input type="number" v-model.number="chanCapacity" min="1" max="1000000" />
     </div>
 
     <div class="config-item">
-      <label>Timeout (ms) :</label>
+      <label>
+        Timeout (ms) :
+        <span
+          class="help-tooltip"
+          tabindex="0"
+          aria-label="Délai pcap avant livraison des paquets. Petit, il réduit la latence; plus grand, il favorise le batching."
+          data-tooltip="Délai pcap avant livraison des paquets. Petit, il réduit la latence; plus grand, il favorise le batching."
+        >?</span>
+      </label>
       <input type="number" v-model.number="timeout" min="1" max="10000" />
     </div>
 
     <div class="config-item">
-      <label>Taille du snaplen :</label>
+      <label>
+        Taille du snaplen :
+        <span
+          class="help-tooltip"
+          tabindex="0"
+          aria-label="Nombre maximum d'octets capturés par paquet. Grand, il garde les paquets complets; petit, il réduit CPU et mémoire mais peut tronquer le décodage."
+          data-tooltip="Nombre maximum d'octets capturés par paquet. Grand, il garde les paquets complets; petit, il réduit CPU et mémoire mais peut tronquer le décodage."
+        >?</span>
+      </label>
       <input type="number" v-model.number="snaplen" min="64" max="262144" />
     </div>
 
@@ -187,10 +219,56 @@ export default {
 }
 
 .config-item label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-weight: bold;
   width: 100%;
   text-align: left;
+}
+
+.help-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #8a8a8a;
+  border-radius: 50%;
+  color: #ffffff;
+  background-color: #303744;
+  font-size: 12px;
+  line-height: 1;
+  cursor: help;
+  flex: 0 0 auto;
+}
+
+.help-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1001;
+  width: min(280px, 70vw);
+  padding: 8px 10px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background-color: #111827;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.15s ease;
+}
+
+.help-tooltip:hover::after,
+.help-tooltip:focus::after {
+  opacity: 1;
 }
 
 .config-item input,
