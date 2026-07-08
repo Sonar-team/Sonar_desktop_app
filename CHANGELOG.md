@@ -1,5 +1,38 @@
 # Changelog
 
+## **[4.2.0] - 2026-07-08**
+
+## ✨ Améliorations
+
+- Surbrillance de la parenté des tunnels dans le graphe : survoler une arête
+  illumine toute la famille du tunnel (ligne externe CAPWAP et flux internes,
+  dans les deux sens) et estompe le reste du graphe ; un clic sur l'arête
+  épingle la surbrillance, re-clic ou clic sur le fond la libère.
+- La colonne `encap_id` de la matrice ventile désormais les paquets par tunnel
+  (formes `id` ou `id1:n|id2:n|…`) : la somme des paquets attribués aux lignes
+  internes d'un tunnel est exactement égale au compteur de sa ligne externe,
+  tout en gardant une seule ligne par flux. L'import CSV comprend les trois
+  formes (aller-retour export → import sans perte).
+- Documentation du modèle père/fils des tunnels dans `TUNNELS.md` (vision,
+  invariants, choix techniques, format SFMS de la colonne `encap_id`).
+
+## 🛠 Corrections
+
+- L'identifiant de tunnel est un hash de la paire d'extrémités, indépendant du
+  sens : l'aller et le retour d'un même tunnel partagent le même `encap_id`.
+  Plus de tunnels orphelins dans la matrice (sur la capture de référence :
+  80 tunnels sur 80 équilibrés, contre 73 orphelins sur 84 auparavant).
+- Les paquets de tunnel sans contenu décapsulable (keepalives CAPWAP) ne sont
+  plus comptés dans la ligne externe du tunnel, préservant l'égalité
+  père/fils.
+- En développement, l'enregistrement d'une matrice dans
+  `src-tauri/test_files/` ne fait plus redémarrer `tauri dev`
+  (`.taurignore`).
+
+## 🔧 Maintenance
+
+- Mise à jour de la version de SONAR en **4.2.0**.
+
 ## **[4.1.1] - 2026-07-07**
 
 ## ✨ Améliorations
