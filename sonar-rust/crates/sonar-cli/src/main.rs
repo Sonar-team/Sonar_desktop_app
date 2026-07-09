@@ -1,7 +1,6 @@
 use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Parser, Subcommand};
-use sonar_core::{matrix::MatrixMergeRequest, pcap::PcapConvertRequest};
 
 #[derive(Debug, Parser)]
 #[command(name = "sonar-cli")]
@@ -41,27 +40,27 @@ fn main() -> ExitCode {
 
     let result = match cli.command {
         Command::Pcap { inputs, output } => {
-            PcapConvertRequest::new(inputs, output).map(|request| {
+            sonar_core::pcap::convert_pcap_files_to_csv(&inputs, &output, |path, report| {
                 eprintln!(
-                    "pcap conversion is not implemented yet: {} input(s) -> {}",
-                    request.inputs.len(),
-                    request.output.display()
+                    "{}: {} paquet(s) lus, {} intégré(s), {} non parsé(s)",
+                    path.display(),
+                    report.packets,
+                    report.parse_ok,
+                    report.parse_errors
                 );
             })
+            .map(|rows| (rows, output))
         }
         Command::Matrix { inputs, output } => {
-            MatrixMergeRequest::new(inputs, output).map(|request| {
-                eprintln!(
-                    "matrix merge is not implemented yet: {} input(s) -> {}",
-                    request.inputs.len(),
-                    request.output.display()
-                );
-            })
+            sonar_core::csv::merge_matrix_files_to_csv(&inputs, &output).map(|rows| (rows, output))
         }
     };
 
     match result {
-        Ok(()) => ExitCode::SUCCESS,
+        Ok((rows, output)) => {
+            eprintln!("{} flux exporté(s) vers {}", rows, output.display());
+            ExitCode::SUCCESS
+        }
         Err(error) => {
             eprintln!("error: {error}");
             ExitCode::FAILURE

@@ -14,6 +14,17 @@ rust-version = "1.96.0"
 version = "0.1.0"
 
 [workspace.dependencies]
+chrono = "0.4.45"
 clap = { version = "4.5.53", features = ["derive"] }
+csv = "1.4.0"
+log = "0.4.33"
+packet_parser = "3.0.1"
+pcap = "2.4.0"
+serde = { version = "1", features = ["derive"] }
 sonar-core = { path = "crates/sonar-core" }
 thiserror = "2.0.18"
+
+# Même politique que src-tauri : pas de panic évitable en code de prod.
+[workspace.lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"

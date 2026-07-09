@@ -12,6 +12,9 @@ version.workspace = true
 name = "sonar-cli"
 path = "src/main.rs"
 
+[lints]
+workspace = true
+
 [dependencies]
 clap.workspace = true
-sonar-core.workspace = true
+sonar-core = { workspace = true, features = ["pcap"] }
