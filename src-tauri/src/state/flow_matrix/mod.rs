@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::fs::File;
 use std::net::IpAddr;
 use std::time::SystemTime;
@@ -104,6 +104,21 @@ pub fn parse_encap_list(
         .collect()
 }
 
+/// Séparateur des noms de fichiers dans la colonne `origin` d'une ligne de
+/// matrice. Un flux présent dans plusieurs fichiers importés porte tous leurs
+/// noms, joints par ce caractère (ex. `site-a.csv|site-b.csv`).
+pub const ORIGIN_SEP: char = '|';
+
+/// Découpe une valeur de colonne `origin` en noms de fichiers individuels
+/// (vides ignorés).
+pub fn parse_origin_list(origin: &str) -> impl Iterator<Item = String> + '_ {
+    origin
+        .split(ORIGIN_SEP)
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .map(str::to_string)
+}
+
 pub struct FlowMatrix {
     // Une entrée de statistiques par couple (flux, tunnel encapsulant), pour
     // que la somme des compteurs internes d'un tunnel soit égale au compteur
@@ -112,6 +127,11 @@ pub struct FlowMatrix {
     // `encap_id` (voir `format_encap_list`).
     pub matrix: HashMap<PacketFlowOwned, Vec<(Option<u64>, FlowStats)>>,
     pub label: HashMap<(String, String), String>,
+    // Fichier(s) d'origine par flux, alimenté à l'import de matrices CSV. Un
+    // flux fusionné depuis plusieurs fichiers accumule tous leurs noms. Vide
+    // pour les flux issus d'une capture live ou d'un import PCAP. Sérialisé
+    // dans la colonne `origin` par `to_flat_vec`.
+    pub origins: HashMap<PacketFlowOwned, BTreeSet<String>>,
 }
 
 impl FlowMatrix {
@@ -119,6 +139,7 @@ impl FlowMatrix {
         Self {
             matrix: HashMap::new(),
             label: HashMap::new(),
+            origins: HashMap::new(),
         }
     }
 
@@ -177,9 +198,29 @@ impl FlowMatrix {
         }
     }
 
+    /// Enregistre le(s) fichier(s) d'origine d'un flux (import de matrice CSV).
+    /// Les noms s'ajoutent à ceux déjà connus pour ce flux : un même flux vu
+    /// dans deux fichiers finit avec les deux noms. Les noms vides sont ignorés
+    /// et n'entraînent aucune allocation.
+    pub fn add_flow_origins<I>(&mut self, flow: &PacketFlowOwned, origins: I)
+    where
+        I: IntoIterator<Item = String>,
+    {
+        let mut origins = origins
+            .into_iter()
+            .filter(|name| !name.trim().is_empty())
+            .peekable();
+        if origins.peek().is_none() {
+            return;
+        }
+        let set = self.origins.entry(flow.clone()).or_default();
+        set.extend(origins);
+    }
+
     pub fn clear(&mut self) {
         self.matrix.clear();
         self.label.clear();
+        self.origins.clear();
     }
 
     // pub fn print(&self) {
@@ -240,9 +281,22 @@ impl FlowMatrix {
                         .unwrap_or(UNIX_EPOCH),
                 };
                 let encap_id = format_encap_list(entries);
-                (flow, encap_id, stats)
+                // Provenance : noms de fichiers d'origine du flux, triés
+                // (BTreeSet) et joints, ou vide hors import de matrice CSV.
+                let origin = self
+                    .origins
+                    .get(flow)
+                    .map(|names| {
+                        names
+                            .iter()
+                            .cloned()
+                            .collect::<Vec<_>>()
+                            .join(&ORIGIN_SEP.to_string())
+                    })
+                    .unwrap_or_default();
+                (flow, encap_id, origin, stats)
             })
-            .map(|(flow, encap_id, stats)| {
+            .map(|(flow, encap_id, origin, stats)| {
                 let ip_source = flow
                     .internet
                     .as_ref()
@@ -303,6 +357,7 @@ impl FlowMatrix {
                     total_bytes: stats.total_bytes,
                     last_seen,
                     encap_id,
+                    origin,
                 }
             })
             .collect()
@@ -494,6 +549,12 @@ pub struct FlowMatrixRow {
     // rester compatible avec les matrices exportées avant cette colonne.
     #[serde(default)]
     pub encap_id: String,
+    // Fichier(s) d'origine de la ligne, joints par `|` quand un même flux
+    // provient de plusieurs fichiers fusionnés (ex. `site-a.csv|site-b.csv`).
+    // Vide pour une capture live ou un import PCAP. `serde(default)` pour
+    // rester compatible avec les matrices exportées avant cette colonne.
+    #[serde(default)]
+    pub origin: String,
 }
 
 impl FlowMatrixRow {

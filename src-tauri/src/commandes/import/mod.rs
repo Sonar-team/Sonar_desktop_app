@@ -33,7 +33,7 @@ use crate::{
     setup::labels::{clean_csv_field, parse_label_fields},
     state::{
         capture::{CaptureState, capture_handle::messages::capture::PacketMinimal},
-        flow_matrix::{FlowMatrix, FlowMatrixRow},
+        flow_matrix::{FlowMatrix, FlowMatrixRow, parse_origin_list},
         graph::GraphData,
         labels_list::LabelStore,
     },
@@ -1128,6 +1128,15 @@ fn read_matrix_rows(csv_path: &str) -> Result<Vec<FlowMatrixRow>, CaptureStateEr
     Ok(rows)
 }
 
+/// Nom de fichier (sans le chemin) utilisé comme origine par défaut d'une
+/// ligne importée. Repli sur le chemin complet si le nom ne peut être extrait.
+fn origin_name_from_path(path: &str) -> String {
+    std::path::Path::new(path)
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_else(|| path.to_string())
+}
+
 fn read_matrix_rows_from_files(
     incoming_file_paths: &[String],
 ) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
@@ -1137,7 +1146,16 @@ fn read_matrix_rows_from_files(
 
     let mut rows = Vec::new();
     for path in incoming_file_paths {
-        rows.extend(read_matrix_rows(path)?);
+        let origin = origin_name_from_path(path);
+        for mut row in read_matrix_rows(path)? {
+            // Une ligne sans provenance héritée reçoit le nom du fichier
+            // importé ; une ligne qui portait déjà une origine (matrice déjà
+            // fusionnée puis réexportée) la conserve telle quelle.
+            if row.origin.trim().is_empty() {
+                row.origin = origin.clone();
+            }
+            rows.push(row);
+        }
     }
     Ok(rows)
 }
@@ -1176,6 +1194,11 @@ fn rebuild_matrix_and_graph_from_rows(
         for (encap_id, stats) in tunnel_rows {
             matrice.merge_row(flow.clone(), encap_id, stats);
         }
+
+        // Provenance : les fichiers d'origine de cette ligne s'ajoutent à ceux
+        // déjà enregistrés pour ce flux, si bien qu'un flux présent dans
+        // plusieurs fichiers en accumule tous les noms.
+        matrice.add_flow_origins(&flow, parse_origin_list(&row.origin));
 
         let source_label = matrice.get_label(&flow.data_link.source_mac, &row.ip_source);
         let destination_label =
@@ -1689,6 +1712,100 @@ mod tests {
                 .values()
                 .any(|edge| edge.count >= rows[0].count + 7),
             "le graphe doit recevoir le trafic fusionné"
+        );
+    }
+
+    /// Deux fichiers portant le même flux : la colonne `origin` de la ligne
+    /// fusionnée doit contenir les deux noms de fichiers (triés, joints par `|`).
+    #[test]
+    fn import_matrix_records_origin_files_per_row() {
+        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
+        let dir = TempDir::new("sonar_test_matrix_origin");
+        let file_a = dir.path().join("site-a.csv");
+        let file_b = dir.path().join("site-b.csv");
+        fs::copy(&source, &file_a).unwrap();
+        fs::copy(&source, &file_b).unwrap();
+
+        let rows = read_matrix_rows_from_files(&[
+            file_a.to_str().unwrap().to_string(),
+            file_b.to_str().unwrap().to_string(),
+        ])
+        .unwrap();
+        let (matrix, _graph) = build_matrix_and_graph(&rows);
+
+        // Deux copies du même fichier : chaque flux est vu dans les deux, donc
+        // fusionné (pas dupliqué) et sa colonne `origin` porte les deux noms.
+        assert_eq!(matrix.row_count(), 30, "flux fusionnés, pas dupliqués");
+        let exported = matrix.to_flat_vec();
+        assert!(
+            exported.iter().all(|r| r.origin == "site-a.csv|site-b.csv"),
+            "chaque ligne doit porter ses deux fichiers d'origine: {:?}",
+            exported.iter().map(|r| r.origin.clone()).collect::<Vec<_>>()
+        );
+    }
+
+    /// Une matrice déjà fusionnée (colonne `origin` renseignée) réimportée sous
+    /// un nouveau nom conserve sa provenance d'origine plutôt que de l'écraser.
+    #[test]
+    fn reimport_preserves_existing_origin_column() {
+        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
+        let dir = TempDir::new("sonar_test_matrix_origin_preserve");
+
+        // Étape 1 : import sous "brut.csv" (origin = brut.csv) puis export.
+        let brut = dir.path().join("brut.csv");
+        fs::copy(&source, &brut).unwrap();
+        let rows = read_matrix_rows_from_files(&[brut.to_str().unwrap().to_string()]).unwrap();
+        let (matrix, _graph) = build_matrix_and_graph(&rows);
+        let merged = dir.path().join("fusion.csv");
+        matrix
+            .export_to_csv(merged.to_str().unwrap().to_string())
+            .unwrap();
+
+        // Étape 2 : réimport de fusion.csv -> l'origine "brut.csv" est préservée.
+        let rows = read_matrix_rows_from_files(&[merged.to_str().unwrap().to_string()]).unwrap();
+        let (matrix, _graph) = build_matrix_and_graph(&rows);
+        let exported = matrix.to_flat_vec();
+        assert!(
+            exported.iter().all(|r| r.origin == "brut.csv"),
+            "l'origine héritée doit être conservée, pas remplacée par fusion.csv: {:?}",
+            exported.iter().map(|r| r.origin.clone()).collect::<Vec<_>>()
+        );
+    }
+
+    /// Deux fichiers dont la colonne `origin` est **déjà remplie** (matrices
+    /// issues de fusions antérieures) : les provenances des deux colonnes sont
+    /// fusionnées, et le nom des fichiers physiques importés n'est PAS ajouté.
+    #[test]
+    fn reimport_merges_existing_origin_columns() {
+        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
+        let dir = TempDir::new("sonar_test_matrix_origin_merge");
+
+        // Prépare deux matrices déjà « étiquetées » par des origines distinctes,
+        // en réexportant le même fichier source importé sous deux noms.
+        let export_with_origin = |raw_name: &str, out_name: &str| {
+            let raw = dir.path().join(raw_name);
+            fs::copy(&source, &raw).unwrap();
+            let rows = read_matrix_rows_from_files(&[raw.to_str().unwrap().to_string()]).unwrap();
+            let (matrix, _graph) = build_matrix_and_graph(&rows);
+            let out = dir.path().join(out_name);
+            matrix
+                .export_to_csv(out.to_str().unwrap().to_string())
+                .unwrap();
+            out.to_str().unwrap().to_string()
+        };
+        let fusion_a = export_with_origin("a-raw.csv", "fusion-a.csv");
+        let fusion_b = export_with_origin("b-raw.csv", "fusion-b.csv");
+
+        // Réimport des deux matrices déjà renseignées (origin = "a-raw.csv" et
+        // "b-raw.csv") : chaque flux partagé doit porter les DEUX provenances,
+        // sans trace de "fusion-a.csv"/"fusion-b.csv".
+        let rows = read_matrix_rows_from_files(&[fusion_a, fusion_b]).unwrap();
+        let (matrix, _graph) = build_matrix_and_graph(&rows);
+        let exported = matrix.to_flat_vec();
+        assert!(
+            exported.iter().all(|r| r.origin == "a-raw.csv|b-raw.csv"),
+            "les colonnes origin doivent être fusionnées, sans les fichiers de fusion: {:?}",
+            exported.iter().map(|r| r.origin.clone()).collect::<Vec<_>>()
         );
     }
 

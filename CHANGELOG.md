@@ -1,5 +1,23 @@
 # Changelog
 
+## **[4.3.0] - 2026-07-09**
+
+## ✨ Améliorations
+
+- Nouvelle colonne `origin` dans la matrice de flux : à l'import de plusieurs
+  matrices CSV, chaque ligne indique le ou les fichiers dont elle provient.
+  Quand un même flux est présent dans plusieurs fichiers, ses noms sont
+  fusionnés (triés, joints par `|`, ex. `site-a.csv|site-b.csv`).
+- Une matrice déjà fusionnée puis réimportée conserve la provenance de sa
+  colonne `origin` : le nom du fichier de fusion n'est pas ajouté, seules les
+  origines des colonnes sont réunies. Les flux issus d'une capture live ou
+  d'un import PCAP ont une origine vide. La colonne est optionnelle à la
+  lecture (compatibilité avec les matrices exportées avant cette version).
+
+## 🔧 Maintenance
+
+- Mise à jour de la version de SONAR en **4.3.0**.
+
 ## **[4.2.0] - 2026-07-08**
 
 ## ✨ Améliorations
