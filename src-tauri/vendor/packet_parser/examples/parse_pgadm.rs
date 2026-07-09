@@ -18,23 +18,23 @@ fn main() {
         Ok(flow) => {
             println!("✅ Packet parsé");
 
-            if let Some(transport) = &flow.transport {
-                if let Some(payload) = transport.payload {
-                    match PostgreSqlPacket::try_from(payload) {
-                        Ok(pg) => {
-                            println!("{:#?}", pg);
+            if let Some(transport) = &flow.transport
+                && let Some(payload) = transport.payload
+            {
+                match PostgreSqlPacket::try_from(payload) {
+                    Ok(pg) => {
+                        println!("{:#?}", pg);
 
-                            for (i, msg) in pg.messages.iter().enumerate() {
-                                println!("--------------------------------");
-                                println!("Message {}", i);
-                                println!("Type   : {:?}", msg.message_type);
-                                println!("Length : {}", msg.length);
-                                println!("Body   : {:#?}", msg.body);
-                            }
+                        for (i, msg) in pg.messages.iter().enumerate() {
+                            println!("--------------------------------");
+                            println!("Message {}", i);
+                            println!("Type   : {:?}", msg.message_type);
+                            println!("Length : {}", msg.length);
+                            println!("Body   : {:#?}", msg.body);
                         }
-                        Err(e) => {
-                            println!("Erreur PostgreSQL : {:?}", e);
-                        }
+                    }
+                    Err(e) => {
+                        println!("Erreur PostgreSQL : {:?}", e);
                     }
                 }
             }

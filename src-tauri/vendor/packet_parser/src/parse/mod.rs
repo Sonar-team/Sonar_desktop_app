@@ -721,7 +721,7 @@ mod tests {
             pg.messages[7].message_type,
             PostgreSqlMessageType::ReadyForQuery
         );
-        assert_eq!(pg.messages[7].payload, &[b'I']);
+        assert_eq!(pg.messages[7].payload, b"I");
     }
 
     #[test]

@@ -1,0 +1,39 @@
+mac,ip,label
+,192.168.1.100,PF_Services
+,192.168.1.101,ansible
+,192.168.1.130,Youtrack
+,192.168.1.131,Mattermost
+,192.168.1.160,Draw
+,192.168.1.200,PF_Tests
+,192.168.1.75,Runners
+,192.168.1.90,Wazuh
+00:00:00:00:00:00,127.0.0.1,pc sonar
+00:00:00:00:00:00,::1,pc sonar
+00:50:56:c0:00:01,192.168.174.1,pc sonar
+00:50:56:c0:00:01,fe80::250:56ff:fec0:1,pc sonar
+00:50:56:c0:00:08,172.16.27.1,pc sonar
+00:50:56:c0:00:08,fe80::250:56ff:fec0:8,pc sonar
+4e:1f:97:a7:b5:ca,172.23.0.1,pc sonar
+4e:1f:97:a7:b5:ca,fe80::4c1f:97ff:fea7:b5ca,pc sonar
+52:51:a2:f2:a8:ce,172.21.0.1,pc sonar
+52:54:00:c9:b9:1f,192.168.122.1,pc sonar
+64:6e:e0:ea:fa:83,192.168.1.15,pc sonar
+64:6e:e0:ea:fa:83,fe80::13d7:5125:5bff:ec96,pc sonar
+76:05:19:89:35:ca,172.18.0.1,pc sonar
+7e:12:83:55:4a:9a,fe80::7c12:83ff:fe55:4a9a,pc sonar
+7e:20:e6:83:f2:4c,fe80::7c20:e6ff:fe83:f24c,pc sonar
+8e:fe:4c:29:e7:d7,172.20.0.1,pc sonar
+bc:24:11:11:33:2e,192.168.1.128,Gitlab
+bc:24:11:28:25:63,192.168.1.153,Doc-Grimoire
+bc:24:11:38:16:85,192.168.1.80,PiHole
+bc:24:11:4b:19:47,192.168.1.152,Doc-Sonar
+bc:24:11:65:8c:26,192.168.1.60,Bind9
+bc:24:11:74:5c:57,192.168.1.154,Dashboard
+bc:24:11:7f:f0:17,192.168.1.151,Doc-CyCLOPS
+bc:24:11:95:92:a1,192.168.1.105,PostgreSQL
+bc:24:11:c9:ac:c1,192.168.1.70,Traefik
+bc:24:11:ff:3e:15,192.168.1.150,Forge
+be:72:03:9a:d3:cc,fe80::bc72:3ff:fe9a:d3cc,pc sonar
+be:83:d9:90:0a:6a,172.17.0.1,pc sonar
+d2:a0:28:4a:54:ff,172.22.0.1,pc sonar
+da:e0:3e:6c:56:a2,172.19.0.1,pc sonar
