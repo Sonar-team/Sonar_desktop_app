@@ -51,6 +51,16 @@ mod utils;
 // Exposé pour le benchmark `examples/pool_bench.rs`.
 pub use state::capture::capture_handle::threads::packet_buffer;
 
+/// Vrai si l'application tourne en mode headless (`--headless`).
+/// Fixé une fois au démarrage, exposé au frontend via `is_headless` pour que
+/// l'UI choisisse entre raccourcis globaux (headless) et locaux (fenêtré).
+struct HeadlessMode(bool);
+
+#[tauri::command]
+fn is_headless(state: tauri::State<'_, HeadlessMode>) -> bool {
+    state.0
+}
+
 /// Main entry point for the application
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
@@ -61,31 +71,9 @@ pub fn run() -> Result<(), tauri::Error> {
         now.format("%H-%M-%S")
     );
 
-    let ctrl_c_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyC);
-
-    let exit_code = 0;
-
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_cli::init())
-        .plugin(
-            tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(move |app, shortcut, event| {
-                    println!("{:?}", shortcut);
-                    if shortcut == &ctrl_c_shortcut {
-                        match event.state() {
-                            ShortcutState::Pressed => {
-                                println!("Ctrl-C Pressed!");
-                                app.exit(exit_code);
-                            }
-                            ShortcutState::Released => {
-                                println!("Ctrl-C Released!");
-                            }
-                        }
-                    }
-                })
-                .build(),
-        )
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_process::init())
@@ -167,7 +155,22 @@ pub fn run() -> Result<(), tauri::Error> {
 
                 println!("headless_enabled = {}", headless_enabled);
                 println!("args: {:?}", cli_matches);
-                app.global_shortcut().register(ctrl_c_shortcut)?;
+                app.manage(HeadlessMode(headless_enabled));
+
+                // En headless, aucune fenêtre n'est créée : un Ctrl+C global
+                // reste le seul moyen d'arrêter proprement la capture. En mode
+                // fenêtré, on n'enregistre rien pour ne pas voler le raccourci
+                // au reste du système.
+                if headless_enabled {
+                    let ctrl_c = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyC);
+                    app.global_shortcut()
+                        .on_shortcut(ctrl_c, |app, _shortcut, event| {
+                            if matches!(event.state(), ShortcutState::Pressed) {
+                                info!("Ctrl+C global reçu: arrêt de SONAR headless");
+                                app.exit(0);
+                            }
+                        })?;
+                }
 
                 // handle the capture state here
                 if !headless_enabled {
@@ -233,7 +236,8 @@ pub fn run() -> Result<(), tauri::Error> {
             import_matrix_file,
             import_matrix_files,
             clear_label_store,
-            is_matrix_empty
+            is_matrix_empty,
+            is_headless
         ])
         .run(tauri::generate_context!())
 }

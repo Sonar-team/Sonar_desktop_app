@@ -74,59 +74,70 @@ export default {
     return {
       showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
       shortcuts: [] as string[],
+      localHandler: null as ((e: KeyboardEvent) => void) | null,
       activePanel: null as Panel | null,
     };
   },
-  mounted() {
-    // Sauvegardes
-    this.bindShortcut('CommandOrControl+S', () => this.SaveAsCsv());
-    this.bindShortcut('CommandOrControl+Shift+S', () => this.SaveAsXlsx());
+  async mounted() {
+    // En mode fenêtré, des raccourcis globaux voleraient Ctrl+S, Ctrl+F, etc.
+    // à toutes les applications du système : on n'utilise le plugin
+    // global-shortcut qu'en headless, et un listener clavier local sinon.
+    const headless = await invoke<boolean>('is_headless');
 
-    // Reset
-    this.bindShortcut('CommandOrControl+Shift+R', () => this.reset());
+    if (headless) {
+      const bindings: [string, () => void][] = [
+        ['CommandOrControl+S', () => this.SaveAsCsv()],
+        ['CommandOrControl+Shift+S', () => this.SaveAsXlsx()],
+        ['CommandOrControl+Shift+R', () => this.reset()],
+        ['CommandOrControl+P', () => this.start()],
+        ['CommandOrControl+Shift+P', () => this.stop()],
+        ['CommandOrControl+O', () => this.displayPcapOpener()],
+        ['CommandOrControl+,', () => this.handleConfigClick()],
+        ['CommandOrControl+F', () => this.handleFilterClick()],
+        ['CommandOrControl+L', () => this.export_logs()],
+        ['CommandOrControl+Q', () => this.quit()],
+      ];
+      for (const [shortcut, handler] of bindings) {
+        this.shortcuts.push(shortcut);
+        await register(shortcut, (event) => {
+          if (event.state === 'Released') handler();
+        });
+      }
+    } else {
+      this.localHandler = (e: KeyboardEvent) => {
+        const ctrl = e.ctrlKey || e.metaKey;
+        if (!ctrl) return;
 
-    // Start / Stop
-    // Choix 1 (classique "Play/Stop")
-    this.bindShortcut('CommandOrControl+P', () => this.start());
-    this.bindShortcut('CommandOrControl+Shift+P', () => this.stop());
-
-    // Ouvrir (pcap opener)
-    this.bindShortcut('CommandOrControl+O', () => this.displayPcapOpener());
-
-    // Config
-    this.bindShortcut('CommandOrControl+,', () => this.handleConfigClick());
-
-    // Filtre
-    this.bindShortcut('CommandOrControl+F', () => this.handleFilterClick());
-
-    // Logs
-    this.bindShortcut('CommandOrControl+L', () => this.export_logs());
-
-    // Quit
-    this.bindShortcut('CommandOrControl+Q', () => this.quit());
+        const key = e.key.toLowerCase();
+        if (key === 's' && !e.shiftKey) { e.preventDefault(); this.SaveAsCsv(); }
+        else if (key === 's' && e.shiftKey) { e.preventDefault(); this.SaveAsXlsx(); }
+        else if (key === 'r' && e.shiftKey) { e.preventDefault(); this.reset(); }
+        else if (key === 'p' && !e.shiftKey) { e.preventDefault(); this.start(); }
+        else if (key === 'p' && e.shiftKey) { e.preventDefault(); this.stop(); }
+        else if (key === 'o') { e.preventDefault(); this.displayPcapOpener(); }
+        else if (key === ',') { e.preventDefault(); this.handleConfigClick(); }
+        else if (key === 'f') { e.preventDefault(); this.handleFilterClick(); }
+        else if (key === 'l') { e.preventDefault(); this.export_logs(); }
+        else if (key === 'q') { e.preventDefault(); this.quit(); }
+      };
+      window.addEventListener('keydown', this.localHandler);
+    }
 
     useCaptureStore().refreshHasData(); // Vérifie s'il y a déjà des données au montage pour ajuster l'état de hasData
   },
 
   async beforeUnmount() {
-  // recommandé en dev/hot reload
-    await this.unbindAllShortcuts();
+    // recommandé en dev/hot reload
+    if (this.shortcuts.length > 0) {
+      await unregister(this.shortcuts);
+      this.shortcuts = [];
+    }
+    if (this.localHandler) {
+      window.removeEventListener('keydown', this.localHandler);
+      this.localHandler = null;
+    }
   },
   methods: {
-    bindShortcut(shortcut: string, handler: () => void) {
-      this.shortcuts.push(shortcut);
-      register(shortcut, (event) => {
-        if (event.state === 'Released') handler();
-      });
-    },
-
-    async unbindAllShortcuts() {
-      // unregister accepte string | string[]
-      if (this.shortcuts.length > 0) {
-        await unregister(this.shortcuts);
-      }
-      this.shortcuts = [];
-    },
     async export_logs() {
       info("export logs")
 
@@ -154,7 +165,7 @@ export default {
         if (response) {
           // Attendez que l'invocation d'API pour sauvegarder soit terminée
           const saveResponse = await invoke('export_logs', { destination: response });
-          info("Sauvegarde terminée:", saveResponse);
+          info(`Sauvegarde terminée: ${JSON.stringify(saveResponse)}`);
           return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
         } else {
           info("Aucun chemin de fichier sélectionné");
@@ -188,12 +199,12 @@ export default {
 
         if (response) {
           const saveResponse = await invoke('export_csv', { path: response });
-          info("response: ", saveResponse);
+          info(`response: ${JSON.stringify(saveResponse)}`);
         } else {
           info("Aucun chemin sélectionné");
         }
       } catch (err) {
-        error("Erreur sauvegarde csv: ", err);
+        error(`Erreur sauvegarde csv: ${JSON.stringify(err)}`);
       } finally {
         useCaptureStore().isImporting = false;
       }
@@ -259,15 +270,16 @@ export default {
         if (response) {
           // Attendez que l'invocation d'API pour sauvegarder soit terminée
           const saveResponse = await invoke('save_packets_to_excel', { file_path: response });
-          info("Sauvegarde terminée:", saveResponse);
+          info(`Sauvegarde terminée: ${JSON.stringify(saveResponse)}`);
           return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
         } else {
           info("Aucun chemin de fichier sélectionné");
           throw new Error("Sauvegarde annulée ou chemin non sélectionné");
         }
-      } catch (error) {
-        error("Erreur lors de la sauvegarde en xlsx:", error);
-        throw error; // Relancer l'erreur pour la gestion dans quit()
+      } catch (err) {
+        // `catch (error)` masquait la fonction de log `error` → TypeError.
+        error(`Erreur lors de la sauvegarde en xlsx: ${JSON.stringify(err)}`);
+        throw err; // Relancer l'erreur pour la gestion dans quit()
       } finally {
         this.activePanel = null;
         useCaptureStore().isImporting = false;
