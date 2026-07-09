@@ -40,7 +40,7 @@ fn main() -> ExitCode {
 
     let result = match cli.command {
         Command::Pcap { inputs, output } => {
-            sonar_core::pcap::convert_pcap_files_to_csv(&inputs, &output, |path, report| {
+            sonar_flows_core::pcap::convert_pcap_files_to_csv(&inputs, &output, |path, report| {
                 eprintln!(
                     "{}: {} paquet(s) lus, {} intégré(s), {} non parsé(s)",
                     path.display(),
@@ -52,7 +52,7 @@ fn main() -> ExitCode {
             .map(|rows| (rows, output))
         }
         Command::Matrix { inputs, output } => {
-            sonar_core::csv::merge_matrix_files_to_csv(&inputs, &output).map(|rows| (rows, output))
+            sonar_flows_core::csv::merge_matrix_files_to_csv(&inputs, &output).map(|rows| (rows, output))
         }
     };
 

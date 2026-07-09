@@ -1,5 +1,5 @@
 [package]
-name = "sonar-core"
+name = "sonar-flows-core"
 description = "Reusable Sonar analysis core without Tauri dependencies"
 authors.workspace = true
 edition.workspace = true

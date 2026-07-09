@@ -1,7 +1,7 @@
 [workspace]
 members = [
-  "crates/sonar-core",
-  "crates/sonar-cli",
+  "crates/sonar-flows-core",
+  "crates/sonar-flows-cli",
 ]
 resolver = "3"
 
@@ -21,7 +21,7 @@ log = "0.4.33"
 packet_parser = "3.0.1"
 pcap = "2.4.0"
 serde = { version = "1", features = ["derive"] }
-sonar-core = { path = "crates/sonar-core" }
+sonar-flows-core = { path = "crates/sonar-flows-core", version = "0.1.0" }
 thiserror = "2.0.18"
 
 # Même politique que src-tauri : pas de panic évitable en code de prod.

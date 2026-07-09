@@ -1,5 +1,5 @@
 [package]
-name = "sonar-cli"
+name = "sonar-flows-cli"
 description = "Command-line interface for Sonar batch analysis"
 authors.workspace = true
 edition.workspace = true
@@ -17,4 +17,4 @@ workspace = true
 
 [dependencies]
 clap.workspace = true
-sonar-core = { workspace = true, features = ["pcap"] }
+sonar-flows-core = { workspace = true, features = ["pcap"] }
