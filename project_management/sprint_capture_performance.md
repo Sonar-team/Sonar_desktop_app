@@ -1,5 +1,8 @@
 # Sprint: performance capture sous forte charge réseau
 
+> Suivi GitHub: [#132](https://github.com/Sonar-team/Sonar_desktop_app/issues/132)
+> — branche `sprint-capture-performance`
+
 ## Objectif
 Réduire la pression CPU et IPC pendant la capture live, afin de garder une
 UI réactive même quand le débit réseau est élevé.

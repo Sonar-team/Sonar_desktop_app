@@ -1,5 +1,7 @@
 # Sprint: Sonar Core and CLI Extraction
 
+> Suivi GitHub: [#133](https://github.com/Sonar-team/Sonar_desktop_app/issues/133)
+
 ## Objectif
 
 Preparer une architecture Rust separee pour extraire le moteur Sonar dans une
