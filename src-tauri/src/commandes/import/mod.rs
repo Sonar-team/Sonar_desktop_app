@@ -1138,27 +1138,42 @@ fn origin_name_from_path(path: &str) -> String {
         .unwrap_or_else(|| path.to_string())
 }
 
-fn read_matrix_rows_from_files(
+/// Lit chaque fichier de matrice et retourne ses lignes groupées par fichier,
+/// pour la comptabilité par fichier (événements `Finished`).
+fn read_matrix_rows_per_file(
     incoming_file_paths: &[String],
-) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
+) -> Result<Vec<(String, Vec<FlowMatrixRow>)>, CaptureStateError> {
     if incoming_file_paths.is_empty() {
         return Err(std::io::Error::other("Aucun fichier de matrice sélectionné").into());
     }
 
-    let mut rows = Vec::new();
+    let mut files = Vec::new();
     for path in incoming_file_paths {
         let origin = origin_name_from_path(path);
-        for mut row in read_matrix_rows(path)? {
+        let mut rows = read_matrix_rows(path)?;
+        for row in &mut rows {
             // Une ligne sans provenance héritée reçoit le nom du fichier
             // importé ; une ligne qui portait déjà une origine (matrice déjà
             // fusionnée puis réexportée) la conserve telle quelle.
             if row.origin.trim().is_empty() {
                 row.origin = origin.clone();
             }
-            rows.push(row);
         }
+        files.push((path.clone(), rows));
     }
-    Ok(rows)
+    Ok(files)
+}
+
+// La production passe par `read_matrix_rows_per_file` (comptabilité par
+// fichier) ; cette version aplatie ne sert plus qu'aux tests.
+#[cfg(test)]
+fn read_matrix_rows_from_files(
+    incoming_file_paths: &[String],
+) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
+    Ok(read_matrix_rows_per_file(incoming_file_paths)?
+        .into_iter()
+        .flat_map(|(_, rows)| rows)
+        .collect())
 }
 
 fn rebuild_matrix_and_graph_from_rows(
@@ -1254,7 +1269,12 @@ pub fn import_matrix_files(
     );
 
     // Un fichier invalide ne doit pas effacer la matrice courante.
-    let rows = read_matrix_rows_from_files(&incoming_file_paths)?;
+    let files = read_matrix_rows_per_file(&incoming_file_paths)?;
+    let line_counts: Vec<(String, usize)> = files
+        .iter()
+        .map(|(path, rows)| (path.clone(), rows.len()))
+        .collect();
+    let rows: Vec<FlowMatrixRow> = files.into_iter().flat_map(|(_, rows)| rows).collect();
 
     // Même ordre de verrouillage que convert_from_pcap_list et net_capture
     // (matrice -> graph -> label_store) pour éviter un interblocage ABBA.
@@ -1282,6 +1302,30 @@ pub fn import_matrix_files(
         graph_data: &snapshot,
     }) {
         error!("Erreur lors de l'envoi de GraphSnapshot: {:?}", e);
+    }
+
+    // Mêmes événements que l'import PCAP, pour que la barre de statut mette à
+    // jour ses compteurs : un `Finished` par fichier (lignes lues, total de
+    // flux fusionnés), puis un `Stats` final qui fixe les totaux affichés
+    // (📥 = lignes lues au total, 📊 = flux de la matrice fusionnée).
+    let matrix_total_count = matrice_guard.row_count();
+    for (path, line_count) in &line_counts {
+        if let Err(e) = on_event.send(CaptureEvent::Finished {
+            file_name: path,
+            packet_total_count: *line_count,
+            matrix_total_count,
+        }) {
+            error!("Erreur lors de l'envoi de Finished: {:?}", e);
+        }
+    }
+    if let Err(e) = on_event.send(CaptureEvent::Stats {
+        received: rows.len() as u32,
+        dropped: 0,
+        if_dropped: 0,
+        app_dropped: 0,
+        processed: matrix_total_count as u32,
+    }) {
+        error!("Erreur lors de l'envoi de Stats: {:?}", e);
     }
 
     Ok(())
