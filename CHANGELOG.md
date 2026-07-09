@@ -1,5 +1,23 @@
 # Changelog
 
+## **[4.3.1] - 2026-07-09**
+
+## 🛠 Corrections
+
+- Élimination de tous les `unwrap()`/`expect()` du code de production : un
+  mutex empoisonné, un fichier de log sans nom ou un canal d'événement
+  indisponible remontent désormais une erreur structurée au frontend au lieu
+  de faire paniquer le backend.
+
+## 🔧 Maintenance
+
+- Ajout des lints clippy `unwrap_used`/`expect_used` (bloquants en CI) pour
+  empêcher la réintroduction de panics évitables ; les tests restent exemptés
+  via `clippy.toml`.
+- Référencement des issues GitHub de suivi dans les documents de sprint
+  (#132 performance capture, #133 extraction sonar-core/cli).
+- Mise à jour de la version de SONAR en **4.3.1**.
+
 ## **[4.3.0] - 2026-07-09**
 
 ## ✨ Améliorations
