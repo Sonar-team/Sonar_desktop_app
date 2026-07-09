@@ -329,9 +329,7 @@ impl FlowMatrix {
                 let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
                     Ok(dur) => {
                         chrono::DateTime::<chrono::Utc>::from_timestamp(dur.as_secs() as i64, 0)
-                            .unwrap_or_else(|| {
-                                chrono::DateTime::<chrono::Utc>::from_timestamp(0, 0).unwrap()
-                            })
+                            .unwrap_or(chrono::DateTime::<chrono::Utc>::UNIX_EPOCH)
                             .format("%Y-%m-%d %H:%M:%S")
                             .to_string()
                     }

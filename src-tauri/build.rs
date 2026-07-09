@@ -1,3 +1,7 @@
+// Dans un script de build, paniquer est le mode d'échec attendu :
+// l'erreur arrête la compilation avec un message explicite.
+#![allow(clippy::expect_used, clippy::unwrap_used)]
+
 fn main() {
     println!("cargo:rerun-if-changed=../config/build-versions.env");
     println!("cargo:rerun-if-changed=windows/npcap-sdk/Lib/x64/Packet.lib");

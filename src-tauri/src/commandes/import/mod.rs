@@ -45,9 +45,9 @@ use crate::{
 fn event_channel(
     capture_state: &State<'_, Arc<Mutex<CaptureState>>>,
     on_event: Channel<CaptureEvent<'static>>,
-) -> Channel<CaptureEvent<'static>> {
-    let live = capture_state.lock().unwrap().on_event.clone();
-    live.unwrap_or(on_event)
+) -> Result<Channel<CaptureEvent<'static>>, CaptureStateError> {
+    let live = capture_state.lock()?.on_event.clone();
+    Ok(live.unwrap_or(on_event))
 }
 
 #[cfg(feature = "capture_timing")]
@@ -260,7 +260,10 @@ fn dedup_labels_first_wins(rows: Vec<LabelRow>) -> (Vec<LabelRow>, Vec<LabelConf
     let mut conflicts = Vec::new();
     let mut kept_rows = Vec::new();
     for key in order {
-        let row = kept.remove(&key).expect("clé retenue présente");
+        // Clé absente = déjà consommée (doublon dans `order`) : on passe.
+        let Some(row) = kept.remove(&key) else {
+            continue;
+        };
         if let Some(dropped_choices) = dropped.remove(&key) {
             conflicts.push(LabelConflictReport {
                 mac: row.mac.clone(),
@@ -341,8 +344,8 @@ pub fn convert_from_pcap_list(
         error!("Erreur lors de l'envoi de Started: {:?}", e);
     };
 
-    let mut matrice_guard = matrice.lock().unwrap();
-    let mut graph_guard = graph.lock().unwrap();
+    let mut matrice_guard = matrice.lock()?;
+    let mut graph_guard = graph.lock()?;
     #[cfg(feature = "capture_timing")]
     let reset_start = Instant::now();
     matrice_guard.clear();
@@ -772,7 +775,7 @@ fn handle_pcap_file(
 pub fn get_label_rows(
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
 ) -> Result<Vec<(String, String, String)>, CaptureStateError> {
-    let label_store = label_store.lock().unwrap();
+    let label_store = label_store.lock()?;
     Ok(label_store.get().clone())
 }
 
@@ -780,7 +783,7 @@ pub fn get_label_rows(
 pub fn clear_label_store(
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
 ) -> Result<(), CaptureStateError> {
-    let mut labels = label_store.lock().unwrap();
+    let mut labels = label_store.lock()?;
     labels.clear();
     Ok(())
 }
@@ -974,7 +977,7 @@ pub fn import_label_file(
     conflict_store: State<'_, Arc<Mutex<LabelConflictStore>>>,
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<LabelImportReport, CaptureStateError> {
-    let on_event = event_channel(&capture_state, on_event);
+    let on_event = event_channel(&capture_state, on_event)?;
 
     // Les erreurs de FORMAT restent bloquantes ; les conflits de labels, eux,
     // ne bloquent plus : on garde le premier label par clé (mac, ip) et on
@@ -983,7 +986,7 @@ pub fn import_label_file(
     verif_mac_ip_format(incoming_file_path.clone())?;
 
     let conflicts = {
-        let mut label_store = label_store.lock().unwrap();
+        let mut label_store = label_store.lock()?;
         label_store.clear();
 
         let mut rows = read_label_rows(&incoming_file_path)?;
@@ -1003,14 +1006,14 @@ pub fn import_label_file(
     };
 
     let applied = {
-        let mut state_label = state_label.lock().unwrap();
+        let mut state_label = state_label.lock()?;
         labels_to_matrix(label_store, &mut state_label)?;
 
         // Réapplique les labels sur les nœuds du graphe (même résolution que la
         // capture) et notifie le front nœud par nœud : pas de snapshot complet,
         // pour préserver la disposition du graphe côté UI.
         let updates = {
-            let mut graph_guard = graph.lock().unwrap();
+            let mut graph_guard = graph.lock()?;
             graph_guard.refresh_labels(|mac, ip| state_label.get_label(mac, ip))
         };
 
@@ -1030,7 +1033,7 @@ pub fn import_label_file(
     };
 
     // Mémorise les conflits pour le module d'arbitrage.
-    conflict_store.lock().unwrap().conflicts = conflicts.clone();
+    conflict_store.lock()?.conflicts = conflicts.clone();
 
     Ok(LabelImportReport { applied, conflicts })
 }
@@ -1041,7 +1044,7 @@ pub fn import_label_file(
 pub fn get_label_conflicts(
     conflict_store: State<'_, Arc<Mutex<LabelConflictStore>>>,
 ) -> Result<Vec<LabelConflictReport>, CaptureStateError> {
-    Ok(conflict_store.lock().unwrap().conflicts.clone())
+    Ok(conflict_store.lock()?.conflicts.clone())
 }
 
 /// Arbitrage d'un conflit : applique le `label` choisi à la clé `(mac, ip)`
@@ -1062,17 +1065,13 @@ pub fn resolve_label_conflict(
     // Applique le label choisi à la matrice (résolution des flux) et au store
     // (table + réexport).
     matrix
-        .lock()
-        .unwrap()
+        .lock()?
         .add_label(mac.clone(), ip.clone(), label.clone());
-    label_store.lock().unwrap().set(&mac, &ip, &label);
+    label_store.lock()?.set(&mac, &ip, &label);
 
     // Rafraîchit le nœud du graphe et notifie l'UI, sans reconstruire le graphe.
-    let graph_update = graph
-        .lock()
-        .unwrap()
-        .update_node_label(&mac, &ip, label.clone());
-    let on_event = capture_state.lock().unwrap().on_event.clone();
+    let graph_update = graph.lock()?.update_node_label(&mac, &ip, label.clone());
+    let on_event = capture_state.lock()?.on_event.clone();
     if let (Some(update), Some(on_event)) = (graph_update, on_event)
         && let Err(e) = on_event.send(CaptureEvent::Graph { update: &update })
     {
@@ -1080,7 +1079,7 @@ pub fn resolve_label_conflict(
     }
 
     // Retire le conflit résolu, renvoie ceux qui restent.
-    let mut store = conflict_store.lock().unwrap();
+    let mut store = conflict_store.lock()?;
     store.conflicts.retain(|c| !(c.mac == mac && c.ip == ip));
     Ok(store.conflicts.clone())
 }
@@ -1089,7 +1088,7 @@ pub fn labels_to_matrix(
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
     matrice: &mut FlowMatrix,
 ) -> Result<(), CaptureStateError> {
-    let label_store = label_store.lock().unwrap();
+    let label_store = label_store.lock()?;
     copy_labels_to_matrix(&label_store, matrice)
 }
 
@@ -1105,8 +1104,10 @@ pub fn copy_labels_to_matrix(
 }
 
 #[tauri::command]
-pub fn is_matrix_empty(state: tauri::State<'_, Arc<Mutex<FlowMatrix>>>) -> bool {
-    state.lock().unwrap().matrix.is_empty()
+pub fn is_matrix_empty(
+    state: tauri::State<'_, Arc<Mutex<FlowMatrix>>>,
+) -> Result<bool, CaptureStateError> {
+    Ok(state.lock()?.matrix.is_empty())
 }
 
 /*<----- Import matrice -----> */
@@ -1244,7 +1245,7 @@ pub fn import_matrix_files(
     capture_state: State<'_, Arc<Mutex<CaptureState>>>,
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<(), CaptureStateError> {
-    let on_event = event_channel(&capture_state, on_event);
+    let on_event = event_channel(&capture_state, on_event)?;
 
     info!(
         "[import_matrix_files] COMMAND CALLED avec {} fichier(s): {:?}",
@@ -1257,9 +1258,9 @@ pub fn import_matrix_files(
 
     // Même ordre de verrouillage que convert_from_pcap_list et net_capture
     // (matrice -> graph -> label_store) pour éviter un interblocage ABBA.
-    let mut matrice_guard = matrice.lock().unwrap();
-    let mut graph_guard = graph.lock().unwrap();
-    let label_store_guard = label_store.lock().unwrap();
+    let mut matrice_guard = matrice.lock()?;
+    let mut graph_guard = graph.lock()?;
+    let label_store_guard = label_store.lock()?;
     rebuild_matrix_and_graph_from_rows(
         &rows,
         &label_store_guard,
@@ -1719,7 +1720,8 @@ mod tests {
     /// fusionnée doit contenir les deux noms de fichiers (triés, joints par `|`).
     #[test]
     fn import_matrix_records_origin_files_per_row() {
-        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
+        let source =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
         let dir = TempDir::new("sonar_test_matrix_origin");
         let file_a = dir.path().join("site-a.csv");
         let file_b = dir.path().join("site-b.csv");
@@ -1740,7 +1742,10 @@ mod tests {
         assert!(
             exported.iter().all(|r| r.origin == "site-a.csv|site-b.csv"),
             "chaque ligne doit porter ses deux fichiers d'origine: {:?}",
-            exported.iter().map(|r| r.origin.clone()).collect::<Vec<_>>()
+            exported
+                .iter()
+                .map(|r| r.origin.clone())
+                .collect::<Vec<_>>()
         );
     }
 
@@ -1748,7 +1753,8 @@ mod tests {
     /// un nouveau nom conserve sa provenance d'origine plutôt que de l'écraser.
     #[test]
     fn reimport_preserves_existing_origin_column() {
-        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
+        let source =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
         let dir = TempDir::new("sonar_test_matrix_origin_preserve");
 
         // Étape 1 : import sous "brut.csv" (origin = brut.csv) puis export.
@@ -1768,7 +1774,10 @@ mod tests {
         assert!(
             exported.iter().all(|r| r.origin == "brut.csv"),
             "l'origine héritée doit être conservée, pas remplacée par fusion.csv: {:?}",
-            exported.iter().map(|r| r.origin.clone()).collect::<Vec<_>>()
+            exported
+                .iter()
+                .map(|r| r.origin.clone())
+                .collect::<Vec<_>>()
         );
     }
 
@@ -1777,7 +1786,8 @@ mod tests {
     /// fusionnées, et le nom des fichiers physiques importés n'est PAS ajouté.
     #[test]
     fn reimport_merges_existing_origin_columns() {
-        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
+        let source =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
         let dir = TempDir::new("sonar_test_matrix_origin_merge");
 
         // Prépare deux matrices déjà « étiquetées » par des origines distinctes,
@@ -1805,7 +1815,10 @@ mod tests {
         assert!(
             exported.iter().all(|r| r.origin == "a-raw.csv|b-raw.csv"),
             "les colonnes origin doivent être fusionnées, sans les fichiers de fusion: {:?}",
-            exported.iter().map(|r| r.origin.clone()).collect::<Vec<_>>()
+            exported
+                .iter()
+                .map(|r| r.origin.clone())
+                .collect::<Vec<_>>()
         );
     }
 

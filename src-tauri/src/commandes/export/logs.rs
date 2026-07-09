@@ -117,7 +117,11 @@ pub fn export_logs(destination: String) -> Result<String, CaptureStateError> {
         let entry = entry?;
         let src_path = entry.path();
         if src_path.is_file() {
-            let file_name = src_path.file_name().unwrap();
+            // Un fichier issu de read_dir a toujours un nom ; sinon on l'ignore
+            // plutôt que de paniquer.
+            let Some(file_name) = src_path.file_name() else {
+                continue;
+            };
             let dest_path = destination.join(file_name);
             fs::copy(&src_path, &dest_path)?;
         }

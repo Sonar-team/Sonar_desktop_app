@@ -21,9 +21,9 @@ pub fn read_labels(app: &AppHandle) -> Result<(), tauri::Error> {
 pub fn create_labels_from_network_interfaces(
     interfaces: Vec<netdev::Interface>,
     app: &AppHandle,
-) -> Result<(), tauri::Error> {
+) -> Result<(), CaptureStateError> {
     let state_label = app.state::<Arc<Mutex<PcInfoLabel>>>();
-    let mut pcinfo = state_label.lock().unwrap();
+    let mut pcinfo = state_label.lock()?;
     const LABEL_NAME: &str = "pc sonar";
 
     for interface in interfaces {
@@ -50,7 +50,7 @@ pub fn update_labels_in_state(
     state_label: &mut FlowMatrix,
 ) -> Result<(), CaptureStateError> {
     let pcinfo = app.state::<Arc<Mutex<PcInfoLabel>>>();
-    let pcinfo = pcinfo.lock().unwrap();
+    let pcinfo = pcinfo.lock()?;
 
     for label in pcinfo.get_label() {
         let Some((mac, ip, label_name)) = parse_label_row(label) else {

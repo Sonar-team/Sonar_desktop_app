@@ -202,6 +202,9 @@ impl<'a> PacketMinimal<'a> {
 // }
 
 #[cfg(all(test, target_os = "linux"))]
+// Le cfg composé échappe à `allow-unwrap-in-tests` (clippy.toml) : on
+// réautorise explicitement les unwrap dans ce module de tests.
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
