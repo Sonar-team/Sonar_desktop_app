@@ -1682,7 +1682,7 @@ mod tests {
     fn import_matrix_rows_merges_duplicate_flows() {
         let mut rows = read_matrix_rows(
             Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("test_files/20260703_DR_Matrice.csv")
+                .join("test_files/20260703_NP_Matrice.csv")
                 .to_str()
                 .unwrap(),
         )
@@ -1721,7 +1721,7 @@ mod tests {
     #[test]
     fn import_matrix_records_origin_files_per_row() {
         let source =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_NP_Matrice.csv");
         let dir = TempDir::new("sonar_test_matrix_origin");
         let file_a = dir.path().join("site-a.csv");
         let file_b = dir.path().join("site-b.csv");
@@ -1754,7 +1754,7 @@ mod tests {
     #[test]
     fn reimport_preserves_existing_origin_column() {
         let source =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_NP_Matrice.csv");
         let dir = TempDir::new("sonar_test_matrix_origin_preserve");
 
         // Étape 1 : import sous "brut.csv" (origin = brut.csv) puis export.
@@ -1787,7 +1787,7 @@ mod tests {
     #[test]
     fn reimport_merges_existing_origin_columns() {
         let source =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_DR_Matrice.csv");
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_NP_Matrice.csv");
         let dir = TempDir::new("sonar_test_matrix_origin_merge");
 
         // Prépare deux matrices déjà « étiquetées » par des origines distinctes,
@@ -1990,7 +1990,7 @@ mod tests {
     #[test]
     fn import_real_matrix_file_rebuilds_matrix_and_graph() {
         let matrix_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("test_files/20260703_DR_Matrice.csv")
+            .join("test_files/20260703_NP_Matrice.csv")
             .to_str()
             .unwrap()
             .to_string();
@@ -2032,7 +2032,7 @@ mod tests {
     #[test]
     fn import_1000_row_matrix_builds_full_graph() {
         let matrix_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("test_files/20260703_DR_Matrice_1000.csv")
+            .join("test_files/20260703_NP_Matrice_1000.csv")
             .to_str()
             .unwrap()
             .to_string();
@@ -2065,7 +2065,7 @@ mod tests {
     #[test]
     fn import_real_label_file_resolves_labels_for_matrix_hosts() {
         let label_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("test_files/20260703_DR_Labels.csv")
+            .join("test_files/20260703_NP_Labels.csv")
             .to_str()
             .unwrap()
             .to_string();
