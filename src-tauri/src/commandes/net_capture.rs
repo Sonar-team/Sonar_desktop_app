@@ -97,14 +97,27 @@ pub fn stop_capture(
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
     let mut app = state.lock()?;
-    if let Some(capture) = app.capture.take() {
-        capture.stop(on_event)?; // Suppose que stop() ne retourne pas d'erreur
-        app.status.toggle();
-        app.on_event = None;
+    stop_capture_inner(&mut app, on_event)
+}
+
+/// Cœur de [`stop_capture`], séparé pour être testable sans `State` Tauri.
+fn stop_capture_inner(
+    state: &mut CaptureState,
+    on_event: Channel<CaptureEvent<'static>>,
+) -> Result<CaptureStatus, CaptureStateError> {
+    if let Some(capture) = state.capture.take() {
+        let stop_result = capture.stop(on_event);
+        // `stop()` a joint les threads quoi qu'il arrive : le statut est
+        // normalisé AVANT de propager une éventuelle erreur d'envoi de
+        // `Stopped`, sinon le backend resterait marqué « en cours » sans
+        // capture et le démarrage suivant serait marqué arrêté.
+        state.status.is_running = false;
+        state.on_event = None;
+        stop_result?;
     } else {
         println!("Aucun thread à arrêter.");
     }
-    Ok(app.status.clone())
+    Ok(state.status.clone())
 }
 
 /// Valide puis applique une nouvelle configuration de capture, persistée sur
@@ -166,4 +179,46 @@ pub fn set_filter(
     let mut app = state.lock()?;
     app.filter = Some(filter);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Le canal IPC échoue à l'envoi (frontend mort) : l'erreur doit être
+    /// propagée, mais PAS avant la normalisation du statut backend.
+    #[test]
+    fn stop_normalizes_status_even_when_stopped_event_fails() {
+        let mut state = CaptureState::new();
+        state.capture = Some(CaptureHandle::terminated_for_tests());
+        state.status.is_running = true;
+        state.on_event = Some(Channel::new(|_| Ok(())));
+        let dead_channel = Channel::new(|_| Err(std::io::Error::other("canal mort").into()));
+
+        let result = stop_capture_inner(&mut state, dead_channel);
+
+        assert!(result.is_err(), "l'erreur d'envoi de Stopped est propagée");
+        assert!(!state.status.is_running, "statut normalisé malgré l'erreur");
+        assert!(state.capture.is_none(), "le handle est libéré");
+        assert!(state.on_event.is_none(), "le channel mort est détaché");
+    }
+
+    #[test]
+    fn stop_succeeds_and_normalizes_with_a_live_channel() {
+        let mut state = CaptureState::new();
+        state.capture = Some(CaptureHandle::terminated_for_tests());
+        state.status.is_running = true;
+
+        let status = stop_capture_inner(&mut state, Channel::new(|_| Ok(()))).unwrap();
+
+        assert!(!status.is_running);
+        assert!(state.capture.is_none());
+    }
+
+    #[test]
+    fn stop_without_capture_returns_current_status() {
+        let mut state = CaptureState::new();
+        let status = stop_capture_inner(&mut state, Channel::new(|_| Ok(()))).unwrap();
+        assert!(!status.is_running);
+    }
 }
