@@ -38,3 +38,36 @@
   6. Publier sonar-core quand l’API est propre.
 
   Donc oui : sonar-core + sonar-cli + sonar_desktop_app, c’est beaucoup plus sain que d’étendre indéfiniment le headless Tauri.
+
+---
+
+# Reste à faire — audit de code du 10/07/2026
+
+Points vérifiés et suivis en issues (le corrigé est déjà sur main :
+capture fantôme, drainage à l'arrêt, import PCAP transactionnel, cycle
+d'import frontend, bidir/multi-MAC du graphe, export de logs, vue-tsc,
+typecheck, tests mockIPC).
+
+## Sprint proposé : fiabiliser CI et release (project_management/sprint_ci_release_fiabilisation.md)
+
+- [ ] [#135](https://github.com/Sonar-team/Sonar_desktop_app/issues/135) CI : workflows cassés et gates manquants (clippy, sonar-rust, typecheck, tests front, fmt, artefact macOS)
+- [ ] [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136) Release atomique et reproductibilité démontrable
+- [ ] [#137](https://github.com/Sonar-team/Sonar_desktop_app/issues/137) SBOM frontend invalide (deno.lock non catalogué par Syft)
+- [ ] [#138](https://github.com/Sonar-team/Sonar_desktop_app/issues/138) Licence Npcap avant release Windows publique (décision, bloquant)
+
+## Backlog robustesse pipeline
+
+- [ ] [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) Exclusion mutuelle capture/import/export (verrous tenus pendant l'I/O disque)
+- [ ] [#140](https://github.com/Sonar-team/Sonar_desktop_app/issues/140) Pool de buffers : famine des jumbo frames
+- [ ] [#141](https://github.com/Sonar-team/Sonar_desktop_app/issues/141) Télémétrie backpressure trop bavarde sous saturation
+
+## Backlog qualité frontend
+
+- [ ] [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) Typer les contrats IPC TypeScript (msg: any, snake/camel)
+- [ ] [#144](https://github.com/Sonar-team/Sonar_desktop_app/issues/144) Accessibilité des modales
+- [ ] [#145](https://github.com/Sonar-team/Sonar_desktop_app/issues/145) Vues/routes mortes ou cassées (/readPcap, homeView, Matrice.vue)
+
+## Backlog transverse
+
+- [ ] [#143](https://github.com/Sonar-team/Sonar_desktop_app/issues/143) Capacités Tauri : permissions mortes/dupliquées, bloc fs.scope ignoré
+- [ ] [#146](https://github.com/Sonar-team/Sonar_desktop_app/issues/146) Stratégie E2E : capture réelle, installateurs Windows/macOS
