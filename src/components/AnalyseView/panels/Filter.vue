@@ -169,84 +169,39 @@
 import { ref, computed, watch } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { useCaptureStore } from '../../../store/capture';
-
-type Dir = 'any' | 'src' | 'dst';
+import {
+  BPF_PRESETS,
+  buildBpfExpression,
+  emptyBpfFormState,
+  validateIpFields,
+  validatePortFields,
+} from '../../../utils/bpf';
 
 const emit = defineEmits<{ 'update:visible': [value: boolean] }>();
 const captureStore = useCaptureStore();
 
-const opt = ref({ vlan: false, onlyIp4: false, excludeIpv6: false, excludeArp: false });
-const proto = ref({ tcp: false, udp: false, icmp: false, icmp6: false });
-const ip = ref({ includeHost: '', excludeHost: '', includeNet: '', excludeNet: '', direction: 'any' as Dir });
-const ports = ref({ include: '', exclude: '', range: '', direction: 'any' as Dir });
+const initial = emptyBpfFormState();
+const opt = ref(initial.opt);
+const proto = ref(initial.proto);
+const ip = ref(initial.ip);
+const ports = ref(initial.ports);
 const advancedRaw = ref('');
 const previewText = ref('');
 const isManualPreview = ref(false);
 
-const ipErrors = computed<string[]>(() => {
-  const errs: string[] = [];
-  const isIp = (s: string) => /^(\d{1,3}\.){3}\d{1,3}$/.test(s);
-  const isCidr = (s: string) => /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/.test(s);
-  if (ip.value.includeHost && !isIp(ip.value.includeHost)) errs.push(`IP invalide : ${ip.value.includeHost}`);
-  if (ip.value.excludeHost && !isIp(ip.value.excludeHost)) errs.push(`IP invalide : ${ip.value.excludeHost}`);
-  if (ip.value.includeNet && !isCidr(ip.value.includeNet)) errs.push(`CIDR invalide : ${ip.value.includeNet}`);
-  if (ip.value.excludeNet && !isCidr(ip.value.excludeNet)) errs.push(`CIDR invalide : ${ip.value.excludeNet}`);
-  return errs;
-});
-
-const portErrors = computed<string[]>(() => {
-  const errs: string[] = [];
-  const isPortList = (s: string) =>
-    s.split(',').every(p => /^\s*\d{1,5}\s*$/.test(p) && Number(p.trim()) <= 65535);
-  const isRange = (s: string) =>
-    /^\s*\d{1,5}\s*-\s*\d{1,5}\s*$/.test(s) &&
-    Number(s.split('-')[0]) <= 65535 &&
-    Number(s.split('-')[1]) <= 65535;
-  if (ports.value.include && !isPortList(ports.value.include)) errs.push('Ports à inclure invalides');
-  if (ports.value.exclude && !isPortList(ports.value.exclude)) errs.push('Ports à exclure invalides');
-  if (ports.value.range && !isRange(ports.value.range)) errs.push('Plage de ports invalide (ex: 10000-20000)');
-  return errs;
-});
-
+const ipErrors = computed<string[]>(() => validateIpFields(ip.value));
+const portErrors = computed<string[]>(() => validatePortFields(ports.value));
 const globalErrors = computed(() => [...ipErrors.value, ...portErrors.value]);
 
-const autoPreview = computed(() => {
-  const c: string[] = [];
-  const groupOr = (clauses: string[]) => clauses.length > 1 ? `(${clauses.join(' or ')})` : clauses[0] ?? '';
-  const dirPfx = (d: Dir) => d === 'any' ? '' : `${d} `;
-
-  if (opt.value.vlan) c.push('vlan');
-  if (opt.value.onlyIp4) c.push('ip');
-  if (opt.value.excludeIpv6) c.push('not ip6');
-  if (opt.value.excludeArp) c.push('not arp');
-
-  const protos: string[] = [];
-  if (proto.value.tcp) protos.push('tcp');
-  if (proto.value.udp) protos.push('udp');
-  if (proto.value.icmp) protos.push('icmp');
-  if (proto.value.icmp6) protos.push('icmp6');
-  if (protos.length) c.push(groupOr(protos));
-
-  if (ip.value.includeHost) c.push(`${dirPfx(ip.value.direction)}host ${ip.value.includeHost}`);
-  if (ip.value.excludeHost) c.push(`not ${dirPfx(ip.value.direction)}host ${ip.value.excludeHost}`);
-  if (ip.value.includeNet) c.push(`${dirPfx(ip.value.direction)}net ${ip.value.includeNet}`);
-  if (ip.value.excludeNet) c.push(`not ${dirPfx(ip.value.direction)}net ${ip.value.excludeNet}`);
-
-  const addPorts = (list: string, negate = false) => {
-    if (!list.trim()) return;
-    const op = negate ? 'not ' : '';
-    const parts = list.split(',').map(s => s.trim()).filter(Boolean);
-    const clauses = parts.map(p => `${dirPfx(ports.value.direction)}port ${p}`);
-    c.push(op + groupOr(clauses));
-  };
-  addPorts(ports.value.include);
-  addPorts(ports.value.exclude, true);
-  if (ports.value.range.trim()) c.push(`${dirPfx(ports.value.direction)}portrange ${ports.value.range.trim()}`);
-
-  if (advancedRaw.value.trim()) c.push(advancedRaw.value.trim());
-
-  return c.join(' and ').trim();
-});
+const autoPreview = computed(() =>
+  buildBpfExpression({
+    opt: opt.value,
+    proto: proto.value,
+    ip: ip.value,
+    ports: ports.value,
+    advancedRaw: advancedRaw.value,
+  })
+);
 
 const canApply = computed(() => previewText.value.trim().length > 0 && globalErrors.value.length === 0);
 
@@ -281,10 +236,11 @@ async function apply() {
 }
 
 function resetForm() {
-  opt.value = { vlan: false, onlyIp4: false, excludeIpv6: false, excludeArp: false };
-  proto.value = { tcp: false, udp: false, icmp: false, icmp6: false };
-  ip.value = { includeHost: '', excludeHost: '', includeNet: '', excludeNet: '', direction: 'any' };
-  ports.value = { include: '', exclude: '', range: '', direction: 'any' };
+  const empty = emptyBpfFormState();
+  opt.value = empty.opt;
+  proto.value = empty.proto;
+  ip.value = empty.ip;
+  ports.value = empty.ports;
   advancedRaw.value = '';
   isManualPreview.value = false;
   previewText.value = '';
@@ -312,36 +268,12 @@ async function cancelPending() {
 
 function preset(name: string) {
   resetForm();
-  switch (name) {
-    case 'ipv4':
-      opt.value.onlyIp4 = true;
-      break;
-    case 'web':
-      opt.value.onlyIp4 = true;
-      proto.value.tcp = true;
-      ports.value.include = '80,443';
-      break;
-    case 'dns':
-      opt.value.onlyIp4 = true;
-      proto.value.udp = true;
-      proto.value.tcp = true;
-      ports.value.include = '53';
-      break;
-    case 'ntp':
-      opt.value.onlyIp4 = true;
-      proto.value.udp = true;
-      ports.value.include = '123';
-      break;
-    case 'syn':
-      opt.value.onlyIp4 = true;
-      proto.value.tcp = true;
-      advancedRaw.value = 'tcp[13] & 0x02 != 0 and tcp[13] & 0x10 = 0';
-      break;
-    case 'no-arp-ipv6':
-      opt.value.excludeArp = true;
-      opt.value.excludeIpv6 = true;
-      break;
-  }
+  const patch = BPF_PRESETS[name];
+  if (!patch) return;
+  Object.assign(opt.value, patch.opt ?? {});
+  Object.assign(proto.value, patch.proto ?? {});
+  Object.assign(ports.value, patch.ports ?? {});
+  if (patch.advancedRaw) advancedRaw.value = patch.advancedRaw;
 }
 </script>
 

@@ -110,14 +110,11 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import { CaptureEvent } from '../../../types/capture';
-import { displayCaptureError, CaptureStateErrorKind, LabelErrorKind } from '../../../errors/capture';
+import { displayCaptureError } from '../../../errors/capture';
+import { classifyLabelImportError } from '../../../utils/labelImport';
+import { LabelConflictReport, LabelImportReport } from '../../../types/labels';
 import ConflictDialog from './ConflictDialog.vue'
 import ArbitrationDialog from './ArbitrationDialog.vue'
-
-// (n° de ligne, label, ligne brute)
-type LabelChoice = [number, string, string];
-type LabelConflictReport = { mac: string; ip: string; kept: LabelChoice; dropped: LabelChoice[] };
-type LabelImportReport = { applied: number; conflicts: LabelConflictReport[] };
 
 
 export default defineComponent({
@@ -352,28 +349,7 @@ export default defineComponent({
           this.showArbitration = true;
         }
       } catch (err) {
-        const error = err as CaptureStateErrorKind;
-        if (error.kind === "label") {
-          const labelError = error.message as LabelErrorKind;
-          if (labelError.kind === "invalidMacIpFormat") {
-            const [invalidMac, invalidIp] = labelError.message;
-            this.invalidMac = invalidMac;
-            this.invalidIp = invalidIp;
-            this.showConflictDialog = true;
-          } else if (labelError.kind === "labelLinesConflicts") {
-            const [sameIpDiffMac, sameIpDiffLabel] = labelError.message;
-            this.sameIpDiffMac = sameIpDiffMac;
-            this.sameIpDiffLabel = sameIpDiffLabel;
-            this.showConflictDialog = true;
-          } else if (labelError.kind === "invalidRowsFormat") {
-            this.invalidLines = labelError.message;
-            this.showConflictDialog = true;
-          } else {
-            displayCaptureError(err);
-          }
-        } else {
-          displayCaptureError(err);
-        }  
+        this.showLabelFileIssues(err);
       } finally {
         this.labelRows = await invoke('get_label_rows');
         this.filteredlabelRows =this.labelRows;
@@ -381,6 +357,26 @@ export default defineComponent({
       }
     },
   
+
+    /** Erreur bloquante d'import de labels : ouvre le dialogue de conflits
+     *  avec le détail typé, ou affiche l'erreur générique sinon. */
+    showLabelFileIssues(err: unknown) {
+      const issues = classifyLabelImportError(err);
+      if (!issues) {
+        displayCaptureError(err);
+        return;
+      }
+      if (issues.kind === 'invalidMacIpFormat') {
+        this.invalidMac = issues.invalidMac;
+        this.invalidIp = issues.invalidIp;
+      } else if (issues.kind === 'labelLinesConflicts') {
+        this.sameIpDiffMac = issues.sameIpDiffMac;
+        this.sameIpDiffLabel = issues.sameIpDiffLabel;
+      } else {
+        this.invalidLines = issues.invalidLines;
+      }
+      this.showConflictDialog = true;
+    },
 
     async clearLabelStore() {
         try {

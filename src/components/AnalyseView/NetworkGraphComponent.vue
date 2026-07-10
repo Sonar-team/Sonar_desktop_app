@@ -5,138 +5,36 @@ import Sigma from "sigma"
 import { EdgeArrowProgram } from "sigma/rendering"
 import forceAtlas2 from "graphology-layout-forceatlas2"
 import FA2Layout from "graphology-layout-forceatlas2/worker"
-import { EdgeCurvedArrowProgram, indexParallelEdgesIndex, DEFAULT_EDGE_CURVATURE } from "@sigma/edge-curve"
+import { EdgeCurvedArrowProgram } from "@sigma/edge-curve"
 import { NodeBorderProgram } from "@sigma/node-border"
 import { toBlob } from "@sigma/export-image"
 import { useCaptureStore } from "../../store/capture"
 import { save } from "@tauri-apps/plugin-dialog"
 import { writeFile } from "@tauri-apps/plugin-fs"
-import { EdgeData, EdgeId, GraphData, GraphUpdate, NodeData } from "../../types/capture"
+import { GraphData, GraphUpdate, NodeData } from "../../types/capture"
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentDate } from '../../utils/time';
 import LegendComponent from './LegendComponent.vue';
-import { colorForProtocol } from "../../utils/protocolColors"
+import MatrixLabelsPanel from './graph/MatrixLabelsPanel.vue';
+import {
+  DIM_EDGE_COLOR,
+  DIM_NODE_COLOR,
+  EDGE_LABEL_ZOOM,
+  PORT_LABEL_ZOOM,
+  drawNodeLabel,
+  formatBytes,
+  nodeAttributes,
+} from "./graph/graphStyle"
+import {
+  normalizeGraphUpdate,
+  refreshParallelEdges,
+  upsertEdge,
+  upsertNode,
+} from "./graph/graphSync"
 
-// --- Helpers ---------------------------------------------------------------
-function clamp01(x: number) { return x < 0 ? 0 : x > 1 ? 1 : x }
-function hexToRgb(hex: string) {
-  const h = hex.startsWith("#") ? hex.slice(1) : hex
-  const v = parseInt(h.length === 3 ? h.replace(/(.)/g, "$1$1") : h, 16)
-  return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 }
-}
-function rgbToHex(r: number, g: number, b: number) {
-  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
-}
-function darken(hex: string, factor = 0.2) {
-  const { r, g, b } = hexToRgb(hex)
-  return rgbToHex((r * (1 - factor)) | 0, (g * (1 - factor)) | 0, (b * (1 - factor)) | 0)
-}
-function brighten(hex: string, factor = 0.15) {
-  const { r, g, b } = hexToRgb(hex)
-  return rgbToHex(
-    (clamp01(r / 255 + factor) * 255) | 0,
-    (clamp01(g / 255 + factor) * 255) | 0,
-    (clamp01(b / 255 + factor) * 255) | 0
-  )
-}
-const EDGE_SEP = "__"
-function edgeKey(e: EdgeData): EdgeId {
-  return `${e.source}${EDGE_SEP}${e.target}${EDGE_SEP}${e.label}`
-}
-
-// Jitter autour d'un point d'ancrage pour les nouveaux nœuds (évite l'empilement)
-function jitterAround(x: number, y: number, radius = 120) {
-  const angle = Math.random() * 2 * Math.PI
-  const r = radius * (0.4 + 0.6 * Math.random())
-  return { x: x + Math.cos(angle) * r, y: y + Math.sin(angle) * r }
-}
-
-// Seuils de zoom pour l'affichage des labels d'arêtes (zoom = 1 / camera.ratio)
-const EDGE_LABEL_ZOOM = 1.2
-const PORT_LABEL_ZOOM = 1.8
-
-// Tailles proportionnelles au trafic, en échelle log : les gros parleurs
-// ressortent sans écraser les hôtes discrets.
-const NODE_SIZE_MIN = 7
-const NODE_SIZE_MAX = 18
-function nodeSizeFor(bytes: number) {
-  return Math.min(NODE_SIZE_MAX, NODE_SIZE_MIN + 1.1 * Math.log2(1 + bytes / 2000))
-}
-const EDGE_SIZE_MIN = 1.2
-const EDGE_SIZE_MAX = 7
-function edgeSizeFor(bytes: number) {
-  return Math.min(EDGE_SIZE_MAX, EDGE_SIZE_MIN + 0.55 * Math.log2(1 + bytes / 1500))
-}
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} o`
-  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} ko`
-  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} Mo`
-  return `${(bytes / 1024 ** 3).toFixed(2)} Go`
-}
-
-// Courbure des arêtes parallèles (repris de l'exemple officiel @sigma/edge-curve)
-function getCurvature(index: number, maxIndex: number): number {
-  if (maxIndex <= 0) return DEFAULT_EDGE_CURVATURE
-  const amplitude = 3.5
-  const maxCurvature = amplitude * (1 - Math.exp(-maxIndex / amplitude)) * DEFAULT_EDGE_CURVATURE
-  return (maxCurvature * index) / maxIndex
-}
-
-// Label de nœud : texte blanc sur fond noir, au-dessus du nœud.
-// Sert aussi au rendu du hover (fond blanc par défaut, illisible sur fond noir).
-function drawNodeLabel(context: CanvasRenderingContext2D, data: any, settings: any) {
-  if (!data.label) return
-  const size = settings.labelSize
-  context.font = `${settings.labelWeight} ${size}px ${settings.labelFont}`
-  const width = context.measureText(data.label).width + 10
-  const x = data.x - width / 2
-  const y = data.y - data.size - size - 8
-  context.fillStyle = "#000000CC"
-  context.fillRect(x, y, width, size + 6)
-  context.fillStyle = "#ffffff"
-  context.fillText(data.label, x + 5, y + size)
-}
-
-function nodeAttributes(node: any) {
-  const color = node.color || "#2196F3"
-  const rawLabel = node.label || ""
-  return {
-    name: node.name || node.id,
-    mac: node.mac || "",
-    ip: node.ip || "",
-    rawLabel,
-    label: rawLabel || node.name || node.id,
-    color,
-    borderColor: darken(color, 0.25),
-    hoverColor: brighten(color, 0.18),
-  }
-}
-
-function edgeAttributes(e: any) {
-  const totalBytes = Number(e.total_bytes) || 0
-  return {
-    protocol: e.label || "",
-    source_port: e.source_port ?? null,
-    destination_port: e.destination_port ?? null,
-    bidir: !!e.bidir,
-    count: Number(e.count) || 0,
-    total_bytes: totalBytes,
-    // Tunnels (encap_id hex) auxquels ce flux participe : le backend envoie
-    // la liste cumulative, on remplace donc simplement à chaque update.
-    encapIds: Array.isArray(e.encap_ids) ? e.encap_ids : [],
-    color: e._color || colorForProtocol(e.label || ""),
-    size: edgeSizeFor(totalBytes),
-  }
-}
-
-// Couleurs d'estompage pendant la surbrillance d'un tunnel (fond noir)
-const DIM_EDGE_COLOR = "#2a2a2a"
-const DIM_NODE_COLOR = "#3a3a3a"
-
-// --- Component -------------------------------------------------------------
 export default defineComponent({
   name: "NetworkGraphComponent",
-  components: { LegendComponent },
+  components: { LegendComponent, MatrixLabelsPanel },
 
   data() {
     return {
@@ -166,8 +64,6 @@ export default defineComponent({
 
       // Panneau "Afficher les labels"
       showLabelsPanel: false as boolean,
-      matrixLabels: [] as [string, string, string][],
-      labelsSearch: "" as string,
 
       // Queue
       _queue: [] as GraphUpdate[],
@@ -188,13 +84,6 @@ export default defineComponent({
 
   computed: {
     captureStore() { return useCaptureStore() },
-    filteredMatrixLabels(): [string, string, string][] {
-      const q = this.labelsSearch.trim().toLowerCase()
-      if (!q) return this.matrixLabels
-      return this.matrixLabels.filter((row) =>
-        row.some((field) => field.toLowerCase().includes(q))
-      )
-    },
   },
 
   mounted() {
@@ -251,21 +140,6 @@ export default defineComponent({
   },
 
   methods: {
-    async printLabels() {
-      try {
-        this.matrixLabels = await invoke<[string, string, string][]>('get_matrix_labels')
-      } catch (e) {
-        console.error("Erreur get_matrix_labels:", e)
-        this.matrixLabels = []
-      }
-      this.labelsSearch = ""
-      this.showLabelsPanel = true
-    },
-
-    closeLabelsPanel() {
-      this.showLabelsPanel = false
-    },
-
     // === Initialisation Sigma ==============================================
     initSigma() {
       const container = this.$refs.sigmaContainer as HTMLElement
@@ -292,41 +166,8 @@ export default defineComponent({
         // passer la famille surlignée au-dessus des arêtes estompées.
         enableEdgeEvents: true,
         zIndex: true,
-        nodeReducer: (node, data) => {
-          const res: any = { ...data }
-          const tunnelNodes = this.hoveredTunnelNodes
-          if (tunnelNodes && !tunnelNodes.has(node)) {
-            res.color = DIM_NODE_COLOR
-            res.label = null
-          }
-          if (node === this.hoveredNode) res.color = data.hoverColor ?? res.color
-          if (node === this.selectedNodeId) res.highlighted = true
-          return res
-        },
-        edgeReducer: (edge, data) => {
-          const res: any = { ...data }
-          const tunnelEdges = this.hoveredTunnelEdges
-          const dimmed = !!tunnelEdges && !tunnelEdges.has(edge)
-          if (tunnelEdges) {
-            if (dimmed) {
-              res.color = DIM_EDGE_COLOR
-              res.zIndex = 0
-            } else {
-              res.zIndex = 1
-              res.size = (data.size || 1) + 1
-            }
-          }
-          if (!this._edgeLabelsShown || dimmed) {
-            res.label = null
-            return res
-          }
-          let label = data.protocol ?? ""
-          if (this._portLabelsShown && (data.source_port != null || data.destination_port != null)) {
-            label += ` ${data.source_port ?? ""}→${data.destination_port ?? ""}`
-          }
-          res.label = label
-          return res
-        },
+        nodeReducer: (node, data) => this.nodeReducer(node, data),
+        edgeReducer: (edge, data) => this.edgeReducer(edge, data),
       })
       this.renderer = markRaw(renderer)
 
@@ -339,6 +180,44 @@ export default defineComponent({
       renderer.on("clickEdge", ({ edge }) => this.onTunnelEdgeClick(edge))
 
       renderer.getCamera().on("updated", (state) => this.onZoom(1 / state.ratio))
+    },
+
+    // === Reducers Sigma (état de survol/sélection -> rendu) ================
+    nodeReducer(node: string, data: any) {
+      const res: any = { ...data }
+      const tunnelNodes = this.hoveredTunnelNodes
+      if (tunnelNodes && !tunnelNodes.has(node)) {
+        res.color = DIM_NODE_COLOR
+        res.label = null
+      }
+      if (node === this.hoveredNode) res.color = data.hoverColor ?? res.color
+      if (node === this.selectedNodeId) res.highlighted = true
+      return res
+    },
+
+    edgeReducer(edge: string, data: any) {
+      const res: any = { ...data }
+      const tunnelEdges = this.hoveredTunnelEdges
+      const dimmed = !!tunnelEdges && !tunnelEdges.has(edge)
+      if (tunnelEdges) {
+        if (dimmed) {
+          res.color = DIM_EDGE_COLOR
+          res.zIndex = 0
+        } else {
+          res.zIndex = 1
+          res.size = (data.size || 1) + 1
+        }
+      }
+      if (!this._edgeLabelsShown || dimmed) {
+        res.label = null
+        return res
+      }
+      let label = data.protocol ?? ""
+      if (this._portLabelsShown && (data.source_port != null || data.destination_port != null)) {
+        label += ` ${data.source_port ?? ""}→${data.destination_port ?? ""}`
+      }
+      res.label = label
+      return res
     },
 
     // === Surbrillance des tunnels ==========================================
@@ -441,98 +320,6 @@ export default defineComponent({
       this.unpinTunnelHighlight()
     },
 
-    // === Upserts ===========================================================
-    /** Barycentre des nœuds existants (point d'apparition des nouveaux). */
-    _spawnAnchor(): { x: number; y: number } {
-      const g = this.graph
-      if (!g || g.order === 0) return { x: 0, y: 0 }
-      let sx = 0, sy = 0
-      g.forEachNode((_n, attrs) => { sx += attrs.x; sy += attrs.y })
-      return { x: sx / g.order, y: sy / g.order }
-    },
-
-    /** Ajoute ou met à jour un nœud. Retourne true si un élément a été ajouté. */
-    upsertNode(node: any): boolean {
-      if (!this.graph || !node?.id) return false
-      const attrs = nodeAttributes(node)
-      if (this.graph.hasNode(node.id)) {
-        this.graph.mergeNodeAttributes(node.id, attrs)
-        return false
-      }
-      const anchor = this._spawnAnchor()
-      const pos = jitterAround(anchor.x, anchor.y, 200)
-      this.graph.addNode(node.id, { ...attrs, ...pos, size: NODE_SIZE_MIN, _spawned: true })
-      return true
-    },
-
-    /** Taille du nœud proportionnelle (log) au trafic cumulé de ses arêtes. */
-    updateNodeTrafficSize(nodeId: string) {
-      if (!this.graph?.hasNode(nodeId)) return
-      let bytes = 0
-      this.graph.forEachEdge(nodeId, (_edge, attrs) => { bytes += attrs.total_bytes || 0 })
-      this.graph.setNodeAttribute(nodeId, "size", nodeSizeFor(bytes))
-    },
-
-    /** Ajoute ou met à jour une arête. Retourne true si un élément a été ajouté. */
-    upsertEdge(e: any): boolean {
-      if (!this.graph || !e?.source || !e?.target) return false
-      // Arête orpheline : les deux extrémités doivent exister
-      if (!this.graph.hasNode(e.source) || !this.graph.hasNode(e.target)) return false
-
-      const key = edgeKey(e)
-      const attrs = edgeAttributes(e)
-      if (this.graph.hasEdge(key)) {
-        this.graph.mergeEdgeAttributes(key, attrs)
-        this.updateNodeTrafficSize(e.source)
-        this.updateNodeTrafficSize(e.target)
-        return false
-      }
-      this.graph.addEdgeWithKey(key, e.source, e.target, attrs)
-      this.updateNodeTrafficSize(e.source)
-      this.updateNodeTrafficSize(e.target)
-
-      // Un nœud fraîchement apparu est déplacé à côté de son premier voisin
-      // déjà placé : ForceAtlas2 n'a plus qu'un ajustement local à faire.
-      const srcSpawned = !!this.graph.getNodeAttribute(e.source, "_spawned")
-      const dstSpawned = !!this.graph.getNodeAttribute(e.target, "_spawned")
-      if (srcSpawned !== dstSpawned) {
-        const fresh = srcSpawned ? e.source : e.target
-        const settled = srcSpawned ? e.target : e.source
-        const p = jitterAround(
-          this.graph.getNodeAttribute(settled, "x"),
-          this.graph.getNodeAttribute(settled, "y")
-        )
-        this.graph.mergeNodeAttributes(fresh, { x: p.x, y: p.y, _spawned: false })
-      }
-      return true
-    },
-
-    /** Recalcule type/courbure des arêtes parallèles (multi-protocoles). */
-    refreshParallelEdges() {
-      if (!this.graph) return
-      indexParallelEdgesIndex(this.graph, {
-        edgeIndexAttribute: "parallelIndex",
-        edgeMinIndexAttribute: "parallelMinIndex",
-        edgeMaxIndexAttribute: "parallelMaxIndex",
-      })
-      this.graph.forEachEdge((edge, attrs) => {
-        const { parallelIndex, parallelMinIndex, parallelMaxIndex } = attrs as any
-        if (typeof parallelMinIndex === "number") {
-          this.graph!.mergeEdgeAttributes(edge, {
-            type: parallelIndex ? "curved" : "straight",
-            curvature: parallelIndex ? getCurvature(parallelIndex, parallelMaxIndex) : 0,
-          })
-        } else if (typeof parallelIndex === "number") {
-          this.graph!.mergeEdgeAttributes(edge, {
-            type: "curved",
-            curvature: getCurvature(parallelIndex, parallelMaxIndex),
-          })
-        } else {
-          this.graph!.setEdgeAttribute(edge, "type", "straight")
-        }
-      })
-    },
-
     /**
      * Recharge complètement le graphe à partir d'un snapshot complet
      * envoyé par le backend (GraphSnapshot).
@@ -583,12 +370,12 @@ export default defineComponent({
             console.warn(`[NetworkGraphComponent] Arête ${edgeId} invalide: source ou target manquante`);
             continue;
           }
-          if (!this.upsertEdge(edge)) {
+          if (!upsertEdge(this.graph, edge)) {
             console.warn(`[NetworkGraphComponent] Arête orpheline ignorée: ${edge.source} -> ${edge.target} (${edge.label})`);
           }
         }
 
-        this.refreshParallelEdges()
+        refreshParallelEdges(this.graph)
 
         // Layout recréé avec des réglages adaptés à la taille du graphe.
         this.startLayout()
@@ -615,7 +402,7 @@ export default defineComponent({
         label: attrs.rawLabel,
       }
       this.editedLabel = attrs.rawLabel ?? ""
-      this.selectedNodeInfos = this._buildNodeInfos(nodeId)
+      this.selectedNodeInfos = this.buildNodeInfos(nodeId)
       this.renderer?.refresh()
     },
     clearNodeInfos() {
@@ -637,7 +424,7 @@ export default defineComponent({
         label: newLabel || attrs.name || this.selectedNodeId,
       })
       this.selectedNode = { ...this.selectedNode, label: newLabel }
-      this.selectedNodeInfos = this._buildNodeInfos(this.selectedNodeId)
+      this.selectedNodeInfos = this.buildNodeInfos(this.selectedNodeId)
 
       // Appel backend avec mac/ip/label
       try {
@@ -660,12 +447,12 @@ export default defineComponent({
     cancelEdit() {
       if (this.selectedNode && this.selectedNodeId) {
         this.editedLabel = this.selectedNode.label ?? ""
-        this.selectedNodeInfos = this._buildNodeInfos(this.selectedNodeId)
+        this.selectedNodeInfos = this.buildNodeInfos(this.selectedNodeId)
       }
     },
 
     // === Bandeau infos =====================================================
-    _buildNodeInfos(nodeId: string): string[] {
+    buildNodeInfos(nodeId: string): string[] {
       if (!this.graph?.hasNode(nodeId)) return ["Nœud introuvable"]
       const n = this.graph.getNodeAttributes(nodeId)
 
@@ -754,16 +541,6 @@ export default defineComponent({
     },
 
     // === Queue & updates ===================================================
-    normalizeGraphUpdate(raw: any): GraphUpdate | null {
-      const u = raw?.update ?? raw
-      if (!u) return null
-      if (u.type && "payload" in u) return u as GraphUpdate
-      if (u.NewNode) return { type: "NodeAdded", payload: u.NewNode }
-      if (u.NodeUpdated) return { type: "NodeUpdated", payload: u.NodeUpdated }
-      if (u.NewEdge) return { type: "EdgeAdded", payload: u.NewEdge }
-      if (u.EdgeUpdated) return { type: "EdgeUpdated", payload: u.EdgeUpdated }
-      return null
-    },
     flushQueue() {
       const q = this._queue
       if (!q.length || !this.graph) return
@@ -776,43 +553,45 @@ export default defineComponent({
 
       // Le superviseur ForceAtlas2 suit les ajouts tout seul ; il ne reste
       // qu'à recalculer la courbure des arêtes parallèles.
-      if (addedEdges) this.refreshParallelEdges()
+      if (addedEdges) refreshParallelEdges(this.graph)
       this.ensureLayoutSettings()
     },
     /** Retourne "node" | "edge" si un élément a été ajouté au graphe. */
     applyUpdate(update: GraphUpdate | any): "node" | "edge" | null {
-      if (!update) return null
-      const u = this.normalizeGraphUpdate(update)
+      if (!update || !this.graph) return null
+      const u = normalizeGraphUpdate(update)
       if (!u) return null
 
       switch (u.type) {
         case "NodeAdded":
-          return this.upsertNode(u.payload) ? "node" : null
+          return upsertNode(this.graph, u.payload) ? "node" : null
         case "NodeUpdated": {
           const node = u.payload
           if (!node) return null
-          const added = this.upsertNode(node)
-
-          if (this.selectedNodeId === node.id && this.graph?.hasNode(node.id)) {
-            const attrs = this.graph.getNodeAttributes(node.id)
-            this.selectedNode = {
-              id: node.id,
-              name: attrs.name,
-              mac: attrs.mac,
-              ip: attrs.ip,
-              color: attrs.color,
-              label: attrs.rawLabel,
-            }
-            this.editedLabel = attrs.rawLabel ?? ""
-            this.selectedNodeInfos = this._buildNodeInfos(node.id)
-          }
+          const added = upsertNode(this.graph, node)
+          this.refreshSelectedNode(node.id)
           return added ? "node" : null
         }
         case "EdgeAdded":
         case "EdgeUpdated":
-          return this.upsertEdge(u.payload) ? "edge" : null
+          return upsertEdge(this.graph, u.payload) ? "edge" : null
       }
       return null
+    },
+    /** Resynchronise le bandeau bas si le nœud mis à jour est sélectionné. */
+    refreshSelectedNode(nodeId: string | undefined) {
+      if (!nodeId || this.selectedNodeId !== nodeId || !this.graph?.hasNode(nodeId)) return
+      const attrs = this.graph.getNodeAttributes(nodeId)
+      this.selectedNode = {
+        id: nodeId,
+        name: attrs.name,
+        mac: attrs.mac,
+        ip: attrs.ip,
+        color: attrs.color,
+        label: attrs.rawLabel,
+      }
+      this.editedLabel = attrs.rawLabel ?? ""
+      this.selectedNodeInfos = this.buildNodeInfos(nodeId)
     },
   },
 })
@@ -843,7 +622,7 @@ export default defineComponent({
         <div class="tunnel-info">🚇 {{ tunnelHoverInfo }}</div>
       </template>
       <div class="sep" />
-      <button class="download-button" @click="printLabels" title="afficher les labels">Afficher les labels</button>
+      <button class="download-button" @click="showLabelsPanel = true" title="afficher les labels">Afficher les labels</button>
       <div class="sep" />
       <div class="node-infos" v-if="selectedNodeInfos.length">
         <strong>Nœud sélectionné</strong>
@@ -881,44 +660,7 @@ export default defineComponent({
     </div>
 
     <!-- Panneau : labels appliqués à la matrice -->
-    <div v-if="showLabelsPanel" class="labels-overlay" @click.self="closeLabelsPanel">
-      <div class="labels-modal">
-        <div class="labels-modal-header">
-          <h3>Labels appliqués à la matrice ({{ matrixLabels.length }})</h3>
-          <button class="labels-close" @click="closeLabelsPanel" title="Fermer">✕</button>
-        </div>
-
-        <input
-          v-model="labelsSearch"
-          class="labels-search"
-          type="text"
-          placeholder="Rechercher (MAC, IP, label)…"
-        />
-
-        <p v-if="matrixLabels.length === 0" class="labels-empty">
-          Aucun label appliqué à la matrice pour le moment.
-        </p>
-
-        <div v-else class="labels-table">
-          <div class="labels-row labels-head">
-            <div class="labels-col">Adresse MAC</div>
-            <div class="labels-col">Adresse IP</div>
-            <div class="labels-col">Label</div>
-          </div>
-          <div class="labels-body">
-            <div
-              v-for="([mac, ip, label], index) in filteredMatrixLabels"
-              :key="index"
-              class="labels-row"
-            >
-              <div class="labels-col">{{ mac || "-" }}</div>
-              <div class="labels-col">{{ ip || "-" }}</div>
-              <div class="labels-col">{{ label || "-" }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <MatrixLabelsPanel v-if="showLabelsPanel" @close="showLabelsPanel = false" />
 
     <LegendComponent />
   </div>
@@ -1031,84 +773,5 @@ button.ghost {
   border-radius: 6px;
   padding: 6px 10px;
   cursor: pointer;
-}
-
-/* Panneau "Afficher les labels" */
-.labels-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 50;
-}
-.labels-modal {
-  display: flex;
-  flex-direction: column;
-  width: 90%;
-  max-width: 640px;
-  max-height: 80%;
-  background: #1e1e2e;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  color: whitesmoke;
-}
-.labels-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-.labels-modal-header h3 { margin: 0; font-size: 1.1rem; }
-.labels-close {
-  background: transparent;
-  color: #bbb;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  line-height: 1;
-}
-.labels-close:hover { color: #fff; }
-.labels-search {
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 0.75rem;
-  padding: 0.4em 0.7em;
-  border-radius: 6px;
-  border: 1px solid #444;
-  background: #2d3748;
-  color: whitesmoke;
-}
-.labels-empty { color: rgba(245, 245, 245, 0.6); text-align: center; padding: 1rem 0; }
-.labels-table {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  border: 1px solid #333;
-  border-radius: 6px;
-  overflow: hidden;
-}
-.labels-body { overflow-y: auto; }
-.labels-row {
-  display: flex;
-  padding: 0.35rem 0.5rem;
-  border-bottom: 1px solid #2a2a3a;
-}
-.labels-row:last-child { border-bottom: none; }
-.labels-head {
-  font-weight: 600;
-  background: #262636;
-  position: sticky;
-  top: 0;
-}
-.labels-col {
-  flex: 1;
-  padding: 0 0.4rem;
-  word-break: break-all;
-  font-family: monospace;
-  font-size: 0.85rem;
 }
 </style>

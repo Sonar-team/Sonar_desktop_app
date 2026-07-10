@@ -42,9 +42,8 @@
 import { defineComponent, PropType } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { info, error } from '@tauri-apps/plugin-log';
+import { LabelConflictReport } from '../../../types/labels';
 
-type LabelChoice = [number, string, string];
-type LabelConflictReport = { mac: string; ip: string; kept: LabelChoice; dropped: LabelChoice[] };
 type Candidate = { label: string; lines: number[] };
 
 export default defineComponent({
