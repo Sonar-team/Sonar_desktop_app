@@ -557,6 +557,26 @@ fn best_protocol_label(flow: &PacketFlowOwned) -> String {
     "Unknown".to_string()
 }
 
+/// Retourne (edge_key, a_id, b_id, current_is_a_to_b)
+/// a_id <= b_id (ordre canonique stable)
+fn undirected_key(a: &str, b: &str, proto: &str) -> (String, String, String, bool) {
+    if a <= b {
+        (
+            format!("{a}:{b}:{proto}"),
+            a.to_string(),
+            b.to_string(),
+            true,
+        )
+    } else {
+        (
+            format!("{b}:{a}:{proto}"),
+            b.to_string(),
+            a.to_string(),
+            false,
+        )
+    }
+}
+
 #[cfg(test)]
 mod graph_update_batch_tests {
     use super::*;
@@ -650,25 +670,5 @@ mod graph_update_batch_tests {
         // Réutilisable après take : nouvel index, pas de collision
         batch.push(GraphUpdate::NodeUpdated(node("1", Some("après"))));
         assert_eq!(batch.take().len(), 1);
-    }
-}
-
-/// Retourne (edge_key, a_id, b_id, current_is_a_to_b)
-/// a_id <= b_id (ordre canonique stable)
-fn undirected_key(a: &str, b: &str, proto: &str) -> (String, String, String, bool) {
-    if a <= b {
-        (
-            format!("{a}:{b}:{proto}"),
-            a.to_string(),
-            b.to_string(),
-            true,
-        )
-    } else {
-        (
-            format!("{b}:{a}:{proto}"),
-            b.to_string(),
-            a.to_string(),
-            false,
-        )
     }
 }

@@ -11,12 +11,21 @@ import {
   validatePortFields,
 } from "../utils/bpf.ts";
 
+/** Patch partiel de formulaire (mêmes champs que les presets). */
+type FormPatch = {
+  opt?: Partial<BpfFormState["opt"]>;
+  proto?: Partial<BpfFormState["proto"]>;
+  ip?: Partial<BpfFormState["ip"]>;
+  ports?: Partial<BpfFormState["ports"]>;
+  advancedRaw?: string;
+};
+
 /** Formulaire vierge avec un patch appliqué (même mécanique que les presets). */
-function stateWith(patch: Partial<BpfFormState>): BpfFormState {
+function stateWith(patch: FormPatch): BpfFormState {
   const state = emptyBpfFormState();
   return {
     ...state,
-    ...patch,
+    advancedRaw: patch.advancedRaw ?? state.advancedRaw,
     opt: { ...state.opt, ...patch.opt },
     proto: { ...state.proto, ...patch.proto },
     ip: { ...state.ip, ...patch.ip },

@@ -534,8 +534,11 @@ export default defineComponent({
       })
       if (!filePath) return
 
-      const { width, height } = this.renderer.getDimensions()
-      const blob = await toBlob(this.renderer, {
+      // Le typage Options API de Vue « déballe » l'instance Sigma (markRaw) ;
+      // le cast rend le type nominal attendu par toBlob.
+      const renderer = this.renderer as Sigma
+      const { width, height } = renderer.getDimensions()
+      const blob = await toBlob(renderer, {
         format: "png",
         backgroundColor: "#ffffff",
         width: width * 2,
