@@ -7,6 +7,8 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use crate::state::flow_matrix::is_non_unicast_mac;
+
 /// Graphe complet : l'état de référence côté backend, dont le frontend
 /// reçoit soit des updates incrémentales, soit un snapshot entier.
 #[derive(Serialize, Default, Debug)]
@@ -115,7 +117,12 @@ pub struct Node {
     pub id: String,
     pub name: String,  // l’IP sous forme de string (ou MAC)
     pub color: String, // stockée en String côté struct (UI-friendly)
+    /// Première MAC observée pour ce nœud (clé de labellisation historique).
     pub mac: String,
+    /// Toutes les MAC unicast observées pour cette IP, première comprise.
+    /// Plusieurs entrées = anomalie à investiguer (IP partagée, VRRP,
+    /// usurpation ARP…) : le front la signale visuellement.
+    pub macs: Vec<String>,
     pub ip: String,
     pub label: Option<String>,
 }
@@ -129,11 +136,17 @@ impl Node {
         label: Option<String>,
     ) -> Self {
         let id = NODE_COUNTER.fetch_add(1, Ordering::SeqCst);
+        let macs = if mac.is_empty() || is_non_unicast_mac(&mac) {
+            Vec::new()
+        } else {
+            vec![mac.clone()]
+        };
         Self {
             id: id.to_string(),
             name,
             color: color.to_string(),
             mac,
+            macs,
             ip,
             label,
         }
@@ -143,8 +156,8 @@ impl Node {
 #[derive(Serialize, Clone, Debug)]
 pub struct Edge {
     pub id: String,
-    pub source: String, // Node.id (a_id, canonique)
-    pub target: String, // Node.id (b_id, canonique)
+    pub source: String, // Node.id (sens du PREMIER paquet observé)
+    pub target: String, // Node.id (sens du PREMIER paquet observé)
     pub label: String,  // protocole (ex: "DNS", "TCP", "IPv6"...)
     pub source_port: Option<u16>,
     pub destination_port: Option<u16>,
@@ -229,6 +242,11 @@ impl GraphData {
                 let src_node_id = match self.nodes.entry(src_ip_str.clone()) {
                     Entry::Occupied(mut e) => {
                         maybe_update_node_label(e.get_mut(), source_label.clone(), &mut updates);
+                        record_observed_mac(
+                            e.get_mut(),
+                            &packet.data_link.source_mac,
+                            &mut updates,
+                        );
                         e.get().id.clone()
                     }
                     Entry::Vacant(v) => {
@@ -254,6 +272,11 @@ impl GraphData {
                             destination_label.clone(),
                             &mut updates,
                         );
+                        record_observed_mac(
+                            e.get_mut(),
+                            &packet.data_link.destination_mac,
+                            &mut updates,
+                        );
                         e.get().id.clone()
                     }
                     Entry::Vacant(v) => {
@@ -273,20 +296,18 @@ impl GraphData {
 
                 let protocol = best_protocol_label(packet);
 
-                // 🔥 Clé non orientée + direction courante vs canonique
-                let (edge_key, a_id, b_id, current_is_a_to_b) =
-                    undirected_key(&src_node_id, &dst_node_id, &protocol);
+                // Clé non orientée : {A,B,proto} indépendamment du sens.
+                let edge_key = undirected_edge_key(&src_node_id, &dst_node_id, &protocol);
 
                 match self.edges.get_mut(&edge_key) {
                     Some(edge) => {
                         // Arête existe déjà (A—B:proto).
                         let mut notify = false;
 
-                        // Si on observe le sens inverse pour la première fois,
-                        // on passe bidir=true et on notifie le front.
-                        // À la création, edge.source == a_id et edge.target == b_id.
-                        // Si current_is_a_to_b == false -> on a vu b->a -> bidir.
-                        if !edge.bidir && !current_is_a_to_b {
+                        // L'arête est stockée dans le sens du premier paquet
+                        // observé : bidir passe à vrai seulement quand le sens
+                        // courant en diffère réellement.
+                        if !edge.bidir && edge.source != src_node_id {
                             edge.bidir = true;
                             notify = true;
                         }
@@ -304,8 +325,10 @@ impl GraphData {
                         }
                     }
                     None => {
-                        // Première observation de {A,B,proto} → création de l'arête canonique (A->B)
-                        let mut edge = Edge::new(a_id.clone(), b_id.clone())
+                        // Première observation de {A,B,proto} : l'arête est
+                        // créée dans le sens réellement observé (la flèche du
+                        // rendu reflète le premier paquet).
+                        let mut edge = Edge::new(src_node_id.clone(), dst_node_id.clone())
                             .with_label(protocol)
                             .with_ports(
                                 packet.transport.as_ref().and_then(|t| t.source_port),
@@ -370,13 +393,12 @@ impl GraphData {
         };
 
         let l2_proto = packet.data_link.ethertype.clone();
-        let (edge_key, a_id, b_id, current_is_a_to_b) =
-            undirected_key(&src_node_id, &dst_node_id, &l2_proto);
+        let edge_key = undirected_edge_key(&src_node_id, &dst_node_id, &l2_proto);
 
         match self.edges.get_mut(&edge_key) {
             Some(edge) => {
                 let mut notify = false;
-                if !edge.bidir && !current_is_a_to_b {
+                if !edge.bidir && edge.source != src_node_id {
                     edge.bidir = true;
                     notify = true;
                 }
@@ -391,7 +413,7 @@ impl GraphData {
                 }
             }
             None => {
-                let mut edge = Edge::new(a_id.clone(), b_id.clone())
+                let mut edge = Edge::new(src_node_id.clone(), dst_node_id.clone())
                     .with_label(l2_proto)
                     .with_ports(None, None) // pas de ports en L2
                     .with_traffic(packets, bytes);
@@ -518,6 +540,21 @@ fn maybe_update_node_label(node: &mut Node, label: Option<String>, updates: &mut
     }
 }
 
+/// Enregistre une MAC unicast supplémentaire observée pour ce nœud (IP).
+/// Plusieurs MAC pour une même IP = anomalie à investiguer (IP partagée,
+/// VRRP, usurpation ARP…) : le front la signale visuellement. Les MAC
+/// broadcast/multicast, partageables par nature, sont ignorées.
+fn record_observed_mac(node: &mut Node, mac: &str, updates: &mut Vec<GraphUpdate>) {
+    if mac.is_empty() || is_non_unicast_mac(mac) {
+        return;
+    }
+    if node.macs.iter().any(|known| known == mac) {
+        return;
+    }
+    node.macs.push(mac.to_string());
+    updates.push(GraphUpdate::NodeUpdated(node.clone()));
+}
+
 fn is_unknown(s: &str) -> bool {
     let t = s.trim();
     t.is_empty() || t.eq_ignore_ascii_case("unknown")
@@ -557,23 +594,13 @@ fn best_protocol_label(flow: &PacketFlowOwned) -> String {
     "Unknown".to_string()
 }
 
-/// Retourne (edge_key, a_id, b_id, current_is_a_to_b)
-/// a_id <= b_id (ordre canonique stable)
-fn undirected_key(a: &str, b: &str, proto: &str) -> (String, String, String, bool) {
+/// Clé d'arête non orientée `{A,B,proto}` : ordre canonique stable des ids,
+/// indépendant du sens observé (les deux sens partagent la même arête).
+fn undirected_edge_key(a: &str, b: &str, proto: &str) -> String {
     if a <= b {
-        (
-            format!("{a}:{b}:{proto}"),
-            a.to_string(),
-            b.to_string(),
-            true,
-        )
+        format!("{a}:{b}:{proto}")
     } else {
-        (
-            format!("{b}:{a}:{proto}"),
-            b.to_string(),
-            a.to_string(),
-            false,
-        )
+        format!("{b}:{a}:{proto}")
     }
 }
 
@@ -587,6 +614,7 @@ mod graph_update_batch_tests {
             name: "10.0.0.1".to_string(),
             color: "#8BC34A".to_string(),
             mac: "aa:bb:cc:dd:ee:ff".to_string(),
+            macs: vec!["aa:bb:cc:dd:ee:ff".to_string()],
             ip: "10.0.0.1".to_string(),
             label: label.map(str::to_string),
         }
@@ -670,5 +698,109 @@ mod graph_update_batch_tests {
         // Réutilisable après take : nouvel index, pas de collision
         batch.push(GraphUpdate::NodeUpdated(node("1", Some("après"))));
         assert_eq!(batch.take().len(), 1);
+    }
+}
+
+#[cfg(test)]
+mod add_packet_flow_tests {
+    use super::*;
+    use packet_parser::owned::{DataLinkOwned, InternetOwned};
+    use std::net::IpAddr;
+
+    /// Flux L3 minimal : IPv4 privé des deux côtés (chemin L3 du graphe).
+    fn flow(src_mac: &str, src_ip: &str, dst_mac: &str, dst_ip: &str) -> PacketFlowOwned {
+        PacketFlowOwned {
+            data_link: DataLinkOwned {
+                destination_mac: dst_mac.to_string(),
+                source_mac: src_mac.to_string(),
+                ethertype: "IPv4".to_string(),
+                vlan: None,
+            },
+            internet: Some(InternetOwned {
+                source_ip: Some(src_ip.parse::<IpAddr>().unwrap()),
+                ip_source_type: Some(IpType::from_ip(src_ip)),
+                destination_ip: Some(dst_ip.parse::<IpAddr>().unwrap()),
+                ip_destination_type: Some(IpType::from_ip(dst_ip)),
+                protocol: "IPv4".to_string(),
+            }),
+            transport: None,
+            application: None,
+        }
+    }
+
+    fn add(graph: &mut GraphData, f: &PacketFlowOwned) -> Vec<GraphUpdate> {
+        graph.add_packet_flow(f, None, None, 1, 100, &[])
+    }
+
+    fn single_edge(graph: &GraphData) -> &Edge {
+        assert_eq!(graph.edges.len(), 1, "une seule arête attendue");
+        graph.edges.values().next().unwrap()
+    }
+
+    /// Régression : deux paquets dans le MÊME sens ne doivent jamais marquer
+    /// l'arête bidirectionnelle (l'ancienne clé canonique le faisait dès que
+    /// l'ordre lexicographique des ids ne suivait pas le sens observé).
+    #[test]
+    fn same_direction_packets_never_mark_bidir() {
+        let mut graph = GraphData::new();
+        let a_to_b = flow("10:00:00:00:00:0a", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20");
+
+        add(&mut graph, &a_to_b);
+        add(&mut graph, &a_to_b);
+        add(&mut graph, &a_to_b);
+
+        assert!(!single_edge(&graph).bidir, "un seul sens observé");
+    }
+
+    /// Le premier paquet fixe le sens affiché ; le sens inverse passe bidir.
+    #[test]
+    fn reverse_direction_marks_bidir_and_first_direction_is_kept() {
+        let mut graph = GraphData::new();
+        let a_to_b = flow("10:00:00:00:00:0a", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20");
+        let b_to_a = flow("10:00:00:00:00:0b", "192.168.1.20", "10:00:00:00:00:0a", "192.168.1.10");
+
+        add(&mut graph, &a_to_b);
+        assert!(!single_edge(&graph).bidir);
+        let source_id = graph.nodes.get("192.168.1.10").unwrap().id.clone();
+        assert_eq!(
+            single_edge(&graph).source,
+            source_id,
+            "l'arête part du premier émetteur observé"
+        );
+
+        add(&mut graph, &b_to_a);
+        assert!(single_edge(&graph).bidir, "sens inverse observé -> bidir");
+    }
+
+    /// Une IP vue avec plusieurs MAC unicast accumule les MAC observées et
+    /// notifie le front (anomalie type usurpation ARP à signaler).
+    #[test]
+    fn multiple_macs_for_same_ip_are_recorded() {
+        let mut graph = GraphData::new();
+        add(&mut graph, &flow("10:00:00:00:00:0a", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20"));
+        let updates = add(
+            &mut graph,
+            &flow("de:ad:be:ef:00:01", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20"),
+        );
+
+        let node = graph.nodes.get("192.168.1.10").unwrap();
+        assert_eq!(node.macs.len(), 2, "les deux MAC observées sont retenues");
+        assert_eq!(node.mac, "10:00:00:00:00:0a", "la première MAC reste la clé");
+        assert!(
+            updates.iter().any(|u| matches!(u, GraphUpdate::NodeUpdated(n) if n.macs.len() == 2)),
+            "le front est notifié de l'anomalie"
+        );
+    }
+
+    /// Les MAC broadcast/multicast, partageables par nature, ne comptent pas
+    /// comme conflit.
+    #[test]
+    fn non_unicast_macs_are_not_recorded_as_conflict() {
+        let mut graph = GraphData::new();
+        add(&mut graph, &flow("10:00:00:00:00:0a", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20"));
+        add(&mut graph, &flow("ff:ff:ff:ff:ff:ff", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20"));
+
+        let node = graph.nodes.get("192.168.1.10").unwrap();
+        assert_eq!(node.macs.len(), 1, "la MAC broadcast est ignorée");
     }
 }

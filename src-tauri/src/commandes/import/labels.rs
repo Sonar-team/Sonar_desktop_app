@@ -141,6 +141,10 @@ pub fn get_label_rows(
     Ok(label_store.get().clone())
 }
 
+/// Vide le store de labels (la table « contenu importé » du panneau).
+///
+/// Sémantique **assumée** : ne retire pas les labels déjà appliqués à la
+/// matrice ou au graphe — même logique de fusion que [`import_label_file`].
 #[tauri::command(async)]
 pub fn clear_label_store(
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
@@ -329,6 +333,13 @@ fn is_header_row(row: &LabelRow) -> bool {
     !is_mac_address(&row.mac) && !is_ip_address(&row.ip)
 }
 
+/// Importe un fichier de labels CSV.
+///
+/// Sémantique **assumée de fusion** côté matrice/graphe : le store est
+/// remplacé par le contenu du fichier, mais les labels précédemment appliqués
+/// à la matrice ou aux nœuds du graphe survivent tant qu'une nouvelle valeur
+/// ne les écrase pas (clé `(mac, ip)` identique). Un import ne « désétiquette »
+/// donc jamais un équipement. Pour repartir de zéro : reset de la capture.
 #[tauri::command(async)]
 pub fn import_label_file(
     incoming_file_path: String,

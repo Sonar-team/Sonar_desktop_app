@@ -86,8 +86,11 @@ export type EdgeId = string;
 export interface NodeData {
   id: string;
   name: string;
+  /** Première MAC observée (clé de labellisation). */
   mac?: string;
-  ip?: string; // ← NEW
+  /** Toutes les MAC unicast observées ; plusieurs entrées = anomalie. */
+  macs?: string[];
+  ip?: string;
   color: string;
   label?: string;
   _hover?: string;

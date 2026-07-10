@@ -35,6 +35,9 @@ export function brighten(hex: string, factor = 0.15) {
 export const DIM_EDGE_COLOR = "#2a2a2a"
 export const DIM_NODE_COLOR = "#3a3a3a"
 
+// Bordure d'alerte : IP observée avec plusieurs MAC (anomalie à investiguer)
+export const MAC_CONFLICT_BORDER_COLOR = "#FF5252"
+
 // --- Clés d'arêtes ----------------------------------------------------------
 const EDGE_SEP = "__"
 export function edgeKey(e: EdgeData): EdgeId {
@@ -103,14 +106,20 @@ export function drawNodeLabel(context: CanvasRenderingContext2D, data: any, sett
 export function nodeAttributes(node: any) {
   const color = node.color || "#2196F3"
   const rawLabel = node.label || ""
+  const macs: string[] = Array.isArray(node.macs) ? node.macs : []
+  // Plusieurs MAC unicast pour une même IP : anomalie (IP partagée, VRRP,
+  // usurpation ARP…) signalée par une bordure d'alerte.
+  const macConflict = macs.length > 1
   return {
     name: node.name || node.id,
     mac: node.mac || "",
+    macs,
+    macConflict,
     ip: node.ip || "",
     rawLabel,
     label: rawLabel || node.name || node.id,
     color,
-    borderColor: darken(color, 0.25),
+    borderColor: macConflict ? MAC_CONFLICT_BORDER_COLOR : darken(color, 0.25),
     hoverColor: brighten(color, 0.18),
   }
 }

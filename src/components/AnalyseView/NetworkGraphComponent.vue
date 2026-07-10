@@ -473,11 +473,16 @@ export default defineComponent({
         bytes += attrs.total_bytes || 0
       })
 
+      // Plusieurs MAC observées pour cette IP : anomalie mise en évidence.
+      const macInfo = n.macConflict
+        ? `⚠ MACs multiples (${n.macs.length}): ${n.macs.join(", ")}`
+        : `MAC: ${n.mac ?? ""}`
+
       return [
         `ID: ${nodeId}`,
         `Nom: ${n.name ?? ""}`,
         `Label: ${n.rawLabel || "N/A"}`,
-        `MAC: ${n.mac ?? ""}`,
+        macInfo,
         `IP: ${n.ip ?? ""}`,
         `Couleur: ${n.color}`,
         `Degré: ${degree}`,
