@@ -2,7 +2,7 @@
 //! des buffers du pool et les pousse dans le canal borné vers le thread de
 //! traitement (comptage des pertes applicatives quand le canal est plein).
 
-use crossbeam::channel::Sender;
+use crossbeam::channel::{Sender, TrySendError};
 use log::{debug, error, warn};
 use pcap::{Active, Capture};
 use std::{
@@ -82,12 +82,22 @@ pub fn spawn_capture_thread_with_pool(
                             Ok(()) => {
                                 // Succès : le processing thread RENDRA le buffer au pool.
                             }
-                            Err(err) => {
+                            Err(TrySendError::Full(message)) => {
                                 drop_counters.add_channel_full();
                                 pending_drops.channel_full += 1;
                                 // Échec d'envoi => on remet IMMÉDIATEMENT le buffer au pool
-                                let CaptureMessage::Packet(buffer) = err.into_inner();
+                                let CaptureMessage::Packet(buffer) = message;
                                 buffer_pool.put(buffer);
+                            }
+                            Err(TrySendError::Disconnected(message)) => {
+                                // Le consommateur est parti (arrêt en cours) :
+                                // ce paquet est arrivé après l'arrêt effectif,
+                                // ce n'est pas une perte — on rend le buffer
+                                // et on sort sans le compter en « canal plein ».
+                                let CaptureMessage::Packet(buffer) = message;
+                                buffer_pool.put(buffer);
+                                debug!("Canal fermé côté processing : fin du thread de capture");
+                                break;
                             }
                         }
                     } else {

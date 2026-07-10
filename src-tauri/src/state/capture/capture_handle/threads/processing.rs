@@ -46,6 +46,10 @@ const STATS_EMIT_INTERVAL_MS: u64 = 250;
 const CHANNEL_EMIT_TEMPO: Duration = Duration::from_millis(40);
 /// Flush anticipé du batch graphe (rafales de nouveaux flux, ex. début de capture).
 const GRAPH_BATCH_MAX: usize = 512;
+/// Attente maximale entre deux paquets pendant le drainage d'arrêt : couvre
+/// largement le timeout pcap par défaut (25 ms) le temps que le thread de
+/// capture sorte et lâche l'émetteur.
+const DRAIN_RECV_TIMEOUT: Duration = Duration::from_millis(250);
 
 /// IPs source/destination d'un flux possédé, en chaînes (vides si absentes).
 fn flow_ips(owned: &PacketOwnedStats) -> (String, String) {
@@ -311,17 +315,30 @@ impl PacketWorker {
     /// Draine le canal après l'arrêt : les paquets déjà acceptés par le
     /// pipeline (jusqu'à `chan_capacity`) sont intégrés à la matrice et au
     /// graphe au lieu d'être jetés — le relevé exporté reste fidèle à ce qui
-    /// a été capturé. Retourne le nombre de paquets récupérés.
+    /// a été capturé. Consomme jusqu'à la déconnexion (le thread de capture
+    /// sort et lâche l'émetteur), pour couvrir aussi les paquets envoyés
+    /// entre la levée du drapeau d'arrêt et la sortie effective de la
+    /// capture. Retourne le nombre de paquets récupérés.
     fn drain_channel(
         &mut self,
         rx: &Receiver<CaptureMessage>,
         buffer_pool: &PacketBufferPool,
     ) -> usize {
         let mut drained = 0;
-        while let Ok(CaptureMessage::Packet(pkt)) = rx.try_recv() {
-            self.ingest_packet_silently(&pkt);
-            buffer_pool.put(pkt);
-            drained += 1;
+        loop {
+            match rx.recv_timeout(DRAIN_RECV_TIMEOUT) {
+                Ok(CaptureMessage::Packet(pkt)) => {
+                    self.ingest_packet_silently(&pkt);
+                    buffer_pool.put(pkt);
+                    drained += 1;
+                }
+                // Émetteur lâché et canal vide : drainage complet.
+                Err(RecvTimeoutError::Disconnected) => break,
+                // Garde-fou : l'émetteur vit encore mais plus rien n'arrive
+                // (ne devrait pas se produire à l'arrêt, le thread de capture
+                // sort dans son timeout pcap).
+                Err(RecvTimeoutError::Timeout) => break,
+            }
         }
         if drained > 0 {
             info!("Arrêt : {drained} paquet(s) drainés du canal vers la matrice");
@@ -649,6 +666,9 @@ mod tests {
         for _ in 0..3 {
             tx.send(packet_message(&pool, &arp_frame())).unwrap();
         }
+        // Le thread de capture sort et lâche l'émetteur : le drainage doit
+        // consommer tout le buffer restant puis s'arrêter sur la déconnexion.
+        drop(tx);
 
         let drained = worker.drain_channel(&rx, &pool);
 
@@ -681,6 +701,7 @@ mod tests {
 
         tx.send(packet_message(&pool, &[0x00, 0x01, 0x02])).unwrap();
         tx.send(packet_message(&pool, &arp_frame())).unwrap();
+        drop(tx);
 
         let drained = worker.drain_channel(&rx, &pool);
 
