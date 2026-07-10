@@ -1,8 +1,12 @@
+//! Erreurs du démarrage et du pipeline de capture réseau.
+
 use crossbeam::channel::TrySendError;
 use thiserror::Error;
 
 use crate::state::capture::capture_handle::messages::CaptureMessage;
 
+/// Erreur survenue à la configuration, à l'initialisation ou pendant la
+/// capture (canal interne ou IPC).
 #[derive(Debug, Error)]
 pub enum CaptureError {
     #[error("Configuration de capture invalide : {0}")]
@@ -29,6 +33,7 @@ pub enum CaptureError {
     // FilterError(String),
 }
 
+/// Représentation sérialisable de [`CaptureError`] (forme `{ kind, message }`).
 #[derive(serde::Serialize)]
 #[serde(tag = "kind", content = "message")]
 #[serde(rename_all = "camelCase")]

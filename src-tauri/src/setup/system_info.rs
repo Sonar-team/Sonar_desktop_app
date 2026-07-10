@@ -1,13 +1,19 @@
+//! Monitoring système : usage CPU moyen émis périodiquement au frontend et
+//! énumération des interfaces réseau locales.
+
 use serde::Serialize;
 use std::sync::{Arc, Mutex};
 use sysinfo::System;
 use tauri::{AppHandle, Emitter};
 
+/// Payload de l'événement `cpu_usage_update` (usage CPU moyen, en %).
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemInfo {
     pub cpu_usage: f32,
 }
 
+/// Démarre la tâche de fond qui émet chaque seconde l'usage CPU moyen au
+/// frontend (événement `cpu_usage_update`, affiché dans la barre de statut).
 pub fn start_cpu_monitor(app_handle: AppHandle) -> Result<(), tauri::Error> {
     let sys = Arc::new(Mutex::new(System::new_all()));
 
@@ -43,6 +49,7 @@ pub fn start_cpu_monitor(app_handle: AppHandle) -> Result<(), tauri::Error> {
     Ok(())
 }
 
+/// Interfaces réseau locales (via `netdev`), journalisées au passage.
 pub fn get_interfaces() -> Vec<netdev::Interface> {
     let interfaces = netdev::get_interfaces();
 

@@ -1,3 +1,7 @@
+<!--
+  Écran d'ouverture de fichiers PCAP : sélection puis conversion en matrice
+  de flux (commande convert_from_pcap_list).
+-->
 <template>
     <div class="container">
       <div class="image-container">

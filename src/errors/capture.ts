@@ -1,3 +1,6 @@
+// Erreurs du backend (miroir de `CaptureStateErrorKind` côté Rust, forme
+// discriminée `{ kind, message }`) et affichage utilisateur : chaque erreur
+// est traduite en message lisible, montrée en dialogue et journalisée.
 import { message } from "@tauri-apps/plugin-dialog";
 import { error } from "@tauri-apps/plugin-log";
 

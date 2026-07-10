@@ -1,3 +1,6 @@
+//! DTO sérialisables pour l'IPC Tauri : miroirs des types `pcap::Device` et
+//! associés, exposés au frontend par la commande `get_net_interfaces`.
+
 use std::net::IpAddr;
 
 use pcap::{
@@ -6,8 +9,7 @@ use pcap::{
 };
 use serde::Serialize;
 
-/// ====== DTO sérialisables pour l'IPC Tauri ======
-
+/// Interface réseau telle que présentée au frontend.
 #[derive(Debug, Serialize)]
 pub struct NetDevice {
     pub name: String,
@@ -16,6 +18,7 @@ pub struct NetDevice {
     pub flags: DeviceFlags,
 }
 
+/// Adresse portée par une interface (IP, masque, broadcast, destination).
 #[derive(Debug, Serialize)]
 pub struct Address {
     pub addr: IpAddr,
@@ -24,6 +27,7 @@ pub struct Address {
     pub dst_addr: Option<IpAddr>,
 }
 
+/// Drapeaux d'une interface : bits bruts + état de connexion.
 #[derive(Debug, Serialize)]
 pub struct DeviceFlags {
     pub if_flags: IfFlags,
@@ -38,6 +42,7 @@ pub struct IfFlags {
     pub bits: u32,
 }
 
+/// État de connexion d'une interface, tel que remonté par pcap.
 #[derive(Debug, Serialize)]
 pub enum ConnectionStatus {
     Unknown,

@@ -1,3 +1,7 @@
+<!--
+  Vue d'analyse (route par défaut) : graphe réseau, matrice de flux et
+  panneaux latéraux (import, filtre, configuration), orchestrés par TopBar.
+-->
 <template>
   <div class="page-container">
     <div class="top-container">

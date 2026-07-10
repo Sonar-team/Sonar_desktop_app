@@ -1,8 +1,13 @@
+//! Indicateur d'occupation du canal capture→processing, remonté au frontend
+//! pour matérialiser la backpressure.
+
 use serde::Serialize;
 use tauri::ipc::Channel;
 
 use crate::events::CaptureEvent;
 
+/// Occupation du canal : taille max, remplissage courant et drapeau de
+/// backpressure (≥ 90 % de remplissage).
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 pub struct ChannelCapacityPayload {
     pub channel_size: usize,
@@ -21,6 +26,8 @@ impl Default for ChannelCapacityPayload {
 }
 
 impl ChannelCapacityPayload {
+    /// Émet l'événement `ChannelCapacityPayload` seulement si l'état a changé
+    /// depuis `last` (déduplication côté backend).
     pub fn send_if_changed(
         last: &mut Self,
         current_size: usize,

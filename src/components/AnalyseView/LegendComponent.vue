@@ -1,3 +1,7 @@
+<!--
+  Légende du graphe réseau : couleurs par protocole (voir
+  utils/protocolColors.ts).
+-->
 <template>
   <div class="legend-container">
     <h3>Légende</h3>

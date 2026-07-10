@@ -1,3 +1,9 @@
+<!--
+  Dialogue d'arbitrage des conflits de labels : pour chaque clé (mac, ip)
+  ayant reçu plusieurs labels à l'import, l'utilisateur choisit le label à
+  garder (commande resolve_label_conflict).
+  Props : conflicts. Événements : close, resolved.
+-->
 <template>
   <div class="container">
     <div class="center-container">

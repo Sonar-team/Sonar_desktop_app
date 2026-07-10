@@ -1,3 +1,7 @@
+//! Erreurs des commandes d'export (CSV, labels, logs).
+
+/// Erreur d'export : chemin manquant, E/S, écriture CSV, verrou empoisonné
+/// ou dossier de logs introuvable.
 #[derive(Debug, thiserror::Error)]
 pub enum ExportError {
     #[error("Chemin de fichier vide")]
@@ -12,6 +16,7 @@ pub enum ExportError {
     LogNotFound,
 }
 
+/// Représentation sérialisable de [`ExportError`] (forme `{ kind, message }`).
 #[derive(serde::Serialize)]
 #[serde(tag = "kind", content = "message")]
 #[serde(rename_all = "camelCase")]

@@ -1,7 +1,12 @@
+//! Stores de labels : lignes `(mac, ip, label)` importées par l'utilisateur
+//! ([`LabelStore`]) et labels générés au démarrage pour la machine de capture
+//! ([`PcInfoLabel`]).
+
 use serde::Serialize;
 
+/// Labels importés du dernier fichier CSV, indexés par clé `(mac, ip)`.
+/// Source de vérité pour repeupler la matrice à chaque import ou capture.
 #[derive(Serialize, Default, Debug)]
-
 pub struct LabelStore {
     pub rows: Vec<(String, String, String)>,
 }
@@ -11,10 +16,13 @@ impl LabelStore {
         LabelStore { rows: Vec::new() }
     }
 
+    /// Ajoute une ligne `(mac, ip, label)` (sans dédoublonnage : l'import
+    /// déduplique en amont).
     pub fn add(&mut self, row: (String, String, String)) {
         self.rows.push(row)
     }
 
+    /// Toutes les lignes du store, dans l'ordre d'import.
     pub fn get(&self) -> &Vec<(String, String, String)> {
         &self.rows
     }
@@ -35,6 +43,8 @@ impl LabelStore {
     }
 }
 
+/// Lignes de labels « pc sonar » générées au démarrage depuis les interfaces
+/// réseau locales (voir `setup::labels`).
 pub struct PcInfoLabel {
     pub label_lines: Vec<String>,
 }

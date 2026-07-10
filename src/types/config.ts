@@ -1,3 +1,6 @@
+// Configuration de capture (miroir de `CaptureConfig` côté Rust) et valeurs
+// par défaut proposées dans le panneau de configuration.
+
 export type CaptureConfig = {
   device_name: string;
   buffer_size: number;

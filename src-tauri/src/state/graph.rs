@@ -1,8 +1,14 @@
+//! Graphe réseau : nœuds (équipements identifiés par IP ou MAC) et arêtes
+//! (conversations par protocole), construit incrémentalement pendant la
+//! capture ou l'import et synchronisé avec le frontend par `GraphUpdate`.
+
 use packet_parser::{IpType, owned::PacketFlowOwned};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+/// Graphe complet : l'état de référence côté backend, dont le frontend
+/// reçoit soit des updates incrémentales, soit un snapshot entier.
 #[derive(Serialize, Default, Debug)]
 pub struct GraphData {
     // clé = IP (stringifiée) ou "mac:XX:XX:..."

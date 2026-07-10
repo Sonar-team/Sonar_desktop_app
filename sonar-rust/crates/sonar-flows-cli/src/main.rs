@@ -1,3 +1,7 @@
+//! CLI d'analyse batch SONAR : conversion PCAP → matrice CSV et fusion de
+//! matrices, sans interface graphique (mêmes traitements que l'application
+//! desktop, via `sonar-flows-core`).
+
 use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Parser, Subcommand};

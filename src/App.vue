@@ -1,3 +1,8 @@
+<!--
+  Racine de l'application : fond, overlay bloquant pendant les imports,
+  barre du haut (TopBar), vue routée et barre de statut. Gère aussi la
+  confirmation de fermeture de la fenêtre.
+-->
 <template>
 
   <!-- Overlay bloquant -->

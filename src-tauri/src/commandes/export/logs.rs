@@ -1,3 +1,5 @@
+//! Commande d'export des fichiers de logs de l'application.
+
 use std::fs;
 use std::path::PathBuf;
 use tauri::command;

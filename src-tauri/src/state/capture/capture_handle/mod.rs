@@ -1,3 +1,7 @@
+//! Pipeline de capture live : deux threads (capture pcap → canal borné →
+//! traitement) pilotés par un [`CaptureHandle`], avec pool de buffers pour
+//! éviter les allocations par paquet.
+
 pub mod messages;
 pub mod setup;
 pub mod threads;
@@ -30,6 +34,8 @@ use crate::{
     },
 };
 
+/// Poignée d'une capture en cours : drapeau d'arrêt partagé et threads du
+/// pipeline, joints à l'arrêt.
 pub struct CaptureHandle {
     stop_flag: Arc<AtomicBool>,
     /// Threads capture + processing, joints au `stop()` pour garantir qu'un

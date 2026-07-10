@@ -1,3 +1,7 @@
+//! Thread de capture : lit les paquets sur l'interface pcap, les copie dans
+//! des buffers du pool et les pousse dans le canal borné vers le thread de
+//! traitement (comptage des pertes applicatives quand le canal est plein).
+
 use crossbeam::channel::Sender;
 use log::{debug, error, warn};
 use pcap::{Active, Capture};

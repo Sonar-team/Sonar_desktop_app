@@ -1,5 +1,9 @@
+//! Statut de la capture exposé au frontend.
+
 use serde::Serialize;
 
+/// Statut courant de la capture (démarrée ou non), renvoyé par les commandes
+/// `start_capture`/`stop_capture`.
 #[derive(Clone, Serialize)]
 pub struct CaptureStatus {
     pub is_running: bool,

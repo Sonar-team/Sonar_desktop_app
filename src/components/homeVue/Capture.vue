@@ -1,3 +1,7 @@
+<!--
+  Écran de démarrage d'une capture live : choix de l'interface réseau et
+  lancement de la capture (commande start_capture).
+-->
 <template>
   <div class="image-container">
     <img src="../../assets/images/128x128@2x.png" alt="Sonar Logo" width="150" height="150">

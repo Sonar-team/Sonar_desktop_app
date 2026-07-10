@@ -1,3 +1,7 @@
+<!--
+  Barre de statut : compteurs de capture (reçus, traités, perdus), état du
+  canal, interface active, CPU et durée de capture.
+-->
 <template>
   <div class="status-bar">
     <div class="left-status-content">

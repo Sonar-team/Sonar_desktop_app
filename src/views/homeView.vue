@@ -1,3 +1,7 @@
+<!--
+  Vue d'accueil : bascule entre le lancement d'une capture live (Capture)
+  et l'ouverture de fichiers PCAP (FromPcap).
+-->
 <script setup>
 import { ref } from 'vue';
 import Capture from '../components/homeVue/Capture.vue';

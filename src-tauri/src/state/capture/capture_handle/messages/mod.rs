@@ -1,3 +1,6 @@
+//! Messages et payloads du pipeline de capture : paquets, stats partagées et
+//! occupation du canal.
+
 use crate::state::capture::capture_handle::threads::packet_buffer::PacketBuffer;
 
 pub mod capture;

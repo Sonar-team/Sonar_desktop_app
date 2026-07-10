@@ -1,3 +1,6 @@
+//! Commandes de gestion des labels de la matrice de flux (ajout manuel,
+//! consultation).
+
 use std::sync::{Arc, Mutex};
 use tauri::{State, command};
 
@@ -6,8 +9,9 @@ use crate::{
     events::CaptureEvent,
     state::{capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData},
 };
-// si tu veux un Result typé :
 
+/// Applique un label à la clé `(mac, ip)` : matrice de flux, nœud du graphe,
+/// puis notification du frontend via le channel de la capture s'il existe.
 #[command]
 pub fn add_label(
     matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
@@ -41,6 +45,7 @@ pub fn add_label(
     Ok(())
 }
 
+/// Liste des labels connus de la matrice (valeurs seules, pour l'UI).
 #[command]
 pub fn get_label_list(
     matrix: State<'_, Arc<Mutex<FlowMatrix>>>,

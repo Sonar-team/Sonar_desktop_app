@@ -1,3 +1,6 @@
+// Couleurs des protocoles dans le graphe réseau : palette fixe pour les
+// protocoles connus, couleur dérivée par hachage stable pour les autres.
+// Alimente aussi la légende du graphe.
 type ProtocolColorLegendItem = {
   label: string
   color: string

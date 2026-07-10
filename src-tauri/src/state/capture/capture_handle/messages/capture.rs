@@ -1,3 +1,8 @@
+//! Représentations d'un paquet dans le pipeline : [`PacketMinimal`]
+//! (emprunte les octets capturés) et [`PacketOwnedStats`] (possédé,
+//! sérialisable vers le frontend), avec dépliage des tunnels en niveaux de
+//! flux reliés par `encap_id`.
+
 use std::hash::{Hash, Hasher};
 
 use packet_parser::PacketFlow;

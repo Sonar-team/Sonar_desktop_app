@@ -1,3 +1,7 @@
+//! Initialisation de l'application : bannière, snapshot d'environnement dans
+//! les logs, labels générés depuis les interfaces réseau, monitoring CPU et
+//! messages « À propos ».
+
 use colored::Colorize;
 use log::info;
 use tauri::AppHandle;
@@ -6,6 +10,9 @@ pub mod about;
 pub mod labels;
 pub mod system_info;
 
+/// Journalise un instantané complet de l'environnement au démarrage : hôte,
+/// OS, métadonnées de l'application et cible de compilation. Précieux pour
+/// diagnostiquer un binaire en production à partir de ses seuls logs.
 pub fn log_host_and_app_snapshot(app: &AppHandle) {
     // ---------- OS / Host (tauri_plugin_os) ----------
     // Note: la lib `tauri_plugin_os` expose des helpers côté Rust.

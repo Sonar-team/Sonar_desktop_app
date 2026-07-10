@@ -1,3 +1,8 @@
+<!--
+  Barre d'actions principale : démarrer/arrêter la capture, reset, exports
+  (matrice, labels, logs), ouverture des panneaux (import, filtre, config)
+  et raccourcis clavier associés.
+-->
 <template>
   <div class="top-bar">
     <button class="image-btn" @click="start" title="Démarrer (ctrl+p)" :disabled="isRunning || activePanel !== null">

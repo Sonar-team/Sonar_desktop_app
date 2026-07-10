@@ -1,3 +1,7 @@
+<!--
+  Sélecteur d'interface réseau : liste déroulante des interfaces remontées
+  par le backend (get_devices_list), avec état de connexion et adresses.
+-->
 <template>
   <div class="interface-selector">
     <label class="selector-label">Interface réseau</label>

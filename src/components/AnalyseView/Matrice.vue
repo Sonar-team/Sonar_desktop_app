@@ -1,3 +1,7 @@
+<!--
+  Matrice de flux sous forme de tableau : une ligne par flux avec adresses,
+  ports, protocoles, compteurs et labels, rafraîchie depuis le backend.
+-->
 <template>
   <div class="custom-table-container">
     <table class="custom-table">

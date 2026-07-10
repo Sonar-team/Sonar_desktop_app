@@ -1,8 +1,10 @@
+// Dialogues de sauvegarde : export de la matrice de flux et des labels en
+// CSV (nommage DR_<date>_<installation>), via les commandes backend.
 import { message, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { error } from "@tauri-apps/plugin-log";
 
-// Fonction pour sauvegarder en CSV
+/** Exporte la matrice de flux en CSV après choix du chemin par l'utilisateur. */
 export async function SaveAsCsv(
   getCurrentDate,
   niveauConfidentialite,

@@ -1,6 +1,10 @@
+<!--
+  Vue de lecture PCAP : sélection de fichiers de capture et lancement de la
+  conversion en matrice de flux.
+-->
 <template>
   <div class="container">
-    
+
     <div class="content">
 
     </div>

@@ -1,6 +1,9 @@
+<!--
+  Panneau modal des labels appliqués à la matrice (MAC, IP, label) avec
+  recherche plein texte. Chargé depuis le backend à l'ouverture.
+  Événement : close.
+-->
 <script lang="ts">
-// Panneau modal : labels (MAC, IP, label) appliqués à la matrice, avec
-// recherche plein texte. Chargé depuis le backend à l'ouverture.
 import { defineComponent } from "vue"
 import { invoke } from "@tauri-apps/api/core"
 

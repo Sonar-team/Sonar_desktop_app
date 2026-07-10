@@ -1,3 +1,5 @@
+// Fermeture de l'application avec confirmation utilisateur, protégée contre
+// les demandes concurrentes (un seul dialogue à la fois).
 import { ask } from '@tauri-apps/plugin-dialog';
 import { exit } from '@tauri-apps/plugin-process';
 import { error, info } from '@tauri-apps/plugin-log';

@@ -1,3 +1,6 @@
+//! Statistiques de capture partagées entre threads (atomiques, hors canal de
+//! données) et payload `Stats` émis au frontend.
+
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 use serde::Serialize;

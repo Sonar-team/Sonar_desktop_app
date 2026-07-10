@@ -1,4 +1,6 @@
-// src/main.js
+// Point d'entrée du frontend : monte l'application Vue (router + Pinia) et
+// installe le bus d'événements global `$bus` (reset, navigation…), basé sur
+// des CustomEvent DOM.
 import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";

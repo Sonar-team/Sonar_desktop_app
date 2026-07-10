@@ -1,3 +1,7 @@
+//! Bibliothèque principale de SONAR : construit l'application Tauri
+//! (plugins, état partagé, menu, fenêtre ou mode headless) et enregistre
+//! toutes les commandes exposées au frontend.
+
 use chrono::Local;
 use commandes::{
     net_capture::{config_capture, get_config_capture, start_capture, stop_capture},
@@ -56,12 +60,15 @@ pub use state::capture::capture_handle::threads::packet_buffer;
 /// l'UI choisisse entre raccourcis globaux (headless) et locaux (fenêtré).
 struct HeadlessMode(bool);
 
+/// Commande Tauri : indique au frontend si l'application est en mode headless.
 #[tauri::command]
 fn is_headless(state: tauri::State<'_, HeadlessMode>) -> bool {
     state.0
 }
 
-/// Main entry point for the application
+/// Point d'entrée de l'application : configure les plugins, l'état partagé,
+/// le menu et la fenêtre (ou lance directement la capture en headless), puis
+/// démarre la boucle Tauri.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
     let now = Local::now();

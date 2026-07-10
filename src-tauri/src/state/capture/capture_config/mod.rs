@@ -1,3 +1,7 @@
+//! Configuration de la capture (interface, buffers, timeout, snaplen) :
+//! validation par bornes et persistance JSON dans le dossier de données de
+//! l'application.
+
 use std::{fs, path::PathBuf};
 
 use crate::{errors::capture_error::CaptureError, utils::return_device_lookup};
@@ -15,6 +19,8 @@ const MAX_TIMEOUT_MS: i32 = 10_000;
 const MIN_SNAPLEN: i32 = 64;
 const MAX_SNAPLEN: i32 = 262_144;
 
+/// Paramètres d'une capture : interface et réglages pcap. Toujours passer
+/// par [`CaptureConfig::setup`]/`validate` avant usage (bornes `MIN_*`/`MAX_*`).
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct CaptureConfig {
     pub device_name: String,

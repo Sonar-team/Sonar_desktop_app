@@ -1,3 +1,8 @@
+//! Matrice de flux : agrégat central de SONAR. Chaque flux observé (couple
+//! MAC/IP/ports/protocoles) y accumule ses statistiques, ventilées par tunnel
+//! (`encap_id`), avec résolution de labels par clé `(mac, ip)` et export /
+//! réimport CSV sans perte.
+
 use std::collections::{BTreeSet, HashMap};
 use std::fs::File;
 use std::net::IpAddr;
@@ -119,6 +124,8 @@ pub fn parse_origin_list(origin: &str) -> impl Iterator<Item = String> + '_ {
         .map(str::to_string)
 }
 
+/// Matrice de flux : statistiques par flux (ventilées par tunnel), labels
+/// résolus par clé `(mac, ip)` et provenance (fichiers d'origine) par flux.
 pub struct FlowMatrix {
     // Une entrée de statistiques par couple (flux, tunnel encapsulant), pour
     // que la somme des compteurs internes d'un tunnel soit égale au compteur
@@ -625,6 +632,7 @@ use std::time::UNIX_EPOCH;
 
 use crate::state::capture::capture_handle::messages::capture::PacketOwnedStats;
 
+/// Convertit un timestamp pcap (`tv_sec`, `tv_usec`) en `SystemTime`.
 pub fn timeval_to_systemtime(tv_sec: impl Into<i64>, tv_usec: impl Into<i64>) -> SystemTime {
     let tv_sec = tv_sec.into();
     let tv_usec = tv_usec.into();

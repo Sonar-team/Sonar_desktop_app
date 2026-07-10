@@ -1,3 +1,8 @@
+//! Smoke test de démarrage (`--sonar-smoke-test`) : vérifie hors UI que le
+//! binaire démarre, résout une interface réseau et écrit ses marqueurs de
+//! validation (stdout + fichier optionnel `SONAR_SMOKE_LOG_PATH`). Utilisé
+//! par la CI de release.
+
 use std::{
     env,
     fs::{File, OpenOptions},
@@ -10,12 +15,16 @@ use crate::{setup::print_banner, utils::lookup_default_device};
 const SMOKE_ARG: &str = "--sonar-smoke-test";
 const SMOKE_LOG_ENV: &str = "SONAR_SMOKE_LOG_PATH";
 
+/// Marqueur écrit en fin de smoke test réussi, recherché par la CI.
 pub const VALIDATION_LOG: &str = "SONAR_STARTUP_VALIDATION=OK";
 
+/// Vrai si le processus a été lancé avec `--sonar-smoke-test`.
 pub fn is_requested() -> bool {
     env::args().any(|arg| arg == SMOKE_ARG)
 }
 
+/// Exécute le smoke test et retourne le code de sortie du processus
+/// (0 = validation OK, 1 = échec journalisé).
 pub fn run() -> i32 {
     match run_inner() {
         Ok(()) => 0,

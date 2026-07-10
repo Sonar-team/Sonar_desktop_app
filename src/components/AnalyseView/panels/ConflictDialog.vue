@@ -1,3 +1,8 @@
+<!--
+  Dialogue des erreurs bloquantes d'import de labels : formats MAC/IP
+  invalides, lignes malformées ou conflits entre lignes, avec le détail
+  ligne par ligne remonté par le backend.
+-->
 <template>
   <div class="container">
     <div class="center-container">

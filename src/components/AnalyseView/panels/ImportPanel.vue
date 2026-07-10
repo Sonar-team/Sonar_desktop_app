@@ -1,3 +1,9 @@
+<!--
+  Panneau d'import (modal) : labels CSV en mode « csv », captures PCAP et
+  matrices CSV en mode « pcap », avec drag & drop, table des labels
+  importés et accès à l'arbitrage des conflits.
+  Props : mode ('csv' | 'pcap'). Événement principal : update:visible.
+-->
 <template>
   <div class="container">
     <div class="center-container" :class="{ 'drag-over': isDragOver }">

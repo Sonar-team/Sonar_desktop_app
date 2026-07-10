@@ -1,3 +1,8 @@
+//! Pool de buffers de paquets sans verrou (files `SegQueue`) : évite une
+//! allocation par paquet capturé. Deux classes de tailles — buffers
+//! « standard » (2 Ko) pour le trafic courant, buffers `snaplen` pour les
+//! trames larges (jumbo, GRO/TSO).
+
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
 use crossbeam::queue::SegQueue;

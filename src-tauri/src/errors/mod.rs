@@ -1,3 +1,8 @@
+//! Erreurs de l'application. [`CaptureStateError`] agrège les erreurs de
+//! chaque domaine (capture, export, import, labels) et se sérialise vers le
+//! frontend sous la forme discriminée `{ kind, message }` attendue par
+//! `src/errors/capture.ts`.
+
 use capture_error::{CaptureError, CaptureErrorKind};
 use serde::Serialize;
 
@@ -12,6 +17,9 @@ pub mod export;
 pub mod import;
 pub mod label;
 
+/// Erreur agrégée retournée par les commandes Tauri : chaque variante
+/// enveloppe l'erreur d'un domaine (IO, verrou empoisonné, capture, export,
+/// import PCAP, labels, Tauri).
 #[derive(Debug, thiserror::Error)]
 pub enum CaptureStateError {
     #[error(transparent)]
@@ -30,6 +38,8 @@ pub enum CaptureStateError {
     Tauri(#[from] tauri::Error),
 }
 
+/// Représentation sérialisable de [`CaptureStateError`] : forme discriminée
+/// `{ kind, message }` consommée telle quelle par le frontend.
 #[derive(serde::Serialize)]
 #[serde(tag = "kind", content = "message")]
 #[serde(rename_all = "camelCase")]

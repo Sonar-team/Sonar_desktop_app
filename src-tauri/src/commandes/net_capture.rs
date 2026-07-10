@@ -1,3 +1,6 @@
+//! Commandes du cycle de vie de la capture live : démarrage/arrêt,
+//! configuration, filtre BPF et remise à zéro de l'état.
+
 use std::sync::{Arc, Mutex};
 
 use log::info;
@@ -19,6 +22,9 @@ use crate::{
     },
 };
 
+/// Démarre une capture live : recharge les labels dans la matrice, attache le
+/// channel d'événements puis lance les threads de capture. Sans effet si une
+/// capture tourne déjà (renvoie le statut courant).
 #[command(async)]
 pub fn start_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
@@ -49,6 +55,8 @@ pub fn start_capture(
     Ok(state_lock.status.clone())
 }
 
+/// Variante headless de [`start_capture`] : démarre la capture sans channel
+/// d'événements (aucun frontend à notifier).
 pub fn start_capture_core(
     state: State<'_, Arc<Mutex<CaptureState>>>,
     app: AppHandle,
@@ -70,6 +78,8 @@ pub fn start_capture_core(
     Ok(st.status.clone())
 }
 
+/// Arrête la capture en cours (threads stoppés, channel détaché) et renvoie
+/// le nouveau statut.
 #[command(async)]
 pub fn stop_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
@@ -86,6 +96,8 @@ pub fn stop_capture(
     Ok(app.status.clone())
 }
 
+/// Valide puis applique une nouvelle configuration de capture, persistée sur
+/// disque pour les prochains démarrages.
 #[command(async, rename_all = "snake_case")]
 pub fn config_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
@@ -112,6 +124,7 @@ pub fn config_capture(
     Ok(app.config.clone())
 }
 
+/// Configuration de capture courante.
 #[command(async)]
 pub fn get_config_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
@@ -121,6 +134,7 @@ pub fn get_config_capture(
     Ok(app.config.clone())
 }
 
+/// Vide la matrice de flux et le graphe (bouton reset du frontend).
 #[command(async)]
 pub fn reset_capture(
     matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
@@ -131,6 +145,7 @@ pub fn reset_capture(
     Ok(())
 }
 
+/// Enregistre le filtre BPF à appliquer au prochain démarrage de capture.
 #[command(async)]
 pub fn set_filter(
     state: State<'_, Arc<Mutex<CaptureState>>>,

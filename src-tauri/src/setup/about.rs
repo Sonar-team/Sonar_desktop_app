@@ -1,3 +1,7 @@
+//! Contenus des dialogues « Version » et « Changelog » du menu À propos.
+
+/// Message du dialogue Version : version de SONAR et versions de la chaîne
+/// de build injectées par la CI (`SONAR_*_VERSION`).
 pub fn about_message() -> String {
     format!(
         "SONAR {}\n\nRust: {}\nNode.js: {}\nDeno: {}\nTauri CLI: {}\nNpcap (Windows): {}",

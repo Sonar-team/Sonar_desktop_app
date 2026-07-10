@@ -1,4 +1,6 @@
-// types/capture.ts
+// Types des données de capture échangées avec le backend : graphe (nœuds,
+// arêtes, updates), stats et contrat des événements du Channel Tauri
+// (miroir de `CaptureEvent` côté Rust).
 import { Channel } from "@tauri-apps/api/core";
 
 export type GraphData = {

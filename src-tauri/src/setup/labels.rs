@@ -1,3 +1,7 @@
+//! Labels générés au démarrage : le poste SONAR s'auto-étiquette (« pc
+//! sonar ») à partir de ses interfaces réseau, et fournit les primitives de
+//! parsing d'une ligne de label CSV réutilisées par les imports.
+
 use std::sync::{Arc, Mutex};
 
 use tauri::{AppHandle, Manager, path::BaseDirectory};
@@ -7,6 +11,8 @@ use crate::{
     state::{flow_matrix::FlowMatrix, labels_list::PcInfoLabel},
 };
 
+/// Lit le fichier `resources/labels.csv` embarqué (vérification de présence
+/// au démarrage ; le contenu est affiché dans la console).
 pub fn read_labels(app: &AppHandle) -> Result<(), tauri::Error> {
     let resource_path = app
         .path()
@@ -18,6 +24,9 @@ pub fn read_labels(app: &AppHandle) -> Result<(), tauri::Error> {
     Ok(())
 }
 
+/// Enregistre une ligne de label « pc sonar » pour chaque couple
+/// (MAC, IP) des interfaces réseau locales : la machine de capture est ainsi
+/// identifiable dans la matrice et le graphe.
 pub fn create_labels_from_network_interfaces(
     interfaces: Vec<netdev::Interface>,
     app: &AppHandle,
@@ -45,6 +54,8 @@ pub fn create_labels_from_network_interfaces(
     Ok(())
 }
 
+/// Recopie les labels « pc sonar » mémorisés au démarrage dans la matrice de
+/// flux (appelé à chaque démarrage de capture).
 pub fn update_labels_in_state(
     app: &AppHandle,
     state_label: &mut FlowMatrix,
@@ -63,10 +74,16 @@ pub fn update_labels_in_state(
     Ok(())
 }
 
+/// Parse une ligne CSV `mac,ip,label…` en tuple `(mac, ip, label)`.
+/// Voir [`parse_label_fields`] pour les règles de normalisation.
 pub fn parse_label_row(row: &str) -> Option<(String, String, String)> {
     parse_label_fields(row.split(','))
 }
 
+/// Normalise les champs d'une ligne de label : au moins 3 colonnes, au moins
+/// une adresse (MAC ou IP) non vide, notation CIDR ramenée à l'adresse seule,
+/// colonnes surnuméraires fusionnées dans le label (`"Label?"` si vide).
+/// Retourne `None` pour une ligne inexploitable.
 pub fn parse_label_fields<I, S>(fields: I) -> Option<(String, String, String)>
 where
     I: IntoIterator<Item = S>,
@@ -107,6 +124,7 @@ where
     Some((mac.to_string(), ip.to_string(), label))
 }
 
+/// Nettoie un champ CSV : espaces et guillemets d'encadrement retirés.
 pub fn clean_csv_field(value: &str) -> &str {
     value.trim().trim_matches('"')
 }

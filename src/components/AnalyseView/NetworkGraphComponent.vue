@@ -1,3 +1,9 @@
+<!--
+  Graphe réseau interactif (Sigma + graphology + ForceAtlas2) : rendu des
+  nœuds/arêtes reçus du backend, surbrillance des familles de tunnels,
+  sélection et édition de labels, export PNG. Les helpers de style et les
+  mutations du graphe vivent dans ./graph/.
+-->
 <script lang="ts">
 import { defineComponent, markRaw } from "vue"
 import Graph from "graphology"

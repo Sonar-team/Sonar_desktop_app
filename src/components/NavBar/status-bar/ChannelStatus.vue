@@ -1,3 +1,7 @@
+<!--
+  Indicateur d'occupation du canal capture→processing (backpressure),
+  alimenté par l'événement ChannelCapacityPayload.
+-->
 <template>
     <div class="channel-status">
       <p :title="progress + '%'">🚨​:</p>

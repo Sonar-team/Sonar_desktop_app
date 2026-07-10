@@ -1,3 +1,7 @@
+//! Matrice de flux (port sans Tauri de celle de l'application desktop) :
+//! statistiques par flux ventilées par tunnel (`encap_id`), labels résolus
+//! par clé `(mac, ip)` et export/réimport CSV sans perte.
+
 use std::collections::{BTreeSet, HashMap};
 use std::fs::File;
 use std::net::IpAddr;

@@ -1,3 +1,9 @@
+<!--
+  Panneau de filtre BPF : formulaire guidé (presets, couches, protocoles,
+  adresses, ports) avec aperçu éditable de l'expression générée, appliquée
+  via la commande set_filter. La construction/validation vit dans
+  utils/bpf.ts.
+-->
 <template>
   <div class="filter-overlay" @click="$emit('update:visible', false)">
     <div class="filter-panel" @click.stop>

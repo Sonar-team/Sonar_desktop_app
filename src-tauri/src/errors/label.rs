@@ -1,7 +1,15 @@
+//! Erreurs de validation des fichiers de labels CSV.
+
+/// Champ invalide : (n° de ligne, valeur fautive, ligne brute).
 pub type LabelInvalidField = (usize, String, String);
+/// Ligne invalide : (n° de ligne, contenu affiché).
 pub type LabelInvalidRow = (usize, String);
+/// Conflit entre deux lignes : (ligne A, ligne B, ip, valeur A, valeur B,
+/// ligne brute A, ligne brute B).
 pub type LabelConflict = (usize, usize, String, String, String, String, String);
 
+/// Erreur bloquante de validation d'un fichier de labels. Le frontend
+/// affiche chaque variante dans un dialogue dédié (`ConflictDialog`).
 #[derive(Debug, thiserror::Error)]
 pub enum LabelError {
     #[error("Adresse MAC invalide: {invalid_mac:?} / Adresse IP invalide: {invalid_ip:?}")]
@@ -26,6 +34,7 @@ pub enum LabelError {
     },
 }
 
+/// Représentation sérialisable de [`LabelError`] (forme `{ kind, message }`).
 #[derive(serde::Serialize)]
 #[serde(tag = "kind", content = "message")]
 #[serde(rename_all = "camelCase")]

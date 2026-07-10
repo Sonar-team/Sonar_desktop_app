@@ -1,3 +1,7 @@
+//! Événements poussés au frontend sur le `Channel` Tauri, pendant une
+//! capture live comme pendant un import. Le contrat (noms `camelCase`,
+//! forme `{ event, data }`) est consommé par `src/store/capture.ts`.
+
 use serde::Serialize;
 
 use crate::state::{
@@ -5,9 +9,13 @@ use crate::state::{
     graph::{GraphData, GraphUpdate},
 };
 
+/// Événement de capture/import envoyé au frontend. Les variantes empruntent
+/// des références quand l'événement est construit depuis l'état verrouillé
+/// (zéro copie à la sérialisation).
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]
 pub enum CaptureEvent<'a> {
+    /// La capture (ou la conversion PCAP) démarre, avec ses paramètres.
     Started {
         device: &'a str,
         buffer_size: i32,
@@ -15,6 +23,7 @@ pub enum CaptureEvent<'a> {
         timeout: i32,
         snaplen: i32,
     },
+    /// Compteurs périodiques pour la barre de statut.
     Stats {
         received: u32,
         dropped: u32,
@@ -24,6 +33,7 @@ pub enum CaptureEvent<'a> {
         app_dropped: u64,
         processed: u32,
     },
+    /// Occupation du canal capture→processing (indicateur de backpressure).
     ChannelCapacityPayload {
         channel_size: usize,
         current_size: usize,
@@ -36,9 +46,11 @@ pub enum CaptureEvent<'a> {
     Packet {
         packet: &'a PacketMinimal<'a>,
     },
+    /// Lot de paquets traités (voir `PACKET_BATCH_MAX` côté processing).
     PacketBatch {
         packets: Vec<PacketOwnedStats>,
     },
+    /// Update graphe unitaire (ex. label de nœud modifié après arbitrage).
     Graph {
         update: &'a GraphUpdate,
     },
@@ -52,11 +64,14 @@ pub enum CaptureEvent<'a> {
     Stopped {
         reason: String,
     },
+    /// Fin de traitement d'un fichier importé (PCAP ou matrice CSV), avec la
+    /// comptabilité affichée dans la barre de statut.
     Finished {
         file_name: &'a str,
         packet_total_count: usize,
         matrix_total_count: usize,
     },
+    /// Graphe complet, envoyé en fin d'import pour recharger la vue.
     GraphSnapshot {
         graph_data: &'a GraphData,
     },

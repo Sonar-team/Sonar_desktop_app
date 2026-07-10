@@ -1,3 +1,8 @@
+<!--
+  Panneau de configuration de la capture : interface, taille de buffer,
+  capacité de canal, timeout et snaplen, persistés côté backend
+  (commande config_capture).
+-->
 <template>
   <div class="config-panel">
     <h2>Configuration Capture</h2>

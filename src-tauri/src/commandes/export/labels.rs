@@ -1,3 +1,5 @@
+//! Commande d'export des labels en CSV.
+
 use std::sync::{Arc, Mutex};
 
 use tauri::{State, command};

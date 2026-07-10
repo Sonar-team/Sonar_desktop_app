@@ -1,3 +1,7 @@
+<!--
+  Chronomètre de capture : durée écoulée depuis le démarrage, remis à zéro
+  à chaque nouvelle capture.
+-->
 <template>
   <div class="timer">
     <p :title="title">{{ icon }}: {{ formattedTime }}</p>

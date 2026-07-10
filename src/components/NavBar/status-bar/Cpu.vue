@@ -1,3 +1,7 @@
+<!--
+  Usage CPU moyen de la machine, alimenté par l'événement Tauri
+  cpu_usage_update émis par le backend.
+-->
 <template>
     <div class="cpu">
       <img src="/src/assets/images/TablerCpu.png" alt="Flux" class="icon-img" />

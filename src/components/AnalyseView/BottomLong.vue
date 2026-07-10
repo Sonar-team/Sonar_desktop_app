@@ -1,3 +1,7 @@
+<!--
+  Tableau des trames reçues en direct (batchs de paquets du backend),
+  affiché sous le graphe pendant une capture.
+-->
 <template>
   <div>
     <table class="trames">

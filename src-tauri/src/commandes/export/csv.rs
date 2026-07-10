@@ -1,3 +1,5 @@
+//! Commande d'export de la matrice de flux en CSV.
+
 use std::sync::{Arc, Mutex};
 
 use tauri::{State, command};
@@ -7,6 +9,8 @@ use crate::{
     state::flow_matrix::FlowMatrix,
 };
 
+/// Exporte la matrice de flux courante vers `path` (format de
+/// `FlowMatrix::export_to_csv`, réimportable par `import_matrix_files`).
 #[command(async)]
 pub fn export_csv(
     state: State<'_, Arc<Mutex<FlowMatrix>>>,

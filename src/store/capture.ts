@@ -1,3 +1,7 @@
+// Store Pinia central de la capture : reçoit les événements du backend via
+// le Channel Tauri (stats, paquets, updates graphe, snapshots), tient l'état
+// courant (running, filtre, compteurs) et redistribue les événements aux
+// composants par des abonnements (onGraphUpdate, onGraphSnapshot, …).
 import { defineStore } from "pinia";
 import { markRaw } from "vue";
 import type { Channel } from "@tauri-apps/api/core";

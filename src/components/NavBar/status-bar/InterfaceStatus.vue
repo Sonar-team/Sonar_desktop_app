@@ -1,6 +1,9 @@
+<!--
+  Interface réseau active de la capture, affichée dans la barre de statut.
+-->
 <template>
   <div>
-    <p 
+    <p
       class="interface-btn"
       >
         Interface : {{ config }}

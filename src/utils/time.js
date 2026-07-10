@@ -1,5 +1,6 @@
-// src/utils/dateUtils.js
+// Helpers de formatage de dates pour le nommage des fichiers exportés.
 
+/** Date du jour au format compact AAAAMMJJ. */
 export function getCurrentDate() {
   const now = new Date();
   return `${now.getFullYear()}${padZero(now.getMonth() + 1)}${
