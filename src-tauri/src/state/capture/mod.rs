@@ -38,4 +38,58 @@ impl CaptureState {
             on_event: None,
         }
     }
+
+    /// Récolte un pipeline qui s'est arrêté de lui-même (erreur pcap, canal
+    /// IPC cassé) : joint les threads, libère le handle et normalise le
+    /// statut, pour qu'un redémarrage ne réponde pas « déjà en cours ».
+    /// Retourne vrai si un handle terminé a été récolté.
+    pub fn reap_terminated_capture(&mut self) -> bool {
+        if !self.capture.as_ref().is_some_and(|c| c.is_terminated()) {
+            return false;
+        }
+        if let Some(capture) = self.capture.take() {
+            capture.join_threads();
+        }
+        self.status.is_running = false;
+        self.on_event = None;
+        true
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reap_without_capture_does_nothing() {
+        let mut state = CaptureState::new();
+        assert!(!state.reap_terminated_capture());
+        assert!(!state.status.is_running);
+    }
+
+    #[test]
+    fn reap_ignores_a_live_capture() {
+        let mut state = CaptureState::new();
+        state.capture = Some(CaptureHandle::new());
+        state.status.is_running = true;
+
+        assert!(!state.reap_terminated_capture(), "handle vivant : intouché");
+        assert!(state.capture.is_some());
+        assert!(state.status.is_running);
+    }
+
+    /// Scénario « erreur -> stopped -> redémarrage » : après un arrêt
+    /// autonome du pipeline, la récolte libère le handle et normalise le
+    /// statut, si bien qu'un start suivant ne répond plus « déjà en cours ».
+    #[test]
+    fn reap_frees_a_terminated_capture_for_restart() {
+        let mut state = CaptureState::new();
+        state.capture = Some(CaptureHandle::terminated_for_tests());
+        state.status.is_running = true;
+
+        assert!(state.reap_terminated_capture());
+        assert!(state.capture.is_none(), "le handle mort est libéré");
+        assert!(!state.status.is_running, "statut backend normalisé");
+        assert!(state.on_event.is_none(), "channel IPC mort détaché");
+    }
 }

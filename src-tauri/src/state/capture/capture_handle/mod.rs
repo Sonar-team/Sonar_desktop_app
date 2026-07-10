@@ -122,6 +122,34 @@ impl CaptureHandle {
         Ok(())
     }
 
+    /// Handle simulant un pipeline arrêté de lui-même, pour les tests du
+    /// cycle de vie (récolte par `CaptureState::reap_terminated_capture`).
+    #[cfg(test)]
+    pub(crate) fn terminated_for_tests() -> Self {
+        let handle = Self::new();
+        handle.stop_flag.store(true, Ordering::Relaxed);
+        handle
+    }
+
+    /// Vrai si le pipeline s'est arrêté de lui-même (erreur pcap, canal IPC
+    /// cassé) : le drapeau d'arrêt a été levé par un thread, ou tous les
+    /// threads sont terminés, sans passer par [`CaptureHandle::stop`].
+    pub fn is_terminated(&self) -> bool {
+        self.stop_flag.load(Ordering::Relaxed)
+            || (!self.threads.is_empty() && self.threads.iter().all(|t| t.is_finished()))
+    }
+
+    /// Joint les threads d'un pipeline déjà arrêté, sans émettre d'événement
+    /// (le canal IPC est en général mort dans ce scénario).
+    pub fn join_threads(mut self) {
+        self.stop_flag.store(true, Ordering::Relaxed);
+        for handle in self.threads.drain(..) {
+            if handle.join().is_err() {
+                log::error!("Un thread de capture a paniqué avant l'arrêt");
+            }
+        }
+    }
+
     /// Arrête le pipeline et attend la fin des threads (borné par le timeout
     /// pcap et l'intervalle de batch, ~100 ms avec la config par défaut).
     pub fn stop(mut self, on_event: Channel<CaptureEvent<'static>>) -> Result<(), CaptureError> {
@@ -204,5 +232,37 @@ impl CaptureHandle {
         ));
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fresh_handle_is_not_terminated() {
+        let handle = CaptureHandle::new();
+        assert!(!handle.is_terminated(), "handle neuf, rien à récolter");
+    }
+
+    #[test]
+    fn handle_with_stop_flag_raised_is_terminated() {
+        // Simule un pipeline qui s'est arrêté de lui-même (erreur pcap ou
+        // canal IPC cassé) : un thread a levé le drapeau avant de sortir.
+        let handle = CaptureHandle::new();
+        handle.stop_flag.store(true, Ordering::Relaxed);
+        assert!(handle.is_terminated());
+    }
+
+    #[test]
+    fn handle_with_finished_threads_is_terminated() {
+        let mut handle = CaptureHandle::new();
+        handle.threads.push(std::thread::spawn(|| {}));
+        // Laisse le thread se terminer.
+        while !handle.threads[0].is_finished() {
+            std::thread::yield_now();
+        }
+        assert!(handle.is_terminated());
+        handle.join_threads();
     }
 }

@@ -37,6 +37,12 @@ pub fn start_capture(
     labels_to_matrix(label_store, &mut state_label)?;
     update_labels_in_state(&app, &mut state_label)?;
     let mut state_lock = state.lock()?;
+    // Un pipeline arrêté de lui-même (erreur pcap, canal IPC cassé) laisse un
+    // handle mort : on le récolte pour que ce démarrage ne réponde pas
+    // « déjà en cours » à tort.
+    if state_lock.reap_terminated_capture() {
+        info!("Pipeline précédent terminé : handle récolté avant redémarrage");
+    }
     if state_lock.capture.is_some() {
         println!("Déjà en cours.");
         return Ok(state_lock.status.clone());
@@ -63,6 +69,11 @@ pub fn start_capture_core(
 ) -> Result<CaptureStatus, CaptureStateError> {
     let mut st = state.lock()?;
 
+    // Même récolte qu'en mode fenêtré : un pipeline mort ne doit pas bloquer
+    // le redémarrage.
+    if st.reap_terminated_capture() {
+        info!("Pipeline précédent terminé : handle récolté avant redémarrage");
+    }
     if st.capture.is_some() {
         return Ok(st.status.clone());
     }
