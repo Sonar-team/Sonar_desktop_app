@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
 // packet_parser/src/timing.rs
 #[cfg(feature = "parse_timing")]
 #[derive(Debug, Clone, Copy, Default)]
@@ -126,9 +131,10 @@ mod tests {
     #[test]
     fn test_now_and_elapsed_ns() {
         let t0 = now();
-        let elapsed = elapsed_ns(t0);
+        let first = elapsed_ns(t0);
+        let second = elapsed_ns(t0);
 
-        assert!(elapsed <= u64::MAX);
+        assert!(second >= first);
     }
 
     #[cfg(feature = "parse_timing")]

@@ -6,7 +6,10 @@
 use core::convert::TryFrom;
 
 use crate::{
-    checks::application::srvloc::{ensure_len, validate_packet_not_empty},
+    checks::application::srvloc::{
+        ensure_len, validate_declared_packet_length, validate_function, validate_packet_not_empty,
+        validate_utf8,
+    },
     errors::application::srvloc::SrvlocPacketParseError,
 };
 
@@ -27,20 +30,22 @@ use crate::{
 /// 96-111: "Language Tag Length u16"
 /// 112-175: "Language Tag / Payload variable"
 /// ```
+///
+/// Zero-copy: all variable-length fields borrow from the original packet.
 #[derive(Debug)]
-pub struct SrvlocPacket {
-    pub header: SrvlocHeader,
-    pub payload: SrvlocMessage,
+pub struct SrvlocPacket<'a> {
+    pub header: SrvlocHeader<'a>,
+    pub payload: SrvlocMessage<'a>,
 }
 
 #[derive(Debug)]
-pub enum SrvlocHeader {
-    V1(SrvlocHeaderV1),
-    V2(SrvlocHeaderV2),
+pub enum SrvlocHeader<'a> {
+    V1(SrvlocHeaderV1<'a>),
+    V2(SrvlocHeaderV2<'a>),
 }
 
 #[derive(Debug)]
-pub struct SrvlocHeaderV2 {
+pub struct SrvlocHeaderV2<'a> {
     pub version: u8,
     pub function: u8,
 
@@ -59,35 +64,35 @@ pub struct SrvlocHeaderV2 {
     // 2 octets sur le fil -> u16
     pub lang_tag_len: u16,
 
-    // chaîne UTF-8 ("en", "fr", etc.)
-    pub lang_tag: String,
+    // chaîne UTF-8 empruntée au paquet ("en", "fr", etc.)
+    pub lang_tag: &'a str,
 }
 
 #[derive(Debug)]
-pub struct SrvlocHeaderV1 {
+pub struct SrvlocHeaderV1<'a> {
     pub version: u8,
     pub function: u8,
     pub packet_length: u16, // 2 octets
     pub flags: u8,
     pub dialect: u8,
-    pub language: String, // 2 bytes ASCII -> "en"
+    pub language: &'a str, // 2 bytes ASCII -> "en"
 
     pub encoding: u8,
     pub transaction_id: u16,
     pub error_code: u16,
 
     pub url_length: u16,
-    pub url: String,
+    pub url: &'a str,
 
     pub scope_list_lengh: u16,
-    pub scope_list: String,
+    pub scope_list: &'a str,
 }
 
 /// Pour l’instant on garde le payload simple.
 /// Tu pourras ajouter plus tard `V1DaAdvert`, `V2DaAdvert`, etc.
 #[derive(Debug)]
-pub enum SrvlocMessage {
-    Raw(Vec<u8>),
+pub enum SrvlocMessage<'a> {
+    Raw(&'a [u8]),
 }
 
 fn read_u16(buf: &[u8], offset: &mut usize) -> Result<u16, SrvlocPacketParseError> {
@@ -106,22 +111,22 @@ fn read_u24(buf: &[u8], offset: &mut usize) -> Result<u32, SrvlocPacketParseErro
     Ok(v)
 }
 
-fn read_string(
-    buf: &[u8],
+fn read_str<'a>(
+    buf: &'a [u8],
     offset: &mut usize,
     len: usize,
     field: &'static str,
-) -> Result<String, SrvlocPacketParseError> {
+) -> Result<&'a str, SrvlocPacketParseError> {
     ensure_len(buf, *offset + len)?;
     let slice = &buf[*offset..*offset + len];
     *offset += len;
-    String::from_utf8(slice.to_vec()).map_err(|_| SrvlocPacketParseError::InvalidUtf8(field))
+    validate_utf8(slice, field)
 }
 
-impl TryFrom<&[u8]> for SrvlocPacket {
+impl<'a> TryFrom<&'a [u8]> for SrvlocPacket<'a> {
     type Error = SrvlocPacketParseError;
 
-    fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(payload: &'a [u8]) -> Result<Self, Self::Error> {
         validate_packet_not_empty(payload)?;
 
         let version = payload[0];
@@ -135,7 +140,7 @@ impl TryFrom<&[u8]> for SrvlocPacket {
 }
 
 /// Parse un paquet SLP v1 (DA Advert dans ton cas)
-fn parse_v1_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseError> {
+fn parse_v1_packet(payload: &[u8]) -> Result<SrvlocPacket<'_>, SrvlocPacketParseError> {
     // Layout v1 (d’après Wireshark pour DA Advertisement) :
     //  0 : Version (1)
     //  1 : Function (1)
@@ -155,14 +160,14 @@ fn parse_v1_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseErro
     ensure_len(payload, 8)?;
     let version = payload[0];
     let function = payload[1];
+    validate_function(version, function)?;
 
     let packet_length = u16::from_be_bytes([payload[2], payload[3]]);
+    validate_declared_packet_length(packet_length as usize, payload.len())?;
     let flags = payload[4];
     let dialect = payload[5];
 
-    let lang_bytes = [payload[6], payload[7]];
-    let language = String::from_utf8(lang_bytes.to_vec())
-        .map_err(|_| SrvlocPacketParseError::InvalidUtf8("language"))?;
+    let language = validate_utf8(&payload[6..8], "language")?;
 
     let mut offset = 8;
 
@@ -175,10 +180,10 @@ fn parse_v1_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseErro
     let error_code = read_u16(payload, &mut offset)?;
 
     let url_length = read_u16(payload, &mut offset)?;
-    let url = read_string(payload, &mut offset, url_length as usize, "url")?;
+    let url = read_str(payload, &mut offset, url_length as usize, "url")?;
 
     let scope_list_lengh = read_u16(payload, &mut offset)?;
-    let scope_list = read_string(
+    let scope_list = read_str(
         payload,
         &mut offset,
         scope_list_lengh as usize,
@@ -201,12 +206,9 @@ fn parse_v1_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseErro
         scope_list,
     };
 
-    // On met ce qu’il reste (normalement rien) dans le payload brut
-    let remaining = if offset < payload.len() {
-        payload[offset..].to_vec()
-    } else {
-        Vec::new()
-    };
+    // On met ce qu’il reste (normalement rien) dans le payload brut,
+    // en zero-copy : `offset` ne depasse jamais `payload.len()`.
+    let remaining = &payload[offset..];
 
     Ok(SrvlocPacket {
         header: SrvlocHeader::V1(header_v1),
@@ -215,7 +217,7 @@ fn parse_v1_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseErro
 }
 
 /// Parse un paquet SLP v2 (DA Advert dans ton cas)
-fn parse_v2_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseError> {
+fn parse_v2_packet(payload: &[u8]) -> Result<SrvlocPacket<'_>, SrvlocPacketParseError> {
     // Layout SLP v2 :
     //  0 : Version (u8)
     //  1 : Function (u8)
@@ -234,13 +236,15 @@ fn parse_v2_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseErro
 
     let function = payload[offset];
     offset += 1;
+    validate_function(version, function)?;
 
     let packet_length = read_u24(payload, &mut offset)?;
+    validate_declared_packet_length(packet_length as usize, payload.len())?;
     let flags = read_u16(payload, &mut offset)?;
     let next_extension_offset = read_u24(payload, &mut offset)?;
     let xid = read_u16(payload, &mut offset)?;
     let lang_tag_len = read_u16(payload, &mut offset)?;
-    let lang_tag = read_string(payload, &mut offset, lang_tag_len as usize, "lang_tag")?;
+    let lang_tag = read_str(payload, &mut offset, lang_tag_len as usize, "lang_tag")?;
 
     let header_v2 = SrvlocHeaderV2 {
         version,
@@ -255,11 +259,7 @@ fn parse_v2_packet(payload: &[u8]) -> Result<SrvlocPacket, SrvlocPacketParseErro
 
     // Pour l’instant, on laisse le body v2 dans Raw.
     // Tu pourras l’étendre plus tard (Error Code, Timestamp, URL, Scope, etc.)
-    let remaining = if offset < payload.len() {
-        payload[offset..].to_vec()
-    } else {
-        Vec::new()
-    };
+    let remaining = &payload[offset..];
 
     Ok(SrvlocPacket {
         header: SrvlocHeader::V2(header_v2),
@@ -276,7 +276,9 @@ mod tests {
         let mut bytes = Vec::new();
         bytes.push(1); // version
         bytes.push(8); // function : DA Advert
-        bytes.extend_from_slice(&24u16.to_be_bytes()); // packet length
+        // packet length : taille totale reelle du message (22 octets), la
+        // validation stricte rejette toute incoherence
+        bytes.extend_from_slice(&22u16.to_be_bytes());
         bytes.push(0x20); // flags
         bytes.push(0); // dialect
         bytes.extend_from_slice(b"en"); // language
@@ -315,7 +317,7 @@ mod tests {
             SrvlocHeader::V1(header) => {
                 assert_eq!(header.version, 1);
                 assert_eq!(header.function, 8);
-                assert_eq!(header.packet_length, 24);
+                assert_eq!(header.packet_length, 22);
                 assert_eq!(header.flags, 0x20);
                 assert_eq!(header.dialect, 0);
                 assert_eq!(header.language, "en");
@@ -335,13 +337,76 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_v1_zero_copy_borrows_from_packet() {
+        let bytes = build_v1_packet();
+        let packet = SrvlocPacket::try_from(bytes.as_slice()).expect("paquet v1 valide");
+
+        let SrvlocHeader::V1(header) = &packet.header else {
+            panic!("attendu header V1");
+        };
+
+        // zero-copy : les &str pointent dans le buffer d'origine
+        assert_eq!(header.url.as_ptr(), bytes[15..].as_ptr());
+        assert_eq!(header.language.as_ptr(), bytes[6..].as_ptr());
+    }
+
+    #[test]
     fn test_parse_v1_packet_with_trailing_bytes() {
+        // Les octets au-dela des champs parses doivent etre inclus dans la
+        // longueur declaree (message = datagramme UDP complet).
         let mut bytes = build_v1_packet();
         bytes.extend_from_slice(&[0xCA, 0xFE]);
+        let declared = bytes.len() as u16;
+        bytes[2..4].copy_from_slice(&declared.to_be_bytes());
 
         let packet = SrvlocPacket::try_from(bytes.as_slice()).expect("paquet v1 valide");
         let SrvlocMessage::Raw(rest) = &packet.payload;
-        assert_eq!(rest, &vec![0xCA, 0xFE]);
+        assert_eq!(*rest, [0xCA, 0xFE]);
+    }
+
+    #[test]
+    fn test_v1_undeclared_trailing_bytes_rejected() {
+        let mut bytes = build_v1_packet();
+        bytes.extend_from_slice(&[0xCA, 0xFE]);
+
+        assert!(matches!(
+            SrvlocPacket::try_from(bytes.as_slice()),
+            Err(SrvlocPacketParseError::InconsistentPacketLength {
+                declared: 22,
+                actual: 24
+            })
+        ));
+    }
+
+    #[test]
+    fn test_v1_invalid_function_rejected() {
+        let mut bytes = build_v1_packet();
+        bytes[1] = 11; // > SrvTypeRply (10), inexistant en SLPv1
+
+        assert!(matches!(
+            SrvlocPacket::try_from(bytes.as_slice()),
+            Err(SrvlocPacketParseError::UnsupportedFunction {
+                version: 1,
+                function: 11
+            })
+        ));
+    }
+
+    /// Regression issue #3 : un DHCP Discover reel (op=1 lu comme "version 1")
+    /// ne doit plus etre classifie SRVLOC. Sa pseudo-longueur declaree
+    /// (htype/hops = 0x0600 = 1536) ne correspond pas aux 272 octets reels.
+    #[test]
+    fn test_dhcp_discover_is_rejected() {
+        let dhcp =
+            crate::parse::application::protocols::dhcp::tests_fixtures::DHCP_DISCOVER_PAYLOAD;
+
+        assert!(matches!(
+            SrvlocPacket::try_from(&dhcp[..]),
+            Err(SrvlocPacketParseError::InconsistentPacketLength {
+                declared: 1536,
+                actual: 272
+            })
+        ));
     }
 
     #[test]
@@ -369,7 +434,7 @@ mod tests {
         let bytes = build_v2_packet(&[0x01, 0x02, 0x03]);
         let packet = SrvlocPacket::try_from(bytes.as_slice()).expect("paquet v2 valide");
         let SrvlocMessage::Raw(rest) = &packet.payload;
-        assert_eq!(rest, &vec![0x01, 0x02, 0x03]);
+        assert_eq!(*rest, [0x01, 0x02, 0x03]);
     }
 
     #[test]
@@ -408,6 +473,19 @@ mod tests {
     }
 
     #[test]
+    fn test_v1_truncated_scope_list() {
+        // scope_list_length annonce 200 octets absents
+        let mut bytes = build_v1_packet();
+        let scope_len_offset = 18; // apres url "svc"
+        bytes[scope_len_offset] = 0;
+        bytes[scope_len_offset + 1] = 200;
+        assert!(matches!(
+            SrvlocPacket::try_from(bytes.as_slice()),
+            Err(SrvlocPacketParseError::Truncated { .. })
+        ));
+    }
+
+    #[test]
     fn test_v1_invalid_utf8_url() {
         let mut bytes = build_v1_packet();
         bytes[15] = 0xFF; // premier octet de l'url
@@ -418,9 +496,31 @@ mod tests {
     }
 
     #[test]
+    fn test_v1_invalid_utf8_language() {
+        let mut bytes = build_v1_packet();
+        bytes[6] = 0xC0; // octet UTF-8 invalide dans language
+        assert!(matches!(
+            SrvlocPacket::try_from(bytes.as_slice()),
+            Err(SrvlocPacketParseError::InvalidUtf8("language"))
+        ));
+    }
+
+    #[test]
     fn test_v2_truncated_header() {
         assert!(matches!(
             SrvlocPacket::try_from(&[2u8, 8, 0, 0, 20][..]),
+            Err(SrvlocPacketParseError::Truncated { .. })
+        ));
+    }
+
+    #[test]
+    fn test_v2_lang_tag_len_beyond_buffer() {
+        // lang_tag_len annonce 500 octets absents
+        let mut bytes = build_v2_packet(&[]);
+        bytes[12] = 0x01;
+        bytes[13] = 0xF4;
+        assert!(matches!(
+            SrvlocPacket::try_from(bytes.as_slice()),
             Err(SrvlocPacketParseError::Truncated { .. })
         ));
     }

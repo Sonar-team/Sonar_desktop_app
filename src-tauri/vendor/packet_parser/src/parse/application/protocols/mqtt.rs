@@ -30,10 +30,10 @@ use crate::{
 /// 104-167: "Payload variable"
 /// ```
 #[derive(Debug)]
-pub struct MqttPacket {
+pub struct MqttPacket<'a> {
     pub fixed_header: MqttFixedHeader,
-    pub variable_header: Vec<u8>,
-    pub payload: Vec<u8>,
+    pub variable_header: &'a [u8],
+    pub payload: &'a [u8],
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -92,7 +92,7 @@ impl fmt::Display for MqttFixedHeader {
     }
 }
 
-impl fmt::Display for MqttPacket {
+impl fmt::Display for MqttPacket<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -102,10 +102,10 @@ impl fmt::Display for MqttPacket {
     }
 }
 
-impl TryFrom<&[u8]> for MqttPacket {
+impl<'a> TryFrom<&'a [u8]> for MqttPacket<'a> {
     type Error = MqttError;
 
-    fn try_from(packet: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(packet: &'a [u8]) -> Result<Self, Self::Error> {
         validate_mqtt_min_length(packet)?;
 
         let first = packet[0];
@@ -129,8 +129,8 @@ impl TryFrom<&[u8]> for MqttPacket {
                 packet_type,
                 remaining_length,
             },
-            variable_header: vh.to_vec(),
-            payload: pl.to_vec(),
+            variable_header: vh,
+            payload: pl,
         })
     }
 }
@@ -152,7 +152,9 @@ mod tests {
         assert_eq!(mqtt.fixed_header.packet_type, MqttPacketType::Connect);
         assert_eq!(mqtt.fixed_header.remaining_length, 14);
         assert_eq!(mqtt.variable_header.len(), 10);
-        assert_eq!(mqtt.payload, vec![0x00, 0x02, b'i', b'd']);
+        // Zero-copy : les slices doivent pointer dans le paquet original.
+        assert_eq!(mqtt.variable_header, &packet[2..12]);
+        assert_eq!(mqtt.payload, &[0x00, 0x02, b'i', b'd'][..]);
     }
 
     #[test]
@@ -160,7 +162,7 @@ mod tests {
         let packet: &[u8] = &[0x20, 0x02, 0x00, 0x00];
         let mqtt = MqttPacket::try_from(packet).expect("CONNACK valide");
         assert_eq!(mqtt.fixed_header.packet_type, MqttPacketType::Connack);
-        assert_eq!(mqtt.variable_header, vec![0x00, 0x00]);
+        assert_eq!(mqtt.variable_header, &[0x00, 0x00][..]);
         assert!(mqtt.payload.is_empty());
     }
 
@@ -176,8 +178,8 @@ mod tests {
 
         let mqtt = MqttPacket::try_from(packet).expect("PUBLISH valide");
         assert_eq!(mqtt.fixed_header.packet_type, MqttPacketType::Publish);
-        assert_eq!(mqtt.variable_header, vec![0x00, 0x03, b'a', b'/', b'b']);
-        assert_eq!(mqtt.payload, vec![0x00, 0x01, 0xDE, 0xAD]);
+        assert_eq!(mqtt.variable_header, &[0x00, 0x03, b'a', b'/', b'b'][..]);
+        assert_eq!(mqtt.payload, &[0x00, 0x01, 0xDE, 0xAD][..]);
     }
 
     #[test]
@@ -219,6 +221,19 @@ mod tests {
         assert!(matches!(
             MqttPacket::try_from(&[0xF0, 0x00][..]),
             Err(MqttError::InvalidPacketType { raw: 15 })
+        ));
+    }
+
+    #[test]
+    fn test_truncated_remaining_length_varint() {
+        // Octet de continuation sans octet suivant : varint tronqué.
+        assert!(matches!(
+            MqttPacket::try_from(&[0x10, 0x80][..]),
+            Err(MqttError::MalformedRemainingLength)
+        ));
+        assert!(matches!(
+            MqttPacket::try_from(&[0x10, 0xFF, 0xFF][..]),
+            Err(MqttError::MalformedRemainingLength)
         ));
     }
 

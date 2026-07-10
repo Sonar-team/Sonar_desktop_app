@@ -5,7 +5,7 @@
 
 use crate::{
     checks::application::bitcoin::{
-        check_magic_number, check_minimum_length, validate_command_bytes, validate_total_length,
+        check_magic_number, check_minimum_length, parse_command_bytes, validate_total_length,
     },
     errors::application::bitcoin::BitcoinError,
 };
@@ -26,26 +26,21 @@ use crate::{
 /// ```
 ///
 /// The `BitcoinPacket` struct represents a parsed Bitcoin packet.
+///
+/// Zero-copy: `command` and `payload` borrow from the original packet.
 #[derive(Debug)]
-pub struct BitcoinPacket {
+pub struct BitcoinPacket<'a> {
     pub magic: u32,
-    pub command: String,
+    pub command: &'a str,
     pub length: u32,
     pub checksum: [u8; 4],
-    pub payload: Vec<u8>,
+    pub payload: &'a [u8],
 }
 
-/// Extracts the command string from the payload (12 bytes, null-padded ASCII)
-fn extract_command(payload: &[u8]) -> Result<String, BitcoinError> {
-    let bytes = &payload[4..16];
-    validate_command_bytes(bytes)?;
-
-    let end = bytes.iter().position(|&b| b == 0).unwrap_or(bytes.len());
-    let command = std::str::from_utf8(&bytes[..end])
-        .map_err(|_| BitcoinError::InvalidCommandBytes)?
-        .to_string();
-
-    Ok(command)
+/// Extracts the command string from the packet (12 bytes, null-padded ASCII),
+/// borrowed from the input with trailing NUL padding trimmed.
+fn extract_command(payload: &[u8]) -> Result<&str, BitcoinError> {
+    parse_command_bytes(&payload[4..16])
 }
 
 /// Extracts the length of the payload from the header (4 bytes)
@@ -58,9 +53,9 @@ fn extract_checksum(payload: &[u8]) -> [u8; 4] {
     [payload[20], payload[21], payload[22], payload[23]]
 }
 
-/// Extracts the actual payload data
-fn extract_payload(payload: &[u8]) -> Vec<u8> {
-    payload[24..].to_vec()
+/// Extracts the actual payload data as a borrowed slice
+fn extract_payload(payload: &[u8]) -> &[u8] {
+    &payload[24..]
 }
 
 /// Parses a Bitcoin packet from a given payload.
@@ -73,10 +68,10 @@ fn extract_payload(payload: &[u8]) -> Vec<u8> {
 ///
 /// * `Result<BitcoinPacket, BitcoinError>` - Returns `Ok(BitcoinPacket)` if parsing is successful,
 ///   otherwise returns a typed `BitcoinError`.
-impl TryFrom<&[u8]> for BitcoinPacket {
+impl<'a> TryFrom<&'a [u8]> for BitcoinPacket<'a> {
     type Error = BitcoinError;
 
-    fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(payload: &'a [u8]) -> Result<Self, Self::Error> {
         check_minimum_length(payload)?;
         let magic = check_magic_number(payload)?;
         let command = extract_command(payload)?;
@@ -150,6 +145,24 @@ mod tests {
     }
 
     #[test]
+    fn test_zero_copy_borrows_from_packet() {
+        let bitcoin_payload = vec![
+            0xF9, 0xBE, 0xB4, 0xD9, // Magic number (mainnet)
+            0x76, 0x65, 0x72, 0x61, 0x63, 0x6B, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, // Command ("verack")
+            0x03, 0x00, 0x00, 0x00, // Length (3)
+            0x5D, 0xF6, 0xE0, 0xE2, // Checksum (example)
+            0xDE, 0xAD, 0xBE, // Payload
+        ];
+        let packet = BitcoinPacket::try_from(bitcoin_payload.as_slice()).expect("valid packet");
+
+        // zero-copy: command and payload point into the original buffer
+        assert_eq!(packet.command.as_ptr(), bitcoin_payload[4..].as_ptr());
+        assert_eq!(packet.payload.as_ptr(), bitcoin_payload[24..].as_ptr());
+        assert_eq!(packet.payload, &[0xDE, 0xAD, 0xBE]);
+    }
+
+    #[test]
     fn test_invalid_magic_number() {
         // Test with an invalid magic number
         let invalid_magic_number = vec![
@@ -192,6 +205,51 @@ mod tests {
             err,
             BitcoinError::LengthMismatch { declared: 5, .. }
         ));
+    }
+
+    #[test]
+    fn test_declared_length_beyond_buffer() {
+        // length annonce 1000 octets absents => mismatch
+        let mut packet = vec![
+            0xF9, 0xBE, 0xB4, 0xD9, // Magic
+            0x76, 0x65, 0x72, 0x61, 0x63, 0x6B, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, // "verack"
+            0xE8, 0x03, 0x00, 0x00, // length=1000 (little-endian)
+            0x00, 0x00, 0x00, 0x00, // checksum (dummy)
+        ];
+        packet.push(0x01); // un seul octet de payload
+
+        let err = BitcoinPacket::try_from(packet.as_slice()).unwrap_err();
+        assert!(matches!(
+            err,
+            BitcoinError::LengthMismatch { declared: 1000, .. }
+        ));
+    }
+
+    #[test]
+    fn test_command_with_embedded_non_ascii() {
+        let packet = vec![
+            0xF9, 0xBE, 0xB4, 0xD9, // Magic
+            0x76, 0x65, 0xC3, 0x61, 0x63, 0x6B, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, // command avec 0xC3 (non-ASCII)
+            0x00, 0x00, 0x00, 0x00, // Length (0)
+            0x00, 0x00, 0x00, 0x00, // Checksum (dummy)
+        ];
+        let err = BitcoinPacket::try_from(packet.as_slice()).unwrap_err();
+        assert!(matches!(err, BitcoinError::InvalidCommandBytes));
+    }
+
+    #[test]
+    fn test_command_with_non_zero_padding_after_null() {
+        let packet = vec![
+            0xF9, 0xBE, 0xB4, 0xD9, // Magic
+            0x76, 0x65, 0x72, 0x61, 0x63, 0x6B, 0x00, 0x78, 0x00, 0x00, 0x00,
+            0x00, // "verack\0x..." padding invalide
+            0x00, 0x00, 0x00, 0x00, // Length (0)
+            0x00, 0x00, 0x00, 0x00, // Checksum (dummy)
+        ];
+        let err = BitcoinPacket::try_from(packet.as_slice()).unwrap_err();
+        assert!(matches!(err, BitcoinError::NonZeroPaddingAfterNull));
     }
 
     #[test]
@@ -242,7 +300,7 @@ mod tests {
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04,
                 0x05
             ]),
-            vec![0x01, 0x02, 0x03, 0x04, 0x05]
+            &[0x01, 0x02, 0x03, 0x04, 0x05]
         );
     }
 }

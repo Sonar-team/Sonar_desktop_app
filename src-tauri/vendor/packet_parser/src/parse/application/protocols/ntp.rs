@@ -84,6 +84,7 @@
 /// - **`InvalidTimestamps`** → The timestamps are inconsistent.
 ///
 /// These errors help diagnose malformed or unexpected packets.
+use std::fmt;
 use std::net::Ipv4Addr;
 
 use chrono::{DateTime, Utc};
@@ -140,12 +141,45 @@ pub struct NtpPacket {
     pub transmit_timestamp: DateTime<Utc>,
 }
 
-/// Enum pour représenter un Reference ID NTP
-#[derive(Debug, PartialEq)]
+/// NTP Reference ID (4 bytes, RFC 5905 section 7.3).
+///
+/// Kiss codes (stratum 0) and clock sources (stratum 1) are 4 ASCII bytes,
+/// left-justified and zero/space padded. They are stored as the raw fixed
+/// `[u8; 4]` (no allocation); use [`Refid::code`] or the `Display`
+/// implementation for a readable form.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Refid {
     Ipv4(Ipv4Addr),
-    KissCode(String),
-    ClockSource(String),
+    KissCode([u8; 4]),
+    ClockSource([u8; 4]),
+}
+
+impl Refid {
+    /// Returns the ASCII code of a kiss code or clock source, trimmed of its
+    /// trailing NUL/space padding. Returns `None` for IPv4 reference ids or
+    /// if the bytes are not printable ASCII.
+    pub fn code(&self) -> Option<&str> {
+        match self {
+            Refid::Ipv4(_) => None,
+            Refid::KissCode(bytes) | Refid::ClockSource(bytes) => reference_code_str(bytes),
+        }
+    }
+}
+
+impl fmt::Display for Refid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Refid::Ipv4(ip) => write!(f, "{ip}"),
+            Refid::KissCode(bytes) => match reference_code_str(bytes) {
+                Some(code) if !code.is_empty() => write!(f, "{code}"),
+                _ => write!(f, "NULL"),
+            },
+            Refid::ClockSource(bytes) => match reference_code_str(bytes) {
+                Some(code) if !code.is_empty() => write!(f, "{code}"),
+                _ => write!(f, "{bytes:02X?}"),
+            },
+        }
+    }
 }
 
 impl TryFrom<&[u8]> for NtpPacket {
@@ -159,7 +193,7 @@ impl TryFrom<&[u8]> for NtpPacket {
         let stratum = extract_stratum(&payload[1])?;
         let poll = extract_poll(&payload[2])?;
         let precision = extract_precision(&payload[3])?;
-        let root_delay = extract_root_delay(&payload[4..8])?; // ✅ Correction ici !
+        let root_delay = extract_root_delay(&payload[4..8])?;
         let root_dispersion = extract_root_dispersion(&payload[8..12])?;
         let reference_id = extract_reference_id(stratum, &payload[12..16])?;
         let reference_timestamp = extract_timestamp(&payload[16..24])?;
@@ -212,29 +246,25 @@ mod tests {
         assert_eq!(result.precision, -6);
         assert_eq!(result.root_delay, 0x00000000);
         assert_eq!(result.root_dispersion, 66192);
-        assert_eq!(result.reference_id, Refid::KissCode("NULL".to_string()));
-        // let expected_timestamp = Utc
-        //     .datetime_from_str("1970-01-01T00:00:00Z", "%Y-%m-%dT%H:%M:%S%.9fZ")
-        //     .expect("Invalid datetime format");
-        // assert_eq!(result.reference_timestamp, expected_timestamp);
-        // let expected_timestamp = Utc
-        //     .datetime_from_str("1970-01-01T00:00:00Z", "%Y-%m-%dT%H:%M:%S%.9fZ")
-        //     .expect("Invalid datetime format");
-        // assert_eq!(result.originate_timestamp, expected_timestamp);
-        // let expected_timestamp = Utc
-        //     .datetime_from_str("1970-01-01T00:00:00Z", "%Y-%m-%dT%H:%M:%S%.9fZ")
-        //     .expect("Invalid datetime format");
-        // assert_eq!(result.receive_timestamp, expected_timestamp);
-        // let expected_timestamp = Utc
-        //     .datetime_from_str("2004-09-27T03:18:04.932910699Z", "%Y-%m-%dT%H:%M:%S%.9fZ")
-        //     .expect("Invalid datetime format");
-        // assert_eq!(result.transmit_timestamp, expected_timestamp);
+        assert_eq!(result.reference_id, Refid::KissCode([0, 0, 0, 0]));
+        assert_eq!(result.reference_id.to_string(), "NULL");
     }
 
     #[test]
     fn test_invalid_ntp_packet_length() {
         let short_payload = vec![0x1B, 0x00, 0x04];
         let result = NtpPacket::try_from(short_payload.as_slice());
+        assert!(matches!(
+            result,
+            Err(NtpPacketParseError::InvalidPacketLength)
+        ));
+    }
+
+    #[test]
+    fn test_truncated_ntp_packet_one_byte_short() {
+        // 47 bytes: one byte less than the minimum NTP packet size.
+        let truncated = vec![0u8; 47];
+        let result = NtpPacket::try_from(truncated.as_slice());
         assert!(matches!(
             result,
             Err(NtpPacketParseError::InvalidPacketLength)
@@ -269,6 +299,46 @@ mod tests {
             result,
             Err(NtpPacketParseError::InvalidMode { .. })
         ));
+    }
+
+    #[test]
+    fn test_non_ascii_reference_id_is_rejected() {
+        // Stratum 0 packet whose reference id contains non-ASCII bytes.
+        let mut payload = hex::decode(
+            "d9000afa000000000001029000000000000000000000000000000000000000000000000000000000c50204eceed33c52",
+        )
+        .expect("valid hex");
+        payload[12..16].copy_from_slice(&[0xC3, 0xA9, 0xFF, 0xFE]);
+
+        let result = NtpPacket::try_from(payload.as_slice());
+        assert!(matches!(
+            result,
+            Err(NtpPacketParseError::InvalidReferenceIdForStratum0)
+        ));
+    }
+
+    #[test]
+    fn test_refid_display() {
+        use std::net::Ipv4Addr;
+
+        assert_eq!(Refid::KissCode([0, 0, 0, 0]).to_string(), "NULL");
+        assert_eq!(Refid::KissCode(*b"RATE").to_string(), "RATE");
+        assert_eq!(Refid::ClockSource(*b"GPS\0").to_string(), "GPS");
+        assert_eq!(Refid::ClockSource(*b"GPS ").to_string(), "GPS");
+        assert_eq!(
+            Refid::Ipv4(Ipv4Addr::new(8, 8, 8, 8)).to_string(),
+            "8.8.8.8"
+        );
+    }
+
+    #[test]
+    fn test_refid_code_accessor() {
+        use std::net::Ipv4Addr;
+
+        assert_eq!(Refid::KissCode(*b"RATE").code(), Some("RATE"));
+        assert_eq!(Refid::ClockSource(*b"GPS ").code(), Some("GPS"));
+        assert_eq!(Refid::KissCode([0, 0, 0, 0]).code(), Some(""));
+        assert_eq!(Refid::Ipv4(Ipv4Addr::new(8, 8, 8, 8)).code(), None);
     }
 
     #[test]

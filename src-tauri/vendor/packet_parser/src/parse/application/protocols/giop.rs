@@ -4,11 +4,12 @@
 // This file may not be copied, modified, or distributed except according to those terms.
 
 use std::convert::TryFrom;
-use std::str;
 
 use crate::{
     checks::application::giop::{
-        GIOP_HEADER_LEN, ensure_min_len, parse_magic, validate_total_length, validate_version,
+        GIOP_HEADER_LEN, ensure_available, ensure_min_len, parse_cdr_string, parse_magic,
+        validate_service_context_count, validate_target_discriminator, validate_total_length,
+        validate_version,
     },
     errors::application::giop::GiopParseError,
 };
@@ -87,7 +88,7 @@ impl TryFrom<&[u8]> for GiopHeader {
         let message_type = GiopMessageType::try_from(message_type_raw)?;
 
         // MessageSize est toujours en big-endian dans le header
-        let message_length = u32::from_be_bytes(payload[8..12].try_into().unwrap());
+        let message_length = u32::from_be_bytes([payload[8], payload[9], payload[10], payload[11]]);
         Ok(GiopHeader {
             magic,
             major_version,
@@ -122,14 +123,14 @@ impl TryFrom<&[u8]> for GiopHeader {
 /// 96-159: "Body variable"
 /// ```
 #[derive(Debug)]
-pub struct GiopPacket {
+pub struct GiopPacket<'a> {
     pub header: GiopHeader,
-    pub payload: GiopMessage,
+    pub payload: GiopMessage<'a>,
 }
 
 #[derive(Debug)]
-pub enum GiopMessage {
-    Request(GiopRequest),
+pub enum GiopMessage<'a> {
+    Request(GiopRequest<'a>),
     Reply(GiopReply),
     Fragment(GiopFragment),
     Other,
@@ -137,26 +138,26 @@ pub enum GiopMessage {
 }
 
 #[derive(Debug)]
-pub enum TargetAddress {
-    KeyAddr(Vec<u8>),
-    ProfileAddr(Vec<u8>),
-    ReferenceAddr(Vec<u8>),
+pub enum TargetAddress<'a> {
+    KeyAddr(&'a [u8]),
+    ProfileAddr(&'a [u8]),
+    ReferenceAddr(&'a [u8]),
 }
 
 #[derive(Debug)]
-pub struct ServiceContext {
+pub struct ServiceContext<'a> {
     pub context_id: u32,
-    pub context_data: Vec<u8>,
+    pub context_data: &'a [u8],
 }
 
 #[derive(Debug)]
-pub struct GiopRequest {
+pub struct GiopRequest<'a> {
     pub request_id: u32,
     pub response_flags: u8, // 0..3 (SyncScope)
-    pub target: TargetAddress,
-    pub operation: String,
-    pub service_contexts: Vec<ServiceContext>,
-    pub stub_data: Vec<u8>, // CDR payload (arguments), non décodé ici
+    pub target: TargetAddress<'a>,
+    pub operation: &'a str,
+    pub service_contexts: Vec<ServiceContext<'a>>,
+    pub stub_data: &'a [u8], // CDR payload (arguments), non décodé ici
 }
 
 // Placeholders pour plus tard
@@ -172,44 +173,16 @@ pub struct GiopFragment;
 // =========================
 //
 
-impl TryFrom<&[u8]> for GiopPacket {
+impl<'a> TryFrom<&'a [u8]> for GiopPacket<'a> {
     type Error = GiopParseError;
 
-    fn try_from(buf: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(buf: &'a [u8]) -> Result<Self, Self::Error> {
         let header = GiopHeader::try_from(buf)?;
         let total_needed = GiopHeader::HEADER_LEN + header.message_length as usize;
         validate_total_length(total_needed, buf.len())?;
 
-        // let body = &buf[GiopHeader::HEADER_LEN..total_needed];
-        // println!("giop body parsed");
-
         // Bit 0 des flags = endianness du body
         let _little_endian = (header.flags & 0x01) != 0;
-
-        // let payload = match header.message_type {
-        //     GiopMessageType::Request => {
-        //         if let Ok(req) = GiopRequest::parse(body, little_endian) {
-        //             println!("giop request parsed");
-        //             GiopMessage::Request(req)
-        //         } else {
-        //             return Err(GiopParseError::Other("Failed to parse GiopRequest"));
-        //         }
-        //     }
-        //     GiopMessageType::Reply => {
-        //         // À implémenter plus tard si besoin
-        //         GiopMessage::Reply(GiopReply)
-        //     }
-        //     GiopMessageType::Fragment => {
-        //         // À implémenter plus tard si besoin
-        //         GiopMessage::Fragment(GiopFragment)
-        //     }
-        //     _ => {
-        //         println!("giop message type not implemented");
-        //         return Err(GiopParseError::Other(
-        //             "Message type not implemented in parser",
-        //         ))
-        //     }
-        // };
 
         let payload = GiopMessage::Other;
         Ok(GiopPacket { header, payload })
@@ -242,19 +215,20 @@ impl<'a> Cursor<'a> {
     }
 
     fn read_u8(&mut self) -> Result<u8, GiopParseError> {
-        if self.remaining() < 1 {
-            return Err(GiopParseError::UnexpectedEof);
-        }
+        ensure_available(self.remaining(), 1)?;
         let v = self.buf[self.pos];
         self.pos += 1;
         Ok(v)
     }
 
     fn read_u32(&mut self) -> Result<u32, GiopParseError> {
-        if self.remaining() < 4 {
-            return Err(GiopParseError::UnexpectedEof);
-        }
-        let bytes: [u8; 4] = self.buf[self.pos..self.pos + 4].try_into().unwrap();
+        ensure_available(self.remaining(), 4)?;
+        let bytes = [
+            self.buf[self.pos],
+            self.buf[self.pos + 1],
+            self.buf[self.pos + 2],
+            self.buf[self.pos + 3],
+        ];
         self.pos += 4;
         Ok(if self.little_endian {
             u32::from_le_bytes(bytes)
@@ -264,27 +238,17 @@ impl<'a> Cursor<'a> {
     }
 
     fn read_bytes(&mut self, len: usize) -> Result<&'a [u8], GiopParseError> {
-        if self.remaining() < len {
-            return Err(GiopParseError::UnexpectedEof);
-        }
+        ensure_available(self.remaining(), len)?;
         let slice = &self.buf[self.pos..self.pos + len];
         self.pos += len;
         Ok(slice)
     }
 
-    fn read_string(&mut self) -> Result<String, GiopParseError> {
+    fn read_str(&mut self) -> Result<&'a str, GiopParseError> {
         // String CDR : ulong length, puis bytes (souvent terminés par 0)
         let len = self.read_u32()? as usize;
         let bytes = self.read_bytes(len)?;
-        let str_bytes = if !bytes.is_empty() && bytes[len - 1] == 0 {
-            &bytes[..len - 1]
-        } else {
-            bytes
-        };
-
-        str::from_utf8(str_bytes)
-            .map(|s| s.to_string())
-            .map_err(|_| GiopParseError::InvalidUtf8)
+        parse_cdr_string(bytes)
     }
 }
 
@@ -294,8 +258,8 @@ impl<'a> Cursor<'a> {
 // =========================
 //
 
-impl GiopRequest {
-    pub fn parse(body: &[u8], little_endian: bool) -> Result<Self, GiopParseError> {
+impl<'a> GiopRequest<'a> {
+    pub fn parse(body: &'a [u8], little_endian: bool) -> Result<Self, GiopParseError> {
         let mut cur = Cursor::new(body, little_endian);
 
         let request_id = cur.read_u32()?;
@@ -307,16 +271,11 @@ impl GiopRequest {
         let _r3 = cur.read_u8()?;
 
         let target = parse_target_address(&mut cur)?;
-        let operation = cur.read_string()?;
+        let operation = cur.read_str()?;
         let service_contexts = parse_service_context_list(&mut cur)?;
 
         // Le reste = stub data (arguments CDR)
-        let remaining = cur.remaining();
-        let stub_data = if remaining > 0 {
-            cur.read_bytes(remaining)?.to_vec()
-        } else {
-            Vec::new()
-        };
+        let stub_data = cur.read_bytes(cur.remaining())?;
         Ok(GiopRequest {
             request_id,
             response_flags,
@@ -328,43 +287,37 @@ impl GiopRequest {
     }
 }
 
-fn parse_target_address(cur: &mut Cursor<'_>) -> Result<TargetAddress, GiopParseError> {
+fn parse_target_address<'a>(cur: &mut Cursor<'a>) -> Result<TargetAddress<'a>, GiopParseError> {
     let discriminator = cur.read_u8()?;
+    validate_target_discriminator(discriminator)?;
 
-    match discriminator {
-        0 => {
-            // KeyAddr: sequence<octet>
-            let len = cur.read_u32()? as usize;
-            let data = cur.read_bytes(len)?.to_vec();
-            Ok(TargetAddress::KeyAddr(data))
-        }
-        1 => {
-            // ProfileAddr : brut pour l'instant
-            let len = cur.read_u32()? as usize;
-            let data = cur.read_bytes(len)?.to_vec();
-            Ok(TargetAddress::ProfileAddr(data))
-        }
-        2 => {
-            // ReferenceAddr : brut pour l'instant
-            let len = cur.read_u32()? as usize;
-            let data = cur.read_bytes(len)?.to_vec();
-            Ok(TargetAddress::ReferenceAddr(data))
-        }
-        _ => Err(GiopParseError::Other("Unknown TargetAddress discriminator")),
-    }
+    let len = cur.read_u32()? as usize;
+    let data = cur.read_bytes(len)?;
+
+    Ok(match discriminator {
+        // KeyAddr: sequence<octet>
+        0 => TargetAddress::KeyAddr(data),
+        // ProfileAddr : brut pour l'instant
+        1 => TargetAddress::ProfileAddr(data),
+        // ReferenceAddr : brut pour l'instant
+        _ => TargetAddress::ReferenceAddr(data),
+    })
 }
 
-fn parse_service_context_list(cur: &mut Cursor<'_>) -> Result<Vec<ServiceContext>, GiopParseError> {
+fn parse_service_context_list<'a>(
+    cur: &mut Cursor<'a>,
+) -> Result<Vec<ServiceContext<'a>>, GiopParseError> {
     let count = cur.read_u32()? as usize;
+    validate_service_context_count(count, cur.remaining())?;
     let mut contexts = Vec::with_capacity(count);
 
     for _ in 0..count {
         let context_id = cur.read_u32()?;
         let len = cur.read_u32()? as usize;
-        let data = cur.read_bytes(len)?.to_vec();
+        let context_data = cur.read_bytes(len)?;
         contexts.push(ServiceContext {
             context_id,
-            context_data: data,
+            context_data,
         });
     }
 
@@ -430,6 +383,16 @@ mod tests {
     }
 
     #[test]
+    fn test_truncated_header_eleven_bytes() {
+        // Un octet de moins que le header complet de 12 octets
+        let bytes = build_giop_header(0, 0);
+        assert!(matches!(
+            GiopPacket::try_from(&bytes[..GiopHeader::HEADER_LEN - 1]),
+            Err(GiopParseError::InvalidSize)
+        ));
+    }
+
+    #[test]
     fn test_invalid_magic() {
         let bytes = [b'N', b'O', b'P', b'E', 1, 0, 0, 0, 0, 0, 0, 0];
         assert!(matches!(
@@ -468,6 +431,22 @@ mod tests {
         ));
     }
 
+    #[test]
+    fn test_declared_length_beyond_buffer() {
+        // message_length annonce plus que ce que le buffer contient,
+        // meme avec des octets de body presents
+        let mut bytes = build_giop_header(1, 100);
+        bytes.extend_from_slice(&[0u8; 4]); // seulement 4 octets de body
+
+        assert!(matches!(
+            GiopPacket::try_from(bytes.as_slice()),
+            Err(GiopParseError::TruncatedBody {
+                expected: 112,
+                actual: 16
+            })
+        ));
+    }
+
     /// Body CDR d'un Request big-endian : target KeyAddr, opération "op",
     /// un service context, puis stub data.
     fn build_request_body_be() -> Vec<u8> {
@@ -490,19 +469,20 @@ mod tests {
 
     #[test]
     fn test_parse_request_big_endian() {
-        let request = GiopRequest::parse(&build_request_body_be(), false).expect("request valide");
+        let body = build_request_body_be();
+        let request = GiopRequest::parse(&body, false).expect("request valide");
 
         assert_eq!(request.request_id, 7);
         assert_eq!(request.response_flags, 3);
         match &request.target {
-            TargetAddress::KeyAddr(key) => assert_eq!(key, b"key"),
+            TargetAddress::KeyAddr(key) => assert_eq!(*key, b"key"),
             other => panic!("attendu KeyAddr, obtenu {other:?}"),
         }
         assert_eq!(request.operation, "op");
         assert_eq!(request.service_contexts.len(), 1);
         assert_eq!(request.service_contexts[0].context_id, 17);
-        assert_eq!(request.service_contexts[0].context_data, vec![0xAA, 0xBB]);
-        assert_eq!(request.stub_data, vec![0x01, 0x02, 0x03]);
+        assert_eq!(request.service_contexts[0].context_data, &[0xAA, 0xBB]);
+        assert_eq!(request.stub_data, &[0x01, 0x02, 0x03]);
     }
 
     #[test]
@@ -554,7 +534,7 @@ mod tests {
 
         assert!(matches!(
             GiopRequest::parse(&body, false),
-            Err(GiopParseError::Other(_))
+            Err(GiopParseError::UnknownTargetDiscriminator(9))
         ));
     }
 
@@ -594,5 +574,71 @@ mod tests {
             GiopRequest::parse(&body, false),
             Err(GiopParseError::UnexpectedEof)
         ));
+    }
+
+    #[test]
+    fn test_parse_request_forged_service_context_count() {
+        // Le compte annonce plus de contexts que le body ne peut en contenir :
+        // rejeté avant toute allocation.
+        let mut body = Vec::new();
+        body.extend_from_slice(&1u32.to_be_bytes()); // request_id
+        body.push(0); // response_flags
+        body.extend_from_slice(&[0, 0, 0]); // reserved
+        body.push(0); // KeyAddr
+        body.extend_from_slice(&0u32.to_be_bytes()); // key vide
+        body.extend_from_slice(&1u32.to_be_bytes()); // operation vide NUL
+        body.push(0);
+        body.extend_from_slice(&0xFFFF_FFFFu32.to_be_bytes()); // compte forgé
+
+        assert!(matches!(
+            GiopRequest::parse(&body, false),
+            Err(GiopParseError::InvalidServiceContextCount {
+                count: 0xFFFF_FFFF,
+                available: 0
+            })
+        ));
+    }
+
+    #[test]
+    fn test_parse_request_truncated_service_context() {
+        // Un context annoncé, son en-tête est présent mais context_data est tronqué.
+        let mut body = Vec::new();
+        body.extend_from_slice(&1u32.to_be_bytes()); // request_id
+        body.push(0); // response_flags
+        body.extend_from_slice(&[0, 0, 0]); // reserved
+        body.push(0); // KeyAddr
+        body.extend_from_slice(&0u32.to_be_bytes()); // key vide
+        body.extend_from_slice(&1u32.to_be_bytes()); // operation vide NUL
+        body.push(0);
+        body.extend_from_slice(&1u32.to_be_bytes()); // 1 service context
+        body.extend_from_slice(&17u32.to_be_bytes()); // context_id
+        body.extend_from_slice(&8u32.to_be_bytes()); // context len 8 mais 1 octet présent
+        body.push(0xAA);
+
+        assert!(matches!(
+            GiopRequest::parse(&body, false),
+            Err(GiopParseError::UnexpectedEof)
+        ));
+    }
+
+    #[test]
+    fn test_zero_copy_borrows_from_input() {
+        // Les slices retournées doivent pointer dans le buffer d'origine.
+        let body = build_request_body_be();
+        let request = GiopRequest::parse(&body, false).expect("request valide");
+
+        let range = body.as_ptr_range();
+        let key = match request.target {
+            TargetAddress::KeyAddr(key) => key,
+            ref other => panic!("attendu KeyAddr, obtenu {other:?}"),
+        };
+        for slice in [
+            key,
+            request.operation.as_bytes(),
+            request.service_contexts[0].context_data,
+            request.stub_data,
+        ] {
+            assert!(range.contains(&slice.as_ptr()));
+        }
     }
 }

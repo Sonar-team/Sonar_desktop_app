@@ -7,8 +7,8 @@ use std::fmt;
 
 use crate::{
     checks::application::copt::{
-        validate_connection_header_len, validate_declared_len, validate_min_len,
-        validate_parameter_header, validate_parameter_len, validate_tpdu_number_not_empty,
+        parse_cotp_parameter, validate_connection_header_len, validate_declared_len,
+        validate_min_len, validate_parameter_header, validate_parameter_len,
     },
     errors::application::copt::CotpParseError,
 };
@@ -56,7 +56,7 @@ impl From<u8> for CotpPduType {
 /// 56-127: "Parameters variable"
 /// ```
 #[derive(Debug, Clone)]
-pub struct CotpHeader {
+pub struct CotpHeader<'a> {
     pub length: u8,
     pub pdu_type: CotpPduType,
     pub dst_ref: u16,
@@ -64,25 +64,25 @@ pub struct CotpHeader {
     pub class: u8,
     pub extended_formats: bool,
     pub no_explicit_flow_control: bool,
-    pub parameters: Vec<CotpParameter>,
+    pub parameters: Vec<CotpParameter<'a>>,
 }
 
-#[derive(Debug, Clone)]
-pub enum CotpParameter {
-    TpduSize(u8),       // 0xC0: TPDU size
-    SrcTsap(u16),       // 0xC1: Source TSAP
-    DstTsap(u16),       // 0xC2: Destination TSAP
-    TpduNumber(u8),     // 0xC0 in DT TPDU
-    Eot(bool),          // 0x80 in DT TPDU
-    Other(u8, Vec<u8>), // Other parameters
+#[derive(Debug, Clone, PartialEq)]
+pub enum CotpParameter<'a> {
+    TpduSize(u8),        // 0xC0: TPDU size
+    SrcTsap(u16),        // 0xC1: Source TSAP
+    DstTsap(u16),        // 0xC2: Destination TSAP
+    TpduNumber(u8),      // 0xC0 in DT TPDU
+    Eot(bool),           // 0x80 in DT TPDU
+    Other(u8, &'a [u8]), // Other parameters (raw bytes borrowed from the packet)
 }
 
-impl CotpHeader {
+impl<'a> CotpHeader<'a> {
     /// Minimum size of a COTP header (3 bytes for basic header)
     pub const MIN_SIZE: usize = 7; // 1 + 1 + 2 + 2 + 1 (for CR/CC)
 
     /// Parse a COTP header from a byte slice
-    pub fn from_bytes(data: &[u8]) -> Result<(Self, usize), CotpParseError> {
+    pub fn from_bytes(data: &'a [u8]) -> Result<(Self, usize), CotpParseError> {
         validate_min_len(data)?;
 
         let length = data[0];
@@ -129,32 +129,7 @@ impl CotpHeader {
 
             let param_data = &data[offset + 2..offset + 2 + param_len];
 
-            let param = match param_type {
-                0xC0 => {
-                    // TPDU size or TPDU number
-                    if pdu_type == CotpPduType::Data {
-                        validate_tpdu_number_not_empty(offset, param_data.len())?;
-                        CotpParameter::TpduNumber(param_data[0])
-                    } else if param_len == 1 {
-                        CotpParameter::TpduSize(param_data[0])
-                    } else {
-                        CotpParameter::Other(param_type, param_data.to_vec())
-                    }
-                }
-                0xC1 if param_len == 2 => {
-                    // Source TSAP
-                    CotpParameter::SrcTsap(u16::from_be_bytes([param_data[0], param_data[1]]))
-                }
-                0xC2 if param_len == 2 => {
-                    // Destination TSAP
-                    CotpParameter::DstTsap(u16::from_be_bytes([param_data[0], param_data[1]]))
-                }
-                0x80 if pdu_type == CotpPduType::Data && param_len == 0 => {
-                    // EOT
-                    CotpParameter::Eot(true)
-                }
-                _ => CotpParameter::Other(param_type, param_data.to_vec()),
-            };
+            let param = parse_cotp_parameter(pdu_type, param_type, offset, param_data)?;
 
             parameters.push(param);
             offset += 2 + param_len;
@@ -176,16 +151,16 @@ impl CotpHeader {
     }
 }
 
-impl TryFrom<&[u8]> for CotpHeader {
+impl<'a> TryFrom<&'a [u8]> for CotpHeader<'a> {
     type Error = CotpParseError;
 
-    fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(data: &'a [u8]) -> Result<Self, Self::Error> {
         let (header, _) = Self::from_bytes(data)?;
         Ok(header)
     }
 }
 
-impl fmt::Display for CotpHeader {
+impl fmt::Display for CotpHeader<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let type_str = match self.pdu_type {
             CotpPduType::Data => "Data (DT)",
@@ -239,7 +214,7 @@ impl fmt::Display for CotpHeader {
                 }
                 CotpParameter::Other(code, data) => {
                     write!(f, "  Parameter 0x{code:02X}: ")?;
-                    for byte in data {
+                    for byte in *data {
                         write!(f, "{byte:02X} ")?;
                     }
                     writeln!(f)?;
@@ -363,7 +338,11 @@ mod tests {
 
         let (header, _) = CotpHeader::from_bytes(&data).unwrap();
         match &header.parameters[0] {
-            CotpParameter::Other(0xC5, data) => assert_eq!(data, &vec![0xAB, 0xCD]),
+            CotpParameter::Other(0xC5, bytes) => {
+                // Zero-copy : la slice pointe dans le paquet original.
+                assert_eq!(*bytes, &data[9..11]);
+                assert_eq!(*bytes, &[0xAB, 0xCD][..]);
+            }
             other => panic!("attendu Other(0xC5, ..), obtenu {other:?}"),
         }
     }
@@ -420,6 +399,35 @@ mod tests {
             0xD0, // CC
             0x00, 0x01, 0x00, 0x03, 0x00, // refs + class
             0xC1, 0x0A, // param annonce 10 octets absents
+        ];
+        assert!(matches!(
+            CotpHeader::from_bytes(&data),
+            Err(CotpParseError::ParameterLengthExceedsPacket { .. })
+        ));
+    }
+
+    #[test]
+    fn test_parameter_header_truncated() {
+        // Un seul octet de paramètre restant : impossible de lire type + longueur.
+        let data = [
+            0x07, // Length : declared_end = 8
+            0xD0, // CC
+            0x00, 0x01, 0x00, 0x03, 0x00, // refs + class
+            0xC1, // début de paramètre tronqué
+        ];
+        assert!(matches!(
+            CotpHeader::from_bytes(&data),
+            Err(CotpParseError::ParameterHeaderTruncated { offset: 7 })
+        ));
+    }
+
+    #[test]
+    fn test_data_tpdu_number_empty_parameter() {
+        // 0xC0 avec longueur 0 dans un DT : TPDU number vide.
+        let data = [
+            0x03, // Length : declared_end = 4
+            0xF0, // DT (Data)
+            0xC0, 0x00, // TPDU number sans donnée
         ];
         assert!(matches!(
             CotpHeader::from_bytes(&data),

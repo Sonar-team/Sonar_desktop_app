@@ -18,4 +18,7 @@ pub enum DhcpParseError {
 
     #[error("Invalid DHCP hardware address length: {hlen}")]
     InvalidHardwareAddressLength { hlen: u8 },
+
+    #[error("DHCP options area does not start with the RFC 2131 magic cookie")]
+    InvalidMagicCookie,
 }

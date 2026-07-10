@@ -7,7 +7,7 @@ use std::fmt::{self, Display};
 
 use crate::parse::application::protocols::bitcoin::BitcoinPacket;
 
-impl Display for BitcoinPacket {
+impl Display for BitcoinPacket<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -25,10 +25,10 @@ mod tests {
     fn test_bitcoin_packet_display() {
         let packet = BitcoinPacket {
             magic: 0xF9BEB4D9,
-            command: "version".to_string(),
+            command: "version",
             length: 2,
             checksum: [0xAB, 0xCD, 0xEF, 0x01],
-            payload: vec![0xDE, 0xAD],
+            payload: &[0xDE, 0xAD],
         };
 
         let rendered = packet.to_string();

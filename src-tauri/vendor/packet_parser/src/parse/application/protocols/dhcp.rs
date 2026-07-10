@@ -6,12 +6,11 @@
 //! Module for parsing DHCP packets.
 
 use std::convert::TryFrom;
-use std::fmt;
 
 use crate::{
     checks::application::dhcp::{
-        validate_dhcp_min_length, validate_hardware_address_length, validate_hardware_type,
-        validate_operation,
+        DHCP_MIN_LEN, validate_dhcp_min_length, validate_hardware_address_length,
+        validate_hardware_type, validate_magic_cookie, validate_operation,
     },
     errors::application::dhcp::DhcpParseError,
 };
@@ -42,8 +41,11 @@ use crate::{
 /// ```
 ///
 /// The `DhcpPacket` struct represents a parsed DHCP packet.
+///
+/// Parsing is zero-copy: fixed-size fields (`chaddr`, `sname`, `file`) and the
+/// variable-length `options` area are borrowed slices into the original packet.
 #[derive(Debug)]
-pub struct DhcpPacket {
+pub struct DhcpPacket<'a> {
     pub op: u8,
     pub htype: u8,
     pub hlen: u8,
@@ -55,47 +57,23 @@ pub struct DhcpPacket {
     pub yiaddr: [u8; 4],
     pub siaddr: [u8; 4],
     pub giaddr: [u8; 4],
-    pub chaddr: [u8; 16],
-    pub sname: [u8; 64],
-    pub file: [u8; 128],
-    pub options: Vec<u8>,
+    pub chaddr: &'a [u8; 16],
+    pub sname: &'a [u8; 64],
+    pub file: &'a [u8; 128],
+    pub options: &'a [u8],
 }
 
-impl fmt::Display for DhcpPacket {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "DHCP Packet: op={}, htype={}, hlen={}, hops={}, xid={:08X}, secs={}, flags={}, ciaddr={:?}, yiaddr={:?}, siaddr={:?}, giaddr={:?}, chaddr={:?}, sname={:?}, file={:?}, options={:02X?}",
-            self.op,
-            self.htype,
-            self.hlen,
-            self.hops,
-            self.xid,
-            self.secs,
-            self.flags,
-            self.ciaddr,
-            self.yiaddr,
-            self.siaddr,
-            self.giaddr,
-            self.chaddr,
-            self.sname,
-            self.file,
-            self.options
-        )
-    }
-}
-
-impl TryFrom<&[u8]> for DhcpPacket {
+impl<'a> TryFrom<&'a [u8]> for DhcpPacket<'a> {
     type Error = DhcpParseError;
 
-    fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(payload: &'a [u8]) -> Result<Self, Self::Error> {
         parse_dhcp_packet(payload)
     }
 }
 
-/// Parses a DHCP packet from a given payload.
-pub fn parse_dhcp_packet(payload: &[u8]) -> Result<DhcpPacket, DhcpParseError> {
-    // Check minimum length
+/// Parses a DHCP packet from a given payload without copying any field.
+pub fn parse_dhcp_packet(payload: &[u8]) -> Result<DhcpPacket<'_>, DhcpParseError> {
+    // Check minimum length before any indexing.
     validate_dhcp_min_length(payload)?;
 
     let op = payload[0];
@@ -109,19 +87,25 @@ pub fn parse_dhcp_packet(payload: &[u8]) -> Result<DhcpPacket, DhcpParseError> {
     let yiaddr = [payload[16], payload[17], payload[18], payload[19]];
     let siaddr = [payload[20], payload[21], payload[22], payload[23]];
     let giaddr = [payload[24], payload[25], payload[26], payload[27]];
-    let mut chaddr = [0u8; 16];
-    chaddr.copy_from_slice(&payload[28..44]);
-    let mut sname = [0u8; 64];
-    sname.copy_from_slice(&payload[44..108]);
-    let mut file = [0u8; 128];
-    file.copy_from_slice(&payload[108..236]);
 
-    let options = payload[236..].to_vec();
+    // Borrow the fixed-size areas directly from the packet (zero-copy).
+    // The lengths are guaranteed by `validate_dhcp_min_length`, so these
+    // conversions cannot fail; the error mapping avoids any `unwrap()`.
+    let too_short = || DhcpParseError::PacketTooShort {
+        expected: DHCP_MIN_LEN,
+        actual: payload.len(),
+    };
+    let chaddr: &[u8; 16] = payload[28..44].try_into().map_err(|_| too_short())?;
+    let sname: &[u8; 64] = payload[44..108].try_into().map_err(|_| too_short())?;
+    let file: &[u8; 128] = payload[108..236].try_into().map_err(|_| too_short())?;
+
+    let options = &payload[DHCP_MIN_LEN..];
 
     // Validate DHCP packet fields
     validate_operation(op)?;
     validate_hardware_type(htype)?;
     validate_hardware_address_length(hlen)?;
+    validate_magic_cookie(options)?;
 
     Ok(DhcpPacket {
         op,
@@ -142,13 +126,65 @@ pub fn parse_dhcp_packet(payload: &[u8]) -> Result<DhcpPacket, DhcpParseError> {
     })
 }
 
+/// Fixtures partagees : trames DHCP reelles (exemple_pcap/dhcp.pcap),
+/// utilisees aussi par les tests de non-regression SRVLOC (issue #3).
+#[cfg(test)]
+pub mod tests_fixtures {
+    /// DHCP Discover reel (op=1, cookie RFC 2131), payload UDP complet.
+    pub const DHCP_DISCOVER_PAYLOAD: [u8; 272] = [
+        0x01, 0x01, 0x06, 0x00, 0x00, 0x00, 0x3d, 0x1d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b,
+        0x82, 0x01, 0xfc, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x63, 0x82, 0x53, 0x63,
+        0x35, 0x01, 0x01, 0x3d, 0x07, 0x01, 0x00, 0x0b, 0x82, 0x01, 0xfc, 0x42, 0x32, 0x04, 0x00,
+        0x00, 0x00, 0x00, 0x37, 0x04, 0x01, 0x03, 0x06, 0x2a, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00,
+    ];
+
+    /// DHCP Offer reel (op=2, cookie RFC 2131), payload UDP complet.
+    pub const DHCP_OFFER_PAYLOAD: [u8; 300] = [
+        0x02, 0x01, 0x06, 0x00, 0x00, 0x00, 0x3d, 0x1d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0xc0, 0xa8, 0x00, 0x0a, 0xc0, 0xa8, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b,
+        0x82, 0x01, 0xfc, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x63, 0x82, 0x53, 0x63,
+        0x35, 0x01, 0x02, 0x01, 0x04, 0xff, 0xff, 0xff, 0x00, 0x3a, 0x04, 0x00, 0x00, 0x07, 0x08,
+        0x3b, 0x04, 0x00, 0x00, 0x0c, 0x4e, 0x33, 0x04, 0x00, 0x00, 0x0e, 0x10, 0x36, 0x04, 0xc0,
+        0xa8, 0x00, 0x01, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ];
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_parse_dhcp_packet() {
-        let dhcp_payload = [
+    /// Builds a valid 236-byte fixed DHCP header, followed by `options`.
+    fn build_dhcp_payload(options: &[u8]) -> Vec<u8> {
+        let mut payload = vec![
             0x01, 0x01, 0x06, 0x00, // op, htype, hlen, hops
             0x39, 0x03, 0xF3, 0x26, // xid
             0x00, 0x00, // secs
@@ -159,21 +195,20 @@ mod tests {
             0x00, 0x00, 0x00, 0x00, // giaddr
             0x00, 0x0C, 0x29, 0x36, 0x57, 0xD2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, // chaddr
-        ]
-        .iter()
-        .cloned()
-        .chain([0x00; 64].iter().cloned())
-        .chain([0x00; 128].iter().cloned())
-        .chain(
-            [
-                0x63, 0x82, 0x53, 0x63, // Magic cookie
-                0x35, 0x01, 0x05, // DHCP message type
-                0xFF, // End option
-            ]
-            .iter()
-            .cloned(),
-        )
-        .collect::<Vec<u8>>();
+        ];
+        payload.extend_from_slice(&[0x00; 64]); // sname
+        payload.extend_from_slice(&[0x00; 128]); // file
+        payload.extend_from_slice(options);
+        payload
+    }
+
+    #[test]
+    fn test_parse_dhcp_packet() {
+        let dhcp_payload = build_dhcp_payload(&[
+            0x63, 0x82, 0x53, 0x63, // Magic cookie
+            0x35, 0x01, 0x05, // DHCP message type
+            0xFF, // End option
+        ]);
 
         match DhcpPacket::try_from(dhcp_payload.as_slice()) {
             Ok(packet) => {
@@ -190,20 +225,43 @@ mod tests {
                 assert_eq!(packet.giaddr, [0, 0, 0, 0]);
                 assert_eq!(
                     packet.chaddr,
-                    [
+                    &[
                         0x00, 0x0C, 0x29, 0x36, 0x57, 0xD2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x00, 0x00, 0x00, 0x00
                     ]
                 );
-                assert_eq!(packet.sname, [0u8; 64]);
-                assert_eq!(packet.file, [0u8; 128]);
+                assert_eq!(packet.sname, &[0u8; 64]);
+                assert_eq!(packet.file, &[0u8; 128]);
                 assert_eq!(
                     packet.options,
-                    vec![0x63, 0x82, 0x53, 0x63, 0x35, 0x01, 0x05, 0xFF]
+                    &[0x63, 0x82, 0x53, 0x63, 0x35, 0x01, 0x05, 0xFF]
                 );
             }
             Err(_) => panic!("Expected DHCP packet"),
         }
+    }
+
+    #[test]
+    fn test_parse_dhcp_packet_borrows_from_payload() {
+        // Zero-copy check: the borrowed fields must point inside the payload.
+        let dhcp_payload = build_dhcp_payload(&[0x63, 0x82, 0x53, 0x63, 0xFF]);
+        let packet = DhcpPacket::try_from(dhcp_payload.as_slice()).expect("valid packet");
+
+        let base = dhcp_payload.as_ptr() as usize;
+        assert_eq!(packet.chaddr.as_ptr() as usize, base + 28);
+        assert_eq!(packet.sname.as_ptr() as usize, base + 44);
+        assert_eq!(packet.file.as_ptr() as usize, base + 108);
+        assert_eq!(packet.options.as_ptr() as usize, base + 236);
+    }
+
+    #[test]
+    fn test_parse_dhcp_packet_empty_options() {
+        // Exactly the fixed header, no options at all.
+        let dhcp_payload = build_dhcp_payload(&[]);
+        assert_eq!(dhcp_payload.len(), 236);
+
+        let packet = DhcpPacket::try_from(dhcp_payload.as_slice()).expect("valid packet");
+        assert!(packet.options.is_empty());
     }
 
     #[test]
@@ -222,27 +280,50 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_dhcp_packet_one_byte_short_of_header() {
+        // 235 bytes: one byte less than the fixed DHCP header.
+        let payload = build_dhcp_payload(&[]);
+        let truncated = &payload[..235];
+        assert!(matches!(
+            DhcpPacket::try_from(truncated),
+            Err(DhcpParseError::PacketTooShort {
+                expected: 236,
+                actual: 235
+            })
+        ));
+    }
+
+    #[test]
+    fn test_parse_dhcp_packet_empty_payload() {
+        assert!(matches!(
+            DhcpPacket::try_from(&[][..]),
+            Err(DhcpParseError::PacketTooShort {
+                expected: 236,
+                actual: 0
+            })
+        ));
+    }
+
+    #[test]
     fn test_parse_dhcp_packet_invalid_op() {
-        let invalid_op_payload = vec![
-            0x03, 0x01, 0x06, 0x00, 0x39, 0x03, 0xF3, 0x26, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x0C, 0x29, 0x36, 0x57, 0xD2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00,
-        ]
-        .iter()
-        .cloned()
-        .chain([0x00; 64].iter().cloned())
-        .chain([0x00; 128].iter().cloned())
-        .chain(
-            [0x63, 0x82, 0x53, 0x63, 0x35, 0x01, 0x05, 0xFF]
-                .iter()
-                .cloned(),
-        )
-        .collect::<Vec<u8>>();
+        let mut invalid_op_payload = build_dhcp_payload(&[0x63, 0x82, 0x53, 0x63, 0xFF]);
+        invalid_op_payload[0] = 0x03;
 
         match DhcpPacket::try_from(invalid_op_payload.as_slice()) {
             Ok(_) => panic!("Expected invalid DHCP packet due to invalid op code"),
             Err(err) => assert_eq!(err, DhcpParseError::InvalidOperation { op: 3 }),
         }
+    }
+
+    #[test]
+    fn test_dhcp_packet_display() {
+        let dhcp_payload = build_dhcp_payload(&[0x63, 0x82, 0x53, 0x63, 0xFF]);
+        let packet = DhcpPacket::try_from(dhcp_payload.as_slice()).expect("valid packet");
+
+        let rendered = packet.to_string();
+        assert!(rendered.starts_with("DHCP Packet:"));
+        assert!(rendered.contains("op=1"));
+        assert!(rendered.contains("xid=3903F326"));
+        assert!(rendered.contains("options=[63, 82, 53, 63, FF]"));
     }
 }

@@ -19,6 +19,12 @@ pub enum SrvlocPacketParseError {
     #[error("Unsupported SRVLOC version {0}")]
     UnsupportedVersion(u8),
 
+    #[error("SRVLOC declared packet length {declared} does not match payload length {actual}")]
+    InconsistentPacketLength { declared: usize, actual: usize },
+
+    #[error("Unsupported SRVLOC v{version} function {function}")]
+    UnsupportedFunction { version: u8, function: u8 },
+
     #[error("Invalid UTF-8 in SRVLOC field '{0}'")]
     InvalidUtf8(&'static str),
 }

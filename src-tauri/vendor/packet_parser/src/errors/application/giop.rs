@@ -28,6 +28,11 @@ pub enum GiopParseError {
     #[error("Unexpected end of buffer")]
     UnexpectedEof,
 
-    #[error("Other GIOP parsing error: {0}")]
-    Other(&'static str),
+    #[error("Unknown GIOP TargetAddress discriminator {0}")]
+    UnknownTargetDiscriminator(u8),
+
+    #[error(
+        "Invalid GIOP service context count {count} (only {available} bytes available in body)"
+    )]
+    InvalidServiceContextCount { count: usize, available: usize },
 }

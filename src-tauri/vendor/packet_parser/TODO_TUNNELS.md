@@ -3,6 +3,8 @@
 Suivi du chantier « un paquet encapsulé → plusieurs niveaux de flux ».
 Tout passe par le module [`src/parse/tunnel/mod.rs`](src/parse/tunnel/mod.rs).
 
+> Suivi GitHub : [issue #15](https://github.com/Akmot9/Packet-parser/issues/15).
+
 ## ✅ Fait
 
 - [x] Champ récursif `PacketFlow.inner: Option<Box<PacketFlow>>` + `flatten()`.

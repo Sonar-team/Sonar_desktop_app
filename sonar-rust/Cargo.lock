@@ -388,9 +388,9 @@ checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
 name = "packet_parser"
-version = "3.0.1"
+version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9afc9eabd810533ed74f84369a3cec9d4b5785daa03c2fc720c6cc348e979e2"
+checksum = "37ba06a22e3dd43066a6b9f49c7bc1e128541dc29d6fc26c127ec21c016cabdb"
 dependencies = [
  "chrono",
  "hex",

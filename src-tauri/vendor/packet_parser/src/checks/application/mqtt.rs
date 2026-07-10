@@ -8,6 +8,7 @@ use crate::{
 };
 
 pub const MQTT_MIN_HEADER_LEN: usize = 2;
+pub const MQTT_REMAINING_LENGTH_MAX_BYTES: usize = 4;
 
 pub fn validate_mqtt_min_length(packet: &[u8]) -> Result<(), MqttError> {
     if packet.len() < MQTT_MIN_HEADER_LEN {
@@ -77,7 +78,7 @@ pub fn decode_remaining_length(buf: &[u8]) -> Result<(u32, usize), MqttError> {
     let mut multiplier: u32 = 1;
     let mut value: u32 = 0;
 
-    for (i, &byte) in buf.iter().take(4).enumerate() {
+    for (i, &byte) in buf.iter().take(MQTT_REMAINING_LENGTH_MAX_BYTES).enumerate() {
         value = value
             .checked_add(((byte & 127) as u32).saturating_mul(multiplier))
             .ok_or(MqttError::MalformedRemainingLength)?;
@@ -91,7 +92,12 @@ pub fn decode_remaining_length(buf: &[u8]) -> Result<(u32, usize), MqttError> {
             .ok_or(MqttError::MalformedRemainingLength)?;
     }
 
-    Err(MqttError::RemainingLengthOverflow)
+    if buf.len() < MQTT_REMAINING_LENGTH_MAX_BYTES {
+        // Le buffer se termine sur un octet de continuation : varint tronqué.
+        Err(MqttError::MalformedRemainingLength)
+    } else {
+        Err(MqttError::RemainingLengthOverflow)
+    }
 }
 
 pub fn validate_mqtt_header_available(
@@ -280,6 +286,58 @@ mod tests {
         assert!(matches!(
             validate_mqtt_header_available(3, 5),
             Err(MqttError::PacketTooShort { actual: 3, min: 5 })
+        ));
+    }
+
+    #[test]
+    fn test_validate_mqtt_min_length() {
+        assert!(validate_mqtt_min_length(&[0xC0, 0x00]).is_ok());
+        assert!(matches!(
+            validate_mqtt_min_length(&[0xC0]),
+            Err(MqttError::PacketTooShort { actual: 1, min: 2 })
+        ));
+        assert!(matches!(
+            validate_mqtt_min_length(&[]),
+            Err(MqttError::PacketTooShort { actual: 0, min: 2 })
+        ));
+    }
+
+    #[test]
+    fn test_decode_remaining_length_truncated_varint() {
+        // Buffer épuisé alors que l'octet de continuation annonce une suite.
+        assert!(matches!(
+            decode_remaining_length(&[0x80]),
+            Err(MqttError::MalformedRemainingLength)
+        ));
+        assert!(matches!(
+            decode_remaining_length(&[0xFF, 0xFF, 0x80]),
+            Err(MqttError::MalformedRemainingLength)
+        ));
+        assert!(matches!(
+            decode_remaining_length(&[]),
+            Err(MqttError::MalformedRemainingLength)
+        ));
+    }
+
+    #[test]
+    fn test_decode_remaining_length_max_value() {
+        // Valeur maximale encodable : 268 435 455 sur 4 octets.
+        assert_eq!(
+            decode_remaining_length(&[0xFF, 0xFF, 0xFF, 0x7F]).unwrap(),
+            (268_435_455, 4)
+        );
+    }
+
+    #[test]
+    fn test_validate_remaining_length_available() {
+        assert!(validate_remaining_length_available(4, 4).is_ok());
+        assert!(validate_remaining_length_available(0, 0).is_ok());
+        assert!(matches!(
+            validate_remaining_length_available(5, 4),
+            Err(MqttError::RemainingLengthExceedsBuffer {
+                remaining_length: 5,
+                available: 4
+            })
         ));
     }
 }

@@ -88,44 +88,65 @@ pub fn extract_precision(payload: &u8) -> Result<i8, NtpPacketParseError> {
 }
 
 pub fn extract_root_delay(payload: &[u8]) -> Result<u32, NtpPacketParseError> {
+    if payload.len() < 4 {
+        return Err(NtpPacketParseError::InvalidPacketLength);
+    }
     Ok(u32::from_be_bytes([
         payload[0], payload[1], payload[2], payload[3],
     ]))
 }
 
 pub fn extract_root_dispersion(payload: &[u8]) -> Result<u32, NtpPacketParseError> {
+    if payload.len() < 4 {
+        return Err(NtpPacketParseError::InvalidPacketLength);
+    }
     Ok(u32::from_be_bytes([
         payload[0], payload[1], payload[2], payload[3],
     ]))
 }
 
+/// Returns the ASCII reference code held in a 4-byte NTP reference id,
+/// trimmed of its trailing NUL/space padding.
+///
+/// Returns `None` if the non-padding bytes are not printable ASCII, without
+/// allocating: the returned `&str` borrows from the input bytes.
+pub fn reference_code_str(bytes: &[u8; 4]) -> Option<&str> {
+    let end = bytes
+        .iter()
+        .rposition(|&b| b != 0 && b != b' ')
+        .map_or(0, |i| i + 1);
+    let trimmed = &bytes[..end];
+
+    if !trimmed.iter().all(|b| b.is_ascii_graphic()) {
+        return None;
+    }
+
+    std::str::from_utf8(trimmed).ok()
+}
+
 /// Extrait le Reference ID d’un paquet NTP en vérifiant le Stratum.
 pub fn extract_reference_id(stratum: u8, payload: &[u8]) -> Result<Refid, NtpPacketParseError> {
-    // println!("payload : {:02X?}", payload);
     if payload.len() < 4 {
         return Err(NtpPacketParseError::InvalidReferenceIdForHigherStratum);
     }
 
     let ref_id_bytes = [payload[0], payload[1], payload[2], payload[3]];
-    let ref_str = String::from_utf8_lossy(&ref_id_bytes).to_string();
 
     match stratum {
         0 => {
-            if ref_str == "\0\0\0\0" {
-                Ok(Refid::KissCode("NULL".to_string())) // Stratum 0 peut être "NULL"
-            } else if KISS_CODES.contains(&ref_str.trim()) {
-                Ok(Refid::KissCode(ref_str.trim().to_string()))
-            } else {
-                Err(NtpPacketParseError::InvalidReferenceIdForStratum0)
+            // Stratum 0 may carry an all-zero ("NULL") reference id.
+            if ref_id_bytes == [0u8; 4] {
+                return Ok(Refid::KissCode(ref_id_bytes));
+            }
+            match reference_code_str(&ref_id_bytes) {
+                Some(code) if KISS_CODES.contains(&code) => Ok(Refid::KissCode(ref_id_bytes)),
+                _ => Err(NtpPacketParseError::InvalidReferenceIdForStratum0),
             }
         }
-        1 => {
-            if CLOCK_SOURCES.contains(&ref_str.trim()) {
-                Ok(Refid::ClockSource(ref_str.trim().to_string()))
-            } else {
-                Err(NtpPacketParseError::InvalidReferenceIdForStratum1)
-            }
-        }
+        1 => match reference_code_str(&ref_id_bytes) {
+            Some(code) if CLOCK_SOURCES.contains(&code) => Ok(Refid::ClockSource(ref_id_bytes)),
+            _ => Err(NtpPacketParseError::InvalidReferenceIdForStratum1),
+        },
         2..=15 => {
             let ip = Ipv4Addr::new(
                 ref_id_bytes[0],
@@ -157,49 +178,41 @@ const CLOCK_SOURCES: &[&str] = &[
 
 const NTP_TO_UNIX_EPOCH: i64 = 2_208_988_800;
 
-/// Extracts the NTP transmit timestamp from an NTP packet and returns a `DateTime<Utc>`.
+/// Extracts an NTP timestamp (8 bytes) and returns a `DateTime<Utc>`.
 pub fn extract_timestamp(payload: &[u8]) -> Result<DateTime<Utc>, NtpPacketParseError> {
-    validate_epoch(payload)?;
+    validate_timestamp_size(payload)?;
+
     // Extraction des 4 premiers octets pour obtenir les secondes NTP.
-    let ntp_seconds = u32::from_be_bytes(payload[0..4].try_into().unwrap());
+    let ntp_seconds = u32::from_be_bytes([payload[0], payload[1], payload[2], payload[3]]);
 
     // Extraction des 4 derniers octets pour obtenir la fraction de seconde NTP.
-    let ntp_fraction = u32::from_be_bytes(payload[4..8].try_into().unwrap());
+    let ntp_fraction = u32::from_be_bytes([payload[4], payload[5], payload[6], payload[7]]);
 
-    if ntp_seconds == 0 && ntp_fraction == 0 {
-        return Ok(Utc.timestamp_opt(0, 0).unwrap()); // Retourne 1970-01-01 00:00:00 UTC
-    }
     // Conversion des secondes NTP en secondes UNIX (décalage de 1900 à 1970).
-    let unix_seconds = ntp_seconds as i64 - NTP_TO_UNIX_EPOCH;
+    // Un timestamp entièrement nul est interprété comme 1970-01-01 00:00:00 UTC.
+    let unix_seconds = if ntp_seconds == 0 && ntp_fraction == 0 {
+        0
+    } else {
+        ntp_seconds as i64 - NTP_TO_UNIX_EPOCH
+    };
 
     // Conversion de la fraction de seconde NTP en nanosecondes.
-    let nanos = ((ntp_fraction as u64) * 1_000_000_000) / (1 << 32);
-    let nanos = nanos as u32;
+    let nanos = (((ntp_fraction as u64) * 1_000_000_000) / (1 << 32)) as u32;
+
     // Construction du `DateTime<Utc>` et validation de la date.
-    let datetime = Utc.timestamp_opt(unix_seconds, nanos).single().ok_or(
+    Utc.timestamp_opt(unix_seconds, nanos).single().ok_or(
         NtpPacketParseError::TimestampConversionError {
             seconds: unix_seconds,
             nanos,
         },
-    )?;
-
-    Ok(datetime)
+    )
 }
 
-fn validate_epoch(payload: &[u8]) -> Result<(), NtpPacketParseError> {
+fn validate_timestamp_size(payload: &[u8]) -> Result<(), NtpPacketParseError> {
     if payload.len() != 8 {
         return Err(NtpPacketParseError::InvalidTimestampSize {
             received: payload.len(),
         });
-    }
-
-    // Extraction des 4 premiers octets pour obtenir les secondes NTP.
-    let ntp_seconds = u32::from_be_bytes(payload[0..4].try_into().unwrap());
-
-    // Vérification si le timestamp est avant 1970
-    if (ntp_seconds as i64) < 0 {
-        println!("Invalid timestamp: {ntp_seconds}");
-        return Err(NtpPacketParseError::InvalidTime);
     }
 
     Ok(())
@@ -222,6 +235,20 @@ pub fn validate_datetime_ordering(
 mod tests {
     use super::*;
     use chrono::{TimeZone, Utc};
+
+    #[test]
+    fn test_validate_ntp_packet_length() {
+        assert!(validate_ntp_packet_length(&[0u8; 48]).is_ok());
+        assert!(validate_ntp_packet_length(&[0u8; 60]).is_ok());
+        assert!(matches!(
+            validate_ntp_packet_length(&[0u8; 47]),
+            Err(NtpPacketParseError::InvalidPacketLength)
+        ));
+        assert!(matches!(
+            validate_ntp_packet_length(&[]),
+            Err(NtpPacketParseError::InvalidPacketLength)
+        ));
+    }
 
     #[test]
     fn test_valid_ordering() {
@@ -247,12 +274,43 @@ mod tests {
             Err(NtpPacketParseError::InconsistentTimestamps)
         ));
     }
+
+    #[test]
+    fn test_reference_code_str_trims_padding() {
+        assert_eq!(reference_code_str(b"GPS "), Some("GPS"));
+        assert_eq!(reference_code_str(b"GPS\0"), Some("GPS"));
+        assert_eq!(reference_code_str(b"RATE"), Some("RATE"));
+        assert_eq!(reference_code_str(&[0, 0, 0, 0]), Some(""));
+    }
+
+    #[test]
+    fn test_reference_code_str_rejects_non_ascii() {
+        assert_eq!(reference_code_str(&[0x80, 0x00, 0x00, 0x00]), None);
+        assert_eq!(reference_code_str(&[0xC3, 0xA9, 0xFF, 0xFE]), None);
+        // Control characters are not printable ASCII either.
+        assert_eq!(reference_code_str(&[0x01, 0x02, 0x03, 0x04]), None);
+    }
+
+    #[test]
+    fn test_stratum_0_null_reference_id() {
+        let result = extract_reference_id(0, &[0, 0, 0, 0]);
+        assert_eq!(result, Ok(Refid::KissCode([0, 0, 0, 0])));
+    }
+
+    #[test]
+    fn test_stratum_0_valid_kiss_code() {
+        let result = extract_reference_id(0, b"RATE");
+        assert_eq!(result, Ok(Refid::KissCode(*b"RATE")));
+        assert_eq!(result.unwrap().code(), Some("RATE"));
+    }
+
     #[test]
     fn test_stratum_1_valid_ascii() {
         let stratum = 1;
         let payload = b"GPS ";
         let result = extract_reference_id(stratum, payload);
-        assert_eq!(result, Ok(Refid::ClockSource("GPS".to_string())));
+        assert_eq!(result, Ok(Refid::ClockSource(*b"GPS ")));
+        assert_eq!(result.unwrap().code(), Some("GPS"));
     }
 
     #[test]
@@ -263,6 +321,16 @@ mod tests {
         assert!(matches!(
             result,
             Err(NtpPacketParseError::InvalidReferenceIdForStratum1)
+        ));
+    }
+
+    #[test]
+    fn test_stratum_0_non_ascii() {
+        let payload = [0xC3, 0xA9, 0xFF, 0xFE]; // Non-ASCII reference id
+        let result = extract_reference_id(0, &payload);
+        assert!(matches!(
+            result,
+            Err(NtpPacketParseError::InvalidReferenceIdForStratum0)
         ));
     }
 
@@ -294,5 +362,57 @@ mod tests {
             result,
             Err(NtpPacketParseError::InvalidReferenceIdForStratum0)
         ));
+    }
+
+    #[test]
+    fn test_extract_reference_id_too_short() {
+        let result = extract_reference_id(2, &[8, 8]);
+        assert!(matches!(
+            result,
+            Err(NtpPacketParseError::InvalidReferenceIdForHigherStratum)
+        ));
+    }
+
+    #[test]
+    fn test_extract_timestamp_zero_is_unix_epoch() {
+        let payload = [0u8; 8];
+        let result = extract_timestamp(&payload).expect("zero timestamp must be valid");
+        assert_eq!(result, Utc.timestamp_opt(0, 0).unwrap());
+    }
+
+    #[test]
+    fn test_extract_timestamp_valid() {
+        // NTP seconds for 2004-09-27T03:18:04Z (0xC50204EC).
+        let payload = [0xC5, 0x02, 0x04, 0xEC, 0x00, 0x00, 0x00, 0x00];
+        let result = extract_timestamp(&payload).expect("valid timestamp");
+        assert_eq!(result.timestamp(), 0xC50204ECu32 as i64 - 2_208_988_800);
+    }
+
+    #[test]
+    fn test_extract_timestamp_invalid_size() {
+        let payload = [0u8; 4];
+        let result = extract_timestamp(&payload);
+        assert!(matches!(
+            result,
+            Err(NtpPacketParseError::InvalidTimestampSize { received: 4 })
+        ));
+    }
+
+    #[test]
+    fn test_extract_root_delay_and_dispersion_too_short() {
+        assert!(matches!(
+            extract_root_delay(&[0x00, 0x01]),
+            Err(NtpPacketParseError::InvalidPacketLength)
+        ));
+        assert!(matches!(
+            extract_root_dispersion(&[0x00]),
+            Err(NtpPacketParseError::InvalidPacketLength)
+        ));
+    }
+
+    #[test]
+    fn test_extract_flags_valid() {
+        // LI=3, VN=3, Mode=1 → 0b11_011_001 = 0xD9
+        assert_eq!(extract_flags(&0xD9), Ok((3, 3, 1)));
     }
 }

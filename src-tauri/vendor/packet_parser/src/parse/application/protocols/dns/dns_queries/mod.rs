@@ -92,6 +92,9 @@ impl fmt::Display for DnsQuery {
 /// - `DnsQueryParseError::OutOfBoundParse` si les données ne contiennent pas assez d'octets pour un parsing correct.
 /// - `DnsQueryParseError::Utf8Error` si les données ne sont pas des chaînes UTF-8 valides.
 fn parse_name(bytes: &[u8], mut offset: usize) -> Result<(String, usize), DnsQueryParseError> {
+    // Allocation justifiée (METHODE_AJOUT_PROTOCOLE.md) : un nom DNS est découpé
+    // en labels préfixés par leur longueur, potentiellement non contigus
+    // (compression RFC 1035) — il doit être reconstruit, pas emprunté.
     let mut labels = Vec::new(); // Stocke chaque label extrait du nom de domaine
 
     loop {

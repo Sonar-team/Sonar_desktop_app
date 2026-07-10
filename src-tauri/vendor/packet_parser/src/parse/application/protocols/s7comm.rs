@@ -222,7 +222,6 @@ impl<'a> S7CommPacket<'a> {
     /// }
     /// ```
     fn parse(packet: &'a [u8]) -> Result<Self, S7CommParseError> {
-        // println!("S7CommPacket::try_from: packet len: {:?}", packet);
         validate_min_size(packet.len(), Self::MIN_SIZES)?;
 
         // Parse TPKT Header (4 bytes)
@@ -248,16 +247,7 @@ impl<'a> S7CommPacket<'a> {
 
         // S7 Header starts after TPKT + COTP
         let s7_start = 4 + cotp.length as usize + 1; // +1 for the length byte itself
-        // println!("S7 header start: {}", s7_start);
-
-        if s7_start + 10 > packet.len() {
-            // println!(
-            //     "Packet too short for S7 header: need {} bytes, have {}",
-            //     s7_start + 10,
-            //     packet.len()
-            // );
-            validate_s7_header_length(s7_start + 10, packet.len())?;
-        }
+        validate_s7_header_length(s7_start + 10, packet.len())?;
 
         // First create the header without error fields
         let mut s7_header = S7Header {
@@ -277,49 +267,14 @@ impl<'a> S7CommPacket<'a> {
             s7_header.error_code = Some(packet[s7_start + 11]);
         }
 
-        // println!("S7 Header: {:?}", s7_header);
-
-        // Print packet structure for debugging - only print up to the packet length
-        // println!("Packet structure:");
-        // println!(
-        //     "  TPKT: {:02x} {:02x} {:02x}{:02x}",
-        //     packet[0], packet[1], packet[2], packet[3]
-        // );
-        // println!(
-        //     "  COTP: {:02x} {:02x} {:02x}",
-        //     packet[4], packet[5], packet[6]
-        // );
-
-        // Only print S7 header bytes that exist in the packet
-        let s7_header_end = std::cmp::min(s7_start + 12, packet.len());
-        // print!("  S7 Header: ");
-        for _byte in packet.iter().take(s7_header_end).skip(s7_start) {
-            // print!("{:02x} ", byte);
-        }
-        // println!();
-
         // The parameter section starts right after the S7 header (10 bytes for header + 2 for error class/code if present)
         let s7_header_length = if s7_header.rosctr == 0x03 { 12 } else { 10 };
         let param_start = s7_start + s7_header_length;
 
-        // println!("Parameter section start: {}", param_start);
-
         // If there's no parameter data, return an empty parameter section
         let parameter = if s7_header.parameter_length > 0 {
             let param_end = param_start + s7_header.parameter_length as usize;
-
-            if param_end > packet.len() {
-                // println!(
-                //     "Invalid parameter length: param_end={}, packet_len={}",
-                //     param_end,
-                //     packet.len()
-                // );
-                // println!("  TPKT length: {}", tpkt.length);
-                // println!("  COTP length: {}", cotp.length);
-                // println!("  S7 parameter_length: {}", s7_header.parameter_length);
-                // println!("  S7 data_length: {}", s7_header.data_length);
-                validate_parameter_length(param_end, packet.len())?;
-            }
+            validate_parameter_length(param_end, packet.len())?;
 
             Self::parse_parameter(&packet[param_start..param_end])?
         } else {
@@ -487,6 +442,57 @@ mod tests {
             result.is_ok(),
             "Failed to parse S7Comm packet: {:?}",
             result.err().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_truncated_parameter_item_length() {
+        // parameter_length = 6, item declares length 0x0a but only 4 bytes
+        // follow the item header -> InvalidParameterItemLength
+        let hex_str = "0300001702f08032010000000100060000_0401120a1002".replace('_', "");
+        let bytes = hex::decode(hex_str).expect("Failed to decode hex string");
+        let err = S7CommPacket::try_from(&bytes[..]).unwrap_err();
+        assert_eq!(err, S7CommParseError::InvalidParameterItemLength);
+    }
+
+    #[test]
+    fn test_truncated_parameter_item_header() {
+        // parameter_length = 3, item_count = 1 but only 1 byte remains for the
+        // 2-byte item header -> InvalidParameterItemHeader
+        let hex_str = "0300001402f08032010000000100030000_040112".replace('_', "");
+        let bytes = hex::decode(hex_str).expect("Failed to decode hex string");
+        let err = S7CommPacket::try_from(&bytes[..]).unwrap_err();
+        assert_eq!(err, S7CommParseError::InvalidParameterItemHeader);
+    }
+
+    #[test]
+    fn test_parameter_section_beyond_packet() {
+        // Valid packet truncated after 25 bytes: declared parameter_length (14)
+        // ends at offset 31, beyond the 25-byte packet -> InvalidParameterLength
+        let hex_str = "0300001f02f080320100000013000e00000401120a10020001000083000000";
+        let bytes = hex::decode(hex_str).expect("Failed to decode hex string");
+        let err = S7CommPacket::try_from(&bytes[..25]).unwrap_err();
+        assert_eq!(
+            err,
+            S7CommParseError::InvalidParameterLength {
+                expected: 31,
+                actual: 25,
+            }
+        );
+    }
+
+    #[test]
+    fn test_data_section_beyond_packet() {
+        // data_length = 4 declared but no data bytes present -> InvalidDataLength
+        let hex_str = "0300001202f08032010000000100010004_04".replace('_', "");
+        let bytes = hex::decode(hex_str).expect("Failed to decode hex string");
+        let err = S7CommPacket::try_from(&bytes[..]).unwrap_err();
+        assert_eq!(
+            err,
+            S7CommParseError::InvalidDataLength {
+                expected: 22,
+                actual: 18,
+            }
         );
     }
 }

@@ -1,27 +1,21 @@
-# Sprint 01 - Reste a faire
+# Sprint 01 - Termine
 
-Ce fichier liste les ecarts restants entre la librairie actuelle et la methode de travail decrite dans `METHODE_AJOUT_PROTOCOLE.md`.
+Ce fichier listait les ecarts entre la librairie et la methode de travail decrite dans `METHODE_AJOUT_PROTOCOLE.md`. Le sprint est solde avec la version 4.0.0 (voir `CHANGELOG.md`).
 
-## Etat actuel
+> Suivi GitHub : [issue #16](https://github.com/Akmot9/Packet-parser/issues/16).
 
-- Les erreurs non typees prioritaires ont ete remplacees par des erreurs dediees.
-- Les validations inline prioritaires ont ete deplacees vers `src/checks`.
-- Les nouveaux ajouts doivent maintenant suivre `TryFrom<&[u8]>`, `thiserror`, `src/errors`, `src/checks`, zero-copy et rustdoc Mermaid `packet-beta`.
-- `cargo fmt` et `cargo test` passent a la date de ce sprint.
+## Fait
 
-## Reste prioritaire
+- Erreurs non typees remplacees par des erreurs dediees (`thiserror`), y compris QUIC (`src/errors/application/quic.rs`), Bitcoin et MQTT.
+- Validations inline deplacees vers `src/checks` pour GIOP, QUIC (curseur + varint), TLS (boucle de records), OPC UA, COTP et S7Comm.
+- Migration zero-copy terminee : HTTP, GIOP, QUIC, SRVLOC, Bitcoin, MQTT, COTP, DHCP et NTP empruntent leurs champs au paquet (`&'a [u8]` / `&'a str`). Les noms de protocoles sont des `&'static str` (commit 9c2aa35).
+- Seule allocation restante dans le chemin de parsing : la reconstruction des noms DNS (labels + compression RFC 1035), documentee comme justifiee par le protocole dans `src/parse/application/protocols/dns/dns_queries/mod.rs`.
+- Tests unitaires directs des checks et tests de bornes ajoutes (~130 tests, 598 au total), dont des tests de provenance de pointeur garantissant le zero-copy.
+- Chaque protocole expose un schema Mermaid `packet-beta` dans la rustdoc de son type principal (verifie).
+- En-tete de licence MIT present sur tous les fichiers de `src/` (14 fichiers corriges).
+- `cargo fmt`, `cargo clippy --all-targets --all-features -D warnings` et `cargo test` passent.
 
-- Finaliser l'audit protocole par protocole pour verifier le respect complet de la methode.
-- Creer une erreur dediee QUIC dans `src/errors/application/quic.rs` au lieu de passer par une erreur applicative generique.
-- Deplacer ou encapsuler les dernieres validations locales encore presentes dans certains parseurs complexes, notamment GIOP, QUIC cursor, TLS record loop, OPC UA, COTP et S7Comm.
-- Continuer la migration zero-copy des parseurs qui exposent encore des `Vec<u8>`, `String`, `to_vec()` ou `to_string()` dans le chemin de parsing.
-- Revoir les payloads et champs variables de Bitcoin, DNS, HTTP, MQTT, QUIC, SRVLOC, COTP, TLS et S7Comm pour privilegier `&'a [u8]` ou `&'a str` valide.
-- Ajouter des tests unitaires directs pour les nouveaux checks, pas seulement via les parseurs.
-- Ajouter des tests de bornes pour les longueurs declarees, offsets, champs variables et payloads tronques.
-- Verifier que chaque protocole expose un schema Mermaid `packet-beta` exact dans la rustdoc du type principal.
-- Verifier que chaque nouveau fichier conserve l'en-tete de licence MIT du projet.
-
-## Definition de termine
+## Definition de termine (atteinte)
 
 - Tous les protocoles ont un parseur `TryFrom<&[u8]>`.
 - Les erreurs de protocole sont dans `src/errors/<couche>/`.

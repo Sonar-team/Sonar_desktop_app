@@ -7,8 +7,8 @@ use core::convert::TryFrom;
 
 use crate::{
     checks::application::opcua::{
-        OPCUA_TCP_HEADER_LEN, validate_body_len, validate_message_size, validate_tcp_header_length,
-        validate_ua_string_available, validate_ua_string_len,
+        OPCUA_TCP_HEADER_LEN, validate_body_len, validate_chunk_available, validate_message_size,
+        validate_tcp_header_length, validate_ua_string_available, validate_ua_string_len,
     },
     errors::application::opcua::OpcuaParseError,
 };
@@ -175,12 +175,17 @@ impl<'a> TryFrom<&'a [u8]> for OpcuaPacket<'a> {
             let header = OpcuaTcpHeader::try_from(remaining)?;
             let message_size = header.message_size as usize;
 
-            let (consumed, payload) = if remaining.len() < message_size {
-                let body = &remaining[OPCUA_TCP_HEADER_LEN..];
-                (remaining.len(), OpcuaPayload::Partial(body))
-            } else {
-                let body = &remaining[OPCUA_TCP_HEADER_LEN..message_size];
-                (message_size, parse_payload(header.message_type, body)?)
+            let (consumed, payload) = match validate_chunk_available(remaining.len(), message_size)
+            {
+                // Chunk annoncé plus grand que le buffer restant → chunk partiel.
+                Err(_) => {
+                    let body = &remaining[OPCUA_TCP_HEADER_LEN..];
+                    (remaining.len(), OpcuaPayload::Partial(body))
+                }
+                Ok(()) => {
+                    let body = &remaining[OPCUA_TCP_HEADER_LEN..message_size];
+                    (message_size, parse_payload(header.message_type, body)?)
+                }
             };
 
             chunks.push(OpcuaChunk { header, payload });
@@ -372,6 +377,22 @@ mod tests {
         assert_eq!(packet.chunks[0].header.message_size, 28);
         match packet.chunks[0].payload {
             OpcuaPayload::Partial(body) => assert!(body.is_empty()),
+            _ => panic!("expected partial OPC UA payload"),
+        }
+    }
+
+    #[test]
+    fn parse_chunk_size_beyond_buffer_as_partial_with_body() {
+        // Declared message size (64) far beyond the buffer: header + 4 body bytes.
+        let mut bytes = b"MSGF".to_vec();
+        bytes.extend_from_slice(&64u32.to_le_bytes());
+        bytes.extend_from_slice(&[0xDE, 0xAD, 0xBE, 0xEF]);
+
+        let packet = OpcuaPacket::try_from(bytes.as_slice()).unwrap();
+        assert_eq!(packet.chunks.len(), 1);
+        assert_eq!(packet.chunks[0].header.message_size, 64);
+        match packet.chunks[0].payload {
+            OpcuaPayload::Partial(body) => assert_eq!(body, &[0xDE, 0xAD, 0xBE, 0xEF]),
             _ => panic!("expected partial OPC UA payload"),
         }
     }

@@ -6,6 +6,62 @@ Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-07-09
+
+Sprint 01 : mise en conformite complete avec `METHODE_AJOUT_PROTOCOLE.md`
+(zero-copy, erreurs typees, validations dans `src/checks`).
+
+### Rupture
+
+- Migration zero-copy des parseurs qui copiaient encore des octets du paquet :
+  les structures suivantes gagnent un lifetime et empruntent leurs champs au
+  paquet source (`&'a [u8]` / `&'a str`) au lieu de posseder `Vec<u8>`/`String` :
+  `HttpRequest<'a>`, `GiopPacket<'a>` (et `GiopRequest`, `ServiceContext`,
+  `TargetAddress`), `QuicPacket<'a>` (et `ConnectionId`, `CryptoFrame`,
+  `QuicFrame`, `QuicPayload`), `SrvlocPacket<'a>`, `BitcoinPacket<'a>`,
+  `MqttPacket<'a>`, `CotpHeader<'a>` (et `CotpParameter`), `DhcpPacket<'a>`.
+- `NtpPacket` : `Refid::KissCode` et `Refid::ClockSource` passent de `String`
+  a `[u8; 4]` (avec accesseur `Refid::code()` et `Display`).
+- `BitcoinError` et `MqttError` migrent vers `thiserror` (messages identiques).
+- GIOP : variante stringly `GiopError::Other` supprimee au profit de variantes
+  typees (`UnknownTargetDiscriminator`, `InvalidServiceContextCount`).
+- Noms de protocoles corriges dans la detection applicative : `"SRVLOCK"`
+  devient `"SRVLOC"` et `"QUIQ"` devient `"QUIC"` (tout consommateur qui
+  matche sur ces chaines doit se mettre a jour).
+- SRVLOC : la longueur declaree dans l'en-tete doit desormais correspondre
+  exactement a la taille du payload, et le code fonction doit exister pour la
+  version (RFC 2165 / RFC 2608).
+- DHCP : une zone options non vide doit commencer par le magic cookie
+  RFC 2131 (`0x63825363`) ; les options vides (BOOTP pur) restent acceptees.
+
+### Ajoute
+
+- Erreur dediee `QuicError` dans `src/errors/application/quic.rs` (remplace
+  l'erreur applicative generique dans le parseur QUIC).
+- Validations extraites des parseurs vers `src/checks` pour GIOP, QUIC
+  (curseur borne + varint RFC 9000), TLS (boucle de records), OPC UA (taille
+  de chunk), COTP (regles TPDU/TSAP) et S7Comm (bornes parametres/items).
+- Environ 130 tests supplementaires : tests unitaires directs des checks,
+  tests de bornes (longueurs declarees, offsets, payloads tronques) et tests
+  de provenance de pointeur garantissant le zero-copy (598 tests au total).
+- En-tete de licence MIT ajoute aux 14 fichiers qui ne l'avaient pas.
+
+### Corrige
+
+- Issue #3 : les paquets DHCP ne sont plus classifies `SRVLOCK`. DHCP est
+  ajoute a la chaine de detection applicative (avant SRVLOC), et le parseur
+  SRVLOC durci rejette les payloads BOOTP dont l'op code mimait une version
+  SLP. Non-regression verifiee avec les trames reelles de `dhcp.pcap`.
+- GIOP : un compteur de service contexts forge ne peut plus declencher une
+  allocation demesuree (validation avant `Vec::with_capacity`).
+- MQTT : un varint de longueur restante tronque renvoie desormais
+  `MalformedRemainingLength` au lieu de `RemainingLengthOverflow`.
+- NTP : suppression des `unwrap()` du chemin de parsing et gardes de longueur
+  sur root delay / root dispersion.
+- La reconstruction des noms DNS (labels + compression RFC 1035) reste la
+  seule allocation du chemin de parsing, documentee comme justifiee par le
+  protocole.
+
 ## [3.0.0] - 2026-07-07
 
 ### Ajoute

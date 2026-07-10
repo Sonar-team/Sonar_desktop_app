@@ -9,6 +9,7 @@ use std::fmt;
 use crate::{
     checks::application::tls::{
         TLS_RECORD_HEADER_LEN, validate_tls_header_length, validate_tls_payload_length,
+        validate_tls_record_complete,
     },
     errors::application::tls::TlsError,
 };
@@ -159,11 +160,13 @@ pub fn parse_tls_records<'a>(buf: &'a [u8]) -> Vec<TlsPacket<'a>> {
 
         match TlsPacket::try_from(slice) {
             Ok(packet) => {
-                let record_total_len = TLS_RECORD_HEADER_LEN + packet.length as usize;
-                if buf.len().saturating_sub(offset) < record_total_len {
+                let remaining = buf.len().saturating_sub(offset);
+                if validate_tls_record_complete(remaining, packet.length).is_err() {
                     // Record annoncé mais tronqué → on s'arrête, on ne le compte pas.
                     break;
                 }
+
+                let record_total_len = TLS_RECORD_HEADER_LEN + packet.length as usize;
 
                 // On garde le packet (avec des slices dans le buffer d'origine).
                 records.push(packet);

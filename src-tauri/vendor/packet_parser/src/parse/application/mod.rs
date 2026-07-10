@@ -13,8 +13,9 @@ use serde::Serialize;
 use crate::{
     errors::application::ApplicationError,
     parse::application::protocols::{
-        giop::GiopPacket, modbus_tcp::ModbusTcpPacket, ntp::NtpPacket, opcua::OpcuaPacket,
-        postgresql::is_likely_postgresql_payload, quic::QuicPacket, srvloc::SrvlocPacket,
+        dhcp::DhcpPacket, giop::GiopPacket, modbus_tcp::ModbusTcpPacket, ntp::NtpPacket,
+        opcua::OpcuaPacket, postgresql::is_likely_postgresql_payload, quic::QuicPacket,
+        srvloc::SrvlocPacket,
     },
 };
 
@@ -83,9 +84,16 @@ impl TryFrom<&[u8]> for Application {
                 application_protocol: "GIOP",
             });
         }
+        // DHCP avant SRVLOC : un BOOTP (op=1/2) mimait un en-tete SLP v1/v2
+        // et sortait etiquete SRVLOC (issue #3).
+        if DhcpPacket::try_from(packet).is_ok() {
+            return Ok(Application {
+                application_protocol: "DHCP",
+            });
+        }
         if SrvlocPacket::try_from(packet).is_ok() {
             return Ok(Application {
-                application_protocol: "SRVLOCK",
+                application_protocol: "SRVLOC",
             });
         }
         if ModbusTcpPacket::try_from(packet).is_ok() {
@@ -111,7 +119,7 @@ impl TryFrom<&[u8]> for Application {
         // }
         if QuicPacket::try_from(packet).is_ok() {
             return Ok(Application {
-                application_protocol: "QUIQ",
+                application_protocol: "QUIC",
             });
         }
         // If no parser matches, return a "None" protocol
@@ -200,7 +208,22 @@ mod tests {
         packet.extend_from_slice(b"en");
 
         let parsed = Application::try_from(packet.as_slice()).unwrap();
-        assert_eq!(parsed.application_protocol, "SRVLOCK");
+        assert_eq!(parsed.application_protocol, "SRVLOC");
+    }
+
+    /// Regression issue #3 : les trames DHCP reelles (Discover op=1 et
+    /// Offer op=2) doivent sortir "DHCP", plus jamais "SRVLOC".
+    #[test]
+    fn test_detects_dhcp_not_srvloc() {
+        use crate::parse::application::protocols::dhcp::tests_fixtures::{
+            DHCP_DISCOVER_PAYLOAD, DHCP_OFFER_PAYLOAD,
+        };
+
+        let discover = Application::try_from(&DHCP_DISCOVER_PAYLOAD[..]).unwrap();
+        assert_eq!(discover.application_protocol, "DHCP");
+
+        let offer = Application::try_from(&DHCP_OFFER_PAYLOAD[..]).unwrap();
+        assert_eq!(offer.application_protocol, "DHCP");
     }
 
     #[test]
@@ -214,7 +237,7 @@ mod tests {
         packet.push(0); // PN
 
         let parsed = Application::try_from(packet.as_slice()).unwrap();
-        assert_eq!(parsed.application_protocol, "QUIQ");
+        assert_eq!(parsed.application_protocol, "QUIC");
     }
 
     #[test]
