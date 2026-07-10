@@ -3,7 +3,7 @@
 //! de paquets, les updates graphe et les stats périodiques.
 
 use crossbeam::channel::{Receiver, RecvTimeoutError};
-use log::{debug, error};
+use log::{debug, error, info};
 use std::{
     sync::atomic::{AtomicBool, Ordering},
     sync::{Arc, Mutex},
@@ -280,6 +280,55 @@ impl PacketWorker {
         true
     }
 
+    /// Intègre un paquet à la matrice et au graphe sans rien émettre sur le
+    /// canal IPC (chemin de drainage : le front est arrêté ou injoignable).
+    fn ingest_packet_silently(&mut self, pkt: &PacketBuffer) {
+        let Ok(flow) = PacketFlow::try_from(pkt.as_ref()) else {
+            return;
+        };
+        let packet = PacketMinimal {
+            ts_sec: pkt.header.ts.tv_sec,
+            ts_usec: pkt.header.ts.tv_usec,
+            caplen: pkt.header.caplen,
+            len: pkt.header.len,
+            flow,
+        };
+        for owned in packet.to_owned_packets() {
+            let (source_label, destination_label) = self.resolve_labels_and_update_matrix(&owned);
+            if let Ok(mut g) = self.graph.lock() {
+                g.add_packet_flow(
+                    &owned.flow,
+                    source_label,
+                    destination_label,
+                    1,
+                    owned.len as u64,
+                    owned.encap_id.as_slice(),
+                );
+            }
+        }
+    }
+
+    /// Draine le canal après l'arrêt : les paquets déjà acceptés par le
+    /// pipeline (jusqu'à `chan_capacity`) sont intégrés à la matrice et au
+    /// graphe au lieu d'être jetés — le relevé exporté reste fidèle à ce qui
+    /// a été capturé. Retourne le nombre de paquets récupérés.
+    fn drain_channel(
+        &mut self,
+        rx: &Receiver<CaptureMessage>,
+        buffer_pool: &PacketBufferPool,
+    ) -> usize {
+        let mut drained = 0;
+        while let Ok(CaptureMessage::Packet(pkt)) = rx.try_recv() {
+            self.ingest_packet_silently(&pkt);
+            buffer_pool.put(pkt);
+            drained += 1;
+        }
+        if drained > 0 {
+            info!("Arrêt : {drained} paquet(s) drainés du canal vers la matrice");
+        }
+        drained
+    }
+
     /// Niveaux internes d'un paquet tunnelé : matrice, graphe et batch pour
     /// chaque flux transporté (le niveau externe est déjà traité).
     fn process_inner_tunnels(&mut self, packet: &PacketMinimal<'_>) {
@@ -484,6 +533,11 @@ pub fn spawn_processing_thread(
 
         loop {
             if stop_flag.load(Ordering::Relaxed) {
+                // Arrêt demandé : les paquets déjà acceptés dans le canal
+                // sont intégrés à la matrice (fidélité du relevé), puis les
+                // derniers batches partent vers le front en best-effort.
+                worker.drain_channel(&rx, &buffer_pool);
+                let _ = worker.flush_batches();
                 break;
             }
 
@@ -491,9 +545,12 @@ pub fn spawn_processing_thread(
             match rx.recv_timeout(timeout.max(Duration::from_millis(1))) {
                 Ok(CaptureMessage::Packet(pkt)) => {
                     if stop_flag.load(Ordering::Relaxed) {
-                        // Drain quietly after stop: no packet event and no matrix update.
-                        worker.packet_batch.clear();
+                        // Arrêt reçu entre deux paquets : celui-ci et le reste
+                        // du canal sont intégrés à la matrice avant de sortir.
+                        worker.ingest_packet_silently(&pkt);
                         buffer_pool.put(pkt);
+                        worker.drain_channel(&rx, &buffer_pool);
+                        let _ = worker.flush_batches();
                         break;
                     }
 
@@ -502,9 +559,11 @@ pub fn spawn_processing_thread(
                     if !keep_going {
                         // Canal IPC vers le front cassé : sans arrêt explicite,
                         // le thread de capture continuerait seul à remplir le
-                        // canal (capture fantôme). On stoppe tout le pipeline.
+                        // canal (capture fantôme). On stoppe tout le pipeline,
+                        // en gardant les paquets déjà acceptés dans la matrice.
                         error!("Canal IPC frontend cassé : arrêt du pipeline de capture");
                         stop_flag.store(true, Ordering::Relaxed);
+                        worker.drain_channel(&rx, &buffer_pool);
                         break;
                     }
                 }
@@ -514,12 +573,16 @@ pub fn spawn_processing_thread(
                     if !worker.flush_batches() {
                         error!("Canal IPC frontend cassé : arrêt du pipeline de capture");
                         stop_flag.store(true, Ordering::Relaxed);
+                        worker.drain_channel(&rx, &buffer_pool);
                         break;
                     }
                 }
 
                 Err(RecvTimeoutError::Disconnected) => {
+                    // Le thread de capture est mort : on récupère ce qui reste
+                    // dans le canal avant de sortir.
                     error!("Erreur réception canal : canal déconnecté");
+                    worker.drain_channel(&rx, &buffer_pool);
                     break;
                 }
             }
@@ -530,4 +593,98 @@ pub fn spawn_processing_thread(
         #[cfg(feature = "capture_timing")]
         worker.write_run_summary(&buffer_pool);
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crossbeam::channel::bounded;
+
+    /// Trame ARP request complète (42 octets) : parsée par packet_parser,
+    /// elle produit une ligne de matrice.
+    fn arp_frame() -> Vec<u8> {
+        let mut frame = Vec::new();
+        frame.extend_from_slice(&[0xff; 6]); // dst broadcast
+        frame.extend_from_slice(&[0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]); // src
+        frame.extend_from_slice(&[0x08, 0x06]); // ethertype ARP
+        frame.extend_from_slice(&[0x00, 0x01]); // hw type ethernet
+        frame.extend_from_slice(&[0x08, 0x00]); // proto type IPv4
+        frame.extend_from_slice(&[0x06, 0x04]); // hlen, plen
+        frame.extend_from_slice(&[0x00, 0x01]); // opération request
+        frame.extend_from_slice(&[0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]); // sha
+        frame.extend_from_slice(&[192, 168, 1, 10]); // spa
+        frame.extend_from_slice(&[0x00; 6]); // tha
+        frame.extend_from_slice(&[192, 168, 1, 1]); // tpa
+        frame
+    }
+
+    fn packet_message(pool: &PacketBufferPool, data: &[u8]) -> CaptureMessage {
+        let mut buffer = pool.get(data.len()).expect("buffer disponible");
+        let header = pcap::PacketHeader {
+            ts: libc::timeval {
+                tv_sec: 0,
+                tv_usec: 0,
+            },
+            caplen: data.len() as u32,
+            len: data.len() as u32,
+        };
+        buffer.write_from_parts(&header, data);
+        CaptureMessage::Packet(buffer)
+    }
+
+    /// Fidélité à l'arrêt : les paquets encore dans le canal sont intégrés à
+    /// la matrice au lieu d'être jetés.
+    #[test]
+    fn drain_channel_ingests_pending_packets_into_matrix() {
+        let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        let graph = Arc::new(Mutex::new(GraphData::new()));
+        let mut worker = PacketWorker::new(
+            Channel::new(|_| Ok(())),
+            flow_matrix.clone(),
+            graph.clone(),
+        );
+        let pool = PacketBufferPool::new(8, 65_536);
+        let (tx, rx) = bounded::<CaptureMessage>(8);
+
+        for _ in 0..3 {
+            tx.send(packet_message(&pool, &arp_frame())).unwrap();
+        }
+
+        let drained = worker.drain_channel(&rx, &pool);
+
+        assert_eq!(drained, 3, "tous les paquets en attente sont consommés");
+        assert!(rx.is_empty());
+        let matrix = flow_matrix.lock().unwrap();
+        assert_eq!(matrix.row_count(), 1, "3 paquets du même flux -> 1 ligne");
+        let packets: u64 = matrix
+            .matrix
+            .values()
+            .flat_map(|entries| entries.iter())
+            .map(|(_, stats)| stats.count)
+            .sum();
+        assert_eq!(packets, 3, "aucun paquet accepté n'est perdu");
+        assert!(!graph.lock().unwrap().nodes.is_empty(), "le graphe reçoit les nœuds");
+    }
+
+    /// Un paquet illisible ne bloque pas le drainage.
+    #[test]
+    fn drain_channel_skips_unparseable_packets() {
+        let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        let graph = Arc::new(Mutex::new(GraphData::new()));
+        let mut worker = PacketWorker::new(
+            Channel::new(|_| Ok(())),
+            flow_matrix.clone(),
+            graph,
+        );
+        let pool = PacketBufferPool::new(8, 65_536);
+        let (tx, rx) = bounded::<CaptureMessage>(8);
+
+        tx.send(packet_message(&pool, &[0x00, 0x01, 0x02])).unwrap();
+        tx.send(packet_message(&pool, &arp_frame())).unwrap();
+
+        let drained = worker.drain_channel(&rx, &pool);
+
+        assert_eq!(drained, 2, "le paquet illisible est consommé sans bloquer");
+        assert_eq!(flow_matrix.lock().unwrap().row_count(), 1);
+    }
 }

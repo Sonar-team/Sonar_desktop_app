@@ -103,6 +103,9 @@ impl Serialize for CaptureStateError {
                     PcapImportError::OpenFileError(msg, msgg) => {
                         PcapImportErrorKind::OpenFileError(msg.clone(), msgg.clone())
                     }
+                    PcapImportError::ReadPacketError(file, msg) => {
+                        PcapImportErrorKind::ReadPacketError(file.clone(), msg.clone())
+                    }
                 };
                 CaptureStateErrorKind::Import(kind)
             }

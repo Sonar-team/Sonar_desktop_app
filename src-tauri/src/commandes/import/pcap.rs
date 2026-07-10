@@ -24,7 +24,7 @@ use crate::{
     },
 };
 
-use super::labels::labels_to_matrix;
+use super::labels::copy_labels_to_matrix;
 use super::timing::ImportTimingLogger;
 #[cfg(feature = "capture_timing")]
 use super::timing::{ImportTimingSample, elapsed_ns_since, now_unix_ns, write_timing_or_disable};
@@ -38,12 +38,27 @@ fn open_pcap_file(file_path: &str) -> Result<Capture<pcap::Offline>, CaptureStat
     })
 }
 
+/// Erreur de lecture au milieu d'un PCAP (fichier tronqué ou corrompu).
+fn read_packet_error(file_path: &str, error: &pcap::Error) -> CaptureStateError {
+    CaptureStateError::Import(PcapImportError::ReadPacketError(
+        file_path.to_string(),
+        error.to_string(),
+    ))
+}
+
 fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
     let mut cap = open_pcap_file(file_path)?;
 
     let mut count: usize = 0;
-    while cap.next_packet().is_ok() {
-        count += 1;
+    loop {
+        match cap.next_packet() {
+            Ok(_) => count += 1,
+            // Fin normale du fichier.
+            Err(pcap::Error::NoMorePackets) => break,
+            // Fichier tronqué/corrompu : sans cette distinction, l'import
+            // produisait silencieusement une matrice partielle.
+            Err(e) => return Err(read_packet_error(file_path, &e)),
+        }
     }
     Ok(count)
 }
@@ -365,7 +380,16 @@ pub(super) fn handle_pcap_file(
     #[cfg(feature = "capture_timing")]
     let mut counters = ParseCounters::default();
 
-    while let Ok(packet) = cap.next_packet() {
+    loop {
+        let packet = match cap.next_packet() {
+            Ok(packet) => packet,
+            // Fin normale du fichier.
+            Err(pcap::Error::NoMorePackets) => break,
+            // Erreur de lecture en cours de fichier (tronqué, corrompu) :
+            // propagée pour que l'import échoue explicitement au lieu de
+            // produire une matrice partielle en silence.
+            Err(e) => return Err(read_packet_error(file_path, &e)),
+        };
         packet_count += 1;
 
         #[cfg(feature = "capture_timing")]
@@ -450,31 +474,29 @@ pub fn convert_from_pcap_list(
 
     send_started_event(&on_event);
 
+    // Copie des labels sous verrou court : le store n'est pas tenu pendant
+    // la conversion.
+    let labels = LabelStore {
+        rows: label_store.lock()?.get().clone(),
+    };
+
+    // Import transactionnel : matrice et graphe sont construits en local et
+    // l'état partagé n'est remplacé qu'en cas de succès complet. Une erreur
+    // (fichier illisible, tronqué…) préserve l'état courant, et les verrous
+    // ne sont tenus que le temps du swap au lieu de toute la conversion.
+    let (new_matrix, new_graph) =
+        build_matrix_and_graph_from_pcaps(&pcap_paths, &labels, &on_event, &mut timing_logger)?;
+
+    info!("[convert_from_pcap_list] FIN traitement liste PCAP");
+
     let mut matrice_guard = matrice.lock()?;
     let mut graph_guard = graph.lock()?;
     #[cfg(feature = "capture_timing")]
-    let reset_start = Instant::now();
-    matrice_guard.clear();
-    graph_guard.clear();
+    let swap_start = Instant::now();
+    *matrice_guard = new_matrix;
+    *graph_guard = new_graph;
     #[cfg(feature = "capture_timing")]
-    let reset_ns = elapsed_ns_since(reset_start);
-
-    labels_to_matrix(label_store, &mut matrice_guard)?;
-
-    info!("[convert_from_pcap_list] Matrice & GraphData reset");
-
-    for pcap_path in &pcap_paths {
-        info!("[convert_from_pcap_list] Traitement de {}", pcap_path);
-        handle_pcap_file(
-            pcap_path,
-            &mut matrice_guard,
-            &mut graph_guard,
-            &on_event,
-            &mut timing_logger,
-        )?;
-    }
-
-    info!("[convert_from_pcap_list] FIN traitement liste PCAP");
+    let reset_ns = elapsed_ns_since(swap_start);
 
     // 🔥 snapshot complet envoyé sur le channel
     #[cfg(feature = "capture_timing")]
@@ -519,11 +541,97 @@ pub fn convert_from_pcap_list(
     Ok(())
 }
 
+/// Construit matrice + graphe depuis les fichiers PCAP, sans toucher à
+/// l'état partagé : l'appelant ne remplace l'état qu'en cas de succès complet
+/// (import transactionnel).
+fn build_matrix_and_graph_from_pcaps(
+    pcap_paths: &[String],
+    labels: &LabelStore,
+    on_event: &Channel<CaptureEvent<'_>>,
+    timing_logger: &mut Option<ImportTimingLogger>,
+) -> Result<(FlowMatrix, GraphData), CaptureStateError> {
+    let mut matrix = FlowMatrix::new();
+    let mut graph = GraphData::new();
+    copy_labels_to_matrix(labels, &mut matrix)?;
+
+    for pcap_path in pcap_paths {
+        info!("[convert_from_pcap_list] Traitement de {}", pcap_path);
+        handle_pcap_file(pcap_path, &mut matrix, &mut graph, on_event, timing_logger)?;
+    }
+
+    Ok((matrix, graph))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::super::test_support::local_tunnel_pcap;
+    use super::super::test_support::{TempDir, local_tunnel_pcap};
     use super::*;
     use crate::state::flow_matrix::FlowMatrixRow;
+    use std::fs;
+
+    /// PCAP dont l'en-tête de paquet annonce 100 octets mais n'en fournit
+    /// que 10 : fichier tronqué typique (copie interrompue, disque plein).
+    fn write_truncated_pcap(path: &std::path::Path) {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&0xa1b2_c3d4u32.to_le_bytes()); // magic
+        bytes.extend_from_slice(&2u16.to_le_bytes()); // version majeure
+        bytes.extend_from_slice(&4u16.to_le_bytes()); // version mineure
+        bytes.extend_from_slice(&0i32.to_le_bytes()); // thiszone
+        bytes.extend_from_slice(&0u32.to_le_bytes()); // sigfigs
+        bytes.extend_from_slice(&65_535u32.to_le_bytes()); // snaplen
+        bytes.extend_from_slice(&1u32.to_le_bytes()); // linktype Ethernet
+        bytes.extend_from_slice(&0u32.to_le_bytes()); // ts_sec
+        bytes.extend_from_slice(&0u32.to_le_bytes()); // ts_usec
+        bytes.extend_from_slice(&100u32.to_le_bytes()); // caplen annoncé
+        bytes.extend_from_slice(&100u32.to_le_bytes()); // len annoncé
+        bytes.extend_from_slice(&[0u8; 10]); // ... mais 10 octets seulement
+        fs::write(path, &bytes).unwrap();
+    }
+
+    /// Un fichier tronqué doit produire une erreur explicite, pas une fin de
+    /// fichier silencieuse (matrice partielle).
+    #[test]
+    fn truncated_pcap_returns_read_error() {
+        let dir = TempDir::new("sonar_test_truncated_pcap");
+        let path = dir.path().join("tronque.pcap");
+        write_truncated_pcap(&path);
+
+        match count_packets_in_pcap(path.to_str().unwrap()) {
+            Err(CaptureStateError::Import(PcapImportError::ReadPacketError(file, _))) => {
+                assert!(file.ends_with("tronque.pcap"));
+            }
+            other => panic!("attendu ReadPacketError, obtenu {other:?}"),
+        }
+    }
+
+    /// L'import est transactionnel : le builder échoue sans avoir touché à
+    /// l'état partagé (il n'y a pas accès), l'appelant garde donc la matrice
+    /// courante en cas d'erreur.
+    #[test]
+    fn build_from_pcaps_fails_cleanly_on_bad_file() {
+        let dir = TempDir::new("sonar_test_transactional_import");
+        let bad = dir.path().join("tronque.pcap");
+        write_truncated_pcap(&bad);
+        let labels = crate::state::labels_list::LabelStore::new();
+        let on_event = Channel::new(|_| Ok(()));
+
+        let result = build_matrix_and_graph_from_pcaps(
+            &[bad.to_str().unwrap().to_string()],
+            &labels,
+            &on_event,
+            &mut None,
+        );
+
+        assert!(result.is_err(), "fichier tronqué -> erreur propagée");
+
+        let missing = build_matrix_and_graph_from_pcaps(
+            &["/inexistant/capture.pcap".to_string()],
+            &labels,
+            &on_event,
+            &mut None,
+        );
+        assert!(missing.is_err(), "fichier absent -> erreur propagée");
+    }
 
     /// Rejoue l'import PCAP réel et vérifie la comptabilité des tunnels :
     /// pour chaque tunnel, la somme des paquets attribués aux lignes internes
