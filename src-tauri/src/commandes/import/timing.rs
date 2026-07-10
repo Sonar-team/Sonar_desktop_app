@@ -126,14 +126,14 @@ fn import_timing_log_path() -> PathBuf {
                     .unwrap_or_else(|| PathBuf::from("/"))
                     .join(".local/share")
             });
-        base.join("fr.sonar.app/logs").join(file_name)
+        base.join("fr.sonar.ssf/logs").join(file_name)
     }
 
     #[cfg(target_os = "windows")]
     {
         return dirs::data_local_dir()
             .unwrap_or_else(|| PathBuf::from("C:\\Users\\Default\\AppData\\Local"))
-            .join("fr.sonar.app\\logs")
+            .join("fr.sonar.ssf\\logs")
             .join(file_name);
     }
 
@@ -141,7 +141,7 @@ fn import_timing_log_path() -> PathBuf {
     {
         return dirs::home_dir()
             .unwrap_or_else(|| PathBuf::from("/Users/Shared"))
-            .join("Library/Logs/fr.sonar.app")
+            .join("Library/Logs/fr.sonar.ssf")
             .join(file_name);
     }
 }

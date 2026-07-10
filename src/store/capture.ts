@@ -89,6 +89,9 @@ export const useCaptureStore = defineStore("capture", {
             break;
           case "packetBatch": {
             const packets = Array.isArray(msg.data?.packets) ? msg.data.packets : [];
+            // Le backend n'émet plus de `packet` unitaire : c'est ici que la
+            // présence de données doit être détectée.
+            if (packets.length > 0 && !this.hasData) this.hasData = true;
 
             for (const cb of this.packetBatchListeners) cb(packets);
 

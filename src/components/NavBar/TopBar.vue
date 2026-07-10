@@ -92,7 +92,6 @@ export default {
     if (headless) {
       const bindings: [string, () => void][] = [
         ['CommandOrControl+S', () => this.SaveAsCsv()],
-        ['CommandOrControl+Shift+S', () => this.SaveAsXlsx()],
         ['CommandOrControl+Shift+R', () => this.reset()],
         ['CommandOrControl+P', () => this.start()],
         ['CommandOrControl+Shift+P', () => this.stop()],
@@ -115,7 +114,6 @@ export default {
 
         const key = e.key.toLowerCase();
         if (key === 's' && !e.shiftKey) { e.preventDefault(); this.SaveAsCsv(); }
-        else if (key === 's' && e.shiftKey) { e.preventDefault(); this.SaveAsXlsx(); }
         else if (key === 'r' && e.shiftKey) { e.preventDefault(); this.reset(); }
         else if (key === 'p' && !e.shiftKey) { e.preventDefault(); this.start(); }
         else if (key === 'p' && e.shiftKey) { e.preventDefault(); this.stop(); }
@@ -248,48 +246,6 @@ export default {
         useCaptureStore().isImporting = false;
       }
     },
-    async SaveAsXlsx() {
-
-       if (useCaptureStore().isImporting) {
-        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
-        return;
-      }
-      
-      if (this.activePanel !== null) {
-        this.$emit(`toggle-${this.activePanel}`, false)
-      }
-
-      useCaptureStore().isImporting = true;
-
-      try {
-        info("Début de la sauvegarde en xlsx");
-        const response = await save({
-          filters: [{
-            name: '.xlsx',
-            extensions: ['xlsx']
-          }],
-          title: 'Sauvegarder la matrice de flux',
-          defaultPath: getCurrentDate() + '_DR_Matrice' + '.xlsx'
-        });
-
-        if (response) {
-          // Attendez que l'invocation d'API pour sauvegarder soit terminée
-          const saveResponse = await invoke('save_packets_to_excel', { file_path: response });
-          info(`Sauvegarde terminée: ${JSON.stringify(saveResponse)}`);
-          return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
-        } else {
-          info("Aucun chemin de fichier sélectionné");
-          throw new Error("Sauvegarde annulée ou chemin non sélectionné");
-        }
-      } catch (err) {
-        // `catch (error)` masquait la fonction de log `error` → TypeError.
-        error(`Erreur lors de la sauvegarde en xlsx: ${JSON.stringify(err)}`);
-        throw err; // Relancer l'erreur pour la gestion dans quit()
-      } finally {
-        this.activePanel = null;
-        useCaptureStore().isImporting = false;
-      }
-    },
     async triggerSave() {
       info("trigger save")
       this.SaveAsCsv();
@@ -406,7 +362,13 @@ export default {
           this.captureStore.updateStatus(typedStatus);
           info('Capture arrêtée : ' + this.captureStore.isRunning);
         })
-        .catch(displayCaptureError)
+        .catch((err) => {
+          // Même en erreur (ex. échec d'envoi de l'événement Stopped), le
+          // backend a joint les threads et normalisé son statut : le store
+          // doit refléter l'arrêt, sinon l'UI reste bloquée « en cours ».
+          this.captureStore.updateStatus({ is_running: false });
+          displayCaptureError(err);
+        })
         .finally(() =>useCaptureStore().refreshHasData());
     },
     toggleView() {

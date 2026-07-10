@@ -273,6 +273,8 @@ export default defineComponent({
       info('convert_from_pcap_list : ' + this.packetFiles);
 
       this.isConverting = true;
+      // Verrou global : bloque les entrées de l'app pendant la conversion.
+      useCaptureStore().isImporting = true;
 
       try {
         await invoke('convert_from_pcap_list', { pcapPaths: this.packetFiles, onEvent });
@@ -281,6 +283,7 @@ export default defineComponent({
       } catch (err) {
         displayCaptureError(err);
       } finally {
+        useCaptureStore().isImporting = false;
         await useCaptureStore().refreshHasData();
         this.isConverting = false;
       }
@@ -303,6 +306,8 @@ export default defineComponent({
       }
 
       this.isConverting = true;
+      // Verrou global : bloque les entrées de l'app pendant l'import.
+      useCaptureStore().isImporting = true;
       try {
         await invoke('import_matrix_files', { incomingFilePaths: this.matrixFiles, onEvent });
         info('réponse invoke');
@@ -311,6 +316,7 @@ export default defineComponent({
       } catch (err) {
         displayCaptureError(err);
       } finally {
+        useCaptureStore().isImporting = false;
         await useCaptureStore().refreshHasData();
         this.isConverting = false;
       }
@@ -414,15 +420,11 @@ export default defineComponent({
   },
 
   mounted() {
-    this.unsubs.push(this.captureStore.onStarted(() => {
-      info("started hearded");
-      this.captureStore.updateStatus({ is_running: true });
-    }));
-
-    this.unsubs.push(this.captureStore.onFinished(() => {
-      info("finished hearded");
-      this.captureStore.updateStatus({ is_running: false });
-    }));
+    // NB : les imports ne touchent plus à isRunning (réservé à la capture
+    // live) — leur cycle de vie passe par isImporting. L'ancien couplage aux
+    // événements Started/Finished laissait isRunning bloqué à vrai si la
+    // conversion échouait, et le premier Finished d'un import multi-fichiers
+    // arrêtait visuellement l'import trop tôt.
 
     // Conflits de labels en attente d'arbitrage (import précédent).
     invoke<LabelConflictReport[]>('get_label_conflicts')

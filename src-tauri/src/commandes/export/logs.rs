@@ -2,22 +2,17 @@
 
 use std::fs;
 use std::path::PathBuf;
-use tauri::command;
+use tauri::{AppHandle, Manager, command};
 
 use crate::errors::CaptureStateError;
 use crate::errors::export::ExportError;
 
 /// Exporte les fichiers de logs de l'application vers un chemin donné par l'utilisateur.
 ///
-/// Cette commande Tauri détecte automatiquement l'emplacement du dossier de logs
-/// en fonction du système d'exploitation (Linux, Windows, macOS), puis copie tous les
-/// fichiers de logs présents vers le chemin de destination fourni.
-///
-/// Le chemin source des logs suit la convention suivante selon l’OS :
-///
-/// - **Linux** : `$XDG_DATA_HOME/fr.sonar.app/logs` ou `~/.local/share/fr.sonar.app/logs`
-/// - **Windows** : `%LocalAppData%\fr.sonar.app\logs`
-/// - **macOS** : `~/Library/Logs/fr.sonar.app`
+/// Le dossier source est résolu par Tauri (`app_log_dir`), donc toujours
+/// aligné sur l'identifiant réel de l'application (`fr.sonar.ssf`) et sur
+/// l'emplacement où `tauri-plugin-log` écrit — l'ancien chemin codé en dur
+/// (`fr.sonar.app`) rendait l'export systématiquement introuvable.
 ///
 /// # Paramètres
 ///
@@ -76,34 +71,11 @@ use crate::errors::export::ExportError;
 /// mais elle ne fait pas de vérification de doublons ou d'intégrité.
 /// Il est recommandé de filtrer les fichiers côté Rust si nécessaire.
 #[command(async)]
-pub fn export_logs(destination: String) -> Result<String, CaptureStateError> {
-    let log_dir: PathBuf = {
-        #[cfg(target_os = "linux")]
-        {
-            let base = std::env::var("XDG_DATA_HOME")
-                .map(PathBuf::from)
-                .unwrap_or_else(|_| {
-                    dirs::home_dir()
-                        .unwrap_or_else(|| PathBuf::from("/"))
-                        .join(".local/share")
-                });
-            base.join("fr.sonar.app/logs")
-        }
-
-        #[cfg(target_os = "windows")]
-        {
-            dirs::data_local_dir()
-                .unwrap_or_else(|| PathBuf::from("C:\\Users\\Default\\AppData\\Local"))
-                .join("fr.sonar.app\\logs")
-        }
-
-        #[cfg(target_os = "macos")]
-        {
-            dirs::home_dir()
-                .unwrap_or_else(|| PathBuf::from("/Users/Shared"))
-                .join("Library/Logs/fr.sonar.app")
-        }
-    };
+pub fn export_logs(app: AppHandle, destination: String) -> Result<String, CaptureStateError> {
+    let log_dir: PathBuf = app
+        .path()
+        .app_log_dir()
+        .map_err(|_| CaptureStateError::Export(ExportError::LogNotFound))?;
 
     if !log_dir.exists() {
         return Err(CaptureStateError::Export(ExportError::LogNotFound));
