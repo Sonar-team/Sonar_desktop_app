@@ -500,6 +500,11 @@ pub fn spawn_processing_thread(
                     let keep_going = worker.process_packet(&pkt);
                     buffer_pool.put(pkt);
                     if !keep_going {
+                        // Canal IPC vers le front cassé : sans arrêt explicite,
+                        // le thread de capture continuerait seul à remplir le
+                        // canal (capture fantôme). On stoppe tout le pipeline.
+                        error!("Canal IPC frontend cassé : arrêt du pipeline de capture");
+                        stop_flag.store(true, Ordering::Relaxed);
                         break;
                     }
                 }
@@ -507,6 +512,8 @@ pub fn spawn_processing_thread(
                 Err(RecvTimeoutError::Timeout) => {
                     // Flush les batches restants après inactivité.
                     if !worker.flush_batches() {
+                        error!("Canal IPC frontend cassé : arrêt du pipeline de capture");
+                        stop_flag.store(true, Ordering::Relaxed);
                         break;
                     }
                 }

@@ -78,6 +78,9 @@ export const useCaptureStore = defineStore("capture", {
             break;
           case "stopped":
             console.log("[CaptureStore] Capture arrêtée :", msg.data?.reason);
+            // Arrêt initié par le backend (ex. erreur pcap) : sans cette mise
+            // à jour, l'UI croirait capturer indéfiniment.
+            this.isRunning = false;
             for (const cb of this.stoppedListeners) cb(msg.data);
             break;
           case "packet":
