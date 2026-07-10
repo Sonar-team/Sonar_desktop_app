@@ -3,5 +3,8 @@
   "lock": {
     "frozen": true
   },
-  "nodeModulesDir": "auto"
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "test": "deno test --no-check --allow-env src/tests/"
+  }
 }
