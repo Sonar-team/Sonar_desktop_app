@@ -1,0 +1,617 @@
+//! Conversion de fichiers PCAP en matrice de flux et graphe : lecture des
+//! paquets, parsing, mise à jour de l'état et événements de progression.
+
+use log::{error, info};
+use packet_parser::PacketFlow;
+#[cfg(feature = "capture_timing")]
+use packet_parser::timing::ParseTiming;
+use pcap::Capture;
+#[cfg(feature = "capture_timing")]
+use serde_json::json;
+use std::sync::{Arc, Mutex};
+#[cfg(feature = "capture_timing")]
+use std::time::Instant;
+use tauri::{State, ipc::Channel};
+
+use crate::{
+    errors::{CaptureStateError, import::PcapImportError},
+    events::CaptureEvent,
+    state::{
+        capture::capture_handle::messages::capture::{PacketMinimal, PacketOwnedStats},
+        flow_matrix::FlowMatrix,
+        graph::{GraphData, GraphUpdate},
+        labels_list::LabelStore,
+    },
+};
+
+use super::labels::labels_to_matrix;
+use super::timing::ImportTimingLogger;
+#[cfg(feature = "capture_timing")]
+use super::timing::{ImportTimingSample, elapsed_ns_since, now_unix_ns, write_timing_or_disable};
+
+fn open_pcap_file(file_path: &str) -> Result<Capture<pcap::Offline>, CaptureStateError> {
+    Capture::from_file(file_path).map_err(|e| {
+        CaptureStateError::Import(PcapImportError::OpenFileError(
+            file_path.to_string(),
+            e.to_string(),
+        ))
+    })
+}
+
+fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
+    let mut cap = open_pcap_file(file_path)?;
+
+    let mut count: usize = 0;
+    while cap.next_packet().is_ok() {
+        count += 1;
+    }
+    Ok(count)
+}
+
+/// Journal de timing des imports, actif seulement avec la feature
+/// `capture_timing` (sinon `None`). Un échec d'ouverture désactive le journal
+/// sans bloquer l'import.
+fn new_timing_logger() -> Option<ImportTimingLogger> {
+    #[cfg(feature = "capture_timing")]
+    {
+        match ImportTimingLogger::new() {
+            Ok(logger) => Some(logger),
+            Err(e) => {
+                error!("Import timing log disabled: {}", e);
+                None
+            }
+        }
+    }
+    #[cfg(not(feature = "capture_timing"))]
+    {
+        None
+    }
+}
+
+fn send_started_event(on_event: &Channel<CaptureEvent<'_>>) {
+    if let Err(e) = on_event.send(CaptureEvent::Started {
+        device: "",
+        buffer_size: 0,
+        chan_capacity: 0,
+        timeout: 0,
+        snaplen: 65536,
+    }) {
+        error!("Erreur lors de l'envoi de Started: {:?}", e);
+    };
+}
+
+/// Envoie l'événement `Stats` (compteurs de la barre de statut). Retourne
+/// vrai si l'envoi a réussi.
+fn send_stats_event(on_event: &Channel<CaptureEvent<'_>>, received: usize, processed: usize) -> bool {
+    on_event
+        .send(CaptureEvent::Stats {
+            received: received as u32,
+            dropped: 0,
+            if_dropped: 0,
+            app_dropped: 0,
+            processed: processed as u32,
+        })
+        .map_err(|e| {
+            error!("Erreur lors de l'envoi de Stats: {:?}", e);
+            e
+        })
+        .is_ok()
+}
+
+/// Labels source/destination d'un paquet possédé, résolus par la matrice
+/// (clé MAC + IP, avec les replis de `FlowMatrix::get_label`).
+fn lookup_flow_labels(
+    matrice: &FlowMatrix,
+    owned_packet: &PacketOwnedStats,
+) -> (Option<String>, Option<String>) {
+    let source_ip = owned_packet
+        .flow
+        .internet
+        .as_ref()
+        .and_then(|i| i.source_ip)
+        .map(|ip| ip.to_string())
+        .unwrap_or_default();
+    let destination_ip = owned_packet
+        .flow
+        .internet
+        .as_ref()
+        .and_then(|i| i.destination_ip)
+        .map(|ip| ip.to_string())
+        .unwrap_or_default();
+
+    (
+        matrice.get_label(&owned_packet.flow.data_link.source_mac, &source_ip),
+        matrice.get_label(&owned_packet.flow.data_link.destination_mac, &destination_ip),
+    )
+}
+
+/// Applique un paquet possédé (un niveau de flux) à la matrice puis au graphe.
+fn apply_owned_packet(
+    matrice: &mut FlowMatrix,
+    graph: &mut GraphData,
+    owned_packet: &PacketOwnedStats,
+) -> Vec<GraphUpdate> {
+    matrice.update_flow(owned_packet);
+    let (source_label, destination_label) = lookup_flow_labels(matrice, owned_packet);
+    graph.add_packet_flow(
+        &owned_packet.flow,
+        source_label,
+        destination_label,
+        1,
+        owned_packet.len as u64,
+        owned_packet.encap_id.as_slice(),
+    )
+}
+
+/// Traite un paquet lu du PCAP : parsing, mise à jour matrice + graphe pour
+/// chaque niveau de flux (tunnels), stats périodiques.
+#[cfg(not(feature = "capture_timing"))]
+fn process_packet(
+    packet: &pcap::Packet<'_>,
+    packet_count: usize,
+    total: usize,
+    matrice: &mut FlowMatrix,
+    graph: &mut GraphData,
+    on_event: &Channel<CaptureEvent<'_>>,
+) {
+    let Ok(flow) = PacketFlow::try_from(packet.data) else {
+        return;
+    };
+    let packet_min = PacketMinimal {
+        ts_sec: packet.header.ts.tv_sec,
+        ts_usec: packet.header.ts.tv_usec,
+        caplen: packet.header.caplen,
+        len: packet.header.len,
+        flow,
+    };
+
+    // Un paquet tunnelé (ex. CAPWAP) produit plusieurs niveaux de flux :
+    // la ligne externe (tunnel) puis la (les) conversation(s) interne(s).
+    for owned_packet in packet_min.to_owned_packets() {
+        apply_owned_packet(matrice, graph, &owned_packet);
+    }
+
+    // Stats périodiques (optionnel)
+    if packet_count.is_multiple_of(1000) || packet_count == total {
+        send_stats_event(on_event, packet_count, matrice.row_count());
+    }
+}
+
+#[cfg(feature = "capture_timing")]
+#[derive(Default)]
+struct ParseCounters {
+    ok: usize,
+    errors: usize,
+}
+
+/// Variante instrumentée de `process_packet` : mêmes traitements, avec mesure
+/// de chaque étape et écriture d'une entrée JSONL par paquet échantillonné.
+#[cfg(feature = "capture_timing")]
+#[allow(clippy::too_many_arguments)]
+fn process_packet_timed(
+    packet: &pcap::Packet<'_>,
+    file_path: &str,
+    packet_count: usize,
+    total: usize,
+    matrice: &mut FlowMatrix,
+    graph: &mut GraphData,
+    on_event: &Channel<CaptureEvent<'_>>,
+    timing_logger: &mut Option<ImportTimingLogger>,
+    counters: &mut ParseCounters,
+) {
+    let timing_sample: Option<ImportTimingSample> = timing_logger
+        .as_mut()
+        .and_then(ImportTimingLogger::next_sample);
+    let pipeline_start = timing_sample.map(|_| Instant::now());
+
+    let parsed_flow = if timing_sample.is_some() {
+        let mut parse_timing = ParseTiming::default();
+        PacketFlow::try_from_timed(packet.data, &mut parse_timing)
+            .map(|flow| (flow, parse_timing))
+            .map_err(|error| (error, parse_timing))
+    } else {
+        PacketFlow::try_from(packet.data)
+            .map(|flow| (flow, ParseTiming::default()))
+            .map_err(|error| (error, ParseTiming::default()))
+    };
+
+    match parsed_flow {
+        Ok((flow, parse_timing)) => {
+            counters.ok += 1;
+            let packet_min = PacketMinimal {
+                ts_sec: packet.header.ts.tv_sec,
+                ts_usec: packet.header.ts.tv_usec,
+                caplen: packet.header.caplen,
+                len: packet.header.len,
+                flow,
+            };
+
+            let packet_owned_start = timing_sample.map(|_| Instant::now());
+            let owned_packet = packet_min.to_owned_packet();
+            let packet_owned_ns = packet_owned_start.map(elapsed_ns_since).unwrap_or(0);
+
+            let matrix_update_start = timing_sample.map(|_| Instant::now());
+            matrice.update_flow(&owned_packet);
+            let matrix_count = matrice.row_count();
+            let matrix_update_ns = matrix_update_start.map(elapsed_ns_since).unwrap_or(0);
+
+            let label_lookup_start = timing_sample.map(|_| Instant::now());
+            let (source_label, destination_label) = lookup_flow_labels(matrice, &owned_packet);
+            let label_lookup_ns = label_lookup_start.map(elapsed_ns_since).unwrap_or(0);
+
+            let graph_update_start = timing_sample.map(|_| Instant::now());
+            let graph_updates = graph.add_packet_flow(
+                &owned_packet.flow,
+                source_label,
+                destination_label,
+                1,
+                owned_packet.len as u64,
+                owned_packet.encap_id.as_slice(),
+            );
+            let graph_update_ns = graph_update_start.map(elapsed_ns_since).unwrap_or(0);
+
+            // Niveaux internes des tunnels (non instrumentés).
+            for inner in packet_min.to_owned_packets().into_iter().skip(1) {
+                apply_owned_packet(matrice, graph, &inner);
+            }
+
+            let mut stats_ipc_ns = 0;
+            let mut stats_ipc_sent = false;
+            let mut stats_ipc_ok = false;
+            if packet_count.is_multiple_of(1000) || packet_count == total {
+                stats_ipc_sent = true;
+                let stats_ipc_start = timing_sample.map(|_| Instant::now());
+                stats_ipc_ok = send_stats_event(on_event, packet_count, matrix_count);
+                stats_ipc_ns = stats_ipc_start.map(elapsed_ns_since).unwrap_or(0);
+            }
+
+            if let (Some(sample), Some(start)) = (timing_sample, pipeline_start) {
+                write_timing_or_disable(
+                    timing_logger,
+                    json!({
+                        "event": "import_packet_timing",
+                        "ts_unix_ns": now_unix_ns(),
+                        "file_path": file_path,
+                        "seq": sample.seq,
+                        "packet_index": packet_count,
+                        "total_packets": total,
+                        "sample_rate": sample.sample_rate,
+                        "caplen": packet.header.caplen,
+                        "len": packet.header.len,
+                        "parse_l2_ns": parse_timing.l2_ns,
+                        "parse_l3_ns": parse_timing.l3_ns,
+                        "parse_l4_ns": parse_timing.l4_ns,
+                        "parse_l7_ns": parse_timing.l7_ns,
+                        "parse_total_ns": parse_timing.total_ns,
+                        "packet_owned_ns": packet_owned_ns,
+                        "matrix_update_ns": matrix_update_ns,
+                        "label_lookup_ns": label_lookup_ns,
+                        "graph_update_ns": graph_update_ns,
+                        "graph_updates": graph_updates.len(),
+                        "stats_ipc_ns": stats_ipc_ns,
+                        "stats_ipc_sent": stats_ipc_sent,
+                        "stats_ipc_ok": stats_ipc_ok,
+                        "matrix_count": matrix_count,
+                        "pipeline_total_ns": elapsed_ns_since(start)
+                    }),
+                    "packet",
+                );
+            }
+        }
+        Err((parse_error, parse_timing)) => {
+            counters.errors += 1;
+
+            if let (Some(sample), Some(start)) = (timing_sample, pipeline_start) {
+                write_timing_or_disable(
+                    timing_logger,
+                    json!({
+                        "event": "import_parse_error_timing",
+                        "ts_unix_ns": now_unix_ns(),
+                        "file_path": file_path,
+                        "seq": sample.seq,
+                        "packet_index": packet_count,
+                        "total_packets": total,
+                        "sample_rate": sample.sample_rate,
+                        "caplen": packet.header.caplen,
+                        "len": packet.header.len,
+                        "error": parse_error.to_string(),
+                        "parse_l2_ns": parse_timing.l2_ns,
+                        "parse_l3_ns": parse_timing.l3_ns,
+                        "parse_l4_ns": parse_timing.l4_ns,
+                        "parse_l7_ns": parse_timing.l7_ns,
+                        "parse_total_ns": parse_timing.total_ns,
+                        "pipeline_total_ns": elapsed_ns_since(start)
+                    }),
+                    "parse error",
+                );
+            }
+        }
+    }
+}
+
+/// Convertit un fichier PCAP : compte les paquets (pour la progression), les
+/// rejoue un à un dans la matrice et le graphe, puis signale la fin du fichier.
+pub(super) fn handle_pcap_file(
+    file_path: &str,
+    matrice: &mut FlowMatrix,
+    graph: &mut GraphData,
+    on_event: &Channel<CaptureEvent<'_>>,
+    timing_logger: &mut Option<ImportTimingLogger>,
+) -> Result<(), CaptureStateError> {
+    #[cfg(not(feature = "capture_timing"))]
+    let _ = timing_logger;
+    #[cfg(feature = "capture_timing")]
+    let file_start = Instant::now();
+    #[cfg(feature = "capture_timing")]
+    let count_start = Instant::now();
+    let total = count_packets_in_pcap(file_path)?;
+    #[cfg(feature = "capture_timing")]
+    let count_packets_ns = elapsed_ns_since(count_start);
+
+    info!(
+        "[handle_pcap_file] {} : {} paquets détectés",
+        file_path, total
+    );
+
+    #[cfg(feature = "capture_timing")]
+    let open_start = Instant::now();
+    let mut cap = open_pcap_file(file_path)?;
+    #[cfg(feature = "capture_timing")]
+    let open_ns = elapsed_ns_since(open_start);
+
+    let mut packet_count: usize = 0;
+    #[cfg(feature = "capture_timing")]
+    let process_start = Instant::now();
+    #[cfg(feature = "capture_timing")]
+    let mut counters = ParseCounters::default();
+
+    while let Ok(packet) = cap.next_packet() {
+        packet_count += 1;
+
+        #[cfg(feature = "capture_timing")]
+        process_packet_timed(
+            &packet,
+            file_path,
+            packet_count,
+            total,
+            matrice,
+            graph,
+            on_event,
+            timing_logger,
+            &mut counters,
+        );
+        #[cfg(not(feature = "capture_timing"))]
+        process_packet(&packet, packet_count, total, matrice, graph, on_event);
+    }
+
+    #[cfg(feature = "capture_timing")]
+    let process_ns = elapsed_ns_since(process_start);
+    #[cfg(feature = "capture_timing")]
+    let finished_ipc_start = Instant::now();
+    let finished_send_result = on_event.send(CaptureEvent::Finished {
+        file_name: file_path,
+        packet_total_count: total,
+        matrix_total_count: matrice.row_count(),
+    });
+    if let Err(e) = &finished_send_result {
+        error!("Erreur lors de l'envoi de Finished: {:?}", e);
+    };
+    #[cfg(feature = "capture_timing")]
+    {
+        let finished_ipc_ns = elapsed_ns_since(finished_ipc_start);
+        write_timing_or_disable(
+            timing_logger,
+            json!({
+                "event": "import_file_timing",
+                "ts_unix_ns": now_unix_ns(),
+                "file_path": file_path,
+                "total_packets": total,
+                "read_packets": packet_count,
+                "parse_ok": counters.ok,
+                "parse_errors": counters.errors,
+                "matrix_count": matrice.row_count(),
+                "graph_nodes": graph.nodes.len(),
+                "graph_edges": graph.edges.len(),
+                "count_packets_ns": count_packets_ns,
+                "open_ns": open_ns,
+                "process_ns": process_ns,
+                "finished_ipc_ns": finished_ipc_ns,
+                "finished_ipc_ok": finished_send_result.is_ok(),
+                "file_total_ns": elapsed_ns_since(file_start)
+            }),
+            "file",
+        );
+    }
+
+    info!(
+        "[handle_pcap_file] Finised with {} paquets lu, {} lignes matrice",
+        total,
+        matrice.row_count()
+    );
+    Ok(())
+}
+
+#[tauri::command(async)]
+pub fn convert_from_pcap_list(
+    matrice: State<'_, Arc<Mutex<FlowMatrix>>>,
+    graph: State<'_, Arc<Mutex<GraphData>>>,
+    label_store: State<'_, Arc<Mutex<LabelStore>>>,
+    pcap_paths: Vec<String>,
+    on_event: Channel<CaptureEvent<'_>>,
+) -> Result<(), CaptureStateError> {
+    let mut timing_logger = new_timing_logger();
+    #[cfg(feature = "capture_timing")]
+    let command_start = Instant::now();
+
+    info!(
+        "[convert_from_pcap_list] COMMAND CALLED avec pcap_paths = {:?}",
+        pcap_paths
+    );
+
+    send_started_event(&on_event);
+
+    let mut matrice_guard = matrice.lock()?;
+    let mut graph_guard = graph.lock()?;
+    #[cfg(feature = "capture_timing")]
+    let reset_start = Instant::now();
+    matrice_guard.clear();
+    graph_guard.clear();
+    #[cfg(feature = "capture_timing")]
+    let reset_ns = elapsed_ns_since(reset_start);
+
+    labels_to_matrix(label_store, &mut matrice_guard)?;
+
+    info!("[convert_from_pcap_list] Matrice & GraphData reset");
+
+    for pcap_path in &pcap_paths {
+        info!("[convert_from_pcap_list] Traitement de {}", pcap_path);
+        handle_pcap_file(
+            pcap_path,
+            &mut matrice_guard,
+            &mut graph_guard,
+            &on_event,
+            &mut timing_logger,
+        )?;
+    }
+
+    info!("[convert_from_pcap_list] FIN traitement liste PCAP");
+
+    // 🔥 snapshot complet envoyé sur le channel
+    #[cfg(feature = "capture_timing")]
+    let snapshot_build_start = Instant::now();
+    let snapshot: GraphData = graph_guard.get_all_graph_data(); // doit renvoyer un GraphData possédé
+    #[cfg(feature = "capture_timing")]
+    let snapshot_build_ns = elapsed_ns_since(snapshot_build_start);
+
+    #[cfg(feature = "capture_timing")]
+    let snapshot_ipc_start = Instant::now();
+    let snapshot_send_result = on_event.send(CaptureEvent::GraphSnapshot {
+        graph_data: &snapshot,
+    });
+    if let Err(e) = &snapshot_send_result {
+        error!("Erreur lors de l'envoi de GraphSnapshot: {:?}", e);
+    }
+    #[cfg(feature = "capture_timing")]
+    {
+        let snapshot_ipc_ns = elapsed_ns_since(snapshot_ipc_start);
+        if let Some(logger) = timing_logger.as_mut()
+            && let Err(e) = logger.write_value(json!({
+                "event": "import_snapshot_timing",
+                "ts_unix_ns": now_unix_ns(),
+                "files": pcap_paths.len(),
+                "matrix_count": matrice_guard.row_count(),
+                "graph_nodes": snapshot.nodes.len(),
+                "graph_edges": snapshot.edges.len(),
+                "snapshot_build_ns": snapshot_build_ns,
+                "snapshot_ipc_ns": snapshot_ipc_ns,
+                "snapshot_ipc_ok": snapshot_send_result.is_ok(),
+                "reset_ns": reset_ns,
+                "command_total_ns": elapsed_ns_since(command_start)
+            }))
+        {
+            error!(
+                "Import timing log disabled after snapshot write error: {}",
+                e
+            );
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::test_support::local_tunnel_pcap;
+    use super::*;
+    use crate::state::flow_matrix::FlowMatrixRow;
+
+    /// Rejoue l'import PCAP réel et vérifie la comptabilité des tunnels :
+    /// pour chaque tunnel, la somme des paquets attribués aux lignes internes
+    /// (via la colonne `encap_id`, forme `id` ou `id:n|…`) doit être égale au
+    /// compteur des lignes externes CAPWAP (aller + retour), sans orphelin.
+    #[test]
+    fn import_pcap_tunnel_counts_are_balanced() {
+        let Some(pcap_path) = local_tunnel_pcap() else {
+            return;
+        };
+        let mut matrix = FlowMatrix::new();
+        let mut graph = GraphData::new();
+        let on_event = Channel::new(|_| Ok(()));
+
+        handle_pcap_file(
+            pcap_path.to_str().unwrap(),
+            &mut matrix,
+            &mut graph,
+            &on_event,
+            &mut None,
+        )
+        .unwrap();
+
+        // Ventile la colonne `encap_id` d'une ligne : `id` nu = tout le
+        // compteur de la ligne, `id:n` = n paquets pour ce tunnel.
+        fn tunnel_counts(row: &FlowMatrixRow) -> Vec<(String, u64)> {
+            row.encap_id
+                .split('|')
+                .filter(|e| !e.is_empty())
+                .map(|element| match element.split_once(':') {
+                    Some((id, n)) => (id.to_string(), n.parse::<u64>().unwrap()),
+                    None => (element.to_string(), row.count),
+                })
+                .collect()
+        }
+
+        let rows = matrix.to_flat_vec();
+        assert_eq!(rows.len(), matrix.row_count(), "une ligne par flux");
+
+        let mut outer: std::collections::HashMap<String, u64> = std::collections::HashMap::new();
+        let mut inner: std::collections::HashMap<String, u64> = std::collections::HashMap::new();
+        for row in &rows {
+            let target = if row.application_protocol.as_deref() == Some("CAPWAP") {
+                &mut outer
+            } else {
+                &mut inner
+            };
+            for (id, count) in tunnel_counts(row) {
+                *target.entry(id).or_default() += count;
+            }
+        }
+
+        assert!(!outer.is_empty(), "le pcap contient des tunnels CAPWAP");
+        for (id, outer_count) in &outer {
+            assert_eq!(
+                inner.get(id),
+                Some(outer_count),
+                "tunnel {id} : la somme des paquets fils doit égaler le compteur du père"
+            );
+        }
+        for id in inner.keys() {
+            assert!(
+                outer.contains_key(id),
+                "tunnel {id} : lignes internes sans ligne externe"
+            );
+        }
+
+        // Le graphe porte la parenté père/fils : chaque arête CAPWAP connaît
+        // l'id de son tunnel, et des arêtes internes portent les ids des
+        // tunnels qui les transportent (surbrillance au survol côté front).
+        let capwap_edges: Vec<_> = graph
+            .edges
+            .values()
+            .filter(|e| e.label == "CAPWAP")
+            .collect();
+        assert!(!capwap_edges.is_empty(), "arêtes CAPWAP attendues");
+        assert!(
+            capwap_edges.iter().all(|e| !e.encap_ids.is_empty()),
+            "chaque arête CAPWAP doit porter au moins un id de tunnel"
+        );
+        let linked_inner = graph
+            .edges
+            .values()
+            .filter(|e| e.label != "CAPWAP" && !e.encap_ids.is_empty())
+            .count();
+        assert!(
+            linked_inner > 0,
+            "des arêtes internes doivent être reliées à leur tunnel"
+        );
+    }
+}
