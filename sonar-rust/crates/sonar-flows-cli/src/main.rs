@@ -56,7 +56,8 @@ fn main() -> ExitCode {
             .map(|rows| (rows, output))
         }
         Command::Matrix { inputs, output } => {
-            sonar_flows_core::csv::merge_matrix_files_to_csv(&inputs, &output).map(|rows| (rows, output))
+            sonar_flows_core::csv::merge_matrix_files_to_csv(&inputs, &output)
+                .map(|rows| (rows, output))
         }
     };
 

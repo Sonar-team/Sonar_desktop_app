@@ -4,7 +4,10 @@
 //! paquet est parsé par `packet_parser`, aplati en niveaux de tunnel
 //! (externe + internes partageant le même `encap_id`), puis agrégé dans la
 //! [`FlowMatrix`]. Les paquets que le parser ne comprend pas sont comptés,
-//! pas fatals.
+//! pas fatals. Une erreur de *lecture* (fichier tronqué, enregistrement
+//! corrompu) est en revanche fatale : elle ne doit pas être confondue avec
+//! une fin de fichier, sous peine de produire une matrice silencieusement
+//! partielle.
 
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
@@ -116,14 +119,26 @@ pub struct PcapFileReport {
 }
 
 /// Ajoute le contenu d'un fichier PCAP/PCAPNG à une matrice existante.
+///
+/// Les paquets non parsés sont comptés dans le bilan sans interrompre la
+/// conversion ; une erreur de lecture (autre que la fin de fichier) est
+/// fatale et laisse la matrice possiblement partielle — les appelants qui
+/// veulent une sémantique transactionnelle passent par
+/// [`convert_pcap_files`], qui ne retourne jamais de matrice partielle.
 pub fn append_pcap_file(matrix: &mut FlowMatrix, path: &Path) -> Result<PcapFileReport> {
-    let mut cap = Capture::from_file(path).map_err(|e| SonarCoreError::Pcap {
+    let pcap_error = |e: &pcap::Error| SonarCoreError::Pcap {
         path: path.to_path_buf(),
         message: e.to_string(),
-    })?;
+    };
+    let mut cap = Capture::from_file(path).map_err(|e| pcap_error(&e))?;
 
     let mut report = PcapFileReport::default();
-    while let Ok(packet) = cap.next_packet() {
+    loop {
+        let packet = match cap.next_packet() {
+            Ok(packet) => packet,
+            Err(pcap::Error::NoMorePackets) => break,
+            Err(e) => return Err(pcap_error(&e)),
+        };
         report.packets += 1;
         match PacketFlow::try_from(packet.data) {
             Ok(flow) => {
@@ -176,4 +191,48 @@ pub fn convert_pcap_files_to_csv(
     let matrix = convert_pcap_files(inputs, on_file)?;
     matrix.export_to_csv(output.to_string_lossy().into_owned())?;
     Ok(matrix.row_count())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::append_pcap_file;
+    use crate::matrix::FlowMatrix;
+
+    /// En-tête global PCAP minimal (little-endian, Ethernet).
+    fn pcap_global_header() -> Vec<u8> {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&0xa1b2_c3d4u32.to_le_bytes()); // magic
+        bytes.extend_from_slice(&2u16.to_le_bytes()); // version majeure
+        bytes.extend_from_slice(&4u16.to_le_bytes()); // version mineure
+        bytes.extend_from_slice(&0i32.to_le_bytes()); // thiszone
+        bytes.extend_from_slice(&0u32.to_le_bytes()); // sigfigs
+        bytes.extend_from_slice(&65535u32.to_le_bytes()); // snaplen
+        bytes.extend_from_slice(&1u32.to_le_bytes()); // LINKTYPE_ETHERNET
+        bytes
+    }
+
+    #[test]
+    fn truncated_pcap_is_an_error_not_an_eof() {
+        let dir = std::env::temp_dir().join("sonar_core_pcap_truncated_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let path = dir.join("truncated.pcap");
+
+        // En-tête d'enregistrement annonçant 100 octets, suivi de 10 seulement :
+        // le cas « PCAP tronqué » qui était avalé comme une fin de fichier.
+        let mut bytes = pcap_global_header();
+        bytes.extend_from_slice(&0u32.to_le_bytes()); // ts_sec
+        bytes.extend_from_slice(&0u32.to_le_bytes()); // ts_usec
+        bytes.extend_from_slice(&100u32.to_le_bytes()); // incl_len
+        bytes.extend_from_slice(&100u32.to_le_bytes()); // orig_len
+        bytes.extend_from_slice(&[0u8; 10]);
+        std::fs::write(&path, bytes).expect("écriture pcap tronqué");
+
+        let mut matrix = FlowMatrix::new();
+        let err = append_pcap_file(&mut matrix, &path).expect_err("le pcap tronqué doit échouer");
+        assert!(
+            err.to_string().contains("truncated.pcap"),
+            "l'erreur doit citer le fichier fautif: {err}"
+        );
+    }
 }
