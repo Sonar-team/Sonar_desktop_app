@@ -74,6 +74,8 @@ fn flow_ips(owned: &PacketOwnedStats) -> (String, String) {
 /// updates graphe) et accès à la matrice / au graphe partagés.
 struct PacketWorker {
     on_event: Channel<CaptureEvent<'static>>,
+    /// Session de capture émettrice, reprise dans chaque événement.
+    session_id: u64,
     flow_matrix: Arc<Mutex<FlowMatrix>>,
     graph: Arc<Mutex<GraphData>>,
     packet_batch: Vec<PacketOwnedStats>,
@@ -88,11 +90,13 @@ struct PacketWorker {
 impl PacketWorker {
     fn new(
         on_event: Channel<CaptureEvent<'static>>,
+        session_id: u64,
         flow_matrix: Arc<Mutex<FlowMatrix>>,
         graph: Arc<Mutex<GraphData>>,
     ) -> Self {
         Self {
             on_event,
+            session_id,
             flow_matrix,
             graph,
             packet_batch: Vec::with_capacity(PACKET_BATCH_MAX),
@@ -398,7 +402,10 @@ impl PacketWorker {
         self.last_batch_flush = Instant::now();
         #[cfg(feature = "capture_timing")]
         let ipc_start = Instant::now();
-        let send_result = self.on_event.send(CaptureEvent::PacketBatch { packets });
+        let send_result = self.on_event.send(CaptureEvent::PacketBatch {
+            session_id: self.session_id,
+            packets,
+        });
         #[cfg(feature = "capture_timing")]
         if let Some(logger) = self.timing_logger.as_mut()
             && let Err(e) = logger.write_packet_batch_ipc(
@@ -429,7 +436,10 @@ impl PacketWorker {
             return true;
         }
         let updates = self.graph_batch.take();
-        match self.on_event.send(CaptureEvent::GraphBatch { updates }) {
+        match self.on_event.send(CaptureEvent::GraphBatch {
+            session_id: self.session_id,
+            updates,
+        }) {
             Ok(_) => true,
             Err(e) => {
                 error!("[TAURI] Erreur envoi GraphBatch: {}", e);
@@ -457,6 +467,7 @@ impl PacketWorker {
 /// Émission périodique vers le front des stats de capture et de l'occupation
 /// du canal, dédupliquées par leurs payloads respectifs.
 struct StatsEmitter {
+    session_id: u64,
     stats: StatTriple,
     emit_interval: Duration,
     last_emit: Instant,
@@ -473,8 +484,10 @@ impl StatsEmitter {
         channel_capacity: usize,
         shared_stats: Arc<SharedCaptureStats>,
         drop_counters: Arc<AppDropCounters>,
+        session_id: u64,
     ) -> Self {
         Self {
+            session_id,
             stats: StatTriple::default(),
             emit_interval: Duration::from_millis(STATS_EMIT_INTERVAL_MS),
             last_emit: Instant::now(),
@@ -502,6 +515,7 @@ impl StatsEmitter {
                 self.shared_stats.load(),
                 self.drop_counters.total(),
                 processed,
+                self.session_id,
                 on_event,
             ) {
                 error!("[TAURI] Erreur envoi Stats: {}", e);
@@ -518,6 +532,7 @@ impl StatsEmitter {
                 &mut self.last_channel,
                 queue_len,
                 self.channel_capacity,
+                self.session_id,
                 on_event,
             ) {
                 error!("[TAURI] Erreur émission canal : {}", e);
@@ -536,6 +551,7 @@ pub fn spawn_processing_thread(
     drop_counters: Arc<AppDropCounters>,
     shared_stats: Arc<SharedCaptureStats>,
     stop_flag: Arc<AtomicBool>,
+    session_id: u64,
 ) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         debug!("Démarrage du thread de traitement");
@@ -544,9 +560,13 @@ pub fn spawn_processing_thread(
         let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>().inner().clone();
         let graph = app.state::<Arc<Mutex<GraphData>>>().inner().clone();
 
-        let mut worker = PacketWorker::new(on_event, flow_matrix, graph);
-        let mut emitter =
-            StatsEmitter::new(channel_capacity as usize, shared_stats, drop_counters);
+        let mut worker = PacketWorker::new(on_event, session_id, flow_matrix, graph);
+        let mut emitter = StatsEmitter::new(
+            channel_capacity as usize,
+            shared_stats,
+            drop_counters,
+            session_id,
+        );
 
         loop {
             if stop_flag.load(Ordering::Relaxed) {
@@ -657,6 +677,7 @@ mod tests {
         let graph = Arc::new(Mutex::new(GraphData::new()));
         let mut worker = PacketWorker::new(
             Channel::new(|_| Ok(())),
+            1,
             flow_matrix.clone(),
             graph.clone(),
         );
@@ -693,6 +714,7 @@ mod tests {
         let graph = Arc::new(Mutex::new(GraphData::new()));
         let mut worker = PacketWorker::new(
             Channel::new(|_| Ok(())),
+            1,
             flow_matrix.clone(),
             graph,
         );

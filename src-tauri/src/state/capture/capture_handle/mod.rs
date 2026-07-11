@@ -37,6 +37,8 @@ use crate::{
 /// Poignée d'une capture en cours : drapeau d'arrêt partagé et threads du
 /// pipeline, joints à l'arrêt.
 pub struct CaptureHandle {
+    /// Identifiant de la session, repris dans tous les événements émis.
+    session_id: u64,
     stop_flag: Arc<AtomicBool>,
     /// Threads capture + processing, joints au `stop()` pour garantir qu'un
     /// redémarrage immédiat ne fasse pas cohabiter deux pipelines.
@@ -44,9 +46,9 @@ pub struct CaptureHandle {
 }
 
 impl CaptureHandle {
-    pub fn new() -> Self {
-        println!("[DEBUG] CaptureHandle créé");
+    pub fn new(session_id: u64) -> Self {
         Self {
+            session_id,
             stop_flag: Arc::new(AtomicBool::new(false)),
             threads: Vec::new(),
         }
@@ -65,14 +67,6 @@ impl CaptureHandle {
             config.device_name
         );
 
-        on_event.send(CaptureEvent::Started {
-            device: &config.device_name,
-            buffer_size: config.buffer_size,
-            chan_capacity: config.chan_capacity,
-            timeout: config.timeout,
-            snaplen: config.snaplen,
-        })?;
-
         let stop_flag = self.stop_flag.clone();
 
         let device = Device::list()?
@@ -85,6 +79,18 @@ impl CaptureHandle {
         let mut cap = setup_capture(config.clone())?;
 
         setup_filter(&mut cap, filter)?;
+
+        // `Started` part seulement une fois l'interface ouverte et le filtre
+        // appliqué : un échec de démarrage ne produit jamais un « démarré »
+        // suivi d'une erreur.
+        on_event.send(CaptureEvent::Started {
+            session_id: self.session_id,
+            device: &config.device_name,
+            buffer_size: config.buffer_size,
+            chan_capacity: config.chan_capacity,
+            timeout: config.timeout,
+            snaplen: config.snaplen,
+        })?;
 
         let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) =
             bounded(config.chan_capacity as usize);
@@ -107,6 +113,7 @@ impl CaptureHandle {
             drop_counters.clone(),
             shared_stats.clone(),
             stop_flag.clone(),
+            self.session_id,
         ));
         self.threads.push(spawn_capture_thread_with_pool(
             tx,
@@ -117,6 +124,7 @@ impl CaptureHandle {
             arc_buffer_pool,
             drop_counters,
             shared_stats,
+            self.session_id,
         ));
 
         Ok(())
@@ -126,7 +134,7 @@ impl CaptureHandle {
     /// cycle de vie (récolte par `CaptureState::reap_terminated_capture`).
     #[cfg(test)]
     pub(crate) fn terminated_for_tests() -> Self {
-        let handle = Self::new();
+        let handle = Self::new(1);
         handle.stop_flag.store(true, Ordering::Relaxed);
         handle
     }
@@ -161,9 +169,11 @@ impl CaptureHandle {
             }
         }
         on_event.send(CaptureEvent::Stopped {
+            session_id: self.session_id,
             reason: "arrêt demandé".to_string(),
         })?;
         on_event.send(CaptureEvent::Stats {
+            session_id: self.session_id,
             received: 0,
             dropped: 0,
             if_dropped: 0,
@@ -180,7 +190,7 @@ mod tests {
 
     #[test]
     fn fresh_handle_is_not_terminated() {
-        let handle = CaptureHandle::new();
+        let handle = CaptureHandle::new(1);
         assert!(!handle.is_terminated(), "handle neuf, rien à récolter");
     }
 
@@ -188,14 +198,14 @@ mod tests {
     fn handle_with_stop_flag_raised_is_terminated() {
         // Simule un pipeline qui s'est arrêté de lui-même (erreur pcap ou
         // canal IPC cassé) : un thread a levé le drapeau avant de sortir.
-        let handle = CaptureHandle::new();
+        let handle = CaptureHandle::new(1);
         handle.stop_flag.store(true, Ordering::Relaxed);
         assert!(handle.is_terminated());
     }
 
     #[test]
     fn handle_with_finished_threads_is_terminated() {
-        let mut handle = CaptureHandle::new();
+        let mut handle = CaptureHandle::new(1);
         handle.threads.push(std::thread::spawn(|| {}));
         // Laisse le thread se terminer.
         while !handle.threads[0].is_finished() {

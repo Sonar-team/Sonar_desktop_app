@@ -123,6 +123,60 @@ Deno.test("setChannel - packetBatch alimente les deux familles d'abonnés", () =
   }
 });
 
+Deno.test("setChannel - les événements d'une session périmée sont ignorés", () => {
+  mockIPC(() => {});
+  try {
+    const { store, emitFromBackend } = setupStoreWithChannel();
+    const batches: unknown[][] = [];
+    const stopped: unknown[] = [];
+    store.onPacketBatch((b) => batches.push(b));
+    store.onStopped((d) => stopped.push(d));
+
+    // La session 2 est la session courante.
+    emitFromBackend({ event: "started", data: { session_id: 2 } });
+    assertEquals(store.sessionId, 2);
+    store.isRunning = true;
+
+    // Événements retardataires de la session 1 : filtrés.
+    emitFromBackend({ event: "packetBatch", data: { session_id: 1, packets: [{ len: 1 }] } });
+    emitFromBackend({ event: "stopped", data: { session_id: 1, reason: "vieux pipeline" } });
+    assertEquals(batches.length, 0, "packetBatch périmé ignoré");
+    assertEquals(stopped.length, 0, "stopped périmé ignoré");
+    assertEquals(store.isRunning, true, "un stopped périmé n'arrête pas la session courante");
+
+    // Ceux de la session courante passent, ainsi que les événements hors
+    // session (session_id 0, ex. import).
+    emitFromBackend({ event: "packetBatch", data: { session_id: 2, packets: [{ len: 1 }] } });
+    emitFromBackend({ event: "packetBatch", data: { session_id: 0, packets: [{ len: 2 }] } });
+    assertEquals(batches.length, 2);
+
+    emitFromBackend({ event: "stopped", data: { session_id: 2, reason: "arrêt demandé" } });
+    assertEquals(store.isRunning, false);
+  } finally {
+    clearMocks();
+  }
+});
+
+Deno.test("updateStatus - reprend le session_id du statut backend", () => {
+  mockIPC(() => {});
+  try {
+    setActivePinia(createPinia());
+    const store = useCaptureStore();
+
+    store.updateStatus({ is_running: true, session_id: 7 });
+    assertEquals(store.isRunning, true);
+    assertEquals(store.sessionId, 7);
+
+    // L'arrêt ne remet pas l'id à zéro : il sert encore à filtrer les
+    // retardataires de la session close.
+    store.updateStatus({ is_running: false });
+    assertEquals(store.isRunning, false);
+    assertEquals(store.sessionId, 7);
+  } finally {
+    clearMocks();
+  }
+});
+
 Deno.test("onStats - le désabonnement retire bien le listener", () => {
   mockIPC(() => {});
   try {

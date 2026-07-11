@@ -233,6 +233,7 @@ pub fn import_matrix_files(
         }
     }
     if let Err(e) = on_event.send(CaptureEvent::Stats {
+        session_id: 0,
         received: rows.len() as u32,
         dropped: 0,
         if_dropped: 0,

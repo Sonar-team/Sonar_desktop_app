@@ -109,6 +109,7 @@ impl StatTriple {
 
 #[derive(Clone, Copy, Serialize)]
 pub struct StatsPayload {
+    pub session_id: u64,
     pub received: u32,
     pub dropped: u32,
     pub if_dropped: u32,
@@ -118,8 +119,9 @@ pub struct StatsPayload {
 
 impl StatsPayload {
     #[inline]
-    pub fn new(triple: StatTriple, processed: u32) -> Self {
+    pub fn new(triple: StatTriple, processed: u32, session_id: u64) -> Self {
         Self {
+            session_id,
             received: triple.received,
             dropped: triple.dropped,
             if_dropped: triple.if_dropped,
@@ -132,6 +134,7 @@ impl StatsPayload {
     #[inline]
     pub fn send(&self, ch: &Channel<CaptureEvent<'static>>) -> Result<(), tauri::Error> {
         ch.send(CaptureEvent::Stats {
+            session_id: self.session_id,
             received: self.received,
             dropped: self.dropped,
             if_dropped: self.if_dropped,
@@ -147,11 +150,12 @@ impl StatsPayload {
         mut current: StatTriple,
         app_dropped: u64,
         processed: u32,
+        session_id: u64,
         ch: &Channel<CaptureEvent<'static>>,
     ) -> Result<(), tauri::Error> {
         current.app_dropped = app_dropped;
         if current.update_if_changed(last) {
-            let payload = StatsPayload::new(current, processed);
+            let payload = StatsPayload::new(current, processed, session_id);
             payload.send(ch)
         } else {
             Ok(())

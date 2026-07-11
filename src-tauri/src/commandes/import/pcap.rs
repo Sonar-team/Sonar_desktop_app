@@ -85,6 +85,7 @@ fn new_timing_logger() -> Option<ImportTimingLogger> {
 
 fn send_started_event(on_event: &Channel<CaptureEvent<'_>>) {
     if let Err(e) = on_event.send(CaptureEvent::Started {
+        session_id: 0,
         device: "",
         buffer_size: 0,
         chan_capacity: 0,
@@ -100,6 +101,7 @@ fn send_started_event(on_event: &Channel<CaptureEvent<'_>>) {
 fn send_stats_event(on_event: &Channel<CaptureEvent<'_>>, received: usize, processed: usize) -> bool {
     on_event
         .send(CaptureEvent::Stats {
+            session_id: 0,
             received: received as u32,
             dropped: 0,
             if_dropped: 0,

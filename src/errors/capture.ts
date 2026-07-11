@@ -31,6 +31,7 @@ export type LabelErrorKind =
 export type CaptureStateErrorKind =
   | { kind: "io"; message: string }
   | { kind: "poisonError"; message: string }
+  | { kind: "invalidTransition"; message: string }
   | { kind: "capture"; message: CaptureErrorKind }
   | { kind: "import"; message: ImportErrorKind }
   | { kind: "label"; message: LabelErrorKind}
@@ -47,6 +48,10 @@ export async function displayCaptureError(err: unknown) {
         break;
       case "poisonError":
         userFriendlyMessage = `Erreur verrou : ${captureError.message}`;
+        break;
+      case "invalidTransition":
+        userFriendlyMessage =
+          `Opération refusée : ${captureError.message}`;
         break;
       case "capture":
         const captureKind = captureError.message as CaptureErrorKind;

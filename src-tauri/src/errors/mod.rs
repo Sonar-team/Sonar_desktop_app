@@ -26,6 +26,10 @@ pub enum CaptureStateError {
     Io(#[from] std::io::Error),
     #[error("the mutex was poisoned")]
     PoisonError(String),
+    /// Transition refusée par la machine d'état de capture (ex. démarrage
+    /// pendant qu'une capture tourne déjà).
+    #[error("transition de capture refusée : {from} → {to}")]
+    InvalidTransition { from: String, to: String },
     #[error(transparent)]
     Capture(#[from] CaptureError),
     #[error(transparent)]
@@ -46,6 +50,7 @@ pub enum CaptureStateError {
 pub enum CaptureStateErrorKind {
     Io(String),
     PoisonError(String),
+    InvalidTransition(String),
     Capture(CaptureErrorKind),
     Export(ExportErrorKind),
     Import(PcapImportErrorKind),
@@ -61,6 +66,9 @@ impl Serialize for CaptureStateError {
         let kind = match self {
             Self::Io(e) => CaptureStateErrorKind::Io(e.to_string()),
             Self::PoisonError(e) => CaptureStateErrorKind::PoisonError(e.clone()),
+            Self::InvalidTransition { .. } => {
+                CaptureStateErrorKind::InvalidTransition(self.to_string())
+            }
             Self::Capture(e) => {
                 // Convert `CaptureError` into `CaptureErrorKind`
                 let kind = match e {

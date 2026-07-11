@@ -22,6 +22,12 @@ function unsubscribe<T>(listeners: Array<(d: T) => void>, cb: (d: T) => void) {
 export const useCaptureStore = defineStore("capture", {
   state: () => ({
     isRunning: false,
+    // Démarrage en cours (invoke start_capture pas encore résolu) : bloque
+    // un second start avant que isRunning ne soit à jour (double-clic).
+    isStarting: false,
+    // Session de capture live courante (0 = aucune). Les événements portant
+    // un session_id différent viennent d'une session périmée et sont ignorés.
+    sessionId: 0,
     showMatrice: true,
     isImporting: false,
     hasData: false,
@@ -42,8 +48,11 @@ export const useCaptureStore = defineStore("capture", {
   }),
 
   actions: {
-    updateStatus(status: { is_running: boolean }) {
+    updateStatus(status: { is_running: boolean; session_id?: number }) {
       this.isRunning = status.is_running;
+      if (typeof status.session_id === "number" && status.session_id > 0) {
+        this.sessionId = status.session_id;
+      }
     },
     toggleView() {
       this.showMatrice = !this.showMatrice;
@@ -64,7 +73,22 @@ export const useCaptureStore = defineStore("capture", {
       __channel = markRaw(channel);
 
       __channel.onmessage = (msg: any) => {
-        // console.log("[CaptureStore] Message reçu :", msg.data)
+        // Filtrage de session : les événements de capture live portent le
+        // session_id de leur pipeline (0 = hors session, ex. import). Un id
+        // différent de la session courante signale un événement périmé.
+        const sid = msg.data?.session_id;
+        if (typeof sid === "number" && sid > 0) {
+          if (msg.event === "started") {
+            if (sid < this.sessionId) {
+              console.warn(`[CaptureStore] started d'une session périmée ignoré (${sid} < ${this.sessionId})`);
+              return;
+            }
+            this.sessionId = sid;
+          } else if (sid !== this.sessionId) {
+            console.warn(`[CaptureStore] ${msg.event} d'une session périmée ignoré (${sid} ≠ ${this.sessionId})`);
+            return;
+          }
+        }
         switch (msg.event) {
           case "started":
             if (this.pendingFilter) {

@@ -54,6 +54,7 @@ pub fn spawn_capture_thread_with_pool(
     buffer_pool: Arc<PacketBufferPool>,
     drop_counters: Arc<AppDropCounters>,
     shared_stats: Arc<SharedCaptureStats>,
+    session_id: u64,
 ) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         debug!("Démarrage du thread de capture avec pool");
@@ -116,6 +117,7 @@ pub fn spawn_capture_thread_with_pool(
                             pending_drops.channel_full
                         );
                         if let Err(e) = on_event.send(CaptureEvent::ChannelCapacityPayload {
+                            session_id,
                             channel_size: channel_capacity as usize,
                             current_size: tx.len(),
                             backpressure: true,
@@ -136,6 +138,7 @@ pub fn spawn_capture_thread_with_pool(
                     // frontend, sinon l'UI croit capturer indéfiniment.
                     stop_flag.store(true, Ordering::Relaxed);
                     if let Err(send_err) = on_event.send(CaptureEvent::Stopped {
+                        session_id,
                         reason: format!("erreur pcap : {e}"),
                     }) {
                         error!("Erreur send Stopped: {}", send_err);

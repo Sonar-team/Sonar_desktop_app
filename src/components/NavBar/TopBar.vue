@@ -302,20 +302,26 @@ export default {
     async start() {
       if (this.activePanel !== null || useCaptureStore().isImporting) return;
 
-      if (this.captureStore.isRunning) {
+      // isStarting posé de façon synchrone : un double-clic ne peut pas
+      // déclencher deux invocations (et donc deux channels) concurrentes.
+      if (this.captureStore.isRunning || this.captureStore.isStarting) {
         return;
       }
+      this.captureStore.isStarting = true;
 
       const onEvent = new Channel<CaptureEvent>();
       this.captureStore.setChannel(onEvent); // 🟢 rendre le Channel accessible
 
-      await invoke('start_capture', { onEvent })
-        .then((status) => {
-          const typedStatus = status as { is_running: boolean };
-          this.captureStore.updateStatus(typedStatus);
-          info('Capture démarrée : ' + this.captureStore.isRunning);
-        })
-        .catch(displayCaptureError);
+      try {
+        const status = await invoke('start_capture', { onEvent });
+        const typedStatus = status as { is_running: boolean; session_id: number };
+        this.captureStore.updateStatus(typedStatus);
+        info('Capture démarrée : ' + this.captureStore.isRunning);
+      } catch (err) {
+        displayCaptureError(err);
+      } finally {
+        this.captureStore.isStarting = false;
+      }
     },
 
     async stop() {
@@ -325,7 +331,7 @@ export default {
       const onEvent = this.captureStore.getChannel();
       await invoke('stop_capture',{ onEvent })
         .then((status) => {
-          const typedStatus = status as { is_running: boolean };
+          const typedStatus = status as { is_running: boolean; session_id: number };
           this.captureStore.updateStatus(typedStatus);
           info('Capture arrêtée : ' + this.captureStore.isRunning);
         })

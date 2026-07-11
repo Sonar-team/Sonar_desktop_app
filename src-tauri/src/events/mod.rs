@@ -12,11 +12,18 @@ use crate::state::{
 /// Événement de capture/import envoyé au frontend. Les variantes empruntent
 /// des références quand l'événement est construit depuis l'état verrouillé
 /// (zéro copie à la sérialisation).
+///
+/// `session_id` identifie la session de capture live émettrice : le frontend
+/// ignore les événements d'une session périmée. La valeur 0 signifie « hors
+/// session » (imports PCAP/CSV), jamais filtrée.
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]
 pub enum CaptureEvent<'a> {
     /// La capture (ou la conversion PCAP) démarre, avec ses paramètres.
+    /// En capture live, émis seulement une fois l'interface ouverte et le
+    /// filtre appliqué : un échec de démarrage ne produit jamais `Started`.
     Started {
+        session_id: u64,
         device: &'a str,
         buffer_size: i32,
         chan_capacity: i32,
@@ -25,6 +32,7 @@ pub enum CaptureEvent<'a> {
     },
     /// Compteurs périodiques pour la barre de statut.
     Stats {
+        session_id: u64,
         received: u32,
         dropped: u32,
         if_dropped: u32,
@@ -35,6 +43,7 @@ pub enum CaptureEvent<'a> {
     },
     /// Occupation du canal capture→processing (indicateur de backpressure).
     ChannelCapacityPayload {
+        session_id: u64,
         channel_size: usize,
         current_size: usize,
         backpressure: bool,
@@ -48,6 +57,7 @@ pub enum CaptureEvent<'a> {
     },
     /// Lot de paquets traités (voir `PACKET_BATCH_MAX` côté processing).
     PacketBatch {
+        session_id: u64,
         packets: Vec<PacketOwnedStats>,
     },
     /// Update graphe unitaire (ex. label de nœud modifié après arbitrage).
@@ -56,12 +66,14 @@ pub enum CaptureEvent<'a> {
     },
     /// Updates graphe coalescées sur la fenêtre de batch (voir `GraphUpdateBatch`).
     GraphBatch {
+        session_id: u64,
         updates: Vec<GraphUpdate>,
     },
     /// Fin du pipeline de capture, normale ou sur erreur fatale (ex. pcap).
     /// Sans cet événement, le frontend croirait capturer indéfiniment après
     /// une erreur.
     Stopped {
+        session_id: u64,
         reason: String,
     },
     /// Fin de traitement d'un fichier importé (PCAP ou matrice CSV), avec la

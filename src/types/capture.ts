@@ -118,10 +118,13 @@ export type GraphUpdate =
   | { type: "EdgeAdded"; payload: Edge }
   | { type: "EdgeUpdated"; payload: Edge };
 
+// `session_id` : session de capture live émettrice (0 = hors session, ex.
+// import) ; le store ignore les événements d'une session périmée.
 export type CaptureEvent =
   | {
     event: "started";
     data: {
+      session_id: number;
       device: string;
       bufferSize: number;
       timeout: number;
@@ -130,6 +133,7 @@ export type CaptureEvent =
   | {
     event: "stats";
     data: {
+      session_id: number;
       stats: Stats;
       processed: number;
     };
@@ -137,6 +141,7 @@ export type CaptureEvent =
   | {
     event: "channelCapacityPayload";
     data: {
+      session_id: number;
       channelSize: number;
       currentSize: number;
       backpressure: boolean;
@@ -151,6 +156,7 @@ export type CaptureEvent =
   | {
     event: "stopped";
     data: {
+      session_id: number;
       reason: string;
     };
   }
@@ -163,6 +169,7 @@ export type CaptureEvent =
   | {
     event: "packetBatch";
     data: {
+      session_id: number;
       packets: PacketMinimal[];
     };
   }
@@ -181,13 +188,8 @@ export type CaptureEvent =
   | {
     event: "graphBatch";
     data: {
+      session_id: number;
       updates: GraphUpdate[];
-    };
-  }
-  | {
-    event: "stopped";
-    data: {
-      reason: string;
     };
   }
   | {

@@ -32,6 +32,7 @@ impl ChannelCapacityPayload {
         last: &mut Self,
         current_size: usize,
         max_size: usize,
+        session_id: u64,
         on_event: &Channel<CaptureEvent<'static>>,
     ) -> Result<(), tauri::Error> {
         let backpressure = current_size >= (max_size as f32 * 0.9).floor() as usize;
@@ -45,6 +46,7 @@ impl ChannelCapacityPayload {
         if current != *last {
             *last = current.clone();
             on_event.send(CaptureEvent::ChannelCapacityPayload {
+                session_id,
                 channel_size: current.channel_size,
                 current_size: current.current_size,
                 backpressure: current.backpressure,

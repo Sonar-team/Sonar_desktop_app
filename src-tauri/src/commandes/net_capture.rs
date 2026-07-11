@@ -13,8 +13,10 @@ use crate::{
     setup::labels::update_labels_in_state,
     state::{
         capture::{
-            CaptureState, capture_config::CaptureConfig, capture_handle::CaptureHandle,
-            capture_status::CaptureStatus,
+            CaptureState,
+            capture_config::CaptureConfig,
+            capture_handle::CaptureHandle,
+            capture_status::{CapturePhase, CaptureStatus},
         },
         flow_matrix::FlowMatrix,
         graph::GraphData,
@@ -22,9 +24,10 @@ use crate::{
     },
 };
 
-/// Démarre une capture live : recharge les labels dans la matrice, attache le
-/// channel d'événements puis lance les threads de capture. Sans effet si une
-/// capture tourne déjà (renvoie le statut courant).
+/// Démarre une capture live : recharge les labels dans la matrice, lance les
+/// threads de capture puis attache le channel d'événements. Refuse
+/// explicitement toute transition concurrente (capture déjà en cours ou en
+/// train de démarrer/s'arrêter).
 #[command(async)]
 pub fn start_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
@@ -43,22 +46,26 @@ pub fn start_capture(
     if state_lock.reap_terminated_capture() {
         info!("Pipeline précédent terminé : handle récolté avant redémarrage");
     }
-    if state_lock.capture.is_some() {
-        println!("Déjà en cours.");
-        return Ok(state_lock.status.clone());
-    }
-    let mut capture = CaptureHandle::new();
-    state_lock.on_event = Some(on_event.clone());
-    capture.start(
+    let session_id = state_lock.begin_start()?;
+    info!("Démarrage de la session de capture {session_id}");
+    let mut capture = CaptureHandle::new(session_id);
+    match capture.start(
         state_lock.config.clone(),
         app,
-        on_event,
+        on_event.clone(),
         state_lock.filter.clone(),
-    )?;
-    state_lock.capture = Some(capture);
-    state_lock.status.toggle();
-
-    Ok(state_lock.status.clone())
+    ) {
+        Ok(()) => {
+            // Le channel n'est mémorisé qu'après un démarrage réussi : un
+            // échec ne laisse pas de canal fantôme attaché à l'état.
+            state_lock.complete_start(capture, on_event);
+            Ok(state_lock.status())
+        }
+        Err(e) => {
+            state_lock.abort_start();
+            Err(e.into())
+        }
+    }
 }
 
 /// Arrête la capture en cours (threads stoppés, channel détaché) et renvoie
@@ -73,23 +80,25 @@ pub fn stop_capture(
 }
 
 /// Cœur de [`stop_capture`], séparé pour être testable sans `State` Tauri.
+/// Idempotent : sans capture en cours, renvoie simplement le statut.
 fn stop_capture_inner(
     state: &mut CaptureState,
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
     if let Some(capture) = state.capture.take() {
+        state.phase = CapturePhase::Stopping;
         let stop_result = capture.stop(on_event);
         // `stop()` a joint les threads quoi qu'il arrive : le statut est
         // normalisé AVANT de propager une éventuelle erreur d'envoi de
         // `Stopped`, sinon le backend resterait marqué « en cours » sans
         // capture et le démarrage suivant serait marqué arrêté.
-        state.status.is_running = false;
+        state.phase = CapturePhase::Idle;
         state.on_event = None;
         stop_result?;
     } else {
-        println!("Aucun thread à arrêter.");
+        info!("Aucun thread à arrêter.");
     }
-    Ok(state.status.clone())
+    Ok(state.status())
 }
 
 /// Valide puis applique une nouvelle configuration de capture, persistée sur
@@ -163,14 +172,18 @@ mod tests {
     fn stop_normalizes_status_even_when_stopped_event_fails() {
         let mut state = CaptureState::new();
         state.capture = Some(CaptureHandle::terminated_for_tests());
-        state.status.is_running = true;
+        state.phase = CapturePhase::Running;
         state.on_event = Some(Channel::new(|_| Ok(())));
         let dead_channel = Channel::new(|_| Err(std::io::Error::other("canal mort").into()));
 
         let result = stop_capture_inner(&mut state, dead_channel);
 
         assert!(result.is_err(), "l'erreur d'envoi de Stopped est propagée");
-        assert!(!state.status.is_running, "statut normalisé malgré l'erreur");
+        assert_eq!(
+            state.phase,
+            CapturePhase::Idle,
+            "statut normalisé malgré l'erreur"
+        );
         assert!(state.capture.is_none(), "le handle est libéré");
         assert!(state.on_event.is_none(), "le channel mort est détaché");
     }
@@ -179,11 +192,12 @@ mod tests {
     fn stop_succeeds_and_normalizes_with_a_live_channel() {
         let mut state = CaptureState::new();
         state.capture = Some(CaptureHandle::terminated_for_tests());
-        state.status.is_running = true;
+        state.phase = CapturePhase::Running;
 
         let status = stop_capture_inner(&mut state, Channel::new(|_| Ok(()))).unwrap();
 
         assert!(!status.is_running);
+        assert_eq!(status.phase, CapturePhase::Idle);
         assert!(state.capture.is_none());
     }
 
