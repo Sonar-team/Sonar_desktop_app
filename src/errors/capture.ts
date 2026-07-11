@@ -133,6 +133,14 @@ function handleImportError(importError: ImportErrorKind): string {
   }
 }
 
+/// Formate une liste d'erreurs en la plafonnant : au-delà de `max` entrées
+/// (mauvais fichier, encodage…), le détail complet noie le diagnostic.
+function capList<T>(items: T[], format: (item: T) => string, max = 8): string {
+  const shown = items.slice(0, max).map(format).join('\n');
+  const rest = items.length - max;
+  return rest > 0 ? `${shown}\n… et ${rest} autre${rest > 1 ? 's' : ''}` : shown;
+}
+
 function handleLabelerror(labelError: LabelErrorKind): string {
   if (
     !labelError || typeof labelError !== "object" || !("kind" in labelError)
@@ -141,14 +149,30 @@ function handleLabelerror(labelError: LabelErrorKind): string {
   }
 
   switch(labelError.kind) {
-    case "invalidMacIpFormat":
+    case "invalidMacIpFormat": {
       const [invalidMac, invalidIp] = labelError.message;
-      return `Formats invalides : MAC - ${invalidMac.map(([line, mac, row]) => `ligne ${line}: ${mac} | ${row}`).join('\n')}, IP - ${invalidIp.map(([line, ip, row]) => `ligne ${line}: ${ip} | ${row}`).join('\n')}`;
-    case "labelLinesConflicts":
+      const parts = [];
+      if (invalidMac.length > 0) {
+        parts.push(`MAC invalides (${invalidMac.length}) :\n${capList(invalidMac, ([line, mac, row]) => `ligne ${line}: ${mac} | ${row}`)}`);
+      }
+      if (invalidIp.length > 0) {
+        parts.push(`IP invalides (${invalidIp.length}) :\n${capList(invalidIp, ([line, ip, row]) => `ligne ${line}: ${ip} | ${row}`)}`);
+      }
+      return `Formats invalides.\n${parts.join('\n\n')}`;
+    }
+    case "labelLinesConflicts": {
       const [sameIpDiffMac, sameIpDiffLabel] = labelError.message;
-      return `Conflits dans les lignes de labels : même IP, MAC différent - ${sameIpDiffMac.map(([lineA, lineB, ip, ref_mac, mac, rowA, rowB]) => `lignes ${lineA}/${lineB} - ${ip} : ${ref_mac} <-> ${mac}\nligne ${lineA}: ${rowA}\nligne ${lineB}: ${rowB}`).join('\n')}, même IP, label différent - ${sameIpDiffLabel.map(([lineA, lineB, ip, ref_label, label, rowA, rowB]) => `lignes ${lineA}/${lineB} - ${ip} : ${ref_label} <-> ${label}\nligne ${lineA}: ${rowA}\nligne ${lineB}: ${rowB}`).join('\n')} \n <Importation impossible>`;
+      const parts = [];
+      if (sameIpDiffMac.length > 0) {
+        parts.push(`même IP, MAC différent (${sameIpDiffMac.length}) :\n${capList(sameIpDiffMac, ([lineA, lineB, ip, ref_mac, mac]) => `lignes ${lineA}/${lineB} - ${ip} : ${ref_mac} <-> ${mac}`)}`);
+      }
+      if (sameIpDiffLabel.length > 0) {
+        parts.push(`même IP, label différent (${sameIpDiffLabel.length}) :\n${capList(sameIpDiffLabel, ([lineA, lineB, ip, ref_label, label]) => `lignes ${lineA}/${lineB} - ${ip} : ${ref_label} <-> ${label}`)}`);
+      }
+      return `Conflits dans les lignes de labels.\n${parts.join('\n\n')}\n<Importation impossible>`;
+    }
     case "invalidRowsFormat":
-      return `Format de ligne invalide. Attendu au moins "mac, ip, label"; les colonnes suivantes sont ajoutées au label. Trouvé ${labelError.message.map(([line, value]) => `ligne ${line}: ${value}`).join('\n')}`
+      return `Format de fichier invalide. Attendu au moins "mac, ip, label" (colonnes suivantes ajoutées au label).\n${capList(labelError.message, ([line, value]) => `ligne ${line}: ${value}`)}`
     case "editRejected":
       return `Édition refusée : ${labelError.message}`;
     default:

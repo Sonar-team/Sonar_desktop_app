@@ -54,30 +54,39 @@
           <div v-show="invalid_mac.length > 0 || invalid_ip.length > 0" class="file-list">
               <ul v-show="invalid_mac.length > 0">
                 <h3 class="text">MAC invalides</h3>
-                <li v-for="([line, mac, row], index) in invalid_mac" :key="index">
+                <li v-for="([line, mac, row], index) in shownInvalidMac" :key="index">
                   <label>
                     <span class="text indented">ligne {{ line }} — MAC: '{{ mac }}'</span>
                     <span class="text indented line-context">ligne complète : '{{ row }}'</span>
                   </label>
                 </li>
+                <li v-if="invalid_mac.length > maxShown" class="text indented truncated">
+                  … et {{ invalid_mac.length - maxShown }} autre{{ invalid_mac.length - maxShown > 1 ? 's' : '' }} (corrigez les premières : souvent la même cause)
+                </li>
               </ul>
               <ul v-show="invalid_ip.length > 0">
                 <h3 class="text">IP invalides</h3>
-                <li v-for="([line, ip, row], index) in invalid_ip" :key="index">
+                <li v-for="([line, ip, row], index) in shownInvalidIp" :key="index">
                   <label>
                     <span class="text indented">ligne {{ line }} — IP: '{{ ip }}'</span>
                     <span class="text indented line-context">ligne complète : '{{ row }}'</span>
                   </label>
+                </li>
+                <li v-if="invalid_ip.length > maxShown" class="text indented truncated">
+                  … et {{ invalid_ip.length - maxShown }} autre{{ invalid_ip.length - maxShown > 1 ? 's' : '' }} (corrigez les premières : souvent la même cause)
                 </li>
               </ul>
           </div>
           <div v-show="invalid_lines.length > 0" class="file-list">
             <ul>
               <h3 class="text">Lignes concernées :</h3>
-              <li v-for="([line, value], index) in invalid_lines" :key="index">
+              <li v-for="([line, value], index) in shownInvalidLines" :key="index">
                 <label>
                   <span class="text indented">ligne {{ line }} : '{{ value }}'</span>
                 </label>
+              </li>
+              <li v-if="invalid_lines.length > maxShown" class="text indented truncated">
+                … et {{ invalid_lines.length - maxShown }} autre{{ invalid_lines.length - maxShown > 1 ? 's' : '' }}
               </li>
             </ul>
           </div>
@@ -133,6 +142,15 @@ export default defineComponent({
     }
   },
 
+  data() {
+    return {
+      // Plafond d'erreurs détaillées par catégorie : au-delà (mauvais
+      // fichier, encodage…), la liste complète noie le diagnostic — le
+      // compteur « … et N autres » suffit.
+      maxShown: 10,
+    };
+  },
+
   computed: {
     totalErrors(): number {
       return this.same_ip_diff_mac.length
@@ -140,7 +158,16 @@ export default defineComponent({
         + this.invalid_mac.length
         + this.invalid_ip.length
         + this.invalid_lines.length;
-    }
+    },
+    shownInvalidMac(): FieldLineValue[] {
+      return this.invalid_mac.slice(0, this.maxShown);
+    },
+    shownInvalidIp(): FieldLineValue[] {
+      return this.invalid_ip.slice(0, this.maxShown);
+    },
+    shownInvalidLines(): LineValue[] {
+      return this.invalid_lines.slice(0, this.maxShown);
+    },
   },
 
   methods: {

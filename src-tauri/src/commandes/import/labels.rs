@@ -198,6 +198,13 @@ fn label_record_to_display(record: &csv::StringRecord) -> String {
     record.iter().collect::<Vec<_>>().join(",")
 }
 
+/// Vrai si la ligne est l'en-tête d'une matrice de flux exportée
+/// (`FlowMatrixRow`) : l'utilisateur s'est trompé de fichier.
+fn is_matrix_export_header(record: &csv::StringRecord) -> bool {
+    let mut fields = record.iter().map(str::trim);
+    fields.next() == Some("mac_source") && fields.next() == Some("mac_destination")
+}
+
 fn read_label_records(
     csv_path: &str,
 ) -> Result<Vec<(usize, csv::StringRecord)>, CaptureStateError> {
@@ -218,6 +225,23 @@ fn read_label_records(
                 let line = label_record_line(&record, fallback_line);
                 if record.iter().all(|field| clean_csv_field(field).is_empty()) {
                     continue;
+                }
+                // Mauvais type de fichier : une matrice de flux exportée
+                // commence par son en-tête `mac_source,mac_destination,…`.
+                // Sans cette détection, chacune de ses lignes devenait une
+                // « erreur MAC/IP » et l'utilisateur recevait des centaines
+                // d'erreurs au lieu d'un diagnostic clair.
+                if index == 0 && is_matrix_export_header(&record) {
+                    return Err(LabelError::InvalidRowsFormat {
+                        invalid_lines: vec![(
+                            line,
+                            "ce fichier est une matrice de flux exportée (colonnes \
+                             mac_source, mac_destination…) : importez-le via « Ouvrir \
+                             un fichier CSV ». Un fichier de labels contient mac, ip, label."
+                                .to_string(),
+                        )],
+                    }
+                    .into());
                 }
                 if record.len() < 3 {
                     invalid_lines.push((line, label_record_to_display(&record)));
@@ -596,6 +620,28 @@ mod tests {
     use super::*;
     use std::fs;
     use std::path::Path;
+
+    /// Une matrice de flux exportée importée comme fichier de labels doit
+    /// produire UNE erreur claire (« mauvais type de fichier »), pas une
+    /// erreur MAC/IP par ligne du fichier.
+    #[test]
+    fn matrix_export_imported_as_labels_gives_one_clear_error() {
+        let dir = TempDir::new("sonar_test_label_wrong_kind");
+        let path = dir.path().join("matrice.csv");
+        fs::write(
+            &path,
+            "mac_source,mac_destination,vlan_id,protocol_data_link,ip_source\n\
+             aa:bb:cc:dd:ee:ff,ff:ff:ff:ff:ff:ff,,ARP,172.24.8.29\n",
+        )
+        .unwrap();
+
+        let err = read_label_rows(path.to_str().unwrap()).unwrap_err();
+        let CaptureStateError::Label(LabelError::InvalidRowsFormat { invalid_lines }) = err else {
+            panic!("erreur InvalidRowsFormat attendue, reçu {err:?}");
+        };
+        assert_eq!(invalid_lines.len(), 1, "une seule erreur, pas une par ligne");
+        assert!(invalid_lines[0].1.contains("matrice de flux"));
+    }
 
     /// La saisie du panneau de gestion suit les mêmes règles que l'import de
     /// fichier : normalisation vers les formes du parser, rejet explicite.
