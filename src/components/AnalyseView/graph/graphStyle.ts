@@ -132,8 +132,10 @@ export function edgeAttributes(e: any) {
     destination_port: e.destination_port ?? null,
     // Tous les ports « service » observés sur l'arête (triés, plafonnés
     // backend) : plusieurs services entre deux équipements ne sont plus
-    // masqués par le premier couple de ports.
+    // masqués par le premier couple de ports. Les ports éphémères ne sont
+    // pas listés : has_dynamic_ports les signale (rendu « … »).
     ports: Array.isArray(e.ports) ? e.ports : [],
+    has_dynamic_ports: e.has_dynamic_ports === true,
     bidir: !!e.bidir,
     count: Number(e.count) || 0,
     total_bytes: totalBytes,

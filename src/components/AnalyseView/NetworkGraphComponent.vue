@@ -221,10 +221,14 @@ export default defineComponent({
       let label = data.protocol ?? ""
       if (this._portLabelsShown) {
         const ports: number[] = Array.isArray(data.ports) ? data.ports : []
-        if (ports.length > 1) {
-          // Plusieurs services sur la même arête : tous affichés, le seul
-          // premier couple de ports était trompeur.
-          label += ` :${ports.join(",")}`
+        const hasDynamic = data.has_dynamic_ports === true
+        if (ports.length > 0) {
+          // Ports « service » de l'arête (les éphémères ne sont pas listés,
+          // le backend les résume par has_dynamic_ports → « … »).
+          label += ` :${ports.join(",")}${hasDynamic ? ",…" : ""}`
+        } else if (hasDynamic) {
+          // Uniquement du trafic sur ports dynamiques : signalé sans liste.
+          label += " :…"
         } else if (data.source_port != null || data.destination_port != null) {
           label += ` ${data.source_port ?? ""}→${data.destination_port ?? ""}`
         }

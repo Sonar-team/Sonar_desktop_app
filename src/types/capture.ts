@@ -80,6 +80,8 @@ export type Edge = {
   destination_port: number | null;
   /** Ports « service » observés sur l'arête (triés, plafonnés backend). */
   ports?: number[];
+  /** Trafic sur ports exclusivement dynamiques/éphémères (rendu « … »). */
+  has_dynamic_ports?: boolean;
 };
 
 export type NodeId = string;
@@ -105,8 +107,10 @@ export interface EdgeData {
   label: string;
   source_port?: string | number | null;
   destination_port?: string | number | null;
-  /** Ports « service » observés sur l'arête (triés, plafonnés backend). */
+  /** Ports « service » observés (triés, plafonnés backend). */
   ports?: number[];
+  /** Trafic sur ports exclusivement dynamiques/éphémères (rendu « … »). */
+  has_dynamic_ports?: boolean;
   bidir?: boolean;
   count?: number;
   total_bytes?: number;

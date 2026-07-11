@@ -153,10 +153,28 @@ impl Node {
     }
 }
 
-/// Plafond de ports « service » retenus par arête : au-delà (scan de ports,
-/// trafic éphémère), la liste n'apporte plus rien à la lecture du graphe et
-/// croîtrait sans borne. La matrice de flux, elle, garde le détail exact.
+/// Plafond de ports « service » retenus par arête : au-delà (scan de ports),
+/// la liste n'apporte plus rien à la lecture du graphe et croîtrait sans
+/// borne. La matrice de flux, elle, garde le détail exact.
 const MAX_EDGE_PORTS: usize = 16;
+
+/// Début de la plage de ports dynamiques/éphémères (IANA 49152–65535) : les
+/// clients y prennent leurs ports source. Un « service » dans cette plage
+/// est presque toujours un éphémère (P2P, RTP, réponse) — le lister rendrait
+/// l'arête illisible sans rien dire du service.
+const DYNAMIC_PORT_START: u16 = 49152;
+
+/// Port « service » d'un paquet : le plus petit des deux ports présents (le
+/// service écoute sur le port bas, le client répond depuis un éphémère
+/// haut). En bidirectionnel, la réponse `443 → 50123` redonne bien 443 au
+/// lieu d'accumuler l'éphémère du client sur l'arête.
+fn service_port(source_port: Option<u16>, destination_port: Option<u16>) -> Option<u16> {
+    match (source_port, destination_port) {
+        (Some(s), Some(d)) => Some(s.min(d)),
+        (Some(p), None) | (None, Some(p)) => Some(p),
+        (None, None) => None,
+    }
+}
 
 #[derive(Serialize, Clone, Debug)]
 pub struct Edge {
@@ -166,11 +184,15 @@ pub struct Edge {
     pub label: String,  // protocole (ex: "DNS", "TCP", "IPv6"...)
     pub source_port: Option<u16>,
     pub destination_port: Option<u16>,
-    // Ports destination de TOUS les paquets agrégés sur cette arête (triés,
-    // plafonnés à MAX_EDGE_PORTS) : une arête {A,B,proto} porte souvent
-    // plusieurs services distincts, que le seul premier couple
-    // source_port/destination_port masquait (#154).
+    // Ports « service » des paquets agrégés sur cette arête (triés, plafonnés
+    // à MAX_EDGE_PORTS) : une arête {A,B,proto} porte souvent plusieurs
+    // services distincts, que le seul premier couple
+    // source_port/destination_port masquait (#154). Les ports de la plage
+    // dynamique (>= 49152) n'y entrent pas : ils lèvent `has_dynamic_ports`.
     pub ports: BTreeSet<u16>,
+    // Vrai si du trafic sur ports exclusivement dynamiques/éphémères a été
+    // observé (P2P, RTP…) : rendu « … » côté front, détail dans la matrice.
+    pub has_dynamic_ports: bool,
     pub bidir: bool,      // true si trafic observé dans les deux sens
     pub count: u64,       // paquets cumulés sur ce flux
     pub total_bytes: u64, // octets cumulés sur ce flux
@@ -192,6 +214,7 @@ impl Edge {
             source_port: None,
             destination_port: None,
             ports: BTreeSet::new(),
+            has_dynamic_ports: false,
             bidir: false,
             count: 0,
             total_bytes: 0,
@@ -213,21 +236,29 @@ impl Edge {
     pub fn with_ports(mut self, source_port: Option<u16>, destination_port: Option<u16>) -> Self {
         self.source_port = source_port;
         self.destination_port = destination_port;
-        if let Some(port) = destination_port {
-            self.ports.insert(port);
-        }
+        self.record_service_port(source_port, destination_port);
         self
     }
 
-    /// Enregistre le port destination d'un paquet agrégé sur cette arête.
-    /// Retourne vrai si la liste des ports a changé (le front doit être
-    /// notifié). Plafonné à [`MAX_EDGE_PORTS`].
-    fn record_destination_port(&mut self, destination_port: Option<u16>) -> bool {
-        match destination_port {
-            Some(port) if self.ports.len() < MAX_EDGE_PORTS || self.ports.contains(&port) => {
-                self.ports.insert(port)
-            }
-            _ => false,
+    /// Enregistre le port « service » d'un paquet agrégé sur cette arête
+    /// (voir [`service_port`]). Retourne vrai si l'affichage doit être
+    /// rafraîchi. Liste plafonnée à [`MAX_EDGE_PORTS`] ; un port de la plage
+    /// dynamique n'est pas listé, il lève `has_dynamic_ports` une fois.
+    fn record_service_port(
+        &mut self,
+        source_port: Option<u16>,
+        destination_port: Option<u16>,
+    ) -> bool {
+        let Some(port) = service_port(source_port, destination_port) else {
+            return false;
+        };
+        if port >= DYNAMIC_PORT_START {
+            return !std::mem::replace(&mut self.has_dynamic_ports, true);
+        }
+        if self.ports.len() < MAX_EDGE_PORTS || self.ports.contains(&port) {
+            self.ports.insert(port)
+        } else {
+            false
         }
     }
 }
@@ -346,10 +377,12 @@ impl GraphData {
                             notify = true;
                         }
 
-                        // Chaque service (port destination) observé s'ajoute
-                        // à l'arête : le premier couple de ports ne masque
-                        // plus les autres services (#154).
-                        if edge.record_destination_port(
+                        // Chaque service observé s'ajoute à l'arête : le
+                        // premier couple de ports ne masque plus les autres
+                        // services (#154), et les ports éphémères ne polluent
+                        // pas la liste (port « service » + plage dynamique).
+                        if edge.record_service_port(
+                            packet.transport.as_ref().and_then(|t| t.source_port),
                             packet.transport.as_ref().and_then(|t| t.destination_port),
                         ) {
                             notify = true;
@@ -672,6 +705,7 @@ mod graph_update_batch_tests {
             source_port: None,
             destination_port: None,
             ports: BTreeSet::new(),
+            has_dynamic_ports: false,
             bidir: false,
             count,
             total_bytes: count * 100,
@@ -794,9 +828,9 @@ mod add_packet_flow_tests {
     }
 
     /// Plusieurs services entre les mêmes équipements : l'arête accumule
-    /// tous les ports destination au lieu de figer le premier couple (#154).
+    /// tous les ports « service » au lieu de figer le premier couple (#154).
     #[test]
-    fn edge_accumulates_all_destination_ports() {
+    fn edge_accumulates_all_service_ports() {
         let mut graph = GraphData::new();
         let src = ("10:00:00:00:00:0a", "192.168.1.10");
         let dst = ("10:00:00:00:00:0b", "192.168.1.20");
@@ -835,6 +869,66 @@ mod add_packet_flow_tests {
                 .any(|u| matches!(u, GraphUpdate::EdgeUpdated(e) if e.ports.len() != 2)),
             "ports inchangés"
         );
+    }
+
+    /// En bidirectionnel, la réponse `443 → éphémère` ne doit pas accumuler
+    /// le port éphémère du client : le port « service » (le plus petit des
+    /// deux) est retenu dans les deux sens.
+    #[test]
+    fn reply_direction_records_service_port_not_ephemeral() {
+        let mut graph = GraphData::new();
+        let a = ("10:00:00:00:00:0a", "192.168.1.10");
+        let b = ("10:00:00:00:00:0b", "192.168.1.20");
+
+        // Requête client -> serveur puis réponse serveur -> client.
+        add(
+            &mut graph,
+            &flow_with_ports(a.0, a.1, b.0, b.1, 50_123, 443),
+        );
+        add(
+            &mut graph,
+            &flow_with_ports(b.0, b.1, a.0, a.1, 443, 50_123),
+        );
+
+        let edge = single_edge(&graph);
+        assert_eq!(
+            edge.ports.iter().copied().collect::<Vec<_>>(),
+            vec![443],
+            "seul le port service est listé, pas l'éphémère du client"
+        );
+        assert!(!edge.has_dynamic_ports, "443 n'est pas un port dynamique");
+        assert!(edge.bidir);
+    }
+
+    /// Deux ports éphémères (P2P, RTP…) : rien n'entre dans la liste, le
+    /// marqueur has_dynamic_ports est levé une seule fois — l'arête reste
+    /// lisible au lieu d'accumuler des ports dynamiques sans signification.
+    #[test]
+    fn purely_dynamic_ports_raise_flag_without_polluting_list() {
+        let mut graph = GraphData::new();
+        let a = ("10:00:00:00:00:0a", "192.168.1.10");
+        let b = ("10:00:00:00:00:0b", "192.168.1.20");
+
+        add(
+            &mut graph,
+            &flow_with_ports(a.0, a.1, b.0, b.1, 50_000, 60_000),
+        );
+        add(
+            &mut graph,
+            &flow_with_ports(a.0, a.1, b.0, b.1, 50_001, 60_001),
+        );
+
+        let edge = single_edge(&graph);
+        assert!(edge.ports.is_empty(), "aucun port dynamique listé");
+        assert!(edge.has_dynamic_ports, "le trafic éphémère est signalé");
+
+        // Un vrai service apparaît ensuite sur la même arête : il est listé.
+        add(
+            &mut graph,
+            &flow_with_ports(a.0, a.1, b.0, b.1, 50_002, 502),
+        );
+        let edge = single_edge(&graph);
+        assert_eq!(edge.ports.iter().copied().collect::<Vec<_>>(), vec![502]);
     }
 
     fn single_edge(graph: &GraphData) -> &Edge {
