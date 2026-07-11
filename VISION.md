@@ -41,6 +41,35 @@ Quatre choix techniques trahissent l'identité réelle du produit :
 - **Philosophie « SONAR ne tire aucune conclusion »** → l'outil **restitue**,
   l'humain **interprète et arbitre**.
 
+### Deux formes, un seul cœur
+
+SONAR se livre sous **deux formes**, portées à terme par le même cœur métier
+(`sonar-flows-core`, workspace [`sonar-rust/`](./sonar-rust/)) :
+
+- **SONAR desktop** (Tauri) — le relevé **interactif** : capture, graphe,
+  labels, arbitrages. Une application Tauri repose sur la WebView et dépend
+  donc **par construction** de la pile graphique de l'OS ; elle vise les
+  postes avec interface.
+- **sonar-cli** — le traitement **batch et serveur** : conversion PCAP →
+  matrice, fusion de matrices, exit codes et stderr scriptables. C'est la
+  forme prévue pour les machines sans interface graphique (Ubuntu Server,
+  sonde, CI).
+
+**Décision (11/07/2026) : il n'y a pas de « mode headless » de l'application
+desktop.** Faire tourner un binaire Tauri sans GUI est un contresens
+technique ; l'usage sans interface passe par `sonar-cli`. Le mode headless
+résiduel du desktop est retiré ([#155](https://github.com/Sonar-team/Sonar_desktop_app/issues/155)),
+et les capacités qui lui manquaient (capture continue, export automatique)
+sont des évolutions de `sonar-cli`, pas du desktop.
+
+À ne pas confondre avec l'**interface en ligne de commande du binaire
+desktop**, qui est conservée et assumée : lancer `sonar` avec des arguments
+(smoke test de démarrage `--sonar-smoke-test`, options de session) sert
+l'**orchestration** — Ansible ou équivalent — et l'automatisation des tests
+de déploiement et d'intégration. La distinction : ces arguments **pilotent le
+lancement** d'une application qui garde sa GUI (ou vérifient qu'elle sait
+démarrer), ils ne prétendent pas la faire fonctionner sans.
+
 ---
 
 ## 🏛️ Les cinq piliers
@@ -151,6 +180,8 @@ réseau observé. Argument décisif en OT.
   **observable** (pas de déchiffrement TLS).
 - Un outil de supervision temps réel permanent — l'usage cible est le
   **relevé / l'audit**, pas le monitoring 24/7.
+- Un service headless dérivé du desktop — une app Tauri dépend de la pile
+  graphique de l'OS ; **sans GUI, c'est `sonar-cli`**.
 
 ---
 

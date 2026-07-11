@@ -71,3 +71,28 @@ typecheck, tests mockIPC).
 
 - [ ] [#143](https://github.com/Sonar-team/Sonar_desktop_app/issues/143) Capacités Tauri : permissions mortes/dupliquées, bloc fs.scope ignoré
 - [ ] [#146](https://github.com/Sonar-team/Sonar_desktop_app/issues/146) Stratégie E2E : capture réelle, installateurs Windows/macOS
+
+# Reste à faire — audit externe du 11/07/2026 (analyses/11072026_gpt-5.6-sol ultra.md)
+
+L'audit recoupe largement #135–#146 (compléments postés en commentaires sur
+#135, #138 et #142) ; la dérive `while let Ok` de sonar-flows-core qu'il
+signalait est corrigée. Points nouveaux tracés :
+
+## Fiabilité en exploitation
+
+- [ ] [#147](https://github.com/Sonar-team/Sonar_desktop_app/issues/147) Mémoire non bornée en capture longue (matrice/graphe sans éviction, rétention logs illimitée)
+- [ ] [#149](https://github.com/Sonar-team/Sonar_desktop_app/issues/149) Machine d'état de capture et identifiant de session IPC
+- [ ] [#155](https://github.com/Sonar-team/Sonar_desktop_app/issues/155) Retirer le mode headless du desktop — sans GUI, c'est sonar-cli (décision VISION.md)
+- [ ] [#156](https://github.com/Sonar-team/Sonar_desktop_app/issues/156) Arguments de session au lancement du desktop (interface, filtre, autostart, export) pour l'orchestration
+
+## Fidélité des données
+
+- [ ] [#148](https://github.com/Sonar-team/Sonar_desktop_app/issues/148) Exports/imports CSV : déterminisme, écriture atomique, injection de formule, encap_id instable
+- [ ] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) Vérifier le DLT libpcap et neutraliser l'effet de capture_timing (packet_parser, correctif amont)
+- [ ] [#153](https://github.com/Sonar-team/Sonar_desktop_app/issues/153) Import de labels : chemin inexistant vidant le store, header heuristique, normalisation MAC/IP
+- [ ] [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) Graphe/stats : ports d'arête tronqués, processed mal libellé, stats effacées à l'arrêt
+
+## Tests et conformité
+
+- [ ] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) Tests PCAP réels silencieusement sautés quand LOC42.pcapng est absent
+- [ ] [#152](https://github.com/Sonar-team/Sonar_desktop_app/issues/152) Licence : texte AGPL « or later » vs manifests AGPL-3.0-only (décision)
