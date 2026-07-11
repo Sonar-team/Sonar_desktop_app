@@ -13,6 +13,10 @@ body_file="${2:-release-body.md}"
 
 test -s "$body_file"
 
+# Release atomique (#136) : créée en draft, rendue publique par le job
+# finalize-release seulement quand builds, smoke tests, hashes et
+# attestations ont réussi sur toutes les plateformes. Un tag dont un build
+# échoue ne laisse donc aucune release publique visible.
 if gh release view "$release_tag" >/dev/null 2>&1; then
   gh release edit "$release_tag" \
     --title "Sonar ${release_tag}" \
@@ -21,5 +25,6 @@ else
   gh release create "$release_tag" \
     --title "Sonar ${release_tag}" \
     --notes-file "$body_file" \
+    --draft \
     --verify-tag
 fi

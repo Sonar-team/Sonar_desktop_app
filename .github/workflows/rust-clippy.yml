@@ -1,11 +1,10 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-# rust-clippy is a tool that runs a bunch of lints to catch common
-# mistakes in your Rust code and help improve your Rust code.
-# More details at https://github.com/rust-lang/rust-clippy
-# and https://rust-lang.github.io/rust-clippy/
+# Analyse clippy publiée dans l'onglet Sécurité (SARIF). Les gates bloquants
+# (clippy -D warnings) vivent dans rust-ci.yml ; ce workflow alimente le
+# tableau de bord code-scanning pour les deux workspaces.
+#
+# Réparé pour #135 : clippy tournait à la racine du dépôt (aucun Cargo.toml,
+# résultat vide) sans dépendances système, et continue-on-error masquait
+# l'échec. Il couvre désormais src-tauri ET sonar-rust.
 
 name: rust-clippy analyze
 
@@ -41,18 +40,49 @@ jobs:
           toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
           components: clippy
 
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            pkg-config \
+            libglib2.0-dev \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libpcap-dev
+
       - name: Install required cargo
         run: cargo install clippy-sarif sarif-fmt
 
-      - name: Run rust-clippy
-        run:
-          cargo clippy
-          --all-features
-          --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
-        continue-on-error: true
+      - name: Run rust-clippy on src-tauri
+        run: |
+          cargo clippy \
+            --all-features \
+            --all-targets \
+            --message-format=json \
+            | clippy-sarif | tee rust-clippy-src-tauri.sarif | sarif-fmt
+        working-directory: ./src-tauri
 
-      - name: Upload analysis results to GitHub
+      - name: Run rust-clippy on sonar-rust
+        run: |
+          cargo clippy \
+            --all-features \
+            --all-targets \
+            --message-format=json \
+            | clippy-sarif | tee rust-clippy-sonar-rust.sarif | sarif-fmt
+        working-directory: ./sonar-rust
+
+      - name: Upload src-tauri analysis results to GitHub
         uses: github/codeql-action/upload-sarif@78ed0c7291d93e40c51b085850dc669a4c3ab73b
         with:
-          sarif_file: rust-clippy-results.sarif
+          sarif_file: src-tauri/rust-clippy-src-tauri.sarif
+          category: clippy-src-tauri
+          wait-for-processing: true
+
+      - name: Upload sonar-rust analysis results to GitHub
+        uses: github/codeql-action/upload-sarif@78ed0c7291d93e40c51b085850dc669a4c3ab73b
+        with:
+          sarif_file: sonar-rust/rust-clippy-sonar-rust.sarif
+          category: clippy-sonar-rust
           wait-for-processing: true

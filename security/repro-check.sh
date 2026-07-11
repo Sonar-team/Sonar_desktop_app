@@ -7,6 +7,13 @@ TAURI_BUILD_CMD="${TAURI_BUILD_CMD:-deno task tauri build --ci --no-sign --no-bu
 BIN_PATH="${BIN_PATH:-src-tauri/target/release/$APP_NAME}"
 WORKDIR="${WORKDIR:-/tmp/repro-check-${APP_NAME}}"
 FIXED_EPOCH="${FIXED_EPOCH:-1700000000}"
+# ISOLATED=1 : chaque build part d'un checkout vierge (clone local du HEAD)
+# avec son propre target/ et ses propres node_modules — la reproductibilité
+# est démontrée sur des builds réellement isolés, pas sur une recompilation
+# incrémentale dans le même dossier (#136). Le cache de téléchargement cargo
+# (registre, adressé par contenu) reste partagé : il ne masque aucune
+# non-reproductibilité.
+ISOLATED="${ISOLATED:-0}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -36,27 +43,43 @@ run_build() {
   local mode="$1"
   local run="$2"
 
-  log "Build mode=${mode} run=${run}"
+  log "Build mode=${mode} run=${run} isolated=${ISOLATED}"
 
-  clean_outputs
-
-  if [[ "$mode" == "with-flags" ]]; then
-    SOURCE_DATE_EPOCH="$FIXED_EPOCH" \
-      deno run -A ./security/repro-env.ts run bash -lc "$TAURI_BUILD_CMD"
+  local build_root="$PROJECT_ROOT"
+  if [[ "$ISOLATED" == "1" ]]; then
+    # Checkout vierge par run : ni target/, ni dist/, ni node_modules
+    # partagés entre les deux builds comparés.
+    build_root="${WORKDIR}/checkout-${mode}-run${run}"
+    rm -rf "$build_root"
+    git clone --quiet --local --no-hardlinks "$PROJECT_ROOT" "$build_root"
+    (cd "$build_root" && deno install --frozen)
   else
-    bash -lc "$TAURI_BUILD_CMD"
+    clean_outputs
   fi
 
-  if [[ ! -f "$BIN_PATH" ]]; then
-    err "Binaire introuvable : $BIN_PATH"
+  if [[ "$mode" == "with-flags" ]]; then
+    (cd "$build_root" && SOURCE_DATE_EPOCH="$FIXED_EPOCH" \
+      deno run -A ./security/repro-env.ts run bash -lc "$TAURI_BUILD_CMD")
+  else
+    (cd "$build_root" && bash -lc "$TAURI_BUILD_CMD")
+  fi
+
+  if [[ ! -f "$build_root/$BIN_PATH" ]]; then
+    err "Binaire introuvable : $build_root/$BIN_PATH"
     exit 1
   fi
 
   local outdir="${WORKDIR}/${mode}/run${run}"
   mkdir -p "$outdir"
 
-  cp "$BIN_PATH" "${outdir}/${APP_NAME}"
+  cp "$build_root/$BIN_PATH" "${outdir}/${APP_NAME}"
   sha256sum "${outdir}/${APP_NAME}" | tee "${outdir}/sha256-bin.txt"
+
+  # Le checkout isolé est volumineux (target/) : nettoyé une fois le
+  # binaire archivé.
+  if [[ "$ISOLATED" == "1" ]]; then
+    rm -rf "$build_root"
+  fi
 }
 
 compare_pair() {

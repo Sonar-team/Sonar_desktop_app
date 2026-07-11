@@ -6,7 +6,10 @@ target_dir="${2:-src-tauri/target}"
 output_dir="${3:-release-artifacts}"
 
 case "$platform" in
-  macos-14) artifact_name="sonar-macos-aarch64" ;;
+  # Le runner macos-14 est arm64 mais le build cible MACOS_TARGET
+  # (x86_64-apple-darwin, cf. config/build-versions.env) : le nom de
+  # l'artefact suit la cible réelle, pas l'architecture du runner (#135).
+  macos-14) artifact_name="sonar-macos-x86_64" ;;
   ubuntu-22.04) artifact_name="sonar-linux-x86_64" ;;
   windows-2022) artifact_name="sonar-windows-x86_64.exe" ;;
   *)

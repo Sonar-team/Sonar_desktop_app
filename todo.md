@@ -50,8 +50,8 @@ typecheck, tests mockIPC).
 
 ## Sprint proposé : fiabiliser CI et release (project_management/sprint_ci_release_fiabilisation.md)
 
-- [ ] [#135](https://github.com/Sonar-team/Sonar_desktop_app/issues/135) CI : workflows cassés et gates manquants (clippy, sonar-rust, typecheck, tests front, fmt, artefact macOS)
-- [ ] [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136) Release atomique et reproductibilité démontrable
+- [x] [#135](https://github.com/Sonar-team/Sonar_desktop_app/issues/135) CI : workflows cassés et gates manquants (clippy, sonar-rust, typecheck, tests front, fmt, artefact macOS)
+- [x] [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136) Release atomique et reproductibilité démontrable
 - [x] [#137](https://github.com/Sonar-team/Sonar_desktop_app/issues/137) SBOM frontend invalide (deno.lock non catalogué par Syft)
 - [ ] [#138](https://github.com/Sonar-team/Sonar_desktop_app/issues/138) Licence Npcap avant release Windows publique (décision, bloquant)
 

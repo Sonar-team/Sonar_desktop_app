@@ -43,6 +43,9 @@ jobs:
         shell: bash
         env:
           TAURI_BUILD_CMD: "deno task tauri build --ci --no-sign --no-bundle"
+          # Builds réellement isolés (checkout, target/, node_modules
+          # distincts par run), cf. security/repro-check.sh (#136).
+          ISOLATED: "1"
         run: ./security/repro-check.sh
 
   create-release:
@@ -296,3 +299,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: ./script/ci/update-release-body.sh "${GITHUB_REF_NAME}"
+
+  # Publication atomique (#136) : la release, créée en draft, ne devient
+  # publique que si TOUTES les plateformes ont construit, passé le smoke
+  # test, uploadé bundles, hashes, attestations et signatures. Un échec en
+  # amont laisse un draft invisible, jamais une release publique partielle.
+  finalize-release:
+    name: publish the release once complete
+    needs: [update-release-body]
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Publish release (draft -> public)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${GITHUB_REF_NAME}" --draft=false --latest

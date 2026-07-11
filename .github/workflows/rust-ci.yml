@@ -7,6 +7,7 @@ on:
     branches: [main]
 
 jobs:
+  # Gates src-tauri : fmt, tests, clippy -D warnings, audit, deny, udeps.
   rust_checks:
     runs-on: ubuntu-22.04
     env:
@@ -62,7 +63,7 @@ jobs:
         working-directory: ./src-tauri
 
       - name: Run cargo clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
         working-directory: ./src-tauri
 
       - name: Check licenses and configurations with cargo deny
@@ -79,3 +80,63 @@ jobs:
       - name: Check unused dependencies with cargo udeps
         run: cargo +nightly udeps --all-targets --locked
         working-directory: ./src-tauri
+
+  # Gates du workspace sonar-rust (sonar-flows-core + sonar-flows-cli),
+  # source unique du domaine consommée par src-tauri (#135).
+  sonar_rust_checks:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+          components: rustfmt, clippy
+
+      - name: Install libpcap (feature pcap de sonar-flows-core)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev
+
+      - name: Check formatting with cargo fmt
+        run: cargo fmt -- --check
+        working-directory: ./sonar-rust
+
+      - name: Run cargo clippy
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: ./sonar-rust
+
+      - name: Run tests
+        run: cargo test --verbose
+        working-directory: ./sonar-rust
+
+  # Gates frontend : typecheck vue-tsc et tests Deno (#135).
+  frontend_checks:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: setup deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: Install frontend dependencies
+        run: deno install --frozen
+
+      - name: Typecheck (vue-tsc)
+        run: deno task typecheck
+
+      - name: Run frontend tests
+        run: deno task test
