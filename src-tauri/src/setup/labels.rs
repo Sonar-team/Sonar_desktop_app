@@ -8,8 +8,45 @@ use tauri::{AppHandle, Manager, path::BaseDirectory};
 
 use crate::{
     errors::CaptureStateError,
-    state::{flow_matrix::FlowMatrix, labels_list::PcInfoLabel},
+    state::{
+        flow_matrix::FlowMatrix,
+        graph::{GraphData, GraphUpdate},
+        labels_list::{LabelStore, PcInfoLabel},
+    },
 };
+
+/// Reconstruit le miroir de labels de la matrice depuis les sources de
+/// vérité : labels « pc sonar » d'abord, lignes du [`LabelStore`] ensuite
+/// (l'utilisateur gagne à clé égale). Le miroir est entièrement remplacé :
+/// un label supprimé du store disparaît de la matrice (#157).
+pub fn resync_labels_into_matrix(
+    pcinfo: &PcInfoLabel,
+    store: &LabelStore,
+    matrix: &mut FlowMatrix,
+) {
+    matrix.label.clear();
+    for line in pcinfo.get_label() {
+        if let Some((mac, ip, label)) = parse_label_row(line) {
+            matrix.add_label(mac, ip, label);
+        }
+    }
+    for (mac, ip, label) in store.get() {
+        matrix.add_label(mac.clone(), ip.clone(), label.clone());
+    }
+}
+
+/// Resynchronisation complète après une mutation de labels : miroir de la
+/// matrice puis rafraîchissement des nœuds du graphe. Retourne les updates
+/// graphe à pousser au frontend (channel live et/ou réponse de commande).
+pub fn resync_labels(
+    pcinfo: &PcInfoLabel,
+    store: &LabelStore,
+    matrix: &mut FlowMatrix,
+    graph: &mut GraphData,
+) -> Vec<GraphUpdate> {
+    resync_labels_into_matrix(pcinfo, store, matrix);
+    graph.refresh_labels(|mac, ip| matrix.get_label(mac, ip))
+}
 
 /// Lit le fichier `resources/labels.csv` embarqué (vérification de présence
 /// au démarrage ; le contenu est affiché dans la console).

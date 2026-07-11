@@ -20,7 +20,10 @@ use crate::{
     events::CaptureEvent,
     setup::labels::{clean_csv_field, parse_label_fields},
     state::{
-        capture::CaptureState, flow_matrix::FlowMatrix, graph::GraphData, labels_list::LabelStore,
+        capture::CaptureState,
+        flow_matrix::FlowMatrix,
+        graph::GraphData,
+        labels_list::{LabelStore, PcInfoLabel},
     },
 };
 
@@ -156,17 +159,25 @@ pub fn get_label_rows(
     Ok(label_store.get().clone())
 }
 
-/// Vide le store de labels (la table « contenu importé » du panneau).
-///
-/// Sémantique **assumée** : ne retire pas les labels déjà appliqués à la
-/// matrice ou au graphe — même logique de fusion que [`import_label_file`].
+/// Vide le store de labels. Le store étant la source de vérité unique
+/// (#157), la matrice et le graphe sont resynchronisés : tous les
+/// équipements sont désétiquetés (seuls les labels « pc sonar » subsistent).
 #[tauri::command(async)]
 pub fn clear_label_store(
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
-) -> Result<(), CaptureStateError> {
-    let mut labels = label_store.lock()?;
-    labels.clear();
-    Ok(())
+    pcinfo: State<'_, Arc<Mutex<PcInfoLabel>>>,
+    matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
+    graph: State<'_, Arc<Mutex<GraphData>>>,
+    capture_state: State<'_, Arc<Mutex<CaptureState>>>,
+) -> Result<Vec<crate::state::graph::GraphUpdate>, CaptureStateError> {
+    label_store.lock()?.clear();
+    crate::commandes::flow_matrix::resync_and_notify(
+        &matrix,
+        &graph,
+        &label_store,
+        &pcinfo,
+        &capture_state,
+    )
 }
 
 fn label_record_line(record: &csv::StringRecord, fallback: usize) -> usize {
@@ -353,6 +364,48 @@ fn is_ip_address(value: &str) -> bool {
     value.parse::<IpAddr>().is_ok()
 }
 
+/// Normalise et valide une clé de label saisie dans l'UI de gestion (#157) :
+/// MAC en minuscules, IP canonique (IPv6 compressée) — mêmes formes que le
+/// parser de paquets et que l'import de fichier (#153). Un champ vide est
+/// permis (label partiel), pas les deux. Erreurs au même format que l'import
+/// (rendu identique côté front).
+pub fn normalize_label_key(mac: &str, ip: &str) -> Result<(String, String), CaptureStateError> {
+    let mac = clean_csv_field(mac).to_ascii_lowercase();
+    let ip_raw = clean_csv_field(ip);
+    let raw = format!("{mac},{ip_raw}");
+
+    let mut invalid_mac = Vec::new();
+    let mut invalid_ip = Vec::new();
+    if !mac.is_empty() && !is_mac_address(&mac) {
+        invalid_mac.push((1, mac.clone(), raw.clone()));
+    }
+    let ip = if ip_raw.is_empty() {
+        String::new()
+    } else {
+        match ip_raw.parse::<IpAddr>() {
+            Ok(addr) => addr.to_string(),
+            Err(_) => {
+                invalid_ip.push((1, ip_raw.to_string(), raw.clone()));
+                ip_raw.to_string()
+            }
+        }
+    };
+    if !invalid_mac.is_empty() || !invalid_ip.is_empty() {
+        return Err(LabelError::InvalidMacIpFormat {
+            invalid_mac,
+            invalid_ip,
+        }
+        .into());
+    }
+    if mac.is_empty() && ip.is_empty() {
+        return Err(LabelError::InvalidRowsFormat {
+            invalid_lines: vec![(1, "MAC et IP tous deux vides".to_string())],
+        }
+        .into());
+    }
+    Ok((mac, ip))
+}
+
 fn is_mac_address(value: &str) -> bool {
     let parts: Vec<&str> = value.split(':').collect();
     parts.len() == 6
@@ -371,15 +424,17 @@ fn is_header_row(row: &LabelRow) -> bool {
 
 /// Importe un fichier de labels CSV.
 ///
-/// Sémantique **assumée de fusion** côté matrice/graphe : le store est
-/// remplacé par le contenu du fichier, mais les labels précédemment appliqués
-/// à la matrice ou aux nœuds du graphe survivent tant qu'une nouvelle valeur
-/// ne les écrase pas (clé `(mac, ip)` identique). Un import ne « désétiquette »
-/// donc jamais un équipement. Pour repartir de zéro : reset de la capture.
+/// Le store est la source de vérité unique (#157) : il est remplacé par le
+/// contenu du fichier puis matrice et graphe sont resynchronisés — un label
+/// absent du fichier disparaît (l'ancienne sémantique « un import ne
+/// désétiquette jamais » est abandonnée, la table du panneau EST l'état des
+/// labels). Les labels « pc sonar » générés au démarrage subsistent.
+#[allow(clippy::too_many_arguments)]
 #[tauri::command(async)]
 pub fn import_label_file(
     incoming_file_path: String,
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
+    pcinfo: State<'_, Arc<Mutex<PcInfoLabel>>>,
     state_label: State<'_, Arc<Mutex<FlowMatrix>>>,
     graph: State<'_, Arc<Mutex<GraphData>>>,
     capture_state: State<'_, Arc<Mutex<CaptureState>>>,
@@ -414,15 +469,22 @@ pub fn import_label_file(
     };
 
     let applied = {
+        // Resynchronisation complète (#157) : le store est LA source de
+        // vérité, le miroir de la matrice est remplacé — un label absent du
+        // fichier importé disparaît (fin de « un import ne désétiquette
+        // jamais »). Les nœuds du graphe sont rafraîchis et notifiés un par
+        // un : pas de snapshot complet, la disposition UI est préservée.
         let mut state_label = state_label.lock()?;
-        labels_to_matrix(label_store, &mut state_label)?;
-
-        // Réapplique les labels sur les nœuds du graphe (même résolution que la
-        // capture) et notifie le front nœud par nœud : pas de snapshot complet,
-        // pour préserver la disposition du graphe côté UI.
         let updates = {
             let mut graph_guard = graph.lock()?;
-            graph_guard.refresh_labels(|mac, ip| state_label.get_label(mac, ip))
+            let store_guard = label_store.lock()?;
+            let pcinfo_guard = pcinfo.lock()?;
+            crate::setup::labels::resync_labels(
+                &pcinfo_guard,
+                &store_guard,
+                &mut state_label,
+                &mut graph_guard,
+            )
         };
 
         info!(
@@ -534,6 +596,25 @@ mod tests {
     use super::*;
     use std::fs;
     use std::path::Path;
+
+    /// La saisie du panneau de gestion suit les mêmes règles que l'import de
+    /// fichier : normalisation vers les formes du parser, rejet explicite.
+    #[test]
+    fn normalize_label_key_normalizes_and_rejects() {
+        // MAC en minuscules, IPv6 compressée.
+        let (mac, ip) = normalize_label_key("AA:BB:CC:DD:EE:FF", "2001:0db8:0::0001").unwrap();
+        assert_eq!(mac, "aa:bb:cc:dd:ee:ff");
+        assert_eq!(ip, "2001:db8::1");
+
+        // Champ vide autorisé (label partiel), pas les deux.
+        let (mac, ip) = normalize_label_key("", "192.168.1.10").unwrap();
+        assert_eq!((mac.as_str(), ip.as_str()), ("", "192.168.1.10"));
+        assert!(normalize_label_key("", "").is_err());
+
+        // Valeurs invalides rejetées.
+        assert!(normalize_label_key("pas-une-mac", "192.168.1.10").is_err());
+        assert!(normalize_label_key("aa:bb:cc:dd:ee:ff", "999.1.1.1").is_err());
+    }
 
     #[test]
     fn valid_csv_format_returns_ok() {

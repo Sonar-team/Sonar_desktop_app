@@ -32,6 +32,10 @@ pub enum LabelError {
         same_ip_diff_mac: Vec<LabelConflict>,
         same_ip_diff_label: Vec<LabelConflict>,
     },
+    /// Édition refusée par le store (ligne introuvable, collision de clé) —
+    /// panneau de gestion des labels (#157).
+    #[error("édition de label refusée : {0}")]
+    EditRejected(String),
 }
 
 /// Représentation sérialisable de [`LabelError`] (forme `{ kind, message }`).
@@ -42,4 +46,5 @@ pub enum LabelErrorKind {
     InvalidMacIpFormat(Vec<LabelInvalidField>, Vec<LabelInvalidField>),
     InvalidRowsFormat(Vec<LabelInvalidRow>),
     LabelLinesConflicts(Vec<LabelConflict>, Vec<LabelConflict>),
+    EditRejected(String),
 }

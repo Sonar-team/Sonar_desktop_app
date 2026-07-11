@@ -208,7 +208,26 @@ pub fn import_matrix_files(
     // (matrice -> graph -> label_store) pour éviter un interblocage ABBA.
     let mut matrice_guard = matrice.lock()?;
     let mut graph_guard = graph.lock()?;
-    let label_store_guard = label_store.lock()?;
+    let mut label_store_guard = label_store.lock()?;
+
+    // Les labels portés par les fichiers entrent dans le store — source de
+    // vérité unique (#157), fichier prioritaire à clé égale : ils survivent
+    // aux resynchronisations déclenchées par les mutations ultérieures.
+    for row in &rows {
+        for (mac, ip, label) in [
+            (&row.mac_source, &row.ip_source, &row.label_source),
+            (
+                &row.mac_destination,
+                &row.ip_destination,
+                &row.label_destination,
+            ),
+        ] {
+            if let Some(label) = label.as_ref().filter(|l| !l.is_empty()) {
+                label_store_guard.set(mac, ip, &unescape_formula_cell(label));
+            }
+        }
+    }
+
     rebuild_matrix_and_graph_from_rows(
         &rows,
         &label_store_guard,

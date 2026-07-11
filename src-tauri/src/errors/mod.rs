@@ -135,6 +135,9 @@ impl Serialize for CaptureStateError {
                     LabelError::InvalidRowsFormat { invalid_lines } => {
                         LabelErrorKind::InvalidRowsFormat(invalid_lines.clone())
                     }
+                    LabelError::EditRejected(reason) => {
+                        LabelErrorKind::EditRejected(reason.clone())
+                    }
                 };
                 CaptureStateErrorKind::Label(kind)
             }

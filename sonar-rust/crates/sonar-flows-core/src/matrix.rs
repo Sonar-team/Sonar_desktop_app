@@ -450,11 +450,17 @@ impl FlowMatrix {
     /// provoquaient de faux conflits au réimport. Les labels stockés qui ne
     /// correspondent à aucun endpoint courant sont conservés (champs
     /// placeholder normalisés à vide).
+    ///
+    /// Les endpoints eux-mêmes sont exposés par [`Self::observed_endpoints`]
+    /// (statut « observé/dormant » d'un label dans l'UI de gestion).
     pub fn export_labels(&self) -> Vec<(String, String, String)> {
-        use std::collections::{BTreeSet, HashSet};
+        self.export_labels_inner()
+    }
 
-        // Endpoints réels : MAC unicast + IP non-placeholder observés dans la matrice.
-        let mut endpoints: BTreeSet<(String, String)> = BTreeSet::new();
+    /// Endpoints réels observés dans la matrice : couples (MAC unicast,
+    /// IP non-placeholder), triés et dédupliqués.
+    pub fn observed_endpoints(&self) -> std::collections::BTreeSet<(String, String)> {
+        let mut endpoints = std::collections::BTreeSet::new();
         for flow in self.matrix.keys() {
             let src_ip = flow
                 .internet
@@ -482,6 +488,13 @@ impl FlowMatrix {
                 }
             }
         }
+        endpoints
+    }
+
+    fn export_labels_inner(&self) -> Vec<(String, String, String)> {
+        use std::collections::{BTreeSet, HashSet};
+
+        let endpoints = self.observed_endpoints();
 
         // BTreeSet : déduplication + sortie déterministe.
         let mut rows: BTreeSet<(String, String, String)> = BTreeSet::new();

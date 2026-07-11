@@ -23,7 +23,10 @@ use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 use crate::{
     commandes::{
         export::{csv::export_csv, labels::export_label_file, logs::export_logs},
-        flow_matrix::{add_label, get_label_list, get_matrix_labels},
+        flow_matrix::{
+            add_label, delete_label, get_label_list, get_labels_with_status, get_matrix_labels,
+            update_label,
+        },
         import::{
             LabelConflictStore, clear_label_store, convert_from_pcap_list, get_label_conflicts,
             get_label_rows, import_label_file, import_matrix_file, import_matrix_files,
@@ -183,6 +186,9 @@ pub fn run() -> Result<(), tauri::Error> {
             export_logs,
             convert_from_pcap_list,
             add_label,
+            update_label,
+            delete_label,
+            get_labels_with_status,
             get_label_list,
             get_matrix_labels,
             set_filter,
