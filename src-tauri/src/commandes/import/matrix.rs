@@ -11,7 +11,7 @@ use crate::{
     events::CaptureEvent,
     state::{
         capture::CaptureState,
-        flow_matrix::{FlowMatrix, FlowMatrixRow, parse_origin_list},
+        flow_matrix::{FlowMatrix, FlowMatrixRow, parse_origin_list, unescape_formula_cell},
         graph::GraphData,
         labels_list::LabelStore,
     },
@@ -38,6 +38,10 @@ pub(super) fn read_matrix_rows(csv_path: &str) -> Result<Vec<FlowMatrixRow>, Cap
     for (i, result) in rdr.deserialize::<FlowMatrixRow>().enumerate() {
         let row =
             result.map_err(|e| std::io::Error::other(format!("Ligne {} invalide: {e}", i + 2)))?;
+        // Validation stricte (#148) : une IP ou une date illisible est
+        // rejetée avec son numéro de ligne, pas dégradée silencieusement.
+        row.validate()
+            .map_err(|e| std::io::Error::other(format!("Ligne {} invalide: {e}", i + 2)))?;
         rows.push(row);
     }
     Ok(rows)
@@ -100,17 +104,22 @@ fn rebuild_matrix_and_graph_from_rows(
     graph.clear();
 
     // Labels du store courant, puis ceux portés par les fichiers (prioritaires
-    // à clé égale puisque insérés après).
+    // à clé égale puisque insérés après). Le préfixe anti-injection de
+    // formule posé à l'export est retiré (aller-retour sans altération).
     copy_labels_to_matrix(label_store, matrice)?;
     for row in rows {
         if let Some(label) = row.label_source.as_ref().filter(|l| !l.is_empty()) {
-            matrice.add_label(row.mac_source.clone(), row.ip_source.clone(), label.clone());
+            matrice.add_label(
+                row.mac_source.clone(),
+                row.ip_source.clone(),
+                unescape_formula_cell(label),
+            );
         }
         if let Some(label) = row.label_destination.as_ref().filter(|l| !l.is_empty()) {
             matrice.add_label(
                 row.mac_destination.clone(),
                 row.ip_destination.clone(),
-                label.clone(),
+                unescape_formula_cell(label),
             );
         }
     }

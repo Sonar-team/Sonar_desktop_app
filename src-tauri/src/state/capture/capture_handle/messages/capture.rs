@@ -3,17 +3,59 @@
 //! sérialisable vers le frontend), avec dépliage des tunnels en niveaux de
 //! flux reliés par `encap_id`.
 
-use std::hash::{Hash, Hasher};
+use std::net::IpAddr;
 
 use packet_parser::PacketFlow;
 use packet_parser::owned::PacketFlowOwned;
 
 use serde::Serialize;
 
+/// FNV-1a 64 bits sur une sérialisation d'octets contrôlée : contrairement à
+/// `DefaultHasher`, dont la stabilité n'est pas garantie entre versions de
+/// Rust, deux builds différents produisent les mêmes `encap_id` — les
+/// matrices exportées restent joignables entre elles (#148).
+fn fnv1a(bytes: &[u8]) -> u64 {
+    const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+    const PRIME: u64 = 0x0000_0100_0000_01b3;
+    bytes.iter().fold(OFFSET, |hash, byte| {
+        (hash ^ u64::from(*byte)).wrapping_mul(PRIME)
+    })
+}
+
+/// Sérialisation préfixe-libre des champs d'une extrémité de tunnel.
+fn push_endpoint(buf: &mut Vec<u8>, mac: &str, ip: Option<IpAddr>, port: Option<u16>) {
+    buf.extend_from_slice(&(mac.len() as u32).to_be_bytes());
+    buf.extend_from_slice(mac.as_bytes());
+    match ip {
+        None => buf.push(0),
+        Some(IpAddr::V4(v4)) => {
+            buf.push(4);
+            buf.extend_from_slice(&v4.octets());
+        }
+        Some(IpAddr::V6(v6)) => {
+            buf.push(6);
+            buf.extend_from_slice(&v6.octets());
+        }
+    }
+    match port {
+        None => buf.push(0),
+        Some(p) => {
+            buf.push(1);
+            buf.extend_from_slice(&p.to_be_bytes());
+        }
+    }
+}
+
+fn push_str(buf: &mut Vec<u8>, s: &str) {
+    buf.extend_from_slice(&(s.len() as u32).to_be_bytes());
+    buf.extend_from_slice(s.as_bytes());
+}
+
 /// Identifiant déterministe d'une paire de tunnel, utilisé comme `encap_id`
 /// pour relier la ligne de tunnel externe à ses lignes internes. Les deux
 /// sens d'un même tunnel (A -> B et B -> A) partagent le même identifiant :
-/// les extrémités sont ordonnées avant hachage.
+/// les extrémités sont ordonnées avant hachage. Le hachage (FNV-1a sur une
+/// sérialisation explicite) est stable entre builds et versions de Rust.
 fn tunnel_pair_id(flow: &PacketFlowOwned) -> u64 {
     let source = (
         &flow.data_link.source_mac,
@@ -31,24 +73,29 @@ fn tunnel_pair_id(flow: &PacketFlowOwned) -> u64 {
         (destination, source)
     };
 
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    first.hash(&mut hasher);
-    second.hash(&mut hasher);
-    flow.data_link.ethertype.hash(&mut hasher);
-    flow.data_link.vlan.hash(&mut hasher);
-    flow.internet
-        .as_ref()
-        .map(|i| &i.protocol)
-        .hash(&mut hasher);
-    flow.transport
-        .as_ref()
-        .map(|t| &t.protocol)
-        .hash(&mut hasher);
-    flow.application
-        .as_ref()
-        .map(|a| &a.protocol)
-        .hash(&mut hasher);
-    hasher.finish()
+    let mut buf = Vec::with_capacity(128);
+    push_endpoint(&mut buf, first.0, first.1, first.2);
+    push_endpoint(&mut buf, second.0, second.1, second.2);
+    push_str(&mut buf, &flow.data_link.ethertype);
+    // Seul l'id du VLAN participe : c'est le seul champ préservé par un
+    // aller-retour CSV (pcp/dei non exportés).
+    match flow.data_link.vlan.as_ref().map(|v| v.id) {
+        None => buf.push(0),
+        Some(id) => {
+            buf.push(1);
+            buf.extend_from_slice(&id.to_be_bytes());
+        }
+    }
+    push_str(&mut buf, flow.internet.as_ref().map_or("", |i| &i.protocol));
+    push_str(
+        &mut buf,
+        flow.transport.as_ref().map_or("", |t| &t.protocol),
+    );
+    push_str(
+        &mut buf,
+        flow.application.as_ref().map_or("", |a| &a.protocol),
+    );
+    fnv1a(&buf)
 }
 
 #[cfg(target_os = "linux")]

@@ -164,7 +164,11 @@ impl FlowMatrix {
             if let Some((_, stats)) = entries.iter_mut().find(|(id, _)| *id == pkt.encap_id) {
                 stats.count += 1;
                 stats.total_bytes = stats.total_bytes.saturating_add(pkt.len as u64);
-                stats.last_seen = ts;
+                // Max et non dernière valeur : des PCAP importés hors ordre
+                // chronologique ne font pas régresser la date (#148).
+                if ts > stats.last_seen {
+                    stats.last_seen = ts;
+                }
             } else {
                 entries.push((
                     pkt.encap_id,
@@ -271,7 +275,8 @@ impl FlowMatrix {
     // }
 
     pub fn to_flat_vec(&self) -> Vec<FlowMatrixRow> {
-        self.matrix
+        let mut rows: Vec<FlowMatrixRow> = self
+            .matrix
             .iter()
             .map(|(flow, entries)| {
                 // Une seule ligne par flux : les compteurs par tunnel sont
@@ -333,13 +338,17 @@ impl FlowMatrix {
                 let label_destination =
                     self.get_label(&flow.data_link.destination_mac, &ip_destination);
 
+                // Microsecondes et fuseau explicites : deux captures ne se
+                // distinguent plus à la seconde près et la date est
+                // interprétable sans convention implicite (#148).
                 let last_seen = match stats.last_seen.duration_since(std::time::UNIX_EPOCH) {
-                    Ok(dur) => {
-                        chrono::DateTime::<chrono::Utc>::from_timestamp(dur.as_secs() as i64, 0)
-                            .unwrap_or(chrono::DateTime::<chrono::Utc>::UNIX_EPOCH)
-                            .format("%Y-%m-%d %H:%M:%S")
-                            .to_string()
-                    }
+                    Ok(dur) => chrono::DateTime::<chrono::Utc>::from_timestamp(
+                        dur.as_secs() as i64,
+                        dur.subsec_nanos(),
+                    )
+                    .unwrap_or(chrono::DateTime::<chrono::Utc>::UNIX_EPOCH)
+                    .format("%Y-%m-%d %H:%M:%S%.6f UTC")
+                    .to_string(),
                     Err(_) => "N/A".into(),
                 };
 
@@ -350,10 +359,10 @@ impl FlowMatrix {
                     protocol_data_link: flow.data_link.ethertype.clone(),
                     ip_source,
                     ip_source_type,
-                    label_source,
+                    label_source: label_source.map(|l| escape_formula_cell(&l)),
                     ip_destination,
                     ip_destination_type,
-                    label_destination,
+                    label_destination: label_destination.map(|l| escape_formula_cell(&l)),
                     port_source: flow.transport.as_ref().and_then(|t| t.source_port),
                     port_destination: flow.transport.as_ref().and_then(|t| t.destination_port),
                     protocol_transport: flow.transport.as_ref().map(|t| t.protocol.clone()),
@@ -365,7 +374,38 @@ impl FlowMatrix {
                     origin,
                 }
             })
-            .collect()
+            .collect();
+
+        // Tri stable : l'ordre d'itération du HashMap varie d'une exécution
+        // à l'autre, deux exports du même état doivent produire le même
+        // fichier (#148).
+        rows.sort_by(|a, b| {
+            (
+                &a.mac_source,
+                &a.mac_destination,
+                &a.ip_source,
+                &a.ip_destination,
+                a.vlan_id,
+                a.port_source,
+                a.port_destination,
+                &a.protocol_transport,
+                &a.application_protocol,
+                &a.encap_id,
+            )
+                .cmp(&(
+                    &b.mac_source,
+                    &b.mac_destination,
+                    &b.ip_source,
+                    &b.ip_destination,
+                    b.vlan_id,
+                    b.port_source,
+                    b.port_destination,
+                    &b.protocol_transport,
+                    &b.application_protocol,
+                    &b.encap_id,
+                ))
+        });
+        rows
     }
 
     /// Écrit des lignes de matrice (snapshot de [`Self::to_flat_vec`]) vers
@@ -373,14 +413,12 @@ impl FlowMatrix {
     /// puissent snapshoter sous verrou court et écrire hors verrou, sans
     /// bloquer le pipeline de capture pendant l'I/O disque.
     pub fn write_rows_to_csv(rows: &[FlowMatrixRow], path: &str) -> std::io::Result<()> {
-        let file = File::create(path)?;
-        let mut wtr = csv::Writer::from_writer(file);
-
-        for row in rows {
-            wtr.serialize(row)?;
-        }
-
-        wtr.flush()?;
+        write_csv_atomically(path, |wtr| {
+            for row in rows {
+                wtr.serialize(row)?;
+            }
+            Ok(())
+        })?;
         info!("✅ Matrice exportée avec succès vers {}", path);
         Ok(())
     }
@@ -496,13 +534,13 @@ impl FlowMatrix {
         rows: &[(String, String, String)],
         path: &str,
     ) -> std::io::Result<()> {
-        let file = File::create(path)?;
-        let mut wtr = csv::Writer::from_writer(file);
-        wtr.write_record(["mac", "ip", "label"])?;
-        for (mac, ip, label) in rows {
-            wtr.write_record([mac, ip, label])?;
-        }
-        wtr.flush()?;
+        write_csv_atomically(path, |wtr| {
+            wtr.write_record(["mac", "ip", "label"])?;
+            for (mac, ip, label) in rows {
+                wtr.write_record([mac, ip, &escape_formula_cell(label)])?;
+            }
+            Ok(())
+        })?;
         info!("✅ Labels exportés avec succès vers {}", path);
         Ok(())
     }
@@ -533,6 +571,72 @@ impl FlowMatrix {
     // pub fn add_label_list(&mut self, list: String) {
     //     self.label.insert((mac, ip), label);
     // }
+}
+
+/// Écrit un CSV de façon atomique : fichier temporaire dans le même dossier,
+/// flush + fsync, puis renommage. Une erreur disque en cours d'écriture ne
+/// laisse jamais un fichier final tronqué (#148).
+fn write_csv_atomically(
+    path: &str,
+    write: impl FnOnce(&mut csv::Writer<File>) -> std::io::Result<()>,
+) -> std::io::Result<()> {
+    let tmp_path = format!("{path}.tmp");
+    let result = (|| {
+        let file = File::create(&tmp_path)?;
+        let mut wtr = csv::Writer::from_writer(file);
+        write(&mut wtr)?;
+        wtr.flush()?;
+        let file = wtr
+            .into_inner()
+            .map_err(|e| std::io::Error::other(e.to_string()))?;
+        file.sync_all()?;
+        std::fs::rename(&tmp_path, path)
+    })();
+    if result.is_err() {
+        let _ = std::fs::remove_file(&tmp_path);
+    }
+    result
+}
+
+/// Préfixe d'échappement des cellules commençant par un caractère de formule
+/// (`=`, `+`, `-`, `@`) : ouvertes dans un tableur, elles seraient sinon
+/// interprétées comme du code (injection de formule CSV, #148). Le préfixe
+/// `'` est la convention tableur ; [`unescape_formula_cell`] le retire au
+/// réimport pour préserver l'aller-retour.
+pub fn escape_formula_cell(value: &str) -> String {
+    if value.starts_with(['=', '+', '-', '@']) {
+        format!("'{value}")
+    } else {
+        value.to_string()
+    }
+}
+
+/// Chemin inverse de [`escape_formula_cell`] : retire le `'` d'échappement
+/// devant un caractère de formule. Un `'` légitime (non suivi d'un caractère
+/// de formule) est conservé tel quel.
+pub fn unescape_formula_cell(value: &str) -> String {
+    match value.strip_prefix('\'') {
+        Some(rest) if rest.starts_with(['=', '+', '-', '@']) => rest.to_string(),
+        _ => value.to_string(),
+    }
+}
+
+/// Parse la colonne `last_seen` d'une matrice exportée. Accepte le format
+/// courant (microsecondes + fuseau explicite) et l'ancien (secondes, UTC
+/// implicite) pour rester compatible avec les matrices déjà exportées.
+pub fn parse_last_seen(value: &str) -> Result<SystemTime, String> {
+    let normalized = value.trim().trim_end_matches(" UTC");
+    for format in ["%Y-%m-%d %H:%M:%S%.f", "%Y-%m-%d %H:%M:%S"] {
+        if let Ok(dt) = chrono::NaiveDateTime::parse_from_str(normalized, format) {
+            let ts = dt.and_utc();
+            let secs = u64::try_from(ts.timestamp())
+                .map_err(|_| format!("date antérieure à 1970 : « {value} »"))?;
+            return Ok(UNIX_EPOCH + std::time::Duration::new(secs, ts.timestamp_subsec_nanos()));
+        }
+    }
+    Err(format!(
+        "date invalide « {value} » (attendu : AAAA-MM-JJ HH:MM:SS[.µs] [UTC])"
+    ))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -570,6 +674,26 @@ pub struct FlowMatrixRow {
 }
 
 impl FlowMatrixRow {
+    /// Validation stricte d'une ligne importée : une IP invalide ou une date
+    /// illisible est rejetée avec un message précis, au lieu d'être
+    /// silencieusement dégradée en `None`/epoch (#148). Une IP vide reste
+    /// valide (flux sans couche 3) ; `N/A` et vide sont des dates absentes.
+    pub fn validate(&self) -> Result<(), String> {
+        for (field, value) in [
+            ("ip_source", &self.ip_source),
+            ("ip_destination", &self.ip_destination),
+        ] {
+            if !value.is_empty() && value.parse::<IpAddr>().is_err() {
+                return Err(format!("{field} invalide : « {value} »"));
+            }
+        }
+        let last_seen = self.last_seen.trim();
+        if !last_seen.is_empty() && last_seen != "N/A" {
+            parse_last_seen(last_seen).map_err(|e| format!("last_seen : {e}"))?;
+        }
+        Ok(())
+    }
+
     /// Reconstruit le flux et ses statistiques par tunnel depuis une ligne de
     /// CSV exporté (chemin inverse de `to_flat_vec`). Les types d'IP sont
     /// recalculés depuis les adresses ; le VLAN ne conserve que son id
@@ -623,11 +747,10 @@ impl FlowMatrixRow {
             application,
         };
 
-        let last_seen = chrono::NaiveDateTime::parse_from_str(&self.last_seen, "%Y-%m-%d %H:%M:%S")
-            .map(|dt| {
-                UNIX_EPOCH + std::time::Duration::from_secs(dt.and_utc().timestamp().max(0) as u64)
-            })
-            .unwrap_or(UNIX_EPOCH);
+        // La validation stricte est faite en amont ([`Self::validate`],
+        // avec le numéro de ligne) ; ici le repli epoch ne couvre que les
+        // dates « absentes » (vide, N/A).
+        let last_seen = parse_last_seen(&self.last_seen).unwrap_or(UNIX_EPOCH);
 
         let rows = parse_encap_list(&self.encap_id, self.count, self.total_bytes, last_seen);
 
@@ -649,9 +772,83 @@ pub fn timeval_to_systemtime(tv_sec: impl Into<i64>, tv_usec: impl Into<i64>) ->
 
 #[cfg(test)]
 mod tests {
-    use super::{FlowMatrix, is_non_unicast_mac, is_placeholder_ip};
+    use super::{
+        FlowMatrix, escape_formula_cell, is_non_unicast_mac, is_placeholder_ip, parse_last_seen,
+        unescape_formula_cell,
+    };
     use crate::state::capture::capture_handle::messages::capture::PacketOwnedStats;
     use packet_parser::owned::{DataLinkOwned, PacketFlowOwned};
+
+    /// Deux appels sur le même état produisent exactement les mêmes lignes
+    /// dans le même ordre : l'export est déterministe (#148).
+    #[test]
+    fn to_flat_vec_is_deterministic() {
+        let mut matrix = FlowMatrix::new();
+        for i in 0..50u8 {
+            let mut pkt = sample_packet(100);
+            pkt.flow.data_link.source_mac = format!("aa:bb:cc:dd:ee:{i:02x}");
+            matrix.update_flow(&pkt);
+        }
+
+        let first: Vec<String> = matrix
+            .to_flat_vec()
+            .iter()
+            .map(|r| format!("{}>{}", r.mac_source, r.mac_destination))
+            .collect();
+        let second: Vec<String> = matrix
+            .to_flat_vec()
+            .iter()
+            .map(|r| format!("{}>{}", r.mac_source, r.mac_destination))
+            .collect();
+
+        assert_eq!(first, second);
+        let mut sorted = first.clone();
+        sorted.sort();
+        assert_eq!(first, sorted, "lignes triées par clé stable");
+    }
+
+    /// Une date d'import antérieure ne fait pas régresser last_seen (#148).
+    #[test]
+    fn update_flow_keeps_max_last_seen() {
+        let mut matrix = FlowMatrix::new();
+        let mut newer = sample_packet(100);
+        newer.ts_sec = 2_000;
+        let mut older = sample_packet(100);
+        older.ts_sec = 1_000;
+
+        matrix.update_flow(&newer);
+        matrix.update_flow(&older);
+
+        let (_, stats) = &matrix.matrix.values().next().unwrap()[0];
+        assert_eq!(
+            stats.last_seen,
+            super::timeval_to_systemtime(2_000, 0),
+            "un paquet plus ancien ne fait pas régresser la date"
+        );
+    }
+
+    #[test]
+    fn formula_cells_are_escaped_and_roundtrip() {
+        assert_eq!(escape_formula_cell("=SUM(A1)"), "'=SUM(A1)");
+        assert_eq!(escape_formula_cell("@cmd"), "'@cmd");
+        assert_eq!(escape_formula_cell("Automate 3"), "Automate 3");
+        assert_eq!(unescape_formula_cell("'=SUM(A1)"), "=SUM(A1)");
+        assert_eq!(
+            unescape_formula_cell("'apostrophe légitime"),
+            "'apostrophe légitime"
+        );
+    }
+
+    /// L'ancien format (secondes, UTC implicite) et le nouveau
+    /// (microsecondes + fuseau) sont tous deux acceptés ; l'illisible est
+    /// rejeté avec un message.
+    #[test]
+    fn parse_last_seen_accepts_both_formats_and_rejects_garbage() {
+        let old = parse_last_seen("2026-07-11 10:00:00").unwrap();
+        let new = parse_last_seen("2026-07-11 10:00:00.123456 UTC").unwrap();
+        assert!(new > old);
+        assert!(parse_last_seen("pas une date").is_err());
+    }
 
     fn sample_packet(len: u32) -> PacketOwnedStats {
         PacketOwnedStats {
