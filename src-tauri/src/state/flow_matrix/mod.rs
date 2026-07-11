@@ -368,12 +368,15 @@ impl FlowMatrix {
             .collect()
     }
 
-    /// Exporte la matrice vers un fichier CSV.
-    pub fn export_to_csv(&self, path: String) -> std::io::Result<()> {
-        let file = File::create(&path)?;
+    /// Écrit des lignes de matrice (snapshot de [`Self::to_flat_vec`]) vers
+    /// un fichier CSV. Séparé de l'état pour que les commandes d'export
+    /// puissent snapshoter sous verrou court et écrire hors verrou, sans
+    /// bloquer le pipeline de capture pendant l'I/O disque.
+    pub fn write_rows_to_csv(rows: &[FlowMatrixRow], path: &str) -> std::io::Result<()> {
+        let file = File::create(path)?;
         let mut wtr = csv::Writer::from_writer(file);
 
-        for row in self.to_flat_vec() {
+        for row in rows {
             wtr.serialize(row)?;
         }
 
@@ -486,14 +489,18 @@ impl FlowMatrix {
         rows.into_iter().collect()
     }
 
-    /// Exporte les labels (complétés depuis la matrice) vers un fichier CSV
-    /// `mac,ip,label`, réimportable tel quel par `import_label_file`.
-    pub fn export_labels_to_csv(&self, path: String) -> std::io::Result<()> {
-        let file = File::create(&path)?;
+    /// Écrit des lignes de labels (snapshot de [`Self::export_labels`]) vers
+    /// un fichier CSV `mac,ip,label`. Même logique de verrou court que
+    /// [`Self::write_rows_to_csv`].
+    pub fn write_label_rows_to_csv(
+        rows: &[(String, String, String)],
+        path: &str,
+    ) -> std::io::Result<()> {
+        let file = File::create(path)?;
         let mut wtr = csv::Writer::from_writer(file);
         wtr.write_record(["mac", "ip", "label"])?;
-        for (mac, ip, label) in self.export_labels() {
-            wtr.write_record([&mac, &ip, &label])?;
+        for (mac, ip, label) in rows {
+            wtr.write_record([mac, ip, label])?;
         }
         wtr.flush()?;
         info!("✅ Labels exportés avec succès vers {}", path);

@@ -21,9 +21,10 @@ pub fn export_label_file(
         return Err(CaptureStateError::Export(ExportError::EmptyPath));
     }
 
-    // Verrou + export (I/O) : la commande est déjà déplacée hors du thread UI.
-    let guard = state.lock()?;
+    // Verrou court : snapshot des labels résolus seulement. L'écriture
+    // disque se fait hors verrou pour ne pas bloquer le pipeline de capture.
+    let rows = state.lock()?.export_labels();
 
-    guard.export_labels_to_csv(path)?;
+    FlowMatrix::write_label_rows_to_csv(&rows, &path)?;
     Ok(())
 }

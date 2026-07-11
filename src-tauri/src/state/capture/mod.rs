@@ -87,6 +87,21 @@ impl CaptureState {
         self.phase = CapturePhase::Idle;
     }
 
+    /// Refuse une opération mutuellement exclusive avec la capture live
+    /// (import PCAP/CSV : elle remplacerait la matrice et le graphe en cours
+    /// d'alimentation). Récolte d'abord un éventuel pipeline mort pour ne
+    /// pas refuser à tort après un arrêt autonome.
+    pub fn ensure_idle_for(&mut self, operation: &str) -> Result<(), CaptureStateError> {
+        self.reap_terminated_capture();
+        if self.phase != CapturePhase::Idle {
+            return Err(CaptureStateError::InvalidTransition {
+                from: self.phase.to_string(),
+                to: operation.to_string(),
+            });
+        }
+        Ok(())
+    }
+
     /// Récolte un pipeline qui s'est arrêté de lui-même (erreur pcap, canal
     /// IPC cassé) : joint les threads, libère le handle et normalise le
     /// statut, pour qu'un redémarrage ne réponde pas « déjà en cours ».

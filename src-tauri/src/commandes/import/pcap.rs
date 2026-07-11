@@ -17,7 +17,10 @@ use crate::{
     errors::{CaptureStateError, import::PcapImportError},
     events::CaptureEvent,
     state::{
-        capture::capture_handle::messages::capture::{PacketMinimal, PacketOwnedStats},
+        capture::{
+            CaptureState,
+            capture_handle::messages::capture::{PacketMinimal, PacketOwnedStats},
+        },
         flow_matrix::FlowMatrix,
         graph::{GraphData, GraphUpdate},
         labels_list::LabelStore,
@@ -462,9 +465,17 @@ pub fn convert_from_pcap_list(
     matrice: State<'_, Arc<Mutex<FlowMatrix>>>,
     graph: State<'_, Arc<Mutex<GraphData>>>,
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
+    capture_state: State<'_, Arc<Mutex<CaptureState>>>,
     pcap_paths: Vec<String>,
     on_event: Channel<CaptureEvent<'_>>,
 ) -> Result<(), CaptureStateError> {
+    // Import et capture sont mutuellement exclusifs : la conversion
+    // remplacerait la matrice et le graphe pendant que le pipeline les
+    // alimente.
+    capture_state
+        .lock()?
+        .ensure_idle_for("import de fichiers PCAP")?;
+
     let mut timing_logger = new_timing_logger();
     #[cfg(feature = "capture_timing")]
     let command_start = Instant::now();

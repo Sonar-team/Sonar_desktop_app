@@ -57,7 +57,7 @@ typecheck, tests mockIPC).
 
 ## Backlog robustesse pipeline
 
-- [ ] [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) Exclusion mutuelle capture/import/export (verrous tenus pendant l'I/O disque)
+- [x] [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) Exclusion mutuelle capture/import/export (verrous tenus pendant l'I/O disque)
 - [ ] [#140](https://github.com/Sonar-team/Sonar_desktop_app/issues/140) Pool de buffers : famine des jumbo frames
 - [ ] [#141](https://github.com/Sonar-team/Sonar_desktop_app/issues/141) Télémétrie backpressure trop bavarde sous saturation
 

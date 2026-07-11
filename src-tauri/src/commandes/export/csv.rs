@@ -20,9 +20,11 @@ pub fn export_csv(
         return Err(CaptureStateError::Export(ExportError::EmptyPath));
     }
 
-    // Verrou + export (I/O) : la commande est déjà déplacée hors du thread UI
-    let guard = state.lock()?;
+    // Verrou court : snapshot des lignes seulement. L'écriture disque se
+    // fait hors verrou pour ne pas bloquer le pipeline de capture (le
+    // processing thread verrouille la matrice à chaque paquet).
+    let rows = state.lock()?.to_flat_vec();
 
-    guard.export_to_csv(path)?;
+    FlowMatrix::write_rows_to_csv(&rows, &path)?;
     Ok(())
 }

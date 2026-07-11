@@ -174,6 +174,11 @@ pub fn import_matrix_files(
     capture_state: State<'_, Arc<Mutex<CaptureState>>>,
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<(), CaptureStateError> {
+    // Import et capture sont mutuellement exclusifs : l'import remplacerait
+    // la matrice et le graphe pendant que le pipeline les alimente.
+    capture_state
+        .lock()?
+        .ensure_idle_for("import de matrice CSV")?;
     let on_event = event_channel(&capture_state, on_event)?;
 
     info!(
@@ -355,8 +360,7 @@ mod tests {
         let rows = read_matrix_rows_from_files(&[brut.to_str().unwrap().to_string()]).unwrap();
         let (matrix, _graph) = build_matrix_and_graph(&rows);
         let merged = dir.path().join("fusion.csv");
-        matrix
-            .export_to_csv(merged.to_str().unwrap().to_string())
+        FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), merged.to_str().unwrap())
             .unwrap();
 
         // Étape 2 : réimport de fusion.csv -> l'origine "brut.csv" est préservée.
@@ -390,8 +394,7 @@ mod tests {
             let rows = read_matrix_rows_from_files(&[raw.to_str().unwrap().to_string()]).unwrap();
             let (matrix, _graph) = build_matrix_and_graph(&rows);
             let out = dir.path().join(out_name);
-            matrix
-                .export_to_csv(out.to_str().unwrap().to_string())
+            FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), out.to_str().unwrap())
                 .unwrap();
             out.to_str().unwrap().to_string()
         };
@@ -436,8 +439,7 @@ mod tests {
 
         let dir = TempDir::new("sonar_test_matrix_roundtrip");
         let csv_path = dir.path().join("matrice.csv");
-        matrix
-            .export_to_csv(csv_path.to_str().unwrap().to_string())
+        FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), csv_path.to_str().unwrap())
             .unwrap();
 
         let rows = read_matrix_rows(csv_path.to_str().unwrap()).unwrap();
