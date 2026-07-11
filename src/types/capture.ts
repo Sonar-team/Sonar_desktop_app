@@ -78,6 +78,8 @@ export type Edge = {
   label: string;
   source_port: number | null;
   destination_port: number | null;
+  /** Ports « service » observés sur l'arête (triés, plafonnés backend). */
+  ports?: number[];
 };
 
 export type NodeId = string;
@@ -103,6 +105,8 @@ export interface EdgeData {
   label: string;
   source_port?: string | number | null;
   destination_port?: string | number | null;
+  /** Ports « service » observés sur l'arête (triés, plafonnés backend). */
+  ports?: number[];
   bidir?: boolean;
   count?: number;
   total_bytes?: number;

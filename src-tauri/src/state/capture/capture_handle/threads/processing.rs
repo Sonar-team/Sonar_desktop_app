@@ -50,6 +50,11 @@ const GRAPH_BATCH_MAX: usize = 512;
 /// largement le timeout pcap par défaut (25 ms) le temps que le thread de
 /// capture sorte et lâche l'émetteur.
 const DRAIN_RECV_TIMEOUT: Duration = Duration::from_millis(250);
+/// Nombre maximal de paquets d'un batch réellement sérialisés vers la
+/// WebView : le front n'en affiche que les 5 derniers (journal de
+/// `BottomLong.vue`), sérialiser les 256 du batch était du travail par
+/// paquet inutile (#154). La matrice et le graphe, eux, reçoivent tout.
+const PACKET_BATCH_UI_MAX: usize = 16;
 /// Plafond de flux de la matrice en capture live (#147). Un trafic à forte
 /// cardinalité (scan, adresses aléatoires) créerait des lignes sans fin ;
 /// plutôt qu'évincer des données (le relevé mentirait), la capture s'arrête
@@ -427,7 +432,12 @@ impl PacketWorker {
         }
         #[cfg(feature = "capture_timing")]
         let batch_len = self.packet_batch.len();
-        let packets = std::mem::take(&mut self.packet_batch);
+        let mut packets = std::mem::take(&mut self.packet_batch);
+        // Seule la queue du batch part vers la WebView (voir
+        // PACKET_BATCH_UI_MAX) ; matrice et graphe ont déjà tout intégré.
+        if packets.len() > PACKET_BATCH_UI_MAX {
+            packets.drain(..packets.len() - PACKET_BATCH_UI_MAX);
+        }
         self.last_batch_flush = Instant::now();
         #[cfg(feature = "capture_timing")]
         let ipc_start = Instant::now();
@@ -498,6 +508,8 @@ impl PacketWorker {
 struct StatsEmitter {
     session_id: u64,
     stats: StatTriple,
+    /// Dernier `processed` émis : participe à la déduplication (#154).
+    last_processed: u32,
     emit_interval: Duration,
     last_emit: Instant,
     last_channel: ChannelCapacityPayload,
@@ -518,6 +530,7 @@ impl StatsEmitter {
         Self {
             session_id,
             stats: StatTriple::default(),
+            last_processed: u32::MAX,
             emit_interval: Duration::from_millis(STATS_EMIT_INTERVAL_MS),
             last_emit: Instant::now(),
             last_channel: ChannelCapacityPayload::default(),
@@ -541,6 +554,7 @@ impl StatsEmitter {
             self.last_emit = Instant::now();
             if let Err(e) = StatsPayload::maybe_send(
                 &mut self.stats,
+                &mut self.last_processed,
                 self.shared_stats.load(),
                 self.drop_counters.total(),
                 processed,

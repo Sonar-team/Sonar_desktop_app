@@ -21,7 +21,7 @@
   📥: <span class="counter">{{ stats.received }}</span>
       </p>
 
-      <p title="Trames analysées dans la matrice de flux 📊">
+      <p title="Flux distincts dans la matrice 📊">
         <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
         : <span class="counter">{{ stats.processed }}</span>
       </p>

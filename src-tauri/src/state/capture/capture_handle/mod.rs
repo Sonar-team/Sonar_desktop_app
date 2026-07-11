@@ -172,14 +172,8 @@ impl CaptureHandle {
             session_id: self.session_id,
             reason: "arrêt demandé".to_string(),
         })?;
-        on_event.send(CaptureEvent::Stats {
-            session_id: self.session_id,
-            received: 0,
-            dropped: 0,
-            if_dropped: 0,
-            app_dropped: 0,
-            processed: 0,
-        })?;
+        // Pas de Stats à zéro après l'arrêt : les derniers compteurs restent
+        // affichés (le relevé final), un reset les effaçait (#154).
         Ok(())
     }
 }

@@ -130,6 +130,10 @@ export function edgeAttributes(e: any) {
     protocol: e.label || "",
     source_port: e.source_port ?? null,
     destination_port: e.destination_port ?? null,
+    // Tous les ports « service » observés sur l'arête (triés, plafonnés
+    // backend) : plusieurs services entre deux équipements ne sont plus
+    // masqués par le premier couple de ports.
+    ports: Array.isArray(e.ports) ? e.ports : [],
     bidir: !!e.bidir,
     count: Number(e.count) || 0,
     total_bytes: totalBytes,

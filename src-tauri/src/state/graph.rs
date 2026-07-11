@@ -4,7 +4,7 @@
 
 use packet_parser::{IpType, owned::PacketFlowOwned};
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::state::flow_matrix::is_non_unicast_mac;
@@ -153,6 +153,11 @@ impl Node {
     }
 }
 
+/// Plafond de ports « service » retenus par arête : au-delà (scan de ports,
+/// trafic éphémère), la liste n'apporte plus rien à la lecture du graphe et
+/// croîtrait sans borne. La matrice de flux, elle, garde le détail exact.
+const MAX_EDGE_PORTS: usize = 16;
+
 #[derive(Serialize, Clone, Debug)]
 pub struct Edge {
     pub id: String,
@@ -161,6 +166,11 @@ pub struct Edge {
     pub label: String,  // protocole (ex: "DNS", "TCP", "IPv6"...)
     pub source_port: Option<u16>,
     pub destination_port: Option<u16>,
+    // Ports destination de TOUS les paquets agrégés sur cette arête (triés,
+    // plafonnés à MAX_EDGE_PORTS) : une arête {A,B,proto} porte souvent
+    // plusieurs services distincts, que le seul premier couple
+    // source_port/destination_port masquait (#154).
+    pub ports: BTreeSet<u16>,
     pub bidir: bool,      // true si trafic observé dans les deux sens
     pub count: u64,       // paquets cumulés sur ce flux
     pub total_bytes: u64, // octets cumulés sur ce flux
@@ -181,6 +191,7 @@ impl Edge {
             label: String::new(),
             source_port: None,
             destination_port: None,
+            ports: BTreeSet::new(),
             bidir: false,
             count: 0,
             total_bytes: 0,
@@ -202,7 +213,22 @@ impl Edge {
     pub fn with_ports(mut self, source_port: Option<u16>, destination_port: Option<u16>) -> Self {
         self.source_port = source_port;
         self.destination_port = destination_port;
+        if let Some(port) = destination_port {
+            self.ports.insert(port);
+        }
         self
+    }
+
+    /// Enregistre le port destination d'un paquet agrégé sur cette arête.
+    /// Retourne vrai si la liste des ports a changé (le front doit être
+    /// notifié). Plafonné à [`MAX_EDGE_PORTS`].
+    fn record_destination_port(&mut self, destination_port: Option<u16>) -> bool {
+        match destination_port {
+            Some(port) if self.ports.len() < MAX_EDGE_PORTS || self.ports.contains(&port) => {
+                self.ports.insert(port)
+            }
+            _ => false,
+        }
     }
 }
 
@@ -317,6 +343,15 @@ impl GraphData {
                         }
 
                         if merge_encap_ids(edge, encap_ids) {
+                            notify = true;
+                        }
+
+                        // Chaque service (port destination) observé s'ajoute
+                        // à l'arête : le premier couple de ports ne masque
+                        // plus les autres services (#154).
+                        if edge.record_destination_port(
+                            packet.transport.as_ref().and_then(|t| t.destination_port),
+                        ) {
                             notify = true;
                         }
 
@@ -636,6 +671,7 @@ mod graph_update_batch_tests {
             label: "TCP".to_string(),
             source_port: None,
             destination_port: None,
+            ports: BTreeSet::new(),
             bidir: false,
             count,
             total_bytes: count * 100,
@@ -738,6 +774,67 @@ mod add_packet_flow_tests {
 
     fn add(graph: &mut GraphData, f: &PacketFlowOwned) -> Vec<GraphUpdate> {
         graph.add_packet_flow(f, None, None, 1, 100, &[])
+    }
+
+    fn flow_with_ports(
+        src_mac: &str,
+        src_ip: &str,
+        dst_mac: &str,
+        dst_ip: &str,
+        source_port: u16,
+        destination_port: u16,
+    ) -> PacketFlowOwned {
+        let mut f = flow(src_mac, src_ip, dst_mac, dst_ip);
+        f.transport = Some(packet_parser::owned::TransportOwned {
+            source_port: Some(source_port),
+            destination_port: Some(destination_port),
+            protocol: "TCP".to_string(),
+        });
+        f
+    }
+
+    /// Plusieurs services entre les mêmes équipements : l'arête accumule
+    /// tous les ports destination au lieu de figer le premier couple (#154).
+    #[test]
+    fn edge_accumulates_all_destination_ports() {
+        let mut graph = GraphData::new();
+        let src = ("10:00:00:00:00:0a", "192.168.1.10");
+        let dst = ("10:00:00:00:00:0b", "192.168.1.20");
+
+        add(
+            &mut graph,
+            &flow_with_ports(src.0, src.1, dst.0, dst.1, 50_000, 80),
+        );
+        let updates = add(
+            &mut graph,
+            &flow_with_ports(src.0, src.1, dst.0, dst.1, 50_001, 443),
+        );
+
+        let edge = single_edge(&graph);
+        assert_eq!(
+            edge.ports.iter().copied().collect::<Vec<_>>(),
+            vec![80, 443],
+            "les deux services sont visibles"
+        );
+        assert_eq!(edge.destination_port, Some(80), "premier couple préservé");
+        assert!(
+            updates
+                .iter()
+                .any(|u| matches!(u, GraphUpdate::EdgeUpdated(e) if e.ports.len() == 2)),
+            "le front est notifié du nouveau service"
+        );
+
+        // Même service revu : pas de notification pour rien.
+        let updates = add(
+            &mut graph,
+            &flow_with_ports(src.0, src.1, dst.0, dst.1, 50_002, 443),
+        );
+        assert!(
+            !updates
+                .iter()
+                .any(|u| matches!(u, GraphUpdate::EdgeUpdated(e) if e.ports.len() != 2)),
+            "ports inchangés"
+        );
     }
 
     fn single_edge(graph: &GraphData) -> &Edge {

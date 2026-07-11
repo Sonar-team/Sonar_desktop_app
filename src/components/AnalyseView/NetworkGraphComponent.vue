@@ -219,8 +219,15 @@ export default defineComponent({
         return res
       }
       let label = data.protocol ?? ""
-      if (this._portLabelsShown && (data.source_port != null || data.destination_port != null)) {
-        label += ` ${data.source_port ?? ""}→${data.destination_port ?? ""}`
+      if (this._portLabelsShown) {
+        const ports: number[] = Array.isArray(data.ports) ? data.ports : []
+        if (ports.length > 1) {
+          // Plusieurs services sur la même arête : tous affichés, le seul
+          // premier couple de ports était trompeur.
+          label += ` :${ports.join(",")}`
+        } else if (data.source_port != null || data.destination_port != null) {
+          label += ` ${data.source_port ?? ""}→${data.destination_port ?? ""}`
+        }
       }
       res.label = label
       return res

@@ -143,10 +143,13 @@ impl StatsPayload {
         })
     }
 
-    /// Compare avec `last` et n’envoie que si changement.
+    /// Compare avec `last`/`last_processed` et n’envoie que si changement.
+    /// `processed` participe à la déduplication : sans lui, une matrice qui
+    /// grandit sans nouvelle perte n'était jamais réémise (#154).
     #[inline]
     pub fn maybe_send(
         last: &mut StatTriple,
+        last_processed: &mut u32,
         mut current: StatTriple,
         app_dropped: u64,
         processed: u32,
@@ -154,7 +157,10 @@ impl StatsPayload {
         ch: &Channel<CaptureEvent<'static>>,
     ) -> Result<(), tauri::Error> {
         current.app_dropped = app_dropped;
-        if current.update_if_changed(last) {
+        let triple_changed = current.update_if_changed(last);
+        let processed_changed = *last_processed != processed;
+        *last_processed = processed;
+        if triple_changed || processed_changed {
             let payload = StatsPayload::new(current, processed, session_id);
             payload.send(ch)
         } else {
