@@ -9,103 +9,14 @@
 //! une fin de fichier, sous peine de produire une matrice silencieusement
 //! partielle.
 
-use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
 use packet_parser::PacketFlow;
-use packet_parser::owned::PacketFlowOwned;
 use pcap::Capture;
 
-use crate::matrix::{FlowMatrix, PacketOwnedStats};
+use crate::matrix::FlowMatrix;
+use crate::packet::PacketMinimal;
 use crate::{Result, SonarCoreError, validate_batch_paths};
-
-/// Identifiant de tunnel : hash des extrémités de la paire, indépendant du
-/// sens (l'aller et le retour d'un même tunnel partagent le même id). Même
-/// calcul que l'application desktop pour que les matrices restent joignables.
-fn tunnel_pair_id(flow: &PacketFlowOwned) -> u64 {
-    let source = (
-        &flow.data_link.source_mac,
-        flow.internet.as_ref().and_then(|i| i.source_ip),
-        flow.transport.as_ref().and_then(|t| t.source_port),
-    );
-    let destination = (
-        &flow.data_link.destination_mac,
-        flow.internet.as_ref().and_then(|i| i.destination_ip),
-        flow.transport.as_ref().and_then(|t| t.destination_port),
-    );
-    let (first, second) = if source <= destination {
-        (source, destination)
-    } else {
-        (destination, source)
-    };
-
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    first.hash(&mut hasher);
-    second.hash(&mut hasher);
-    flow.data_link.ethertype.hash(&mut hasher);
-    flow.data_link.vlan.hash(&mut hasher);
-    flow.internet
-        .as_ref()
-        .map(|i| &i.protocol)
-        .hash(&mut hasher);
-    flow.transport
-        .as_ref()
-        .map(|t| &t.protocol)
-        .hash(&mut hasher);
-    flow.application
-        .as_ref()
-        .map(|a| &a.protocol)
-        .hash(&mut hasher);
-    hasher.finish()
-}
-
-/// Convertit un paquet parsé et tous ses niveaux encapsulés en une liste de
-/// [`PacketOwnedStats`], du plus externe au plus interne (port de
-/// `PacketMinimal::to_owned_packets` côté desktop).
-///
-/// La taille en octets est attribuée **par niveau** — trame complète pour
-/// l'externe, taille du segment L3 pour chaque niveau interne — afin de ne
-/// pas compter deux fois le même volume. Pour un paquet tunnelé, tous les
-/// niveaux partagent le même `encap_id`.
-fn owned_packets(
-    ts_sec: i64,
-    ts_usec: i64,
-    caplen: u32,
-    len: u32,
-    flow: &PacketFlow<'_>,
-) -> Vec<PacketOwnedStats> {
-    let levels = flow.flatten();
-    let tunneled = levels.len() > 1;
-
-    let mut owned: Vec<PacketOwnedStats> = levels
-        .into_iter()
-        .enumerate()
-        .map(|(depth, level)| {
-            let level_len = if depth == 0 {
-                len
-            } else {
-                level.data_link.payload.len() as u32
-            };
-            PacketOwnedStats {
-                ts_sec,
-                ts_usec,
-                caplen,
-                len: level_len,
-                flow: level.to_owned(),
-                encap_id: None,
-            }
-        })
-        .collect();
-
-    if tunneled {
-        let id = tunnel_pair_id(&owned[0].flow);
-        for packet in &mut owned {
-            packet.encap_id = Some(id);
-        }
-    }
-
-    owned
-}
 
 /// Bilan de conversion d'un fichier PCAP.
 #[derive(Debug, Default, Clone, Copy)]
@@ -143,16 +54,17 @@ pub fn append_pcap_file(matrix: &mut FlowMatrix, path: &Path) -> Result<PcapFile
         match PacketFlow::try_from(packet.data) {
             Ok(flow) => {
                 report.parse_ok += 1;
-                // Cast nécessaire en cross-platform : les `timeval` de libpcap
-                // sont `i32` sous Windows, `i64` sous Linux.
-                #[allow(clippy::unnecessary_cast)]
-                for owned in owned_packets(
-                    packet.header.ts.tv_sec as i64,
-                    packet.header.ts.tv_usec as i64,
-                    packet.header.caplen,
-                    packet.header.len,
-                    &flow,
-                ) {
+                // Même chemin de dépliage des tunnels que le desktop
+                // (`PacketMinimal::to_owned_packets`) : encap_id identiques,
+                // matrices joignables entre CLI et desktop.
+                let packet_min = PacketMinimal {
+                    ts_sec: packet.header.ts.tv_sec,
+                    ts_usec: packet.header.ts.tv_usec,
+                    caplen: packet.header.caplen,
+                    len: packet.header.len,
+                    flow,
+                };
+                for owned in packet_min.to_owned_packets() {
                     matrix.update_flow(&owned);
                 }
             }

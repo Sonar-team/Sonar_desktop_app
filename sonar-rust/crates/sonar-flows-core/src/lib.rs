@@ -4,7 +4,9 @@
 //! desktop app, the CLI, tests, and eventually external Rust consumers.
 
 pub mod csv;
+pub mod graph;
 pub mod matrix;
+pub mod packet;
 #[cfg(feature = "pcap")]
 pub mod pcap;
 

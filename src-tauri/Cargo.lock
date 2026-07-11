@@ -3609,6 +3609,7 @@ dependencies = [
  "pcap",
  "serde",
  "serde_json",
+ "sonar-flows-core",
  "sysinfo",
  "tauri",
  "tauri-build",
@@ -3621,6 +3622,18 @@ dependencies = [
  "tauri-plugin-shell",
  "thiserror 2.0.18",
  "tokio",
+]
+
+[[package]]
+name = "sonar-flows-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "csv",
+ "log",
+ "packet_parser",
+ "serde",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

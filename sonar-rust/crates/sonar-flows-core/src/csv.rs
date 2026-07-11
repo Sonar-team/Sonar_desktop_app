@@ -7,7 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::matrix::{FlowMatrix, FlowMatrixRow, parse_origin_list};
+use crate::matrix::{FlowMatrix, FlowMatrixRow, parse_origin_list, unescape_formula_cell};
 use crate::{Result, SonarCoreError, validate_batch_paths};
 
 /// Lit toutes les lignes d'un fichier de matrice CSV. Le fichier est
@@ -25,6 +25,12 @@ pub fn read_matrix_rows(csv_path: &Path) -> Result<Vec<FlowMatrixRow>> {
     let mut rows = Vec::new();
     for (i, result) in rdr.deserialize::<FlowMatrixRow>().enumerate() {
         let row = result.map_err(|e| SonarCoreError::InvalidCsv {
+            path: csv_path.to_path_buf(),
+            message: format!("ligne {} invalide: {e}", i + 2),
+        })?;
+        // Validation stricte (#148) : une IP ou une date illisible est
+        // rejetée avec son numéro de ligne, pas dégradée silencieusement.
+        row.validate().map_err(|e| SonarCoreError::InvalidCsv {
             path: csv_path.to_path_buf(),
             message: format!("ligne {} invalide: {e}", i + 2),
         })?;
@@ -70,16 +76,21 @@ pub fn matrix_from_rows(rows: &[FlowMatrixRow]) -> FlowMatrix {
     let mut matrix = FlowMatrix::new();
 
     // Labels portés par les fichiers d'abord : à clé égale, le dernier inséré
-    // gagne, comme dans l'application desktop.
+    // gagne, comme dans l'application desktop. Le préfixe anti-injection de
+    // formule posé à l'export est retiré (aller-retour sans altération).
     for row in rows {
         if let Some(label) = row.label_source.as_ref().filter(|l| !l.is_empty()) {
-            matrix.add_label(row.mac_source.clone(), row.ip_source.clone(), label.clone());
+            matrix.add_label(
+                row.mac_source.clone(),
+                row.ip_source.clone(),
+                unescape_formula_cell(label),
+            );
         }
         if let Some(label) = row.label_destination.as_ref().filter(|l| !l.is_empty()) {
             matrix.add_label(
                 row.mac_destination.clone(),
                 row.ip_destination.clone(),
-                label.clone(),
+                unescape_formula_cell(label),
             );
         }
     }

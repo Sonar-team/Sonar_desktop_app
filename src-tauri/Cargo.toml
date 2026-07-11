@@ -43,6 +43,9 @@ tauri-plugin-process = "2.3.1"
 pcap = "2.4.0"
 packet_parser = "4.0.0"
 netdev = "0.42.0"
+# Cœur métier partagé (matrice, CSV, paquets/tunnels, graphe), consommé
+# aussi par sonar-cli : source unique du domaine, cf. VISION.md.
+sonar-flows-core = { path = "../sonar-rust/crates/sonar-flows-core" }
 
 thiserror = "2.0.18"
 crossbeam = "0.8.4"
