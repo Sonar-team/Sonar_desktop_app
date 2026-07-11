@@ -58,8 +58,8 @@ typecheck, tests mockIPC).
 ## Backlog robustesse pipeline
 
 - [x] [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) Exclusion mutuelle capture/import/export (verrous tenus pendant l'I/O disque)
-- [ ] [#140](https://github.com/Sonar-team/Sonar_desktop_app/issues/140) Pool de buffers : famine des jumbo frames
-- [ ] [#141](https://github.com/Sonar-team/Sonar_desktop_app/issues/141) Télémétrie backpressure trop bavarde sous saturation
+- [x] [#140](https://github.com/Sonar-team/Sonar_desktop_app/issues/140) Pool de buffers : famine des jumbo frames
+- [x] [#141](https://github.com/Sonar-team/Sonar_desktop_app/issues/141) Télémétrie backpressure trop bavarde sous saturation
 
 ## Backlog qualité frontend
 
@@ -90,7 +90,7 @@ signalait est corrigée. Points nouveaux tracés :
 - [x] [#148](https://github.com/Sonar-team/Sonar_desktop_app/issues/148) Exports/imports CSV : déterminisme, écriture atomique, injection de formule, encap_id instable
 - [ ] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) Vérifier le DLT libpcap et neutraliser l'effet de capture_timing (packet_parser, correctif amont)
 - [x] [#153](https://github.com/Sonar-team/Sonar_desktop_app/issues/153) Import de labels : chemin inexistant vidant le store, header heuristique, normalisation MAC/IP
-- [ ] [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) Graphe/stats : ports d'arête tronqués, processed mal libellé, stats effacées à l'arrêt
+- [x] [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) Graphe/stats : ports d'arête tronqués, processed mal libellé, stats effacées à l'arrêt
 
 ## Tests et conformité
 

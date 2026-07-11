@@ -74,6 +74,8 @@ pub struct PoolStats {
     pub small_allocated: usize,
     pub large_allocated: usize,
     pub exhausted: u64,
+    /// Dont refus de trames larges (famine jumbo distincte, #140).
+    pub exhausted_large: u64,
 }
 
 /// Pool lock-free de PacketBuffer à deux classes de tailles.
@@ -93,6 +95,8 @@ pub struct PacketBufferPool {
     large_allocated: AtomicUsize,
     /// Nombre de `get` refusés faute de budget (paquets perdus côté app).
     exhausted: AtomicU64,
+    /// Dont refus de trames larges (famine jumbo distincte, #140).
+    exhausted_large: AtomicU64,
 }
 
 impl PacketBufferPool {
@@ -106,6 +110,7 @@ impl PacketBufferPool {
             small_allocated: AtomicUsize::new(0),
             large_allocated: AtomicUsize::new(0),
             exhausted: AtomicU64::new(0),
+            exhausted_large: AtomicU64::new(0),
         }
     }
 
@@ -131,6 +136,17 @@ impl PacketBufferPool {
                 self.large_allocated.fetch_add(1, Ordering::Relaxed);
                 return Some(PacketBuffer::new(self.large_size));
             }
+            // Budget épuisé mais un buffer standard est inactif : sa
+            // réservation est promue en buffer large. Sans cette promotion,
+            // un budget entièrement consommé par des petits buffers refusait
+            // définitivement toutes les trames larges (jumbo, GRO/TSO) même
+            // avec un pool small excédentaire (#140).
+            if self.small.pop().is_some() {
+                self.small_allocated.fetch_sub(1, Ordering::Relaxed);
+                self.large_allocated.fetch_add(1, Ordering::Relaxed);
+                return Some(PacketBuffer::new(self.large_size));
+            }
+            self.exhausted_large.fetch_add(1, Ordering::Relaxed);
         }
 
         self.exhausted.fetch_add(1, Ordering::Relaxed);
@@ -162,6 +178,7 @@ impl PacketBufferPool {
             small_allocated: self.small_allocated.load(Ordering::Relaxed),
             large_allocated: self.large_allocated.load(Ordering::Relaxed),
             exhausted: self.exhausted.load(Ordering::Relaxed),
+            exhausted_large: self.exhausted_large.load(Ordering::Relaxed),
         }
     }
 
@@ -242,6 +259,32 @@ mod tests {
         // Après restitution, plus de refus.
         pool.put(a);
         assert!(pool.get(100).is_some());
+    }
+
+    /// Budget entièrement consommé par des petits buffers : une demande
+    /// jumbo promeut un buffer standard inactif au lieu d'être refusée pour
+    /// toute la session (#140).
+    #[test]
+    fn idle_small_buffer_is_promoted_for_a_jumbo_request() {
+        let pool = PacketBufferPool::new(2, 65536);
+
+        // Tout le budget part en petits buffers…
+        let a = pool.get(100).expect("1er petit buffer");
+        let b = pool.get(100).expect("2e petit buffer");
+        // …et l'un d'eux redevient inactif.
+        pool.put(a);
+
+        let jumbo = pool.get(9000).expect("promotion du buffer inactif");
+        assert_eq!(jumbo.capacity(), 65536);
+        assert_eq!(pool.stats().exhausted, 0, "aucun refus");
+
+        // Plus rien d'inactif : le refus jumbo est compté distinctement.
+        assert!(pool.get(9000).is_none());
+        let stats = pool.stats();
+        assert_eq!(stats.exhausted, 1);
+        assert_eq!(stats.exhausted_large, 1, "famine jumbo visible");
+
+        drop(b);
     }
 
     #[test]

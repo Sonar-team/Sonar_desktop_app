@@ -42,8 +42,11 @@ pub(super) const PACKET_BATCH_INTERVAL_MS: u64 = 75;
 const PACKET_BATCH_INTERVAL: Duration = Duration::from_millis(PACKET_BATCH_INTERVAL_MS);
 /// Cadence d'émission des stats vers le frontend (dédupliquées par maybe_send).
 const STATS_EMIT_INTERVAL_MS: u64 = 250;
-/// Cadence d'émission de l'occupation du canal quand elle ne change pas.
-const CHANNEL_EMIT_TEMPO: Duration = Duration::from_millis(40);
+/// Intervalle minimal entre deux émissions d'occupation du canal (max 4/s).
+/// L'ancien tempo « à chaque changement de taille » émettait quasiment un
+/// événement IPC par paquet sous saturation — précisément quand le pipeline
+/// était déjà sous pression (#141).
+const CHANNEL_EMIT_MIN_INTERVAL: Duration = Duration::from_millis(250);
 /// Flush anticipé du batch graphe (rafales de nouveaux flux, ex. début de capture).
 const GRAPH_BATCH_MAX: usize = 512;
 /// Attente maximale entre deux paquets pendant le drainage d'arrêt : couvre
@@ -514,7 +517,6 @@ struct StatsEmitter {
     last_emit: Instant,
     last_channel: ChannelCapacityPayload,
     last_channel_update: Instant,
-    last_channel_len: usize,
     channel_capacity: usize,
     shared_stats: Arc<SharedCaptureStats>,
     drop_counters: Arc<AppDropCounters>,
@@ -535,7 +537,6 @@ impl StatsEmitter {
             last_emit: Instant::now(),
             last_channel: ChannelCapacityPayload::default(),
             last_channel_update: Instant::now(),
-            last_channel_len: 0,
             channel_capacity,
             shared_stats,
             drop_counters,
@@ -565,11 +566,8 @@ impl StatsEmitter {
             }
         }
 
-        if self.last_channel_len != queue_len
-            || self.last_channel_update.elapsed() >= CHANNEL_EMIT_TEMPO
-        {
+        if self.last_channel_update.elapsed() >= CHANNEL_EMIT_MIN_INTERVAL {
             self.last_channel_update = Instant::now();
-            self.last_channel_len = queue_len;
 
             if let Err(e) = ChannelCapacityPayload::send_if_changed(
                 &mut self.last_channel,
