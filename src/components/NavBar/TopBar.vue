@@ -17,6 +17,7 @@
 
     <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
     <button class="image-btn" @click="SaveLabels" title="Exporter les labels">🏷️</button>
+    <button class="image-btn" @click="handleLabelsClick" :disabled="isRunning" title="Gérer les labels">🗂️</button>
 
     <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
     <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
@@ -38,17 +39,18 @@ import { useCaptureStore } from '../../store/capture';
 import { CaptureEvent } from '../../types/capture';
 import { requestAppExit } from '../../utils/appExit';
 
-type Panel = 'config' | 'pcap' | 'csv' | 'filter';
+type Panel = 'config' | 'pcap' | 'csv' | 'filter' | 'labels';
 
 export default {
   name: "TopBar",
-  emits: ['toggle-config', 'toggle-pcap','toggle-csv', 'toggle-filter', 'toggle-graph'],
+  emits: ['toggle-config', 'toggle-pcap','toggle-csv', 'toggle-filter', 'toggle-graph', 'toggle-labels'],
 
   props: {
     configOpen: Boolean,
     filterOpen: Boolean,
     csvOpen: Boolean,
     pcapOpen: Boolean,
+    labelsOpen: Boolean,
   },
 
   watch: {
@@ -56,6 +58,7 @@ export default {
   filterOpen(val) { if (!val && this.activePanel === 'filter') this.activePanel = null; },
   csvOpen(val)    { if (!val && this.activePanel === 'csv') this.activePanel = null; },
   pcapOpen(val)   { if (!val && this.activePanel === 'pcap') this.activePanel = null; },
+  labelsOpen(val) { if (!val && this.activePanel === 'labels') this.activePanel = null; },
 },
 
   computed: {
@@ -279,6 +282,20 @@ export default {
       };
       this.activePanel = 'csv';
       this.$emit('toggle-csv');
+    },
+    handleLabelsClick() {
+      if (this.captureStore.isRunning) return;
+
+      if (useCaptureStore().isImporting) {
+        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        return;
+      }
+
+      if (this.activePanel !== null && this.activePanel !== 'labels') {
+        this.$emit(`toggle-${this.activePanel}`, false)
+      }
+      this.activePanel = 'labels';
+      this.$emit('toggle-labels');
     },
     handleFilterClick() {
 

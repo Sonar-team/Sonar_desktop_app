@@ -191,6 +191,14 @@ export const useCaptureStore = defineStore("capture", {
       this.channelCapacityPayloadListeners.push(cb);
       return unsubscribe(this.channelCapacityPayloadListeners, cb);
     },
+    // Applique des updates graphe retournées par une commande (mutations de
+    // labels #157) : mêmes abonnés que le flux du channel de capture, mais
+    // sans dépendre de l'existence d'un channel (hors capture).
+    applyGraphUpdates(updates: GraphUpdate[]) {
+      for (const update of updates) {
+        for (const cb of this.graphUpdateListeners) cb(update);
+      }
+    },
     onGraphUpdate(cb: (u: GraphUpdate) => void) {
       console.log("[CaptureStore] GraphUpdate abonné");
       this.graphUpdateListeners.push(cb);

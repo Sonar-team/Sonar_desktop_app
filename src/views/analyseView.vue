@@ -5,16 +5,18 @@
 <template>
   <div class="page-container">
     <div class="top-container">
-      <TopBar 
-        @toggle-config="toggleConfig" 
+      <TopBar
+        @toggle-config="toggleConfig"
         @toggle-pcap="togglePcap"
         @toggle-csv="toggleCsv"
         @toggle-filter="toggleFilter"
         @toggle-graph="toggleGraph"
+        @toggle-labels="toggleLabels"
         :config-open="showConfig"
         :filter-open="showFilter"
         :csv-open="showCsv"
-        :pcap-open="showPcap"  
+        :pcap-open="showPcap"
+        :labels-open="showLabels"
       />
 
       <div class="panels">
@@ -22,6 +24,7 @@
         <ImportPanel v-if="showPcap" :mode="'pcap'" @update:visible="(val: any) => showPcap = val"/>
         <ImportPanel v-if="showCsv" :mode="'csv'" @update:visible="(val: any) => showCsv = val"/>
         <Filter v-if="showFilter" @update:visible="(val: any) => showFilter = val"/>
+        <LabelsPanel v-if="showLabels" @update:visible="(val: any) => showLabels = val"/>
       </div>
     </div>
 
@@ -47,6 +50,7 @@ import ConfigPanel from '../components/AnalyseView/panels/ConfigPanel.vue';
 import BottomLong from '../components/AnalyseView/BottomLong.vue';
 import ImportPanel from '../components/AnalyseView/panels/ImportPanel.vue';
 import Filter from '../components/AnalyseView/panels/Filter.vue';
+import LabelsPanel from '../components/AnalyseView/panels/LabelsPanel.vue';
 
 export default defineComponent({
   name: 'MainView',
@@ -57,7 +61,8 @@ export default defineComponent({
     NetworkGraphComponent,
     BottomLong,
     StatusBar,
-    Filter
+    Filter,
+    LabelsPanel
   },
   data() {
     return {
@@ -65,6 +70,7 @@ export default defineComponent({
       showPcap: false,
       showCsv: false,
       showFilter: false,
+      showLabels: false,
       showGraph: true, // ✅ état du graph
     };
   },
@@ -85,6 +91,9 @@ export default defineComponent({
     },
     toggleFilter(val?: boolean) {
       this.showFilter = val !== undefined ? val : !this.showFilter;
+    },
+    toggleLabels(val?: boolean) {
+      this.showLabels = val !== undefined ? val : !this.showLabels;
     },
     toggleGraph() {
       this.showGraph = !this.showGraph; // ✅ bascule affichage

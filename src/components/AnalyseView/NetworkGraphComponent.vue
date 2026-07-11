@@ -443,14 +443,17 @@ export default defineComponent({
       this.selectedNode = { ...this.selectedNode, label: newLabel }
       this.selectedNodeInfos = this.buildNodeInfos(this.selectedNodeId)
 
-      // Appel backend avec mac/ip/label
+      // Appel backend avec mac/ip/label. La commande resynchronise tous les
+      // labels (#157) et retourne les updates graphe : appliquées via le
+      // store, sans dépendre du channel de capture.
       try {
         this.isSavingLabel = true
-        await invoke("add_label", {
+        const updates = await invoke<GraphUpdate[]>("add_label", {
           mac: attrs.mac ?? "",
           ip: attrs.ip ?? "",
           label: newLabel,
         })
+        this.captureStore.applyGraphUpdates(updates)
       } catch (e) {
         console.error("Erreur add_label:", e)
       } finally {

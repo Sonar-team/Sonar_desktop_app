@@ -27,6 +27,7 @@ export type LabelErrorKind =
   | { kind: "invalidMacIpFormat"; message: [InvalidFieldValue[], InvalidFieldValue[]] }
   | { kind: "labelLinesConflicts"; message: [LabelConflictRow[], LabelConflictRow[]] }
   | { kind: "invalidRowsFormat"; message: InvalidLineValue[] }
+  | { kind: "editRejected"; message: string }
 
 export type CaptureStateErrorKind =
   | { kind: "io"; message: string }
@@ -148,6 +149,8 @@ function handleLabelerror(labelError: LabelErrorKind): string {
       return `Conflits dans les lignes de labels : même IP, MAC différent - ${sameIpDiffMac.map(([lineA, lineB, ip, ref_mac, mac, rowA, rowB]) => `lignes ${lineA}/${lineB} - ${ip} : ${ref_mac} <-> ${mac}\nligne ${lineA}: ${rowA}\nligne ${lineB}: ${rowB}`).join('\n')}, même IP, label différent - ${sameIpDiffLabel.map(([lineA, lineB, ip, ref_label, label, rowA, rowB]) => `lignes ${lineA}/${lineB} - ${ip} : ${ref_label} <-> ${label}\nligne ${lineA}: ${rowA}\nligne ${lineB}: ${rowB}`).join('\n')} \n <Importation impossible>`;
     case "invalidRowsFormat":
       return `Format de ligne invalide. Attendu au moins "mac, ip, label"; les colonnes suivantes sont ajoutées au label. Trouvé ${labelError.message.map(([line, value]) => `ligne ${line}: ${value}`).join('\n')}`
+    case "editRejected":
+      return `Édition refusée : ${labelError.message}`;
     default:
       return `Erreur de label inconnue : ${JSON.stringify(labelError)}`;
   }
