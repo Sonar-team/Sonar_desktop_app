@@ -47,7 +47,9 @@ check_contains .github/workflows/publish-smoke.yml './script/ci/prepare-windows-
 check_contains .github/workflows/publish-smoke.yml './script/ci/smoke-test-release-binary.sh'
 check_contains .github/workflows/covecode.yml './script/ci/export-build-versions.sh'
 check_contains .github/workflows/covecode.yml 'node-version: "v${{ steps.versions.outputs.NODE_VERSION }}"'
-check_contains src-tauri/tauri.conf.json "npcap-${NPCAP_VERSION}.exe"
+# La ressource Npcap est déclarée dans la conf spécifique Windows depuis
+# qu'elle n'est plus embarquée dans les bundles Linux/macOS (#138).
+check_contains src-tauri/tauri.windows.conf.json "npcap-${NPCAP_VERSION}.exe"
 check_contains src-tauri/windows/hooks.nsh "npcap-${NPCAP_VERSION}.exe"
 check_contains src-tauri/windows/fragments/npcap.wxs "npcap-${NPCAP_VERSION}.exe"
 
