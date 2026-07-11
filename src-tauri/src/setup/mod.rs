@@ -8,6 +8,7 @@ use tauri::AppHandle;
 
 pub mod about;
 pub mod labels;
+pub mod logs;
 pub mod system_info;
 
 /// Journalise un instantané complet de l'environnement au démarrage : hôte,

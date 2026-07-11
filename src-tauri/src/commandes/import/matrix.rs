@@ -360,8 +360,7 @@ mod tests {
         let rows = read_matrix_rows_from_files(&[brut.to_str().unwrap().to_string()]).unwrap();
         let (matrix, _graph) = build_matrix_and_graph(&rows);
         let merged = dir.path().join("fusion.csv");
-        FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), merged.to_str().unwrap())
-            .unwrap();
+        FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), merged.to_str().unwrap()).unwrap();
 
         // Étape 2 : réimport de fusion.csv -> l'origine "brut.csv" est préservée.
         let rows = read_matrix_rows_from_files(&[merged.to_str().unwrap().to_string()]).unwrap();
@@ -394,8 +393,7 @@ mod tests {
             let rows = read_matrix_rows_from_files(&[raw.to_str().unwrap().to_string()]).unwrap();
             let (matrix, _graph) = build_matrix_and_graph(&rows);
             let out = dir.path().join(out_name);
-            FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), out.to_str().unwrap())
-                .unwrap();
+            FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), out.to_str().unwrap()).unwrap();
             out.to_str().unwrap().to_string()
         };
         let fusion_a = export_with_origin("a-raw.csv", "fusion-a.csv");
@@ -439,8 +437,7 @@ mod tests {
 
         let dir = TempDir::new("sonar_test_matrix_roundtrip");
         let csv_path = dir.path().join("matrice.csv");
-        FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), csv_path.to_str().unwrap())
-            .unwrap();
+        FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), csv_path.to_str().unwrap()).unwrap();
 
         let rows = read_matrix_rows(csv_path.to_str().unwrap()).unwrap();
         assert_eq!(rows.len(), matrix.row_count(), "une ligne CSV par flux");

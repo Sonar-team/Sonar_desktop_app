@@ -75,7 +75,10 @@ pub fn run() -> Result<(), tauri::Error> {
         .plugin(tauri_plugin_process::init())
         .plugin(
             tauri_plugin_log::Builder::new()
-                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+                // Une session garde au plus 5 fichiers rotatés de 500 Ko ;
+                // l'accumulation entre sessions est bornée par
+                // `setup::logs::prune_old_logs` au démarrage (#147).
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(5))
                 .max_file_size(500_000)
                 .target(tauri_plugin_log::Target::new(
                     tauri_plugin_log::TargetKind::LogDir {
@@ -121,6 +124,7 @@ pub fn run() -> Result<(), tauri::Error> {
             move |app| {
                 info!("{}", print_banner());
                 log_host_and_app_snapshot(app.app_handle());
+                setup::logs::prune_old_logs(app.app_handle());
                 info!("Reading labels...");
                 read_labels(app.handle())?;
 

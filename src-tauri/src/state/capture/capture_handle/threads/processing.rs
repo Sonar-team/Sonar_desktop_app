@@ -50,6 +50,15 @@ const GRAPH_BATCH_MAX: usize = 512;
 /// largement le timeout pcap par défaut (25 ms) le temps que le thread de
 /// capture sorte et lâche l'émetteur.
 const DRAIN_RECV_TIMEOUT: Duration = Duration::from_millis(250);
+/// Plafond de flux de la matrice en capture live (#147). Un trafic à forte
+/// cardinalité (scan, adresses aléatoires) créerait des lignes sans fin ;
+/// plutôt qu'évincer des données (le relevé mentirait), la capture s'arrête
+/// proprement avec une raison explicite — le relevé reste fidèle à ce qui a
+/// été observé jusque-là. ~250 k lignes ≈ quelques centaines de Mo.
+const MAX_LIVE_FLOWS: u32 = 250_000;
+/// Cadence maximale des logs d'erreur de parsing : sous trafic malformé
+/// (volontaire ou non), un log par paquet saturerait le fichier de logs.
+const PARSE_ERROR_LOG_INTERVAL: Duration = Duration::from_secs(1);
 
 /// IPs source/destination d'un flux possédé, en chaînes (vides si absentes).
 fn flow_ips(owned: &PacketOwnedStats) -> (String, String) {
@@ -83,6 +92,9 @@ struct PacketWorker {
     last_batch_flush: Instant,
     /// Nombre de flux de la matrice, rafraîchi à chaque update (pour les stats).
     processed: u32,
+    /// Erreurs de parsing accumulées depuis le dernier log (rate-limiting).
+    parse_errors_pending: u64,
+    last_parse_error_log: Instant,
     #[cfg(feature = "capture_timing")]
     timing_logger: Option<CaptureTimingLogger>,
 }
@@ -103,6 +115,8 @@ impl PacketWorker {
             graph_batch: GraphUpdateBatch::default(),
             last_batch_flush: Instant::now(),
             processed: 0,
+            parse_errors_pending: 0,
+            last_parse_error_log: Instant::now(),
             #[cfg(feature = "capture_timing")]
             timing_logger: match CaptureTimingLogger::new() {
                 Ok(logger) => Some(logger),
@@ -111,6 +125,23 @@ impl PacketWorker {
                     None
                 }
             },
+        }
+    }
+
+    /// Compte une erreur de parsing et la journalise au plus une fois par
+    /// [`PARSE_ERROR_LOG_INTERVAL`] : du trafic malformé en rafale ne doit
+    /// pas amplifier les logs (#147).
+    fn note_parse_error(&mut self, err: &dyn std::fmt::Display) {
+        self.parse_errors_pending += 1;
+        if self.last_parse_error_log.elapsed() >= PARSE_ERROR_LOG_INTERVAL {
+            error!(
+                "{} paquet(s) illisible(s) depuis {:?} (dernier : {})",
+                self.parse_errors_pending,
+                self.last_parse_error_log.elapsed(),
+                err
+            );
+            self.parse_errors_pending = 0;
+            self.last_parse_error_log = Instant::now();
         }
     }
 
@@ -131,7 +162,7 @@ impl PacketWorker {
             match parse_packet_flow_with_timing(pkt.as_ref()) {
                 Ok(parsed) => parsed,
                 Err(e) => {
-                    error!("Failed to parse PacketFlow: {}", e);
+                    self.note_parse_error(&e);
                     return true;
                 }
             }
@@ -139,7 +170,7 @@ impl PacketWorker {
             match PacketFlow::try_from(pkt.as_ref()) {
                 Ok(flow) => (flow, ParseTiming::default()),
                 Err(e) => {
-                    error!("Failed to parse PacketFlow: {}", e);
+                    self.note_parse_error(&e);
                     return true;
                 }
             }
@@ -149,7 +180,7 @@ impl PacketWorker {
         let flow = match PacketFlow::try_from(pkt.as_ref()) {
             Ok(flow) => flow,
             Err(e) => {
-                error!("Failed to parse PacketFlow: {}", e);
+                self.note_parse_error(&e);
                 return true;
             }
         };
@@ -601,6 +632,23 @@ pub fn spawn_processing_thread(
                         error!("Canal IPC frontend cassé : arrêt du pipeline de capture");
                         stop_flag.store(true, Ordering::Relaxed);
                         worker.drain_channel(&rx, &buffer_pool);
+                        break;
+                    }
+
+                    if worker.processed >= MAX_LIVE_FLOWS {
+                        // Plafond de flux atteint : arrêt propre et explicite
+                        // plutôt qu'une éviction silencieuse (le relevé
+                        // mentirait) ou un épuisement mémoire (#147).
+                        error!("Plafond de {MAX_LIVE_FLOWS} flux atteint : arrêt de la capture");
+                        stop_flag.store(true, Ordering::Relaxed);
+                        let _ = worker.flush_batches();
+                        let _ = worker.on_event.send(CaptureEvent::Stopped {
+                            session_id,
+                            reason: format!(
+                                "plafond de {MAX_LIVE_FLOWS} flux atteint : capture arrêtée \
+                                 pour préserver la mémoire, le relevé reste fidèle jusqu'ici"
+                            ),
+                        });
                         break;
                     }
                 }

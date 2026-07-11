@@ -80,7 +80,7 @@ signalait est corrigée. Points nouveaux tracés :
 
 ## Fiabilité en exploitation
 
-- [ ] [#147](https://github.com/Sonar-team/Sonar_desktop_app/issues/147) Mémoire non bornée en capture longue (matrice/graphe sans éviction, rétention logs illimitée)
+- [x] [#147](https://github.com/Sonar-team/Sonar_desktop_app/issues/147) Mémoire non bornée en capture longue (matrice/graphe sans éviction, rétention logs illimitée)
 - [x] [#149](https://github.com/Sonar-team/Sonar_desktop_app/issues/149) Machine d'état de capture et identifiant de session IPC
 - [x] [#155](https://github.com/Sonar-team/Sonar_desktop_app/issues/155) Retirer le mode headless du desktop — sans GUI, c'est sonar-cli (décision VISION.md)
 - [ ] [#156](https://github.com/Sonar-team/Sonar_desktop_app/issues/156) Arguments de session au lancement du desktop (interface, filtre, autostart, export) pour l'orchestration

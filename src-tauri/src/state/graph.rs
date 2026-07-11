@@ -540,6 +540,11 @@ fn maybe_update_node_label(node: &mut Node, label: Option<String>, updates: &mut
     }
 }
 
+/// Plafond de MAC retenues par nœud : l'anomalie multi-MAC est déjà signalée
+/// dès la deuxième, en garder plus n'apporte rien à l'arbitrage et une
+/// usurpation massive (MAC aléatoires) gonflerait la mémoire sans borne (#147).
+const MAX_MACS_PER_NODE: usize = 16;
+
 /// Enregistre une MAC unicast supplémentaire observée pour ce nœud (IP).
 /// Plusieurs MAC pour une même IP = anomalie à investiguer (IP partagée,
 /// VRRP, usurpation ARP…) : le front la signale visuellement. Les MAC
@@ -549,6 +554,9 @@ fn record_observed_mac(node: &mut Node, mac: &str, updates: &mut Vec<GraphUpdate
         return;
     }
     if node.macs.iter().any(|known| known == mac) {
+        return;
+    }
+    if node.macs.len() >= MAX_MACS_PER_NODE {
         return;
     }
     node.macs.push(mac.to_string());
@@ -789,6 +797,26 @@ mod add_packet_flow_tests {
         assert!(
             updates.iter().any(|u| matches!(u, GraphUpdate::NodeUpdated(n) if n.macs.len() == 2)),
             "le front est notifié de l'anomalie"
+        );
+
+        // Usurpation massive (MAC aléatoires) : la liste est bornée, la
+        // mémoire ne croît plus au-delà du plafond (#147).
+        for i in 0..100u32 {
+            add(
+                &mut graph,
+                &flow(
+                    &format!("02:00:00:00:{:02x}:{:02x}", i / 256, i % 256),
+                    "192.168.1.10",
+                    "10:00:00:00:00:0b",
+                    "192.168.1.20",
+                ),
+            );
+        }
+        let node = graph.nodes.get("192.168.1.10").unwrap();
+        assert_eq!(
+            node.macs.len(),
+            MAX_MACS_PER_NODE,
+            "la liste des MAC est plafonnée"
         );
     }
 

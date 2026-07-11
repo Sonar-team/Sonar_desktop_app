@@ -18,6 +18,10 @@ const MIN_TIMEOUT_MS: i32 = 1;
 const MAX_TIMEOUT_MS: i32 = 10_000;
 const MIN_SNAPLEN: i32 = 64;
 const MAX_SNAPLEN: i32 = 262_144;
+/// Budget mémoire du pool de buffers de capture : `(chan_capacity + 2) ×
+/// snaplen` octets sont réservables en vol. Sans ce plafond, les bornes
+/// individuelles autorisent ~244 Gio théoriques (#147).
+const MAX_POOL_BYTES: i64 = 1024 * 1024 * 1024;
 
 /// Paramètres d'une capture : interface et réglages pcap. Toujours passer
 /// par [`CaptureConfig::setup`]/`validate` avant usage (bornes `MIN_*`/`MAX_*`).
@@ -81,6 +85,16 @@ impl CaptureConfig {
         )?;
         validate_range("timeout", self.timeout, MIN_TIMEOUT_MS, MAX_TIMEOUT_MS)?;
         validate_range("snaplen", self.snaplen, MIN_SNAPLEN, MAX_SNAPLEN)?;
+
+        // Budget global du pool de buffers (miroir du dimensionnement de
+        // CaptureHandle::start : chan_capacity + 2 buffers de snaplen octets).
+        let pool_bytes = (self.chan_capacity as i64 + 2) * self.snaplen as i64;
+        if pool_bytes > MAX_POOL_BYTES {
+            return Err(CaptureError::InvalidConfig(format!(
+                "chan_capacity × snaplen réserverait {pool_bytes} octets de buffers ; \
+                 le budget maximum est de {MAX_POOL_BYTES} octets (1 Gio)"
+            )));
+        }
         Ok(())
     }
 
@@ -187,6 +201,27 @@ mod tests {
         assert!(matches!(result, Err(CaptureError::InvalidConfig(_))));
         assert_eq!(config.device_name, previous.device_name);
         assert_eq!(config.buffer_size, previous.buffer_size);
+    }
+
+    /// Chaque borne individuelle est respectée mais le produit dépasse le
+    /// budget mémoire du pool : la configuration est refusée (#147).
+    #[test]
+    fn validation_rejects_pool_budget_overflow() {
+        let mut config = valid_config();
+        config.chan_capacity = MAX_CHAN_CAPACITY; // 1 000 000 buffers
+        config.snaplen = MAX_SNAPLEN; // × 262 144 o ≈ 244 Gio
+
+        assert!(matches!(
+            config.validate(),
+            Err(CaptureError::InvalidConfig(_))
+        ));
+    }
+
+    #[test]
+    fn validation_accepts_default_pool_budget() {
+        let mut config = CaptureConfig::default();
+        config.device_name = "eth0".to_string();
+        config.validate().expect("config par défaut sous le budget");
     }
 
     #[test]
