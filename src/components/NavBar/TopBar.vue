@@ -31,11 +31,6 @@
 import { Channel, invoke } from '@tauri-apps/api/core';
 import { info, error } from '@tauri-apps/plugin-log';
 import { save } from '@tauri-apps/plugin-dialog';
-import { register, unregister } from '@tauri-apps/plugin-global-shortcut';
-// when using `"withGlobalTauri": true`, you may use
-// const { register } = window.__TAURI__.globalShortcut;
-
-
 
 import { displayCaptureError } from '../../errors/capture'; // Gestion des erreurs propre
 import { getCurrentDate } from '../../utils/time';
@@ -78,63 +73,35 @@ export default {
   data() {
     return {
       showMatrice: true, // Toggle state (true for Matrice, false for NetworkGraphComponent)
-      shortcuts: [] as string[],
       localHandler: null as ((e: KeyboardEvent) => void) | null,
       activePanel: null as Panel | null,
     };
   },
   async mounted() {
-    // En mode fenêtré, des raccourcis globaux voleraient Ctrl+S, Ctrl+F, etc.
-    // à toutes les applications du système : on n'utilise le plugin
-    // global-shortcut qu'en headless, et un listener clavier local sinon.
-    const headless = await invoke<boolean>('is_headless');
+    // Raccourcis locaux à la fenêtre : des raccourcis globaux voleraient
+    // Ctrl+S, Ctrl+F, etc. à toutes les applications du système.
+    this.localHandler = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (!ctrl) return;
 
-    if (headless) {
-      const bindings: [string, () => void][] = [
-        ['CommandOrControl+S', () => this.SaveAsCsv()],
-        ['CommandOrControl+Shift+R', () => this.reset()],
-        ['CommandOrControl+P', () => this.start()],
-        ['CommandOrControl+Shift+P', () => this.stop()],
-        ['CommandOrControl+O', () => this.displayPcapOpener()],
-        ['CommandOrControl+,', () => this.handleConfigClick()],
-        ['CommandOrControl+F', () => this.handleFilterClick()],
-        ['CommandOrControl+L', () => this.export_logs()],
-        ['CommandOrControl+Q', () => this.quit()],
-      ];
-      for (const [shortcut, handler] of bindings) {
-        this.shortcuts.push(shortcut);
-        await register(shortcut, (event) => {
-          if (event.state === 'Released') handler();
-        });
-      }
-    } else {
-      this.localHandler = (e: KeyboardEvent) => {
-        const ctrl = e.ctrlKey || e.metaKey;
-        if (!ctrl) return;
-
-        const key = e.key.toLowerCase();
-        if (key === 's' && !e.shiftKey) { e.preventDefault(); this.SaveAsCsv(); }
-        else if (key === 'r' && e.shiftKey) { e.preventDefault(); this.reset(); }
-        else if (key === 'p' && !e.shiftKey) { e.preventDefault(); this.start(); }
-        else if (key === 'p' && e.shiftKey) { e.preventDefault(); this.stop(); }
-        else if (key === 'o') { e.preventDefault(); this.displayPcapOpener(); }
-        else if (key === ',') { e.preventDefault(); this.handleConfigClick(); }
-        else if (key === 'f') { e.preventDefault(); this.handleFilterClick(); }
-        else if (key === 'l') { e.preventDefault(); this.export_logs(); }
-        else if (key === 'q') { e.preventDefault(); this.quit(); }
-      };
-      window.addEventListener('keydown', this.localHandler);
-    }
+      const key = e.key.toLowerCase();
+      if (key === 's' && !e.shiftKey) { e.preventDefault(); this.SaveAsCsv(); }
+      else if (key === 'r' && e.shiftKey) { e.preventDefault(); this.reset(); }
+      else if (key === 'p' && !e.shiftKey) { e.preventDefault(); this.start(); }
+      else if (key === 'p' && e.shiftKey) { e.preventDefault(); this.stop(); }
+      else if (key === 'o') { e.preventDefault(); this.displayPcapOpener(); }
+      else if (key === ',') { e.preventDefault(); this.handleConfigClick(); }
+      else if (key === 'f') { e.preventDefault(); this.handleFilterClick(); }
+      else if (key === 'l') { e.preventDefault(); this.export_logs(); }
+      else if (key === 'q') { e.preventDefault(); this.quit(); }
+    };
+    window.addEventListener('keydown', this.localHandler);
 
     useCaptureStore().refreshHasData(); // Vérifie s'il y a déjà des données au montage pour ajuster l'état de hasData
   },
 
   async beforeUnmount() {
     // recommandé en dev/hot reload
-    if (this.shortcuts.length > 0) {
-      await unregister(this.shortcuts);
-      this.shortcuts = [];
-    }
     if (this.localHandler) {
       window.removeEventListener('keydown', this.localHandler);
       this.localHandler = null;

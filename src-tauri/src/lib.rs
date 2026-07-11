@@ -1,6 +1,10 @@
 //! Bibliothèque principale de SONAR : construit l'application Tauri
-//! (plugins, état partagé, menu, fenêtre ou mode headless) et enregistre
-//! toutes les commandes exposées au frontend.
+//! (plugins, état partagé, menu, fenêtre) et enregistre toutes les
+//! commandes exposées au frontend.
+//!
+//! L'usage sans interface graphique n'existe pas ici : c'est le rôle de
+//! `sonar-cli` (workspace `sonar-rust/`), cf. VISION.md « Deux formes,
+//! un seul cœur ».
 
 use chrono::Local;
 use commandes::{
@@ -14,9 +18,7 @@ use tauri::{
     Manager,
     menu::{MenuBuilder, SubmenuBuilder},
 };
-use tauri_plugin_cli::CliExt;
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 use crate::{
     commandes::{
@@ -27,7 +29,7 @@ use crate::{
             get_label_rows, import_label_file, import_matrix_file, import_matrix_files,
             is_matrix_empty, resolve_label_conflict,
         },
-        net_capture::{reset_capture, set_filter, start_capture_core},
+        net_capture::{reset_capture, set_filter},
     },
     setup::{
         about::{about_message, changelog_message},
@@ -55,20 +57,8 @@ mod utils;
 // Exposé pour le benchmark `examples/pool_bench.rs`.
 pub use state::capture::capture_handle::threads::packet_buffer;
 
-/// Vrai si l'application tourne en mode headless (`--headless`).
-/// Fixé une fois au démarrage, exposé au frontend via `is_headless` pour que
-/// l'UI choisisse entre raccourcis globaux (headless) et locaux (fenêtré).
-struct HeadlessMode(bool);
-
-/// Commande Tauri : indique au frontend si l'application est en mode headless.
-#[tauri::command]
-fn is_headless(state: tauri::State<'_, HeadlessMode>) -> bool {
-    state.0
-}
-
 /// Point d'entrée de l'application : configure les plugins, l'état partagé,
-/// le menu et la fenêtre (ou lance directement la capture en headless), puis
-/// démarre la boucle Tauri.
+/// le menu et la fenêtre, puis démarre la boucle Tauri.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<(), tauri::Error> {
     let now = Local::now();
@@ -79,7 +69,6 @@ pub fn run() -> Result<(), tauri::Error> {
     );
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
@@ -148,75 +137,32 @@ pub fn run() -> Result<(), tauri::Error> {
                     Err(err) => error!("Configuration capture persistée ignorée: {err}"),
                 }
 
-                // CLI
-                let Ok(cli_matches) = app.cli().matches() else {
-                    println!("Une erreur est survenue lors de l'analyse des arguments");
-                    return Ok(());
-                };
+                let _ = start_cpu_monitor(app.handle().clone());
 
-                let headless_enabled = cli_matches
-                    .args
-                    .get("headless")
-                    .map(|a| a.occurrences > 0)
-                    .unwrap_or(false);
-
-                println!("headless_enabled = {}", headless_enabled);
-                println!("args: {:?}", cli_matches);
-                app.manage(HeadlessMode(headless_enabled));
-
-                // En headless, aucune fenêtre n'est créée : un Ctrl+C global
-                // reste le seul moyen d'arrêter proprement la capture. En mode
-                // fenêtré, on n'enregistre rien pour ne pas voler le raccourci
-                // au reste du système.
-                if headless_enabled {
-                    let ctrl_c = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyC);
-                    app.global_shortcut()
-                        .on_shortcut(ctrl_c, |app, _shortcut, event| {
-                            if matches!(event.state(), ShortcutState::Pressed) {
-                                info!("Ctrl+C global reçu: arrêt de SONAR headless");
-                                app.exit(0);
-                            }
-                        })?;
-                }
-
-                // handle the capture state here
-                if !headless_enabled {
-                    let _ = start_cpu_monitor(app.handle().clone());
-
-                    let apropos = SubmenuBuilder::new(app, "A propos")
-                        .text("version", "Version")
-                        .text("changelog", "Changelog")
-                        .build()?;
-
-                    let menu = MenuBuilder::new(app)
-                        .text("fichier", "Fichier")
-                        .item(&apropos)
-                        .text("fermer", "Fermer")
-                        .build()?;
-
-                    app.set_menu(menu)?;
-
-                    tauri::WebviewWindowBuilder::new(
-                        app,
-                        "main",
-                        tauri::WebviewUrl::App("index.html".into()),
-                    )
-                    .title("SONAR")
-                    .inner_size(1800.0, 950.0)
+                let apropos = SubmenuBuilder::new(app, "A propos")
+                    .text("version", "Version")
+                    .text("changelog", "Changelog")
                     .build()?;
 
-                    let interfaces = setup::system_info::get_interfaces();
-                    setup::labels::create_labels_from_network_interfaces(interfaces, app.handle())?;
-                    //println!("labels: {:#?}", labels);
-                    //setup::labels::add_labels_to_file(app.handle(), labels.clone())?;
-                    //read_labels(app.handle())?;
-                    //setup::labels::update_labels_in_state(app.handle())?;
-                } else {
-                    let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
-                    let config = get_config_capture(capture_state.clone());
-                    println!("config: {:#?}", config);
-                    start_capture_core(capture_state, app.handle().clone())?;
-                }
+                let menu = MenuBuilder::new(app)
+                    .text("fichier", "Fichier")
+                    .item(&apropos)
+                    .text("fermer", "Fermer")
+                    .build()?;
+
+                app.set_menu(menu)?;
+
+                tauri::WebviewWindowBuilder::new(
+                    app,
+                    "main",
+                    tauri::WebviewUrl::App("index.html".into()),
+                )
+                .title("SONAR")
+                .inner_size(1800.0, 950.0)
+                .build()?;
+
+                let interfaces = setup::system_info::get_interfaces();
+                setup::labels::create_labels_from_network_interfaces(interfaces, app.handle())?;
 
                 Ok(())
             }
@@ -243,8 +189,7 @@ pub fn run() -> Result<(), tauri::Error> {
             import_matrix_file,
             import_matrix_files,
             clear_label_store,
-            is_matrix_empty,
-            is_headless
+            is_matrix_empty
         ])
         .run(tauri::generate_context!())
 }

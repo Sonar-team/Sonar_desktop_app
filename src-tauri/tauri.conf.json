@@ -67,13 +67,6 @@
   "plugins": {
     "cli": {
       "description": "Sonar CLI",
-      "args": [
-        {
-          "short": "H",
-          "name": "headless",
-          "description": "Run without any window (headless mode)"
-        }
-      ],
       "subcommands": {
         "run": {
           "description": "Run the application",
