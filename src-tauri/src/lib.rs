@@ -27,7 +27,7 @@ use crate::{
         import::{
             LabelConflictStore, clear_label_store, convert_from_pcap_list, get_label_conflicts,
             get_label_rows, import_label_file, import_matrix_file, import_matrix_files,
-            is_matrix_empty, resolve_label_conflict,
+            is_matrix_empty, resolve_label_conflicts,
         },
         net_capture::{reset_capture, set_filter},
     },
@@ -188,7 +188,7 @@ pub fn run() -> Result<(), tauri::Error> {
             set_filter,
             get_label_rows,
             get_label_conflicts,
-            resolve_label_conflict,
+            resolve_label_conflicts,
             import_label_file,
             import_matrix_file,
             import_matrix_files,

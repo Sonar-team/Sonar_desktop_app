@@ -11,7 +11,7 @@ mod timing;
 
 pub use labels::{
     LabelConflictStore, clear_label_store, get_label_conflicts, get_label_rows, import_label_file,
-    labels_to_matrix, resolve_label_conflict,
+    labels_to_matrix, resolve_label_conflicts,
 };
 pub use matrix::{import_matrix_file, import_matrix_files, is_matrix_empty};
 pub use pcap::convert_from_pcap_list;

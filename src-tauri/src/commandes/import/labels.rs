@@ -76,6 +76,15 @@ pub struct LabelConflictStore {
     pub conflicts: Vec<LabelConflictReport>,
 }
 
+/// Choix d'arbitrage envoyé par le front : le label retenu pour une clé
+/// `(mac, ip)` en conflit.
+#[derive(Debug, serde::Deserialize)]
+pub struct LabelResolution {
+    pub mac: String,
+    pub ip: String,
+    pub label: String,
+}
+
 /// Déduplique les lignes par clé `(mac, ip)` en gardant la **première**
 /// occurrence. Retourne les lignes retenues (une par clé) et la liste des
 /// conflits (clés ayant reçu au moins deux labels différents).
@@ -128,7 +137,13 @@ fn dedup_labels_first_wins(rows: Vec<LabelRow>) -> (Vec<LabelRow>, Vec<LabelConf
 fn read_label_file(csv_path: &str) -> Result<String, CaptureStateError> {
     match std::fs::read_to_string(csv_path) {
         Ok(csv_data) => Ok(csv_data),
-        Err(error) if error.kind() == ErrorKind::NotFound => Ok(String::new()),
+        // Un chemin inexistant était lu comme un fichier vide : l'import
+        // vidait alors le store de labels sans un mot. Erreur explicite (#153).
+        Err(error) if error.kind() == ErrorKind::NotFound => Err(std::io::Error::new(
+            ErrorKind::NotFound,
+            format!("fichier de labels introuvable : {csv_path}"),
+        )
+        .into()),
         Err(error) => Err(error.into()),
     }
 }
@@ -220,14 +235,25 @@ fn read_label_rows(csv_path: &str) -> Result<Vec<LabelRow>, CaptureStateError> {
             parse_label_fields(record.iter()).map(|(mac, ip, label)| LabelRow {
                 line,
                 raw,
-                mac,
-                ip,
-                label,
+                // Normalisation vers les formes produites par le parser de
+                // paquets : MAC en minuscules, IP canonique (IPv6 compressée).
+                // Sans elle, un label « AA:BB:… » ou « ::0001 » ne
+                // correspondait jamais, sans erreur visible (#153). La forme
+                // brute reste dans `raw` pour les messages d'erreur.
+                mac: mac.to_ascii_lowercase(),
+                ip: ip
+                    .parse::<IpAddr>()
+                    .map(|addr| addr.to_string())
+                    .unwrap_or(ip),
+                // Retire le préfixe anti-injection de formule posé à
+                // l'export (#148) : aller-retour sans altération.
+                label: crate::state::flow_matrix::unescape_formula_cell(&label),
             })
         })
         .collect())
 }
 
+#[cfg(test)]
 fn verif_label_rows_format(file: String) -> Result<(), CaptureStateError> {
     read_label_records(&file)?;
     Ok(())
@@ -289,11 +315,19 @@ fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
     }
 }
 
+// La production passe par `verif_mac_ip_format_rows` (lecture unique du
+// fichier dans `import_label_file`) ; cette version basée fichier ne sert
+// plus qu'aux tests.
+#[cfg(test)]
 pub fn verif_mac_ip_format(csv_path: String) -> Result<(), CaptureStateError> {
+    let rows = read_label_rows(&csv_path)?;
+    verif_mac_ip_format_rows(&rows)
+}
+
+/// Variante sur lignes déjà lues : évite de relire le fichier (#153).
+fn verif_mac_ip_format_rows(rows: &[LabelRow]) -> Result<(), CaptureStateError> {
     let mut invalid_ip: Vec<(usize, String, String)> = Vec::new();
     let mut invalid_mac: Vec<(usize, String, String)> = Vec::new();
-
-    let rows = read_label_rows(&csv_path)?;
 
     let skip = usize::from(rows.first().is_some_and(is_header_row));
     for row in rows.iter().skip(skip) {
@@ -327,10 +361,12 @@ fn is_mac_address(value: &str) -> bool {
             .all(|p| p.len() == 2 && p.chars().all(|c| c.is_ascii_hexdigit()))
 }
 
-// Une ligne d'en-tête ("mac,ip,label") ne peut être que la première du fichier :
-// on la reconnaît parce que ni son champ MAC ni son champ IP ne sont des adresses valides.
+// Une ligne d'en-tête ne peut être que la première du fichier et n'est
+// reconnue que si elle dit littéralement `mac,ip[,…]` (insensible à la
+// casse). L'ancienne heuristique « champs non parseables » avalait
+// silencieusement une première ligne de données invalide (#153).
 fn is_header_row(row: &LabelRow) -> bool {
-    !is_mac_address(&row.mac) && !is_ip_address(&row.ip)
+    row.mac.eq_ignore_ascii_case("mac") && row.ip.eq_ignore_ascii_case("ip")
 }
 
 /// Importe un fichier de labels CSV.
@@ -352,17 +388,16 @@ pub fn import_label_file(
 ) -> Result<LabelImportReport, CaptureStateError> {
     let on_event = event_channel(&capture_state, on_event)?;
 
-    // Les erreurs de FORMAT restent bloquantes ; les conflits de labels, eux,
-    // ne bloquent plus : on garde le premier label par clé (mac, ip) et on
-    // enregistre les doublons écartés pour arbitrage.
-    verif_label_rows_format(incoming_file_path.clone())?;
-    verif_mac_ip_format(incoming_file_path.clone())?;
+    // Lecture unique du fichier (#153) ; les erreurs de FORMAT restent
+    // bloquantes et précèdent toute modification du store. Les conflits de
+    // labels, eux, ne bloquent pas : on garde le premier label par clé
+    // (mac, ip) et on enregistre les doublons écartés pour arbitrage.
+    let mut rows = read_label_rows(&incoming_file_path)?;
+    verif_mac_ip_format_rows(&rows)?;
 
     let conflicts = {
         let mut label_store = label_store.lock()?;
         label_store.clear();
-
-        let mut rows = read_label_rows(&incoming_file_path)?;
 
         // L'en-tête éventuel est écarté ici pour que le store ne contienne que des données.
         if rows.first().is_some_and(is_header_row) {
@@ -425,35 +460,52 @@ pub fn get_label_conflicts(
 /// renvoie les conflits restants.
 #[tauri::command]
 #[allow(clippy::too_many_arguments)]
-pub fn resolve_label_conflict(
-    mac: String,
-    ip: String,
-    label: String,
+pub fn resolve_label_conflicts(
+    resolutions: Vec<LabelResolution>,
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
     matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
     graph: State<'_, Arc<Mutex<GraphData>>>,
     capture_state: State<'_, Arc<Mutex<CaptureState>>>,
     conflict_store: State<'_, Arc<Mutex<LabelConflictStore>>>,
 ) -> Result<Vec<LabelConflictReport>, CaptureStateError> {
-    // Applique le label choisi à la matrice (résolution des flux) et au store
-    // (table + réexport).
-    matrix
-        .lock()?
-        .add_label(mac.clone(), ip.clone(), label.clone());
-    label_store.lock()?.set(&mac, &ip, &label);
-
-    // Rafraîchit le nœud du graphe et notifie l'UI, sans reconstruire le graphe.
-    let graph_update = graph.lock()?.update_node_label(&mac, &ip, label.clone());
+    // Application transactionnelle (#153) : tous les verrous sont pris une
+    // fois puis chaque arbitrage est appliqué dans la même section critique —
+    // l'ancien appel par conflit depuis le front pouvait s'interrompre à
+    // mi-chemin et laisser un état partiel.
+    let mut matrix = matrix.lock()?;
+    let mut labels = label_store.lock()?;
+    let mut graph = graph.lock()?;
     let on_event = capture_state.lock()?.on_event.clone();
-    if let (Some(update), Some(on_event)) = (graph_update, on_event)
-        && let Err(e) = on_event.send(CaptureEvent::Graph { update: &update })
-    {
-        error!("Erreur d'envoi du GraphUpdate arbitrage: {e}");
+    let mut store = conflict_store.lock()?;
+
+    for resolution in &resolutions {
+        // Applique le label choisi à la matrice (résolution des flux) et au
+        // store (table + réexport).
+        matrix.add_label(
+            resolution.mac.clone(),
+            resolution.ip.clone(),
+            resolution.label.clone(),
+        );
+        labels.set(&resolution.mac, &resolution.ip, &resolution.label);
+
+        // Rafraîchit le nœud du graphe et notifie l'UI, sans reconstruire le
+        // graphe. Une erreur d'envoi n'interrompt pas la transaction : l'état
+        // backend reste cohérent, le front se resynchronisera.
+        let graph_update =
+            graph.update_node_label(&resolution.mac, &resolution.ip, resolution.label.clone());
+        if let (Some(update), Some(on_event)) = (graph_update, on_event.as_ref())
+            && let Err(e) = on_event.send(CaptureEvent::Graph { update: &update })
+        {
+            error!("Erreur d'envoi du GraphUpdate arbitrage: {e}");
+        }
     }
 
-    // Retire le conflit résolu, renvoie ceux qui restent.
-    let mut store = conflict_store.lock()?;
-    store.conflicts.retain(|c| !(c.mac == mac && c.ip == ip));
+    // Retire les conflits résolus, renvoie ceux qui restent.
+    store.conflicts.retain(|c| {
+        !resolutions
+            .iter()
+            .any(|resolution| resolution.mac == c.mac && resolution.ip == c.ip)
+    });
     Ok(store.conflicts.clone())
 }
 
@@ -492,6 +544,64 @@ mod tests {
         let result = verif_label_rows_format(file_path.to_str().unwrap().to_string());
 
         assert!(result.is_ok());
+    }
+
+    /// Un chemin inexistant est une erreur explicite : il était lu comme un
+    /// fichier vide et l'import vidait le store de labels (#153).
+    #[test]
+    fn missing_file_is_an_explicit_error() {
+        let result = read_label_rows("/chemin/qui/n/existe/pas/labels.csv");
+        match result.unwrap_err() {
+            CaptureStateError::Io(e) => {
+                assert_eq!(e.kind(), std::io::ErrorKind::NotFound);
+                assert!(e.to_string().contains("introuvable"), "{e}");
+            }
+            error => panic!("erreur inattendue: {error:?}"),
+        }
+    }
+
+    /// L'en-tête n'est reconnu que s'il dit littéralement `mac,ip` : une
+    /// première ligne de données invalide n'est plus avalée en silence (#153).
+    #[test]
+    fn header_detection_is_strict() {
+        let header = LabelRow {
+            line: 1,
+            raw: "MAC,IP,Label".into(),
+            mac: "MAC".into(),
+            ip: "IP".into(),
+            label: "Label".into(),
+        };
+        assert!(is_header_row(&header));
+
+        let invalid_data = LabelRow {
+            line: 1,
+            raw: "pas-une-mac,pas-une-ip,label".into(),
+            mac: "pas-une-mac".into(),
+            ip: "pas-une-ip".into(),
+            label: "label".into(),
+        };
+        assert!(
+            !is_header_row(&invalid_data),
+            "une ligne invalide n'est pas un en-tête"
+        );
+    }
+
+    /// MAC/IP non canoniques (casse, forme IPv6 étendue) sont normalisées à
+    /// l'import vers les formes du parser : le label s'applique (#153).
+    #[test]
+    fn labels_are_normalized_to_parser_forms() {
+        let dir = TempDir::new("sonar_test_label_normalization");
+        let file_path = dir.path().join("labels.csv");
+        fs::write(
+            &file_path,
+            "AA:BB:CC:DD:EE:FF,192.168.1.1,pc-majuscules\n00:11:22:33:44:55,2001:0db8:0000:0000:0000:0000:0000:0001,ipv6-étendue\n",
+        )
+        .unwrap();
+
+        let rows = read_label_rows(file_path.to_str().unwrap()).unwrap();
+
+        assert_eq!(rows[0].mac, "aa:bb:cc:dd:ee:ff", "MAC en minuscules");
+        assert_eq!(rows[1].ip, "2001:db8::1", "IPv6 compressée canonique");
     }
 
     #[test]

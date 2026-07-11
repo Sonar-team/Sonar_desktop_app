@@ -89,7 +89,7 @@ signalait est corrigée. Points nouveaux tracés :
 
 - [x] [#148](https://github.com/Sonar-team/Sonar_desktop_app/issues/148) Exports/imports CSV : déterminisme, écriture atomique, injection de formule, encap_id instable
 - [ ] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) Vérifier le DLT libpcap et neutraliser l'effet de capture_timing (packet_parser, correctif amont)
-- [ ] [#153](https://github.com/Sonar-team/Sonar_desktop_app/issues/153) Import de labels : chemin inexistant vidant le store, header heuristique, normalisation MAC/IP
+- [x] [#153](https://github.com/Sonar-team/Sonar_desktop_app/issues/153) Import de labels : chemin inexistant vidant le store, header heuristique, normalisation MAC/IP
 - [ ] [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) Graphe/stats : ports d'arête tronqués, processed mal libellé, stats effacées à l'arrêt
 
 ## Tests et conformité

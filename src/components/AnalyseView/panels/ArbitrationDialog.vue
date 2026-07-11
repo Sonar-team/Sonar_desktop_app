@@ -1,7 +1,7 @@
 <!--
   Dialogue d'arbitrage des conflits de labels : pour chaque clé (mac, ip)
   ayant reçu plusieurs labels à l'import, l'utilisateur choisit le label à
-  garder (commande resolve_label_conflict).
+  garder (commande resolve_label_conflicts, transactionnelle).
   Props : conflicts. Événements : close, resolved.
 -->
 <template>
@@ -83,10 +83,15 @@ export default defineComponent({
     async applyAll() {
       this.resolving = true;
       try {
-        for (let i = 0; i < this.conflicts.length; i++) {
-          const c = this.conflicts[i];
-          await invoke('resolve_label_conflict', { mac: c.mac, ip: c.ip, label: this.selected[i] });
-        }
+        // Un seul invoke pour tous les arbitrages : le backend les applique
+        // dans une même section critique (transactionnel), une erreur ne
+        // laisse pas la moitié des choix appliqués.
+        const resolutions = this.conflicts.map((c, i) => ({
+          mac: c.mac,
+          ip: c.ip,
+          label: this.selected[i],
+        }));
+        await invoke('resolve_label_conflicts', { resolutions });
         info(`Arbitrage : ${this.conflicts.length} conflit(s) résolu(s)`);
         this.$emit('resolved');
       } catch (err) {
