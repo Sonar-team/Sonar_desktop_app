@@ -60,8 +60,7 @@
     },
 
     "resources": {
-      "resources/labels.csv": "resources/labels.csv",
-      "windows/npcap-1.88.exe": "windows/npcap-1.88.exe"
+      "resources/labels.csv": "resources/labels.csv"
     }
   },
   "plugins": {

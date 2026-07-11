@@ -13,11 +13,6 @@ if ! command -v cargo-cyclonedx >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! command -v syft >/dev/null 2>&1; then
-  echo "syft is required but not installed" >&2
-  exit 1
-fi
-
 if ! command -v jq >/dev/null 2>&1; then
   echo "jq is required but not installed" >&2
   exit 1
@@ -43,23 +38,11 @@ cargo cyclonedx \
 mv "$BACKEND_TEMP" "$BACKEND_VERSIONED_OUTPUT"
 cp "$BACKEND_VERSIONED_OUTPUT" "$BACKEND_OUTPUT"
 
+# Syft ne sait pas cataloguer deno.lock (le SBOM frontend sortait vide,
+# #137) : le lockfile est converti directement en CycloneDX.
 echo "Generating frontend SBOM: $FRONTEND_VERSIONED_OUTPUT"
-SYFT_CHECK_FOR_APP_UPDATE=false syft scan dir:. \
-  --exclude './.cache/**' \
-  --exclude './.cargo-home/**' \
-  --exclude './target/**' \
-  --exclude './dist/**' \
-  --exclude './bundle-repro-*/**' \
-  --exclude './src-tauri/vendor/**' \
-  --exclude './src-tauri/target/**' \
-  --exclude './node_modules/**' \
-  --exclude './.git/**' \
-  --exclude './sbom/**' \
-  -o cyclonedx-json="$FRONTEND_VERSIONED_OUTPUT"
-
-tmp_frontend="$(mktemp)"
-jq '.' "$FRONTEND_VERSIONED_OUTPUT" > "$tmp_frontend"
-mv "$tmp_frontend" "$FRONTEND_VERSIONED_OUTPUT"
+"$ROOT_DIR/script/ci/generate-frontend-sbom-from-lock.sh" \
+  deno.lock "$SONAR_VERSION" "$FRONTEND_VERSIONED_OUTPUT"
 cp "$FRONTEND_VERSIONED_OUTPUT" "$FRONTEND_OUTPUT"
 
 echo "SBOM artifacts generated:"

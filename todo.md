@@ -52,7 +52,7 @@ typecheck, tests mockIPC).
 
 - [ ] [#135](https://github.com/Sonar-team/Sonar_desktop_app/issues/135) CI : workflows cassés et gates manquants (clippy, sonar-rust, typecheck, tests front, fmt, artefact macOS)
 - [ ] [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136) Release atomique et reproductibilité démontrable
-- [ ] [#137](https://github.com/Sonar-team/Sonar_desktop_app/issues/137) SBOM frontend invalide (deno.lock non catalogué par Syft)
+- [x] [#137](https://github.com/Sonar-team/Sonar_desktop_app/issues/137) SBOM frontend invalide (deno.lock non catalogué par Syft)
 - [ ] [#138](https://github.com/Sonar-team/Sonar_desktop_app/issues/138) Licence Npcap avant release Windows publique (décision, bloquant)
 
 ## Backlog robustesse pipeline
@@ -95,4 +95,4 @@ signalait est corrigée. Points nouveaux tracés :
 ## Tests et conformité
 
 - [ ] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) Tests PCAP réels silencieusement sautés quand LOC42.pcapng est absent
-- [ ] [#152](https://github.com/Sonar-team/Sonar_desktop_app/issues/152) Licence : texte AGPL « or later » vs manifests AGPL-3.0-only (décision)
+- [x] [#152](https://github.com/Sonar-team/Sonar_desktop_app/issues/152) Licence : texte AGPL « or later » vs manifests AGPL-3.0-only (décision)
