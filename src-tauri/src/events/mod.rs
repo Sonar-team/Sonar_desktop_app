@@ -52,18 +52,14 @@ pub enum CaptureEvent<'a> {
     /// variant reste dans le contrat d'événements du frontend
     /// (`src/store/capture.ts`) pour pouvoir être réactivé.
     #[allow(dead_code)]
-    Packet {
-        packet: &'a PacketMinimal<'a>,
-    },
+    Packet { packet: &'a PacketMinimal<'a> },
     /// Lot de paquets traités (voir `PACKET_BATCH_MAX` côté processing).
     PacketBatch {
         session_id: u64,
         packets: Vec<PacketOwnedStats>,
     },
     /// Update graphe unitaire (ex. label de nœud modifié après arbitrage).
-    Graph {
-        update: &'a GraphUpdate,
-    },
+    Graph { update: &'a GraphUpdate },
     /// Updates graphe coalescées sur la fenêtre de batch (voir `GraphUpdateBatch`).
     GraphBatch {
         session_id: u64,
@@ -72,10 +68,7 @@ pub enum CaptureEvent<'a> {
     /// Fin du pipeline de capture, normale ou sur erreur fatale (ex. pcap).
     /// Sans cet événement, le frontend croirait capturer indéfiniment après
     /// une erreur.
-    Stopped {
-        session_id: u64,
-        reason: String,
-    },
+    Stopped { session_id: u64, reason: String },
     /// Fin de traitement d'un fichier importé (PCAP ou matrice CSV), avec la
     /// comptabilité affichée dans la barre de statut.
     Finished {
@@ -84,7 +77,5 @@ pub enum CaptureEvent<'a> {
         matrix_total_count: usize,
     },
     /// Graphe complet, envoyé en fin d'import pour recharger la vue.
-    GraphSnapshot {
-        graph_data: &'a GraphData,
-    },
+    GraphSnapshot { graph_data: &'a GraphData },
 }

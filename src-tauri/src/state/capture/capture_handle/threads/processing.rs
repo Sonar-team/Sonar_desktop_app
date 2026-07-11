@@ -205,37 +205,36 @@ impl PacketWorker {
         let mut label_lookup_ns = 0u64;
         #[cfg(feature = "capture_timing")]
         let mut matrix_update_ns = 0u64;
-        let (source_label, destination_label) = if let Ok(mut locked_state) =
-            self.flow_matrix.lock()
-        {
-            #[cfg(feature = "capture_timing")]
-            let label_lookup_start = timing_sample.map(|_| Instant::now());
-            let (source_ip, destination_ip) = flow_ips(&record_owned);
-            let labels = (
-                locked_state.get_label(&record_owned.flow.data_link.source_mac, &source_ip),
-                locked_state.get_label(
-                    &record_owned.flow.data_link.destination_mac,
-                    &destination_ip,
-                ),
-            );
-            #[cfg(feature = "capture_timing")]
-            {
-                label_lookup_ns = label_lookup_start.map(elapsed_ns_since).unwrap_or(0);
-            }
+        let (source_label, destination_label) =
+            if let Ok(mut locked_state) = self.flow_matrix.lock() {
+                #[cfg(feature = "capture_timing")]
+                let label_lookup_start = timing_sample.map(|_| Instant::now());
+                let (source_ip, destination_ip) = flow_ips(&record_owned);
+                let labels = (
+                    locked_state.get_label(&record_owned.flow.data_link.source_mac, &source_ip),
+                    locked_state.get_label(
+                        &record_owned.flow.data_link.destination_mac,
+                        &destination_ip,
+                    ),
+                );
+                #[cfg(feature = "capture_timing")]
+                {
+                    label_lookup_ns = label_lookup_start.map(elapsed_ns_since).unwrap_or(0);
+                }
 
-            #[cfg(feature = "capture_timing")]
-            let matrix_update_start = timing_sample.map(|_| Instant::now());
-            locked_state.update_flow(&record_owned);
-            self.processed = locked_state.row_count() as u32;
-            #[cfg(feature = "capture_timing")]
-            {
-                matrix_update_ns = matrix_update_start.map(elapsed_ns_since).unwrap_or(0);
-            }
+                #[cfg(feature = "capture_timing")]
+                let matrix_update_start = timing_sample.map(|_| Instant::now());
+                locked_state.update_flow(&record_owned);
+                self.processed = locked_state.row_count() as u32;
+                #[cfg(feature = "capture_timing")]
+                {
+                    matrix_update_ns = matrix_update_start.map(elapsed_ns_since).unwrap_or(0);
+                }
 
-            labels
-        } else {
-            (None, None)
-        };
+                labels
+            } else {
+                (None, None)
+            };
 
         #[cfg(feature = "capture_timing")]
         let graph_update_start = timing_sample.map(|_| Instant::now());
@@ -263,8 +262,7 @@ impl PacketWorker {
         for update in graph_updates {
             self.graph_batch.push(update);
         }
-        let graph_flush_ok =
-            self.graph_batch.len() < GRAPH_BATCH_MAX || self.flush_graph_batch();
+        let graph_flush_ok = self.graph_batch.len() < GRAPH_BATCH_MAX || self.flush_graph_batch();
         #[cfg(feature = "capture_timing")]
         let graph_ipc_ns = graph_ipc_start.map(elapsed_ns_since).unwrap_or(0);
         if !graph_flush_ok {
@@ -752,7 +750,10 @@ mod tests {
             .map(|(_, stats)| stats.count)
             .sum();
         assert_eq!(packets, 3, "aucun paquet accepté n'est perdu");
-        assert!(!graph.lock().unwrap().nodes.is_empty(), "le graphe reçoit les nœuds");
+        assert!(
+            !graph.lock().unwrap().nodes.is_empty(),
+            "le graphe reçoit les nœuds"
+        );
     }
 
     /// Un paquet illisible ne bloque pas le drainage.
@@ -760,12 +761,7 @@ mod tests {
     fn drain_channel_skips_unparseable_packets() {
         let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
         let graph = Arc::new(Mutex::new(GraphData::new()));
-        let mut worker = PacketWorker::new(
-            Channel::new(|_| Ok(())),
-            1,
-            flow_matrix.clone(),
-            graph,
-        );
+        let mut worker = PacketWorker::new(Channel::new(|_| Ok(())), 1, flow_matrix.clone(), graph);
         let pool = PacketBufferPool::new(8, 65_536);
         let (tx, rx) = bounded::<CaptureMessage>(8);
 

@@ -101,7 +101,11 @@ fn send_started_event(on_event: &Channel<CaptureEvent<'_>>) {
 
 /// Envoie l'événement `Stats` (compteurs de la barre de statut). Retourne
 /// vrai si l'envoi a réussi.
-fn send_stats_event(on_event: &Channel<CaptureEvent<'_>>, received: usize, processed: usize) -> bool {
+fn send_stats_event(
+    on_event: &Channel<CaptureEvent<'_>>,
+    received: usize,
+    processed: usize,
+) -> bool {
     on_event
         .send(CaptureEvent::Stats {
             session_id: 0,
@@ -141,7 +145,10 @@ fn lookup_flow_labels(
 
     (
         matrice.get_label(&owned_packet.flow.data_link.source_mac, &source_ip),
-        matrice.get_label(&owned_packet.flow.data_link.destination_mac, &destination_ip),
+        matrice.get_label(
+            &owned_packet.flow.data_link.destination_mac,
+            &destination_ip,
+        ),
     )
 }
 

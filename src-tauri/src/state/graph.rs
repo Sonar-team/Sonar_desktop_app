@@ -751,7 +751,12 @@ mod add_packet_flow_tests {
     #[test]
     fn same_direction_packets_never_mark_bidir() {
         let mut graph = GraphData::new();
-        let a_to_b = flow("10:00:00:00:00:0a", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20");
+        let a_to_b = flow(
+            "10:00:00:00:00:0a",
+            "192.168.1.10",
+            "10:00:00:00:00:0b",
+            "192.168.1.20",
+        );
 
         add(&mut graph, &a_to_b);
         add(&mut graph, &a_to_b);
@@ -764,8 +769,18 @@ mod add_packet_flow_tests {
     #[test]
     fn reverse_direction_marks_bidir_and_first_direction_is_kept() {
         let mut graph = GraphData::new();
-        let a_to_b = flow("10:00:00:00:00:0a", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20");
-        let b_to_a = flow("10:00:00:00:00:0b", "192.168.1.20", "10:00:00:00:00:0a", "192.168.1.10");
+        let a_to_b = flow(
+            "10:00:00:00:00:0a",
+            "192.168.1.10",
+            "10:00:00:00:00:0b",
+            "192.168.1.20",
+        );
+        let b_to_a = flow(
+            "10:00:00:00:00:0b",
+            "192.168.1.20",
+            "10:00:00:00:00:0a",
+            "192.168.1.10",
+        );
 
         add(&mut graph, &a_to_b);
         assert!(!single_edge(&graph).bidir);
@@ -785,17 +800,35 @@ mod add_packet_flow_tests {
     #[test]
     fn multiple_macs_for_same_ip_are_recorded() {
         let mut graph = GraphData::new();
-        add(&mut graph, &flow("10:00:00:00:00:0a", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20"));
+        add(
+            &mut graph,
+            &flow(
+                "10:00:00:00:00:0a",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
+        );
         let updates = add(
             &mut graph,
-            &flow("de:ad:be:ef:00:01", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20"),
+            &flow(
+                "de:ad:be:ef:00:01",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
         );
 
         let node = graph.nodes.get("192.168.1.10").unwrap();
         assert_eq!(node.macs.len(), 2, "les deux MAC observées sont retenues");
-        assert_eq!(node.mac, "10:00:00:00:00:0a", "la première MAC reste la clé");
+        assert_eq!(
+            node.mac, "10:00:00:00:00:0a",
+            "la première MAC reste la clé"
+        );
         assert!(
-            updates.iter().any(|u| matches!(u, GraphUpdate::NodeUpdated(n) if n.macs.len() == 2)),
+            updates
+                .iter()
+                .any(|u| matches!(u, GraphUpdate::NodeUpdated(n) if n.macs.len() == 2)),
             "le front est notifié de l'anomalie"
         );
 
@@ -825,8 +858,24 @@ mod add_packet_flow_tests {
     #[test]
     fn non_unicast_macs_are_not_recorded_as_conflict() {
         let mut graph = GraphData::new();
-        add(&mut graph, &flow("10:00:00:00:00:0a", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20"));
-        add(&mut graph, &flow("ff:ff:ff:ff:ff:ff", "192.168.1.10", "10:00:00:00:00:0b", "192.168.1.20"));
+        add(
+            &mut graph,
+            &flow(
+                "10:00:00:00:00:0a",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
+        );
+        add(
+            &mut graph,
+            &flow(
+                "ff:ff:ff:ff:ff:ff",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
+        );
 
         let node = graph.nodes.get("192.168.1.10").unwrap();
         assert_eq!(node.macs.len(), 1, "la MAC broadcast est ignorée");
