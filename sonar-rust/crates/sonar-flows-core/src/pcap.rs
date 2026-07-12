@@ -29,6 +29,60 @@ pub struct PcapFileReport {
     pub parse_errors: usize,
 }
 
+impl<'a> PacketMinimal<'a> {
+    /// Construit un [`PacketMinimal`] depuis l'en-tête d'un paquet pcap et son
+    /// flux déjà parsé (les types de `ts_sec`/`ts_usec` suivent le `timeval`
+    /// de chaque OS, comme les déclinaisons de la structure).
+    pub fn from_pcap(header: &pcap::PacketHeader, flow: PacketFlow<'a>) -> Self {
+        Self {
+            ts_sec: header.ts.tv_sec,
+            ts_usec: header.ts.tv_usec,
+            caplen: header.caplen,
+            len: header.len,
+            flow,
+        }
+    }
+}
+
+/// Itère les paquets bruts d'un fichier PCAP/PCAPNG et retourne leur nombre.
+/// Une erreur de lecture en cours de fichier ([`SonarCoreError::PcapRead`])
+/// est distinguée de la fin normale : un fichier tronqué échoue au lieu de
+/// passer pour une fin de fichier.
+pub fn for_each_raw_packet(
+    path: &Path,
+    mut on_packet: impl FnMut(&pcap::Packet<'_>),
+) -> Result<usize> {
+    let mut cap = Capture::from_file(path).map_err(|e| SonarCoreError::PcapOpen {
+        path: path.to_path_buf(),
+        message: e.to_string(),
+    })?;
+
+    let mut count: usize = 0;
+    loop {
+        match cap.next_packet() {
+            Ok(packet) => {
+                count += 1;
+                on_packet(&packet);
+            }
+            Err(pcap::Error::NoMorePackets) => break,
+            Err(e) => {
+                return Err(SonarCoreError::PcapRead {
+                    path: path.to_path_buf(),
+                    message: e.to_string(),
+                });
+            }
+        }
+    }
+    Ok(count)
+}
+
+/// Compte les paquets d'un fichier PCAP (pré-passe de progression). Comme
+/// [`for_each_raw_packet`], échoue sur un fichier tronqué au lieu de
+/// retourner un compte partiel.
+pub fn count_pcap_packets(path: &Path) -> Result<usize> {
+    for_each_raw_packet(path, |_| {})
+}
+
 /// Ajoute le contenu d'un fichier PCAP/PCAPNG à une matrice existante.
 ///
 /// Les paquets non parsés sont comptés dans le bilan sans interrompre la
@@ -37,41 +91,27 @@ pub struct PcapFileReport {
 /// veulent une sémantique transactionnelle passent par
 /// [`convert_pcap_files`], qui ne retourne jamais de matrice partielle.
 pub fn append_pcap_file(matrix: &mut FlowMatrix, path: &Path) -> Result<PcapFileReport> {
-    let pcap_error = |e: &pcap::Error| SonarCoreError::Pcap {
-        path: path.to_path_buf(),
-        message: e.to_string(),
-    };
-    let mut cap = Capture::from_file(path).map_err(|e| pcap_error(&e))?;
-
-    let mut report = PcapFileReport::default();
-    loop {
-        let packet = match cap.next_packet() {
-            Ok(packet) => packet,
-            Err(pcap::Error::NoMorePackets) => break,
-            Err(e) => return Err(pcap_error(&e)),
-        };
-        report.packets += 1;
+    let mut parse_ok: usize = 0;
+    let mut parse_errors: usize = 0;
+    let packets = for_each_raw_packet(path, |packet| {
         match PacketFlow::try_from(packet.data) {
             Ok(flow) => {
-                report.parse_ok += 1;
+                parse_ok += 1;
                 // Même chemin de dépliage des tunnels que le desktop
                 // (`PacketMinimal::to_owned_packets`) : encap_id identiques,
                 // matrices joignables entre CLI et desktop.
-                let packet_min = PacketMinimal {
-                    ts_sec: packet.header.ts.tv_sec,
-                    ts_usec: packet.header.ts.tv_usec,
-                    caplen: packet.header.caplen,
-                    len: packet.header.len,
-                    flow,
-                };
-                for owned in packet_min.to_owned_packets() {
+                for owned in PacketMinimal::from_pcap(packet.header, flow).to_owned_packets() {
                     matrix.update_flow(&owned);
                 }
             }
-            Err(_) => report.parse_errors += 1,
+            Err(_) => parse_errors += 1,
         }
-    }
-    Ok(report)
+    })?;
+    Ok(PcapFileReport {
+        packets,
+        parse_ok,
+        parse_errors,
+    })
 }
 
 /// Convertit un ou plusieurs fichiers PCAP en une matrice de flux unique.

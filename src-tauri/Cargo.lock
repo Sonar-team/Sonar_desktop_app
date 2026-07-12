@@ -3632,6 +3632,7 @@ dependencies = [
  "csv",
  "log",
  "packet_parser",
+ "pcap",
  "serde",
  "thiserror 2.0.18",
 ]

@@ -3,15 +3,18 @@
 //! matrice et du graphe.
 
 use log::{error, info};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tauri::{State, ipc::Channel};
+
+use sonar_flows_core::csv::{apply_row_labels, merge_rows};
 
 use crate::{
     errors::CaptureStateError,
     events::CaptureEvent,
     state::{
         capture::CaptureState,
-        flow_matrix::{FlowMatrix, FlowMatrixRow, parse_origin_list, unescape_formula_cell},
+        flow_matrix::{FlowMatrix, FlowMatrixRow, unescape_formula_cell},
         graph::GraphData,
         labels_list::LabelStore,
     },
@@ -26,38 +29,20 @@ pub fn is_matrix_empty(
     Ok(state.lock()?.matrix.is_empty())
 }
 
-/// Lit un CSV de matrice de flux (format de `FlowMatrix::export_to_csv`).
-/// Le fichier est entièrement validé avant de toucher à l'état.
-pub(super) fn read_matrix_rows(csv_path: &str) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
-    let mut rdr = csv::ReaderBuilder::new()
-        .trim(csv::Trim::All)
-        .from_path(csv_path)
-        .map_err(|e| std::io::Error::other(format!("Ouverture de {csv_path}: {e}")))?;
-
-    let mut rows = Vec::new();
-    for (i, result) in rdr.deserialize::<FlowMatrixRow>().enumerate() {
-        let row =
-            result.map_err(|e| std::io::Error::other(format!("Ligne {} invalide: {e}", i + 2)))?;
-        // Validation stricte (#148) : une IP ou une date illisible est
-        // rejetée avec son numéro de ligne, pas dégradée silencieusement.
-        row.validate()
-            .map_err(|e| std::io::Error::other(format!("Ligne {} invalide: {e}", i + 2)))?;
-        rows.push(row);
-    }
-    Ok(rows)
-}
-
-/// Nom de fichier (sans le chemin) utilisé comme origine par défaut d'une
-/// ligne importée. Repli sur le chemin complet si le nom ne peut être extrait.
-fn origin_name_from_path(path: &str) -> String {
-    std::path::Path::new(path)
-        .file_name()
-        .map(|name| name.to_string_lossy().into_owned())
-        .unwrap_or_else(|| path.to_string())
+/// Lit un CSV de matrice de flux (format de `FlowMatrix::export_to_csv`),
+/// entièrement validé avant de toucher à l'état — lecture et validation
+/// stricte (#148) déléguées au cœur partagé. La production passe par
+/// `read_matrix_rows_per_file` ; ce raccourci ne sert plus qu'aux tests.
+#[cfg(test)]
+fn read_matrix_rows(csv_path: &str) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
+    Ok(sonar_flows_core::csv::read_matrix_rows(
+        std::path::Path::new(csv_path),
+    )?)
 }
 
 /// Lit chaque fichier de matrice et retourne ses lignes groupées par fichier,
-/// pour la comptabilité par fichier (événements `Finished`).
+/// pour la comptabilité par fichier (événements `Finished`). La lecture et
+/// l'héritage de la colonne `origin` viennent du cœur partagé.
 fn read_matrix_rows_per_file(
     incoming_file_paths: &[String],
 ) -> Result<Vec<(String, Vec<FlowMatrixRow>)>, CaptureStateError> {
@@ -65,21 +50,12 @@ fn read_matrix_rows_per_file(
         return Err(std::io::Error::other("Aucun fichier de matrice sélectionné").into());
     }
 
-    let mut files = Vec::new();
-    for path in incoming_file_paths {
-        let origin = origin_name_from_path(path);
-        let mut rows = read_matrix_rows(path)?;
-        for row in &mut rows {
-            // Une ligne sans provenance héritée reçoit le nom du fichier
-            // importé ; une ligne qui portait déjà une origine (matrice déjà
-            // fusionnée puis réexportée) la conserve telle quelle.
-            if row.origin.trim().is_empty() {
-                row.origin = origin.clone();
-            }
-        }
-        files.push((path.clone(), rows));
-    }
-    Ok(files)
+    let paths: Vec<PathBuf> = incoming_file_paths.iter().map(PathBuf::from).collect();
+    Ok(sonar_flows_core::csv::read_matrix_rows_per_file(&paths)?
+        .into_iter()
+        .zip(incoming_file_paths)
+        .map(|((_, rows), path)| (path.clone(), rows))
+        .collect())
 }
 
 // La production passe par `read_matrix_rows_per_file` (comptabilité par
@@ -104,40 +80,15 @@ fn rebuild_matrix_and_graph_from_rows(
     graph.clear();
 
     // Labels du store courant, puis ceux portés par les fichiers (prioritaires
-    // à clé égale puisque insérés après). Le préfixe anti-injection de
-    // formule posé à l'export est retiré (aller-retour sans altération).
+    // à clé égale puisque appliqués après) ; fusion des flux tunnel par tunnel
+    // et provenance accumulée par le cœur partagé.
     copy_labels_to_matrix(label_store, matrice)?;
-    for row in rows {
-        if let Some(label) = row.label_source.as_ref().filter(|l| !l.is_empty()) {
-            matrice.add_label(
-                row.mac_source.clone(),
-                row.ip_source.clone(),
-                unescape_formula_cell(label),
-            );
-        }
-        if let Some(label) = row.label_destination.as_ref().filter(|l| !l.is_empty()) {
-            matrice.add_label(
-                row.mac_destination.clone(),
-                row.ip_destination.clone(),
-                unescape_formula_cell(label),
-            );
-        }
-    }
+    apply_row_labels(matrice, rows);
+    merge_rows(matrice, rows);
 
     for row in rows {
         let (flow, tunnel_rows) = row.to_flow_and_rows();
         let encap_ids: Vec<u64> = tunnel_rows.iter().filter_map(|(id, _)| *id).collect();
-
-        // Les doublons éventuels des fichiers sont fusionnés, tunnel par
-        // tunnel, pour préserver la comptabilité père/fils.
-        for (encap_id, stats) in tunnel_rows {
-            matrice.merge_row(flow.clone(), encap_id, stats);
-        }
-
-        // Provenance : les fichiers d'origine de cette ligne s'ajoutent à ceux
-        // déjà enregistrés pour ce flux, si bien qu'un flux présent dans
-        // plusieurs fichiers en accumule tous les noms.
-        matrice.add_flow_origins(&flow, parse_origin_list(&row.origin));
 
         let source_label = matrice.get_label(&flow.data_link.source_mac, &row.ip_source);
         let destination_label =

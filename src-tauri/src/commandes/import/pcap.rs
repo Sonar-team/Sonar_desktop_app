@@ -5,16 +5,16 @@ use log::{error, info};
 use packet_parser::PacketFlow;
 #[cfg(feature = "capture_timing")]
 use packet_parser::timing::ParseTiming;
-use pcap::Capture;
 #[cfg(feature = "capture_timing")]
 use serde_json::json;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 #[cfg(feature = "capture_timing")]
 use std::time::Instant;
 use tauri::{State, ipc::Channel};
 
 use crate::{
-    errors::{CaptureStateError, import::PcapImportError},
+    errors::CaptureStateError,
     events::CaptureEvent,
     state::{
         capture::{
@@ -32,38 +32,13 @@ use super::timing::ImportTimingLogger;
 #[cfg(feature = "capture_timing")]
 use super::timing::{ImportTimingSample, elapsed_ns_since, now_unix_ns, write_timing_or_disable};
 
-fn open_pcap_file(file_path: &str) -> Result<Capture<pcap::Offline>, CaptureStateError> {
-    Capture::from_file(file_path).map_err(|e| {
-        CaptureStateError::Import(PcapImportError::OpenFileError(
-            file_path.to_string(),
-            e.to_string(),
-        ))
-    })
-}
-
-/// Erreur de lecture au milieu d'un PCAP (fichier tronqué ou corrompu).
-fn read_packet_error(file_path: &str, error: &pcap::Error) -> CaptureStateError {
-    CaptureStateError::Import(PcapImportError::ReadPacketError(
-        file_path.to_string(),
-        error.to_string(),
-    ))
-}
-
+/// Compte les paquets d'un fichier PCAP via le cœur partagé, qui distingue un
+/// fichier tronqué/corrompu d'une fin normale ; la conversion d'erreur
+/// (`From<SonarCoreError>`) préserve la distinction ouverture/lecture.
 fn count_packets_in_pcap(file_path: &str) -> Result<usize, CaptureStateError> {
-    let mut cap = open_pcap_file(file_path)?;
-
-    let mut count: usize = 0;
-    loop {
-        match cap.next_packet() {
-            Ok(_) => count += 1,
-            // Fin normale du fichier.
-            Err(pcap::Error::NoMorePackets) => break,
-            // Fichier tronqué/corrompu : sans cette distinction, l'import
-            // produisait silencieusement une matrice partielle.
-            Err(e) => return Err(read_packet_error(file_path, &e)),
-        }
-    }
-    Ok(count)
+    Ok(sonar_flows_core::pcap::count_pcap_packets(Path::new(
+        file_path,
+    ))?)
 }
 
 /// Journal de timing des imports, actif seulement avec la feature
@@ -184,13 +159,7 @@ fn process_packet(
     let Ok(flow) = PacketFlow::try_from(packet.data) else {
         return;
     };
-    let packet_min = PacketMinimal {
-        ts_sec: packet.header.ts.tv_sec,
-        ts_usec: packet.header.ts.tv_usec,
-        caplen: packet.header.caplen,
-        len: packet.header.len,
-        flow,
-    };
+    let packet_min = PacketMinimal::from_pcap(packet.header, flow);
 
     // Un paquet tunnelé (ex. CAPWAP) produit plusieurs niveaux de flux :
     // la ligne externe (tunnel) puis la (les) conversation(s) interne(s).
@@ -245,13 +214,7 @@ fn process_packet_timed(
     match parsed_flow {
         Ok((flow, parse_timing)) => {
             counters.ok += 1;
-            let packet_min = PacketMinimal {
-                ts_sec: packet.header.ts.tv_sec,
-                ts_usec: packet.header.ts.tv_usec,
-                caplen: packet.header.caplen,
-                len: packet.header.len,
-                flow,
-            };
+            let packet_min = PacketMinimal::from_pcap(packet.header, flow);
 
             let packet_owned_start = timing_sample.map(|_| Instant::now());
             let owned_packet = packet_min.to_owned_packet();
@@ -380,33 +343,22 @@ pub(super) fn handle_pcap_file(
         file_path, total
     );
 
-    #[cfg(feature = "capture_timing")]
-    let open_start = Instant::now();
-    let mut cap = open_pcap_file(file_path)?;
-    #[cfg(feature = "capture_timing")]
-    let open_ns = elapsed_ns_since(open_start);
-
     let mut packet_count: usize = 0;
     #[cfg(feature = "capture_timing")]
     let process_start = Instant::now();
     #[cfg(feature = "capture_timing")]
     let mut counters = ParseCounters::default();
 
-    loop {
-        let packet = match cap.next_packet() {
-            Ok(packet) => packet,
-            // Fin normale du fichier.
-            Err(pcap::Error::NoMorePackets) => break,
-            // Erreur de lecture en cours de fichier (tronqué, corrompu) :
-            // propagée pour que l'import échoue explicitement au lieu de
-            // produire une matrice partielle en silence.
-            Err(e) => return Err(read_packet_error(file_path, &e)),
-        };
+    // La boucle de lecture vient du cœur partagé : fin normale distinguée
+    // d'une erreur en cours de fichier (tronqué, corrompu), propagée pour que
+    // l'import échoue explicitement au lieu de produire une matrice partielle
+    // en silence.
+    sonar_flows_core::pcap::for_each_raw_packet(Path::new(file_path), |packet| {
         packet_count += 1;
 
         #[cfg(feature = "capture_timing")]
         process_packet_timed(
-            &packet,
+            packet,
             file_path,
             packet_count,
             total,
@@ -417,8 +369,8 @@ pub(super) fn handle_pcap_file(
             &mut counters,
         );
         #[cfg(not(feature = "capture_timing"))]
-        process_packet(&packet, packet_count, total, matrice, graph, on_event);
-    }
+        process_packet(packet, packet_count, total, matrice, graph, on_event);
+    })?;
 
     #[cfg(feature = "capture_timing")]
     let process_ns = elapsed_ns_since(process_start);
@@ -449,7 +401,6 @@ pub(super) fn handle_pcap_file(
                 "graph_nodes": graph.nodes.len(),
                 "graph_edges": graph.edges.len(),
                 "count_packets_ns": count_packets_ns,
-                "open_ns": open_ns,
                 "process_ns": process_ns,
                 "finished_ipc_ns": finished_ipc_ns,
                 "finished_ipc_ok": finished_send_result.is_ok(),
@@ -586,6 +537,7 @@ fn build_matrix_and_graph_from_pcaps(
 mod tests {
     use super::super::test_support::{TempDir, local_tunnel_pcap};
     use super::*;
+    use crate::errors::import::PcapImportError;
     use crate::state::flow_matrix::FlowMatrixRow;
     use std::fs;
 

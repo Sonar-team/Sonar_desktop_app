@@ -152,3 +152,22 @@ impl<T> From<std::sync::PoisonError<T>> for CaptureStateError {
         CaptureStateError::PoisonError(err.to_string())
     }
 }
+
+/// Les erreurs du cœur partagé gardent leur distinction ouverture/lecture
+/// (préservée côté front par `PcapImportErrorKind`) ; le reste (CSV invalide,
+/// IO…) passe par la variante `Io` avec son message d'origine.
+impl From<sonar_flows_core::SonarCoreError> for CaptureStateError {
+    fn from(err: sonar_flows_core::SonarCoreError) -> Self {
+        use sonar_flows_core::SonarCoreError;
+        match err {
+            SonarCoreError::PcapOpen { path, message } => CaptureStateError::Import(
+                PcapImportError::OpenFileError(path.display().to_string(), message),
+            ),
+            SonarCoreError::PcapRead { path, message } => CaptureStateError::Import(
+                PcapImportError::ReadPacketError(path.display().to_string(), message),
+            ),
+            SonarCoreError::Io(e) => CaptureStateError::Io(e),
+            other => CaptureStateError::Io(std::io::Error::other(other.to_string())),
+        }
+    }
+}

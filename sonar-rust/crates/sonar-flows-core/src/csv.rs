@@ -47,37 +47,43 @@ pub fn origin_name_from_path(path: &Path) -> String {
         .unwrap_or_else(|| path.to_string_lossy().into_owned())
 }
 
-/// Lit les lignes de plusieurs fichiers de matrice. Une ligne sans provenance
-/// héritée reçoit le nom du fichier importé ; une ligne qui portait déjà une
-/// origine (matrice déjà fusionnée puis réexportée) la conserve telle quelle.
-pub fn read_matrix_rows_from_files(paths: &[PathBuf]) -> Result<Vec<FlowMatrixRow>> {
+/// Lit les lignes de chaque fichier de matrice, groupées par fichier (pour la
+/// comptabilité par fichier des appelants). Une ligne sans provenance héritée
+/// reçoit le nom du fichier importé ; une ligne qui portait déjà une origine
+/// (matrice déjà fusionnée puis réexportée) la conserve telle quelle.
+pub fn read_matrix_rows_per_file(paths: &[PathBuf]) -> Result<Vec<(PathBuf, Vec<FlowMatrixRow>)>> {
     if paths.is_empty() {
         return Err(SonarCoreError::MissingInput);
     }
 
-    let mut rows = Vec::new();
+    let mut files = Vec::new();
     for path in paths {
         let origin = origin_name_from_path(path);
-        for mut row in read_matrix_rows(path)? {
+        let mut rows = read_matrix_rows(path)?;
+        for row in &mut rows {
             if row.origin.trim().is_empty() {
                 row.origin = origin.clone();
             }
-            rows.push(row);
         }
+        files.push((path.clone(), rows));
     }
-    Ok(rows)
+    Ok(files)
 }
 
-/// Reconstruit une matrice depuis des lignes de CSV : les doublons éventuels
-/// sont fusionnés tunnel par tunnel (comptabilité père/fils préservée), les
-/// origines s'accumulent par flux et les labels portés par les fichiers sont
-/// réappliqués.
-pub fn matrix_from_rows(rows: &[FlowMatrixRow]) -> FlowMatrix {
-    let mut matrix = FlowMatrix::new();
+/// Lit les lignes de plusieurs fichiers de matrice (version aplatie de
+/// [`read_matrix_rows_per_file`]).
+pub fn read_matrix_rows_from_files(paths: &[PathBuf]) -> Result<Vec<FlowMatrixRow>> {
+    Ok(read_matrix_rows_per_file(paths)?
+        .into_iter()
+        .flat_map(|(_, rows)| rows)
+        .collect())
+}
 
-    // Labels portés par les fichiers d'abord : à clé égale, le dernier inséré
-    // gagne, comme dans l'application desktop. Le préfixe anti-injection de
-    // formule posé à l'export est retiré (aller-retour sans altération).
+/// Applique à une matrice les labels portés par des lignes de CSV : à clé
+/// égale, le dernier inséré gagne (et écrase un label déjà présent dans la
+/// matrice). Le préfixe anti-injection de formule posé à l'export est retiré
+/// (aller-retour sans altération).
+pub fn apply_row_labels(matrix: &mut FlowMatrix, rows: &[FlowMatrixRow]) {
     for row in rows {
         if let Some(label) = row.label_source.as_ref().filter(|l| !l.is_empty()) {
             matrix.add_label(
@@ -94,7 +100,12 @@ pub fn matrix_from_rows(rows: &[FlowMatrixRow]) -> FlowMatrix {
             );
         }
     }
+}
 
+/// Fusionne des lignes de CSV dans une matrice : les doublons éventuels sont
+/// fusionnés tunnel par tunnel (comptabilité père/fils préservée) et les
+/// origines s'accumulent par flux.
+pub fn merge_rows(matrix: &mut FlowMatrix, rows: &[FlowMatrixRow]) {
     for row in rows {
         let (flow, tunnel_rows) = row.to_flow_and_rows();
 
@@ -104,7 +115,14 @@ pub fn matrix_from_rows(rows: &[FlowMatrixRow]) -> FlowMatrix {
 
         matrix.add_flow_origins(&flow, parse_origin_list(&row.origin));
     }
+}
 
+/// Reconstruit une matrice depuis des lignes de CSV : labels des fichiers
+/// réappliqués ([`apply_row_labels`]) puis flux fusionnés ([`merge_rows`]).
+pub fn matrix_from_rows(rows: &[FlowMatrixRow]) -> FlowMatrix {
+    let mut matrix = FlowMatrix::new();
+    apply_row_labels(&mut matrix, rows);
+    merge_rows(&mut matrix, rows);
     matrix
 }
 

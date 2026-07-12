@@ -32,9 +32,18 @@ pub mod error {
         #[error(transparent)]
         Io(#[from] std::io::Error),
 
+        /// Fichier PCAP impossible à ouvrir (absent, illisible, format non
+        /// reconnu par libpcap).
         #[cfg(feature = "pcap")]
         #[error("{path}: {message}")]
-        Pcap { path: PathBuf, message: String },
+        PcapOpen { path: PathBuf, message: String },
+
+        /// Erreur de lecture au milieu d'un fichier PCAP (tronqué, corrompu) :
+        /// distincte de la fin normale pour ne jamais produire une matrice
+        /// silencieusement partielle.
+        #[cfg(feature = "pcap")]
+        #[error("{path}: {message}")]
+        PcapRead { path: PathBuf, message: String },
     }
 
     pub type Result<T> = std::result::Result<T, SonarCoreError>;
