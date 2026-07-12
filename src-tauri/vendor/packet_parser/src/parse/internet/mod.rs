@@ -9,6 +9,7 @@ use std::convert::TryFrom;
 use std::net::IpAddr;
 
 use crate::errors::internet::InternetError;
+use crate::parse::data_link::ethertype::Ethertype;
 use crate::parse::internet::protocols::profinet;
 use crate::parse::transport::protocols::TransportProtocol;
 use protocols::arp::ArpPacket;
@@ -18,6 +19,11 @@ use serde::Serialize;
 pub mod ip_type;
 use super::transport::Transport;
 use ip_type::IpType;
+
+const ETHERTYPE_IPV4: u16 = 0x0800;
+const ETHERTYPE_ARP: u16 = 0x0806;
+const ETHERTYPE_IPV6: u16 = 0x86DD;
+const ETHERTYPE_PROFINET: u16 = 0x8892;
 
 #[derive(Debug, Clone, Serialize, Eq)]
 pub struct Internet<'a> {
@@ -42,67 +48,114 @@ pub struct Internet<'a> {
     pub payload: &'a [u8],
 }
 
+impl<'a> Internet<'a> {
+    /// Parses the internet layer using the EtherType announced by the
+    /// data-link layer.
+    ///
+    /// Unlike [`Internet::try_from`], which probes every supported protocol
+    /// and therefore cannot tell a corrupt packet from an unknown protocol,
+    /// this dispatches on `ethertype`:
+    ///
+    /// - unknown EtherType (e.g. LLDP) → [`InternetError::UnsupportedProtocol`]
+    /// - known EtherType but corrupt payload → the protocol's parse error
+    pub fn try_from_parts(ethertype: Ethertype, payload: &'a [u8]) -> Result<Self, InternetError> {
+        match ethertype.0 {
+            ETHERTYPE_ARP => Ok(Self::from_arp(&ArpPacket::try_from(payload)?)),
+            ETHERTYPE_IPV4 => Ok(Self::from_ipv4(ipv4::Ipv4Packet::try_from(payload)?)),
+            ETHERTYPE_IPV6 => Ok(Self::from_ipv6(ipv6::Ipv6Packet::try_from(payload)?)),
+            ETHERTYPE_PROFINET => {
+                profinet::ProfinetPacket::try_from(payload)?;
+                Ok(Self::profinet())
+            }
+            _ => Err(InternetError::UnsupportedProtocol),
+        }
+    }
+
+    fn from_arp(arp_packet: &ArpPacket) -> Self {
+        Internet {
+            source: Some(arp_packet.sender_protocol_addr),
+            source_type: Some(IpType::from_addr(&arp_packet.sender_protocol_addr)),
+            destination: Some(arp_packet.target_protocol_addr),
+            destination_type: Some(IpType::from_addr(&arp_packet.target_protocol_addr)),
+            protocol_name: "ARP",
+            payload_protocol: None,
+            payload: &[],
+        }
+    }
+
+    fn from_ipv4(ipv4_packet: ipv4::Ipv4Packet<'a>) -> Self {
+        let payload_protocol = if ipv4_packet.is_fragmented() {
+            None
+        } else {
+            Some(Transport::transport_from_u8(&ipv4_packet.protocol))
+        };
+
+        Internet {
+            source: Some(IpAddr::V4(ipv4_packet.source_addr)),
+            source_type: Some(IpType::from_addr(&IpAddr::V4(ipv4_packet.source_addr))),
+            destination: Some(IpAddr::V4(ipv4_packet.dest_addr)),
+            destination_type: Some(IpType::from_addr(&IpAddr::V4(ipv4_packet.dest_addr))),
+            protocol_name: "IPv4",
+            payload_protocol,
+            payload: ipv4_packet.payload,
+        }
+    }
+
+    fn from_ipv6(ipv6_packet: ipv6::Ipv6Packet<'a>) -> Self {
+        Internet {
+            source: Some(IpAddr::V6(ipv6_packet.source_addr)),
+            source_type: Some(IpType::from_addr(&IpAddr::V6(ipv6_packet.source_addr))),
+            destination: Some(IpAddr::V6(ipv6_packet.dest_addr)),
+            destination_type: Some(IpType::from_addr(&IpAddr::V6(ipv6_packet.dest_addr))),
+            protocol_name: "IPv6",
+            payload_protocol: ipv6_packet
+                .transport_protocol
+                .map(|protocol| Transport::transport_from_u8(&protocol)),
+            payload: ipv6_packet.payload,
+        }
+    }
+
+    fn profinet() -> Self {
+        Internet {
+            source: None,
+            source_type: None,
+            destination: None,
+            destination_type: None,
+            protocol_name: "Profinet",
+            payload_protocol: None,
+            payload: &[],
+        }
+    }
+}
+
 impl<'a> TryFrom<&'a [u8]> for Internet<'a> {
     type Error = InternetError;
 
+    /// Probes ARP, IPv4, IPv6 then Profinet in order, without knowing the
+    /// EtherType. Prefer [`Internet::try_from_parts`] when the data-link
+    /// layer is available: probing cannot distinguish a corrupt packet from
+    /// an unsupported protocol.
     fn try_from(packet: &'a [u8]) -> Result<Self, Self::Error> {
         if packet.is_empty() {
             return Err(InternetError::EmptyPacket);
         }
 
-        // Try to parse as ARP first
         if let Ok(arp_packet) = ArpPacket::try_from(packet) {
-            return Ok(Internet {
-                source: Some(arp_packet.sender_protocol_addr),
-                source_type: Some(IpType::from_addr(&arp_packet.sender_protocol_addr)),
-                destination: Some(arp_packet.target_protocol_addr),
-                destination_type: Some(IpType::from_addr(&arp_packet.target_protocol_addr)),
-                protocol_name: "ARP",
-                payload_protocol: None,
-                payload: &[],
-            });
+            return Ok(Self::from_arp(&arp_packet));
         }
 
         if let Ok(ipv4_packet) = ipv4::Ipv4Packet::try_from(packet) {
-            let payload_protocol = if ipv4_packet.is_fragmented() {
-                None
-            } else {
-                Some(Transport::transport_from_u8(&ipv4_packet.protocol))
-            };
-
-            return Ok(Internet {
-                source: Some(IpAddr::V4(ipv4_packet.source_addr)),
-                source_type: Some(IpType::from_addr(&IpAddr::V4(ipv4_packet.source_addr))),
-                destination: Some(IpAddr::V4(ipv4_packet.dest_addr)),
-                destination_type: Some(IpType::from_addr(&IpAddr::V4(ipv4_packet.dest_addr))),
-                protocol_name: "IPv4",
-                payload_protocol,
-                payload: ipv4_packet.payload,
-            });
+            return Ok(Self::from_ipv4(ipv4_packet));
         }
 
         if let Ok(ipv6_packet) = ipv6::Ipv6Packet::try_from(packet) {
-            return Ok(Internet {
-                source: Some(IpAddr::V6(ipv6_packet.source_addr)),
-                source_type: Some(IpType::from_addr(&IpAddr::V6(ipv6_packet.source_addr))),
-                destination: Some(IpAddr::V6(ipv6_packet.dest_addr)),
-                destination_type: Some(IpType::from_addr(&IpAddr::V6(ipv6_packet.dest_addr))),
-                protocol_name: "IPv6",
-                payload_protocol: Some(Transport::transport_from_u8(&ipv6_packet.next_header)),
-                payload: ipv6_packet.payload,
-            });
+            return Ok(Self::from_ipv6(ipv6_packet));
         }
+
         if profinet::ProfinetPacket::try_from(packet).is_ok() {
-            return Ok(Internet {
-                source: None,
-                source_type: None,
-                destination: None,
-                destination_type: None,
-                protocol_name: "Profinet",
-                payload_protocol: None,
-                payload: &[],
-            });
+            return Ok(Self::profinet());
         }
+
         Err(InternetError::UnsupportedProtocol)
     }
 }

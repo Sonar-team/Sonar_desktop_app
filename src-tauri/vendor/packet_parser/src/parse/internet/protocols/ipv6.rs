@@ -39,7 +39,9 @@ pub struct Ipv6Packet<'a> {
     pub version_tc_flow: [u8; 4],
     /// Payload Length
     pub payload_length: u16,
-    /// Next Header (similar to IPv4's protocol field)
+    /// Next Header of the fixed header. This may designate an extension
+    /// header; see [`Ipv6Packet::transport_protocol`] for the upper-layer
+    /// protocol reached after the extension chain.
     pub next_header: u8,
     /// Hop Limit (similar to IPv4's TTL)
     pub hop_limit: u8,
@@ -47,10 +49,32 @@ pub struct Ipv6Packet<'a> {
     pub source_addr: Ipv6Addr,
     /// Destination Address
     pub dest_addr: Ipv6Addr,
-    /// Extension Headers (if any)
+    /// Raw bytes of the extension header chain (empty if none).
     pub extension_headers: &'a [u8],
-    /// Payload data
+    /// Upper-layer protocol after the extension chain.
+    ///
+    /// `None` when the packet is a fragment (parsing L4 safely would require
+    /// reassembly) or when the chain ends with No Next Header (59).
+    pub transport_protocol: Option<u8>,
+    /// Payload data, past any extension headers.
     pub payload: &'a [u8],
+    /// Whether a Fragment extension header is present.
+    fragmented: bool,
+}
+
+/// IPv6 extension headers chained via the Next Header field (RFC 8200).
+const HOP_BY_HOP: u8 = 0;
+const ROUTING: u8 = 43;
+const FRAGMENT: u8 = 44;
+const AUTH_HEADER: u8 = 51;
+const DEST_OPTIONS: u8 = 60;
+const NO_NEXT_HEADER: u8 = 59;
+
+fn is_extension_header(next_header: u8) -> bool {
+    matches!(
+        next_header,
+        HOP_BY_HOP | ROUTING | FRAGMENT | AUTH_HEADER | DEST_OPTIONS
+    )
 }
 
 impl<'a> Ipv6Packet<'a> {
@@ -69,6 +93,12 @@ impl<'a> Ipv6Packet<'a> {
         ((self.version_tc_flow[1] as u32 & 0x0F) << 16)
             | ((self.version_tc_flow[2] as u32) << 8)
             | (self.version_tc_flow[3] as u32)
+    }
+
+    /// Returns true when a Fragment extension header is present. Like IPv4
+    /// fragments, the L4 payload then requires reassembly to be parsed.
+    pub fn is_fragmented(&self) -> bool {
+        self.fragmented
     }
 }
 
@@ -117,16 +147,52 @@ impl<'a> TryFrom<&'a [u8]> for Ipv6Packet<'a> {
         );
 
         let total_expected_len = validate_ipv6_payload_length(data.len(), payload_length)?;
+        let full_payload = &data[IPV6_HEADER_LEN..total_expected_len];
 
-        // For simplicity, we're not parsing extension headers here
-        // In a real implementation, you would parse them based on next_header
-        let extension_headers = &[0u8];
+        // Walk the extension header chain (RFC 8200 §4) until an upper-layer
+        // protocol is reached. Each extension starts with (next header,
+        // length), so the walk is bounded by `full_payload`.
+        let mut current = next_header;
+        let mut offset = 0usize;
+        let mut fragmented = false;
 
-        // Extract payload
-        let payload = if payload_length > 0 {
-            &data[IPV6_HEADER_LEN..total_expected_len]
+        while is_extension_header(current) {
+            let rest = &full_payload[offset..];
+            if rest.len() < 2 {
+                return Err(Ipv6Error::InvalidExtensionHeader(format!(
+                    "truncated extension header (type {current})"
+                )));
+            }
+            let header_len = match current {
+                // Fragment header has a fixed 8-byte size (its second byte is
+                // reserved, not a length).
+                FRAGMENT => 8,
+                // AH expresses its length in 4-byte units, minus 2 (RFC 4302).
+                AUTH_HEADER => (rest[1] as usize + 2) * 4,
+                // Hop-by-Hop, Routing and Destination Options use 8-byte
+                // units, not counting the first 8 bytes.
+                _ => (rest[1] as usize + 1) * 8,
+            };
+            if rest.len() < header_len {
+                return Err(Ipv6Error::InvalidExtensionHeader(format!(
+                    "extension header (type {current}) longer than payload: \
+                     {header_len} > {} bytes",
+                    rest.len()
+                )));
+            }
+            if current == FRAGMENT {
+                fragmented = true;
+            }
+            current = rest[0];
+            offset += header_len;
+        }
+
+        let extension_headers = &full_payload[..offset];
+        let payload = &full_payload[offset..];
+        let transport_protocol = if fragmented || current == NO_NEXT_HEADER {
+            None
         } else {
-            &[]
+            Some(current)
         };
 
         Ok(Ipv6Packet {
@@ -137,7 +203,9 @@ impl<'a> TryFrom<&'a [u8]> for Ipv6Packet<'a> {
             source_addr,
             dest_addr,
             extension_headers,
+            transport_protocol,
             payload,
+            fragmented,
         })
     }
 }
@@ -204,6 +272,82 @@ mod tests {
                 actual: 39
             })
         ));
+    }
+
+    /// Fixed IPv6 header with the given next header and payload length.
+    fn ipv6_header(next_header: u8, payload_length: u16) -> Vec<u8> {
+        let mut data = vec![0u8; 40];
+        data[0] = 0x60;
+        data[4] = (payload_length >> 8) as u8;
+        data[5] = payload_length as u8;
+        data[6] = next_header;
+        data[7] = 64;
+        data
+    }
+
+    #[test]
+    fn test_hop_by_hop_extension_header_reaches_udp() {
+        // Hop-by-Hop (8 bytes: next=17/UDP, len=0, padding) then 4 payload bytes.
+        let mut data = ipv6_header(0, 12);
+        data.extend_from_slice(&[17, 0, 0, 0, 0, 0, 0, 0]);
+        data.extend_from_slice(&[0xde, 0xad, 0xbe, 0xef]);
+
+        let packet = Ipv6Packet::try_from(&data[..]).unwrap();
+
+        assert_eq!(packet.next_header, 0);
+        assert_eq!(packet.transport_protocol, Some(17));
+        assert_eq!(packet.extension_headers.len(), 8);
+        assert_eq!(packet.payload, &[0xde, 0xad, 0xbe, 0xef]);
+        assert!(!packet.is_fragmented());
+    }
+
+    #[test]
+    fn test_chained_extension_headers() {
+        // Hop-by-Hop → Destination Options (16 bytes) → TCP.
+        let mut data = ipv6_header(0, 8 + 16 + 4);
+        data.extend_from_slice(&[60, 0, 0, 0, 0, 0, 0, 0]); // HbH → DestOpts
+        data.extend_from_slice(&[6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); // DestOpts → TCP
+        data.extend_from_slice(&[1, 2, 3, 4]);
+
+        let packet = Ipv6Packet::try_from(&data[..]).unwrap();
+
+        assert_eq!(packet.transport_protocol, Some(6));
+        assert_eq!(packet.extension_headers.len(), 24);
+        assert_eq!(packet.payload, &[1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn test_fragment_header_disables_transport_protocol() {
+        // Fragment header (8 bytes, next=17/UDP, offset 185, more fragments).
+        let mut data = ipv6_header(44, 12);
+        data.extend_from_slice(&[17, 0, 0x05, 0xc9, 0x00, 0x00, 0x00, 0x01]);
+        data.extend_from_slice(&[0xde, 0xad, 0xbe, 0xef]);
+
+        let packet = Ipv6Packet::try_from(&data[..]).unwrap();
+
+        assert_eq!(packet.transport_protocol, None);
+        assert!(packet.is_fragmented());
+    }
+
+    #[test]
+    fn test_no_next_header_yields_no_transport_protocol() {
+        let data = ipv6_header(59, 0);
+
+        let packet = Ipv6Packet::try_from(&data[..]).unwrap();
+
+        assert_eq!(packet.transport_protocol, None);
+        assert!(!packet.is_fragmented());
+    }
+
+    #[test]
+    fn test_truncated_extension_header_is_rejected() {
+        // Hop-by-Hop claiming 8 bytes but only 4 available.
+        let mut data = ipv6_header(0, 4);
+        data.extend_from_slice(&[17, 0, 0, 0]);
+
+        let result = Ipv6Packet::try_from(&data[..]);
+
+        assert!(matches!(result, Err(Ipv6Error::InvalidExtensionHeader(_))));
     }
 
     #[test]

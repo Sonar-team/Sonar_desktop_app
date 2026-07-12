@@ -803,6 +803,8 @@ mod add_packet_flow_tests {
             }),
             transport: None,
             application: None,
+            corrupted: None,
+            inner: None,
         }
     }
 

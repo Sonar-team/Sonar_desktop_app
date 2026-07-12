@@ -53,6 +53,7 @@ mod tests {
             transport: None,
             application: None,
             inner: None,
+            corrupted: None,
         };
 
         let expected = concat!(
@@ -85,6 +86,7 @@ mod tests {
             transport: None,
             application: None,
             inner: None,
+            corrupted: None,
         };
 
         let rendered = packet.to_string();

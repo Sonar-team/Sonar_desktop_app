@@ -13,9 +13,9 @@ use serde::Serialize;
 use crate::{
     errors::application::ApplicationError,
     parse::application::protocols::{
-        dhcp::DhcpPacket, giop::GiopPacket, modbus_tcp::ModbusTcpPacket, ntp::NtpPacket,
-        opcua::OpcuaPacket, postgresql::is_likely_postgresql_payload, quic::QuicPacket,
-        srvloc::SrvlocPacket,
+        dhcp::DhcpPacket, giop::GiopPacket, http::HttpRequest, modbus_tcp::ModbusTcpPacket,
+        mqtt::MqttPacket, ntp::NtpPacket, opcua::OpcuaPacket,
+        postgresql::is_likely_postgresql_payload, quic::QuicPacket, srvloc::SrvlocPacket,
     },
 };
 
@@ -74,6 +74,11 @@ impl TryFrom<&[u8]> for Application {
                 application_protocol: "TLS",
             });
         }
+        if HttpRequest::try_from(packet).is_ok() {
+            return Ok(Application {
+                application_protocol: "HTTP",
+            });
+        }
         if S7CommPacket::try_from(packet).is_ok() {
             return Ok(Application {
                 application_protocol: "S7Comm",
@@ -101,25 +106,19 @@ impl TryFrom<&[u8]> for Application {
                 application_protocol: "ModbusTCP",
             });
         }
-        // if Dhcpv6Packet::try_from(packet).is_ok() {
-        //     return Ok(Application {
-        //         application_protocol: "DHCPv6",
-        //     });
-        // }
-        // if AmsPacket::try_from(packet).is_ok() {
-        //     return Ok(Application {
-        //         application_protocol: "AMS",
-        //     });
-        // }
-
-        // if CotpHeader::from_bytes(packet).is_ok() {
-        //     return Ok(Application {
-        //         application_protocol: "COTP",
-        //     });
-        // }
+        // DHCPv6, AMS et COTP ont des signatures trop faibles pour un probing
+        // à l'aveugle (risque de faux positifs) : ils sont détectés avec un
+        // garde-fou de port dans PacketFlow::parse_application_from_transport.
         if QuicPacket::try_from(packet).is_ok() {
             return Ok(Application {
                 application_protocol: "QUIC",
+            });
+        }
+        // MQTT en dernier : son en-tête fixe (1 octet de type + longueur) est
+        // peu discriminant, les protocoles plus stricts doivent passer avant.
+        if MqttPacket::try_from(packet).is_ok() {
+            return Ok(Application {
+                application_protocol: "MQTT",
             });
         }
         // If no parser matches, return a "None" protocol
@@ -267,6 +266,34 @@ mod tests {
 
         let parsed = Application::try_from(packet.as_slice()).unwrap();
         assert_eq!(parsed.application_protocol, "PostgreSQL");
+    }
+
+    #[test]
+    fn test_detects_http() {
+        let packet = b"GET /index.html HTTP/1.1\r\nHost: example.com\r\n\r\n";
+
+        let parsed = Application::try_from(&packet[..]).unwrap();
+        assert_eq!(parsed.application_protocol, "HTTP");
+    }
+
+    #[test]
+    fn test_random_text_is_not_http() {
+        let packet = b"BONJOUR tout le monde\r\n\r\n";
+
+        let parsed = Application::try_from(&packet[..]).unwrap();
+        assert_ne!(parsed.application_protocol, "HTTP");
+    }
+
+    #[test]
+    fn test_detects_mqtt_connect() {
+        let packet: &[u8] = &[
+            0x10, 0x0E, // CONNECT, remaining length 14
+            0x00, 0x04, b'M', b'Q', b'T', b'T', 0x04, 0x02, 0x00, 0x3C, // variable header
+            0x00, 0x02, b'i', b'd', // client id
+        ];
+
+        let parsed = Application::try_from(packet).unwrap();
+        assert_eq!(parsed.application_protocol, "MQTT");
     }
 
     #[test]

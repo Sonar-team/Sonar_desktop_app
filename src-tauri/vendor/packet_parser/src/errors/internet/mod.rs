@@ -16,6 +16,18 @@ pub enum InternetError {
     #[error("ARP error: {0}")]
     ArpError(#[from] ArpError),
 
+    /// Error related to IPv4 parsing
+    #[error("IPv4 error: {0}")]
+    Ipv4Error(#[from] ipv4::Ipv4Error),
+
+    /// Error related to IPv6 parsing
+    #[error("IPv6 error: {0}")]
+    Ipv6Error(#[from] ipv6::Ipv6Error),
+
+    /// Error related to Profinet parsing
+    #[error("Profinet error: {0}")]
+    ProfinetError(#[from] profinet::ProfinetPacketError),
+
     /// The packet is too short to be a valid internet protocol packet
     #[error("Invalid packet length: expected at least {expected} bytes, got {actual} bytes")]
     InvalidLength { expected: usize, actual: usize },

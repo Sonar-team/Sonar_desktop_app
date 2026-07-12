@@ -103,8 +103,10 @@ pub mod owned;
 /// Module for displaying parsed data (internal use).
 mod displays;
 
-/// Centralized error management for the crate.
-mod errors;
+/// Centralized error management for the crate. Public so consumers can name
+/// and match the per-layer error types (e.g.
+/// `errors::internet::InternetError`, `errors::transport::TransportError`).
+pub mod errors;
 pub use errors::ParsedPacketError;
 
 /// Main module for packet analysis.
@@ -120,5 +122,6 @@ pub use parse::transport::Transport;
 
 /// Exports data link layer parsing functionality.
 pub use parse::PacketFlow;
+pub use parse::{CorruptedLayer, CorruptedLayerKind};
 
 pub mod timing;

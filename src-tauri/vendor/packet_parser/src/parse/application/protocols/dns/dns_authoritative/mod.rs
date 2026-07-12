@@ -5,16 +5,31 @@
 
 use std::fmt;
 
-use crate::parse::application::protocols::dns::utils::{dns_class::DnsClass, dns_types::DnsType};
+use crate::parse::application::protocols::dns::utils::{
+    dns_class::DnsClass, dns_types::DnsType, name::RawRecord,
+};
 
 #[derive(Debug)]
 pub struct AuthoritativeNameServer {
-    name: String,           // Domain name
-    answer_type: DnsType,   // Type of record
-    answer_class: DnsClass, // Class of record
-    ttl: u32,               // Time to live
-    data_length: u16,       // Length of the data
-    address: Vec<u8>,       // Address or other data (variable length)
+    pub name: String,           // Domain name
+    pub answer_type: DnsType,   // Type of record
+    pub answer_class: DnsClass, // Class of record
+    pub ttl: u32,               // Time to live
+    pub data_length: u16,       // Length of the data
+    pub address: Vec<u8>,       // Address or other data (variable length)
+}
+
+impl From<RawRecord> for AuthoritativeNameServer {
+    fn from(record: RawRecord) -> Self {
+        AuthoritativeNameServer {
+            name: record.name,
+            answer_type: DnsType::new(record.rtype),
+            answer_class: DnsClass::new(record.rclass),
+            ttl: record.ttl,
+            data_length: record.data_length,
+            address: record.data,
+        }
+    }
 }
 
 impl fmt::Display for AuthoritativeNameServer {

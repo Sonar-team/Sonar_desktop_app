@@ -20,7 +20,7 @@ suivantes a `None` quand c'est necessaire.
 
 ```toml
 [dependencies]
-packet_parser = "3.0.1"
+packet_parser = "5.0.0"
 ```
 
 Pour reproduire les exemples qui decodent de l'hexadecimal:
@@ -28,7 +28,7 @@ Pour reproduire les exemples qui decodent de l'hexadecimal:
 ```toml
 [dependencies]
 hex = "0.4"
-packet_parser = "3.0.1"
+packet_parser = "5.0.0"
 ```
 
 ## Exemple rapide

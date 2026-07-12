@@ -16,11 +16,17 @@ pub enum HttpParseError {
     #[error("Missing HTTP method")]
     MissingMethod,
 
+    #[error("Unknown HTTP method: {0}")]
+    InvalidMethod(String),
+
     #[error("Missing HTTP URI")]
     MissingUri,
 
     #[error("Missing HTTP version")]
     MissingVersion,
+
+    #[error("Invalid HTTP version: {0}")]
+    InvalidVersion(String),
 
     #[error("Invalid HTTP header")]
     InvalidHeader,

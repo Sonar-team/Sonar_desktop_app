@@ -169,11 +169,16 @@ impl TryFrom<&[u8]> for MacAddress {
 impl TryFrom<String> for MacAddress {
     type Error = MacParseError;
 
+    /// # Errors
+    ///
+    /// Returns [`MacParseError::InvalidComponent`] when a component is not a
+    /// valid hexadecimal byte, and [`MacParseError::InvalidLength`] when the
+    /// address does not have exactly 6 components.
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let bytes = value
             .split(':')
-            .map(|s| u8::from_str_radix(s, 16).unwrap())
-            .collect::<Vec<u8>>();
+            .map(|s| u8::from_str_radix(s, 16).map_err(|_| MacParseError::InvalidComponent))
+            .collect::<Result<Vec<u8>, _>>()?;
         Self::try_from(&bytes[..])
     }
 }

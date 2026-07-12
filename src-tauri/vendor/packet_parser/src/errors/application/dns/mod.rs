@@ -39,6 +39,10 @@ pub enum DnsQueryParseError {
     OutOfBoundParse,
     #[error("UTF-8 parsing error: {0}")]
     Utf8Error(#[from] std::string::FromUtf8Error),
+    #[error("Invalid DNS compression pointer at offset {0} (loop or forward reference)")]
+    InvalidCompressionPointer(usize),
+    #[error("Reserved DNS label type at offset {0}")]
+    ReservedLabelType(usize),
 }
 
 #[derive(Debug, Error, PartialEq)]

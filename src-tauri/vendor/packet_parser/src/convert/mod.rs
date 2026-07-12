@@ -57,19 +57,49 @@ impl fmt::Display for Packet {
     }
 }
 
-/// Convertit un flux hexadécimal Wireshark en `Vec<u8>`.
-pub fn hex_stream_to_bytes(hex: &str) -> Vec<u8> {
-    let mut bytes = Vec::new();
-    assert!(
-        hex.len().is_multiple_of(2),
-        "La chaîne hexadécimale doit avoir une longueur paire"
-    );
+/// Erreurs de conversion d'un flux hexadécimal.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum HexStreamError {
+    #[error("La chaîne hexadécimale doit avoir une longueur paire (longueur: {0})")]
+    OddLength(usize),
+    #[error("Valeur hex invalide: {0:?}")]
+    InvalidDigit(String),
+}
+
+/// Convertit un flux hexadécimal Wireshark en `Vec<u8>`, sans paniquer sur une
+/// entrée invalide. À préférer à [`hex_stream_to_bytes`] pour toute entrée
+/// non maîtrisée.
+pub fn try_hex_stream_to_bytes(hex: &str) -> Result<Vec<u8>, HexStreamError> {
+    if !hex.len().is_multiple_of(2) {
+        return Err(HexStreamError::OddLength(hex.len()));
+    }
+    let mut bytes = Vec::with_capacity(hex.len() / 2);
     for i in (0..hex.len()).step_by(2) {
-        let byte_str = &hex[i..i + 2];
-        let byte = u8::from_str_radix(byte_str, 16).expect("Valeur hex invalide");
+        let byte_str = hex.get(i..i + 2).ok_or_else(|| {
+            HexStreamError::InvalidDigit(hex.get(i..).unwrap_or_default().to_string())
+        })?;
+        let byte = u8::from_str_radix(byte_str, 16)
+            .map_err(|_| HexStreamError::InvalidDigit(byte_str.to_string()))?;
         bytes.push(byte);
     }
-    bytes
+    Ok(bytes)
+}
+
+/// Convertit un flux hexadécimal Wireshark en `Vec<u8>`.
+///
+/// # Panics
+///
+/// Panique si la chaîne a une longueur impaire ou contient un caractère non
+/// hexadécimal. Utiliser [`try_hex_stream_to_bytes`] pour une entrée
+/// utilisateur.
+pub fn hex_stream_to_bytes(hex: &str) -> Vec<u8> {
+    match try_hex_stream_to_bytes(hex) {
+        Ok(bytes) => bytes,
+        Err(HexStreamError::OddLength(_)) => {
+            panic!("La chaîne hexadécimale doit avoir une longueur paire")
+        }
+        Err(HexStreamError::InvalidDigit(_)) => panic!("Valeur hex invalide"),
+    }
 }
 
 /// Convertit un slice `&[u8]` en une chaîne hexadécimale.
@@ -138,6 +168,30 @@ mod tests {
         let hex = "deadbeef";
         let expected = vec![0xDE, 0xAD, 0xBE, 0xEF];
         assert_eq!(hex_stream_to_bytes(hex), expected);
+    }
+
+    #[test]
+    fn test_try_hex_stream_to_bytes_valid() {
+        assert_eq!(
+            try_hex_stream_to_bytes("deadbeef"),
+            Ok(vec![0xDE, 0xAD, 0xBE, 0xEF])
+        );
+    }
+
+    #[test]
+    fn test_try_hex_stream_to_bytes_odd_length() {
+        assert_eq!(
+            try_hex_stream_to_bytes("ABC"),
+            Err(HexStreamError::OddLength(3))
+        );
+    }
+
+    #[test]
+    fn test_try_hex_stream_to_bytes_invalid_digit() {
+        assert_eq!(
+            try_hex_stream_to_bytes("ZZ"),
+            Err(HexStreamError::InvalidDigit("ZZ".to_string()))
+        );
     }
 
     #[test]

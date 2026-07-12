@@ -5,17 +5,32 @@
 
 use std::fmt;
 
-use crate::parse::application::protocols::dns::utils::{dns_class::DnsClass, dns_types::DnsType};
+use crate::parse::application::protocols::dns::utils::{
+    dns_class::DnsClass, dns_types::DnsType, name::RawRecord,
+};
 
 // more can be a list of this possible struct (those strcut may on may not be on the liste: "more"):
 #[derive(Debug)]
 pub struct Answer {
-    name: String,           // Domain name
-    answer_type: DnsType,   // Type of record (e.g., A, AAAA, MX, etc.)
-    answer_class: DnsClass, // Class of record (typically IN for Internet)
-    ttl: u32,               // Time to live
-    data_length: u16,       // Length of the data
-    address: Vec<u8>,       // Address or other data (variable length)
+    pub name: String,           // Domain name
+    pub answer_type: DnsType,   // Type of record (e.g., A, AAAA, MX, etc.)
+    pub answer_class: DnsClass, // Class of record (typically IN for Internet)
+    pub ttl: u32,               // Time to live
+    pub data_length: u16,       // Length of the data
+    pub address: Vec<u8>,       // Address or other data (variable length)
+}
+
+impl From<RawRecord> for Answer {
+    fn from(record: RawRecord) -> Self {
+        Answer {
+            name: record.name,
+            answer_type: DnsType::new(record.rtype),
+            answer_class: DnsClass::new(record.rclass),
+            ttl: record.ttl,
+            data_length: record.data_length,
+            address: record.data,
+        }
+    }
 }
 
 impl fmt::Display for Answer {

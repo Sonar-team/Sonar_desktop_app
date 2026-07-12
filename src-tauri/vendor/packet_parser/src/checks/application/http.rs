@@ -36,9 +36,20 @@ pub fn require_request_line(line: Option<&str>) -> Result<&str, HttpParseError> 
     line.ok_or(HttpParseError::MissingRequestLine)
 }
 
-/// Requires the HTTP method token to be present and returns it borrowed.
+/// Standard HTTP request methods (RFC 9110) accepted by the parser.
+const HTTP_METHODS: [&str; 9] = [
+    "GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH",
+];
+
+/// Requires the HTTP method token to be present and to be a standard HTTP
+/// method, then returns it borrowed. Rejecting unknown methods keeps random
+/// text payloads from being classified as HTTP.
 pub fn require_method(part: Option<&str>) -> Result<&str, HttpParseError> {
-    part.ok_or(HttpParseError::MissingMethod)
+    let method = part.ok_or(HttpParseError::MissingMethod)?;
+    if !HTTP_METHODS.contains(&method) {
+        return Err(HttpParseError::InvalidMethod(method.to_string()));
+    }
+    Ok(method)
 }
 
 /// Requires the URI token to be present and returns it borrowed.
@@ -46,9 +57,14 @@ pub fn require_uri(part: Option<&str>) -> Result<&str, HttpParseError> {
     part.ok_or(HttpParseError::MissingUri)
 }
 
-/// Requires the HTTP version token to be present and returns it borrowed.
+/// Requires the HTTP version token to be present and shaped like `HTTP/x.y`,
+/// then returns it borrowed.
 pub fn require_version(part: Option<&str>) -> Result<&str, HttpParseError> {
-    part.ok_or(HttpParseError::MissingVersion)
+    let version = part.ok_or(HttpParseError::MissingVersion)?;
+    if !version.starts_with("HTTP/") {
+        return Err(HttpParseError::InvalidVersion(version.to_string()));
+    }
+    Ok(version)
 }
 
 /// Requires a header name or value part to be present and returns it borrowed.

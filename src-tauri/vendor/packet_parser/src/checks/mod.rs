@@ -6,6 +6,7 @@
 use crate::errors::ParsedPacketError;
 
 pub mod application;
+pub mod checksum;
 pub mod data_link;
 pub mod internet;
 pub mod transport;

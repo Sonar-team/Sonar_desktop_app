@@ -12,7 +12,7 @@
 [package]
 edition = "2024"
 name = "packet_parser"
-version = "4.0.0"
+version = "5.0.0"
 authors = ["Cyprien Avico avicocyprien@yahoo.com"]
 build = false
 exclude = [

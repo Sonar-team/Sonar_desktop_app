@@ -15,18 +15,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let data_link = DataLink::try_from(frame.as_slice())?;
     println!("Data link: {:?}", data_link);
-    let mut internet = match Internet::try_from(data_link.payload) {
-        Ok(internet) => Some(internet),
-        Err(e) => return Err(e.into()),
-    };
+    let mut internet = Some(Internet::try_from(data_link.payload)?);
     println!("Internet: {:?}", internet);
     let transport = match internet.as_mut() {
-        Some(internet) => {
-            match Transport::try_from_parts(internet.payload_protocol, internet.payload) {
-                Ok(transport) => Some(transport),
-                Err(e) => return Err(e.into()),
-            }
-        }
+        Some(internet) => Some(Transport::try_from_parts(
+            internet.payload_protocol,
+            internet.payload,
+        )?),
         None => None,
     };
     println!("Transport: {:?}", transport);

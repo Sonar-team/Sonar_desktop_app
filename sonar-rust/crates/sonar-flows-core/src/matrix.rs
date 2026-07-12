@@ -775,6 +775,11 @@ impl FlowMatrixRow {
             internet,
             transport,
             application,
+            // Une ligne CSV ne transporte ni diagnostic de corruption ni
+            // tunnel imbriqué : les niveaux d'un tunnel sont déjà des lignes
+            // distinctes reliées par `encap_id`.
+            corrupted: None,
+            inner: None,
         };
 
         // La validation stricte est faite en amont ([`Self::validate`],
@@ -896,6 +901,8 @@ mod tests {
                 internet: None,
                 transport: None,
                 application: None,
+                corrupted: None,
+                inner: None,
             },
             encap_id: None,
         }
@@ -1116,6 +1123,8 @@ mod tests {
                 }),
                 transport: None,
                 application: None,
+                corrupted: None,
+                inner: None,
             },
             encap_id: None,
         }

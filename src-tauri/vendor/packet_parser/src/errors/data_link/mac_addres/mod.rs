@@ -9,4 +9,7 @@ use thiserror::Error;
 pub enum MacParseError {
     #[error("Invalid MAC address length: expected 6 bytes, found {actual} bytes")]
     InvalidLength { actual: usize },
+
+    #[error("Invalid MAC address component: expected two hex digits")]
+    InvalidComponent,
 }

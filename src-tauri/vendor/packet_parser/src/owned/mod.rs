@@ -9,6 +9,7 @@ use std::{
     net::IpAddr,
 };
 
+use crate::parse::CorruptedLayer;
 use crate::parse::data_link::vlan_tag::VlanTag;
 use crate::{IpType, PacketFlow};
 
@@ -22,6 +23,13 @@ pub struct PacketFlowOwned {
     pub transport: Option<TransportOwned>,
     #[serde(flatten)]
     pub application: Option<ApplicationOwned>,
+    /// Encapsulated flow when this flow is a tunnel (e.g. CAPWAP), mirroring
+    /// [`PacketFlow::inner`](crate::PacketFlow).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inner: Option<Box<PacketFlowOwned>>,
+    /// Corruption report, mirroring [`PacketFlow::corrupted`](crate::PacketFlow).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub corrupted: Option<CorruptedLayer>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
@@ -118,31 +126,45 @@ pub struct ApplicationOwned {
     pub protocol: String,
 }
 
-impl<'a> From<PacketFlow<'a>> for PacketFlowOwned {
-    fn from(flow: PacketFlow<'a>) -> Self {
+impl<'a> From<&PacketFlow<'a>> for PacketFlowOwned {
+    fn from(flow: &PacketFlow<'a>) -> Self {
         Self {
             data_link: DataLinkOwned {
                 destination_mac: flow.data_link.destination_mac.to_string(),
                 source_mac: flow.data_link.source_mac.to_string(),
                 ethertype: flow.data_link.ethertype.name(),
-                vlan: flow.data_link.vlan,
+                vlan: flow.data_link.vlan.clone(),
             },
-            internet: flow.internet.map(|internet| InternetOwned {
+            internet: flow.internet.as_ref().map(|internet| InternetOwned {
                 source_ip: internet.source,
-                ip_source_type: internet.source_type,
+                ip_source_type: internet.source_type.clone(),
                 destination_ip: internet.destination,
-                ip_destination_type: internet.destination_type,
+                ip_destination_type: internet.destination_type.clone(),
                 protocol: internet.protocol_name.to_string(),
             }),
-            transport: flow.transport.map(|transport| TransportOwned {
+            transport: flow.transport.as_ref().map(|transport| TransportOwned {
                 source_port: transport.source_port,
                 destination_port: transport.destination_port,
                 protocol: transport.protocol.to_string(),
             }),
-            application: flow.application.map(|application| ApplicationOwned {
-                protocol: application.application_protocol.to_string(),
-            }),
+            application: flow
+                .application
+                .as_ref()
+                .map(|application| ApplicationOwned {
+                    protocol: application.application_protocol.to_string(),
+                }),
+            inner: flow
+                .inner
+                .as_deref()
+                .map(|inner| Box::new(PacketFlowOwned::from(inner))),
+            corrupted: flow.corrupted.clone(),
         }
+    }
+}
+
+impl<'a> From<PacketFlow<'a>> for PacketFlowOwned {
+    fn from(flow: PacketFlow<'a>) -> Self {
+        Self::from(&flow)
     }
 }
 
@@ -159,6 +181,9 @@ impl Display for PacketFlowOwned {
         }
         if let Some(application) = &self.application {
             writeln!(f, "  Application: {application}")?;
+        }
+        if let Some(inner) = &self.inner {
+            writeln!(f, "  Inner {inner}")?;
         }
 
         Ok(())
@@ -212,6 +237,8 @@ mod tests {
             internet: Some(sample_internet()),
             transport: Some(sample_transport()),
             application: Some(sample_application()),
+            inner: None,
+            corrupted: None,
         }
     }
 
@@ -318,6 +345,8 @@ mod tests {
             internet: None,
             transport: None,
             application: None,
+            inner: None,
+            corrupted: None,
         };
 
         let expected = concat!(

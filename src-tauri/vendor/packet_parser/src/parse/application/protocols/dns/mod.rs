@@ -19,6 +19,7 @@ use dns_authoritative::AuthoritativeNameServer;
 use dns_header::DnsHeader;
 use dns_queries::DnsQueries;
 use std::fmt;
+use utils::name::{RawRecord, parse_resource_record};
 
 #[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// DNS Packet
@@ -53,10 +54,16 @@ impl TryFrom<&[u8]> for DnsPacket {
         check_dns_minimum_size(bytes)?;
 
         let header = DnsHeader::try_from(bytes)?;
-        let queries = DnsQueries::from_bytes(&bytes[12..], header.counts[0])?;
-        let answers = None;
-        let authorities = None;
-        let additionals = None;
+
+        // Les sections sont parsées sur le message complet : les pointeurs de
+        // compression (RFC 1035 §4.1.4) sont des offsets depuis l'octet 0.
+        let mut offset = 12;
+        let queries = DnsQueries::parse(bytes, &mut offset, header.counts[0])?;
+        let answers = parse_record_section::<Answer>(bytes, &mut offset, header.counts[1])?;
+        let authorities =
+            parse_record_section::<AuthoritativeNameServer>(bytes, &mut offset, header.counts[2])?;
+        let additionals =
+            parse_record_section::<AdditionalRecord>(bytes, &mut offset, header.counts[3])?;
 
         Ok(DnsPacket {
             header,
@@ -66,6 +73,23 @@ impl TryFrom<&[u8]> for DnsPacket {
             additionals,
         })
     }
+}
+
+/// Parse `count` resource records à `*offset` dans `message`. Retourne `None`
+/// quand la section est vide.
+fn parse_record_section<T: From<RawRecord>>(
+    message: &[u8],
+    offset: &mut usize,
+    count: u16,
+) -> Result<Option<Vec<T>>, DnsPacketError> {
+    if count == 0 {
+        return Ok(None);
+    }
+    let mut records = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        records.push(T::from(parse_resource_record(message, offset)?));
+    }
+    Ok(Some(records))
 }
 
 impl fmt::Display for DnsPacket {
@@ -96,9 +120,78 @@ mod tests {
                 assert_eq!(packet.header.counts[1], 15);
                 assert_eq!(packet.header.counts[2], 6);
                 assert_eq!(packet.header.counts[3], 2);
+
+                assert_eq!(packet.queries.queries[0].name, "us.pool.ntp.org");
+
+                // 15 réponses A, noms compressés (pointeur c00c vers la question).
+                let answers = packet.answers.as_ref().expect("answers");
+                assert_eq!(answers.len(), 15);
+                assert_eq!(answers[0].name, "us.pool.ntp.org");
+                assert_eq!(answers[0].answer_type.0, 1); // A
+                assert_eq!(answers[0].answer_class.0, 1); // IN
+                assert_eq!(answers[0].ttl, 0x0d87);
+                assert_eq!(answers[0].data_length, 4);
+                assert_eq!(answers[0].address, vec![0x43, 0x81, 0x44, 0x09]);
+                assert_eq!(answers[14].address, vec![0x42, 0x73, 0x88, 0x04]);
+
+                // 6 enregistrements NS, avec compression dans le nom ET la rdata.
+                let authorities = packet.authorities.as_ref().expect("authorities");
+                assert_eq!(authorities.len(), 6);
+                assert_eq!(authorities[0].name, "POOL.ntp.org");
+                assert_eq!(authorities[0].answer_type.0, 2); // NS
+
+                // 2 additionnels (A des serveurs de noms).
+                let additionals = packet.additionals.as_ref().expect("additionals");
+                assert_eq!(additionals.len(), 2);
+                assert_eq!(additionals[0].answer_type.0, 1); // A
+                assert_eq!(additionals[0].data_length, 4);
             }
             Err(e) => panic!("Error parsing DNS packet: {}", e),
         }
+    }
+
+    #[test]
+    fn test_dns_query_only_packet_has_empty_sections() {
+        // Question simple "example.com A IN", aucun record.
+        let mut data = vec![
+            0x12, 0x34, // transaction id
+            0x01, 0x00, // flags : requête standard, RD
+            0x00, 0x01, // 1 question
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0 answer/authority/additional
+        ];
+        data.push(7);
+        data.extend_from_slice(b"example");
+        data.push(3);
+        data.extend_from_slice(b"com");
+        data.push(0);
+        data.extend_from_slice(&[0x00, 0x01, 0x00, 0x01]);
+
+        let packet = DnsPacket::try_from(data.as_slice()).unwrap();
+
+        assert_eq!(packet.queries.queries[0].name, "example.com");
+        assert!(packet.answers.is_none());
+        assert!(packet.authorities.is_none());
+        assert!(packet.additionals.is_none());
+    }
+
+    #[test]
+    fn test_dns_truncated_answer_section_is_rejected() {
+        // En-tête annonçant 1 réponse, mais section absente.
+        let mut data = vec![
+            0x12, 0x34, // transaction id
+            0x81, 0x80, // flags : réponse standard
+            0x00, 0x01, // 1 question
+            0x00, 0x01, // 1 answer annoncée
+            0x00, 0x00, 0x00, 0x00,
+        ];
+        data.push(1);
+        data.push(b'a');
+        data.push(0);
+        data.extend_from_slice(&[0x00, 0x01, 0x00, 0x01]);
+
+        let result = DnsPacket::try_from(data.as_slice());
+
+        assert!(result.is_err(), "truncated answer section must not parse");
     }
 
     #[test]
@@ -125,7 +218,7 @@ mod tests {
             Ok(_) => panic!("Expected error, but parsing succeeded"),
             Err(e) => assert!(
                 e.to_string()
-                    .contains("required 1 more bytes at offset 0, but only 0 bytes available"),
+                    .contains("required 1 more bytes at offset 12, but only 0 bytes available"),
                 "Unexpected error: {}",
                 e
             ),

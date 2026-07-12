@@ -20,7 +20,9 @@
 //!
 //! ## Design goals
 //!
-//! - Deterministic, allocation-free parsing using `&[u8]` references
+//! - Deterministic, zero-copy parsing of the L2/L3/L4 layers using `&[u8]`
+//!   references. Some application-layer parsers (e.g. DNS, HTTP, SNMP) and
+//!   tunnel recursion do allocate (`Vec`, `Box`).
 //! - Clear separation between protocol layers
 //! - Robust handling of unknown or unsupported protocols
 //! - Suitable for network auditing, traffic analysis and post-capture inspection
@@ -29,6 +31,9 @@
 //! It expects a complete packet buffer (e.g. from PCAP capture).
 
 use application::Application;
+use application::protocols::ams::AmsPacket;
+use application::protocols::copt::CotpHeader;
+use application::protocols::dhcpv6::Dhcpv6Packet;
 use application::protocols::postgresql::is_likely_postgresql_payload;
 use application::protocols::snmp::SnmpPacket;
 use internet::Internet;
@@ -48,16 +53,50 @@ pub mod internet;
 pub mod transport;
 pub(crate) mod tunnel;
 
+/// Layer at which recognized-but-invalid bytes stopped the parsing.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, Hash)]
+pub enum CorruptedLayerKind {
+    /// The EtherType announced a known L3 protocol but its bytes are invalid.
+    Internet,
+    /// The internet layer announced a known L4 protocol but its bytes are
+    /// invalid.
+    Transport,
+}
+
+/// A layer that was **recognized** (by the EtherType or the IP protocol
+/// field) but whose bytes are invalid.
+///
+/// Parsing degrades gracefully instead of failing: every layer *above* the
+/// corrupted one stays filled, the corrupted layer and everything below it
+/// are `None`, and the corruption is reported here.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, Hash)]
+pub struct CorruptedLayer {
+    /// Which layer had invalid bytes.
+    pub layer: CorruptedLayerKind,
+    /// Human-readable description of the parse error.
+    pub error: String,
+}
+
 /// A fully or partially parsed network packet flow.
 ///
 /// `PacketFlow` represents a packet parsed across protocol layers.
 /// Each layer is optional except for the data link layer, which is mandatory.
 ///
 /// Unsupported or unrecognized protocols do **not** fail parsing and instead
-/// result in `None` for the corresponding layer.
+/// result in `None` for the corresponding layer. A **recognized but corrupt**
+/// layer does not fail parsing either: the layers above it are kept and the
+/// problem is reported in [`PacketFlow::corrupted`]. Parsing only returns an
+/// error when the data-link layer itself cannot be read.
 ///
 /// The structure borrows from the original packet buffer (`&[u8]`) and is
 /// therefore zero-copy.
+///
+/// ## Equality and hashing
+///
+/// `PartialEq`, `Eq` and `Hash` compare the **flow identity** (addresses,
+/// protocols, ports…), not the raw bytes: layer payloads are deliberately
+/// ignored. Two packets of the same conversation carrying different data
+/// therefore compare equal and hash identically.
 #[derive(Debug, Clone, Serialize, Eq)]
 pub struct PacketFlow<'a> {
     /// Data link layer (mandatory).
@@ -82,6 +121,12 @@ pub struct PacketFlow<'a> {
     /// innermost. See [`PacketFlow::flatten`].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inner: Option<Box<PacketFlow<'a>>>,
+
+    /// Present when a recognized layer carried invalid bytes: that layer and
+    /// the ones below are `None`, the layers above stay filled. `None` on
+    /// healthy packets.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub corrupted: Option<CorruptedLayer>,
 }
 
 impl<'a> TryFrom<&'a [u8]> for PacketFlow<'a> {
@@ -100,6 +145,7 @@ impl<'a> PartialEq for PacketFlow<'a> {
             && self.transport == other.transport
             && self.application == other.application
             && self.inner == other.inner
+            && self.corrupted == other.corrupted
     }
 }
 
@@ -112,6 +158,7 @@ impl<'a> Hash for PacketFlow<'a> {
         self.transport.hash(state);
         self.application.hash(state);
         self.inner.hash(state);
+        self.corrupted.hash(state);
     }
 }
 
@@ -127,6 +174,36 @@ impl<'a> PacketFlow<'a> {
         {
             return Some(Application {
                 application_protocol: "SNMP",
+            });
+        }
+
+        // Protocoles à signature faible : uniquement détectés sur leurs ports
+        // standards pour éviter les faux positifs du probing à l'aveugle.
+        if transport.protocol == TransportProtocol::Udp
+            && (is_dhcpv6_udp_port(transport.source_port)
+                || is_dhcpv6_udp_port(transport.destination_port))
+            && Dhcpv6Packet::try_from(payload).is_ok()
+        {
+            return Some(Application {
+                application_protocol: "DHCPv6",
+            });
+        }
+
+        if transport.protocol == TransportProtocol::Tcp
+            && (is_iso_tsap_tcp_port(transport.source_port)
+                || is_iso_tsap_tcp_port(transport.destination_port))
+            && CotpHeader::try_from(payload).is_ok()
+        {
+            return Some(Application {
+                application_protocol: "COTP",
+            });
+        }
+
+        if (is_ams_port(transport.source_port) || is_ams_port(transport.destination_port))
+            && AmsPacket::try_from(payload).is_ok()
+        {
+            return Some(Application {
+                application_protocol: "AMS",
             });
         }
 
@@ -160,7 +237,7 @@ impl<'a> PacketFlow<'a> {
     /// packet buffer and is suitable for storage, serialization or cross-thread
     /// usage.
     pub fn to_owned(&self) -> PacketFlowOwned {
-        PacketFlowOwned::from(self.clone())
+        PacketFlowOwned::from(self)
     }
 
     /// Returns this flow and every encapsulated flow, from the outermost to the
@@ -185,34 +262,56 @@ impl<'a> PacketFlow<'a> {
         Self::parse_layers(data_link, 0)
     }
 
-    /// Parses the L3/L4/L7 layers from a data-link layer, then recurses into any
-    /// tunnel. `depth` bounds tunnel nesting. Shared by the top-level entry and
-    /// by tunnel peeling (which supplies a rebuilt inner data-link layer).
-    pub(crate) fn parse_layers(
-        data_link: DataLink<'a>,
-        depth: u8,
-    ) -> Result<Self, ParsedPacketError> {
-        let internet = match Internet::try_from(data_link.payload) {
-            Ok(internet) => Some(internet),
-            Err(InternetError::UnsupportedProtocol) => None,
-            Err(e) => return Err(e.into()),
-        };
+    /// Parses the internet layer from the data-link layer, dispatching on the
+    /// EtherType. An unknown EtherType yields `(None, None)`; a known
+    /// EtherType with a corrupt payload yields `(None, Some(corruption))` —
+    /// never a hard error, so the data-link information is preserved.
+    #[inline(always)]
+    fn parse_l3(data_link: &DataLink<'a>) -> (Option<Internet<'a>>, Option<CorruptedLayer>) {
+        match Internet::try_from_parts(data_link.ethertype, data_link.payload) {
+            Ok(internet) => (Some(internet), None),
+            Err(InternetError::UnsupportedProtocol) => (None, None),
+            Err(e) => (
+                None,
+                Some(CorruptedLayer {
+                    layer: CorruptedLayerKind::Internet,
+                    error: e.to_string(),
+                }),
+            ),
+        }
+    }
 
-        let transport = match internet.as_ref() {
+    #[inline(always)]
+    fn parse_l4(
+        internet: Option<&Internet<'a>>,
+    ) -> (Option<Transport<'a>>, Option<CorruptedLayer>) {
+        match internet {
             Some(internet) => {
                 match Transport::try_from_parts(internet.payload_protocol, internet.payload) {
-                    Ok(transport) => Some(transport),
-                    Err(TransportError::UnsupportedProtocol) => None,
-                    Err(e) => return Err(e.into()),
+                    Ok(transport) => (Some(transport), None),
+                    Err(TransportError::UnsupportedProtocol) => (None, None),
+                    Err(e) => (
+                        None,
+                        Some(CorruptedLayer {
+                            layer: CorruptedLayerKind::Transport,
+                            error: e.to_string(),
+                        }),
+                    ),
                 }
             }
-            None => None,
-        };
+            None => (None, None),
+        }
+    }
 
-        // If the transport layer encapsulates a tunnel (e.g. CAPWAP), record the
-        // tunnel name as THIS flow's application protocol and parse the inner
-        // packet into `inner`. Otherwise, best-effort application detection.
-        let (application, inner) = match transport.as_ref() {
+    /// If the transport layer encapsulates a tunnel (e.g. CAPWAP), record the
+    /// tunnel name as THIS flow's application protocol and parse the inner
+    /// packet into `inner`. Otherwise, best-effort application detection.
+    #[inline(always)]
+    fn parse_l7_and_inner(
+        transport: Option<&Transport<'a>>,
+        depth: u8,
+    ) -> (Option<Application>, Option<Box<PacketFlow<'a>>>) {
+        match transport {
             Some(transport) => match tunnel::detect_inner(transport, depth) {
                 Some((tunnel_name, inner_flow)) => (
                     Some(Application {
@@ -223,7 +322,19 @@ impl<'a> PacketFlow<'a> {
                 None => (Self::parse_application_from_transport(transport), None),
             },
             None => (None, None),
-        };
+        }
+    }
+
+    /// Parses the L3/L4/L7 layers from a data-link layer, then recurses into any
+    /// tunnel. `depth` bounds tunnel nesting. Shared by the top-level entry and
+    /// by tunnel peeling (which supplies a rebuilt inner data-link layer).
+    pub(crate) fn parse_layers(
+        data_link: DataLink<'a>,
+        depth: u8,
+    ) -> Result<Self, ParsedPacketError> {
+        let (internet, l3_corruption) = Self::parse_l3(&data_link);
+        let (transport, l4_corruption) = Self::parse_l4(internet.as_ref());
+        let (application, inner) = Self::parse_l7_and_inner(transport.as_ref(), depth);
 
         Ok(PacketFlow {
             data_link,
@@ -231,6 +342,7 @@ impl<'a> PacketFlow<'a> {
             transport,
             application,
             inner,
+            corrupted: l3_corruption.or(l4_corruption),
         })
     }
 
@@ -249,6 +361,9 @@ impl<'a> PacketFlow<'a> {
 
         let total_t0 = now();
 
+        // Same layer functions as parse_layers(): the timed path returns
+        // exactly what the normal path returns (tunnels included) and only
+        // adds instrumentation around each layer.
         let result = (|| {
             let t0 = now();
             let data_link = match DataLink::try_from(packets) {
@@ -261,53 +376,27 @@ impl<'a> PacketFlow<'a> {
             timing.l2_ns = elapsed_ns(t0);
 
             let t0 = now();
-            let internet = match Internet::try_from(data_link.payload) {
-                Ok(internet) => Some(internet),
-                Err(InternetError::UnsupportedProtocol) => None,
-                Err(e) => {
-                    timing.l3_ns = elapsed_ns(t0);
-                    return Err(e.into());
-                }
-            };
+            let internet = Self::parse_l3(&data_link);
             timing.l3_ns = elapsed_ns(t0);
+            let (internet, l3_corruption) = internet;
 
-            let transport = match internet.as_ref() {
-                Some(internet) => {
-                    let t0 = now();
-                    let transport = match Transport::try_from_parts(
-                        internet.payload_protocol,
-                        internet.payload,
-                    ) {
-                        Ok(transport) => Some(transport),
-                        Err(TransportError::UnsupportedProtocol) => None,
-                        Err(e) => {
-                            timing.l4_ns = elapsed_ns(t0);
-                            return Err(e.into());
-                        }
-                    };
-                    timing.l4_ns = elapsed_ns(t0);
-                    transport
-                }
-                None => None,
-            };
+            let t0 = now();
+            let (transport, l4_corruption) = Self::parse_l4(internet.as_ref());
+            timing.l4_ns = elapsed_ns(t0);
 
-            let application = match transport.as_ref() {
-                Some(transport) => {
-                    let t0 = now();
-                    let application = Self::parse_application_from_transport(transport);
-                    timing.l7_ns = elapsed_ns(t0);
-                    application
-                }
-                None => None,
-            };
+            // l7_ns includes tunnel detection and the recursive parsing of
+            // any encapsulated packet.
+            let t0 = now();
+            let (application, inner) = Self::parse_l7_and_inner(transport.as_ref(), 0);
+            timing.l7_ns = elapsed_ns(t0);
 
             Ok(PacketFlow {
                 data_link,
                 internet,
                 transport,
                 application,
-                // Tunnel recursion is not instrumented in the timing path.
-                inner: None,
+                inner,
+                corrupted: l3_corruption.or(l4_corruption),
             })
         })();
 
@@ -338,6 +427,20 @@ fn is_opcua_tcp_port(port: Option<u16>) -> bool {
 
 fn is_snmp_udp_port(port: Option<u16>) -> bool {
     matches!(port, Some(161 | 162))
+}
+
+fn is_dhcpv6_udp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(546 | 547))
+}
+
+/// ISO-TSAP (TPKT/COTP, notamment S7comm).
+fn is_iso_tsap_tcp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(102))
+}
+
+/// Beckhoff AMS/ADS : TCP 48898, UDP 48899.
+fn is_ams_port(port: Option<u16>) -> bool {
+    matches!(port, Some(48898 | 48899))
 }
 
 #[cfg(test)]
@@ -860,7 +963,7 @@ mod tests {
 
     #[cfg(feature = "parse_timing")]
     #[test]
-    fn packetflow_timing_records_total_on_l3_error() {
+    fn packetflow_timing_records_total_on_l3_corruption() {
         let packet = [
             0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // Destination MAC
             0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, // Source MAC
@@ -868,26 +971,36 @@ mod tests {
         ];
         let (result, timing) = timed_parse(&packet);
 
-        assert!(matches!(result, Err(ParsedPacketError::InvalidInternet(_))));
+        // Dégradation gracieuse : le L2 est conservé, la corruption signalée.
+        let flow = result.expect("corrupt L3 must not fail parsing");
+        assert!(flow.internet.is_none());
+        assert_eq!(
+            flow.corrupted.as_ref().map(|c| c.layer),
+            Some(CorruptedLayerKind::Internet)
+        );
         assert_total_timing_is_recorded(timing);
         assert!(timing.l2_ns > 0);
         assert!(timing.l3_ns > 0);
-        assert_eq!(timing.l4_ns, 0);
-        assert_eq!(timing.l7_ns, 0);
     }
 
     #[cfg(feature = "parse_timing")]
     #[test]
-    fn packetflow_timing_records_total_on_l4_error() {
+    fn packetflow_timing_records_total_on_l4_corruption() {
         let packet = ethernet_ipv4_udp_packet(0, 16);
         let (result, timing) = timed_parse(packet.as_slice());
 
-        assert!(matches!(result, Err(ParsedPacketError::Transport(_))));
+        // Dégradation gracieuse : L2/L3 conservés, corruption au transport.
+        let flow = result.expect("corrupt L4 must not fail parsing");
+        assert!(flow.internet.is_some());
+        assert!(flow.transport.is_none());
+        assert_eq!(
+            flow.corrupted.as_ref().map(|c| c.layer),
+            Some(CorruptedLayerKind::Transport)
+        );
         assert_total_timing_is_recorded(timing);
         assert!(timing.l2_ns > 0);
         assert!(timing.l3_ns > 0);
         assert!(timing.l4_ns > 0);
-        assert_eq!(timing.l7_ns, 0);
     }
 
     #[test]
@@ -992,6 +1105,120 @@ mod tests {
 
         // Un paquet -> deux niveaux de flux aplatis.
         assert_eq!(flow.flatten().len(), 2);
+    }
+
+    /// EtherType IPv4 annoncé mais en-tête IP invalide : le L2 doit être
+    /// conservé et la corruption signalée, sans échec du parsing.
+    #[test]
+    fn corrupt_ipv4_keeps_data_link_and_reports_corruption() {
+        let mut packet = vec![
+            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // dst MAC
+            0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, // src MAC
+            0x08, 0x00, // EtherType IPv4
+        ];
+        packet.extend_from_slice(&[0xFF; 6]); // octets invalides pour IPv4
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        assert_eq!(flow.data_link.ethertype.0, 0x0800);
+        assert!(flow.internet.is_none());
+        assert!(flow.transport.is_none());
+        let corrupted = flow.corrupted.as_ref().expect("corruption report");
+        assert_eq!(corrupted.layer, CorruptedLayerKind::Internet);
+        assert!(!corrupted.error.is_empty());
+    }
+
+    /// EtherType inconnu (LLDP) : pas de L3, mais pas de corruption non plus.
+    #[test]
+    fn unknown_ethertype_is_not_corruption() {
+        let mut packet = vec![
+            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0x88,
+            0xCC, // EtherType LLDP
+        ];
+        packet.extend_from_slice(&[0xFF; 6]);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        assert!(flow.internet.is_none());
+        assert!(flow.corrupted.is_none());
+    }
+
+    /// IPv4 valide annonçant du TCP, mais segment TCP tronqué : le L3 doit
+    /// être conservé et la corruption signalée au niveau transport.
+    #[test]
+    fn corrupt_tcp_keeps_internet_and_reports_corruption() {
+        let mut packet = vec![
+            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // dst MAC
+            0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, // src MAC
+            0x08, 0x00, // EtherType IPv4
+        ];
+        // IPv4 minimal : total length 24 = 20 d'en-tête + 4 octets de "TCP"
+        // (bien trop court pour un en-tête TCP de 20 octets).
+        packet.extend_from_slice(&[
+            0x45, 0x00, 0x00, 0x18, // Version/IHL, DSCP, Total Length = 24
+            0x12, 0x34, 0x00, 0x00, // Id, Flags/Fragment
+            64, 6, 0x00, 0x00, // TTL, Protocol = TCP, Checksum
+            192, 168, 1, 10, // Source IP
+            192, 168, 1, 20, // Destination IP
+            0xde, 0xad, 0xbe, 0xef, // pseudo-payload TCP tronqué
+        ]);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let internet = flow.internet.as_ref().expect("internet layer kept");
+        assert_eq!(internet.protocol_name, "IPv4");
+        assert!(flow.transport.is_none());
+        let corrupted = flow.corrupted.as_ref().expect("corruption report");
+        assert_eq!(corrupted.layer, CorruptedLayerKind::Transport);
+    }
+
+    /// La corruption survit à to_owned().
+    #[test]
+    fn to_owned_preserves_corruption() {
+        let mut packet = vec![
+            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0x08, 0x00,
+        ];
+        packet.extend_from_slice(&[0xFF; 6]);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+        let owned = flow.to_owned();
+
+        assert_eq!(owned.corrupted, flow.corrupted);
+    }
+
+    #[test]
+    fn to_owned_preserves_tunnel_inner() {
+        let packet = sample_capwap_ieee80211_inner_tcp();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let owned = flow.to_owned();
+
+        assert_eq!(
+            owned
+                .application
+                .as_ref()
+                .expect("outer application")
+                .protocol,
+            "CAPWAP"
+        );
+        let inner = owned.inner.as_deref().expect("inner owned flow");
+        let inner_transport = inner.transport.as_ref().expect("inner transport");
+        assert_eq!(inner_transport.source_port, Some(56699));
+        assert_eq!(inner_transport.destination_port, Some(445));
+        assert!(inner.inner.is_none());
+    }
+
+    #[cfg(feature = "parse_timing")]
+    #[test]
+    fn try_from_timed_returns_same_flow_as_try_from() {
+        let packet = sample_capwap_ieee80211_inner_tcp();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let mut timing = crate::timing::ParseTiming::default();
+        let timed_flow = PacketFlow::try_from_timed(packet.as_slice(), &mut timing).unwrap();
+
+        assert_eq!(flow, timed_flow);
+        assert!(timed_flow.inner.is_some(), "timed path must keep tunnels");
     }
 
     /// Sens retour de la même conversation : CAPWAP avec en-tête minimal

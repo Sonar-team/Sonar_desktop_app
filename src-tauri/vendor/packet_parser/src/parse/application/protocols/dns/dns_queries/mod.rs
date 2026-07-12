@@ -6,11 +6,11 @@
 use std::fmt;
 
 use crate::{
-    checks::application::dns::{
-        check_dns_label_bounds, check_dns_name_offset, check_dns_query_size,
-    },
+    checks::application::dns::check_dns_query_size,
     errors::application::dns::DnsQueryParseError,
-    parse::application::protocols::dns::utils::{dns_class::DnsClass, dns_types::DnsType},
+    parse::application::protocols::dns::utils::{
+        dns_class::DnsClass, dns_types::DnsType, name::parse_dns_name,
+    },
 };
 
 #[derive(Debug, PartialEq)]
@@ -19,12 +19,25 @@ pub struct DnsQueries {
 }
 
 impl DnsQueries {
+    /// Parse `count` questions au début de `bytes`. Pour un message avec
+    /// compression, préférer [`DnsQueries::parse`] avec le message complet,
+    /// les pointeurs étant relatifs au début du message.
     pub fn from_bytes(bytes: &[u8], count: u16) -> Result<Self, DnsQueryParseError> {
-        let mut queries = Vec::with_capacity(count as usize);
         let mut offset = 0;
+        Self::parse(bytes, &mut offset, count)
+    }
+
+    /// Parse `count` questions à `*offset` dans `message` (message DNS
+    /// complet, en-tête inclus) et avance l'offset après la section.
+    pub fn parse(
+        message: &[u8],
+        offset: &mut usize,
+        count: u16,
+    ) -> Result<Self, DnsQueryParseError> {
+        let mut queries = Vec::with_capacity(count as usize);
         for _ in 0..count {
-            check_dns_query_size(bytes, offset, 1)?;
-            queries.push(DnsQuery::from_bytes(bytes, &mut offset)?);
+            check_dns_query_size(message, *offset, 1)?;
+            queries.push(DnsQuery::from_bytes(message, offset)?);
         }
         Ok(DnsQueries { queries })
     }
@@ -49,7 +62,7 @@ pub struct DnsQuery {
 
 impl DnsQuery {
     pub fn from_bytes(bytes: &[u8], offset: &mut usize) -> Result<Self, DnsQueryParseError> {
-        let (name, new_offset) = parse_name(bytes, *offset)?;
+        let (name, new_offset) = parse_dns_name(bytes, *offset)?;
         *offset = new_offset;
 
         check_dns_query_size(bytes, *offset, 4)?;
@@ -76,60 +89,10 @@ impl fmt::Display for DnsQuery {
     }
 }
 
-/// Parse un nom de domaine à partir d'un tableau d'octets, en suivant le format DNS.
-///
-/// # Arguments
-/// - `bytes`: Référence à un tableau d'octets représentant le message DNS.
-/// - `offset`: Position de départ dans `bytes` pour le parsing du nom de domaine.
-///
-/// # Returns
-/// - `Ok((String, usize))` : Un tuple contenant le nom de domaine sous forme de chaîne de caractères
-///   et la nouvelle valeur d'offset après le parsing.
-/// - `Err(DnsQueryParseError)` : Retourne une erreur si les données sont insuffisantes ou
-///   si une erreur de conversion UTF-8 survient.
-///
-/// # Errors
-/// - `DnsQueryParseError::OutOfBoundParse` si les données ne contiennent pas assez d'octets pour un parsing correct.
-/// - `DnsQueryParseError::Utf8Error` si les données ne sont pas des chaînes UTF-8 valides.
-fn parse_name(bytes: &[u8], mut offset: usize) -> Result<(String, usize), DnsQueryParseError> {
-    // Allocation justifiée (METHODE_AJOUT_PROTOCOLE.md) : un nom DNS est découpé
-    // en labels préfixés par leur longueur, potentiellement non contigus
-    // (compression RFC 1035) — il doit être reconstruit, pas emprunté.
-    let mut labels = Vec::new(); // Stocke chaque label extrait du nom de domaine
-
-    loop {
-        check_dns_name_offset(bytes, offset)?;
-
-        // Lit la longueur du prochain label (octet actuel)
-        let len = bytes[offset] as usize;
-
-        // Si la longueur est 0, le nom est terminé ; on avance l'offset d'un octet pour finir
-        if len == 0 {
-            offset += 1;
-            break;
-        }
-
-        // Avance l'offset d'un octet pour pointer au début du label
-        offset += 1;
-
-        check_dns_label_bounds(bytes, offset, len)?;
-
-        // Convertit le label en UTF-8 ; retourne une erreur si la conversion échoue
-        let label = String::from_utf8(bytes[offset..offset + len].to_vec())?;
-        labels.push(label); // Ajoute le label à la liste
-
-        // Avance l'offset de la longueur du label pour traiter le suivant
-        offset += len;
-    }
-
-    // Joint tous les labels avec des points pour former le nom complet
-    let name = labels.join(".");
-    Ok((name, offset)) // Retourne le nom et la nouvelle position de l'offset
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parse::application::protocols::dns::utils::name::parse_dns_name as parse_name;
 
     #[test]
     fn test_parse_name() {

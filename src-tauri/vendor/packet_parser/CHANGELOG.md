@@ -6,6 +6,82 @@ Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ## [Unreleased]
 
+## [5.0.0] - 2026-07-11
+
+Corrections issues de l'audit `analyse.md` : semantique de parsing, chaine de
+publication et completude protocolaire.
+
+### Rupture
+
+- La couche L3 est desormais routee par l'EtherType via
+  `Internet::try_from_parts(ethertype, payload)` : un EtherType inconnu donne
+  `internet: None` comme avant, mais un paquet **corrompu** sous un EtherType
+  connu (IPv4/IPv6/ARP/Profinet) n'est plus avale silencieusement.
+  `Internet::try_from(&[u8])` (probing sans EtherType) reste disponible.
+- Degradation gracieuse sur couche corrompue : `PacketFlow` gagne un champ
+  `corrupted: Option<CorruptedLayer>` (`layer: Internet | Transport`,
+  `error: String`). Quand une couche reconnue (par l'EtherType ou le champ
+  protocole IP) contient des octets invalides, les couches au-dessus restent
+  remplies, la couche fautive et celles du dessous valent `None`, et la
+  corruption est rapportee — `try_from` n'echoue plus que si le L2 lui-meme
+  est illisible. Meme champ sur `PacketFlowOwned`. (Auparavant, un L4
+  corrompu faisait echouer tout le parsing.)
+- `Ipv6Packet` : les extension headers (Hop-by-Hop, Routing, Fragment, AH,
+  Destination Options) sont maintenant parcourus. `extension_headers` contient
+  les vrais octets de la chaine (plus jamais `&[0]`), `payload` pointe apres
+  les extensions, et les nouveaux champs `transport_protocol` /
+  `is_fragmented()` exposent le protocole L4 final (aucun L4 n'est parse pour
+  les fragments, comme en IPv4).
+- `PacketFlowOwned` gagne un champ `inner: Option<Box<PacketFlowOwned>>` :
+  `to_owned()` preserve desormais les tunnels (CAPWAP…) au lieu de les perdre,
+  et la conversion se fait depuis `&PacketFlow` sans clone intermediaire.
+- `MacAddress::try_from(String)` retourne `MacParseError::InvalidComponent`
+  sur un composant hexadecimal invalide au lieu de paniquer.
+- HTTP : la methode doit etre une methode standard (RFC 9110) et la version
+  doit commencer par `HTTP/` (`InvalidMethod`, `InvalidVersion`), sinon des
+  payloads texte quelconques etaient classes HTTP.
+- DNS : les messages annoncant des records absents ou utilisant des pointeurs
+  de compression invalides (boucle, reference avant) sont maintenant rejetes
+  (`InvalidCompressionPointer`, `ReservedLabelType`).
+
+### Ajoute
+
+- DNS complet : les sections answers, authorities et additionals sont parsees
+  (elles restaient toujours `None`), avec support de la compression de noms
+  RFC 1035 §4.1.4 bornee contre les boucles de pointeurs hostiles.
+- Detection L7 : HTTP et MQTT rejoignent le dispatcher applicatif ; DHCPv6,
+  COTP (ISO-TSAP 102) et AMS/ADS (48898/48899) sont detectes sur leurs ports
+  standards (signatures trop faibles pour du probing a l'aveugle).
+- `checks::checksum` : validation **opt-in** des checksums IPv4, TCP et UDP
+  (`verify_ipv4_header_checksum`, `verify_tcp_checksum`,
+  `verify_udp_checksum`) — le parsing ne valide toujours rien par defaut a
+  cause de l'offload materiel.
+- `convert::try_hex_stream_to_bytes` : variante sans panic de
+  `hex_stream_to_bytes` (`HexStreamError`).
+- Le module `errors` est public : les erreurs par couche
+  (`errors::internet::InternetError`, etc.) sont nommables par les
+  consommateurs ; `InternetError` gagne les variantes `Ipv4Error`, `Ipv6Error`
+  et `ProfinetError`.
+- Fuzzing : cible cargo-fuzz `fuzz/` avec trois harnais (`parse_packetflow`,
+  `parse_dns`, `parse_application`).
+
+### Corrige
+
+- `PacketFlow::try_from_timed` retourne exactement le meme resultat que le
+  parsing normal, tunnels inclus (il forcait `inner: None`) ; les deux chemins
+  partagent les memes fonctions de couche.
+- Publication crates.io : plus de double declenchement CI→Coverage, garde
+  `conclusion == success` sur Coverage, et publication uniquement sur tag
+  `vX.Y.Z` (avec verification tag/version) ou dispatch manuel.
+- Ingestor : l'offset JSONL n'est valide qu'apres insertion PostgreSQL
+  reussie ; plus aucune mesure perdue quand PostgreSQL est indisponible.
+- `benchmark_db` : le repertoire des PCAP se passe en argument CLI ou via
+  `PCAP_DIR` (plus de chemin absolu code en dur).
+- README/README-fr : version d'installation corrigee (`4.0.0`).
+- Documentation : la promesse « allocation-free » est precisee (zero-copy
+  L2/L3/L4 ; DNS, HTTP, SNMP et les tunnels allouent), et le contrat
+  d'egalite/hash (identite de flux, payloads ignores) est documente.
+
 ## [4.0.0] - 2026-07-09
 
 Sprint 01 : mise en conformite complete avec `METHODE_AJOUT_PROTOCOLE.md`

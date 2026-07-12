@@ -133,7 +133,16 @@ mod tests {
         let http_payload = b"INVALID REQUEST\r\n\r\n";
         match HttpRequest::try_from(&http_payload[..]) {
             Ok(_) => panic!("Expected invalid HTTP request"),
-            Err(err) => assert_eq!(err, HttpParseError::MissingVersion),
+            Err(err) => assert_eq!(err, HttpParseError::InvalidMethod("INVALID".to_string())),
+        }
+    }
+
+    #[test]
+    fn test_parse_http_request_rejects_non_http_version() {
+        let http_payload = b"GET something else\r\n\r\n";
+        match HttpRequest::try_from(&http_payload[..]) {
+            Ok(_) => panic!("Expected invalid HTTP request"),
+            Err(err) => assert_eq!(err, HttpParseError::InvalidVersion("else".to_string())),
         }
     }
 
