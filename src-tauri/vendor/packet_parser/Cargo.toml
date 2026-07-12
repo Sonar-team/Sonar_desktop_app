@@ -12,7 +12,7 @@
 [package]
 edition = "2024"
 name = "packet_parser"
-version = "5.0.0"
+version = "6.0.0"
 authors = ["Cyprien Avico avicocyprien@yahoo.com"]
 build = false
 exclude = [
@@ -22,6 +22,8 @@ exclude = [
     "benches/",
     "tools/",
     "perf_by_version.json",
+    "pcaps_exemple/",
+    "integration_test/",
 ]
 autolib = false
 autobins = false
@@ -86,6 +88,10 @@ path = "examples/parse_pgadm.rs"
 [[example]]
 name = "parse_tcp"
 path = "examples/parse_tcp.rs"
+
+[[example]]
+name = "scan_pcaps"
+path = "examples/scan_pcaps.rs"
 
 [dependencies.aquamarine]
 version = "0.6.0"

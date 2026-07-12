@@ -18,7 +18,7 @@ chrono = "0.4.45"
 clap = { version = "4.5.53", features = ["derive"] }
 csv = "1.4.0"
 log = "0.4.33"
-packet_parser = "5.0.0"
+packet_parser = "6.0.0"
 pcap = "2.4.0"
 serde = { version = "1", features = ["derive"] }
 sonar-flows-core = { path = "crates/sonar-flows-core", version = "0.2.0" }

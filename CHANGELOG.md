@@ -2,7 +2,9 @@
 
 ## Non publié
 
-### Sécurité
+## **[4.4.0] - 2026-07-13**
+
+## 🔒 Sécurité
 
 - Retrait de l'installeur Npcap du dépôt et des bundles Windows : Npcap doit
   désormais être téléchargé séparément depuis son site officiel.
@@ -12,6 +14,14 @@
 - La CI refuse tout installeur Npcap/WinPcap dans le dépôt ou le bundle. Le
   smoke Windows devient structurel tant que l'usage de Npcap sur les runners
   n'est pas clarifié avec Nmap dans l'issue #138, qui reste ouverte.
+
+## 🔧 Maintenance
+
+- Mise à jour de `packet_parser` en **6.0.0** : durcissement de la détection
+  MQTT (validation stricte MQTT 3.1/3.1.1, zéro faux positif sur le corpus de
+  pcaps de la crate). Le workspace `sonar-rust` est aligné sur la même version
+  pour éviter les doubles majeures dans le graphe de dépendances.
+- Mise à jour de la version de SONAR en **4.4.0**.
 
 ## **[4.3.1] - 2026-07-09**
 

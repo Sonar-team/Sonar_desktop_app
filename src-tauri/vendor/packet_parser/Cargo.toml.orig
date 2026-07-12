@@ -1,6 +1,6 @@
 [package]
 name = "packet_parser"
-version = "5.0.0"
+version = "6.0.0"
 edition = "2024"
 authors = ["Cyprien Avico avicocyprien@yahoo.com"]
 description = "A powerful and modular Rust crate for network packet parsing."
@@ -10,7 +10,7 @@ categories = ["network-programming", "parsing", "development-tools"]
 readme = "README.md"
 homepage = "https://github.com/Akmot9/Packet-parser"
 keywords = ["network", "packets", "parser", "cybersecurity", "Rust"]
-exclude = [".github/", ".gitignore", "tests/", "benches/", "tools/", "perf_by_version.json"]
+exclude = [".github/", ".gitignore", "tests/", "benches/", "tools/", "perf_by_version.json", "pcaps_exemple/", "integration_test/"]
 
 
 [dependencies]

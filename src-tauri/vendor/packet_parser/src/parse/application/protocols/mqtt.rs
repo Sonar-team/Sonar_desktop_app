@@ -105,34 +105,53 @@ impl fmt::Display for MqttPacket<'_> {
 impl<'a> TryFrom<&'a [u8]> for MqttPacket<'a> {
     type Error = MqttError;
 
+    /// Parse le premier paquet MQTT du buffer, en exigeant que le buffer
+    /// entier soit une suite de paquets MQTT valides : un segment TCP peut
+    /// coalescer plusieurs messages, mais des octets résiduels qui ne se
+    /// parsent pas signifient que ce n'était pas du MQTT (garde anti-faux
+    /// positifs du probing à l'aveugle).
     fn try_from(packet: &'a [u8]) -> Result<Self, Self::Error> {
-        validate_mqtt_min_length(packet)?;
+        let (first, mut consumed) = parse_one(packet)?;
+        while consumed < packet.len() {
+            let (_, len) = parse_one(&packet[consumed..])?;
+            consumed += len;
+        }
+        Ok(first)
+    }
+}
 
-        let first = packet[0];
-        let packet_type = parse_packet_type(first)?;
-        validate_fixed_header_flags(packet_type, first)?;
+/// Parse un paquet MQTT au début de `packet` et retourne sa longueur totale
+/// (fixed header compris). Les octets au-delà ne sont pas examinés.
+fn parse_one(packet: &[u8]) -> Result<(MqttPacket<'_>, usize), MqttError> {
+    validate_mqtt_min_length(packet)?;
 
-        let (remaining_length, rl_bytes) = decode_remaining_length(&packet[1..])?;
-        let header_len = 1 + rl_bytes;
+    let first = packet[0];
+    let packet_type = parse_packet_type(first)?;
+    validate_fixed_header_flags(packet_type, first)?;
 
-        validate_mqtt_header_available(packet.len(), header_len)?;
+    let (remaining_length, rl_bytes) = decode_remaining_length(&packet[1..])?;
+    let header_len = 1 + rl_bytes;
 
-        let available = packet.len() - header_len;
-        validate_remaining_length_available(remaining_length, available)?;
+    validate_mqtt_header_available(packet.len(), header_len)?;
 
-        let body = &packet[header_len..header_len + remaining_length as usize];
-        let vh_len = variable_header_len(packet_type, body)?;
-        let (vh, pl) = body.split_at(vh_len);
+    let available = packet.len() - header_len;
+    validate_remaining_length_available(remaining_length, available)?;
 
-        Ok(MqttPacket {
+    let body = &packet[header_len..header_len + remaining_length as usize];
+    let vh_len = variable_header_len(packet_type, first, body)?;
+    let (vh, pl) = body.split_at(vh_len);
+
+    Ok((
+        MqttPacket {
             fixed_header: MqttFixedHeader {
                 packet_type,
                 remaining_length,
             },
             variable_header: vh,
             payload: pl,
-        })
-    }
+        },
+        header_len + remaining_length as usize,
+    ))
 }
 
 #[cfg(test)]
@@ -172,14 +191,82 @@ mod tests {
         let packet: &[u8] = &[
             0x3B, 0x09, // fixed header
             0x00, 0x03, b'a', b'/', b'b', // topic
-            0x00, 0x01, // packet id (compté dans le payload ici)
+            0x00, 0x01, // packet id (QoS 1 : fait partie du variable header)
             0xDE, 0xAD, // payload applicatif
         ];
 
         let mqtt = MqttPacket::try_from(packet).expect("PUBLISH valide");
         assert_eq!(mqtt.fixed_header.packet_type, MqttPacketType::Publish);
-        assert_eq!(mqtt.variable_header, &[0x00, 0x03, b'a', b'/', b'b'][..]);
-        assert_eq!(mqtt.payload, &[0x00, 0x01, 0xDE, 0xAD][..]);
+        assert_eq!(
+            mqtt.variable_header,
+            &[0x00, 0x03, b'a', b'/', b'b', 0x00, 0x01][..]
+        );
+        assert_eq!(mqtt.payload, &[0xDE, 0xAD][..]);
+    }
+
+    #[test]
+    fn test_publish_qos3_rejected() {
+        // QoS 3 (bits 1-2 à 11) : interdit par la spec.
+        let packet: &[u8] = &[0x36, 0x05, 0x00, 0x03, b'a', b'/', b'b'];
+        assert!(matches!(
+            MqttPacket::try_from(packet),
+            Err(MqttError::InvalidQos { qos: 3 })
+        ));
+    }
+
+    #[test]
+    fn test_trailing_garbage_rejected() {
+        // Un CONNACK valide suivi d'octets qui ne sont pas du MQTT : le
+        // buffer entier doit être une suite de paquets MQTT.
+        let packet: &[u8] = &[0x20, 0x02, 0x00, 0x00, 0xFF, 0xFE];
+        assert!(MqttPacket::try_from(packet).is_err());
+    }
+
+    #[test]
+    fn test_coalesced_mqtt_packets_accepted() {
+        // Deux messages MQTT dans le même buffer (segments TCP coalescés) :
+        // le premier est retourné, le second est validé.
+        let packet: &[u8] = &[
+            0x20, 0x02, 0x00, 0x00, // CONNACK
+            0xC0, 0x00, // PINGREQ
+        ];
+        let mqtt = MqttPacket::try_from(packet).expect("suite MQTT valide");
+        assert_eq!(mqtt.fixed_header.packet_type, MqttPacketType::Connack);
+    }
+
+    #[test]
+    fn test_connect_bad_protocol_name_rejected() {
+        // Même forme qu'un CONNECT mais nom de protocole "ABCD".
+        let packet: &[u8] = &[
+            0x10, 0x0E, 0x00, 0x04, b'A', b'B', b'C', b'D', 0x04, 0x02, 0x00, 0x3C, 0x00, 0x02,
+            b'i', b'd',
+        ];
+        assert!(matches!(
+            MqttPacket::try_from(packet),
+            Err(MqttError::InvalidProtocolName)
+        ));
+    }
+
+    #[test]
+    fn test_puback_with_bogus_remaining_length_rejected() {
+        // PUBACK dont le remaining length n'est ni 2 (v3) ni une forme v5
+        // valide : c'était la première source de faux positifs.
+        let packet: &[u8] = &[0x40, 0x08, 0x4C, 0xA3, 0x03, 0x97, 0x98, 0xA0, 0x38, 0xB0];
+        assert!(matches!(
+            MqttPacket::try_from(packet),
+            Err(MqttError::InvalidReasonCode { .. })
+        ));
+    }
+
+    #[test]
+    fn test_nonempty_disconnect_v3_rejected() {
+        // DISCONNECT v3 doit avoir un corps vide ; 0xF1 n'est pas un reason
+        // code v5 plausible.
+        let packet: &[u8] = &[0xE0, 0x02, 0xF1, 0x91];
+        assert!(matches!(
+            MqttPacket::try_from(packet),
+            Err(MqttError::InvalidReasonCode { .. })
+        ));
     }
 
     #[test]

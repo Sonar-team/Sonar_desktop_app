@@ -6,6 +6,57 @@ Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ## [Unreleased]
 
+## [6.0.0] - 2026-07-12
+
+Durcissement de la detection MQTT : sur le corpus de pcaps du depot, un
+tiers des etiquettes MQTT etaient des faux positifs (payloads binaires
+quelconques dont le premier octet mimait un fixed header).
+
+### Rupture
+
+- `MqttPacket::try_from` valide strictement MQTT 3.1/3.1.1 (avec tolerance
+  v5) : nom de protocole `MQTT`/`MQIsdp` et niveau coherent exiges dans le
+  CONNECT (bit reserve des connect flags controle), remaining length par
+  type (acks == 2 ou forme v5 valide, PING/DISCONNECT vides ou reason code
+  v5), packet id non nul, codes CONNACK/SUBACK/UNSUBACK verifies, QoS 3
+  rejete, topic de PUBLISH UTF-8 non vide sans wildcard ni caractere de
+  controle, payload de SUBSCRIBE/UNSUBSCRIBE decoupe en entrees exactes.
+- `MqttPacket::try_from` exige que le buffer entier soit une suite de
+  paquets MQTT valides : les segments TCP coalesces (plusieurs messages)
+  restent acceptes, les octets residuels non-MQTT sont rejetes.
+- PUBLISH QoS > 0 : le packet id fait desormais partie du
+  `variable_header` (conformite spec) et non plus du `payload`.
+- CONNECT v3.1 `MQIsdp` : variable header de 12 octets (il etait fige a
+  10, faux pour ce nom de protocole).
+- `MqttError` gagne neuf variantes (`InvalidProtocolName`,
+  `InvalidProtocolLevel`, `InvalidReservedConnectFlag`, `InvalidQos`,
+  `ZeroPacketId`, `InvalidRemainingLength`, `InvalidReasonCode`,
+  `InvalidTopic`, `MalformedSubscriptionPayload`) : les `match` exhaustifs
+  doivent etre completes.
+- `checks::application::mqtt::variable_header_len` prend le premier octet
+  du fixed header en plus : `(packet_type, first_byte, body)`.
+
+### Corrige
+
+- Detection MQTT : 0 faux positif sur le corpus de pcaps (20 avant), les
+  38 trames MQTT reelles restent detectees, aucun effet sur les autres
+  protocoles.
+
+### Ajoute
+
+- Exemple `scan_pcaps` : compte les protocoles applicatifs detectes par
+  fichier pcap/pcapng (`cargo run --example scan_pcaps -- <dossier>
+  [--focus PROTO]`), utile pour auditer les faux positifs.
+- Golden tests sur trames reelles : session MQTT v3.1 complete (CONNECT,
+  CONNACK, SUBSCRIBE, PUBLISH, PINGREQ) et quatre trames sosies qui
+  produisaient les faux positifs.
+- Captures de reference : `pcaps_exemple/protocols/mqtt/` (session Paho
+  vers m2m.eclipse.org:1883) et dossiers arp/dhcp/dns/icmp/ip/tcp/
+  ieee80211 issus du depot de Chris Sanders (citation dans les
+  `SOURCE.md`).
+- Le paquet crates.io exclut desormais `pcaps_exemple/` et
+  `integration_test/` (2,8 Mo de captures hors tarball).
+
 ## [5.0.0] - 2026-07-11
 
 Corrections issues de l'audit `analyse.md` : semantique de parsing, chaine de

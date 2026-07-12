@@ -45,6 +45,50 @@ pub enum MqttError {
 
     #[error("Unsupported MQTT packet type: {packet_type:?}")]
     UnsupportedPacketType { packet_type: MqttPacketType },
+
+    /// CONNECT dont le nom de protocole n'est ni "MQTT" ni "MQIsdp".
+    #[error("Invalid MQTT protocol name in CONNECT")]
+    InvalidProtocolName,
+
+    /// Niveau de protocole incohérent avec le nom (MQIsdp=3, MQTT=4/5).
+    #[error("Invalid MQTT protocol level: {level}")]
+    InvalidProtocolLevel { level: u8 },
+
+    /// Bit réservé des connect flags à 1 (doit être 0).
+    #[error("Reserved MQTT CONNECT flag bit set")]
+    InvalidReservedConnectFlag,
+
+    /// QoS 3 (les deux bits QoS à 1) : interdit par la spec.
+    #[error("Invalid MQTT QoS: {qos}")]
+    InvalidQos { qos: u8 },
+
+    /// Packet identifier nul là où la spec impose une valeur non nulle.
+    #[error("MQTT packet identifier must be non-zero")]
+    ZeroPacketId,
+
+    /// Remaining length impossible pour ce type (ex. PINGREQ != 0, PUBACK < 2).
+    #[error("Invalid MQTT remaining length {remaining_length} for {packet_type:?}")]
+    InvalidRemainingLength {
+        packet_type: MqttPacketType,
+        remaining_length: u32,
+    },
+
+    /// Code retour / reason code inconnu pour ce type de paquet.
+    #[error("Invalid MQTT reason code {code:#04X} for {packet_type:?}")]
+    InvalidReasonCode {
+        packet_type: MqttPacketType,
+        code: u8,
+    },
+
+    /// Topic non UTF-8, vide, avec caractère de contrôle, ou wildcard dans un
+    /// PUBLISH.
+    #[error("Invalid MQTT topic")]
+    InvalidTopic,
+
+    /// Payload de SUBSCRIBE/UNSUBSCRIBE qui ne se découpe pas en une suite
+    /// exacte d'entrées (topic filter [+ QoS]).
+    #[error("Malformed MQTT {packet_type:?} payload")]
+    MalformedSubscriptionPayload { packet_type: MqttPacketType },
 }
 #[cfg(test)]
 mod tests {
