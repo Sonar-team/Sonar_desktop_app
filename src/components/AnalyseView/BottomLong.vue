@@ -44,7 +44,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCaptureStore } from '../../store/capture'
-import type { PacketMinimal } from '../../types/capture'
+import type { CapturedPacket } from '../../types/capture'
 
 const LOG_FLUSH_INTERVAL_MS = 100
 const MAX_LOG_ROWS = 5
@@ -107,7 +107,7 @@ export default defineComponent({
     },
   },
   mounted() {
-    const pendingPackets: PacketMinimal[] = []
+    const pendingPackets: CapturedPacket[] = []
 
     const flushPackets = () => {
       this.flushTimer = null
@@ -126,7 +126,7 @@ export default defineComponent({
       this.flushTimer = window.setTimeout(flushPackets, LOG_FLUSH_INTERVAL_MS)
     }
 
-    const enqueuePackets = (packets: PacketMinimal[]) => {
+    const enqueuePackets = (packets: CapturedPacket[]) => {
       if (packets.length === 0) return
       pendingPackets.push(...packets.slice(-MAX_LOG_ROWS))
       if (pendingPackets.length > MAX_BUFFERED_ROWS) {
@@ -135,12 +135,12 @@ export default defineComponent({
       scheduleFlush()
     }
 
-    const onPacket = (packet: PacketMinimal | undefined | null) => {
+    const onPacket = (packet: CapturedPacket | undefined | null) => {
       if (!packet || typeof packet !== 'object') return
       enqueuePackets([packet])
     }
 
-    const onPacketBatch = (packets: PacketMinimal[] | undefined | null) => {
+    const onPacketBatch = (packets: CapturedPacket[] | undefined | null) => {
       if (!Array.isArray(packets)) return
       enqueuePackets(packets.filter((packet) => packet && typeof packet === 'object'))
     }
@@ -177,7 +177,7 @@ export default defineComponent({
     }
   },
   methods: {
-    createLogRow(packet: PacketMinimal): PacketLogRow {
+    createLogRow(packet: CapturedPacket): PacketLogRow {
       const flow = packet.flow as PacketFlowLogFields | null
 
       return {

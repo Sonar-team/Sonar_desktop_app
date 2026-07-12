@@ -18,7 +18,7 @@ use crate::{
         capture::capture_handle::{
             messages::{
                 CaptureMessage,
-                capture::{PacketMinimal, PacketOwnedStats},
+                capture::{CapturedPacket, CapturedPacketOwned},
                 channel::ChannelCapacityPayload,
                 stats::{AppDropCounters, SharedCaptureStats, StatTriple, StatsPayload},
             },
@@ -69,7 +69,7 @@ const MAX_LIVE_FLOWS: u32 = 250_000;
 const PARSE_ERROR_LOG_INTERVAL: Duration = Duration::from_secs(1);
 
 /// IPs source/destination d'un flux possédé, en chaînes (vides si absentes).
-fn flow_ips(owned: &PacketOwnedStats) -> (String, String) {
+fn flow_ips(owned: &CapturedPacketOwned) -> (String, String) {
     let source_ip = owned
         .flow
         .internet
@@ -95,7 +95,7 @@ struct PacketWorker {
     session_id: u64,
     flow_matrix: Arc<Mutex<FlowMatrix>>,
     graph: Arc<Mutex<GraphData>>,
-    packet_batch: Vec<PacketOwnedStats>,
+    packet_batch: Vec<CapturedPacketOwned>,
     graph_batch: GraphUpdateBatch,
     last_batch_flush: Instant,
     /// Nombre de flux de la matrice, rafraîchi à chaque update (pour les stats).
@@ -193,7 +193,7 @@ impl PacketWorker {
             }
         };
 
-        let packet = PacketMinimal {
+        let packet = CapturedPacket {
             ts_sec: pkt.header.ts.tv_sec,
             ts_usec: pkt.header.ts.tv_usec,
             caplen: pkt.header.caplen,
@@ -331,7 +331,7 @@ impl PacketWorker {
         let Ok(flow) = PacketFlow::try_from(pkt.as_ref()) else {
             return;
         };
-        let packet = PacketMinimal {
+        let packet = CapturedPacket {
             ts_sec: pkt.header.ts.tv_sec,
             ts_usec: pkt.header.ts.tv_usec,
             caplen: pkt.header.caplen,
@@ -389,7 +389,7 @@ impl PacketWorker {
 
     /// Niveaux internes d'un paquet tunnelé : matrice, graphe et batch pour
     /// chaque flux transporté (le niveau externe est déjà traité).
-    fn process_inner_tunnels(&mut self, packet: &PacketMinimal<'_>) {
+    fn process_inner_tunnels(&mut self, packet: &CapturedPacket<'_>) {
         for inner_owned in packet.to_owned_packets().into_iter().skip(1) {
             let (source_label, destination_label) =
                 self.resolve_labels_and_update_matrix(&inner_owned);
@@ -413,7 +413,7 @@ impl PacketWorker {
     /// du flux dans le même scope.
     fn resolve_labels_and_update_matrix(
         &mut self,
-        owned: &PacketOwnedStats,
+        owned: &CapturedPacketOwned,
     ) -> (Option<String>, Option<String>) {
         let Ok(mut locked_state) = self.flow_matrix.lock() else {
             return (None, None);

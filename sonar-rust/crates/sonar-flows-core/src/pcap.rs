@@ -15,7 +15,7 @@ use packet_parser::PacketFlow;
 use pcap::Capture;
 
 use crate::matrix::FlowMatrix;
-use crate::packet::PacketMinimal;
+use crate::packet::CapturedPacket;
 use crate::{Result, SonarCoreError, validate_batch_paths};
 
 /// Bilan de conversion d'un fichier PCAP.
@@ -29,8 +29,8 @@ pub struct PcapFileReport {
     pub parse_errors: usize,
 }
 
-impl<'a> PacketMinimal<'a> {
-    /// Construit un [`PacketMinimal`] depuis l'en-tête d'un paquet pcap et son
+impl<'a> CapturedPacket<'a> {
+    /// Construit un [`CapturedPacket`] depuis l'en-tête d'un paquet pcap et son
     /// flux déjà parsé (les types de `ts_sec`/`ts_usec` suivent le `timeval`
     /// de chaque OS, comme les déclinaisons de la structure).
     pub fn from_pcap(header: &pcap::PacketHeader, flow: PacketFlow<'a>) -> Self {
@@ -98,9 +98,9 @@ pub fn append_pcap_file(matrix: &mut FlowMatrix, path: &Path) -> Result<PcapFile
             Ok(flow) => {
                 parse_ok += 1;
                 // Même chemin de dépliage des tunnels que le desktop
-                // (`PacketMinimal::to_owned_packets`) : encap_id identiques,
+                // (`CapturedPacket::to_owned_packets`) : encap_id identiques,
                 // matrices joignables entre CLI et desktop.
-                for owned in PacketMinimal::from_pcap(packet.header, flow).to_owned_packets() {
+                for owned in CapturedPacket::from_pcap(packet.header, flow).to_owned_packets() {
                     matrix.update_flow(&owned);
                 }
             }

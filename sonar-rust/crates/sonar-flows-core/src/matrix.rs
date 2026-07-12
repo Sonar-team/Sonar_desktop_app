@@ -161,7 +161,7 @@ impl FlowMatrix {
         self.matrix.len()
     }
 
-    pub fn update_flow(&mut self, pkt: &PacketOwnedStats) {
+    pub fn update_flow(&mut self, pkt: &CapturedPacketOwned) {
         let ts = timeval_to_systemtime(pkt.ts_sec, pkt.ts_usec);
 
         // Lookup par référence : le flow (et ses ~8 String) n'est cloné
@@ -795,7 +795,7 @@ impl FlowMatrixRow {
 
 use std::time::UNIX_EPOCH;
 
-use crate::packet::PacketOwnedStats;
+use crate::packet::CapturedPacketOwned;
 
 /// Convertit un timestamp pcap (`tv_sec`, `tv_usec`) en `SystemTime`.
 pub fn timeval_to_systemtime(tv_sec: impl Into<i64>, tv_usec: impl Into<i64>) -> SystemTime {
@@ -811,7 +811,7 @@ mod tests {
         FlowMatrix, escape_formula_cell, is_non_unicast_mac, is_placeholder_ip, parse_last_seen,
         unescape_formula_cell,
     };
-    use crate::packet::PacketOwnedStats;
+    use crate::packet::CapturedPacketOwned;
     use packet_parser::owned::{DataLinkOwned, PacketFlowOwned};
 
     /// Deux appels sur le même état produisent exactement les mêmes lignes
@@ -885,8 +885,8 @@ mod tests {
         assert!(parse_last_seen("pas une date").is_err());
     }
 
-    fn sample_packet(len: u32) -> PacketOwnedStats {
-        PacketOwnedStats {
+    fn sample_packet(len: u32) -> CapturedPacketOwned {
+        CapturedPacketOwned {
             ts_sec: 1_000,
             ts_usec: 0,
             caplen: len,
@@ -1097,12 +1097,12 @@ mod tests {
         src_ip: &str,
         dst_mac: &str,
         dst_ip: &str,
-    ) -> PacketOwnedStats {
+    ) -> CapturedPacketOwned {
         use packet_parser::IpType;
         use packet_parser::owned::InternetOwned;
         use std::net::IpAddr;
 
-        PacketOwnedStats {
+        CapturedPacketOwned {
             ts_sec: 1_000,
             ts_usec: 0,
             caplen: 100,

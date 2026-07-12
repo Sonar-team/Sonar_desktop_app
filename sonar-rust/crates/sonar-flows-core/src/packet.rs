@@ -1,5 +1,5 @@
-//! Représentations d'un paquet dans le pipeline : [`PacketMinimal`]
-//! (emprunte les octets capturés) et [`PacketOwnedStats`] (possédé,
+//! Représentations d'un paquet dans le pipeline : [`CapturedPacket`]
+//! (emprunte les octets capturés) et [`CapturedPacketOwned`] (possédé,
 //! sérialisable vers le frontend), avec dépliage des tunnels en niveaux de
 //! flux reliés par `encap_id`.
 
@@ -100,7 +100,7 @@ pub fn tunnel_pair_id(flow: &PacketFlowOwned) -> u64 {
 
 #[cfg(target_os = "linux")]
 #[derive(Debug, Clone, Serialize)]
-pub struct PacketMinimal<'a> {
+pub struct CapturedPacket<'a> {
     pub ts_sec: i64,
     pub ts_usec: i64,
     pub caplen: u32,
@@ -110,7 +110,7 @@ pub struct PacketMinimal<'a> {
 
 #[cfg(target_os = "windows")]
 #[derive(Debug, Clone, Serialize)]
-pub struct PacketMinimal<'a> {
+pub struct CapturedPacket<'a> {
     pub ts_sec: i32,
     pub ts_usec: i32,
     pub caplen: u32,
@@ -120,7 +120,7 @@ pub struct PacketMinimal<'a> {
 
 #[cfg(target_os = "macos")]
 #[derive(Debug, Clone, Serialize)]
-pub struct PacketMinimal<'a> {
+pub struct CapturedPacket<'a> {
     pub ts_sec: i64,
     pub ts_usec: i32,
     pub caplen: u32,
@@ -130,7 +130,7 @@ pub struct PacketMinimal<'a> {
 
 #[cfg(target_os = "linux")]
 #[derive(Debug, Clone, Serialize, Hash, PartialEq, Eq)]
-pub struct PacketOwnedStats {
+pub struct CapturedPacketOwned {
     pub ts_sec: i64,
     pub ts_usec: i64,
     pub caplen: u32,
@@ -143,7 +143,7 @@ pub struct PacketOwnedStats {
 
 #[cfg(target_os = "windows")]
 #[derive(Debug, Clone, Serialize, Hash, PartialEq, Eq)]
-pub struct PacketOwnedStats {
+pub struct CapturedPacketOwned {
     pub ts_sec: i32,
     pub ts_usec: i32,
     pub caplen: u32,
@@ -156,7 +156,7 @@ pub struct PacketOwnedStats {
 
 #[cfg(target_os = "macos")]
 #[derive(Debug, Clone, Serialize, Hash, PartialEq, Eq)]
-pub struct PacketOwnedStats {
+pub struct CapturedPacketOwned {
     pub ts_sec: i64,
     pub ts_usec: i32,
     pub caplen: u32,
@@ -167,7 +167,7 @@ pub struct PacketOwnedStats {
     pub encap_id: Option<u64>,
 }
 
-impl<'a> PacketMinimal<'a> {
+impl<'a> CapturedPacket<'a> {
     // pub fn new(pkt: PacketBuffer) -> Result<Self, ParsedPacketError> {
     //     let flow = PacketFlow::try_from(pkt.data.as_ref())?;
     //     Ok(Self {
@@ -179,13 +179,13 @@ impl<'a> PacketMinimal<'a> {
     //     })
     // }
 
-    pub fn to_owned_packet(&self) -> PacketOwnedStats {
+    pub fn to_owned_packet(&self) -> CapturedPacketOwned {
         let flow = self.flow.to_owned();
         // La ligne externe d'un tunnel doit porter le même `encap_id` que ses
         // lignes internes (celui calculé dans `to_owned_packets`), sinon la
         // jointure externe <-> interne est impossible côté SOC.
         let encap_id = self.flow.inner.is_some().then(|| tunnel_pair_id(&flow));
-        PacketOwnedStats {
+        CapturedPacketOwned {
             ts_sec: self.ts_sec,
             ts_usec: self.ts_usec,
             caplen: self.caplen,
@@ -196,17 +196,17 @@ impl<'a> PacketMinimal<'a> {
     }
 
     /// Convertit le paquet et tous ses niveaux encapsulés (tunnels) en une liste
-    /// de `PacketOwnedStats`, du plus externe au plus interne. Un paquet non
+    /// de `CapturedPacketOwned`, du plus externe au plus interne. Un paquet non
     /// tunnelé donne un seul élément (comportement identique à `to_owned_packet`).
     ///
     /// La taille en octets est attribuée **par niveau** — trame complète pour
     /// l'externe, taille du segment L3 pour chaque niveau interne — afin de ne
     /// pas compter deux fois le même volume.
-    pub fn to_owned_packets(&self) -> Vec<PacketOwnedStats> {
+    pub fn to_owned_packets(&self) -> Vec<CapturedPacketOwned> {
         let levels = self.flow.flatten();
         let tunneled = levels.len() > 1;
 
-        let mut owned: Vec<PacketOwnedStats> = levels
+        let mut owned: Vec<CapturedPacketOwned> = levels
             .into_iter()
             .enumerate()
             .map(|(depth, flow)| {
@@ -215,7 +215,7 @@ impl<'a> PacketMinimal<'a> {
                 } else {
                     flow.data_link.payload.len() as u32
                 };
-                PacketOwnedStats {
+                CapturedPacketOwned {
                     ts_sec: self.ts_sec,
                     ts_usec: self.ts_usec,
                     caplen: self.caplen,
@@ -240,7 +240,7 @@ impl<'a> PacketMinimal<'a> {
     }
 }
 
-// impl <'a> PacketMinimal<'a> {
+// impl <'a> CapturedPacket<'a> {
 //     pub fn new(pkt: PacketBuffer) -> Result<Self, ParsedPacketError> {
 //         let flow = PacketFlow::try_from(pkt.data.as_ref())?;
 //         Ok(Self {
@@ -276,7 +276,7 @@ mod tests {
             "c464138f9e04442b0302172c080045080138b7e04000ff115967ac18086aac1808ca2174147f0124000000200320000000000104e5440000000001082c00003a9a5af450e0c2642fa3b4000c29967ca43980aaaa030000000800453800eca89440008006651464ac911e64ac91b4dd7b01bda58ecb952483ab67501800fec87e0000000000c0fe534d4240000100030000000500000030000000000000006704090000000000fffe0000966e611ec3ba49eb000000000000000000000000000000000000000039000000020000000000000000000000000000000000000080000000000000000700000001000000000020007800120090000000300000005200530058005f00440052002d0053004600000000000000180000001000040000001800000000004d78416300000000000000001000040000001800000000005146696400000000",
         );
         let flow = PacketFlow::try_from(bytes.as_slice()).expect("parse CAPWAP frame");
-        let packet = PacketMinimal {
+        let packet = CapturedPacket {
             ts_sec: 1,
             ts_usec: 2,
             caplen: 326,
@@ -350,7 +350,7 @@ mod tests {
             "00112233445566778899aabb08004500001c000100004011000ac0a80001c0a800020035003500080000",
         );
         let flow = PacketFlow::try_from(bytes.as_slice()).expect("parse UDP frame");
-        let packet = PacketMinimal {
+        let packet = CapturedPacket {
             ts_sec: 1,
             ts_usec: 2,
             caplen: bytes.len() as u32,

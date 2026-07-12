@@ -5,7 +5,7 @@
 use serde::Serialize;
 
 use crate::state::{
-    capture::capture_handle::messages::capture::{PacketMinimal, PacketOwnedStats},
+    capture::capture_handle::messages::capture::{CapturedPacket, CapturedPacketOwned},
     graph::{GraphData, GraphUpdate},
 };
 
@@ -52,11 +52,11 @@ pub enum CaptureEvent<'a> {
     /// variant reste dans le contrat d'événements du frontend
     /// (`src/store/capture.ts`) pour pouvoir être réactivé.
     #[allow(dead_code)]
-    Packet { packet: &'a PacketMinimal<'a> },
+    Packet { packet: &'a CapturedPacket<'a> },
     /// Lot de paquets traités (voir `PACKET_BATCH_MAX` côté processing).
     PacketBatch {
         session_id: u64,
-        packets: Vec<PacketOwnedStats>,
+        packets: Vec<CapturedPacketOwned>,
     },
     /// Update graphe unitaire (ex. label de nœud modifié après arbitrage).
     Graph { update: &'a GraphUpdate },

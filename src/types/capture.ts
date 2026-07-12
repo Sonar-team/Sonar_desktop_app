@@ -15,7 +15,7 @@ export type Stats = {
   appDropped?: number;
 };
 
-export type PacketMinimal = {
+export type CapturedPacket = {
   ts_sec: number;
   ts_usec: number;
   caplen: number;
@@ -171,14 +171,14 @@ export type CaptureEvent =
   | {
     event: "packet";
     data: {
-      packet: PacketMinimal;
+      packet: CapturedPacket;
     };
   }
   | {
     event: "packetBatch";
     data: {
       session_id: number;
-      packets: PacketMinimal[];
+      packets: CapturedPacket[];
     };
   }
   | {

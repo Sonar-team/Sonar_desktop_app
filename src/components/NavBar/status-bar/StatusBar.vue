@@ -18,24 +18,24 @@
       <Cpu />
 
       <p title="Trames reçues 📥 par la carte réseau">
-  📥: <span class="counter">{{ stats.received }}</span>
+        <span class="counter">{{ stats.received }} :📥</span>
       </p>
 
       <p title="Flux distincts dans la matrice 📊">
-        <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
-        : <span class="counter">{{ stats.processed }}</span>
+        
+        <span class="counter">{{ stats.processed }} :<img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" /></span>
       </p>
 
       <p title="Trames ❌ perdues côté kernel">
-        ❌: <span class="counter">{{ stats.dropped }}</span>
+       <span class="counter">{{ stats.dropped }} :❌</span>
       </p>
 
       <p title="Trames 🚫 perdues au niveau de l’interface">
-        🚫: <span class="counter">{{ stats.if_dropped }}</span>
+        <span class="counter">{{ stats.if_dropped }} :🚫</span>
       </p>
 
       <p title="Trames ⚠️ perdues côté application (pool ou canal saturé)">
-        ⚠️: <span class="counter">{{ stats.app_dropped }}</span>
+        <span class="counter">{{ stats.app_dropped }} :⚠️</span>
       </p>
 
       <ChannelStatus />

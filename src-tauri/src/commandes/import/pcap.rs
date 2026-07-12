@@ -19,7 +19,7 @@ use crate::{
     state::{
         capture::{
             CaptureState,
-            capture_handle::messages::capture::{PacketMinimal, PacketOwnedStats},
+            capture_handle::messages::capture::{CapturedPacket, CapturedPacketOwned},
         },
         flow_matrix::FlowMatrix,
         graph::{GraphData, GraphUpdate},
@@ -101,7 +101,7 @@ fn send_stats_event(
 /// (clé MAC + IP, avec les replis de `FlowMatrix::get_label`).
 fn lookup_flow_labels(
     matrice: &FlowMatrix,
-    owned_packet: &PacketOwnedStats,
+    owned_packet: &CapturedPacketOwned,
 ) -> (Option<String>, Option<String>) {
     let source_ip = owned_packet
         .flow
@@ -131,7 +131,7 @@ fn lookup_flow_labels(
 fn apply_owned_packet(
     matrice: &mut FlowMatrix,
     graph: &mut GraphData,
-    owned_packet: &PacketOwnedStats,
+    owned_packet: &CapturedPacketOwned,
 ) -> Vec<GraphUpdate> {
     matrice.update_flow(owned_packet);
     let (source_label, destination_label) = lookup_flow_labels(matrice, owned_packet);
@@ -159,7 +159,7 @@ fn process_packet(
     let Ok(flow) = PacketFlow::try_from(packet.data) else {
         return;
     };
-    let packet_min = PacketMinimal::from_pcap(packet.header, flow);
+    let packet_min = CapturedPacket::from_pcap(packet.header, flow);
 
     // Un paquet tunnelé (ex. CAPWAP) produit plusieurs niveaux de flux :
     // la ligne externe (tunnel) puis la (les) conversation(s) interne(s).
@@ -214,7 +214,7 @@ fn process_packet_timed(
     match parsed_flow {
         Ok((flow, parse_timing)) => {
             counters.ok += 1;
-            let packet_min = PacketMinimal::from_pcap(packet.header, flow);
+            let packet_min = CapturedPacket::from_pcap(packet.header, flow);
 
             let packet_owned_start = timing_sample.map(|_| Instant::now());
             let owned_packet = packet_min.to_owned_packet();

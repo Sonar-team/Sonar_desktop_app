@@ -1,17 +1,16 @@
 # Sonar Rust Workspace
 
-This workspace is intentionally isolated from the current Tauri application in
-`src-tauri/`.
-
-It is the staging area for extracting reusable Sonar domain logic into
-`sonar-core` and building a dedicated terminal binary in `sonar-cli`.
+This workspace hosts the shared Sonar domain logic and its terminal binary.
+The Tauri application in `src-tauri/` depends on `sonar-flows-core`, so any
+domain fix belongs here, once, rather than in the desktop app.
 
 Current layout:
 
-- `crates/sonar-core`: reusable Rust library, with no Tauri dependency.
-- `crates/sonar-cli`: Clap-based command-line binary using `sonar-core`.
+- `crates/sonar-flows-core`: reusable Rust library, with no Tauri dependency.
+- `crates/sonar-flows-cli`: Clap-based command-line binary (installed as
+  `sonar-cli`) using `sonar-flows-core`.
 
-Target command shape:
+Command shape:
 
 ```sh
 sonar-cli pcap ezra.pcap -o ezra.csv
