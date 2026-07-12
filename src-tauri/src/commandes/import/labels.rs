@@ -639,7 +639,11 @@ mod tests {
         let CaptureStateError::Label(LabelError::InvalidRowsFormat { invalid_lines }) = err else {
             panic!("erreur InvalidRowsFormat attendue, reçu {err:?}");
         };
-        assert_eq!(invalid_lines.len(), 1, "une seule erreur, pas une par ligne");
+        assert_eq!(
+            invalid_lines.len(),
+            1,
+            "une seule erreur, pas une par ligne"
+        );
         assert!(invalid_lines[0].1.contains("matrice de flux"));
     }
 
