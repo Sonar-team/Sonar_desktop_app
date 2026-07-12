@@ -33,9 +33,9 @@ capture, imports transactionnels, graphe) sont déjà sur `main`.
      (catalogage de `node_modules/` ou lockfile dérivé) ;
    - SBOM frontend contenant Vue/Vite/Pinia/Sigma/plugins Tauri JS, sans
      éléments Rust ou Npcap.
-4. **Décision Npcap documentée** (#138) — bloquant pour toute release
-   Windows publique : licence OEM, retrait du bundle, ou distribution
-   restreinte.
+4. **Décision Npcap documentée** (#138) : retrait provisoire du bundle,
+   installation séparée depuis le site officiel et issue maintenue ouverte
+   pour demander à Nmap une solution adaptée au projet open source.
 
 ## Critères d'acceptation
 
@@ -44,8 +44,8 @@ capture, imports transactionnels, graphe) sont déjà sur `main`.
 - Un tag de release dont un build échoue ne laisse aucune release publique
   visible.
 - Le SBOM frontend d'une release candidate liste les dépendances JS réelles.
-- La position licence Npcap est écrite (README ou doc de release) avant le
-  prochain tag Windows public.
+- Aucun installeur Npcap n'est présent dans le dépôt ou les bundles ; le NSIS
+  détecte le prérequis et redirige vers la page officielle.
 
 ## Hors périmètre (backlog, voir todo.md)
 

@@ -26,33 +26,32 @@ Conséquence assumée : le projet ne pourra pas être relicencié
 automatiquement vers une future AGPL v4 ; tout changement de licence
 restera une décision explicite des ayants droit.
 
-## Npcap : pas de redistribution publique sans licence OEM (#138)
+## Npcap : redistribution retirée, suivi maintenu (#138)
 
-**Constat.** L'installeur Windows embarque `npcap-1.88.exe` et le lance
-avec élévation (hook NSIS). La version gratuite de Npcap n'autorise pas la
-redistribution externe sans licence OEM : <https://npcap.com/oem/redist>.
+La version gratuite de Npcap n'autorise normalement pas sa redistribution
+externe avec un autre produit sans accord ou licence OEM :
+<https://npcap.com/oem/redist>.
 
-**Position (11/07/2026).**
+**Décision provisoire (12/07/2026).**
 
-1. **Aucune release Windows publique ne doit être publiée** tant que l'une
-   de ces conditions n'est pas remplie :
-   - acquisition d'une licence **Npcap OEM** (redistribution autorisée) ;
-   - **retrait** de l'installeur du bundle, avec documentation d'une
-     installation préalable de Npcap par l'utilisateur ;
-   - distribution **restreinte** (interne, hors des cas visés par la
-     clause de redistribution — à faire valider juridiquement).
-2. En attendant la décision, l'embarquement est **limité au seul build
-   Windows** (`src-tauri/tauri.windows.conf.json`) : les paquets Linux
-   (deb/rpm) et macOS (dmg) ne redistribuent plus l'EXE Npcap — ils
-   l'embarquaient jusqu'ici sans raison.
-3. Durcissements à câbler dans la CI (suivis dans #135/#136) si la
-   redistribution est retenue :
-   - vérification d'un hash attendu de `npcap-1.88.exe` au build ;
-   - validation Authenticode de l'installeur ;
-   - notice de licence Npcap visible dans l'installeur NSIS.
+1. L'installeur `npcap-*.exe` est retiré du dépôt et de tous les bundles SONAR.
+   Les bibliothèques `.lib` du SDK restent présentes uniquement pour permettre
+   la compilation Windows ; elles n'installent ni pilote ni runtime.
+2. Npcap devient un prérequis installé séparément par l'utilisateur depuis
+   <https://npcap.com/#download>, avec l'option **WinPcap API-compatible Mode**.
+3. Le bundle Windows est temporairement limité à NSIS : son hook vérifie le
+   service Npcap, l'option de compatibilité et les DLL nécessaires. Si le
+   prérequis manque, il explique la situation et propose d'ouvrir uniquement
+   la page officielle.
+4. La CI refuse la présence d'un installeur Npcap/WinPcap dans le dépôt ou le
+   bundle. Elle ne télécharge pas non plus Npcap sur ses runners tant que ce
+   cas d'usage n'a pas été clarifié.
 
-**Décision finale (OEM / retrait / distribution restreinte) : à trancher
-par le mainteneur avant le prochain tag Windows public.**
+L'issue #138 **reste ouverte**. Le projet demandera à Nmap s'il existe une
+autorisation ou une formule adaptée à un projet open source non commercial.
+Npcap ne devra être réintroduit dans un bundle qu'après obtention d'un droit
+écrit explicite. Le traitement des anciens tags/releases contenant déjà
+l'installeur reste également suivi dans cette issue.
 
 ## SBOM (#137)
 

@@ -155,12 +155,13 @@ reconstruire un binaire de référence pour comparer.
 **Contre-mesures dans SONAR :**
 
 - **Une source canonique unique des versions d'outillage** :
-  `config/build-versions.env` (Rust, Node, Deno, Tauri CLI, Vite, Npcap…).
+  `config/build-versions.env` (Rust, Node, Deno, Tauri CLI, Vite…).
   Les workflows CI chargent ces versions via
   `script/ci/export-build-versions.sh`.
 - **Alignement vérifié en CI** : `script/ci/check-build-versions.sh` échoue
   si `rust-toolchain.toml`, `package.json`, le `Dockerfile`, les workflows ou
-  les références Npcap divergent du fichier canonique.
+  les références d'outillage divergent du fichier canonique. Il vérifie aussi
+  qu'aucun installeur Npcap/WinPcap n'est présent dans le dépôt.
 - **Image Docker épinglée par digest SHA256** (pas par tag) et **archives
   Node.js/Deno vérifiées par SHA256** au téléchargement dans le `Dockerfile`.
 - **Paquets système figés dans le temps** : `script/ci/use-apt-snapshot.sh`

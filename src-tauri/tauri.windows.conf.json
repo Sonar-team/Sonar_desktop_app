@@ -1,7 +1,5 @@
 {
   "bundle": {
-    "resources": {
-      "windows/npcap-1.88.exe": "windows/npcap-1.88.exe"
-    }
+    "targets": ["nsis"]
   }
 }

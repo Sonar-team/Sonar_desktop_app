@@ -4,13 +4,12 @@
 /// de build injectées par la CI (`SONAR_*_VERSION`).
 pub fn about_message() -> String {
     format!(
-        "SONAR {}\n\nRust: {}\nNode.js: {}\nDeno: {}\nTauri CLI: {}\nNpcap (Windows): {}",
+        "SONAR {}\n\nRust: {}\nNode.js: {}\nDeno: {}\nTauri CLI: {}\nNpcap (Windows): requis séparément",
         env!("CARGO_PKG_VERSION"),
         option_env!("SONAR_RUST_VERSION").unwrap_or("unknown"),
         option_env!("SONAR_NODE_VERSION").unwrap_or("unknown"),
         option_env!("SONAR_DENO_VERSION").unwrap_or("unknown"),
         option_env!("SONAR_TAURI_CLI_VERSION").unwrap_or("unknown"),
-        option_env!("SONAR_NPCAP_VERSION").unwrap_or("unknown"),
     )
 }
 
@@ -77,7 +76,7 @@ mod tests {
     }
 
     #[test]
-    fn about_message_contains_npcap_version() {
-        assert!(about_message().contains("Npcap"));
+    fn about_message_mentions_separate_npcap_installation() {
+        assert!(about_message().contains("Npcap (Windows): requis séparément"));
     }
 }

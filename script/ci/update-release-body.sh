@@ -6,10 +6,10 @@ hash_dir="${2:-release-hashes}"
 body_file="${3:-release-body.md}"
 
 {
-  printf 'Cette release publie les binaires construits avec l'\''environnement reproductible et les bundles natifs generes par Tauri: DMG pour macOS, DEB/RPM pour Linux, MSI/NSIS pour Windows.\n\n'
+  printf 'Cette release publie les binaires construits avec l'\''environnement reproductible et les bundles natifs generes par Tauri: DMG pour macOS, DEB/RPM pour Linux, NSIS pour Windows.\n\n'
   printf 'La verification de reproductibilite porte sur le binaire; les bundles sont publies avec hashes, attestations et signatures detachees.\n\n'
   printf '## Windows\n\n'
-  printf 'Le bundle NSIS peut proposer l'\''installation de Npcap. Pour le binaire brut `sonar.exe` ou le MSI, installez Npcap séparément depuis https://npcap.com/#download et activez le mode compatible WinPcap dans l'\''installateur Npcap. Sans Npcap, la capture réseau ne fonctionnera pas.\n\n'
+  printf 'Npcap n'\''est pas inclus dans SONAR. Le bundle NSIS détecte son absence ou un mode incompatible et propose d'\''ouvrir https://npcap.com/#download. Installez Npcap séparément avec le mode compatible WinPcap avant de lancer SONAR.\n\n'
   printf '## SHA256\n\n'
   find "$hash_dir" -type f -name 'release-hashes-*.md' \
     | sort | while IFS= read -r hash_file; do

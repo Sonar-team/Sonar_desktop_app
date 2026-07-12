@@ -59,6 +59,11 @@ vuln.txt
 # Tauri
 /target
 
+# Npcap doit être téléchargé par l'utilisateur, jamais redistribué avec SONAR
+# tant que l'issue licence #138 reste ouverte.
+**/npcap*.exe
+**/winpcap*.exe
+
 # Cosign
 cosign.key
 cosign.pub

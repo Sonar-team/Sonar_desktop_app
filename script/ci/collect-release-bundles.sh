@@ -15,8 +15,10 @@ case "$platform" in
     suffixes=("deb" "rpm")
     ;;
   windows-2022)
-    patterns=("*.msi" "*setup.exe")
-    suffixes=("msi" "setup.exe")
+    # NSIS uniquement tant que le MSI n'implémente pas le contrôle du
+    # prérequis Npcap et la redirection officielle (#138).
+    patterns=("*setup.exe")
+    suffixes=("setup.exe")
     ;;
   *)
     patterns=("*.dmg" "*.deb" "*.rpm" "*.msi" "*setup.exe")

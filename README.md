@@ -82,7 +82,8 @@ SOC rules.
 
 ## Release Binaries
 
-Release assets are raw binaries, not installers.
+Release assets contain raw binaries and native bundles: DMG on macOS, DEB/RPM
+on Linux and NSIS setup on Windows.
 
 ## Configuration minimale
 
@@ -99,21 +100,22 @@ Release assets are raw binaries, not installers.
 
 ### Windows
 
-- Install **Npcap** separately from the
+- Npcap is **not included in SONAR**. Install it separately from the
   [official Npcap download page](https://npcap.com/#download) before launching
   `sonar.exe`.
 - During Npcap installation, enable **WinPcap API-compatible Mode**.
-- Without Npcap, Sonar can start but packet capture will not work.
+- The NSIS installer checks this prerequisite and offers to open the official
+  download page when Npcap is absent or incompatible.
+- Because the Windows binary links to Npcap's runtime DLLs, SONAR may not start
+  until a compatible Npcap installation is available.
 
 ## 🧰 System Dependencies
 
 ### Windows
 
 - **Npcap:** Required at runtime for packet capture.
-- **Build from source only:** You must also install the **WinPcap Developer
-  Pack**.
-- **Environment Variable:** Add the `/Lib` or `/Lib/x64` folder to your system
-  `LIB` environment variable when building from source.
+- **Build from source:** The SDK import libraries required by the linker are
+  versioned in the repository; they do not include or install the Npcap driver.
 
 ### Linux
 

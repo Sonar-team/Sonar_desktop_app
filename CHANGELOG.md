@@ -1,5 +1,18 @@
 # Changelog
 
+## Non publié
+
+### Sécurité
+
+- Retrait de l'installeur Npcap du dépôt et des bundles Windows : Npcap doit
+  désormais être téléchargé séparément depuis son site officiel.
+- Le bundle Windows est temporairement limité à NSIS. Son hook distingue Npcap
+  absent, installé sans mode compatible et prêt pour SONAR, puis propose
+  d'ouvrir la page de téléchargement officielle sans exécuter de binaire tiers.
+- La CI refuse tout installeur Npcap/WinPcap dans le dépôt ou le bundle. Le
+  smoke Windows devient structurel tant que l'usage de Npcap sur les runners
+  n'est pas clarifié avec Nmap dans l'issue #138, qui reste ouverte.
+
 ## **[4.3.1] - 2026-07-09**
 
 ## 🛠 Corrections
