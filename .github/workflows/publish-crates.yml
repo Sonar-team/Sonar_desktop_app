@@ -1,0 +1,60 @@
+name: "publish crates"
+
+# Publication crates.io délibérée : uniquement sur tag crates-vX.Y.Z ou
+# dispatch manuel, jamais en effet de bord d'un run CI. Les tags vX.Y.Z
+# restent réservés aux releases de l'application desktop (publish.yml).
+# Même modèle que le publish.yml de Akmot9/Packet-parser, adapté au
+# workspace à deux crates : le cœur d'abord, la CLI ensuite (cargo attend
+# que le cœur soit indexé avant de rendre la main).
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "crates-v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  publish:
+    name: Publish sonar-flows-core + sonar-flows-cli
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+
+      # Le build de vérification de sonar-flows-cli active la feature pcap.
+      - name: Install libpcap (feature pcap de sonar-flows-core)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev
+
+      - name: Check tag matches workspace version
+        if: github.event_name == 'push'
+        working-directory: sonar-rust
+        run: |
+          crate_version="$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "sonar-flows-core") | .version')"
+          tag_version="${GITHUB_REF_NAME#crates-v}"
+          if [ "$crate_version" != "$tag_version" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match Cargo.toml version $crate_version" >&2
+            exit 1
+          fi
+
+      - name: Publish sonar-flows-core
+        working-directory: sonar-rust
+        run: cargo publish -p sonar-flows-core --registry crates-io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+
+      - name: Publish sonar-flows-cli
+        working-directory: sonar-rust
+        run: cargo publish -p sonar-flows-cli --registry crates-io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
