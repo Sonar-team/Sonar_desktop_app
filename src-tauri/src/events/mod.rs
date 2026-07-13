@@ -29,6 +29,11 @@ pub enum CaptureEvent<'a> {
         chan_capacity: i32,
         timeout: i32,
         snaplen: i32,
+        /// Type de liaison (LINKTYPE/DLT) de la capture ou du fichier importé
+        /// (« Ethernet », « Linux cooked v1 »…), affiché dans la barre de
+        /// statut. Plusieurs fichiers importés de DLT différents sont joints
+        /// par des virgules.
+        link_type: &'a str,
     },
     /// Compteurs périodiques pour la barre de statut.
     Stats {

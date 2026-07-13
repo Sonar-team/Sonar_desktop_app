@@ -33,6 +33,10 @@ export const useCaptureStore = defineStore("capture", {
     hasData: false,
     activeFilter: '' as string,
     pendingFilter: '' as string,
+    // Type de liaison (LINKTYPE/DLT) de la capture live ou des fichiers
+    // importés, reçu dans l'événement `started` et affiché dans la barre
+    // de statut ('' = inconnu).
+    linkType: '' as string,
 
     // Listeners HMR-safe dans le state
     startedListeners: [] as Array<(d: any) => void>,
@@ -95,6 +99,7 @@ export const useCaptureStore = defineStore("capture", {
               this.activeFilter = this.pendingFilter;
               this.pendingFilter = '';
             }
+            this.linkType = msg.data?.link_type ?? '';
             for (const cb of this.startedListeners) cb(msg.data);
             break;
           case "finished":

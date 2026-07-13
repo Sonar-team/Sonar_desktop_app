@@ -7,6 +7,7 @@ use serde::Serialize;
 use std::collections::{BTreeSet, HashMap};
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use crate::link::LinkView;
 use crate::matrix::is_non_unicast_mac;
 
 /// Graphe complet : l'état de référence côté backend, dont le frontend
@@ -279,6 +280,7 @@ impl GraphData {
     ) -> Vec<GraphUpdate> {
         use std::collections::hash_map::Entry;
         let mut updates = Vec::new();
+        let link = LinkView::of(&packet.data_link);
 
         // ===============================
         // 1) Chemin L3 (avec IP) si possible
@@ -299,17 +301,13 @@ impl GraphData {
                 let src_node_id = match self.nodes.entry(src_ip_str.clone()) {
                     Entry::Occupied(mut e) => {
                         maybe_update_node_label(e.get_mut(), source_label.clone(), &mut updates);
-                        record_observed_mac(
-                            e.get_mut(),
-                            &packet.data_link.source_mac,
-                            &mut updates,
-                        );
+                        record_observed_mac(e.get_mut(), &link.source_mac, &mut updates);
                         e.get().id.clone()
                     }
                     Entry::Vacant(v) => {
                         let node = Node::new(
                             src_ip_str.clone(),
-                            packet.data_link.source_mac.clone(),
+                            link.source_mac.clone(),
                             src_color,
                             src_ip_str.clone(),
                             source_label.clone(),
@@ -329,17 +327,13 @@ impl GraphData {
                             destination_label.clone(),
                             &mut updates,
                         );
-                        record_observed_mac(
-                            e.get_mut(),
-                            &packet.data_link.destination_mac,
-                            &mut updates,
-                        );
+                        record_observed_mac(e.get_mut(), &link.destination_mac, &mut updates);
                         e.get().id.clone()
                     }
                     Entry::Vacant(v) => {
                         let node = Node::new(
                             dst_ip_str.clone(),
-                            packet.data_link.destination_mac.clone(),
+                            link.destination_mac.clone(),
                             dst_color,
                             dst_ip_str.clone(),
                             destination_label.clone(),
@@ -418,8 +412,8 @@ impl GraphData {
         // ===============================
         const L2_COLOR: &str = "#00BCD4";
 
-        let src_mac = packet.data_link.source_mac.clone();
-        let dst_mac = packet.data_link.destination_mac.clone();
+        let src_mac = link.source_mac.clone();
+        let dst_mac = link.destination_mac.clone();
 
         let src_key = format!("mac:{src_mac}");
         let dst_key = format!("mac:{dst_mac}");
@@ -460,7 +454,7 @@ impl GraphData {
             }
         };
 
-        let l2_proto = packet.data_link.ethertype.clone();
+        let l2_proto = link.protocol.clone();
         let edge_key = undirected_edge_key(&src_node_id, &dst_node_id, &l2_proto);
 
         match self.edges.get_mut(&edge_key) {
@@ -662,9 +656,9 @@ fn best_protocol_label(flow: &PacketFlowOwned) -> String {
     }
 
     // Enfin L2
-    let p = flow.data_link.ethertype.as_str();
-    if !is_unknown(p) {
-        return p.to_string();
+    let p = LinkView::of(&flow.data_link).protocol;
+    if !is_unknown(&p) {
+        return p;
     }
 
     "Unknown".to_string()
@@ -782,18 +776,14 @@ mod graph_update_batch_tests {
 #[cfg(test)]
 mod add_packet_flow_tests {
     use super::*;
-    use packet_parser::owned::{DataLinkOwned, InternetOwned};
+    use crate::link::ethernet_link_from_text;
+    use packet_parser::owned::InternetOwned;
     use std::net::IpAddr;
 
     /// Flux L3 minimal : IPv4 privé des deux côtés (chemin L3 du graphe).
     fn flow(src_mac: &str, src_ip: &str, dst_mac: &str, dst_ip: &str) -> PacketFlowOwned {
         PacketFlowOwned {
-            data_link: DataLinkOwned {
-                destination_mac: dst_mac.to_string(),
-                source_mac: src_mac.to_string(),
-                ethertype: "IPv4".to_string(),
-                vlan: None,
-            },
+            data_link: ethernet_link_from_text(src_mac, dst_mac, "IPv4", None),
             internet: Some(InternetOwned {
                 source_ip: Some(src_ip.parse::<IpAddr>().unwrap()),
                 ip_source_type: Some(IpType::from_ip(src_ip)),

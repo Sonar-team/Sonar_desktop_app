@@ -1,5 +1,10 @@
 # Sprint: performance capture sous forte charge réseau
 
+> Statut : backlog P1 — repris après le sprint de fidélité #165
+> Dernière revue : 13/07/2026
+> Les optimisations ne doivent jamais précéder la comptabilité exacte des
+> pertes ni modifier le résultat fonctionnel.
+>
 > Suivi GitHub: [#132](https://github.com/Sonar-team/Sonar_desktop_app/issues/132)
 > — branche `sprint-capture-performance`
 

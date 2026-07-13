@@ -11,12 +11,16 @@ use std::{
 
 use crate::parse::CorruptedLayer;
 use crate::parse::data_link::vlan_tag::VlanTag;
-use crate::{IpType, PacketFlow};
+use crate::parse::data_link::{ethertype, ethertype::Ethertype, mac_addres::MacAddress};
+use crate::parse::link_layer::{
+    Ieee80211Link, LinkLayer, LinkLayerKind, LinuxArphrdType, LinuxCookedPacketType, LinuxSll2Link,
+    LinuxSllLink, NetworkProtocol, RawIpLink,
+};
+use crate::{DataLink, IpType, LinkType, PacketFlow};
 
 #[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
 pub struct PacketFlowOwned {
-    #[serde(flatten)]
-    pub data_link: DataLinkOwned,
+    pub data_link: LinkLayerOwned,
     #[serde(flatten)]
     pub internet: Option<InternetOwned>,
     #[serde(flatten)]
@@ -34,12 +38,218 @@ pub struct PacketFlowOwned {
 
 #[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
 pub struct DataLinkOwned {
-    pub destination_mac: String,
-    /// The source MAC address as a string.
-    pub source_mac: String,
+    pub destination_mac: MacAddress,
+    /// The source MAC address.
+    pub source_mac: MacAddress,
     /// The Ethertype of the packet, indicating the protocol in the payload.
-    pub ethertype: String,
+    #[serde(serialize_with = "ethertype::serialize_name")]
+    pub ethertype: Ethertype,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub vlan: Option<VlanTag>,
+}
+
+/// Owned format-specific link-layer information.
+#[non_exhaustive]
+#[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
+#[serde(tag = "link_kind", content = "link_details", rename_all = "snake_case")]
+pub enum LinkLayerOwnedKind {
+    Ethernet(DataLinkOwned),
+    RawIp(RawIpLinkOwned),
+    LinuxSll(LinuxSllLinkOwned),
+    LinuxSll2(LinuxSll2LinkOwned),
+    Ieee80211(Ieee80211LinkOwned),
+}
+
+/// Owned RAW IP metadata. RAW has no link-layer addresses or EtherType.
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Hash, Eq)]
+pub struct RawIpLinkOwned {
+    pub ip_version: u8,
+}
+
+/// Owned Linux cooked capture v1 metadata.
+#[non_exhaustive]
+#[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
+pub struct LinuxSllLinkOwned {
+    pub packet_type: LinuxCookedPacketType,
+    pub hardware_type: LinuxArphrdType,
+    pub address_length: u16,
+    pub source_address: Option<Vec<u8>>,
+    pub protocol: u16,
+}
+
+impl LinuxSllLinkOwned {
+    pub const fn address_is_truncated(&self) -> bool {
+        self.address_length > 8
+    }
+}
+
+/// Owned Linux cooked capture v2 metadata.
+#[non_exhaustive]
+#[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
+pub struct LinuxSll2LinkOwned {
+    pub protocol: u16,
+    pub reserved_mbz: u16,
+    pub interface_index: u32,
+    pub hardware_type: LinuxArphrdType,
+    pub packet_type: LinuxCookedPacketType,
+    pub address_length: u8,
+    pub source_address: Option<Vec<u8>>,
+}
+
+impl LinuxSll2LinkOwned {
+    pub const fn reserved_is_zero(&self) -> bool {
+        self.reserved_mbz == 0
+    }
+
+    pub const fn address_is_truncated(&self) -> bool {
+        self.address_length > 8
+    }
+}
+
+/// Owned IEEE 802.11 fields produced by tunnel peeling.
+#[non_exhaustive]
+#[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
+pub struct Ieee80211LinkOwned {
+    pub destination_mac: MacAddress,
+    pub source_mac: MacAddress,
+    #[serde(serialize_with = "ethertype::serialize_name")]
+    pub snap_protocol: Ethertype,
+}
+
+impl Ieee80211LinkOwned {
+    pub const fn new(
+        destination_mac: MacAddress,
+        source_mac: MacAddress,
+        snap_protocol: Ethertype,
+    ) -> Self {
+        Self {
+            destination_mac,
+            source_mac,
+            snap_protocol,
+        }
+    }
+}
+
+/// Owned counterpart of [`LinkLayer`].
+#[derive(Debug, Clone, Serialize, PartialEq, Hash, Eq)]
+pub struct LinkLayerOwned {
+    link_type: LinkType,
+    network_protocol: NetworkProtocol,
+    #[serde(flatten)]
+    kind: LinkLayerOwnedKind,
+}
+
+impl LinkLayerOwned {
+    pub fn ethernet(frame: DataLinkOwned) -> Self {
+        Self {
+            link_type: LinkType::ETHERNET,
+            network_protocol: frame.ethertype.into(),
+            kind: LinkLayerOwnedKind::Ethernet(frame),
+        }
+    }
+
+    fn raw_ip(network_protocol: NetworkProtocol, details: RawIpLinkOwned) -> Self {
+        Self {
+            link_type: LinkType::RAW,
+            network_protocol,
+            kind: LinkLayerOwnedKind::RawIp(details),
+        }
+    }
+
+    pub fn raw_ipv4() -> Self {
+        Self::raw_ip(NetworkProtocol::Ipv4, RawIpLinkOwned { ip_version: 4 })
+    }
+
+    pub fn raw_ipv6() -> Self {
+        Self::raw_ip(NetworkProtocol::Ipv6, RawIpLinkOwned { ip_version: 6 })
+    }
+
+    fn linux_sll(details: LinuxSllLinkOwned) -> Self {
+        Self {
+            link_type: LinkType::LINUX_SLL,
+            network_protocol: NetworkProtocol::from_link_protocol(details.protocol),
+            kind: LinkLayerOwnedKind::LinuxSll(details),
+        }
+    }
+
+    fn linux_sll2(details: LinuxSll2LinkOwned) -> Self {
+        Self {
+            link_type: LinkType::LINUX_SLL2,
+            network_protocol: NetworkProtocol::from_link_protocol(details.protocol),
+            kind: LinkLayerOwnedKind::LinuxSll2(details),
+        }
+    }
+
+    pub fn ieee80211(frame: Ieee80211LinkOwned) -> Self {
+        Self {
+            link_type: LinkType::IEEE802_11,
+            network_protocol: frame.snap_protocol.into(),
+            kind: LinkLayerOwnedKind::Ieee80211(frame),
+        }
+    }
+
+    pub const fn link_type(&self) -> LinkType {
+        self.link_type
+    }
+
+    pub const fn network_protocol(&self) -> NetworkProtocol {
+        self.network_protocol
+    }
+
+    pub const fn kind(&self) -> &LinkLayerOwnedKind {
+        &self.kind
+    }
+
+    pub const fn as_ethernet(&self) -> Option<&DataLinkOwned> {
+        match &self.kind {
+            LinkLayerOwnedKind::Ethernet(frame) => Some(frame),
+            LinkLayerOwnedKind::RawIp(_) => None,
+            LinkLayerOwnedKind::LinuxSll(_) => None,
+            LinkLayerOwnedKind::LinuxSll2(_) => None,
+            LinkLayerOwnedKind::Ieee80211(_) => None,
+        }
+    }
+
+    pub const fn as_raw_ip(&self) -> Option<&RawIpLinkOwned> {
+        match &self.kind {
+            LinkLayerOwnedKind::RawIp(details) => Some(details),
+            LinkLayerOwnedKind::Ethernet(_)
+            | LinkLayerOwnedKind::LinuxSll(_)
+            | LinkLayerOwnedKind::LinuxSll2(_)
+            | LinkLayerOwnedKind::Ieee80211(_) => None,
+        }
+    }
+
+    pub const fn as_linux_sll(&self) -> Option<&LinuxSllLinkOwned> {
+        match &self.kind {
+            LinkLayerOwnedKind::LinuxSll(details) => Some(details),
+            LinkLayerOwnedKind::Ethernet(_)
+            | LinkLayerOwnedKind::RawIp(_)
+            | LinkLayerOwnedKind::LinuxSll2(_)
+            | LinkLayerOwnedKind::Ieee80211(_) => None,
+        }
+    }
+
+    pub const fn as_linux_sll2(&self) -> Option<&LinuxSll2LinkOwned> {
+        match &self.kind {
+            LinkLayerOwnedKind::LinuxSll2(details) => Some(details),
+            LinkLayerOwnedKind::Ethernet(_)
+            | LinkLayerOwnedKind::RawIp(_)
+            | LinkLayerOwnedKind::LinuxSll(_)
+            | LinkLayerOwnedKind::Ieee80211(_) => None,
+        }
+    }
+
+    pub const fn as_ieee80211(&self) -> Option<&Ieee80211LinkOwned> {
+        match &self.kind {
+            LinkLayerOwnedKind::Ethernet(_) => None,
+            LinkLayerOwnedKind::RawIp(_) => None,
+            LinkLayerOwnedKind::LinuxSll(_) => None,
+            LinkLayerOwnedKind::LinuxSll2(_) => None,
+            LinkLayerOwnedKind::Ieee80211(frame) => Some(frame),
+        }
+    }
 }
 
 impl Display for DataLinkOwned {
@@ -47,7 +257,9 @@ impl Display for DataLinkOwned {
         write!(
             f,
             "\n    Destination MAC: {},\n    Source MAC: {},\n    Ethertype: {},\n    VLAN: ",
-            self.destination_mac, self.source_mac, self.ethertype,
+            self.destination_mac,
+            self.source_mac,
+            self.ethertype.name(),
         )?;
 
         match &self.vlan {
@@ -56,6 +268,44 @@ impl Display for DataLinkOwned {
         }
 
         writeln!(f)
+    }
+}
+
+impl Display for LinkLayerOwned {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        match &self.kind {
+            LinkLayerOwnedKind::Ethernet(frame) => frame.fmt(f),
+            LinkLayerOwnedKind::RawIp(details) => write!(
+                f,
+                "\n    RAW IP Version: {},\n    Protocol: {}\n",
+                details.ip_version, self.network_protocol
+            ),
+            LinkLayerOwnedKind::LinuxSll(details) => write!(
+                f,
+                "\n    Linux SLL Packet Type: {},\n    Hardware Type: {},\n    Address Length: {},\n    Protocol: 0x{:04X}\n",
+                details.packet_type,
+                details.hardware_type,
+                details.address_length,
+                details.protocol
+            ),
+            LinkLayerOwnedKind::LinuxSll2(details) => write!(
+                f,
+                "\n    Linux SLL2 Interface Index: {},\n    Packet Type: {},\n    Hardware Type: {},\n    Address Length: {},\n    Protocol: 0x{:04X},\n    Reserved MBZ: 0x{:04X}\n",
+                details.interface_index,
+                details.packet_type,
+                details.hardware_type,
+                details.address_length,
+                details.protocol,
+                details.reserved_mbz
+            ),
+            LinkLayerOwnedKind::Ieee80211(frame) => write!(
+                f,
+                "\n    IEEE 802.11 Destination MAC: {},\n    Source MAC: {},\n    SNAP Protocol: {}\n",
+                frame.destination_mac,
+                frame.source_mac,
+                frame.snap_protocol.name()
+            ),
+        }
     }
 }
 
@@ -129,12 +379,7 @@ pub struct ApplicationOwned {
 impl<'a> From<&PacketFlow<'a>> for PacketFlowOwned {
     fn from(flow: &PacketFlow<'a>) -> Self {
         Self {
-            data_link: DataLinkOwned {
-                destination_mac: flow.data_link.destination_mac.to_string(),
-                source_mac: flow.data_link.source_mac.to_string(),
-                ethertype: flow.data_link.ethertype.name(),
-                vlan: flow.data_link.vlan.clone(),
-            },
+            data_link: LinkLayerOwned::from(&flow.data_link),
             internet: flow.internet.as_ref().map(|internet| InternetOwned {
                 source_ip: internet.source,
                 ip_source_type: internet.source_type.clone(),
@@ -158,6 +403,73 @@ impl<'a> From<&PacketFlow<'a>> for PacketFlowOwned {
                 .as_deref()
                 .map(|inner| Box::new(PacketFlowOwned::from(inner))),
             corrupted: flow.corrupted.clone(),
+        }
+    }
+}
+
+impl From<&DataLink<'_>> for DataLinkOwned {
+    fn from(frame: &DataLink<'_>) -> Self {
+        Self {
+            destination_mac: frame.destination_mac,
+            source_mac: frame.source_mac,
+            ethertype: frame.ethertype,
+            vlan: frame.vlan.clone(),
+        }
+    }
+}
+
+impl From<&Ieee80211Link<'_>> for Ieee80211LinkOwned {
+    fn from(frame: &Ieee80211Link<'_>) -> Self {
+        Self::new(frame.destination_mac, frame.source_mac, frame.snap_protocol)
+    }
+}
+
+impl From<&RawIpLink<'_>> for RawIpLinkOwned {
+    fn from(details: &RawIpLink<'_>) -> Self {
+        Self {
+            ip_version: details.ip_version,
+        }
+    }
+}
+
+impl From<&LinuxSllLink<'_>> for LinuxSllLinkOwned {
+    fn from(details: &LinuxSllLink<'_>) -> Self {
+        Self {
+            packet_type: details.packet_type,
+            hardware_type: details.hardware_type,
+            address_length: details.address_length,
+            source_address: details.source_address.map(<[u8]>::to_vec),
+            protocol: details.protocol,
+        }
+    }
+}
+
+impl From<&LinuxSll2Link<'_>> for LinuxSll2LinkOwned {
+    fn from(details: &LinuxSll2Link<'_>) -> Self {
+        Self {
+            protocol: details.protocol,
+            reserved_mbz: details.reserved_mbz,
+            interface_index: details.interface_index,
+            hardware_type: details.hardware_type,
+            packet_type: details.packet_type,
+            address_length: details.address_length,
+            source_address: details.source_address.map(<[u8]>::to_vec),
+        }
+    }
+}
+
+impl From<&LinkLayer<'_>> for LinkLayerOwned {
+    fn from(layer: &LinkLayer<'_>) -> Self {
+        match layer.kind() {
+            LinkLayerKind::Ethernet(frame) => Self::ethernet(DataLinkOwned::from(frame)),
+            LinkLayerKind::RawIp(details) => {
+                Self::raw_ip(layer.network_protocol(), RawIpLinkOwned::from(details))
+            }
+            LinkLayerKind::LinuxSll(details) => Self::linux_sll(LinuxSllLinkOwned::from(details)),
+            LinkLayerKind::LinuxSll2(details) => {
+                Self::linux_sll2(LinuxSll2LinkOwned::from(details))
+            }
+            LinkLayerKind::Ieee80211(frame) => Self::ieee80211(Ieee80211LinkOwned::from(frame)),
         }
     }
 }
@@ -200,11 +512,15 @@ mod tests {
 
     fn sample_data_link_without_vlan() -> DataLinkOwned {
         DataLinkOwned {
-            destination_mac: "AA:BB:CC:DD:EE:FF".to_string(),
-            source_mac: "11:22:33:44:55:66".to_string(),
-            ethertype: "IPv4".to_string(),
+            destination_mac: MacAddress([0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]),
+            source_mac: MacAddress([0x11, 0x22, 0x33, 0x44, 0x55, 0x66]),
+            ethertype: Ethertype(0x0800),
             vlan: None,
         }
+    }
+
+    fn sample_link_layer_owned() -> LinkLayerOwned {
+        LinkLayerOwned::ethernet(sample_data_link_without_vlan())
     }
 
     fn sample_internet() -> InternetOwned {
@@ -233,7 +549,7 @@ mod tests {
 
     fn sample_packet_flow_owned() -> PacketFlowOwned {
         PacketFlowOwned {
-            data_link: sample_data_link_without_vlan(),
+            data_link: sample_link_layer_owned(),
             internet: Some(sample_internet()),
             transport: Some(sample_transport()),
             application: Some(sample_application()),
@@ -252,7 +568,7 @@ mod tests {
     fn test_data_link_owned_display_without_vlan() {
         let data_link = sample_data_link_without_vlan();
 
-        let expected = "\n    Destination MAC: AA:BB:CC:DD:EE:FF,\n    Source MAC: 11:22:33:44:55:66,\n    Ethertype: IPv4,\n    VLAN: None\n";
+        let expected = "\n    Destination MAC: aa:bb:cc:dd:ee:ff,\n    Source MAC: 11:22:33:44:55:66,\n    Ethertype: IPv4,\n    VLAN: None\n";
         assert_eq!(data_link.to_string(), expected);
     }
 
@@ -315,7 +631,7 @@ mod tests {
         let expected = concat!(
             "Packet Flow:\n",
             "  Data Link: \n",
-            "    Destination MAC: AA:BB:CC:DD:EE:FF,\n",
+            "    Destination MAC: aa:bb:cc:dd:ee:ff,\n",
             "    Source MAC: 11:22:33:44:55:66,\n",
             "    Ethertype: IPv4,\n",
             "    VLAN: None\n",
@@ -341,7 +657,7 @@ mod tests {
     #[test]
     fn test_packet_flow_owned_display_only_data_link() {
         let flow = PacketFlowOwned {
-            data_link: sample_data_link_without_vlan(),
+            data_link: sample_link_layer_owned(),
             internet: None,
             transport: None,
             application: None,
@@ -352,7 +668,7 @@ mod tests {
         let expected = concat!(
             "Packet Flow:\n",
             "  Data Link: \n",
-            "    Destination MAC: AA:BB:CC:DD:EE:FF,\n",
+            "    Destination MAC: aa:bb:cc:dd:ee:ff,\n",
             "    Source MAC: 11:22:33:44:55:66,\n",
             "    Ethertype: IPv4,\n",
             "    VLAN: None\n",
@@ -394,9 +710,19 @@ mod tests {
         let json = serde_json::to_string(&flow).unwrap();
         let value: serde_json::Value = serde_json::from_str(&json).unwrap();
 
-        assert!(json.contains("\"destination_mac\":\"AA:BB:CC:DD:EE:FF\""));
-        assert!(json.contains("\"source_mac\":\"11:22:33:44:55:66\""));
-        assert!(json.contains("\"ethertype\":\"IPv4\""));
+        assert_eq!(value["data_link"]["link_type"], 1);
+        assert_eq!(value["data_link"]["network_protocol"]["kind"], "ipv4");
+        assert_eq!(value["data_link"]["link_kind"], "ethernet");
+        assert_eq!(
+            value["data_link"]["link_details"]["destination_mac"],
+            "aa:bb:cc:dd:ee:ff"
+        );
+        assert_eq!(
+            value["data_link"]["link_details"]["source_mac"],
+            "11:22:33:44:55:66"
+        );
+        assert_eq!(value["data_link"]["link_details"]["ethertype"], "IPv4");
+        assert!(value["data_link"]["link_details"].get("vlan").is_none());
         assert!(json.contains("\"source_ip\":\"192.168.1.10\""));
         assert!(json.contains("\"destination_ip\":\"8.8.8.8\""));
         assert!(json.contains("\"source_port\":12345"));

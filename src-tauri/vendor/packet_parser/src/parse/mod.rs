@@ -30,6 +30,7 @@
 //! This module does **not** perform stream reassembly or session tracking.
 //! It expects a complete packet buffer (e.g. from PCAP capture).
 
+use crate::checks::application::quic::is_plausible_short_header;
 use application::Application;
 use application::protocols::ams::AmsPacket;
 use application::protocols::copt::CotpHeader;
@@ -42,7 +43,7 @@ use transport::Transport;
 use transport::protocols::TransportProtocol;
 
 use crate::{
-    DataLink,
+    LinkLayer, LinkType, NetworkProtocol, ParseError,
     errors::{ParsedPacketError, internet::InternetError, transport::TransportError},
     owned::PacketFlowOwned,
 };
@@ -50,8 +51,49 @@ use crate::{
 pub mod application;
 pub mod data_link;
 pub mod internet;
+mod link;
+pub mod link_layer;
 pub mod transport;
 pub(crate) mod tunnel;
+
+/// Returns whether this build has a decoder for the canonical link type.
+///
+/// This can be used to reject an unsupported capture interface before reading
+/// or mutating packet-derived state.
+#[inline(always)]
+pub const fn is_supported(link_type: LinkType) -> bool {
+    link::is_supported(link_type)
+}
+
+/// Parses one packet using the decoder selected by its explicit link type.
+///
+/// [`LinkType`] uses canonical `LINKTYPE_*` values. The caller is responsible
+/// for mapping its capture source to that namespace and passing only packet
+/// bytes, without a PCAP or PCAPNG record header.
+#[inline(always)]
+pub fn parse(link_type: LinkType, bytes: &[u8]) -> Result<PacketFlow<'_>, ParseError> {
+    PacketFlow::parse_decoded(link::decode(link_type, bytes)?, 0)
+}
+
+/// Timed counterpart of [`parse`], using the exact same link-type dispatcher.
+#[cfg(feature = "parse_timing")]
+#[inline(always)]
+pub fn parse_timed<'a>(
+    link_type: LinkType,
+    bytes: &'a [u8],
+    timing: &mut crate::timing::ParseTiming,
+) -> Result<PacketFlow<'a>, ParseError> {
+    use crate::timing::{elapsed_ns, now};
+
+    *timing = crate::timing::ParseTiming::default();
+    let total_t0 = now();
+    let result = (|| {
+        let decoded = link::decode_timed(link_type, bytes, timing)?;
+        PacketFlow::parse_decoded_timed(decoded, timing, 0)
+    })();
+    timing.total_ns = elapsed_ns(total_t0);
+    result
+}
 
 /// Layer at which recognized-but-invalid bytes stopped the parsing.
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, Hash)]
@@ -99,9 +141,8 @@ pub struct CorruptedLayer {
 /// therefore compare equal and hash identically.
 #[derive(Debug, Clone, Serialize, Eq)]
 pub struct PacketFlow<'a> {
-    /// Data link layer (mandatory).
-    #[serde(flatten)]
-    pub data_link: DataLink<'a>,
+    /// Link layer (mandatory), tagged with its canonical LINKTYPE.
+    pub data_link: LinkLayer<'a>,
 
     /// Internet layer (optional).
     #[serde(flatten)]
@@ -130,11 +171,11 @@ pub struct PacketFlow<'a> {
 }
 
 impl<'a> TryFrom<&'a [u8]> for PacketFlow<'a> {
-    type Error = ParsedPacketError;
+    type Error = ParseError;
 
     #[inline(always)]
-    fn try_from(packets: &'a [u8]) -> Result<Self, Self::Error> {
-        Self::parse_impl(packets)
+    fn try_from(bytes: &'a [u8]) -> Result<Self, Self::Error> {
+        parse(LinkType::ETHERNET, bytes)
     }
 }
 
@@ -207,6 +248,22 @@ impl<'a> PacketFlow<'a> {
             });
         }
 
+        // QUIC 1-RTT (Short Header) : l'en-tête est volontairement opaque
+        // (RFC 9000 §17.3, pas de version ni de longueur de DCID), seul un
+        // détecteur stateful façon Wireshark peut le décoder. En stateless on
+        // se limite à une heuristique (form=0, fixed=1, taille minimale)
+        // gardée par le port UDP 443. Les Long Headers, eux, sont détectés
+        // sans port par le probing générique (Application::try_from).
+        if transport.protocol == TransportProtocol::Udp
+            && (is_quic_udp_port(transport.source_port)
+                || is_quic_udp_port(transport.destination_port))
+            && is_plausible_short_header(payload)
+        {
+            return Some(Application {
+                application_protocol: "QUIC",
+            });
+        }
+
         if transport.protocol == TransportProtocol::Tcp && is_likely_postgresql_payload(payload) {
             return Some(Application {
                 application_protocol: "PostgreSQL",
@@ -256,19 +313,16 @@ impl<'a> PacketFlow<'a> {
         out
     }
 
-    #[inline(always)]
-    fn parse_impl(packets: &'a [u8]) -> Result<Self, ParsedPacketError> {
-        let data_link = DataLink::try_from(packets)?;
-        Self::parse_layers(data_link, 0)
-    }
-
     /// Parses the internet layer from the data-link layer, dispatching on the
     /// EtherType. An unknown EtherType yields `(None, None)`; a known
     /// EtherType with a corrupt payload yields `(None, Some(corruption))` —
     /// never a hard error, so the data-link information is preserved.
     #[inline(always)]
-    fn parse_l3(data_link: &DataLink<'a>) -> (Option<Internet<'a>>, Option<CorruptedLayer>) {
-        match Internet::try_from_parts(data_link.ethertype, data_link.payload) {
+    fn parse_l3(
+        network_protocol: NetworkProtocol,
+        network_payload: &'a [u8],
+    ) -> (Option<Internet<'a>>, Option<CorruptedLayer>) {
+        match Internet::try_from_network_parts(network_protocol, network_payload) {
             Ok(internet) => (Some(internet), None),
             Err(InternetError::UnsupportedProtocol) => (None, None),
             Err(e) => (
@@ -325,14 +379,14 @@ impl<'a> PacketFlow<'a> {
         }
     }
 
-    /// Parses the L3/L4/L7 layers from a data-link layer, then recurses into any
-    /// tunnel. `depth` bounds tunnel nesting. Shared by the top-level entry and
-    /// by tunnel peeling (which supplies a rebuilt inner data-link layer).
-    pub(crate) fn parse_layers(
-        data_link: DataLink<'a>,
+    /// Parses the shared L3/L4/L7 pipeline from a normalized link decoder
+    /// output. `depth` bounds tunnel nesting.
+    pub(crate) fn parse_decoded(
+        decoded: link::DecodedLink<'a>,
         depth: u8,
     ) -> Result<Self, ParsedPacketError> {
-        let (internet, l3_corruption) = Self::parse_l3(&data_link);
+        let (data_link, network_protocol, network_payload) = decoded.into_parts();
+        let (internet, l3_corruption) = Self::parse_l3(network_protocol, network_payload);
         let (transport, l4_corruption) = Self::parse_l4(internet.as_ref());
         let (application, inner) = Self::parse_l7_and_inner(transport.as_ref(), depth);
 
@@ -353,55 +407,37 @@ impl<'a> PacketFlow<'a> {
 
     #[cfg(feature = "parse_timing")]
     #[inline(always)]
-    fn parse_impl_timed(
-        packets: &'a [u8],
+    pub(crate) fn parse_decoded_timed(
+        decoded: link::DecodedLink<'a>,
         timing: &mut crate::timing::ParseTiming,
+        depth: u8,
     ) -> Result<Self, ParsedPacketError> {
         use crate::timing::{elapsed_ns, now};
 
-        let total_t0 = now();
+        let (data_link, network_protocol, network_payload) = decoded.into_parts();
+        let t0 = now();
+        let internet = Self::parse_l3(network_protocol, network_payload);
+        timing.l3_ns = elapsed_ns(t0);
+        let (internet, l3_corruption) = internet;
 
-        // Same layer functions as parse_layers(): the timed path returns
-        // exactly what the normal path returns (tunnels included) and only
-        // adds instrumentation around each layer.
-        let result = (|| {
-            let t0 = now();
-            let data_link = match DataLink::try_from(packets) {
-                Ok(data_link) => data_link,
-                Err(e) => {
-                    timing.l2_ns = elapsed_ns(t0);
-                    return Err(e.into());
-                }
-            };
-            timing.l2_ns = elapsed_ns(t0);
+        let t0 = now();
+        let (transport, l4_corruption) = Self::parse_l4(internet.as_ref());
+        timing.l4_ns = elapsed_ns(t0);
 
-            let t0 = now();
-            let internet = Self::parse_l3(&data_link);
-            timing.l3_ns = elapsed_ns(t0);
-            let (internet, l3_corruption) = internet;
+        // l7_ns includes tunnel detection and the recursive parsing of any
+        // encapsulated packet.
+        let t0 = now();
+        let (application, inner) = Self::parse_l7_and_inner(transport.as_ref(), depth);
+        timing.l7_ns = elapsed_ns(t0);
 
-            let t0 = now();
-            let (transport, l4_corruption) = Self::parse_l4(internet.as_ref());
-            timing.l4_ns = elapsed_ns(t0);
-
-            // l7_ns includes tunnel detection and the recursive parsing of
-            // any encapsulated packet.
-            let t0 = now();
-            let (application, inner) = Self::parse_l7_and_inner(transport.as_ref(), 0);
-            timing.l7_ns = elapsed_ns(t0);
-
-            Ok(PacketFlow {
-                data_link,
-                internet,
-                transport,
-                application,
-                inner,
-                corrupted: l3_corruption.or(l4_corruption),
-            })
-        })();
-
-        timing.total_ns = elapsed_ns(total_t0);
-        result
+        Ok(PacketFlow {
+            data_link,
+            internet,
+            transport,
+            application,
+            inner,
+            corrupted: l3_corruption.or(l4_corruption),
+        })
     }
 
     /// Parses a raw packet buffer into a [`PacketFlow`] and fills timing data.
@@ -413,11 +449,10 @@ impl<'a> PacketFlow<'a> {
     #[cfg(feature = "parse_timing")]
     #[inline(always)]
     pub fn try_from_timed(
-        packets: &'a [u8],
+        bytes: &'a [u8],
         timing: &mut crate::timing::ParseTiming,
-    ) -> Result<Self, ParsedPacketError> {
-        *timing = crate::timing::ParseTiming::default();
-        Self::parse_impl_timed(packets, timing)
+    ) -> Result<Self, ParseError> {
+        parse_timed(LinkType::ETHERNET, bytes, timing)
     }
 }
 
@@ -441,6 +476,11 @@ fn is_iso_tsap_tcp_port(port: Option<u16>) -> bool {
 /// Beckhoff AMS/ADS : TCP 48898, UDP 48899.
 fn is_ams_port(port: Option<u16>) -> bool {
     matches!(port, Some(48898 | 48899))
+}
+
+/// QUIC (HTTP/3) : UDP 443.
+fn is_quic_udp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(443))
 }
 
 #[cfg(test)]
@@ -479,6 +519,75 @@ mod tests {
             "0000000000000000000000000800450000d5ef3a400040064ce67f0000017f0000011538b36bc949e22ac901b10c80187fffda6900000101080a13420d7613420d2c520000000800000000530000001c636c69656e745f656e636f64696e6700554e49434f4445005300000017446174655374796c650049534f2c204d445900530000001569735f737570657275736572006f66660053000000197365727665725f76657273696f6e00372e342e3600530000001f73657373696f6e5f617574686f72697a6174696f6e006f727978004b0000000c000058e9679266075a0000000549",
         )
         .expect("invalid test hex fixture")
+    }
+
+    fn sample_quic_hxdump() -> Vec<u8> {
+        hex::decode(
+            "44152420a564e0d55e289bd486dd600a438a04d61140200108613fc79b009880c22c9b6600ba2a001450400c0c1d0000000000000054b21901bb04d689acce00000001089fdef188f3a0f2fe00404600e779f8fab6a42cbf19764ac834844fe3f9270a8a18d0fd0267b8cef3ab69c34028dcb8fc5e446f5ac727df40f9e40c7508b22db7d22df4ee4c750c6c2004fa7a0aad8c68cc447583631755cac8662d0da45f1499dbcea03c92e0f2c03066c0ae3be00fc828f42b01158d3f6b264c5d0f77f06651db0ce664bd646ac02e26ca6598f1cdee8195fd954a1358686b1fbbebcc597971f197f45e44078ebfb9e9a5c67d33446b3ef24d80fdb5e523b798bc877e1e55d71c23c68bf27788ef09793bf1bf0579179508bbf092c878424b868d8f7de251d4340b88a5389a60a9fc10a678e7c8e02341c0182963f9e5bf23e7d410a28587ad4529a7fd832c11dbf21d235ed3a87b75360c0b00a44ec5994e7fbf7c41c0541a66f578a96dabc285c1441ffc84b5493362b02c79778a59e229e37261212945a35243829d1d83cf2f48740029b1cc9b772cae528448dd9256886b7a021afdd4acf5b9cbc5deb62d53f8768a28d9e11a64dc9bcee1ce1c1ae971539028b96ea555f2c10fb8b145ec6bd349d2ff7bda1b848232cc3dd8f14058112379d71a2b843dbff6fc94d447f2c7ca81af20f68cd0a1ffc915dc9660c6c0ae552c8e34747c95e550bc769d09ad838165bd94b8cd356831a8a4b05ca255af060faee93df66e5d94c6f8e6677c8e6dc3144351a8c620f5801596e872a3b4b68d1b84f491e12e134eb7d24a57511b96ec6c98bd8e36091e49f6d28c8205a90b531680bcec215b425c09211be4afd1219ae67a19551752b862d539d4c2fc2a1256323a7c43f945bca8d69dde9a038d910ff43abc03b678a6d1d74dfdd9eb37de48e4b9926bd1b16bf0c4d33d99a9a1b06d181c156aa7b125543bfc74bbf3e9d0a42ad45e4563adcc090330fb688a414d4ba1550e8924f221879d4ac6bf62678a3972653aa8be4f5248a6a0dbd9e9fd7e4f8d6c74f36931f8ee64539739a5436fbf91bceef94c79b3dedcf6697575b846d67e75ac4f0ee6d3237b9fda36cf482455113e8228f90527e1ef9a039896d6f878aec3b7364d650872a8bed0e94192bbce7f3e5f159a311d6a4a88bfb82f36e6a15340ee462a1bef98f7ecf05ee6368773e4879b8aebd917925f8284c37084cbc75a0c115f2145e529fa1082ebd709273257ce5da188b50e4011ee1d0adf6dbbb1da455b34b298772c3001bcb633f58923437bc23b433cc3a7395ee486ef167194118ec902373eec3ded222289857b068651a52d99a3a7bc0e6311bcee18c8a276ce23c41ed015c4588d157673f7da67654110abac9c518141eb9dfbd30496b7996e11c4e36ad165dc8fa04a43b6ff9ab92381e93d25e148ab63fee22ea8076f7ff517be1d6bdd3e63de82fa8756f39687d86cdd9e2e491814ededbc407e210cf9c83b28663520a182935f970424de3f7edcf10db4a54d059157c6d0412d3f17bd7836c64453e3b90a96feef93c2f2de7cd9b2845abf58984a924b343ab530252036d51ffee2a7260c1422ec3574e4269a7763265f070fcfbc54d3fbccd28f1ae632e19eef1f330b01eaf214ec109d202a6248e33750d8d6137a3b4d5b41ecc324a5227f830afc1be368f2f61f6f71443995c078dababc9fe31e43d06e39b714b986709d15619e50b102454be9065d8c52401c52d5de2836287c90ff046708823ba9a780c622682c4d15702a78b723543bb2fe75584e58dd9ed25de06c710e3f",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    fn sample_quic_hxdump_1() -> Vec<u8> {
+        hex::decode(
+            "44152420a564e0d55e289bd486dd600a438a04d61140200108613fc79b009880c22c9b6600ba2a001450400c0c1d0000000000000054b21901bb04d689acce00000001089fdef188f3a0f2fe00404600e779f8fab6a42cbf19764ac834844fe3f9270a8a18d0fd0267b8cef3ab69c34028dcb8fc5e446f5ac727df40f9e40c7508b22db7d22df4ee4c750c6c2004fa7a0aad8c68cc4475b9c6b8c185164b7d25dd840dc4f760eee1c2d541908004ce7306e34069ef0f290cdd426a3dcafffdf81c4adedbc4a07665aaa153da60c5e33636035c7cfdb318db381046c66c39c8d1493629d5a188fd890fb220c8d344a67082cb87e82c24a46e9bf7815b42e6f2c1e5ac7a702d8dc7441c407fa726c1e434c106b2d3e4c9be188f77bffcadc12e879bfd53be6f5bff74060c4360495cfce26558550f320131e741e851b9139f16645c4a12c0a4c66cd75e1b12b17601c77f1656f9c359d17588276aee82ff7e9a6f84f80ad6c2c1f22f7f0a56685601b24ffe263a77a5417a067dbf706b800842039184ac6eba534fc95d7107ebd3914f0a5f3244bf2a8556ca7782d744bbb403679aa5c6725c6b7e62d4d3d34cf59f8bc5d4a323c14a2e1a5c0378f716fd5e4d59ed0cb727c1787d6c4b3f22845d3c8bb62ec1085218e1212c1db442a80c0be8863910cf1c0658f5d850604ad622205dfa325fc7bdb057be21df84411e71adb67daf495d2de0ff24d401c12d76a6a1662e5cdaff75cd969e0c243a0bf479061309fd5ad07ca642840f6c0fa6c39c46472112fa4bbdf4cf257e5ce205f04de503313035ac7f92a3237c4d2a199b29bb7d22c96a54c001ce1b42fd88b7a851c5cd3cd9b31ab75fd1bd4129134f592977bb16911f4c0e0f4469134412711d288657f3935cf4789cfa593a4878cb5f5b8135568ebe8cca39c50e317045b8fc10e805a130eb3d82546d6810195bfbdcf93dda639fa5bb7e50983a5a78ae92ecef702c635dabbdb49f35b08bbea4f78cba3329e197218e992266e8e9f65a37a9716ece10c90e52c655bfc28ee39d40b4f0c5f07d3c9d5250ad774e4cc5b4f7059a0ec95ae897fa823dc81c9646510de9d9d43fadb293c3c2afb36de10369d1d955bf9e13f39e14876291b22cff253f0a2cd882678c951b2e6211c47054657d9967f33abd72e28118194da7e4a6e612ff1aafee37bedaf8791c0e9cf8d3b63eb78bdd4bc912cb7012dc16ecacf41cd27d91868c1e9edfa83f0c1dc4037585e7e36ae7b2f789468e769d3f8247bc0e583022cc52b50a3d836bf9081e898d3917e62ba02b9169c8924c3061bb56655aa69b698dd78c780f9fc129c0423620a335ef57400fdbe3b96b92c733f567db07f8602f0753457e2c275034586b7fde510f466e452c480ea820c71b51b6ec114fbfeb71352c576db2f16d7b64ca8271ceae5a8007ef3995401f8e919071b0c813b72fb4a62e05ea3f424ed4e43d9b81ee99a083bac1a898916033e06c916d16e39871f4ac686846c8be6eda9f70968d2947af9fa020056c2931bf466722caef7241ddc2e7b8af84815788ced088363a968947ac3d770cbf1e6d81fc74eb20d83b3f8b07931fb062990dde84f6e5461ff0d33da496a2c69a9299bdcc4031473bfa4d738776dcc1d27dddb46279d3a4b23b058aa3248390dc79c676aa59f30e3497a4bca6caa9b9693bbf6648142dba1768c274e6c1bd40efcf9b1949ca88e5895e126359eb55ef317b0a458f8177cb6714223ca60cbdc59b5b85f0b3a43ee92054f8ff47e9bd133e732e2c801c0bd4cbddad4d1664ac6bbfaf6aff4053ed7830e65fab",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    fn sample_quic_hxdump_2() -> Vec<u8> {
+        hex::decode(
+            "44152420a564e0d55e289bd486dd600a438a00551140200108613fc79b009880c22c9b6600ba2a001450400c0c1d0000000000000054b21901bb0055852bd200000001089fdef188f3a0f2fe00403c36b482d0ad59a93db4091aca5a682718349c76bf3a7775c0479baa46c4ef61df76f763a4a620667fd6cc6bb70e3f9fdcaf4b12729dd60afef3da0008",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    fn sample_quic_hxdump_handshake() -> Vec<u8> {
+        hex::decode(
+            "44152420a564e0d55e289bd486dd600a438a00561140200108613fc79b009880c22c9b6600ba2a001450400c0c1d0000000000000054b21901bb0056852cec0000000108ffdef188f3a0f2fe00403d41ad9c41d1f28a94fa9403324682b513751c6ed7c2772fea3984260e174f1dd4ab0b080d81bdc8496bceaa653bde8c9af2dd7be4e93402e8cb7e77c455",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    fn sample_quic_hxdump_protected_payload() -> Vec<u8> {
+        hex::decode(
+            "44152420a564e0d55e289bd486dd600a438a00271140200108613fc79b009880c22c9b6600ba2a001450400c0c1d0000000000000054b21901bb002784fd4cffdef188f3a0f2fe823c3cf50ccc89c2d8016464794f376ddb705c5d1deb",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    #[test]
+    fn packetflow_detects_quic() {
+        let packet = sample_quic_hxdump();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "QUIC");
+
+        let packet = sample_quic_hxdump_1();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "QUIC");
+
+        let packet = sample_quic_hxdump_2();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "QUIC");
+    }
+
+    #[test]
+    fn packetflow_detects_quic_protected_payload() {
+        let packet = sample_quic_hxdump_protected_payload();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "QUIC");
+    }
+
+    #[test]
+    fn packetflow_detects_quic_handshake() {
+        let packet = sample_quic_hxdump_handshake();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "QUIC");
     }
 
     fn ethernet_ipv4_udp_packet(ip_flags_fragment: u16, udp_length: u16) -> Vec<u8> {
@@ -655,7 +764,7 @@ mod tests {
         let packet = sample_ipv6_tcp_packet();
         let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
 
-        assert!(!flow.data_link.payload.is_empty());
+        assert!(!flow.data_link.network_payload().is_empty());
     }
 
     #[test]
@@ -1094,12 +1203,18 @@ mod tests {
         assert_eq!(inner_tcp.destination_port, Some(445));
 
         // MAC internes = adresses 802.11 (station Intel -> destination VMware).
+        let inner_wifi = inner
+            .data_link
+            .as_ieee80211()
+            .expect("native IEEE 802.11 inner link");
+        assert_eq!(inner.data_link.link_type(), LinkType::IEEE802_11);
+        assert!(inner.data_link.as_ethernet().is_none());
         assert_eq!(
-            inner.data_link.source_mac,
+            inner_wifi.source_mac,
             MacAddress([0xe0, 0xc2, 0x64, 0x2f, 0xa3, 0xb4])
         );
         assert_eq!(
-            inner.data_link.destination_mac,
+            inner_wifi.destination_mac,
             MacAddress([0x00, 0x0c, 0x29, 0x96, 0x7c, 0xa4])
         );
 
@@ -1209,7 +1324,7 @@ mod tests {
 
         let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
 
-        assert_eq!(flow.data_link.ethertype.0, 0x0800);
+        assert_eq!(flow.data_link.as_ethernet().unwrap().ethertype.0, 0x0800);
         assert!(flow.internet.is_none());
         assert!(flow.transport.is_none());
         let corrupted = flow.corrupted.as_ref().expect("corruption report");
@@ -1291,6 +1406,13 @@ mod tests {
             "CAPWAP"
         );
         let inner = owned.inner.as_deref().expect("inner owned flow");
+        let borrowed_inner = flow.inner.as_deref().expect("inner borrowed flow");
+        assert_eq!(inner.data_link.link_type(), LinkType::IEEE802_11);
+        assert!(inner.data_link.as_ieee80211().is_some());
+        assert_eq!(
+            serde_json::to_value(&borrowed_inner.data_link).unwrap(),
+            serde_json::to_value(&inner.data_link).unwrap()
+        );
         let inner_transport = inner.transport.as_ref().expect("inner transport");
         assert_eq!(inner_transport.source_port, Some(56699));
         assert_eq!(inner_transport.destination_port, Some(445));
@@ -1364,12 +1486,17 @@ mod tests {
         assert_eq!(inner_tcp.destination_port, Some(56699));
 
         // FromDS : DA = Address1 (station), SA = Address3 (hôte serveur).
+        let inner_wifi = inner
+            .data_link
+            .as_ieee80211()
+            .expect("native IEEE 802.11 inner link");
+        assert_eq!(inner.data_link.link_type(), LinkType::IEEE802_11);
         assert_eq!(
-            inner.data_link.destination_mac,
+            inner_wifi.destination_mac,
             MacAddress([0xe0, 0xc2, 0x64, 0x2f, 0xa3, 0xb4])
         );
         assert_eq!(
-            inner.data_link.source_mac,
+            inner_wifi.source_mac,
             MacAddress([0x00, 0x0c, 0x29, 0x96, 0x7c, 0xa4])
         );
 

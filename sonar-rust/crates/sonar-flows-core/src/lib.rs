@@ -5,6 +5,7 @@
 
 pub mod csv;
 pub mod graph;
+pub mod link;
 pub mod matrix;
 pub mod packet;
 #[cfg(feature = "pcap")]

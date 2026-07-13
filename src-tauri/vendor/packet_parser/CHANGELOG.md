@@ -4,7 +4,95 @@ Tous les changements notables du projet seront documentes dans ce fichier.
 
 Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), avec des sections simples par type de changement.
 
-## [Unreleased]
+## [7.0.0] - 2026-07-13
+
+Version majeure : dispatch multi-LINKTYPE. Les decodeurs RAW, Linux SLL v1 et
+Linux SLL2 sont maintenant disponibles, avec le nouveau contrat d'erreur
+`ParseError` et les cibles fuzz du sprint.
+
+### Rupture
+
+- L'erreur de parsing principale est renommee `ParseError` et devient
+  `#[non_exhaustive]`. `ParsedPacketError` reste un alias de compatibilite, mais
+  les `match` exhaustifs existants doivent ajouter un cas generique. Ce
+  changement est reserve a la version majeure 7.0.0.
+- `PacketFlow::data_link` devient `LinkLayer` et
+  `PacketFlowOwned::data_link` devient `LinkLayerOwned`. Les acces directs
+  Ethernet (`flow.data_link.ethertype`, MAC, VLAN) migrent vers
+  `flow.data_link.as_ethernet()` ou les accesseurs communs. Les constructions
+  par litteral doivent utiliser `LinkLayer::ethernet` / `From<DataLink>`.
+- Le JSON de la liaison n'est plus aplati a la racine : `data_link` contient
+  `link_type`, `network_protocol`, `link_kind` et `link_details`. Le modele
+  emprunte et son miroir owned produisent la meme forme.
+- `DataLinkOwned` conserve des `MacAddress` et un `Ethertype` types au lieu de
+  chaines. Leur representation JSON lisible reste une chaine.
+- Les flux internes CAPWAP ne sont plus presentes comme un faux Ethernet : ils
+  utilisent le variant IEEE 802.11 natif et le LINKTYPE 105.
+
+### Ajoute
+
+- `LinkType(u32)`, identifiant ouvert dans l'espace canonique `LINKTYPE_*`, avec
+  constantes Ethernet (1), RAW (101), Linux SLL (113), Bluetooth H4 avec
+  pseudo-en-tete (201) et Linux SLL2 (276). Les valeurs inconnues et leur
+  serialisation numerique sont preservees.
+- Entrees `parse(LinkType, &[u8])`, `is_supported(LinkType)` et, avec la feature
+  `parse_timing`, `parse_timed(...)`. Un LINKTYPE sans decodeur retourne
+  `ParseError::UnsupportedLinkType` avant toute interpretation des octets.
+- Catalogue interne de decodeurs avec une source unique pour le preflight et
+  les chemins normal/instrumente. Ethernet est le seul decodeur actif dans ce
+  premier jalon ; `PacketFlow::try_from` et `try_from_timed` restent ses
+  raccourcis de compatibilite.
+- `LinkLayer`, `LinkLayerKind`, `NetworkProtocol` et leurs miroirs owned. Le
+  payload L3 reste zero-copy et est exclu de `Eq`, `Hash` et de la
+  serialisation ; les protocoles inconnus conservent leur valeur numerique.
+- Sortie interne `DecodedLink` commune aux decodeurs. Le pipeline L3/L4/L7
+  recoit desormais un protocole reseau et un payload independants d'Ethernet ;
+  les chemins normal et instrumente appellent le meme decodeur.
+- Modele `Ieee80211Link` pour les trames decapsulees de CAPWAP, avec adresses
+  ToDS/FromDS effectives et vrai protocole LLC/SNAP.
+- Decodeur `LINKTYPE_RAW` (101) : le nibble de version selectionne IPv4 ou IPv6
+  et le paquet complet est transmis zero-copy au pipeline commun, sans MAC ni
+  EtherType invente. Un header IP reconnu mais invalide reste une corruption
+  L3 non fatale.
+- `RawIpLink` / `RawIpLinkOwned` exposent la version IP et partagent le meme
+  schema JSON. `LinkLayerError` conserve le LINKTYPE, les tailles de troncature
+  et les versions IP invalides pour la comptabilite des echecs de liaison.
+- Decodeur `LINKTYPE_LINUX_SLL` (113) : l'en-tete cooked v1 de 16 octets est
+  decode en ordre reseau et son payload est transmis zero-copy au pipeline
+  commun. Les types de paquet, ARPHRD, longueurs d'adresse et protocoles
+  inconnus restent comptables sans etre convertis en faux Ethernet.
+- `LinuxSllLink` / `LinuxSllLinkOwned`, `LinuxCookedPacketType` et
+  `LinuxArphrdType` conservent les metadonnees SLL. Une longueur d'adresse
+  superieure au slot wire de huit octets est preservee avec une vue bornee et
+  un indicateur de troncature, conformement au comportement de Tshark.
+- Decodeur `LINKTYPE_LINUX_SLL2` (276) distinct : son en-tete cooked de 20
+  octets preserve le protocole, le champ reserve MBZ, l'index d'interface,
+  l'ARPHRD, le type de paquet, la longueur declaree et l'adresse disponible.
+- `LinuxSll2Link` / `LinuxSll2LinkOwned` conservent les valeurs futures et
+  exposent `reserved_is_zero()` sans rendre fatale une valeur reservee non
+  nulle que Tshark sait encore dissecter. L'index reste numerique et n'est pas
+  resolu contre les interfaces de la machine d'analyse.
+- Tests publics de conservation des identifiants, refus ferme des LINKTYPE non
+  supportes, equivalence Ethernet IPv4/IPv6/VLAN/corruptions, erreurs Ethernet
+  et VLAN tronquees, parite du dispatch instrumente, schema borrowed/owned et
+  identite de flux independante des octets de payload.
+- Tests RAW issus d'un paquet IPv4/ICMP de la fixture Sonar et d'un vecteur
+  IPv6/UDP, avec parite normale/instrumentee, zero-copy, erreurs structurees et
+  degradation L3 pour chaque longueur inferieure aux headers IP minimaux.
+- Tests SLL issus d'un paquet IPv4/TCP loopback de la fixture Sonar et de
+  vecteurs IPv6/ARP anonymises : endianness, zero-copy, valeurs futures,
+  adresses absentes ou bornees, padding, schema borrowed/owned, erreurs L2 et
+  degradation L3 exhaustive sous les tailles minimales IPv4/IPv6/ARP.
+- Tests SLL2 fondes sur un vecteur IPv4 anonymise valide avec Tshark et des
+  vecteurs IPv6/ARP/inconnu synthetiques : offsets, endianness, index
+  d'interface, reserved MBZ nul ou non nul, valeurs futures, zero-copy, schema,
+  troncatures L2/L3 et parite normale/instrumentee.
+
+### Documentation
+
+- Distinction entre les `LINKTYPE_*` de fichiers et les `DLT_*` de captures
+  live, responsabilite de normalisation du lecteur, octets attendus par paquet
+  et matrice de support courante documentes dans les deux README.
 
 ## [6.0.0] - 2026-07-12
 

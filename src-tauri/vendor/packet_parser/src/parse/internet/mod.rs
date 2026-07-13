@@ -18,12 +18,8 @@ use protocols::ipv6;
 use serde::Serialize;
 pub mod ip_type;
 use super::transport::Transport;
+use crate::NetworkProtocol;
 use ip_type::IpType;
-
-const ETHERTYPE_IPV4: u16 = 0x0800;
-const ETHERTYPE_ARP: u16 = 0x0806;
-const ETHERTYPE_IPV6: u16 = 0x86DD;
-const ETHERTYPE_PROFINET: u16 = 0x8892;
 
 #[derive(Debug, Clone, Serialize, Eq)]
 pub struct Internet<'a> {
@@ -59,15 +55,26 @@ impl<'a> Internet<'a> {
     /// - unknown EtherType (e.g. LLDP) → [`InternetError::UnsupportedProtocol`]
     /// - known EtherType but corrupt payload → the protocol's parse error
     pub fn try_from_parts(ethertype: Ethertype, payload: &'a [u8]) -> Result<Self, InternetError> {
-        match ethertype.0 {
-            ETHERTYPE_ARP => Ok(Self::from_arp(&ArpPacket::try_from(payload)?)),
-            ETHERTYPE_IPV4 => Ok(Self::from_ipv4(ipv4::Ipv4Packet::try_from(payload)?)),
-            ETHERTYPE_IPV6 => Ok(Self::from_ipv6(ipv6::Ipv6Packet::try_from(payload)?)),
-            ETHERTYPE_PROFINET => {
+        Self::try_from_network_parts(ethertype.into(), payload)
+    }
+
+    /// Parses the internet layer from a format-neutral link-layer protocol.
+    ///
+    /// RAW IP decoders can call this with `Ipv4` or `Ipv6` directly instead of
+    /// inventing an Ethernet header or EtherType.
+    pub fn try_from_network_parts(
+        protocol: NetworkProtocol,
+        payload: &'a [u8],
+    ) -> Result<Self, InternetError> {
+        match protocol {
+            NetworkProtocol::Arp => Ok(Self::from_arp(&ArpPacket::try_from(payload)?)),
+            NetworkProtocol::Ipv4 => Ok(Self::from_ipv4(ipv4::Ipv4Packet::try_from(payload)?)),
+            NetworkProtocol::Ipv6 => Ok(Self::from_ipv6(ipv6::Ipv6Packet::try_from(payload)?)),
+            NetworkProtocol::Profinet => {
                 profinet::ProfinetPacket::try_from(payload)?;
                 Ok(Self::profinet())
             }
-            _ => Err(InternetError::UnsupportedProtocol),
+            NetworkProtocol::Other(_) => Err(InternetError::UnsupportedProtocol),
         }
     }
 

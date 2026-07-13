@@ -1,5 +1,10 @@
 # Feature: filtres de capture BPF
 
+> Les user stories US-01 à US-05 sont désormais tenues à jour dans
+> [`epics/capture/filtres-bpf/`](epics/capture/filtres-bpf/feature.md).
+> Ce fichier reste la référence pour le contexte produit et l'état
+> d'implémentation de la branche `filter-fix-ux`.
+
 ## Contexte produit
 
 Le panneau `Filter.vue` permet de préparer un filtre BPF pour limiter les paquets capturés par `pcap`. Le filtre est construit à partir d'options simples: couches, protocoles, adresses IP, réseaux, ports, plages de ports, presets et saisie manuelle.

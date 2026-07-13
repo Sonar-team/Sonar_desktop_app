@@ -23,11 +23,25 @@ export type CapturedPacket = {
   flow: PacketFlow | null;
 };
 
+// Couche liaison packet_parser 7 : typée par LINKTYPE. Les MAC/EtherType ne
+// sont présents que pour les liens qui en ont réellement (Ethernet, 802.11) ;
+// SLL expose une adresse source unique, RAW IP aucune adresse.
+export type DataLink = {
+  link_type?: number;
+  network_protocol?: { kind?: string; value?: number } | null;
+  link_kind?: "ethernet" | "raw_ip" | "linux_sll" | "linux_sll2" | "ieee80211" | string;
+  link_details?: {
+    source_mac?: string;
+    destination_mac?: string;
+    source_address?: number[] | null;
+    ethertype?: string;
+    snap_protocol?: string;
+    vlan?: { id?: number | null } | null;
+  } | null;
+};
+
 export type PacketFlow = {
-  source_mac?: string;
-  destination_mac?: string;
-  ethertype?: string;
-  vlan?: { id?: number | null } | null;
+  data_link?: DataLink | null;
   source_ip?: string | null;
   ip_source_type?: string | null;
   destination_ip?: string | null;
@@ -136,6 +150,8 @@ export type CaptureEvent =
       device: string;
       bufferSize: number;
       timeout: number;
+      /** Type de liaison (LINKTYPE/DLT), ex. « Ethernet », « Linux cooked v1 ». */
+      link_type?: string;
     };
   }
   | {

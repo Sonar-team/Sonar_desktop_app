@@ -1,98 +1,116 @@
-  Je ferais sonar-core comme une lib Rust pure, publiable sur crates.io, sans dépendance Tauri :
+# Backlog SONAR — de la bêta avancée au produit Pro
 
-  sonar-core
-    matrix       # FlowMatrix, FlowMatrixRow, merge, export CSV
-    pcap         # PCAP/PCAPNG -> FlowMatrix
-    labels       # import/export labels, conflits
-    graph        # optionnel si considéré domaine métier
-    errors       # thiserror, erreurs stables
+> Dernière synchronisation GitHub : 13/07/2026
+> Source : audit complet bêta → pro du 13/07/2026
+> Règle : les issues GitHub sont la source de vérité ; ce fichier fournit la
+> priorité et l'ordre d'exécution. `sprint.md` décrit uniquement le sprint actif.
+> Priorisation détaillée :
+> [project_management/priorisation_beta_to_pro.md](project_management/priorisation_beta_to_pro.md).
 
-  Puis :
+## Ordre immédiat
 
-  sonar-cli         # clap, stdout/stderr, exit codes
-  sonar-desktop     # Tauri UI, invoke handlers, windows, events
+1. Revalider [#87](https://github.com/Sonar-team/Sonar_desktop_app/issues/87)
+   et rendre les skips de
+   [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) visibles.
+2. Corriger l'atomicité [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139).
+3. Définir la comptabilité [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150).
+4. Corriger le drainage [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158).
+5. Qualifier avec le corpus complet #151.
+6. Générer l'IPC [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142).
+7. Stabiliser l'identité [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154).
 
-  Le point important : sonar-core ne doit pas connaître tauri::State, Channel, AppHandle, WebView, menus, logs Tauri, etc. Il doit exposer des fonctions simples :
+#161 et #162 peuvent avancer en parallèle sur leurs sous-tâches isolées.
 
-  let matrix = sonar_core::pcap::convert_files(&paths, options)?;
-  sonar_core::csv::write_matrix(&matrix, output)?;
+## Sprint actif — fidélité des données et intégrité des sessions
 
-  Pour le desktop, les commandes Tauri deviennent juste des adaptateurs :
+Suivi : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 
-  - récupèrent les args depuis l’UI
-  - appellent sonar-core
-  - traduisent le résultat en events/snapshots UI
+- [ ] **P0** [#87](https://github.com/Sonar-team/Sonar_desktop_app/issues/87) — reproduire l'import infini ou le fermer avec preuve et test
+- [ ] **P0** [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) — supprimer les skips silencieux, puis construire le corpus complet
+- [ ] **P0** [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) — réserver atomiquement l'état `Importing` pendant toute conversion
+- [ ] **P0** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — détecter le DLT et comptabiliser exhaustivement les résultats de parsing
+- [ ] **P0** [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) — ne perdre aucun paquet accepté à l'arrêt ou au plafond de flux
+- [ ] **P0** [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) — générer et tester le contrat IPC Rust ↔ TypeScript
+- [ ] **P0** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée par site, capteur, interface et VLAN
+- [ ] **P1 validation** [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) — revalider immédiatement les chemins espaces/Unicode
 
-  Pour crates.io, je ferais attention à deux choses :
+La Definition of Done détaillée est dans `sprint.md` et dans l'issue #165.
 
-  - feature flags : pcap devrait probablement être une feature, car libpcap/Npcap rend l’installation plus lourde.
-  - API stable : ne pas publier trop tôt une API interne brouillonne. D’abord extraire proprement, puis publier quand sonar-cli et sonar-desktop utilisent vraiment la crate.
+## Sprint suivant — sessions et parcours produit terminés
 
-  Plan pragmatique :
+- [ ] **P0** [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159) — projets persistants, autosave, récupération et manifest de preuve
+- [ ] **P0** [#160](https://github.com/Sonar-team/Sonar_desktop_app/issues/160) — matrice de flux de production dans le parcours principal
+- [ ] **P0** [#161](https://github.com/Sonar-team/Sonar_desktop_app/issues/161) — intégrité frontend : doublons, imports bloqués et erreurs invisibles
+- [ ] **P1** [#111](https://github.com/Sonar-team/Sonar_desktop_app/issues/111) — fiabiliser tous les parcours sauvegarde/export
+- [ ] **P1** [#102](https://github.com/Sonar-team/Sonar_desktop_app/issues/102) — produire un support bundle ZIP cohérent sous Windows
+- [ ] **P1** [#145](https://github.com/Sonar-team/Sonar_desktop_app/issues/145) — supprimer ou migrer les routes et vues héritées
+- [ ] **P1** [#144](https://github.com/Sonar-team/Sonar_desktop_app/issues/144) — rendre les parcours principaux conformes WCAG 2.2 AA
 
-  1. Créer un workspace Cargo.
-  2. Extraire FlowMatrix, FlowMatrixRow, CSV import/export dans sonar-core.
-  3. Extraire PCAP -> matrix dans sonar-core, avec callback de progression optionnel.
-  4. Adapter Tauri à la nouvelle lib.
-  5. Créer sonar-cli avec clap.
-  6. Publier sonar-core quand l’API est propre.
+## Sprint suivant — distribution professionnelle
 
-  Donc oui : sonar-core + sonar-cli + sonar_desktop_app, c’est beaucoup plus sain que d’étendre indéfiniment le headless Tauri.
+- [ ] **P0** [#94](https://github.com/Sonar-team/Sonar_desktop_app/issues/94) — Authenticode, Developer ID, notarisation et Apple Silicon
+- [ ] **P0** [#146](https://github.com/Sonar-team/Sonar_desktop_app/issues/146) — E2E Tauri et installateurs réellement testés sur chaque OS
+- [ ] **P0** [#162](https://github.com/Sonar-team/Sonar_desktop_app/issues/162) — quality gates et scans bloquants sur toute release taggée
+- [ ] **P1** [#96](https://github.com/Sonar-team/Sonar_desktop_app/issues/96) — modèle de menace, preuve de passivité et durcissement runtime
+- [ ] **P1** [#143](https://github.com/Sonar-team/Sonar_desktop_app/issues/143) — moindre privilège Tauri, chemins validés et helper de capture
+- [ ] **P1** [#163](https://github.com/Sonar-team/Sonar_desktop_app/issues/163) — documentation et support d'une distribution professionnelle
+- [ ] **P2 ouverte** [#138](https://github.com/Sonar-team/Sonar_desktop_app/issues/138) — conserver Npcap externe, détecter/rediriger, puis consulter Nmap
 
----
+## Différenciation Pro — après fermeture des P0
 
-# Reste à faire — audit de code du 10/07/2026
+- [ ] **P2** [#164](https://github.com/Sonar-team/Sonar_desktop_app/issues/164) — baseline/diff, inventaire d'actifs, rapports attestables et spécification SFMS
+- [ ] **P2** [#156](https://github.com/Sonar-team/Sonar_desktop_app/issues/156) — arguments de session du desktop pour orchestration et recette
+- [ ] **P1** [#132](https://github.com/Sonar-team/Sonar_desktop_app/issues/132) — performance de capture sous forte charge, après fidélité
+- [ ] **P3** [#133](https://github.com/Sonar-team/Sonar_desktop_app/issues/133) — publier crates.io après stabilisation des API
 
-Points vérifiés et suivis en issues (le corrigé est déjà sur main :
-capture fantôme, drainage à l'arrêt, import PCAP transactionnel, cycle
-d'import frontend, bidir/multi-MAC du graphe, export de logs, vue-tsc,
-typecheck, tests mockIPC).
+## Backlog GitHub historique à requalifier
 
-## Sprint proposé : fiabiliser CI et release (project_management/sprint_ci_release_fiabilisation.md)
+Ces tickets restent ouverts et ont reçu une priorité P1 à P3. Leur périmètre
+n'a pas été réécrit en détail et doit être revalidé avant intégration dans un
+sprint.
 
-- [x] [#135](https://github.com/Sonar-team/Sonar_desktop_app/issues/135) CI : workflows cassés et gates manquants (clippy, sonar-rust, typecheck, tests front, fmt, artefact macOS)
-- [x] [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136) Release atomique et reproductibilité démontrable
-- [x] [#137](https://github.com/Sonar-team/Sonar_desktop_app/issues/137) SBOM frontend invalide (deno.lock non catalogué par Syft)
-- [ ] [#138](https://github.com/Sonar-team/Sonar_desktop_app/issues/138) Suivi Npcap : installeur retiré, demander à Nmap une solution open source avant toute réintroduction
+### Bugs et validation
 
-## Backlog robustesse pipeline
+- [ ] **P1** [#97](https://github.com/Sonar-team/Sonar_desktop_app/issues/97) — validation Windows 11
+- [ ] **P1** [#98](https://github.com/Sonar-team/Sonar_desktop_app/issues/98) — VAE SONAR, gate de Release Candidate
+- [ ] **P2** [#107](https://github.com/Sonar-team/Sonar_desktop_app/issues/107) — paquet Debian non reproductible
+- [ ] **P3** [#118](https://github.com/Sonar-team/Sonar_desktop_app/issues/118) — revalider l'ancien échec MSI, actuellement désactivé
+- [ ] **P2** [#119](https://github.com/Sonar-team/Sonar_desktop_app/issues/119) — reproductibilité NSIS
+- [ ] **P2** [#120](https://github.com/Sonar-team/Sonar_desktop_app/issues/120) — reproductibilité DMG
+- [ ] **P2** [#121](https://github.com/Sonar-team/Sonar_desktop_app/issues/121) — robustesse des snapshots APT face aux erreurs 503
 
-- [x] [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) Exclusion mutuelle capture/import/export (verrous tenus pendant l'I/O disque)
-- [x] [#140](https://github.com/Sonar-team/Sonar_desktop_app/issues/140) Pool de buffers : famine des jumbo frames
-- [x] [#141](https://github.com/Sonar-team/Sonar_desktop_app/issues/141) Télémétrie backpressure trop bavarde sous saturation
+### Produit, interface et dette technique
 
-## Backlog qualité frontend
+- [ ] **P1** [#89](https://github.com/Sonar-team/Sonar_desktop_app/issues/89) — écran À propos alimenté par le build
+- [ ] **P1** [#90](https://github.com/Sonar-team/Sonar_desktop_app/issues/90) — filtres cohérents matrice/graphe/export
+- [ ] **P3** [#91](https://github.com/Sonar-team/Sonar_desktop_app/issues/91) — homogénéisation visuelle des sous-menus
+- [ ] **P1** [#92](https://github.com/Sonar-team/Sonar_desktop_app/issues/92) — légendes évitant une mauvaise interprétation
+- [ ] **P2** [#101](https://github.com/Sonar-team/Sonar_desktop_app/issues/101) — refonte visuelle des icônes
+- [ ] **P1** [#109](https://github.com/Sonar-team/Sonar_desktop_app/issues/109) — typer et normaliser l'état de `ConfigPanel`
+- [ ] **P2** [#112](https://github.com/Sonar-team/Sonar_desktop_app/issues/112) — retirer les logs console des chemins chauds
+- [ ] **P3** [#124](https://github.com/Sonar-team/Sonar_desktop_app/issues/124) — suivis Gemini issus de la PR Node 24
 
-- [ ] [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) Typer les contrats IPC TypeScript (msg: any, snake/camel)
-- [ ] [#144](https://github.com/Sonar-team/Sonar_desktop_app/issues/144) Accessibilité des modales
-- [ ] [#145](https://github.com/Sonar-team/Sonar_desktop_app/issues/145) Vues/routes mortes ou cassées (/readPcap, homeView, Matrice.vue)
+## Réalisé récemment
 
-## Backlog transverse
+- [x] [#135](https://github.com/Sonar-team/Sonar_desktop_app/issues/135) — gates CI Rust/frontend/core
+- [x] [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136) — release atomique et contrôle de reproductibilité
+- [x] [#137](https://github.com/Sonar-team/Sonar_desktop_app/issues/137) — SBOM frontend
+- [x] [#140](https://github.com/Sonar-team/Sonar_desktop_app/issues/140) — pool de buffers jumbo
+- [x] [#141](https://github.com/Sonar-team/Sonar_desktop_app/issues/141) — télémétrie de backpressure
+- [x] [#147](https://github.com/Sonar-team/Sonar_desktop_app/issues/147) — limites mémoire live initiales
+- [x] [#148](https://github.com/Sonar-team/Sonar_desktop_app/issues/148) — CSV déterministe, atomique et protégé contre l'injection de formule
+- [x] [#149](https://github.com/Sonar-team/Sonar_desktop_app/issues/149) — machine d'état de capture et identifiant de session IPC
+- [x] [#152](https://github.com/Sonar-team/Sonar_desktop_app/issues/152) — décision de licence AGPL
+- [x] [#153](https://github.com/Sonar-team/Sonar_desktop_app/issues/153) — import et normalisation des labels
+- [x] [#155](https://github.com/Sonar-team/Sonar_desktop_app/issues/155) — suppression du mode headless desktop
+- [x] [#157](https://github.com/Sonar-team/Sonar_desktop_app/issues/157) — interface unifiée de gestion des labels
 
-- [ ] [#143](https://github.com/Sonar-team/Sonar_desktop_app/issues/143) Capacités Tauri : permissions mortes/dupliquées, bloc fs.scope ignoré
-- [ ] [#146](https://github.com/Sonar-team/Sonar_desktop_app/issues/146) Stratégie E2E : capture réelle, installateurs Windows/macOS
+## Règles de sortie de bêta
 
-# Reste à faire — audit externe du 11/07/2026 (analyses/11072026_gpt-5.6-sol ultra.md)
-
-L'audit recoupe largement #135–#146 (compléments postés en commentaires sur
-#135, #138 et #142) ; la dérive `while let Ok` de sonar-flows-core qu'il
-signalait est corrigée. Points nouveaux tracés :
-
-## Fiabilité en exploitation
-
-- [x] [#147](https://github.com/Sonar-team/Sonar_desktop_app/issues/147) Mémoire non bornée en capture longue (matrice/graphe sans éviction, rétention logs illimitée)
-- [x] [#149](https://github.com/Sonar-team/Sonar_desktop_app/issues/149) Machine d'état de capture et identifiant de session IPC
-- [x] [#155](https://github.com/Sonar-team/Sonar_desktop_app/issues/155) Retirer le mode headless du desktop — sans GUI, c'est sonar-cli (décision VISION.md)
-- [ ] [#156](https://github.com/Sonar-team/Sonar_desktop_app/issues/156) Arguments de session au lancement du desktop (interface, filtre, autostart, export) pour l'orchestration
-
-## Fidélité des données
-
-- [x] [#148](https://github.com/Sonar-team/Sonar_desktop_app/issues/148) Exports/imports CSV : déterminisme, écriture atomique, injection de formule, encap_id instable
-- [ ] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) Vérifier le DLT libpcap et neutraliser l'effet de capture_timing (packet_parser, correctif amont)
-- [x] [#153](https://github.com/Sonar-team/Sonar_desktop_app/issues/153) Import de labels : chemin inexistant vidant le store, header heuristique, normalisation MAC/IP
-- [x] [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) Graphe/stats : ports d'arête tronqués, processed mal libellé, stats effacées à l'arrêt
-
-## Tests et conformité
-
-- [ ] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) Tests PCAP réels silencieusement sautés quand LOC42.pcapng est absent
-- [x] [#152](https://github.com/Sonar-team/Sonar_desktop_app/issues/152) Licence : texte AGPL « or later » vs manifests AGPL-3.0-only (décision)
+- aucun P0 ouvert avant la Release Candidate ;
+- aucun P1 ouvert avant la 1.0 Pro, sauf dérogation écrite et limitée ;
+- chaque paquet lu est classé ou compté comme perdu avec une raison ;
+- aucun travail utilisateur n'est perdu sur stop, fermeture ou crash ;
+- les parcours capture/import/matrice/graphe/labels/export passent en E2E ;
+- les installateurs sont signés, notarifiés et testés sur machine propre ;
+- les limites, prérequis et données sensibles sont documentés.

@@ -6,6 +6,13 @@
   <div class="status-bar">
     <div class="left-status-content">
       <InterfaceStatus />
+      <p
+        v-if="captureStore.linkType"
+        class="dlt-badge"
+        title="Type de liaison (LINKTYPE/DLT) de la capture ou du fichier importé"
+      >
+        DLT : {{ captureStore.linkType }}
+      </p>
       <div v-if="captureStore.activeFilter" class="filter-badge" :title="captureStore.activeFilter">
         <span class="filter-icon">⚗</span>
         <span class="filter-text">{{ captureStore.activeFilter }}</span>
@@ -123,6 +130,15 @@ export default {
   width: 60px;
   text-align: right;
   font-family: monospace;
+}
+
+.dlt-badge {
+  margin-left: 10px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #9fd3a8;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .filter-badge {

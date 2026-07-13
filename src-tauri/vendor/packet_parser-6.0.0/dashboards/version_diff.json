@@ -1,0 +1,192 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "uid": "grafana-postgresql-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "12.3.2",
+      "targets": [
+        {
+          "dataset": "benchdb",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH per_run_meta AS (\n  SELECT\n    COALESCE(crate_code, crate_version) AS crate_code,\n    run_id,\n    MAX(ts_ms) AS last_ts_ms\n  FROM packet_parse_events\n  WHERE COALESCE(crate_code, crate_version) IN (${crate_code_a:sqlstring}, ${crate_code_b:sqlstring})\n    AND pcap = '$pcap'\n  GROUP BY COALESCE(crate_code, crate_version), run_id\n),\nlast_runs AS (\n  SELECT DISTINCT ON (crate_code) crate_code, run_id\n  FROM per_run_meta\n  ORDER BY crate_code, last_ts_ms DESC\n),\nper_run AS (\n  SELECT\n    COALESCE(e.crate_code, e.crate_version) AS crate_code,\n    e.run_id,\n    ROUND(AVG(l2_ns))::bigint AS l2_ns,\n    ROUND(AVG(l3_ns))::bigint AS l3_ns,\n    ROUND(AVG(l4_ns))::bigint AS l4_ns,\n    ROUND(AVG(l7_ns))::bigint AS l7_ns,\n    ROUND(AVG(duration_ns))::bigint AS total_ns\n  FROM packet_parse_events e\n  JOIN last_runs r\n    ON r.crate_code = COALESCE(e.crate_code, e.crate_version)\n   AND r.run_id = e.run_id\n  WHERE e.pcap = '$pcap'\n  GROUP BY COALESCE(e.crate_code, e.crate_version), e.run_id\n),\ncomparisons AS (\n  SELECT\n    'L2' AS layer,\n    MAX(CASE WHEN crate_code = ${crate_code_a:sqlstring} THEN l2_ns END) AS a_ns,\n    MAX(CASE WHEN crate_code = ${crate_code_b:sqlstring} THEN l2_ns END) AS b_ns\n  FROM per_run\n  UNION ALL\n  SELECT\n    'L3' AS layer,\n    MAX(CASE WHEN crate_code = ${crate_code_a:sqlstring} THEN l3_ns END) AS a_ns,\n    MAX(CASE WHEN crate_code = ${crate_code_b:sqlstring} THEN l3_ns END) AS b_ns\n  FROM per_run\n  UNION ALL\n  SELECT\n    'L4' AS layer,\n    MAX(CASE WHEN crate_code = ${crate_code_a:sqlstring} THEN l4_ns END) AS a_ns,\n    MAX(CASE WHEN crate_code = ${crate_code_b:sqlstring} THEN l4_ns END) AS b_ns\n  FROM per_run\n  UNION ALL\n  SELECT\n    'L7' AS layer,\n    MAX(CASE WHEN crate_code = ${crate_code_a:sqlstring} THEN l7_ns END) AS a_ns,\n    MAX(CASE WHEN crate_code = ${crate_code_b:sqlstring} THEN l7_ns END) AS b_ns\n  FROM per_run\n  UNION ALL\n  SELECT\n    'TOTAL' AS layer,\n    MAX(CASE WHEN crate_code = ${crate_code_a:sqlstring} THEN total_ns END) AS a_ns,\n    MAX(CASE WHEN crate_code = ${crate_code_b:sqlstring} THEN total_ns END) AS b_ns\n  FROM per_run\n)\nSELECT\n  layer,\n  a_ns AS crate_a_ns,\n  b_ns AS crate_b_ns,\n  (b_ns - a_ns) AS delta_ns,\n  ROUND(((b_ns - a_ns)::numeric / NULLIF(a_ns, 0)) * 100, 2) AS delta_pct\nFROM comparisons\nORDER BY CASE layer WHEN 'L2' THEN 1 WHEN 'L3' THEN 2 WHEN 'L4' THEN 3 WHEN 'L7' THEN 4 ELSE 5 END;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 20
+          }
+        }
+      ],
+      "title": "diff perf between two crate codes",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "10s",
+  "schemaVersion": 42,
+  "tags": [
+    "perf",
+    "comparison"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "ModbusTCP.pcap",
+          "value": "/home/erdt-cyber/rust/ICS-Security-Tools/pcaps/ModbusTCP/ModbusTCP.pcap"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "grafana-postgresql-datasource"
+        },
+        "definition": "SELECT DISTINCT pcap\nFROM packet_parse_events\nORDER BY pcap;\n",
+        "hide": 0,
+        "includeAll": false,
+        "label": "pcap",
+        "multi": false,
+        "name": "pcap",
+        "options": [],
+        "query": "SELECT DISTINCT pcap\nFROM packet_parse_events\nORDER BY pcap;\n",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "code-4e2e7c0723fc",
+          "value": "code-4e2e7c0723fc"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "grafana-postgresql-datasource"
+        },
+        "definition": "SELECT DISTINCT COALESCE(crate_code, crate_version) AS crate_code\nFROM packet_parse_events\nORDER BY crate_code DESC;\n",
+        "hide": 0,
+        "includeAll": false,
+        "label": "crate code a",
+        "multi": false,
+        "name": "crate_code_a",
+        "options": [],
+        "query": "SELECT DISTINCT COALESCE(crate_code, crate_version) AS crate_code\nFROM packet_parse_events\nORDER BY crate_code DESC;\n",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "code-4e2e7c0723fc",
+          "value": "code-4e2e7c0723fc"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "grafana-postgresql-datasource"
+        },
+        "definition": "SELECT DISTINCT COALESCE(crate_code, crate_version) AS crate_code\nFROM packet_parse_events\nORDER BY crate_code DESC;\n",
+        "hide": 0,
+        "includeAll": false,
+        "label": "crate code b",
+        "multi": false,
+        "name": "crate_code_b",
+        "options": [],
+        "query": "SELECT DISTINCT COALESCE(crate_code, crate_version) AS crate_code\nFROM packet_parse_events\nORDER BY crate_code DESC;\n",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "crate code performance diff",
+  "uid": "cratecodediff",
+  "version": 1
+}

@@ -8,6 +8,24 @@ use crate::errors::application::quic::QuicError;
 /// QUIC v1 version number (RFC 9000).
 pub const QUIC_V1: u32 = 1;
 
+/// Taille minimale plausible d'un paquet Short Header (RFC 9001 §5.4.2) :
+/// 1 octet de flags + DCID (peut être vide) + au moins 20 octets après le
+/// DCID — la protection d'en-tête exige un échantillon de 16 octets pris
+/// 4 octets après le début du Packet Number, donc l'émetteur padde toujours
+/// à cette taille.
+pub const QUIC_SHORT_HEADER_MIN_LEN: usize = 21;
+
+/// Heuristique stateless pour un paquet 1-RTT à Short Header (RFC 9000 §17.3).
+///
+/// Le Short Header est volontairement opaque : pas de version, pas de
+/// longueur de DCID encodée. Les seuls invariants observables sont
+/// Header Form = 0 et Fixed Bit = 1 (`b0 & 0xC0 == 0x40`), plus la taille
+/// minimale imposée par l'échantillonnage de la protection d'en-tête.
+/// Signature faible : à n'utiliser que derrière un garde-fou de port.
+pub fn is_plausible_short_header(payload: &[u8]) -> bool {
+    payload.len() >= QUIC_SHORT_HEADER_MIN_LEN && payload[0] & 0b1100_0000 == 0b0100_0000
+}
+
 /// Bounds-checked cursor over a QUIC packet slice.
 ///
 /// Controlled-extraction helper: every read validates the remaining length
@@ -231,6 +249,30 @@ mod tests {
                 remaining: 3
             })
         );
+    }
+
+    #[test]
+    fn test_is_plausible_short_header() {
+        // Premier octet valide (form=0, fixed=1) et taille suffisante.
+        let mut packet = vec![0x4C];
+        packet.extend_from_slice(&[0u8; QUIC_SHORT_HEADER_MIN_LEN - 1]);
+        assert!(is_plausible_short_header(&packet));
+
+        // Trop court d'un octet.
+        assert!(!is_plausible_short_header(
+            &packet[..QUIC_SHORT_HEADER_MIN_LEN - 1]
+        ));
+
+        // Long Header (form=1) : pas un Short Header.
+        packet[0] = 0xC0;
+        assert!(!is_plausible_short_header(&packet));
+
+        // Fixed bit absent.
+        packet[0] = 0x0C;
+        assert!(!is_plausible_short_header(&packet));
+
+        // Buffer vide.
+        assert!(!is_plausible_short_header(&[]));
     }
 
     #[test]

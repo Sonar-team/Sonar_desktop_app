@@ -100,6 +100,9 @@ pub mod convert;
 
 pub mod owned;
 
+mod link_type;
+pub use link_type::LinkType;
+
 /// Module for displaying parsed data (internal use).
 mod displays;
 
@@ -107,10 +110,13 @@ mod displays;
 /// and match the per-layer error types (e.g.
 /// `errors::internet::InternetError`, `errors::transport::TransportError`).
 pub mod errors;
-pub use errors::ParsedPacketError;
+pub use errors::{LinkLayerError, ParseError, ParsedPacketError};
 
 /// Main module for packet analysis.
 pub mod parse;
+#[cfg(feature = "parse_timing")]
+pub use parse::parse_timed;
+pub use parse::{is_supported, parse};
 
 pub use parse::application::Application;
 /// Exports data link layer parsing functionality.
@@ -118,6 +124,10 @@ pub use parse::data_link::DataLink;
 pub use parse::data_link::mac_addres::MacAddress;
 pub use parse::internet::Internet;
 pub use parse::internet::ip_type::IpType;
+pub use parse::link_layer::{
+    Ieee80211Link, LinkLayer, LinkLayerKind, LinuxArphrdType, LinuxCookedPacketType, LinuxSll2Link,
+    LinuxSllLink, NetworkProtocol, RawIpLink,
+};
 pub use parse::transport::Transport;
 
 /// Exports data link layer parsing functionality.

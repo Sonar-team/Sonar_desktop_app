@@ -1,53 +1,80 @@
-# Sprint: Sonar Core and CLI Extraction
+# Sprint P0 — Fidélité des données et intégrité des sessions
 
-> Suivi GitHub: [#133](https://github.com/Sonar-team/Sonar_desktop_app/issues/133)
+> Statut : actif
+> Dernière revue : 13/07/2026
+> Source : audit bêta → pro du 13/07/2026
+> Suivi GitHub : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
+> Priorisation :
+> [project_management/priorisation_beta_to_pro.md](project_management/priorisation_beta_to_pro.md)
 
 ## Objectif
 
-Preparer une architecture Rust separee pour extraire le moteur Sonar dans une
-crate reutilisable, sans casser l'application Tauri actuelle.
+Garantir qu'aucun paquet, flux ou état de session ne puisse être perdu,
+ignoré, fusionné ou remplacé silencieusement.
+
+## Phase 0 — rendre les défauts observables
+
+1. [ ] [#87](https://github.com/Sonar-team/Sonar_desktop_app/issues/87) :
+   reproduire l'import infini ou le fermer avec preuve et test.
+2. [ ] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) :
+   supprimer tout succès obtenu en sautant une fixture absente.
+3. [ ] [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) :
+   revalider espaces/Unicode et créer les tests nécessaires.
+
+## Phase 1 — atomicité et comptabilité
+
+4. [ ] [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) :
+   réserver `Importing` pendant toute la conversion.
+5. [ ] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) :
+   définir le résultat canonique de parsing et le rapport qualité.
+6. [ ] [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) :
+   drainer arrêt et plafond avec des compteurs exacts.
+7. [ ] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) :
+   compléter multi-DLT, malformé, PCAPNG et fuzzing.
+
+## Phase 2 — intégration et identité
+
+8. [ ] [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) :
+   générer et tester le contrat IPC Rust → TypeScript.
+9. [ ] [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) :
+   stabiliser l'identité d'actif contextualisée.
 
 ## Livrables
 
-- Workspace Cargo isole dans `sonar-rust/`.
-- Crate `sonar-core` sans dependance Tauri.
-- Binaire `sonar-cli` base sur `clap`.
-- Premier squelette de commandes batch:
-  - `sonar-cli pcap <files...> -o <matrix.csv>`
-  - `sonar-cli matrix <files...> -o <merged.csv>`
+- classification canonique partagée cœur, CLI et desktop ;
+- égalité vérifiable entre paquets lus et toutes les catégories ;
+- pertes noyau, interface et application distinguées ;
+- import protégé contre toute capture/reset concurrent ;
+- arrêt sans paquet accepté abandonné silencieusement ;
+- corpus assaini ou généré déterministement ;
+- contrat IPC généré et exhaustif ;
+- identité tenant compte du projet/site, capteur, interface et VLAN.
 
-## Plan de travail
+## Travail parallèle autorisé
 
-1. Stabiliser le workspace `sonar-rust`.
-2. Extraire les types de matrice dans `sonar-core`.
-3. Extraire l'import/export CSV dans `sonar-core`.
-4. Extraire la conversion PCAP vers matrice dans `sonar-core`.
-5. Brancher `sonar-cli` sur les fonctions reelles.
-6. Adapter progressivement `src-tauri` pour consommer `sonar-core`.
-7. Ajouter tests unitaires et tests de non-regression sur les matrices CSV.
+- [#161](https://github.com/Sonar-team/Sonar_desktop_app/issues/161) :
+  double batch, déduplication des fichiers et déverrouillage `finally` ;
+- [#162](https://github.com/Sonar-team/Sonar_desktop_app/issues/162) :
+  workflow qualité commun aux PR et releases ;
+- conception de [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159),
+  sans figer son schéma avant #154.
 
-## Contraintes
+## Definition of Done
 
-- Ne pas modifier le comportement de l'application desktop pendant la phase
-  d'extraction.
-- Garder `sonar-core` independant de Tauri, WebView, `Channel`, `State` et
-  `AppHandle`.
-- Garder des erreurs propres et stables pour que la CLI puisse retourner des
-  exit codes fiables.
-- Isoler les dependances lourdes comme `pcap` derriere des features si cela
-  devient necessaire pour publier sur crates.io.
+- [ ] Chaque paquet lu appartient à une catégorie explicite.
+- [ ] Un DLT non supporté échoue avant toute mutation de l'état.
+- [ ] Une capture ne peut pas démarrer pendant un import.
+- [ ] Stop et limite de flux drainent ou comptent la perte exacte.
+- [ ] Aucun test critique ne dépend silencieusement d'un fichier local.
+- [ ] Le rapport final traverse un IPC généré, est visible et exportable.
+- [ ] Deux actifs de même IP sur des VLAN/sites distincts ne sont pas fusionnés.
+- [ ] Les courses et chemins d'arrêt ont des tests déterministes.
+- [ ] Typecheck, tests, builds, fmt et Clippy strict sont verts.
+- [ ] Les DLT supportés et limites sont documentés.
 
-## Criteres d'acceptation du MVP CLI
+## Hors périmètre
 
-- `sonar-cli --help` affiche les commandes disponibles.
-- `sonar-cli pcap input.pcap -o output.csv` genere une matrice CSV.
-- `sonar-cli matrix a.csv b.csv -o merged.csv` fusionne les matrices.
-- Les erreurs d'entree/sortie sont lisibles dans `stderr`.
-- Les commandes retournent `0` en succes et un code non nul en erreur.
-
-## Risques
-
-- Le code actuel d'import PCAP est encore couple aux evenements Tauri.
-- Le binaire desktop Windows n'est pas ideal comme executable console.
-- La publication crates.io demande une API plus stable que les modules internes
-  actuels.
+- produit et persistance : #159, #160, #161 ;
+- distribution : #94, #138, #146, #162 ;
+- documentation/support : #163 ;
+- différenciation : #164.

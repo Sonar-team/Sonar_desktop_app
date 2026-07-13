@@ -48,7 +48,8 @@ mod tests {
                 ethertype: Ethertype(0x0800),
                 vlan: None,
                 payload: &payload,
-            },
+            }
+            .into(),
             internet: None,
             transport: None,
             application: None,
@@ -81,7 +82,8 @@ mod tests {
                 ethertype: Ethertype(0x0806),
                 vlan: None,
                 payload: &payload,
-            },
+            }
+            .into(),
             internet: None,
             transport: None,
             application: None,

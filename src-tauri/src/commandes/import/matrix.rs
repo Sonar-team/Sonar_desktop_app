@@ -90,9 +90,8 @@ fn rebuild_matrix_and_graph_from_rows(
         let (flow, tunnel_rows) = row.to_flow_and_rows();
         let encap_ids: Vec<u64> = tunnel_rows.iter().filter_map(|(id, _)| *id).collect();
 
-        let source_label = matrice.get_label(&flow.data_link.source_mac, &row.ip_source);
-        let destination_label =
-            matrice.get_label(&flow.data_link.destination_mac, &row.ip_destination);
+        let source_label = matrice.get_label(&row.mac_source, &row.ip_source);
+        let destination_label = matrice.get_label(&row.mac_destination, &row.ip_destination);
         graph.add_packet_flow(
             &flow,
             source_label,

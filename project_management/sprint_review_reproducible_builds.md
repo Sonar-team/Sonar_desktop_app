@@ -1,5 +1,9 @@
 # Sprint Review: Reproducible Builds
 
+> Statut : archivé — revue terminée
+> Dernière revue : 13/07/2026
+> Suites actives : #107, #119 et #120 en P2 ; #94 et #162 en P0.
+
 ## Sprint Goal
 
 Evaluate whether the sprint moved SONAR toward reproducible release builds by

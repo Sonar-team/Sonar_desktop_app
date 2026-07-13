@@ -1,5 +1,11 @@
 # Sprint: Fiabilisation CI et release
 
+> Statut : archivé — périmètre initial terminé pour #135, #136 et #137
+> Dernière revue : 13/07/2026
+> #138 reste ouverte en P2 : Npcap est un prérequis externe détecté par NSIS,
+> avec redirection officielle ; la discussion Nmap viendra ensuite.
+> Les nouveaux P0 de release sont #94, #146 et #162.
+>
 > Suivi GitHub: [#135](https://github.com/Sonar-team/Sonar_desktop_app/issues/135),
 > [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136),
 > [#137](https://github.com/Sonar-team/Sonar_desktop_app/issues/137),
@@ -11,8 +17,9 @@ Rendre la chaîne CI/release digne de confiance : chaque PR est bloquée par
 les vérifications réelles (elles ne le sont pas aujourd'hui), et une release
 publiée est complète, validée et correctement nommée — ou n'existe pas.
 
-Issu de l'audit de code du 10/07/2026 ; les correctifs runtime (fidélité de
-capture, imports transactionnels, graphe) sont déjà sur `main`.
+Issu de l'audit de code du 10/07/2026. Ce document décrit son périmètre CI et
+release initial ; il ne vaut pas validation globale de la fidélité runtime,
+désormais suivie dans le sprint actif #165.
 
 ## Livrables
 
@@ -33,9 +40,10 @@ capture, imports transactionnels, graphe) sont déjà sur `main`.
      (catalogage de `node_modules/` ou lockfile dérivé) ;
    - SBOM frontend contenant Vue/Vite/Pinia/Sigma/plugins Tauri JS, sans
      éléments Rust ou Npcap.
-4. **Décision Npcap documentée** (#138) : retrait provisoire du bundle,
-   installation séparée depuis le site officiel et issue maintenue ouverte
-   pour demander à Nmap une solution adaptée au projet open source.
+4. **Décision Npcap documentée** (#138) : aucun installeur dans le dépôt ou
+   les bundles, détection pendant l'installation et redirection vers le site
+   officiel ; l'issue reste ouverte pour demander à Nmap une solution adaptée
+   au projet open source.
 
 ## Critères d'acceptation
 

@@ -10,9 +10,9 @@ trame brute, commence a la couche liaison, puis remonte progressivement les
 couches internet, transport et application.
 
 Le coeur de l'API est `PacketFlow`: une representation empruntee, zero-copy, du
-paquet parse. Les protocoles inconnus ou non supportes ne font pas echouer tout
-le parsing: la crate conserve les couches deja decodees et laisse les couches
-suivantes a `None` quand c'est necessaire.
+paquet parse. Les protocoles inconnus ou non supportes au-dessus de la couche
+liaison ne font pas echouer tout le parsing: la crate conserve les couches deja
+decodees et laisse les couches suivantes a `None` quand c'est necessaire.
 
 ![Packet parser overview](images/packet_parser.png)
 
@@ -20,7 +20,7 @@ suivantes a `None` quand c'est necessaire.
 
 ```toml
 [dependencies]
-packet_parser = "6.0.0"
+packet_parser = "7.0.0"
 ```
 
 Pour reproduire les exemples qui decodent de l'hexadecimal:
@@ -28,7 +28,7 @@ Pour reproduire les exemples qui decodent de l'hexadecimal:
 ```toml
 [dependencies]
 hex = "0.4"
-packet_parser = "6.0.0"
+packet_parser = "7.0.0"
 ```
 
 ## Exemple rapide
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let flow = PacketFlow::try_from(raw.as_slice())?;
 
-    println!("L2: {:?}", flow.data_link.ethertype);
+    println!("L2: {}", flow.data_link);
 
     if let Some(internet) = &flow.internet {
         println!(
@@ -69,27 +69,130 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+Cet exemple utilise l'API de compatibilite Ethernet disponible dans la version
+7.0.0 publiee.
+
+## API LINKTYPE explicite (non publiee, cible 7.0.0)
+
+La branche de developpement introduit une entree explicite et fermee par defaut
+pour les lecteurs de captures:
+
+```rust
+use packet_parser::{LinkType, is_supported, parse};
+
+let link_type = LinkType::ETHERNET;
+if !is_supported(link_type) {
+    return Err(format!("LINKTYPE non supporte: {}", link_type).into());
+}
+
+let flow = parse(link_type, packet_bytes)?;
+```
+
+`packet_bytes` doit contenir exactement un paquet, sans en-tete d'enregistrement
+PCAP ou PCAPNG. `LinkType` utilise l'espace canonique `LINKTYPE_*` stocke dans
+les fichiers. Un adaptateur de capture live doit d'abord normaliser les valeurs
+`DLT_*` lorsque leur valeur numerique differe. Pour PCAPNG, le lecteur resout
+l'interface referencee par chaque paquet et transmet le LINKTYPE de cette
+interface.
+
+Etat actuel de la branche de developpement:
+
+| LINKTYPE | Valeur | Etat du decodeur |
+| --- | ---: | --- |
+| Ethernet | 1 | Supporte |
+| RAW IP | 101 | Supporte pour IPv4 et IPv6 |
+| IEEE 802.11 natif | 105 | Modelise pour les flux internes CAPWAP ; decodeur de capture non disponible |
+| Linux SLL v1 | 113 | Supporte |
+| Bluetooth H4 avec pseudo-en-tete | 201 | Identifie, explicitement non supporte |
+| Linux SLL v2 | 276 | Supporte |
+| Toute autre valeur | Preservee telle quelle | `ParseError::UnsupportedLinkType` |
+
+Un LINKTYPE non supporte est refuse avant de decoder les octets du paquet. Les
+protocoles inconnus des couches superieures conservent le comportement gracieux
+`None`/`corrupted` decrit plus haut.
+
+Pour RAW IP, un paquet vide ou un nibble de version different de 4/6 retourne
+un `InvalidLinkLayer(LinkLayerError)` structure. Des qu'IPv4 ou IPv6 est
+identifie, un header IP invalide ou tronque reste un flux partiel reussi avec
+`corrupted: Internet` ; la liaison et sa comptabilite sont conservees.
+
+Linux SLL v1 decode son en-tete cooked de 16 octets en ordre reseau et conserve
+le type de paquet, le type materiel ARPHRD brut, la longueur d'adresse declaree,
+les octets d'adresse source disponibles et la valeur du protocole. Les valeurs
+numeriques inconnues sont preservees ; une adresse plus longue que le slot wire
+de huit octets est signalee tronquee plutot que rejetee. Utiliser le
+`LinkType::LINUX_SLL` canonique (113) : la valeur 25 affichee par certains
+champs Wireshark est un identifiant d'encapsulation WTAP interne.
+
+Linux SLL v2 decode independamment son en-tete de 20 octets et conserve en plus
+l'index numerique de l'interface de la machine de capture ainsi que le champ
+reserve MBZ. Une valeur reservee non nulle est preservee et signalee par
+`reserved_is_zero()` plutot que de perdre un paquet autrement decodable, comme
+le fait le dissecteur tolerant de Tshark. Les noms d'interface ne sont pas
+resolus, car ils appartiennent a la machine de capture. Utiliser le
+`LinkType::LINUX_SLL2` canonique (276) ; l'identifiant d'encapsulation WTAP
+interne actuellement affiche par Wireshark pour ce format vaut 210.
+
+Chaque flux parse transporte maintenant un `LinkLayer` generique. Ses
+accesseurs communs ne supposent pas Ethernet:
+
+```rust
+println!("LINKTYPE={}", flow.data_link.link_type());
+println!("suivant={:?}", flow.data_link.network_protocol());
+
+if let Some(ethernet) = flow.data_link.as_ethernet() {
+    println!("{} -> {}", ethernet.source_mac, ethernet.destination_mac);
+}
+```
+
+`network_payload()` retourne le slice L3 emprunte. Les vues propres au format
+sont explicites (`as_ethernet()`, `as_raw_ip()`, `as_linux_sll()`,
+`as_linux_sll2()`, `as_ieee80211()`), afin que RAW et les deux formats SLL ne
+puissent jamais fabriquer silencieusement des champs Ethernet.
+
 ## API principale
 
 | Besoin | API |
 | --- | --- |
-| Parser une trame complete | `PacketFlow::try_from(&[u8])` |
+| Verifier la presence d'un decodeur (cible 7.0.0) | `is_supported(LinkType)` |
+| Parser un paquet avec un type de liaison explicite (cible 7.0.0) | `parse(LinkType, &[u8])` |
+| Parser Ethernet avec le raccourci de compatibilite | `PacketFlow::try_from(&[u8])` |
 | Parser seulement Ethernet/VLAN | `DataLink::try_from(&[u8])` |
 | Parser seulement L3 | `Internet::try_from(&[u8])` |
 | Parser seulement L4 | `Transport::try_from(&[u8])` ou `Transport::try_from_parts(...)` |
 | Detacher le resultat du buffer d'origine | `flow.to_owned()` |
 | Recuperer les flux encapsules | `flow.flatten()` |
-| Mesurer le temps de parsing par couche | `PacketFlow::try_from_timed(...)` avec la feature `parse_timing` |
+| Mesurer un LINKTYPE explicite (cible 7.0.0) | `parse_timed(...)` avec la feature `parse_timing` |
+| Mesurer Ethernet via l'API de compatibilite | `PacketFlow::try_from_timed(...)` avec la feature `parse_timing` |
 
 `PacketFlow` contient:
 
 ```rust
 pub struct PacketFlow<'a> {
-    pub data_link: DataLink<'a>,
+    pub data_link: LinkLayer<'a>,
     pub internet: Option<Internet<'a>>,
     pub transport: Option<Transport<'a>>,
     pub application: Option<Application>,
     pub inner: Option<Box<PacketFlow<'a>>>,
+}
+```
+
+Le schema de serialisation 7.0 imbrique la liaison et utilise des tags stables.
+Les modeles emprunte et owned de la liaison produisent le meme JSON (les octets
+du payload ne sont pas serialises):
+
+```json
+{
+  "data_link": {
+    "link_type": 1,
+    "network_protocol": { "kind": "ipv4" },
+    "link_kind": "ethernet",
+    "link_details": {
+      "destination_mac": "00:11:22:33:44:55",
+      "source_mac": "66:77:88:99:aa:bb",
+      "ethertype": "IPv4"
+    }
+  }
 }
 ```
 
@@ -99,7 +202,12 @@ pub struct PacketFlow<'a> {
 
 - Ethernet II
 - VLAN 802.1Q
+- RAW IPv4/IPv6 (`LINKTYPE_RAW`)
+- Linux cooked capture v1 (`LINKTYPE_LINUX_SLL`)
+- Linux cooked capture v2 (`LINKTYPE_LINUX_SLL2`)
 - Adresses MAC et resolution OUI interne
+- Representation IEEE 802.11 native pour les flux internes CAPWAP (pas encore
+  de decodeur LINKTYPE de premier niveau)
 
 ### Internet
 
@@ -175,7 +283,7 @@ for level in flow.flatten() {
 | Feature | Effet |
 | --- | --- |
 | `doc-diagrams` | Active les diagrammes Rustdoc via `aquamarine` |
-| `parse_timing` | Expose `ParseTiming` et `PacketFlow::try_from_timed` |
+| `parse_timing` | Expose `ParseTiming`, `PacketFlow::try_from_timed` et, sur la branche de developpement, `parse_timed` |
 
 La feature `parse_timing` est faite pour les benchmarks. Le chemin normal
 `PacketFlow::try_from` ne mesure pas le temps de parsing.

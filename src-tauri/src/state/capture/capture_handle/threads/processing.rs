@@ -29,6 +29,7 @@ use crate::{
     },
 };
 use packet_parser::PacketFlow;
+use sonar_flows_core::link::LinkView;
 #[cfg(feature = "capture_timing")]
 use packet_parser::timing::ParseTiming;
 
@@ -218,12 +219,10 @@ impl PacketWorker {
                 #[cfg(feature = "capture_timing")]
                 let label_lookup_start = timing_sample.map(|_| Instant::now());
                 let (source_ip, destination_ip) = flow_ips(&record_owned);
+                let link = LinkView::of(&record_owned.flow.data_link);
                 let labels = (
-                    locked_state.get_label(&record_owned.flow.data_link.source_mac, &source_ip),
-                    locked_state.get_label(
-                        &record_owned.flow.data_link.destination_mac,
-                        &destination_ip,
-                    ),
+                    locked_state.get_label(&link.source_mac, &source_ip),
+                    locked_state.get_label(&link.destination_mac, &destination_ip),
                 );
                 #[cfg(feature = "capture_timing")]
                 {
@@ -419,9 +418,10 @@ impl PacketWorker {
             return (None, None);
         };
         let (source_ip, destination_ip) = flow_ips(owned);
+        let link = LinkView::of(&owned.flow.data_link);
         let labels = (
-            locked_state.get_label(&owned.flow.data_link.source_mac, &source_ip),
-            locked_state.get_label(&owned.flow.data_link.destination_mac, &destination_ip),
+            locked_state.get_label(&link.source_mac, &source_ip),
+            locked_state.get_label(&link.destination_mac, &destination_ip),
         );
         locked_state.update_flow(owned);
         self.processed = locked_state.row_count() as u32;

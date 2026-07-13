@@ -61,7 +61,7 @@ fn new_timing_logger() -> Option<ImportTimingLogger> {
     }
 }
 
-fn send_started_event(on_event: &Channel<CaptureEvent<'_>>) {
+fn send_started_event(on_event: &Channel<CaptureEvent<'_>>, link_type: &str) {
     if let Err(e) = on_event.send(CaptureEvent::Started {
         session_id: 0,
         device: "",
@@ -69,9 +69,26 @@ fn send_started_event(on_event: &Channel<CaptureEvent<'_>>) {
         chan_capacity: 0,
         timeout: 0,
         snaplen: 65536,
+        link_type,
     }) {
         error!("Erreur lors de l'envoi de Started: {:?}", e);
     };
+}
+
+/// Libellés des types de liaison (DLT) des fichiers à importer, dédupliqués
+/// dans l'ordre de la liste. Un fichier illisible est ignoré ici : la
+/// conversion elle-même échouera avec l'erreur précise.
+fn import_link_types(pcap_paths: &[String]) -> String {
+    let mut labels: Vec<String> = Vec::new();
+    for path in pcap_paths {
+        if let Ok(link_type) = sonar_flows_core::pcap::pcap_file_datalink(Path::new(path)) {
+            let label = sonar_flows_core::pcap::datalink_label(link_type);
+            if !labels.contains(&label) {
+                labels.push(label);
+            }
+        }
+    }
+    labels.join(", ")
 }
 
 /// Envoie l'événement `Stats` (compteurs de la barre de statut). Retourne
@@ -118,12 +135,10 @@ fn lookup_flow_labels(
         .map(|ip| ip.to_string())
         .unwrap_or_default();
 
+    let link = sonar_flows_core::link::LinkView::of(&owned_packet.flow.data_link);
     (
-        matrice.get_label(&owned_packet.flow.data_link.source_mac, &source_ip),
-        matrice.get_label(
-            &owned_packet.flow.data_link.destination_mac,
-            &destination_ip,
-        ),
+        matrice.get_label(&link.source_mac, &source_ip),
+        matrice.get_label(&link.destination_mac, &destination_ip),
     )
 }
 
@@ -443,7 +458,7 @@ pub fn convert_from_pcap_list(
         pcap_paths
     );
 
-    send_started_event(&on_event);
+    send_started_event(&on_event, &import_link_types(&pcap_paths));
 
     // Copie des labels sous verrou court : le store n'est pas tenu pendant
     // la conversion.

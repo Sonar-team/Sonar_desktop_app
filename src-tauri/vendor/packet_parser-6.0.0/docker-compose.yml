@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: bench_pg
+    environment:
+      POSTGRES_DB: benchdb
+      POSTGRES_USER: bench
+      POSTGRES_PASSWORD: benchpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - bench_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bench -d benchdb -h 127.0.0.1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+    networks:
+      - bench_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bench_grafana
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - bench_net
+
+  ingestor:
+    build:
+      context: ./ingestor
+      dockerfile: Dockerfile
+    container_name: bench_ingestor
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PG_HOST: postgres
+      PG_PORT: "5432"
+      PG_DB: benchdb
+      PG_USER: bench
+      PG_PASSWORD: benchpass
+      JSONL_DIR: /data/jsonl
+      SCAN_INTERVAL_MS: "500"
+      BATCH_SIZE: "1000"
+    volumes:
+      - ${HOME}/.local/share/packet_parser_bench/jsonl:/data/jsonl:ro
+    restart: unless-stopped
+    networks:
+      - bench_net
+
+volumes:
+  grafana_data:
+  bench_pgdata:
+
+networks:
+  bench_net:
+    driver: bridge

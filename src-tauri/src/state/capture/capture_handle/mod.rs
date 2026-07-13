@@ -83,6 +83,7 @@ impl CaptureHandle {
         // `Started` part seulement une fois l'interface ouverte et le filtre
         // appliqué : un échec de démarrage ne produit jamais un « démarré »
         // suivi d'une erreur.
+        let link_type = sonar_flows_core::pcap::datalink_label(cap.get_datalink());
         on_event.send(CaptureEvent::Started {
             session_id: self.session_id,
             device: &config.device_name,
@@ -90,6 +91,7 @@ impl CaptureHandle {
             chan_capacity: config.chan_capacity,
             timeout: config.timeout,
             snaplen: config.snaplen,
+            link_type: &link_type,
         })?;
 
         let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) =

@@ -10,6 +10,8 @@ use packet_parser::owned::PacketFlowOwned;
 
 use serde::Serialize;
 
+use crate::link::LinkView;
+
 /// FNV-1a 64 bits sur une sérialisation d'octets contrôlée : contrairement à
 /// `DefaultHasher`, dont la stabilité n'est pas garantie entre versions de
 /// Rust, deux builds différents produisent les mêmes `encap_id` — les
@@ -57,13 +59,14 @@ fn push_str(buf: &mut Vec<u8>, s: &str) {
 /// les extrémités sont ordonnées avant hachage. Le hachage (FNV-1a sur une
 /// sérialisation explicite) est stable entre builds et versions de Rust.
 pub fn tunnel_pair_id(flow: &PacketFlowOwned) -> u64 {
+    let link = LinkView::of(&flow.data_link);
     let source = (
-        &flow.data_link.source_mac,
+        &link.source_mac,
         flow.internet.as_ref().and_then(|i| i.source_ip),
         flow.transport.as_ref().and_then(|t| t.source_port),
     );
     let destination = (
-        &flow.data_link.destination_mac,
+        &link.destination_mac,
         flow.internet.as_ref().and_then(|i| i.destination_ip),
         flow.transport.as_ref().and_then(|t| t.destination_port),
     );
@@ -76,10 +79,10 @@ pub fn tunnel_pair_id(flow: &PacketFlowOwned) -> u64 {
     let mut buf = Vec::with_capacity(128);
     push_endpoint(&mut buf, first.0, first.1, first.2);
     push_endpoint(&mut buf, second.0, second.1, second.2);
-    push_str(&mut buf, &flow.data_link.ethertype);
+    push_str(&mut buf, &link.protocol);
     // Seul l'id du VLAN participe : c'est le seul champ préservé par un
     // aller-retour CSV (pcp/dei non exportés).
-    match flow.data_link.vlan.as_ref().map(|v| v.id) {
+    match link.vlan_id {
         None => buf.push(0),
         Some(id) => {
             buf.push(1);
@@ -213,7 +216,7 @@ impl<'a> CapturedPacket<'a> {
                 let len = if depth == 0 {
                     self.len
                 } else {
-                    flow.data_link.payload.len() as u32
+                    flow.data_link.network_payload().len() as u32
                 };
                 CapturedPacketOwned {
                     ts_sec: self.ts_sec,
@@ -324,10 +327,13 @@ mod tests {
 
         // Retour : mêmes extrémités, sens inversé.
         let mut reverse = forward.clone();
-        std::mem::swap(
-            &mut reverse.data_link.source_mac,
-            &mut reverse.data_link.destination_mac,
-        );
+        let mut swapped = reverse
+            .data_link
+            .as_ethernet()
+            .expect("trame Ethernet")
+            .clone();
+        std::mem::swap(&mut swapped.source_mac, &mut swapped.destination_mac);
+        reverse.data_link = packet_parser::owned::LinkLayerOwned::ethernet(swapped);
         if let Some(internet) = reverse.internet.as_mut() {
             std::mem::swap(&mut internet.source_ip, &mut internet.destination_ip);
             std::mem::swap(

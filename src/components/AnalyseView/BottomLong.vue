@@ -65,11 +65,24 @@ type PacketLogRow = {
   time: string
 }
 
+// Couche liaison packet_parser 7 : `data_link` est imbriqué et typé par
+// LINKTYPE (`link_kind`), les MAC/EtherType vivent dans `link_details` et
+// n'existent que pour les liens qui en ont réellement (Ethernet, 802.11).
+type DataLinkLogFields = {
+  link_kind?: unknown
+  network_protocol?: { kind?: unknown; value?: unknown } | null
+  link_details?: {
+    source_mac?: unknown
+    destination_mac?: unknown
+    source_address?: unknown[]
+    vlan?: { id?: unknown } | null
+    ethertype?: unknown
+    snap_protocol?: unknown
+  } | null
+}
+
 type PacketFlowLogFields = {
-  source_mac?: unknown
-  destination_mac?: unknown
-  vlan?: { id?: unknown } | null
-  ethertype?: unknown
+  data_link?: DataLinkLogFields | null
   source_ip?: unknown
   destination_ip?: unknown
   source?: unknown
@@ -180,11 +193,20 @@ export default defineComponent({
     createLogRow(packet: CapturedPacket): PacketLogRow {
       const flow = packet.flow as PacketFlowLogFields | null
 
+      const dataLink = flow?.data_link
+      const linkDetails = dataLink?.link_details
+
       return {
-        sourceMac: this.formatValue(flow?.source_mac),
-        destinationMac: this.formatValue(flow?.destination_mac),
-        vlan: this.formatValue(flow?.vlan?.id),
-        ethertype: this.formatValue(flow?.ethertype),
+        sourceMac: this.formatValue(
+          linkDetails?.source_mac ?? this.formatHwAddress(linkDetails?.source_address),
+        ),
+        destinationMac: this.formatValue(linkDetails?.destination_mac),
+        vlan: this.formatValue(linkDetails?.vlan?.id),
+        ethertype: this.formatValue(
+          linkDetails?.ethertype
+            ?? linkDetails?.snap_protocol
+            ?? this.formatNetworkProtocol(dataLink?.network_protocol),
+        ),
         source: this.formatValue(flow?.source_ip ?? flow?.source),
         destination: this.formatValue(flow?.destination_ip ?? flow?.destination),
         transportProtocol: this.formatTransportProtocol(flow),
@@ -226,6 +248,32 @@ export default defineComponent({
     formatValue(value: unknown): string {
       if (value === null || value === undefined || value === '') return '-'
       return String(value)
+    },
+    // Adresse matérielle SLL/SLL2 : sérialisée en tableau d'octets côté Rust.
+    formatHwAddress(value: unknown): string | undefined {
+      if (!Array.isArray(value) || value.length === 0) return undefined
+      return value
+        .map((byte) => Number(byte).toString(16).padStart(2, '0'))
+        .join(':')
+    },
+    // Protocole réseau annoncé par la couche liaison quand elle n'a pas
+    // d'EtherType (RAW IP, SLL) : sérialisé `{ kind, value }` côté Rust.
+    formatNetworkProtocol(
+      protocol: DataLinkLogFields['network_protocol'],
+    ): string | undefined {
+      switch (protocol?.kind) {
+        case 'ipv4': return 'IPv4'
+        case 'ipv6': return 'IPv6'
+        case 'arp': return 'ARP'
+        case 'profinet': return 'Profinet'
+        case 'other': {
+          const value = Number(protocol?.value)
+          return Number.isFinite(value)
+            ? `0x${value.toString(16).toUpperCase().padStart(4, '0')}`
+            : undefined
+        }
+        default: return undefined
+      }
     },
     formatTimestamp(sec?: number, usec?: number): string {
       if (typeof sec !== 'number' || typeof usec !== 'number') return '-'

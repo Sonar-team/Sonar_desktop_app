@@ -44,6 +44,26 @@ impl<'a> CapturedPacket<'a> {
     }
 }
 
+/// Type de liaison (LINKTYPE/DLT) annoncé par l'en-tête d'un fichier
+/// PCAP/PCAPNG (celui de la première interface pour un PCAPNG).
+pub fn pcap_file_datalink(path: &Path) -> Result<pcap::Linktype> {
+    let cap = Capture::from_file(path).map_err(|e| SonarCoreError::PcapOpen {
+        path: path.to_path_buf(),
+        message: e.to_string(),
+    })?;
+    Ok(cap.get_datalink())
+}
+
+/// Libellé lisible d'un type de liaison pour l'UI : description libpcap
+/// (« Ethernet », « Linux cooked v1 »…), sinon nom (« EN10MB »), sinon la
+/// valeur numérique — jamais de valeur inventée.
+pub fn datalink_label(link_type: pcap::Linktype) -> String {
+    link_type
+        .get_description()
+        .or_else(|_| link_type.get_name())
+        .unwrap_or_else(|_| format!("DLT {}", link_type.0))
+}
+
 /// Itère les paquets bruts d'un fichier PCAP/PCAPNG et retourne leur nombre.
 /// Une erreur de lecture en cours de fichier ([`SonarCoreError::PcapRead`])
 /// est distinguée de la fin normale : un fichier tronqué échoue au lieu de

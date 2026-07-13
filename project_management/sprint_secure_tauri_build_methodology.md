@@ -1,5 +1,9 @@
 # Sprint: methodologie de build securise pour application Tauri
 
+> Statut : archivé — méthodologie livrée, écarts d'implémentation transférés
+> Dernière revue : 13/07/2026
+> Suites actives : #94, #146 et #162 en P0 ; #143 et #163 en P1.
+
 ## Objectif
 
 Formaliser une methodologie de build securise pour SONAR et, plus largement,

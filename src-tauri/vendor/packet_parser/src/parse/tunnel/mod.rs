@@ -11,7 +11,7 @@
 //! inside the tunnel.
 //!
 //! This module recognizes a tunnel from the transport layer, peels its
-//! headers, rebuilds an inner [`DataLink`] and lets [`PacketFlow`] re-parse the
+//! headers, exposes an honest inner IEEE 802.11 link layer and lets [`PacketFlow`] re-parse the
 //! encapsulated packet recursively. One wire packet then yields several flow
 //! levels (outer tunnel + inner conversation(s)).
 //!
@@ -22,9 +22,10 @@
 //! [`detect_inner`] the same way.
 
 use super::PacketFlow;
-use super::data_link::DataLink;
 use super::data_link::ethertype::Ethertype;
 use super::data_link::mac_addres::MacAddress;
+use super::link::DecodedLink;
+use super::link_layer::{Ieee80211Link, LinkLayer};
 use super::transport::Transport;
 use super::transport::protocols::TransportProtocol;
 
@@ -56,8 +57,8 @@ pub(crate) fn detect_inner<'a>(
     if transport.protocol == TransportProtocol::Udp
         && (transport.source_port == Some(CAPWAP_DATA_PORT)
             || transport.destination_port == Some(CAPWAP_DATA_PORT))
-        && let Some(inner_dl) = peel_capwap_ieee80211(payload)
-        && let Ok(inner) = PacketFlow::parse_layers(inner_dl, depth + 1)
+        && let Some(inner_link) = peel_capwap_ieee80211(payload)
+        && let Ok(inner) = PacketFlow::parse_decoded(DecodedLink::new(inner_link), depth + 1)
     {
         return Some(("CAPWAP", inner));
     }
@@ -67,7 +68,7 @@ pub(crate) fn detect_inner<'a>(
 
 /// Peels CAPWAP-Data → IEEE 802.11 → LLC/SNAP and returns the inner data-link
 /// layer (802.11 MAC addresses + SNAP EtherType + L3 payload).
-fn peel_capwap_ieee80211(payload: &[u8]) -> Option<DataLink<'_>> {
+fn peel_capwap_ieee80211(payload: &[u8]) -> Option<LinkLayer<'_>> {
     // --- CAPWAP header (RFC 5415) ---
     // Byte 0: preamble = version(4 bits) | type(4 bits). Type 0 = plaintext,
     // type 1 = DTLS (encrypted) → we can't recurse into it.
@@ -86,7 +87,7 @@ fn peel_capwap_ieee80211(payload: &[u8]) -> Option<DataLink<'_>> {
 /// Peels an IEEE 802.11 **data** frame and its LLC/SNAP header into an inner
 /// data-link layer. Handles ToDS/FromDS addressing, the optional Address4
 /// (WDS) and the optional QoS control field.
-fn peel_ieee80211(frame: &[u8]) -> Option<DataLink<'_>> {
+fn peel_ieee80211(frame: &[u8]) -> Option<LinkLayer<'_>> {
     if frame.len() < 24 {
         return None;
     }
@@ -135,13 +136,12 @@ fn peel_ieee80211(frame: &[u8]) -> Option<DataLink<'_>> {
 
     let (ethertype, l3) = peel_llc_snap(&frame[header..])?;
 
-    Some(DataLink {
-        destination_mac: MacAddress(dst.try_into().ok()?),
-        source_mac: MacAddress(src.try_into().ok()?),
-        vlan: None,
-        ethertype: Ethertype(ethertype),
-        payload: l3,
-    })
+    Some(LinkLayer::ieee80211(Ieee80211Link::new(
+        MacAddress(dst.try_into().ok()?),
+        MacAddress(src.try_into().ok()?),
+        Ethertype(ethertype),
+        l3,
+    )))
 }
 
 /// Peels an LLC/SNAP header (DSAP=SSAP=0xAA, control=0x03, OUI=00:00:00) and

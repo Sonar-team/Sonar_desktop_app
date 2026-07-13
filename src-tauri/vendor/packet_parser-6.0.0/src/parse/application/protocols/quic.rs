@@ -1,0 +1,727 @@
+// Copyright (c) 2026 Cyprien Avico avicocyprien@yahoo.com
+//
+// Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
+use crate::{
+    checks::application::quic::{
+        QuicCursor, validate_fixed_bit, validate_length_field, validate_long_header,
+        validate_payload_available, validate_version,
+    },
+    errors::application::quic::QuicError,
+};
+
+#[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
+/// QUIC Long Header Packet
+///
+/// ```mermaid
+/// ---
+/// title: QuicPacket
+/// ---
+/// packet-beta
+/// 0-0: "Header Form u1"
+/// 1-1: "Fixed Bit u1"
+/// 2-3: "Long Packet Type u2"
+/// 4-5: "Reserved u2"
+/// 6-7: "Packet Number Length u2"
+/// 8-39: "Version u32"
+/// 40-47: "DCID Length u8"
+/// 48-207: "Destination Connection ID variable"
+/// 208-215: "SCID Length u8"
+/// 216-375: "Source Connection ID variable"
+/// 376-439: "Token / Length / Packet Number / Payload variable"
+/// ```
+///
+/// Modélisation minimale d'un paquet QUIC v1 (RFC 9000/9001) avec Long Header:
+/// couvre `Initial` et `Handshake`, ainsi que quelques frames fréquentes.
+///
+/// Le parsing est zero-copy : `token`, les Connection IDs et le payload sont
+/// des slices empruntées (`&'a [u8]`) au paquet original.
+///
+/// Remarques :
+/// - Un paquet `Initial` peut contenir un Token.
+/// - Un paquet `Handshake` n'a pas de Token.
+/// - Le champ `length` du Long Header inclut PN + payload chiffré (frames).
+/// - Le `packet_number` est encodé sur 1..=4 octets ; on expose ici la longueur et la valeur étendue.
+/// - Les frames peuvent rester chiffrées selon le contexte ; si tu ne déchiffres pas,
+///   utilise `QuicPayload::EncryptedPayload(&'a [u8])`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum QuicPacket<'a> {
+    /// Paquet QUIC avec Long Header de type Initial (Packet Type = 0x00)
+    Initial {
+        /// Entête Long Header commun.
+        header: QuicLongHeader<'a>,
+        /// Jeton fourni/retourné par le serveur (anti-DoS, address validation).
+        token: &'a [u8],
+        /// Liste des frames décodées (si déchiffrement réussi) ou charge brute.
+        payload: QuicPayload<'a>,
+    },
+    /// Paquet QUIC avec Long Header de type Handshake (Packet Type = 0x02)
+    Handshake {
+        /// Entête Long Header commun.
+        header: QuicLongHeader<'a>,
+        /// Liste des frames décodées (si déchiffrement réussi) ou charge brute.
+        payload: QuicPayload<'a>,
+    },
+    /// Autres Long Headers (0-RTT, Retry) si besoin plus tard.
+    OtherLong {
+        header: QuicLongHeader<'a>,
+        payload: QuicPayload<'a>,
+    },
+}
+
+/// Entête commun aux paquets QUIC à Long Header.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct QuicLongHeader<'a> {
+    /// Doit valoir 1 pour Long Header.
+    pub header_form_long: bool,
+    /// Bit fixé à 1 par la spec.
+    pub fixed_bit: bool,
+    /// Type de paquet (Initial, 0-RTT, Handshake, Retry).
+    pub packet_type: QuicPacketType,
+    /// Version QUIC (ex: 0x00000001 pour QUIC v1).
+    pub version: u32,
+    /// Destination Connection ID (DCID).
+    pub dcid: ConnectionId<'a>,
+    /// Source Connection ID (SCID).
+    pub scid: ConnectionId<'a>,
+    /// Longueur du champ `packet_number` en octets (1..=4).
+    pub pn_length: u8,
+    /// Longueur (varint) annoncée pour PN + payload chiffré.
+    pub length_field: u64,
+    /// Numéro de paquet reconstruit (valeur étendue), si PN decoding dispo.
+    pub packet_number: Option<u64>,
+}
+
+/// Type de paquet Long Header.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QuicPacketType {
+    Initial,
+    ZeroRtt,
+    Handshake,
+    Retry,
+    Unknown(u8),
+}
+
+/// Connection ID générique (0..=20 octets courants, mais extensible).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ConnectionId<'a> {
+    /// Longueur du CID (0..=20 dans ta capture).
+    pub len: u8,
+    /// Octets du CID (slice empruntée au paquet).
+    pub bytes: &'a [u8],
+}
+
+/// Charge utile d’un paquet QUIC une fois l’entête parsé.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum QuicPayload<'a> {
+    /// Ensemble de frames décodées (après déchiffrement).
+    Frames(Vec<QuicFrame<'a>>),
+    /// Payload encore chiffré ou non interprété (slice empruntée au paquet).
+    EncryptedPayload(&'a [u8]),
+}
+
+/// Ensemble minimal de frames QUIC utiles au handshake.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum QuicFrame<'a> {
+    /// Frame ACK (RFC 9000 §19.3)
+    Ack(AckFrame),
+    /// Frame CRYPTO (RFC 9001 §4) — transporte les enregistrements TLS 1.3.
+    Crypto(CryptoFrame<'a>),
+    /// PADDING (0x00)
+    Padding { length: u64 },
+    /// PING (0x01)
+    Ping,
+    /// Autre type de frame non gérée ici.
+    Unknown { frame_type: u64, raw: &'a [u8] },
+}
+
+/// Frame ACK (schéma simplifié : first range + ranges supplémentaires).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AckFrame {
+    /// Plus grand numéro de paquet accusé de réception.
+    pub largest_acknowledged: u64,
+    /// Délai d’ACK en microsecondes (valeur QUIC encodée en exponentiel; ici post-décodée).
+    pub ack_delay_us: u64,
+    /// Nombre de ranges additionnels (peut être 0).
+    pub ack_range_count: u64,
+    /// Premier intervalle (taille du range commençant à `largest_acknowledged`).
+    pub first_ack_range: u64,
+    /// Ranges additionnels : (gap, ack_range_len)
+    pub additional_ranges: Vec<AckRange>,
+}
+
+/// Un intervalle d’ACK supplémentaire (gap + longueur du range).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AckRange {
+    /// Ecart (paquets non accusés) avant le prochain range.
+    pub gap: u64,
+    /// Taille du range suivant.
+    pub ack_range_len: u64,
+}
+
+/// Frame CRYPTO : transporte des fragments TLS 1.3 (ClientHello, ServerHello, etc.).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CryptoFrame<'a> {
+    /// Offset dans le flux CRYPTO (peut arriver en fragments).
+    pub offset: u64,
+    /// Taille des données (facultatif si `data.len()` suffit).
+    pub length: u64,
+    /// Données TLS (potentiellement fragmentées) — slice empruntée au paquet.
+    pub data: &'a [u8],
+}
+
+/// Lit un Connection ID (longueur u8 + octets) sans copie.
+fn read_cid<'a>(cur: &mut QuicCursor<'a>) -> Result<ConnectionId<'a>, QuicError> {
+    let len = cur.take_u8()?;
+    let bytes = cur.take(len as usize)?;
+    Ok(ConnectionId { len, bytes })
+}
+
+/// Lit Length (varint), Packet Number puis le payload chiffré.
+///
+/// Remplit `length_field` et `packet_number` dans le header et retourne
+/// le payload emprunté (Length - PN length octets).
+fn read_pn_and_payload<'a>(
+    cur: &mut QuicCursor<'a>,
+    header: &mut QuicLongHeader<'a>,
+) -> Result<&'a [u8], QuicError> {
+    let length_field = cur.read_varint()?;
+    header.length_field = length_field;
+
+    // PN (1..=4 octets big-endian)
+    let pn_raw = cur.take(header.pn_length as usize)?;
+    let mut pn: u64 = 0;
+    for &b in pn_raw {
+        pn = (pn << 8) | (b as u64);
+    }
+    header.packet_number = Some(pn);
+
+    // Payload (length_field inclut PN + payload)
+    let payload_len = validate_length_field(length_field, header.pn_length)?;
+    validate_payload_available(cur.remaining(), payload_len)?;
+    cur.take(payload_len)
+}
+
+impl<'a> TryFrom<&'a [u8]> for QuicPacket<'a> {
+    type Error = QuicError;
+
+    fn try_from(buf: &'a [u8]) -> Result<Self, Self::Error> {
+        let mut cur = QuicCursor::new(buf);
+
+        // 1) Octet 0 : Long Header bits
+        let b0 = cur.take_u8()?;
+
+        let header_form_long = (b0 & 0b1000_0000) != 0;
+        validate_long_header(header_form_long)?;
+
+        let fixed_bit = (b0 & 0b0100_0000) != 0;
+        validate_fixed_bit(fixed_bit)?;
+
+        let lptype = (b0 >> 4) & 0b11; // Long Packet Type (2 bits)
+        let _reserved = (b0 >> 2) & 0b11; // reserved
+        let pn_len_code = b0 & 0b11; // PN length code
+        let pn_length = pn_len_code + 1; // 1..=4
+
+        let packet_type = match lptype {
+            0 => QuicPacketType::Initial,
+            1 => QuicPacketType::ZeroRtt,
+            2 => QuicPacketType::Handshake,
+            3 => QuicPacketType::Retry,
+            x => QuicPacketType::Unknown(x),
+        };
+
+        // 2) Version
+        let ver_bytes = cur.take(4)?;
+        let version = u32::from_be_bytes([ver_bytes[0], ver_bytes[1], ver_bytes[2], ver_bytes[3]]);
+        validate_version(version)?;
+
+        // 3) DCID / SCID
+        let dcid = read_cid(&mut cur)?;
+        let scid = read_cid(&mut cur)?;
+
+        // 4) En-tête commun assemblé (length_field/pn/… à compléter après)
+        let mut header = QuicLongHeader {
+            header_form_long,
+            fixed_bit,
+            packet_type,
+            version,
+            dcid,
+            scid,
+            pn_length,
+            length_field: 0,     // placeholder, on remplit après
+            packet_number: None, // idem
+        };
+
+        // 5) Champs spécifiques selon type
+        match packet_type {
+            QuicPacketType::Initial => {
+                // Token Length (varint) + Token
+                let token_len = cur.read_varint()? as usize;
+                let token = cur.take(token_len)?;
+
+                let payload = read_pn_and_payload(&mut cur, &mut header)?;
+
+                Ok(QuicPacket::Initial {
+                    header,
+                    token,
+                    payload: QuicPayload::EncryptedPayload(payload),
+                })
+            }
+
+            QuicPacketType::Handshake => {
+                // Pas de Token, directement Length (varint)
+                let payload = read_pn_and_payload(&mut cur, &mut header)?;
+
+                Ok(QuicPacket::Handshake {
+                    header,
+                    payload: QuicPayload::EncryptedPayload(payload),
+                })
+            }
+
+            QuicPacketType::ZeroRtt => {
+                // Length (varint), PN, payload (non déchiffré ici)
+                let payload = read_pn_and_payload(&mut cur, &mut header)?;
+
+                Ok(QuicPacket::OtherLong {
+                    header,
+                    payload: QuicPayload::EncryptedPayload(payload),
+                })
+            }
+
+            QuicPacketType::Retry => {
+                // Retry a un format spécifique (pas de Length ni PN).
+                // On met tout le reste en payload brut.
+                let rest = cur.take_rest();
+                Ok(QuicPacket::OtherLong {
+                    header,
+                    payload: QuicPayload::EncryptedPayload(rest),
+                })
+            }
+
+            QuicPacketType::Unknown(_t) => {
+                // Tentative générique: Length (varint) si possible, sinon tout en brut
+                let mut snapshot = cur;
+                match read_pn_and_payload(&mut cur, &mut header) {
+                    Ok(payload) => Ok(QuicPacket::OtherLong {
+                        header,
+                        payload: QuicPayload::EncryptedPayload(payload),
+                    }),
+                    Err(_) => {
+                        // pas de varint/PN plausible, tout en brut
+                        let rest = snapshot.take_rest();
+                        Ok(QuicPacket::OtherLong {
+                            header,
+                            payload: QuicPayload::EncryptedPayload(rest),
+                        })
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // -------- Tests --------
+
+    #[test]
+    fn test_valid_quic_initial_minimal() {
+        // construit un QUIC Initial minimal (comme tes autres tests),
+        // pas besoin ETH/IPv6/UDP pour l’instant.
+        let mut buf = Vec::new();
+        buf.push(0xC0); // Long=1, Fixed=1, Initial, PN len=1
+        buf.extend_from_slice(&0x00000001u32.to_be_bytes());
+        buf.push(0); // dcid len
+        buf.push(0); // scid len
+        buf.push(0x00); // token len = 0
+        buf.push(0x01); // length = 1 (PN seul)
+        buf.push(0x00); // PN
+
+        let pkt = QuicPacket::try_from(buf.as_slice()).expect("must parse");
+        match pkt {
+            QuicPacket::Initial {
+                header,
+                token,
+                payload,
+            } => {
+                assert_eq!(header.version, 1);
+                assert!(token.is_empty());
+                assert!(matches!(payload, QuicPayload::EncryptedPayload(v) if v.is_empty()));
+            }
+            _ => panic!("expected Initial"),
+        }
+    }
+
+    #[test]
+    fn test_error_short_buffer() {
+        let buf = [0xC0u8]; // beaucoup trop court
+        let res = QuicPacket::try_from(&buf[..]);
+        assert!(matches!(res, Err(QuicError::Truncated { .. })));
+    }
+
+    #[test]
+    fn test_error_not_long_header() {
+        // MSB = 0 → Short Header → notre parseur Long Header doit refuser
+        // 0x40 = 0100_0000 (fixed bit = 1, mais header_form_long = 0)
+        let mut buf = Vec::new();
+        buf.push(0x40);
+        buf.extend_from_slice(&0x00000001u32.to_be_bytes()); // version (ne sera pas lu)
+        buf.push(0); // dcid len
+        buf.push(0); // scid len
+        let res = QuicPacket::try_from(buf.as_slice());
+        assert!(matches!(res, Err(QuicError::NotLongHeader)));
+    }
+
+    #[test]
+    fn test_error_fixed_bit_zero() {
+        // Long Header (MSB=1) mais fixed bit = 0 → doit échouer
+        // 1000_0000 = 0x80 : header_form_long=1, fixed=0, type=00, pnlen=00
+        let mut buf = Vec::new();
+        buf.push(0x80);
+        buf.extend_from_slice(&0x00000001u32.to_be_bytes()); // version
+        buf.push(0); // dcid len
+        buf.push(0); // scid len
+        // Pour Initial: token_len=0 varint (0x00)
+        buf.push(0x00);
+        // length varint: 1 (PN seul)
+        buf.push(0x01);
+        // PN sur 1 octet (pn_length=1 via b0=0x80 -> pn_len_code=0 -> 1)
+        buf.push(0x00);
+        let res = QuicPacket::try_from(buf.as_slice());
+        assert!(matches!(res, Err(QuicError::FixedBitNotSet)));
+    }
+
+    #[test]
+    fn test_error_truncated_payload_length() {
+        // Construire un Initial valide en apparence mais avec length trop grand
+        // b0: 1100_0000 = 0xC0 (Long=1, Fixed=1, Type=Initial(00), PN len code=00 -> 1 octet)
+        let mut buf = Vec::new();
+        buf.push(0xC0);
+        // version v1
+        buf.extend_from_slice(&0x00000001u32.to_be_bytes());
+        // dcid/scid vides
+        buf.push(0); // dcid len
+        buf.push(0); // scid len
+        // token_len = 0 (varint 1o)
+        buf.push(0x00);
+        // length = 5 (varint 1o) => PN(1) + payload(4) attendus
+        buf.push(0x05);
+        // PN (1 octet)
+        buf.push(0xAA);
+        // MAIS on ne met que 2 octets de payload au lieu de 4 → doit échouer
+        buf.extend_from_slice(&[0x01, 0x02]);
+
+        let res = QuicPacket::try_from(buf.as_slice());
+        assert!(matches!(
+            res,
+            Err(QuicError::PayloadTooShort {
+                expected: 4,
+                available: 2
+            })
+        ));
+    }
+
+    #[test]
+    fn test_initial_pkn_1_ack() {
+        let bytes = hex::decode(
+            "c4000000010008f409517248c4ab52004016dae7c01a42788f5049396532534a03ae8ebd63bf94e4",
+        )
+        .expect("Invalid hex string");
+
+        let parsed = QuicPacket::try_from(bytes.as_slice()).expect("must parse");
+
+        match parsed {
+            QuicPacket::Initial {
+                header,
+                token,
+                payload,
+            } => {
+                // Header bits
+                assert!(header.header_form_long);
+                assert!(header.fixed_bit);
+
+                // Type / version
+                assert!(matches!(header.packet_type, QuicPacketType::Initial));
+                assert_eq!(header.version, 1);
+
+                // DCID / SCID
+                assert_eq!(header.dcid.len, 0);
+                assert!(header.dcid.bytes.is_empty());
+
+                assert_eq!(header.scid.len, 8);
+                assert_eq!(
+                    header.scid.bytes,
+                    hex::decode("f409517248c4ab52").unwrap().as_slice()
+                );
+
+                // Token
+                assert!(token.is_empty());
+
+                // Length field (PN + payload chiffré)
+                assert_eq!(header.length_field, 22);
+                assert_eq!(header.pn_length, 1);
+
+                // IMPORTANT: ici tu lis le PN "protégé" (pas celui affiché par Wireshark)
+                assert_eq!(header.packet_number, Some(0xDA));
+
+                // Payload (22 - 1 = 21 bytes)
+                match payload {
+                    QuicPayload::EncryptedPayload(v) => {
+                        assert_eq!(
+                            v,
+                            hex::decode("e7c01a42788f5049396532534a03ae8ebd63bf94e4")
+                                .unwrap()
+                                .as_slice()
+                        );
+                    }
+                    _ => panic!("expected EncryptedPayload"),
+                }
+            }
+            _ => panic!("expected Initial"),
+        }
+    }
+}
+
+#[cfg(test)]
+mod extra_tests {
+    use super::*;
+
+    /// En-tête long commun : version 1, DCID de 2 octets, SCID vide.
+    fn long_header(first_byte: u8) -> Vec<u8> {
+        let mut buf = vec![first_byte];
+        buf.extend_from_slice(&1u32.to_be_bytes()); // version 1
+        buf.push(2); // dcid len
+        buf.extend_from_slice(&[0xAA, 0xBB]);
+        buf.push(0); // scid len
+        buf
+    }
+
+    #[test]
+    fn parses_initial_with_token_and_payload() {
+        let mut buf = long_header(0xC1); // Initial, PN len 2
+        buf.push(3); // token len
+        buf.extend_from_slice(&[1, 2, 3]);
+        buf.push(6); // length = PN(2) + payload(4)
+        buf.extend_from_slice(&[0x00, 0x07]); // PN = 7
+        buf.extend_from_slice(&[0xDE, 0xAD, 0xBE, 0xEF]);
+
+        let packet = QuicPacket::try_from(buf.as_slice()).expect("Initial valide");
+        match packet {
+            QuicPacket::Initial {
+                header,
+                token,
+                payload,
+            } => {
+                assert_eq!(header.version, 1);
+                assert_eq!(header.dcid.bytes, &[0xAA, 0xBB]);
+                assert_eq!(header.pn_length, 2);
+                assert_eq!(header.packet_number, Some(7));
+                assert_eq!(header.length_field, 6);
+                assert_eq!(token, &[1, 2, 3]);
+                assert!(matches!(
+                    payload,
+                    QuicPayload::EncryptedPayload(b) if b == [0xDE, 0xAD, 0xBE, 0xEF]
+                ));
+            }
+            other => panic!("attendu Initial, obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_handshake_packet() {
+        let mut buf = long_header(0xE0); // Handshake, PN len 1
+        buf.push(3); // length = PN(1) + payload(2)
+        buf.push(0x09); // PN
+        buf.extend_from_slice(&[0x01, 0x02]);
+
+        let packet = QuicPacket::try_from(buf.as_slice()).expect("Handshake valide");
+        match packet {
+            QuicPacket::Handshake { header, payload } => {
+                assert_eq!(header.packet_number, Some(9));
+                assert!(matches!(
+                    payload,
+                    QuicPayload::EncryptedPayload(b) if b == [0x01, 0x02]
+                ));
+            }
+            other => panic!("attendu Handshake, obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_zero_rtt_packet() {
+        let mut buf = long_header(0xD0); // 0-RTT, PN len 1
+        buf.push(2); // length = PN(1) + payload(1)
+        buf.push(0x01); // PN
+        buf.push(0xFF);
+
+        let packet = QuicPacket::try_from(buf.as_slice()).expect("0-RTT valide");
+        assert!(matches!(packet, QuicPacket::OtherLong { .. }));
+    }
+
+    #[test]
+    fn parses_retry_packet() {
+        let mut buf = long_header(0xF0); // Retry
+        buf.extend_from_slice(&[0x11, 0x22, 0x33]); // token + integrity tag bruts
+
+        let packet = QuicPacket::try_from(buf.as_slice()).expect("Retry valide");
+        match packet {
+            QuicPacket::OtherLong { header, payload } => {
+                assert!(matches!(header.packet_type, QuicPacketType::Retry));
+                assert!(matches!(
+                    payload,
+                    QuicPayload::EncryptedPayload(b) if b == [0x11, 0x22, 0x33]
+                ));
+            }
+            other => panic!("attendu OtherLong, obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_two_byte_varint_token_length() {
+        let mut buf = long_header(0xC0); // Initial, PN len 1
+        buf.extend_from_slice(&[0x40, 0x02]); // token len = 2 en varint 2 octets
+        buf.extend_from_slice(&[0xCA, 0xFE]);
+        buf.push(1); // length = PN seul
+        buf.push(0x00); // PN
+
+        let packet = QuicPacket::try_from(buf.as_slice()).expect("varint 2 octets valide");
+        match packet {
+            QuicPacket::Initial { token, .. } => assert_eq!(token, &[0xCA, 0xFE]),
+            other => panic!("attendu Initial, obtenu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn zero_copy_payload_points_into_input() {
+        // Le payload retourné doit être une sous-slice du buffer d'entrée,
+        // pas une copie.
+        let mut buf = long_header(0xE0); // Handshake, PN len 1
+        buf.push(3); // length = PN(1) + payload(2)
+        buf.push(0x09); // PN
+        buf.extend_from_slice(&[0x01, 0x02]);
+
+        let packet = QuicPacket::try_from(buf.as_slice()).expect("Handshake valide");
+        let QuicPacket::Handshake {
+            payload: QuicPayload::EncryptedPayload(p),
+            ..
+        } = packet
+        else {
+            panic!("attendu Handshake");
+        };
+        let input_range = buf.as_ptr() as usize..buf.as_ptr() as usize + buf.len();
+        assert!(input_range.contains(&(p.as_ptr() as usize)));
+    }
+
+    #[test]
+    fn rejects_invalid_packets() {
+        // buffer vide
+        assert!(QuicPacket::try_from(&[][..]).is_err());
+        // header court (short header)
+        assert!(QuicPacket::try_from(&[0x40u8, 0, 0, 0, 1][..]).is_err());
+        // fixed bit absent
+        assert!(QuicPacket::try_from(&[0x80u8, 0, 0, 0, 1][..]).is_err());
+        // version inconnue
+        let mut buf = vec![0xC0];
+        buf.extend_from_slice(&2u32.to_be_bytes());
+        buf.extend_from_slice(&[0, 0]);
+        assert!(matches!(
+            QuicPacket::try_from(buf.as_slice()),
+            Err(QuicError::UnsupportedVersion(2))
+        ));
+        // tronqué au milieu du DCID
+        let mut buf = vec![0xC0];
+        buf.extend_from_slice(&1u32.to_be_bytes());
+        buf.push(8); // dcid len 8 mais rien derrière
+        assert!(matches!(
+            QuicPacket::try_from(buf.as_slice()),
+            Err(QuicError::Truncated {
+                needed: 8,
+                remaining: 0
+            })
+        ));
+    }
+
+    #[test]
+    fn rejects_truncated_long_header() {
+        // Version coupée en plein milieu (2 octets sur 4).
+        let buf = [0xC0u8, 0x00, 0x00];
+        assert!(matches!(
+            QuicPacket::try_from(&buf[..]),
+            Err(QuicError::Truncated {
+                needed: 4,
+                remaining: 2
+            })
+        ));
+    }
+
+    #[test]
+    fn rejects_token_length_beyond_buffer() {
+        let mut buf = long_header(0xC0); // Initial, PN len 1
+        buf.push(0x20); // token len = 32 mais seulement 2 octets derrière
+        buf.extend_from_slice(&[0x01, 0x02]);
+        assert!(matches!(
+            QuicPacket::try_from(buf.as_slice()),
+            Err(QuicError::Truncated {
+                needed: 32,
+                remaining: 2
+            })
+        ));
+    }
+
+    #[test]
+    fn rejects_truncated_varint_token_length() {
+        let mut buf = long_header(0xC0); // Initial, PN len 1
+        buf.push(0x80); // varint 4 octets annoncé, mais buffer fini
+        assert!(matches!(
+            QuicPacket::try_from(buf.as_slice()),
+            Err(QuicError::TruncatedVarint {
+                needed: 3,
+                remaining: 0
+            })
+        ));
+    }
+
+    #[test]
+    fn rejects_truncated_packet_number() {
+        // PN len 4 annoncé mais un seul octet disponible après Length.
+        let mut buf = long_header(0xE3); // Handshake, PN len 4
+        buf.push(5); // length = PN(4) + payload(1)
+        buf.push(0xAA); // un seul octet de PN
+        assert!(matches!(
+            QuicPacket::try_from(buf.as_slice()),
+            Err(QuicError::Truncated {
+                needed: 4,
+                remaining: 1
+            })
+        ));
+    }
+
+    #[test]
+    fn rejects_length_field_smaller_than_pn() {
+        let mut buf = long_header(0xC1); // PN len 2
+        buf.push(0); // token len 0
+        buf.push(1); // length 1 < pn_length 2
+        buf.extend_from_slice(&[0x00, 0x01]);
+        assert!(matches!(
+            QuicPacket::try_from(buf.as_slice()),
+            Err(QuicError::LengthFieldTooSmall {
+                length_field: 1,
+                pn_length: 2
+            })
+        ));
+    }
+
+    #[test]
+    fn rejects_payload_shorter_than_length_field() {
+        let mut buf = long_header(0xE0);
+        buf.push(10); // length = 10 mais un seul octet dispo
+        buf.push(0x00);
+        assert!(matches!(
+            QuicPacket::try_from(buf.as_slice()),
+            Err(QuicError::PayloadTooShort { .. })
+        ));
+    }
+}

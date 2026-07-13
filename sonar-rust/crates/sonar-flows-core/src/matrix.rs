@@ -10,10 +10,10 @@ use std::time::SystemTime;
 
 use log::info;
 use packet_parser::IpType;
-use packet_parser::owned::{
-    ApplicationOwned, DataLinkOwned, InternetOwned, PacketFlowOwned, TransportOwned,
-};
+use packet_parser::owned::{ApplicationOwned, InternetOwned, PacketFlowOwned, TransportOwned};
 use packet_parser::parse::data_link::{ethertype::Ethertype, vlan_tag::VlanTag};
+
+use crate::link::LinkView;
 use serde::{Deserialize, Serialize};
 
 /// Vrai pour les IP « non spécifiées »/broadcast qui ne désignent pas un
@@ -315,6 +315,7 @@ impl FlowMatrix {
                 (flow, encap_id, origin, stats)
             })
             .map(|(flow, encap_id, origin, stats)| {
+                let link = LinkView::of(&flow.data_link);
                 let ip_source = flow
                     .internet
                     .as_ref()
@@ -327,7 +328,7 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_source_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
-                let label_source = self.get_label(&flow.data_link.source_mac, &ip_source);
+                let label_source = self.get_label(&link.source_mac, &ip_source);
 
                 let ip_destination = flow
                     .internet
@@ -341,8 +342,7 @@ impl FlowMatrix {
                     .and_then(|i| i.ip_destination_type.clone())
                     .map(|ip| ip.to_string())
                     .unwrap_or_default();
-                let label_destination =
-                    self.get_label(&flow.data_link.destination_mac, &ip_destination);
+                let label_destination = self.get_label(&link.destination_mac, &ip_destination);
 
                 // Microsecondes et fuseau explicites : deux captures ne se
                 // distinguent plus à la seconde près et la date est
@@ -359,10 +359,10 @@ impl FlowMatrix {
                 };
 
                 FlowMatrixRow {
-                    mac_source: flow.data_link.source_mac.clone(),
-                    mac_destination: flow.data_link.destination_mac.clone(),
-                    vlan_id: flow.data_link.vlan.as_ref().map(|v| v.id),
-                    protocol_data_link: flow.data_link.ethertype.clone(),
+                    mac_source: link.source_mac,
+                    mac_destination: link.destination_mac,
+                    vlan_id: link.vlan_id,
+                    protocol_data_link: link.protocol,
                     ip_source,
                     ip_source_type,
                     label_source: label_source.map(|l| escape_formula_cell(&l)),
@@ -475,9 +475,10 @@ impl FlowMatrix {
                 .map(|ip| ip.to_string())
                 .unwrap_or_default();
 
+            let link = LinkView::of(&flow.data_link);
             for (mac, ip) in [
-                (&flow.data_link.source_mac, &src_ip),
-                (&flow.data_link.destination_mac, &dst_ip),
+                (&link.source_mac, &src_ip),
+                (&link.destination_mac, &dst_ip),
             ] {
                 if !mac.is_empty()
                     && !ip.is_empty()
@@ -721,6 +722,27 @@ impl FlowMatrixRow {
         if !last_seen.is_empty() && last_seen != "N/A" {
             parse_last_seen(last_seen).map_err(|e| format!("last_seen : {e}"))?;
         }
+        // Depuis packet_parser 7 la couche liaison est typée : une MAC ou un
+        // protocole L2 irreprésentables seraient silencieusement dégradés par
+        // `to_flow_and_rows` — on rejette la ligne avec un message précis à
+        // la place (#148). Une MAC vide reste valide (flux sans adresse de
+        // liaison, ex. RAW IP).
+        for (field, value) in [
+            ("mac_source", &self.mac_source),
+            ("mac_destination", &self.mac_destination),
+        ] {
+            if !value.is_empty() && crate::link::mac_from_text(value).is_none() {
+                return Err(format!("{field} invalide : « {value} »"));
+            }
+        }
+        if !self.protocol_data_link.is_empty()
+            && crate::link::ethertype_from_name(&self.protocol_data_link).is_none()
+        {
+            return Err(format!(
+                "protocol_data_link inconnu : « {} » (attendu : nom connu ou « Unknown (0x…) »)",
+                self.protocol_data_link
+            ));
+        }
         Ok(())
     }
 
@@ -766,12 +788,12 @@ impl FlowMatrixRow {
         });
 
         let flow = PacketFlowOwned {
-            data_link: DataLinkOwned {
-                destination_mac: self.mac_destination.clone(),
-                source_mac: self.mac_source.clone(),
-                ethertype: self.protocol_data_link.clone(),
+            data_link: crate::link::ethernet_link_from_text(
+                &self.mac_source,
+                &self.mac_destination,
+                &self.protocol_data_link,
                 vlan,
-            },
+            ),
             internet,
             transport,
             application,
@@ -811,8 +833,9 @@ mod tests {
         FlowMatrix, escape_formula_cell, is_non_unicast_mac, is_placeholder_ip, parse_last_seen,
         unescape_formula_cell,
     };
+    use crate::link::ethernet_link_from_text;
     use crate::packet::CapturedPacketOwned;
-    use packet_parser::owned::{DataLinkOwned, PacketFlowOwned};
+    use packet_parser::owned::PacketFlowOwned;
 
     /// Deux appels sur le même état produisent exactement les mêmes lignes
     /// dans le même ordre : l'export est déterministe (#148).
@@ -821,7 +844,12 @@ mod tests {
         let mut matrix = FlowMatrix::new();
         for i in 0..50u8 {
             let mut pkt = sample_packet(100);
-            pkt.flow.data_link.source_mac = format!("aa:bb:cc:dd:ee:{i:02x}");
+            pkt.flow.data_link = ethernet_link_from_text(
+                &format!("aa:bb:cc:dd:ee:{i:02x}"),
+                "aa:bb:cc:dd:ee:ff",
+                "IPv4",
+                None,
+            );
             matrix.update_flow(&pkt);
         }
 
@@ -892,12 +920,12 @@ mod tests {
             caplen: len,
             len,
             flow: PacketFlowOwned {
-                data_link: DataLinkOwned {
-                    destination_mac: "aa:bb:cc:dd:ee:ff".to_string(),
-                    source_mac: "11:22:33:44:55:66".to_string(),
-                    ethertype: "IPv4".to_string(),
-                    vlan: None,
-                },
+                data_link: ethernet_link_from_text(
+                    "11:22:33:44:55:66",
+                    "aa:bb:cc:dd:ee:ff",
+                    "IPv4",
+                    None,
+                ),
                 internet: None,
                 transport: None,
                 application: None,
@@ -1108,12 +1136,7 @@ mod tests {
             caplen: 100,
             len: 100,
             flow: PacketFlowOwned {
-                data_link: DataLinkOwned {
-                    destination_mac: dst_mac.to_string(),
-                    source_mac: src_mac.to_string(),
-                    ethertype: "IPv4".to_string(),
-                    vlan: None,
-                },
+                data_link: ethernet_link_from_text(src_mac, dst_mac, "IPv4", None),
                 internet: Some(InternetOwned {
                     source_ip: Some(src_ip.parse::<IpAddr>().unwrap()),
                     ip_source_type: Some(IpType::from_ip(src_ip)),

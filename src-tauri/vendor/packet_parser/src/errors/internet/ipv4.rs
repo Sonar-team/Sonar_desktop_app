@@ -23,7 +23,9 @@ pub enum Ipv4Error {
     #[error("Invalid header length: {0} bytes (must be between 20-60 bytes and a multiple of 4)")]
     InvalidHeaderLength(usize),
     /// The total length field is invalid
-    #[error("Invalid total length: expected {expected} bytes (header: {min_header_len} + data: {}), but got {actual} bytes", expected - min_header_len)]
+    // saturating_sub : un Total Length forgé plus petit que l'IHL ne doit pas
+    // faire paniquer le Display (trouvé par fuzzing).
+    #[error("Invalid total length: expected {expected} bytes (header: {min_header_len} + data: {}), but got {actual} bytes", expected.saturating_sub(*min_header_len))]
     InvalidTotalLength {
         /// The expected total length from the header
         expected: usize,
@@ -89,6 +91,18 @@ mod tests {
         assert_eq!(
             err.to_string(),
             "Invalid total length: expected 100 bytes (header: 20 + data: 80), but got 50 bytes"
+        );
+
+        // Total Length forgé plus petit que l'IHL : le Display ne doit pas
+        // paniquer par underflow (crash trouvé par fuzzing).
+        let err = Ipv4Error::InvalidTotalLength {
+            expected: 0,
+            actual: 50,
+            min_header_len: 44,
+        };
+        assert_eq!(
+            err.to_string(),
+            "Invalid total length: expected 0 bytes (header: 44 + data: 0), but got 50 bytes"
         );
 
         let err = Ipv4Error::InvalidChecksum {
