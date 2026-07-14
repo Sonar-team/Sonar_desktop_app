@@ -72,22 +72,26 @@ fn read_matrix_rows_from_files(
 
 fn rebuild_matrix_and_graph_from_rows(
     rows: &[FlowMatrixRow],
+    link_type: packet_parser::LinkType,
     label_store: &LabelStore,
     matrice: &mut FlowMatrix,
     graph: &mut GraphData,
 ) -> Result<(), CaptureStateError> {
     matrice.clear();
     graph.clear();
+    matrice.link_type = Some(link_type);
 
     // Labels du store courant, puis ceux portés par les fichiers (prioritaires
     // à clé égale puisque appliqués après) ; fusion des flux tunnel par tunnel
     // et provenance accumulée par le cœur partagé.
     copy_labels_to_matrix(label_store, matrice)?;
     apply_row_labels(matrice, rows);
-    merge_rows(matrice, rows);
+    merge_rows(matrice, rows, link_type)?;
 
     for row in rows {
-        let (flow, tunnel_rows) = row.to_flow_and_rows();
+        let (flow, tunnel_rows) = row
+            .to_flow_and_rows(link_type)
+            .map_err(sonar_flows_core::SonarCoreError::InvalidMatrixRow)?;
         let encap_ids: Vec<u64> = tunnel_rows.iter().filter_map(|(id, _)| *id).collect();
 
         let source_label = matrice.get_label(&row.mac_source, &row.ip_source);
@@ -187,13 +191,11 @@ pub fn import_matrix_files(
 
     rebuild_matrix_and_graph_from_rows(
         &rows,
+        link_type,
         &label_store_guard,
         &mut matrice_guard,
         &mut graph_guard,
     )?;
-    // Le relevé reconstruit porte le DLT commun des fichiers importés (le
-    // rebuild passe par `clear()`, qui l'avait remis à zéro).
-    matrice_guard.link_type = Some(link_type);
 
     info!(
         "[import_matrix_files] {} fichier(s), {} ligne(s) importée(s) -> {} flux fusionné(s), {} nœuds, {} arêtes",
@@ -262,12 +264,57 @@ mod tests {
 
     /// Reproduit la construction de `import_matrix_file` (labels puis flux).
     fn build_matrix_and_graph(rows: &[FlowMatrixRow]) -> (FlowMatrix, GraphData) {
+        build_matrix_and_graph_for_link_type(rows, packet_parser::LinkType::ETHERNET)
+    }
+
+    fn build_matrix_and_graph_for_link_type(
+        rows: &[FlowMatrixRow],
+        link_type: packet_parser::LinkType,
+    ) -> (FlowMatrix, GraphData) {
         let mut matrix = FlowMatrix::new();
         let mut graph = GraphData::new();
         let label_store = LabelStore::new();
-        rebuild_matrix_and_graph_from_rows(rows, &label_store, &mut matrix, &mut graph).unwrap();
+        rebuild_matrix_and_graph_from_rows(rows, link_type, &label_store, &mut matrix, &mut graph)
+            .unwrap();
 
         (matrix, graph)
+    }
+
+    /// L'adaptateur desktop transmet le DLT du préambule à la matrice ET au
+    /// graphe : un CSV SLL ne doit jamais être reconstruit comme Ethernet.
+    #[test]
+    fn sll_matrix_rebuild_keeps_typed_keys_and_graph() {
+        let rows = read_matrix_rows(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("test_files/20260703_NP_Matrice.csv")
+                .to_str()
+                .unwrap(),
+        )
+        .unwrap();
+        let mut row = rows
+            .into_iter()
+            .find(|row| {
+                !row.ip_source.is_empty()
+                    && !row.ip_destination.is_empty()
+                    && sonar_flows_core::link::cooked_protocol_from_text(&row.protocol_data_link)
+                        .is_some()
+            })
+            .expect("la fixture contient un flux IP");
+        row.mac_destination.clear();
+        row.vlan_id = None;
+
+        let (matrix, graph) =
+            build_matrix_and_graph_for_link_type(&[row], packet_parser::LinkType::LINUX_SLL);
+
+        assert_eq!(matrix.link_type, Some(packet_parser::LinkType::LINUX_SLL));
+        assert!(
+            matrix
+                .matrix
+                .keys()
+                .all(|flow| { flow.data_link.link_type() == packet_parser::LinkType::LINUX_SLL })
+        );
+        assert!(!graph.nodes.is_empty());
+        assert!(!graph.edges.is_empty());
     }
 
     #[test]
@@ -286,7 +333,9 @@ mod tests {
         duplicate.last_seen = "2099-01-01 00:00:00".to_string();
         rows.push(duplicate);
 
-        let (flow, _tunnel_rows) = rows[0].to_flow_and_rows();
+        let (flow, _tunnel_rows) = rows[0]
+            .to_flow_and_rows(packet_parser::LinkType::ETHERNET)
+            .unwrap();
         let (matrix, graph) = build_matrix_and_graph(&rows);
         let entries = matrix.matrix.get(&flow).unwrap();
         let merged_count: u64 = entries.iter().map(|(_, stats)| stats.count).sum();

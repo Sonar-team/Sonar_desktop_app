@@ -1,6 +1,6 @@
 # Backlog SONAR — de la bêta avancée au produit Pro
 
-> Dernière synchronisation GitHub : 14/07/2026
+> Dernière synchronisation GitHub : 15/07/2026
 > Source : audit complet bêta → pro du 13/07/2026
 > Règle : les issues GitHub sont la source de vérité ; ce fichier fournit la
 > priorité et l'ordre d'exécution. `sprint.md` décrit uniquement le sprint actif.
@@ -28,7 +28,7 @@ Suivi : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 - [x] **P0** [#87](https://github.com/Sonar-team/Sonar_desktop_app/issues/87) — reproduire l'import infini ou le fermer avec preuve et test *(fermée le 14/07, non reproductible avec preuves ; reliquat UI dans #161)*
 - [ ] **P0** [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) — supprimer les skips silencieux, puis construire le corpus complet *(skips supprimés le 14/07 — corpus nDPI + PCAPNG forgés ; reste le fuzzing)*
 - [x] **P0** [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) — réserver atomiquement l'état `Importing` pendant toute conversion *(fait le 14/07)*
-- [ ] **P0** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — détecter le DLT et comptabiliser exhaustivement les résultats de parsing *(15/07 : rapport qualité visible — ne reste que le réimport SLL, bloqué par arbitrage)*
+- [x] **P0** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — détecter le DLT et comptabiliser exhaustivement les résultats de parsing *(15/07 : rapport qualité visible ; identité RAW/SLL/SLL2 réimportable sans `link_details`, fusion multi-sondes préservée)*
 - [x] **P0** [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) — ne perdre aucun paquet accepté à l'arrêt ou au plafond de flux *(fait le 14/07)*
 - [ ] **P0** [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) — générer et tester le contrat IPC Rust ↔ TypeScript *(15/07 : erreurs + Stats générés, gate CI ; restent les événements complexes)*
 - [ ] **P0** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée par site, capteur, interface et VLAN

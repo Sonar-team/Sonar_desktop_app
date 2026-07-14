@@ -9,11 +9,13 @@ use std::net::IpAddr;
 use std::time::SystemTime;
 
 use log::info;
-use packet_parser::IpType;
 use packet_parser::owned::{ApplicationOwned, InternetOwned, PacketFlowOwned, TransportOwned};
 use packet_parser::parse::data_link::{ethertype::Ethertype, vlan_tag::VlanTag};
+use packet_parser::{IpType, LinkType};
 
-use crate::link::LinkView;
+use crate::link::{
+    LinkView, into_matrix_flow_identity, matrix_flow_identity, matrix_link_from_text,
+};
 use serde::{Deserialize, Serialize};
 
 /// Vrai pour les IP « non spécifiées »/broadcast qui ne désignent pas un
@@ -40,6 +42,9 @@ pub struct FlowStats {
     pub total_bytes: u64,      // Total des octets passés dans ce flow
     pub last_seen: SystemTime, // Dernière apparition
 }
+
+/// Flux reconstruit depuis une ligne SFMS et statistiques ventilées par tunnel.
+pub type ReconstructedFlowRows = (PacketFlowOwned, Vec<(Option<u64>, FlowStats)>);
 
 /// Sérialise la colonne `encap_id` d'une ligne de matrice :
 /// - `""` : flux jamais vu dans un tunnel ;
@@ -192,10 +197,11 @@ impl FlowMatrix {
 
     pub fn update_flow(&mut self, pkt: &CapturedPacketOwned) {
         let ts = timeval_to_systemtime(pkt.ts_sec, pkt.ts_usec);
+        let flow = matrix_flow_identity(&pkt.flow);
 
-        // Lookup par référence : le flow (et ses ~8 String) n'est cloné
-        // qu'au premier paquet du flux, pas à chaque paquet.
-        if let Some(entries) = self.matrix.get_mut(&pkt.flow) {
+        // Ethernet/RAW restent recherchés par référence. Pour SLL/SLL2, la
+        // clé canonique ignore les seules métadonnées du point d'observation.
+        if let Some(entries) = self.matrix.get_mut(flow.as_ref()) {
             if let Some((_, stats)) = entries.iter_mut().find(|(id, _)| *id == pkt.encap_id) {
                 stats.count += 1;
                 stats.total_bytes = stats.total_bytes.saturating_add(pkt.len as u64);
@@ -216,7 +222,7 @@ impl FlowMatrix {
             }
         } else {
             self.matrix.insert(
-                pkt.flow.clone(),
+                flow.into_owned(),
                 vec![(
                     pkt.encap_id,
                     FlowStats {
@@ -232,6 +238,7 @@ impl FlowMatrix {
     /// Fusionne une ligne déjà agrégée (import de matrice CSV) : cumule les
     /// compteurs si la ligne (flux, tunnel) existe, la crée sinon.
     pub fn merge_row(&mut self, flow: PacketFlowOwned, encap_id: Option<u64>, stats: FlowStats) {
+        let flow = into_matrix_flow_identity(flow);
         let entries = self.matrix.entry(flow).or_default();
         if let Some((_, existing)) = entries.iter_mut().find(|(id, _)| *id == encap_id) {
             existing.count += stats.count;
@@ -259,7 +266,8 @@ impl FlowMatrix {
         if origins.peek().is_none() {
             return;
         }
-        let set = self.origins.entry(flow.clone()).or_default();
+        let flow = matrix_flow_identity(flow);
+        let set = self.origins.entry(flow.into_owned()).or_default();
         set.extend(origins);
     }
 
@@ -714,7 +722,7 @@ pub fn parse_last_seen(value: &str) -> Result<SystemTime, String> {
     ))
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct FlowMatrixRow {
     pub mac_source: String,
     pub mac_destination: String,
@@ -753,7 +761,7 @@ impl FlowMatrixRow {
     /// illisible est rejetée avec un message précis, au lieu d'être
     /// silencieusement dégradée en `None`/epoch (#148). Une IP vide reste
     /// valide (flux sans couche 3) ; `N/A` et vide sont des dates absentes.
-    pub fn validate(&self) -> Result<(), String> {
+    pub fn validate(&self, link_type: LinkType) -> Result<(), String> {
         for (field, value) in [
             ("ip_source", &self.ip_source),
             ("ip_destination", &self.ip_destination),
@@ -766,26 +774,65 @@ impl FlowMatrixRow {
         if !last_seen.is_empty() && last_seen != "N/A" {
             parse_last_seen(last_seen).map_err(|e| format!("last_seen : {e}"))?;
         }
-        // Depuis packet_parser 7 la couche liaison est typée : une MAC ou un
-        // protocole L2 irreprésentables seraient silencieusement dégradés par
-        // `to_flow_and_rows` — on rejette la ligne avec un message précis à
-        // la place (#148). Une MAC vide reste valide (flux sans adresse de
-        // liaison, ex. RAW IP).
-        for (field, value) in [
-            ("mac_source", &self.mac_source),
-            ("mac_destination", &self.mac_destination),
-        ] {
-            if !value.is_empty() && crate::link::mac_from_text(value).is_none() {
-                return Err(format!("{field} invalide : « {value} »"));
+        // La projection SFMS de liaison dépend du DLT annoncé par le
+        // préambule : Ethernet exige des MAC à 6 octets, cooked accepte une
+        // adresse source de 1 à 8 octets, RAW n'en accepte aucune.
+        match link_type {
+            LinkType::ETHERNET => {
+                for (field, value) in [
+                    ("mac_source", &self.mac_source),
+                    ("mac_destination", &self.mac_destination),
+                ] {
+                    if !value.is_empty() && crate::link::mac_from_text(value).is_none() {
+                        return Err(format!("{field} invalide : « {value} »"));
+                    }
+                }
+                if !self.protocol_data_link.is_empty()
+                    && crate::link::ethertype_from_name(&self.protocol_data_link).is_none()
+                {
+                    return Err(format!(
+                        "protocol_data_link inconnu : « {} » (attendu : nom connu ou « Unknown (0x…) »)",
+                        self.protocol_data_link
+                    ));
+                }
             }
-        }
-        if !self.protocol_data_link.is_empty()
-            && crate::link::ethertype_from_name(&self.protocol_data_link).is_none()
-        {
-            return Err(format!(
-                "protocol_data_link inconnu : « {} » (attendu : nom connu ou « Unknown (0x…) »)",
-                self.protocol_data_link
-            ));
+            LinkType::RAW => {
+                if !self.mac_source.is_empty() || !self.mac_destination.is_empty() {
+                    return Err("un relevé RAW ne peut pas porter d'adresse de liaison".to_string());
+                }
+                if self.vlan_id.is_some() {
+                    return Err("un relevé RAW ne peut pas porter de VLAN".to_string());
+                }
+                if !matches!(self.protocol_data_link.as_str(), "IPv4" | "IPv6") {
+                    return Err(format!(
+                        "protocol_data_link RAW invalide : « {} » (attendu : IPv4 ou IPv6)",
+                        self.protocol_data_link
+                    ));
+                }
+            }
+            LinkType::LINUX_SLL | LinkType::LINUX_SLL2 => {
+                crate::link::cooked_address_from_text(&self.mac_source)?;
+                if !self.mac_destination.is_empty() {
+                    return Err(
+                        "un relevé SLL/SLL2 ne peut pas porter d'adresse destination".to_string(),
+                    );
+                }
+                if self.vlan_id.is_some() {
+                    return Err("un relevé SLL/SLL2 ne peut pas porter de VLAN".to_string());
+                }
+                if crate::link::cooked_protocol_from_text(&self.protocol_data_link).is_none() {
+                    return Err(format!(
+                        "protocol_data_link cooked invalide : « {} » (attendu : nom connu ou 0xNNNN)",
+                        self.protocol_data_link
+                    ));
+                }
+            }
+            _ => {
+                return Err(format!(
+                    "type de liaison non reconstructible : {}",
+                    link_type.0
+                ));
+            }
         }
         Ok(())
     }
@@ -794,7 +841,7 @@ impl FlowMatrixRow {
     /// CSV exporté (chemin inverse de `to_flat_vec`). Les types d'IP sont
     /// recalculés depuis les adresses ; le VLAN ne conserve que son id
     /// (pcp/dei non exportés).
-    pub fn to_flow_and_rows(&self) -> (PacketFlowOwned, Vec<(Option<u64>, FlowStats)>) {
+    pub fn to_flow_and_rows(&self, link_type: LinkType) -> Result<ReconstructedFlowRows, String> {
         let source_ip = self.ip_source.parse::<IpAddr>().ok();
         let destination_ip = self.ip_destination.parse::<IpAddr>().ok();
 
@@ -832,12 +879,13 @@ impl FlowMatrixRow {
         });
 
         let flow = PacketFlowOwned {
-            data_link: crate::link::ethernet_link_from_text(
+            data_link: matrix_link_from_text(
+                link_type,
                 &self.mac_source,
                 &self.mac_destination,
                 &self.protocol_data_link,
                 vlan,
-            ),
+            )?,
             internet,
             transport,
             application,
@@ -855,7 +903,7 @@ impl FlowMatrixRow {
 
         let rows = parse_encap_list(&self.encap_id, self.count, self.total_bytes, last_seen);
 
-        (flow, rows)
+        Ok((flow, rows))
     }
 }
 
@@ -879,7 +927,10 @@ mod tests {
     };
     use crate::link::ethernet_link_from_text;
     use crate::packet::CapturedPacketOwned;
-    use packet_parser::owned::PacketFlowOwned;
+    use packet_parser::owned::{
+        LinkLayerOwned, LinuxSll2LinkOwned, LinuxSllLinkOwned, PacketFlowOwned,
+    };
+    use packet_parser::{LinkType, LinuxArphrdType, LinuxCookedPacketType};
 
     /// Deux appels sur le même état produisent exactement les mêmes lignes
     /// dans le même ordre : l'export est déterministe (#148).
@@ -978,6 +1029,93 @@ mod tests {
             },
             encap_id: None,
         }
+    }
+    /// Les champs cooked propres à la sonde ne font pas partie de l'identité
+    /// de conversation. Les paquets originaux restent fidèles pour l'IPC,
+    /// tandis que compteurs et octets fusionnent dans une seule ligne.
+    #[test]
+    fn cooked_observation_metadata_does_not_split_matrix_rows() {
+        let address = Some(vec![0xaa, 0xbb, 0xcc, 0xdd]);
+
+        let mut sll_a = sample_packet(40);
+        sll_a.flow.data_link = LinkLayerOwned::linux_sll(LinuxSllLinkOwned::new(
+            LinuxCookedPacketType::OUTGOING,
+            LinuxArphrdType::ETHERNET,
+            9,
+            address.clone(),
+            0x0800,
+        ));
+        let mut sll_b = sample_packet(60);
+        sll_b.flow.data_link = LinkLayerOwned::linux_sll(LinuxSllLinkOwned::new(
+            LinuxCookedPacketType::HOST,
+            LinuxArphrdType::LOOPBACK,
+            4,
+            address.clone(),
+            0x0800,
+        ));
+        let original_sll_a = sll_a.flow.data_link.clone();
+
+        let mut sll_matrix = FlowMatrix::new();
+        sll_matrix.link_type = Some(LinkType::LINUX_SLL);
+        sll_matrix.update_flow(&sll_a);
+        sll_matrix.update_flow(&sll_b);
+
+        assert_eq!(sll_matrix.row_count(), 1);
+        let sll_stats = &sll_matrix.matrix.values().next().unwrap()[0].1;
+        assert_eq!((sll_stats.count, sll_stats.total_bytes), (2, 100));
+        assert_eq!(
+            sll_a.flow.data_link, original_sll_a,
+            "la normalisation de clé ne doit pas altérer le paquet IPC"
+        );
+
+        let mut sll2_a = sample_packet(70);
+        sll2_a.flow.data_link = LinkLayerOwned::linux_sll2(LinuxSll2LinkOwned::new(
+            0xabcd,
+            7,
+            3,
+            LinuxArphrdType::ETHERNET,
+            LinuxCookedPacketType::OUTGOING,
+            8,
+            address.clone(),
+        ));
+        let mut sll2_b = sample_packet(30);
+        sll2_b.flow.data_link = LinkLayerOwned::linux_sll2(LinuxSll2LinkOwned::new(
+            0xabcd,
+            0,
+            42,
+            LinuxArphrdType::LOOPBACK,
+            LinuxCookedPacketType::BROADCAST,
+            4,
+            address.clone(),
+        ));
+        let original_sll2_a = sll2_a.flow.data_link.clone();
+
+        let mut sll2_matrix = FlowMatrix::new();
+        sll2_matrix.link_type = Some(LinkType::LINUX_SLL2);
+        sll2_matrix.update_flow(&sll2_a);
+        sll2_matrix.update_flow(&sll2_b);
+
+        assert_eq!(sll2_matrix.row_count(), 1);
+        let sll2_stats = &sll2_matrix.matrix.values().next().unwrap()[0].1;
+        assert_eq!((sll2_stats.count, sll2_stats.total_bytes), (2, 100));
+        assert_eq!(sll2_a.flow.data_link, original_sll2_a);
+
+        let mut other_address = sll2_b.clone();
+        other_address.flow.data_link = LinkLayerOwned::linux_sll2(LinuxSll2LinkOwned::new(
+            0xabcd,
+            0,
+            99,
+            LinuxArphrdType::ETHERNET,
+            LinuxCookedPacketType::HOST,
+            4,
+            Some(vec![0xaa, 0xbb, 0xcc, 0xee]),
+        ));
+        sll2_matrix.update_flow(&other_address);
+        assert_eq!(
+            sll2_matrix.row_count(),
+            2,
+            "une adresse source différente reste une identité différente"
+        );
     }
 
     #[test]

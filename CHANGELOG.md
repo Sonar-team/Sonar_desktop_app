@@ -10,6 +10,14 @@
   statut affiche les illisibles (🧩) après un import comme pendant une
   capture. Les paquets illisibles sont maintenant comptés dans l'import
   desktop (ils étaient perdus hors instrumentation).
+- **Réimport RAW/SLL/SLL2 sans éclater les fusions multi-sondes** (#150) :
+  l'aller-retour CSV conserve exactement l'identité SFMS. Pour Linux cooked,
+  seuls l'adresse source et le protocole identifient la conversation ;
+  direction, type matériel, longueur déclarée, champ réservé et index
+  d'interface restent des métadonnées fidèles du paquet observé mais ne
+  segmentent plus la matrice. Aucune colonne `link_details` n'est ajoutée,
+  et `origin` cumule les fichiers ayant vu le flux. Les captures réelles SLL
+  (2 702 trames) et SLL2 (779 trames) couvrent le round-trip bout en bout.
 - **Le contrat IPC des erreurs et des stats est généré depuis Rust** (#142,
   ts-rs) : `src/types/generated/` est écrit par `cargo test
   export_ipc_bindings` et la CI échoue si le contrat commité a dérivé des

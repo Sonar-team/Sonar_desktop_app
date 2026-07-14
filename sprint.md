@@ -1,7 +1,7 @@
 # Sprint P0 — Fidélité des données et intégrité des sessions
 
 > Statut : actif
-> Dernière revue : 14/07/2026 (v4.5.0 : DLT réel, préambule #SFMS, rejet inter-DLT)
+> Dernière revue : 15/07/2026 (rapport qualité, IPC généré, round-trip RAW/SLL/SLL2)
 > Source : audit bêta → pro du 13/07/2026
 > Suivi GitHub : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 > Priorisation :
@@ -32,12 +32,13 @@ ignoré, fusionné ou remplacé silencieusement.
 4. [x] [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) :
    réserver `Importing` pendant toute la conversion. *(14/07 : phase
    `Importing` + guard RAII, tests de course déterministes.)*
-5. [ ] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) :
+5. [x] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) :
    définir le résultat canonique de parsing et le rapport qualité.
-   *(14-15/07 : DLT réel branché partout, refus avant mutation, préambule
-   `#SFMS`, fusion inter-DLT rejetée, rapport qualité visible (Finished +
-   barre de statut), DLT documentés au README — ne reste que le réimport
-   SLL exact, bloqué par l'arbitrage `link_details`.)*
+   *(14-15/07 : DLT réel, refus avant mutation, préambule `#SFMS`, rapport
+   qualité visible et DLT documentés. Round-trip d'identité RAW/SLL/SLL2
+   fermé sans `link_details` : les métadonnées cooked du point d'observation
+   ne segmentent pas les conversations multi-sondes ; fixtures réelles SLL et
+   SLL2 testées bout en bout.)*
 6. [x] [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) :
    drainer arrêt et plafond avec des compteurs exacts. *(14/07 : drainage au
    plafond, compteurs intégrés/illisibles, récapitulatif final.)*

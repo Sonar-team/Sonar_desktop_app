@@ -272,6 +272,53 @@ mod tests {
             .join(name)
     }
 
+    /// Exporte puis réimporte une matrice et compare toute son identité SFMS.
+    /// Seule `origin`, ajoutée au réimport pour tracer le fichier, est hors
+    /// comparaison.
+    fn assert_matrix_identity_round_trip(
+        matrix: &FlowMatrix,
+        link_type: LinkType,
+        dir_name: &str,
+        file_name: &str,
+    ) {
+        let dir = std::env::temp_dir().join(dir_name);
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let out = dir.join(file_name);
+        matrix
+            .export_to_csv(out.to_string_lossy().into_owned())
+            .expect("export du relevé cooked");
+
+        let first_line = std::fs::read_to_string(&out)
+            .expect("relecture")
+            .lines()
+            .next()
+            .map(str::to_string)
+            .expect("fichier non vide");
+        assert_eq!(
+            first_line,
+            crate::sfms::format_preamble(Some(link_type)),
+            "le DLT réel reste dans le préambule"
+        );
+
+        let reimported =
+            crate::csv::merge_matrix_files(std::slice::from_ref(&out)).expect("réimport cooked");
+        assert_eq!(reimported.link_type, Some(link_type));
+        assert!(
+            reimported
+                .matrix
+                .keys()
+                .all(|flow| flow.data_link.link_type() == link_type),
+            "toutes les clés sont reconstruites dans le vrai DLT"
+        );
+
+        let mut expected = matrix.to_flat_vec();
+        let mut actual = reimported.to_flat_vec();
+        for row in expected.iter_mut().chain(actual.iter_mut()) {
+            row.origin.clear();
+        }
+        assert_eq!(actual, expected, "l'identité SFMS doit être inversible");
+    }
     /// Le DLT en capture live (`DLT_RAW` = 12) et celui des fichiers
     /// (`LINKTYPE_RAW` = 101) se normalisent vers le même LinkType ; les
     /// autres valeurs passent inchangées.
@@ -478,12 +525,10 @@ mod tests {
     }
 
     /// Bout-en-bout sur capture réelle Linux cooked v1 (2702 trames,
-    /// `tcpdump -i any`) : conversion avec le vrai DLT, matrice non vide,
-    /// export CSV avec préambule `dlt=LINUX_SLL`, et réimport refusé tant que
-    /// la reconstruction SLL n'est pas branchée (arbitrage 14/07/2026 :
-    /// échouer plutôt que dégrader en Ethernet).
+    /// `tcpdump -i any`) : conversion avec le vrai DLT puis aller-retour CSV
+    /// exact de l'identité SFMS.
     #[test]
-    fn real_sll_capture_converts_exports_with_preamble_and_refuses_reimport() {
+    fn real_sll_capture_round_trips_its_matrix_identity() {
         let mut matrix = FlowMatrix::new();
         let report =
             append_pcap_file(&mut matrix, &fixture("sll.pcap")).expect("capture SLL réelle");
@@ -498,39 +543,31 @@ mod tests {
         assert!(matrix.row_count() > 0, "la matrice contient des flux");
         assert_eq!(matrix.link_type, Some(LinkType::LINUX_SLL));
 
-        let dir = std::env::temp_dir().join("sonar_core_real_sll_test");
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).expect("tempdir");
-        let out = dir.join("releve_sll.csv");
-        matrix
-            .export_to_csv(out.to_string_lossy().into_owned())
-            .expect("export du relevé SLL");
-
-        let first_line = std::fs::read_to_string(&out)
-            .expect("relecture")
-            .lines()
-            .next()
-            .map(str::to_string)
-            .expect("fichier non vide");
-        assert_eq!(first_line, "#SFMS version=1 dlt=LINUX_SLL");
-
-        let err = crate::csv::read_matrix_rows(&out).expect_err("réimport SLL refusé");
-        assert!(
-            matches!(err, SonarCoreError::UnreimportableLinkType { .. }),
-            "refus explicite attendu, obtenu : {err}"
+        assert_matrix_identity_round_trip(
+            &matrix,
+            LinkType::LINUX_SLL,
+            "sonar_core_real_sll_test",
+            "releve_sll.csv",
         );
     }
 
     /// Capture réelle Linux cooked v2 (779 trames) : conversion avec le vrai
-    /// DLT et matrice non vide.
+    /// DLT puis aller-retour CSV exact, y compris après neutralisation de
+    /// l'index d'interface propre au point d'observation.
     #[test]
-    fn real_sll2_capture_is_parsed_with_its_dlt() {
+    fn real_sll2_capture_round_trips_its_matrix_identity() {
         let mut matrix = FlowMatrix::new();
         let report = append_pcap_file(&mut matrix, &fixture("capture_sll2.pcap"))
             .expect("capture SLL2 réelle");
 
         assert_eq!(report.packets, 779, "toutes les trames du fichier lues");
         assert_eq!(report.parse_ok + report.parse_errors, report.packets);
+        assert_matrix_identity_round_trip(
+            &matrix,
+            LinkType::LINUX_SLL2,
+            "sonar_core_real_sll2_test",
+            "releve_sll2.csv",
+        );
         assert!(report.parse_ok > 0, "des flux SLL2 sont décodés");
         assert!(matrix.row_count() > 0, "la matrice contient des flux");
         assert_eq!(matrix.link_type, Some(LinkType::LINUX_SLL2));

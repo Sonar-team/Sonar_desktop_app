@@ -86,9 +86,9 @@ jamais « supposé Ethernet » :
 | LINKTYPE | Valeur | Capture live | Import PCAP | Réimport matrice CSV |
 |---|---|---|---|---|
 | `ETHERNET` | 1 | ✅ | ✅ | ✅ |
-| `RAW` (IP nu) | 101 (DLT 12 en live) | ✅ | ✅ | ❌ (refus explicite) |
-| `LINUX_SLL` (cooked v1, `-i any`) | 113 | ✅ | ✅ | ❌ (refus explicite) |
-| `LINUX_SLL2` (cooked v2) | 276 | ✅ | ✅ | ❌ (refus explicite) |
+| `RAW` (IP nu) | 101 (DLT 12 en live) | ✅ | ✅ | ✅ |
+| `LINUX_SLL` (cooked v1, `-i any`) | 113 | ✅ | ✅ | ✅ |
+| `LINUX_SLL2` (cooked v2) | 276 | ✅ | ✅ | ✅ |
 
 Limites, toutes **explicites** (jamais de dégradation silencieuse) :
 
@@ -97,8 +97,18 @@ Limites, toutes **explicites** (jamais de dégradation silencieuse) :
 - **un relevé = un réseau = un DLT** : la fusion de sources de DLT
   différents est refusée (matrices, PCAP multi-fichiers, capture sur une
   interface d'un autre DLT que le relevé en cours) ;
-- le réimport d'une matrice non-Ethernet est refusé tant que la
-  reconstruction exacte de sa couche liaison n'est pas disponible ;
+- l'export/réimport RAW, SLL et SLL2 préserve exactement l'identité SFMS
+  de chaque conversation ;
+- pour SLL/SLL2, l'adresse source et le protocole font partie de cette
+  identité. `packet_type`, `hardware_type`, `address_length`,
+  `reserved_mbz` et `interface_index` décrivent le point d'observation :
+  ils restent fidèles dans les paquets affichés, mais ne créent pas de lignes
+  supplémentaires dans la matrice et ne sont pas ajoutés au CSV ;
+- aucune colonne `link_details` n'est nécessaire : une même conversation
+  importée depuis plusieurs sondes fusionne, et `origin` conserve les noms
+  des fichiers qui l'ont observée ;
+- un LINKTYPE sans projection d'identité SFMS définie est refusé au réimport
+  plutôt que reconstruit sous un autre DLT ;
 - un PCAPNG multi-interfaces à DLT ou snaplens mélangés est refusé par
   libpcap à la lecture ;
 - les matrices exportées portent leur DLT dans la ligne préambule

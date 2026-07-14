@@ -15,6 +15,7 @@ interfaces, and command-line argument handling belong to its consumers.
 | `matrix` | Aggregate packet metadata by flow, maintain labels and origins, and import or export SFMS rows. |
 | `csv` | Strictly validate, read, reconstruct, and merge SFMS CSV files. |
 | `graph` | Build a network graph and produce coalescible node and edge updates for a consumer. |
+| `link` | Project typed link layers to the SFMS identity and reconstruct Ethernet, RAW, SLL, and SLL2 identities. |
 | `packet` | Represent captured packets and flatten nested flows while retaining their tunnel relationship. |
 | `pcap` | Optionally read PCAP/PCAPNG files and convert them to a flow matrix. |
 | `error` | Provide the shared `Result` type and structured `SonarCoreError` errors. |
@@ -140,6 +141,13 @@ Two extension columns preserve audit context:
 - `origin` is empty for packets and PCAP imports. When matrices are merged, it
   contains the sorted, deduplicated source file names separated by `|`.
 
+There is intentionally no `link_details` column. For Linux cooked captures,
+the source address and carried protocol belong to the SFMS conversation
+identity. Packet direction, ARPHRD type, declared address length, reserved
+bits, and SLL2 interface index describe the observation point: packet events
+retain them, but they neither split matrix rows nor prevent matrices from
+different probes on the same network from merging. The `origin` column keeps
+the contributing file names.
 See [TUNNELS.md](../../../TUNNELS.md) for the tunnel model and its accounting
 invariants.
 
@@ -153,8 +161,8 @@ invariants.
   and restored on re-import.
 - Tunnel identifiers are deterministic across directions, builds, and Rust
   versions.
-- CSV export and re-import preserve per-tunnel packet accounting, labels, and
-  flow origins.
+- CSV export and re-import preserve Ethernet, RAW, SLL, and SLL2 SFMS
+  identities, per-tunnel packet accounting, labels, and flow origins.
 
 Lower-level building blocks remain available when the batch helpers are too
 coarse: `FlowMatrix`, `FlowMatrixRow`, `GraphData`, `GraphUpdateBatch`,

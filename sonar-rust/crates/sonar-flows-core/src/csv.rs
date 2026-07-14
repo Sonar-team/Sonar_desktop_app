@@ -16,15 +16,18 @@ use crate::{Result, SonarCoreError, validate_batch_paths};
 /// Lit toutes les lignes d'un fichier de matrice CSV. Le fichier est
 /// entièrement validé : la première ligne invalide interrompt la lecture avec
 /// son numéro de ligne. Le préambule `#SFMS` éventuel est contrôlé : un DLT
-/// que le réimport ne sait pas encore reconstruire (pas de constructeur owned
-/// dans `packet_parser`) est refusé plutôt que dégradé en Ethernet.
+/// sans projection d'identité SFMS définie est refusé plutôt que reconstruit
+/// sous un autre type de liaison.
 pub fn read_matrix_rows(csv_path: &Path) -> Result<Vec<FlowMatrixRow>> {
     let preamble = sfms::read_preamble(csv_path)?;
     let link_type = preamble
         .as_ref()
         .and_then(|p| p.link_type)
         .unwrap_or(LinkType::ETHERNET);
-    if link_type != LinkType::ETHERNET {
+    if !matches!(
+        link_type,
+        LinkType::ETHERNET | LinkType::RAW | LinkType::LINUX_SLL | LinkType::LINUX_SLL2
+    ) {
         return Err(SonarCoreError::UnreimportableLinkType {
             path: csv_path.to_path_buf(),
             label: sfms::link_type_name(link_type),
@@ -52,10 +55,11 @@ pub fn read_matrix_rows(csv_path: &Path) -> Result<Vec<FlowMatrixRow>> {
         })?;
         // Validation stricte (#148) : une IP ou une date illisible est
         // rejetée avec son numéro de ligne, pas dégradée silencieusement.
-        row.validate().map_err(|e| SonarCoreError::InvalidCsv {
-            path: csv_path.to_path_buf(),
-            message: format!("ligne {} invalide: {e}", i + first_data_line),
-        })?;
+        row.validate(link_type)
+            .map_err(|e| SonarCoreError::InvalidCsv {
+                path: csv_path.to_path_buf(),
+                message: format!("ligne {} invalide: {e}", i + first_data_line),
+            })?;
         rows.push(row);
     }
     Ok(rows)
@@ -151,9 +155,17 @@ pub fn apply_row_labels(matrix: &mut FlowMatrix, rows: &[FlowMatrixRow]) {
 /// Fusionne des lignes de CSV dans une matrice : les doublons éventuels sont
 /// fusionnés tunnel par tunnel (comptabilité père/fils préservée) et les
 /// origines s'accumulent par flux.
-pub fn merge_rows(matrix: &mut FlowMatrix, rows: &[FlowMatrixRow]) {
+pub fn merge_rows(
+    matrix: &mut FlowMatrix,
+    rows: &[FlowMatrixRow],
+    link_type: LinkType,
+) -> Result<()> {
     for row in rows {
-        let (flow, tunnel_rows) = row.to_flow_and_rows();
+        row.validate(link_type)
+            .map_err(SonarCoreError::InvalidMatrixRow)?;
+        let (flow, tunnel_rows) = row
+            .to_flow_and_rows(link_type)
+            .map_err(SonarCoreError::InvalidMatrixRow)?;
 
         for (encap_id, stats) in tunnel_rows {
             matrix.merge_row(flow.clone(), encap_id, stats);
@@ -161,15 +173,17 @@ pub fn merge_rows(matrix: &mut FlowMatrix, rows: &[FlowMatrixRow]) {
 
         matrix.add_flow_origins(&flow, parse_origin_list(&row.origin));
     }
+    Ok(())
 }
 
 /// Reconstruit une matrice depuis des lignes de CSV : labels des fichiers
 /// réappliqués ([`apply_row_labels`]) puis flux fusionnés ([`merge_rows`]).
-pub fn matrix_from_rows(rows: &[FlowMatrixRow]) -> FlowMatrix {
+pub fn matrix_from_rows(rows: &[FlowMatrixRow], link_type: LinkType) -> Result<FlowMatrix> {
     let mut matrix = FlowMatrix::new();
+    matrix.link_type = Some(link_type);
     apply_row_labels(&mut matrix, rows);
-    merge_rows(&mut matrix, rows);
-    matrix
+    merge_rows(&mut matrix, rows, link_type)?;
+    Ok(matrix)
 }
 
 /// Fusionne plusieurs fichiers de matrice CSV en une matrice unique. Les
@@ -178,9 +192,7 @@ pub fn matrix_from_rows(rows: &[FlowMatrixRow]) -> FlowMatrix {
 pub fn merge_matrix_files(inputs: &[PathBuf]) -> Result<FlowMatrix> {
     let link_type = common_matrix_link_type(inputs)?;
     let rows = read_matrix_rows_from_files(inputs)?;
-    let mut matrix = matrix_from_rows(&rows);
-    matrix.link_type = Some(link_type);
-    Ok(matrix)
+    matrix_from_rows(&rows, link_type)
 }
 
 /// Fusionne plusieurs fichiers de matrice CSV et exporte le résultat.
@@ -276,23 +288,117 @@ mod tests {
         );
     }
 
-    /// Un relevé d'un DLT que le réimport ne sait pas encore reconstruire
-    /// (SLL) est refusé explicitement, pas réimporté dégradé en Ethernet.
+    /// RAW, SLL et SLL2 reconstruisent le vrai type de liaison depuis le
+    /// préambule. Une adresse cooked non-Ethernet (4 octets) et un protocole
+    /// inconnu restent inversibles sans colonne supplémentaire.
     #[test]
-    fn reimport_of_a_non_reconstructible_dlt_is_refused() {
-        let dir = std::env::temp_dir().join("sonar_core_preamble_sll_test");
+    fn raw_sll_and_sll2_matrix_identities_round_trip() {
+        let dir = std::env::temp_dir().join("sonar_core_non_ethernet_roundtrip_test");
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("tempdir");
-        let path = dir.join("releve_sll.csv");
-        let ethernet_body =
-            std::fs::read_to_string(fixture("20260703_NP_Matrice.csv")).expect("lecture fixture");
-        std::fs::write(
-            &path,
-            format!("#SFMS version=1 dlt=LINUX_SLL\n{ethernet_body}"),
-        )
-        .expect("écriture");
 
-        let err = read_matrix_rows(&path).expect_err("réimport SLL refusé");
+        let mut base = read_matrix_rows(&fixture("20260703_NP_Matrice.csv"))
+            .expect("fixture")
+            .remove(0);
+        base.mac_destination.clear();
+        base.vlan_id = None;
+        base.origin.clear();
+
+        for (link_type, source_address, protocol, file_name) in [
+            (LinkType::RAW, "", "IPv4", "raw.csv"),
+            (LinkType::LINUX_SLL, "01:02:03:04", "0xABCD", "sll.csv"),
+            (
+                LinkType::LINUX_SLL2,
+                "01:02:03:04:05:06:07:08",
+                "0xABCD",
+                "sll2.csv",
+            ),
+        ] {
+            let mut row = base.clone();
+            row.mac_source = source_address.to_string();
+            row.protocol_data_link = protocol.to_string();
+            let path = dir.join(file_name);
+            FlowMatrix::write_rows_to_csv(
+                std::slice::from_ref(&row),
+                Some(link_type),
+                &path.to_string_lossy(),
+            )
+            .expect("export non-Ethernet");
+
+            let contents = std::fs::read_to_string(&path).expect("relecture");
+            assert!(
+                !contents.lines().nth(1).unwrap().contains("link_details"),
+                "le schéma SFMS reste inchangé"
+            );
+
+            let matrix =
+                merge_matrix_files(std::slice::from_ref(&path)).expect("réimport non-Ethernet");
+            assert_eq!(matrix.link_type, Some(link_type));
+            assert_eq!(matrix.row_count(), 1);
+            assert!(
+                matrix
+                    .matrix
+                    .keys()
+                    .all(|flow| flow.data_link.link_type() == link_type),
+                "les clés doivent être reconstruites dans le vrai DLT"
+            );
+            let exported = matrix.to_flat_vec();
+            assert_eq!(exported[0].mac_source, source_address);
+            assert_eq!(exported[0].protocol_data_link, protocol);
+            assert_eq!(exported[0].count, row.count);
+            assert_eq!(exported[0].total_bytes, row.total_bytes);
+        }
+    }
+
+    /// Deux matrices SLL2 du même réseau, observées par deux sondes, fusionnent
+    /// la conversation et cumulent leur provenance sans `link_details`.
+    #[test]
+    fn sll2_matrices_from_two_observation_points_merge_one_row() {
+        let dir = std::env::temp_dir().join("sonar_core_sll2_multi_probe_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+
+        let mut row = read_matrix_rows(&fixture("20260703_NP_Matrice.csv"))
+            .expect("fixture")
+            .remove(0);
+        row.mac_source = "01:02:03:04".to_string();
+        row.mac_destination.clear();
+        row.vlan_id = None;
+        row.protocol_data_link = "IPv4".to_string();
+        row.origin.clear();
+
+        let site_a = dir.join("site-a.csv");
+        let site_b = dir.join("site-b.csv");
+        for path in [&site_a, &site_b] {
+            FlowMatrix::write_rows_to_csv(
+                std::slice::from_ref(&row),
+                Some(LinkType::LINUX_SLL2),
+                &path.to_string_lossy(),
+            )
+            .expect("export sonde");
+        }
+
+        let merged = merge_matrix_files(&[site_a, site_b]).expect("fusion multi-sondes");
+        assert_eq!(merged.link_type, Some(LinkType::LINUX_SLL2));
+        assert_eq!(merged.row_count(), 1, "la sonde ne segmente pas le flux");
+        let merged_row = &merged.to_flat_vec()[0];
+        assert_eq!(merged_row.count, row.count * 2);
+        assert_eq!(merged_row.total_bytes, row.total_bytes * 2);
+        assert_eq!(merged_row.origin, "site-a.csv|site-b.csv");
+    }
+
+    /// Un LINKTYPE sans projection SFMS définie reste refusé explicitement.
+    #[test]
+    fn reimport_of_an_undefined_sfms_linktype_is_refused() {
+        let dir = std::env::temp_dir().join("sonar_core_unknown_dlt_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let path = dir.join("releve_user0.csv");
+        let rows = read_matrix_rows(&fixture("20260703_NP_Matrice.csv")).expect("fixture");
+        FlowMatrix::write_rows_to_csv(&rows, Some(LinkType(147)), &path.to_string_lossy())
+            .expect("export");
+
+        let err = read_matrix_rows(&path).expect_err("DLT sans projection refusé");
         assert!(
             matches!(err, crate::SonarCoreError::UnreimportableLinkType { .. }),
             "erreur dédiée attendue, obtenu : {err}"
@@ -403,6 +509,54 @@ mod tests {
         );
     }
 
+    /// Les champs qui ne peuvent pas appartenir à une projection cooked sont
+    /// rejetés avec le vrai numéro de ligne, jamais ignorés à la reconstruction.
+    #[test]
+    fn invalid_cooked_identity_fields_are_rejected_explicitly() {
+        let dir = std::env::temp_dir().join("sonar_core_invalid_cooked_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+
+        let mut base = read_matrix_rows(&fixture("20260703_NP_Matrice.csv"))
+            .expect("fixture")
+            .remove(0);
+        base.mac_source = "01:02:03:04".to_string();
+        base.mac_destination.clear();
+        base.vlan_id = None;
+        base.protocol_data_link = "IPv4".to_string();
+
+        let mut long_address = base.clone();
+        long_address.mac_source = "00:01:02:03:04:05:06:07:08".to_string();
+        let mut destination = base.clone();
+        destination.mac_destination = "aa:bb:cc:dd:ee:ff".to_string();
+        let mut vlan = base.clone();
+        vlan.vlan_id = Some(42);
+        let mut protocol = base;
+        protocol.protocol_data_link = "illisible".to_string();
+
+        for (name, row, expected) in [
+            ("address.csv", long_address, "adresse cooked invalide"),
+            ("destination.csv", destination, "adresse destination"),
+            ("vlan.csv", vlan, "porter de VLAN"),
+            (
+                "protocol.csv",
+                protocol,
+                "protocol_data_link cooked invalide",
+            ),
+        ] {
+            let path = dir.join(name);
+            FlowMatrix::write_rows_to_csv(
+                &[row],
+                Some(LinkType::LINUX_SLL2),
+                &path.to_string_lossy(),
+            )
+            .expect("écriture du cas invalide");
+            let err = read_matrix_rows(&path).expect_err("identité cooked invalide");
+            let message = err.to_string();
+            assert!(message.contains("ligne 3"), "{name}: {message}");
+            assert!(message.contains(expected), "{name}: {message}");
+        }
+    }
     /// Le numéro de ligne des erreurs tient compte du préambule : la première
     /// ligne de données d'un fichier avec préambule est la ligne 3.
     #[test]

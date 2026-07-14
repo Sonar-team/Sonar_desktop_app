@@ -31,6 +31,12 @@ pub mod error {
         #[error("{path}: {message}")]
         InvalidCsv { path: PathBuf, message: String },
 
+        /// Une ligne déjà lue ne peut pas être reconstruite dans le DLT
+        /// annoncé. Ce garde interne complète la validation numérotée du CSV
+        /// et évite tout repli silencieux si l'API est appelée directement.
+        #[error("ligne de matrice non reconstructible : {0}")]
+        InvalidMatrixRow(String),
+
         #[error(transparent)]
         Io(#[from] std::io::Error),
 
@@ -67,13 +73,11 @@ pub mod error {
             expected: String,
         },
 
-        /// Relevé dont le type de liaison ne peut pas encore être reconstruit
-        /// au réimport (pas de constructeur owned dans `packet_parser`) :
-        /// refusé plutôt que réimporté dégradé en Ethernet.
+        /// Relevé dont la projection SFMS n'est pas définie dans cette
+        /// version (IEEE 802.11 ou LINKTYPE futur) : refusé plutôt que
+        /// réimporté sous un autre type de liaison.
         #[error(
-            "{path}: relevé {label} non réimportable pour l'instant : la reconstruction de ce \
-             type de liaison n'est pas encore disponible, réimport refusé plutôt que dégradé en \
-             Ethernet"
+            "{path}: relevé {label} non réimportable : aucune projection d'identité SFMS n'est définie pour ce type de liaison"
         )]
         UnreimportableLinkType { path: PathBuf, label: String },
     }
