@@ -1,7 +1,7 @@
 # Sprint P0 — Fidélité des données et intégrité des sessions
 
 > Statut : actif
-> Dernière revue : 13/07/2026
+> Dernière revue : 14/07/2026 (v4.5.0 : DLT réel, préambule #SFMS, rejet inter-DLT)
 > Source : audit bêta → pro du 13/07/2026
 > Suivi GitHub : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 > Priorisation :
@@ -27,6 +27,9 @@ ignoré, fusionné ou remplacé silencieusement.
    réserver `Importing` pendant toute la conversion.
 5. [ ] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) :
    définir le résultat canonique de parsing et le rapport qualité.
+   *(14/07 : DLT réel branché partout, refus avant mutation, préambule
+   `#SFMS`, fusion inter-DLT rejetée — reste le rapport qualité UI/export
+   et le réimport SLL exact, cf. commentaire du 14/07.)*
 6. [ ] [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) :
    drainer arrêt et plafond avec des compteurs exacts.
 7. [ ] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) :
@@ -62,7 +65,7 @@ ignoré, fusionné ou remplacé silencieusement.
 ## Definition of Done
 
 - [ ] Chaque paquet lu appartient à une catégorie explicite.
-- [ ] Un DLT non supporté échoue avant toute mutation de l'état.
+- [x] Un DLT non supporté échoue avant toute mutation de l'état. *(v4.5.0)*
 - [ ] Une capture ne peut pas démarrer pendant un import.
 - [ ] Stop et limite de flux drainent ou comptent la perte exacte.
 - [ ] Aucun test critique ne dépend silencieusement d'un fichier local.
