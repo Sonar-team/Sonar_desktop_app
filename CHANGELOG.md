@@ -2,6 +2,45 @@
 
 ## Non publié
 
+## **[4.5.0] - 2026-07-14**
+
+## ✨ Améliorations
+
+- **Le type de liaison (DLT) réel est enfin respecté de bout en bout** (#150) :
+  la capture live et l'import PCAP parsent chaque paquet avec le décodeur de
+  son LINKTYPE (Ethernet, RAW IP, Linux cooked SLL/SLL2) au lieu de supposer
+  Ethernet. Un DLT sans décodeur est refusé explicitement **avant** toute
+  mutation du relevé — au démarrage de capture (avant l'événement `Started`)
+  comme à l'import.
+- **Préambule SFMS** : les matrices exportées commencent par une ligne
+  `#SFMS version=1 dlt=…` qui porte les métadonnées du relevé. Un export
+  antérieur (sans préambule) se réimporte inchangé, avec un DLT implicite
+  Ethernet. Pas de date d'export dans le préambule : deux exports d'une même
+  matrice restent identiques octet pour octet (déterminisme, #148).
+- **La fusion inter-DLT est refusée partout** (arbitrage du 14/07/2026 : une
+  fusion ne concerne que des relevés du même réseau, donc du même type de
+  liaison) : fusion de matrices CSV, conversion PCAP multi-fichiers, et
+  démarrage d'une capture sur une interface d'un autre DLT que le relevé en
+  cours. Le réimport d'une matrice SLL est refusé explicitement tant que la
+  reconstruction exacte n'est pas disponible, plutôt que dégradé en Ethernet.
+
+## 🛠 Corrections
+
+- Les erreurs d'import (`openFileError`, `readPacketError`), d'export et
+  Tauri affichent à nouveau leur vrai message : les types TypeScript de
+  `capture.ts` sont réalignés sur la sérialisation réelle des enums Rust
+  (fichier affiché `undefined`, erreurs d'export en « Erreur inconnue », #142).
+
+## 🔧 Maintenance
+
+- Mise à jour de `packet_parser` en **8.1.0** : point d'entrée
+  `parse(link_type, bytes)` multi-LINKTYPE et constructeurs publics owned
+  SLL/SLL2 (préparation du réimport SLL exact).
+- Corpus de test : captures réelles Linux cooked v1 (`sll.pcap`, 2702 trames)
+  et v2 (`capture_sll2.pcap`, 779 trames) intégrées aux fixtures, avec tests
+  bout-en-bout (conversion, comptabilité exhaustive des paquets, préambule,
+  refus de réimport) qui échouent si la fixture manque (#151).
+
 ## **[4.4.0] - 2026-07-13**
 
 ## 🔒 Sécurité
