@@ -28,10 +28,10 @@ use crate::{
         graph::{GraphData, GraphUpdateBatch},
     },
 };
-use packet_parser::PacketFlow;
-use sonar_flows_core::link::LinkView;
+use packet_parser::LinkType;
 #[cfg(feature = "capture_timing")]
 use packet_parser::timing::ParseTiming;
+use sonar_flows_core::link::LinkView;
 
 #[cfg(feature = "capture_timing")]
 use super::capture_timing::{
@@ -94,6 +94,9 @@ struct PacketWorker {
     on_event: Channel<CaptureEvent<'static>>,
     /// Session de capture émettrice, reprise dans chaque événement.
     session_id: u64,
+    /// LINKTYPE canonique de l'interface capturée : chaque paquet est parsé
+    /// avec le décodeur de ce type de liaison, jamais Ethernet supposé (#150).
+    link_type: LinkType,
     flow_matrix: Arc<Mutex<FlowMatrix>>,
     graph: Arc<Mutex<GraphData>>,
     packet_batch: Vec<CapturedPacketOwned>,
@@ -112,12 +115,14 @@ impl PacketWorker {
     fn new(
         on_event: Channel<CaptureEvent<'static>>,
         session_id: u64,
+        link_type: LinkType,
         flow_matrix: Arc<Mutex<FlowMatrix>>,
         graph: Arc<Mutex<GraphData>>,
     ) -> Self {
         Self {
             on_event,
             session_id,
+            link_type,
             flow_matrix,
             graph,
             packet_batch: Vec::with_capacity(PACKET_BATCH_MAX),
@@ -168,7 +173,7 @@ impl PacketWorker {
 
         #[cfg(feature = "capture_timing")]
         let (flow, parse_timing) = if timing_sample.is_some() {
-            match parse_packet_flow_with_timing(pkt.as_ref()) {
+            match parse_packet_flow_with_timing(self.link_type, pkt.as_ref()) {
                 Ok(parsed) => parsed,
                 Err(e) => {
                     self.note_parse_error(&e);
@@ -176,7 +181,7 @@ impl PacketWorker {
                 }
             }
         } else {
-            match PacketFlow::try_from(pkt.as_ref()) {
+            match packet_parser::parse::parse(self.link_type, pkt.as_ref()) {
                 Ok(flow) => (flow, ParseTiming::default()),
                 Err(e) => {
                     self.note_parse_error(&e);
@@ -186,7 +191,7 @@ impl PacketWorker {
         };
 
         #[cfg(not(feature = "capture_timing"))]
-        let flow = match PacketFlow::try_from(pkt.as_ref()) {
+        let flow = match packet_parser::parse::parse(self.link_type, pkt.as_ref()) {
             Ok(flow) => flow,
             Err(e) => {
                 self.note_parse_error(&e);
@@ -327,7 +332,7 @@ impl PacketWorker {
     /// Intègre un paquet à la matrice et au graphe sans rien émettre sur le
     /// canal IPC (chemin de drainage : le front est arrêté ou injoignable).
     fn ingest_packet_silently(&mut self, pkt: &PacketBuffer) {
-        let Ok(flow) = PacketFlow::try_from(pkt.as_ref()) else {
+        let Ok(flow) = packet_parser::parse::parse(self.link_type, pkt.as_ref()) else {
             return;
         };
         let packet = CapturedPacket {
@@ -593,6 +598,7 @@ pub fn spawn_processing_thread(
     shared_stats: Arc<SharedCaptureStats>,
     stop_flag: Arc<AtomicBool>,
     session_id: u64,
+    link_type: LinkType,
 ) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         debug!("Démarrage du thread de traitement");
@@ -601,7 +607,7 @@ pub fn spawn_processing_thread(
         let flow_matrix = app.state::<Arc<Mutex<FlowMatrix>>>().inner().clone();
         let graph = app.state::<Arc<Mutex<GraphData>>>().inner().clone();
 
-        let mut worker = PacketWorker::new(on_event, session_id, flow_matrix, graph);
+        let mut worker = PacketWorker::new(on_event, session_id, link_type, flow_matrix, graph);
         let mut emitter = StatsEmitter::new(
             channel_capacity as usize,
             shared_stats,
@@ -736,6 +742,7 @@ mod tests {
         let mut worker = PacketWorker::new(
             Channel::new(|_| Ok(())),
             1,
+            LinkType::ETHERNET,
             flow_matrix.clone(),
             graph.clone(),
         );
@@ -773,7 +780,13 @@ mod tests {
     fn drain_channel_skips_unparseable_packets() {
         let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
         let graph = Arc::new(Mutex::new(GraphData::new()));
-        let mut worker = PacketWorker::new(Channel::new(|_| Ok(())), 1, flow_matrix.clone(), graph);
+        let mut worker = PacketWorker::new(
+            Channel::new(|_| Ok(())),
+            1,
+            LinkType::ETHERNET,
+            flow_matrix.clone(),
+            graph,
+        );
         let pool = PacketBufferPool::new(8, 65_536);
         let (tx, rx) = bounded::<CaptureMessage>(8);
 

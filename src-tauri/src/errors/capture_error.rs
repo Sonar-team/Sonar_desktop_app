@@ -29,6 +29,17 @@ pub enum CaptureError {
 
     #[error("Erreur lors de l'envoi de l'evenement : {0}")]
     EventSendError(#[from] tauri::Error),
+
+    /// Type de liaison de l'interface sans décodeur dans cette version :
+    /// refusé au démarrage, avant tout événement `Started` (un DLT non
+    /// supporté ne doit jamais être parsé comme de l'Ethernet).
+    #[error("Type de liaison non supporté par cette version : {0}")]
+    UnsupportedLinkType(String),
+
+    /// Interface d'un autre type de liaison que le relevé en cours : capture
+    /// refusée (un relevé = un réseau = un DLT, arbitrage du 14/07/2026).
+    #[error("{0}")]
+    MixedLinkType(String),
     // #[error("Erreur lors de l'application du filtre : {0}")]
     // FilterError(String),
 }
@@ -45,6 +56,8 @@ pub enum CaptureErrorKind {
     CaptureInitError(String),
     ChannelSendError(String),
     EventSendError(String),
+    UnsupportedLinkType(String),
+    MixedLinkType(String),
     // FilterError(String),
 }
 
@@ -61,6 +74,10 @@ impl serde::Serialize for CaptureError {
             Self::CaptureInitError(e) => CaptureErrorKind::CaptureInitError(e.to_string()),
             Self::ChannelSendError(e) => CaptureErrorKind::ChannelSendError(e.to_string()),
             Self::EventSendError(e) => CaptureErrorKind::EventSendError(e.to_string()),
+            Self::UnsupportedLinkType(label) => {
+                CaptureErrorKind::UnsupportedLinkType(label.clone())
+            }
+            Self::MixedLinkType(message) => CaptureErrorKind::MixedLinkType(message.clone()),
             // Self::FilterError(e) => CaptureErrorKind::FilterError(e.to_string()),
         };
         kind.serialize(serializer)

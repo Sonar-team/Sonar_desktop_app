@@ -92,6 +92,12 @@ impl Serialize for CaptureStateError {
                     }
                     CaptureError::EventSendError(e) => {
                         CaptureErrorKind::EventSendError(e.to_string())
+                    }
+                    CaptureError::UnsupportedLinkType(label) => {
+                        CaptureErrorKind::UnsupportedLinkType(label.clone())
+                    }
+                    CaptureError::MixedLinkType(message) => {
+                        CaptureErrorKind::MixedLinkType(message.clone())
                     } //   CaptureError::FilterError(e) => CaptureErrorKind::FilterError(e.to_string()),
                 };
                 CaptureStateErrorKind::Capture(kind)
@@ -113,6 +119,9 @@ impl Serialize for CaptureStateError {
                     }
                     PcapImportError::ReadPacketError(file, msg) => {
                         PcapImportErrorKind::ReadPacketError(file.clone(), msg.clone())
+                    }
+                    PcapImportError::UnsupportedLinkType(file, label) => {
+                        PcapImportErrorKind::UnsupportedLinkType(file.clone(), label.clone())
                     }
                 };
                 CaptureStateErrorKind::Import(kind)
@@ -165,6 +174,9 @@ impl From<sonar_flows_core::SonarCoreError> for CaptureStateError {
             ),
             SonarCoreError::PcapRead { path, message } => CaptureStateError::Import(
                 PcapImportError::ReadPacketError(path.display().to_string(), message),
+            ),
+            SonarCoreError::UnsupportedLinkType { path, label } => CaptureStateError::Import(
+                PcapImportError::UnsupportedLinkType(path.display().to_string(), label),
             ),
             SonarCoreError::Io(e) => CaptureStateError::Io(e),
             other => CaptureStateError::Io(std::io::Error::other(other.to_string())),

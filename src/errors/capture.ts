@@ -11,13 +11,17 @@ export type CaptureErrorKind =
   | { kind: "deviceListError"; message: string }
   | { kind: "captureInitError"; message: string }
   | { kind: "channelSendError"; message: string }
-  | { kind: "eventSendError"; message: string };
+  | { kind: "eventSendError"; message: string }
+  | { kind: "unsupportedLinkType"; message: string }
+  | { kind: "mixedLinkType"; message: string };
 
+// Miroir exact de `PcapImportErrorKind` (Rust) : les variantes à deux champs
+// sont sérialisées par serde en `message: [fichier, détail]` (tag/content),
+// pas en champs nommés (#142).
 export type ImportErrorKind =
-  | { kind: "openFileError"; file: string; message: string }
-  | { kind: "invalidPacket"; message: string }
-  | { kind: "parseError"; message: string }
-  | { kind: "other"; message: string };
+  | { kind: "openFileError"; message: [string, string] }
+  | { kind: "readPacketError"; message: [string, string] }
+  | { kind: "unsupportedLinkType"; message: [string, string] };
 
 export type InvalidLineValue = [number, string];
 export type InvalidFieldValue = [number, string, string];
@@ -29,14 +33,24 @@ export type LabelErrorKind =
   | { kind: "invalidRowsFormat"; message: InvalidLineValue[] }
   | { kind: "editRejected"; message: string }
 
+// Miroir exact de `ExportErrorKind` (Rust) : les variantes sans donnée
+// (`emptyPath`, `logNotFound`) sont sérialisées sans clé `message`.
+export type ExportErrorKind =
+  | { kind: "emptyPath" }
+  | { kind: "io"; message: string }
+  | { kind: "csv"; message: string }
+  | { kind: "poisonError"; message: string }
+  | { kind: "logNotFound" };
+
 export type CaptureStateErrorKind =
   | { kind: "io"; message: string }
   | { kind: "poisonError"; message: string }
   | { kind: "invalidTransition"; message: string }
   | { kind: "capture"; message: CaptureErrorKind }
+  | { kind: "export"; message: ExportErrorKind }
   | { kind: "import"; message: ImportErrorKind }
-  | { kind: "label"; message: LabelErrorKind}
-  | { kind: "other"; message: string };
+  | { kind: "label"; message: LabelErrorKind }
+  | { kind: "tauri"; message: string };
 
 export async function displayCaptureError(err: unknown) {
   const captureError = err as CaptureStateErrorKind;
@@ -86,9 +100,21 @@ export async function displayCaptureError(err: unknown) {
               userFriendlyMessage =
                 `Erreur envoi evenement capture : ${captureKind.message}`;
               break;
+            case "unsupportedLinkType":
+              userFriendlyMessage =
+                `Type de liaison non supporté par cette version : ${captureKind.message}.\nLa capture n'a pas démarré.`;
+              break;
+            case "mixedLinkType":
+              userFriendlyMessage =
+                `${captureKind.message}\nExportez ou réinitialisez le relevé en cours avant de capturer sur cette interface.`;
+              break;
           }
         }
         break;
+      case "export":
+        userFriendlyMessage = handleExportError(captureError.message);
+        break;
+
       case "import":
         userFriendlyMessage = handleImportError(captureError.message);
         break;
@@ -97,8 +123,8 @@ export async function displayCaptureError(err: unknown) {
         userFriendlyMessage = handleLabelerror(captureError.message);
         break;
 
-      case "other":
-        userFriendlyMessage = `Erreur inattendue : ${captureError.message}`;
+      case "tauri":
+        userFriendlyMessage = `Erreur Tauri : ${captureError.message}`;
         break;
     }
   }
@@ -112,6 +138,29 @@ export async function displayCaptureError(err: unknown) {
   );
 }
 
+function handleExportError(exportError: ExportErrorKind): string {
+  if (
+    !exportError || typeof exportError !== "object" || !("kind" in exportError)
+  ) {
+    return `Erreur d'export inconnue : ${JSON.stringify(exportError)}`;
+  }
+
+  switch (exportError.kind) {
+    case "emptyPath":
+      return "Aucun chemin de fichier fourni pour l'export.";
+    case "io":
+      return `Erreur d'écriture du fichier exporté : ${exportError.message}`;
+    case "csv":
+      return `Erreur d'écriture CSV : ${exportError.message}`;
+    case "poisonError":
+      return `Erreur verrou pendant l'export : ${exportError.message}`;
+    case "logNotFound":
+      return "Le dossier de logs est introuvable.";
+    default:
+      return `Erreur d'export inconnue : ${JSON.stringify(exportError)}`;
+  }
+}
+
 function handleImportError(importError: ImportErrorKind): string {
   if (
     !importError || typeof importError !== "object" || !("kind" in importError)
@@ -120,14 +169,18 @@ function handleImportError(importError: ImportErrorKind): string {
   }
 
   switch (importError.kind) {
-    case "openFileError":
-      return `Impossible d'ouvrir le fichier ${importError.file} : ${importError.message}`;
-    case "invalidPacket":
-      return `Paquet invalide : ${importError.message}`;
-    case "parseError":
-      return `Erreur d'analyse : ${importError.message}`;
-    case "other":
-      return `Erreur d'import : ${importError.message}`;
+    case "openFileError": {
+      const [file, message] = importError.message;
+      return `Impossible d'ouvrir le fichier ${file} : ${message}`;
+    }
+    case "readPacketError": {
+      const [file, message] = importError.message;
+      return `Erreur de lecture dans ${file} : ${message}.\nL'import a été annulé, la matrice courante est inchangée.`;
+    }
+    case "unsupportedLinkType": {
+      const [file, label] = importError.message;
+      return `Type de liaison non supporté dans ${file} : ${label}.\nL'import a été annulé, la matrice courante est inchangée.`;
+    }
     default:
       return `Erreur d'import inconnue : ${JSON.stringify(importError)}`;
   }

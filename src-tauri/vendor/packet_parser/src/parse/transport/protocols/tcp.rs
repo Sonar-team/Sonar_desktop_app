@@ -14,7 +14,7 @@ use crate::{
 };
 
 /// Represents a TCP header
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TcpHeader<'a> {
     pub source_port: u16,
     pub destination_port: u16,
@@ -57,7 +57,7 @@ pub struct TcpHeader<'a> {
 /// 144-159: "Urgent Pointer u16"
 /// 160-191: "Options / Payload variable"
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TcpPacket<'a> {
     pub header: TcpHeader<'a>,
     pub payload: &'a [u8],

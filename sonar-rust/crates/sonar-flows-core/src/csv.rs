@@ -7,15 +7,37 @@
 
 use std::path::{Path, PathBuf};
 
+use packet_parser::LinkType;
+
 use crate::matrix::{FlowMatrix, FlowMatrixRow, parse_origin_list, unescape_formula_cell};
+use crate::sfms;
 use crate::{Result, SonarCoreError, validate_batch_paths};
 
 /// Lit toutes les lignes d'un fichier de matrice CSV. Le fichier est
 /// entièrement validé : la première ligne invalide interrompt la lecture avec
-/// son numéro de ligne.
+/// son numéro de ligne. Le préambule `#SFMS` éventuel est contrôlé : un DLT
+/// que le réimport ne sait pas encore reconstruire (pas de constructeur owned
+/// dans `packet_parser`) est refusé plutôt que dégradé en Ethernet.
 pub fn read_matrix_rows(csv_path: &Path) -> Result<Vec<FlowMatrixRow>> {
+    let preamble = sfms::read_preamble(csv_path)?;
+    let link_type = preamble
+        .as_ref()
+        .and_then(|p| p.link_type)
+        .unwrap_or(LinkType::ETHERNET);
+    if link_type != LinkType::ETHERNET {
+        return Err(SonarCoreError::UnreimportableLinkType {
+            path: csv_path.to_path_buf(),
+            label: sfms::link_type_name(link_type),
+        });
+    }
+    // Numéro de ligne réel dans le fichier : la première ligne de données
+    // suit l'en-tête, lui-même précédé du préambule s'il est présent.
+    let first_data_line = if preamble.is_some() { 3 } else { 2 };
+
     let mut rdr = csv::ReaderBuilder::new()
         .trim(csv::Trim::All)
+        // Saute la ligne de préambule `#SFMS` (et tout commentaire `#`).
+        .comment(Some(b'#'))
         .from_path(csv_path)
         .map_err(|e| SonarCoreError::InvalidCsv {
             path: csv_path.to_path_buf(),
@@ -26,17 +48,41 @@ pub fn read_matrix_rows(csv_path: &Path) -> Result<Vec<FlowMatrixRow>> {
     for (i, result) in rdr.deserialize::<FlowMatrixRow>().enumerate() {
         let row = result.map_err(|e| SonarCoreError::InvalidCsv {
             path: csv_path.to_path_buf(),
-            message: format!("ligne {} invalide: {e}", i + 2),
+            message: format!("ligne {} invalide: {e}", i + first_data_line),
         })?;
         // Validation stricte (#148) : une IP ou une date illisible est
         // rejetée avec son numéro de ligne, pas dégradée silencieusement.
         row.validate().map_err(|e| SonarCoreError::InvalidCsv {
             path: csv_path.to_path_buf(),
-            message: format!("ligne {} invalide: {e}", i + 2),
+            message: format!("ligne {} invalide: {e}", i + first_data_line),
         })?;
         rows.push(row);
     }
     Ok(rows)
+}
+
+/// Type de liaison commun à des fichiers de matrice (préambule `#SFMS`,
+/// Ethernet implicite pour un export antérieur) : la fusion de relevés de DLT
+/// différents est refusée explicitement (arbitrage du 14/07/2026).
+pub fn common_matrix_link_type(paths: &[PathBuf]) -> Result<LinkType> {
+    let mut common: Option<(LinkType, &PathBuf)> = None;
+    for path in paths {
+        let link_type = sfms::matrix_file_link_type(path)?;
+        match common {
+            None => common = Some((link_type, path)),
+            Some((expected, _)) if expected == link_type => {}
+            Some((expected, _)) => {
+                return Err(SonarCoreError::MixedLinkTypes {
+                    path: path.clone(),
+                    found: sfms::link_type_name(link_type),
+                    expected: sfms::link_type_name(expected),
+                });
+            }
+        }
+    }
+    common
+        .map(|(link_type, _)| link_type)
+        .ok_or(SonarCoreError::MissingInput)
 }
 
 /// Nom de fichier (sans le chemin) utilisé comme origine par défaut d'une
@@ -126,10 +172,15 @@ pub fn matrix_from_rows(rows: &[FlowMatrixRow]) -> FlowMatrix {
     matrix
 }
 
-/// Fusionne plusieurs fichiers de matrice CSV en une matrice unique.
+/// Fusionne plusieurs fichiers de matrice CSV en une matrice unique. Les
+/// fichiers doivent porter le même type de liaison (fusion inter-DLT refusée),
+/// que la matrice produite conserve.
 pub fn merge_matrix_files(inputs: &[PathBuf]) -> Result<FlowMatrix> {
+    let link_type = common_matrix_link_type(inputs)?;
     let rows = read_matrix_rows_from_files(inputs)?;
-    Ok(matrix_from_rows(&rows))
+    let mut matrix = matrix_from_rows(&rows);
+    matrix.link_type = Some(link_type);
+    Ok(matrix)
 }
 
 /// Fusionne plusieurs fichiers de matrice CSV et exporte le résultat.
@@ -186,6 +237,111 @@ mod tests {
                 .iter()
                 .all(|r| r.origin == "site-a.csv|site-b.csv"),
             "chaque ligne trace ses deux fichiers d'origine"
+        );
+    }
+
+    /// L'export écrit le préambule `#SFMS` en tête et le réimport le relit :
+    /// aller-retour complet, DLT du relevé conservé.
+    #[test]
+    fn export_writes_sfms_preamble_and_reimport_reads_it_back() {
+        let dir = std::env::temp_dir().join("sonar_core_preamble_roundtrip_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let out = dir.join("releve.csv");
+
+        let matrix = merge_matrix_files(&[fixture("20260703_NP_Matrice.csv")])
+            .expect("fixture sans préambule -> Ethernet implicite");
+        assert_eq!(
+            matrix.link_type,
+            Some(packet_parser::LinkType::ETHERNET),
+            "un export antérieur au préambule est un relevé Ethernet"
+        );
+        matrix
+            .export_to_csv(out.to_string_lossy().into_owned())
+            .expect("export");
+
+        let first_line = std::fs::read_to_string(&out)
+            .expect("relecture")
+            .lines()
+            .next()
+            .map(str::to_string)
+            .expect("fichier non vide");
+        assert_eq!(first_line, "#SFMS version=1 dlt=ETHERNET");
+
+        let reimported = merge_matrix_files(&[out]).expect("réimport avec préambule");
+        assert_eq!(reimported.row_count(), matrix.row_count());
+        assert_eq!(
+            reimported.link_type,
+            Some(packet_parser::LinkType::ETHERNET)
+        );
+    }
+
+    /// Un relevé d'un DLT que le réimport ne sait pas encore reconstruire
+    /// (SLL) est refusé explicitement, pas réimporté dégradé en Ethernet.
+    #[test]
+    fn reimport_of_a_non_reconstructible_dlt_is_refused() {
+        let dir = std::env::temp_dir().join("sonar_core_preamble_sll_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let path = dir.join("releve_sll.csv");
+        let ethernet_body =
+            std::fs::read_to_string(fixture("20260703_NP_Matrice.csv")).expect("lecture fixture");
+        std::fs::write(
+            &path,
+            format!("#SFMS version=1 dlt=LINUX_SLL\n{ethernet_body}"),
+        )
+        .expect("écriture");
+
+        let err = read_matrix_rows(&path).expect_err("réimport SLL refusé");
+        assert!(
+            matches!(err, crate::SonarCoreError::UnreimportableLinkType { .. }),
+            "erreur dédiée attendue, obtenu : {err}"
+        );
+    }
+
+    /// Deux relevés de DLT différents ne se fusionnent pas : rejet explicite
+    /// (arbitrage du 14/07/2026), avec les deux types cités.
+    #[test]
+    fn merging_matrices_of_different_dlt_is_refused() {
+        let dir = std::env::temp_dir().join("sonar_core_mixed_dlt_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let body =
+            std::fs::read_to_string(fixture("20260703_NP_Matrice.csv")).expect("lecture fixture");
+        let ethernet = dir.join("site-eth.csv");
+        let sll = dir.join("sonde-sll.csv");
+        std::fs::write(&ethernet, format!("#SFMS version=1 dlt=ETHERNET\n{body}")).expect("a");
+        std::fs::write(&sll, format!("#SFMS version=1 dlt=LINUX_SLL\n{body}")).expect("b");
+
+        let Err(err) = merge_matrix_files(&[ethernet, sll]) else {
+            panic!("la fusion inter-DLT doit être refusée");
+        };
+        assert!(
+            matches!(err, crate::SonarCoreError::MixedLinkTypes { .. }),
+            "erreur dédiée attendue, obtenu : {err}"
+        );
+        let message = err.to_string();
+        assert!(message.contains("LINUX_SLL") && message.contains("ETHERNET"));
+    }
+
+    /// Le numéro de ligne des erreurs tient compte du préambule : la première
+    /// ligne de données d'un fichier avec préambule est la ligne 3.
+    #[test]
+    fn line_numbers_account_for_the_preamble() {
+        let dir = std::env::temp_dir().join("sonar_core_preamble_lines_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let bad = dir.join("bad.csv");
+        std::fs::write(
+            &bad,
+            "#SFMS version=1 dlt=ETHERNET\nmac_source,mac_destination\nnot,enough\n",
+        )
+        .expect("écriture");
+
+        let err = read_matrix_rows(&bad).expect_err("fichier invalide");
+        assert!(
+            err.to_string().contains("ligne 3"),
+            "le numéro de ligne doit compter le préambule: {err}"
         );
     }
 

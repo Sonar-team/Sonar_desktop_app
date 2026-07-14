@@ -10,6 +10,7 @@ pub mod matrix;
 pub mod packet;
 #[cfg(feature = "pcap")]
 pub mod pcap;
+pub mod sfms;
 
 pub use error::{Result, SonarCoreError};
 
@@ -45,6 +46,36 @@ pub mod error {
         #[cfg(feature = "pcap")]
         #[error("{path}: {message}")]
         PcapRead { path: PathBuf, message: String },
+
+        /// Type de liaison (LINKTYPE/DLT) sans décodeur dans cette version :
+        /// refusé avant toute mutation d'état, jamais parsé « comme si »
+        /// c'était de l'Ethernet.
+        #[cfg(feature = "pcap")]
+        #[error("{path}: type de liaison non supporté : {label}")]
+        UnsupportedLinkType { path: PathBuf, label: String },
+
+        /// Fusion de relevés de types de liaison différents : refusée
+        /// explicitement (arbitrage du 14/07/2026 — une fusion ne concerne
+        /// que des relevés du même réseau, donc du même DLT).
+        #[error(
+            "{path}: type de liaison {found} incompatible avec le relevé en cours ({expected}) : \
+             une fusion ne concerne que des relevés du même réseau (même type de liaison)"
+        )]
+        MixedLinkTypes {
+            path: PathBuf,
+            found: String,
+            expected: String,
+        },
+
+        /// Relevé dont le type de liaison ne peut pas encore être reconstruit
+        /// au réimport (pas de constructeur owned dans `packet_parser`) :
+        /// refusé plutôt que réimporté dégradé en Ethernet.
+        #[error(
+            "{path}: relevé {label} non réimportable pour l'instant : la reconstruction de ce \
+             type de liaison n'est pas encore disponible, réimport refusé plutôt que dégradé en \
+             Ethernet"
+        )]
+        UnreimportableLinkType { path: PathBuf, label: String },
     }
 
     pub type Result<T> = std::result::Result<T, SonarCoreError>;

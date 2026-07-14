@@ -2,7 +2,7 @@
 //! paquets, parsing, mise à jour de l'état et événements de progression.
 
 use log::{error, info};
-use packet_parser::PacketFlow;
+use packet_parser::LinkType;
 #[cfg(feature = "capture_timing")]
 use packet_parser::timing::ParseTiming;
 #[cfg(feature = "capture_timing")]
@@ -163,15 +163,17 @@ fn apply_owned_packet(
 /// Traite un paquet lu du PCAP : parsing, mise à jour matrice + graphe pour
 /// chaque niveau de flux (tunnels), stats périodiques.
 #[cfg(not(feature = "capture_timing"))]
+#[allow(clippy::too_many_arguments)]
 fn process_packet(
     packet: &pcap::Packet<'_>,
+    link_type: LinkType,
     packet_count: usize,
     total: usize,
     matrice: &mut FlowMatrix,
     graph: &mut GraphData,
     on_event: &Channel<CaptureEvent<'_>>,
 ) {
-    let Ok(flow) = PacketFlow::try_from(packet.data) else {
+    let Ok(flow) = packet_parser::parse::parse(link_type, packet.data) else {
         return;
     };
     let packet_min = CapturedPacket::from_pcap(packet.header, flow);
@@ -201,6 +203,7 @@ struct ParseCounters {
 #[allow(clippy::too_many_arguments)]
 fn process_packet_timed(
     packet: &pcap::Packet<'_>,
+    link_type: LinkType,
     file_path: &str,
     packet_count: usize,
     total: usize,
@@ -217,11 +220,11 @@ fn process_packet_timed(
 
     let parsed_flow = if timing_sample.is_some() {
         let mut parse_timing = ParseTiming::default();
-        PacketFlow::try_from_timed(packet.data, &mut parse_timing)
+        packet_parser::parse::parse_timed(link_type, packet.data, &mut parse_timing)
             .map(|flow| (flow, parse_timing))
             .map_err(|error| (error, parse_timing))
     } else {
-        PacketFlow::try_from(packet.data)
+        packet_parser::parse::parse(link_type, packet.data)
             .map(|flow| (flow, ParseTiming::default()))
             .map_err(|error| (error, ParseTiming::default()))
     };
@@ -347,6 +350,12 @@ pub(super) fn handle_pcap_file(
     let _ = timing_logger;
     #[cfg(feature = "capture_timing")]
     let file_start = Instant::now();
+    // Un DLT sans décodeur échoue ici, avant toute lecture de paquet : le
+    // fichier ne doit pas être parsé « comme si » c'était de l'Ethernet (#150).
+    let link_type = sonar_flows_core::pcap::supported_parser_link_type(Path::new(file_path))?;
+    // Un relevé = un réseau = un DLT : un fichier d'un autre type de liaison
+    // que les précédents est refusé (fusion inter-DLT, arbitrage 14/07/2026).
+    matrice.bind_link_type(link_type, Path::new(file_path))?;
     #[cfg(feature = "capture_timing")]
     let count_start = Instant::now();
     let total = count_packets_in_pcap(file_path)?;
@@ -374,6 +383,7 @@ pub(super) fn handle_pcap_file(
         #[cfg(feature = "capture_timing")]
         process_packet_timed(
             packet,
+            link_type,
             file_path,
             packet_count,
             total,
@@ -384,7 +394,15 @@ pub(super) fn handle_pcap_file(
             &mut counters,
         );
         #[cfg(not(feature = "capture_timing"))]
-        process_packet(packet, packet_count, total, matrice, graph, on_event);
+        process_packet(
+            packet,
+            link_type,
+            packet_count,
+            total,
+            matrice,
+            graph,
+            on_event,
+        );
     })?;
 
     #[cfg(feature = "capture_timing")]

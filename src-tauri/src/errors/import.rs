@@ -13,6 +13,10 @@ pub enum PcapImportError {
     /// silence.
     #[error("Read error in pcap file {0}: {1}")]
     ReadPacketError(String, String),
+    /// Type de liaison du fichier sans décodeur dans cette version : refusé
+    /// avant toute mutation, jamais parsé comme de l'Ethernet.
+    #[error("Type de liaison non supporté dans {0} : {1}")]
+    UnsupportedLinkType(String, String),
 }
 
 /// Représentation sérialisable de [`PcapImportError`] (forme `{ kind, message }`).
@@ -22,4 +26,5 @@ pub enum PcapImportError {
 pub enum PcapImportErrorKind {
     OpenFileError(String, String),
     ReadPacketError(String, String),
+    UnsupportedLinkType(String, String),
 }

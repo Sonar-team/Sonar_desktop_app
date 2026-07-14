@@ -122,13 +122,14 @@ pub use parse::application::Application;
 /// Exports data link layer parsing functionality.
 pub use parse::data_link::DataLink;
 pub use parse::data_link::mac_addres::MacAddress;
-pub use parse::internet::Internet;
+pub use parse::internet::dscp_ecn::{Dscp, Ecn};
 pub use parse::internet::ip_type::IpType;
+pub use parse::internet::{Internet, InternetDetails};
 pub use parse::link_layer::{
     Ieee80211Link, LinkLayer, LinkLayerKind, LinuxArphrdType, LinuxCookedPacketType, LinuxSll2Link,
     LinuxSllLink, NetworkProtocol, RawIpLink,
 };
-pub use parse::transport::Transport;
+pub use parse::transport::{Transport, TransportDetails};
 
 /// Exports data link layer parsing functionality.
 pub use parse::PacketFlow;

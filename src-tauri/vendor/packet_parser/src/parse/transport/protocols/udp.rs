@@ -24,7 +24,7 @@ use crate::{
 /// 48-63: "Checksum u16"
 /// 64-127: "Payload variable"
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UdpPacket<'a> {
     /// Source port
     pub source_port: u16,

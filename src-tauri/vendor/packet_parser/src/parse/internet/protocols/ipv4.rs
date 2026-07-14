@@ -9,6 +9,7 @@ use crate::{
         validate_ipv4_min_length, validate_ipv4_total_length, validate_ipv4_version,
     },
     errors::internet::ipv4::Ipv4Error,
+    parse::internet::dscp_ecn::{Dscp, Ecn},
 };
 use std::convert::TryFrom;
 use std::net::Ipv4Addr;
@@ -37,7 +38,7 @@ use std::net::Ipv4Addr;
 /// 128-159: "Destination IPv4 u32"
 /// 160-191: "Options / Payload variable"
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Ipv4Packet<'a> {
     /// Version (4 for IPv4) and Internet Header Length (IHL)
     pub version_ihl: u8,
@@ -81,14 +82,15 @@ impl<'a> Ipv4Packet<'a> {
         (self.ihl() as usize) * 4
     }
 
-    /// Returns the Differentiated Services Code Point (DSCP)
-    pub fn dscp(&self) -> u8 {
-        self.dscp_ecn >> 2
+    /// Returns the Differentiated Services Code Point (DSCP), with its
+    /// IANA-registered name available through `Display`/[`Dscp::name`].
+    pub fn dscp(&self) -> Dscp {
+        Dscp::from_ds_field(self.dscp_ecn)
     }
 
-    /// Returns the Explicit Congestion Notification (ECN)
-    pub fn ecn(&self) -> u8 {
-        self.dscp_ecn & 0x03
+    /// Returns the Explicit Congestion Notification (ECN) field.
+    pub fn ecn(&self) -> Ecn {
+        Ecn::from_ds_field(self.dscp_ecn)
     }
 
     /// Returns the flags (3 bits)

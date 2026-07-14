@@ -4,6 +4,58 @@ Tous les changements notables du projet seront documentes dans ce fichier.
 
 Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), avec des sections simples par type de changement.
 
+## [8.1.0] - 2026-07-14
+
+Reconstruction owned SLL/SLL2 hors parseur, pour les consommateurs qui
+rebatissent une couche liaison depuis des champs serialises (ex. reimport
+d'une matrice de flux SONAR, issue Sonar#150).
+
+### Ajoute
+
+- `LinuxSllLinkOwned::new` et `LinuxSll2LinkOwned::new` : constructeurs
+  publics des metadonnees cooked owned (les structs restent
+  `#[non_exhaustive]`, le constructeur est le chemin supporte).
+- `LinkLayerOwned::linux_sll` et `LinkLayerOwned::linux_sll2` deviennent
+  publics : le protocole reseau est derive du champ `protocol` cooked, avec
+  la meme derivation que le decodeur live — une couche rebatie est egale
+  (Eq/Hash) a celle produite par le parseur, tests d'aller-retour a l'appui.
+
+## [8.0.0] - 2026-07-14
+
+Version majeure : exposition des en-tetes parses complets via `details` et
+champs DSCP/ECN types.
+
+### Rupture
+
+- `Ipv4Packet::dscp()` et `Ipv4Packet::ecn()` retournent desormais les types
+  [`Dscp`] et [`Ecn`] (RFC 2474 / RFC 3168) au lieu de `u8` bruts. La valeur
+  numerique reste accessible et `Display` affiche le nom IANA (CS0-CS7,
+  AF11-AF43, EF, VA, LE) quand il existe.
+- `Internet` et `Transport` gagnent un champ public `details` : les
+  constructions par litteral doivent l'initialiser. Le champ est ignore par
+  `PartialEq`/`Hash` et absent de la serialisation JSON : l'identite des
+  couches reste definie par les champs aplatis.
+
+### Ajoute
+
+- `InternetDetails` (`Ipv4`/`Ipv6`/`Arp`) et `TransportDetails` (`Tcp`/`Udp`),
+  enums `#[non_exhaustive]` portes par `Internet.details` et
+  `Transport.details` : les consommateurs accedent aux en-tetes parses
+  complets (TTL, flags, options, operation ARP...) sans re-parser le payload.
+- Module `dscp_ecn` partage IPv4/IPv6 avec les types `Dscp` et `Ecn`,
+  reexportes a la racine de la crate.
+- `Ipv6Packet::dscp()` et `Ipv6Packet::ecn()` decodent le champ DS du
+  Traffic Class avec les memes types que l'IPv4.
+- `Ipv4Packet`, `Ipv6Packet`, `TcpPacket` et `UdpPacket` derivent `Clone`.
+
+### Modifie
+
+- Les fixtures TLS 1.3 des tests proviennent maintenant de trames reelles de
+  `pcaps_exemple/protocols/tls/tls1.3.pcapng` (session openssl s_client /
+  s_server sur loopback), couvrant ClientHello, ServerHello multi-records,
+  fin de handshake et Application Data.
+- `perf_by_version.json` regenere avec la mesure de la 8.0.0.
+
 ## [7.0.0] - 2026-07-13
 
 Version majeure : dispatch multi-LINKTYPE. Les decodeurs RAW, Linux SLL v1 et

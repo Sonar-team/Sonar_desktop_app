@@ -60,6 +60,7 @@ impl CaptureHandle {
         app: AppHandle,
         on_event: Channel<CaptureEvent<'static>>,
         filter: Option<String>,
+        matrix: &mut crate::state::flow_matrix::FlowMatrix,
     ) -> Result<(), CaptureError> {
         config.validate()?;
         debug!(
@@ -80,11 +81,30 @@ impl CaptureHandle {
 
         setup_filter(&mut cap, filter)?;
 
+        // Le DLT de l'interface est refusé avant l'événement `Started` si
+        // cette version n'a pas de décodeur pour lui : un DLT non supporté
+        // ne doit jamais être parsé comme de l'Ethernet (#150).
+        let datalink = cap.get_datalink();
+        let parser_link_type = sonar_flows_core::pcap::parser_link_type(datalink);
+        if !packet_parser::parse::is_supported(parser_link_type) {
+            return Err(CaptureError::UnsupportedLinkType(
+                sonar_flows_core::pcap::datalink_label(datalink),
+            ));
+        }
+
+        // Un relevé = un réseau = un DLT (arbitrage 14/07/2026) : capturer sur
+        // une interface d'un autre type de liaison que la matrice en cours
+        // est refusé avant tout démarrage.
+        let previous_link_type = matrix.link_type;
+        matrix
+            .bind_link_type(parser_link_type, std::path::Path::new(&config.device_name))
+            .map_err(|e| CaptureError::MixedLinkType(e.to_string()))?;
+
         // `Started` part seulement une fois l'interface ouverte et le filtre
         // appliqué : un échec de démarrage ne produit jamais un « démarré »
         // suivi d'une erreur.
-        let link_type = sonar_flows_core::pcap::datalink_label(cap.get_datalink());
-        on_event.send(CaptureEvent::Started {
+        let link_type = sonar_flows_core::pcap::datalink_label(datalink);
+        if let Err(e) = on_event.send(CaptureEvent::Started {
             session_id: self.session_id,
             device: &config.device_name,
             buffer_size: config.buffer_size,
@@ -92,7 +112,12 @@ impl CaptureHandle {
             timeout: config.timeout,
             snaplen: config.snaplen,
             link_type: &link_type,
-        })?;
+        }) {
+            // Démarrage avorté : le DLT éventuellement fixé ci-dessus ne doit
+            // pas rester lié à un relevé qui n'a rien reçu.
+            matrix.link_type = previous_link_type;
+            return Err(e.into());
+        }
 
         let (tx, rx): (Sender<CaptureMessage>, Receiver<CaptureMessage>) =
             bounded(config.chan_capacity as usize);
@@ -116,6 +141,7 @@ impl CaptureHandle {
             shared_stats.clone(),
             stop_flag.clone(),
             self.session_id,
+            parser_link_type,
         ));
         self.threads.push(spawn_capture_thread_with_pool(
             tx,

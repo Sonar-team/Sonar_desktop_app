@@ -1311,6 +1311,317 @@ mod tests {
         }
     }
 
+    /// Trames réelles : pcaps_exemple/sll.pcap (Linux cooked v1, capture
+    /// `tcpdump -i any`) — requêtes DNS vers 192.168.1.254:53 et
+    /// systemd-resolved (127.0.0.53). Trames 98 (IPv4, sortante, hatype
+    /// Ethernet), 96 (IPv6, sortante), 93 (IPv4 via loopback, hatype 772).
+    #[test]
+    fn sll_v1_real_capture_dispatches_ipv4_ipv6_and_loopback_to_dns() {
+        use crate::{LinuxArphrdType, LinuxCookedPacketType};
+        use std::net::Ipv6Addr;
+
+        struct Expected {
+            name: &'static str,
+            hex: &'static str,
+            packet_type: LinuxCookedPacketType,
+            hardware_type: LinuxArphrdType,
+            source_address: &'static [u8],
+            sll_protocol: u16,
+            source: IpAddr,
+            destination: IpAddr,
+            source_port: u16,
+        }
+
+        let frames = [
+            Expected {
+                name: "trame 98 (IPv4 sortante)",
+                hex: "000400010006e0d55e289bd4000008004500004c717200004011842bc0a801b5c0a801fe8ef100350038854d3a4d0100000100000000000107756e6c6561736807636f646569756d03636f6d000041000100002905c0000000000000",
+                packet_type: LinuxCookedPacketType::OUTGOING,
+                hardware_type: LinuxArphrdType::ETHERNET,
+                source_address: &[0xe0, 0xd5, 0x5e, 0x28, 0x9b, 0xd4],
+                sll_protocol: 0x0800,
+                source: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 181)),
+                destination: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 254)),
+                source_port: 36593,
+            },
+            Expected {
+                name: "trame 96 (IPv6 sortante)",
+                hex: "000400010006e0d55e289bd4000086dd600f037800381140200108613fc79b00d48220dc0d4c71e6200108613fc79b00461524fffe20a5648db30035003889c8dee70100000100000000000107756e6c6561736807636f646569756d03636f6d000041000100002905ac000000000000",
+                packet_type: LinuxCookedPacketType::OUTGOING,
+                hardware_type: LinuxArphrdType::ETHERNET,
+                source_address: &[0xe0, 0xd5, 0x5e, 0x28, 0x9b, 0xd4],
+                sll_protocol: 0x86dd,
+                source: IpAddr::V6(Ipv6Addr::new(
+                    0x2001, 0x0861, 0x3fc7, 0x9b00, 0xd482, 0x20dc, 0x0d4c, 0x71e6,
+                )),
+                destination: IpAddr::V6(Ipv6Addr::new(
+                    0x2001, 0x0861, 0x3fc7, 0x9b00, 0x4615, 0x24ff, 0xfe20, 0xa564,
+                )),
+                source_port: 36275,
+            },
+            Expected {
+                name: "trame 93 (loopback vers systemd-resolved)",
+                hex: "0000030400060000000000000000080045000041445540004011f8207f0000017f00003541470035002dfe74c1470100000100000000000007756e6c6561736807636f646569756d03636f6d0000410001",
+                packet_type: LinuxCookedPacketType::HOST,
+                hardware_type: LinuxArphrdType::LOOPBACK,
+                source_address: &[0, 0, 0, 0, 0, 0],
+                sll_protocol: 0x0800,
+                source: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+                destination: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 53)),
+                source_port: 16711,
+            },
+        ];
+
+        for expected in &frames {
+            let name = expected.name;
+            let packet = hex::decode(expected.hex).expect("invalid test hex fixture");
+            let flow = parse(LinkType::LINUX_SLL, packet.as_slice()).unwrap();
+
+            let sll = flow
+                .data_link
+                .as_linux_sll()
+                .unwrap_or_else(|| panic!("{name}: lien SLL attendu"));
+            assert_eq!(flow.data_link.link_type(), LinkType::LINUX_SLL, "{name}");
+            assert_eq!(sll.packet_type, expected.packet_type, "{name}");
+            assert_eq!(sll.hardware_type, expected.hardware_type, "{name}");
+            assert_eq!(sll.address_length, 6, "{name}");
+            assert_eq!(sll.source_address, Some(expected.source_address), "{name}");
+            assert_eq!(sll.protocol, expected.sll_protocol, "{name}");
+
+            let internet = flow
+                .internet
+                .as_ref()
+                .unwrap_or_else(|| panic!("{name}: pas de L3"));
+            assert_eq!(internet.source, Some(expected.source), "{name}");
+            assert_eq!(internet.destination, Some(expected.destination), "{name}");
+
+            let transport = flow
+                .transport
+                .as_ref()
+                .unwrap_or_else(|| panic!("{name}: pas de L4"));
+            assert_eq!(transport.protocol, TransportProtocol::Udp, "{name}");
+            assert_eq!(transport.source_port, Some(expected.source_port), "{name}");
+            assert_eq!(transport.destination_port, Some(53), "{name}");
+
+            assert_eq!(
+                flow.application
+                    .as_ref()
+                    .unwrap_or_else(|| panic!("{name}: pas de L7"))
+                    .application_protocol,
+                "DNS",
+                "{name} doit être détecté DNS"
+            );
+        }
+    }
+
+    /// Trame réelle : pcaps_exemple/sll.pcap, trame 1864 — requête ARP
+    /// « Who has 192.168.1.108? Tell 192.168.1.254 » vue à travers
+    /// l'en-tête cooked v1 (le padding d'adresse non nul du noyau ne doit
+    /// pas fuiter dans la vue de l'adresse).
+    #[test]
+    fn sll_v1_real_capture_dispatches_arp_without_transport() {
+        use crate::parse::internet::InternetDetails;
+        use crate::{LinuxArphrdType, LinuxCookedPacketType};
+
+        let packet = hex::decode(
+            "00000001000644152420a564742d0806000108000604000144152420a564c0a801fe000000000000c0a8016c00000000000000000000",
+        )
+        .expect("invalid test hex fixture");
+        let flow = parse(LinkType::LINUX_SLL, packet.as_slice()).unwrap();
+
+        let sll = flow.data_link.as_linux_sll().expect("lien SLL attendu");
+        assert_eq!(sll.packet_type, LinuxCookedPacketType::HOST);
+        assert_eq!(sll.hardware_type, LinuxArphrdType::ETHERNET);
+        // Le slot d'adresse sur le fil contient 44:15:24:20:a5:64 suivi de
+        // deux octets de padding non nuls (74:2d) : address_length = 6 doit
+        // borner la vue.
+        assert_eq!(
+            sll.source_address,
+            Some(&[0x44, 0x15, 0x24, 0x20, 0xa5, 0x64][..])
+        );
+        assert_eq!(sll.protocol, 0x0806);
+
+        let internet = flow.internet.as_ref().expect("pas de L3");
+        let InternetDetails::Arp(arp) = internet.details.as_ref().expect("détails ARP") else {
+            panic!("détails ARP attendus, obtenu {:?}", internet.details);
+        };
+        assert_eq!(arp.operation, 1);
+        assert_eq!(
+            arp.sender_hardware_addr,
+            [0x44, 0x15, 0x24, 0x20, 0xa5, 0x64]
+        );
+        assert_eq!(
+            internet.source,
+            Some(IpAddr::V4(Ipv4Addr::new(192, 168, 1, 254)))
+        );
+        assert_eq!(
+            internet.destination,
+            Some(IpAddr::V4(Ipv4Addr::new(192, 168, 1, 108)))
+        );
+
+        assert!(flow.transport.is_none());
+        assert!(flow.application.is_none());
+        assert!(flow.corrupted.is_none());
+    }
+
+    /// Trames réelles : pcaps_exemple/capture_sll2.pcap (Linux cooked v2,
+    /// capture dumpcap `-i any`) — requêtes DNS vers 192.168.1.254:53 et
+    /// systemd-resolved (127.0.0.53). Trames 87 (IPv4, sortante, ifindex 2),
+    /// 86 (IPv6, sortante, ifindex 2), 83 (IPv4 via loopback, hatype 772,
+    /// ifindex 1).
+    #[test]
+    fn sll2_real_capture_dispatches_ipv4_ipv6_and_loopback_to_dns() {
+        use crate::{LinuxArphrdType, LinuxCookedPacketType};
+        use std::net::Ipv6Addr;
+
+        struct Expected {
+            name: &'static str,
+            hex: &'static str,
+            sll_protocol: u16,
+            interface_index: u32,
+            packet_type: LinuxCookedPacketType,
+            hardware_type: LinuxArphrdType,
+            source_address: &'static [u8],
+            source: IpAddr,
+            destination: IpAddr,
+            source_port: u16,
+        }
+
+        let frames = [
+            Expected {
+                name: "trame 87 (IPv4 sortante)",
+                hex: "080000000000000200010406e0d55e289bd400004500004c6e84000040118719c0a801b5c0a801fed8e100350038854d0c5a01000001000000000001086163636f756e747306676f6f676c6503636f6d000041000100002905c0000000000000",
+                sll_protocol: 0x0800,
+                interface_index: 2,
+                packet_type: LinuxCookedPacketType::OUTGOING,
+                hardware_type: LinuxArphrdType::ETHERNET,
+                source_address: &[0xe0, 0xd5, 0x5e, 0x28, 0x9b, 0xd4],
+                source: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 181)),
+                destination: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 254)),
+                source_port: 55521,
+            },
+            Expected {
+                name: "trame 86 (IPv6 sortante)",
+                hex: "86dd00000000000200010406e0d55e289bd4000060073f1c00381140200108613fc79b00d48220dc0d4c71e6200108613fc79b00461524fffe20a56498140035003889c8575801000001000000000001086163636f756e747306676f6f676c6503636f6d000041000100002905ac000000000000",
+                sll_protocol: 0x86dd,
+                interface_index: 2,
+                packet_type: LinuxCookedPacketType::OUTGOING,
+                hardware_type: LinuxArphrdType::ETHERNET,
+                source_address: &[0xe0, 0xd5, 0x5e, 0x28, 0x9b, 0xd4],
+                source: IpAddr::V6(Ipv6Addr::new(
+                    0x2001, 0x0861, 0x3fc7, 0x9b00, 0xd482, 0x20dc, 0x0d4c, 0x71e6,
+                )),
+                destination: IpAddr::V6(Ipv6Addr::new(
+                    0x2001, 0x0861, 0x3fc7, 0x9b00, 0x4615, 0x24ff, 0xfe20, 0xa564,
+                )),
+                source_port: 38932,
+            },
+            Expected {
+                name: "trame 83 (loopback vers systemd-resolved)",
+                hex: "08000000000000010304000600000000000000004500004191e640004011aa8f7f0000017f000035aaf60035002dfe74136201000001000000000000086163636f756e747306676f6f676c6503636f6d0000410001",
+                sll_protocol: 0x0800,
+                interface_index: 1,
+                packet_type: LinuxCookedPacketType::HOST,
+                hardware_type: LinuxArphrdType::LOOPBACK,
+                source_address: &[0, 0, 0, 0, 0, 0],
+                source: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+                destination: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 53)),
+                source_port: 43766,
+            },
+        ];
+
+        for expected in &frames {
+            let name = expected.name;
+            let packet = hex::decode(expected.hex).expect("invalid test hex fixture");
+            let flow = parse(LinkType::LINUX_SLL2, packet.as_slice()).unwrap();
+
+            let sll2 = flow
+                .data_link
+                .as_linux_sll2()
+                .unwrap_or_else(|| panic!("{name}: lien SLL2 attendu"));
+            assert_eq!(flow.data_link.link_type(), LinkType::LINUX_SLL2, "{name}");
+            assert_eq!(sll2.protocol, expected.sll_protocol, "{name}");
+            assert!(sll2.reserved_is_zero(), "{name}");
+            assert_eq!(sll2.interface_index, expected.interface_index, "{name}");
+            assert_eq!(sll2.packet_type, expected.packet_type, "{name}");
+            assert_eq!(sll2.hardware_type, expected.hardware_type, "{name}");
+            assert_eq!(sll2.address_length, 6, "{name}");
+            assert_eq!(sll2.source_address, Some(expected.source_address), "{name}");
+
+            let internet = flow
+                .internet
+                .as_ref()
+                .unwrap_or_else(|| panic!("{name}: pas de L3"));
+            assert_eq!(internet.source, Some(expected.source), "{name}");
+            assert_eq!(internet.destination, Some(expected.destination), "{name}");
+
+            let transport = flow
+                .transport
+                .as_ref()
+                .unwrap_or_else(|| panic!("{name}: pas de L4"));
+            assert_eq!(transport.protocol, TransportProtocol::Udp, "{name}");
+            assert_eq!(transport.source_port, Some(expected.source_port), "{name}");
+            assert_eq!(transport.destination_port, Some(53), "{name}");
+
+            assert_eq!(
+                flow.application
+                    .as_ref()
+                    .unwrap_or_else(|| panic!("{name}: pas de L7"))
+                    .application_protocol,
+                "DNS",
+                "{name} doit être détecté DNS"
+            );
+        }
+    }
+
+    /// Trame réelle : pcaps_exemple/capture_sll2.pcap, trame 121 — requête
+    /// ARP « Who has 192.168.1.181? Tell 192.168.1.254 » reçue sur
+    /// l'ifindex 2 à travers l'en-tête cooked v2.
+    #[test]
+    fn sll2_real_capture_dispatches_arp_without_transport() {
+        use crate::parse::internet::InternetDetails;
+        use crate::{LinuxArphrdType, LinuxCookedPacketType};
+
+        let packet = hex::decode(
+            "08060000000000020001000644152420a5640000000108000604000144152420a564c0a801fe000000000000c0a801b5000000000000000000000000000000000000",
+        )
+        .expect("invalid test hex fixture");
+        let flow = parse(LinkType::LINUX_SLL2, packet.as_slice()).unwrap();
+
+        let sll2 = flow.data_link.as_linux_sll2().expect("lien SLL2 attendu");
+        assert_eq!(sll2.protocol, 0x0806);
+        assert!(sll2.reserved_is_zero());
+        assert_eq!(sll2.interface_index, 2);
+        assert_eq!(sll2.packet_type, LinuxCookedPacketType::HOST);
+        assert_eq!(sll2.hardware_type, LinuxArphrdType::ETHERNET);
+        assert_eq!(
+            sll2.source_address,
+            Some(&[0x44, 0x15, 0x24, 0x20, 0xa5, 0x64][..])
+        );
+
+        let internet = flow.internet.as_ref().expect("pas de L3");
+        let InternetDetails::Arp(arp) = internet.details.as_ref().expect("détails ARP") else {
+            panic!("détails ARP attendus, obtenu {:?}", internet.details);
+        };
+        assert_eq!(arp.operation, 1);
+        assert_eq!(
+            arp.sender_hardware_addr,
+            [0x44, 0x15, 0x24, 0x20, 0xa5, 0x64]
+        );
+        assert_eq!(
+            internet.source,
+            Some(IpAddr::V4(Ipv4Addr::new(192, 168, 1, 254)))
+        );
+        assert_eq!(
+            internet.destination,
+            Some(IpAddr::V4(Ipv4Addr::new(192, 168, 1, 181)))
+        );
+
+        assert!(flow.transport.is_none());
+        assert!(flow.application.is_none());
+        assert!(flow.corrupted.is_none());
+    }
+
     /// EtherType IPv4 annoncé mais en-tête IP invalide : le L2 doit être
     /// conservé et la corruption signalée, sans échec du parsing.
     #[test]
@@ -1501,5 +1812,191 @@ mod tests {
         );
 
         assert_eq!(flow.flatten().len(), 2);
+    }
+
+    // Trames réelles : pcaps_exemple/protocols/tls/tls1.3.pcapng — session
+    // TLS 1.3 openssl s_client -> s_server sur loopback (127.0.0.1:4443),
+    // capture issue de github.com/tex2e/openssl-playground.
+
+    /// Trame 4 : ClientHello TLSv1.3 (record layer en version legacy 0x0301,
+    /// extension supported_versions = TLS 1.3 uniquement).
+    fn sample_tlsv3_client_hello() -> Vec<u8> {
+        hex::decode(
+            "00000000000000000000000008004500010b94e440004006a7067f0000017f00000184dc115bd5b503fbebbcb42b80180200feff00000101080a64b097c664b097c616030100d2010000ce0303987b596feff4ea77cd7743d5c52192a1e95eee1b926c86e4d6ada4b39e087c2320b98aa442054ba9403f8c5fec4c6da74771b7e0cae70e703758d43280a0c2c1b8000813021303130100ff0100007d000b000403000102000a000c000a001d0017001e00190018002300000016000000170000000d001e001c040305030603080708080809080a080b080408050806040105010601002b0003020304002d00020101003300260024001d0020f9d63defe78ed9a66cef42ab56e27a97562a534ae6186fb564a98d044e8ac665",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 6 : réponse serveur — six records TLS dans le même segment TCP :
+    /// ServerHello, ChangeCipherSpec, puis quatre records chiffrés
+    /// (EncryptedExtensions, Certificate, CertificateVerify, Finished)
+    /// annoncés comme Application Data.
+    fn sample_tlsv3_server_hello() -> Vec<u8> {
+        hex::decode(
+            "00000000000000000000000008004500056dbaf3400040067c957f0000017f000001115b84dcebbcb42bd5b504d280180200036200000101080a64b097cd64b097c6160303007a020000760303f1075544aed0578146368af51ebca7755b4057296f8b887c1576295ad529dc5f20b98aa442054ba9403f8c5fec4c6da74771b7e0cae70e703758d43280a0c2c1b8130200002e002b0002030400330024001d00206f830422af5e6f22368d20607c67c3956d8b8a5bbd8cbc71c92c92efaab2c91c1403030001011703030017b0891cce8c1b5dbb3710ab331ed44441cc8319d817280f170303032b2b622969394121ba16170f3fedd3cee7a5855df6dcd78196574827560e0cec51bd40cb3c4eee46ddee30e16c20e71d593f57de3b807e4a9100193aa68056c92bf8fb493c5b1183a2e8a7dc5f722bb307f8d7c069fbefe6494dda7f3982a2b1c7959d935e3f18830e4b26bd1f9e34ea7421c0819e964cc8b674a106f57f5e8a3b49f3cbed90513902928a5cd9dbdbb2ab3b6a3af44d5cfdfcbfaa14805315ca5274d1f449ce52f346f363b2564248ccf31c17fc476faf8708060145eedafa6f0ee96c0bb6fa38d41c7d2990a75d6b7414af876b935066dac69df387e0a3477ef53b253720af1112d557d895ee2b7936433ca35ab37052dd7b349bb42169a793e2b06b7f73014c820313d9c8653ca4b46459ab65f06746430784324e0dacbedd80859c69062e48adbaed5a22f9bd32f0fa475956b8976fa91e6f74297c6ad0e76f901bd3fbe8e1550de4de3d7a70df0992bba9735878a8263e710b07cbb0bbde8a278fa2b8772f5e0f763414dfe3ebd573d7ad9deb929cf84a5944ada4d960c61cd1b2625670272a2d7d16d1148efb186cfc909914b10f4e8aa3ce4dbcc2704e576141d06cae7bce11acebc3b9b091060f23a6d787d0c7d3dc269f8331e70b1e99d4ce60feb22e3294b51cfd8ba75dfb62dcb120934ecc7d4b37e499a99d3cfdc0e67633a42f3c72b034567e17dfd847301dcae4bccccbea7f500e3c49e564404618ada6567006d19409ac7e055a269c0649a24c17c0f007a4c7488f6037535ee83c010a46df77ad69403f3fa2cbfe7d50cbcd3ba730702f1b68e72bf9a95a6d688dd7ac9aae3434207bae61b7bc4549832c3aef0c2913c989790c8231bd365e32381292b351716d78aaf88169312a122374bcfc829bfd6af05c7494e23809945d285bd6a684f783513483f506374000799ed900e92036ab4f6ed871987ddbb35a0a6033772a4e7b50300e5ecc7981eedd84384a0d1b51fdb080af3abe28a034ae5149a42a48753fa882a7271ed6dcd5800b685b046ff9794584f6ae6a79c71f5f1edc9d233f85d580bf37c85bcc021d45d340f1ebff1ef4b3df6e27fff60c70b127818e91ade8ad704877f36e65f030698aaa9815b41faee698a40e2dc779f911b347bbf3bc9d5f812595b317030301196f7d7a403e3173b32b1dcf87bc7a8331f89fd5bd98f65788eb70c11e032a48dded8694b8a381bb2d3f4f159878fc2c020f97a38178ecf8c16add420da4abfea59e16e7b5c128f2b1eab6ce49c41f8141379db20f05ee8f701b48ed26e67a81a0b1c4d191ebf560f9774d1c399d61187454f718d519eca300dd4f491bb6905a123495f250301af22bebd90d3f946dd206494f5ae2d7abcb6664d3620bd43a4c4521e75147e2583585e4cf21fc2824695ee68e512126361bdffbecc2505ede998ac8499b5ca5d42a9eeb614174c0b3a67d01bc2c66837ab6644a02ab34ec7e13f66e6fe66e1589a0894b60724cf83eaf25cc69d7b67b07b1ddee1c4ac5a62bb8491340db21f760abb34851940d5030a5f96c90d47a8db1c62f381703030045262610454da3638060106eb4581be0b529977e7df24b996730ab7fa1880db9007cc4d6d826393a603e08655c28a6cdb5aa57cc4249a86216dad14742857451dc39e1f8c889",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 8 : fin de handshake côté client — ChangeCipherSpec puis
+    /// Finished chiffré (Application Data) dans le même segment TCP.
+    fn sample_tlsv3_change_cypher_spec() -> Vec<u8> {
+        hex::decode(
+            "00000000000000000000000008004500008494e640004006a78b7f0000017f00000184dc115bd5b504d2ebbcb96480180200fe7800000101080a64b097ce64b097cd1403030001011703030045591262704518d3d8b4792fd81a61a233aae2be7b7d1454ff722087ecf85aef68f6c07625ebcd6ec250754280e6ac73b96c36ff492b82962a63aba1a7750c55c09e68f23ea2",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 19 : record Application Data applicatif (données chiffrées).
+    fn sample_tlsv3_application_data() -> Vec<u8> {
+        hex::decode(
+            "00000000000000000000000008004500004c94eb40004006a7be7f0000017f00000184dc115bd5b50547ebbccc1080180200fe4000000101080a64b097d864b097d5170303001351e67564011ed1bebcb4cf70f19c845b0e8920",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// tls1.3.pcapng, trame 4 : le ClientHello TLSv1.3 traverse tout le
+    /// pipeline (IPv4 -> TCP -> application "TLS") et le record se décode
+    /// champ à champ comme dans la dissection tshark.
+    #[test]
+    fn packetflow_detects_tlsv3() {
+        use crate::parse::application::protocols::tls::{
+            TlsContentType, TlsVersion, parse_tls_records,
+        };
+
+        let packet = sample_tlsv3_client_hello();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let internet = flow.internet.as_ref().expect("internet layer");
+        assert_eq!(internet.protocol_name, "IPv4");
+        assert_eq!(internet.source, Some(IpAddr::V4(Ipv4Addr::LOCALHOST)));
+        assert_eq!(internet.destination, Some(IpAddr::V4(Ipv4Addr::LOCALHOST)));
+
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.protocol, TransportProtocol::Tcp);
+        assert_eq!(transport.source_port, Some(34012));
+        assert_eq!(transport.destination_port, Some(4443));
+
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "TLS");
+
+        // Le payload TCP est exactement un record TLS complet de 215 octets :
+        // 5 d'en-tête + 210 de ClientHello.
+        let payload = transport.payload.expect("tcp payload");
+        assert_eq!(payload.len(), 215);
+
+        let records = parse_tls_records(payload);
+        assert_eq!(records.len(), 1);
+        let record = &records[0];
+        assert_eq!(record.content_type, TlsContentType::Handshake);
+        // Legacy version du record layer : 0x0301. La version TLS 1.3 réelle
+        // se négocie dans l'extension supported_versions du ClientHello.
+        assert_eq!(record.version, TlsVersion { major: 3, minor: 1 });
+        assert_eq!(record.length, 210);
+        // Handshake Type: Client Hello (1), Length: 206.
+        assert_eq!(record.payload[0], 1);
+        assert_eq!(record.payload[1..4], [0x00, 0x00, 0xce]);
+    }
+
+    /// tls1.3.pcapng, trame 6 : la réponse serveur porte six records TLS
+    /// dans le même segment TCP, tous décodés par parse_tls_records.
+    #[test]
+    fn packetflow_detects_tlsv3_server_hello_multi_records() {
+        use crate::parse::application::protocols::tls::{
+            TlsContentType, TlsVersion, parse_tls_records,
+        };
+
+        let packet = sample_tlsv3_server_hello();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.source_port, Some(4443));
+        assert_eq!(transport.destination_port, Some(34012));
+
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "TLS");
+
+        let records = parse_tls_records(transport.payload.expect("tcp payload"));
+        assert_eq!(records.len(), 6);
+
+        // ServerHello (type 2) : supported_versions = TLS 1.3 (0x0304).
+        assert_eq!(records[0].content_type, TlsContentType::Handshake);
+        assert_eq!(records[0].length, 122);
+        assert_eq!(records[0].payload[0], 2);
+        let supported_versions_tls13 = [0x00, 0x2b, 0x00, 0x02, 0x03, 0x04];
+        assert!(
+            records[0]
+                .payload
+                .windows(supported_versions_tls13.len())
+                .any(|w| w == supported_versions_tls13),
+            "le ServerHello doit négocier TLS 1.3 via supported_versions"
+        );
+
+        assert_eq!(records[1].content_type, TlsContentType::ChangeCipherSpec);
+        assert_eq!(records[1].payload, &[0x01]);
+
+        // EncryptedExtensions, Certificate, CertificateVerify et Finished
+        // chiffrés : annoncés Application Data en version legacy 0x0303.
+        let encrypted_lengths = [23, 811, 281, 69];
+        for (record, expected_length) in records[2..].iter().zip(encrypted_lengths) {
+            assert_eq!(record.content_type, TlsContentType::ApplicationData);
+            assert_eq!(record.version, TlsVersion { major: 3, minor: 3 });
+            assert_eq!(record.length, expected_length);
+        }
+    }
+
+    /// tls1.3.pcapng, trame 8 : fin de handshake client — ChangeCipherSpec
+    /// puis Finished chiffré dans le même segment TCP.
+    #[test]
+    fn packetflow_detects_tlsv3_change_cypher_spec() {
+        use crate::parse::application::protocols::tls::{
+            TlsContentType, TlsVersion, parse_tls_records,
+        };
+
+        let packet = sample_tlsv3_change_cypher_spec();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.source_port, Some(34012));
+        assert_eq!(transport.destination_port, Some(4443));
+
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "TLS");
+
+        let records = parse_tls_records(transport.payload.expect("tcp payload"));
+        assert_eq!(records.len(), 2);
+
+        assert_eq!(records[0].content_type, TlsContentType::ChangeCipherSpec);
+        assert_eq!(records[0].length, 1);
+        assert_eq!(records[0].payload, &[0x01]);
+
+        assert_eq!(records[1].content_type, TlsContentType::ApplicationData);
+        assert_eq!(records[1].version, TlsVersion { major: 3, minor: 3 });
+        assert_eq!(records[1].length, 69);
+    }
+
+    /// tls1.3.pcapng, trame 19 : record Application Data applicatif ; en
+    /// TLS 1.3 les records chiffrés s'annoncent en version legacy 0x0303.
+    #[test]
+    fn packetflow_detects_tlsv3_application_data() {
+        use crate::parse::application::protocols::tls::{
+            TlsContentType, TlsVersion, parse_tls_records,
+        };
+
+        let packet = sample_tlsv3_application_data();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.source_port, Some(34012));
+        assert_eq!(transport.destination_port, Some(4443));
+
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "TLS");
+
+        let records = parse_tls_records(transport.payload.expect("tcp payload"));
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].content_type, TlsContentType::ApplicationData);
+        assert_eq!(records[0].version, TlsVersion { major: 3, minor: 3 });
+        assert_eq!(records[0].length, 19);
     }
 }

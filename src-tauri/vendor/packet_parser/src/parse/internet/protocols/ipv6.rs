@@ -9,6 +9,7 @@ use crate::{
         validate_ipv6_version,
     },
     errors::internet::ipv6::Ipv6Error,
+    parse::internet::dscp_ecn::{Dscp, Ecn},
 };
 use std::convert::TryFrom;
 use std::net::Ipv6Addr;
@@ -33,7 +34,7 @@ use std::net::Ipv6Addr;
 /// 192-319: "Destination IPv6 u128"
 /// 320-383: "Extension Headers / Payload variable"
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Ipv6Packet<'a> {
     /// Version (6 for IPv6), Traffic Class, and Flow Label
     pub version_tc_flow: [u8; 4],
@@ -86,6 +87,18 @@ impl<'a> Ipv6Packet<'a> {
     /// Returns the Traffic Class
     pub fn traffic_class(&self) -> u8 {
         ((self.version_tc_flow[0] & 0x0F) << 4) | (self.version_tc_flow[1] >> 4)
+    }
+
+    /// Returns the Differentiated Services Code Point carried by the
+    /// Traffic Class (same DS field layout as IPv4, RFC 2474).
+    pub fn dscp(&self) -> Dscp {
+        Dscp::from_ds_field(self.traffic_class())
+    }
+
+    /// Returns the Explicit Congestion Notification field of the
+    /// Traffic Class.
+    pub fn ecn(&self) -> Ecn {
+        Ecn::from_ds_field(self.traffic_class())
     }
 
     /// Returns the Flow Label

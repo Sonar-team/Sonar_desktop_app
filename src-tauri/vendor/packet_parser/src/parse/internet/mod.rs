@@ -3,6 +3,7 @@
 // Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
 // This file may not be copied, modified, or distributed except according to those terms.
 
+pub mod dscp_ecn;
 pub mod protocols;
 
 use std::convert::TryFrom;
@@ -21,7 +22,21 @@ use super::transport::Transport;
 use crate::NetworkProtocol;
 use ip_type::IpType;
 
-#[derive(Debug, Clone, Serialize, Eq)]
+/// Protocol-specific parsed header, kept alongside the flattened summary
+/// fields so consumers never need to re-parse the payload to reach fields
+/// like DSCP/ECN, TTL or the ARP operation.
+///
+/// `None` on [`Internet`] means the protocol keeps no detailed header
+/// (Profinet) or the value was built by hand.
+#[non_exhaustive]
+#[derive(Debug, Clone)]
+pub enum InternetDetails<'a> {
+    Ipv4(ipv4::Ipv4Packet<'a>),
+    Ipv6(ipv6::Ipv6Packet<'a>),
+    Arp(ArpPacket),
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct Internet<'a> {
     /// Source IP address when the internet layer carries one.
     pub source: Option<IpAddr>,
@@ -42,6 +57,12 @@ pub struct Internet<'a> {
     /// Internet-layer payload bytes.
     #[serde(skip_serializing)]
     pub payload: &'a [u8],
+    /// Full parsed header when the protocol keeps one.
+    ///
+    /// Ignored by `PartialEq`/`Hash`/serialization: the flattened fields
+    /// above define the identity of the internet layer.
+    #[serde(skip_serializing)]
+    pub details: Option<InternetDetails<'a>>,
 }
 
 impl<'a> Internet<'a> {
@@ -67,7 +88,7 @@ impl<'a> Internet<'a> {
         payload: &'a [u8],
     ) -> Result<Self, InternetError> {
         match protocol {
-            NetworkProtocol::Arp => Ok(Self::from_arp(&ArpPacket::try_from(payload)?)),
+            NetworkProtocol::Arp => Ok(Self::from_arp(ArpPacket::try_from(payload)?)),
             NetworkProtocol::Ipv4 => Ok(Self::from_ipv4(ipv4::Ipv4Packet::try_from(payload)?)),
             NetworkProtocol::Ipv6 => Ok(Self::from_ipv6(ipv6::Ipv6Packet::try_from(payload)?)),
             NetworkProtocol::Profinet => {
@@ -78,7 +99,7 @@ impl<'a> Internet<'a> {
         }
     }
 
-    fn from_arp(arp_packet: &ArpPacket) -> Self {
+    fn from_arp(arp_packet: ArpPacket) -> Self {
         Internet {
             source: Some(arp_packet.sender_protocol_addr),
             source_type: Some(IpType::from_addr(&arp_packet.sender_protocol_addr)),
@@ -87,6 +108,7 @@ impl<'a> Internet<'a> {
             protocol_name: "ARP",
             payload_protocol: None,
             payload: &[],
+            details: Some(InternetDetails::Arp(arp_packet)),
         }
     }
 
@@ -105,6 +127,7 @@ impl<'a> Internet<'a> {
             protocol_name: "IPv4",
             payload_protocol,
             payload: ipv4_packet.payload,
+            details: Some(InternetDetails::Ipv4(ipv4_packet)),
         }
     }
 
@@ -119,6 +142,7 @@ impl<'a> Internet<'a> {
                 .transport_protocol
                 .map(|protocol| Transport::transport_from_u8(&protocol)),
             payload: ipv6_packet.payload,
+            details: Some(InternetDetails::Ipv6(ipv6_packet)),
         }
     }
 
@@ -131,6 +155,7 @@ impl<'a> Internet<'a> {
             protocol_name: "Profinet",
             payload_protocol: None,
             payload: &[],
+            details: None,
         }
     }
 }
@@ -148,7 +173,7 @@ impl<'a> TryFrom<&'a [u8]> for Internet<'a> {
         }
 
         if let Ok(arp_packet) = ArpPacket::try_from(packet) {
-            return Ok(Self::from_arp(&arp_packet));
+            return Ok(Self::from_arp(arp_packet));
         }
 
         if let Ok(ipv4_packet) = ipv4::Ipv4Packet::try_from(packet) {
@@ -190,6 +215,8 @@ impl<'a> TryFrom<&'a [u8]> for Internet<'a> {
 //         })
 //     }
 // }
+
+impl<'a> Eq for Internet<'a> {}
 
 impl<'a> PartialEq for Internet<'a> {
     fn eq(&self, other: &Self) -> bool {
@@ -430,6 +457,7 @@ mod tests {
             protocol_name: "IPv4",
             payload_protocol: Some(TransportProtocol::Tcp),
             payload: &[1, 2, 3, 4],
+            details: None,
         };
 
         let b = Internet {
@@ -440,6 +468,7 @@ mod tests {
             protocol_name: "IPv4",
             payload_protocol: Some(TransportProtocol::Tcp),
             payload: &[9, 9, 9, 9],
+            details: None,
         };
 
         assert_eq!(a, b);
@@ -455,6 +484,7 @@ mod tests {
             protocol_name: "IPv4",
             payload_protocol: Some(TransportProtocol::Udp),
             payload: &[1, 2, 3],
+            details: None,
         };
 
         let b = Internet {
@@ -465,6 +495,7 @@ mod tests {
             protocol_name: "IPv4",
             payload_protocol: Some(TransportProtocol::Udp),
             payload: &[99, 88, 77],
+            details: None,
         };
 
         let mut hasher_a = DefaultHasher::new();
@@ -486,6 +517,7 @@ mod tests {
             protocol_name: "IPv4",
             payload_protocol: Some(TransportProtocol::Tcp),
             payload: &[],
+            details: None,
         };
 
         let b = Internet {
@@ -496,6 +528,7 @@ mod tests {
             protocol_name: "IPv4",
             payload_protocol: Some(TransportProtocol::Tcp),
             payload: &[],
+            details: None,
         };
 
         assert_ne!(a, b);

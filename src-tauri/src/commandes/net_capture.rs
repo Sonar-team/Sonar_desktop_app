@@ -54,6 +54,7 @@ pub fn start_capture(
         app,
         on_event.clone(),
         state_lock.filter.clone(),
+        &mut state_label,
     ) {
         Ok(()) => {
             // Le channel n'est mémorisé qu'après un démarrage réussi : un

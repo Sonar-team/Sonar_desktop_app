@@ -79,6 +79,27 @@ pub struct LinuxSllLinkOwned {
 }
 
 impl LinuxSllLinkOwned {
+    /// Builds owned SLL metadata without going through the parser — the path
+    /// a consumer takes to rebuild a link layer from serialized fields (e.g.
+    /// reimporting an exported flow matrix). The struct stays
+    /// `#[non_exhaustive]`, so this constructor is the supported way to
+    /// create one from outside the crate.
+    pub fn new(
+        packet_type: LinuxCookedPacketType,
+        hardware_type: LinuxArphrdType,
+        address_length: u16,
+        source_address: Option<Vec<u8>>,
+        protocol: u16,
+    ) -> Self {
+        Self {
+            packet_type,
+            hardware_type,
+            address_length,
+            source_address,
+            protocol,
+        }
+    }
+
     pub const fn address_is_truncated(&self) -> bool {
         self.address_length > 8
     }
@@ -98,6 +119,29 @@ pub struct LinuxSll2LinkOwned {
 }
 
 impl LinuxSll2LinkOwned {
+    /// Builds owned SLL2 metadata without going through the parser — see
+    /// [`LinuxSllLinkOwned::new`].
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        protocol: u16,
+        reserved_mbz: u16,
+        interface_index: u32,
+        hardware_type: LinuxArphrdType,
+        packet_type: LinuxCookedPacketType,
+        address_length: u8,
+        source_address: Option<Vec<u8>>,
+    ) -> Self {
+        Self {
+            protocol,
+            reserved_mbz,
+            interface_index,
+            hardware_type,
+            packet_type,
+            address_length,
+            source_address,
+        }
+    }
+
     pub const fn reserved_is_zero(&self) -> bool {
         self.reserved_mbz == 0
     }
@@ -165,7 +209,10 @@ impl LinkLayerOwned {
         Self::raw_ip(NetworkProtocol::Ipv6, RawIpLinkOwned { ip_version: 6 })
     }
 
-    fn linux_sll(details: LinuxSllLinkOwned) -> Self {
+    /// Wraps owned SLL metadata into a link layer, deriving the network
+    /// protocol from the cooked `protocol` field — same derivation as the
+    /// live decoder, so a rebuilt layer compares equal to a parsed one.
+    pub fn linux_sll(details: LinuxSllLinkOwned) -> Self {
         Self {
             link_type: LinkType::LINUX_SLL,
             network_protocol: NetworkProtocol::from_link_protocol(details.protocol),
@@ -173,7 +220,8 @@ impl LinkLayerOwned {
         }
     }
 
-    fn linux_sll2(details: LinuxSll2LinkOwned) -> Self {
+    /// SLL2 counterpart of [`LinkLayerOwned::linux_sll`].
+    pub fn linux_sll2(details: LinuxSll2LinkOwned) -> Self {
         Self {
             link_type: LinkType::LINUX_SLL2,
             network_protocol: NetworkProtocol::from_link_protocol(details.protocol),
@@ -749,5 +797,77 @@ mod tests {
         assert!(json.contains("\"destination_ip\":null"));
         assert!(json.contains("\"protocol_internet\":\"UDP\""));
         assert!(!json.contains("\"protocol\":\"UDP\""));
+    }
+
+    /// A consumer rebuilding an SLL link layer from serialized fields (e.g.
+    /// a flow-matrix reimport) must obtain the exact same owned value as the
+    /// parser produces from the wire — equality and hash included.
+    #[test]
+    fn constructed_owned_sll_equals_the_parsed_one() {
+        // LINKTYPE_LINUX_SLL frame: outgoing, ARPHRD_ETHER, 6-byte address,
+        // IPv4 protocol, followed by a minimal IPv4 header.
+        let mut frame = Vec::new();
+        frame.extend_from_slice(&4_u16.to_be_bytes()); // packet type OUTGOING
+        frame.extend_from_slice(&1_u16.to_be_bytes()); // ARPHRD_ETHER
+        frame.extend_from_slice(&6_u16.to_be_bytes()); // address length
+        frame.extend_from_slice(&[0xe0, 0xd5, 0x5e, 0x28, 0x9b, 0xd4, 0, 0]); // address slot
+        frame.extend_from_slice(&0x0800_u16.to_be_bytes()); // protocol IPv4
+        frame.extend_from_slice(&[
+            0x45, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11, 0x00, 0x00, 192, 168, 1,
+            181, 192, 168, 1, 254,
+        ]);
+
+        let flow = crate::parse::parse(LinkType::LINUX_SLL, &frame).unwrap();
+        let parsed = LinkLayerOwned::from(&flow.data_link);
+
+        let rebuilt = LinkLayerOwned::linux_sll(LinuxSllLinkOwned::new(
+            LinuxCookedPacketType::OUTGOING,
+            LinuxArphrdType::ETHERNET,
+            6,
+            Some(vec![0xe0, 0xd5, 0x5e, 0x28, 0x9b, 0xd4]),
+            0x0800,
+        ));
+
+        assert_eq!(rebuilt, parsed);
+        assert_eq!(hash_of(&rebuilt), hash_of(&parsed));
+        assert_eq!(rebuilt.link_type(), LinkType::LINUX_SLL);
+        assert_eq!(rebuilt.network_protocol(), NetworkProtocol::Ipv4);
+    }
+
+    /// SLL2 counterpart of `constructed_owned_sll_equals_the_parsed_one`.
+    #[test]
+    fn constructed_owned_sll2_equals_the_parsed_one() {
+        // LINKTYPE_LINUX_SLL2 frame: IPv4 protocol, interface 3, incoming
+        // unicast, ARPHRD_ETHER, 6-byte address, minimal IPv4 header.
+        let mut frame = Vec::new();
+        frame.extend_from_slice(&0x0800_u16.to_be_bytes()); // protocol IPv4
+        frame.extend_from_slice(&0_u16.to_be_bytes()); // reserved (MBZ)
+        frame.extend_from_slice(&3_u32.to_be_bytes()); // interface index
+        frame.extend_from_slice(&1_u16.to_be_bytes()); // ARPHRD_ETHER
+        frame.push(0); // packet type HOST
+        frame.push(6); // address length
+        frame.extend_from_slice(&[0xe0, 0xd5, 0x5e, 0x28, 0x9b, 0xd4, 0, 0]); // address slot
+        frame.extend_from_slice(&[
+            0x45, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11, 0x00, 0x00, 192, 168, 1,
+            181, 192, 168, 1, 254,
+        ]);
+
+        let flow = crate::parse::parse(LinkType::LINUX_SLL2, &frame).unwrap();
+        let parsed = LinkLayerOwned::from(&flow.data_link);
+
+        let rebuilt = LinkLayerOwned::linux_sll2(LinuxSll2LinkOwned::new(
+            0x0800,
+            0,
+            3,
+            LinuxArphrdType::ETHERNET,
+            LinuxCookedPacketType::HOST,
+            6,
+            Some(vec![0xe0, 0xd5, 0x5e, 0x28, 0x9b, 0xd4]),
+        ));
+
+        assert_eq!(rebuilt, parsed);
+        assert_eq!(hash_of(&rebuilt), hash_of(&parsed));
+        assert_eq!(rebuilt.link_type(), LinkType::LINUX_SLL2);
+        assert_eq!(rebuilt.network_protocol(), NetworkProtocol::Ipv4);
     }
 }

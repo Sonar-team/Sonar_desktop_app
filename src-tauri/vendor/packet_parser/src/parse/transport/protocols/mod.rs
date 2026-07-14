@@ -489,6 +489,7 @@ impl TransportProtocol {
             source_port: None,
             destination_port: None,
             payload: None,
+            details: None,
         }
     }
 }

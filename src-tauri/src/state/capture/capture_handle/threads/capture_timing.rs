@@ -11,7 +11,7 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-use packet_parser::{PacketFlow, timing::ParseTiming};
+use packet_parser::{LinkType, PacketFlow, timing::ParseTiming};
 
 use super::packet_buffer::PacketBufferPool;
 use super::processing::{PACKET_BATCH_INTERVAL_MS, PACKET_BATCH_MAX};
@@ -20,10 +20,11 @@ static CAPTURE_TIMING_RUN_COUNTER: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(1);
 
 pub(super) fn parse_packet_flow_with_timing(
+    link_type: LinkType,
     bytes: &[u8],
-) -> Result<(PacketFlow<'_>, ParseTiming), packet_parser::ParsedPacketError> {
+) -> Result<(PacketFlow<'_>, ParseTiming), packet_parser::ParseError> {
     let mut timing = ParseTiming::default();
-    let flow = PacketFlow::try_from_timed(bytes, &mut timing)?;
+    let flow = packet_parser::parse::parse_timed(link_type, bytes, &mut timing)?;
     Ok((flow, timing))
 }
 

@@ -20,11 +20,14 @@ pub fn export_csv(
         return Err(CaptureStateError::Export(ExportError::EmptyPath));
     }
 
-    // Verrou court : snapshot des lignes seulement. L'écriture disque se
-    // fait hors verrou pour ne pas bloquer le pipeline de capture (le
-    // processing thread verrouille la matrice à chaque paquet).
-    let rows = state.lock()?.to_flat_vec();
+    // Verrou court : snapshot des lignes et du DLT seulement. L'écriture
+    // disque se fait hors verrou pour ne pas bloquer le pipeline de capture
+    // (le processing thread verrouille la matrice à chaque paquet).
+    let (rows, link_type) = {
+        let matrix = state.lock()?;
+        (matrix.to_flat_vec(), matrix.link_type)
+    };
 
-    FlowMatrix::write_rows_to_csv(&rows, &path)?;
+    FlowMatrix::write_rows_to_csv(&rows, link_type, &path)?;
     Ok(())
 }

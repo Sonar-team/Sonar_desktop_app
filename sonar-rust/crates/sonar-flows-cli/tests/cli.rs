@@ -109,9 +109,17 @@ fn write_pcap(path: &Path, frames: &[Vec<u8>]) {
 // Lecture de la matrice CSV produite (via les en-têtes, pas les positions).
 // ---------------------------------------------------------------------------
 
+/// Ouvre une matrice exportée en sautant la ligne de préambule `#SFMS`.
+fn matrix_csv_reader(path: &Path) -> csv::Reader<std::fs::File> {
+    csv::ReaderBuilder::new()
+        .comment(Some(b'#'))
+        .from_path(path)
+        .expect("ouverture du CSV exporté")
+}
+
 /// Somme la colonne `count` de la matrice exportée.
 fn sum_count_column(path: &Path) -> u64 {
-    let mut reader = csv::Reader::from_path(path).expect("ouverture du CSV exporté");
+    let mut reader = matrix_csv_reader(path);
     let count_idx = reader
         .headers()
         .expect("en-têtes CSV")
@@ -129,7 +137,7 @@ fn sum_count_column(path: &Path) -> u64 {
 }
 
 fn data_row_count(path: &Path) -> usize {
-    let mut reader = csv::Reader::from_path(path).expect("ouverture du CSV exporté");
+    let mut reader = matrix_csv_reader(path);
     reader.records().count()
 }
 

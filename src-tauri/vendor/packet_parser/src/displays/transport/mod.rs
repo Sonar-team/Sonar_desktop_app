@@ -206,6 +206,7 @@ mod tests {
             source_port: Some(12345),
             destination_port: Some(80),
             payload: Some(&payload),
+            details: None,
         };
 
         let displayed = format!("{transport}");
@@ -223,6 +224,7 @@ mod tests {
             source_port: None,
             destination_port: None,
             payload: None,
+            details: None,
         };
 
         let displayed = format!("{transport}");
@@ -241,6 +243,7 @@ mod tests {
             source_port: Some(42),
             destination_port: None,
             payload: Some(&payload),
+            details: None,
         };
 
         let displayed = format!("{transport}");
@@ -259,6 +262,7 @@ mod tests {
             source_port: None,
             destination_port: Some(443),
             payload: Some(&payload),
+            details: None,
         };
 
         let displayed = format!("{transport}");

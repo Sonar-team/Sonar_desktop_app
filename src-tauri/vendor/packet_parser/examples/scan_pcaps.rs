@@ -13,7 +13,7 @@
 //! (n° de trame, ports, premiers octets du payload) pour auditer les
 //! faux positifs.
 
-use packet_parser::PacketFlow;
+use packet_parser::{LinkType, parse};
 use pcap::Capture;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -67,11 +67,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         };
 
+        let link_type = LinkType::from(cap.get_datalink().0 as u32);
+
         let mut tally: BTreeMap<String, usize> = BTreeMap::new();
         let mut frame_no = 0usize;
         while let Ok(packet) = cap.next_packet() {
             frame_no += 1;
-            let Ok(flow) = PacketFlow::try_from(packet.data) else {
+            let Ok(flow) = parse(link_type, packet.data) else {
                 *tally.entry("<erreur L2>".into()).or_default() += 1;
                 continue;
             };

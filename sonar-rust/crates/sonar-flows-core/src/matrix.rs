@@ -139,6 +139,11 @@ pub struct FlowMatrix {
     // pour les flux issus d'une capture live ou d'un import PCAP. Sérialisé
     // dans la colonne `origin` par `to_flat_vec`.
     pub origins: HashMap<PacketFlowOwned, BTreeSet<String>>,
+    // Type de liaison du relevé, fixé par la première source (capture,
+    // fichier PCAP ou préambule #SFMS d'une matrice importée) via
+    // `bind_link_type`. Un relevé = un réseau = un DLT (arbitrage 14/07/2026) :
+    // toute source d'un autre DLT est refusée. `None` = matrice vierge.
+    pub link_type: Option<packet_parser::LinkType>,
 }
 
 impl Default for FlowMatrix {
@@ -153,6 +158,30 @@ impl FlowMatrix {
             matrix: HashMap::new(),
             label: HashMap::new(),
             origins: HashMap::new(),
+            link_type: None,
+        }
+    }
+
+    /// Fixe le type de liaison du relevé, ou vérifie qu'une nouvelle source
+    /// (capture, PCAP, matrice importée) porte bien le même : une fusion ne
+    /// concerne que des relevés du même réseau, donc du même DLT (arbitrage
+    /// du 14/07/2026). `origin` identifie la source refusée dans l'erreur.
+    pub fn bind_link_type(
+        &mut self,
+        link_type: packet_parser::LinkType,
+        origin: &std::path::Path,
+    ) -> crate::Result<()> {
+        match self.link_type {
+            None => {
+                self.link_type = Some(link_type);
+                Ok(())
+            }
+            Some(existing) if existing == link_type => Ok(()),
+            Some(existing) => Err(crate::SonarCoreError::MixedLinkTypes {
+                path: origin.to_path_buf(),
+                found: crate::sfms::link_type_name(link_type),
+                expected: crate::sfms::link_type_name(existing),
+            }),
         }
     }
 
@@ -238,6 +267,7 @@ impl FlowMatrix {
         self.matrix.clear();
         self.label.clear();
         self.origins.clear();
+        self.link_type = None;
     }
 
     // pub fn print(&self) {
@@ -414,17 +444,22 @@ impl FlowMatrix {
         rows
     }
 
-    /// Exporte la matrice vers un fichier CSV (écriture atomique).
+    /// Exporte la matrice vers un fichier CSV (écriture atomique), préambule
+    /// `#SFMS` en tête (version du format, DLT du relevé).
     pub fn export_to_csv(&self, path: String) -> std::io::Result<()> {
-        Self::write_rows_to_csv(&self.to_flat_vec(), &path)
+        Self::write_rows_to_csv(&self.to_flat_vec(), self.link_type, &path)
     }
 
     /// Écrit des lignes de matrice (snapshot de [`Self::to_flat_vec`]) vers
     /// un fichier CSV. Séparé de l'état pour que les commandes d'export
-    /// puissent snapshoter sous verrou court et écrire hors verrou, sans
-    /// bloquer le pipeline de capture pendant l'I/O disque.
-    pub fn write_rows_to_csv(rows: &[FlowMatrixRow], path: &str) -> std::io::Result<()> {
-        write_csv_atomically(path, |wtr| {
+    /// puissent snapshoter sous verrou court (lignes + `link_type`) et écrire
+    /// hors verrou, sans bloquer le pipeline de capture pendant l'I/O disque.
+    pub fn write_rows_to_csv(
+        rows: &[FlowMatrixRow],
+        link_type: Option<packet_parser::LinkType>,
+        path: &str,
+    ) -> std::io::Result<()> {
+        write_csv_atomically(path, Some(crate::sfms::format_preamble(link_type)), |wtr| {
             for row in rows {
                 wtr.serialize(row)?;
             }
@@ -565,7 +600,9 @@ impl FlowMatrix {
         rows: &[(String, String, String)],
         path: &str,
     ) -> std::io::Result<()> {
-        write_csv_atomically(path, |wtr| {
+        // Pas de préambule : le fichier de labels est une annexe du relevé,
+        // pas une matrice SFMS.
+        write_csv_atomically(path, None, |wtr| {
             wtr.write_record(["mac", "ip", "label"])?;
             for (mac, ip, label) in rows {
                 wtr.write_record([mac, ip, &escape_formula_cell(label)])?;
@@ -606,14 +643,21 @@ impl FlowMatrix {
 
 /// Écrit un CSV de façon atomique : fichier temporaire dans le même dossier,
 /// flush + fsync, puis renommage. Une erreur disque en cours d'écriture ne
-/// laisse jamais un fichier final tronqué (#148).
+/// laisse jamais un fichier final tronqué (#148). Le `preamble` éventuel est
+/// écrit tel quel avant la première ligne CSV (ligne `#SFMS`).
 fn write_csv_atomically(
     path: &str,
+    preamble: Option<String>,
     write: impl FnOnce(&mut csv::Writer<File>) -> std::io::Result<()>,
 ) -> std::io::Result<()> {
+    use std::io::Write;
+
     let tmp_path = format!("{path}.tmp");
     let result = (|| {
-        let file = File::create(&tmp_path)?;
+        let mut file = File::create(&tmp_path)?;
+        if let Some(preamble) = preamble {
+            writeln!(file, "{preamble}")?;
+        }
         let mut wtr = csv::Writer::from_writer(file);
         write(&mut wtr)?;
         wtr.flush()?;

@@ -54,6 +54,7 @@ mod tests {
             destination: Some(IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8))),
             destination_type: Some(IpType::Private),
             payload: &[],
+            details: None,
         };
 
         let rendered = format!("{internet}");
@@ -73,6 +74,7 @@ mod tests {
             destination: None,
             destination_type: None,
             payload: &[],
+            details: None,
         };
 
         let rendered = format!("{internet}");

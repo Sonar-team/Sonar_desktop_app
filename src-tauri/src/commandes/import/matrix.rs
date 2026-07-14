@@ -146,7 +146,11 @@ pub fn import_matrix_files(
         incoming_file_paths
     );
 
-    // Un fichier invalide ne doit pas effacer la matrice courante.
+    // Un fichier invalide ne doit pas effacer la matrice courante. Les
+    // fichiers doivent porter le même DLT (préambule #SFMS, Ethernet
+    // implicite pour un export antérieur) : fusion inter-DLT refusée.
+    let import_paths: Vec<PathBuf> = incoming_file_paths.iter().map(PathBuf::from).collect();
+    let link_type = sonar_flows_core::csv::common_matrix_link_type(&import_paths)?;
     let files = read_matrix_rows_per_file(&incoming_file_paths)?;
     let line_counts: Vec<(String, usize)> = files
         .iter()
@@ -184,6 +188,9 @@ pub fn import_matrix_files(
         &mut matrice_guard,
         &mut graph_guard,
     )?;
+    // Le relevé reconstruit porte le DLT commun des fichiers importés (le
+    // rebuild passe par `clear()`, qui l'avait remis à zéro).
+    matrice_guard.link_type = Some(link_type);
 
     info!(
         "[import_matrix_files] {} fichier(s), {} ligne(s) importée(s) -> {} flux fusionné(s), {} nœuds, {} arêtes",
@@ -338,7 +345,12 @@ mod tests {
         let rows = read_matrix_rows_from_files(&[brut.to_str().unwrap().to_string()]).unwrap();
         let (matrix, _graph) = build_matrix_and_graph(&rows);
         let merged = dir.path().join("fusion.csv");
-        FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), merged.to_str().unwrap()).unwrap();
+        FlowMatrix::write_rows_to_csv(
+            &matrix.to_flat_vec(),
+            matrix.link_type,
+            merged.to_str().unwrap(),
+        )
+        .unwrap();
 
         // Étape 2 : réimport de fusion.csv -> l'origine "brut.csv" est préservée.
         let rows = read_matrix_rows_from_files(&[merged.to_str().unwrap().to_string()]).unwrap();
@@ -371,7 +383,12 @@ mod tests {
             let rows = read_matrix_rows_from_files(&[raw.to_str().unwrap().to_string()]).unwrap();
             let (matrix, _graph) = build_matrix_and_graph(&rows);
             let out = dir.path().join(out_name);
-            FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), out.to_str().unwrap()).unwrap();
+            FlowMatrix::write_rows_to_csv(
+                &matrix.to_flat_vec(),
+                matrix.link_type,
+                out.to_str().unwrap(),
+            )
+            .unwrap();
             out.to_str().unwrap().to_string()
         };
         let fusion_a = export_with_origin("a-raw.csv", "fusion-a.csv");
@@ -415,7 +432,12 @@ mod tests {
 
         let dir = TempDir::new("sonar_test_matrix_roundtrip");
         let csv_path = dir.path().join("matrice.csv");
-        FlowMatrix::write_rows_to_csv(&matrix.to_flat_vec(), csv_path.to_str().unwrap()).unwrap();
+        FlowMatrix::write_rows_to_csv(
+            &matrix.to_flat_vec(),
+            matrix.link_type,
+            csv_path.to_str().unwrap(),
+        )
+        .unwrap();
 
         let rows = read_matrix_rows(csv_path.to_str().unwrap()).unwrap();
         assert_eq!(rows.len(), matrix.row_count(), "une ligne CSV par flux");

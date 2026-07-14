@@ -343,6 +343,117 @@ mod tests {
         assert!(!looks_like_tls(&too_short));
     }
 
+    // --- Golden tests : trame réelle TLSv1.3 ---
+    //
+    // ClientHello TLSv1.3 réel (trame 199 capturée sur eno1 vers
+    // unleash.codeium.com:443), dissection tshark complète documentée en fin
+    // de fichier. Le record layer annonce la version legacy 0x0301 (TLS 1.0),
+    // la vraie version se négocie dans l'extension supported_versions (0x0304).
+    const TLS13_CLIENT_HELLO_RECORD_HEX: &str = concat!(
+        "1603010200010001fc0303900986c5d29c4072ed85dec8067e2dd2cd3e8f3ee763e4ae",
+        "030986410e5b1e8d20046d7d07df148587017273a2b93bfd1f061ffc3a42066ce3bfcc",
+        "ced6f2f7db2e0024130113021303c02fc02bc030c02cc027cca9cca8c009c013c00ac0",
+        "14009c009d002f00350100018f000000180016000013756e6c656173682e636f646569",
+        "756d2e636f6d00170000ff01000100000a00080006001d00170018000b000201000023",
+        "0000000d00140012040308040401050308050501080606010201003300260024001d00",
+        "2019e36da4275dad5fe69c13a2c7cd81991f0d4bd0fdfe0d7daa390876845db21b002d",
+        "00020101002b00050403040303001500a0000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000",
+        "00000029005b00260020432e29c0ce0e79f70e48238f7d619ec9e7e9c9def0f8df4b53",
+        "c965d4935c443700a48f55003130966f759b98683dd7d866812f9e8d5af8ea8ad65045",
+        "e20ec0e0f0d1af9b01b376c0b9d2c31667cb1dbd67bac24ccd500a",
+    );
+
+    fn tls13_client_hello_record() -> Vec<u8> {
+        hex::decode(TLS13_CLIENT_HELLO_RECORD_HEX).expect("valid golden hex fixture")
+    }
+
+    #[test]
+    fn golden_tls13_client_hello_record_header() {
+        let buf = tls13_client_hello_record();
+
+        let packet = TlsPacket::try_from(buf.as_slice()).expect("golden TLS 1.3 record");
+
+        assert_eq!(packet.content_type, TlsContentType::Handshake);
+        // Legacy version du record layer : 0x0301, comme dissequé par tshark.
+        assert_eq!(packet.version, TlsVersion { major: 3, minor: 1 });
+        assert_eq!(packet.version.to_string(), "TLS 1.0");
+        assert_eq!(packet.length, 512);
+        assert_eq!(packet.payload.len(), 512);
+    }
+
+    #[test]
+    fn golden_tls13_client_hello_handshake_payload() {
+        let buf = tls13_client_hello_record();
+        let packet = TlsPacket::try_from(buf.as_slice()).expect("golden TLS 1.3 record");
+        let payload = packet.payload;
+
+        // Handshake Type: Client Hello (1), Length: 508.
+        assert_eq!(payload[0], 1);
+        assert_eq!(payload[1..4], [0x00, 0x01, 0xfc]);
+        // Version legacy du ClientHello : TLS 1.2 (0x0303).
+        assert_eq!(payload[4..6], [0x03, 0x03]);
+        // Random.
+        assert_eq!(
+            payload[6..38],
+            hex::decode("900986c5d29c4072ed85dec8067e2dd2cd3e8f3ee763e4ae030986410e5b1e8d")
+                .unwrap()[..]
+        );
+        // Session ID Length: 32.
+        assert_eq!(payload[38], 32);
+        // Cipher Suites Length: 36, la première étant TLS_AES_128_GCM_SHA256.
+        assert_eq!(payload[71..73], [0x00, 0x24]);
+        assert_eq!(payload[73..75], [0x13, 0x01]);
+        // SNI : unleash.codeium.com.
+        assert!(
+            payload
+                .windows(b"unleash.codeium.com".len())
+                .any(|w| w == b"unleash.codeium.com"),
+            "SNI attendu dans le ClientHello"
+        );
+        // Extension supported_versions (43) : TLS 1.3 (0x0304) puis TLS 1.2
+        // (0x0303) — c'est elle qui fait de cette trame un ClientHello TLSv1.3.
+        let supported_versions = [0x00, 0x2b, 0x00, 0x05, 0x04, 0x03, 0x04, 0x03, 0x03];
+        assert!(
+            payload
+                .windows(supported_versions.len())
+                .any(|w| w == supported_versions),
+            "extension supported_versions TLS 1.3 attendue"
+        );
+    }
+
+    #[test]
+    fn golden_tls13_client_hello_is_a_single_complete_record() {
+        let buf = tls13_client_hello_record();
+
+        assert!(looks_like_tls(&buf));
+
+        let records = parse_tls_records(&buf);
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].content_type, TlsContentType::Handshake);
+        assert_eq!(records[0].length, 512);
+        assert_eq!(records[0].payload, &buf[TLS_RECORD_HEADER_LEN..]);
+    }
+
+    #[test]
+    fn golden_tls13_client_hello_truncated_is_rejected() {
+        let buf = tls13_client_hello_record();
+        let truncated = &buf[..buf.len() - 1];
+
+        let err = TlsPacket::try_from(truncated).unwrap_err();
+        assert!(matches!(
+            err,
+            TlsError::InconsistentLength {
+                declared: 512,
+                available: 511
+            }
+        ));
+        assert!(parse_tls_records(truncated).is_empty());
+    }
+
     // --- Tests sur les types et versions ---
 
     #[test]
@@ -383,3 +494,160 @@ mod tests {
         ));
     }
 }
+
+// 44152420a564e0d55e289bd40800450002398fa340004006d42cc0a801b523dfeeb2c40a01bb462b3ca1cdac346c8018003fd71a00000101080a7032e8b2c27b69501603010200010001fc0303900986c5d29c4072ed85dec8067e2dd2cd3e8f3ee763e4ae030986410e5b1e8d20046d7d07df148587017273a2b93bfd1f061ffc3a42066ce3bfccced6f2f7db2e0024130113021303c02fc02bc030c02cc027cca9cca8c009c013c00ac014009c009d002f00350100018f000000180016000013756e6c656173682e636f646569756d2e636f6d00170000ff01000100000a00080006001d00170018000b0002010000230000000d00140012040308040401050308050501080606010201003300260024001d002019e36da4275dad5fe69c13a2c7cd81991f0d4bd0fdfe0d7daa390876845db21b002d00020101002b00050403040303001500a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000029005b00260020432e29c0ce0e79f70e48238f7d619ec9e7e9c9def0f8df4b53c965d4935c443700a48f55003130966f759b98683dd7d866812f9e8d5af8ea8ad65045e20ec0e0f0d1af9b01b376c0b9d2c31667cb1dbd67bac24ccd500a
+// tlsv3 part:
+// 1603010200010001fc0303900986c5d29c4072ed85dec8067e2dd2cd3e8f3ee763e4ae030986410e5b1e8d20046d7d07df148587017273a2b93bfd1f061ffc3a42066ce3bfccced6f2f7db2e0024130113021303c02fc02bc030c02cc027cca9cca8c009c013c00ac014009c009d002f00350100018f000000180016000013756e6c656173682e636f646569756d2e636f6d00170000ff01000100000a00080006001d00170018000b0002010000230000000d00140012040308040401050308050501080606010201003300260024001d002019e36da4275dad5fe69c13a2c7cd81991f0d4bd0fdfe0d7daa390876845db21b002d00020101002b00050403040303001500a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000029005b00260020432e29c0ce0e79f70e48238f7d619ec9e7e9c9def0f8df4b53c965d4935c443700a48f55003130966f759b98683dd7d866812f9e8d5af8ea8ad65045e20ec0e0f0d1af9b01b376c0b9d2c31667cb1dbd67bac24ccd500a
+// Frame 199: Packet, 583 bytes on wire (4664 bits), 583 bytes captured (4664 bits) on interface eno1, id 0
+// Ethernet II, Src: GigaByteTech_28:9b:d4 (e0:d5:5e:28:9b:d4), Dst: SagemcomBroa_20:a5:64 (44:15:24:20:a5:64)
+// Internet Protocol Version 4, Src: 192.168.1.181, Dst: 35.223.238.178
+// Transmission Control Protocol, Src Port: 50186, Dst Port: 443, Seq: 1, Ack: 1, Len: 517
+// Transport Layer Security
+//     [Stream index: 5]
+//     TLSv1.3 Record Layer: Handshake Protocol: Client Hello
+//         Content Type: Handshake (22)
+//         Version: TLS 1.0 (0x0301)
+//         Length: 512
+//         Handshake Protocol: Client Hello
+//             Handshake Type: Client Hello (1)
+//             Length: 508
+//             Version: TLS 1.2 (0x0303)
+//                 [Expert Info (Chat/Deprecated): This legacy_version field MUST be ignored. The supported_versions extension is present and MUST be used instead.]
+//                     [This legacy_version field MUST be ignored. The supported_versions extension is present and MUST be used instead.]
+//                     [Severity level: Chat]
+//                     [Group: Deprecated]
+//             Random: 900986c5d29c4072ed85dec8067e2dd2cd3e8f3ee763e4ae030986410e5b1e8d
+//             Session ID Length: 32
+//             Session ID: 046d7d07df148587017273a2b93bfd1f061ffc3a42066ce3bfccced6f2f7db2e
+//             Cipher Suites Length: 36
+//             Cipher Suites (18 suites)
+//                 Cipher Suite: TLS_AES_128_GCM_SHA256 (0x1301)
+//                 Cipher Suite: TLS_AES_256_GCM_SHA384 (0x1302)
+//                 Cipher Suite: TLS_CHACHA20_POLY1305_SHA256 (0x1303)
+//                 Cipher Suite: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 (0xc02f)
+//                 Cipher Suite: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 (0xc02b)
+//                 Cipher Suite: TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 (0xc030)
+//                 Cipher Suite: TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 (0xc02c)
+//                 Cipher Suite: TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 (0xc027)
+//                 Cipher Suite: TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 (0xcca9)
+//                 Cipher Suite: TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 (0xcca8)
+//                 Cipher Suite: TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA (0xc009)
+//                 Cipher Suite: TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA (0xc013)
+//                 Cipher Suite: TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA (0xc00a)
+//                 Cipher Suite: TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA (0xc014)
+//                 Cipher Suite: TLS_RSA_WITH_AES_128_GCM_SHA256 (0x009c)
+//                 Cipher Suite: TLS_RSA_WITH_AES_256_GCM_SHA384 (0x009d)
+//                 Cipher Suite: TLS_RSA_WITH_AES_128_CBC_SHA (0x002f)
+//                 Cipher Suite: TLS_RSA_WITH_AES_256_CBC_SHA (0x0035)
+//             Compression Methods Length: 1
+//             Compression Methods (1 method)
+//                 Compression Method: null (0)
+//             Extensions Length: 399
+//             Extension: server_name (len=24) name=unleash.codeium.com
+//                 Type: server_name (0)
+//                 Length: 24
+//                 Server Name Indication extension
+//                     Server Name list length: 22
+//                     Server Name Type: host_name (0)
+//                     Server Name length: 19
+//                     Server Name: unleash.codeium.com
+//             Extension: extended_master_secret (len=0)
+//                 Type: extended_master_secret (23)
+//                 Length: 0
+//             Extension: renegotiation_info (len=1)
+//                 Type: renegotiation_info (65281)
+//                 Length: 1
+//                 Renegotiation Info extension
+//                     Renegotiation info extension length: 0
+//             Extension: supported_groups (len=8)
+//                 Type: supported_groups (10)
+//                 Length: 8
+//                 Supported Groups List Length: 6
+//                 Supported Groups (3 groups)
+//                     Supported Group: x25519 (0x001d)
+//                     Supported Group: secp256r1 (0x0017)
+//                     Supported Group: secp384r1 (0x0018)
+//             Extension: ec_point_formats (len=2)
+//                 Type: ec_point_formats (11)
+//                 Length: 2
+//                 EC point formats Length: 1
+//                 Elliptic curves point formats (1)
+//                     EC point format: uncompressed (0)
+//             Extension: session_ticket (len=0)
+//                 Type: session_ticket (35)
+//                 Length: 0
+//                 Session Ticket: <MISSING>
+//             Extension: signature_algorithms (len=20)
+//                 Type: signature_algorithms (13)
+//                 Length: 20
+//                 Signature Hash Algorithms Length: 18
+//                 Signature Hash Algorithms (9 algorithms)
+//                     Signature Algorithm: ecdsa_secp256r1_sha256 (0x0403)
+//                         Signature Hash Algorithm Hash: SHA256 (4)
+//                         Signature Hash Algorithm Signature: ECDSA (3)
+//                     Signature Algorithm: rsa_pss_rsae_sha256 (0x0804)
+//                         Signature Hash Algorithm Hash: Unknown (8)
+//                         Signature Hash Algorithm Signature: Unknown (4)
+//                     Signature Algorithm: rsa_pkcs1_sha256 (0x0401)
+//                         Signature Hash Algorithm Hash: SHA256 (4)
+//                         Signature Hash Algorithm Signature: RSA (1)
+//                     Signature Algorithm: ecdsa_secp384r1_sha384 (0x0503)
+//                         Signature Hash Algorithm Hash: SHA384 (5)
+//                         Signature Hash Algorithm Signature: ECDSA (3)
+//                     Signature Algorithm: rsa_pss_rsae_sha384 (0x0805)
+//                         Signature Hash Algorithm Hash: Unknown (8)
+//                         Signature Hash Algorithm Signature: Unknown (5)
+//                     Signature Algorithm: rsa_pkcs1_sha384 (0x0501)
+//                         Signature Hash Algorithm Hash: SHA384 (5)
+//                         Signature Hash Algorithm Signature: RSA (1)
+//                     Signature Algorithm: rsa_pss_rsae_sha512 (0x0806)
+//                         Signature Hash Algorithm Hash: Unknown (8)
+//                         Signature Hash Algorithm Signature: Unknown (6)
+//                     Signature Algorithm: rsa_pkcs1_sha512 (0x0601)
+//                         Signature Hash Algorithm Hash: SHA512 (6)
+//                         Signature Hash Algorithm Signature: RSA (1)
+//                     Signature Algorithm: rsa_pkcs1_sha1 (0x0201)
+//                         Signature Hash Algorithm Hash: SHA1 (2)
+//                         Signature Hash Algorithm Signature: RSA (1)
+//             Extension: key_share (len=38) x25519
+//                 Type: key_share (51)
+//                 Length: 38
+//                 Key Share extension
+//                     Client Key Share Length: 36
+//                     Key Share Entry: Group: x25519, Key Exchange length: 32
+//                         Group: x25519 (29)
+//                         Key Exchange Length: 32
+//                         Key Exchange: 19e36da4275dad5fe69c13a2c7cd81991f0d4bd0fdfe0d7daa390876845db21b
+//             Extension: psk_key_exchange_modes (len=2)
+//                 Type: psk_key_exchange_modes (45)
+//                 Length: 2
+//                 PSK Key Exchange Modes Length: 1
+//                 PSK Key Exchange Mode: PSK with (EC)DHE key establishment (psk_dhe_ke) (1)
+//             Extension: supported_versions (len=5) TLS 1.3, TLS 1.2
+//                 Type: supported_versions (43)
+//                 Length: 5
+//                 Supported Versions length: 4
+//                 Supported Version: TLS 1.3 (0x0304)
+//                 Supported Version: TLS 1.2 (0x0303)
+//             Extension: padding (len=160)
+//                 Type: padding (21)
+//                 Length: 160
+//                 Padding Data […]: 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+//             Extension: pre_shared_key (len=91)
+//                 Type: pre_shared_key (41)
+//                 Length: 91
+//                 Pre-Shared Key extension
+//                     Identities Length: 38
+//                     PSK Identity (length: 32)
+//                         Identity Length: 32
+//                         Identity: 432e29c0ce0e79f70e48238f7d619ec9e7e9c9def0f8df4b53c965d4935c4437
+//                         Obfuscated Ticket Age: 10784597
+//                     PSK Binders length: 49
+//                     PSK Binders
+//                         PSK Binder (length: 48)
+//                             Binder Length: 48
+//                             Binder: 966f759b98683dd7d866812f9e8d5af8ea8ad65045e20ec0e0f0d1af9b01b376c0b9d2c31667cb1dbd67bac24ccd500a
+//             [JA4: t13d181200_5d04281c6031_02c8e53ee398]
+//             [JA4_r: t13d181200_002f,0035,009c,009d,1301,1302,1303,c009,c00a,c013,c014,c027,c02b,c02c,c02f,c030,cca8,cca9_000a,000b,000d,0015,0017,0023,0029,002b,002d,0033,ff01_0403,0804,0401,0503,0805,0501,0806,0601,0201]
+//             [JA3 Fullstring: 771,4865-4866-4867-49199-49195-49200-49196-49191-52393-52392-49161-49171-49162-49172-156-157-47-53,0-23-65281-10-11-35-13-51-45-43-21-41,29-23-24,0]
+//             [JA3: d92981146534550ae85075b70b1c352a]

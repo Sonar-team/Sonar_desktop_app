@@ -11,7 +11,7 @@
 
 use std::path::{Path, PathBuf};
 
-use packet_parser::PacketFlow;
+use packet_parser::{LinkType, PacketFlow};
 use pcap::Capture;
 
 use crate::matrix::FlowMatrix;
@@ -64,6 +64,35 @@ pub fn datalink_label(link_type: pcap::Linktype) -> String {
         .unwrap_or_else(|_| format!("DLT {}", link_type.0))
 }
 
+/// Normalise un type de liaison pcap (`DLT_*` en capture live, valeur de
+/// l'en-tête pour un fichier) vers l'espace canonique `LINKTYPE_*` de
+/// `packet_parser`. Seul `DLT_RAW` diffère parmi les liaisons supportées :
+/// il vaut 12 sur les plateformes visées alors que `LINKTYPE_RAW` vaut 101
+/// (même normalisation que libpcap à l'écriture d'un fichier).
+pub fn parser_link_type(link_type: pcap::Linktype) -> LinkType {
+    match link_type.0 {
+        // DLT_RAW vaut 12 en capture live sur les plateformes visées, alors
+        // que LINKTYPE_RAW (et pcap::Linktype::RAW) vaut 101.
+        12 => LinkType::RAW,
+        other => LinkType(other.unsigned_abs()),
+    }
+}
+
+/// LinkType `packet_parser` d'un fichier PCAP/PCAPNG, refusé avant toute
+/// lecture de paquet si cette version n'a pas de décodeur pour lui : un DLT
+/// non supporté échoue explicitement au lieu d'être parsé comme de l'Ethernet.
+pub fn supported_parser_link_type(path: &Path) -> Result<LinkType> {
+    let file_link_type = pcap_file_datalink(path)?;
+    let link_type = parser_link_type(file_link_type);
+    if !packet_parser::parse::is_supported(link_type) {
+        return Err(SonarCoreError::UnsupportedLinkType {
+            path: path.to_path_buf(),
+            label: datalink_label(file_link_type),
+        });
+    }
+    Ok(link_type)
+}
+
 /// Itère les paquets bruts d'un fichier PCAP/PCAPNG et retourne leur nombre.
 /// Une erreur de lecture en cours de fichier ([`SonarCoreError::PcapRead`])
 /// est distinguée de la fin normale : un fichier tronqué échoue au lieu de
@@ -111,10 +140,16 @@ pub fn count_pcap_packets(path: &Path) -> Result<usize> {
 /// veulent une sémantique transactionnelle passent par
 /// [`convert_pcap_files`], qui ne retourne jamais de matrice partielle.
 pub fn append_pcap_file(matrix: &mut FlowMatrix, path: &Path) -> Result<PcapFileReport> {
+    // Un DLT sans décodeur échoue ici, avant toute mutation de la matrice :
+    // le fichier ne doit pas être parsé « comme si » c'était de l'Ethernet.
+    let link_type = supported_parser_link_type(path)?;
+    // Un relevé = un réseau = un DLT : un fichier d'un autre type de liaison
+    // que la matrice en cours est refusé (fusion inter-DLT, arbitrage 14/07).
+    matrix.bind_link_type(link_type, path)?;
     let mut parse_ok: usize = 0;
     let mut parse_errors: usize = 0;
     let packets = for_each_raw_packet(path, |packet| {
-        match PacketFlow::try_from(packet.data) {
+        match packet_parser::parse::parse(link_type, packet.data) {
             Ok(flow) => {
                 parse_ok += 1;
                 // Même chemin de dépliage des tunnels que le desktop
@@ -167,11 +202,13 @@ pub fn convert_pcap_files_to_csv(
 
 #[cfg(test)]
 mod tests {
-    use super::append_pcap_file;
+    use super::{append_pcap_file, parser_link_type};
+    use crate::SonarCoreError;
     use crate::matrix::FlowMatrix;
+    use packet_parser::LinkType;
 
-    /// En-tête global PCAP minimal (little-endian, Ethernet).
-    fn pcap_global_header() -> Vec<u8> {
+    /// En-tête global PCAP minimal (little-endian) pour le LINKTYPE donné.
+    fn pcap_global_header_for(link_type: u32) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend_from_slice(&0xa1b2_c3d4u32.to_le_bytes()); // magic
         bytes.extend_from_slice(&2u16.to_le_bytes()); // version majeure
@@ -179,8 +216,214 @@ mod tests {
         bytes.extend_from_slice(&0i32.to_le_bytes()); // thiszone
         bytes.extend_from_slice(&0u32.to_le_bytes()); // sigfigs
         bytes.extend_from_slice(&65535u32.to_le_bytes()); // snaplen
-        bytes.extend_from_slice(&1u32.to_le_bytes()); // LINKTYPE_ETHERNET
+        bytes.extend_from_slice(&link_type.to_le_bytes());
         bytes
+    }
+
+    fn pcap_global_header() -> Vec<u8> {
+        pcap_global_header_for(1) // LINKTYPE_ETHERNET
+    }
+
+    /// Ajoute un enregistrement de paquet au PCAP en construction.
+    fn push_packet_record(bytes: &mut Vec<u8>, data: &[u8]) {
+        bytes.extend_from_slice(&0u32.to_le_bytes()); // ts_sec
+        bytes.extend_from_slice(&0u32.to_le_bytes()); // ts_usec
+        bytes.extend_from_slice(&(data.len() as u32).to_le_bytes()); // incl_len
+        bytes.extend_from_slice(&(data.len() as u32).to_le_bytes()); // orig_len
+        bytes.extend_from_slice(data);
+    }
+
+    /// Paquet Linux cooked v1 (SLL, 16 octets d'en-tête) transportant un
+    /// datagramme IPv4/UDP minimal.
+    fn sll_ipv4_udp_packet() -> Vec<u8> {
+        let mut packet = Vec::new();
+        packet.extend_from_slice(&4u16.to_be_bytes()); // packet_type OUTGOING
+        packet.extend_from_slice(&1u16.to_be_bytes()); // ARPHRD_ETHER
+        packet.extend_from_slice(&6u16.to_be_bytes()); // address_length
+        packet.extend_from_slice(&[0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0, 0]); // adresse (slot 8)
+        packet.extend_from_slice(&0x0800u16.to_be_bytes()); // protocole IPv4
+        packet.extend_from_slice(&[
+            0x45, 0x00, 0x00, 0x1c, // IPv4, IHL 5, longueur totale 28
+            0x00, 0x00, 0x00, 0x00, // id, flags
+            0x40, 0x11, 0x00, 0x00, // TTL 64, UDP, checksum 0
+            192, 168, 1, 10, // source
+            192, 168, 1, 20, // destination
+            0x13, 0x88, 0x13, 0x89, // ports 5000 → 5001
+            0x00, 0x08, 0x00, 0x00, // longueur UDP 8, checksum 0
+        ]);
+        packet
+    }
+
+    fn write_pcap(dir_name: &str, file_name: &str, bytes: &[u8]) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(dir_name);
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let path = dir.join(file_name);
+        std::fs::write(&path, bytes).expect("écriture pcap");
+        path
+    }
+
+    /// Fixture du corpus commun (mêmes fichiers que les tests CSV). Les
+    /// captures SLL/SLL2 réelles viennent de `packet_parser` (commit
+    /// bd03272) : `tcpdump -i any`, cooked v1 et v2.
+    fn fixture(name: &str) -> std::path::PathBuf {
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../src-tauri/test_files")
+            .join(name)
+    }
+
+    /// Le DLT en capture live (`DLT_RAW` = 12) et celui des fichiers
+    /// (`LINKTYPE_RAW` = 101) se normalisent vers le même LinkType ; les
+    /// autres valeurs passent inchangées.
+    #[test]
+    fn parser_link_type_normalizes_dlt_raw() {
+        assert_eq!(parser_link_type(pcap::Linktype(12)), LinkType::RAW);
+        assert_eq!(parser_link_type(pcap::Linktype::RAW), LinkType::RAW);
+        assert_eq!(
+            parser_link_type(pcap::Linktype::ETHERNET),
+            LinkType::ETHERNET
+        );
+        assert_eq!(
+            parser_link_type(pcap::Linktype::LINUX_SLL),
+            LinkType::LINUX_SLL
+        );
+        assert_eq!(parser_link_type(pcap::Linktype(276)), LinkType::LINUX_SLL2);
+    }
+
+    /// Un PCAP Linux cooked (SLL) est parsé avec son vrai LINKTYPE : le flux
+    /// IPv4 transporté atteint la matrice au lieu d'échouer en « Ethernet
+    /// invalide ».
+    #[test]
+    fn sll_pcap_is_parsed_with_its_real_linktype() {
+        let mut bytes = pcap_global_header_for(113); // LINKTYPE_LINUX_SLL
+        push_packet_record(&mut bytes, &sll_ipv4_udp_packet());
+        let path = write_pcap("sonar_core_pcap_sll_test", "cooked.pcap", &bytes);
+
+        let mut matrix = FlowMatrix::new();
+        let report = append_pcap_file(&mut matrix, &path).expect("pcap SLL lisible");
+
+        assert_eq!(report.packets, 1);
+        assert_eq!(report.parse_ok, 1, "le paquet SLL doit être parsé");
+        assert_eq!(report.parse_errors, 0);
+        assert_eq!(matrix.row_count(), 1, "le flux IPv4 atteint la matrice");
+    }
+
+    /// Bout-en-bout sur capture réelle Linux cooked v1 (2702 trames,
+    /// `tcpdump -i any`) : conversion avec le vrai DLT, matrice non vide,
+    /// export CSV avec préambule `dlt=LINUX_SLL`, et réimport refusé tant que
+    /// la reconstruction SLL n'est pas branchée (arbitrage 14/07/2026 :
+    /// échouer plutôt que dégrader en Ethernet).
+    #[test]
+    fn real_sll_capture_converts_exports_with_preamble_and_refuses_reimport() {
+        let mut matrix = FlowMatrix::new();
+        let report =
+            append_pcap_file(&mut matrix, &fixture("sll.pcap")).expect("capture SLL réelle");
+
+        assert_eq!(report.packets, 2702, "toutes les trames du fichier lues");
+        assert_eq!(
+            report.parse_ok + report.parse_errors,
+            report.packets,
+            "chaque paquet lu est classé parsé ou non-parsé, sans trou"
+        );
+        assert!(report.parse_ok > 0, "des flux SLL sont décodés");
+        assert!(matrix.row_count() > 0, "la matrice contient des flux");
+        assert_eq!(matrix.link_type, Some(LinkType::LINUX_SLL));
+
+        let dir = std::env::temp_dir().join("sonar_core_real_sll_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let out = dir.join("releve_sll.csv");
+        matrix
+            .export_to_csv(out.to_string_lossy().into_owned())
+            .expect("export du relevé SLL");
+
+        let first_line = std::fs::read_to_string(&out)
+            .expect("relecture")
+            .lines()
+            .next()
+            .map(str::to_string)
+            .expect("fichier non vide");
+        assert_eq!(first_line, "#SFMS version=1 dlt=LINUX_SLL");
+
+        let err = crate::csv::read_matrix_rows(&out).expect_err("réimport SLL refusé");
+        assert!(
+            matches!(err, SonarCoreError::UnreimportableLinkType { .. }),
+            "refus explicite attendu, obtenu : {err}"
+        );
+    }
+
+    /// Capture réelle Linux cooked v2 (779 trames) : conversion avec le vrai
+    /// DLT et matrice non vide.
+    #[test]
+    fn real_sll2_capture_is_parsed_with_its_dlt() {
+        let mut matrix = FlowMatrix::new();
+        let report = append_pcap_file(&mut matrix, &fixture("capture_sll2.pcap"))
+            .expect("capture SLL2 réelle");
+
+        assert_eq!(report.packets, 779, "toutes les trames du fichier lues");
+        assert_eq!(report.parse_ok + report.parse_errors, report.packets);
+        assert!(report.parse_ok > 0, "des flux SLL2 sont décodés");
+        assert!(matrix.row_count() > 0, "la matrice contient des flux");
+        assert_eq!(matrix.link_type, Some(LinkType::LINUX_SLL2));
+    }
+
+    /// Deux fichiers PCAP de DLT différents ne se convertissent pas dans la
+    /// même matrice : rejet explicite (arbitrage du 14/07/2026).
+    #[test]
+    fn converting_pcaps_of_different_dlt_into_one_matrix_is_refused() {
+        let mut ethernet_bytes = pcap_global_header_for(1);
+        // Trame ARP Ethernet minimale (42 octets), même contenu que les tests
+        // du thread de traitement.
+        let mut arp = Vec::new();
+        arp.extend_from_slice(&[0xff; 6]);
+        arp.extend_from_slice(&[0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]);
+        arp.extend_from_slice(&[0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01]);
+        arp.extend_from_slice(&[0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]);
+        arp.extend_from_slice(&[192, 168, 1, 10]);
+        arp.extend_from_slice(&[0x00; 6]);
+        arp.extend_from_slice(&[192, 168, 1, 1]);
+        push_packet_record(&mut ethernet_bytes, &arp);
+        let ethernet = write_pcap("sonar_core_pcap_mixed_test", "eth.pcap", &ethernet_bytes);
+
+        let mut sll_bytes = pcap_global_header_for(113);
+        push_packet_record(&mut sll_bytes, &sll_ipv4_udp_packet());
+        let sll = std::path::Path::new(&ethernet)
+            .parent()
+            .expect("dossier")
+            .join("cooked.pcap");
+        std::fs::write(&sll, &sll_bytes).expect("écriture pcap sll");
+
+        let mut matrix = FlowMatrix::new();
+        append_pcap_file(&mut matrix, &ethernet).expect("premier fichier Ethernet");
+        let err = append_pcap_file(&mut matrix, &sll).expect_err("fusion inter-DLT refusée");
+        assert!(
+            matches!(err, SonarCoreError::MixedLinkTypes { .. }),
+            "erreur dédiée attendue, obtenu : {err}"
+        );
+        assert_eq!(matrix.link_type, Some(LinkType::ETHERNET));
+        assert_eq!(matrix.row_count(), 1, "le fichier refusé n'a rien muté");
+    }
+
+    /// Un DLT sans décodeur échoue avant toute mutation : la matrice reste
+    /// vide et l'erreur cite le fichier et le type de liaison.
+    #[test]
+    fn unsupported_dlt_fails_before_any_matrix_mutation() {
+        let mut bytes = pcap_global_header_for(108); // LINKTYPE_LOOP (OpenBSD)
+        push_packet_record(&mut bytes, &[0u8; 32]);
+        let path = write_pcap("sonar_core_pcap_unsupported_test", "loop.pcap", &bytes);
+
+        let mut matrix = FlowMatrix::new();
+        let err = append_pcap_file(&mut matrix, &path).expect_err("DLT non supporté");
+
+        assert!(
+            matches!(err, SonarCoreError::UnsupportedLinkType { .. }),
+            "erreur dédiée attendue, obtenu : {err}"
+        );
+        assert!(
+            err.to_string().contains("loop.pcap"),
+            "l'erreur doit citer le fichier : {err}"
+        );
+        assert_eq!(matrix.row_count(), 0, "aucune mutation avant l'échec");
     }
 
     #[test]

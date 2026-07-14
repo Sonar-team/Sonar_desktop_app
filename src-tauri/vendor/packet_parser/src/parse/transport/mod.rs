@@ -12,8 +12,20 @@ use serde::Serialize;
 
 use crate::errors::transport::TransportError;
 
+/// Protocol-specific parsed header, kept alongside the flattened summary
+/// fields so consumers never need to re-parse the transport payload.
+///
+/// `None` on [`Transport`] means the protocol has no dedicated parser yet
+/// (ICMP, IGMP, …) or the value was built by hand.
+#[non_exhaustive]
+#[derive(Debug, Clone)]
+pub enum TransportDetails<'a> {
+    Tcp(TcpPacket<'a>),
+    Udp(UdpPacket<'a>),
+}
+
 /// Represents a transport layer packet (UDP, TCP, etc.)
-#[derive(Debug, Clone, Serialize, Eq)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Transport<'a> {
     /// The transport layer protocol name
     pub protocol: TransportProtocol,
@@ -24,6 +36,12 @@ pub struct Transport<'a> {
     /// The payload of the transport packet
     #[serde(skip_serializing)]
     pub payload: Option<&'a [u8]>,
+    /// Full parsed header when the protocol has a dedicated parser.
+    ///
+    /// Ignored by `PartialEq`/`Hash`/serialization: the flattened fields
+    /// above define the identity of the transport layer.
+    #[serde(skip_serializing)]
+    pub details: Option<TransportDetails<'a>>,
 }
 
 impl<'a> Transport<'a> {
@@ -44,6 +62,7 @@ impl<'a> Transport<'a> {
                     source_port: Some(tcp_packet.header.source_port),
                     destination_port: Some(tcp_packet.header.destination_port),
                     payload: Some(tcp_packet.payload),
+                    details: Some(TransportDetails::Tcp(tcp_packet)),
                 })
             }
             Some(TransportProtocol::Udp) => {
@@ -53,6 +72,7 @@ impl<'a> Transport<'a> {
                     source_port: Some(udp_packet.source_port),
                     destination_port: Some(udp_packet.destination_port),
                     payload: Some(udp_packet.payload),
+                    details: Some(TransportDetails::Udp(udp_packet)),
                 })
             }
             Some(other) => Ok(Transport {
@@ -60,6 +80,7 @@ impl<'a> Transport<'a> {
                 source_port: None,
                 destination_port: None,
                 payload: None,
+                details: None,
             }),
             None => Err(TransportError::UnsupportedProtocol),
         }
@@ -80,6 +101,7 @@ impl<'a> TryFrom<&'a [u8]> for Transport<'a> {
                 source_port: Some(tcp_packet.header.source_port),
                 destination_port: Some(tcp_packet.header.destination_port),
                 payload: Some(tcp_packet.payload),
+                details: Some(TransportDetails::Tcp(tcp_packet)),
             });
         }
 
@@ -91,12 +113,15 @@ impl<'a> TryFrom<&'a [u8]> for Transport<'a> {
                 source_port: Some(udp_packet.source_port),
                 destination_port: Some(udp_packet.destination_port),
                 payload: Some(udp_packet.payload),
+                details: Some(TransportDetails::Udp(udp_packet)),
             });
         }
         // If we get here, no parser could handle the packet
         Err(TransportError::UnsupportedProtocol)
     }
 }
+
+impl<'a> Eq for Transport<'a> {}
 
 impl<'a> PartialEq for Transport<'a> {
     fn eq(&self, other: &Self) -> bool {
@@ -230,6 +255,7 @@ mod tests {
             source_port: Some(1000),
             destination_port: Some(2000),
             payload: Some(&payload1),
+            details: None,
         };
 
         let right = Transport {
@@ -237,6 +263,7 @@ mod tests {
             source_port: Some(1000),
             destination_port: Some(2000),
             payload: Some(&payload2),
+            details: None,
         };
 
         assert_eq!(left, right);
@@ -251,6 +278,7 @@ mod tests {
             source_port: Some(1000),
             destination_port: Some(2000),
             payload: Some(&payload),
+            details: None,
         };
 
         let right = Transport {
@@ -258,6 +286,7 @@ mod tests {
             source_port: Some(1001),
             destination_port: Some(2000),
             payload: Some(&payload),
+            details: None,
         };
 
         assert_ne!(left, right);
@@ -273,6 +302,7 @@ mod tests {
             source_port: Some(1111),
             destination_port: Some(2222),
             payload: Some(&payload1),
+            details: None,
         };
 
         let right = Transport {
@@ -280,6 +310,7 @@ mod tests {
             source_port: Some(1111),
             destination_port: Some(2222),
             payload: Some(&payload2),
+            details: None,
         };
 
         assert_eq!(hash_value(&left), hash_value(&right));
@@ -294,6 +325,7 @@ mod tests {
             source_port: Some(12345),
             destination_port: Some(443),
             payload: Some(&payload),
+            details: None,
         };
 
         let json = serde_json::to_string(&transport).unwrap();
@@ -313,6 +345,7 @@ mod tests {
             source_port: Some(5000),
             destination_port: Some(6000),
             payload: Some(&payload),
+            details: None,
         };
 
         let cloned = transport.clone();
