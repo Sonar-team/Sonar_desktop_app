@@ -183,11 +183,18 @@ impl<'a> CapturedPacket<'a> {
     // }
 
     pub fn to_owned_packet(&self) -> CapturedPacketOwned {
-        let flow = self.flow.to_owned();
+        let mut flow = self.flow.to_owned();
         // La ligne externe d'un tunnel doit porter le même `encap_id` que ses
         // lignes internes (celui calculé dans `to_owned_packets`), sinon la
         // jointure externe <-> interne est impossible côté SOC.
         let encap_id = self.flow.inner.is_some().then(|| tunnel_pair_id(&flow));
+        // Le flux encapsulé ne fait PAS partie de l'identité de la ligne
+        // externe : il est matérialisé comme ligne interne à part entière,
+        // jointe par `encap_id`. Le garder dans la clé faisait éclater un
+        // même tunnel en une ligne externe par conversation interne — une
+        // distinction que l'export CSV ne sait pas exprimer, donc perdue au
+        // réimport (aller-retour non inversible, vu sur ndpi_capwap.pcap).
+        flow.inner = None;
         CapturedPacketOwned {
             ts_sec: self.ts_sec,
             ts_usec: self.ts_usec,
@@ -218,12 +225,17 @@ impl<'a> CapturedPacket<'a> {
                 } else {
                     flow.data_link.network_payload().len() as u32
                 };
+                // Même règle que `to_owned_packet` : chaque niveau est une
+                // ligne à part entière, le flux qu'il encapsule n'entre pas
+                // dans son identité (jointure par `encap_id`).
+                let mut owned_flow = flow.to_owned();
+                owned_flow.inner = None;
                 CapturedPacketOwned {
                     ts_sec: self.ts_sec,
                     ts_usec: self.ts_usec,
                     caplen: self.caplen,
                     len,
-                    flow: flow.to_owned(),
+                    flow: owned_flow,
                     encap_id: None,
                 }
             })

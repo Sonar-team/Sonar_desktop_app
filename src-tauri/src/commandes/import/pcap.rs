@@ -574,7 +574,7 @@ fn build_matrix_and_graph_from_pcaps(
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_support::{TempDir, local_tunnel_pcap};
+    use super::super::test_support::{TempDir, tunnel_pcap};
     use super::*;
     use crate::errors::import::PcapImportError;
     use crate::state::flow_matrix::FlowMatrixRow;
@@ -650,9 +650,7 @@ mod tests {
     /// compteur des lignes externes CAPWAP (aller + retour), sans orphelin.
     #[test]
     fn import_pcap_tunnel_counts_are_balanced() {
-        let Some(pcap_path) = local_tunnel_pcap() else {
-            return;
-        };
+        let pcap_path = tunnel_pcap();
         let mut matrix = FlowMatrix::new();
         let mut graph = GraphData::new();
         let on_event = Channel::new(|_| Ok(()));

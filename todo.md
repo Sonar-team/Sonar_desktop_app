@@ -26,7 +26,7 @@
 Suivi : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 
 - [x] **P0** [#87](https://github.com/Sonar-team/Sonar_desktop_app/issues/87) — reproduire l'import infini ou le fermer avec preuve et test *(fermée le 14/07, non reproductible avec preuves ; reliquat UI dans #161)*
-- [ ] **P0** [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) — supprimer les skips silencieux, puis construire le corpus complet
+- [ ] **P0** [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) — supprimer les skips silencieux, puis construire le corpus complet *(skips supprimés le 14/07 — corpus nDPI + PCAPNG forgés ; reste le fuzzing)*
 - [x] **P0** [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) — réserver atomiquement l'état `Importing` pendant toute conversion *(fait le 14/07)*
 - [ ] **P0** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — détecter le DLT et comptabiliser exhaustivement les résultats de parsing *(largement avancé en v4.5.0 : restent rapport qualité UI et réimport SLL)*
 - [x] **P0** [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) — ne perdre aucun paquet accepté à l'arrêt ou au plafond de flux *(fait le 14/07)*

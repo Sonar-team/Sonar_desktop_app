@@ -244,7 +244,7 @@ pub fn import_matrix_files(
 #[cfg(test)]
 mod tests {
     use super::super::pcap::handle_pcap_file;
-    use super::super::test_support::{TempDir, local_tunnel_pcap};
+    use super::super::test_support::{TempDir, tunnel_pcap};
     use super::*;
     use std::fs;
     use std::path::Path;
@@ -420,9 +420,7 @@ mod tests {
     /// doivent survivre au cycle à l'identique.
     #[test]
     fn pcap_matrix_survives_csv_roundtrip() {
-        let Some(pcap_path) = local_tunnel_pcap() else {
-            return;
-        };
+        let pcap_path = tunnel_pcap();
         let mut matrix = FlowMatrix::new();
         let mut graph = GraphData::new();
         let on_event = Channel::new(|_| Ok(()));

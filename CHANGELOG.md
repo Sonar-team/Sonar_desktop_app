@@ -9,6 +9,13 @@
   backticks — aucun chemin ne passe par un shell. Limite documentée et figée
   par un test : un `|` dans un nom de fichier est découpé par la colonne
   `origin` (séparateur multi-fichiers).
+- **Plus aucun test sauté silencieusement** (#151) : les tests de tunnels
+  utilisent désormais `ndpi_capwap.pcap` (corpus public nDPI, 422 paquets,
+  canal data CAPWAP avec trafic client DHCP/mDNS/ICMPv6), versionné dans le
+  dépôt — la capture de mission LOC42.pcapng, non publiable, faisait passer
+  ces tests pour verts quand elle était absente (CI). Le PCAPNG
+  multi-interfaces (DLT mélangés, snaplens divergents) est forgé en dur dans
+  les tests : rejet explicite figé, comme observé sur fichiers réels.
 - Preuve de terminaison des imports (#87) : un PCAP pathologique (100
   enregistrements de longueur nulle) se termine avec chaque paquet classé ;
   un fichier tronqué ou d'un DLT inconnu échoue explicitement — le backend
@@ -17,6 +24,13 @@
 
 ## 🛠 Corrections
 
+- **L'identité d'une ligne de tunnel n'inclut plus la conversation
+  encapsulée** : un même tunnel produisait une ligne externe par conversation
+  interne (six lignes CAPWAP au 5-uplet identique sur la capture nDPI), une
+  distinction que l'export CSV ne sait pas exprimer — l'aller-retour
+  export → réimport fusionnait ces lignes et n'était donc pas inversible.
+  La ligne externe agrège désormais par flux externe ; les conversations
+  internes restent des lignes à part entière, jointes par `encap_id`.
 - L'import (PCAP ou matrice CSV) réserve désormais **atomiquement** la phase
   `Importing` pendant toute la conversion, swap final inclus (#139) : un
   démarrage de capture pendant un import est refusé par la machine d'état au

@@ -322,6 +322,106 @@ mod tests {
         arp
     }
 
+    /// Blocs PCAPNG minimaux (little-endian) pour forger des fichiers
+    /// multi-interfaces : Section Header, Interface Description, Enhanced
+    /// Packet. Chaque bloc porte sa longueur totale en tête ET en queue.
+    fn pcapng_shb() -> Vec<u8> {
+        let mut b = Vec::new();
+        b.extend_from_slice(&0x0A0D_0D0Au32.to_le_bytes()); // type SHB
+        b.extend_from_slice(&28u32.to_le_bytes());
+        b.extend_from_slice(&0x1A2B_3C4Du32.to_le_bytes()); // byte-order magic
+        b.extend_from_slice(&1u16.to_le_bytes()); // version majeure
+        b.extend_from_slice(&0u16.to_le_bytes()); // version mineure
+        b.extend_from_slice(&(-1i64).to_le_bytes()); // longueur de section inconnue
+        b.extend_from_slice(&28u32.to_le_bytes());
+        b
+    }
+
+    fn pcapng_idb(link_type: u16, snaplen: u32) -> Vec<u8> {
+        let mut b = Vec::new();
+        b.extend_from_slice(&1u32.to_le_bytes()); // type IDB
+        b.extend_from_slice(&20u32.to_le_bytes());
+        b.extend_from_slice(&link_type.to_le_bytes());
+        b.extend_from_slice(&0u16.to_le_bytes()); // réservé
+        b.extend_from_slice(&snaplen.to_le_bytes());
+        b.extend_from_slice(&20u32.to_le_bytes());
+        b
+    }
+
+    fn pcapng_epb(interface_id: u32, data: &[u8]) -> Vec<u8> {
+        let padded = data.len().div_ceil(4) * 4;
+        let total = (32 + padded) as u32;
+        let mut b = Vec::new();
+        b.extend_from_slice(&6u32.to_le_bytes()); // type EPB
+        b.extend_from_slice(&total.to_le_bytes());
+        b.extend_from_slice(&interface_id.to_le_bytes());
+        b.extend_from_slice(&0u32.to_le_bytes()); // timestamp haut
+        b.extend_from_slice(&0u32.to_le_bytes()); // timestamp bas
+        b.extend_from_slice(&(data.len() as u32).to_le_bytes()); // caplen
+        b.extend_from_slice(&(data.len() as u32).to_le_bytes()); // len
+        b.extend_from_slice(data);
+        b.resize(b.len() + (padded - data.len()), 0);
+        b.extend_from_slice(&total.to_le_bytes());
+        b
+    }
+
+    /// PCAPNG multi-interfaces à DLT mélangés (#151, arbitrage 14/07/2026 :
+    /// un relevé = un DLT) : libpcap refuse de mélanger des types de liaison
+    /// — le fichier échoue **explicitement**, jamais en matrice partielle
+    /// silencieuse. Comportement observé le 14/07 sur fichiers réels
+    /// (The-Ultimate-PCAP), figé ici de façon déterministe.
+    #[test]
+    fn mixed_dlt_pcapng_fails_explicitly() {
+        let mut bytes = pcapng_shb();
+        bytes.extend_from_slice(&pcapng_idb(1, 65535)); // Ethernet
+        bytes.extend_from_slice(&pcapng_idb(113, 65535)); // Linux SLL
+        bytes.extend_from_slice(&pcapng_epb(0, &arp_frame()));
+        bytes.extend_from_slice(&pcapng_epb(1, &sll_ipv4_udp_packet()));
+        let path = write_pcap("sonar_core_pcapng_mixed_dlt_test", "mixte.pcapng", &bytes);
+
+        let mut matrix = FlowMatrix::new();
+        let Err(err) = append_pcap_file(&mut matrix, &path) else {
+            panic!("un PCAPNG à DLT mélangés doit être refusé explicitement");
+        };
+        assert!(
+            matches!(
+                err,
+                SonarCoreError::PcapOpen { .. } | SonarCoreError::PcapRead { .. }
+            ),
+            "erreur explicite attendue, obtenu : {err}"
+        );
+        assert!(err.to_string().contains("mixte.pcapng"));
+    }
+
+    /// Variante snaplens divergents (même DLT) : refusée par libpcap dès
+    /// l'ouverture — le cas rencontré le 14/07 avec les PCAPNG réels.
+    #[test]
+    fn mixed_snaplen_pcapng_fails_explicitly() {
+        let mut bytes = pcapng_shb();
+        bytes.extend_from_slice(&pcapng_idb(1, 65535));
+        bytes.extend_from_slice(&pcapng_idb(1, 8192));
+        bytes.extend_from_slice(&pcapng_epb(0, &arp_frame()));
+        bytes.extend_from_slice(&pcapng_epb(1, &arp_frame()));
+        let path = write_pcap(
+            "sonar_core_pcapng_mixed_snaplen_test",
+            "snaplen.pcapng",
+            &bytes,
+        );
+
+        let mut matrix = FlowMatrix::new();
+        let Err(err) = append_pcap_file(&mut matrix, &path) else {
+            panic!("un PCAPNG à snaplens divergents doit être refusé explicitement");
+        };
+        assert!(
+            matches!(
+                err,
+                SonarCoreError::PcapOpen { .. } | SonarCoreError::PcapRead { .. }
+            ),
+            "erreur explicite attendue, obtenu : {err}"
+        );
+        assert_eq!(matrix.row_count(), 0, "aucune mutation");
+    }
+
     /// Preuve de terminaison (#87) : un PCAP pathologique fait de paquets de
     /// longueur nulle se termine — chaque enregistrement avance la lecture,
     /// chaque paquet est classé (ici : illisible), aucune boucle infinie

@@ -56,18 +56,13 @@ mod test_support {
         }
     }
 
-    /// Capture réelle utilisée par les tests de tunnels, volontairement non
-    /// versionnée (données de mission, dépôt public). Retourne `None` quand
-    /// elle est absente (ex. CI) : le test se saute proprement.
-    pub(super) fn local_tunnel_pcap() -> Option<PathBuf> {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/LOC42.pcapng");
-        if path.exists() {
-            Some(path)
-        } else {
-            eprintln!(
-                "test sauté : test_files/LOC42.pcapng absent (capture locale non versionnée)"
-            );
-            None
-        }
+    /// Capture réelle de tunnels CAPWAP, versionnée dans le dépôt : corpus
+    /// public nDPI (`tests/cfgs/default/pcap/capwap.pcap`, projet ntop/nDPI),
+    /// 422 paquets — canal data 5247 transportant le trafic du client
+    /// `kawai-ipad3` (DHCP, mDNS, ICMPv6) à travers le tunnel. Remplace la
+    /// capture de mission LOC42.pcapng, non publiable, dont l'absence faisait
+    /// passer les tests de tunnels pour verts sans les exécuter (#151).
+    pub(super) fn tunnel_pcap() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/ndpi_capwap.pcap")
     }
 }

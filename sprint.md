@@ -18,8 +18,10 @@ ignoré, fusionné ou remplacé silencieusement.
    reproduire l'import infini ou le fermer avec preuve et test. *(14/07 :
    fermée non reproductible — preuves de terminaison backend testées, cause
    plausible restante côté UI suivie dans #161.)*
-2. [ ] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) :
-   supprimer tout succès obtenu en sautant une fixture absente.
+2. [x] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) :
+   supprimer tout succès obtenu en sautant une fixture absente. *(14/07 :
+   LOC42 remplacé par le corpus public nDPI, plus aucun skip silencieux ;
+   reste le fuzzing en phase 1.)*
 3. [ ] [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) :
    revalider espaces/Unicode et créer les tests nécessaires. *(14/07 :
    backend testé — PCAP/matrices/labels, espaces/Unicode/`'`/`"`/`` ` `` ;
@@ -74,7 +76,7 @@ ignoré, fusionné ou remplacé silencieusement.
 - [x] Un DLT non supporté échoue avant toute mutation de l'état. *(v4.5.0)*
 - [x] Une capture ne peut pas démarrer pendant un import. *(#139, 14/07)*
 - [x] Stop et limite de flux drainent ou comptent la perte exacte. *(#158, 14/07)*
-- [ ] Aucun test critique ne dépend silencieusement d'un fichier local.
+- [x] Aucun test critique ne dépend silencieusement d'un fichier local. *(#151, 14/07)*
 - [ ] Le rapport final traverse un IPC généré, est visible et exportable.
 - [ ] Deux actifs de même IP sur des VLAN/sites distincts ne sont pas fusionnés.
 - [ ] Les courses et chemins d'arrêt ont des tests déterministes.
