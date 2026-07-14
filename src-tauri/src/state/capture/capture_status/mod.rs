@@ -4,8 +4,10 @@ use serde::Serialize;
 
 /// Phase du cycle de vie de la capture. Les transitions valides sont
 /// `Idle → Starting → Running → Stopping → Idle` ; un échec de démarrage
-/// ramène `Starting → Idle`. Toute autre transition est refusée par
-/// [`super::CaptureState`].
+/// ramène `Starting → Idle`. Un import (PCAP ou matrice CSV) réserve
+/// `Idle → Importing → Idle` pendant TOUTE la conversion : capture et import
+/// sont mutuellement exclusifs (#139). Toute autre transition est refusée
+/// par [`super::CaptureState`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CapturePhase {
@@ -13,6 +15,7 @@ pub enum CapturePhase {
     Starting,
     Running,
     Stopping,
+    Importing,
 }
 
 impl std::fmt::Display for CapturePhase {
@@ -22,6 +25,7 @@ impl std::fmt::Display for CapturePhase {
             Self::Starting => "starting",
             Self::Running => "running",
             Self::Stopping => "stopping",
+            Self::Importing => "importing",
         };
         f.write_str(name)
     }

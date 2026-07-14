@@ -2,6 +2,15 @@
 
 ## Non publié
 
+## 🛠 Corrections
+
+- L'import (PCAP ou matrice CSV) réserve désormais **atomiquement** la phase
+  `Importing` pendant toute la conversion, swap final inclus (#139) : un
+  démarrage de capture pendant un import est refusé par la machine d'état au
+  lieu de créer un relevé hybride silencieusement écrasé en fin d'import. La
+  réservation est rendue sur tous les chemins de sortie (succès, erreur,
+  panique).
+
 ## **[4.5.0] - 2026-07-14**
 
 ## ✨ Améliorations

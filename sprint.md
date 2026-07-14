@@ -23,8 +23,9 @@ ignoré, fusionné ou remplacé silencieusement.
 
 ## Phase 1 — atomicité et comptabilité
 
-4. [ ] [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) :
-   réserver `Importing` pendant toute la conversion.
+4. [x] [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) :
+   réserver `Importing` pendant toute la conversion. *(14/07 : phase
+   `Importing` + guard RAII, tests de course déterministes.)*
 5. [ ] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) :
    définir le résultat canonique de parsing et le rapport qualité.
    *(14/07 : DLT réel branché partout, refus avant mutation, préambule
@@ -66,7 +67,7 @@ ignoré, fusionné ou remplacé silencieusement.
 
 - [ ] Chaque paquet lu appartient à une catégorie explicite.
 - [x] Un DLT non supporté échoue avant toute mutation de l'état. *(v4.5.0)*
-- [ ] Une capture ne peut pas démarrer pendant un import.
+- [x] Une capture ne peut pas démarrer pendant un import. *(#139, 14/07)*
 - [ ] Stop et limite de flux drainent ou comptent la perte exacte.
 - [ ] Aucun test critique ne dépend silencieusement d'un fichier local.
 - [ ] Le rapport final traverse un IPC généré, est visible et exportable.

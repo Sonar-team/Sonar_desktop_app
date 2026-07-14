@@ -462,10 +462,13 @@ pub fn convert_from_pcap_list(
 ) -> Result<(), CaptureStateError> {
     // Import et capture sont mutuellement exclusifs : la conversion
     // remplacerait la matrice et le graphe pendant que le pipeline les
-    // alimente.
-    capture_state
-        .lock()?
-        .ensure_idle_for("import de fichiers PCAP")?;
+    // alimente. La phase `Importing` est réservée atomiquement et détenue
+    // jusqu'à la fin de la commande, swap inclus (#139) — un démarrage de
+    // capture pendant la conversion est refusé par la machine d'état.
+    let _import_guard = crate::state::capture::ImportGuard::acquire(
+        capture_state.inner(),
+        "import de fichiers PCAP",
+    )?;
 
     let mut timing_logger = new_timing_logger();
     #[cfg(feature = "capture_timing")]

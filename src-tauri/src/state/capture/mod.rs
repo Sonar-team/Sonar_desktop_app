@@ -1,6 +1,8 @@
 //! État de la capture réseau : configuration, machine d'état, handle des
 //! threads en cours et channel d'événements vers le frontend.
 
+use std::sync::{Arc, Mutex};
+
 use capture_config::CaptureConfig;
 use capture_handle::CaptureHandle;
 use capture_status::{CapturePhase, CaptureStatus};
@@ -87,21 +89,6 @@ impl CaptureState {
         self.phase = CapturePhase::Idle;
     }
 
-    /// Refuse une opération mutuellement exclusive avec la capture live
-    /// (import PCAP/CSV : elle remplacerait la matrice et le graphe en cours
-    /// d'alimentation). Récolte d'abord un éventuel pipeline mort pour ne
-    /// pas refuser à tort après un arrêt autonome.
-    pub fn ensure_idle_for(&mut self, operation: &str) -> Result<(), CaptureStateError> {
-        self.reap_terminated_capture();
-        if self.phase != CapturePhase::Idle {
-            return Err(CaptureStateError::InvalidTransition {
-                from: self.phase.to_string(),
-                to: operation.to_string(),
-            });
-        }
-        Ok(())
-    }
-
     /// Récolte un pipeline qui s'est arrêté de lui-même (erreur pcap, canal
     /// IPC cassé) : joint les threads, libère le handle et normalise le
     /// statut, pour qu'un redémarrage ne réponde pas « déjà en cours ».
@@ -116,6 +103,61 @@ impl CaptureState {
         self.phase = CapturePhase::Idle;
         self.on_event = None;
         true
+    }
+}
+
+/// Réservation RAII de la phase [`CapturePhase::Importing`] (#139).
+///
+/// La vérification « aucune capture en cours » et la bascule en `Importing`
+/// se font sous **le même verrou** : rien ne peut s'intercaler entre le
+/// contrôle et la réservation. La réservation est ensuite détenue pendant
+/// toute la vie du guard — donc pendant TOUTE la conversion, jusqu'au swap
+/// de la matrice inclus — et un `start_capture` concurrent est refusé par
+/// la machine d'état (`InvalidTransition`) au lieu de démarrer un pipeline
+/// dont le relevé serait écrasé en fin d'import.
+///
+/// La phase revient à `Idle` au `Drop`, sur tous les chemins de sortie :
+/// succès, erreur (`?` en cours de conversion) ou panique.
+pub struct ImportGuard {
+    state: Arc<Mutex<CaptureState>>,
+}
+
+impl ImportGuard {
+    /// Vérifie `Idle` et bascule en `Importing`, atomiquement. `operation`
+    /// nomme l'import refusé dans l'erreur (`InvalidTransition`) si une
+    /// capture tourne déjà. Récolte d'abord un pipeline mort pour ne pas
+    /// refuser à tort après un arrêt autonome.
+    pub fn acquire(
+        state: &Arc<Mutex<CaptureState>>,
+        operation: &str,
+    ) -> Result<Self, CaptureStateError> {
+        let mut locked = state.lock()?;
+        locked.reap_terminated_capture();
+        if locked.phase != CapturePhase::Idle {
+            return Err(CaptureStateError::InvalidTransition {
+                from: locked.phase.to_string(),
+                to: operation.to_string(),
+            });
+        }
+        locked.phase = CapturePhase::Importing;
+        drop(locked);
+        Ok(Self {
+            state: Arc::clone(state),
+        })
+    }
+}
+
+impl Drop for ImportGuard {
+    fn drop(&mut self) {
+        // Restitution best-effort : même si un thread a paniqué avec le
+        // verrou (mutex empoisonné), la phase doit être rendue, sinon toute
+        // capture serait refusée à jamais.
+        let mut locked = match self.state.lock() {
+            Ok(locked) => locked,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+        debug_assert_eq!(locked.phase, CapturePhase::Importing);
+        locked.phase = CapturePhase::Idle;
     }
 }
 
@@ -173,6 +215,88 @@ mod tests {
         state.complete_start(CaptureHandle::new(first), Channel::new(|_| Ok(())));
         assert_eq!(state.phase, CapturePhase::Running);
         assert!(state.begin_start().is_err(), "start refusé pendant Running");
+    }
+
+    /// La réservation `Importing` est atomique et exclusive : pendant toute
+    /// la vie du guard, un démarrage de capture est refusé — c'est le trou
+    /// de #139 (check-then-act) qui est fermé ici.
+    #[test]
+    fn import_guard_blocks_capture_start_for_its_whole_lifetime() {
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+
+        let guard = ImportGuard::acquire(&state, "import de test").expect("état Idle");
+        assert_eq!(state.lock().unwrap().phase, CapturePhase::Importing);
+
+        let err = state.lock().unwrap().begin_start();
+        assert!(
+            matches!(
+                err,
+                Err(CaptureStateError::InvalidTransition { ref from, .. }) if from == "importing"
+            ),
+            "un start pendant l'import doit être refusé par la machine d'état"
+        );
+
+        drop(guard);
+        assert_eq!(
+            state.lock().unwrap().phase,
+            CapturePhase::Idle,
+            "la phase est rendue au drop du guard"
+        );
+        state
+            .lock()
+            .unwrap()
+            .begin_start()
+            .expect("le démarrage redevient possible après l'import");
+    }
+
+    /// L'inverse tient aussi : une capture en cours refuse la réservation,
+    /// et deux imports ne peuvent pas se chevaucher.
+    #[test]
+    fn import_guard_is_refused_while_running_or_importing() {
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+
+        let session = state.lock().unwrap().begin_start().unwrap();
+        state
+            .lock()
+            .unwrap()
+            .complete_start(CaptureHandle::new(session), Channel::new(|_| Ok(())));
+        assert!(
+            ImportGuard::acquire(&state, "import de test").is_err(),
+            "import refusé pendant Running"
+        );
+
+        // Retour à Idle : la capture est retirée (équivalent d'un stop).
+        {
+            let mut locked = state.lock().unwrap();
+            locked.capture = None;
+            locked.phase = CapturePhase::Idle;
+        }
+
+        let first = ImportGuard::acquire(&state, "premier import").expect("état Idle");
+        assert!(
+            ImportGuard::acquire(&state, "second import").is_err(),
+            "deux imports ne se chevauchent pas"
+        );
+        drop(first);
+    }
+
+    /// Le guard rend la phase même quand l'import échoue en cours de route
+    /// (early return `?`) : simulé par un drop dans un scope d'erreur.
+    #[test]
+    fn import_guard_restores_idle_on_error_paths() {
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+
+        let failing_import = |state: &Arc<Mutex<CaptureState>>| -> Result<(), CaptureStateError> {
+            let _guard = ImportGuard::acquire(state, "import qui échoue")?;
+            Err(CaptureStateError::PoisonError("erreur simulée".to_string()))
+        };
+
+        assert!(failing_import(&state).is_err());
+        assert_eq!(
+            state.lock().unwrap().phase,
+            CapturePhase::Idle,
+            "la phase est rendue malgré l'échec de l'import"
+        );
     }
 
     /// Chaque tentative de démarrage consomme un identifiant de session,

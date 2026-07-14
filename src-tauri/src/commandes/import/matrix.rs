@@ -134,10 +134,13 @@ pub fn import_matrix_files(
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<(), CaptureStateError> {
     // Import et capture sont mutuellement exclusifs : l'import remplacerait
-    // la matrice et le graphe pendant que le pipeline les alimente.
-    capture_state
-        .lock()?
-        .ensure_idle_for("import de matrice CSV")?;
+    // la matrice et le graphe pendant que le pipeline les alimente. La phase
+    // `Importing` est réservée atomiquement et détenue jusqu'à la fin de la
+    // commande, swap inclus (#139).
+    let _import_guard = crate::state::capture::ImportGuard::acquire(
+        capture_state.inner(),
+        "import de matrice CSV",
+    )?;
     let on_event = event_channel(&capture_state, on_event)?;
 
     info!(
