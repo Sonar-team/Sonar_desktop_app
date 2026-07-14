@@ -82,11 +82,19 @@ pub enum CaptureEvent<'a> {
     /// Sans cet événement, le frontend croirait capturer indéfiniment après
     /// une erreur.
     Stopped { session_id: u64, reason: String },
-    /// Fin de traitement d'un fichier importé (PCAP ou matrice CSV), avec la
-    /// comptabilité affichée dans la barre de statut.
+    /// Fin de traitement d'un fichier importé (PCAP ou matrice CSV), avec le
+    /// rapport qualité du fichier (#150) : chaque paquet lu est classé —
+    /// intégré à la matrice ou illisible par le parseur. Affiché dans la
+    /// barre de statut.
     Finished {
         file_name: &'a str,
         packet_total_count: usize,
+        /// Paquets parsés et intégrés à la matrice (pour une matrice CSV :
+        /// lignes importées).
+        integrated_count: usize,
+        /// Paquets lus mais illisibles par le parseur (0 pour une matrice
+        /// CSV : une ligne invalide est une erreur fatale, pas un skip).
+        parse_error_count: usize,
         matrix_total_count: usize,
     },
     /// Graphe complet, envoyé en fin d'import pour recharger la vue.

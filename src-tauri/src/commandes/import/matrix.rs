@@ -220,6 +220,11 @@ pub fn import_matrix_files(
         if let Err(e) = on_event.send(CaptureEvent::Finished {
             file_name: path,
             packet_total_count: *line_count,
+            // Une matrice CSV est validée ligne à ligne avant import : une
+            // ligne invalide est fatale (#148), donc tout ce qui est lu est
+            // intégré.
+            integrated_count: *line_count,
+            parse_error_count: 0,
             matrix_total_count,
         }) {
             error!("Erreur lors de l'envoi de Finished: {:?}", e);

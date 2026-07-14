@@ -90,6 +90,9 @@ export default {
     this._unsub.push(this.captureStore.onFinished((f) => {
       this.stats.processed = f.matrix_total_count;
       this.stats.received = f.packet_total_count;
+      // Rapport qualité de l'import (#150) : les paquets illisibles du
+      // fichier sont visibles au même titre que les pertes de capture.
+      this.stats.parse_errors = f.parse_error_count ?? 0;
     }));
 
     // Reset global

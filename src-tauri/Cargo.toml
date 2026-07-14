@@ -50,6 +50,9 @@ sonar-flows-core = { path = "../sonar-rust/crates/sonar-flows-core", features = 
 ] }
 
 thiserror = "2.0.18"
+# Génération du contrat IPC TypeScript depuis les types Rust (#142) : les
+# fichiers de src/types/generated/ sont écrits par `cargo test export_bindings`.
+ts-rs = "12.0.1"
 crossbeam = "0.8.4"
 parking_lot = "0.12.5"
 log = "0.4.33"

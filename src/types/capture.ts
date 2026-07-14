@@ -8,20 +8,13 @@ export type GraphData = {
   edges: Record<EdgeId, EdgeData>;
 };
 
-// Miroir de l'événement `Stats` Rust (champs plats, snake_case). Émis
-// périodiquement pendant la capture, puis une dernière fois après le
-// drainage d'arrêt ou de plafond (#158) : chaque paquet reçu appartient à
-// une catégorie — intégré, illisible, ou perdu (noyau/interface/application).
-export type Stats = {
-  session_id: number;
-  received: number;
-  dropped: number;
-  if_dropped: number;
-  app_dropped: number;
-  parse_errors: number;
-  integrated: number;
-  processed: number;
-};
+// Contrat GÉNÉRÉ depuis `StatsPayload` (Rust, #142). Émis périodiquement
+// pendant la capture, puis une dernière fois après le drainage d'arrêt ou
+// de plafond (#158) : chaque paquet reçu appartient à une catégorie —
+// intégré, illisible, ou perdu (noyau/interface/application).
+import type { Stats } from "./generated/Stats";
+
+export type { Stats };
 
 export type CapturedPacket = {
   ts_sec: number;
@@ -222,10 +215,14 @@ export type CaptureEvent =
   }
   | {
     event: "finished";
+    // Rapport qualité du fichier importé (#150) : chaque paquet lu est
+    // classé — intégré ou illisible. Champs snake_case comme côté Rust.
     data: {
-      fileName: string;
-      packetTotalCount: number;
-      matrixTotalCount: number;
+      file_name: string;
+      packet_total_count: number;
+      integrated_count: number;
+      parse_error_count: number;
+      matrix_total_count: number;
     };
   }
   | {

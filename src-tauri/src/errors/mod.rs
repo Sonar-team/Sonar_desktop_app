@@ -44,7 +44,7 @@ pub enum CaptureStateError {
 
 /// Représentation sérialisable de [`CaptureStateError`] : forme discriminée
 /// `{ kind, message }` consommée telle quelle par le frontend.
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, ts_rs::TS)]
 #[serde(tag = "kind", content = "message")]
 #[serde(rename_all = "camelCase")]
 pub enum CaptureStateErrorKind {
@@ -181,5 +181,30 @@ impl From<sonar_flows_core::SonarCoreError> for CaptureStateError {
             SonarCoreError::Io(e) => CaptureStateError::Io(e),
             other => CaptureStateError::Io(std::io::Error::other(other.to_string())),
         }
+    }
+}
+
+/// Contrat IPC généré (#142) : écrit les types TypeScript des erreurs et du
+/// payload `Stats` dans `src/types/generated/`, consommés par
+/// `src/errors/capture.ts`. Relancer via `cargo test export_ipc_bindings`
+/// après toute modification de ces types ; la CI vérifie l'absence de dérive
+/// (`git diff --exit-code src/types/generated`).
+#[cfg(test)]
+mod bindings {
+    use ts_rs::TS;
+
+    #[test]
+    fn export_ipc_bindings() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../src/types/generated");
+        // `large_int = number` : serde_json sérialise les u64 en nombres
+        // JSON, pas en bigint — le type généré doit dire la vérité du fil.
+        let cfg = ts_rs::Config::new()
+            .with_out_dir(dir)
+            .with_large_int("number".to_owned());
+        // `export_all` exporte aussi les types imbriqués (kinds par domaine)
+        // avec leurs imports croisés.
+        super::CaptureStateErrorKind::export_all(&cfg).expect("export du contrat d'erreurs");
+        crate::state::capture::capture_handle::messages::stats::StatsPayload::export_all(&cfg)
+            .expect("export du contrat Stats");
     }
 }

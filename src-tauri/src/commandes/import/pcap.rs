@@ -175,10 +175,15 @@ fn process_packet(
     matrice: &mut FlowMatrix,
     graph: &mut GraphData,
     on_event: &Channel<CaptureEvent<'_>>,
+    counters: &mut ParseCounters,
 ) {
     let Ok(flow) = packet_parser::parse::parse(link_type, packet.data) else {
+        // Rapport qualité (#150) : un paquet illisible est compté, jamais
+        // silencieusement ignoré.
+        counters.errors += 1;
         return;
     };
+    counters.ok += 1;
     let packet_min = CapturedPacket::from_pcap(packet.header, flow);
 
     // Un paquet tunnelé (ex. CAPWAP) produit plusieurs niveaux de flux :
@@ -193,7 +198,9 @@ fn process_packet(
     }
 }
 
-#[cfg(feature = "capture_timing")]
+/// Comptabilité de parsing d'un fichier importé : chaque paquet lu est
+/// classé intégré (`ok`) ou illisible (`errors`) — le rapport qualité de
+/// l'import (#150), repris dans l'événement `Finished`.
 #[derive(Default)]
 struct ParseCounters {
     ok: usize,
@@ -373,7 +380,6 @@ pub(super) fn handle_pcap_file(
     let mut packet_count: usize = 0;
     #[cfg(feature = "capture_timing")]
     let process_start = Instant::now();
-    #[cfg(feature = "capture_timing")]
     let mut counters = ParseCounters::default();
 
     // La boucle de lecture vient du cœur partagé : fin normale distinguée
@@ -405,6 +411,7 @@ pub(super) fn handle_pcap_file(
             matrice,
             graph,
             on_event,
+            &mut counters,
         );
     })?;
 
@@ -415,6 +422,8 @@ pub(super) fn handle_pcap_file(
     let finished_send_result = on_event.send(CaptureEvent::Finished {
         file_name: file_path,
         packet_total_count: total,
+        integrated_count: counters.ok,
+        parse_error_count: counters.errors,
         matrix_total_count: matrice.row_count(),
     });
     if let Err(e) = &finished_send_result {
@@ -447,8 +456,11 @@ pub(super) fn handle_pcap_file(
     }
 
     info!(
-        "[handle_pcap_file] Finised with {} paquets lu, {} lignes matrice",
+        "[handle_pcap_file] {} : {} paquets lus ({} intégrés, {} illisibles), {} lignes matrice",
+        file_path,
         total,
+        counters.ok,
+        counters.errors,
         matrice.row_count()
     );
     Ok(())

@@ -39,7 +39,7 @@ pub enum LabelError {
 }
 
 /// Représentation sérialisable de [`LabelError`] (forme `{ kind, message }`).
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, ts_rs::TS)]
 #[serde(tag = "kind", content = "message")]
 #[serde(rename_all = "camelCase")]
 pub enum LabelErrorKind {

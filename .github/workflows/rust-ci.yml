@@ -58,6 +58,12 @@ jobs:
         run: cargo test --verbose
         working-directory: ./src-tauri
 
+      # Contrat IPC généré (#142) : `cargo test` vient de réécrire
+      # src/types/generated/ depuis les types Rust ; si le résultat diffère
+      # de ce qui est commité, le contrat a dérivé et la CI échoue.
+      - name: Check IPC contract is up to date
+        run: git diff --exit-code -- src/types/generated
+
       - name: Audit dependencies with cargo audit
         run: cargo audit
         working-directory: ./src-tauri

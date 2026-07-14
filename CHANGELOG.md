@@ -2,6 +2,22 @@
 
 ## Non publié
 
+## ✨ Améliorations
+
+- **Rapport qualité d'import visible** (#150) : l'événement `Finished` de
+  chaque fichier importé porte désormais sa comptabilité complète — paquets
+  lus, intégrés à la matrice, illisibles par le parseur — et la barre de
+  statut affiche les illisibles (🧩) après un import comme pendant une
+  capture. Les paquets illisibles sont maintenant comptés dans l'import
+  desktop (ils étaient perdus hors instrumentation).
+- **Le contrat IPC des erreurs et des stats est généré depuis Rust** (#142,
+  ts-rs) : `src/types/generated/` est écrit par `cargo test
+  export_ipc_bindings` et la CI échoue si le contrat commité a dérivé des
+  types Rust. Les cinq familles d'erreurs et le payload `Stats` ne peuvent
+  plus mentir au frontend.
+- Les types de liaison supportés et leurs limites sont documentés dans le
+  README (#150).
+
 ## 🔧 Maintenance
 
 - Tests des chemins « difficiles » (#88) : PCAP, matrices et labels sous des

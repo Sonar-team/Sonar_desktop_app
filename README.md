@@ -78,6 +78,33 @@ SOC rules.
   - UDP, TCP
   - HTTP, DNS, TLS, SSL
 
+### 🔗 Types de liaison (LINKTYPE/DLT) supportés
+
+Chaque paquet est parsé avec le décodeur de son type de liaison réel —
+jamais « supposé Ethernet » :
+
+| LINKTYPE | Valeur | Capture live | Import PCAP | Réimport matrice CSV |
+|---|---|---|---|---|
+| `ETHERNET` | 1 | ✅ | ✅ | ✅ |
+| `RAW` (IP nu) | 101 (DLT 12 en live) | ✅ | ✅ | ❌ (refus explicite) |
+| `LINUX_SLL` (cooked v1, `-i any`) | 113 | ✅ | ✅ | ❌ (refus explicite) |
+| `LINUX_SLL2` (cooked v2) | 276 | ✅ | ✅ | ❌ (refus explicite) |
+
+Limites, toutes **explicites** (jamais de dégradation silencieuse) :
+
+- un DLT sans décodeur est refusé avant toute mutation du relevé (au
+  démarrage de capture comme à l'import) ;
+- **un relevé = un réseau = un DLT** : la fusion de sources de DLT
+  différents est refusée (matrices, PCAP multi-fichiers, capture sur une
+  interface d'un autre DLT que le relevé en cours) ;
+- le réimport d'une matrice non-Ethernet est refusé tant que la
+  reconstruction exacte de sa couche liaison n'est pas disponible ;
+- un PCAPNG multi-interfaces à DLT ou snaplens mélangés est refusé par
+  libpcap à la lecture ;
+- les matrices exportées portent leur DLT dans la ligne préambule
+  `#SFMS version=1 dlt=…` (un export antérieur au préambule est réimporté
+  en Ethernet implicite).
+
 ---
 
 ## Release Binaries

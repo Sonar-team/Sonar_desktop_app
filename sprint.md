@@ -34,9 +34,10 @@ ignoré, fusionné ou remplacé silencieusement.
    `Importing` + guard RAII, tests de course déterministes.)*
 5. [ ] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) :
    définir le résultat canonique de parsing et le rapport qualité.
-   *(14/07 : DLT réel branché partout, refus avant mutation, préambule
-   `#SFMS`, fusion inter-DLT rejetée — reste le rapport qualité UI/export
-   et le réimport SLL exact, cf. commentaire du 14/07.)*
+   *(14-15/07 : DLT réel branché partout, refus avant mutation, préambule
+   `#SFMS`, fusion inter-DLT rejetée, rapport qualité visible (Finished +
+   barre de statut), DLT documentés au README — ne reste que le réimport
+   SLL exact, bloqué par l'arbitrage `link_details`.)*
 6. [x] [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) :
    drainer arrêt et plafond avec des compteurs exacts. *(14/07 : drainage au
    plafond, compteurs intégrés/illisibles, récapitulatif final.)*
@@ -46,7 +47,9 @@ ignoré, fusionné ou remplacé silencieusement.
 ## Phase 2 — intégration et identité
 
 8. [ ] [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) :
-   générer et tester le contrat IPC Rust → TypeScript.
+   générer et tester le contrat IPC Rust → TypeScript. *(15/07 : erreurs +
+   Stats générés par ts-rs, gate CI anti-dérive — restent les événements
+   complexes : graphe, batches de paquets, Finished/Started.)*
 9. [ ] [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) :
    stabiliser l'identité d'actif contextualisée.
 
@@ -81,7 +84,7 @@ ignoré, fusionné ou remplacé silencieusement.
 - [ ] Deux actifs de même IP sur des VLAN/sites distincts ne sont pas fusionnés.
 - [ ] Les courses et chemins d'arrêt ont des tests déterministes.
 - [ ] Typecheck, tests, builds, fmt et Clippy strict sont verts.
-- [ ] Les DLT supportés et limites sont documentés.
+- [x] Les DLT supportés et limites sont documentés. *(README, 15/07)*
 
 ## Hors périmètre
 

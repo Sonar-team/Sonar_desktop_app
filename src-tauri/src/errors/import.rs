@@ -20,7 +20,7 @@ pub enum PcapImportError {
 }
 
 /// Représentation sérialisable de [`PcapImportError`] (forme `{ kind, message }`).
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, ts_rs::TS)]
 #[serde(tag = "kind", content = "message")]
 #[serde(rename_all = "camelCase")]
 pub enum PcapImportErrorKind {

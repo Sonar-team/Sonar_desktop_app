@@ -1,56 +1,30 @@
-// Erreurs du backend (miroir de `CaptureStateErrorKind` côté Rust, forme
-// discriminée `{ kind, message }`) et affichage utilisateur : chaque erreur
-// est traduite en message lisible, montrée en dialogue et journalisée.
+// Affichage utilisateur des erreurs backend : chaque erreur est traduite en
+// message lisible, montrée en dialogue et journalisée. Les types sont le
+// contrat IPC GÉNÉRÉ depuis les enums Rust (#142, `cargo test
+// export_ipc_bindings`) — ne pas les redéclarer à la main ici : toute dérive
+// doit être une erreur de compilation, pas un `undefined` en production.
 import { message } from "@tauri-apps/plugin-dialog";
 import { error } from "@tauri-apps/plugin-log";
 
-export type CaptureErrorKind =
-  | { kind: "invalidConfig"; message: string }
-  | { kind: "configPersistence"; message: string }
-  | { kind: "interfaceNotFound"; message: string }
-  | { kind: "deviceListError"; message: string }
-  | { kind: "captureInitError"; message: string }
-  | { kind: "channelSendError"; message: string }
-  | { kind: "eventSendError"; message: string }
-  | { kind: "unsupportedLinkType"; message: string }
-  | { kind: "mixedLinkType"; message: string };
+import type { CaptureErrorKind } from "../types/generated/CaptureErrorKind";
+import type { CaptureStateErrorKind } from "../types/generated/CaptureStateErrorKind";
+import type { ExportErrorKind } from "../types/generated/ExportErrorKind";
+import type { LabelErrorKind } from "../types/generated/LabelErrorKind";
+import type { PcapImportErrorKind as ImportErrorKind } from "../types/generated/PcapImportErrorKind";
 
-// Miroir exact de `PcapImportErrorKind` (Rust) : les variantes à deux champs
-// sont sérialisées par serde en `message: [fichier, détail]` (tag/content),
-// pas en champs nommés (#142).
-export type ImportErrorKind =
-  | { kind: "openFileError"; message: [string, string] }
-  | { kind: "readPacketError"; message: [string, string] }
-  | { kind: "unsupportedLinkType"; message: [string, string] };
+export type {
+  CaptureErrorKind,
+  CaptureStateErrorKind,
+  ExportErrorKind,
+  ImportErrorKind,
+  LabelErrorKind,
+};
 
+// Alias lisibles des tuples du contrat labels (les types générés les
+// inlinent) : consommés par `labelImport.ts` et le panneau d'import.
 export type InvalidLineValue = [number, string];
 export type InvalidFieldValue = [number, string, string];
 export type LabelConflictRow = [number, number, string, string, string, string, string];
-
-export type LabelErrorKind =
-  | { kind: "invalidMacIpFormat"; message: [InvalidFieldValue[], InvalidFieldValue[]] }
-  | { kind: "labelLinesConflicts"; message: [LabelConflictRow[], LabelConflictRow[]] }
-  | { kind: "invalidRowsFormat"; message: InvalidLineValue[] }
-  | { kind: "editRejected"; message: string }
-
-// Miroir exact de `ExportErrorKind` (Rust) : les variantes sans donnée
-// (`emptyPath`, `logNotFound`) sont sérialisées sans clé `message`.
-export type ExportErrorKind =
-  | { kind: "emptyPath" }
-  | { kind: "io"; message: string }
-  | { kind: "csv"; message: string }
-  | { kind: "poisonError"; message: string }
-  | { kind: "logNotFound" };
-
-export type CaptureStateErrorKind =
-  | { kind: "io"; message: string }
-  | { kind: "poisonError"; message: string }
-  | { kind: "invalidTransition"; message: string }
-  | { kind: "capture"; message: CaptureErrorKind }
-  | { kind: "export"; message: ExportErrorKind }
-  | { kind: "import"; message: ImportErrorKind }
-  | { kind: "label"; message: LabelErrorKind }
-  | { kind: "tauri"; message: string };
 
 export async function displayCaptureError(err: unknown) {
   const captureError = err as CaptureStateErrorKind;

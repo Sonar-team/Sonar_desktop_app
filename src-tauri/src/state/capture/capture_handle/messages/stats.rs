@@ -101,7 +101,10 @@ pub struct StatsSnapshot {
     pub processed: u32,
 }
 
-#[derive(Clone, Copy, Serialize)]
+// Miroir TypeScript généré sous le nom `Stats` : c'est la forme exacte des
+// données de l'événement `stats` (#142).
+#[derive(Clone, Copy, Serialize, ts_rs::TS)]
+#[ts(rename = "Stats")]
 pub struct StatsPayload {
     pub session_id: u64,
     pub received: u32,
