@@ -14,12 +14,16 @@ ignoré, fusionné ou remplacé silencieusement.
 
 ## Phase 0 — rendre les défauts observables
 
-1. [ ] [#87](https://github.com/Sonar-team/Sonar_desktop_app/issues/87) :
-   reproduire l'import infini ou le fermer avec preuve et test.
+1. [x] [#87](https://github.com/Sonar-team/Sonar_desktop_app/issues/87) :
+   reproduire l'import infini ou le fermer avec preuve et test. *(14/07 :
+   fermée non reproductible — preuves de terminaison backend testées, cause
+   plausible restante côté UI suivie dans #161.)*
 2. [ ] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) :
    supprimer tout succès obtenu en sautant une fixture absente.
 3. [ ] [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) :
-   revalider espaces/Unicode et créer les tests nécessaires.
+   revalider espaces/Unicode et créer les tests nécessaires. *(14/07 :
+   backend testé — PCAP/matrices/labels, espaces/Unicode/`'`/`"`/`` ` `` ;
+   restent les tests Windows et front.)*
 
 ## Phase 1 — atomicité et comptabilité
 

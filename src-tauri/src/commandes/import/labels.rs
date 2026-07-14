@@ -621,6 +621,31 @@ mod tests {
     use std::fs;
     use std::path::Path;
 
+    /// Chemins avec espaces, Unicode et caractères spéciaux shell (#88) :
+    /// l'import de labels lit le fichier tel quel (`std::fs`, jamais de
+    /// shell ni de concaténation) et les labels Unicode traversent intacts.
+    #[test]
+    fn label_paths_with_spaces_unicode_and_special_characters_import() {
+        let dir = TempDir::new("sonar_test_label_weird_names");
+        for name in [
+            "labels de l'été (v2).csv",
+            "étiquettes 中文 📡.csv",
+            "site \"principal\" `usine`.csv",
+        ] {
+            let path = dir.path().join(name);
+            fs::write(
+                &path,
+                "aa:bb:cc:dd:ee:ff,192.168.1.10,Automate n°1 (atelier été)\n",
+            )
+            .unwrap();
+
+            let rows = read_label_rows(path.to_str().unwrap())
+                .unwrap_or_else(|e| panic!("import de {name}: {e:?}"));
+            assert_eq!(rows.len(), 1, "{name}");
+            assert_eq!(rows[0].label, "Automate n°1 (atelier été)", "{name}");
+        }
+    }
+
     /// Une matrice de flux exportée importée comme fichier de labels doit
     /// produire UNE erreur claire (« mauvais type de fichier »), pas une
     /// erreur MAC/IP par ligne du fichier.

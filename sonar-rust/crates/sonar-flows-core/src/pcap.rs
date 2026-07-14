@@ -202,7 +202,7 @@ pub fn convert_pcap_files_to_csv(
 
 #[cfg(test)]
 mod tests {
-    use super::{append_pcap_file, parser_link_type};
+    use super::{append_pcap_file, parser_link_type, supported_parser_link_type};
     use crate::SonarCoreError;
     use crate::matrix::FlowMatrix;
     use packet_parser::LinkType;
@@ -308,6 +308,75 @@ mod tests {
         assert_eq!(matrix.row_count(), 1, "le flux IPv4 atteint la matrice");
     }
 
+    /// Trame ARP Ethernet minimale (42 octets), partagée par les tests de
+    /// conversion qui n'ont pas besoin d'une capture réelle.
+    fn arp_frame() -> Vec<u8> {
+        let mut arp = Vec::new();
+        arp.extend_from_slice(&[0xff; 6]);
+        arp.extend_from_slice(&[0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]);
+        arp.extend_from_slice(&[0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01]);
+        arp.extend_from_slice(&[0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]);
+        arp.extend_from_slice(&[192, 168, 1, 10]);
+        arp.extend_from_slice(&[0x00; 6]);
+        arp.extend_from_slice(&[192, 168, 1, 1]);
+        arp
+    }
+
+    /// Preuve de terminaison (#87) : un PCAP pathologique fait de paquets de
+    /// longueur nulle se termine — chaque enregistrement avance la lecture,
+    /// chaque paquet est classé (ici : illisible), aucune boucle infinie
+    /// possible dans `for_each_raw_packet`.
+    #[test]
+    fn zero_length_packets_terminate_with_explicit_accounting() {
+        let mut bytes = pcap_global_header();
+        for _ in 0..100 {
+            push_packet_record(&mut bytes, &[]);
+        }
+        let path = write_pcap("sonar_core_pcap_zero_len_test", "zero.pcap", &bytes);
+
+        let mut matrix = FlowMatrix::new();
+        let report = append_pcap_file(&mut matrix, &path).expect("lecture terminée");
+
+        assert_eq!(report.packets, 100, "tous les enregistrements sont lus");
+        assert_eq!(report.parse_ok, 0);
+        assert_eq!(
+            report.parse_errors, 100,
+            "un paquet vide est classé illisible, pas avalé ni bloquant"
+        );
+        assert_eq!(matrix.row_count(), 0);
+    }
+
+    /// Chemins avec espaces, Unicode (accents, CJK, emoji) et caractères
+    /// spéciaux shell (`'`, `"`, `` ` ``) : la conversion PCAP doit les
+    /// traiter comme n'importe quel fichier (#88). Les chemins passent par
+    /// `std::path::Path`, jamais par un shell — ces noms sont légitimes.
+    #[test]
+    fn pcap_paths_with_spaces_unicode_and_special_characters_convert() {
+        let mut bytes = pcap_global_header();
+        push_packet_record(&mut bytes, &arp_frame());
+
+        for name in [
+            "relevé du réseau (été 2026).pcap",
+            "capture 中文-網絡 📡.pcap",
+            "l'atelier d'essai.pcap",
+            "site \"principal\".pcap",
+            "sonde `usine`.pcap",
+        ] {
+            let path = write_pcap("sonar_core_pcap_weird_names_test", name, &bytes);
+
+            let link_type =
+                supported_parser_link_type(&path).unwrap_or_else(|e| panic!("DLT de {name}: {e}"));
+            assert_eq!(link_type, LinkType::ETHERNET);
+
+            let mut matrix = FlowMatrix::new();
+            let report = append_pcap_file(&mut matrix, &path)
+                .unwrap_or_else(|e| panic!("conversion de {name}: {e}"));
+            assert_eq!(report.packets, 1, "{name}");
+            assert_eq!(report.parse_ok, 1, "{name}");
+            assert_eq!(matrix.row_count(), 1, "{name}");
+        }
+    }
+
     /// Bout-en-bout sur capture réelle Linux cooked v1 (2702 trames,
     /// `tcpdump -i any`) : conversion avec le vrai DLT, matrice non vide,
     /// export CSV avec préambule `dlt=LINUX_SLL`, et réimport refusé tant que
@@ -372,17 +441,7 @@ mod tests {
     #[test]
     fn converting_pcaps_of_different_dlt_into_one_matrix_is_refused() {
         let mut ethernet_bytes = pcap_global_header_for(1);
-        // Trame ARP Ethernet minimale (42 octets), même contenu que les tests
-        // du thread de traitement.
-        let mut arp = Vec::new();
-        arp.extend_from_slice(&[0xff; 6]);
-        arp.extend_from_slice(&[0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]);
-        arp.extend_from_slice(&[0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01]);
-        arp.extend_from_slice(&[0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]);
-        arp.extend_from_slice(&[192, 168, 1, 10]);
-        arp.extend_from_slice(&[0x00; 6]);
-        arp.extend_from_slice(&[192, 168, 1, 1]);
-        push_packet_record(&mut ethernet_bytes, &arp);
+        push_packet_record(&mut ethernet_bytes, &arp_frame());
         let ethernet = write_pcap("sonar_core_pcap_mixed_test", "eth.pcap", &ethernet_bytes);
 
         let mut sll_bytes = pcap_global_header_for(113);

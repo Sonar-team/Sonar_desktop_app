@@ -2,6 +2,19 @@
 
 ## Non publié
 
+## 🔧 Maintenance
+
+- Tests des chemins « difficiles » (#88) : PCAP, matrices et labels sous des
+  noms contenant espaces, accents, CJK, emoji, apostrophes, guillemets et
+  backticks — aucun chemin ne passe par un shell. Limite documentée et figée
+  par un test : un `|` dans un nom de fichier est découpé par la colonne
+  `origin` (séparateur multi-fichiers).
+- Preuve de terminaison des imports (#87) : un PCAP pathologique (100
+  enregistrements de longueur nulle) se termine avec chaque paquet classé ;
+  un fichier tronqué ou d'un DLT inconnu échoue explicitement — le backend
+  ne peut pas boucler. Le symptôme « import infini » restant plausible est
+  l'UI qui reste verrouillée (`isConverting`), suivi dans #161.
+
 ## 🛠 Corrections
 
 - L'import (PCAP ou matrice CSV) réserve désormais **atomiquement** la phase

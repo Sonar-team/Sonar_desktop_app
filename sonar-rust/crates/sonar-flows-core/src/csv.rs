@@ -324,6 +324,85 @@ mod tests {
         assert!(message.contains("LINUX_SLL") && message.contains("ETHERNET"));
     }
 
+    /// Chemins avec espaces, Unicode et caractères spéciaux shell (#88) :
+    /// export, réimport et fusion de matrices fonctionnent, et la colonne
+    /// `origin` porte fidèlement le nom du fichier.
+    #[test]
+    fn matrix_paths_with_spaces_unicode_and_special_characters_round_trip() {
+        let dir = std::env::temp_dir().join("sonar_core_csv_weird_names_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+
+        // Lignes sans provenance : au réimport, la colonne `origin` doit
+        // hériter du nom (spécial) du fichier — une ligne qui portait déjà
+        // une origine la conserverait, ce qui ne testerait rien.
+        let mut rows = read_matrix_rows(&fixture("20260703_NP_Matrice.csv")).expect("fixture");
+        for row in &mut rows {
+            row.origin.clear();
+        }
+
+        for name in [
+            "matrice de l'été (v2).csv",
+            "relevé 中文 📡.csv",
+            "site \"principal\" `usine`.csv",
+        ] {
+            let path = dir.join(name);
+            FlowMatrix::write_rows_to_csv(
+                &rows,
+                Some(packet_parser::LinkType::ETHERNET),
+                &path.to_string_lossy(),
+            )
+            .unwrap_or_else(|e| panic!("export vers {name}: {e}"));
+
+            let reimported = merge_matrix_files(std::slice::from_ref(&path))
+                .unwrap_or_else(|e| panic!("réimport de {name}: {e}"));
+            assert!(reimported.row_count() > 0, "{name}");
+            assert!(
+                reimported
+                    .to_flat_vec()
+                    .iter()
+                    .all(|row| row.origin == *name),
+                "{name} : la colonne origin doit porter le nom exact du fichier"
+            );
+        }
+    }
+
+    /// Limite connue documentée (#88) : `|` est le séparateur de la colonne
+    /// `origin` ; un nom de fichier qui en contient est découpé au réimport
+    /// et devient DEUX origines. Ce test fige le comportement actuel — le
+    /// changer demande un échappement du séparateur, pas une régression
+    /// silencieuse.
+    #[test]
+    fn pipe_in_a_matrix_file_name_is_split_by_the_origin_column() {
+        let dir = std::env::temp_dir().join("sonar_core_csv_pipe_name_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let path = dir.join("site-a|site-b.csv");
+
+        let mut rows = read_matrix_rows(&fixture("20260703_NP_Matrice.csv")).expect("fixture");
+        for row in &mut rows {
+            row.origin.clear();
+        }
+        FlowMatrix::write_rows_to_csv(
+            &rows,
+            Some(packet_parser::LinkType::ETHERNET),
+            &path.to_string_lossy(),
+        )
+        .expect("export");
+
+        let merged = merge_matrix_files(std::slice::from_ref(&path)).expect("réimport");
+        let origins: std::collections::BTreeSet<String> =
+            merged.origins.values().flatten().cloned().collect();
+        assert_eq!(
+            origins,
+            ["site-a", "site-b.csv"]
+                .map(str::to_string)
+                .into_iter()
+                .collect(),
+            "le nom contenant `|` est découpé en deux origines (limite documentée)"
+        );
+    }
+
     /// Le numéro de ligne des erreurs tient compte du préambule : la première
     /// ligne de données d'un fichier avec préambule est la ligne 3.
     #[test]
