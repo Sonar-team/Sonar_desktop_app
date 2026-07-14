@@ -64,23 +64,12 @@ impl AppDropCounters {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct StatTriple {
     pub received: u32,
     pub dropped: u32,
     pub if_dropped: u32,
     pub app_dropped: u64,
-}
-
-impl Default for StatTriple {
-    fn default() -> Self {
-        Self {
-            received: u32::MAX,
-            dropped: u32::MAX,
-            if_dropped: u32::MAX,
-            app_dropped: u64::MAX,
-        }
-    }
 }
 
 impl From<pcap::Stat> for StatTriple {
@@ -94,17 +83,22 @@ impl From<pcap::Stat> for StatTriple {
     }
 }
 
-impl StatTriple {
-    /// Retourne true si la stat est différente de `last` et met `last` à jour.
-    #[inline]
-    pub fn update_if_changed(self, last: &mut StatTriple) -> bool {
-        if *last != self {
-            *last = self;
-            true
-        } else {
-            false
-        }
-    }
+/// Photographie complète des compteurs de capture à un instant donné : stats
+/// pcap + pertes applicatives ([`StatTriple`]) et comptabilité du thread de
+/// traitement. C'est l'unité de déduplication des événements `Stats`, et la
+/// forme du récapitulatif final émis après drainage (#158) — chaque paquet
+/// reçu se retrouve dans une catégorie : intégré, illisible, ou perdu
+/// (noyau / interface / application), distinctement.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct StatsSnapshot {
+    pub triple: StatTriple,
+    /// Paquets acceptés par le pipeline mais illisibles par le parseur.
+    pub parse_errors: u64,
+    /// Paquets parsés et intégrés à la matrice (un par paquet capturé,
+    /// niveaux de tunnel non recomptés).
+    pub integrated: u64,
+    /// Flux distincts de la matrice (lignes du relevé).
+    pub processed: u32,
 }
 
 #[derive(Clone, Copy, Serialize)]
@@ -114,19 +108,23 @@ pub struct StatsPayload {
     pub dropped: u32,
     pub if_dropped: u32,
     pub app_dropped: u64,
+    pub parse_errors: u64,
+    pub integrated: u64,
     pub processed: u32,
 }
 
 impl StatsPayload {
     #[inline]
-    pub fn new(triple: StatTriple, processed: u32, session_id: u64) -> Self {
+    pub fn new(snapshot: StatsSnapshot, session_id: u64) -> Self {
         Self {
             session_id,
-            received: triple.received,
-            dropped: triple.dropped,
-            if_dropped: triple.if_dropped,
-            app_dropped: triple.app_dropped,
-            processed,
+            received: snapshot.triple.received,
+            dropped: snapshot.triple.dropped,
+            if_dropped: snapshot.triple.if_dropped,
+            app_dropped: snapshot.triple.app_dropped,
+            parse_errors: snapshot.parse_errors,
+            integrated: snapshot.integrated,
+            processed: snapshot.processed,
         }
     }
 
@@ -139,32 +137,87 @@ impl StatsPayload {
             dropped: self.dropped,
             if_dropped: self.if_dropped,
             app_dropped: self.app_dropped,
+            parse_errors: self.parse_errors,
+            integrated: self.integrated,
             processed: self.processed,
         })
     }
 
-    /// Compare avec `last`/`last_processed` et n’envoie que si changement.
-    /// `processed` participe à la déduplication : sans lui, une matrice qui
-    /// grandit sans nouvelle perte n'était jamais réémise (#154).
+    /// N'envoie que si le snapshot diffère du dernier émis. Tous les
+    /// compteurs participent à la déduplication : une matrice qui grandit
+    /// sans nouvelle perte (#154) comme un paquet illisible de plus doivent
+    /// réémettre.
     #[inline]
     pub fn maybe_send(
-        last: &mut StatTriple,
-        last_processed: &mut u32,
-        mut current: StatTriple,
-        app_dropped: u64,
-        processed: u32,
+        last: &mut Option<StatsSnapshot>,
+        current: StatsSnapshot,
         session_id: u64,
         ch: &Channel<CaptureEvent<'static>>,
     ) -> Result<(), tauri::Error> {
-        current.app_dropped = app_dropped;
-        let triple_changed = current.update_if_changed(last);
-        let processed_changed = *last_processed != processed;
-        *last_processed = processed;
-        if triple_changed || processed_changed {
-            let payload = StatsPayload::new(current, processed, session_id);
-            payload.send(ch)
-        } else {
-            Ok(())
+        if last.as_ref() == Some(&current) {
+            return Ok(());
         }
+        *last = Some(current);
+        StatsPayload::new(current, session_id).send(ch)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    use super::*;
+
+    fn counting_channel() -> (Channel<CaptureEvent<'static>>, Arc<AtomicUsize>) {
+        let sent = Arc::new(AtomicUsize::new(0));
+        let counter = sent.clone();
+        let ch = Channel::new(move |_| {
+            counter.fetch_add(1, Ordering::Relaxed);
+            Ok(())
+        });
+        (ch, sent)
+    }
+
+    /// Tous les compteurs participent à la déduplication : un snapshot
+    /// identique n'est pas réémis, mais un paquet illisible ou intégré de
+    /// plus doit réémettre — sinon le récapitulatif serait invisible (#158).
+    #[test]
+    fn maybe_send_deduplicates_on_the_full_snapshot() {
+        let (ch, sent) = counting_channel();
+        let mut last = None;
+        let mut snapshot = StatsSnapshot {
+            triple: StatTriple {
+                received: 10,
+                ..StatTriple::default()
+            },
+            parse_errors: 0,
+            integrated: 9,
+            processed: 4,
+        };
+
+        StatsPayload::maybe_send(&mut last, snapshot, 1, &ch).unwrap();
+        StatsPayload::maybe_send(&mut last, snapshot, 1, &ch).unwrap();
+        assert_eq!(
+            sent.load(Ordering::Relaxed),
+            1,
+            "snapshot identique dédupliqué"
+        );
+
+        snapshot.parse_errors += 1;
+        StatsPayload::maybe_send(&mut last, snapshot, 1, &ch).unwrap();
+        assert_eq!(
+            sent.load(Ordering::Relaxed),
+            2,
+            "un paquet illisible de plus doit réémettre"
+        );
+
+        snapshot.integrated += 1;
+        StatsPayload::maybe_send(&mut last, snapshot, 1, &ch).unwrap();
+        assert_eq!(
+            sent.load(Ordering::Relaxed),
+            3,
+            "un paquet intégré de plus doit réémettre"
+        );
     }
 }

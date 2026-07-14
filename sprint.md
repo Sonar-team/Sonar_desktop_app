@@ -31,8 +31,9 @@ ignoré, fusionné ou remplacé silencieusement.
    *(14/07 : DLT réel branché partout, refus avant mutation, préambule
    `#SFMS`, fusion inter-DLT rejetée — reste le rapport qualité UI/export
    et le réimport SLL exact, cf. commentaire du 14/07.)*
-6. [ ] [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) :
-   drainer arrêt et plafond avec des compteurs exacts.
+6. [x] [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) :
+   drainer arrêt et plafond avec des compteurs exacts. *(14/07 : drainage au
+   plafond, compteurs intégrés/illisibles, récapitulatif final.)*
 7. [ ] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) :
    compléter multi-DLT, malformé, PCAPNG et fuzzing.
 
@@ -68,7 +69,7 @@ ignoré, fusionné ou remplacé silencieusement.
 - [ ] Chaque paquet lu appartient à une catégorie explicite.
 - [x] Un DLT non supporté échoue avant toute mutation de l'état. *(v4.5.0)*
 - [x] Une capture ne peut pas démarrer pendant un import. *(#139, 14/07)*
-- [ ] Stop et limite de flux drainent ou comptent la perte exacte.
+- [x] Stop et limite de flux drainent ou comptent la perte exacte. *(#158, 14/07)*
 - [ ] Aucun test critique ne dépend silencieusement d'un fichier local.
 - [ ] Le rapport final traverse un IPC généré, est visible et exportable.
 - [ ] Deux actifs de même IP sur des VLAN/sites distincts ne sont pas fusionnés.

@@ -92,7 +92,8 @@ fn import_link_types(pcap_paths: &[String]) -> String {
 }
 
 /// Envoie l'événement `Stats` (compteurs de la barre de statut). Retourne
-/// vrai si l'envoi a réussi.
+/// vrai si l'envoi a réussi. En import, les paquets « reçus » sont les
+/// paquets lus du fichier ; les catégories de perte réseau n'existent pas.
 fn send_stats_event(
     on_event: &Channel<CaptureEvent<'_>>,
     received: usize,
@@ -105,6 +106,8 @@ fn send_stats_event(
             dropped: 0,
             if_dropped: 0,
             app_dropped: 0,
+            parse_errors: 0,
+            integrated: 0,
             processed: processed as u32,
         })
         .map_err(|e| {

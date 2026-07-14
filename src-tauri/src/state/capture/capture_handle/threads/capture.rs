@@ -147,6 +147,12 @@ pub fn spawn_capture_thread_with_pool(
                 }
             }
         }
+        // Dernier relevé des stats pcap avant de sortir : sans lui, le
+        // récapitulatif final émis après drainage lirait des compteurs
+        // vieux d'un cycle de polling (jusqu'à 250 ms de trafic) (#158).
+        if let Ok(stats) = cap.stats() {
+            shared_stats.store(stats);
+        }
         debug!("Thread de capture terminé.");
     })
 }

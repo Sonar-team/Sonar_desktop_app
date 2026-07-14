@@ -20,7 +20,7 @@ use crate::{
                 CaptureMessage,
                 capture::{CapturedPacket, CapturedPacketOwned},
                 channel::ChannelCapacityPayload,
-                stats::{AppDropCounters, SharedCaptureStats, StatTriple, StatsPayload},
+                stats::{AppDropCounters, SharedCaptureStats, StatsPayload, StatsSnapshot},
             },
             threads::packet_buffer::{PacketBuffer, PacketBufferPool},
         },
@@ -104,6 +104,13 @@ struct PacketWorker {
     last_batch_flush: Instant,
     /// Nombre de flux de la matrice, rafraîchi à chaque update (pour les stats).
     processed: u32,
+    /// Paquets parsés et intégrés à la matrice depuis le début de la session
+    /// (un par paquet capturé, niveaux de tunnel non recomptés) : la
+    /// catégorie « intégré » du récapitulatif (#158).
+    packets_integrated: u64,
+    /// Total des paquets illisibles par le parseur depuis le début de la
+    /// session : la catégorie « illisible » du récapitulatif (#158).
+    parse_errors_total: u64,
     /// Erreurs de parsing accumulées depuis le dernier log (rate-limiting).
     parse_errors_pending: u64,
     last_parse_error_log: Instant,
@@ -129,6 +136,8 @@ impl PacketWorker {
             graph_batch: GraphUpdateBatch::default(),
             last_batch_flush: Instant::now(),
             processed: 0,
+            packets_integrated: 0,
+            parse_errors_total: 0,
             parse_errors_pending: 0,
             last_parse_error_log: Instant::now(),
             #[cfg(feature = "capture_timing")]
@@ -146,6 +155,7 @@ impl PacketWorker {
     /// [`PARSE_ERROR_LOG_INTERVAL`] : du trafic malformé en rafale ne doit
     /// pas amplifier les logs (#147).
     fn note_parse_error(&mut self, err: &dyn std::fmt::Display) {
+        self.parse_errors_total += 1;
         self.parse_errors_pending += 1;
         if self.last_parse_error_log.elapsed() >= PARSE_ERROR_LOG_INTERVAL {
             error!(
@@ -199,6 +209,7 @@ impl PacketWorker {
             }
         };
 
+        self.packets_integrated += 1;
         let packet = CapturedPacket {
             ts_sec: pkt.header.ts.tv_sec,
             ts_usec: pkt.header.ts.tv_usec,
@@ -333,8 +344,12 @@ impl PacketWorker {
     /// canal IPC (chemin de drainage : le front est arrêté ou injoignable).
     fn ingest_packet_silently(&mut self, pkt: &PacketBuffer) {
         let Ok(flow) = packet_parser::parse::parse(self.link_type, pkt.as_ref()) else {
+            // Même comptabilité que le chemin nominal : un paquet drainé
+            // illisible reste un paquet classé, pas un paquet évaporé (#158).
+            self.parse_errors_total += 1;
             return;
         };
+        self.packets_integrated += 1;
         let packet = CapturedPacket {
             ts_sec: pkt.header.ts.tv_sec,
             ts_usec: pkt.header.ts.tv_usec,
@@ -515,9 +530,8 @@ impl PacketWorker {
 /// du canal, dédupliquées par leurs payloads respectifs.
 struct StatsEmitter {
     session_id: u64,
-    stats: StatTriple,
-    /// Dernier `processed` émis : participe à la déduplication (#154).
-    last_processed: u32,
+    /// Dernier snapshot émis : unité de déduplication des `Stats`.
+    last: Option<StatsSnapshot>,
     emit_interval: Duration,
     last_emit: Instant,
     last_channel: ChannelCapacityPayload,
@@ -536,8 +550,7 @@ impl StatsEmitter {
     ) -> Self {
         Self {
             session_id,
-            stats: StatTriple::default(),
-            last_processed: u32::MAX,
+            last: None,
             emit_interval: Duration::from_millis(STATS_EMIT_INTERVAL_MS),
             last_emit: Instant::now(),
             last_channel: ChannelCapacityPayload::default(),
@@ -548,25 +561,26 @@ impl StatsEmitter {
         }
     }
 
-    /// Stats lues depuis l'état partagé (hors canal de données) : fiables
-    /// même quand le canal est saturé.
-    fn tick(
-        &mut self,
-        queue_len: usize,
-        processed: u32,
-        on_event: &Channel<CaptureEvent<'static>>,
-    ) {
+    /// Snapshot courant : stats pcap partagées (hors canal de données, donc
+    /// fiables même sous saturation) + comptabilité du worker.
+    fn snapshot(&self, worker: &PacketWorker) -> StatsSnapshot {
+        let mut triple = self.shared_stats.load();
+        triple.app_dropped = self.drop_counters.total();
+        StatsSnapshot {
+            triple,
+            parse_errors: worker.parse_errors_total,
+            integrated: worker.packets_integrated,
+            processed: worker.processed,
+        }
+    }
+
+    fn tick(&mut self, queue_len: usize, worker: &PacketWorker) {
         if self.last_emit.elapsed() >= self.emit_interval {
             self.last_emit = Instant::now();
-            if let Err(e) = StatsPayload::maybe_send(
-                &mut self.stats,
-                &mut self.last_processed,
-                self.shared_stats.load(),
-                self.drop_counters.total(),
-                processed,
-                self.session_id,
-                on_event,
-            ) {
+            let current = self.snapshot(worker);
+            if let Err(e) =
+                StatsPayload::maybe_send(&mut self.last, current, self.session_id, &worker.on_event)
+            {
                 error!("[TAURI] Erreur envoi Stats: {}", e);
             }
         }
@@ -579,10 +593,23 @@ impl StatsEmitter {
                 queue_len,
                 self.channel_capacity,
                 self.session_id,
-                on_event,
+                &worker.on_event,
             ) {
                 error!("[TAURI] Erreur émission canal : {}", e);
             }
+        }
+    }
+
+    /// Récapitulatif final, émis inconditionnellement après le drainage
+    /// d'arrêt ou de plafond (#158) : les derniers compteurs affichés
+    /// incluent les paquets drainés, et la somme des catégories boucle avec
+    /// les paquets reçus. Best-effort : le canal IPC peut être mort à ce
+    /// stade, l'échec est seulement journalisé.
+    fn send_final(&mut self, worker: &PacketWorker) {
+        let current = self.snapshot(worker);
+        self.last = Some(current);
+        if let Err(e) = StatsPayload::new(current, self.session_id).send(&worker.on_event) {
+            error!("[TAURI] Erreur envoi Stats final : {}", e);
         }
     }
 }
@@ -619,9 +646,11 @@ pub fn spawn_processing_thread(
             if stop_flag.load(Ordering::Relaxed) {
                 // Arrêt demandé : les paquets déjà acceptés dans le canal
                 // sont intégrés à la matrice (fidélité du relevé), puis les
-                // derniers batches partent vers le front en best-effort.
+                // derniers batches et le récapitulatif final partent vers le
+                // front en best-effort (#158).
                 worker.drain_channel(&rx, &buffer_pool);
                 let _ = worker.flush_batches();
+                emitter.send_final(&worker);
                 break;
             }
 
@@ -635,6 +664,7 @@ pub fn spawn_processing_thread(
                         buffer_pool.put(pkt);
                         worker.drain_channel(&rx, &buffer_pool);
                         let _ = worker.flush_batches();
+                        emitter.send_final(&worker);
                         break;
                     }
 
@@ -654,10 +684,16 @@ pub fn spawn_processing_thread(
                     if worker.processed >= MAX_LIVE_FLOWS {
                         // Plafond de flux atteint : arrêt propre et explicite
                         // plutôt qu'une éviction silencieuse (le relevé
-                        // mentirait) ou un épuisement mémoire (#147).
+                        // mentirait) ou un épuisement mémoire (#147). Comme à
+                        // l'arrêt demandé, les paquets déjà acceptés dans le
+                        // canal sont drainés vers la matrice : le dépassement
+                        // du plafond est borné par la taille du canal, alors
+                        // que les jeter serait une perte non comptée (#158).
                         error!("Plafond de {MAX_LIVE_FLOWS} flux atteint : arrêt de la capture");
                         stop_flag.store(true, Ordering::Relaxed);
+                        worker.drain_channel(&rx, &buffer_pool);
                         let _ = worker.flush_batches();
+                        emitter.send_final(&worker);
                         let _ = worker.on_event.send(CaptureEvent::Stopped {
                             session_id,
                             reason: format!(
@@ -684,11 +720,13 @@ pub fn spawn_processing_thread(
                     // dans le canal avant de sortir.
                     error!("Erreur réception canal : canal déconnecté");
                     worker.drain_channel(&rx, &buffer_pool);
+                    let _ = worker.flush_batches();
+                    emitter.send_final(&worker);
                     break;
                 }
             }
 
-            emitter.tick(rx.len(), worker.processed, &worker.on_event);
+            emitter.tick(rx.len(), &worker);
         }
 
         #[cfg(feature = "capture_timing")]
@@ -760,6 +798,11 @@ mod tests {
 
         assert_eq!(drained, 3, "tous les paquets en attente sont consommés");
         assert!(rx.is_empty());
+        assert_eq!(
+            worker.packets_integrated, 3,
+            "chaque paquet drainé est compté intégré (#158)"
+        );
+        assert_eq!(worker.parse_errors_total, 0);
         let matrix = flow_matrix.lock().unwrap();
         assert_eq!(matrix.row_count(), 1, "3 paquets du même flux -> 1 ligne");
         let packets: u64 = matrix
@@ -798,5 +841,52 @@ mod tests {
 
         assert_eq!(drained, 2, "le paquet illisible est consommé sans bloquer");
         assert_eq!(flow_matrix.lock().unwrap().row_count(), 1);
+        // Comptabilité exhaustive (#158) : chaque paquet accepté par le
+        // pipeline est classé — intégré ou illisible — jamais évaporé.
+        assert_eq!(worker.packets_integrated, 1);
+        assert_eq!(worker.parse_errors_total, 1);
+        assert_eq!(
+            worker.packets_integrated + worker.parse_errors_total,
+            drained as u64,
+            "la somme des catégories boucle avec les paquets drainés"
+        );
+    }
+
+    /// Le chemin nominal tient la même comptabilité que le drainage : après
+    /// un mélange de paquets lisibles et illisibles, la somme des catégories
+    /// égale les paquets traités (#158).
+    #[test]
+    fn process_packet_categorizes_every_accepted_packet() {
+        let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        let graph = Arc::new(Mutex::new(GraphData::new()));
+        let mut worker = PacketWorker::new(
+            Channel::new(|_| Ok(())),
+            1,
+            LinkType::ETHERNET,
+            flow_matrix,
+            graph,
+        );
+        let pool = PacketBufferPool::new(8, 65_536);
+
+        let frames: [&[u8]; 5] = [
+            &arp_frame(),
+            &[0x00, 0x01, 0x02], // tronqué : illisible
+            &arp_frame(),
+            &[0xff; 4], // tronqué : illisible
+            &arp_frame(),
+        ];
+        for data in frames {
+            let CaptureMessage::Packet(buffer) = packet_message(&pool, data);
+            assert!(worker.process_packet(&buffer), "canal IPC de test vivant");
+            pool.put(buffer);
+        }
+
+        assert_eq!(worker.packets_integrated, 3);
+        assert_eq!(worker.parse_errors_total, 2);
+        assert_eq!(
+            worker.packets_integrated + worker.parse_errors_total,
+            frames.len() as u64,
+            "chaque paquet accepté appartient à une catégorie explicite"
+        );
     }
 }

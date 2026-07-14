@@ -35,7 +35,10 @@ pub enum CaptureEvent<'a> {
         /// par des virgules.
         link_type: &'a str,
     },
-    /// Compteurs périodiques pour la barre de statut.
+    /// Compteurs périodiques pour la barre de statut. Émis aussi une dernière
+    /// fois après le drainage d'arrêt ou de plafond (#158) : le récapitulatif
+    /// final où chaque paquet reçu appartient à une catégorie — intégré,
+    /// illisible, ou perdu (noyau / interface / application).
     Stats {
         session_id: u64,
         received: u32,
@@ -44,6 +47,11 @@ pub enum CaptureEvent<'a> {
         /// Pertes côté application (pool de buffers épuisé ou canal plein),
         /// en plus des drops kernel remontés par pcap.
         app_dropped: u64,
+        /// Paquets acceptés par le pipeline mais illisibles par le parseur.
+        parse_errors: u64,
+        /// Paquets parsés et intégrés à la matrice (niveaux de tunnel non
+        /// recomptés).
+        integrated: u64,
         processed: u32,
     },
     /// Occupation du canal capture→processing (indicateur de backpressure).

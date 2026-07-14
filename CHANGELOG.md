@@ -10,6 +10,18 @@
   lieu de créer un relevé hybride silencieusement écrasé en fin d'import. La
   réservation est rendue sur tous les chemins de sortie (succès, erreur,
   panique).
+- **Aucun paquet accepté n'est plus perdu au plafond de flux** (#158) : à
+  l'arrêt sur plafond (#147), les paquets déjà acceptés dans le canal sont
+  drainés vers la matrice comme à l'arrêt demandé, au lieu d'être détruits
+  sans être comptés (dépassement borné par la taille du canal).
+- **La comptabilité de capture boucle** (#158) : les paquets illisibles par
+  le parseur et les paquets intégrés à la matrice sont comptés et exposés
+  (`parse_errors` 🧩 et `integrated` dans l'événement `Stats`, illisibles
+  affichés dans la barre de statut), et un **récapitulatif final** est émis
+  après le drainage — les derniers compteurs affichés incluent les paquets
+  drainés et un ultime relevé des stats pcap. Chaque paquet reçu appartient
+  à une catégorie : intégré, illisible, ou perdu (noyau / interface /
+  application).
 
 ## **[4.5.0] - 2026-07-14**
 

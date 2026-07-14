@@ -8,11 +8,19 @@ export type GraphData = {
   edges: Record<EdgeId, EdgeData>;
 };
 
+// Miroir de l'événement `Stats` Rust (champs plats, snake_case). Émis
+// périodiquement pendant la capture, puis une dernière fois après le
+// drainage d'arrêt ou de plafond (#158) : chaque paquet reçu appartient à
+// une catégorie — intégré, illisible, ou perdu (noyau/interface/application).
 export type Stats = {
+  session_id: number;
   received: number;
   dropped: number;
-  ifDropped: number;
-  appDropped?: number;
+  if_dropped: number;
+  app_dropped: number;
+  parse_errors: number;
+  integrated: number;
+  processed: number;
 };
 
 export type CapturedPacket = {
@@ -156,11 +164,7 @@ export type CaptureEvent =
   }
   | {
     event: "stats";
-    data: {
-      session_id: number;
-      stats: Stats;
-      processed: number;
-    };
+    data: Stats;
   }
   | {
     event: "channelCapacityPayload";

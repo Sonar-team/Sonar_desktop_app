@@ -45,6 +45,10 @@
         <span class="counter">{{ stats.app_dropped }} :⚠️</span>
       </p>
 
+      <p title="Trames 🧩 acceptées mais illisibles par le parseur">
+        <span class="counter">{{ stats.parse_errors }} :🧩</span>
+      </p>
+
       <ChannelStatus />
     </div>
   </div>
@@ -65,7 +69,7 @@ export default {
   components: { ChannelStatus, InterfaceStatus, Timer, Cpu },
   data() {
     return {
-      stats: { received: 0, dropped: 0, if_dropped: 0, app_dropped: 0, processed: 0 },
+      stats: { received: 0, dropped: 0, if_dropped: 0, app_dropped: 0, parse_errors: 0, processed: 0 },
       _unsub: [], // pour garder les unsubscribe si nécessaires
       _resetHandler: null,
     };
@@ -76,11 +80,12 @@ export default {
   mounted() {
     // Stats live de la capture
     this._unsub.push(this.captureStore.onStats((s) => {
-      this.stats.received    = s.received ?? 0;
-      this.stats.dropped     = s.dropped ?? 0;
-      this.stats.if_dropped  = s.if_dropped ?? 0;
-      this.stats.app_dropped = s.app_dropped ?? 0;
-      this.stats.processed   = s.processed ?? 0;
+      this.stats.received     = s.received ?? 0;
+      this.stats.dropped      = s.dropped ?? 0;
+      this.stats.if_dropped   = s.if_dropped ?? 0;
+      this.stats.app_dropped  = s.app_dropped ?? 0;
+      this.stats.parse_errors = s.parse_errors ?? 0;
+      this.stats.processed    = s.processed ?? 0;
     }));
     this._unsub.push(this.captureStore.onFinished((f) => {
       this.stats.processed = f.matrix_total_count;
@@ -89,7 +94,7 @@ export default {
 
     // Reset global
     this._resetHandler = () => {
-      this.stats = { received: 0, dropped: 0, if_dropped: 0, app_dropped: 0, processed: 0 };
+      this.stats = { received: 0, dropped: 0, if_dropped: 0, app_dropped: 0, parse_errors: 0, processed: 0 };
       this.matrice_len = 0;
     };
     this.$bus.on('reset', this._resetHandler);

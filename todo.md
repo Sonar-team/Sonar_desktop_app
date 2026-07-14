@@ -29,7 +29,7 @@ Suivi : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 - [ ] **P0** [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) — supprimer les skips silencieux, puis construire le corpus complet
 - [x] **P0** [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) — réserver atomiquement l'état `Importing` pendant toute conversion *(fait le 14/07)*
 - [ ] **P0** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — détecter le DLT et comptabiliser exhaustivement les résultats de parsing *(largement avancé en v4.5.0 : restent rapport qualité UI et réimport SLL)*
-- [ ] **P0** [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) — ne perdre aucun paquet accepté à l'arrêt ou au plafond de flux
+- [x] **P0** [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) — ne perdre aucun paquet accepté à l'arrêt ou au plafond de flux *(fait le 14/07)*
 - [ ] **P0** [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) — générer et tester le contrat IPC Rust ↔ TypeScript
 - [ ] **P0** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée par site, capteur, interface et VLAN
 - [ ] **P1 validation** [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) — revalider immédiatement les chemins espaces/Unicode
