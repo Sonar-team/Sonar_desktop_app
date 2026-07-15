@@ -1414,9 +1414,19 @@ mod tests {
              import type { CaptureEvent } from \"../capture\";\n\n",
         );
 
+        // Alimente la garde « champ fantôme » ci-dessous (#142) : le JSON de
+        // chaque fixture, une fois relu, sert à vérifier qu'aucun champ
+        // optionnel déclaré par un type de contrat ne reste systématiquement
+        // absent — ce que `satisfies` ne peut pas détecter (un champ jamais
+        // alimenté par une donnée réelle est, par construction, toujours
+        // omis des deux côtés, real et miroir, donc jamais en désaccord).
+        let mut all_fixture_values: Vec<serde_json::Value> = Vec::new();
+
         macro_rules! fixture {
             ($name:ident, $value:expr) => {
                 let json = serde_json::to_string_pretty(&$value).expect("sérialisation fixture");
+                all_fixture_values
+                    .push(serde_json::from_str(&json).expect("relecture JSON de la fixture"));
                 // `satisfies` (pas `as const`, qui figerait aussi les tableaux
                 // en `readonly` ; pas d'annotation directe `: CaptureEvent`,
                 // qui élargirait le type exporté à l'union entière au lieu du
@@ -1880,6 +1890,8 @@ mod tests {
             }
         );
 
+        assert_no_phantom_contract_fields(&all_fixture_values);
+
         // Chaque fixture ajoute une ligne vide de séparation après elle
         // (writeln!) : après la dernière, ça laisse une ligne vide en fin de
         // fichier que `git diff --check` rejette ("new blank line at EOF").
@@ -1892,5 +1904,116 @@ mod tests {
         // qui est jusqu'ici le seul à créer ce dossier via `ts-rs`.
         std::fs::create_dir_all(&dir).expect("création du dossier des fixtures");
         std::fs::write(dir.join("captureEventFixtures.ts"), out).expect("écriture des fixtures");
+    }
+
+    /// Garde « champ fantôme » (#142) : vérifie qu'aucun champ optionnel
+    /// déclaré par un type de contrat n'est *systématiquement* absent de
+    /// tous les fixtures. Les types de contrat sont recopiés à la main
+    /// (`NodeContract`, `EdgeContract`…) : rien n'empêche syntaxiquement d'y
+    /// ajouter un champ qui ne provient d'aucune donnée réelle. Un tel champ
+    /// fantôme, toujours `None`, est donc toujours omis — des deux côtés,
+    /// réel et miroir — et `assert_same_json` ne peut jamais le remarquer,
+    /// puisqu'il compare des JSON qui restent d'accord en silence. Ici, on
+    /// vérifie plutôt qu'il existe AU MOINS UN fixture où le champ apparaît
+    /// avec une valeur présente : un champ qui n'apparaît jamais est un
+    /// candidat direct à un champ jamais produit par le vrai backend.
+    ///
+    /// Heuristique de couverture, pas une garantie structurelle : un champ
+    /// fantôme accompagné d'un faux fixture plausible resterait invisible.
+    /// Mais elle attrape le cas concret trouvé en revue (champ optionnel
+    /// ajouté au miroir, jamais alimenté par `to_contract`).
+    fn assert_no_phantom_contract_fields(fixtures: &[serde_json::Value]) {
+        let cfg = ts_rs::Config::default();
+        let mut declared_optional_fields = std::collections::HashSet::new();
+        for decl in [
+            CaptureEventContract::decl(&cfg),
+            NodeContract::decl(&cfg),
+            EdgeContract::decl(&cfg),
+            GraphUpdateContract::decl(&cfg),
+            GraphDataContract::decl(&cfg),
+            LinkLayerKindContract::decl(&cfg),
+            DataLinkContract::decl(&cfg),
+            DataLinkDetailsContract::decl(&cfg),
+            RawIpLinkDetailsContract::decl(&cfg),
+            LinuxSllLinkDetailsContract::decl(&cfg),
+            LinuxSll2LinkDetailsContract::decl(&cfg),
+            Ieee80211LinkDetailsContract::decl(&cfg),
+            NetworkProtocolContract::decl(&cfg),
+            VlanTagContract::decl(&cfg),
+            IpTypeContract::decl(&cfg),
+            CorruptedLayerKindContract::decl(&cfg),
+            CorruptedLayerContract::decl(&cfg),
+            PacketFlowContract::decl(&cfg),
+            PacketBatchPacketContract::decl(&cfg),
+        ] {
+            collect_optional_field_names(&decl, &mut declared_optional_fields);
+        }
+
+        let mut present_fields = std::collections::HashSet::new();
+        for value in fixtures {
+            collect_present_field_names(value, &mut present_fields);
+        }
+
+        let mut phantom_fields: Vec<&String> = declared_optional_fields
+            .iter()
+            .filter(|f| !present_fields.contains(*f))
+            .collect();
+        phantom_fields.sort();
+        assert!(
+            phantom_fields.is_empty(),
+            "champ(s) optionnel(s) déclaré(s) dans le contrat mais jamais \
+             présent(s) dans aucun fixture (candidat à un champ jamais \
+             produit par le vrai backend, #142) : {phantom_fields:?}"
+        );
+    }
+
+    /// Extrait les noms de champs optionnels (`champ?:` ou `"champ"?:`) d'une
+    /// déclaration TypeScript générée par ts-rs. Scan caractère par
+    /// caractère plutôt qu'un vrai parseur TS : le format émis par ts-rs est
+    /// assez régulier pour que ça suffise.
+    fn collect_optional_field_names(ts_decl: &str, into: &mut std::collections::HashSet<String>) {
+        let bytes = ts_decl.as_bytes();
+        for i in 0..bytes.len().saturating_sub(1) {
+            if bytes[i] != b'?' || bytes[i + 1] != b':' {
+                continue;
+            }
+            let mut end = i;
+            if end > 0 && bytes[end - 1] == b'"' {
+                end -= 1;
+            }
+            let mut start = end;
+            while start > 0
+                && (bytes[start - 1].is_ascii_alphanumeric() || bytes[start - 1] == b'_')
+            {
+                start -= 1;
+            }
+            if start < end {
+                into.insert(ts_decl[start..end].to_string());
+            }
+        }
+    }
+
+    /// Parcourt récursivement un JSON de fixture et retient les clés dont la
+    /// valeur n'est ni `null` ni absente.
+    fn collect_present_field_names(
+        value: &serde_json::Value,
+        into: &mut std::collections::HashSet<String>,
+    ) {
+        match value {
+            serde_json::Value::Object(map) => {
+                for (key, v) in map {
+                    if !v.is_null() {
+                        into.insert(key.clone());
+                    }
+                    collect_present_field_names(v, into);
+                }
+            }
+            serde_json::Value::Array(items) => {
+                for item in items {
+                    collect_present_field_names(item, into);
+                }
+            }
+            _ => {}
+        }
     }
 }

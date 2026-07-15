@@ -171,9 +171,27 @@ ignoré, fusionné ou remplacé silencieusement.
    + titre quand actif) au lieu de ne recevoir que le reste du payload.
    Convention toujours hybride au sens strict de l'énoncé #142 (exception
    `packet_parser` déjà actée et documentée à la cinquième revue, pas
-   revisitée ici faute de nouvelle décision). 48 fichiers restent staged
-   uniquement ; HEAD/origin/main à 110cdeed, aucune CI distante n'a encore
-   testé ce lot.)*
+   revisitée ici faute de nouvelle décision). Livré : commit `45778e61`
+   poussé sur `origin/main`, CI distante GitHub Actions verte (Rust CI —
+   dont la gate « Check IPC contract is up to date » —, coverage, trivy,
+   rust-clippy analyze, CodeQL, SonarCube).)*
+   *(Huitième revue, 15/07 : garde « champ fantôme » ajoutée — un champ
+   optionnel ajouté à la main dans un type de contrat (`CaptureEventContract`,
+   `NodeContract`…) sans provenir d'aucune donnée réelle reste toujours
+   `None`, donc toujours omis des deux côtés, réel et miroir ; aucun test de
+   fidélité JSON existant ne pouvait le remarquer. Contre-test confirmé
+   avant fix : champ `ghost: Option<bool>` ajouté à `Started`, toujours
+   `None` dans `to_contract` — les 22 tests de contrat restaient verts.
+   Nouveau test `assert_no_phantom_contract_fields` (dans
+   `export_ipc_fixtures`) : extrait les champs optionnels de chaque
+   déclaration `.decl()` ts-rs, les compare à l'ensemble des champs
+   réellement présents (non `null`) dans tous les fixtures combinés, échoue
+   si un champ optionnel déclaré n'apparaît jamais. Contre-test rejoué :
+   échoue bien sur `ghost`. Heuristique de couverture, pas une garantie
+   structurelle (choix assumé — l'alternative, dériver `ts_rs::TS`
+   directement sur les types réels `CaptureEvent`/`Node`/`Edge`/
+   `GraphUpdate` au lieu de miroirs recopiés, a été écartée comme trop
+   large pour cette revue).)*
 9. [ ] [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) :
    stabiliser l'identité d'actif contextualisée.
 

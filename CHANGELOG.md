@@ -83,20 +83,25 @@
   correctif, invisible avant). Le typecheck frontend en CI (`rust-ci.yml`,
   job « Gates frontend ») appelle ce même `deno task typecheck` : il ne
   contrôlait donc jamais réellement le typage du frontend jusqu'ici.
-- **#142, troisième revue — la preuve Rust → JSON → TypeScript est
-  maintenant sur du JSON réellement produit par Rust** : `cargo test
-  export_ipc_fixtures` (`src-tauri/src/events/contract.rs`) écrit
+- **#142, preuve Rust → JSON → TypeScript sur du JSON réellement produit
+  par Rust** : `cargo test export_ipc_fixtures`
+  (`src-tauri/src/events/contract.rs`) écrit
   `src/types/generated/captureEventFixtures.ts`, un JSON réel par variante
-  (17 formes : Ethernet+VLAN, minimal, tunnelé avec `encap_id` non nul,
-  corrompu, SLL/SLL2/RAW/802.11 en contexte `packetBatch` complet,
-  `NodeUpdated`/`EdgeUpdated`…), passé par une identité générique `fx<T
-  extends CaptureEvent>` pour garder les tags en types littéraux sans figer
-  les tableaux en `readonly` (`as const` cassait `macs`/`packets`/
-  `updates`, mutables côté contrat). `captureContractFixtures.ts` les
-  assigne à `CaptureEvent` : vérifié que le regression exact rapporté
-  (`encap_id: string` redéclaré `number`) est maintenant détecté par
-  `deno task typecheck`, invisible avant (les fixtures à la main
-  n'avaient que des `encap_id: null`, valides pour les deux types).
+  et par nullabilité (Ethernet+VLAN, minimal, tunnelé avec `encapId` non
+  nul, corrompu, SLL/SLL2/RAW/802.11 avec et sans adresse, groupes
+  internet/transport présents mais champs individuels absents, nœud sans
+  label, arête sans port), typé avec `satisfies CaptureEvent` — garde les
+  tags en types littéraux sans figer les tableaux en `readonly` (`as
+  const` cassait `macs`/`packets`/`updates`, mutables côté contrat) TOUT EN
+  détectant les champs excédentaires qu'une inférence générique (`fx<T
+  extends CaptureEvent>(v: T): T`, approche initiale, abandonnée) laissait
+  passer silencieusement. `captureContractFixtures.ts` les assigne à
+  `CaptureEvent` : vérifié que le regression exact rapporté (`encap_id:
+  string` redéclaré `number`) est détecté par `deno task typecheck`. Une
+  garde Rust complémentaire (`assert_no_phantom_contract_fields`) vérifie
+  qu'aucun champ optionnel déclaré côté contrat ne reste systématiquement
+  absent de tous les fixtures — un champ ajouté à la main sans provenir
+  d'aucune donnée réelle resterait sinon invisible.
   `normalizeGraphUpdate`, `nodeAttributes`/`edgeAttributes`, le reducer
   `refreshParallelEdges` et `drawNodeLabel` n'ont plus de `any` (types
   Sigma/graphology dédiés) ; `StatusBar.vue` passe en `lang="ts"` (un bug
