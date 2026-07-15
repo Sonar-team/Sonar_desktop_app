@@ -50,6 +50,9 @@ La Definition of Done détaillée est dans `sprint.md` et dans l'issue #165.
 
 - [ ] **P0** [#94](https://github.com/Sonar-team/Sonar_desktop_app/issues/94) — Authenticode, Developer ID, notarisation et Apple Silicon
 - [ ] **P0** [#146](https://github.com/Sonar-team/Sonar_desktop_app/issues/146) — E2E Tauri et installateurs réellement testés sur chaque OS
+  - [ ] Ajouter Cypress Component + E2E navigateur pour les parcours Vue/Vite
+    avec les API Tauri simulées ; conserver WebdriverIO/Tauri pour le binaire,
+    l’IPC Rust et les validations natives par OS.
 - [ ] **P0** [#162](https://github.com/Sonar-team/Sonar_desktop_app/issues/162) — quality gates et scans bloquants sur toute release taggée
 - [ ] **P1** [#96](https://github.com/Sonar-team/Sonar_desktop_app/issues/96) — modèle de menace, preuve de passivité et durcissement runtime
 - [ ] **P1** [#143](https://github.com/Sonar-team/Sonar_desktop_app/issues/143) — moindre privilège Tauri, chemins validés et helper de capture
