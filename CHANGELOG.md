@@ -18,11 +18,91 @@
   segmentent plus la matrice. Aucune colonne `link_details` n'est ajoutée,
   et `origin` cumule les fichiers ayant vu le flux. Les captures réelles SLL
   (2 702 trames) et SLL2 (779 trames) couvrent le round-trip bout en bout.
-- **Le contrat IPC des erreurs et des stats est généré depuis Rust** (#142,
-  ts-rs) : `src/types/generated/` est écrit par `cargo test
-  export_ipc_bindings` et la CI échoue si le contrat commité a dérivé des
-  types Rust. Les cinq familles d'erreurs et le payload `Stats` ne peuvent
-  plus mentir au frontend.
+- **Le contrat IPC complet est généré depuis Rust, versionné, et son
+  exhaustivité Rust → miroir est imposée par le compilateur** (#142, ts-rs) :
+  `src/types/generated/` est écrit par `cargo test export_ipc_bindings` et la
+  CI échoue si le contrat commité a dérivé des types Rust — la gate compare
+  désormais `git status --porcelain` après suppression et régénération
+  complète du dossier (`git diff` seul laissait passer un fichier généré non
+  suivi par git, ce qui était le cas des 18 premiers fichiers de cette
+  fonctionnalité). Les cinq familles d'erreurs, le payload `Stats` et l'union
+  complète `CaptureEvent` (graphe, batches de paquets,
+  `started`/`stopped`/`finished`/`channelCapacityPayload`) ne peuvent plus
+  mentir au frontend, qui consomme le contrat généré (`src/types/capture.ts`)
+  au lieu de types dupliqués à la main. `crate::events::contract::to_contract`
+  convertit chaque `CaptureEvent` réel en son miroir par un `match` sans bras
+  `_` : ajouter une variante côté Rust sans mettre à jour le miroir casse la
+  compilation, pas seulement un test qu'on pourrait oublier d'écrire. Les
+  champs réellement omissibles (VLAN absent, couche applicative absente,
+  paquet non tunnelé…) sont déclarés `#[ts(optional)]`/`#[ts(optional =
+  nullable)]` : un paquet valide sans ces couches satisfait maintenant son
+  propre type TypeScript, ce qui n'était pas le cas avant correction (le
+  sérialiseur omettait la clé, le type généré l'exigeait). `Started` porte
+  `protocol_version` (`CAPTURE_EVENT_PROTOCOL_VERSION`), vérifié par le store
+  frontend et désormais émis par les trois chemins de session (capture live,
+  import PCAP, **et import de matrice CSV**, qui commençait directement par
+  `GraphSnapshot` sans jamais annoncer de session). Un tag d'événement inconnu
+  est journalisé plutôt que de faire planter le store — cohérent avec la
+  politique de version qui n'exige pas de bump pour une nouvelle variante. Le
+  store (`src/store/capture.ts`) et la chaîne de rendu du graphe
+  (`graphSync.ts`, `NetworkGraphComponent.vue`) n'ont plus de `any` sur les
+  abonnements/payloads de capture, et le dispatcher est exhaustif (`never`
+  côté TypeScript). La variante `Packet` (jamais construite côté Rust) est
+  supprimée des deux côtés plutôt que mal mirée avec un champ `encap_id`
+  inexistant sur le vrai type. 18 tests Rust vérifient, variante par variante
+  — Ethernet/RAW/SLL/SLL2/IEEE 802.11, paquet tunnelé, couche corrompue,
+  groupes internet/transport/application tous absents compris — que chaque
+  miroir sérialise en JSON identique au vrai `CaptureEvent`. Bug annexe
+  corrigé : `BottomLong.vue` s'abonnait à la fois à `onPacket` et
+  `onPacketBatch`, doublant chaque trame affichée dans le tableau de capture.
+- **#142, deuxième revue — 6 défauts de fidélité trouvés et corrigés** :
+  `#[ts(optional)]` mal ciblé au premier passage (déjà listé ci-dessus) ;
+  `encap_id` (paquet) sérialisait en `number` alors que c'est un hash 64
+  bits qui peut dépasser `Number.MAX_SAFE_INTEGER` — sérialisé en hex 16
+  caractères comme `Edge::encap_ids`, même convention ; l'import de labels
+  (`import_label_file`) n'émettait ni `Started` ni version ; `BottomLong.vue`
+  recastait le contrat généré vers un type `unknown` local au lieu de
+  discriminer sur `link_kind` ; `normalizeGraphUpdate`, `nodeAttributes`,
+  `edgeAttributes`, les reducers Sigma et le switch `applyUpdate` restaient
+  en `any` ou sans garde `never` ; **aucun test ne validait le JSON contre
+  TypeScript** — `src/types/captureContractFixtures.ts` assigne un littéral
+  par variante à `CaptureEvent`, vérifié par `deno task typecheck` (CI).
+  `cargo test export_bindings` (commentaire, `Cargo.toml`) corrigé en
+  `export_ipc_bindings` (le premier ne matchait aucun test). Contrat
+  d'erreurs : 5 tests de fidélité JSON par domaine ajoutés (`errors/mod.rs`),
+  moins de risque de dérive que les événements car il n'y a pas de miroir
+  dupliqué — `CaptureStateErrorKind` sert à la fois de cible de
+  sérialisation et de type `ts-rs`.
+- **`deno task typecheck` ne détectait plus aucune erreur** (trouvé pendant
+  la revue de #142) : `deno_task_shell` avale silencieusement la sortie et
+  le code de sortie du binaire `vue-tsc` résolu depuis `node_modules/.bin`
+  quand il est invoqué par son nom nu — la tâche rendait « 0 erreur » même
+  sur un fichier ne compilant pas. `deno.json` invoque désormais
+  `node node_modules/.bin/vue-tsc --noEmit`, qui restaure la détection
+  (reproduit et vérifié : erreur introduite délibérément, détectée après le
+  correctif, invisible avant). Le typecheck frontend en CI (`rust-ci.yml`,
+  job « Gates frontend ») appelle ce même `deno task typecheck` : il ne
+  contrôlait donc jamais réellement le typage du frontend jusqu'ici.
+- **#142, troisième revue — la preuve Rust → JSON → TypeScript est
+  maintenant sur du JSON réellement produit par Rust** : `cargo test
+  export_ipc_fixtures` (`src-tauri/src/events/contract.rs`) écrit
+  `src/types/generated/captureEventFixtures.ts`, un JSON réel par variante
+  (17 formes : Ethernet+VLAN, minimal, tunnelé avec `encap_id` non nul,
+  corrompu, SLL/SLL2/RAW/802.11 en contexte `packetBatch` complet,
+  `NodeUpdated`/`EdgeUpdated`…), passé par une identité générique `fx<T
+  extends CaptureEvent>` pour garder les tags en types littéraux sans figer
+  les tableaux en `readonly` (`as const` cassait `macs`/`packets`/
+  `updates`, mutables côté contrat). `captureContractFixtures.ts` les
+  assigne à `CaptureEvent` : vérifié que le regression exact rapporté
+  (`encap_id: string` redéclaré `number`) est maintenant détecté par
+  `deno task typecheck`, invisible avant (les fixtures à la main
+  n'avaient que des `encap_id: null`, valides pour les deux types).
+  `normalizeGraphUpdate`, `nodeAttributes`/`edgeAttributes`, le reducer
+  `refreshParallelEdges` et `drawNodeLabel` n'ont plus de `any` (types
+  Sigma/graphology dédiés) ; `StatusBar.vue` passe en `lang="ts"` (un bug
+  mort trouvé au passage : `this.matrice_len` n'existait sur aucune
+  déclaration, supprimé) ; l'import de labels vérifie aussi
+  `protocol_version` (`LabelsPanel.vue`, constante partagée avec le store).
 - Les types de liaison supportés et leurs limites sont documentés dans le
   README (#150).
 

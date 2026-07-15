@@ -1,7 +1,8 @@
 // Helpers purs de style et de mise en forme du graphe réseau : couleurs,
 // tailles proportionnelles au trafic, labels et courbure des arêtes.
 import { DEFAULT_EDGE_CURVATURE } from "@sigma/edge-curve"
-import { EdgeData, EdgeId } from "../../../types/capture"
+import type { NodeLabelDrawingFunction } from "sigma/rendering"
+import { Edge, EdgeData, EdgeId, Node } from "../../../types/capture"
 import { colorForProtocol } from "../../../utils/protocolColors"
 
 // --- Couleurs ---------------------------------------------------------------
@@ -89,7 +90,7 @@ export function getCurvature(index: number, maxIndex: number): number {
 // --- Rendu des labels de nœuds ----------------------------------------------
 // Label de nœud : texte blanc sur fond noir, au-dessus du nœud.
 // Sert aussi au rendu du hover (fond blanc par défaut, illisible sur fond noir).
-export function drawNodeLabel(context: CanvasRenderingContext2D, data: any, settings: any) {
+export const drawNodeLabel: NodeLabelDrawingFunction = (context, data, settings) => {
   if (!data.label) return
   const size = settings.labelSize
   context.font = `${settings.labelWeight} ${size}px ${settings.labelFont}`
@@ -103,7 +104,7 @@ export function drawNodeLabel(context: CanvasRenderingContext2D, data: any, sett
 }
 
 // --- Attributs graphology ---------------------------------------------------
-export function nodeAttributes(node: any) {
+export function nodeAttributes(node: Node) {
   const color = node.color || "#2196F3"
   const rawLabel = node.label || ""
   const macs: string[] = Array.isArray(node.macs) ? node.macs : []
@@ -124,25 +125,25 @@ export function nodeAttributes(node: any) {
   }
 }
 
-export function edgeAttributes(e: any) {
-  const totalBytes = Number(e.total_bytes) || 0
+export function edgeAttributes(e: Edge) {
+  const totalBytes = Number(e.totalBytes) || 0
   return {
     protocol: e.label || "",
-    source_port: e.source_port ?? null,
-    destination_port: e.destination_port ?? null,
+    source_port: e.sourcePort ?? null,
+    destination_port: e.destinationPort ?? null,
     // Tous les ports « service » observés sur l'arête (triés, plafonnés
     // backend) : plusieurs services entre deux équipements ne sont plus
     // masqués par le premier couple de ports. Les ports éphémères ne sont
     // pas listés : has_dynamic_ports les signale (rendu « … »).
     ports: Array.isArray(e.ports) ? e.ports : [],
-    has_dynamic_ports: e.has_dynamic_ports === true,
+    has_dynamic_ports: e.hasDynamicPorts === true,
     bidir: !!e.bidir,
     count: Number(e.count) || 0,
     total_bytes: totalBytes,
     // Tunnels (encap_id hex) auxquels ce flux participe : le backend envoie
     // la liste cumulative, on remplace donc simplement à chaque update.
-    encapIds: Array.isArray(e.encap_ids) ? e.encap_ids : [],
-    color: e._color || colorForProtocol(e.label || ""),
+    encapIds: Array.isArray(e.encapIds) ? e.encapIds : [],
+    color: colorForProtocol(e.label || ""),
     size: edgeSizeFor(totalBytes),
   }
 }

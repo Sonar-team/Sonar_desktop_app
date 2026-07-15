@@ -18,6 +18,16 @@
         <span class="filter-text">{{ captureStore.activeFilter }}</span>
         <button class="filter-clear" @click="clearFilter" title="Supprimer le filtre">✕</button>
       </div>
+      <p
+        v-if="lastImport"
+        class="import-badge"
+        :title="`${lastImport.fileName} : ${lastImport.integratedCount}/${lastImport.totalCount} paquets intégrés${lastImport.parseErrorCount ? `, ${lastImport.parseErrorCount} illisibles` : ''}`"
+      >
+        Import : {{ lastImport.fileName }} ({{ lastImport.integratedCount }}/{{ lastImport.totalCount }})
+      </p>
+      <p v-if="lastStopReason" class="stopped-badge" :title="lastStopReason">
+        Arrêt : {{ lastStopReason }}
+      </p>
     </div>
 
     <div class="right-status-content">
@@ -26,6 +36,10 @@
 
       <p title="Trames reçues 📥 par la carte réseau">
         <span class="counter">{{ stats.received }} :📥</span>
+      </p>
+
+      <p title="Paquets ✅ intégrés à la matrice">
+        <span class="counter">{{ stats.integrated }} :✅</span>
       </p>
 
       <p title="Flux distincts dans la matrice 📊">
@@ -38,15 +52,15 @@
       </p>
 
       <p title="Trames 🚫 perdues au niveau de l’interface">
-        <span class="counter">{{ stats.if_dropped }} :🚫</span>
+        <span class="counter">{{ stats.ifDropped }} :🚫</span>
       </p>
 
       <p title="Trames ⚠️ perdues côté application (pool ou canal saturé)">
-        <span class="counter">{{ stats.app_dropped }} :⚠️</span>
+        <span class="counter">{{ stats.appDropped }} :⚠️</span>
       </p>
 
       <p title="Trames 🧩 acceptées mais illisibles par le parseur">
-        <span class="counter">{{ stats.parse_errors }} :🧩</span>
+        <span class="counter">{{ stats.parseErrors }} :🧩</span>
       </p>
 
       <ChannelStatus />
@@ -54,24 +68,43 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import ChannelStatus from './ChannelStatus.vue';
 import InterfaceStatus from './InterfaceStatus.vue';
 import Timer from './Timer.vue';
 import Cpu from './Cpu.vue';
 
 import { useCaptureStore } from '../../../store/capture';
-import { info } from '@tauri-apps/plugin-log';
 import { invoke } from '@tauri-apps/api/core';
+import type { Stats } from '../../../types/capture';
 
-export default {
+type StatsView = Record<
+  'received' | 'dropped' | 'ifDropped' | 'appDropped' | 'parseErrors' | 'integrated' | 'processed',
+  number
+>;
+
+const EMPTY_STATS: StatsView = {
+  received: 0, dropped: 0, ifDropped: 0, appDropped: 0, parseErrors: 0, integrated: 0, processed: 0,
+};
+
+interface LastImport {
+  fileName: string;
+  integratedCount: number;
+  totalCount: number;
+  parseErrorCount: number;
+}
+
+export default defineComponent({
   name: 'StatusBar',
   components: { ChannelStatus, InterfaceStatus, Timer, Cpu },
   data() {
     return {
-      stats: { received: 0, dropped: 0, if_dropped: 0, app_dropped: 0, parse_errors: 0, processed: 0 },
-      _unsub: [], // pour garder les unsubscribe si nécessaires
-      _resetHandler: null,
+      stats: { ...EMPTY_STATS } as StatsView,
+      lastImport: null as LastImport | null,
+      lastStopReason: null as string | null,
+      _unsub: [] as Array<() => void>,
+      _resetHandler: null as null | (() => void),
     };
   },
   computed: {
@@ -79,26 +112,44 @@ export default {
   },
   mounted() {
     // Stats live de la capture
-    this._unsub.push(this.captureStore.onStats((s) => {
-      this.stats.received     = s.received ?? 0;
-      this.stats.dropped      = s.dropped ?? 0;
-      this.stats.if_dropped   = s.if_dropped ?? 0;
-      this.stats.app_dropped  = s.app_dropped ?? 0;
-      this.stats.parse_errors = s.parse_errors ?? 0;
-      this.stats.processed    = s.processed ?? 0;
+    this._unsub.push(this.captureStore.onStats((s: Stats) => {
+      this.stats.received    = s.received ?? 0;
+      this.stats.dropped     = s.dropped ?? 0;
+      this.stats.ifDropped   = s.ifDropped ?? 0;
+      this.stats.appDropped  = s.appDropped ?? 0;
+      this.stats.parseErrors = s.parseErrors ?? 0;
+      this.stats.integrated  = s.integrated ?? 0;
+      this.stats.processed   = s.processed ?? 0;
     }));
     this._unsub.push(this.captureStore.onFinished((f) => {
-      this.stats.processed = f.matrix_total_count;
-      this.stats.received = f.packet_total_count;
+      this.stats.processed = f.matrixTotalCount;
+      this.stats.received = f.packetTotalCount;
       // Rapport qualité de l'import (#150) : les paquets illisibles du
       // fichier sont visibles au même titre que les pertes de capture.
-      this.stats.parse_errors = f.parse_error_count ?? 0;
+      this.stats.parseErrors = f.parseErrorCount ?? 0;
+      this.stats.integrated = f.integratedCount ?? 0;
+      this.lastImport = {
+        fileName: f.fileName,
+        integratedCount: f.integratedCount,
+        totalCount: f.packetTotalCount,
+        parseErrorCount: f.parseErrorCount,
+      };
+    }));
+    // Raison d'arrêt (backend, ex. erreur pcap) : sans cet affichage, seule
+    // la console la portait (#142) et l'utilisateur ne savait pas pourquoi
+    // une capture s'était arrêtée d'elle-même.
+    this._unsub.push(this.captureStore.onStopped((d) => {
+      this.lastStopReason = d.reason;
+    }));
+    this._unsub.push(this.captureStore.onStarted(() => {
+      this.lastStopReason = null;
     }));
 
     // Reset global
     this._resetHandler = () => {
-      this.stats = { received: 0, dropped: 0, if_dropped: 0, app_dropped: 0, parse_errors: 0, processed: 0 };
-      this.matrice_len = 0;
+      this.stats = { ...EMPTY_STATS };
+      this.lastImport = null;
+      this.lastStopReason = null;
     };
     this.$bus.on('reset', this._resetHandler);
   },
@@ -118,7 +169,7 @@ export default {
     for (const u of this._unsub) { try { u(); } catch {} }
     this._unsub = [];
   },
-};
+});
 </script>
 
 <style scoped>
@@ -146,6 +197,30 @@ export default {
   font-size: 11px;
   color: #9fd3a8;
   white-space: nowrap;
+  user-select: none;
+}
+
+.import-badge {
+  margin-left: 10px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #9fd3a8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+  user-select: none;
+}
+
+.stopped-badge {
+  margin-left: 10px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #e0a458;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
   user-select: none;
 }
 

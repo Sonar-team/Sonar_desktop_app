@@ -23,13 +23,13 @@ pub struct GraphData {
 #[derive(Clone, Serialize, Debug)]
 #[serde(tag = "type", content = "payload")]
 pub enum GraphUpdate {
-    #[serde(rename = "NodeAdded")]
+    #[serde(rename = "nodeAdded")]
     NewNode(Node),
-    #[serde(rename = "NodeUpdated")]
+    #[serde(rename = "nodeUpdated")]
     NodeUpdated(Node),
-    #[serde(rename = "EdgeAdded")]
+    #[serde(rename = "edgeAdded")]
     NewEdge(Edge),
-    #[serde(rename = "EdgeUpdated")]
+    #[serde(rename = "edgeUpdated")]
     EdgeUpdated(Edge),
 }
 
@@ -178,6 +178,7 @@ fn service_port(source_port: Option<u16>, destination_port: Option<u16>) -> Opti
 }
 
 #[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Edge {
     pub id: String,
     pub source: String, // Node.id (sens du PREMIER paquet observé)

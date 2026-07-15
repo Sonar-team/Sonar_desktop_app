@@ -165,6 +165,24 @@ pub fn import_matrix_files(
         .collect();
     let rows: Vec<FlowMatrixRow> = files.into_iter().flat_map(|(_, rows)| rows).collect();
 
+    // Même principe que l'import PCAP (`send_started_event`) : un import de
+    // matrice CSV est aussi une session, avec sa propre version de contrat
+    // IPC (#142) — sans quoi ce chemin n'émettait jamais `Started` et le
+    // frontend ne pouvait ni afficher le DLT ni détecter une dérive de
+    // version pour cette voie d'import.
+    if let Err(e) = on_event.send(CaptureEvent::Started {
+        session_id: 0,
+        device: "",
+        buffer_size: 0,
+        chan_capacity: 0,
+        timeout: 0,
+        snaplen: 0,
+        link_type: &sonar_flows_core::sfms::link_type_name(link_type),
+        protocol_version: crate::events::CAPTURE_EVENT_PROTOCOL_VERSION,
+    }) {
+        error!("Erreur lors de l'envoi de Started: {:?}", e);
+    }
+
     // Même ordre de verrouillage que convert_from_pcap_list et net_capture
     // (matrice -> graph -> label_store) pour éviter un interblocage ABBA.
     let mut matrice_guard = matrice.lock()?;

@@ -1,13 +1,41 @@
 //! Événements poussés au frontend sur le `Channel` Tauri, pendant une
 //! capture live comme pendant un import. Le contrat (noms `camelCase`,
 //! forme `{ event, data }`) est consommé par `src/store/capture.ts`.
+//!
+//! ## Convention de nommage sérialisée (#142)
+//!
+//! `camelCase` partout — tags d'événement, tags de variante interne
+//! (`GraphUpdate`) et champs de struct — sur tout ce qui est *Sonar-owned*
+//! (ce module, `StatsPayload`, `CapturedPacketOwned`, `Node`/`Edge`/
+//! `GraphUpdate` de `sonar_flows_core`). Seule exception assumée : la
+//! couche paquet/flux (`PacketFlow`, `DataLink`, `IpType`, `NetworkProtocol`,
+//! `CorruptedLayerKind`…) reste dans la casse imposée par la crate vendorée
+//! `packet_parser` (`snake_case` pour les champs, `snake_case` ou
+//! `PascalCase` selon l'enum pour les tags) — cette crate ne se modifie
+//! jamais ici (cf. `never-edit-vendor-packet-parser`) ; à signaler en amont
+//! si une uniformisation complète devient nécessaire.
 
 use serde::Serialize;
 
+// Miroir TypeScript de ce module (#142), utilisé uniquement à l'export du
+// contrat IPC et par son test de fidélité JSON : jamais construit hors tests.
+#[cfg(test)]
+pub mod contract;
+
 use crate::state::{
-    capture::capture_handle::messages::capture::{CapturedPacket, CapturedPacketOwned},
+    capture::capture_handle::messages::capture::CapturedPacketOwned,
     graph::{GraphData, GraphUpdate},
 };
+
+/// Version du contrat `CaptureEvent` (#142) : à incrémenter à toute évolution
+/// non rétro-compatible (variante retirée, champ renommé/retiré, forme JSON
+/// changée) — jamais pour un ajout de champ optionnel ou de variante, qui
+/// reste sûr à l'exécution : `src/store/capture.ts` journalise (au lieu de
+/// planter) tout tag d'événement qu'il ne reconnaît pas encore. Portée par
+/// `Started`, émis en tête de toute session (capture live, import PCAP et
+/// import de matrice CSV), pour que le frontend la lise dès le début du
+/// flux et signale un écart (`EXPECTED_PROTOCOL_VERSION` côté store).
+pub const CAPTURE_EVENT_PROTOCOL_VERSION: u32 = 1;
 
 /// Événement de capture/import envoyé au frontend. Les variantes empruntent
 /// des références quand l'événement est construit depuis l'état verrouillé
@@ -17,7 +45,12 @@ use crate::state::{
 /// ignore les événements d'une session périmée. La valeur 0 signifie « hors
 /// session » (imports PCAP/CSV), jamais filtrée.
 #[derive(Clone, Serialize)]
-#[serde(rename_all = "camelCase", tag = "event", content = "data")]
+#[serde(
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    tag = "event",
+    content = "data"
+)]
 pub enum CaptureEvent<'a> {
     /// La capture (ou la conversion PCAP) démarre, avec ses paramètres.
     /// En capture live, émis seulement une fois l'interface ouverte et le
@@ -34,6 +67,8 @@ pub enum CaptureEvent<'a> {
         /// statut. Plusieurs fichiers importés de DLT différents sont joints
         /// par des virgules.
         link_type: &'a str,
+        /// Version du contrat IPC, cf. [`CAPTURE_EVENT_PROTOCOL_VERSION`].
+        protocol_version: u32,
     },
     /// Compteurs périodiques pour la barre de statut. Émis aussi une dernière
     /// fois après le drainage d'arrêt ou de plafond (#158) : le récapitulatif
@@ -61,11 +96,6 @@ pub enum CaptureEvent<'a> {
         current_size: usize,
         backpressure: bool,
     },
-    /// Émission mono-paquet désactivée au profit de `PacketBatch` ; le
-    /// variant reste dans le contrat d'événements du frontend
-    /// (`src/store/capture.ts`) pour pouvoir être réactivé.
-    #[allow(dead_code)]
-    Packet { packet: &'a CapturedPacket<'a> },
     /// Lot de paquets traités (voir `PACKET_BATCH_MAX` côté processing).
     PacketBatch {
         session_id: u64,

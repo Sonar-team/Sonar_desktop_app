@@ -117,8 +117,8 @@ import { ask, open, save } from '@tauri-apps/plugin-dialog';
 import ArbitrationDialog from './ArbitrationDialog.vue';
 import { displayCaptureError } from '../../../errors/capture';
 import { getCurrentDate } from '../../../utils/time';
-import { useCaptureStore } from '../../../store/capture';
-import type { GraphUpdate } from '../../../types/capture';
+import { EXPECTED_PROTOCOL_VERSION, useCaptureStore } from '../../../store/capture';
+import type { CaptureEvent, GraphUpdate } from '../../../types/capture';
 import type { LabelConflictReport } from '../../../types/labels';
 
 /** Ligne du store enrichie du statut observé/dormant (backend). */
@@ -249,9 +249,14 @@ export default defineComponent({
       try {
         // Channel local : les updates graphe de l'import sont routées vers
         // les abonnés du store sans toucher au channel de capture principal.
-        const onEvent = new Channel<{ event: string; data: any }>();
-        onEvent.onmessage = (msg: any) => {
-          if (msg.event === 'graph' && msg.data?.update) {
+        const onEvent = new Channel<CaptureEvent>();
+        onEvent.onmessage = (msg) => {
+          if (msg.event === 'started' && msg.data.protocolVersion !== EXPECTED_PROTOCOL_VERSION) {
+            console.warn(
+              `[LabelsPanel] version du contrat IPC inattendue : reçu ${msg.data.protocolVersion}, attendu ${EXPECTED_PROTOCOL_VERSION}`
+            );
+          }
+          if (msg.event === 'graph') {
             useCaptureStore().applyGraphUpdates([msg.data.update]);
           }
         };

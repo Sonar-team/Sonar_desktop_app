@@ -70,6 +70,7 @@ fn send_started_event(on_event: &Channel<CaptureEvent<'_>>, link_type: &str) {
         timeout: 0,
         snaplen: 65536,
         link_type,
+        protocol_version: crate::events::CAPTURE_EVENT_PROTOCOL_VERSION,
     }) {
         error!("Erreur lors de l'envoi de Started: {:?}", e);
     };

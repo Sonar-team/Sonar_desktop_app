@@ -103,6 +103,7 @@ pub fn tunnel_pair_id(flow: &PacketFlowOwned) -> u64 {
 
 #[cfg(target_os = "linux")]
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CapturedPacket<'a> {
     pub ts_sec: i64,
     pub ts_usec: i64,
@@ -113,6 +114,7 @@ pub struct CapturedPacket<'a> {
 
 #[cfg(target_os = "windows")]
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CapturedPacket<'a> {
     pub ts_sec: i32,
     pub ts_usec: i32,
@@ -123,16 +125,32 @@ pub struct CapturedPacket<'a> {
 
 #[cfg(target_os = "macos")]
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CapturedPacket<'a> {
     pub ts_sec: i64,
     pub ts_usec: i32,
     pub caplen: u32,
     pub len: u32,
     pub flow: PacketFlow<'a>,
+}
+
+/// Même convention hex que `Edge::encap_ids` (`graph.rs`) et la colonne CSV
+/// `encap_id` (`matrix.rs`) : un hash FNV-1a 64 bits perd en précision une
+/// fois passé tel quel par un `number` JSON (`Number.MAX_SAFE_INTEGER` <
+/// `u64::MAX`), donc jamais sérialisé comme entier brut.
+fn serialize_encap_id_hex<S: serde::Serializer>(
+    value: &Option<u64>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    match value {
+        Some(id) => serializer.serialize_str(&format!("{id:016x}")),
+        None => serializer.serialize_none(),
+    }
 }
 
 #[cfg(target_os = "linux")]
 #[derive(Debug, Clone, Serialize, Hash, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct CapturedPacketOwned {
     pub ts_sec: i64,
     pub ts_usec: i64,
@@ -140,12 +158,18 @@ pub struct CapturedPacketOwned {
     pub len: u32,
     pub flow: PacketFlowOwned,
     /// Identifiant du tunnel encapsulant (partagé par la ligne externe et ses
-    /// lignes internes). `None` pour un flux non tunnelé.
+    /// lignes internes). `None` pour un flux non tunnelé. Sérialisé en hex
+    /// 16 caractères (même convention que `Edge::encap_ids` et la colonne
+    /// CSV `encap_id`) : c'est un hash FNV-1a 64 bits qui peut dépasser
+    /// `Number.MAX_SAFE_INTEGER`, imprécis une fois passé par un `number`
+    /// JSON côté frontend (#142).
+    #[serde(serialize_with = "serialize_encap_id_hex")]
     pub encap_id: Option<u64>,
 }
 
 #[cfg(target_os = "windows")]
 #[derive(Debug, Clone, Serialize, Hash, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct CapturedPacketOwned {
     pub ts_sec: i32,
     pub ts_usec: i32,
@@ -153,12 +177,18 @@ pub struct CapturedPacketOwned {
     pub len: u32,
     pub flow: PacketFlowOwned,
     /// Identifiant du tunnel encapsulant (partagé par la ligne externe et ses
-    /// lignes internes). `None` pour un flux non tunnelé.
+    /// lignes internes). `None` pour un flux non tunnelé. Sérialisé en hex
+    /// 16 caractères (même convention que `Edge::encap_ids` et la colonne
+    /// CSV `encap_id`) : c'est un hash FNV-1a 64 bits qui peut dépasser
+    /// `Number.MAX_SAFE_INTEGER`, imprécis une fois passé par un `number`
+    /// JSON côté frontend (#142).
+    #[serde(serialize_with = "serialize_encap_id_hex")]
     pub encap_id: Option<u64>,
 }
 
 #[cfg(target_os = "macos")]
 #[derive(Debug, Clone, Serialize, Hash, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct CapturedPacketOwned {
     pub ts_sec: i64,
     pub ts_usec: i32,
@@ -166,7 +196,12 @@ pub struct CapturedPacketOwned {
     pub len: u32,
     pub flow: PacketFlowOwned,
     /// Identifiant du tunnel encapsulant (partagé par la ligne externe et ses
-    /// lignes internes). `None` pour un flux non tunnelé.
+    /// lignes internes). `None` pour un flux non tunnelé. Sérialisé en hex
+    /// 16 caractères (même convention que `Edge::encap_ids` et la colonne
+    /// CSV `encap_id`) : c'est un hash FNV-1a 64 bits qui peut dépasser
+    /// `Number.MAX_SAFE_INTEGER`, imprécis une fois passé par un `number`
+    /// JSON côté frontend (#142).
+    #[serde(serialize_with = "serialize_encap_id_hex")]
     pub encap_id: Option<u64>,
 }
 

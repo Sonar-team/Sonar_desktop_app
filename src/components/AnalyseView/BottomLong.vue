@@ -44,7 +44,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCaptureStore } from '../../store/capture'
-import type { CapturedPacket } from '../../types/capture'
+import type { CapturedPacket, DataLink, NetworkProtocol } from '../../types/capture'
 
 const LOG_FLUSH_INTERVAL_MS = 100
 const MAX_LOG_ROWS = 5
@@ -65,36 +65,6 @@ type PacketLogRow = {
   time: string
 }
 
-// Couche liaison packet_parser 7 : `data_link` est imbriqué et typé par
-// LINKTYPE (`link_kind`), les MAC/EtherType vivent dans `link_details` et
-// n'existent que pour les liens qui en ont réellement (Ethernet, 802.11).
-type DataLinkLogFields = {
-  link_kind?: unknown
-  network_protocol?: { kind?: unknown; value?: unknown } | null
-  link_details?: {
-    source_mac?: unknown
-    destination_mac?: unknown
-    source_address?: unknown[]
-    vlan?: { id?: unknown } | null
-    ethertype?: unknown
-    snap_protocol?: unknown
-  } | null
-}
-
-type PacketFlowLogFields = {
-  data_link?: DataLinkLogFields | null
-  source_ip?: unknown
-  destination_ip?: unknown
-  source?: unknown
-  destination?: unknown
-  protocol_internet?: unknown
-  protocol_transport?: unknown
-  protocol?: unknown
-  source_port?: unknown
-  destination_port?: unknown
-  application_protocol?: unknown
-}
-
 type ResetBus = {
   on?: (event: 'reset', handler: () => void) => void
   off?: (event: 'reset', handler?: () => void) => void
@@ -108,7 +78,6 @@ export default defineComponent({
   data() {
     return {
       rows: [] as PacketLogRow[],
-      offPacket: null as null | (() => void),
       offPacketBatch: null as null | (() => void),
       resetHandler: null as null | (() => void),
       flushTimer: null as number | null,
@@ -148,18 +117,15 @@ export default defineComponent({
       scheduleFlush()
     }
 
-    const onPacket = (packet: CapturedPacket | undefined | null) => {
-      if (!packet || typeof packet !== 'object') return
-      enqueuePackets([packet])
-    }
-
+    // Uniquement `onPacketBatch` : le store redistribue aussi chaque batch
+    // paquet par paquet à `onPacket` (pour les consommateurs qui le
+    // préfèrent), donc s'abonner aux deux ferait apparaître chaque trame en
+    // double dans le tableau.
     const onPacketBatch = (packets: CapturedPacket[] | undefined | null) => {
       if (!Array.isArray(packets)) return
       enqueuePackets(packets.filter((packet) => packet && typeof packet === 'object'))
     }
 
-    const maybeOff = this.captureStore.onPacket(onPacket)
-    if (typeof maybeOff === 'function') this.offPacket = maybeOff
     const maybeOffBatch = this.captureStore.onPacketBatch(onPacketBatch)
     if (typeof maybeOffBatch === 'function') this.offPacketBatch = maybeOffBatch
 
@@ -176,9 +142,6 @@ export default defineComponent({
       window.clearTimeout(this.flushTimer)
       this.flushTimer = null
     }
-    if (this.offPacket) {
-      try { this.offPacket() } catch {}
-    }
     if (this.offPacketBatch) {
       try { this.offPacketBatch() } catch {}
     }
@@ -191,49 +154,59 @@ export default defineComponent({
   },
   methods: {
     createLogRow(packet: CapturedPacket): PacketLogRow {
-      const flow = packet.flow as PacketFlowLogFields | null
-
-      const dataLink = flow?.data_link
-      const linkDetails = dataLink?.link_details
+      const flow = packet.flow
+      const dataLink = flow.data_link
 
       return {
-        sourceMac: this.formatValue(
-          linkDetails?.source_mac ?? this.formatHwAddress(linkDetails?.source_address),
+        sourceMac: this.formatValue(this.linkAddressFields(dataLink).sourceMac),
+        destinationMac: this.formatValue(this.linkAddressFields(dataLink).destinationMac),
+        vlan: this.formatValue(this.linkVlanId(dataLink)),
+        ethertype: this.formatValue(this.linkProtocolLabel(dataLink)),
+        source: this.formatValue(flow.source_ip),
+        destination: this.formatValue(flow.destination_ip),
+        transportProtocol: this.formatValue(
+          flow.protocol_transport ? this.normalizeTransportProtocol(flow.protocol_transport) : undefined,
         ),
-        destinationMac: this.formatValue(linkDetails?.destination_mac),
-        vlan: this.formatValue(linkDetails?.vlan?.id),
-        ethertype: this.formatValue(
-          linkDetails?.ethertype
-            ?? linkDetails?.snap_protocol
-            ?? this.formatNetworkProtocol(dataLink?.network_protocol),
-        ),
-        source: this.formatValue(flow?.source_ip ?? flow?.source),
-        destination: this.formatValue(flow?.destination_ip ?? flow?.destination),
-        transportProtocol: this.formatTransportProtocol(flow),
-        sourcePort: this.formatValue(flow?.source_port),
-        destinationPort: this.formatValue(flow?.destination_port),
-        applicationProtocol: this.formatApplicationProtocol(flow),
+        sourcePort: this.formatValue(flow.source_port),
+        destinationPort: this.formatValue(flow.destination_port),
+        applicationProtocol: this.formatValue(flow.application_protocol),
         length: this.formatValue(packet.len),
-        time: this.formatTimestamp(packet.ts_sec, packet.ts_usec),
+        time: this.formatTimestamp(packet.tsSec, packet.tsUsec),
       }
     },
-    formatTransportProtocol(flow: PacketFlowLogFields | null): string {
-      const explicitProtocol = this.formatValue(flow?.protocol_transport)
-      if (explicitProtocol !== '-') return this.normalizeTransportProtocol(explicitProtocol)
-
-      const legacyProtocol = this.formatValue(flow?.protocol)
-      if (this.isTcpOrUdp(legacyProtocol)) return this.normalizeTransportProtocol(legacyProtocol)
-
-      return '-'
+    // MAC pour Ethernet/802.11 ; adresse cooked (longueur variable) pour
+    // SLL/SLL2 ; aucune adresse de liaison pour RAW IP — `link_kind`
+    // discrimine le seul groupe de champs réellement présent (#142).
+    linkAddressFields(dataLink: DataLink): { sourceMac?: string; destinationMac?: string } {
+      switch (dataLink.link_kind) {
+        case 'ethernet':
+        case 'ieee80211':
+          return {
+            sourceMac: dataLink.link_details.source_mac,
+            destinationMac: dataLink.link_details.destination_mac,
+          }
+        case 'linux_sll':
+        case 'linux_sll2':
+          return { sourceMac: this.formatHwAddress(dataLink.link_details.source_address) }
+        case 'raw_ip':
+          return {}
+      }
     },
-    formatApplicationProtocol(flow: PacketFlowLogFields | null): string {
-      const explicitProtocol = this.formatValue(flow?.application_protocol)
-      if (explicitProtocol !== '-') return explicitProtocol
-
-      const legacyProtocol = this.formatValue(flow?.protocol)
-      if (legacyProtocol !== '-' && !this.isTcpOrUdp(legacyProtocol)) return legacyProtocol
-
-      return '-'
+    // VLAN : seul Ethernet en porte un (absent, pas `null`, côté contrat).
+    linkVlanId(dataLink: DataLink): number | undefined {
+      return dataLink.link_kind === 'ethernet' ? dataLink.link_details.vlan?.id : undefined
+    },
+    // EtherType (Ethernet) / protocole SNAP (802.11) ; pour les liens sans
+    // EtherType (RAW IP, SLL/SLL2), le protocole réseau générique du DLT.
+    linkProtocolLabel(dataLink: DataLink): string | undefined {
+      switch (dataLink.link_kind) {
+        case 'ethernet': return dataLink.link_details.ethertype
+        case 'ieee80211': return dataLink.link_details.snap_protocol
+        case 'linux_sll':
+        case 'linux_sll2':
+        case 'raw_ip':
+          return this.formatNetworkProtocol(dataLink.network_protocol)
+      }
     },
     normalizeTransportProtocol(value: string): string {
       const protocol = value.trim().toLowerCase()
@@ -241,38 +214,25 @@ export default defineComponent({
       if (protocol === 'udp') return 'UDP'
       return value
     },
-    isTcpOrUdp(value: string): boolean {
-      const protocol = value.trim().toLowerCase()
-      return protocol === 'tcp' || protocol === 'udp'
-    },
     formatValue(value: unknown): string {
       if (value === null || value === undefined || value === '') return '-'
       return String(value)
     },
     // Adresse matérielle SLL/SLL2 : sérialisée en tableau d'octets côté Rust.
-    formatHwAddress(value: unknown): string | undefined {
-      if (!Array.isArray(value) || value.length === 0) return undefined
-      return value
-        .map((byte) => Number(byte).toString(16).padStart(2, '0'))
-        .join(':')
+    formatHwAddress(value: number[] | null | undefined): string | undefined {
+      if (!value || value.length === 0) return undefined
+      return value.map((byte) => byte.toString(16).padStart(2, '0')).join(':')
     },
     // Protocole réseau annoncé par la couche liaison quand elle n'a pas
     // d'EtherType (RAW IP, SLL) : sérialisé `{ kind, value }` côté Rust.
-    formatNetworkProtocol(
-      protocol: DataLinkLogFields['network_protocol'],
-    ): string | undefined {
-      switch (protocol?.kind) {
+    formatNetworkProtocol(protocol: NetworkProtocol): string | undefined {
+      switch (protocol.kind) {
         case 'ipv4': return 'IPv4'
         case 'ipv6': return 'IPv6'
         case 'arp': return 'ARP'
         case 'profinet': return 'Profinet'
-        case 'other': {
-          const value = Number(protocol?.value)
-          return Number.isFinite(value)
-            ? `0x${value.toString(16).toUpperCase().padStart(4, '0')}`
-            : undefined
-        }
-        default: return undefined
+        case 'other':
+          return `0x${protocol.value.toString(16).toUpperCase().padStart(4, '0')}`
       }
     },
     formatTimestamp(sec?: number, usec?: number): string {

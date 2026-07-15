@@ -474,6 +474,23 @@ pub fn import_label_file(
     let mut rows = read_label_rows(&incoming_file_path)?;
     verif_mac_ip_format_rows(&rows)?;
 
+    // Même principe que les imports PCAP/matrice : un `Started` en tête
+    // pour porter `protocol_version` (#142). Sans DLT propre à un import de
+    // labels (il ne touche pas au parsing de paquets), `link_type` reste
+    // vide plutôt qu'une valeur inventée.
+    if let Err(e) = on_event.send(CaptureEvent::Started {
+        session_id: 0,
+        device: "",
+        buffer_size: 0,
+        chan_capacity: 0,
+        timeout: 0,
+        snaplen: 0,
+        link_type: "",
+        protocol_version: crate::events::CAPTURE_EVENT_PROTOCOL_VERSION,
+    }) {
+        error!("Erreur lors de l'envoi de Started: {:?}", e);
+    }
+
     let conflicts = {
         let mut label_store = label_store.lock()?;
         label_store.clear();

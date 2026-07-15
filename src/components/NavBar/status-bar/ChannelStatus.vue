@@ -7,11 +7,14 @@
       <p :title="progress + '%'">🚨​:</p>
       <p> {{ progress }}%</p>
       <div class="progress-bar-background">
-        <div class="progress-bar" 
-          :style="{ width: progress + '%' }" 
+        <div
+          class="progress-bar"
+          :class="{ 'progress-bar--backpressure': backpressure }"
+          :title="backpressure ? 'Canal saturé : le pipeline applique la backpressure' : undefined"
+          :style="{ width: progress + '%' }"
           >
         </div>
-        
+
       </div>
     </div>
   </template>
@@ -19,28 +22,33 @@
   <script lang="ts">
   import { defineComponent } from 'vue'
   import { useCaptureStore } from '../../../store/capture'
-  
-  interface ChannelPayload {
-    channel_size: number
-    current_size: number
-  }
-  
+  import type { CaptureEvent } from '../../../types/capture'
+
+  // Dérivé du contrat généré (#142) plutôt que retapé à la main : une
+  // interface locale ne suivrait pas silencieusement un ajout/retrait de
+  // champ (`session_id`, `backpressure`) côté Rust, la vérification
+  // bivariante de TypeScript sur les méthodes acceptant un callback plus
+  // étroit que le vrai payload ne le signalerait pas.
+  type ChannelPayload = Extract<CaptureEvent, { event: 'channelCapacityPayload' }>['data']
+
   export default defineComponent({
     data() {
       return {
         progress: 0,
+        backpressure: false,
         unlisten: undefined as undefined | (() => void),
       }
     },
     mounted() {
       const captureStore = useCaptureStore()
       this.unlisten = captureStore.onChannelCapacityPayload((payload: ChannelPayload) => {
-        const { channel_size, current_size } = payload
+        const { channelSize, currentSize, backpressure } = payload
 
-        const computed = channel_size > 0
-          ? Math.min(100, (current_size * 100) / channel_size)
+        const computed = channelSize > 0
+          ? Math.min(100, (currentSize * 100) / channelSize)
           : 0
         this.progress = Math.round(computed)
+        this.backpressure = backpressure
       })
     },
     beforeUnmount() {
@@ -66,7 +74,11 @@
   .progress-bar {
     height: 100%;
     background-color: #e79a6e;
- 
+
+  }
+
+  .progress-bar--backpressure {
+    background-color: #ff5252;
   }
   </style>
   

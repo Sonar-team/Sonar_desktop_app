@@ -206,5 +206,117 @@ mod bindings {
         super::CaptureStateErrorKind::export_all(&cfg).expect("export du contrat d'erreurs");
         crate::state::capture::capture_handle::messages::stats::StatsPayload::export_all(&cfg)
             .expect("export du contrat Stats");
+        // Union complète des événements du Channel de capture (#142) : voir
+        // `crate::events::contract` pour la fidélité au format réellement
+        // émis par `crate::events::CaptureEvent`.
+        crate::events::contract::CaptureEventContract::export_all(&cfg)
+            .expect("export du contrat CaptureEvent");
+    }
+}
+
+/// Fidélité JSON du contrat d'erreurs (#142). Contrairement à
+/// `crate::events::contract`, il n'y a pas de miroir dupliqué à faire
+/// dériver ici : `CaptureStateErrorKind` (et les `XxxKind` par domaine) sont
+/// à la fois la cible de sérialisation ET le type `ts-rs` — un seul `match`
+/// exhaustif construit l'un depuis l'autre (`impl Serialize for
+/// CaptureStateError` ci-dessus), sans possibilité de double définition qui
+/// diverge. Le risque restant est plus étroit (le tag `{kind,message}` et le
+/// `camelCase` de premier niveau), ce que ces tests couvrent par domaine.
+#[cfg(test)]
+mod fidelity_tests {
+    use super::*;
+    use serde_json::json;
+
+    fn assert_json(error: &CaptureStateError, expected: serde_json::Value, label: &str) {
+        assert_eq!(
+            serde_json::to_value(error).unwrap(),
+            expected,
+            "{label} : sérialisation divergente du contrat attendu"
+        );
+    }
+
+    #[test]
+    fn io_and_poison_and_invalid_transition_match() {
+        assert_json(
+            &CaptureStateError::PoisonError("verrou capturé".to_string()),
+            json!({"kind": "poisonError", "message": "verrou capturé"}),
+            "poisonError",
+        );
+        assert_json(
+            &CaptureStateError::InvalidTransition {
+                from: "Idle".to_string(),
+                to: "Running".to_string(),
+            },
+            json!({"kind": "invalidTransition", "message": "transition de capture refusée : Idle → Running"}),
+            "invalidTransition",
+        );
+    }
+
+    #[test]
+    fn capture_domain_nests_under_capture_tag() {
+        assert_json(
+            &CaptureStateError::Capture(CaptureError::InvalidConfig(
+                "snaplen invalide".to_string(),
+            )),
+            json!({"kind": "capture", "message": {"kind": "invalidConfig", "message": "snaplen invalide"}}),
+            "capture.invalidConfig",
+        );
+        assert_json(
+            &CaptureStateError::Capture(CaptureError::UnsupportedLinkType("DLT 999".to_string())),
+            json!({"kind": "capture", "message": {"kind": "unsupportedLinkType", "message": "DLT 999"}}),
+            "capture.unsupportedLinkType",
+        );
+    }
+
+    #[test]
+    fn export_domain_nests_under_export_tag() {
+        assert_json(
+            &CaptureStateError::Export(ExportError::EmptyPath),
+            json!({"kind": "export", "message": {"kind": "emptyPath"}}),
+            "export.emptyPath",
+        );
+        assert_json(
+            &CaptureStateError::Export(ExportError::LogNotFound),
+            json!({"kind": "export", "message": {"kind": "logNotFound"}}),
+            "export.logNotFound",
+        );
+    }
+
+    #[test]
+    fn import_domain_nests_under_import_tag() {
+        assert_json(
+            &CaptureStateError::Import(PcapImportError::OpenFileError(
+                "capture.pcap".to_string(),
+                "permission refusée".to_string(),
+            )),
+            json!({
+                "kind": "import",
+                "message": {"kind": "openFileError", "message": ["capture.pcap", "permission refusée"]},
+            }),
+            "import.openFileError",
+        );
+    }
+
+    #[test]
+    fn label_domain_nests_under_label_tag() {
+        assert_json(
+            &CaptureStateError::Label(LabelError::EditRejected("ligne introuvable".to_string())),
+            json!({"kind": "label", "message": {"kind": "editRejected", "message": "ligne introuvable"}}),
+            "label.editRejected",
+        );
+        assert_json(
+            &CaptureStateError::Label(LabelError::InvalidMacIpFormat {
+                invalid_mac: vec![(3, "zz:zz".to_string(), "3,zz:zz,1.2.3.4".to_string())],
+                invalid_ip: vec![],
+            }),
+            json!({
+                "kind": "label",
+                "message": {
+                    "kind": "invalidMacIpFormat",
+                    "message": [[[3, "zz:zz", "3,zz:zz,1.2.3.4"]], []],
+                },
+            }),
+            "label.invalidMacIpFormat",
+        );
     }
 }

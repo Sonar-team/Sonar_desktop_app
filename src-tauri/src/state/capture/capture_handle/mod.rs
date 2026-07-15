@@ -112,6 +112,7 @@ impl CaptureHandle {
             timeout: config.timeout,
             snaplen: config.snaplen,
             link_type: &link_type,
+            protocol_version: crate::events::CAPTURE_EVENT_PROTOCOL_VERSION,
         }) {
             // Démarrage avorté : le DLT éventuellement fixé ci-dessus ne doit
             // pas rester lié à un relevé qui n'a rien reçu.

@@ -5,7 +5,7 @@
   },
   "nodeModulesDir": "auto",
   "tasks": {
-    "test": "deno test --no-check --allow-env src/tests/",
-    "typecheck": "vue-tsc --noEmit"
+    "test": "deno test --allow-env src/tests/",
+    "typecheck": "node node_modules/.bin/vue-tsc --noEmit"
   }
 }

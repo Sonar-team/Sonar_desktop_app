@@ -58,11 +58,27 @@ jobs:
         run: cargo test --verbose
         working-directory: ./src-tauri
 
-      # Contrat IPC généré (#142) : `cargo test` vient de réécrire
-      # src/types/generated/ depuis les types Rust ; si le résultat diffère
-      # de ce qui est commité, le contrat a dérivé et la CI échoue.
+      # Contrat IPC généré (#142) : le dossier est supprimé puis intégralement
+      # régénéré par `export_ipc_bindings` (bindings ts-rs) ET
+      # `export_ipc_fixtures` (JSON réellement produit par `CaptureEvent`,
+      # cf. src-tauri/src/events/contract.rs) — le filtre "export_ipc" matche
+      # les deux tests par substring de leur chemin complet. `git status
+      # --porcelain` (pas `git diff`, qui ignore les fichiers non suivis)
+      # compare le résultat à ce qui est commité. Ça détecte les trois
+      # dérives possibles : contenu changé, fichier manquant à committer
+      # (`git diff` seul le laisserait passer), et fichier obsolète resté du
+      # commit précédent (un type renommé/supprimé n'efface pas son ancien
+      # .ts, `cargo test` seul ne le recréerait pas non plus).
       - name: Check IPC contract is up to date
-        run: git diff --exit-code -- src/types/generated
+        run: |
+          rm -rf src/types/generated
+          (cd src-tauri && cargo test --lib export_ipc)
+          if [ -n "$(git status --porcelain -- src/types/generated)" ]; then
+            echo "::error::src/types/generated a dérivé des types Rust (ou n'est pas commité) :"
+            git status --porcelain -- src/types/generated
+            git --no-pager diff -- src/types/generated
+            exit 1
+          fi
 
       - name: Audit dependencies with cargo audit
         run: cargo audit

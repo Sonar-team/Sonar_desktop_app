@@ -9,7 +9,32 @@ import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
 import { Channel } from "@tauri-apps/api/core";
 
 import { useCaptureStore } from "../store/capture.ts";
-import type { CaptureEvent } from "../types/capture.ts";
+import type {
+  CapturedPacket,
+  CaptureEvent,
+  GraphData,
+  GraphUpdate,
+  Stats,
+} from "../types/capture.ts";
+import {
+  graphBatchFixture,
+  graphSnapshotFixture,
+  packetBatchMinimalFixture,
+  startedFixture,
+  statsFixture,
+} from "../types/generated/captureEventFixtures.ts";
+
+type EventData<E extends CaptureEvent["event"]> = Extract<CaptureEvent, { event: E }>["data"];
+
+// Les fixtures ci-dessus sont du JSON réellement produit par `CaptureEvent`
+// côté Rust (cargo test export_ipc_fixtures) : les réutiliser ici — plutôt
+// que des littéraux à moitié remplis retapés à la main — garantit que ces
+// tests exercent le store avec la forme *réelle* du contrat, `session_id`
+// et champs de paquet compris, au lieu de passer par un `unknown` qui
+// masquerait tout événement legacy ou incomplet (#142).
+function clone<T>(value: T): T {
+  return structuredClone(value);
+}
 
 /** Store neuf + Channel attaché ; retourne de quoi simuler le backend. */
 function setupStoreWithChannel() {
@@ -19,7 +44,7 @@ function setupStoreWithChannel() {
   store.setChannel(channel);
   // Le store a remplacé onmessage par son dispatcher : l'appeler simule
   // l'arrivée d'un événement backend.
-  const emitFromBackend = (msg: unknown) => (channel.onmessage as (m: unknown) => void)(msg);
+  const emitFromBackend = (msg: CaptureEvent) => (channel.onmessage as (m: CaptureEvent) => void)(msg);
   return { store, emitFromBackend };
 }
 
@@ -57,16 +82,18 @@ Deno.test("setChannel - graphBatch redistribué update par update", () => {
   mockIPC(() => {});
   try {
     const { store, emitFromBackend } = setupStoreWithChannel();
-    const received: unknown[] = [];
-    store.onGraphUpdate((u) => received.push(u));
+    const received: GraphUpdate[] = [];
+    store.onGraphUpdate((u: GraphUpdate) => received.push(u));
 
-    emitFromBackend({
-      event: "graphBatch",
-      data: { updates: [{ NewNode: { id: "a" } }, { NewEdge: { source: "a", target: "b" } }] },
-    });
+    const batch = clone(graphBatchFixture);
+    // sessionId 0 = hors session (cf. store/capture.ts) : passe le filtre
+    // de session sans dépendre du sessionId courant du store, non pertinent
+    // pour ce test de redistribution.
+    batch.data.sessionId = 0;
+    emitFromBackend(batch);
 
-    assertEquals(received.length, 2);
-    assertEquals(received[0], { NewNode: { id: "a" } });
+    assertEquals(received.length, batch.data.updates.length);
+    assertEquals(received[0], batch.data.updates[0]);
   } finally {
     clearMocks();
   }
@@ -76,13 +103,13 @@ Deno.test("setChannel - graphSnapshot atteint les abonnés", () => {
   mockIPC(() => {});
   try {
     const { store, emitFromBackend } = setupStoreWithChannel();
-    const snapshots: unknown[] = [];
-    store.onGraphSnapshot((g) => snapshots.push(g));
+    const snapshots: GraphData[] = [];
+    store.onGraphSnapshot((g: GraphData) => snapshots.push(g));
 
-    const graphData = { nodes: {}, edges: {} };
-    emitFromBackend({ event: "graphSnapshot", data: { graph_data: graphData } });
+    const snapshot = clone(graphSnapshotFixture);
+    emitFromBackend(snapshot);
 
-    assertEquals(snapshots, [graphData]);
+    assertEquals(snapshots, [snapshot.data.graphData]);
   } finally {
     clearMocks();
   }
@@ -95,7 +122,7 @@ Deno.test("setChannel - started promeut le filtre en attente", () => {
     store.setActiveFilter("tcp");
     store.setPendingFilter("udp");
 
-    emitFromBackend({ event: "started", data: {} });
+    emitFromBackend(clone(startedFixture));
 
     assertEquals(store.activeFilter, "udp");
     assertEquals(store.pendingFilter, "");
@@ -108,12 +135,15 @@ Deno.test("setChannel - packetBatch alimente les deux familles d'abonnés", () =
   mockIPC(() => {});
   try {
     const { store, emitFromBackend } = setupStoreWithChannel();
-    const batches: unknown[][] = [];
-    const packets: unknown[] = [];
-    store.onPacketBatch((b) => batches.push(b));
-    store.onPacket((p) => packets.push(p));
+    const batches: CapturedPacket[][] = [];
+    const packets: CapturedPacket[] = [];
+    store.onPacketBatch((b: CapturedPacket[]) => batches.push(b));
+    store.onPacket((p: CapturedPacket) => packets.push(p));
 
-    emitFromBackend({ event: "packetBatch", data: { packets: [{ len: 1 }, { len: 2 }] } });
+    const batch = clone(packetBatchMinimalFixture);
+    batch.data.sessionId = 0; // hors session : indépendant du sessionId courant
+    batch.data.packets.push(clone(packetBatchMinimalFixture.data.packets[0]));
+    emitFromBackend(batch);
 
     assertEquals(batches.length, 1);
     assertEquals(batches[0].length, 2);
@@ -127,30 +157,38 @@ Deno.test("setChannel - les événements d'une session périmée sont ignorés",
   mockIPC(() => {});
   try {
     const { store, emitFromBackend } = setupStoreWithChannel();
-    const batches: unknown[][] = [];
-    const stopped: unknown[] = [];
-    store.onPacketBatch((b) => batches.push(b));
-    store.onStopped((d) => stopped.push(d));
+    const batches: CapturedPacket[][] = [];
+    const stopped: EventData<"stopped">[] = [];
+    store.onPacketBatch((b: CapturedPacket[]) => batches.push(b));
+    store.onStopped((d: EventData<"stopped">) => stopped.push(d));
 
     // La session 2 est la session courante.
-    emitFromBackend({ event: "started", data: { session_id: 2 } });
+    const started = clone(startedFixture);
+    started.data.sessionId = 2;
+    emitFromBackend(started);
     assertEquals(store.sessionId, 2);
     store.isRunning = true;
 
+    const packetBatchForSession = (sessionId: number) => {
+      const batch = clone(packetBatchMinimalFixture);
+      batch.data.sessionId = sessionId;
+      return batch;
+    };
+
     // Événements retardataires de la session 1 : filtrés.
-    emitFromBackend({ event: "packetBatch", data: { session_id: 1, packets: [{ len: 1 }] } });
-    emitFromBackend({ event: "stopped", data: { session_id: 1, reason: "vieux pipeline" } });
+    emitFromBackend(packetBatchForSession(1));
+    emitFromBackend({ event: "stopped", data: { sessionId: 1, reason: "vieux pipeline" } });
     assertEquals(batches.length, 0, "packetBatch périmé ignoré");
     assertEquals(stopped.length, 0, "stopped périmé ignoré");
     assertEquals(store.isRunning, true, "un stopped périmé n'arrête pas la session courante");
 
     // Ceux de la session courante passent, ainsi que les événements hors
-    // session (session_id 0, ex. import).
-    emitFromBackend({ event: "packetBatch", data: { session_id: 2, packets: [{ len: 1 }] } });
-    emitFromBackend({ event: "packetBatch", data: { session_id: 0, packets: [{ len: 2 }] } });
+    // session (sessionId 0, ex. import).
+    emitFromBackend(packetBatchForSession(2));
+    emitFromBackend(packetBatchForSession(0));
     assertEquals(batches.length, 2);
 
-    emitFromBackend({ event: "stopped", data: { session_id: 2, reason: "arrêt demandé" } });
+    emitFromBackend({ event: "stopped", data: { sessionId: 2, reason: "arrêt demandé" } });
     assertEquals(store.isRunning, false);
   } finally {
     clearMocks();
@@ -181,14 +219,21 @@ Deno.test("onStats - le désabonnement retire bien le listener", () => {
   mockIPC(() => {});
   try {
     const { store, emitFromBackend } = setupStoreWithChannel();
-    const seen: unknown[] = [];
-    const unsub = store.onStats((s) => seen.push(s));
+    const seen: number[] = [];
+    const unsub = store.onStats((s: Stats) => seen.push(s.received));
 
-    emitFromBackend({ event: "stats", data: { received: 1 } });
+    const stats1 = clone(statsFixture);
+    stats1.data.sessionId = 0; // hors session : indépendant du sessionId courant
+    stats1.data.received = 1;
+    emitFromBackend(stats1);
     unsub();
-    emitFromBackend({ event: "stats", data: { received: 2 } });
 
-    assertEquals(seen, [{ received: 1 }]);
+    const stats2 = clone(statsFixture);
+    stats2.data.sessionId = 0;
+    stats2.data.received = 2;
+    emitFromBackend(stats2);
+
+    assertEquals(seen, [1]);
   } finally {
     clearMocks();
   }

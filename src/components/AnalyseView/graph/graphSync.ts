@@ -1,9 +1,9 @@
 // Mutations du graphe graphology à partir des données du backend :
-// upserts de nœuds/arêtes, tailles proportionnelles au trafic, courbure des
-// arêtes parallèles et normalisation des updates reçues du canal.
+// upserts de nœuds/arêtes, tailles proportionnelles au trafic et courbure
+// des arêtes parallèles.
 import Graph from "graphology"
 import { indexParallelEdgesIndex } from "@sigma/edge-curve"
-import { GraphUpdate } from "../../../types/capture"
+import { Edge, Node } from "../../../types/capture"
 import {
   NODE_SIZE_MIN,
   edgeAttributes,
@@ -14,6 +14,15 @@ import {
   nodeSizeFor,
 } from "./graphStyle"
 
+// Attributs graphology d'une arête tels que laissés par
+// `indexParallelEdgesIndex` (@sigma/edge-curve) : un sur-ensemble de ce que
+// `edgeAttributes` produit, avec les trois champs que cette fonction ajoute.
+interface ParallelEdgeAttributes extends Record<string, unknown> {
+  parallelIndex?: number
+  parallelMinIndex?: number
+  parallelMaxIndex?: number
+}
+
 /** Barycentre des nœuds existants (point d'apparition des nouveaux). */
 export function spawnAnchor(graph: Graph): { x: number; y: number } {
   if (graph.order === 0) return { x: 0, y: 0 }
@@ -23,7 +32,7 @@ export function spawnAnchor(graph: Graph): { x: number; y: number } {
 }
 
 /** Ajoute ou met à jour un nœud. Retourne true si un élément a été ajouté. */
-export function upsertNode(graph: Graph, node: any): boolean {
+export function upsertNode(graph: Graph, node: Node | null | undefined): boolean {
   if (!node?.id) return false
   const attrs = nodeAttributes(node)
   if (graph.hasNode(node.id)) {
@@ -45,7 +54,7 @@ export function updateNodeTrafficSize(graph: Graph, nodeId: string) {
 }
 
 /** Ajoute ou met à jour une arête. Retourne true si un élément a été ajouté. */
-export function upsertEdge(graph: Graph, e: any): boolean {
+export function upsertEdge(graph: Graph, e: Edge | null | undefined): boolean {
   if (!e?.source || !e?.target) return false
   // Arête orpheline : les deux extrémités doivent exister
   if (!graph.hasNode(e.source) || !graph.hasNode(e.target)) return false
@@ -85,17 +94,17 @@ export function refreshParallelEdges(graph: Graph) {
     edgeMinIndexAttribute: "parallelMinIndex",
     edgeMaxIndexAttribute: "parallelMaxIndex",
   })
-  graph.forEachEdge((edge, attrs) => {
-    const { parallelIndex, parallelMinIndex, parallelMaxIndex } = attrs as any
+  graph.forEachEdge((edge, attrs: ParallelEdgeAttributes) => {
+    const { parallelIndex, parallelMinIndex, parallelMaxIndex } = attrs
     if (typeof parallelMinIndex === "number") {
       graph.mergeEdgeAttributes(edge, {
         type: parallelIndex ? "curved" : "straight",
-        curvature: parallelIndex ? getCurvature(parallelIndex, parallelMaxIndex) : 0,
+        curvature: parallelIndex ? getCurvature(parallelIndex, parallelMaxIndex ?? 0) : 0,
       })
     } else if (typeof parallelIndex === "number") {
       graph.mergeEdgeAttributes(edge, {
         type: "curved",
-        curvature: getCurvature(parallelIndex, parallelMaxIndex),
+        curvature: getCurvature(parallelIndex, parallelMaxIndex ?? 0),
       })
     } else {
       graph.setEdgeAttribute(edge, "type", "straight")
@@ -103,14 +112,11 @@ export function refreshParallelEdges(graph: Graph) {
   })
 }
 
-/** Ramène les différents formats d'update du backend à la forme typée. */
-export function normalizeGraphUpdate(raw: any): GraphUpdate | null {
-  const u = raw?.update ?? raw
-  if (!u) return null
-  if (u.type && "payload" in u) return u as GraphUpdate
-  if (u.NewNode) return { type: "NodeAdded", payload: u.NewNode }
-  if (u.NodeUpdated) return { type: "NodeUpdated", payload: u.NodeUpdated }
-  if (u.NewEdge) return { type: "EdgeAdded", payload: u.NewEdge }
-  if (u.EdgeUpdated) return { type: "EdgeUpdated", payload: u.EdgeUpdated }
+/** Exhaustivité imposée par le compilateur sur `GraphUpdate["type"]` : toute
+ * variante ajoutée sans branche dans le `switch` appelant casse le build
+ * TypeScript. Journalise plutôt que de planter (même politique que
+ * `logUnknownEvent` dans `store/capture.ts`, #142). */
+export function logUnknownGraphUpdateType(update: never): null {
+  console.warn("[graphSync] type de GraphUpdate inconnu ignoré :", update)
   return null
 }

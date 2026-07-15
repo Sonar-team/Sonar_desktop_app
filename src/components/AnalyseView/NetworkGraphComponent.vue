@@ -32,11 +32,36 @@ import {
   nodeAttributes,
 } from "./graph/graphStyle"
 import {
-  normalizeGraphUpdate,
+  logUnknownGraphUpdateType,
   refreshParallelEdges,
   upsertEdge,
   upsertNode,
 } from "./graph/graphSync"
+
+// Attributs graphology reçus/renvoyés par les reducers Sigma : un sur-
+// ensemble de ce que `nodeAttributes`/`edgeAttributes` (graphStyle.ts)
+// produisent, plus `x`/`y`/`size`/`highlighted`/`zIndex` ajoutés par
+// graphology/Sigma. L'index signature couvre le reste de l'attribut bag
+// (Sigma le type en `Attributes` générique côté framework) sans retomber
+// sur `any` pour les champs que ces reducers lisent/écrivent réellement.
+interface NodeRenderAttributes extends Record<string, unknown> {
+  color?: string
+  label?: string | null
+  hoverColor?: string
+  highlighted?: boolean
+}
+
+interface EdgeRenderAttributes extends Record<string, unknown> {
+  color?: string
+  label?: string | null
+  size?: number
+  zIndex?: number
+  protocol?: string
+  ports?: number[]
+  has_dynamic_ports?: boolean
+  source_port?: number | null
+  destination_port?: number | null
+}
 
 export default defineComponent({
   name: "NetworkGraphComponent",
@@ -189,8 +214,8 @@ export default defineComponent({
     },
 
     // === Reducers Sigma (état de survol/sélection -> rendu) ================
-    nodeReducer(node: string, data: any) {
-      const res: any = { ...data }
+    nodeReducer(node: string, data: NodeRenderAttributes): NodeRenderAttributes {
+      const res: NodeRenderAttributes = { ...data }
       const tunnelNodes = this.hoveredTunnelNodes
       if (tunnelNodes && !tunnelNodes.has(node)) {
         res.color = DIM_NODE_COLOR
@@ -201,8 +226,8 @@ export default defineComponent({
       return res
     },
 
-    edgeReducer(edge: string, data: any) {
-      const res: any = { ...data }
+    edgeReducer(edge: string, data: EdgeRenderAttributes): EdgeRenderAttributes {
+      const res: EdgeRenderAttributes = { ...data }
       const tunnelEdges = this.hoveredTunnelEdges
       const dimmed = !!tunnelEdges && !tunnelEdges.has(edge)
       if (tunnelEdges) {
@@ -585,26 +610,24 @@ export default defineComponent({
       this.ensureLayoutSettings()
     },
     /** Retourne "node" | "edge" si un élément a été ajouté au graphe. */
-    applyUpdate(update: GraphUpdate | any): "node" | "edge" | null {
+    applyUpdate(update: GraphUpdate): "node" | "edge" | null {
       if (!update || !this.graph) return null
-      const u = normalizeGraphUpdate(update)
-      if (!u) return null
 
-      switch (u.type) {
-        case "NodeAdded":
-          return upsertNode(this.graph, u.payload) ? "node" : null
-        case "NodeUpdated": {
-          const node = u.payload
-          if (!node) return null
+      switch (update.type) {
+        case "nodeAdded":
+          return upsertNode(this.graph, update.payload) ? "node" : null
+        case "nodeUpdated": {
+          const node = update.payload
           const added = upsertNode(this.graph, node)
           this.refreshSelectedNode(node.id)
           return added ? "node" : null
         }
-        case "EdgeAdded":
-        case "EdgeUpdated":
-          return upsertEdge(this.graph, u.payload) ? "edge" : null
+        case "edgeAdded":
+        case "edgeUpdated":
+          return upsertEdge(this.graph, update.payload) ? "edge" : null
+        default:
+          return logUnknownGraphUpdateType(update)
       }
-      return null
     },
     /** Resynchronise le bandeau bas si le nœud mis à jour est sélectionné. */
     refreshSelectedNode(nodeId: string | undefined) {

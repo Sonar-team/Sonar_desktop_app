@@ -6,7 +6,13 @@ import { defineStore } from "pinia";
 import { markRaw } from "vue";
 import type { Channel } from "@tauri-apps/api/core";
 import { invoke } from "@tauri-apps/api/core";
-import type { CaptureEvent, GraphData, GraphUpdate } from "../types/capture";
+import type {
+  CaptureEvent,
+  GraphData,
+  GraphUpdate,
+  CapturedPacket,
+  Stats,
+} from "../types/capture";
 import { DEFAULT_CAPTURE_CONFIG, type CaptureConfig } from "../types/config";
 
 // ⚠️ Channel hors réactivité pour éviter le proxy de Vue
@@ -17,6 +23,30 @@ function unsubscribe<T>(listeners: Array<(d: T) => void>, cb: (d: T) => void) {
     const index = listeners.indexOf(cb);
     if (index !== -1) listeners.splice(index, 1);
   };
+}
+
+// Payload d'une variante nommée du contrat généré (#142) : évite de
+// redéclarer à la main la forme de chaque événement.
+type EventData<E extends CaptureEvent["event"]> = Extract<CaptureEvent, { event: E }>["data"];
+
+// Version du contrat IPC attendue par ce build frontend, cf.
+// `crate::events::CAPTURE_EVENT_PROTOCOL_VERSION` côté Rust. Comparée à la
+// valeur reçue dans `started` (#142) : un écart signale un frontend et un
+// backend compilés séparément (build de dev désynchronisé), jamais censé
+// arriver sur un bundle Tauri livré atomiquement — d'où un avertissement,
+// pas un blocage. Exportée pour que les channels locaux hors store (import
+// de labels, `LabelsPanel.vue`) fassent la même vérification.
+export const EXPECTED_PROTOCOL_VERSION = 1;
+
+// Exhaustivité imposée par le compilateur (#142) : toute variante ajoutée
+// côté Rust sans branche dans le switch ci-dessous casse le build
+// TypeScript. À l'exécution, un tag que ce build ne connaît pas (donc
+// jamais `never` en pratique) est journalisé plutôt que de faire planter le
+// store : c'est justement le signe d'un contrat désynchronisé que
+// `protocol_version` permet de diagnostiquer, pas une raison de plus pour
+// perdre la session en cours.
+function logUnknownEvent(event: never): void {
+  console.warn("[CaptureStore] événement de capture inconnu ignoré (contrat IPC désynchronisé ?) :", event);
 }
 
 export const useCaptureStore = defineStore("capture", {
@@ -39,14 +69,13 @@ export const useCaptureStore = defineStore("capture", {
     linkType: '' as string,
 
     // Listeners HMR-safe dans le state
-    startedListeners: [] as Array<(d: any) => void>,
-    finishedListeners: [] as Array<(d: any) => void>,
-    stoppedListeners: [] as Array<(d: any) => void>,
-    packetListeners: [] as Array<(p: any) => void>,
-    packetBatchListeners: [] as Array<(packets: any[]) => void>,
-    statsListeners: [] as Array<(d: any) => void>,
-    lenFlowMatrixListeners: [] as Array<(d: any) => void>,
-    channelCapacityPayloadListeners: [] as Array<(d: any) => void>,
+    startedListeners: [] as Array<(d: EventData<"started">) => void>,
+    finishedListeners: [] as Array<(d: EventData<"finished">) => void>,
+    stoppedListeners: [] as Array<(d: EventData<"stopped">) => void>,
+    packetListeners: [] as Array<(p: CapturedPacket) => void>,
+    packetBatchListeners: [] as Array<(packets: CapturedPacket[]) => void>,
+    statsListeners: [] as Array<(d: Stats) => void>,
+    channelCapacityPayloadListeners: [] as Array<(d: EventData<"channelCapacityPayload">) => void>,
     graphUpdateListeners: [] as Array<(u: GraphUpdate) => void>,
     graphSnapshotListeners: [] as Array<(d: GraphData) => void>,
   }),
@@ -72,15 +101,15 @@ export const useCaptureStore = defineStore("capture", {
       console.log("[CaptureStore] Channel attaché");
 
       // détacher l’ancien handler si besoin
-      if (__channel) (__channel as any).onmessage = undefined;
+      if (__channel) __channel.onmessage = () => {};
 
       __channel = markRaw(channel);
 
-      __channel.onmessage = (msg: any) => {
+      __channel.onmessage = (msg: CaptureEvent) => {
         // Filtrage de session : les événements de capture live portent le
-        // session_id de leur pipeline (0 = hors session, ex. import). Un id
+        // sessionId de leur pipeline (0 = hors session, ex. import). Un id
         // différent de la session courante signale un événement périmé.
-        const sid = msg.data?.session_id;
+        const sid = "sessionId" in msg.data ? msg.data.sessionId : undefined;
         if (typeof sid === "number" && sid > 0) {
           if (msg.event === "started") {
             if (sid < this.sessionId) {
@@ -95,31 +124,36 @@ export const useCaptureStore = defineStore("capture", {
         }
         switch (msg.event) {
           case "started":
+            if (msg.data.protocolVersion !== EXPECTED_PROTOCOL_VERSION) {
+              console.warn(
+                `[CaptureStore] version du contrat IPC inattendue : reçu ${msg.data.protocolVersion}, attendu ${EXPECTED_PROTOCOL_VERSION} — frontend et backend probablement désynchronisés`
+              );
+            }
             if (this.pendingFilter) {
               this.activeFilter = this.pendingFilter;
               this.pendingFilter = '';
             }
-            this.linkType = msg.data?.link_type ?? '';
+            this.linkType = msg.data.linkType;
             for (const cb of this.startedListeners) cb(msg.data);
             break;
           case "finished":
             for (const cb of this.finishedListeners) cb(msg.data);
             break;
           case "stopped":
-            console.log("[CaptureStore] Capture arrêtée :", msg.data?.reason);
+            console.log("[CaptureStore] Capture arrêtée :", msg.data.reason);
             // Arrêt initié par le backend (ex. erreur pcap) : sans cette mise
             // à jour, l'UI croirait capturer indéfiniment.
             this.isRunning = false;
             for (const cb of this.stoppedListeners) cb(msg.data);
             break;
-          case "packet":
-            if (!this.hasData) this.hasData = true;
-            for (const cb of this.packetListeners) cb(msg.data.packet);
-            break;
           case "packetBatch": {
-            const packets = Array.isArray(msg.data?.packets) ? msg.data.packets : [];
-            // Le backend n'émet plus de `packet` unitaire : c'est ici que la
-            // présence de données doit être détectée.
+            const packets = msg.data.packets;
+            // Il n'existe pas d'événement `packet` unitaire sur le fil (#142)
+            // : c'est ici que la présence de données doit être détectée, et
+            // que `packetListeners` (abonnés par paquet, cf. `onPacket`) est
+            // nourri à partir des batches — un même consommateur ne doit
+            // s'abonner qu'à l'un des deux (`onPacket` XOR `onPacketBatch`),
+            // sous peine de recevoir chaque paquet deux fois.
             if (packets.length > 0 && !this.hasData) this.hasData = true;
 
             for (const cb of this.packetBatchListeners) cb(packets);
@@ -137,26 +171,20 @@ export const useCaptureStore = defineStore("capture", {
           case "channelCapacityPayload":
             for (const cb of this.channelCapacityPayloadListeners) cb(msg.data);
             break;
-          case "graph": {
-            const update = msg.data.update as GraphUpdate;
-            for (const cb of this.graphUpdateListeners) cb(update);
+          case "graph":
+            for (const cb of this.graphUpdateListeners) cb(msg.data.update);
             break;
-          }
-          case "graphBatch": {
-            const updates = Array.isArray(msg.data?.updates)
-              ? (msg.data.updates as GraphUpdate[])
-              : [];
-            for (const update of updates) {
+          case "graphBatch":
+            for (const update of msg.data.updates) {
               for (const cb of this.graphUpdateListeners) cb(update);
             }
             break;
-          }
-          case "graphSnapshot": {
-            const graphData = msg.data.graph_data as GraphData;
+          case "graphSnapshot":
             console.log("[CaptureStore] GraphSnapshot reçu");
-            for (const cb of this.graphSnapshotListeners) cb(graphData);
+            for (const cb of this.graphSnapshotListeners) cb(msg.data.graphData);
             break;
-          }
+          default:
+            logUnknownEvent(msg);
         }
       };
     },
@@ -164,35 +192,35 @@ export const useCaptureStore = defineStore("capture", {
     getChannel(): Channel<CaptureEvent> | undefined {
       return __channel;
     },
-    onStarted(cb: (d: any) => void) {
+    onStarted(cb: (d: EventData<"started">) => void) {
       this.startedListeners.push(cb);
       return unsubscribe(this.startedListeners, cb);
     },
-    onStopped(cb: (d: any) => void) {
+    onStopped(cb: (d: EventData<"stopped">) => void) {
       this.stoppedListeners.push(cb);
       return unsubscribe(this.stoppedListeners, cb);
     },
-    onFinished(cb: (d: any) => void) {
+    onFinished(cb: (d: EventData<"finished">) => void) {
       this.finishedListeners.push(cb);
       return unsubscribe(this.finishedListeners, cb);
     },
-    onPacket(cb: (p: any) => void) {
+    // Paquet par paquet, dérivé des `packetBatch` reçus (aucun événement
+    // `packet` unitaire n'existe sur le fil). Ne pas combiner avec
+    // `onPacketBatch` sur le même composant : chaque paquet serait délivré
+    // deux fois (une fois par ce canal, une fois dans le batch).
+    onPacket(cb: (p: CapturedPacket) => void) {
       this.packetListeners.push(cb);
       return unsubscribe(this.packetListeners, cb);
     },
-    onPacketBatch(cb: (packets: any[]) => void) {
+    onPacketBatch(cb: (packets: CapturedPacket[]) => void) {
       this.packetBatchListeners.push(cb);
       return unsubscribe(this.packetBatchListeners, cb);
     },
-    onStats(cb: (d: any) => void) {
+    onStats(cb: (d: Stats) => void) {
       this.statsListeners.push(cb);
       return unsubscribe(this.statsListeners, cb);
     },
-    onFlowMatrixLen(cb: (d: any) => void) {
-      this.lenFlowMatrixListeners.push(cb);
-      return unsubscribe(this.lenFlowMatrixListeners, cb);
-    },
-    onChannelCapacityPayload(cb: (d: any) => void) {
+    onChannelCapacityPayload(cb: (d: EventData<"channelCapacityPayload">) => void) {
       this.channelCapacityPayloadListeners.push(cb);
       return unsubscribe(this.channelCapacityPayloadListeners, cb);
     },
