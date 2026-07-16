@@ -1,0 +1,14 @@
+#SFMS version=1 dlt=ETHERNET
+mac_source,mac_destination,vlan_id,protocol_data_link,ip_source,ip_source_type,label_source,ip_destination,ip_destination_type,label_destination,port_source,port_destination,protocol_transport,application_protocol,count,total_bytes,last_seen,encap_id,origin
+64:6e:e0:ea:fa:83,e0:d3:62:6a:a2:5a,,IPv4,192.168.1.15,Privée,,160.79.104.10,Publique,,40998,443,Tcp,,1,66,2026-07-16 07:24:08.755753 UTC,,
+64:6e:e0:ea:fa:83,e0:d3:62:6a:a2:5a,,IPv4,192.168.1.15,Privée,,160.79.104.10,Publique,,41408,443,Tcp,,3,174,2026-07-16 07:24:08.775881 UTC,,
+64:6e:e0:ea:fa:83,e0:d3:62:6a:a2:5a,,IPv4,192.168.1.15,Privée,,160.79.104.10,Publique,,41408,443,Tcp,TLS,1,90,2026-07-16 07:24:08.744995 UTC,,
+64:6e:e0:ea:fa:83,e0:d3:62:6a:a2:5a,,IPv4,192.168.1.15,Privée,,34.149.66.165,Publique,,48258,443,Tcp,,1,66,2026-07-16 07:24:08.895745 UTC,,
+64:6e:e0:ea:fa:83,e0:d3:62:6a:a2:5a,,IPv4,192.168.1.15,Privée,,35.190.46.17,Publique,,37142,443,Tcp,,1,66,2026-07-16 07:24:09.296746 UTC,,
+bc:24:11:38:16:85,ff:ff:ff:ff:ff:ff,,ARP,192.168.1.80,Privée,,192.168.1.90,Privée,,,,,,1,60,2026-07-16 07:24:08.979181 UTC,,
+bc:24:11:4b:19:47,ff:ff:ff:ff:ff:ff,,ARP,192.168.1.152,Privée,,192.168.1.90,Privée,,,,,,1,60,2026-07-16 07:24:09.182282 UTC,,
+bc:24:11:65:8c:26,ff:ff:ff:ff:ff:ff,,ARP,192.168.1.60,Privée,,192.168.1.90,Privée,,,,,,1,60,2026-07-16 07:24:08.876727 UTC,,
+e0:d3:62:6a:a2:5a,64:6e:e0:ea:fa:83,,IPv4,160.79.104.10,Publique,,192.168.1.15,Privée,,443,40998,Tcp,,1,78,2026-07-16 07:24:08.799581 UTC,,
+e0:d3:62:6a:a2:5a,64:6e:e0:ea:fa:83,,IPv4,160.79.104.10,Publique,,192.168.1.15,Privée,,443,41408,Tcp,,2,132,2026-07-16 07:24:08.775783 UTC,,
+e0:d3:62:6a:a2:5a,64:6e:e0:ea:fa:83,,IPv4,34.149.66.165,Publique,,192.168.1.15,Privée,,443,48258,Tcp,,1,78,2026-07-16 07:24:08.929598 UTC,,
+e0:d3:62:6a:a2:5a,64:6e:e0:ea:fa:83,,IPv4,35.190.46.17,Publique,,192.168.1.15,Privée,,443,37142,Tcp,,1,78,2026-07-16 07:24:09.328258 UTC,,
