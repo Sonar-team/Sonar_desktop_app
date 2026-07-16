@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## **[4.6.1] - 2026-07-16**
+
 ## ✨ Améliorations
 
 - **Rapport qualité d'import visible** (#150) : l'événement `Finished` de
