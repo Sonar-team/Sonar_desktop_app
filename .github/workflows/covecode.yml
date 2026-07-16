@@ -11,7 +11,7 @@ jobs:
       options: --security-opt seccomp=unconfined
     steps:
       - name: Checkout repository
-        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: load build versions
         id: versions
@@ -19,7 +19,7 @@ jobs:
         run: ./script/ci/export-build-versions.sh
 
       - name: Node.js setup
-        uses: actions/setup-node@f1f314fca9dfce2769ece7d933488f076716723e
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: "v${{ steps.versions.outputs.NODE_VERSION }}"
 
@@ -29,7 +29,7 @@ jobs:
           toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
 
       - name: Deno setup
-        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
         with:
           deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
@@ -92,7 +92,7 @@ jobs:
         shell: bash --noprofile --norc -e -o pipefail {0}
 
       - name: Upload Rust coverage to codecov.io
-        uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           files: src-tauri/cobertura.xml
@@ -100,7 +100,7 @@ jobs:
           fail_ci_if_error: true
 
       - name: Upload frontend coverage to codecov.io
-        uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           files: coverage/frontend-lcov.info

@@ -22,7 +22,7 @@ jobs:
       matrix: ${{ steps.release-artifacts.outputs.matrix }}
       tag_name: ${{ steps.release-artifacts.outputs.tag_name }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: List scannable release artifacts
         id: release-artifacts
@@ -56,7 +56,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.discover.outputs.matrix || '{"include":[]}') }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Install artifact extraction tools
         shell: bash
@@ -99,14 +99,14 @@ jobs:
 
       - name: Upload Trivy SARIF to GitHub Security tab
         if: always() && hashFiles(format('trivy-{0}.sarif', matrix.safe_name)) != ''
-        uses: github/codeql-action/upload-sarif@78ed0c7291d93e40c51b085850dc669a4c3ab73b
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9
         with:
           sarif_file: "trivy-${{ matrix.safe_name }}.sarif"
           category: "trivy-release-${{ matrix.safe_name }}"
 
       - name: Upload Trivy SARIF artifact
         if: always() && hashFiles(format('trivy-{0}.sarif', matrix.safe_name)) != ''
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: "trivy-release-${{ matrix.safe_name }}"
           path: "trivy-${{ matrix.safe_name }}.sarif"

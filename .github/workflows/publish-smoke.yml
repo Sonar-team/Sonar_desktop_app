@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: load build versions
         id: versions
@@ -27,7 +27,7 @@ jobs:
         run: ./script/ci/export-build-versions.sh
 
       - name: setup deno
-        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
         with:
           deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 

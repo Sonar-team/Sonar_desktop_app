@@ -1,0 +1,39 @@
+name: ShellCheck
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  SHELLCHECK_VERSION: v0.11.0
+  SHELLCHECK_SHA256: 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Install pinned ShellCheck
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          archive_path="${RUNNER_TEMP}/${archive}"
+          curl --fail --location --retry 3 \
+            --output "$archive_path" \
+            "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/${archive}"
+          printf '%s  %s\n' "$SHELLCHECK_SHA256" "$archive_path" | sha256sum --check --status
+          tar -xJf "$archive_path" -C "$RUNNER_TEMP"
+          printf '%s\n' "${RUNNER_TEMP}/shellcheck-${SHELLCHECK_VERSION}" >> "$GITHUB_PATH"
+
+      - name: Check repository shell scripts
+        run: ./script/ci/run-shellcheck.sh

@@ -13,7 +13,7 @@ jobs:
       contents: read
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: load build versions
         id: versions
@@ -21,7 +21,7 @@ jobs:
         run: ./script/ci/export-build-versions.sh
 
       - name: setup deno
-        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
         with:
           deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
@@ -55,7 +55,7 @@ jobs:
       contents: write
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Create release
         shell: bash
@@ -83,7 +83,7 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: load build versions
         id: versions
@@ -91,7 +91,7 @@ jobs:
         run: ./script/ci/export-build-versions.sh
 
       - name: setup deno
-        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
         with:
           deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
 
@@ -165,7 +165,7 @@ jobs:
         run: ./script/ci/generate-attestation-subjects.sh "${{ matrix.platform }}"
 
       - name: Generate provenance attestation
-        uses: actions/attest@281a49d4cbb0a72c9575a50d18f6deb515a11deb
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763
         with:
           subject-path: ${{ steps.attestation-subjects.outputs.subject-paths }}
 
@@ -183,7 +183,7 @@ jobs:
         run: ./script/ci/upload-sigstore-bundles.sh "${{ matrix.platform }}"
 
       - name: Upload Sigstore bundles artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: sigstore-bundles-${{ matrix.platform }}
           path: |
@@ -191,7 +191,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload release hashes artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: release-hashes-${{ matrix.platform }}
           path: release-hashes-${{ matrix.platform }}.md
@@ -206,7 +206,7 @@ jobs:
       attestations: write
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: load build versions
         id: versions
@@ -251,7 +251,7 @@ jobs:
         run: ./script/ci/generate-attestation-subjects.sh sbom sbom-release-artifacts
 
       - name: Generate provenance attestation
-        uses: actions/attest@281a49d4cbb0a72c9575a50d18f6deb515a11deb
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763
         with:
           subject-path: ${{ steps.attestation-subjects.outputs.subject-paths }}
 
@@ -269,7 +269,7 @@ jobs:
         run: ./script/ci/upload-sigstore-bundles.sh sbom
 
       - name: Upload Sigstore bundles artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: sigstore-bundles-sbom
           path: |
@@ -277,7 +277,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload release hashes artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: release-hashes-sbom
           path: release-hashes-sbom.md
@@ -290,10 +290,10 @@ jobs:
       contents: write
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Download release hashes
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           pattern: release-hashes-*
           path: release-hashes
@@ -316,7 +316,7 @@ jobs:
       contents: write
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Publish release (draft -> public)
         shell: bash
