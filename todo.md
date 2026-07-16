@@ -33,6 +33,7 @@ Suivi : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 - [x] **P0** [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) — générer et tester le contrat IPC Rust ↔ TypeScript *(rouverte puis refermée le 15/07 après audit : conversion `to_contract` exhaustive imposée par le compilateur, `#[ts(optional)]` sur les champs réellement omissibles, gate CI corrigée (`git status`, pas `git diff` seul), `protocol_version` opérationnel sur les trois chemins de session — voir sprint.md)*
 - [ ] **P0** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée par site, capteur, interface et VLAN
 - [ ] **P1 validation** [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) — revalider immédiatement les chemins espaces/Unicode *(backend testé le 14/07 ; restent Windows et front)*
+- [ ] **P1** *(sans issue — à ouvrir)* — créer les fichiers de test (pcap simples forgés + matrices CSV attendues) et les tests d'intégration couvrant import pcap, conversion pcap → matrice, export et ré-import de matrice *(arborescence `src-tauri/test_files/pcaps/` créée le 16/07 avec un premier couple pcapng/CSV ; la chaîne `convert_from_pcap_list` et `sonar-flows-core::pcap` restent sans aucun test)*
 
 La Definition of Done détaillée est dans `sprint.md` et dans l'issue #165.
 
