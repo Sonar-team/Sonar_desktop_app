@@ -1,0 +1,27 @@
+[package]
+name = "sonar-flows-core"
+description = "Reusable Sonar analysis core without Tauri dependencies"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[features]
+default = []
+# La conversion PCAP tire libpcap (Npcap sous Windows) : optionnelle pour ne
+# pas imposer cette dépendance système aux consommateurs matrice/CSV.
+pcap = ["dep:pcap"]
+
+[lints]
+workspace = true
+
+[dependencies]
+chrono.workspace = true
+csv.workspace = true
+log.workspace = true
+packet_parser.workspace = true
+pcap = { workspace = true, optional = true }
+serde.workspace = true
+thiserror.workspace = true

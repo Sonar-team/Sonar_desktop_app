@@ -56,7 +56,7 @@ l'installeur reste également suivi dans cette issue.
 ## SBOM (#137)
 
 - SBOM backend : `cargo cyclonedx` sur `src-tauri` (inclut désormais
-  `sonar-flows-core` via le chemin workspace).
+  `sonar-flows-core` depuis sa version crates.io exacte et vendored).
 - SBOM frontend : généré depuis `deno.lock` par
   `script/ci/generate-frontend-sbom-from-lock.sh` (Syft ne cataloguait pas
   `deno.lock` et produisait un SBOM vide). Reproductible : ni timestamp ni
