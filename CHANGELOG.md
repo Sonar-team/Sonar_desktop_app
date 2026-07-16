@@ -2,16 +2,14 @@
 
 ## Non publié
 
+## **[4.7.0] - 2026-07-16**
+
 ## 🛠 Corrections
 
-- **Layout ForceAtlas2 restauré sous Windows** : la CSP Tauri autorise
-  explicitement les Web Workers locaux `blob:` utilisés par Graphology.
-  WebView2 ne bloque donc plus le calcul du layout quand l'interface affiche
-  « Gravité : ON ».
-- **Import des labels Forge** : les fichiers CSV dont l'en-tête utilise les
-  colonnes explicites `adresse_mac,adresse_ip,label` sont maintenant reconnus
-  sans relâcher la validation de la première ligne. La fixture
-  `Adresses_IP_Forge.csv` importe ses 18 labels basés sur l'IP sans conflit.
+- **Gravité du graphe sous Windows** : ForceAtlas2 peut démarrer son Web
+  Worker dans WebView2 grâce à la CSP dédiée aux workers locaux `blob:`.
+- **Import des labels Forge** : les en-têtes `adresse_mac,adresse_ip,label`
+  sont reconnus sans relâcher la validation de la première ligne.
 
 ## **[4.6.2] - 2026-07-16**
 
