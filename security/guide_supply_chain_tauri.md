@@ -324,8 +324,10 @@ d'invoquer des commandes Tauri sensibles.
 **Contre-mesures dans SONAR :**
 
 - **CSP stricte** (`src-tauri/tauri.conf.json`) :
-  `default-src 'self'; connect-src ipc: http://ipc.localhost; img-src 'self' data:; …`
+  `default-src 'self'; connect-src ipc: http://ipc.localhost; img-src 'self' data:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:`
   — aucun script distant, aucune connexion réseau sortante depuis le webview.
+  Les seuls workers supplémentaires autorisés sont les workers locaux
+  `blob:` nécessaires au layout ForceAtlas2.
   Une charge injectée ne peut ni charger de code externe ni téléphoner à la
   maison.
 - **Permissions Tauri déclaratives** (`src-tauri/capabilities/`) : le

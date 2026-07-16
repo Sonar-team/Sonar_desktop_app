@@ -158,3 +158,30 @@ pub fn print_banner() -> String {
     // La bannière est colorée en vert avant d'être retournée.
     banner.green().to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn tauri_csp_allows_forceatlas_blob_workers() {
+        let config: serde_json::Value = serde_json::from_str(include_str!("../../tauri.conf.json"))
+            .expect("tauri.conf.json must contain valid JSON");
+        let csp = config["app"]["security"]["csp"]
+            .as_str()
+            .expect("Tauri CSP must be configured as a string");
+        let worker_sources = csp
+            .split(';')
+            .map(str::trim)
+            .find_map(|directive| directive.strip_prefix("worker-src "))
+            .expect("CSP must define worker-src for the ForceAtlas2 worker");
+        let worker_sources: Vec<_> = worker_sources.split_whitespace().collect();
+
+        assert!(
+            worker_sources.contains(&"'self'"),
+            "worker-src must allow same-origin workers"
+        );
+        assert!(
+            worker_sources.contains(&"blob:"),
+            "ForceAtlas2 creates its worker from a local blob URL"
+        );
+    }
+}

@@ -4,6 +4,10 @@
 
 ## 🛠 Corrections
 
+- **Layout ForceAtlas2 restauré sous Windows** : la CSP Tauri autorise
+  explicitement les Web Workers locaux `blob:` utilisés par Graphology.
+  WebView2 ne bloque donc plus le calcul du layout quand l'interface affiche
+  « Gravité : ON ».
 - **Import des labels Forge** : les fichiers CSV dont l'en-tête utilise les
   colonnes explicites `adresse_mac,adresse_ip,label` sont maintenant reconnus
   sans relâcher la validation de la première ligne. La fixture
