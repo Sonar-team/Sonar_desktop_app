@@ -439,11 +439,13 @@ fn is_mac_address(value: &str) -> bool {
 }
 
 // Une ligne d'en-tête ne peut être que la première du fichier et n'est
-// reconnue que si elle dit littéralement `mac,ip[,…]` (insensible à la
-// casse). L'ancienne heuristique « champs non parseables » avalait
-// silencieusement une première ligne de données invalide (#153).
+// reconnue que si elle utilise une paire de colonnes explicitement supportée
+// (insensible à la casse). L'ancienne heuristique « champs non parseables »
+// avalait silencieusement une première ligne de données invalide (#153).
 fn is_header_row(row: &LabelRow) -> bool {
-    row.mac.eq_ignore_ascii_case("mac") && row.ip.eq_ignore_ascii_case("ip")
+    (row.mac.eq_ignore_ascii_case("mac") && row.ip.eq_ignore_ascii_case("ip"))
+        || (row.mac.eq_ignore_ascii_case("adresse_mac")
+            && row.ip.eq_ignore_ascii_case("adresse_ip"))
 }
 
 /// Importe un fichier de labels CSV.
@@ -756,6 +758,51 @@ mod tests {
         assert!(
             !is_header_row(&invalid_data),
             "une ligne invalide n'est pas un en-tête"
+        );
+    }
+
+    /// La fixture VAE Forge utilise les noms de colonnes explicites
+    /// `adresse_mac,adresse_ip,label`. Elle doit suivre la même chaîne que la
+    /// commande d'import et produire 18 labels basés uniquement sur l'IP.
+    #[test]
+    fn forge_ip_address_label_file_imports() {
+        let label_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("test_files/Adresses_IP_Forge.csv")
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        verif_label_rows_format(label_path.clone()).unwrap();
+        verif_mac_ip_format(label_path.clone()).unwrap();
+
+        let mut rows = read_label_rows(&label_path).unwrap();
+        assert!(rows.first().is_some_and(is_header_row));
+        rows.remove(0);
+
+        let (rows, conflicts) = dedup_labels_first_wins(rows);
+        assert!(conflicts.is_empty());
+        assert_eq!(rows.len(), 18);
+
+        let mut label_store = LabelStore::new();
+        for row in rows {
+            label_store.add(row.into_tuple());
+        }
+
+        assert_eq!(label_store.get().len(), 18);
+        assert_eq!(
+            label_store.get().first(),
+            Some(&(String::new(), "192.168.1.60".into(), "Bind9".into()))
+        );
+        assert_eq!(
+            label_store.get().last(),
+            Some(&(String::new(), "192.168.1.200".into(), "PF_Tests".into()))
+        );
+
+        let mut matrix = FlowMatrix::new();
+        copy_labels_to_matrix(&label_store, &mut matrix).unwrap();
+        assert_eq!(
+            matrix.get_label("aa:bb:cc:dd:ee:ff", "192.168.1.150"),
+            Some("Forge".into())
         );
     }
 

@@ -2,6 +2,33 @@
 
 ## Non publié
 
+## 🛠 Corrections
+
+- **Import des labels Forge** : les fichiers CSV dont l'en-tête utilise les
+  colonnes explicites `adresse_mac,adresse_ip,label` sont maintenant reconnus
+  sans relâcher la validation de la première ligne. La fixture
+  `Adresses_IP_Forge.csv` importe ses 18 labels basés sur l'IP sans conflit.
+
+## **[4.6.2] - 2026-07-16**
+
+## 🛠 Corrections
+
+- **Build de release Linux à nouveau reproductible entre clones isolés** :
+  `sonar-flows-core 0.3.0` est publié, référencé avec une version exacte puis
+  vendorisé dans l'application. Cargo utilise ainsi une identité de source
+  stable au lieu du chemin local du checkout, qui faisait diverger les
+  binaires et bloquait la publication après comparaison des SHA-256.
+- **Publication des SBOM restaurée** : le générateur du SBOM frontend est
+  désormais suivi comme exécutable. Le workflow peut générer, téléverser,
+  attester et signer les SBOM backend et frontend au lieu d'échouer avec le
+  code 126.
+
+## 🔧 Maintenance
+
+- Les crates `sonar-flows-core` et `sonar-flows-cli` passent en version
+  `0.3.0`. Le cœur partagé est inclus dans le vendor hors ligne de
+  l'application et son inventaire de licences est mis à jour.
+
 ## **[4.6.1] - 2026-07-16**
 
 ## ✨ Améliorations
