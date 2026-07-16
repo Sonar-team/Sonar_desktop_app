@@ -614,6 +614,13 @@ pub enum CaptureEventContract {
         parse_error_count: u64,
         matrix_total_count: u64,
     },
+    ImportProgress {
+        file_name: String,
+        file_index: u64,
+        files_total: u64,
+        current: u64,
+        total: u64,
+    },
     GraphSnapshot {
         graph_data: GraphDataContract,
     },
@@ -707,6 +714,19 @@ pub fn to_contract(event: &super::CaptureEvent<'_>) -> CaptureEventContract {
             integrated_count: *integrated_count as u64,
             parse_error_count: *parse_error_count as u64,
             matrix_total_count: *matrix_total_count as u64,
+        },
+        super::CaptureEvent::ImportProgress {
+            file_name,
+            file_index,
+            files_total,
+            current,
+            total,
+        } => CaptureEventContract::ImportProgress {
+            file_name: file_name.to_string(),
+            file_index: *file_index as u64,
+            files_total: *files_total as u64,
+            current: *current as u64,
+            total: *total as u64,
         },
         super::CaptureEvent::GraphSnapshot { graph_data } => CaptureEventContract::GraphSnapshot {
             graph_data: (*graph_data).into(),
@@ -803,6 +823,18 @@ mod tests {
             matrix_total_count: 40,
         };
         assert_same_json(&real, &to_contract(&real), "finished");
+    }
+
+    #[test]
+    fn import_progress_matches() {
+        let real = crate::events::CaptureEvent::ImportProgress {
+            file_name: "capture.pcap",
+            file_index: 2,
+            files_total: 5,
+            current: 1_000,
+            total: 48_350,
+        };
+        assert_same_json(&real, &to_contract(&real), "importProgress");
     }
 
     // `Node::new`/`Edge::new` tirent leur `id` d'un compteur atomique global
@@ -1494,6 +1526,16 @@ mod tests {
                 integrated_count: 95,
                 parse_error_count: 5,
                 matrix_total_count: 40,
+            }
+        );
+        fixture!(
+            importProgressFixture,
+            crate::events::CaptureEvent::ImportProgress {
+                file_name: "capture.pcap",
+                file_index: 2,
+                files_total: 5,
+                current: 1_000,
+                total: 48_350,
             }
         );
 

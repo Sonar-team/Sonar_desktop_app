@@ -11,6 +11,7 @@ import type {
   GraphData,
   GraphUpdate,
   CapturedPacket,
+  ImportProgress,
   Stats,
 } from "../types/capture";
 import { DEFAULT_CAPTURE_CONFIG, type CaptureConfig } from "../types/config";
@@ -60,6 +61,7 @@ export const useCaptureStore = defineStore("capture", {
     sessionId: 0,
     showMatrice: true,
     isImporting: false,
+    importProgress: null as ImportProgress | null,
     hasData: false,
     activeFilter: '' as string,
     pendingFilter: '' as string,
@@ -92,6 +94,9 @@ export const useCaptureStore = defineStore("capture", {
     },
     setActiveFilter(filter: string) {
       this.activeFilter = filter;
+    },
+    clearImportProgress() {
+      this.importProgress = null;
     },
     setPendingFilter(filter: string) {
       this.pendingFilter = filter;
@@ -167,6 +172,9 @@ export const useCaptureStore = defineStore("capture", {
           }
           case "stats":
             for (const cb of this.statsListeners) cb(msg.data);
+            break;
+          case "importProgress":
+            this.importProgress = msg.data;
             break;
           case "channelCapacityPayload":
             for (const cb of this.channelCapacityPayloadListeners) cb(msg.data);

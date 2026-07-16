@@ -76,6 +76,25 @@ fn send_started_event(on_event: &Channel<CaptureEvent<'_>>, link_type: &str) {
     };
 }
 
+fn send_import_progress_event(
+    on_event: &Channel<CaptureEvent<'_>>,
+    file_name: &str,
+    file_index: usize,
+    files_total: usize,
+    current: usize,
+    total: usize,
+) {
+    if let Err(e) = on_event.send(CaptureEvent::ImportProgress {
+        file_name,
+        file_index,
+        files_total,
+        current,
+        total,
+    }) {
+        error!("Erreur lors de l'envoi de ImportProgress: {:?}", e);
+    }
+}
+
 /// Libellés des types de liaison (DLT) des fichiers à importer, dédupliqués
 /// dans l'ordre de la liste. Un fichier illisible est ignoré ici : la
 /// conversion elle-même échouera avec l'erreur précise.
@@ -352,6 +371,8 @@ fn process_packet_timed(
 /// rejoue un à un dans la matrice et le graphe, puis signale la fin du fichier.
 pub(super) fn handle_pcap_file(
     file_path: &str,
+    file_index: usize,
+    files_total: usize,
     matrice: &mut FlowMatrix,
     graph: &mut GraphData,
     on_event: &Channel<CaptureEvent<'_>>,
@@ -377,6 +398,7 @@ pub(super) fn handle_pcap_file(
         "[handle_pcap_file] {} : {} paquets détectés",
         file_path, total
     );
+    send_import_progress_event(on_event, file_path, file_index, files_total, 0, total);
 
     let mut packet_count: usize = 0;
     #[cfg(feature = "capture_timing")]
@@ -389,6 +411,16 @@ pub(super) fn handle_pcap_file(
     // en silence.
     sonar_flows_core::pcap::for_each_raw_packet(Path::new(file_path), |packet| {
         packet_count += 1;
+        if packet_count.is_multiple_of(1000) || packet_count == total {
+            send_import_progress_event(
+                on_event,
+                file_path,
+                file_index,
+                files_total,
+                packet_count,
+                total,
+            );
+        }
 
         #[cfg(feature = "capture_timing")]
         process_packet_timed(
@@ -577,9 +609,17 @@ fn build_matrix_and_graph_from_pcaps(
     let mut graph = GraphData::new();
     copy_labels_to_matrix(labels, &mut matrix)?;
 
-    for pcap_path in pcap_paths {
+    for (file_index, pcap_path) in pcap_paths.iter().enumerate() {
         info!("[convert_from_pcap_list] Traitement de {}", pcap_path);
-        handle_pcap_file(pcap_path, &mut matrix, &mut graph, on_event, timing_logger)?;
+        handle_pcap_file(
+            pcap_path,
+            file_index + 1,
+            pcap_paths.len(),
+            &mut matrix,
+            &mut graph,
+            on_event,
+            timing_logger,
+        )?;
     }
 
     Ok((matrix, graph))
@@ -657,6 +697,49 @@ mod tests {
         assert!(missing.is_err(), "fichier absent -> erreur propagée");
     }
 
+    #[test]
+    fn pcap_import_emits_initial_and_final_progress() {
+        let pcap_path = tunnel_pcap();
+        let progress_events = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let captured = progress_events.clone();
+        let on_event = Channel::new(move |body| {
+            if let tauri::ipc::InvokeResponseBody::Json(json) = body {
+                let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+                if value["event"] == "importProgress" {
+                    captured.lock().unwrap().push(value);
+                }
+            }
+            Ok(())
+        });
+        let mut matrix = FlowMatrix::new();
+        let mut graph = GraphData::new();
+
+        handle_pcap_file(
+            pcap_path.to_str().unwrap(),
+            2,
+            3,
+            &mut matrix,
+            &mut graph,
+            &on_event,
+            &mut None,
+        )
+        .unwrap();
+
+        let events = progress_events.lock().unwrap();
+        assert!(events.len() >= 2, "progression initiale et finale attendue");
+        let first = events.first().unwrap();
+        let last = events.last().unwrap();
+        assert_eq!(first["data"]["fileIndex"].as_u64(), Some(2));
+        assert_eq!(first["data"]["filesTotal"].as_u64(), Some(3));
+        assert_eq!(first["data"]["current"].as_u64(), Some(0));
+        assert_eq!(last["data"]["current"], last["data"]["total"]);
+        assert!(
+            last["data"]["total"]
+                .as_u64()
+                .is_some_and(|total| total > 0)
+        );
+    }
+
     /// Rejoue l'import PCAP réel et vérifie la comptabilité des tunnels :
     /// pour chaque tunnel, la somme des paquets attribués aux lignes internes
     /// (via la colonne `encap_id`, forme `id` ou `id:n|…`) doit être égale au
@@ -670,6 +753,8 @@ mod tests {
 
         handle_pcap_file(
             pcap_path.to_str().unwrap(),
+            1,
+            1,
             &mut matrix,
             &mut graph,
             &on_event,

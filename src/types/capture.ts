@@ -9,6 +9,7 @@
 // si le contrat commité a dérivé.
 import type { CaptureEvent } from "./generated/CaptureEvent";
 export type { CaptureEvent };
+export type ImportProgress = Extract<CaptureEvent, { event: "importProgress" }>["data"];
 
 export type { Stats } from "./generated/Stats";
 export type { Node } from "./generated/Node";

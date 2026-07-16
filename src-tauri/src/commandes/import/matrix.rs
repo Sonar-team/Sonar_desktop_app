@@ -42,20 +42,31 @@ fn read_matrix_rows(csv_path: &str) -> Result<Vec<FlowMatrixRow>, CaptureStateEr
 
 /// Lit chaque fichier de matrice et retourne ses lignes groupées par fichier,
 /// pour la comptabilité par fichier (événements `Finished`). La lecture et
-/// l'héritage de la colonne `origin` viennent du cœur partagé.
+/// l'héritage de la colonne `origin` viennent du cœur partagé. Le callback est
+/// appelé après validation complète de chaque fichier pour publier sa
+/// progression sans exposer de lignes partielles.
 fn read_matrix_rows_per_file(
     incoming_file_paths: &[String],
+    mut on_file_read: impl FnMut(usize, &str, usize),
 ) -> Result<Vec<(String, Vec<FlowMatrixRow>)>, CaptureStateError> {
     if incoming_file_paths.is_empty() {
         return Err(std::io::Error::other("Aucun fichier de matrice sélectionné").into());
     }
 
-    let paths: Vec<PathBuf> = incoming_file_paths.iter().map(PathBuf::from).collect();
-    Ok(sonar_flows_core::csv::read_matrix_rows_per_file(&paths)?
-        .into_iter()
-        .zip(incoming_file_paths)
-        .map(|((_, rows), path)| (path.clone(), rows))
-        .collect())
+    let mut files = Vec::with_capacity(incoming_file_paths.len());
+    for (index, path) in incoming_file_paths.iter().enumerate() {
+        let path_buf = PathBuf::from(path);
+        let origin = sonar_flows_core::csv::origin_name_from_path(&path_buf);
+        let mut rows = sonar_flows_core::csv::read_matrix_rows(&path_buf)?;
+        for row in &mut rows {
+            if row.origin.trim().is_empty() {
+                row.origin = origin.clone();
+            }
+        }
+        on_file_read(index, path, rows.len());
+        files.push((path.clone(), rows));
+    }
+    Ok(files)
 }
 
 // La production passe par `read_matrix_rows_per_file` (comptabilité par
@@ -64,10 +75,12 @@ fn read_matrix_rows_per_file(
 fn read_matrix_rows_from_files(
     incoming_file_paths: &[String],
 ) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
-    Ok(read_matrix_rows_per_file(incoming_file_paths)?
-        .into_iter()
-        .flat_map(|(_, rows)| rows)
-        .collect())
+    Ok(
+        read_matrix_rows_per_file(incoming_file_paths, |_, _, _| {})?
+            .into_iter()
+            .flat_map(|(_, rows)| rows)
+            .collect(),
+    )
 }
 
 fn rebuild_matrix_and_graph_from_rows(
@@ -158,12 +171,6 @@ pub fn import_matrix_files(
     // implicite pour un export antérieur) : fusion inter-DLT refusée.
     let import_paths: Vec<PathBuf> = incoming_file_paths.iter().map(PathBuf::from).collect();
     let link_type = sonar_flows_core::csv::common_matrix_link_type(&import_paths)?;
-    let files = read_matrix_rows_per_file(&incoming_file_paths)?;
-    let line_counts: Vec<(String, usize)> = files
-        .iter()
-        .map(|(path, rows)| (path.clone(), rows.len()))
-        .collect();
-    let rows: Vec<FlowMatrixRow> = files.into_iter().flat_map(|(_, rows)| rows).collect();
 
     // Même principe que l'import PCAP (`send_started_event`) : un import de
     // matrice CSV est aussi une session, avec sa propre version de contrat
@@ -182,6 +189,24 @@ pub fn import_matrix_files(
     }) {
         error!("Erreur lors de l'envoi de Started: {:?}", e);
     }
+
+    let files_total = incoming_file_paths.len();
+    let files = read_matrix_rows_per_file(&incoming_file_paths, |index, path, line_count| {
+        if let Err(e) = on_event.send(CaptureEvent::ImportProgress {
+            file_name: path,
+            file_index: index + 1,
+            files_total,
+            current: line_count,
+            total: line_count,
+        }) {
+            error!("Erreur lors de l'envoi de ImportProgress: {:?}", e);
+        }
+    })?;
+    let line_counts: Vec<(String, usize)> = files
+        .iter()
+        .map(|(path, rows)| (path.clone(), rows.len()))
+        .collect();
+    let rows: Vec<FlowMatrixRow> = files.into_iter().flat_map(|(_, rows)| rows).collect();
 
     // Même ordre de verrouillage que convert_from_pcap_list et net_capture
     // (matrice -> graph -> label_store) pour éviter un interblocage ABBA.
@@ -408,6 +433,36 @@ mod tests {
         );
     }
 
+    #[test]
+    fn matrix_read_reports_each_validated_file() {
+        let source =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_NP_Matrice.csv");
+        let dir = TempDir::new("sonar_test_matrix_progress");
+        let file_a = dir.path().join("site-a.csv");
+        let file_b = dir.path().join("site-b.csv");
+        fs::copy(&source, &file_a).unwrap();
+        fs::copy(&source, &file_b).unwrap();
+        let paths = vec![
+            file_a.to_str().unwrap().to_string(),
+            file_b.to_str().unwrap().to_string(),
+        ];
+        let mut progress = Vec::new();
+
+        let files = read_matrix_rows_per_file(&paths, |index, path, rows| {
+            progress.push((index, path.to_string(), rows));
+        })
+        .unwrap();
+
+        assert_eq!(files.len(), 2);
+        assert_eq!(progress.len(), 2);
+        assert_eq!(progress[0].0, 0);
+        assert_eq!(progress[0].1, paths[0]);
+        assert_eq!(progress[0].2, files[0].1.len());
+        assert_eq!(progress[1].0, 1);
+        assert_eq!(progress[1].1, paths[1]);
+        assert_eq!(progress[1].2, files[1].1.len());
+    }
+
     /// Une matrice déjà fusionnée (colonne `origin` renseignée) réimportée sous
     /// un nouveau nom conserve sa provenance d'origine plutôt que de l'écraser.
     #[test]
@@ -498,6 +553,8 @@ mod tests {
         let on_event = Channel::new(|_| Ok(()));
         handle_pcap_file(
             pcap_path.to_str().unwrap(),
+            1,
+            1,
             &mut matrix,
             &mut graph,
             &on_event,

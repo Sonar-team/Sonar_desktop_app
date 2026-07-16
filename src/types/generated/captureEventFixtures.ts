@@ -61,6 +61,17 @@ export const finishedFixture = ({
   }
 }) satisfies CaptureEvent;
 
+export const importProgressFixture = ({
+  "event": "importProgress",
+  "data": {
+    "fileName": "capture.pcap",
+    "fileIndex": 2,
+    "filesTotal": 5,
+    "current": 1000,
+    "total": 48350
+  }
+}) satisfies CaptureEvent;
+
 export const graphNodeAddedFixture = ({
   "event": "graph",
   "data": {

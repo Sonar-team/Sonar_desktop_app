@@ -127,6 +127,16 @@ pub enum CaptureEvent<'a> {
         parse_error_count: usize,
         matrix_total_count: usize,
     },
+    /// Progression d'un import multi-fichiers. `current` et `total` comptent
+    /// les paquets pour un PCAP et les lignes pour une matrice CSV ; les index
+    /// de fichier commencent à 1 pour être affichés directement dans l'UI.
+    ImportProgress {
+        file_name: &'a str,
+        file_index: usize,
+        files_total: usize,
+        current: usize,
+        total: usize,
+    },
     /// Graphe complet, envoyé en fin d'import pour recharger la vue.
     GraphSnapshot { graph_data: &'a GraphData },
 }

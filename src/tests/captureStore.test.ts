@@ -19,6 +19,7 @@ import type {
 import {
   graphBatchFixture,
   graphSnapshotFixture,
+  importProgressFixture,
   packetBatchMinimalFixture,
   startedFixture,
   statsFixture,
@@ -110,6 +111,22 @@ Deno.test("setChannel - graphSnapshot atteint les abonnés", () => {
     emitFromBackend(snapshot);
 
     assertEquals(snapshots, [snapshot.data.graphData]);
+  } finally {
+    clearMocks();
+  }
+});
+
+Deno.test("setChannel - importProgress met à jour la progression typée", () => {
+  mockIPC(() => {});
+  try {
+    const { store, emitFromBackend } = setupStoreWithChannel();
+    const progress = clone(importProgressFixture);
+
+    emitFromBackend(progress);
+
+    assertEquals(store.importProgress, progress.data);
+    store.clearImportProgress();
+    assertEquals(store.importProgress, null);
   } finally {
     clearMocks();
   }

@@ -33,6 +33,22 @@
       <div class="overlay" v-if="isConverting">
         <div class="spinner"></div>
         <p class="overlay-text">Conversion en cours…</p>
+        <div v-if="importProgress" class="progress-group">
+          <div
+            class="progress-track"
+            role="progressbar"
+            :aria-valuenow="Math.round(progressPercent)"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+          </div>
+          <p class="progress-label">
+            Fichier {{ importProgress.fileIndex }}/{{ importProgress.filesTotal }} ·
+            {{ progressFileName }} ·
+            {{ importProgress.current.toLocaleString() }}/{{ importProgress.total.toLocaleString() }}
+          </p>
+        </div>
       </div>
       <button class="btn image-btn cross" @click.prevent="windowClosed" :disabled="isConverting">❌</button>
       
@@ -115,7 +131,7 @@ import { invoke, Channel } from '@tauri-apps/api/core';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
-import { CaptureEvent } from '../../../types/capture';
+import type { CaptureEvent, ImportProgress } from '../../../types/capture';
 import { displayCaptureError } from '../../../errors/capture';
 import { classifyLabelImportError } from '../../../utils/labelImport';
 import { LabelConflictReport, LabelImportReport } from '../../../types/labels';
@@ -166,6 +182,22 @@ export default defineComponent({
     },
     isRunning(): boolean {
       return this.captureStore.isRunning;
+    },
+    importProgress(): ImportProgress | null {
+      return this.captureStore.importProgress;
+    },
+    progressPercent(): number {
+      const progress = this.importProgress;
+      if (!progress || progress.filesTotal <= 0) return 0;
+      const fileRatio = progress.total > 0
+        ? Math.min(1, Math.max(0, progress.current / progress.total))
+        : 1;
+      const globalRatio = (progress.fileIndex - 1 + fileRatio) / progress.filesTotal;
+      return Math.min(100, Math.max(0, globalRatio * 100));
+    },
+    progressFileName(): string {
+      const progress = this.importProgress;
+      return progress ? (progress.fileName.split(/[\\/]/).pop() ?? progress.fileName) : '';
     },
     dropHint(): string {
       return this.mode === 'csv'
@@ -273,6 +305,7 @@ export default defineComponent({
       info('convert_from_pcap_list : ' + this.packetFiles);
 
       this.isConverting = true;
+      this.captureStore.clearImportProgress();
       // Verrou global : bloque les entrées de l'app pendant la conversion.
       useCaptureStore().isImporting = true;
 
@@ -286,6 +319,7 @@ export default defineComponent({
         useCaptureStore().isImporting = false;
         await useCaptureStore().refreshHasData();
         this.isConverting = false;
+        this.captureStore.clearImportProgress();
       }
 
       this.packetFiles = [];
@@ -306,6 +340,7 @@ export default defineComponent({
       }
 
       this.isConverting = true;
+      this.captureStore.clearImportProgress();
       // Verrou global : bloque les entrées de l'app pendant l'import.
       useCaptureStore().isImporting = true;
       try {
@@ -319,6 +354,7 @@ export default defineComponent({
         useCaptureStore().isImporting = false;
         await useCaptureStore().refreshHasData();
         this.isConverting = false;
+        this.captureStore.clearImportProgress();
       }
     },
 
@@ -802,6 +838,42 @@ export default defineComponent({
   color: white;
   font-size: 1.1rem;
   font-weight: 500;
+}
+
+.progress-group {
+  width: min(70%, 420px);
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #4299e1;
+  border-radius: 4px;
+  transition: width 0.2s ease;
+}
+
+.progress-label {
+  width: 100%;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  font-family: monospace;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @keyframes spin {
