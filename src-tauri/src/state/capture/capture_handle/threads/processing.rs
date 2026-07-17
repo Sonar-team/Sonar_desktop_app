@@ -569,7 +569,6 @@ impl StatsEmitter {
         StatsSnapshot {
             triple,
             parse_errors: worker.parse_errors_total,
-            integrated: worker.packets_integrated,
             processed: worker.processed,
         }
     }

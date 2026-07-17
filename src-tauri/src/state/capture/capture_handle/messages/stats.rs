@@ -84,19 +84,13 @@ impl From<pcap::Stat> for StatTriple {
 }
 
 /// Photographie complète des compteurs de capture à un instant donné : stats
-/// pcap + pertes applicatives ([`StatTriple`]) et comptabilité du thread de
-/// traitement. C'est l'unité de déduplication des événements `Stats`, et la
-/// forme du récapitulatif final émis après drainage (#158) — chaque paquet
-/// reçu se retrouve dans une catégorie : intégré, illisible, ou perdu
-/// (noyau / interface / application), distinctement.
+/// pcap + pertes applicatives ([`StatTriple`]) et erreurs de parsing. C'est
+/// l'unité de déduplication des événements `Stats`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct StatsSnapshot {
     pub triple: StatTriple,
     /// Paquets acceptés par le pipeline mais illisibles par le parseur.
     pub parse_errors: u64,
-    /// Paquets parsés et intégrés à la matrice (un par paquet capturé,
-    /// niveaux de tunnel non recomptés).
-    pub integrated: u64,
     /// Flux distincts de la matrice (lignes du relevé).
     pub processed: u32,
 }
@@ -113,7 +107,6 @@ pub struct StatsPayload {
     pub if_dropped: u32,
     pub app_dropped: u64,
     pub parse_errors: u64,
-    pub integrated: u64,
     pub processed: u32,
 }
 
@@ -127,7 +120,6 @@ impl StatsPayload {
             if_dropped: snapshot.triple.if_dropped,
             app_dropped: snapshot.triple.app_dropped,
             parse_errors: snapshot.parse_errors,
-            integrated: snapshot.integrated,
             processed: snapshot.processed,
         }
     }
@@ -142,7 +134,6 @@ impl StatsPayload {
             if_dropped: self.if_dropped,
             app_dropped: self.app_dropped,
             parse_errors: self.parse_errors,
-            integrated: self.integrated,
             processed: self.processed,
         })
     }
@@ -196,7 +187,6 @@ mod tests {
                 ..StatTriple::default()
             },
             parse_errors: 0,
-            integrated: 9,
             processed: 4,
         };
 
@@ -214,14 +204,6 @@ mod tests {
             sent.load(Ordering::Relaxed),
             2,
             "un paquet illisible de plus doit réémettre"
-        );
-
-        snapshot.integrated += 1;
-        StatsPayload::maybe_send(&mut last, snapshot, 1, &ch).unwrap();
-        assert_eq!(
-            sent.load(Ordering::Relaxed),
-            3,
-            "un paquet intégré de plus doit réémettre"
         );
     }
 }

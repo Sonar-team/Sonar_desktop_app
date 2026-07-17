@@ -282,7 +282,6 @@ pub fn import_matrix_files(
         if_dropped: 0,
         app_dropped: 0,
         parse_errors: 0,
-        integrated: 0,
         processed: matrix_total_count as u32,
     }) {
         error!("Erreur lors de l'envoi de Stats: {:?}", e);

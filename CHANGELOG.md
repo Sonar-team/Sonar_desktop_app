@@ -2,6 +2,13 @@
 
 ## Non publié
 
+## 🛠 Corrections
+
+- **Barre de statut** : suppression du compteur redondant des paquets intégrés
+  à la matrice ; les pertes et erreurs de parsing restent affichées pour
+  expliquer les écarts avec les trames reçues. Les compteurs restent lisibles
+  au-delà de 1 000 sans chevauchement.
+
 ## **[4.7.0] - 2026-07-16**
 
 ## 🛠 Corrections

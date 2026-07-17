@@ -84,9 +84,6 @@ pub enum CaptureEvent<'a> {
         app_dropped: u64,
         /// Paquets acceptés par le pipeline mais illisibles par le parseur.
         parse_errors: u64,
-        /// Paquets parsés et intégrés à la matrice (niveaux de tunnel non
-        /// recomptés).
-        integrated: u64,
         processed: u32,
     },
     /// Occupation du canal capture→processing (indicateur de backpressure).

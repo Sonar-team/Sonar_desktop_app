@@ -108,7 +108,12 @@ UI réactive même quand le débit réseau est élevé.
 - Le thread de capture ne porte plus la logique métier lourde.
 - Les mises à jour de matrice et de graphe sont batchées.
 - La UI reste réactive, même si les rafraîchissements sont moins fréquents.
-- Les stats et l’état de backpressure restent cohérents.
+- Les stats et l'état de backpressure restent cohérents.
+- La barre de statut affiche une seule fois le total des trames reçues ; les
+  pertes kernel, interface, application et parsing expliquent les écarts.
+  Aucun compteur redondant de paquets intégrés n'est exposé.
+- Les compteurs restent lisibles et ne se chevauchent pas pour des valeurs
+  supérieures ou égales à 1 000.
 
 ## Décision validée: batching frontend live
 - Réglage retenu pour `PacketBatch` live:

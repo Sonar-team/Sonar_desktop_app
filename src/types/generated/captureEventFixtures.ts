@@ -27,7 +27,6 @@ export const statsFixture = ({
     "ifDropped": 0,
     "appDropped": 0,
     "parseErrors": 1,
-    "integrated": 9,
     "processed": 3
   }
 }) satisfies CaptureEvent;

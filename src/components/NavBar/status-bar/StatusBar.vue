@@ -21,9 +21,9 @@
       <p
         v-if="lastImport"
         class="import-badge"
-        :title="`${lastImport.fileName} : ${lastImport.integratedCount}/${lastImport.totalCount} paquets intégrés${lastImport.parseErrorCount ? `, ${lastImport.parseErrorCount} illisibles` : ''}`"
+        :title="`${lastImport.fileName} : ${lastImport.totalCount} lignes lues${lastImport.parseErrorCount ? `, ${lastImport.parseErrorCount} illisibles` : ''}`"
       >
-        Import : {{ lastImport.fileName }} ({{ lastImport.integratedCount }}/{{ lastImport.totalCount }})
+        Import : {{ lastImport.fileName }} ({{ lastImport.totalCount }} lignes{{ lastImport.parseErrorCount ? `, ${lastImport.parseErrorCount} illisibles` : '' }})
       </p>
       <p v-if="lastStopReason" class="stopped-badge" :title="lastStopReason">
         Arrêt : {{ lastStopReason }}
@@ -36,10 +36,6 @@
 
       <p title="Trames reçues 📥 par la carte réseau">
         <span class="counter">{{ stats.received }} :📥</span>
-      </p>
-
-      <p title="Paquets ✅ intégrés à la matrice">
-        <span class="counter">{{ stats.integrated }} :✅</span>
       </p>
 
       <p title="Flux distincts dans la matrice 📊">
@@ -80,12 +76,12 @@ import { invoke } from '@tauri-apps/api/core';
 import type { Stats } from '../../../types/capture';
 
 type StatsView = Record<
-  'received' | 'dropped' | 'ifDropped' | 'appDropped' | 'parseErrors' | 'integrated' | 'processed',
+  'received' | 'dropped' | 'ifDropped' | 'appDropped' | 'parseErrors' | 'processed',
   number
 >;
 
 const EMPTY_STATS: StatsView = {
-  received: 0, dropped: 0, ifDropped: 0, appDropped: 0, parseErrors: 0, integrated: 0, processed: 0,
+  received: 0, dropped: 0, ifDropped: 0, appDropped: 0, parseErrors: 0, processed: 0,
 };
 
 interface LastImport {
@@ -118,7 +114,6 @@ export default defineComponent({
       this.stats.ifDropped   = s.ifDropped ?? 0;
       this.stats.appDropped  = s.appDropped ?? 0;
       this.stats.parseErrors = s.parseErrors ?? 0;
-      this.stats.integrated  = s.integrated ?? 0;
       this.stats.processed   = s.processed ?? 0;
     }));
     this._unsub.push(this.captureStore.onFinished((f) => {
@@ -127,7 +122,6 @@ export default defineComponent({
       // Rapport qualité de l'import (#150) : les paquets illisibles du
       // fichier sont visibles au même titre que les pertes de capture.
       this.stats.parseErrors = f.parseErrorCount ?? 0;
-      this.stats.integrated = f.integratedCount ?? 0;
       this.lastImport = {
         fileName: f.fileName,
         integratedCount: f.integratedCount,
@@ -180,13 +174,19 @@ export default defineComponent({
   display: flex; flex-direction: row; justify-content: space-between; align-items: center;
   padding: 0 10px; box-sizing: border-box;
 }
-.left-status-content { display: flex; align-items: center; }
-.right-status-content { display: flex; align-items: center; gap: 12px; text-align: right; }
+.left-status-content { display: flex; align-items: center; min-width: 0; overflow: hidden; }
+.right-status-content { display: flex; align-items: center; gap: 4px 10px; text-align: right; min-width: 0; flex-shrink: 0; }
+.status-bar p { margin: 0; line-height: 1; }
+.right-status-content > p { flex: 0 0 auto; white-space: nowrap; }
 .icon-img { height: 16px; width: 16px; vertical-align: middle; margin-right: 5px; }
 
 .counter {
   display: inline-block;
-  width: 60px;
+  width: auto;
+  min-width: 5ch;
+  flex: 0 0 5ch;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   text-align: right;
   font-family: monospace;
 }

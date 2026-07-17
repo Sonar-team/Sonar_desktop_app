@@ -127,7 +127,6 @@ fn send_stats_event(
             if_dropped: 0,
             app_dropped: 0,
             parse_errors: 0,
-            integrated: 0,
             processed: processed as u32,
         })
         .map_err(|e| {

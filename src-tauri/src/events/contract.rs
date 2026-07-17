@@ -658,7 +658,6 @@ pub fn to_contract(event: &super::CaptureEvent<'_>) -> CaptureEventContract {
             if_dropped,
             app_dropped,
             parse_errors,
-            integrated,
             processed,
         } => CaptureEventContract::Stats(StatsPayload {
             session_id: *session_id,
@@ -667,7 +666,6 @@ pub fn to_contract(event: &super::CaptureEvent<'_>) -> CaptureEventContract {
             if_dropped: *if_dropped,
             app_dropped: *app_dropped,
             parse_errors: *parse_errors,
-            integrated: *integrated,
             processed: *processed,
         }),
         super::CaptureEvent::ChannelCapacityPayload {
@@ -787,7 +785,6 @@ mod tests {
             if_dropped: 0,
             app_dropped: 0,
             parse_errors: 1,
-            integrated: 9,
             processed: 3,
         };
         assert_same_json(&real, &to_contract(&real), "stats");
@@ -1498,7 +1495,6 @@ mod tests {
                 if_dropped: 0,
                 app_dropped: 0,
                 parse_errors: 1,
-                integrated: 9,
                 processed: 3,
             }
         );
