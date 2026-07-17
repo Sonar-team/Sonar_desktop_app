@@ -25,7 +25,9 @@ ni l'audit des dépendances, ni la protection runtime par CSP.
 - ESLint, Prettier, SAST JavaScript/Vue et détection de secrets ne sont pas
   encore des gates frontend dédiées. L'intégration ESLint est maintenant
   amorcée avec `eslint.config.js` et `deno task lint` ; le traitement des
-  violations existantes reste le travail FE-01.
+  violations existantes reste le travail FE-01. Prettier est intégré pour les
+  nouveaux fichiers de configuration ; le reformatage progressif de `src/`
+  reste le travail FE-02 afin d'éviter un diff massif.
 
 ## Périmètre
 

@@ -24,6 +24,7 @@
     "npm:graphology@0.26.0": "0.26.0_graphology-types@0.24.8",
     "npm:html2canvas@1.4.1": "1.4.1",
     "npm:pinia@3.0.4": "3.0.4_typescript@6.0.3_vue@3.5.38__typescript@6.0.3",
+    "npm:prettier@3.6.2": "3.6.2",
     "npm:sigma@3.0.3": "3.0.3_graphology-types@0.24.8",
     "npm:typescript-eslint@^8.64.0": "8.64.0_eslint@9.39.5_typescript@6.0.3",
     "npm:typescript@6.0.3": "6.0.3",
@@ -1413,6 +1414,10 @@
     "prelude-ls@1.2.1": {
       "integrity": "sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g=="
     },
+    "prettier@3.6.2": {
+      "integrity": "sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==",
+      "bin": true
+    },
     "punycode@2.3.1": {
       "integrity": "sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg=="
     },
@@ -1708,6 +1713,7 @@
         "npm:graphology@0.26.0",
         "npm:html2canvas@1.4.1",
         "npm:pinia@3.0.4",
+        "npm:prettier@3.6.2",
         "npm:sigma@3.0.3",
         "npm:typescript-eslint@^8.64.0",
         "npm:typescript@6.0.3",
