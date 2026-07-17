@@ -19,8 +19,8 @@
     <button class="image-btn" @click="SaveLabels" title="Exporter les labels">🏷️</button>
     <button class="image-btn" @click="handleLabelsClick" :disabled="isRunning" title="Gérer les labels">🗂️</button>
 
-    <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap (ctrl+o)">📄</button>
-    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning" title="Ouvrir un fichier csv"><img src="/src/assets/images/import_csv.png" alt="Ouvrir un fichier csv" /></button>
+    <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap ou une matrice de flux (ctrl+o)">📄</button>
+    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning" title="Importer un fichier de label"><img src="/src/assets/images/import_csv.png" alt="Importer un fichier de label" /></button>
     
     <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">❎</button>
     <button class="image-btn" @click="export_logs" title="Logs (ctrl+l)">📒</button>
