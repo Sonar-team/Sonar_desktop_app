@@ -160,7 +160,7 @@ export default defineComponent({
   beforeUnmount() {
     if (this._resetHandler) this.$bus.off('reset', this._resetHandler);
     // si tes onXxx() renvoient une fonction d’unsubscribe, tu peux les stocker dans _unsub et les appeler ici
-    for (const u of this._unsub) { try { u(); } catch {} }
+    for (const u of this._unsub) { try { u(); } catch { /* already unsubscribed */ } }
     this._unsub = [];
   },
 });

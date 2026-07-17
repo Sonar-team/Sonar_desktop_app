@@ -143,7 +143,7 @@ export default defineComponent({
       this.flushTimer = null
     }
     if (this.offPacketBatch) {
-      try { this.offPacketBatch() } catch {}
+      try { this.offPacketBatch() } catch { /* already unsubscribed */ }
     }
     const bus = (this as unknown as ComponentWithResetBus).$bus
     if (this.resetHandler) {

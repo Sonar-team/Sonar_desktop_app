@@ -145,7 +145,7 @@ export default defineComponent({
 
   beforeUnmount() {
     for (const unsub of this.graphUnsubs) {
-      try { unsub() } catch {}
+      try { unsub() } catch { /* already unsubscribed */ }
     }
     this.graphUnsubs = []
 
@@ -160,7 +160,7 @@ export default defineComponent({
     }
 
     if (this.layout) {
-      try { this.layout.kill() } catch {}
+      try { this.layout.kill() } catch { /* already stopped */ }
       this.layout = null
     }
     if (this.renderer) {
@@ -353,7 +353,7 @@ export default defineComponent({
     // === Réinitialisation ==================================================
     resetGraph() {
       if (this.layout) {
-        try { this.layout.kill() } catch {}
+        try { this.layout.kill() } catch { /* already stopped */ }
         this.layout = null
       }
       this._layoutOrder = 0
@@ -539,7 +539,7 @@ export default defineComponent({
     startLayout() {
       if (!this.graph || this.graph.order === 0) return
       if (this.layout) {
-        try { this.layout.kill() } catch {}
+        try { this.layout.kill() } catch { /* already stopped */ }
         this.layout = null
       }
       this._layoutOrder = this.graph.order

@@ -9,7 +9,6 @@
 </template>
 
 <script>
-import { watch } from 'vue'
 import { useCaptureStore } from '../../../store/capture'
 
 export default {

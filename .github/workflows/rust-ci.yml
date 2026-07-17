@@ -157,6 +157,9 @@ jobs:
       - name: Install frontend dependencies
         run: deno install --frozen
 
+      - name: ESLint frontend
+        run: deno task lint
+
       - name: Typecheck (vue-tsc)
         run: deno task typecheck
 

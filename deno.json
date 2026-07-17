@@ -5,6 +5,7 @@
   },
   "nodeModulesDir": "auto",
   "tasks": {
+    "lint": "node node_modules/.bin/eslint src vite.config.ts --max-warnings=0",
     "test": "deno test --allow-env src/tests/",
     "typecheck": "node node_modules/.bin/vue-tsc --noEmit"
   }

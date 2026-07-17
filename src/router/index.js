@@ -1,7 +1,6 @@
 // Routes de l'application : vue d'analyse (par défaut), accueil capture et
 // lecture de PCAP.
 import { createRouter, createWebHistory } from "vue-router";
-import HomeComponent from "../views/homeView.vue";
 import AnalyseView from "../views/analyseView.vue";
 import ReadPcapView from "../views/readPcapView.vue";
 

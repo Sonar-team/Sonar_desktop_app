@@ -42,7 +42,7 @@ export async function displayCaptureError(err: unknown) {
         userFriendlyMessage =
           `Opération refusée : ${captureError.message}`;
         break;
-      case "capture":
+      case "capture": {
         const captureKind = captureError.message as CaptureErrorKind;
         if ("kind" in captureKind) {
           switch (captureKind.kind) {
@@ -85,6 +85,7 @@ export async function displayCaptureError(err: unknown) {
           }
         }
         break;
+      }
       case "export":
         userFriendlyMessage = handleExportError(captureError.message);
         break;

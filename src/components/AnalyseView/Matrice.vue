@@ -34,9 +34,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-if="processedPackets.length === 0" v-for="n in 40" :key="'empty-' + n">
-          <td v-for="header in headers" :key="header.key || header.value">&nbsp;</td>
-        </tr>
+        <template v-if="processedPackets.length === 0">
+          <tr v-for="n in 40" :key="'empty-' + n">
+            <td v-for="header in headers" :key="header.key || header.value">&nbsp;</td>
+          </tr>
+        </template>
         <tr v-else v-for="packet in processedPackets" :key="packet.id">
           <td>{{ packet.mac_address_source }}</td>
           <td>{{ packet.mac_address_destination }}</td>
@@ -57,7 +59,7 @@
 
 <script>
 import { invoke } from '@tauri-apps/api/core';
-import { info, error } from '@tauri-apps/plugin-log';
+import { info } from '@tauri-apps/plugin-log';
 
 export default {
   data() {
@@ -121,7 +123,7 @@ export default {
           }
         }
       } catch (error) {
-        error("Error fetching packet infos:", error);
+        console.error("Error fetching packet infos:", error);
       }
     },
     async sort(headerValue) {

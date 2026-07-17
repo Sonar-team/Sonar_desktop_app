@@ -4,7 +4,7 @@
 -->
 <template>
     <div class="channel-status">
-      <p :title="progress + '%'">🚨​:</p>
+      <p :title="progress + '%'">🚨:</p>
       <p> {{ progress }}%</p>
       <div class="progress-bar-background">
         <div
