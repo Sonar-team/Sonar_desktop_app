@@ -46,7 +46,7 @@ produit des applications compatibles avec les éditions gratuite et OEM.
    d'ouvrir la page officielle.
 5. La CI refuse tout installeur Npcap/WinPcap ajouté au dépôt ou aux bundles. Un
    test automatisé nécessitant une installation silencieuse doit utiliser un
-   environnement disposant des droits OEM adaptés, pas télécharger la version
+   environnement disposant des droits OEM adaptés, plutôt que de télécharger la version
    gratuite.
 
 La version gratuite peut convenir à un utilisateur qui l'installe manuellement,
