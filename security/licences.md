@@ -64,9 +64,9 @@ intégration de l'installeur dans SONAR nécessiterait au préalable une licence
 écrite, une validation juridique ainsi que les contrôles de hash, Authenticode
 et notice de licence. Cette option n'est pas retenue.
 
-Les prix ne sont pas figés dans ce document : ils dépendent du palier et peuvent
-évoluer. Les conditions et tarifs officiels prévalent sur toute estimation
-historique. La décision de licence courante est close dans #138.
+Les tarifs de Npcap OEM dépendent du palier et peuvent évoluer. Les conditions et
+tarifs officiels prévalent sur toute estimation historique. La décision de licence
+courante est close dans #138.
 L'assainissement des releases historiques qui contiennent un installeur reste
 suivi dans #169 ; les tests Windows avec Npcap présent, absent ou incompatible
 restent suivis dans #146.
