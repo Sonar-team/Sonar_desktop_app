@@ -1,57 +1,75 @@
 # Position licences de SONAR
 
-Document de référence pour les questions de licence du projet, issu des
-audits des 10–11/07/2026 (issues [#152](https://github.com/Sonar-team/Sonar_desktop_app/issues/152)
-et [#138](https://github.com/Sonar-team/Sonar_desktop_app/issues/138)).
+Document de référence pour les questions de licence du projet, issu des audits
+des 10–11/07/2026 (issues
+[#152](https://github.com/Sonar-team/Sonar_desktop_app/issues/152) et
+[#138](https://github.com/Sonar-team/Sonar_desktop_app/issues/138)).
 
 ## Licence du projet : AGPL-3.0-only (#152)
 
-SONAR est publié sous **GNU Affero General Public License version 3
-uniquement** (SPDX : `AGPL-3.0-only`).
+SONAR est publié sous **GNU Affero General Public License version 3 uniquement**
+(SPDX : `AGPL-3.0-only`).
 
-L'audit relevait une divergence : l'avis de concession de `LICENSE.md`
-disait « or (at your option) any later version » alors que les manifests
-(`src-tauri/Cargo.toml`, workspace `sonar-rust`) déclaraient
-`AGPL-3.0-only`. La forme « only » était le choix délibéré (répété dans
-chaque manifest) ; l'avis de `LICENSE.md` était un boilerplate copié.
+L'audit relevait une divergence : l'avis de concession de `LICENSE.md` disait «
+or (at your option) any later version » alors que les manifests
+(`src-tauri/Cargo.toml`, workspace `sonar-rust`) déclaraient `AGPL-3.0-only`. La
+forme « only » était le choix délibéré (répété dans chaque manifest) ; l'avis de
+`LICENSE.md` était un boilerplate copié.
 
 Alignement effectué le 11/07/2026 :
 
 - `LICENSE.md` : avis corrigé en « version 3 only » avec l'identifiant SPDX ;
-- `package.json` : champ `"license": "AGPL-3.0-only"` ajouté (repris par le
-  SBOM frontend) ;
+- `package.json` : champ `"license": "AGPL-3.0-only"` ajouté (repris par le SBOM
+  frontend) ;
 - manifests Cargo : déjà `AGPL-3.0-only`, inchangés.
 
-Conséquence assumée : le projet ne pourra pas être relicencié
-automatiquement vers une future AGPL v4 ; tout changement de licence
-restera une décision explicite des ayants droit.
+Conséquence assumée : le projet ne pourra pas être relicencié automatiquement
+vers une future AGPL v4 ; tout changement de licence restera une décision
+explicite des ayants droit.
 
-## Npcap : redistribution retirée, suivi maintenu (#138)
+## Npcap : SDK de compilation et runtime externe (#138)
 
-La version gratuite de Npcap n'autorise normalement pas sa redistribution
-externe avec un autre produit sans accord ou licence OEM :
-<https://npcap.com/oem/redist>.
+**Décision finale (20/07/2026).** Nmap/Npcap a confirmé par écrit que l'approche
+recommandée pour SONAR consiste à compiler avec le SDK Npcap, tout en
+distribuant l'application sans le runtime ni l'installeur Npcap. Le SDK normal
+produit des applications compatibles avec les éditions gratuite et OEM.
 
-**Décision provisoire (12/07/2026).**
-
-1. L'installeur `npcap-*.exe` est retiré du dépôt et de tous les bundles SONAR.
-   Les bibliothèques `.lib` du SDK restent présentes uniquement pour permettre
+1. Aucun installeur `npcap-*.exe` ou `winpcap-*.exe` ne doit être conservé dans
+   le dépôt, intégré à un bundle, téléchargé ou exécuté par SONAR.
+2. Les bibliothèques `.lib` du SDK restent présentes uniquement pour permettre
    la compilation Windows ; elles n'installent ni pilote ni runtime.
-2. Npcap devient un prérequis installé séparément par l'utilisateur depuis
-   <https://npcap.com/#download>, avec l'option **WinPcap API-compatible Mode**.
-3. Le bundle Windows est temporairement limité à NSIS : son hook vérifie le
-   service Npcap, l'option de compatibilité et les DLL nécessaires. Si le
-   prérequis manque, il explique la situation et propose d'ouvrir uniquement
-   la page officielle.
-4. La CI refuse la présence d'un installeur Npcap/WinPcap dans le dépôt ou le
-   bundle. Elle ne télécharge pas non plus Npcap sur ses runners tant que ce
-   cas d'usage n'a pas été clarifié.
+3. Npcap est un prérequis installé séparément par l'utilisateur depuis la
+   [page officielle](https://npcap.com/#download), avec l'option **WinPcap
+   API-compatible Mode** requise par SONAR.
+4. Le hook NSIS vérifie le service, le mode compatible et les DLL nécessaires.
+   Si le prérequis manque, il explique la situation et propose uniquement
+   d'ouvrir la page officielle.
+5. La CI refuse tout installeur Npcap/WinPcap ajouté au dépôt ou aux bundles. Un
+   test automatisé nécessitant une installation silencieuse doit utiliser un
+   environnement disposant des droits OEM adaptés, pas télécharger la version
+   gratuite.
 
-L'issue #138 **reste ouverte**. Le projet demandera à Nmap s'il existe une
-autorisation ou une formule adaptée à un projet open source non commercial.
-Npcap ne devra être réintroduit dans un bundle qu'après obtention d'un droit
-écrit explicite. Le traitement des anciens tags/releases contenant déjà
-l'installeur reste également suivi dans cette issue.
+La version gratuite peut convenir à un utilisateur qui l'installe manuellement,
+respecte la limite générale de cinq systèmes par organisation et n'a besoin ni
+d'installation silencieuse ni de support commercial. Une organisation qui
+dépasse ce seuil ou automatise le déploiement doit acquérir sa propre licence
+[Npcap OEM Internal-use](https://npcap.com/oem/internal), avec une maintenance
+active si elle veut bénéficier des mises à jour et du support commercial. Chaque
+utilisateur ou organisation reste responsable du respect des conditions et
+exceptions applicables.
+
+Une licence Internal-use n'autorise pas SONAR à redistribuer Npcap. Toute future
+intégration de l'installeur dans SONAR nécessiterait au préalable une licence
+[Npcap OEM Redistribution](https://npcap.com/oem/redist), une autorisation
+écrite, une validation juridique ainsi que les contrôles de hash, Authenticode
+et notice de licence. Cette option n'est pas retenue.
+
+Les prix ne sont pas figés dans ce document : ils dépendent du palier et peuvent
+évoluer. Les conditions et tarifs officiels prévalent sur toute estimation
+historique. La décision de licence courante est close dans #138.
+L'assainissement des releases historiques qui contiennent un installeur reste
+suivi dans #169 ; les tests Windows avec Npcap présent, absent ou incompatible
+restent suivis dans #146.
 
 ## SBOM (#137)
 
