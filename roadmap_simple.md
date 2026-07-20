@@ -1,6 +1,6 @@
 # SONAR — où va le produit
 
-> Mise à jour : juillet 2026 · Version actuelle : 4.4.0
+> Mise à jour : 20 juillet 2026 · Version actuelle : 4.7.0
 > Version détaillée pour l'équipe technique : `Roadmap.md`
 
 SONAR cartographie les flux réseau en écoutant passivement le trafic,
@@ -50,9 +50,11 @@ de capture.
 
 ## Ce qui est déjà fait
 
-- Capture stable avec démarrage/arrêt maîtrisés et exports CSV fiables.
+- Comptabilité de capture, drainage et exports CSV fiabilisés ; la concurrence
+  start/stop reste suivie avant la sortie de bêta.
 - Gestion des étiquettes d'équipements (import, normalisation, édition).
-- Chaîne de fabrication des versions vérifiée et automatisée.
+- Chaîne de fabrication des versions automatisée, mais encore à fiabiliser
+  pour garantir l'identité et l'immuabilité des artefacts publiés.
 - Licence open source AGPL adoptée.
 
 *La sortie de bêta est prononcée quand les étapes 1 à 3 sont terminées.*

@@ -1,7 +1,7 @@
 # Roadmap SONAR — de la bêta avancée au produit professionnel
 
-> Dernière mise à jour : 13/07/2026 (version courante : 4.4.0, packet_parser 6.0.0)
-> Source : audit complet bêta → pro du 13/07/2026
+> Dernière mise à jour : 20/07/2026 (version courante : 4.7.0, packet_parser 8.1.0)
+> Sources : audits complets bêta → pro des 13/07 et 17/07/2026
 > Articulation des documents : les issues GitHub sont la source de vérité ;
 > `todo.md` donne la priorité et l'ordre d'exécution ; `sprint.md` décrit le
 > sprint actif ; ce fichier donne la trajectoire d'ensemble.
@@ -16,19 +16,23 @@ résultats sont attestables.
 
 ---
 
-## Phase 1 — Fidélité des données et intégrité des sessions *(sprint actif)*
+## Phase 1 — Fidélité des données et intégrité des sessions *(sprint actif — orange)*
 
 Suivi : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165) — détail dans `sprint.md`.
 
 Prouver que le résultat affiché représente fidèlement toutes les données
 acceptées par l'application.
 
-- **P0** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — détection du DLT et comptabilité exhaustive du parsing
-- **P0** [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) — état `Importing` réservé atomiquement pendant toute conversion
-- **P0** [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) — aucun paquet accepté perdu à l'arrêt ou au plafond de flux
-- **P0** [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) — corpus PCAP/PCAPNG CI multi-DLT, aucun test silencieusement sauté
-- **P0** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée (site, capteur, interface, VLAN)
-- **P1 stretch** [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) — contrat IPC Rust ↔ TypeScript généré et testé
+- **P0 — lot livré, issue ouverte** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — DLT réel et rapport de parsing ; garanties transverses restantes
+- **P0 — livré** [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) — état `Importing` réservé atomiquement pendant toute conversion
+- **P0 — livré** [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) — aucun paquet accepté perdu à l'arrêt ou au plafond de flux
+- **P0 — partiel** [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) — skips silencieux supprimés ; corpus complet et fuzzing restants
+- **P0 — ouvert** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée (site, capteur, interface, VLAN)
+- **P0 — livré** [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) — contrat IPC Rust ↔ JSON ↔ TypeScript généré et testé
+- **P0 — ouvert** [#166](https://github.com/Sonar-team/Sonar_desktop_app/issues/166) — interblocage start/stop concurrent
+- **P0 — ouvert** [#167](https://github.com/Sonar-team/Sonar_desktop_app/issues/167) — imports vides et resets concurrents
+- **P1 validation — ouvert** [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) — chemins Windows et frontend
+- **P1 validation — ouvert** [#168](https://github.com/Sonar-team/Sonar_desktop_app/issues/168) — preuve différentielle PCAP → matrice avec TShark
 
 ## Phase 2 — Sessions et parcours produit terminés
 
@@ -48,6 +52,7 @@ en silence.
 Livrer des binaires auxquels un client peut faire confiance sur machine
 propre.
 
+- **P0 — rouvert** [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136) — construire une fois, tester puis publier les mêmes artefacts sans remplacement
 - **P0** [#94](https://github.com/Sonar-team/Sonar_desktop_app/issues/94) — Authenticode, Developer ID, notarisation, Apple Silicon
 - **P0** [#146](https://github.com/Sonar-team/Sonar_desktop_app/issues/146) — E2E Tauri et installateurs testés sur chaque OS supporté
 - **P0** [#162](https://github.com/Sonar-team/Sonar_desktop_app/issues/162) — quality gates et scans bloquants sur toute release taguée
@@ -66,7 +71,7 @@ propre.
 ## Backlog à requalifier
 
 Tickets historiques ouverts, hors phases tant qu'ils ne sont pas requalifiés
-(liste complète dans `todo.md`) : imports PCAP (#87, #88), validation
+(liste complète dans `todo.md`) : import PCAP (#88), validation
 Windows 11 et VAE (#97, #98), reproductibilité des paquets (#107, #118,
 #119, #120, #121), finitions UI (#89, #90, #91, #92, #101), dette frontend
 (#109, #112, #124).
@@ -84,8 +89,12 @@ Windows 11 et VAE (#97, #98), reproductibilité des paquets (#107, #118,
 
 ## Jalons déjà atteints
 
-- **Fiabilisation CI/release** (archivé) — gates Rust/frontend/core (#135),
-  release atomique et contrôle de reproductibilité (#136), SBOM frontend (#137).
+- **Lots fidélité livrés** — import infini revalidé et fermé (#87), état
+  `Importing` atomique (#139), DLT/rapport qualité (#150), drainage exact
+  (#158) et contrat IPC généré (#142).
+- **Fiabilisation CI/release** (partielle) — gates Rust/frontend/core (#135),
+  publication atomique en draft livrée mais #136 rouvert pour l'identité et
+  l'immuabilité des artefacts ; SBOM frontend initial (#137).
 - **Méthodologie de build sécurisé Tauri** (archivé) — méthodologie livrée,
   écarts transférés vers #94, #143, #146, #162 et #163.
 - **Revue reproducible builds** (archivé) — suites actives : #107, #119, #120,

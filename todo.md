@@ -1,7 +1,7 @@
 # Backlog SONAR — de la bêta avancée au produit Pro
 
-> Dernière synchronisation GitHub : 15/07/2026
-> Source : audit complet bêta → pro du 13/07/2026
+> Dernière synchronisation GitHub : 20/07/2026
+> Sources : audits complets bêta → pro des 13/07 et 17/07/2026
 > Règle : les issues GitHub sont la source de vérité ; ce fichier fournit la
 > priorité et l'ordre d'exécution. `sprint.md` décrit uniquement le sprint actif.
 > Priorisation détaillée :
@@ -9,15 +9,20 @@
 
 ## Ordre immédiat
 
-1. Revalider [#87](https://github.com/Sonar-team/Sonar_desktop_app/issues/87)
-   et rendre les skips de
-   [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) visibles.
-2. Corriger l'atomicité [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139).
-3. Définir la comptabilité [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150).
-4. Corriger le drainage [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158).
-5. Qualifier avec le corpus complet #151.
-6. Générer l'IPC [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142).
-7. Stabiliser l'identité [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154).
+1. Supprimer l'interblocage start/stop
+   [#166](https://github.com/Sonar-team/Sonar_desktop_app/issues/166).
+2. Refuser les imports vides et les resets concurrents
+   [#167](https://github.com/Sonar-team/Sonar_desktop_app/issues/167).
+3. Stabiliser l'identité d'actif contextualisée
+   [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154).
+4. Terminer le corpus, les cas malformés et le fuzzing
+   [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151).
+5. Prouver l'exactitude PCAP → matrice par oracle TShark
+   [#168](https://github.com/Sonar-team/Sonar_desktop_app/issues/168).
+6. Finir la validation Windows/frontend des chemins
+   [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88).
+7. Fermer les garanties transverses encore ouvertes dans
+   [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150).
 
 #161 et #162 peuvent avancer en parallèle sur leurs sous-tâches isolées.
 
@@ -26,14 +31,16 @@
 Suivi : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 
 - [x] **P0** [#87](https://github.com/Sonar-team/Sonar_desktop_app/issues/87) — reproduire l'import infini ou le fermer avec preuve et test *(fermée le 14/07, non reproductible avec preuves ; reliquat UI dans #161)*
-- [ ] **P0** [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) — supprimer les skips silencieux, puis construire le corpus complet *(skips supprimés le 14/07 — corpus nDPI + PCAPNG forgés ; reste le fuzzing)*
-- [x] **P0** [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) — réserver atomiquement l'état `Importing` pendant toute conversion *(fait le 14/07)*
-- [x] **P0** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — détecter le DLT et comptabiliser exhaustivement les résultats de parsing *(15/07 : rapport qualité visible ; identité RAW/SLL/SLL2 réimportable sans `link_details`, fusion multi-sondes préservée)*
+- [ ] **P0** [#166](https://github.com/Sonar-team/Sonar_desktop_app/issues/166) — éliminer l'interblocage start/stop découvert par l'audit du 17/07
+- [ ] **P0** [#167](https://github.com/Sonar-team/Sonar_desktop_app/issues/167) — refuser les imports vides et les resets concurrents sans mutation
+- [ ] **P0** [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) — supprimer les skips silencieux, puis construire le corpus complet *(skips supprimés le 14/07 — corpus nDPI + PCAPNG forgés ; restent la qualification exhaustive et le fuzzing)*
+- [x] **P0** [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) — réserver atomiquement l'état `Importing` pendant toute conversion *(lot livré le 14/07 ; reliquats transférés dans #167)*
+- [x] **P0** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — détecter le DLT et livrer le rapport de parsing *(lot du sprint livré le 15/07 ; issue maintenue ouverte pour catégories fines, export/projet et preuve exhaustive)*
 - [x] **P0** [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) — ne perdre aucun paquet accepté à l'arrêt ou au plafond de flux *(fait le 14/07)*
 - [x] **P0** [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) — générer et tester le contrat IPC Rust ↔ TypeScript *(rouverte puis refermée le 15/07 après audit : conversion `to_contract` exhaustive imposée par le compilateur, `#[ts(optional)]` sur les champs réellement omissibles, gate CI corrigée (`git status`, pas `git diff` seul), `protocol_version` opérationnel sur les trois chemins de session — voir sprint.md)*
 - [ ] **P0** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée par site, capteur, interface et VLAN
 - [ ] **P1 validation** [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) — revalider immédiatement les chemins espaces/Unicode *(backend testé le 14/07 ; restent Windows et front)*
-- [ ] **P1** *(sans issue — à ouvrir)* — créer les fichiers de test (pcap simples forgés + matrices CSV attendues) et les tests d'intégration couvrant import pcap, conversion pcap → matrice, export et ré-import de matrice *(arborescence `src-tauri/test_files/pcaps/` créée le 16/07 avec un premier couple pcapng/CSV ; la chaîne `convert_from_pcap_list` et `sonar-flows-core::pcap` restent sans aucun test)*
+- [ ] **P1** [#168](https://github.com/Sonar-team/Sonar_desktop_app/issues/168) — créer les vérités terrain et tests d'intégration PCAP → matrice → export/réimport selon le [plan TShark](project_management/plan_exactitude_matrices_tshark.md) *(premier couple PCAPNG/CSV créé ; comparaison flux par flux et câblage CI à démarrer)*
 
 La Definition of Done détaillée est dans `sprint.md` et dans l'issue #165.
 
@@ -49,6 +56,7 @@ La Definition of Done détaillée est dans `sprint.md` et dans l'issue #165.
 
 ## Sprint suivant — distribution professionnelle
 
+- [ ] **P0 rouverte** [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136) — construire une fois, tester puis publier les mêmes artefacts sans `--clobber`
 - [ ] **P0** [#94](https://github.com/Sonar-team/Sonar_desktop_app/issues/94) — Authenticode, Developer ID, notarisation et Apple Silicon
 - [ ] **P0** [#146](https://github.com/Sonar-team/Sonar_desktop_app/issues/146) — E2E Tauri et installateurs réellement testés sur chaque OS
   - [ ] Ajouter Cypress Component + E2E navigateur pour les parcours Vue/Vite
@@ -97,7 +105,7 @@ sprint.
 ## Réalisé récemment
 
 - [x] [#135](https://github.com/Sonar-team/Sonar_desktop_app/issues/135) — gates CI Rust/frontend/core
-- [x] [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136) — release atomique et contrôle de reproductibilité
+- [ ] [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136) — publication draft livrée ; identité des artefacts et reruns immuables restent après réouverture
 - [x] [#137](https://github.com/Sonar-team/Sonar_desktop_app/issues/137) — SBOM frontend
 - [x] [#140](https://github.com/Sonar-team/Sonar_desktop_app/issues/140) — pool de buffers jumbo
 - [x] [#141](https://github.com/Sonar-team/Sonar_desktop_app/issues/141) — télémétrie de backpressure

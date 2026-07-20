@@ -10,14 +10,14 @@
 
 | Epic | Périmètre | Issues principales |
 |---|---|---|
-| [capture](capture/epic.md) | Capture live, filtres, arrêt fidèle, performance | #158, #90, #132, #156 |
-| [import](import/epic.md) | Import PCAP/PCAPNG, parsing, corpus CI | #150, #139, #151, #87, #88 |
+| [capture](capture/epic.md) | Capture live, filtres, arrêt fidèle, performance | #158, #166, #90, #132, #156 |
+| [import](import/epic.md) | Import PCAP/PCAPNG, parsing, corpus CI | #150, #139, #151, #167, #168, #87, #88 |
 | [visualisation](visualisation/epic.md) | Matrice de flux, graphe, tri/édition/fusion | #160, #92 |
 | [actifs](actifs/epic.md) | Identité d'actif, labels, inventaire, baseline | #154, #164 |
 | [projets-sessions](projets-sessions/epic.md) | Persistance, autosave, récupération, manifest | #159 |
 | [exports-rapports](exports-rapports/epic.md) | Sauvegarde/export, support bundle, rapports | #111, #102, #164 |
 | [interface](interface/epic.md) | Intégrité frontend, accessibilité, finitions UI | #161, #144, #145 |
-| [distribution](distribution/epic.md) | Signatures, installateurs, gates, reproductibilité | #94, #146, #162 |
+| [distribution](distribution/epic.md) | Signatures, installateurs, gates, reproductibilité | #94, #136, #146, #162 |
 | [securite](securite/epic.md) | Modèle de menace, moindre privilège, contrat IPC | #96, #143, #142 |
 
 ## Statuts

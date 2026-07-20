@@ -1,6 +1,6 @@
 # Sprint : chaîne DevSecOps frontend
 
-> Statut : planifié
+> Statut : en cours (partiel, chantier parallèle hors sprint produit #165)
 > Dernière revue : 17/07/2026
 > Périmètre : frontend Vue/TypeScript, dépendances npm résolues par Deno et
 > contrôles GitHub Actions.
@@ -22,12 +22,10 @@ ni l'audit des dépendances, ni la protection runtime par CSP.
 - Le build Vite est utilisé par la chaîne Tauri.
 - Les versions et le graphe de dépendances sont verrouillés par
   `package.json`, `deno.json` et `deno.lock`.
-- ESLint, Prettier, SAST JavaScript/Vue et détection de secrets ne sont pas
-  encore des gates frontend dédiées. L'intégration ESLint est maintenant
-  amorcée avec `eslint.config.js` et `deno task lint` ; le traitement des
-  violations existantes reste le travail FE-01. Prettier est intégré pour les
-  nouveaux fichiers de configuration ; le reformatage progressif de `src/`
-  reste le travail FE-02 afin d'éviter un diff massif.
+- ESLint et Prettier sont désormais des gates frontend dédiées
+  (commits `34dca21c` et `85a431f` du 17/07).
+- SAST JavaScript/Vue, audit de dépendances dédié et détection de secrets
+  restent à livrer.
 
 ## Périmètre
 
@@ -55,6 +53,8 @@ ni l'audit des dépendances, ni la protection runtime par CSP.
 
 ### FE-01 — Lint ESLint Vue/TypeScript
 
+Statut : **livré pour la gate initiale**, durcissement progressif restant.
+
 - Ajouter ESLint flat config, `typescript-eslint` et `eslint-plugin-vue`.
 - Activer les règles recommandées et les règles TypeScript strictes utiles.
 - Interdire au minimum `any` non justifié, `eval`, `new Function` et les
@@ -64,11 +64,16 @@ ni l'audit des dépendances, ni la protection runtime par CSP.
 
 ### FE-02 — Formatage et hygiène du diff
 
+Statut : **livré pour la gate `format:check`**, reformatage progressif restant.
+
 - Ajouter Prettier avec configuration versionnée.
 - Ajouter `deno task format:check`.
 - Ne pas mélanger un reformatage massif avec une correction fonctionnelle.
 
 ### FE-03 — Gates frontend CI
+
+Statut : **partiellement livré** ; lint et format sont branchés, la chaîne
+complète reste à vérifier sur les workflows de release.
 
 Le job frontend doit exécuter dans cet ordre :
 

@@ -1,10 +1,10 @@
 # Sprint: Fiabilisation CI et release
 
-> Statut : archivé — périmètre initial terminé pour #135, #136 et #137
-> Dernière revue : 13/07/2026
+> Statut : archivé pour #135/#137 ; #136 rouvert en P0
+> Dernière revue : 20/07/2026
 > #138 reste ouverte en P2 : Npcap est un prérequis externe détecté par NSIS,
 > avec redirection officielle ; la discussion Nmap viendra ensuite.
-> Les nouveaux P0 de release sont #94, #146 et #162.
+> Les P0 de release ouverts sont #94, #136, #146 et #162.
 >
 > Suivi GitHub: [#135](https://github.com/Sonar-team/Sonar_desktop_app/issues/135),
 > [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136),
@@ -31,10 +31,11 @@ désormais suivie dans le sprint actif #165.
    - `cargo fmt` corrigé dans les deux workspaces puis gate `--check` ;
    - artefact macOS renommé selon la cible réelle (`x86_64-apple-darwin`).
 2. **Release atomique** (#136)
-   - release créée en draft, publiée seulement après build + smoke +
-     hashes + attestations sur toutes les plateformes ;
-   - reproductibilité démontrée sur des builds réellement isolés
-     (checkout/caches distincts), comparaison sur les artefacts livrés.
+   - livré : release créée en draft et publiée après les validations
+     principales ;
+   - rouvert le 20/07 : construire une seule fois puis tester, scanner,
+     signer, attester et publier les mêmes octets, avec permissions minimales
+     et sans remplacement `--clobber`.
 3. **SBOM frontend complet** (#137)
    - contournement de la non-prise en charge de `deno.lock` par Syft
      (catalogage de `node_modules/` ou lockfile dérivé) ;
@@ -51,6 +52,8 @@ désormais suivie dans le sprint actif #165.
   frontend) est rouge.
 - Un tag de release dont un build échoue ne laisse aucune release publique
   visible.
+- Les artefacts testés sont exactement ceux publiés et un rerun ne remplace
+  jamais une release déjà publique (#136).
 - Le SBOM frontend d'une release candidate liste les dépendances JS réelles.
 - Aucun installeur Npcap n'est présent dans le dépôt ou les bundles ; le NSIS
   détecte le prérequis et redirige vers la page officielle.

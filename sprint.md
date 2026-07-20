@@ -1,8 +1,10 @@
 # Sprint P0 — Fidélité des données et intégrité des sessions
 
-> Statut : actif
-> Dernière revue : 15/07/2026 (rapport qualité, IPC généré, round-trip RAW/SLL/SLL2)
-> Source : audit bêta → pro du 13/07/2026
+> Statut : actif — orange
+> Dernière synchronisation : 20/07/2026
+> Avancement du plan initial : 6 lots sur 9 ; Definition of Done : 6/10
+> Référence vérifiée : `main` au SHA `a8d8b5a6`
+> Sources : audits bêta → pro des 13/07 et 17/07/2026
 > Suivi GitHub : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 > Priorisation :
 > [project_management/priorisation_beta_to_pro.md](project_management/priorisation_beta_to_pro.md)
@@ -31,19 +33,24 @@ ignoré, fusionné ou remplacé silencieusement.
 
 4. [x] [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) :
    réserver `Importing` pendant toute la conversion. *(14/07 : phase
-   `Importing` + guard RAII, tests de course déterministes.)*
+   `Importing` + guard RAII, tests de course déterministes. Le refus du reset
+   concurrent et des imports vides est désormais suivi explicitement par
+   [#167](https://github.com/Sonar-team/Sonar_desktop_app/issues/167)).*
 5. [x] [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) :
    définir le résultat canonique de parsing et le rapport qualité.
    *(14-15/07 : DLT réel, refus avant mutation, préambule `#SFMS`, rapport
    qualité visible et DLT documentés. Round-trip d'identité RAW/SLL/SLL2
    fermé sans `link_details` : les métadonnées cooked du point d'observation
    ne segmentent pas les conversations multi-sondes ; fixtures réelles SLL et
-   SLL2 testées bout en bout.)*
+   SLL2 testées bout en bout. Ce lot du sprint est livré, mais #150 reste
+   ouverte pour les catégories fines, l'export/projet et la preuve exhaustive.)*
 6. [x] [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) :
    drainer arrêt et plafond avec des compteurs exacts. *(14/07 : drainage au
    plafond, compteurs intégrés/illisibles, récapitulatif final.)*
 7. [ ] [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) :
-   compléter multi-DLT, malformé, PCAPNG et fuzzing.
+   compléter multi-DLT, malformé, PCAPNG et fuzzing. La preuve différentielle
+   PCAP → matrice est suivie dans
+   [#168](https://github.com/Sonar-team/Sonar_desktop_app/issues/168).
 
 ## Phase 2 — intégration et identité
 
@@ -195,12 +202,29 @@ ignoré, fusionné ou remplacé silencieusement.
 9. [ ] [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) :
    stabiliser l'identité d'actif contextualisée.
 
+## Risques P0 apparus pendant le sprint
+
+Ces défauts ont été confirmés sur le code courant pendant la synchronisation
+du 20/07. Ils s'ajoutent aux garanties à fermer sans modifier le décompte des
+neuf lots du plan initial.
+
+- [ ] [#166](https://github.com/Sonar-team/Sonar_desktop_app/issues/166) :
+  supprimer l'interblocage possible entre démarrage et arrêt concurrents ;
+- [ ] [#167](https://github.com/Sonar-team/Sonar_desktop_app/issues/167) :
+  refuser les imports vides et les resets concurrents sans perdre la session.
+
+## Chantier qualité rattaché
+
+- [ ] [#168](https://github.com/Sonar-team/Sonar_desktop_app/issues/168) — P1 :
+  prouver l'exactitude PCAP → matrice avec une vérité terrain TShark hors ligne.
+
 ## Livrables
 
 - classification canonique partagée cœur, CLI et desktop ;
 - égalité vérifiable entre paquets lus et toutes les catégories ;
 - pertes noyau, interface et application distinguées ;
-- import protégé contre toute capture/reset concurrent ;
+- import protégé contre une capture ou un second import concurrent ;
+- reset concurrent et import vide refusés avant mutation (#167) ;
 - arrêt sans paquet accepté abandonné silencieusement ;
 - corpus assaini ou généré déterministement ;
 - contrat IPC généré et exhaustif ;
@@ -212,6 +236,8 @@ ignoré, fusionné ou remplacé silencieusement.
   double batch, déduplication des fichiers et déverrouillage `finally` ;
 - [#162](https://github.com/Sonar-team/Sonar_desktop_app/issues/162) :
   workflow qualité commun aux PR et releases ;
+- [#168](https://github.com/Sonar-team/Sonar_desktop_app/issues/168) :
+  préparation des fixtures et de la vérité terrain TShark ;
 - conception de [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159),
   sans figer son schéma avant #154.
 
@@ -225,8 +251,10 @@ ignoré, fusionné ou remplacé silencieusement.
 - [x] Le rapport final traverse un IPC généré et est visible. *(#142, 15/07 ;
   export dédié du rapport non couvert — l'export CSV de la matrice existe déjà)*
 - [ ] Deux actifs de même IP sur des VLAN/sites distincts ne sont pas fusionnés.
-- [ ] Les courses et chemins d'arrêt ont des tests déterministes.
-- [ ] Typecheck, tests, builds, fmt et Clippy strict sont verts.
+- [ ] Les courses et chemins d'arrêt ont des tests déterministes complets
+  (#166 et #167 restent ouverts).
+- [ ] Typecheck, tests, builds, fmt et Clippy strict sont verts sur le SHA
+  courant.
 - [x] Les DLT supportés et limites sont documentés. *(README, 15/07)*
 
 ## Hors périmètre

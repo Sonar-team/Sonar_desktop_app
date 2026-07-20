@@ -1,7 +1,9 @@
 # Plan : preuve d'exactitude des matrices par test différentiel SONAR vs TShark
 
-> Statut : à démarrer — rattaché au sprint de fidélité #165 (tâche « tests
-> d'intégration pcap/CSV ») et prépare [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151)
+> Statut : à démarrer — suivi par
+> [#168](https://github.com/Sonar-team/Sonar_desktop_app/issues/168), rattaché
+> au sprint de fidélité #165 et préparant
+> [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151)
 > Dernière revue : 17/07/2026
 > La preuve d'exactitude précède toute réintégration de la matrice dans
 > l'UI (#160) : on ne réaffiche pas une matrice dont la fidélité n'est pas

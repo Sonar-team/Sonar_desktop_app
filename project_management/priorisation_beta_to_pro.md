@@ -1,7 +1,7 @@
 # Priorisation SONAR — bêta avancée vers 1.0 Pro
 
 > Statut : référentiel actif
-> Dernière revue : 13/07/2026
+> Dernière revue : 20/07/2026
 > Source de vérité opérationnelle : issues GitHub
 > Sprint actif : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 
@@ -22,14 +22,13 @@ devenir pour autant un blocage plus grave.
 
 | Ordre | Issue | Action |
 |---:|---|---|
-| 1 | [#87](https://github.com/Sonar-team/Sonar_desktop_app/issues/87) | Reproduire l'import infini ou le fermer avec preuve et test |
-| 2 | [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) | Faire échouer explicitement les tests dont la fixture manque |
-| 3 | [#139](https://github.com/Sonar-team/Sonar_desktop_app/issues/139) | Réserver atomiquement l'état `Importing` |
-| 4 | [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) | Définir le résultat canonique de parsing et le rapport qualité |
-| 5 | [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) | Corriger le drainage avec le nouveau contrat de compteurs |
-| 6 | [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) | Compléter corpus multi-DLT, malformé et fuzzing |
-| 7 | [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) | Générer le contrat IPC depuis Rust |
-| 8 | [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) | Stabiliser l'identité d'actif avant le format de projet |
+| 1 | [#166](https://github.com/Sonar-team/Sonar_desktop_app/issues/166) | Supprimer l'interblocage start/stop |
+| 2 | [#167](https://github.com/Sonar-team/Sonar_desktop_app/issues/167) | Refuser imports vides et resets concurrents |
+| 3 | [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) | Stabiliser l'identité d'actif avant le format de projet |
+| 4 | [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151) | Compléter corpus multi-DLT, malformé et fuzzing |
+| 5 | [#168](https://github.com/Sonar-team/Sonar_desktop_app/issues/168) | Prouver l'exactitude PCAP → matrice avec TShark |
+| 6 | [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) | Finir la validation Windows et frontend des chemins |
+| 7 | [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) | Fermer catégories fines, export/projet et preuves restantes |
 
 Deux chantiers peuvent commencer en parallèle :
 
@@ -41,7 +40,10 @@ Deux chantiers peuvent commencer en parallèle :
 
 ## Flux A — fidélité et sessions
 
-`#87/#151 → #139 → #150 → #158 → #151 complet → #142 → #154 → #159`
+`#166/#167 → #154 → #151/#168 → #159`
+
+Les lots #87, #139, #142 et #158 sont livrés. Le lot cœur de #150 est livré,
+mais l'issue reste ouverte pour ses garanties transverses.
 
 - Le schéma de projet [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159)
   ne doit pas être figé avant l'identité d'actif #154.
@@ -60,7 +62,7 @@ Deux chantiers peuvent commencer en parallèle :
 
 ## Flux C — distribution professionnelle
 
-`#162 → #143/#96 → #94 → #146 → #163 → Release Candidate`
+`#162/#136 → #143/#96 → #94 → #146 → #163 → Release Candidate`
 
 - #162 peut démarrer immédiatement.
 - #146 est la gate finale : application installée, réellement lancée et testée
@@ -71,16 +73,20 @@ Deux chantiers peuvent commencer en parallèle :
 
 ## Classement exhaustif
 
-### P0 — bloque la sortie de bêta
+### P0 ouverts — bloquent la sortie de bêta
 
-- #87, #94, #139, #142, #146, #150, #151, #154
-- #158, #159, #160, #161, #162
+- #94, #136, #146, #150, #151, #154
+- #159, #160, #161, #162, #166, #167
 - #165 est l'issue de suivi du sprint P0
+
+### P0 livrés récemment
+
+- #87, #139, #142 et #158
 
 ### P1 — obligatoire avant 1.0 Pro
 
 - #88, #89, #90, #92, #96, #97, #98, #102
-- #109, #111, #132, #143, #144, #145, #163
+- #109, #111, #132, #143, #144, #145, #163, #168
 
 ### P2 — important après la stabilisation
 

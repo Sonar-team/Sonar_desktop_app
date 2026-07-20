@@ -1,7 +1,7 @@
 # Sprint: performance capture sous forte charge réseau
 
 > Statut : backlog P1 — repris après le sprint de fidélité #165
-> Dernière revue : 13/07/2026
+> Dernière revue : 17/07/2026
 > Les optimisations ne doivent jamais précéder la comptabilité exacte des
 > pertes ni modifier le résultat fonctionnel.
 >

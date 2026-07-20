@@ -1,6 +1,6 @@
 # Feature : fidélité du parsing et détection du DLT
 
-> Epic : import — Statut : sprint actif (P0)
+> Epic : import — Statut : lot du sprint livré, issue ouverte (P0)
 > Issue : [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150)
 
 Détecter le DLT du fichier, rejeter explicitement les DLT non supportés
@@ -11,5 +11,6 @@ vendor).
 
 ## User stories
 
-- [ ] US-01 — à rédiger : voir un bilan « paquets lus = somme des catégories »
-- [ ] US-02 — à rédiger : être prévenu avant import qu'un DLT n'est pas supporté
+- [ ] US-01 — voir un bilan fin « paquets lus = somme des catégories »
+  (rapport global livré ; catégories fines et export/projet restent dans #150)
+- [x] US-02 — être prévenu avant mutation qu'un DLT n'est pas supporté

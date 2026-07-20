@@ -1,6 +1,6 @@
 # Feature : contrat IPC Rust ↔ TypeScript
 
-> Epic : securite — Statut : sprint actif (P1 stretch)
+> Epic : securite — Statut : livré le 15/07/2026 (P0 fermé)
 > Issue : [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142)
 
 Générer les types TypeScript depuis les définitions Rust et tester le
@@ -9,5 +9,5 @@ events et stores.
 
 ## User stories
 
-- [ ] US-01 — à rédiger : une modification de commande Rust incompatible
-  casse la CI avant d'atteindre l'utilisateur
+- [x] US-01 — une modification de contrat Rust incompatible casse la CI avant
+  d'atteindre l'utilisateur
