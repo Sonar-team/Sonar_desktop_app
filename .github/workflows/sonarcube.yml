@@ -13,6 +13,30 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: Install frontend dependencies
+        run: deno install --frozen
+
+      - name: Generate frontend coverage
+        run: |
+          deno test --allow-env --clean \
+            --coverage=coverage/frontend src/tests/
+          deno coverage --lcov \
+            --include='^file:.*/src/' \
+            --exclude='/src/tests/' \
+            --output=coverage/frontend-lcov.info \
+            coverage/frontend
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f
         env:
