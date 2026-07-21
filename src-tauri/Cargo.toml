@@ -63,6 +63,7 @@ libc = "0.2.186"
 tauri-plugin-fs = "2.5.1"
 
 csv = "1.4.0"
+calamine = { version = "0.36.0", default-features = false, features = ["dates"] }
 dirs = "6.0.0"
 
 colored = "3.1.1"

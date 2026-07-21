@@ -2,6 +2,16 @@
 
 ## Non publié
 
+## ✨ Améliorations
+
+- **Import direct des matrices Excel** : le sélecteur et le glisser-déposer
+  acceptent désormais les fichiers `.xlsx`. La première feuille est lue avec
+  le même schéma et la même validation stricte que les matrices CSV ; les
+  colonnes supplémentaires, même insérées au milieu, sont ignorées tant que
+  les en-têtes Sonar sont conservés. Les dates Excel sont normalisées au
+  format SFMS et les imports mixtes CSV/XLSX conservent la provenance de
+  chaque fichier.
+
 ## 🛠 Corrections
 
 - **Barre de statut** : suppression du compteur redondant des paquets intégrés

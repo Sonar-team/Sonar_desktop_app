@@ -105,7 +105,7 @@
         <div class="separator matrix-separator"></div>
         <div class="file-group">
           <button class="btn btn-add text" @click="addMatrixFiles" :disabled="isConverting">
-            Ajouter une ou plusieurs matrices (CSV)
+            Ajouter une ou plusieurs matrices (CSV ou XLSX)
           </button>
           <button v-if="matrixFiles.length > 0" class="btn btn-clear" @click="clearMatrixFiles" :disabled="isConverting">
             Effacer
@@ -202,7 +202,7 @@ export default defineComponent({
     dropHint(): string {
       return this.mode === 'csv'
         ? 'Déposez un fichier de labels (.csv)'
-        : 'Déposez des captures (.pcap, .pcapng, .cap) ou des matrices (.csv)';
+        : 'Déposez des captures (.pcap, .pcapng, .cap) ou des matrices (.csv, .xlsx)';
     },
   },
 
@@ -217,6 +217,7 @@ export default defineComponent({
       if (this.isConverting) return;
       const ext = (p: string) => (p.split('.').pop() ?? '').toLowerCase();
       const pcapExts = ['pcap', 'pcapng', 'cap'];
+      const matrixExts = ['csv', 'xlsx'];
 
       if (this.mode === 'csv') {
         const csv = paths.find((p) => ext(p) === 'csv');
@@ -230,11 +231,11 @@ export default defineComponent({
         return;
       }
 
-      // Mode pcap : .pcap -> liste captures, .csv -> liste matrices.
+      // Mode pcap : captures réseau d'un côté, matrices CSV/XLSX de l'autre.
       const pcaps = paths.filter((p) => pcapExts.includes(ext(p)));
-      const matrices = paths.filter((p) => ext(p) === 'csv');
+      const matrices = paths.filter((p) => matrixExts.includes(ext(p)));
       if (pcaps.length === 0 && matrices.length === 0) {
-        info('drop ignoré : ni .pcap ni .csv');
+        info('drop ignoré : ni capture réseau ni matrice CSV/XLSX');
         return;
       }
       if (pcaps.length > 0) {
@@ -254,12 +255,12 @@ export default defineComponent({
     },
 
     addMatrixFiles() {
-      return this.addFiles('matrix', ['csv']);
+      return this.addFiles('matrix', ['csv', 'xlsx']);
     },
 
     async addFiles(type: 'pcap' | 'csv' | 'matrix', extensions: string[]) {
         const label = type === 'csv' ? 'Label File'
-          : type === 'matrix' ? 'Matrice CSV'
+          : type === 'matrix' ? 'Matrice CSV ou XLSX'
           : 'Capture File';
         useCaptureStore().isImporting = true;
 

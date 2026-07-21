@@ -83,7 +83,7 @@ SOC rules.
 Chaque paquet est parsé avec le décodeur de son type de liaison réel —
 jamais « supposé Ethernet » :
 
-| LINKTYPE | Valeur | Capture live | Import PCAP | Réimport matrice CSV |
+| LINKTYPE | Valeur | Capture live | Import PCAP | Réimport matrice CSV/XLSX |
 |---|---|---|---|---|
 | `ETHERNET` | 1 | ✅ | ✅ | ✅ |
 | `RAW` (IP nu) | 101 (DLT 12 en live) | ✅ | ✅ | ✅ |

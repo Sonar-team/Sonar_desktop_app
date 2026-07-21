@@ -1,9 +1,10 @@
-//! Import des matrices de flux CSV (format de `FlowMatrix::export_to_csv`) :
-//! lecture, fusion multi-fichiers avec provenance, reconstruction de la
-//! matrice et du graphe.
+//! Import des matrices de flux CSV ou XLSX (schéma de
+//! `FlowMatrix::export_to_csv`) : lecture, fusion multi-fichiers avec
+//! provenance, reconstruction de la matrice et du graphe.
 
+use calamine::{Data, DataType, Range, Reader, Xlsx, open_workbook};
 use log::{error, info};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tauri::{State, ipc::Channel};
 
@@ -22,6 +23,9 @@ use crate::{
 
 use super::{event_channel, labels::copy_labels_to_matrix};
 
+type MatrixRowsByFile = Vec<(String, Vec<FlowMatrixRow>)>;
+type MatrixBatch = (packet_parser::LinkType, MatrixRowsByFile);
+
 #[tauri::command]
 pub fn is_matrix_empty(
     state: tauri::State<'_, Arc<Mutex<FlowMatrix>>>,
@@ -29,15 +33,145 @@ pub fn is_matrix_empty(
     Ok(state.lock()?.matrix.is_empty())
 }
 
-/// Lit un CSV de matrice de flux (format de `FlowMatrix::export_to_csv`),
+/// Lit une matrice de flux (format de `FlowMatrix::export_to_csv`),
 /// entièrement validé avant de toucher à l'état — lecture et validation
-/// stricte (#148) déléguées au cœur partagé. La production passe par
+/// stricte (#148). La production passe par
 /// `read_matrix_rows_per_file` ; ce raccourci ne sert plus qu'aux tests.
 #[cfg(test)]
-fn read_matrix_rows(csv_path: &str) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
-    Ok(sonar_flows_core::csv::read_matrix_rows(
-        std::path::Path::new(csv_path),
-    )?)
+fn read_matrix_rows(path: &str) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
+    Ok(read_matrix_file(Path::new(path))?.1)
+}
+
+fn invalid_matrix(path: &Path, message: impl Into<String>) -> CaptureStateError {
+    sonar_flows_core::SonarCoreError::InvalidCsv {
+        path: path.to_path_buf(),
+        message: message.into(),
+    }
+    .into()
+}
+
+fn is_xlsx(path: &Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("xlsx"))
+}
+
+/// Convertit une cellule Excel en texte CSV. Les dates réellement typées par
+/// Excel sont normalisées dans le format SFMS accepté par `last_seen` ; les
+/// autres cellules gardent leur représentation textuelle.
+fn xlsx_cell_text(cell: &Data, header: &str) -> String {
+    if header == "last_seen"
+        && let Some(date) = cell.as_datetime()
+    {
+        return date.format("%Y-%m-%d %H:%M:%S%.6f UTC").to_string();
+    }
+    cell.to_string()
+}
+
+/// Lit la première feuille d'un classeur XLSX. La première ligne non vide est
+/// soit le préambule `#SFMS`, soit directement l'en-tête. On repasse ensuite
+/// par le désérialiseur CSV et la validation métier existants afin que CSV et
+/// XLSX appliquent exactement le même schéma, y compris l'ignorance des
+/// colonnes supplémentaires.
+fn read_xlsx_matrix(
+    path: &Path,
+) -> Result<(packet_parser::LinkType, Vec<FlowMatrixRow>), CaptureStateError> {
+    let mut workbook: Xlsx<_> = open_workbook(path)
+        .map_err(|error| invalid_matrix(path, format!("ouverture XLSX impossible: {error}")))?;
+    let range = workbook
+        .worksheet_range_at(0)
+        .ok_or_else(|| invalid_matrix(path, "le classeur XLSX ne contient aucune feuille"))?
+        .map_err(|error| invalid_matrix(path, format!("lecture XLSX impossible: {error}")))?;
+
+    parse_xlsx_range(path, &range)
+}
+
+fn parse_xlsx_range(
+    path: &Path,
+    range: &Range<Data>,
+) -> Result<(packet_parser::LinkType, Vec<FlowMatrixRow>), CaptureStateError> {
+    let non_empty_rows: Vec<&[Data]> = range
+        .rows()
+        .filter(|row| row.iter().any(|cell| !cell.is_empty()))
+        .collect();
+    let first = non_empty_rows
+        .first()
+        .ok_or_else(|| invalid_matrix(path, "la première feuille XLSX est vide"))?;
+    let first_cell = first.first().map(ToString::to_string).unwrap_or_default();
+    let (link_type, header_index) = match sonar_flows_core::sfms::parse_preamble(&first_cell)
+        .map_err(|message| invalid_matrix(path, message))?
+    {
+        Some(preamble) => (
+            preamble
+                .link_type
+                .unwrap_or(packet_parser::LinkType::ETHERNET),
+            1,
+        ),
+        None => (packet_parser::LinkType::ETHERNET, 0),
+    };
+    let header_row = non_empty_rows
+        .get(header_index)
+        .ok_or_else(|| invalid_matrix(path, "en-tête de matrice XLSX absent"))?;
+    let headers: Vec<String> = header_row
+        .iter()
+        .map(|cell| cell.to_string().trim().to_string())
+        .collect();
+
+    let mut csv_data = Vec::new();
+    {
+        let mut writer = csv::WriterBuilder::new().from_writer(&mut csv_data);
+        writer.write_record(&headers).map_err(|error| {
+            invalid_matrix(path, format!("conversion XLSX impossible: {error}"))
+        })?;
+        for row in non_empty_rows.iter().skip(header_index + 1) {
+            let record = headers.iter().enumerate().map(|(column, header)| {
+                row.get(column)
+                    .map(|cell| xlsx_cell_text(cell, header))
+                    .unwrap_or_default()
+            });
+            writer.write_record(record).map_err(|error| {
+                invalid_matrix(path, format!("conversion XLSX impossible: {error}"))
+            })?;
+        }
+        writer.flush().map_err(|error| {
+            invalid_matrix(path, format!("conversion XLSX impossible: {error}"))
+        })?;
+    }
+
+    let first_data_line = header_index + 2;
+    let mut reader = csv::ReaderBuilder::new()
+        .trim(csv::Trim::All)
+        .from_reader(csv_data.as_slice());
+    let mut rows = Vec::new();
+    for (index, result) in reader.deserialize::<FlowMatrixRow>().enumerate() {
+        let row = result.map_err(|error| {
+            invalid_matrix(
+                path,
+                format!("ligne {} invalide: {error}", index + first_data_line),
+            )
+        })?;
+        row.validate(link_type).map_err(|error| {
+            invalid_matrix(
+                path,
+                format!("ligne {} invalide: {error}", index + first_data_line),
+            )
+        })?;
+        rows.push(row);
+    }
+    Ok((link_type, rows))
+}
+
+fn read_matrix_file(
+    path: &Path,
+) -> Result<(packet_parser::LinkType, Vec<FlowMatrixRow>), CaptureStateError> {
+    if is_xlsx(path) {
+        read_xlsx_matrix(path)
+    } else {
+        Ok((
+            sonar_flows_core::sfms::matrix_file_link_type(path)?,
+            sonar_flows_core::csv::read_matrix_rows(path)?,
+        ))
+    }
 }
 
 /// Lit chaque fichier de matrice et retourne ses lignes groupées par fichier,
@@ -48,16 +182,29 @@ fn read_matrix_rows(csv_path: &str) -> Result<Vec<FlowMatrixRow>, CaptureStateEr
 fn read_matrix_rows_per_file(
     incoming_file_paths: &[String],
     mut on_file_read: impl FnMut(usize, &str, usize),
-) -> Result<Vec<(String, Vec<FlowMatrixRow>)>, CaptureStateError> {
+) -> Result<MatrixBatch, CaptureStateError> {
     if incoming_file_paths.is_empty() {
         return Err(std::io::Error::other("Aucun fichier de matrice sélectionné").into());
     }
 
     let mut files = Vec::with_capacity(incoming_file_paths.len());
+    let mut common_link_type = None;
     for (index, path) in incoming_file_paths.iter().enumerate() {
         let path_buf = PathBuf::from(path);
         let origin = sonar_flows_core::csv::origin_name_from_path(&path_buf);
-        let mut rows = sonar_flows_core::csv::read_matrix_rows(&path_buf)?;
+        let (link_type, mut rows) = read_matrix_file(&path_buf)?;
+        match common_link_type {
+            None => common_link_type = Some(link_type),
+            Some(expected) if expected == link_type => {}
+            Some(expected) => {
+                return Err(sonar_flows_core::SonarCoreError::MixedLinkTypes {
+                    path: path_buf,
+                    found: sonar_flows_core::sfms::link_type_name(link_type),
+                    expected: sonar_flows_core::sfms::link_type_name(expected),
+                }
+                .into());
+            }
+        }
         for row in &mut rows {
             if row.origin.trim().is_empty() {
                 row.origin = origin.clone();
@@ -66,7 +213,9 @@ fn read_matrix_rows_per_file(
         on_file_read(index, path, rows.len());
         files.push((path.clone(), rows));
     }
-    Ok(files)
+    let link_type = common_link_type
+        .ok_or_else(|| std::io::Error::other("Aucun fichier de matrice sélectionné"))?;
+    Ok((link_type, files))
 }
 
 // La production passe par `read_matrix_rows_per_file` (comptabilité par
@@ -77,6 +226,7 @@ fn read_matrix_rows_from_files(
 ) -> Result<Vec<FlowMatrixRow>, CaptureStateError> {
     Ok(
         read_matrix_rows_per_file(incoming_file_paths, |_, _, _| {})?
+            .1
             .into_iter()
             .flat_map(|(_, rows)| rows)
             .collect(),
@@ -156,7 +306,7 @@ pub fn import_matrix_files(
     // commande, swap inclus (#139).
     let _import_guard = crate::state::capture::ImportGuard::acquire(
         capture_state.inner(),
-        "import de matrice CSV",
+        "import de matrice CSV/XLSX",
     )?;
     let on_event = event_channel(&capture_state, on_event)?;
 
@@ -168,12 +318,24 @@ pub fn import_matrix_files(
 
     // Un fichier invalide ne doit pas effacer la matrice courante. Les
     // fichiers doivent porter le même DLT (préambule #SFMS, Ethernet
-    // implicite pour un export antérieur) : fusion inter-DLT refusée.
-    let import_paths: Vec<PathBuf> = incoming_file_paths.iter().map(PathBuf::from).collect();
-    let link_type = sonar_flows_core::csv::common_matrix_link_type(&import_paths)?;
+    // implicite pour un export antérieur) : fusion inter-DLT refusée. Chaque
+    // classeur XLSX n'est ouvert qu'une fois, même pour les gros relevés.
+    let files_total = incoming_file_paths.len();
+    let (link_type, files) =
+        read_matrix_rows_per_file(&incoming_file_paths, |index, path, line_count| {
+            if let Err(e) = on_event.send(CaptureEvent::ImportProgress {
+                file_name: path,
+                file_index: index + 1,
+                files_total,
+                current: line_count,
+                total: line_count,
+            }) {
+                error!("Erreur lors de l'envoi de ImportProgress: {:?}", e);
+            }
+        })?;
 
     // Même principe que l'import PCAP (`send_started_event`) : un import de
-    // matrice CSV est aussi une session, avec sa propre version de contrat
+    // matrice CSV/XLSX est aussi une session, avec sa propre version de contrat
     // IPC (#142) — sans quoi ce chemin n'émettait jamais `Started` et le
     // frontend ne pouvait ni afficher le DLT ni détecter une dérive de
     // version pour cette voie d'import.
@@ -190,18 +352,6 @@ pub fn import_matrix_files(
         error!("Erreur lors de l'envoi de Started: {:?}", e);
     }
 
-    let files_total = incoming_file_paths.len();
-    let files = read_matrix_rows_per_file(&incoming_file_paths, |index, path, line_count| {
-        if let Err(e) = on_event.send(CaptureEvent::ImportProgress {
-            file_name: path,
-            file_index: index + 1,
-            files_total,
-            current: line_count,
-            total: line_count,
-        }) {
-            error!("Erreur lors de l'envoi de ImportProgress: {:?}", e);
-        }
-    })?;
     let line_counts: Vec<(String, usize)> = files
         .iter()
         .map(|(path, rows)| (path.clone(), rows.len()))
@@ -265,7 +415,7 @@ pub fn import_matrix_files(
         if let Err(e) = on_event.send(CaptureEvent::Finished {
             file_name: path,
             packet_total_count: *line_count,
-            // Une matrice CSV est validée ligne à ligne avant import : une
+            // Une matrice CSV/XLSX est validée ligne à ligne avant import : une
             // ligne invalide est fatale (#148), donc tout ce qui est lu est
             // intégré.
             integrated_count: *line_count,
@@ -302,6 +452,56 @@ mod tests {
     fn new_matrix_is_empty() {
         let matrix = FlowMatrix::new();
         assert!(matrix.matrix.is_empty());
+    }
+
+    #[test]
+    fn xlsx_range_accepts_an_extra_column_in_the_middle() {
+        let source_path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_NP_Matrice.csv");
+        let expected = sonar_flows_core::csv::read_matrix_rows(&source_path)
+            .unwrap()
+            .into_iter()
+            .next()
+            .unwrap();
+
+        // Réutilise la sérialisation canonique pour obtenir les en-têtes et
+        // insère une vraie colonne cliente au milieu de la feuille.
+        let mut serialized = Vec::new();
+        {
+            let mut writer = csv::Writer::from_writer(&mut serialized);
+            writer.serialize(&expected).unwrap();
+            writer.flush().unwrap();
+        }
+        let mut reader = csv::Reader::from_reader(serialized.as_slice());
+        let mut headers: Vec<String> = reader
+            .headers()
+            .unwrap()
+            .iter()
+            .map(str::to_string)
+            .collect();
+        let mut values: Vec<String> = reader
+            .records()
+            .next()
+            .unwrap()
+            .unwrap()
+            .iter()
+            .map(str::to_string)
+            .collect();
+        headers.insert(6, "commentaire_client".to_string());
+        values.insert(6, "ajouté dans Excel".to_string());
+
+        let last_column = u32::try_from(headers.len() - 1).unwrap();
+        let mut range = Range::new((0, 0), (1, last_column));
+        for (column, header) in headers.into_iter().enumerate() {
+            range.set_value((0, u32::try_from(column).unwrap()), Data::String(header));
+        }
+        for (column, value) in values.into_iter().enumerate() {
+            range.set_value((1, u32::try_from(column).unwrap()), Data::String(value));
+        }
+
+        let (link_type, rows) = parse_xlsx_range(Path::new("client.xlsx"), &range).unwrap();
+        assert_eq!(link_type, packet_parser::LinkType::ETHERNET);
+        assert_eq!(rows, vec![expected]);
     }
 
     /// Reproduit la construction de `import_matrix_file` (labels puis flux).
@@ -447,7 +647,7 @@ mod tests {
         ];
         let mut progress = Vec::new();
 
-        let files = read_matrix_rows_per_file(&paths, |index, path, rows| {
+        let (_link_type, files) = read_matrix_rows_per_file(&paths, |index, path, rows| {
             progress.push((index, path.to_string(), rows));
         })
         .unwrap();
