@@ -65,4 +65,10 @@ mod test_support {
     pub(super) fn tunnel_pcap() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/ndpi_capwap.pcap")
     }
+
+    pub(super) fn tshark_corpus(name: &str) -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("test_files/pcaps/import/pcap_tshark_corpus")
+            .join(name)
+    }
 }

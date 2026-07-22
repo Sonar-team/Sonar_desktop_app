@@ -135,7 +135,11 @@ jobs:
         working-directory: ./sonar-rust
 
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test --locked --verbose
+        working-directory: ./sonar-rust
+
+      - name: Verify PCAP matrices against committed TShark oracles
+        run: cargo test --locked -p sonar-flows-core --features pcap --test pcap_accuracy --verbose
         working-directory: ./sonar-rust
 
   # Gates frontend : typecheck vue-tsc et tests Deno (#135).

@@ -626,7 +626,7 @@ fn build_matrix_and_graph_from_pcaps(
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_support::{TempDir, tunnel_pcap};
+    use super::super::test_support::{TempDir, tshark_corpus, tunnel_pcap};
     use super::*;
     use crate::errors::import::PcapImportError;
     use crate::state::flow_matrix::FlowMatrixRow;
@@ -694,6 +694,43 @@ mod tests {
             &mut None,
         );
         assert!(missing.is_err(), "fichier absent -> erreur propagée");
+    }
+
+    /// Test ciblé du pipeline appelé par `convert_from_pcap_list` avec les
+    /// quatre DLT réellement supportés. Chaque fichier est importé dans une
+    /// transaction séparée puisque la fusion inter-DLT est refusée par contrat.
+    #[test]
+    fn convert_from_pcap_list_pipeline_imports_real_multi_dlt_corpus() {
+        let labels = crate::state::labels_list::LabelStore::new();
+        let on_event = Channel::new(|_| Ok(()));
+        for (name, expected_link_type, expected_packets) in [
+            ("vlan.pcap", LinkType::ETHERNET, 7_u64),
+            ("raw_ip.pcap", LinkType::RAW, 15),
+            ("linux_sll.pcap", LinkType::LINUX_SLL, 2_702),
+            ("linux_sll2.pcap", LinkType::LINUX_SLL2, 779),
+        ] {
+            let path = tshark_corpus(name);
+            let (matrix, graph) = build_matrix_and_graph_from_pcaps(
+                &[path.to_string_lossy().into_owned()],
+                &labels,
+                &on_event,
+                &mut None,
+            )
+            .unwrap_or_else(|error| panic!("import Tauri de {name}: {error}"));
+
+            assert_eq!(matrix.link_type, Some(expected_link_type), "{name}");
+            assert_eq!(
+                matrix
+                    .to_flat_vec()
+                    .iter()
+                    .map(|row| row.count)
+                    .sum::<u64>(),
+                expected_packets,
+                "comptabilité du wrapper Tauri pour {name}"
+            );
+            assert!(matrix.row_count() > 0, "matrice vide pour {name}");
+            assert!(!graph.nodes.is_empty(), "graphe vide pour {name}");
+        }
     }
 
     #[test]
