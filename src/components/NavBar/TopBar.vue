@@ -41,6 +41,8 @@ import { requestAppExit } from '../../utils/appExit';
 
 type Panel = 'config' | 'pcap' | 'csv' | 'filter' | 'labels';
 
+const BUSY_MESSAGE = "Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.";
+
 export default {
   name: "TopBar",
   emits: ['toggle-config', 'toggle-pcap','toggle-csv', 'toggle-filter', 'toggle-graph', 'toggle-labels'],
@@ -111,110 +113,86 @@ export default {
     }
   },
   methods: {
-    async export_logs() {
-      info("export logs")
-
+    /** Pose le verrou global d'import/export, ferme le panneau actif,
+     * exécute `action`, puis libère le verrou (même en cas d'erreur). Si une
+     * opération est déjà en cours, `action` n'est pas exécutée. */
+    async withImportLock(action: () => Promise<void>) {
       if (useCaptureStore().isImporting) {
-        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        info(BUSY_MESSAGE);
         return;
       }
-
       if (this.activePanel !== null) {
-        this.$emit(`toggle-${this.activePanel}`, false)
+        this.$emit(`toggle-${this.activePanel}`, false);
       }
-      
       useCaptureStore().isImporting = true;
-
-      try{
-        const response = await save({
-          filters: [{
-            name: '.log',
-            extensions: ['log']
-          }],
-          title: 'Sauvegarder les logs',
-          defaultPath: 'sonar.log'
-        });
-
-        if (response) {
-          // Attendez que l'invocation d'API pour sauvegarder soit terminée
-          const saveResponse = await invoke('export_logs', { destination: response });
-          info(`Sauvegarde terminée: ${JSON.stringify(saveResponse)}`);
-          return saveResponse; // Retourner la réponse pour confirmer que c'est terminé
-        } else {
-          info("Aucun chemin de fichier sélectionné");
-          throw new Error("Sauvegarde annulée ou chemin non sélectionné");
-        } 
-      } finally {
-        useCaptureStore().isImporting = false;
-    }
-  },
-
-    async SaveAsCsv() {
-      info("Save as csv");
-
-       if (useCaptureStore().isImporting) {
-        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
-        return;
-      }
-
-      if (this.activePanel !== null) {
-        this.$emit(`toggle-${this.activePanel}`, false)  // Ferme le panneau ouvert avant de sauvegarder
-      }
-
-      useCaptureStore().isImporting = true;
-
       try {
-        const response = await save({
-          filters: [{ name: '.csv', extensions: ['csv'] }],
-          title: 'Sauvegarder la matrice de flux',
-          defaultPath: getCurrentDate() + '_DR_Matrice.csv'
-        });
-
-        if (response) {
-          const saveResponse = await invoke('export_csv', { path: response });
-          info(`response: ${JSON.stringify(saveResponse)}`);
-        } else {
-          info("Aucun chemin sélectionné");
-        }
-      } catch (err) {
-        error(`Erreur sauvegarde csv: ${JSON.stringify(err)}`);
+        await action();
       } finally {
         useCaptureStore().isImporting = false;
       }
     },
-    async SaveLabels() {
-      info("Export des labels");
 
-      if (useCaptureStore().isImporting) {
-        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
-        return;
-      }
-
-      if (this.activePanel !== null) {
-        this.$emit(`toggle-${this.activePanel}`, false)  // Ferme le panneau ouvert avant de sauvegarder
-      }
-
-      useCaptureStore().isImporting = true;
-
-      try {
+    async export_logs() {
+      info("export logs")
+      await this.withImportLock(async () => {
         const response = await save({
-          filters: [{ name: '.csv', extensions: ['csv'] }],
-          title: 'Exporter les labels',
-          defaultPath: getCurrentDate() + '_labels.csv'
+          filters: [{ name: '.log', extensions: ['log'] }],
+          title: 'Sauvegarder les logs',
+          defaultPath: 'sonar.log'
         });
 
-        if (response) {
-          await invoke('export_label_file', { path: response });
-          info("Labels exportés");
-        } else {
-          info("Aucun chemin sélectionné");
+        if (!response) {
+          info("Aucun chemin de fichier sélectionné");
+          throw new Error("Sauvegarde annulée ou chemin non sélectionné");
         }
-      } catch (err) {
-        error(`Erreur export labels: ${err}`);
-        displayCaptureError(err);
-      } finally {
-        useCaptureStore().isImporting = false;
-      }
+        // Attendez que l'invocation d'API pour sauvegarder soit terminée
+        const saveResponse = await invoke('export_logs', { destination: response });
+        info(`Sauvegarde terminée: ${JSON.stringify(saveResponse)}`);
+      });
+    },
+
+    async SaveAsCsv() {
+      info("Save as csv");
+      await this.withImportLock(async () => {
+        try {
+          const response = await save({
+            filters: [{ name: '.csv', extensions: ['csv'] }],
+            title: 'Sauvegarder la matrice de flux',
+            defaultPath: getCurrentDate() + '_DR_Matrice.csv'
+          });
+
+          if (response) {
+            const saveResponse = await invoke('export_csv', { path: response });
+            info(`response: ${JSON.stringify(saveResponse)}`);
+          } else {
+            info("Aucun chemin sélectionné");
+          }
+        } catch (err) {
+          error(`Erreur sauvegarde csv: ${JSON.stringify(err)}`);
+        }
+      });
+    },
+    async SaveLabels() {
+      info("Export des labels");
+      await this.withImportLock(async () => {
+        try {
+          const response = await save({
+            filters: [{ name: '.csv', extensions: ['csv'] }],
+            title: 'Exporter les labels',
+            defaultPath: getCurrentDate() + '_labels.csv'
+          });
+
+          if (response) {
+            await invoke('export_label_file', { path: response });
+            info("Labels exportés");
+          } else {
+            info("Aucun chemin sélectionné");
+          }
+        } catch (err) {
+          error(`Erreur export labels: ${err}`);
+          displayCaptureError(err);
+        }
+      });
     },
     async triggerSave() {
       info("trigger save")
@@ -225,7 +203,7 @@ export default {
       info("reset")
 
       if (useCaptureStore().isImporting) {
-        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
+        info(BUSY_MESSAGE);
         return;
       }
 
@@ -235,86 +213,39 @@ export default {
     },
 
 
+    /** Ouvre `panel` (sauf capture en cours ou `blocked`), en fermant
+     * d'abord le panneau actif s'il y en a un autre. */
+    openPanel(panel: Panel, blocked = false) {
+      if (this.captureStore.isRunning || blocked) return;
+      if (useCaptureStore().isImporting) {
+        info(BUSY_MESSAGE);
+        return;
+      }
+      if (this.activePanel !== null && this.activePanel !== panel) {
+        this.$emit(`toggle-${this.activePanel}`, false);
+      }
+      this.activePanel = panel;
+      this.$emit(`toggle-${panel}`);
+    },
     handleConfigClick() {
       info("[TopBar] Bouton config cliqué");
-
-      if (this.captureStore.isRunning) {
-        return;
-      }
-      if (useCaptureStore().isImporting) {
-        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
-        return;
-      }
-
-
-      if (this.activePanel !== null && this.activePanel !== 'config') {
-        this.$emit(`toggle-${this.activePanel}`, false)
-      };
-      this.activePanel = 'config';
-      this.$emit('toggle-config');
+      this.openPanel('config');
     },
     displayPcapOpener() {
       info("[TopBar] Bouton open cliqué");
-
-      if (useCaptureStore().isImporting) {
-        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
-        return;
-      }
-
-      if (useCaptureStore().hasData || this.captureStore.isRunning) return;
-      if (this.activePanel !== null && this.activePanel !== 'pcap') {
-        this.$emit(`toggle-${this.activePanel}`, false)
-      };
-      this.activePanel = 'pcap';
-      this.$emit('toggle-pcap');
+      // Empêche d'ouvrir le panneau pcap si la matrice de flux contient déjà des données.
+      this.openPanel('pcap', this.captureStore.hasData);
     },
     displayCsvOpener() {
       info("[TopBar] Bouton open cliqué");
-
-      if (useCaptureStore().isImporting) {
-        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
-        return;
-      }
-
-      if (this.captureStore.isRunning) return; // Empêche d'ouvrir le panneau d'import CSV si la matrice de flux contient déjà des données ou si une capture est en cours
-      if (this.activePanel !== null && this.activePanel !== 'csv') {
-        this.$emit(`toggle-${this.activePanel}`, false) // Ferme le panneau ouvert avant d'ouvrir le panneau d'import CSV
-      };
-      this.activePanel = 'csv';
-      this.$emit('toggle-csv');
+      this.openPanel('csv');
     },
     handleLabelsClick() {
-      if (this.captureStore.isRunning) return;
-
-      if (useCaptureStore().isImporting) {
-        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
-        return;
-      }
-
-      if (this.activePanel !== null && this.activePanel !== 'labels') {
-        this.$emit(`toggle-${this.activePanel}`, false)
-      }
-      this.activePanel = 'labels';
-      this.$emit('toggle-labels');
+      this.openPanel('labels');
     },
     handleFilterClick() {
-
-      if (this.captureStore.isRunning) {
-        return;
-      }
-
       info("[TopBar] Bouton filter cliqué");
-
-      if (useCaptureStore().isImporting) {
-        info("Une opération d'importation ou de sauvegarde est déjà en cours. Veuillez patienter.");
-        return;
-      }
-
-      if (this.activePanel !== null && this.activePanel !== 'filter') {
-        this.$emit(`toggle-${this.activePanel}`, false)
-      };
-      this.activePanel = 'filter';
-      this.$emit('toggle-filter');
+      this.openPanel('filter');
     },
     async start() {
       if (this.activePanel !== null || useCaptureStore().isImporting) return;
