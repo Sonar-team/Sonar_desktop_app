@@ -137,6 +137,9 @@ import { classifyLabelImportError } from '../../../utils/labelImport';
 import { LabelConflictReport, LabelImportReport } from '../../../types/labels';
 import ConflictDialog from './ConflictDialog.vue'
 import ArbitrationDialog from './ArbitrationDialog.vue'
+import { MATRIX_EXTENSIONS, PCAP_EXTENSIONS, routeDroppedPaths } from './import/fileTypes';
+import { progressFileNameOf, progressPercentOf } from './import/importProgress';
+import { filterLabelRows } from './import/labelSearch';
 
 
 export default defineComponent({
@@ -187,17 +190,10 @@ export default defineComponent({
       return this.captureStore.importProgress;
     },
     progressPercent(): number {
-      const progress = this.importProgress;
-      if (!progress || progress.filesTotal <= 0) return 0;
-      const fileRatio = progress.total > 0
-        ? Math.min(1, Math.max(0, progress.current / progress.total))
-        : 1;
-      const globalRatio = (progress.fileIndex - 1 + fileRatio) / progress.filesTotal;
-      return Math.min(100, Math.max(0, globalRatio * 100));
+      return progressPercentOf(this.importProgress);
     },
     progressFileName(): string {
-      const progress = this.importProgress;
-      return progress ? (progress.fileName.split(/[\\/]/).pop() ?? progress.fileName) : '';
+      return progressFileNameOf(this.importProgress);
     },
     dropHint(): string {
       return this.mode === 'csv'
@@ -213,41 +209,38 @@ export default defineComponent({
 
     // Route les fichiers déposés (drag & drop) selon le mode du panneau et
     // l'extension : labels en mode csv ; captures/matrices en mode pcap.
+    // Classification déléguée à ./import/fileTypes.ts.
     async handleDroppedPaths(paths: string[]) {
       if (this.isConverting) return;
-      const ext = (p: string) => (p.split('.').pop() ?? '').toLowerCase();
-      const pcapExts = ['pcap', 'pcapng', 'cap'];
-      const matrixExts = ['csv', 'xlsx'];
+      const routing = routeDroppedPaths(paths, this.mode);
 
-      if (this.mode === 'csv') {
-        const csv = paths.find((p) => ext(p) === 'csv');
-        if (!csv) { info('drop ignoré : aucun fichier .csv'); return; }
+      if (routing.kind === 'ignored') {
+        info(this.mode === 'csv'
+          ? 'drop ignoré : aucun fichier .csv'
+          : 'drop ignoré : ni capture réseau ni matrice CSV/XLSX');
+        return;
+      }
+
+      if (routing.kind === 'csv') {
         useCaptureStore().isImporting = true;
         try {
-          await this.importLabelFile(csv);
+          await this.importLabelFile(routing.path);
         } finally {
           useCaptureStore().isImporting = false;
         }
         return;
       }
 
-      // Mode pcap : captures réseau d'un côté, matrices CSV/XLSX de l'autre.
-      const pcaps = paths.filter((p) => pcapExts.includes(ext(p)));
-      const matrices = paths.filter((p) => matrixExts.includes(ext(p)));
-      if (pcaps.length === 0 && matrices.length === 0) {
-        info('drop ignoré : ni capture réseau ni matrice CSV/XLSX');
-        return;
+      if (routing.pcaps.length > 0) {
+        this.packetFiles = Array.from(new Set([...this.packetFiles, ...routing.pcaps]));
       }
-      if (pcaps.length > 0) {
-        this.packetFiles = Array.from(new Set([...this.packetFiles, ...pcaps]));
-      }
-      if (matrices.length > 0) {
-        this.matrixFiles = Array.from(new Set([...this.matrixFiles, ...matrices]));
+      if (routing.matrices.length > 0) {
+        this.matrixFiles = Array.from(new Set([...this.matrixFiles, ...routing.matrices]));
       }
     },
 
     addPcapFiles() {
-      return this.addFiles('pcap', ['pcap', 'pcapng', 'cap']);
+      return this.addFiles('pcap', PCAP_EXTENSIONS);
     },
 
     addCsvFiles() {
@@ -255,7 +248,7 @@ export default defineComponent({
     },
 
     addMatrixFiles() {
-      return this.addFiles('matrix', ['csv', 'xlsx']);
+      return this.addFiles('matrix', MATRIX_EXTENSIONS);
     },
 
     async addFiles(type: 'pcap' | 'csv' | 'matrix', extensions: string[]) {
@@ -360,7 +353,7 @@ export default defineComponent({
     },
 
     listFilter() {
-      this.filteredlabelRows = this.labelRows.filter((row) => row.some((field) => field.toLowerCase().includes(this.searchInput.toLowerCase())))
+      this.filteredlabelRows = filterLabelRows(this.labelRows, this.searchInput);
     },
 
     async importLabelFile(path: string) {
