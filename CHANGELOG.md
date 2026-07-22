@@ -19,6 +19,14 @@
   expliquer les écarts avec les trames reçues. Les compteurs restent lisibles
   au-delà de 1 000 sans chevauchement.
 
+## **[4.8.2] - 2026-07-22**
+
+## 🛠 Corrections
+
+- **CI de l'oracle PCAP restaurée** : le script ShellCheck utilise désormais
+  une affectation portable de `CDPATH`, la configuration Dependabot est valide
+  et le changelog expose la version attendue par les contrôles de publication.
+
 ## **[4.8.1] - 2026-07-22**
 
 ## ✅ Tests
