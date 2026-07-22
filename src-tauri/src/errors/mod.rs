@@ -320,3 +320,88 @@ mod fidelity_tests {
         );
     }
 }
+
+/// Conversion `sonar_flows_core::SonarCoreError -> CaptureStateError` : les
+/// trois variantes PCAP distinguées (ouverture/lecture/DLT non supporté)
+/// gardent leur identité côté front, le reste retombe sur `Io`.
+#[cfg(test)]
+mod sonar_core_error_conversion_tests {
+    use super::*;
+    use sonar_flows_core::SonarCoreError;
+    use std::path::PathBuf;
+
+    #[test]
+    fn pcap_open_becomes_import_open_file_error() {
+        let err: CaptureStateError = SonarCoreError::PcapOpen {
+            path: PathBuf::from("capture.pcap"),
+            message: "permission refusée".to_string(),
+        }
+        .into();
+        match err {
+            CaptureStateError::Import(PcapImportError::OpenFileError(path, message)) => {
+                assert_eq!(path, "capture.pcap");
+                assert_eq!(message, "permission refusée");
+            }
+            other => panic!("attendu Import(OpenFileError), reçu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn pcap_read_becomes_import_read_packet_error() {
+        let err: CaptureStateError = SonarCoreError::PcapRead {
+            path: PathBuf::from("capture.pcap"),
+            message: "paquet tronqué".to_string(),
+        }
+        .into();
+        match err {
+            CaptureStateError::Import(PcapImportError::ReadPacketError(path, message)) => {
+                assert_eq!(path, "capture.pcap");
+                assert_eq!(message, "paquet tronqué");
+            }
+            other => panic!("attendu Import(ReadPacketError), reçu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn unsupported_link_type_is_preserved() {
+        let err: CaptureStateError = SonarCoreError::UnsupportedLinkType {
+            path: PathBuf::from("capture.pcap"),
+            label: "DLT_RAW".to_string(),
+        }
+        .into();
+        match err {
+            CaptureStateError::Import(PcapImportError::UnsupportedLinkType(path, label)) => {
+                assert_eq!(path, "capture.pcap");
+                assert_eq!(label, "DLT_RAW");
+            }
+            other => panic!("attendu Import(UnsupportedLinkType), reçu {other:?}"),
+        }
+    }
+
+    #[test]
+    fn io_variant_passes_through() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "fichier introuvable");
+        let err: CaptureStateError = SonarCoreError::Io(io_err).into();
+        match err {
+            CaptureStateError::Io(e) => assert_eq!(e.kind(), std::io::ErrorKind::NotFound),
+            other => panic!("attendu Io, reçu {other:?}"),
+        }
+    }
+
+    /// Toute autre variante (pas de pendant PCAP dédié : CSV invalide,
+    /// entrée manquante, DLT mixte…) retombe sur `Io` avec son message
+    /// d'origine, sans perte d'information.
+    #[test]
+    fn other_variants_fall_back_to_io_with_original_message() {
+        let err: CaptureStateError = SonarCoreError::MissingInput.into();
+        match err {
+            CaptureStateError::Io(e) => {
+                assert!(
+                    e.to_string()
+                        .contains("at least one input file is required")
+                );
+            }
+            other => panic!("attendu Io, reçu {other:?}"),
+        }
+    }
+}

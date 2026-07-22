@@ -89,3 +89,113 @@ impl ChannelCapacityPayload {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Arc, Mutex};
+
+    /// (channel_size, current_size, backpressure) capturés à chaque envoi.
+    type CapturedPayloads = Arc<Mutex<Vec<(usize, usize, bool)>>>;
+
+    /// `Channel` de test : capture chaque payload `ChannelCapacityPayload`
+    /// envoyé, sans dépendre d'un contexte Tauri réel.
+    fn recording_channel() -> (Channel<CaptureEvent<'static>>, CapturedPayloads) {
+        let sent = Arc::new(Mutex::new(Vec::new()));
+        let captured = sent.clone();
+        let on_event = Channel::new(move |body| {
+            if let tauri::ipc::InvokeResponseBody::Json(json) = body {
+                let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+                if value["event"] == "channelCapacityPayload" {
+                    let data = &value["data"];
+                    captured.lock().unwrap().push((
+                        data["channelSize"].as_u64().unwrap() as usize,
+                        data["currentSize"].as_u64().unwrap() as usize,
+                        data["backpressure"].as_bool().unwrap(),
+                    ));
+                }
+            }
+            Ok(())
+        });
+        (on_event, sent)
+    }
+
+    #[test]
+    fn raises_backpressure_at_90_percent_fill() {
+        let mut last = ChannelCapacityPayload::default();
+        let (on_event, sent) = recording_channel();
+
+        ChannelCapacityPayload::send_if_changed(&mut last, 90, 100, 1, &on_event).unwrap();
+
+        assert!(last.backpressure);
+        assert_eq!(sent.lock().unwrap().as_slice(), &[(100, 90, true)]);
+    }
+
+    #[test]
+    fn stays_clear_just_under_the_raise_threshold() {
+        let mut last = ChannelCapacityPayload::default();
+        let (on_event, sent) = recording_channel();
+
+        ChannelCapacityPayload::send_if_changed(&mut last, 89, 100, 1, &on_event).unwrap();
+
+        assert!(!last.backpressure);
+        assert_eq!(sent.lock().unwrap().as_slice(), &[(100, 89, false)]);
+    }
+
+    /// Hystérésis (#141) : une fois levé, le drapeau ne retombe qu'en
+    /// dessous du seuil de relâchement (70 %), pas simplement sous 90 %.
+    #[test]
+    fn releases_only_below_the_release_threshold_not_the_raise_threshold() {
+        let mut last = ChannelCapacityPayload::default();
+        let (on_event, _sent) = recording_channel();
+
+        ChannelCapacityPayload::send_if_changed(&mut last, 95, 100, 1, &on_event).unwrap();
+        assert!(last.backpressure);
+
+        // Sous 90 % mais toujours au-dessus de 70 % : le drapeau reste levé.
+        ChannelCapacityPayload::send_if_changed(&mut last, 80, 100, 1, &on_event).unwrap();
+        assert!(last.backpressure, "doit rester levé entre 70 % et 90 %");
+
+        // Sous 70 % : relâché.
+        ChannelCapacityPayload::send_if_changed(&mut last, 65, 100, 1, &on_event).unwrap();
+        assert!(!last.backpressure);
+    }
+
+    #[test]
+    fn no_event_sent_when_nothing_changed() {
+        let mut last = ChannelCapacityPayload::default();
+        let (on_event, sent) = recording_channel();
+
+        ChannelCapacityPayload::send_if_changed(&mut last, 10, 100, 1, &on_event).unwrap();
+        ChannelCapacityPayload::send_if_changed(&mut last, 10, 100, 1, &on_event).unwrap();
+
+        // Un seul événement : le second appel est un no-op (déduplication).
+        assert_eq!(sent.lock().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn event_sent_on_first_call_from_default() {
+        let mut last = ChannelCapacityPayload::default();
+        let (on_event, sent) = recording_channel();
+
+        ChannelCapacityPayload::send_if_changed(&mut last, 0, 100, 1, &on_event).unwrap();
+
+        assert_eq!(
+            sent.lock().unwrap().len(),
+            1,
+            "l'état par défaut diffère de (0, 100, false)"
+        );
+    }
+
+    #[test]
+    fn payload_fields_round_trip_through_the_event() {
+        let mut last = ChannelCapacityPayload::default();
+        let (on_event, sent) = recording_channel();
+
+        ChannelCapacityPayload::send_if_changed(&mut last, 42, 200, 7, &on_event).unwrap();
+
+        assert_eq!(sent.lock().unwrap().as_slice(), &[(200, 42, false)]);
+        assert_eq!(last.channel_size, 200);
+        assert_eq!(last.current_size, 42);
+    }
+}

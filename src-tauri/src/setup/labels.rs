@@ -168,7 +168,12 @@ pub fn clean_csv_field(value: &str) -> &str {
 
 #[cfg(test)]
 mod tests {
-    use super::parse_label_row;
+    use super::{parse_label_row, resync_labels, resync_labels_into_matrix};
+    use crate::state::{
+        flow_matrix::FlowMatrix,
+        graph::{GraphData, GraphUpdate, Node},
+        labels_list::{LabelStore, PcInfoLabel},
+    };
     use netdev::Interface;
     use netdev::ipnet::{Ipv4Net, Ipv6Net};
     use std::net::{Ipv4Addr, Ipv6Addr};
@@ -297,5 +302,103 @@ mod tests {
                 "google public dns".to_string(),
             ))
         );
+    }
+
+    #[test]
+    fn store_row_overrides_pcinfo_row_at_the_same_key() {
+        let mut pcinfo = PcInfoLabel::new();
+        pcinfo.push("aa:bb:cc:dd:ee:ff,192.168.1.1,pc sonar".to_string());
+        let mut store = LabelStore::new();
+        store.add((
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            "192.168.1.1".to_string(),
+            "PC de Cyprien".to_string(),
+        ));
+        let mut matrix = FlowMatrix::new();
+
+        resync_labels_into_matrix(&pcinfo, &store, &mut matrix);
+
+        // Le store (l'utilisateur) est rejoué après pcinfo : il gagne à clé égale.
+        assert_eq!(
+            matrix.get_label("aa:bb:cc:dd:ee:ff", "192.168.1.1"),
+            Some("PC de Cyprien".to_string())
+        );
+    }
+
+    #[test]
+    fn pcinfo_only_rows_survive_the_resync() {
+        let mut pcinfo = PcInfoLabel::new();
+        pcinfo.push("aa:bb:cc:dd:ee:ff,192.168.1.1,pc sonar".to_string());
+        let store = LabelStore::new();
+        let mut matrix = FlowMatrix::new();
+
+        resync_labels_into_matrix(&pcinfo, &store, &mut matrix);
+
+        assert_eq!(
+            matrix.get_label("aa:bb:cc:dd:ee:ff", "192.168.1.1"),
+            Some("pc sonar".to_string())
+        );
+    }
+
+    /// Garde de non-régression #157 : le miroir est entièrement remplacé à
+    /// chaque resync, donc un label retiré du store disparaît vraiment de la
+    /// matrice (l'ancienne sémantique « un import ne désétiquette jamais »
+    /// est abandonnée).
+    #[test]
+    fn a_label_removed_from_the_store_disappears_from_the_matrix() {
+        let pcinfo = PcInfoLabel::new();
+        let mut store = LabelStore::new();
+        store.add((
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            "192.168.1.1".to_string(),
+            "mon-pc".to_string(),
+        ));
+        let mut matrix = FlowMatrix::new();
+        resync_labels_into_matrix(&pcinfo, &store, &mut matrix);
+        assert_eq!(
+            matrix.get_label("aa:bb:cc:dd:ee:ff", "192.168.1.1"),
+            Some("mon-pc".to_string())
+        );
+
+        // Le label disparaît du store (arbitrage / suppression) puis on resynchronise.
+        let store = LabelStore::new();
+        resync_labels_into_matrix(&pcinfo, &store, &mut matrix);
+
+        assert_eq!(
+            matrix.get_label("aa:bb:cc:dd:ee:ff", "192.168.1.1"),
+            None,
+            "le miroir doit refléter la disparition, pas la conserver"
+        );
+    }
+
+    #[test]
+    fn resync_labels_returns_a_node_updated_for_the_new_label() {
+        let pcinfo = PcInfoLabel::new();
+        let mut store = LabelStore::new();
+        store.add((
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            "192.168.1.1".to_string(),
+            "mon-pc".to_string(),
+        ));
+        let mut matrix = FlowMatrix::new();
+        let mut graph = GraphData::new();
+        graph.nodes.insert(
+            "192.168.1.1".to_string(),
+            Node::new(
+                "192.168.1.1".to_string(),
+                "aa:bb:cc:dd:ee:ff".to_string(),
+                "#2196F3",
+                "192.168.1.1".to_string(),
+                None,
+            ),
+        );
+
+        let updates = resync_labels(&pcinfo, &store, &mut matrix, &mut graph);
+
+        assert_eq!(updates.len(), 1);
+        match &updates[0] {
+            GraphUpdate::NodeUpdated(node) => assert_eq!(node.label, Some("mon-pc".to_string())),
+            other => panic!("attendu NodeUpdated, reçu {other:?}"),
+        }
     }
 }

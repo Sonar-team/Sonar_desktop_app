@@ -113,7 +113,7 @@ export async function displayCaptureError(err: unknown) {
   );
 }
 
-function handleExportError(exportError: ExportErrorKind): string {
+export function handleExportError(exportError: ExportErrorKind): string {
   if (
     !exportError || typeof exportError !== "object" || !("kind" in exportError)
   ) {
@@ -136,7 +136,7 @@ function handleExportError(exportError: ExportErrorKind): string {
   }
 }
 
-function handleImportError(importError: ImportErrorKind): string {
+export function handleImportError(importError: ImportErrorKind): string {
   if (
     !importError || typeof importError !== "object" || !("kind" in importError)
   ) {
@@ -163,13 +163,13 @@ function handleImportError(importError: ImportErrorKind): string {
 
 /// Formate une liste d'erreurs en la plafonnant : au-delà de `max` entrées
 /// (mauvais fichier, encodage…), le détail complet noie le diagnostic.
-function capList<T>(items: T[], format: (item: T) => string, max = 8): string {
+export function capList<T>(items: T[], format: (item: T) => string, max = 8): string {
   const shown = items.slice(0, max).map(format).join('\n');
   const rest = items.length - max;
   return rest > 0 ? `${shown}\n… et ${rest} autre${rest > 1 ? 's' : ''}` : shown;
 }
 
-function handleLabelerror(labelError: LabelErrorKind): string {
+export function handleLabelerror(labelError: LabelErrorKind): string {
   if (
     !labelError || typeof labelError !== "object" || !("kind" in labelError)
   ) {

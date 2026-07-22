@@ -41,3 +41,17 @@ pub struct CaptureStatus {
     pub phase: CapturePhase,
     pub session_id: u64,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display_matches_the_snake_case_serde_form() {
+        assert_eq!(CapturePhase::Idle.to_string(), "idle");
+        assert_eq!(CapturePhase::Starting.to_string(), "starting");
+        assert_eq!(CapturePhase::Running.to_string(), "running");
+        assert_eq!(CapturePhase::Stopping.to_string(), "stopping");
+        assert_eq!(CapturePhase::Importing.to_string(), "importing");
+    }
+}

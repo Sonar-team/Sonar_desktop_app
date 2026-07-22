@@ -106,3 +106,37 @@ impl From<Device> for NetDevice {
 //     #[error("Impossible de lister les interfaces réseau")]
 //     DeviceListError(#[from] pcap::Error),
 // }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Garde contre une variante `pcap::ConnectionStatus` ajoutée en amont
+    /// sans son pendant dans le DTO : chaque variante doit se mapper vers
+    /// elle-même, pas retomber silencieusement sur `Unknown`.
+    #[test]
+    fn connection_status_maps_each_variant_to_its_own_dto_variant() {
+        assert!(matches!(
+            ConnectionStatus::from(PcapConnectionStatus::Unknown),
+            ConnectionStatus::Unknown
+        ));
+        assert!(matches!(
+            ConnectionStatus::from(PcapConnectionStatus::Connected),
+            ConnectionStatus::Connected
+        ));
+        assert!(matches!(
+            ConnectionStatus::from(PcapConnectionStatus::Disconnected),
+            ConnectionStatus::Disconnected
+        ));
+        assert!(matches!(
+            ConnectionStatus::from(PcapConnectionStatus::NotApplicable),
+            ConnectionStatus::NotApplicable
+        ));
+    }
+
+    #[test]
+    fn if_flags_carries_the_raw_bits_through() {
+        let flags: IfFlags = PcapIfFlags::from_bits_truncate(0b101).into();
+        assert_eq!(flags.bits, 0b101);
+    }
+}
