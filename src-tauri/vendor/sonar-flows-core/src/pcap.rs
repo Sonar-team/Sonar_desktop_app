@@ -268,7 +268,7 @@ mod tests {
     /// bd03272) : `tcpdump -i any`, cooked v1 et v2.
     fn fixture(name: &str) -> std::path::PathBuf {
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../../src-tauri/test_files/pcaps/import/pcap_tshark_corpus")
+            .join("../../../src-tauri/test_files")
             .join(name)
     }
 
@@ -531,7 +531,7 @@ mod tests {
     fn real_sll_capture_round_trips_its_matrix_identity() {
         let mut matrix = FlowMatrix::new();
         let report =
-            append_pcap_file(&mut matrix, &fixture("linux_sll.pcap")).expect("capture SLL réelle");
+            append_pcap_file(&mut matrix, &fixture("sll.pcap")).expect("capture SLL réelle");
 
         assert_eq!(report.packets, 2702, "toutes les trames du fichier lues");
         assert_eq!(
@@ -557,7 +557,7 @@ mod tests {
     #[test]
     fn real_sll2_capture_round_trips_its_matrix_identity() {
         let mut matrix = FlowMatrix::new();
-        let report = append_pcap_file(&mut matrix, &fixture("linux_sll2.pcap"))
+        let report = append_pcap_file(&mut matrix, &fixture("capture_sll2.pcap"))
             .expect("capture SLL2 réelle");
 
         assert_eq!(report.packets, 779, "toutes les trames du fichier lues");
