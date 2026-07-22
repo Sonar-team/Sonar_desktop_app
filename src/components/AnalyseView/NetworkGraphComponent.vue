@@ -9,14 +9,10 @@ import { defineComponent, markRaw } from "vue"
 import Graph from "graphology"
 import Sigma from "sigma"
 import { EdgeArrowProgram } from "sigma/rendering"
-import forceAtlas2 from "graphology-layout-forceatlas2"
-import FA2Layout from "graphology-layout-forceatlas2/worker"
 import { EdgeCurvedArrowProgram } from "@sigma/edge-curve"
 import { NodeBorderProgram } from "@sigma/node-border"
-import { toBlob } from "@sigma/export-image"
 import { useCaptureStore } from "../../store/capture"
 import { save } from "@tauri-apps/plugin-dialog"
-import { writeFile } from "@tauri-apps/plugin-fs"
 import { GraphData, GraphUpdate, NodeData } from "../../types/capture"
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentDate } from '../../utils/time';
@@ -28,7 +24,6 @@ import {
   EDGE_LABEL_ZOOM,
   PORT_LABEL_ZOOM,
   drawNodeLabel,
-  formatBytes,
   nodeAttributes,
 } from "./graph/graphStyle"
 import {
@@ -37,6 +32,10 @@ import {
   upsertEdge,
   upsertNode,
 } from "./graph/graphSync"
+import { ForceLayoutController, createForceLayoutController } from "./graph/forceLayout"
+import { computeTunnelHighlight, edgeHasTunnel } from "./graph/tunnelHighlight"
+import { buildNodeInfos, nodeSnapshot } from "./graph/nodeInfo"
+import { exportGraphToPng } from "./graph/exportPng"
 
 // Attributs graphology reçus/renvoyés par les reducers Sigma : un sur-
 // ensemble de ce que `nodeAttributes`/`edgeAttributes` (graphStyle.ts)
@@ -71,7 +70,7 @@ export default defineComponent({
     return {
       graph: null as Graph | null,
       renderer: null as Sigma | null,
-      layout: null as InstanceType<typeof FA2Layout> | null,
+      forceLayout: null as ForceLayoutController | null,
 
       forceEnabled: true,
       zoomLevel: 1,
@@ -103,9 +102,6 @@ export default defineComponent({
       // Affichage des labels d'arêtes selon le zoom
       _edgeLabelsShown: false,
       _portLabelsShown: false,
-
-      // Taille du graphe lors du dernier inferSettings du layout
-      _layoutOrder: 0,
 
       // Handlers pour cleanup
       resetHandler: null as (() => void) | null,
@@ -140,7 +136,7 @@ export default defineComponent({
     this.$bus?.on?.('reset', this.resetHandler)
 
     this.startLayout()
-    if (!this.forceEnabled) this.layout?.stop()
+    if (!this.forceEnabled) this.forceLayout?.stop()
   },
 
   beforeUnmount() {
@@ -159,10 +155,9 @@ export default defineComponent({
       this.resetHandler = null
     }
 
-    if (this.layout) {
-      try { this.layout.kill() } catch { /* already stopped */ }
-      this.layout = null
-    }
+    this.forceLayout?.kill()
+    this.forceLayout = null
+
     if (this.renderer) {
       this.renderer.kill()
       this.renderer = null
@@ -176,6 +171,7 @@ export default defineComponent({
       const container = this.$refs.sigmaContainer as HTMLElement
       const graph = new Graph({ multi: true, type: "directed" })
       this.graph = markRaw(graph)
+      this.forceLayout = markRaw(createForceLayoutController(graph))
 
       const renderer = new Sigma(graph, container, {
         allowInvalidContainer: true,
@@ -263,35 +259,16 @@ export default defineComponent({
     },
 
     // === Surbrillance des tunnels ==========================================
-    /**
-     * Surligne la famille de tunnel(s) d'une arête : si elle participe à un
-     * ou plusieurs tunnels (encapIds non vide), la (les) arête(s) externe(s)
-     * du tunnel ET les flux internes qu'il transporte passent au premier
-     * plan, le reste du graphe est estompé. Fonctionne dans les deux sens :
-     * le CAPWAP montre son contenu, un flux interne montre par quel(s)
-     * tunnel(s) il est passé. Retourne true si une famille a été surlignée.
-     */
+    /** Surligne la famille de tunnel(s) de `edgeId` (calcul délégué à
+     * ./graph/tunnelHighlight.ts). Retourne true si une famille a été surlignée. */
     applyTunnelHighlight(edgeId: string): boolean {
-      if (!this.graph?.hasEdge(edgeId)) return false
-      const ids: string[] = this.graph.getEdgeAttribute(edgeId, "encapIds") || []
-      if (!ids.length) return false
+      if (!this.graph) return false
+      const result = computeTunnelHighlight(this.graph, edgeId, this.pinnedTunnelEdge)
+      if (!result) return false
 
-      const wanted = new Set(ids)
-      const edges = new Set<string>()
-      const nodes = new Set<string>()
-      this.graph.forEachEdge((edge, attrs, source, target) => {
-        const edgeIds: string[] = attrs.encapIds || []
-        if (!edgeIds.some((id) => wanted.has(id))) return
-        edges.add(edge)
-        nodes.add(source)
-        nodes.add(target)
-      })
-
-      this.hoveredTunnelEdges = edges
-      this.hoveredTunnelNodes = nodes
-      const idLabel = ids.length === 1 ? `tunnel ${ids[0].slice(0, 8)}…` : `${ids.length} tunnels`
-      const pin = this.pinnedTunnelEdge === edgeId ? "📌 " : ""
-      this.tunnelHoverInfo = `${pin}${idLabel} — ${edges.size} flux liés`
+      this.hoveredTunnelEdges = result.edges
+      this.hoveredTunnelNodes = result.nodes
+      this.tunnelHoverInfo = result.info
       this.renderer?.refresh()
       return true
     },
@@ -307,7 +284,7 @@ export default defineComponent({
         this.clearTunnelHighlight()
         return
       }
-      if (this.graph?.hasEdge(edgeId) && (this.graph.getEdgeAttribute(edgeId, "encapIds") || []).length) {
+      if (this.graph && edgeHasTunnel(this.graph, edgeId)) {
         this.pinnedTunnelEdge = edgeId
         this.applyTunnelHighlight(edgeId)
       } else {
@@ -352,11 +329,7 @@ export default defineComponent({
 
     // === Réinitialisation ==================================================
     resetGraph() {
-      if (this.layout) {
-        try { this.layout.kill() } catch { /* already stopped */ }
-        this.layout = null
-      }
-      this._layoutOrder = 0
+      this.forceLayout?.kill()
       this.graph?.clear()
       this.clearNodeInfos()
       this.unpinTunnelHighlight()
@@ -421,7 +394,7 @@ export default defineComponent({
 
         // Layout recréé avec des réglages adaptés à la taille du graphe.
         this.startLayout()
-        if (!this.forceEnabled) this.layout?.stop()
+        if (!this.forceEnabled) this.forceLayout?.stop()
 
         this.renderer?.getCamera().animatedReset()
 
@@ -432,19 +405,13 @@ export default defineComponent({
 
     // === Gestion label =====================================================
     onNodeClick(nodeId: string) {
-      if (!this.graph?.hasNode(nodeId)) return
-      const attrs = this.graph.getNodeAttributes(nodeId)
+      if (!this.graph) return
+      const snapshot = nodeSnapshot(this.graph, nodeId)
+      if (!snapshot) return
       this.selectedNodeId = nodeId
-      this.selectedNode = {
-        id: nodeId,
-        name: attrs.name,
-        mac: attrs.mac,
-        ip: attrs.ip,
-        color: attrs.color,
-        label: attrs.rawLabel,
-      }
-      this.editedLabel = attrs.rawLabel ?? ""
-      this.selectedNodeInfos = this.buildNodeInfos(nodeId)
+      this.selectedNode = snapshot
+      this.editedLabel = snapshot.label ?? ""
+      this.selectedNodeInfos = buildNodeInfos(this.graph, nodeId)
       this.renderer?.refresh()
     },
     clearNodeInfos() {
@@ -466,7 +433,7 @@ export default defineComponent({
         label: newLabel || attrs.name || this.selectedNodeId,
       })
       this.selectedNode = { ...this.selectedNode, label: newLabel }
-      this.selectedNodeInfos = this.buildNodeInfos(this.selectedNodeId)
+      this.selectedNodeInfos = buildNodeInfos(this.graph, this.selectedNodeId)
 
       // Appel backend avec mac/ip/label. La commande resynchronise tous les
       // labels (#157) et retourne les updates graphe : appliquées via le
@@ -490,83 +457,26 @@ export default defineComponent({
       else if (e.key === "Escape") this.clearNodeInfos()
     },
     cancelEdit() {
-      if (this.selectedNode && this.selectedNodeId) {
+      if (this.selectedNode && this.selectedNodeId && this.graph) {
         this.editedLabel = this.selectedNode.label ?? ""
-        this.selectedNodeInfos = this.buildNodeInfos(this.selectedNodeId)
+        this.selectedNodeInfos = buildNodeInfos(this.graph, this.selectedNodeId)
       }
-    },
-
-    // === Bandeau infos =====================================================
-    buildNodeInfos(nodeId: string): string[] {
-      if (!this.graph?.hasNode(nodeId)) return ["Nœud introuvable"]
-      const n = this.graph.getNodeAttributes(nodeId)
-
-      const protos = new Set<string>()
-      let degree = 0
-      let packets = 0
-      let bytes = 0
-      this.graph.forEachEdge(nodeId, (_edge, attrs) => {
-        degree++
-        if (attrs.protocol) protos.add(String(attrs.protocol))
-        packets += attrs.count || 0
-        bytes += attrs.total_bytes || 0
-      })
-
-      // Plusieurs MAC observées pour cette IP : anomalie mise en évidence.
-      const macInfo = n.macConflict
-        ? `⚠ MACs multiples (${n.macs.length}): ${n.macs.join(", ")}`
-        : `MAC: ${n.mac ?? ""}`
-
-      return [
-        `ID: ${nodeId}`,
-        `Nom: ${n.name ?? ""}`,
-        `Label: ${n.rawLabel || "N/A"}`,
-        macInfo,
-        `IP: ${n.ip ?? ""}`,
-        `Couleur: ${n.color}`,
-        `Degré: ${degree}`,
-        `Trafic: ${formatBytes(bytes)} (${packets} paquets)`,
-        `Protocoles: ${[...protos].join(", ") || "—"}`,
-      ]
     },
 
     // === Force Layout ======================================================
-    /**
-     * (Re)crée le superviseur ForceAtlas2 (worker) et le démarre.
-     * ⚠️ Jamais sur un graphe vide : inferSettings y produit
-     * slowDown = 1 + log(0) = -Infinity et fige la simulation pour toujours.
-     */
+    // (Re)création, arrêt et adaptation du superviseur ForceAtlas2 délégués
+    // au contrôleur ./graph/forceLayout.ts.
     startLayout() {
-      if (!this.graph || this.graph.order === 0) return
-      if (this.layout) {
-        try { this.layout.kill() } catch { /* already stopped */ }
-        this.layout = null
-      }
-      this._layoutOrder = this.graph.order
-      const settings = forceAtlas2.inferSettings(this.graph)
-      this.layout = markRaw(new FA2Layout(this.graph, { settings }))
-      this.layout.start()
+      this.forceLayout?.start()
     },
-    /**
-     * Recrée le layout quand le graphe vient de se peupler ou a beaucoup
-     * grandi depuis le dernier inferSettings (slowDown/BarnesHut dépendent
-     * de la taille). Le superviseur suit les ajouts intermédiaires tout seul.
-     */
     ensureLayoutSettings() {
-      if (!this.forceEnabled || !this.graph || this.graph.order === 0) return
-      if (!this.layout || this._layoutOrder === 0 || this.graph.order >= this._layoutOrder * 4) {
-        this.startLayout()
-      }
+      if (!this.forceEnabled) return
+      this.forceLayout?.ensureSettings()
     },
     toggleForce() {
-      if (this.forceEnabled) {
-        this.forceEnabled = false
-        this.layout?.stop()
-      } else {
-        this.forceEnabled = true
-        if (this.layout && this._layoutOrder > 0) this.layout.start()
-        else this.startLayout()
-      }
+      this.forceEnabled = !this.forceEnabled
+      if (this.forceEnabled) this.forceLayout?.resume()
+      else this.forceLayout?.stop()
     },
 
     // === Export PNG ========================================================
@@ -579,17 +489,8 @@ export default defineComponent({
       if (!filePath) return
 
       // Le typage Options API de Vue « déballe » l'instance Sigma (markRaw) ;
-      // le cast rend le type nominal attendu par toBlob.
-      const renderer = this.renderer as Sigma
-      const { width, height } = renderer.getDimensions()
-      const blob = await toBlob(renderer, {
-        format: "png",
-        backgroundColor: "#ffffff",
-        width: width * 2,
-        height: height * 2,
-      })
-      const ab = await blob.arrayBuffer()
-      await writeFile(filePath, new Uint8Array(ab))
+      // le cast rend le type nominal attendu par exportGraphToPng.
+      await exportGraphToPng(this.renderer as Sigma, filePath)
       console.log(`PNG exporté dans ${filePath}`)
     },
 
@@ -631,18 +532,12 @@ export default defineComponent({
     },
     /** Resynchronise le bandeau bas si le nœud mis à jour est sélectionné. */
     refreshSelectedNode(nodeId: string | undefined) {
-      if (!nodeId || this.selectedNodeId !== nodeId || !this.graph?.hasNode(nodeId)) return
-      const attrs = this.graph.getNodeAttributes(nodeId)
-      this.selectedNode = {
-        id: nodeId,
-        name: attrs.name,
-        mac: attrs.mac,
-        ip: attrs.ip,
-        color: attrs.color,
-        label: attrs.rawLabel,
-      }
-      this.editedLabel = attrs.rawLabel ?? ""
-      this.selectedNodeInfos = this.buildNodeInfos(nodeId)
+      if (!nodeId || this.selectedNodeId !== nodeId || !this.graph) return
+      const snapshot = nodeSnapshot(this.graph, nodeId)
+      if (!snapshot) return
+      this.selectedNode = snapshot
+      this.editedLabel = snapshot.label ?? ""
+      this.selectedNodeInfos = buildNodeInfos(this.graph, nodeId)
     },
   },
 })
