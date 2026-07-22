@@ -44,12 +44,41 @@ impl<'a> CapturedPacket<'a> {
     }
 }
 
+/// Un PCAPNG multi-interfaces où deux interfaces annoncent un type de
+/// liaison ou un snaplen différents n'est pas lisible par libpcap (son
+/// modèle de capture ne connaît qu'un DLT et un snaplen par fichier, hérité
+/// du format PCAP classique). Le message brut de libpcap ne dit pas quoi
+/// faire : on l'enrichit d'une piste concrète plutôt que de laisser
+/// l'utilisateur face à une erreur FFI opaque.
+fn friendly_pcap_error_message(e: &pcap::Error) -> String {
+    let raw = e.to_string();
+    if raw.contains("different from the snapshot length of the first interface") {
+        format!(
+            "{raw}\nCe fichier a des interfaces avec des tailles de capture (snaplen) \
+             différentes ; libpcap ne peut lire qu'un snaplen unique par fichier. \
+             Normalisez-le avant import, par exemple : \
+             editcap -F pcapng --snaplen 262144 <entrée> <sortie>, ou via Wireshark \
+             (Fichier → Exporter des paquets spécifiés… → pcapng)."
+        )
+    } else if raw.contains("different from the type of the first interface") {
+        format!(
+            "{raw}\nCe fichier a des interfaces avec des types de liaison différents \
+             (ex. Ethernet + Wi-Fi + tunnel) ; libpcap ne peut lire qu'un type de \
+             liaison unique par fichier. Séparez les interfaces avant import, par \
+             exemple avec Wireshark (Statistiques → Hiérarchie des interfaces, puis \
+             Fichier → Exporter des paquets spécifiés… par interface)."
+        )
+    } else {
+        raw
+    }
+}
+
 /// Type de liaison (LINKTYPE/DLT) annoncé par l'en-tête d'un fichier
 /// PCAP/PCAPNG (celui de la première interface pour un PCAPNG).
 pub fn pcap_file_datalink(path: &Path) -> Result<pcap::Linktype> {
     let cap = Capture::from_file(path).map_err(|e| SonarCoreError::PcapOpen {
         path: path.to_path_buf(),
-        message: e.to_string(),
+        message: friendly_pcap_error_message(&e),
     })?;
     Ok(cap.get_datalink())
 }
@@ -103,7 +132,7 @@ pub fn for_each_raw_packet(
 ) -> Result<usize> {
     let mut cap = Capture::from_file(path).map_err(|e| SonarCoreError::PcapOpen {
         path: path.to_path_buf(),
-        message: e.to_string(),
+        message: friendly_pcap_error_message(&e),
     })?;
 
     let mut count: usize = 0;
@@ -117,7 +146,7 @@ pub fn for_each_raw_packet(
             Err(e) => {
                 return Err(SonarCoreError::PcapRead {
                     path: path.to_path_buf(),
-                    message: e.to_string(),
+                    message: friendly_pcap_error_message(&e),
                 });
             }
         }
@@ -438,6 +467,11 @@ mod tests {
             "erreur explicite attendue, obtenu : {err}"
         );
         assert!(err.to_string().contains("mixte.pcapng"));
+        // Message enrichi d'une piste concrète plutôt que l'erreur FFI brute.
+        assert!(
+            err.to_string().contains("types de liaison différents"),
+            "message non enrichi : {err}"
+        );
     }
 
     /// Variante snaplens divergents (même DLT) : refusée par libpcap dès
@@ -467,6 +501,11 @@ mod tests {
             "erreur explicite attendue, obtenu : {err}"
         );
         assert_eq!(matrix.row_count(), 0, "aucune mutation");
+        // Message enrichi d'une piste concrète plutôt que l'erreur FFI brute.
+        assert!(
+            err.to_string().contains("editcap"),
+            "message non enrichi : {err}"
+        );
     }
 
     /// Preuve de terminaison (#87) : un PCAP pathologique fait de paquets de
