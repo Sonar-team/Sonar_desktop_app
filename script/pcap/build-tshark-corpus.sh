@@ -2,7 +2,7 @@
 set -eu
 
 packet_parser_dir=${1:-../Packet-parser}
-repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+repo_dir=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
 output_dir="$repo_dir/src-tauri/test_files/pcaps/import/pcap_tshark_corpus"
 source_dir="$packet_parser_dir/pcaps_exemple"
 temporary_dir=$(mktemp -d)

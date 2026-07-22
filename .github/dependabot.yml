@@ -1,0 +1,16 @@
+version: 2
+
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/src-tauri"
+    schedule:
+      interval: "weekly"
+    # Les mises à jour de versions restent désactivées. Cette entrée configure
+    # surtout les mises à jour de sécurité déjà activées dans le dépôt.
+    open-pull-requests-limit: 0
+    # Dependabot ne prend pas en charge la maintenance d'un vendor Cargo. Il
+    # doit résoudre Cargo.toml/Cargo.lock depuis crates.io sans charger la
+    # redirection locale utilisée par les builds reproductibles de Sonar.
+    exclude-paths:
+      - ".cargo/**"
+      - "vendor/**"

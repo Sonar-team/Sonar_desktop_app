@@ -19,6 +19,16 @@
   expliquer les écarts avec les trames reçues. Les compteurs restent lisibles
   au-delà de 1 000 sans chevauchement.
 
+## **[4.8.1] - 2026-07-22**
+
+## ✅ Tests
+
+- **Exactitude des matrices PCAP contrôlée avec TShark** (#168) : les captures
+  Ethernet, Linux cooked SLL/SLL2 et CAPWAP de la crate `packet_parser` sont
+  comparées flux par flux à des oracles TShark versionnés. Les champs communs,
+  l'encapsulation, le refus des captures non prises en charge et la stabilité
+  octet pour octet des exports SFMS sont vérifiés automatiquement par la CI.
+
 ## **[4.7.0] - 2026-07-16**
 
 ## 🛠 Corrections
