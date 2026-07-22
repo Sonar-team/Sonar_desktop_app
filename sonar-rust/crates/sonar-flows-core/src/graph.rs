@@ -8,6 +8,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::link::LinkView;
+use crate::matrix::FlowMatrix;
 use crate::matrix::is_non_unicast_mac;
 
 /// Graphe complet : l'état de référence côté backend, dont le frontend
@@ -268,6 +269,59 @@ impl Edge {
 impl GraphData {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Reconstruit le graphe relationnel d'une matrice batch. Les flux sont
+    /// triés avant insertion afin que leur ordre reste stable malgré le
+    /// `HashMap` de la matrice.
+    pub fn from_flow_matrix(matrix: &FlowMatrix) -> Self {
+        Self::from_flow_matrix_filtered(matrix, None)
+    }
+
+    /// Variante filtrée sur un protocole de n'importe quelle couche. Ainsi,
+    /// `TCP` conserve aussi une relation affichée comme HTTP/TLS parce que le
+    /// graphe privilégie normalement le protocole applicatif dans son label.
+    pub fn from_flow_matrix_filtered(matrix: &FlowMatrix, protocol: Option<&str>) -> Self {
+        let mut flows: Vec<_> = matrix.matrix.iter().collect();
+        flows.sort_by_cached_key(|(flow, _)| format!("{flow:?}"));
+
+        let mut graph = Self::new();
+        for (flow, entries) in flows {
+            if protocol.is_some_and(|protocol| !flow_uses_protocol(flow, protocol)) {
+                continue;
+            }
+            let packets = entries.iter().map(|(_, stats)| stats.count).sum();
+            let bytes = entries.iter().fold(0u64, |total, (_, stats)| {
+                total.saturating_add(stats.total_bytes)
+            });
+            let mut encap_ids: Vec<u64> = entries.iter().filter_map(|(id, _)| *id).collect();
+            encap_ids.sort_unstable();
+            encap_ids.dedup();
+
+            let link = LinkView::of(&flow.data_link);
+            let source_ip = flow
+                .internet
+                .as_ref()
+                .and_then(|internet| internet.source_ip)
+                .map(|ip| ip.to_string())
+                .unwrap_or_default();
+            let destination_ip = flow
+                .internet
+                .as_ref()
+                .and_then(|internet| internet.destination_ip)
+                .map(|ip| ip.to_string())
+                .unwrap_or_default();
+
+            graph.add_packet_flow(
+                flow,
+                matrix.get_label(&link.source_mac, &source_ip),
+                matrix.get_label(&link.destination_mac, &destination_ip),
+                packets,
+                bytes,
+                &encap_ids,
+            );
+        }
+        graph
     }
 
     pub fn add_packet_flow(
@@ -663,6 +717,23 @@ fn best_protocol_label(flow: &PacketFlowOwned) -> String {
     }
 
     "Unknown".to_string()
+}
+
+fn flow_uses_protocol(flow: &PacketFlowOwned, expected: &str) -> bool {
+    flow.application
+        .as_ref()
+        .is_some_and(|layer| layer.protocol.eq_ignore_ascii_case(expected))
+        || flow
+            .transport
+            .as_ref()
+            .is_some_and(|layer| layer.protocol.eq_ignore_ascii_case(expected))
+        || flow
+            .internet
+            .as_ref()
+            .is_some_and(|layer| layer.protocol.eq_ignore_ascii_case(expected))
+        || LinkView::of(&flow.data_link)
+            .protocol
+            .eq_ignore_ascii_case(expected)
 }
 
 /// Clé d'arête non orientée `{A,B,proto}` : ordre canonique stable des ids,

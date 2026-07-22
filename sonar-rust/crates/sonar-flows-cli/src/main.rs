@@ -6,6 +6,10 @@ use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Parser, Subcommand};
 
+mod graphviz;
+
+use graphviz::{GraphEngine, GraphOptions, NodeLabels};
+
 #[derive(Debug, Parser)]
 #[command(name = "sonar-cli")]
 #[command(about = "Sonar batch analysis CLI", version)]
@@ -37,6 +41,37 @@ enum Command {
         #[arg(short, long)]
         output: PathBuf,
     },
+
+    /// Render one or more Sonar matrix CSV files as a relational graph.
+    Graph {
+        /// Sonar matrix CSV input files.
+        #[arg(required = true)]
+        inputs: Vec<PathBuf>,
+
+        /// Output path (.dot, .svg, or .png).
+        #[arg(short, long)]
+        output: PathBuf,
+
+        /// Ignore relations carrying fewer bytes.
+        #[arg(long, default_value_t = 0)]
+        min_bytes: u64,
+
+        /// Keep at most this many nodes, ranked by incident traffic.
+        #[arg(long, default_value_t = 200)]
+        max_nodes: usize,
+
+        /// Keep only this protocol (case-insensitive, for example TCP).
+        #[arg(long)]
+        protocol: Option<String>,
+
+        /// Text displayed on nodes.
+        #[arg(long, value_enum, default_value_t = NodeLabels::Ip)]
+        labels: NodeLabels,
+
+        /// Graphviz layout engine used for SVG and PNG output.
+        #[arg(long, value_enum, default_value_t = GraphEngine::Sfdp)]
+        engine: GraphEngine,
+    },
 }
 
 fn main() -> ExitCode {
@@ -54,16 +89,45 @@ fn main() -> ExitCode {
                 );
             })
             .map(|rows| (rows, output))
+            .map_err(|error| error.to_string())
         }
         Command::Matrix { inputs, output } => {
             sonar_flows_core::csv::merge_matrix_files_to_csv(&inputs, &output)
                 .map(|rows| (rows, output))
+                .map_err(|error| error.to_string())
         }
+        Command::Graph {
+            inputs,
+            output,
+            min_bytes,
+            max_nodes,
+            protocol,
+            labels,
+            engine,
+        } => sonar_flows_core::csv::merge_matrix_files(&inputs)
+            .map_err(|error| error.to_string())
+            .and_then(|matrix| {
+                let graph = sonar_flows_core::graph::GraphData::from_flow_matrix_filtered(
+                    &matrix,
+                    protocol.as_deref(),
+                );
+                graphviz::export_graph(
+                    &graph,
+                    &output,
+                    &GraphOptions {
+                        min_bytes,
+                        max_nodes,
+                        labels,
+                        engine,
+                    },
+                )
+                .map(|relations| (relations, output))
+            }),
     };
 
     match result {
         Ok((rows, output)) => {
-            eprintln!("{} flux exporté(s) vers {}", rows, output.display());
+            eprintln!("{} élément(s) exporté(s) vers {}", rows, output.display());
             ExitCode::SUCCESS
         }
         Err(error) => {

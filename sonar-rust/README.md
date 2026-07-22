@@ -15,4 +15,10 @@ Command shape:
 ```sh
 sonar-cli pcap ezra.pcap -o ezra.csv
 sonar-cli matrix matrice-a.csv matrice-b.csv -o merged.csv
+sonar-cli graph merged.csv -o network.svg \
+  --min-bytes 10000 --max-nodes 200 --protocol TCP --labels ip
 ```
+
+The graph command accepts `.dot`, `.svg`, and `.png` outputs. SVG and PNG
+rendering requires Graphviz; `sfdp` is the default layout engine and can be
+changed with `--engine`.

@@ -333,3 +333,73 @@ fn matrix_fails_on_invalid_csv_and_reports_line_number() {
     );
     assert!(!output.exists(), "aucun CSV ne doit être écrit");
 }
+
+// ---------------------------------------------------------------------------
+// Commande `graph`
+// ---------------------------------------------------------------------------
+
+#[test]
+fn graph_exports_filtered_dot_with_ip_labels() {
+    let dir = temp_dir("graph_dot");
+    let pcap = dir.join("capture.pcap");
+    let matrix = dir.join("matrix.csv");
+    let graph = dir.join("network.dot");
+    write_pcap(&pcap, &[udp_frame(1, 2), udp_frame(3, 4)]);
+
+    let conversion = sonar_cli()
+        .arg("pcap")
+        .arg(&pcap)
+        .arg("--output")
+        .arg(&matrix)
+        .output()
+        .expect("conversion PCAP");
+    assert!(
+        conversion.status.success(),
+        "stderr: {}",
+        stderr_of(&conversion)
+    );
+
+    let result = sonar_cli()
+        .arg("graph")
+        .arg(&matrix)
+        .arg("--output")
+        .arg(&graph)
+        .arg("--min-bytes")
+        .arg("40")
+        .arg("--max-nodes")
+        .arg("2")
+        .arg("--protocol")
+        .arg("udp")
+        .arg("--labels")
+        .arg("ip")
+        .output()
+        .expect("export DOT");
+
+    let stderr = stderr_of(&result);
+    assert!(result.status.success(), "exit 0 attendu, stderr: {stderr}");
+    let dot = std::fs::read_to_string(&graph).expect("lecture DOT");
+    assert!(dot.starts_with("digraph sonar"));
+    assert_eq!(dot.matches("fillcolor=").count(), 2, "plafond de nœuds");
+    assert_eq!(dot.matches(" -> ").count(), 1, "une relation conservée");
+    assert!(dot.contains("label=\"192.168.1."), "labels IP attendus");
+    assert!(dot.contains("UDP\\n53\\n46 o"), "protocole, port et volume");
+}
+
+#[test]
+fn graph_rejects_unknown_output_format() {
+    let dir = temp_dir("graph_format");
+    let output = dir.join("network.jpg");
+
+    let result = sonar_cli()
+        .arg("graph")
+        .arg(matrix_fixture())
+        .arg("--output")
+        .arg(&output)
+        .output()
+        .expect("lancement de sonar-cli");
+
+    let stderr = stderr_of(&result);
+    assert!(!result.status.success(), "exit 1 attendu, stderr: {stderr}");
+    assert!(stderr.contains(".dot, .svg ou .png"));
+    assert!(!output.exists());
+}
