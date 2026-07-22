@@ -13,7 +13,7 @@
 edition = "2024"
 rust-version = "1.96.0"
 name = "sonar-flows-core"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Sonar Team"]
 build = false
 autolib = false
@@ -33,6 +33,10 @@ pcap = ["dep:pcap"]
 [lib]
 name = "sonar_flows_core"
 path = "src/lib.rs"
+
+[[test]]
+name = "pcap_accuracy"
+path = "tests/pcap_accuracy.rs"
 
 [dependencies.chrono]
 version = "0.4.45"
@@ -56,6 +60,9 @@ features = ["derive"]
 
 [dependencies.thiserror]
 version = "2.0.18"
+
+[dev-dependencies.sha2]
+version = "0.10.9"
 
 [lints.clippy]
 expect_used = "warn"

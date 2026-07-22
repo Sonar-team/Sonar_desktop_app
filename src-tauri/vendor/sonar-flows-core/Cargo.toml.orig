@@ -25,3 +25,6 @@ packet_parser.workspace = true
 pcap = { workspace = true, optional = true }
 serde.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+sha2 = "0.10.9"
