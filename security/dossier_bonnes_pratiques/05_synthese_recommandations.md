@@ -89,7 +89,8 @@ objectif de les transformer progressivement en contrôles bloquants.
 1. `./script/ci/check-build-versions.sh` — outillage aligné sur la source
    canonique
 2. `deno install --frozen` — frontend gelé conforme au lockfile
-3. `cargo deny check && cargo audit` (dans `src-tauri/`) — dépendances saines
+3. `cargo vet --locked --frozen && cargo deny check && cargo audit` (dans
+   `src-tauri/`) — statut d'audit, licences et vulnérabilités contrôlés
 4. `./security/repro-check.sh` — binaire reproductible
 5. Créer le tag → le workflow `publish.yml` produit build, hashes,
    attestations, signatures et SBOM. **Ne jamais téléverser un artefact à la

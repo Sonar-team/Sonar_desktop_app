@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  # Gates src-tauri : fmt, tests, clippy -D warnings, audit, deny, udeps.
+  # Gates src-tauri : fmt, tests, clippy -D warnings, audit, vet, deny, udeps.
   rust_checks:
     runs-on: ubuntu-22.04
     env:
@@ -50,6 +50,11 @@ jobs:
           cargo install cargo-deny --locked
         working-directory: ./src-tauri
 
+      # Installation depuis la racine : ne pas appliquer le remplacement
+      # crates.io -> vendor réservé aux dépendances de l'application.
+      - name: Install cargo-vet
+        run: cargo install cargo-vet --version "${{ steps.versions.outputs.CARGO_VET_VERSION }}" --locked
+
       - name: Check formatting with cargo fmt
         run: cargo fmt -- --check
         working-directory: ./src-tauri
@@ -82,6 +87,15 @@ jobs:
 
       - name: Audit dependencies with cargo audit
         run: cargo audit
+        working-directory: ./src-tauri
+
+      # Les audits tiers sont figés dans imports.lock et les exemptions dans
+      # config.toml représentent le backlog explicite. Toute nouvelle crate ou
+      # version non couverte fait échouer ce gate sans accès réseau. Le store
+      # est partagé avec sonar-rust : aucun check ne minimise les entrées de
+      # l'autre graphe Cargo.
+      - name: Vet dependency supply chain
+        run: cargo vet --locked --frozen --no-minimize-exemptions
         working-directory: ./src-tauri
 
       - name: Run cargo clippy
@@ -126,6 +140,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libpcap-dev
 
+      - name: Install cargo-vet
+        run: cargo install cargo-vet --version "${{ steps.versions.outputs.CARGO_VET_VERSION }}" --locked
+
       - name: Check formatting with cargo fmt
         run: cargo fmt -- --check
         working-directory: ./sonar-rust
@@ -140,6 +157,10 @@ jobs:
 
       - name: Verify PCAP matrices against committed TShark oracles
         run: cargo test --locked -p sonar-flows-core --features pcap --test pcap_accuracy --verbose
+        working-directory: ./sonar-rust
+
+      - name: Vet core and CLI supply chain
+        run: cargo vet --store-path ../src-tauri/supply-chain --locked --frozen --no-minimize-exemptions
         working-directory: ./sonar-rust
 
   # Gates frontend : typecheck vue-tsc et tests Deno (#135).

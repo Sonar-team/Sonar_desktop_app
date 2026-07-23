@@ -25,16 +25,17 @@ composition logicielle.
   (`replace-with = "vendored-sources"`). **Le build ne télécharge aucune
   dépendance** : une version piégée publiée en amont ne peut pas entrer sans
   un commit explicite et relu modifiant le vendor.
-- **Audit par dépendance** avec cargo-vet (`src-tauri/supply-chain/` :
-  `audits.toml`, `config.toml`, `imports.lock`), qui trace le statut de
-  chaque crate.
+- **Statut par dépendance** avec cargo-vet (`src-tauri/supply-chain/` :
+  `audits.toml`, `config.toml`, `imports.lock`) : audits importés et exemptions
+  sont distingués, et la CI refuse toute nouvelle version non couverte dans
+  les graphes `src-tauri` et `sonar-rust`.
 - **Contrôles automatiques en intégration continue**
   (`.github/workflows/rust-ci.yml`) : `cargo deny check` (sources inconnues
   refusées, licences contrôlées via `src-tauri/deny.toml`) et `cargo audit`
   (vulnérabilités RUSTSEC).
 
 *Vérification :* `deno install --frozen` puis, dans `src-tauri/`,
-`cargo deny check && cargo audit`.
+`cargo vet --locked --frozen && cargo deny check && cargo audit`.
 
 ## 4.2 Contre le scénario B — traiter le lockfile comme du code
 
