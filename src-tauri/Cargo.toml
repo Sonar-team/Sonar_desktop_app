@@ -36,7 +36,7 @@ tauri = { version = "2.11.5", features = [] }
 tauri-plugin-shell = "2.3.5"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.150"
-tauri-plugin-dialog = "2.7.1"
+tauri-plugin-dialog = "2.7.2"
 tauri-plugin-log = "2.8.0"
 tauri-plugin-process = "2.3.1"
 
@@ -45,11 +45,11 @@ packet_parser = "8.1.0"
 netdev = "0.42.0"
 # Cœur métier partagé (matrice, CSV, paquets/tunnels, graphe, import PCAP),
 # consommé aussi par sonar-cli : source unique du domaine, cf. VISION.md.
-sonar-flows-core = { version = "=0.3.1", features = [
+sonar-flows-core = { version = "=0.3.2", features = [
   "pcap",
 ] }
 
-thiserror = "2.0.18"
+thiserror = "2.0.19"
 # Génération du contrat IPC TypeScript depuis les types Rust (#142) : les
 # fichiers de src/types/generated/ sont écrits par `cargo test export_ipc_bindings`.
 ts-rs = "12.0.1"
@@ -57,7 +57,7 @@ crossbeam = "0.8.4"
 parking_lot = "0.12.5"
 log = "0.4.33"
 chrono = "0.4.45"
-tokio = "1.52.3"
+tokio = "1.53.1"
 
 libc = "0.2.186"
 tauri-plugin-fs = "2.5.1"

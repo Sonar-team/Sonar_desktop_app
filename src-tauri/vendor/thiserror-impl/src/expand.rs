@@ -385,7 +385,7 @@ fn impl_enum(input: Enum) -> TokenStream {
             v.attrs
                 .display
                 .as_ref()
-                .map_or(false, |display| display.has_bonus_display)
+                .is_some_and(|display| display.has_bonus_display)
         });
         let use_as_display = use_as_display(has_bonus_display);
         let void_deref = if input.variants.is_empty() {

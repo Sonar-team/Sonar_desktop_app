@@ -1,5 +1,6 @@
 use crate::runtime::time::{TimerHandle, TimerShared};
 use crate::time::error::InsertError;
+use crate::util::linked_list::LinkedList;
 
 mod level;
 pub(crate) use self::level::Expiration;
@@ -8,7 +9,6 @@ use self::level::Level;
 use std::ptr::NonNull;
 
 use super::entry::STATE_DEREGISTERED;
-use super::EntryList;
 
 /// Timing wheel implementation.
 ///
@@ -36,7 +36,7 @@ pub(crate) struct Wheel {
     levels: Box<[Level; NUM_LEVELS]>,
 
     /// Entries queued for firing
-    pending: EntryList,
+    pending: LinkedList<TimerShared>,
 }
 
 /// Number of levels. Each level has 64 slots. By using 6 levels with 64 slots
@@ -50,14 +50,11 @@ pub(super) const MAX_DURATION: u64 = (1 << (6 * NUM_LEVELS)) - 1;
 impl Wheel {
     /// Creates a new timing wheel.
     pub(crate) fn new() -> Wheel {
-        let mut levels = Vec::with_capacity(NUM_LEVELS);
-        for i in 0..NUM_LEVELS {
-            levels.push(Level::new(i));
-        }
+        let levels = (0..NUM_LEVELS).map(Level::new).collect::<Box<_>>();
         Wheel {
             elapsed: 0,
-            levels: levels.into_boxed_slice().try_into().unwrap(),
-            pending: EntryList::new(),
+            levels: levels.try_into().unwrap(),
+            pending: LinkedList::new(),
         }
     }
 
@@ -266,7 +263,7 @@ impl Wheel {
     }
 
     /// Obtains the list of entries that need processing for the given expiration.
-    fn take_entries(&mut self, expiration: &Expiration) -> EntryList {
+    fn take_entries(&mut self, expiration: &Expiration) -> LinkedList<TimerShared> {
         self.levels[expiration.level].take_slot(expiration.slot)
     }
 

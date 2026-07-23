@@ -248,7 +248,7 @@ macro_rules! define_keywords {
             #[cfg_attr(docsrs, doc(cfg(feature = "extra-traits")))]
             impl Debug for $name {
                 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                    f.write_str(stringify!($name))
+                    format_token(f, $token)
                 }
             }
 
@@ -291,7 +291,7 @@ macro_rules! define_keywords {
             #[cfg(feature = "parsing")]
             impl Token for $name {
                 fn peek(cursor: Cursor) -> bool {
-                    parsing::peek_keyword(cursor, $token)
+                    cursor.peek_keyword($token)
                 }
 
                 fn display() -> &'static str {
@@ -380,7 +380,7 @@ macro_rules! define_punctuation_structs {
             #[cfg_attr(docsrs, doc(cfg(feature = "extra-traits")))]
             impl Debug for $name {
                 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                    f.write_str(stringify!($name))
+                    format_token(f, $token)
                 }
             }
 
@@ -435,7 +435,7 @@ macro_rules! define_punctuation {
             #[cfg(feature = "parsing")]
             impl Token for $name {
                 fn peek(cursor: Cursor) -> bool {
-                    parsing::peek_punct(cursor, $token)
+                    cursor.peek_punct($token)
                 }
 
                 fn display() -> &'static str {
@@ -736,6 +736,7 @@ define_keywords! {
     "raw"         pub struct Raw
     "ref"         pub struct Ref
     "return"      pub struct Return
+    "safe"        pub struct Safe
     "Self"        pub struct SelfType
     "self"        pub struct SelfValue
     "static"      pub struct Static
@@ -915,6 +916,7 @@ macro_rules! Token {
     [raw]         => { $crate::token::Raw };
     [ref]         => { $crate::token::Ref };
     [return]      => { $crate::token::Return };
+    [safe]        => { $crate::token::Safe };
     [Self]        => { $crate::token::SelfType };
     [self]        => { $crate::token::SelfValue };
     [static]      => { $crate::token::Static };
@@ -981,6 +983,11 @@ macro_rules! Token {
     [_]           => { $crate::token::Underscore };
 }
 
+#[cfg(feature = "extra-traits")]
+fn format_token(formatter: &mut fmt::Formatter, repr: &str) -> fmt::Result {
+    write!(formatter, "Token![{}]", repr)
+}
+
 // Not public API.
 #[doc(hidden)]
 #[cfg(feature = "parsing")]
@@ -1000,14 +1007,6 @@ pub(crate) mod parsing {
             }
             Err(cursor.error(format!("expected `{}`", token)))
         })
-    }
-
-    pub(crate) fn peek_keyword(cursor: Cursor, token: &str) -> bool {
-        if let Some((ident, _rest)) = cursor.ident() {
-            ident == token
-        } else {
-            false
-        }
     }
 
     #[doc(hidden)]
