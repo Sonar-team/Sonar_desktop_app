@@ -3,4 +3,4 @@
 /**
  * Représentation sérialisable de [`PcapImportError`] (forme `{ kind, message }`).
  */
-export type PcapImportErrorKind = { "kind": "openFileError", "message": [string, string] } | { "kind": "readPacketError", "message": [string, string] } | { "kind": "unsupportedLinkType", "message": [string, string] };
+export type PcapImportErrorKind = { "kind": "missingInput", "message": string } | { "kind": "openFileError", "message": [string, string] } | { "kind": "readPacketError", "message": [string, string] } | { "kind": "unsupportedLinkType", "message": [string, string] };

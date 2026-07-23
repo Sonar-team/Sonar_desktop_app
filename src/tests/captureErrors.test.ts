@@ -47,6 +47,13 @@ Deno.test("handleExportError - forme inattendue -> message générique", () => {
 
 // --- handleImportError -------------------------------------------------------
 
+Deno.test("handleImportError - entrée vide explique que le relevé est préservé", () => {
+  const err: PcapImportErrorKind = { kind: "missingInput", message: "l'import PCAP" };
+  const msg = handleImportError(err);
+  assertEquals(msg.includes("Aucun fichier sélectionné"), true, msg);
+  assertEquals(msg.includes("relevé courant est inchangé"), true, msg);
+});
+
 Deno.test("handleImportError - openFileError inclut fichier et détail", () => {
   const err: PcapImportErrorKind = { kind: "openFileError", message: ["capture.pcap", "permission refusée"] };
   assertEquals(handleImportError(err), "Impossible d'ouvrir le fichier capture.pcap : permission refusée");

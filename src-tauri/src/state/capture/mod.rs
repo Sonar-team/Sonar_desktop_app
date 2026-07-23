@@ -25,6 +25,13 @@ pub struct CaptureState {
     /// événements du pipeline pour que le frontend ignore ceux d'une
     /// session périmée (0 = hors session, ex. import).
     pub session_id: u64,
+    /// Génération monotone des opérations destructives réservées. Elle est
+    /// distincte de `session_id` (capture live) et empêche un ancien import
+    /// de committer le snapshot construit pour une réservation périmée.
+    operation_generation: u64,
+    /// Identifiant de la réservation qui possède actuellement la phase
+    /// `Importing` (`None` hors opération destructive).
+    active_operation_id: Option<u64>,
     /// Configuration appliquée au prochain démarrage.
     pub config: CaptureConfig,
     /// Filtre BPF actif, s'il y en a un.
@@ -41,6 +48,8 @@ impl CaptureState {
             capture: None,
             phase: CapturePhase::Idle,
             session_id: 0,
+            operation_generation: 0,
+            active_operation_id: None,
             config: CaptureConfig::default(),
             filter: None,
             on_event: None,
@@ -120,6 +129,7 @@ impl CaptureState {
 /// succès, erreur (`?` en cours de conversion) ou panique.
 pub struct ImportGuard {
     state: Arc<Mutex<CaptureState>>,
+    operation_id: u64,
 }
 
 impl ImportGuard {
@@ -139,11 +149,39 @@ impl ImportGuard {
                 to: operation.to_string(),
             });
         }
+        locked.operation_generation = locked.operation_generation.wrapping_add(1);
+        // 0 reste la valeur sentinelle « aucune opération » même après un
+        // débordement théorique du compteur.
+        if locked.operation_generation == 0 {
+            locked.operation_generation = 1;
+        }
+        let operation_id = locked.operation_generation;
+        locked.active_operation_id = Some(operation_id);
         locked.phase = CapturePhase::Importing;
         drop(locked);
         Ok(Self {
             state: Arc::clone(state),
+            operation_id,
         })
+    }
+
+    /// Vérifie que le résultat sur le point d'être committé appartient
+    /// toujours à la réservation qui l'a construit. Un guard périmé ne peut
+    /// donc jamais remplacer la matrice, le graphe ou les labels courants.
+    pub fn verify_current(&self, commit: &str) -> Result<(), CaptureStateError> {
+        let locked = self.state.lock()?;
+        if locked.phase != CapturePhase::Importing
+            || locked.active_operation_id != Some(self.operation_id)
+        {
+            return Err(CaptureStateError::InvalidTransition {
+                from: format!(
+                    "{} (opération active {:?})",
+                    locked.phase, locked.active_operation_id
+                ),
+                to: commit.to_string(),
+            });
+        }
+        Ok(())
     }
 }
 
@@ -156,8 +194,13 @@ impl Drop for ImportGuard {
             Ok(locked) => locked,
             Err(poisoned) => poisoned.into_inner(),
         };
-        debug_assert_eq!(locked.phase, CapturePhase::Importing);
-        locked.phase = CapturePhase::Idle;
+        // Un guard périmé ne doit surtout pas libérer la réservation d'une
+        // opération plus récente.
+        if locked.active_operation_id == Some(self.operation_id) {
+            debug_assert_eq!(locked.phase, CapturePhase::Importing);
+            locked.active_operation_id = None;
+            locked.phase = CapturePhase::Idle;
+        }
     }
 }
 
@@ -297,6 +340,34 @@ mod tests {
             CapturePhase::Idle,
             "la phase est rendue malgré l'échec de l'import"
         );
+    }
+
+    #[test]
+    fn stale_import_guard_cannot_commit_or_release_a_newer_operation() {
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+        let stale = ImportGuard::acquire(&state, "ancien import").unwrap();
+
+        // Simule une réservation remplacée entre la construction du snapshot
+        // et son commit. Les champs sont privés et ne peuvent être modifiés
+        // ainsi qu'ici, mais ce test verrouille le contrat de génération.
+        {
+            let mut locked = state.lock().unwrap();
+            locked.operation_generation += 1;
+            locked.active_operation_id = Some(locked.operation_generation);
+        }
+
+        assert!(
+            matches!(
+                stale.verify_current("commit de l'ancien import"),
+                Err(CaptureStateError::InvalidTransition { .. })
+            ),
+            "un snapshot construit par une réservation périmée est refusé"
+        );
+        drop(stale);
+
+        let locked = state.lock().unwrap();
+        assert_eq!(locked.phase, CapturePhase::Importing);
+        assert_eq!(locked.active_operation_id, Some(2));
     }
 
     /// Chaque tentative de démarrage consomme un identifiant de session,

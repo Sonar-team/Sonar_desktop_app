@@ -14,7 +14,7 @@ use std::time::Instant;
 use tauri::{State, ipc::Channel};
 
 use crate::{
-    errors::CaptureStateError,
+    errors::{CaptureStateError, import::PcapImportError},
     events::CaptureEvent,
     state::{
         capture::{
@@ -507,12 +507,19 @@ pub fn convert_from_pcap_list(
     pcap_paths: Vec<String>,
     on_event: Channel<CaptureEvent<'_>>,
 ) -> Result<(), CaptureStateError> {
+    // Refus avant la réservation, le premier événement, la lecture des
+    // labels et toute mutation : une liste vide ne représente jamais une
+    // demande de remplacement du relevé courant (#167).
+    if pcap_paths.is_empty() {
+        return Err(PcapImportError::MissingInput("l'import PCAP".to_string()).into());
+    }
+
     // Import et capture sont mutuellement exclusifs : la conversion
     // remplacerait la matrice et le graphe pendant que le pipeline les
     // alimente. La phase `Importing` est réservée atomiquement et détenue
     // jusqu'à la fin de la commande, swap inclus (#139) — un démarrage de
     // capture pendant la conversion est refusé par la machine d'état.
-    let _import_guard = crate::state::capture::ImportGuard::acquire(
+    let import_guard = crate::state::capture::ImportGuard::acquire(
         capture_state.inner(),
         "import de fichiers PCAP",
     )?;
@@ -543,6 +550,7 @@ pub fn convert_from_pcap_list(
 
     info!("[convert_from_pcap_list] FIN traitement liste PCAP");
 
+    import_guard.verify_current("commit de l'import PCAP")?;
     let mut matrice_guard = matrice.lock()?;
     let mut graph_guard = graph.lock()?;
     #[cfg(feature = "capture_timing")]
@@ -935,6 +943,98 @@ mod tests {
         assert_eq!(capture_state.lock().unwrap().phase, CapturePhase::Idle);
         assert_eq!(matrix.lock().unwrap().row_count(), 0);
         assert!(graph.lock().unwrap().nodes.is_empty());
+    }
+
+    /// Une liste vide est une erreur de contrat, pas un relevé vide à
+    /// committer. Le refus IPC doit précéder Started et préserver toutes les
+    /// composantes de la session courante (#167).
+    #[test]
+    fn tauri_pcap_command_refuses_empty_list_without_touching_session() {
+        let mut seeded_matrix = FlowMatrix::new();
+        let mut seeded_graph = GraphData::new();
+        let seed_channel = Channel::new(|_| Ok(()));
+        let capture = tunnel_pcap();
+        handle_pcap_file(
+            capture.to_str().unwrap(),
+            1,
+            1,
+            &mut seeded_matrix,
+            &mut seeded_graph,
+            &seed_channel,
+            &mut None,
+        )
+        .unwrap();
+        seeded_matrix.add_label(
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            "192.0.2.1".to_string(),
+            "sentinelle matrice".to_string(),
+        );
+
+        let mut seeded_labels = LabelStore::new();
+        seeded_labels.add((
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            "192.0.2.1".to_string(),
+            "sentinelle store".to_string(),
+        ));
+        let mut seeded_capture_state = CaptureState::new();
+        seeded_capture_state.session_id = 37;
+        seeded_capture_state.filter = Some("tcp port 443".to_string());
+        seeded_capture_state.config.device_name = "interface-sentinelle".to_string();
+
+        let matrix = Arc::new(Mutex::new(seeded_matrix));
+        let graph = Arc::new(Mutex::new(seeded_graph));
+        let labels = Arc::new(Mutex::new(seeded_labels));
+        let capture_state = Arc::new(Mutex::new(seeded_capture_state));
+        let before_matrix = matrix.lock().unwrap().to_flat_vec();
+        let before_matrix_labels = matrix.lock().unwrap().label.clone();
+        let before_graph = serde_json::to_value(&*graph.lock().unwrap()).unwrap();
+        let before_labels = labels.lock().unwrap().rows.clone();
+        let before_config = serde_json::to_value(&capture_state.lock().unwrap().config).unwrap();
+        let events = Arc::new(Mutex::new(Vec::<serde_json::Value>::new()));
+        let intercepted_events = Arc::clone(&events);
+
+        let app = mock_builder()
+            .channel_interceptor(move |_webview, _callback, _index, body| {
+                if let InvokeResponseBody::Json(json) = body {
+                    intercepted_events
+                        .lock()
+                        .unwrap()
+                        .push(serde_json::from_str(json).unwrap());
+                }
+                true
+            })
+            .manage(Arc::clone(&matrix))
+            .manage(Arc::clone(&graph))
+            .manage(Arc::clone(&labels))
+            .manage(Arc::clone(&capture_state))
+            .invoke_handler(tauri::generate_handler![convert_from_pcap_list])
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let webview = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+
+        let error = get_ipc_response(&webview, pcap_invoke_request(vec![], 167))
+            .expect_err("la liste PCAP vide doit être refusée");
+
+        assert_eq!(error["kind"], "import");
+        assert_eq!(error["message"]["kind"], "missingInput");
+        assert!(events.lock().unwrap().is_empty(), "aucun événement émis");
+        assert_eq!(matrix.lock().unwrap().to_flat_vec(), before_matrix);
+        assert_eq!(matrix.lock().unwrap().label, before_matrix_labels);
+        assert_eq!(
+            serde_json::to_value(&*graph.lock().unwrap()).unwrap(),
+            before_graph
+        );
+        assert_eq!(labels.lock().unwrap().rows, before_labels);
+        let locked_state = capture_state.lock().unwrap();
+        assert_eq!(locked_state.phase, CapturePhase::Idle);
+        assert_eq!(locked_state.session_id, 37);
+        assert_eq!(locked_state.filter.as_deref(), Some("tcp port 443"));
+        assert_eq!(
+            serde_json::to_value(&locked_state.config).unwrap(),
+            before_config
+        );
     }
 
     /// Rejoue l'import PCAP réel et vérifie la comptabilité des tunnels :

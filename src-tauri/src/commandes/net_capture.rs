@@ -145,9 +145,22 @@ pub fn get_config_capture(
 pub fn reset_capture(
     matrix: State<'_, Arc<Mutex<FlowMatrix>>>,
     graph: State<'_, Arc<Mutex<GraphData>>>,
+    capture_state: State<'_, Arc<Mutex<CaptureState>>>,
 ) -> Result<(), CaptureStateError> {
-    graph.lock()?.clear();
-    matrix.lock()?.clear();
+    // Le reset est une opération destructive au même titre qu'un import :
+    // il prend la même réservation exclusive et est donc refusé si un import
+    // est déjà en phase `Importing` (#167).
+    let reset_guard = crate::state::capture::ImportGuard::acquire(
+        capture_state.inner(),
+        "réinitialisation du relevé",
+    )?;
+    reset_guard.verify_current("commit de la réinitialisation")?;
+
+    // Ordre global partagé par les imports : matrice -> graphe.
+    let mut matrix = matrix.lock()?;
+    let mut graph = graph.lock()?;
+    matrix.clear();
+    graph.clear();
     Ok(())
 }
 
@@ -166,6 +179,29 @@ pub fn set_filter(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tauri::{
+        ipc::{CallbackFn, InvokeBody},
+        test::{INVOKE_KEY, get_ipc_response, mock_builder, mock_context, noop_assets},
+        webview::InvokeRequest,
+    };
+
+    fn reset_invoke_request() -> InvokeRequest {
+        InvokeRequest {
+            cmd: "reset_capture".into(),
+            callback: CallbackFn(0),
+            error: CallbackFn(1),
+            url: if cfg!(any(windows, target_os = "android")) {
+                "http://tauri.localhost"
+            } else {
+                "tauri://localhost"
+            }
+            .parse()
+            .unwrap(),
+            body: InvokeBody::Json(serde_json::json!({})),
+            headers: Default::default(),
+            invoke_key: INVOKE_KEY.to_string(),
+        }
+    }
 
     /// Le canal IPC échoue à l'envoi (frontend mort) : l'erreur doit être
     /// propagée, mais PAS avant la normalisation du statut backend.
@@ -207,5 +243,59 @@ mod tests {
         let mut state = CaptureState::new();
         let status = stop_capture_inner(&mut state, Channel::new(|_| Ok(()))).unwrap();
         assert!(!status.is_running);
+    }
+
+    /// Le contrôle frontend n'est pas une synchronisation : le backend doit
+    /// refuser lui-même un reset qui perd la course face à un import et ne
+    /// toucher à aucune donnée (#167).
+    #[test]
+    fn tauri_reset_is_refused_while_importing_without_clearing_data() {
+        let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("test_files/20260703_NP_Matrice.csv");
+        let rows = sonar_flows_core::csv::read_matrix_rows(&source).unwrap();
+        let mut seeded_matrix = FlowMatrix::new();
+        seeded_matrix.link_type = Some(packet_parser::LinkType::ETHERNET);
+        sonar_flows_core::csv::merge_rows(
+            &mut seeded_matrix,
+            &rows,
+            packet_parser::LinkType::ETHERNET,
+        )
+        .unwrap();
+        let seeded_graph = GraphData::from_flow_matrix(&seeded_matrix);
+
+        let matrix = Arc::new(Mutex::new(seeded_matrix));
+        let graph = Arc::new(Mutex::new(seeded_graph));
+        let capture_state = Arc::new(Mutex::new(CaptureState::new()));
+        let before_matrix = matrix.lock().unwrap().to_flat_vec();
+        let before_graph = serde_json::to_value(&*graph.lock().unwrap()).unwrap();
+        let import_guard = crate::state::capture::ImportGuard::acquire(
+            &capture_state,
+            "import concurrent de test",
+        )
+        .unwrap();
+
+        let app = mock_builder()
+            .manage(Arc::clone(&matrix))
+            .manage(Arc::clone(&graph))
+            .manage(Arc::clone(&capture_state))
+            .invoke_handler(tauri::generate_handler![reset_capture])
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let webview = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+
+        let error = get_ipc_response(&webview, reset_invoke_request())
+            .expect_err("reset concurrent à Importing refusé");
+
+        assert_eq!(error["kind"], "invalidTransition");
+        assert_eq!(matrix.lock().unwrap().to_flat_vec(), before_matrix);
+        assert_eq!(
+            serde_json::to_value(&*graph.lock().unwrap()).unwrap(),
+            before_graph
+        );
+        assert_eq!(capture_state.lock().unwrap().phase, CapturePhase::Importing);
+        drop(import_guard);
+        assert_eq!(capture_state.lock().unwrap().phase, CapturePhase::Idle);
     }
 }

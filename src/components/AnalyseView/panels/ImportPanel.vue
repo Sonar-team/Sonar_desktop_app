@@ -140,6 +140,7 @@ import ArbitrationDialog from './ArbitrationDialog.vue'
 import { MATRIX_EXTENSIONS, PCAP_EXTENSIONS, routeDroppedPaths } from './import/fileTypes';
 import { progressFileNameOf, progressPercentOf } from './import/importProgress';
 import { filterLabelRows } from './import/labelSearch';
+import { finalizeImportState } from './import/importLifecycle';
 
 
 export default defineComponent({
@@ -308,12 +309,17 @@ export default defineComponent({
         info('réponse invoke');
         this.$emit('update:visible', false);
       } catch (err) {
-        displayCaptureError(err);
+        await displayCaptureError(err);
       } finally {
-        useCaptureStore().isImporting = false;
-        await useCaptureStore().refreshHasData();
-        this.isConverting = false;
-        this.captureStore.clearImportProgress();
+        await finalizeImportState(
+          () => {
+            this.captureStore.isImporting = false;
+            this.isConverting = false;
+            this.captureStore.clearImportProgress();
+          },
+          () => this.captureStore.refreshHasData(),
+          displayCaptureError,
+        );
       }
 
       this.packetFiles = [];
@@ -343,12 +349,17 @@ export default defineComponent({
         this.matrixFiles = [];
         this.$emit('update:visible', false);
       } catch (err) {
-        displayCaptureError(err);
+        await displayCaptureError(err);
       } finally {
-        useCaptureStore().isImporting = false;
-        await useCaptureStore().refreshHasData();
-        this.isConverting = false;
-        this.captureStore.clearImportProgress();
+        await finalizeImportState(
+          () => {
+            this.captureStore.isImporting = false;
+            this.isConverting = false;
+            this.captureStore.clearImportProgress();
+          },
+          () => this.captureStore.refreshHasData(),
+          displayCaptureError,
+        );
       }
     },
 

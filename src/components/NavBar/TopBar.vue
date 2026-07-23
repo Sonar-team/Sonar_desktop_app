@@ -207,9 +207,15 @@ export default {
         return;
       }
 
-      await invoke('reset_capture');
-      await useCaptureStore().refreshHasData();
-      this.$bus.emit('reset');
+      try {
+        await invoke('reset_capture');
+        await useCaptureStore().refreshHasData();
+        this.$bus.emit('reset');
+      } catch (err) {
+        // Le contrôle frontend peut perdre une course face à un import qui
+        // démarre juste après. Le refus typé du backend reste alors visible.
+        await displayCaptureError(err);
+      }
     },
 
 

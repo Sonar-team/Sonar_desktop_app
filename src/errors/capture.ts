@@ -144,6 +144,8 @@ export function handleImportError(importError: ImportErrorKind): string {
   }
 
   switch (importError.kind) {
+    case "missingInput":
+      return `Aucun fichier sélectionné pour ${importError.message}. Le relevé courant est inchangé.`;
     case "openFileError": {
       const [file, message] = importError.message;
       return `Impossible d'ouvrir le fichier ${file} : ${message}`;

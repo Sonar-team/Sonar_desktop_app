@@ -11,7 +11,7 @@ use tauri::{State, ipc::Channel};
 use sonar_flows_core::csv::{apply_row_labels, merge_rows};
 
 use crate::{
-    errors::CaptureStateError,
+    errors::{CaptureStateError, import::PcapImportError},
     events::CaptureEvent,
     state::{
         capture::CaptureState,
@@ -184,7 +184,9 @@ fn read_matrix_rows_per_file(
     mut on_file_read: impl FnMut(usize, &str, usize),
 ) -> Result<MatrixBatch, CaptureStateError> {
     if incoming_file_paths.is_empty() {
-        return Err(std::io::Error::other("Aucun fichier de matrice sélectionné").into());
+        return Err(
+            PcapImportError::MissingInput("l'import de matrice CSV/XLSX".to_string()).into(),
+        );
     }
 
     let mut files = Vec::with_capacity(incoming_file_paths.len());
@@ -214,7 +216,7 @@ fn read_matrix_rows_per_file(
         files.push((path.clone(), rows));
     }
     let link_type = common_link_type
-        .ok_or_else(|| std::io::Error::other("Aucun fichier de matrice sélectionné"))?;
+        .ok_or_else(|| PcapImportError::MissingInput("l'import de matrice CSV/XLSX".to_string()))?;
     Ok((link_type, files))
 }
 
@@ -300,11 +302,20 @@ pub fn import_matrix_files(
     capture_state: State<'_, Arc<Mutex<CaptureState>>>,
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<(), CaptureStateError> {
+    // Refus avant la réservation, la sélection du channel, la lecture d'un
+    // label et tout événement : une liste vide ne doit jamais vider la
+    // session courante (#167).
+    if incoming_file_paths.is_empty() {
+        return Err(
+            PcapImportError::MissingInput("l'import de matrice CSV/XLSX".to_string()).into(),
+        );
+    }
+
     // Import et capture sont mutuellement exclusifs : l'import remplacerait
     // la matrice et le graphe pendant que le pipeline les alimente. La phase
     // `Importing` est réservée atomiquement et détenue jusqu'à la fin de la
     // commande, swap inclus (#139).
-    let _import_guard = crate::state::capture::ImportGuard::acquire(
+    let import_guard = crate::state::capture::ImportGuard::acquire(
         capture_state.inner(),
         "import de matrice CSV/XLSX",
     )?;
@@ -358,11 +369,12 @@ pub fn import_matrix_files(
         .collect();
     let rows: Vec<FlowMatrixRow> = files.into_iter().flat_map(|(_, rows)| rows).collect();
 
-    // Même ordre de verrouillage que convert_from_pcap_list et net_capture
-    // (matrice -> graph -> label_store) pour éviter un interblocage ABBA.
-    let mut matrice_guard = matrice.lock()?;
-    let mut graph_guard = graph.lock()?;
-    let mut label_store_guard = label_store.lock()?;
+    // Snapshot transactionnel local : labels, matrice et graphe sont bâtis
+    // sans toucher à l'état partagé. Ils seront remplacés ensemble seulement
+    // si la réservation qui a lu ces fichiers est encore courante.
+    let mut new_label_store = LabelStore {
+        rows: label_store.lock()?.get().clone(),
+    };
 
     // Les labels portés par les fichiers entrent dans le store — source de
     // vérité unique (#157), fichier prioritaire à clé égale : ils survivent
@@ -377,18 +389,31 @@ pub fn import_matrix_files(
             ),
         ] {
             if let Some(label) = label.as_ref().filter(|l| !l.is_empty()) {
-                label_store_guard.set(mac, ip, &unescape_formula_cell(label));
+                new_label_store.set(mac, ip, &unescape_formula_cell(label));
             }
         }
     }
 
+    let mut new_matrix = FlowMatrix::new();
+    let mut new_graph = GraphData::new();
     rebuild_matrix_and_graph_from_rows(
         &rows,
         link_type,
-        &label_store_guard,
-        &mut matrice_guard,
-        &mut graph_guard,
+        &new_label_store,
+        &mut new_matrix,
+        &mut new_graph,
     )?;
+
+    import_guard.verify_current("commit de l'import de matrice")?;
+
+    // Même ordre de verrouillage que convert_from_pcap_list et net_capture
+    // (matrice -> graph -> label_store) pour éviter un interblocage ABBA.
+    let mut matrice_guard = matrice.lock()?;
+    let mut graph_guard = graph.lock()?;
+    let mut label_store_guard = label_store.lock()?;
+    *matrice_guard = new_matrix;
+    *graph_guard = new_graph;
+    *label_store_guard = new_label_store;
 
     info!(
         "[import_matrix_files] {} fichier(s), {} ligne(s) importée(s) -> {} flux fusionné(s), {} nœuds, {} arêtes",
@@ -447,6 +472,32 @@ mod tests {
     use super::*;
     use std::fs;
     use std::path::Path;
+    use tauri::{
+        ipc::{CallbackFn, InvokeBody, InvokeResponseBody},
+        test::{INVOKE_KEY, get_ipc_response, mock_builder, mock_context, noop_assets},
+        webview::InvokeRequest,
+    };
+
+    fn matrix_invoke_request(paths: Vec<String>, channel_id: u32) -> InvokeRequest {
+        InvokeRequest {
+            cmd: "import_matrix_files".into(),
+            callback: CallbackFn(0),
+            error: CallbackFn(1),
+            url: if cfg!(any(windows, target_os = "android")) {
+                "http://tauri.localhost"
+            } else {
+                "tauri://localhost"
+            }
+            .parse()
+            .unwrap(),
+            body: InvokeBody::Json(serde_json::json!({
+                "incomingFilePaths": paths,
+                "onEvent": format!("__CHANNEL__:{channel_id}"),
+            })),
+            headers: Default::default(),
+            invoke_key: INVOKE_KEY.to_string(),
+        }
+    }
 
     #[test]
     fn new_matrix_is_empty() {
@@ -874,5 +925,81 @@ mod tests {
 
         let labelled = graph.nodes.values().filter(|n| n.label.is_some()).count();
         assert!(labelled >= 20, "nœuds labellisés: {labelled}");
+    }
+
+    /// Même garantie que la voie PCAP : l'appel IPC avec `[]` échoue avant
+    /// tout événement, lecture de labels ou remplacement partagé (#167).
+    #[test]
+    fn tauri_matrix_command_refuses_empty_list_without_touching_session() {
+        let source =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_NP_Matrice.csv");
+        let rows = read_matrix_rows(source.to_str().unwrap()).unwrap();
+        let (seeded_matrix, seeded_graph) = build_matrix_and_graph(&rows);
+        let mut seeded_labels = LabelStore::new();
+        seeded_labels.add((
+            "aa:bb:cc:dd:ee:ff".to_string(),
+            "198.51.100.9".to_string(),
+            "label sentinelle".to_string(),
+        ));
+        let mut seeded_capture_state = CaptureState::new();
+        seeded_capture_state.session_id = 73;
+        seeded_capture_state.filter = Some("udp".to_string());
+        seeded_capture_state.config.device_name = "matrice-sentinelle".to_string();
+
+        let matrix = Arc::new(Mutex::new(seeded_matrix));
+        let graph = Arc::new(Mutex::new(seeded_graph));
+        let labels = Arc::new(Mutex::new(seeded_labels));
+        let capture_state = Arc::new(Mutex::new(seeded_capture_state));
+        let before_matrix = matrix.lock().unwrap().to_flat_vec();
+        let before_graph = serde_json::to_value(&*graph.lock().unwrap()).unwrap();
+        let before_labels = labels.lock().unwrap().rows.clone();
+        let before_config = serde_json::to_value(&capture_state.lock().unwrap().config).unwrap();
+        let events = Arc::new(Mutex::new(Vec::<serde_json::Value>::new()));
+        let intercepted_events = Arc::clone(&events);
+
+        let app = mock_builder()
+            .channel_interceptor(move |_webview, _callback, _index, body| {
+                if let InvokeResponseBody::Json(json) = body {
+                    intercepted_events
+                        .lock()
+                        .unwrap()
+                        .push(serde_json::from_str(json).unwrap());
+                }
+                true
+            })
+            .manage(Arc::clone(&matrix))
+            .manage(Arc::clone(&graph))
+            .manage(Arc::clone(&labels))
+            .manage(Arc::clone(&capture_state))
+            .invoke_handler(tauri::generate_handler![import_matrix_files])
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let webview = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+
+        let error = get_ipc_response(&webview, matrix_invoke_request(vec![], 167))
+            .expect_err("la liste de matrices vide doit être refusée");
+
+        assert_eq!(error["kind"], "import");
+        assert_eq!(error["message"]["kind"], "missingInput");
+        assert!(events.lock().unwrap().is_empty(), "aucun événement émis");
+        assert_eq!(matrix.lock().unwrap().to_flat_vec(), before_matrix);
+        assert_eq!(
+            serde_json::to_value(&*graph.lock().unwrap()).unwrap(),
+            before_graph
+        );
+        assert_eq!(labels.lock().unwrap().rows, before_labels);
+        let locked_state = capture_state.lock().unwrap();
+        assert_eq!(
+            locked_state.phase,
+            crate::state::capture::capture_status::CapturePhase::Idle
+        );
+        assert_eq!(locked_state.session_id, 73);
+        assert_eq!(locked_state.filter.as_deref(), Some("udp"));
+        assert_eq!(
+            serde_json::to_value(&locked_state.config).unwrap(),
+            before_config
+        );
     }
 }

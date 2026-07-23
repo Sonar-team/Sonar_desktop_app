@@ -114,6 +114,9 @@ impl Serialize for CaptureStateError {
             }
             Self::Import(e) => {
                 let kind = match e {
+                    PcapImportError::MissingInput(operation) => {
+                        PcapImportErrorKind::MissingInput(operation.clone())
+                    }
                     PcapImportError::OpenFileError(msg, msgg) => {
                         PcapImportErrorKind::OpenFileError(msg.clone(), msgg.clone())
                     }
@@ -178,6 +181,9 @@ impl From<sonar_flows_core::SonarCoreError> for CaptureStateError {
             SonarCoreError::UnsupportedLinkType { path, label } => CaptureStateError::Import(
                 PcapImportError::UnsupportedLinkType(path.display().to_string(), label),
             ),
+            SonarCoreError::MissingInput => {
+                CaptureStateError::Import(PcapImportError::MissingInput("cet import".to_string()))
+            }
             SonarCoreError::Io(e) => CaptureStateError::Io(e),
             other => CaptureStateError::Io(std::io::Error::other(other.to_string())),
         }
@@ -285,6 +291,14 @@ mod fidelity_tests {
     #[test]
     fn import_domain_nests_under_import_tag() {
         assert_json(
+            &CaptureStateError::Import(PcapImportError::MissingInput("l'import PCAP".to_string())),
+            json!({
+                "kind": "import",
+                "message": {"kind": "missingInput", "message": "l'import PCAP"},
+            }),
+            "import.missingInput",
+        );
+        assert_json(
             &CaptureStateError::Import(PcapImportError::OpenFileError(
                 "capture.pcap".to_string(),
                 "permission refusée".to_string(),
@@ -388,20 +402,15 @@ mod sonar_core_error_conversion_tests {
         }
     }
 
-    /// Toute autre variante (pas de pendant PCAP dédié : CSV invalide,
-    /// entrée manquante, DLT mixte…) retombe sur `Io` avec son message
-    /// d'origine, sans perte d'information.
+    /// L'absence d'entrée garde une identité typée jusqu'au frontend.
     #[test]
-    fn other_variants_fall_back_to_io_with_original_message() {
+    fn missing_input_becomes_typed_import_error() {
         let err: CaptureStateError = SonarCoreError::MissingInput.into();
         match err {
-            CaptureStateError::Io(e) => {
-                assert!(
-                    e.to_string()
-                        .contains("at least one input file is required")
-                );
+            CaptureStateError::Import(PcapImportError::MissingInput(operation)) => {
+                assert_eq!(operation, "cet import");
             }
-            other => panic!("attendu Io, reçu {other:?}"),
+            other => panic!("attendu Import(MissingInput), reçu {other:?}"),
         }
     }
 }

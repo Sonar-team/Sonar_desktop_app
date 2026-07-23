@@ -6,6 +6,11 @@ use thiserror::Error;
 /// interrompue en cours de fichier).
 #[derive(Error, Debug)]
 pub enum PcapImportError {
+    /// La commande a été appelée sans aucune source. Cette erreur est
+    /// distinguée de l'IO pour que le frontend puisse expliquer le refus et
+    /// pour garantir qu'il intervient avant tout événement ou mutation.
+    #[error("Aucun fichier sélectionné pour {0}")]
+    MissingInput(String),
     #[error("Failed to open pcap file {0}: {1}")]
     OpenFileError(String, String),
     /// Erreur de lecture au milieu du fichier (tronqué, corrompu) : distincte
@@ -24,6 +29,7 @@ pub enum PcapImportError {
 #[serde(tag = "kind", content = "message")]
 #[serde(rename_all = "camelCase")]
 pub enum PcapImportErrorKind {
+    MissingInput(String),
     OpenFileError(String, String),
     ReadPacketError(String, String),
     UnsupportedLinkType(String, String),
