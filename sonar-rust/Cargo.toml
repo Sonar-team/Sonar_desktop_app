@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "crates/sonar-flows-core",
+  "crates/sonar-flows-core/fuzz",
   "crates/sonar-flows-cli",
 ]
 resolver = "3"

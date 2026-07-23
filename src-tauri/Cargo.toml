@@ -73,6 +73,11 @@ sysinfo = "0.38.4"
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-cli = "2"
 
+[dev-dependencies]
+# Runtime simulé pour tester les commandes IPC complètes sans fenêtre native
+# ni boucle d'événements système (#168).
+tauri = { version = "2.11.5", features = ["test"] }
+
 [profile.release]
 debug = false
 strip = "symbols"

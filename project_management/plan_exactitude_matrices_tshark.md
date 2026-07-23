@@ -1,8 +1,8 @@
 # Plan : preuve d'exactitude des matrices par test différentiel SONAR vs TShark
 
-> Statut : à démarrer — rattaché au sprint de fidélité #165 (tâche « tests
+> Statut : livré — rattaché au sprint de fidélité #165 (tâche « tests
 > d'intégration pcap/CSV ») et prépare [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151)
-> Dernière revue : 17/07/2026
+> Dernière revue : 23/07/2026
 > La preuve d'exactitude précède toute réintégration de la matrice dans
 > l'UI (#160) : on ne réaffiche pas une matrice dont la fidélité n'est pas
 > démontrée.
@@ -112,6 +112,11 @@ Un test ciblé sur l'enrobage `convert_from_pcap_list`
 fidèlement transmises au front. La preuve d'exactitude vit dans le cœur ;
 ici on prouve que l'adaptateur ne dégrade rien.
 
+Livré dans les tests de `commandes/import/pcap.rs` avec `tauri::test` : la
+commande passe par le vrai handler IPC, intercepte quatre jalons d'une capture
+SLL (0, 1000, 2000, fin), tente un second import pendant `Started` et vérifie
+la forme frontend `import/unsupportedLinkType` sur la frontière IEEE 802.11.
+
 ## Étape 6 — Câblage CI
 
 - Ajouter le run des tests `--features pcap` au job `sonar_rust_checks` de
@@ -129,6 +134,12 @@ ici on prouve que l'adaptateur ne dégrade rien.
 Ce harnais devient la base du corpus adversarial : pcaps tronqués,
 longueurs menteuses, puis fuzzing (`cargo-fuzz` sur le lecteur pcap et le
 parsing) avec les fixtures comme corpus de départ.
+
+La cible `sonar-flows-core/fuzz/fuzz_targets/pcap_reader.rs` traverse libpcap,
+le parseur et la matrice. `script/pcap/prepare-fuzz-corpus.sh` l'alimente avec
+les petites fixtures multi-DLT/oracle de #168 et deux variantes tronquées
+déterministes ; les crashes minimisés restent à qualifier et promouvoir dans
+le corpus permanent de #151.
 
 ## Critère de réussite
 

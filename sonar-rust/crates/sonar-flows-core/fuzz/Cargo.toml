@@ -1,0 +1,24 @@
+[package]
+name = "sonar-flows-core-fuzz"
+version = "0.0.0"
+publish = false
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+sonar-flows-core = { path = "..", features = ["pcap"] }
+
+[[bin]]
+name = "pcap_reader"
+path = "fuzz_targets/pcap_reader.rs"
+test = false
+doc = false
+bench = false
+
+[lints]
+workspace = true
