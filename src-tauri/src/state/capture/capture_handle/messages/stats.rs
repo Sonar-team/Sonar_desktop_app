@@ -38,12 +38,17 @@ impl SharedCaptureStats {
 }
 
 /// Pertes de paquets côté application (en plus des drops kernel de pcap) :
-/// pool de buffers épuisé ou canal capture→processing plein. Incrémentés par
-/// le thread de capture, lus par le thread de processing pour les stats.
+/// pool de buffers épuisé, canal capture→processing plein, ou paquet accepté
+/// abandonné après une erreur fatale d'intégrité. Incrémentés par les workers,
+/// lus par le thread de processing pour les stats.
 #[derive(Debug, Default)]
 pub struct AppDropCounters {
     pub no_buffer: AtomicU64,
     pub channel_full: AtomicU64,
+    /// Paquets déjà acceptés dans le canal mais abandonnés après une erreur
+    /// d'intégrité : retenter matrice/graphe serait incorrect, mais ils ne
+    /// doivent pas disparaître du récapitulatif final (#158, #166).
+    processing_fatal: AtomicU64,
 }
 
 impl AppDropCounters {
@@ -57,10 +62,17 @@ impl AppDropCounters {
         self.channel_full.fetch_add(1, Ordering::Relaxed);
     }
 
-    /// Total des pertes applicatives (pool + canal).
+    #[inline]
+    pub fn add_processing_fatal(&self, count: u64) {
+        self.processing_fatal.fetch_add(count, Ordering::Relaxed);
+    }
+
+    /// Total des pertes applicatives (pool + canal + arrêt fatal).
     #[inline]
     pub fn total(&self) -> u64 {
-        self.no_buffer.load(Ordering::Relaxed) + self.channel_full.load(Ordering::Relaxed)
+        self.no_buffer.load(Ordering::Relaxed)
+            + self.channel_full.load(Ordering::Relaxed)
+            + self.processing_fatal.load(Ordering::Relaxed)
     }
 }
 

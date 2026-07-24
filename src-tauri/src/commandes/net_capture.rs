@@ -17,6 +17,7 @@ use crate::{
             capture_config::CaptureConfig,
             capture_handle::CaptureHandle,
             capture_status::{CapturePhase, CaptureStatus},
+            reap_terminated_capture, spawn_pipeline_reaper,
         },
         flow_matrix::FlowMatrix,
         graph::GraphData,
@@ -36,35 +37,62 @@ pub fn start_capture(
     state_label: State<'_, Arc<Mutex<FlowMatrix>>>,
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
-    let mut state_label = state_label.lock()?;
-    labels_to_matrix(label_store, &mut state_label)?;
-    update_labels_in_state(&app, &mut state_label)?;
-    let mut state_lock = state.lock()?;
     // Un pipeline arrêté de lui-même (erreur pcap, canal IPC cassé) laisse un
     // handle mort : on le récolte pour que ce démarrage ne réponde pas
-    // « déjà en cours » à tort.
-    if state_lock.reap_terminated_capture() {
+    // « déjà en cours » à tort. La jointure se fait avant tout verrouillage
+    // de la matrice et hors du verrou CaptureState (#166).
+    if reap_terminated_capture(state.inner())? {
         info!("Pipeline précédent terminé : handle récolté avant redémarrage");
     }
-    let session_id = state_lock.begin_start()?;
+
+    // Réserver `Starting` sous le seul verrou CaptureState. Pendant la suite
+    // (labels, ouverture pcap, matrice), stop/import voient cette phase et
+    // sont refusés au lieu de former un ordre de verrous inverse.
+    let (session_id, config, filter) = {
+        let mut state_lock = state.lock()?;
+        let session_id = state_lock.begin_start()?;
+        (
+            session_id,
+            state_lock.config.clone(),
+            state_lock.filter.clone(),
+        )
+    };
     info!("Démarrage de la session de capture {session_id}");
-    let mut capture = CaptureHandle::new(session_id);
-    match capture.start(
-        state_lock.config.clone(),
-        app,
-        on_event.clone(),
-        state_lock.filter.clone(),
-        &mut state_label,
-    ) {
-        Ok(()) => {
+
+    let start_result = (|| -> Result<_, CaptureStateError> {
+        let mut state_label = state_label.lock()?;
+        labels_to_matrix(label_store, &mut state_label)?;
+        update_labels_in_state(&app, &mut state_label)?;
+
+        let mut capture = CaptureHandle::new(session_id);
+        capture.start(config, app, on_event.clone(), filter, &mut state_label)?;
+        let completion = capture.take_completion_receiver().ok_or_else(|| {
+            CaptureStateError::InvalidTransition {
+                from: "pipeline démarré sans coordinateur".to_string(),
+                to: CapturePhase::Running.to_string(),
+            }
+        })?;
+        Ok((capture, completion))
+    })();
+
+    match start_result {
+        Ok((capture, completion)) => {
             // Le channel n'est mémorisé qu'après un démarrage réussi : un
             // échec ne laisse pas de canal fantôme attaché à l'état.
-            state_lock.complete_start(capture, on_event);
-            Ok(state_lock.status())
+            let status = {
+                let mut state_lock = state.lock()?;
+                state_lock.complete_start(session_id, capture, on_event)?;
+                state_lock.status()
+            };
+            // Le coordinateur ne peut courir qu'après l'attachement. Si les
+            // workers se sont déjà arrêtés, leurs notifications sont restées
+            // dans le canal borné et seront consommées immédiatement.
+            spawn_pipeline_reaper(Arc::downgrade(state.inner()), session_id, completion);
+            Ok(status)
         }
         Err(e) => {
-            state_lock.abort_start();
-            Err(e.into())
+            state.lock()?.abort_start(session_id)?;
+            Err(e)
         }
     }
 }
@@ -76,30 +104,38 @@ pub fn stop_capture(
     state: State<'_, Arc<Mutex<CaptureState>>>,
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
-    let mut app = state.lock()?;
-    stop_capture_inner(&mut app, on_event)
+    stop_capture_inner(state.inner(), on_event)
 }
 
 /// Cœur de [`stop_capture`], séparé pour être testable sans `State` Tauri.
-/// Idempotent : sans capture en cours, renvoie simplement le statut.
+/// Idempotent depuis `Idle`. Si le coordinateur autonome possède déjà le
+/// handle en phase `Stopping`, l'appel concurrent est explicitement refusé :
+/// il ne prétend jamais avoir joint des threads qu'un autre finaliseur joint.
 fn stop_capture_inner(
-    state: &mut CaptureState,
+    state: &Arc<Mutex<CaptureState>>,
     on_event: Channel<CaptureEvent<'static>>,
 ) -> Result<CaptureStatus, CaptureStateError> {
-    if let Some(capture) = state.capture.take() {
-        state.phase = CapturePhase::Stopping;
-        let stop_result = capture.stop(on_event);
-        // `stop()` a joint les threads quoi qu'il arrive : le statut est
-        // normalisé AVANT de propager une éventuelle erreur d'envoi de
-        // `Stopped`, sinon le backend resterait marqué « en cours » sans
-        // capture et le démarrage suivant serait marqué arrêté.
-        state.phase = CapturePhase::Idle;
-        state.on_event = None;
-        stop_result?;
-    } else {
-        info!("Aucun thread à arrêter.");
-    }
-    Ok(state.status())
+    let detached = {
+        let mut locked = state.lock()?;
+        match locked.begin_stop()? {
+            Some(detached) => detached,
+            None => {
+                info!("Aucun thread à arrêter.");
+                return Ok(locked.status());
+            }
+        }
+    };
+
+    // Point central de #166 : aucune jointure n'a lieu sous CaptureState.
+    // La phase reste `Stopping`, donc un start/import concurrent est refusé.
+    let termination = detached.handle.stop();
+
+    // `stop()` a joint les threads quoi qu'il arrive : le statut est
+    // normalisé AVANT de propager une éventuelle erreur d'envoi de `Stopped`,
+    // sinon le backend resterait marqué « stopping » sans capture.
+    let status = state.lock()?.complete_stop(detached.session_id)?;
+    termination.publish(&on_event)?;
+    Ok(status)
 }
 
 /// Valide puis applique une nouvelle configuration de capture, persistée sur
@@ -179,6 +215,8 @@ pub fn set_filter(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crossbeam::channel::bounded;
+    use std::{sync::Barrier, thread, time::Duration};
     use tauri::{
         ipc::{CallbackFn, InvokeBody},
         test::{INVOKE_KEY, get_ipc_response, mock_builder, mock_context, noop_assets},
@@ -207,42 +245,191 @@ mod tests {
     /// propagée, mais PAS avant la normalisation du statut backend.
     #[test]
     fn stop_normalizes_status_even_when_stopped_event_fails() {
-        let mut state = CaptureState::new();
-        state.capture = Some(CaptureHandle::terminated_for_tests());
-        state.phase = CapturePhase::Running;
-        state.on_event = Some(Channel::new(|_| Ok(())));
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+        {
+            let mut locked = state.lock().unwrap();
+            locked.capture = Some(CaptureHandle::terminated_for_tests(0));
+            locked.phase = CapturePhase::Running;
+            locked.on_event = Some(Channel::new(|_| Ok(())));
+        }
         let dead_channel = Channel::new(|_| Err(std::io::Error::other("canal mort").into()));
 
-        let result = stop_capture_inner(&mut state, dead_channel);
+        let result = stop_capture_inner(&state, dead_channel);
 
         assert!(result.is_err(), "l'erreur d'envoi de Stopped est propagée");
+        let locked = state.lock().unwrap();
         assert_eq!(
-            state.phase,
+            locked.phase,
             CapturePhase::Idle,
             "statut normalisé malgré l'erreur"
         );
-        assert!(state.capture.is_none(), "le handle est libéré");
-        assert!(state.on_event.is_none(), "le channel mort est détaché");
+        assert!(locked.capture.is_none(), "le handle est libéré");
+        assert!(locked.on_event.is_none(), "le channel mort est détaché");
     }
 
     #[test]
     fn stop_succeeds_and_normalizes_with_a_live_channel() {
-        let mut state = CaptureState::new();
-        state.capture = Some(CaptureHandle::terminated_for_tests());
-        state.phase = CapturePhase::Running;
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+        {
+            let mut locked = state.lock().unwrap();
+            locked.capture = Some(CaptureHandle::terminated_for_tests(0));
+            locked.phase = CapturePhase::Running;
+        }
 
-        let status = stop_capture_inner(&mut state, Channel::new(|_| Ok(()))).unwrap();
+        let status = stop_capture_inner(&state, Channel::new(|_| Ok(()))).unwrap();
 
         assert!(!status.is_running);
         assert_eq!(status.phase, CapturePhase::Idle);
-        assert!(state.capture.is_none());
+        assert!(state.lock().unwrap().capture.is_none());
+    }
+
+    #[test]
+    fn stopped_event_observes_idle_without_capture_state_lock_held() {
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+        {
+            let mut locked = state.lock().unwrap();
+            locked.capture = Some(CaptureHandle::terminated_for_tests(0));
+            locked.phase = CapturePhase::Running;
+        }
+        let event_saw_idle = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let state_for_event = Arc::clone(&state);
+        let saw_idle = Arc::clone(&event_saw_idle);
+        let on_event = Channel::new(move |body| {
+            if let tauri::ipc::InvokeResponseBody::Json(json) = body {
+                let event: serde_json::Value = serde_json::from_str(&json).unwrap();
+                if event["event"] == "stopped" {
+                    let locked = state_for_event
+                        .try_lock()
+                        .expect("Stopped est émis hors du verrou CaptureState");
+                    saw_idle.store(
+                        locked.phase == CapturePhase::Idle && locked.capture.is_none(),
+                        std::sync::atomic::Ordering::Release,
+                    );
+                }
+            }
+            Ok(())
+        });
+
+        let status = stop_capture_inner(&state, on_event).unwrap();
+
+        assert_eq!(status.phase, CapturePhase::Idle);
+        assert!(event_saw_idle.load(std::sync::atomic::Ordering::Acquire));
     }
 
     #[test]
     fn stop_without_capture_returns_current_status() {
-        let mut state = CaptureState::new();
-        let status = stop_capture_inner(&mut state, Channel::new(|_| Ok(()))).unwrap();
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+        let status = stop_capture_inner(&state, Channel::new(|_| Ok(()))).unwrap();
         assert!(!status.is_running);
+    }
+
+    #[test]
+    fn stop_is_refused_while_start_is_reserved() {
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+        let session_id = state.lock().unwrap().begin_start().unwrap();
+
+        let result = stop_capture_inner(&state, Channel::new(|_| Ok(())));
+
+        assert!(
+            matches!(result, Err(CaptureStateError::InvalidTransition { .. })),
+            "une course start/stop doit être refusée, pas modifier l'état"
+        );
+        let mut locked = state.lock().unwrap();
+        assert_eq!(locked.phase, CapturePhase::Starting);
+        locked.abort_start(session_id).unwrap();
+    }
+
+    #[test]
+    fn stop_is_refused_while_the_auto_reaper_owns_the_handle() {
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+        {
+            let mut locked = state.lock().unwrap();
+            locked.session_id = 4;
+            locked.phase = CapturePhase::Stopping;
+            locked.capture = None;
+        }
+
+        let result = stop_capture_inner(&state, Channel::new(|_| Ok(())));
+
+        assert!(
+            matches!(result, Err(CaptureStateError::InvalidTransition { .. })),
+            "l'arrêt concurrent doit signaler que le finaliseur est déjà propriétaire"
+        );
+        let locked = state.lock().unwrap();
+        assert_eq!(locked.phase, CapturePhase::Stopping);
+        assert!(locked.capture.is_none());
+    }
+
+    /// Reproduit l'ancien cycle ABBA de #166 de façon déterministe : le faux
+    /// processing attend la matrice pendant que stop le joint. CaptureState
+    /// doit rester disponible, sans quoi un start tenant la matrice formerait
+    /// l'interblocage historique.
+    #[test]
+    fn stop_releases_capture_state_before_join_and_refuses_concurrent_start() {
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+        let matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        let worker_ready = Arc::new(Barrier::new(2));
+        let (about_to_lock_tx, about_to_lock_rx) = bounded::<()>(1);
+
+        let matrix_for_worker = Arc::clone(&matrix);
+        let ready_for_worker = Arc::clone(&worker_ready);
+        let handle = CaptureHandle::with_thread_for_tests(1, move |stop_flag| {
+            ready_for_worker.wait();
+            while !stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
+                thread::yield_now();
+            }
+            about_to_lock_tx.send(()).unwrap();
+            let _matrix = matrix_for_worker.lock().unwrap();
+        });
+        worker_ready.wait();
+
+        {
+            let mut locked = state.lock().unwrap();
+            locked.session_id = 1;
+            locked.phase = CapturePhase::Running;
+            locked.capture = Some(handle);
+            locked.on_event = Some(Channel::new(|_| Ok(())));
+        }
+
+        let matrix_guard = matrix.lock().unwrap();
+        let state_for_stop = Arc::clone(&state);
+        let (stop_done_tx, stop_done_rx) = bounded(1);
+        thread::spawn(move || {
+            let result = stop_capture_inner(&state_for_stop, Channel::new(|_| Ok(())))
+                .map(|status| status.phase.to_string())
+                .map_err(|error| error.to_string());
+            let _ = stop_done_tx.send(result);
+        });
+
+        about_to_lock_rx
+            .recv_timeout(Duration::from_secs(1))
+            .expect("le faux processing atteint l'attente de la matrice");
+
+        let state_available = match state.try_lock() {
+            Ok(mut locked) => {
+                assert_eq!(locked.phase, CapturePhase::Stopping);
+                assert!(
+                    locked.begin_start().is_err(),
+                    "un start concurrent est refusé pendant Stopping"
+                );
+                true
+            }
+            Err(_) => false,
+        };
+
+        // Nettoyage avant toute assertion : même une régression ne laisse pas
+        // les threads du runner suspendus.
+        drop(matrix_guard);
+        let stop_result = stop_done_rx
+            .recv_timeout(Duration::from_secs(1))
+            .expect("stop doit terminer dans la borne après libération de la matrice");
+
+        assert!(
+            state_available,
+            "CaptureState ne doit pas être conservé pendant join()"
+        );
+        assert_eq!(stop_result.unwrap(), "idle");
+        assert_eq!(state.lock().unwrap().phase, CapturePhase::Idle);
     }
 
     /// Le contrôle frontend n'est pas une synchronisation : le backend doit

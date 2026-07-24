@@ -18,6 +18,7 @@ use tauri::ipc::Channel;
 use crate::{
     events::CaptureEvent,
     state::capture::capture_handle::{
+        PipelineThreadGuard, TerminalState,
         messages::{
             CaptureMessage,
             stats::{AppDropCounters, SharedCaptureStats},
@@ -50,6 +51,8 @@ pub fn spawn_capture_thread_with_pool(
     on_event: Channel<CaptureEvent<'static>>,
     mut cap: Capture<Active>,
     stop_flag: Arc<AtomicBool>,
+    terminal: Arc<TerminalState>,
+    completion: Sender<()>,
     channel_capacity: i32,
     buffer_pool: Arc<PacketBufferPool>,
     drop_counters: Arc<AppDropCounters>,
@@ -57,6 +60,12 @@ pub fn spawn_capture_thread_with_pool(
     session_id: u64,
 ) -> thread::JoinHandle<()> {
     thread::spawn(move || {
+        let _thread_guard = PipelineThreadGuard::new(
+            "capture pcap",
+            completion,
+            Arc::clone(&stop_flag),
+            Arc::clone(&terminal),
+        );
         debug!("Démarrage du thread de capture avec pool");
         let stats_poll_interval = Duration::from_millis(STATS_POLL_INTERVAL_MS);
         let mut last_stats_poll = Instant::now()
@@ -65,7 +74,7 @@ pub fn spawn_capture_thread_with_pool(
         let mut pending_drops = DropReport::default();
         let mut last_drop_report = Instant::now();
 
-        while !stop_flag.load(Ordering::Relaxed) {
+        while !stop_flag.load(Ordering::Acquire) {
             if last_stats_poll.elapsed() >= stats_poll_interval {
                 last_stats_poll = Instant::now();
                 if let Ok(stats) = cap.stats() {
@@ -134,15 +143,11 @@ pub fn spawn_capture_thread_with_pool(
                 Err(pcap::Error::TimeoutExpired) => continue,
                 Err(e) => {
                     error!("Erreur capture : {:?}", e);
-                    // Pipeline mort : on force l'arrêt et on prévient le
-                    // frontend, sinon l'UI croit capturer indéfiniment.
-                    stop_flag.store(true, Ordering::Relaxed);
-                    if let Err(send_err) = on_event.send(CaptureEvent::Stopped {
-                        session_id,
-                        reason: format!("erreur pcap : {e}"),
-                    }) {
-                        error!("Erreur send Stopped: {}", send_err);
-                    }
+                    // Pipeline mort : on force l'arrêt et on mémorise la
+                    // cause ; le coordinateur préviendra le frontend après
+                    // jointure et normalisation de la phase.
+                    stop_flag.store(true, Ordering::Release);
+                    terminal.record_autonomous(format!("erreur pcap : {e}"));
                     break;
                 }
             }

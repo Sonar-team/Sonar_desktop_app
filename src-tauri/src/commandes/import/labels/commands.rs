@@ -179,45 +179,60 @@ pub fn resolve_label_conflicts(
     capture_state: State<'_, Arc<Mutex<CaptureState>>>,
     conflict_store: State<'_, Arc<Mutex<LabelConflictStore>>>,
 ) -> Result<Vec<LabelConflictReport>, CaptureStateError> {
+    // `CaptureState` n'est jamais imbriqué avec un état de données (#166).
+    let on_event = capture_state.lock()?.on_event.clone();
+
     // Application transactionnelle (#153) : tous les verrous sont pris une
     // fois puis chaque arbitrage est appliqué dans la même section critique —
     // l'ancien appel par conflit depuis le front pouvait s'interrompre à
     // mi-chemin et laisser un état partiel.
-    let mut matrix = matrix.lock()?;
-    let mut labels = label_store.lock()?;
-    let mut graph = graph.lock()?;
-    let on_event = capture_state.lock()?.on_event.clone();
-    let mut store = conflict_store.lock()?;
+    let (remaining, graph_updates) = {
+        // Ordre global : matrice → graphe → labels → stores auxiliaires.
+        let mut matrix = matrix.lock()?;
+        let mut graph = graph.lock()?;
+        let mut labels = label_store.lock()?;
+        let mut store = conflict_store.lock()?;
+        let mut graph_updates = Vec::new();
 
-    for resolution in &resolutions {
-        // Applique le label choisi à la matrice (résolution des flux) et au
-        // store (table + réexport).
-        matrix.add_label(
-            resolution.mac.clone(),
-            resolution.ip.clone(),
-            resolution.label.clone(),
-        );
-        labels.set(&resolution.mac, &resolution.ip, &resolution.label);
+        for resolution in &resolutions {
+            // Applique le label choisi à la matrice (résolution des flux) et
+            // au store (table + réexport).
+            matrix.add_label(
+                resolution.mac.clone(),
+                resolution.ip.clone(),
+                resolution.label.clone(),
+            );
+            labels.set(&resolution.mac, &resolution.ip, &resolution.label);
 
-        // Rafraîchit le nœud du graphe et notifie l'UI, sans reconstruire le
-        // graphe. Une erreur d'envoi n'interrompt pas la transaction : l'état
-        // backend reste cohérent, le front se resynchronisera.
-        let graph_update =
-            graph.update_node_label(&resolution.mac, &resolution.ip, resolution.label.clone());
-        if let (Some(update), Some(on_event)) = (graph_update, on_event.as_ref())
-            && let Err(e) = on_event.send(CaptureEvent::Graph { update: &update })
-        {
-            error!("Erreur d'envoi du GraphUpdate arbitrage: {e}");
+            // Rafraîchit le nœud sans reconstruire le graphe. La notification
+            // part après la transaction, sans aucun verrou partagé conservé.
+            if let Some(update) =
+                graph.update_node_label(&resolution.mac, &resolution.ip, resolution.label.clone())
+            {
+                graph_updates.push(update);
+            }
+        }
+
+        // Retire les conflits résolus, renvoie ceux qui restent.
+        store.conflicts.retain(|c| {
+            !resolutions
+                .iter()
+                .any(|resolution| resolution.mac == c.mac && resolution.ip == c.ip)
+        });
+        (store.conflicts.clone(), graph_updates)
+    };
+
+    // Best-effort : une erreur d'envoi ne remet pas en cause la transaction ;
+    // le front se resynchronisera sur l'état backend cohérent.
+    if let Some(on_event) = on_event {
+        for update in &graph_updates {
+            if let Err(e) = on_event.send(CaptureEvent::Graph { update }) {
+                error!("Erreur d'envoi du GraphUpdate arbitrage: {e}");
+            }
         }
     }
 
-    // Retire les conflits résolus, renvoie ceux qui restent.
-    store.conflicts.retain(|c| {
-        !resolutions
-            .iter()
-            .any(|resolution| resolution.mac == c.mac && resolution.ip == c.ip)
-    });
-    Ok(store.conflicts.clone())
+    Ok(remaining)
 }
 
 pub fn labels_to_matrix(

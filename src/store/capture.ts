@@ -59,6 +59,11 @@ export const useCaptureStore = defineStore("capture", {
     // Session de capture live courante (0 = aucune). Les événements portant
     // un session_id différent viennent d'une session périmée et sont ignorés.
     sessionId: 0,
+    // Plus grande session dont l'arrêt a déjà été observé. La réponse de
+    // `start_capture` voyage sur un canal IPC distinct des événements : sur
+    // une panne immédiate, `stopped` peut donc arriver avant la réponse
+    // `Running`. Cette borne rend l'état terminal monotone (#166).
+    lastStoppedSessionId: 0,
     showMatrice: true,
     isImporting: false,
     importProgress: null as ImportProgress | null,
@@ -84,10 +89,23 @@ export const useCaptureStore = defineStore("capture", {
 
   actions: {
     updateStatus(status: { is_running: boolean; session_id?: number }) {
-      this.isRunning = status.is_running;
-      if (typeof status.session_id === "number" && status.session_id > 0) {
-        this.sessionId = status.session_id;
+      const sid = status.session_id;
+      if (typeof sid === "number" && sid > 0) {
+        if (sid < this.sessionId) {
+          console.warn(
+            `[CaptureStore] statut d'une session périmée ignoré (${sid} < ${this.sessionId})`,
+          );
+          return;
+        }
+        if (status.is_running && sid <= this.lastStoppedSessionId) {
+          console.warn(
+            `[CaptureStore] statut Running tardif ignoré pour la session déjà arrêtée ${sid}`,
+          );
+          return;
+        }
+        this.sessionId = sid;
       }
+      this.isRunning = status.is_running;
     },
     toggleView() {
       this.showMatrice = !this.showMatrice;
@@ -148,6 +166,7 @@ export const useCaptureStore = defineStore("capture", {
             console.log("[CaptureStore] Capture arrêtée :", msg.data.reason);
             // Arrêt initié par le backend (ex. erreur pcap) : sans cette mise
             // à jour, l'UI croirait capturer indéfiniment.
+            this.lastStoppedSessionId = Math.max(this.lastStoppedSessionId, msg.data.sessionId);
             this.isRunning = false;
             for (const cb of this.stoppedListeners) cb(msg.data);
             break;

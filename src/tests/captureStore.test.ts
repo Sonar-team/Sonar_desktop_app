@@ -232,6 +232,45 @@ Deno.test("updateStatus - reprend le session_id du statut backend", () => {
   }
 });
 
+Deno.test("updateStatus - un Running tardif ne ressuscite pas une session arrêtée", () => {
+  mockIPC(() => {});
+  try {
+    const { store, emitFromBackend } = setupStoreWithChannel();
+    const started = clone(startedFixture);
+    started.data.sessionId = 7;
+    emitFromBackend(started);
+
+    emitFromBackend({
+      event: "stopped",
+      data: { sessionId: 7, reason: "erreur pcap" },
+    });
+    assertEquals(store.isRunning, false);
+    assertEquals(store.lastStoppedSessionId, 7);
+
+    // La Promise `start_capture` peut se résoudre après l'événement terminal,
+    // car réponse invoke et Channel Tauri sont deux voies indépendantes.
+    store.updateStatus({ is_running: true, session_id: 7 });
+    assertEquals(
+      store.isRunning,
+      false,
+      "la réponse Running périmée est ignorée",
+    );
+    assertEquals(store.sessionId, 7);
+
+    // Une génération strictement plus récente reste autorisée.
+    store.updateStatus({ is_running: true, session_id: 8 });
+    assertEquals(store.isRunning, true);
+    assertEquals(store.sessionId, 8);
+
+    // Une réponse encore plus ancienne ne peut pas faire régresser l'id.
+    store.updateStatus({ is_running: true, session_id: 6 });
+    assertEquals(store.isRunning, true);
+    assertEquals(store.sessionId, 8);
+  } finally {
+    clearMocks();
+  }
+});
+
 Deno.test("onStats - le désabonnement retire bien le listener", () => {
   mockIPC(() => {});
   try {
