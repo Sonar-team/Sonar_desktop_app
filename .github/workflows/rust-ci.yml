@@ -159,6 +159,19 @@ jobs:
         run: cargo test --locked -p sonar-flows-core --features pcap --test pcap_accuracy --verbose
         working-directory: ./sonar-rust
 
+      # `cargo metadata` (utilisé par cargo-vet) résout le graphe complet du
+      # Cargo.lock, y compris les dépendances conditionnées à une autre
+      # plateforme (ex. android_system_properties, via iana-time-zone,
+      # atteignable uniquement sur cfg(target_os = "android")). Les étapes
+      # précédentes (fmt/clippy/test) ne construisent que pour l'hôte Linux et
+      # ne les téléchargent donc jamais. Sans ce pré-chargement réseau, le
+      # `--frozen` de l'étape suivante échoue sur un cache local incomplet —
+      # le lockfile reste la seule source de vérité, ce pré-chargement ne
+      # modifie rien (`--locked`).
+      - name: Warm cargo cache for the full cross-platform lock graph
+        run: cargo metadata --locked --format-version=1 > /dev/null
+        working-directory: ./sonar-rust
+
       - name: Vet core and CLI supply chain
         run: cargo vet --store-path ../src-tauri/supply-chain --locked --frozen --no-minimize-exemptions
         working-directory: ./sonar-rust
