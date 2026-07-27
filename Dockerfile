@@ -72,6 +72,9 @@ RUN apt install -y ${WINDOWS_CROSS_APT_PACKAGES}
 ARG CARGO_XWIN_VERSION=0.23.0
 RUN rustup target add x86_64-pc-windows-msvc \
   && cargo install cargo-xwin --locked --version "${CARGO_XWIN_VERSION}"
+# Hôte Linux, cible Windows : force /Brepro (GUID PDB déterministe dérivé
+# du contenu) que repro-env.ts n'active par défaut que sur hôte Windows.
+ENV SONAR_REPRO_WINDOWS_BREPRO=1
 RUN deno run -A ./security/repro-env.ts run deno task tauri build \
   --runner cargo-xwin --target x86_64-pc-windows-msvc --no-bundle
 
