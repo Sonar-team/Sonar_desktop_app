@@ -7,6 +7,13 @@ function extensionOf(path: string): string {
   return (path.split('.').pop() ?? '').toLowerCase();
 }
 
+/** Ajoute des chemins à une liste en écartant ceux déjà présents : un même
+ *  fichier resélectionné ou redéposé ne doit être importé qu'une fois (#161).
+ *  L'ordre d'arrivée est préservé. */
+export function appendUniquePaths(existing: string[], incoming: string[]): string[] {
+  return Array.from(new Set([...existing, ...incoming]));
+}
+
 export type DroppedPathsRouting =
   | { kind: 'csv'; path: string }
   | { kind: 'files'; pcaps: string[]; matrices: string[] }

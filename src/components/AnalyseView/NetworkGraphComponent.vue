@@ -35,7 +35,9 @@ import {
 } from "./graph/graphSync"
 import { ForceLayoutController, createForceLayoutController } from "./graph/forceLayout"
 import { computeTunnelHighlight, edgeHasTunnel } from "./graph/tunnelHighlight"
+import { applyOptimisticLabel } from "./graph/labelEdit"
 import { buildNodeInfos, nodeSnapshot } from "./graph/nodeInfo"
+import { displayCaptureError } from "../../errors/capture"
 import { exportGraphToPng } from "./graph/exportPng"
 
 // Attributs graphology reçus/renvoyés par les reducers Sigma : un sur-
@@ -419,14 +421,13 @@ export default defineComponent({
       if (!this.graph.hasNode(this.selectedNodeId)) return
       const newLabel = String(this.editedLabel ?? "").trim()
 
-      // MAJ UI immédiate
-      const attrs = this.graph.getNodeAttributes(this.selectedNodeId)
-      this.graph.mergeNodeAttributes(this.selectedNodeId, {
-        rawLabel: newLabel,
-        label: newLabel || attrs.name || this.selectedNodeId,
-      })
+      // MAJ UI immédiate, avec rollback si le backend refuse (#161).
+      const nodeId = this.selectedNodeId
+      const prevSelected = this.selectedNode
+      const attrs = this.graph.getNodeAttributes(nodeId)
+      const rollback = applyOptimisticLabel(this.graph, nodeId, newLabel)
       this.selectedNode = { ...this.selectedNode, label: newLabel }
-      this.selectedNodeInfos = buildNodeInfos(this.graph, this.selectedNodeId)
+      this.selectedNodeInfos = buildNodeInfos(this.graph, nodeId)
 
       // Appel backend avec mac/ip/label. La commande resynchronise tous les
       // labels (#157) et retourne les updates graphe : appliquées via le
@@ -440,7 +441,13 @@ export default defineComponent({
         })
         this.captureStore.applyGraphUpdates(updates)
       } catch (e) {
-        error(`Erreur add_label: ${e}`)
+        rollback()
+        if (this.selectedNodeId === nodeId) {
+          this.selectedNode = prevSelected
+          this.editedLabel = prevSelected.label ?? ""
+          this.selectedNodeInfos = buildNodeInfos(this.graph, nodeId)
+        }
+        await displayCaptureError(e)
       } finally {
         this.isSavingLabel = false
       }

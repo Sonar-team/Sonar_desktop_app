@@ -134,7 +134,7 @@ import { classifyLabelImportError } from '../../../utils/labelImport';
 import { LabelConflictReport, LabelImportReport } from '../../../types/labels';
 import ConflictDialog from './ConflictDialog.vue'
 import ArbitrationDialog from './ArbitrationDialog.vue'
-import { MATRIX_EXTENSIONS, PCAP_EXTENSIONS, routeDroppedPaths } from './import/fileTypes';
+import { appendUniquePaths, MATRIX_EXTENSIONS, PCAP_EXTENSIONS, routeDroppedPaths } from './import/fileTypes';
 import { progressFileNameOf, progressPercentOf } from './import/importProgress';
 import { filterLabelRows } from './import/labelSearch';
 import { finalizeImportState } from './import/importLifecycle';
@@ -230,10 +230,10 @@ export default defineComponent({
       }
 
       if (routing.pcaps.length > 0) {
-        this.packetFiles = Array.from(new Set([...this.packetFiles, ...routing.pcaps]));
+        this.packetFiles = appendUniquePaths(this.packetFiles, routing.pcaps);
       }
       if (routing.matrices.length > 0) {
-        this.matrixFiles = Array.from(new Set([...this.matrixFiles, ...routing.matrices]));
+        this.matrixFiles = appendUniquePaths(this.matrixFiles, routing.matrices);
       }
     },
 
@@ -268,11 +268,13 @@ export default defineComponent({
         if (type === 'csv') {
           await this.importLabelFile(files);
         } else {
+          // Même déduplication que le drag & drop : resélectionner un fichier
+          // déjà listé ne doit pas l'importer deux fois (#161).
           const list = Array.isArray(files) ? files : [files];
           if (type === 'matrix') {
-            this.matrixFiles.push(...list);
+            this.matrixFiles = appendUniquePaths(this.matrixFiles, list);
           } else {
-            this.packetFiles.push(...list);
+            this.packetFiles = appendUniquePaths(this.packetFiles, list);
           }
         }
       } finally {
@@ -401,9 +403,18 @@ export default defineComponent({
       } catch (err) {
         this.showLabelFileIssues(err);
       } finally {
-        this.labelRows = await invoke('get_label_rows');
-        this.filteredlabelRows =this.labelRows;
-        this.isConverting = false;    
+        // L'UI est libérée avant le refresh : un échec de get_label_rows ne
+        // peut ni bloquer le panneau ni masquer l'erreur d'import (#161).
+        await finalizeImportState(
+          () => {
+            this.isConverting = false;
+          },
+          async () => {
+            this.labelRows = await invoke('get_label_rows');
+            this.filteredlabelRows = this.labelRows;
+          },
+          displayCaptureError,
+        );
       }
     },
   
@@ -486,7 +497,7 @@ export default defineComponent({
       .catch((e) => { info(`onDragDropEvent indisponible: ${e}`); });
   },
 
-  async beforeUnmount() {
+  beforeUnmount() {
     for (const unsub of this.unsubs) unsub();
     this.unsubs = [];
 
@@ -494,10 +505,6 @@ export default defineComponent({
       this.unlistenDrop();
       this.unlistenDrop = null;
     }
-
-    this.labelRows = await invoke('get_label_rows');
-    this.filteredlabelRows = this.labelRows;
-
   },
 
 })

@@ -1,11 +1,15 @@
 // Tests des formateurs d'erreurs internes à src/errors/capture.ts :
 // transforment un `*ErrorKind` du contrat IPC en message français lisible.
-// `displayCaptureError` (dialogue + log Tauri) n'est pas testé ici, seuls les
-// handlers purs qu'il délègue le sont.
+// `displayCaptureError` est testé sous mockIPC : il doit accepter toute
+// valeur `unknown` sans lever d'exception secondaire (#161).
+import "./helpers/domShims.ts";
+
 import { deepStrictEqual as assertEquals } from "node:assert/strict";
+import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
 
 import {
   capList,
+  displayCaptureError,
   handleExportError,
   handleImportError,
   handleLabelerror,
@@ -151,4 +155,52 @@ Deno.test("handleLabelerror - editRejected", () => {
 Deno.test("handleLabelerror - forme inattendue -> message générique", () => {
   const msg = handleLabelerror(null as unknown as LabelErrorKind);
   assertEquals(msg.startsWith("Erreur de label inconnue"), true, msg);
+});
+
+// --- displayCaptureError : enveloppes hors contrat (#161) -------------------
+
+/** Intercepte les invokes Tauri (dialogue + log) et collecte les messages. */
+function withMockedDialog(run: () => Promise<void>): Promise<string[]> {
+  const shown: string[] = [];
+  mockIPC((cmd, args) => {
+    if (cmd === "plugin:dialog|message") {
+      shown.push(String((args as { message?: unknown })?.message ?? ""));
+    }
+    return null;
+  });
+  return run().finally(() => clearMocks()).then(() => shown);
+}
+
+Deno.test("displayCaptureError - chaîne brute : affichée sans exception", async () => {
+  const shown = await withMockedDialog(() => displayCaptureError("panne backend"));
+  assertEquals(shown, ["Erreur inattendue : panne backend"]);
+});
+
+Deno.test("displayCaptureError - null : affiché sans exception", async () => {
+  const shown = await withMockedDialog(() => displayCaptureError(null));
+  assertEquals(shown, ["Erreur inattendue : null"]);
+});
+
+Deno.test("displayCaptureError - objet sans kind : sérialisé", async () => {
+  const shown = await withMockedDialog(() => displayCaptureError({ code: 42 }));
+  assertEquals(shown, ['Erreur inattendue : {"code":42}']);
+});
+
+Deno.test("displayCaptureError - objet cyclique : ne lève pas", async () => {
+  const cyclic: Record<string, unknown> = {};
+  cyclic.self = cyclic;
+  const shown = await withMockedDialog(() => displayCaptureError(cyclic));
+  assertEquals(shown, ["Erreur inattendue : [object Object]"]);
+});
+
+Deno.test("displayCaptureError - Error : message repris", async () => {
+  const shown = await withMockedDialog(() => displayCaptureError(new Error("refus")));
+  assertEquals(shown, ["Erreur inattendue : refus"]);
+});
+
+Deno.test("displayCaptureError - enveloppe du contrat : parcours nominal intact", async () => {
+  const shown = await withMockedDialog(() =>
+    displayCaptureError({ kind: "tauri", message: "canal fermé" })
+  );
+  assertEquals(shown, ["Erreur Tauri : canal fermé"]);
 });

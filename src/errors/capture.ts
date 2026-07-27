@@ -26,7 +26,31 @@ export type InvalidLineValue = [number, string];
 export type InvalidFieldValue = [number, string, string];
 export type LabelConflictRow = [number, number, string, string, string, string, string];
 
+/** Rend lisible une valeur d'erreur hors contrat (chaîne, null, Error…)
+ *  sans jamais lever : c'est le dernier filet avant l'affichage (#161). */
+function stringifyUnknown(err: unknown): string {
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message;
+  try {
+    return JSON.stringify(err) ?? String(err);
+  } catch {
+    return String(err);
+  }
+}
+
 export async function displayCaptureError(err: unknown) {
+  // Garde objet/null : `"kind" in err` lève un TypeError sur une valeur non
+  // objet et masquerait l'erreur d'origine par une exception secondaire (#161).
+  if (typeof err !== "object" || err === null || !("kind" in err)) {
+    const userFriendlyMessage = `Erreur inattendue : ${stringifyUnknown(err)}`;
+    await message(userFriendlyMessage, {
+      title: "Erreur Capture (inattendue)",
+      kind: "error",
+    });
+    error(`Erreur Capture (inattendue) : ${userFriendlyMessage}`);
+    return;
+  }
+
   const captureError = err as CaptureStateErrorKind;
   let userFriendlyMessage = "Erreur inconnue";
 
