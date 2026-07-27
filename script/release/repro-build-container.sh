@@ -27,6 +27,9 @@ REF="${REF:-HEAD}"
 # PLATFORM=linux (binaire + deb/rpm) ou windows (sonar.exe cross-compilé
 # via cargo-xwin, cible MSVC).
 PLATFORM="${PLATFORM:-linux}"
+# PRUNE=1 : purge le cache buildkit entre les runs (indépendance renforcée,
+# et nécessaire sur les runners CI au disque limité).
+PRUNE="${PRUNE:-0}"
 
 case "$PLATFORM" in
   linux) target="export"; bin_rel="bin/sonar" ;;
@@ -71,6 +74,10 @@ for i in $(seq 1 "$RUNS"); do
 
   (cd "$out_abs/run$i" && find . -type f -exec sha256sum {} + | sort -k2 > ../"run$i.SHA256SUMS" \
     && mv ../"run$i.SHA256SUMS" SHA256SUMS)
+
+  if [[ "$PRUNE" == "1" ]]; then
+    docker builder prune -af >/dev/null || true
+  fi
 done
 
 echo

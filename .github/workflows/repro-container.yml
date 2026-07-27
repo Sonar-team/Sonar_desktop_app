@@ -1,0 +1,80 @@
+name: Repro Container
+
+# Vérifie que les artefacts SONAR sont re-dérivables : deux builds
+# indépendants (--no-cache) dans le conteneur épinglé doivent produire des
+# binaires au SHA-256 identique, pour la cible Linux et la cible Windows
+# cross-compilée. Le job natif Windows exécute security/repro-check.ps1
+# (même exigence, toolchain MSVC épinglée). Déclenchement manuel tant que
+# la bascule de publish.yml n'est pas décidée.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  repro-container-linux:
+    name: container Linux (2 builds indépendants)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: free runner disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+
+      - name: two independent container builds must match
+        run: RUNS=2 NO_CACHE=1 PRUNE=1 PLATFORM=linux OUT=repro-out ./script/release/repro-build-container.sh
+
+      - name: upload hashes
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: repro-hashes-linux
+          path: repro-out/run*/SHA256SUMS
+          if-no-files-found: error
+
+  repro-container-windows-cross:
+    name: container Windows cross (2 builds indépendants)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: free runner disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+
+      - name: two independent container builds must match
+        run: RUNS=2 NO_CACHE=1 PRUNE=1 PLATFORM=windows OUT=repro-out ./script/release/repro-build-container.sh
+
+      - name: upload hashes
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: repro-hashes-windows-cross
+          path: repro-out/run*/SHA256SUMS
+          if-no-files-found: error
+
+  repro-windows-native:
+    name: natif Windows (repro-check.ps1)
+    runs-on: windows-2022
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: setup deno
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+
+      - name: two isolated native builds must match
+        shell: pwsh
+        run: pwsh -File security/repro-check.ps1
