@@ -72,23 +72,53 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { info } from "@tauri-apps/plugin-log";
 import { invoke } from "@tauri-apps/api/core";
+import { defineComponent } from "vue";
 import { displayCaptureError } from "../../../errors/capture";
 import { useCaptureConfigStore } from "../../../store/capture";
-import { DEFAULT_CAPTURE_CONFIG } from "../../../types/config";
+import { DEFAULT_CAPTURE_CONFIG, type CaptureConfig } from "../../../types/config";
+import type { NetDevice } from "../../../types/NetDevice";
 import InterfaceSelector from "./CustomSelector/interfaceSelector.vue";
 
-export default {
+type ConfigPanelState = {
+  netInterfaces: NetDevice[];
+  selectedInterface: NetDevice | null;
+  deviceName: string;
+  bufferSize: number;
+  chanCapacity: number;
+  timeout: number;
+  snaplen: number;
+};
+
+type CaptureNumericConfig = Omit<CaptureConfig, "device_name">;
+
+function normalizeCaptureConfig(
+  selectedInterface: NetDevice | null,
+  values: CaptureNumericConfig,
+): CaptureConfig | null {
+  const deviceName = selectedInterface?.name.trim();
+  if (!deviceName) return null;
+
+  return {
+    device_name: deviceName,
+    buffer_size: Number(values.buffer_size),
+    chan_capacity: Number(values.chan_capacity),
+    timeout: Number(values.timeout),
+    snaplen: Number(values.snaplen),
+  };
+}
+
+export default defineComponent({
   name: "ConfigPanel",
   components: { InterfaceSelector },
   emits: ["update:ConfigPanel-visible"],
 
-  data() {
+  data(): ConfigPanelState {
     return {
-      netInterfaces: [],
-      selectedInterface: null,
+      netInterfaces: [] as NetDevice[],
+      selectedInterface: null as NetDevice | null,
       deviceName: "",
       bufferSize: DEFAULT_CAPTURE_CONFIG.buffer_size,
       chanCapacity: DEFAULT_CAPTURE_CONFIG.chan_capacity,
@@ -104,17 +134,17 @@ export default {
   },
 
   methods: {
-    syncSelectedInterface() {
+    syncSelectedInterface(): void {
       if (!this.deviceName || !this.netInterfaces.length) return;
       this.selectedInterface = this.netInterfaces.find((iface) => iface.name === this.deviceName) || null;
     },
 
-    async getConfig() {
+    async getConfig(): Promise<void> {
       try {
-        const config = await invoke("get_config_capture");
+        const config = await invoke<CaptureConfig>("get_config_capture");
         info(`[ConfigPanel] config=${JSON.stringify(config)}`);
 
-        this.deviceName = config.device_name || "";
+        this.deviceName = config.device_name;
         this.bufferSize = config.buffer_size;
         this.chanCapacity = config.chan_capacity;
         this.timeout = config.timeout;
@@ -127,17 +157,24 @@ export default {
       }
     },
 
-    async loadInterfaces() {
+    async loadInterfaces(): Promise<void> {
       try {
-        this.netInterfaces = await invoke("get_devices_list");
+        this.netInterfaces = await invoke<NetDevice[]>("get_devices_list");
         this.syncSelectedInterface();
       } catch (err) {
         await displayCaptureError(err);
       }
     },
 
-    async save() {
-      if (!this.selectedInterface?.name) {
+    async save(): Promise<void> {
+      const payload = normalizeCaptureConfig(this.selectedInterface, {
+        buffer_size: this.bufferSize,
+        chan_capacity: this.chanCapacity,
+        timeout: this.timeout,
+        snaplen: this.snaplen,
+      });
+
+      if (!payload) {
         await displayCaptureError({
           kind: "capture",
           message: { kind: "invalidConfig", message: "interface réseau obligatoire" },
@@ -146,15 +183,9 @@ export default {
       }
 
       try {
-        const config = await invoke("config_capture", {
-          device_name: this.selectedInterface.name,
-          buffer_size: Number(this.bufferSize),
-          chan_capacity: Number(this.chanCapacity),
-          timeout: Number(this.timeout),
-          snaplen: Number(this.snaplen),
-        });
+        const config = await invoke<CaptureConfig>("config_capture", payload);
 
-        this.deviceName = config.device_name || "";
+        this.deviceName = config.device_name;
         this.bufferSize = config.buffer_size;
         this.chanCapacity = config.chan_capacity;
         this.timeout = config.timeout;
@@ -167,7 +198,7 @@ export default {
       }
     },
 
-    close() {
+    close(): void {
       this.$emit("update:ConfigPanel-visible", false);
     },
   },
@@ -178,14 +209,14 @@ export default {
   },
 
   watch: {
-    selectedInterface(nextInterface) {
+    selectedInterface(nextInterface: NetDevice | null) {
       this.deviceName = nextInterface?.name || "";
     },
     netInterfaces() {
       this.syncSelectedInterface();
     },
   },
-};
+});
 </script>
 
 <style scoped>
