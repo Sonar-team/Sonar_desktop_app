@@ -15,7 +15,6 @@
     "npm:@tauri-apps/plugin-process@2.3.1": "2.3.1",
     "npm:@tauri-apps/plugin-shell@2.3.5": "2.3.5",
     "npm:@vitejs/plugin-vue@6.0.7": "6.0.7_vite@8.0.16__yaml@2.9.0_vue@3.5.38__typescript@6.0.3_typescript@6.0.3",
-    "npm:chart.js@4.5.1": "4.5.1",
     "npm:color-convert@3.1.3": "3.1.3",
     "npm:eslint-plugin-vue@^10.9.2": "10.9.2_@typescript-eslint+parser@8.64.0__eslint@9.39.5__typescript@6.0.3_eslint@9.39.5_vue-eslint-parser@10.4.1__eslint@9.39.5_typescript@6.0.3",
     "npm:eslint@^9.39.5": "9.39.5",
@@ -219,9 +218,6 @@
         "@jridgewell/resolve-uri",
         "@jridgewell/sourcemap-codec"
       ]
-    },
-    "@kurkle/color@0.3.4": {
-      "integrity": "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w=="
     },
     "@napi-rs/wasm-runtime@1.1.4_@emnapi+core@1.10.0_@emnapi+runtime@1.10.0": {
       "integrity": "sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow==",
@@ -811,12 +807,6 @@
       "dependencies": [
         "ansi-styles",
         "supports-color"
-      ]
-    },
-    "chart.js@4.5.1": {
-      "integrity": "sha512-GIjfiT9dbmHRiYi6Nl2yFCq7kkwdkp1W/lp2J99rX0yo9tgJGn3lKQATztIjb5tVtevcBtIdICNWqlq5+E8/Pw==",
-      "dependencies": [
-        "@kurkle/color"
       ]
     },
     "chokidar@5.0.0": {
@@ -1704,7 +1694,6 @@
         "npm:@tauri-apps/plugin-process@2.3.1",
         "npm:@tauri-apps/plugin-shell@2.3.5",
         "npm:@vitejs/plugin-vue@6.0.7",
-        "npm:chart.js@4.5.1",
         "npm:color-convert@3.1.3",
         "npm:eslint-plugin-vue@^10.9.2",
         "npm:eslint@^9.39.5",

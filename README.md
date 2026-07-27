@@ -128,6 +128,10 @@ Limites, toutes **explicites** (jamais de dégradation silencieuse) :
 Release assets contain raw binaries and native bundles: DMG on macOS, DEB/RPM
 on Linux and NSIS setup on Windows.
 
+La fabrication manuelle d’une release Windows officielle, signée par le HSM de
+l’entreprise et accompagnée d’une provenance SLSA, est décrite dans le
+[guide opérateur Windows](script/release/WIN_OFFICIEL_BUILDER_HSM_PROV.md).
+
 ## Configuration minimale
 
 - **Systeme 64 bits:** Windows 10/11, Linux x86_64 recent ou macOS recent.
