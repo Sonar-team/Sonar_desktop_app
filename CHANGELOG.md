@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## **[4.8.3] - 2026-07-27**
+
 ## ✨ Améliorations
 
 - **Import direct des matrices Excel** : le sélecteur et le glisser-déposer
@@ -14,6 +16,15 @@
 
 ## 🛠 Corrections
 
+- **Arrêt fiable de la capture** (#166) : élimination d'un interblocage
+  possible entre le démarrage et l'arrêt de la capture ; l'arrêt du pipeline
+  est désormais fiable même en cas d'enchaînement rapide des deux actions.
+- **Sessions préservées lors des imports rejetés** (#167) : une opération
+  d'import refusée (fichier invalide, validation échouée) ne supprime plus
+  les sessions existantes ; l'état de travail est restauré à l'identique.
+- **PCAPNG multi-interfaces** : l'import d'un fichier PCAPNG mêlant plusieurs
+  types d'interfaces affiche désormais un message d'erreur actionnable au
+  lieu d'une erreur générique.
 - **Barre de statut** : suppression du compteur redondant des paquets intégrés
   à la matrice ; les pertes et erreurs de parsing restent affichées pour
   expliquer les écarts avec les trames reçues. Les compteurs restent lisibles

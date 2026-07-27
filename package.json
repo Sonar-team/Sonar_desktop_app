@@ -1,7 +1,7 @@
 {
   "name": "sonar",
   "private": true,
-  "version": "4.8.2",
+  "version": "4.8.3",
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
