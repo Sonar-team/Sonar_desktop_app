@@ -42,9 +42,16 @@ RUN arch="$(dpkg --print-architecture)" && \
 WORKDIR /app
 COPY . .
 RUN deno install --frozen
-RUN deno task tauri build
+# Le contexte docker n'a pas de .git (.dockerignore) : l'epoch ne peut pas
+# être dérivée de l'historique, elle est injectée en build-arg — même valeur
+# ⇒ même binaire, quel que soit le démon Docker qui construit (voir
+# script/release/repro-build-container.sh).
+ARG SOURCE_DATE_EPOCH=1700000000
+ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
+RUN deno run -A ./security/repro-env.ts run deno task tauri build
 
 
 FROM scratch AS export
+COPY --from=builder /app/src-tauri/target/release/sonar /bin/sonar
 COPY --from=builder /app/src-tauri/target/release/bundle/deb/ /deb
 COPY --from=builder /app/src-tauri/target/release/bundle/rpm/ /rpm
