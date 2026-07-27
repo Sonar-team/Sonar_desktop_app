@@ -6,16 +6,14 @@
     <div class="channel-status">
       <p :title="progress + '%'">🚨:</p>
       <p> {{ progress }}%</p>
-      <div class="progress-bar-background">
-        <div
-          class="progress-bar"
-          :class="{ 'progress-bar--backpressure': backpressure }"
-          :title="backpressure ? 'Canal saturé : le pipeline applique la backpressure' : undefined"
-          :style="{ width: progress + '%' }"
-          >
-        </div>
-
-      </div>
+      <progress
+        class="channel-progress"
+        :class="{ 'channel-progress--backpressure': backpressure }"
+        :title="backpressure ? 'Canal saturé : le pipeline applique la backpressure' : undefined"
+        :value="progress"
+        max="100"
+        aria-label="Occupation du canal de traitement"
+      ></progress>
     </div>
   </template>
   
@@ -65,19 +63,32 @@
     gap: 5px;
   }
   
-  .progress-bar-background {
+  .channel-progress {
+    appearance: none;
+    -webkit-appearance: none;
     width: 100px; /* Taille fixe de la barre */
     height: 3px;
+    border: 0;
     background-color: #f7f7f7;
   }
-  
-  .progress-bar {
-    height: 100%;
-    background-color: #e79a6e;
 
+  .channel-progress::-webkit-progress-bar {
+    background-color: #f7f7f7;
   }
 
-  .progress-bar--backpressure {
+  .channel-progress::-webkit-progress-value {
+    background-color: #e79a6e;
+  }
+
+  .channel-progress::-moz-progress-bar {
+    background-color: #e79a6e;
+  }
+
+  .channel-progress--backpressure::-webkit-progress-value {
+    background-color: #ff5252;
+  }
+
+  .channel-progress--backpressure::-moz-progress-bar {
     background-color: #ff5252;
   }
   </style>

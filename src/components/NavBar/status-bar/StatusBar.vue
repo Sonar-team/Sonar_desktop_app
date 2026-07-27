@@ -40,7 +40,7 @@
 
       <p title="Flux distincts dans la matrice 📊">
         
-        <span class="counter">{{ stats.processed }} :<img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" /></span>
+        <span class="counter">{{ stats.processed }} :<img src="../../../../src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" /></span>
       </p>
 
       <p title="Trames ❌ perdues côté kernel">

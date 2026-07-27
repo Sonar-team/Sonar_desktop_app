@@ -20,7 +20,7 @@
 
       <div class="panels">
         <div class="left-panel">
-          <img class="image" src="/src/assets/images/warning-sign.png"/>
+          <img class="image" src="../../../assets/images/warning-sign.png"/>
         </div>
         <div class="right-panel">
 

@@ -34,15 +34,12 @@
         <div class="spinner"></div>
         <p class="overlay-text">Conversion en cours…</p>
         <div v-if="importProgress" class="progress-group">
-          <div
+          <progress
             class="progress-track"
-            role="progressbar"
-            :aria-valuenow="Math.round(progressPercent)"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          >
-            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
-          </div>
+            :value="progressPercent"
+            max="100"
+            aria-label="Progression de l'import"
+          ></progress>
           <p class="progress-label">
             Fichier {{ importProgress.fileIndex }}/{{ importProgress.filesTotal }} ·
             {{ progressFileName }} ·
@@ -855,15 +852,28 @@ export default defineComponent({
 }
 
 .progress-track {
+  appearance: none;
+  -webkit-appearance: none;
   width: 100%;
   height: 8px;
+  border: 0;
   background-color: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   overflow: hidden;
 }
 
-.progress-fill {
-  height: 100%;
+.progress-track::-webkit-progress-bar {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.progress-track::-webkit-progress-value {
+  background-color: #4299e1;
+  border-radius: 4px;
+  transition: width 0.2s ease;
+}
+
+.progress-track::-moz-progress-bar {
   background-color: #4299e1;
   border-radius: 4px;
   transition: width 0.2s ease;

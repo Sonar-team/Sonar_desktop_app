@@ -7,36 +7,9 @@
   ],
   "permissions": [
     "core:default",
-    "shell:allow-open",
     "dialog:default",
     "log:allow-log",
-    "os:default",
-    "process:default",
-    "log:default",
-    "shell:default",
-    "fs:allow-write-file",
-    "fs:allow-write-text-file",
-    "fs:allow-mkdir",
-    "fs:default"
-  ],
-  "fs": {
-    "scope": [
-      {
-        "path": "$HOME",
-        "recursive": true
-      },
-      {
-        "path": "$DESKTOP",
-        "recursive": true
-      },
-      {
-        "path": "$DOCUMENT",
-        "recursive": true
-      },
-      {
-        "path": "$DOWNLOAD",
-        "recursive": true
-      }
-    ]
-  }
+    "process:allow-exit",
+    "fs:allow-write-file"
+  ]
 }

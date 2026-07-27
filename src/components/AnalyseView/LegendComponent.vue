@@ -9,11 +9,11 @@
     <div class="legend-section">
       <h4>Couleurs des nœuds</h4>
       <div class="legend-item">
-        <div class="color-box" style="background-color: #2196F3;"></div>
+        <div class="color-box public-ip-color"></div>
         <span>@IP Publique</span>
       </div>
       <div class="legend-item">
-        <div class="color-box" style="background-color: #4CAF50;"></div>
+        <div class="color-box private-ip-color"></div>
         <span>@IP Privée</span>
       </div>
     </div>
@@ -25,7 +25,14 @@
         :key="item.label"
         class="legend-item"
       >
-        <div class="color-box edge-color" :style="{ backgroundColor: item.color }"></div>
+        <svg
+          class="protocol-color-swatch"
+          viewBox="0 0 20 3"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <rect width="20" height="3" rx="1" :fill="item.color" />
+        </svg>
         <span>{{ item.label }}</span>
       </div>
     </div>
@@ -100,10 +107,19 @@ import { PROTOCOL_COLOR_LEGEND } from "../../utils/protocolColors"
   flex-shrink: 0;
 }
 
-.edge-color {
-  border-radius: 2px;
+.public-ip-color {
+  background-color: #2196f3;
+}
+
+.private-ip-color {
+  background-color: #4caf50;
+}
+
+.protocol-color-swatch {
   width: 20px;
   height: 3px;
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 
 .edge-line {

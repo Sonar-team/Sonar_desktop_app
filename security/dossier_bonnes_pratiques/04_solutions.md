@@ -132,14 +132,15 @@ cosign verify-blob --bundle <artefact>.sigstore.json <artefact>
 
 - **Politique de sécurité de contenu (CSP) stricte**
   (`src-tauri/tauri.conf.json`) :
-  `default-src 'self'; connect-src ipc: http://ipc.localhost; img-src 'self' data:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:`.
-  Aucun script distant ni connexion réseau sortante depuis le webview : une
-  charge injectée ne peut ni charger de code externe ni exfiltrer vers un
-  serveur tiers. La source `blob:` est limitée aux workers locaux nécessaires
-  au layout ForceAtlas2.
+  scripts, styles, images et polices limités à `'self'`; styles/scripts inline,
+  attributs de style, `data:`, objets, formulaires et frames interdits. Les
+  connexions sont limitées à l'IPC Tauri. La source `blob:` n'est autorisée que
+  pour le worker local ForceAtlas2. Une `devCsp` séparée ouvre uniquement les
+  ports WebSocket Vite nécessaires au développement.
 - **Permissions Tauri déclaratives** (`src-tauri/capabilities/`) : le
-  frontend n'accède qu'aux commandes explicitement exposées ; l'ajout d'un
-  plugin impose la revue de ses permissions.
+  frontend ne conserve que `core`, les dialogues, l'écriture du fichier choisi,
+  les logs et la fermeture de l'application. Aucun accès récursif au dossier
+  personnel, au Bureau, aux Documents ou aux Téléchargements.
 
 ## 4.8 Le facteur humain (transverse aux scénarios D et E)
 

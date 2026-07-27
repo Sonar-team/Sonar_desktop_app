@@ -6,13 +6,13 @@
 <template>
   <div class="top-bar">
     <button class="image-btn" @click="start" title="Démarrer (ctrl+p)" :disabled="isRunning || activePanel !== null">
-      <img src="/src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
+      <img src="../../../src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
     </button>
 
     <button class="image-btn" @click="stop" title="Arrêter (ctrl+shift+p)" :disabled="!isRunning">🛑</button>
     <button class="image-btn" @click="reset" :disabled="activePanel !== null" title="Réinitialiser (ctrl+shift+r)">🔄</button>
     <button class="image-btn"  title="Config (ctrl+,)" :disabled="isRunning" @click="handleConfigClick">
-      <img src="/src/assets/mdi--gear.svg" alt="Flux" class="icon-img" />
+      <img src="../../assets/mdi--gear.svg" alt="Flux" class="icon-img" />
     </button>
 
     <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)">💾</button>
@@ -20,7 +20,7 @@
     <button class="image-btn" @click="handleLabelsClick" :disabled="isRunning" title="Gérer les labels">🗂️</button>
 
     <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap ou une matrice de flux (ctrl+o)">📄</button>
-    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning" title="Importer un fichier de label"><img src="/src/assets/images/import_csv.png" alt="Importer un fichier de label" /></button>
+    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning" title="Importer un fichier de label"><img src="../../assets/images/import_csv.png" alt="Importer un fichier de label" /></button>
     
     <button class="image-btn" @click="quit" title="Quitter (ctrl+q)">❎</button>
     <button class="image-btn" @click="export_logs" title="Logs (ctrl+l)">📒</button>

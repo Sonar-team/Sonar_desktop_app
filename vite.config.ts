@@ -7,6 +7,12 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [vue()],
 
+  // La CSP de production interdit `data:`. Même les petites icônes doivent
+  // donc rester des fichiers locaux plutôt que d'être encodées dans le JS/CSS.
+  build: {
+    assetsInlineLimit: 0,
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent vite from obscuring rust errors
