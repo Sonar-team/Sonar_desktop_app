@@ -78,10 +78,16 @@ chaque release concernée porte une note de retrait renvoyant vers
 npcap.com. Empreintes SHA-256 et métadonnées préservées dans
 `security/npcap_remediation/` (manifeste `assets_supprimes_2026-07-27.csv`).
 Les installateurs de l'ère MSI, vérifiés sains (fragment WiX non câblé),
-sont conservés. Restent en attente de la réponse de Nmap : le sort des
-archives source automatiques des 119 tags contenant encore le blob
-`npcap-*.exe` (leur retrait imposerait de supprimer les tags ou de réécrire
-l'historique).
+sont conservés.
+
+**Complément du 27/07/2026** : conformément à la réponse reçue de Nmap par
+mail et sur instruction du mainteneur, les **119 tags** dont l'arbre
+contenait un `npcap-*.exe` ont été supprimés du dépôt distant et local
+(manifeste `tags_supprimes_2026-07-27.csv` : tag, SHA visé, date). Leurs
+archives source automatiques ne sont plus servies (404 vérifié) ; les pages
+de releases et leurs assets sains restent en place. Résidu connu : les
+commits historiques restent joignables par SHA sur `main`, une purge
+complète exigerait une réécriture d'historique — non réalisée à ce stade.
 
 ## SBOM (#137)
 

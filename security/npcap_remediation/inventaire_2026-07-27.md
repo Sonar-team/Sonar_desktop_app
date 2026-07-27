@@ -9,8 +9,14 @@ métadonnées).
 (manifeste avec SHA-256 : `assets_supprimes_2026-07-27.csv`) et chaque
 release concernée porte une note de retrait. Vérifié après traitement :
 plus aucun asset « setup » via l'API et 404 sur les URLs de téléchargement.
-Les archives source automatiques des 119 tags restent en ligne — leur sort
-(suppression de tags ou réécriture d'historique) attend la réponse de Nmap.
+**Seconde mise à jour du 27/07/2026** : conformément à la réponse de Nmap
+reçue par mail et sur instruction du mainteneur, les **119 tags** concernés
+ont été supprimés (remote + local, manifeste
+`tags_supprimes_2026-07-27.csv`). Vérifié : plus aucun des 119 tags sur le
+remote (57 tags sains restants), archives source → 404, archives des tags
+sains (ex. v4.8.3) → 200, releases et assets sains intacts. Résidu : les
+commits restent joignables par SHA dans l'historique de `main` ; une purge
+totale demanderait `git filter-repo` + force-push (non réalisée).
 
 ## Méthode
 
