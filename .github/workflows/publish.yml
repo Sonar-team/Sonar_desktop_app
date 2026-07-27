@@ -171,10 +171,27 @@ jobs:
 
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+        with:
+          cosign-release: "v${{ steps.versions.outputs.COSIGN_VERSION }}"
 
       - name: Sign release artifacts
         shell: bash
         run: ./script/ci/sign-release-artifacts.sh "${{ matrix.platform }}"
+
+      - name: Create signed offline verification kit
+        shell: bash
+        run: ./script/ci/create-offline-verification-kit.sh "${{ matrix.platform }}"
+
+      - name: Generate offline kit provenance attestation
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763
+        with:
+          subject-path: offline-kits/*.tar.gz
+
+      - name: Upload offline verification kit to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" offline-kits/*.tar.gz --clobber
 
       - name: Upload Sigstore bundles to release
         shell: bash
@@ -194,7 +211,16 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: release-hashes-${{ matrix.platform }}
-          path: release-hashes-${{ matrix.platform }}.md
+          path: |
+            release-hashes-${{ matrix.platform }}.md
+            release-hashes-${{ matrix.platform }}-offline-kit.md
+          if-no-files-found: error
+
+      - name: Upload offline verification kit artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: offline-verification-kit-${{ matrix.platform }}
+          path: offline-kits/*.tar.gz
           if-no-files-found: error
 
   publish-sbom:
@@ -257,6 +283,8 @@ jobs:
 
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+        with:
+          cosign-release: "v${{ steps.versions.outputs.COSIGN_VERSION }}"
 
       - name: Sign SBOM artifacts
         shell: bash

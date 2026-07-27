@@ -32,18 +32,18 @@ XZ possibles.
 La démarche recoupe les attentes des principaux cadres de référence, ce qui
 facilite son adoption dans un contexte institutionnel :
 
-| Exigence de référentiel | Mise en œuvre dans la démarche |
-|-------------------------|-------------------------------|
-| Maîtrise et inventaire des composants (SBOM) | SBOM CycloneDX backend + frontend, publié et attesté |
-| Intégrité et provenance des artefacts (esprit SLSA) | attestations de provenance GitHub, builds issus de la seule CI |
-| Builds reproductibles / vérifiables | `repro-env.ts` + `repro-check.sh` + job CI bloquant |
-| Gestion des vulnérabilités connues | cargo-audit, Trivy dépôt et artefacts, mises à jour tracées |
-| Sécurité du développement (esprit NIST SSDF) | méthodologie écrite, revue des lockfiles, actions CI épinglées |
-| Moindre privilège | permissions CI minimales par job, permissions Tauri déclaratives, CSP stricte |
+| Exigence de référentiel                             | Mise en œuvre dans la démarche                                                |
+| --------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Maîtrise et inventaire des composants (SBOM)        | SBOM CycloneDX backend + frontend, publié et attesté                          |
+| Intégrité et provenance des artefacts (esprit SLSA) | attestations de provenance GitHub, builds issus de la seule CI                |
+| Builds reproductibles / vérifiables                 | `repro-env.ts` + `repro-check.sh` + job CI bloquant                           |
+| Gestion des vulnérabilités connues                  | cargo-audit, Trivy dépôt et artefacts, mises à jour tracées                   |
+| Sécurité du développement (esprit NIST SSDF)        | méthodologie écrite, revue des lockfiles, actions CI épinglées                |
+| Moindre privilège                                   | permissions CI minimales par job, permissions Tauri déclaratives, CSP stricte |
 
-*(Les intitulés de référentiels sont donnés à titre indicatif ; une mise en
+_(Les intitulés de référentiels sont donnés à titre indicatif ; une mise en
 correspondance formelle avec un référentiel précis peut être produite sur
-demande.)*
+demande.)_
 
 ## 5.3 Recommandations pour une adoption institutionnelle
 
@@ -100,7 +100,8 @@ objectif de les transformer progressivement en contrôles bloquants.
 
 1. `sha256sum <artefact>` comparé à la valeur publiée
 2. `gh attestation verify <artefact> -R <org>/<repo>`
-3. `cosign verify-blob --bundle <artefact>.sigstore.json <artefact>`
+3. `script/ci/verify-offline-release-kit.sh` avec le tag exact, Cosign et la
+   racine de confiance provisionnés hors du kit
 4. Croiser le SBOM publié avec les bases de vulnérabilités
 5. Optionnel : reconstruire le commit taggé et comparer les empreintes SHA256
 
@@ -130,7 +131,7 @@ objectif de les transformer progressivement en contrôles bloquants.
 
 ---
 
-*Dossier établi à partir du projet SONAR (analyseur de trafic réseau open
+_Dossier établi à partir du projet SONAR (analyseur de trafic réseau open
 source, application Tauri). L'ensemble des mesures citées est vérifiable dans
 le dépôt public du projet ; les fichiers de référence sont indiqués au fil du
-document.*
+document._

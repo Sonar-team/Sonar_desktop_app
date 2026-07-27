@@ -34,7 +34,7 @@ composition logicielle.
   refusées, licences contrôlées via `src-tauri/deny.toml`) et `cargo audit`
   (vulnérabilités RUSTSEC).
 
-*Vérification :* `deno install --frozen` puis, dans `src-tauri/`,
+_Vérification :_ `deno install --frozen` puis, dans `src-tauri/`,
 `cargo vet --locked --frozen && cargo deny check && cargo audit`.
 
 ## 4.2 Contre le scénario B — traiter le lockfile comme du code
@@ -72,7 +72,7 @@ d'injection.
   SHA256, archives Node.js/Deno vérifiées par SHA256, paquets système figés
   sur des snapshots datés (`script/ci/use-apt-snapshot.sh`).
 
-*Vérification (auditeur) :* `./security/repro-check.sh`, puis comparaison au
+_Vérification (auditeur) :_ `./security/repro-check.sh`, puis comparaison au
 SHA256 publié dans la release.
 
 ## 4.4 Contre le scénario D (XZ) — provenance et absence de fabrication manuelle
@@ -93,13 +93,23 @@ cryptographiquement au dépôt.**
 - **Empreintes SHA256 publiques** de tous les artefacts, listées dans le
   corps de la release.
 
-*Vérification (utilisateur) :*
+_Vérification (utilisateur) :_
 
 ```
 sha256sum <artefact>                     # comparer à la valeur publiée
 gh attestation verify <artefact> -R <org>/<repo>
-cosign verify-blob --bundle <artefact>.sigstore.json <artefact>
+cosign verify-blob \
+  --trusted-root security/sigstore-trusted-root.json \
+  --certificate-identity \
+  "https://github.com/Sonar-team/Sonar_desktop_app/.github/workflows/publish.yml@refs/tags/<tag>" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  --bundle <bundle.sigstore.json> \
+  <artefact>
 ```
+
+Avec une signature keyless, Cosign doit aussi recevoir la racine de confiance,
+l'identité exacte du workflow et l'émetteur OIDC. SONAR encapsule ce contrôle
+dans `script/ci/verify-offline-release-kit.sh`, avec un tag attendu obligatoire.
 
 ## 4.5 Contre le scénario E — durcir l'intégration continue
 
@@ -157,15 +167,15 @@ revue** — précisément ce qu'exploitait l'attaque XZ :
 
 ## 4.9 Tableau de correspondance scénario → contre-mesure
 
-| Scénario | Risque | Contre-mesure principale | Fichiers de preuve |
-|----------|--------|--------------------------|--------------------|
-| A — dépendance piégée | R1, R3 | vendoring, lockfiles gelés, cargo-vet/deny/audit | `src-tauri/vendor/`, `supply-chain/`, `deny.toml`, `rust-ci.yml` |
-| B — lockfile empoisonné | R2 | lockfile relu comme du code, diff vendor visible | méthodologie, `vendor/` |
-| C — injection au build | R4 (SUNBURST) | build reproductible vérifié avant release | `repro-env.ts`, `repro-check.sh`, `publish.yml` |
-| D — release manuelle | R5, R8 (XZ) | CI seule source + attestations + cosign + SHA256 | `publish.yml`, `generate-attestation-subjects.sh`, `sign-release-artifacts.sh` |
-| E — action CI détournée | R6 | actions épinglées par SHA, permissions minimales | `.github/workflows/*.yml` |
-| F — vulnérabilité dormante | R7 | SBOM CycloneDX, cargo-audit, Trivy | `generate-sbom-artifacts.sh`, `trivy*.yml` |
-| G — évasion webview | R9 | CSP stricte, permissions Tauri | `tauri.conf.json`, `capabilities/` |
+| Scénario                   | Risque        | Contre-mesure principale                         | Fichiers de preuve                                                             |
+| -------------------------- | ------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| A — dépendance piégée      | R1, R3        | vendoring, lockfiles gelés, cargo-vet/deny/audit | `src-tauri/vendor/`, `supply-chain/`, `deny.toml`, `rust-ci.yml`               |
+| B — lockfile empoisonné    | R2            | lockfile relu comme du code, diff vendor visible | méthodologie, `vendor/`                                                        |
+| C — injection au build     | R4 (SUNBURST) | build reproductible vérifié avant release        | `repro-env.ts`, `repro-check.sh`, `publish.yml`                                |
+| D — release manuelle       | R5, R8 (XZ)   | CI seule source + attestations + cosign + SHA256 | `publish.yml`, `generate-attestation-subjects.sh`, `sign-release-artifacts.sh` |
+| E — action CI détournée    | R6            | actions épinglées par SHA, permissions minimales | `.github/workflows/*.yml`                                                      |
+| F — vulnérabilité dormante | R7            | SBOM CycloneDX, cargo-audit, Trivy               | `generate-sbom-artifacts.sh`, `trivy*.yml`                                     |
+| G — évasion webview        | R9            | CSP stricte, permissions Tauri                   | `tauri.conf.json`, `capabilities/`                                             |
 
 **Bilan.** Les neuf risques critiques ou élevés identifiés au chapitre 2 sont
 couverts par au moins une mesure vérifiable, et les scénarios de gravité

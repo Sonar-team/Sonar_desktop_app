@@ -1,530 +1,295 @@
-# Intégration DevSecOps des tests E2E SONAR sur une VM Linux
+# Intégration DevSecOps du gate E2E signé SONAR
 
-Ce document décrit l'intégration du harness X11 de SONAR dans une chaîne
-GitLab CI pilotant une VM Linux avec Ansible. L'objectif est de valider le
-paquet réellement produit et installé, avec le vrai binaire Tauri, le WebView,
-les dialogues natifs et les commandes Rust.
+Ce runbook décrit le circuit de confiance utilisé pour installer et tester sur
+une VM Linux exactement le paquet SONAR signé et publié. Il concerne les
+pipelines de tags `vX.Y.Z`.
 
-Le script exécuté est
-[`run-sonar-x11-e2e.sh`](./run-sonar-x11-e2e.sh). Son contrat fonctionnel et la
-liste détaillée des contrôles sont présentés dans le [README E2E](./README.md).
-
-## Résultat attendu
-
-Le chemin nominal est le suivant :
+Le gate est composé de deux chaînes complémentaires :
 
 ```text
-job GitLab build
-    │
-    ├── paquet sonar_*.deb
-    └── dist/ du même build
-            │
-            ▼
-job GitLab e2e-vm ── Ansible/SSH ──► VM de test propre
-                                            │
-                                            ├── installe le paquet
-                                            ├── déploie le harness et les fixtures
-                                            ├── démarre Xvfb automatiquement
-                                            └── exécute les parcours E2E
-                                                        │
-                                                        ▼
-                         GitLab conserve résumé, logs, captures et exports
+GitHub Actions publish
+  └─ build → hashes → signatures Sigstore → kit hors ligne signé → release
+                                                                  │
+GitLab CI e2e:signed-linux-vm                                     │
+  └─ attend la release publique ◄─────────────────────────────────┘
+     → vérifie le kit et le .deb
+     → Ansible installe ce .deb sur la VM
+     → Xvfb exécute les parcours E2E
+     → GitLab conserve les preuves
 ```
 
-Le job est bloquant : un retour non nul du script doit faire échouer la
-pipeline. Ne pas utiliser `allow_failure: true` pour ce contrôle.
+Le `.deb` reconstruit par GitLab n'est jamais substitué au paquet signé. Le
+gate télécharge l'artefact de la release GitHub correspondant exactement à
+`CI_COMMIT_TAG` et `CI_COMMIT_SHA`.
 
-## Périmètre de validation
+## Composants versionnés
 
-Le harness couvre notamment :
+| Fichier                                                                          | Rôle                                                                    |
+| -------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [`create-offline-verification-kit.sh`](../ci/create-offline-verification-kit.sh) | Assemble et signe le kit durant la release                              |
+| [`verify-offline-release-kit.sh`](../ci/verify-offline-release-kit.sh)           | Vérifie hors ligne l'archive, l'identité, les hashes et chaque artefact |
+| [`verify-offline-release-kit.ps1`](../ci/verify-offline-release-kit.ps1)         | Même vérification sur un poste Windows sans Bash                        |
+| [`download-signed-release-for-e2e.sh`](../ci/download-signed-release-for-e2e.sh) | Attend et télécharge le kit signé exact                                 |
+| [`sigstore-trusted-root.json`](../../security/sigstore-trusted-root.json)        | Racine Sigstore figée et revue dans le dépôt                            |
+| [`e2e-vm.yml`](../../.gitlab/ci/e2e-vm.yml)                                      | Job GitLab bloquant sur les tags                                        |
+| [`sonar-e2e.yml`](../../ci/ansible/sonar-e2e.yml)                                | Installation et exécution distante avec Ansible                         |
+| [`run-sonar-x11-e2e.sh`](./run-sonar-x11-e2e.sh)                                 | Parcours fonctionnels du vrai binaire Tauri                             |
 
-- le smoke test du binaire installé et l'ouverture de la fenêtre Tauri ;
-- les panneaux Configuration et Filtre BPF ;
-- l'import d'un PCAP puis le rendu du graphe ;
-- l'activation et l'arrêt de ForceAtlas2 ;
-- l'import et la gestion des labels ;
-- les exports PNG, matrice CSV, labels CSV et logs ;
-- le reset puis l'import d'une matrice CSV ;
-- les dialogues de fichiers natifs GTK ;
-- les erreurs CSP et les panic Rust visibles dans les logs ;
-- la présence des assets attendus dans `dist/`, si ce dossier est déployé.
+La version de Cosign est centralisée dans `config/build-versions.env`. Le
+workflow et l'image du runner GitLab doivent utiliser cette même version.
 
-La capture réseau en direct est volontairement désactivée par défaut. Les
-imports PCAP testent le pipeline sans donner de privilèges réseau au job.
+## Contenu du kit hors ligne
 
-## Contrat d'entrée et de sortie
+À partir de la prochaine release produite avec ce mécanisme, chaque plateforme
+publie une archive :
 
-| Élément          | Contrat                                                                          |
-| ---------------- | -------------------------------------------------------------------------------- |
-| Paquet           | Un unique paquet `.deb` provenant du job `build`                                 |
-| Binaire installé | `/usr/bin/sonar` pour le paquet Debian actuel                                    |
-| Harness          | `script/e2e/` et `script/ci/smoke-test-release-binary.sh` du même commit         |
-| Fixtures         | Un PCAP, une matrice CSV et un fichier de labels CSV non sensibles               |
-| Assets           | Le dossier `dist/` provenant du même job que le paquet                           |
-| Affichage        | Xvfb créé automatiquement quand `DISPLAY` est absent                             |
-| Succès           | Code retour `0` et première ligne de `summary.txt` égale à `SONAR X11 E2E: PASS` |
-| Échec            | Code retour non nul, avec logs et capture `failure.png` lorsque possible         |
+```text
+sonar-offline-kit-<version>-<plateforme>.tar.gz
+<plateforme>-sonar-offline-kit-<version>-<plateforme>.tar.gz.sigstore.json
+```
 
-Le nombre de lignes `PASS` peut varier si Openbox ou la capture live sont
-activés. Le gate doit donc reposer sur le code retour et `summary.txt`, pas sur
-un nombre de contrôles codé en dur.
+L'archive contient :
 
-## Préparation de la VM
+- les binaires et installateurs de la plateforme ;
+- la signature Sigstore individuelle de chaque artefact ;
+- le manifeste de hashes signé de la release ;
+- un manifeste `SHA256SUMS` couvrant le contenu du kit ;
+- la racine Sigstore utilisée par la version ;
+- le binaire Cosign vérifié par l'action d'installation épinglée ;
+- les scripts de vérification Bash et PowerShell ;
+- pour Linux, `dist/`, le harness X11 et les fixtures E2E du même build.
 
-### Système recommandé
+Le kit est lui-même signé et reçoit une attestation de provenance. Son SHA-256
+est ajouté au corps de la release.
 
-- VM Debian ou Ubuntu amd64 compatible avec le paquet produit ;
-- VM éphémère recréée depuis une image maîtrisée pour chaque pipeline ;
-- compte SSH non-root dédié à la CI avec élévation contrôlée pour
-  l'installation des paquets ;
-- au moins 2 vCPU, 4 Gio de RAM et 5 Gio d'espace libre ;
-- aucun serveur X ni processus SONAR déjà actif.
+La release `v4.8.3`, antérieure à cette intégration, possède des signatures
+individuelles mais pas encore l'archive hors ligne. Le premier kit sera publié
+par le prochain tag construit après l'intégration de ces changements.
 
-Une VM persistante reste possible. Dans ce cas, sérialiser les jobs avec
-`resource_group` dans GitLab et restaurer la VM après chaque exécution pour
-éviter les états résiduels.
+## Amorçage de la confiance hors ligne
 
-### Dépendances de test
+Un kit ne peut pas se déclarer lui-même fiable. Avant l'isolement du poste ou
+de l'image de VM, provisionner séparément :
 
-Le paquet SONAR installe ses dépendances runtime. Le harness demande en plus :
+1. Cosign dans la version déclarée par `COSIGN_VERSION` ;
+2. `security/sigstore-trusted-root.json` ;
+3. `script/ci/verify-offline-release-kit.sh` ;
+4. le tag exact que l'opérateur est autorisé à installer.
+
+Ces trois fichiers doivent venir de l'image de confiance ou d'un support
+d'administration contrôlé. Le vérificateur n'exécute volontairement pas le
+Cosign embarqué dans une archive encore non vérifiée.
+
+La racine actuellement versionnée a été générée avec Cosign 3.0.6 depuis les
+services par défaut Sigstore. Son SHA-256 est figé dans
+`SIGSTORE_TRUSTED_ROOT_SHA256`, dans `config/build-versions.env`, et contrôlé
+par la CI :
 
 ```bash
-apt-get install --yes \
-  build-essential pkg-config libx11-dev libxtst-dev \
-  xvfb openbox x11-utils wmctrl xclip imagemagick dbus-x11 file
+sha256sum security/sigstore-trusted-root.json
 ```
 
-`openbox` et `wmctrl` sont facultatifs techniquement, mais recommandés sur
-l'image de test afin de garder un comportement graphique identique entre les
-exécutions. `cc`, les headers X11 et XTest sont nécessaires, car le petit pilote
-X11 est compilé localement au début du scénario.
+Lors d'une rotation Sigstore, générer une nouvelle racine dans un fichier
+temporaire, examiner le diff, vérifier une release connue, puis faire valider le
+changement par une pull request :
 
-### Réseau
+```bash
+cosign trusted-root create \
+  --with-default-services \
+  --out trusted-root.candidate.json
+```
 
-Xvfb est lancé avec `-nolisten tcp`. La VM n'a donc pas besoin d'exposer un
-port graphique. Seul SSH depuis le runner ou le contrôleur Ansible est requis.
-Les accès sortants de la VM peuvent être interdits une fois les paquets système
-disponibles depuis un miroir interne.
+Ne jamais remplacer automatiquement la racine pendant une installation sur un
+poste isolé.
 
-## Préparation de GitLab
+## Vérification manuelle hors ligne
 
-Configurer les éléments suivants dans les variables CI/CD protégées :
+Sur une station d'administration connectée, télécharger l'archive et son
+bundle, puis les transférer ensemble avec le tag attendu. Sur le poste isolé :
 
-| Variable                    | Type conseillé                            | Usage                           |
-| --------------------------- | ----------------------------------------- | ------------------------------- |
-| `SONAR_E2E_SSH_KEY`         | File, protégée                            | Clé privée du compte Ansible    |
-| `SONAR_E2E_KNOWN_HOSTS`     | File, protégée                            | Empreinte SSH vérifiée de la VM |
-| Inventaire ou adresse de VM | Variable protégée ou inventaire dynamique | Cible Ansible                   |
+```bash
+./verify-offline-release-kit.sh \
+  --archive sonar-offline-kit-4.9.0-ubuntu-22.04.tar.gz \
+  --bundle ubuntu-22.04-sonar-offline-kit-4.9.0-ubuntu-22.04.tar.gz.sigstore.json \
+  --trusted-root /opt/sonar-trust/sigstore-trusted-root.json \
+  --expected-tag v4.9.0 \
+  --expected-commit <SHA-1 Git de 40 caractères> \
+  --platform ubuntu-22.04 \
+  --cosign /opt/sonar-trust/cosign \
+  --extract-to /var/tmp/sonar-verified-v4.9.0
+```
 
-Ne pas désactiver `StrictHostKeyChecking` et ne pas écrire de clé privée dans
-le dépôt. Pour une VM créée dynamiquement, faire produire l'inventaire et
-`known_hosts` par l'étape de provisioning approuvée.
+Sur un poste Windows isolé, la commande équivalente est :
 
-Exemple minimal pour une VM déjà provisionnée :
+```powershell
+.\verify-offline-release-kit.ps1 `
+  -Archive .\sonar-offline-kit-4.9.0-windows-2022.tar.gz `
+  -Bundle .\windows-2022-sonar-offline-kit-4.9.0-windows-2022.tar.gz.sigstore.json `
+  -TrustedRoot C:\ProgramData\SONAR\Trust\sigstore-trusted-root.json `
+  -ExpectedTag v4.9.0 `
+  -ExpectedCommit <SHA-1 Git de 40 caractères> `
+  -Platform windows-2022 `
+  -Cosign C:\ProgramData\SONAR\Trust\cosign.exe `
+  -ExtractTo C:\ProgramData\SONAR\Verified\v4.9.0
+```
+
+La commande ne contacte ni Fulcio ni Rekor. Le bundle et la racine fournissent
+le matériel de vérification. Elle contrôle successivement :
+
+1. la signature de l'archive avant son extraction ;
+2. l'identité exacte du workflow `publish.yml` et du tag demandé ;
+3. le commit Git exact, lorsqu'il est fourni par la CI ou l'opérateur ;
+4. l'absence de chemin dangereux ou de lien symbolique dans l'archive ;
+5. tous les hashes internes ;
+6. la signature du manifeste de release ;
+7. la signature et le SHA-256 de chaque artefact.
+
+Le succès se termine par :
+
+```text
+SONAR_OFFLINE_KIT_VERIFIED=/chemin/du/kit
+SONAR_SIGNED_DEB=/chemin/du/paquet.deb
+```
+
+Une version ancienne mais correctement signée reste techniquement valide. Le
+paramètre obligatoire `--expected-tag` empêche qu'elle soit installée par
+substitution lorsque l'opérateur attend une autre version. Le commit attendu
+doit venir de la fiche de release ou du canal d'autorisation, jamais du kit à
+contrôler. GitLab fournit automatiquement `CI_COMMIT_SHA`.
+
+## Activation dans GitLab
+
+Le dépôt inclut déjà `.gitlab/ci/e2e-vm.yml` et le stage `e2e`. Le job reste
+absent tant que la variable suivante n'est pas définie :
+
+```text
+SONAR_E2E_VM_ENABLED=true
+```
+
+Le motif de tags `v*` doit être protégé dans GitLab et GitHub afin que seuls les
+mainteneurs de release autorisés puissent déclencher cette chaîne.
+
+Configurer ensuite ces variables CI/CD protégées :
+
+| Variable                      | Type                      | Contenu                                                                               |
+| ----------------------------- | ------------------------- | ------------------------------------------------------------------------------------- |
+| `SONAR_E2E_RUNNER_IMAGE`      | Variable                  | Image immuable contenant Bash, `gh`, Cosign, Ansible, SSH, `jq`, `tar` et `sha256sum` |
+| `SONAR_GITHUB_TOKEN`          | Variable masquée/protégée | Jeton GitHub en lecture seule des releases                                            |
+| `SONAR_SIGSTORE_TRUSTED_ROOT` | File protégée             | Copie approuvée de la racine Sigstore versionnée                                      |
+| `SONAR_E2E_INVENTORY`         | File protégée             | Inventaire Ansible du groupe `sonar_e2e`                                              |
+| `SONAR_E2E_SSH_KEY`           | File protégée             | Clé privée SSH du compte d'automatisation                                             |
+| `SONAR_E2E_KNOWN_HOSTS`       | File protégée             | Empreinte SSH vérifiée de la VM                                                       |
+
+L'image `SONAR_E2E_RUNNER_IMAGE` doit être épinglée par digest et contenir la
+version exacte de Cosign déclarée dans `config/build-versions.env`. Le jeton
+GitHub n'a besoin que de lire les releases et ne doit pas permettre leur
+modification. Le job exige aussi que la racine fournie par la variable protégée
+soit identique à celle revue dans le dépôt.
+
+Exemple minimal d'inventaire :
 
 ```ini
 [sonar_e2e]
 sonar-e2e-linux ansible_host=192.0.2.10 ansible_user=sonar-ci
 ```
 
-L'adresse ci-dessus est un exemple réservé à la documentation. Le compte
-`sonar-ci` doit pouvoir utiliser `become` uniquement pour les tâches système
-prévues par le playbook.
+L'adresse est réservée à la documentation. Ne jamais désactiver la vérification
+de la clé d'hôte SSH. Le compte `sonar-ci` peut utiliser `become` uniquement
+pour l'installation des dépendances et du paquet.
 
-Le job `build` doit publier :
+## Déroulement du job GitLab
 
-```yaml
-artifacts:
-  paths:
-    - src-tauri/target/release/bundle/deb/*.deb
-    - dist/
+Le job `e2e:signed-linux-vm` :
+
+1. attend au maximum deux heures que la release GitHub du même tag devienne
+   publique ;
+2. télécharge uniquement le kit Linux et son bundle Sigstore ;
+3. vérifie le kit avec la racine versionnée, l'identité, le tag et le
+   `CI_COMMIT_SHA` exacts ;
+4. transmet à Ansible le chemin du `.deb` déjà vérifié ;
+5. recalcule son SHA-256 après le transfert SSH ;
+6. installe `/usr/bin/sonar` depuis ce paquet ;
+7. exécute les E2E avec Xvfb et un compte non privilégié ;
+8. récupère les preuves avant de propager un éventuel échec.
+
+Le job ne passe jamais `--build` au harness. Il teste le binaire du paquet
+signé, pas une reconstruction effectuée sur la VM.
+
+Si GitHub ne publie pas la release, si l'identité ne correspond pas, si une
+signature est absente ou si Ansible échoue, le job GitLab échoue aussi.
+
+## VM de test
+
+La cible de référence est une VM Debian ou Ubuntu amd64 propre, avec au moins
+2 vCPU, 4 Gio de RAM et 5 Gio libres. Le playbook installe :
+
+```text
+build-essential  pkg-config  libx11-dev  libxtst-dev
+xvfb  openbox  x11-utils  wmctrl  xclip
+imagemagick  dbus-x11  file
 ```
 
-Le build doit laisser exactement un paquet Debian dans ses artefacts. Comme
-`src-tauri/target/` est mis en cache dans la CI actuelle, supprimer les anciens
-paquets du dossier de sortie avant le build ou faire échouer le job E2E lorsque
-plusieurs `.deb` sont trouvés. Il ne faut pas sélectionner silencieusement un
-ancien paquet.
+SONAR et Xvfb s'exécutent avec l'utilisateur système `sonar-e2e`, jamais avec
+`root`. Xvfb n'écoute pas sur TCP. Les données, caches et configurations sont
+isolés par le harness avec `XDG_*`.
 
-## Playbook Ansible de référence
+Une VM éphémère est recommandée. Si plusieurs pipelines partagent une VM, le
+`resource_group` GitLab empêche leur exécution simultanée, mais la VM doit
+quand même être restaurée entre les campagnes.
 
-L'exemple suivant est volontairement autonome. Il installe le paquet, déploie
-uniquement les fichiers utiles depuis le checkout du runner, exécute SONAR avec
-un utilisateur non privilégié, puis récupère les preuves avant de propager un
-éventuel échec.
+## Preuves conservées
 
-Les variables `sonar_deb_local`, `sonar_deb_sha256`, `ci_pipeline_id` et
-`local_artifacts_dir` sont fournies par le job GitLab.
+GitLab publie avec `artifacts: when: always` :
 
-```yaml
----
-- name: Valider le paquet SONAR sur une VM Linux
-  hosts: sonar_e2e
-  gather_facts: true
-  become: true
+- `verification.log`, qui prouve la validation Sigstore du kit ;
+- `summary.txt` et `runtime.log` ;
+- les captures des écrans et dialogues natifs ;
+- les exports PNG, matrice, labels et logs ;
+- `failure.png` lorsqu'une erreur apparaît après l'ouverture de SONAR ;
+- les répertoires XDG isolés de la session.
 
-  vars:
-    controller_repo_root: "{{ lookup('ansible.builtin.env', 'CI_PROJECT_DIR') }}"
-    e2e_user: sonar-e2e
-    e2e_home: /var/lib/sonar-e2e
-    remote_root: '/opt/sonar-e2e/{{ ci_pipeline_id }}'
-    remote_fixtures: '{{ remote_root }}/fixtures'
-    remote_artifacts: '/var/tmp/sonar-e2e-{{ ci_pipeline_id }}'
-    remote_archive: '/var/tmp/sonar-e2e-{{ ci_pipeline_id }}.tar.gz'
-    remote_deb: '/var/tmp/sonar-under-test-{{ ci_pipeline_id }}.deb'
-    sonar_binary: /usr/bin/sonar
+Limiter l'accès et la rétention de ces artefacts : ils peuvent contenir les
+données importées pendant la recette. Les fixtures versionnées ne doivent
+contenir aucune donnée de production.
 
-  pre_tasks:
-    - name: Vérifier la famille de système prise en charge
-      ansible.builtin.assert:
-        that:
-          - ansible_facts.os_family == "Debian"
-        fail_msg: 'Ce playbook de référence attend une VM Debian ou Ubuntu.'
+## Capture réseau en direct
 
-    - name: Vérifier les variables obligatoires
-      ansible.builtin.assert:
-        that:
-          - sonar_deb_local | length > 0
-          - sonar_deb_sha256 | length == 64
-          - ci_pipeline_id | string | length > 0
-          - local_artifacts_dir | length > 0
+Le gate standard n'accorde aucune capability réseau. L'import PCAP valide le
+pipeline fonctionnel sans privilège supplémentaire.
 
-  tasks:
-    - name: Installer les dépendances du harness
-      ansible.builtin.apt:
-        name:
-          - build-essential
-          - pkg-config
-          - libx11-dev
-          - libxtst-dev
-          - xvfb
-          - openbox
-          - x11-utils
-          - wmctrl
-          - xclip
-          - imagemagick
-          - dbus-x11
-          - file
-        state: present
-        update_cache: true
-
-    - name: Créer l'utilisateur de test non privilégié
-      ansible.builtin.user:
-        name: '{{ e2e_user }}'
-        home: '{{ e2e_home }}'
-        create_home: true
-        shell: /usr/sbin/nologin
-        system: true
-
-    - name: Copier le paquet construit
-      ansible.builtin.copy:
-        src: '{{ sonar_deb_local }}'
-        dest: '{{ remote_deb }}'
-        owner: root
-        group: root
-        mode: '0644'
-
-    - name: Calculer l'empreinte du paquet reçu
-      ansible.builtin.stat:
-        path: '{{ remote_deb }}'
-        checksum_algorithm: sha256
-      register: remote_deb_stat
-
-    - name: Vérifier l'intégrité du paquet transféré
-      ansible.builtin.assert:
-        that:
-          - remote_deb_stat.stat.checksum == sonar_deb_sha256
-        fail_msg: 'Le SHA-256 du paquet copié sur la VM est différent.'
-
-    - name: Installer le paquet SONAR à valider
-      ansible.builtin.apt:
-        deb: '{{ remote_deb }}'
-        state: present
-
-    - name: Créer les répertoires du scénario
-      ansible.builtin.file:
-        path: '{{ item }}'
-        state: directory
-        owner: '{{ e2e_user }}'
-        group: '{{ e2e_user }}'
-        mode: '0750'
-      loop:
-        - '{{ remote_root }}'
-        - '{{ remote_root }}/script'
-        - '{{ remote_root }}/script/ci'
-        - '{{ remote_root }}/script/e2e'
-        - '{{ remote_fixtures }}'
-        - '{{ remote_artifacts }}'
-
-    - name: Déployer le harness X11
-      ansible.builtin.copy:
-        src: '{{ controller_repo_root }}/script/e2e/'
-        dest: '{{ remote_root }}/script/e2e/'
-        owner: '{{ e2e_user }}'
-        group: '{{ e2e_user }}'
-        mode: preserve
-
-    - name: Déployer le smoke test du binaire
-      ansible.builtin.copy:
-        src: '{{ controller_repo_root }}/script/ci/smoke-test-release-binary.sh'
-        dest: '{{ remote_root }}/script/ci/smoke-test-release-binary.sh'
-        owner: '{{ e2e_user }}'
-        group: '{{ e2e_user }}'
-        mode: '0750'
-
-    - name: Déployer le dist issu du même build
-      ansible.builtin.copy:
-        src: '{{ controller_repo_root }}/dist/'
-        dest: '{{ remote_root }}/dist/'
-        owner: '{{ e2e_user }}'
-        group: '{{ e2e_user }}'
-        mode: preserve
-
-    - name: Déployer les fixtures déterministes
-      ansible.builtin.copy:
-        src: '{{ item.src }}'
-        dest: '{{ remote_fixtures }}/{{ item.dest }}'
-        owner: '{{ e2e_user }}'
-        group: '{{ e2e_user }}'
-        mode: '0640'
-      loop:
-        - src: '{{ controller_repo_root }}/src-tauri/test_files/pcaps/import/pcap_tshark_corpus/industrial_ethernet.pcap'
-          dest: industrial_ethernet.pcap
-        - src: '{{ controller_repo_root }}/src-tauri/test_files/20260703_NP_Matrice.csv'
-          dest: matrice.csv
-        - src: '{{ controller_repo_root }}/src-tauri/test_files/20260703_NP_Labels.csv'
-          dest: labels.csv
-
-    - name: Exécuter et collecter le scénario E2E
-      block:
-        - name: Lancer le binaire installé dans un nouvel affichage Xvfb
-          become_user: '{{ e2e_user }}'
-          ansible.builtin.command:
-            argv:
-              - /usr/bin/env
-              - -u
-              - DISPLAY
-              - -u
-              - DBUS_SESSION_BUS_ADDRESS
-              - '{{ remote_root }}/script/e2e/run-sonar-x11-e2e.sh'
-              - --binary
-              - '{{ sonar_binary }}'
-              - --artifacts
-              - '{{ remote_artifacts }}'
-          environment:
-            HOME: '{{ e2e_home }}'
-            SONAR_E2E_PCAP: '{{ remote_fixtures }}/industrial_ethernet.pcap'
-            SONAR_E2E_MATRIX: '{{ remote_fixtures }}/matrice.csv'
-            SONAR_E2E_LABELS: '{{ remote_fixtures }}/labels.csv'
-          register: sonar_e2e_result
-          changed_when: false
-          failed_when: false
-
-        - name: Afficher la sortie synthétique du scénario
-          ansible.builtin.debug:
-            var: sonar_e2e_result.stdout_lines
-
-      always:
-        - name: Archiver les preuves sur la VM
-          ansible.builtin.command:
-            argv:
-              - /usr/bin/tar
-              - -C
-              - /var/tmp
-              - -czf
-              - '{{ remote_archive }}'
-              - '{{ remote_artifacts | basename }}'
-          changed_when: true
-
-        - name: Créer le dossier local de collecte
-          become: false
-          delegate_to: localhost
-          ansible.builtin.file:
-            path: '{{ local_artifacts_dir }}'
-            state: directory
-            mode: '0750'
-
-        - name: Récupérer les preuves sur le runner GitLab
-          ansible.builtin.fetch:
-            src: '{{ remote_archive }}'
-            dest: '{{ local_artifacts_dir }}/{{ inventory_hostname }}.tar.gz'
-            flat: true
-
-    - name: Bloquer la pipeline si le scénario a échoué
-      ansible.builtin.fail:
-        msg: >-
-          Le scénario E2E SONAR a échoué avec le code
-          {{ sonar_e2e_result.rc }}. Consulter l'archive de preuves.
-      when: sonar_e2e_result.rc != 0
-```
-
-Ce playbook ne passe pas `--build` : la cible du test est obligatoirement le
-binaire issu du paquet installé, et non un nouveau binaire reconstruit sur la
-VM.
-
-## Job GitLab de référence
-
-Ajouter un stage `e2e` après `build`, puis inclure par exemple un fichier
-`.gitlab/ci/e2e-vm.yml`.
-
-L'image du job doit contenir Bash, une version épinglée d'Ansible et un client
-SSH. Utiliser de préférence une image interne référencée par digest et placer
-sa référence complète dans `ANSIBLE_RUNNER_IMAGE`.
-
-```yaml
-e2e:linux-vm:
-  stage: e2e
-  image: '${ANSIBLE_RUNNER_IMAGE}'
-  needs:
-    - job: build
-      artifacts: true
-  timeout: 30 minutes
-  interruptible: true
-
-  # À conserver si plusieurs pipelines partagent la même VM.
-  resource_group: sonar-e2e-linux-vm
-
-  before_script:
-    - install -m 600 "$SONAR_E2E_SSH_KEY" "$CI_PROJECT_DIR/.ansible-key"
-    - install -m 644 "$SONAR_E2E_KNOWN_HOSTS" "$CI_PROJECT_DIR/.known_hosts"
-    - export ANSIBLE_PRIVATE_KEY_FILE="$CI_PROJECT_DIR/.ansible-key"
-    - export ANSIBLE_HOST_KEY_CHECKING=True
-    - export ANSIBLE_SSH_ARGS="-o UserKnownHostsFile=$CI_PROJECT_DIR/.known_hosts"
-
-  script:
-    - |
-      mapfile -t sonar_debs < <(
-        find src-tauri/target/release/bundle/deb \
-          -maxdepth 1 -type f -name 'sonar_*.deb' -print
-      )
-      if (( ${#sonar_debs[@]} != 1 )); then
-        printf 'Un seul paquet SONAR est attendu, trouvé : %s\n' \
-          "${#sonar_debs[@]}" >&2
-        exit 1
-      fi
-      sonar_deb="${sonar_debs[0]}"
-      sonar_sha256="$(sha256sum "$sonar_deb" | cut -d ' ' -f 1)"
-
-      set +e
-      ansible-playbook \
-        --inventory ci/ansible/inventory.ini \
-        ci/ansible/sonar-e2e.yml \
-        --extra-vars "sonar_deb_local=$CI_PROJECT_DIR/$sonar_deb" \
-        --extra-vars "sonar_deb_sha256=$sonar_sha256" \
-        --extra-vars "ci_pipeline_id=$CI_PIPELINE_ID" \
-        --extra-vars "local_artifacts_dir=$CI_PROJECT_DIR/e2e-artifacts"
-      e2e_status=$?
-      set -e
-
-      for archive in e2e-artifacts/*.tar.gz; do
-        [[ -e "$archive" ]] || continue
-        mkdir -p "${archive%.tar.gz}"
-        tar -xzf "$archive" -C "${archive%.tar.gz}"
-      done
-      exit "$e2e_status"
-
-  artifacts:
-    when: always
-    paths:
-      - e2e-artifacts/
-    expire_in: 14 days
-
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_COMMIT_TAG'
-```
-
-Dans `.gitlab-ci.yml`, déclarer le stage et l'include :
-
-```yaml
-stages:
-  - build
-  - e2e
-  - sonarqube
-
-include:
-  - local: '.gitlab/ci/build.yml'
-  - local: '.gitlab/ci/e2e-vm.yml'
-  - local: '.gitlab/ci/sonarqube.yml'
-```
-
-Les chemins `ci/ansible/` et la méthode de création de la VM sont des exemples
-à adapter à l'infrastructure de l'équipe. Le harness SONAR lui-même reste dans
-`script/e2e/`.
-
-## Politique de sécurité
-
-### Exécution normale
-
-- exécuter SONAR et Xvfb avec `sonar-e2e`, jamais avec `root` ;
-- réserver `become` à l'installation des paquets et à la préparation de la VM ;
-- ne pas utiliser `xhost +` et ne pas exposer Xvfb sur TCP ;
-- utiliser uniquement les fixtures versionnées, jamais un PCAP de production ;
-- utiliser un dossier d'artefacts unique par pipeline ;
-- détruire ou restaurer la VM après le test ;
-- limiter la rétention et l'accès aux artefacts GitLab, car les logs et les
-  données XDG peuvent contenir les données importées pendant le scénario.
-
-### Capture réseau en direct
-
-Le mode live n'est pas nécessaire au gate standard. S'il est ajouté à une
-pipeline spécialisée :
+Pour une campagne spécialisée sur une VM éphémère :
 
 ```bash
 setcap cap_net_raw,cap_net_admin=eip /usr/bin/sonar
 ```
 
-puis ajouter `--live-capture` à la commande E2E. Cette capability doit être
-accordée uniquement dans une VM éphémère dédiée et après l'installation du
-paquet. Ne pas contourner cette exigence en exécutant toute l'application avec
-`sudo`.
+puis ajouter `--live-capture` au harness. Ne jamais remplacer cette procédure
+par l'exécution complète de SONAR avec `sudo`.
 
-## Artefacts à conserver
+## Critères d'acceptation
 
-Le dossier produit contient notamment :
+L'intégration est opérationnelle lorsque :
 
-- `summary.txt` : verdict et chemins des fixtures ;
-- `runtime.log` et `startup-smoke.log` : sorties du binaire ;
-- les captures `01-startup.png` à `10-matrix-imported.png` ;
-- `native-dialog-*-before.png` : preuve des dialogues natifs ;
-- `graph-export.png`, `matrix-export.csv` et `labels-export.csv` ;
-- `logs-export.log/` : export applicatif des logs ;
-- `failure.png` lorsqu'une erreur survient après l'ouverture de SONAR ;
-- les répertoires XDG isolés de la session.
-
-Le job GitLab doit publier ces éléments avec `artifacts: when: always`, y
-compris lorsque Ansible renvoie un échec.
-
-## Critères d'acceptation du gate
-
-L'intégration est considérée opérationnelle lorsque :
-
-1. le paquet testé vient exactement du job `build` de la même pipeline ;
-2. son SHA-256 est vérifié après le transfert sur la VM ;
-3. le paquet est installé sur une VM propre avant le test ;
-4. le scénario s'exécute sans `DISPLAY` hérité et crée son propre Xvfb ;
-5. le job échoue pour tout code retour non nul ;
-6. `summary.txt` contient `SONAR X11 E2E: PASS` en cas de succès ;
-7. les preuves sont récupérées et publiées même en cas d'échec ;
-8. le job n'est ni autorisé à échouer ni relancé automatiquement pour masquer
-   un test instable ;
-9. aucun privilège de capture réseau n'est accordé au gate standard.
+1. le job ne s'exécute que pour un tag `vX.Y.Z` explicitement attendu ;
+2. le kit et le paquet sont signés par le workflow SONAR exact ;
+3. le tag du certificat correspond à `CI_COMMIT_TAG` ;
+4. la racine et Cosign viennent de l'image de confiance ;
+5. Ansible installe le `.deb` extrait du kit vérifié ;
+6. tous les parcours E2E réussissent sur une VM propre ;
+7. les preuves sont récupérées même lorsque le scénario échoue ;
+8. le job n'utilise ni `allow_failure` ni `--keep-open` ;
+9. aucun privilège de capture n'est présent dans le gate standard.
 
 ## Diagnostic rapide
 
-| Symptôme                      | Vérification                                                        |
-| ----------------------------- | ------------------------------------------------------------------- |
-| `commande requise absente`    | Comparer les paquets installés avec la liste des dépendances        |
-| `Xvfb ne répond pas`          | Lire `xvfb.log`, vérifier `/tmp` et les numéros `DISPLAY` 90 à 119  |
-| Dialogue natif introuvable    | Vérifier `dbus-x11`, `xclip`, GTK et les captures `native-dialog-*` |
-| Fenêtre SONAR déjà présente   | Recréer la VM ou supprimer proprement la session précédente         |
-| Fixture absente               | Vérifier les trois variables `SONAR_E2E_*` et les droits de lecture |
-| Asset absent                  | Vérifier que `dist/` vient du même build et a été copié sur la VM   |
-| Import PCAP ou labels bloqué  | Lire `runtime.log` et la capture correspondant à l'étape            |
-| Échec uniquement en mode live | Vérifier `getcap /usr/bin/sonar` et l'interface de capture de la VM |
-
-Pour reproduire une exécution CI manuellement sur la VM, utiliser le même
-compte non privilégié et la même commande Ansible. L'option `--keep-open` est
-réservée au diagnostic interactif et ne doit jamais être utilisée dans le gate
-automatique.
+| Symptôme                       | Vérification                                                            |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| Release signée introuvable     | Contrôler le tag, le workflow GitHub `publish` et le jeton de lecture   |
+| Identité ou signature invalide | Vérifier le tag attendu, la racine versionnée et le bundle téléchargé   |
+| Version Cosign différente      | Reconstruire l'image du runner avec `COSIGN_VERSION`                    |
+| Racine embarquée différente    | Examiner une rotation Sigstore ou une archive altérée                   |
+| Aucun `.deb` unique            | Vérifier le contenu du kit Linux et la collecte des bundles             |
+| `Xvfb ne répond pas`           | Lire `xvfb.log` et vérifier les numéros `DISPLAY` 90 à 119              |
+| Dialogue natif introuvable     | Vérifier `dbus-x11`, GTK, `xclip` et les captures du dialogue           |
+| Asset absent                   | Vérifier `validation/dist/` dans le kit signé                           |
+| Échec fonctionnel              | Lire `runtime.log`, `summary.txt` et la capture correspondant à l'étape |
