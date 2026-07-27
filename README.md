@@ -78,6 +78,12 @@ SOC rules.
   - UDP, TCP
   - HTTP, DNS, TLS, SSL
 
+### 📄 Format des matrices de flux
+
+Le format des matrices produites et consommées par SONAR (colonnes,
+préambule versionné, tunnels, provenance, règles d'import) est décrit dans
+[`SFMS.md`](./SFMS.md).
+
 ### 🔗 Types de liaison (LINKTYPE/DLT) supportés
 
 Chaque paquet est parsé avec le décodeur de son type de liaison réel —
