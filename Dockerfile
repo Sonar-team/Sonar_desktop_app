@@ -72,9 +72,13 @@ RUN apt install -y ${WINDOWS_CROSS_APT_PACKAGES}
 ARG CARGO_XWIN_VERSION=0.23.0
 RUN rustup target add x86_64-pc-windows-msvc \
   && cargo install cargo-xwin --locked --version "${CARGO_XWIN_VERSION}"
-# Hôte Linux, cible Windows : force /Brepro (GUID PDB déterministe dérivé
-# du contenu) que repro-env.ts n'active par défaut que sur hôte Windows.
+# Hôte Linux, cible Windows : force /Brepro (timestamps PE dérivés du
+# contenu) que repro-env.ts n'active par défaut que sur hôte Windows, et
+# supprime toute émission de PDB (/DEBUG:NONE) — le GUID RSDS du PDB était
+# la dernière source de non-déterminisme, et le profil release strippe déjà
+# les symboles. repro-env.ts compose ses flags par-dessus cette RUSTFLAGS.
 ENV SONAR_REPRO_WINDOWS_BREPRO=1
+ENV RUSTFLAGS="-C link-arg=/DEBUG:NONE"
 RUN deno run -A ./security/repro-env.ts run deno task tauri build \
   --runner cargo-xwin --target x86_64-pc-windows-msvc --no-bundle
 
