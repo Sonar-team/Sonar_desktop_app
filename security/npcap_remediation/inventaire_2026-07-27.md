@@ -2,9 +2,15 @@
 
 Réalisé pour l'issue [#169](https://github.com/Sonar-team/Sonar_desktop_app/issues/169)
 (phases non destructives : inventaire, classification, préservation des
-métadonnées). **Aucune suppression n'a été effectuée** — conformément à
-l'issue, toute action destructive attend la consigne écrite de Nmap et la
-validation des mainteneurs.
+métadonnées).
+
+**Mise à jour du 27/07/2026** : sur instruction du mainteneur, les 39 assets
+`*-setup.exe` NSIS embarquant Npcap ont été supprimés des releases GitHub
+(manifeste avec SHA-256 : `assets_supprimes_2026-07-27.csv`) et chaque
+release concernée porte une note de retrait. Vérifié après traitement :
+plus aucun asset « setup » via l'API et 404 sur les URLs de téléchargement.
+Les archives source automatiques des 119 tags restent en ligne — leur sort
+(suppression de tags ou réécriture d'historique) attend la réponse de Nmap.
 
 ## Méthode
 

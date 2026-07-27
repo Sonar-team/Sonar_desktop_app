@@ -71,6 +71,18 @@ L'assainissement des releases historiques qui contiennent un installeur reste
 suivi dans #169 ; les tests Windows avec Npcap présent, absent ou incompatible
 restent suivis dans #146.
 
+**Décision du 27/07/2026 (#169)** : sur instruction du mainteneur, les
+39 installateurs NSIS `*-setup.exe` qui embarquaient et exécutaient Npcap
+(releases `app-v3.9.6` à `v4.3.1`) ont été supprimés des releases GitHub, et
+chaque release concernée porte une note de retrait renvoyant vers
+npcap.com. Empreintes SHA-256 et métadonnées préservées dans
+`security/npcap_remediation/` (manifeste `assets_supprimes_2026-07-27.csv`).
+Les installateurs de l'ère MSI, vérifiés sains (fragment WiX non câblé),
+sont conservés. Restent en attente de la réponse de Nmap : le sort des
+archives source automatiques des 119 tags contenant encore le blob
+`npcap-*.exe` (leur retrait imposerait de supprimer les tags ou de réécrire
+l'historique).
+
 ## SBOM (#137)
 
 - SBOM backend : `cargo cyclonedx` sur `src-tauri` (inclut désormais
