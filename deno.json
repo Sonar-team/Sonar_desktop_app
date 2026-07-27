@@ -8,6 +8,7 @@
     "lint": "node node_modules/.bin/eslint src vite.config.ts --max-warnings=0",
     "format:check": "node node_modules/.bin/prettier --check .prettierrc.json eslint.config.js deno.json package.json",
     "test": "deno test --allow-env src/tests/",
-    "typecheck": "node node_modules/.bin/vue-tsc --noEmit"
+    "typecheck": "node node_modules/.bin/vue-tsc --noEmit",
+    "e2e:x11": "bash ./script/e2e/run-sonar-x11-e2e.sh"
   }
 }
