@@ -69,8 +69,6 @@ export default {
   },
 
   async mounted() {
-    console.log("mounted");
-
     // Set up the close event listener
     this.unlistenCloseEvent = await appWindow.onCloseRequested(async (event) => {
       info("close requested")

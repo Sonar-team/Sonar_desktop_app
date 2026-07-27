@@ -13,6 +13,7 @@ import { EdgeCurvedArrowProgram } from "@sigma/edge-curve"
 import { NodeBorderProgram } from "@sigma/node-border"
 import { useCaptureStore } from "../../store/capture"
 import { save } from "@tauri-apps/plugin-dialog"
+import { error, info, warn } from "@tauri-apps/plugin-log"
 import { GraphData, GraphUpdate, NodeData } from "../../types/capture"
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentDate } from '../../utils/time';
@@ -127,7 +128,6 @@ export default defineComponent({
     }))
 
     this.graphUnsubs.push(this.captureStore.onGraphSnapshot((graphData) => {
-      console.log("[NetworkGraphComponent] GraphSnapshot reçu -> reload");
       this.loadFromGraphData(graphData);
     }));
 
@@ -340,18 +340,13 @@ export default defineComponent({
      * envoyé par le backend (GraphSnapshot).
      */
     loadFromGraphData(snapshot: GraphData | null | undefined) {
-      console.log("[NetworkGraphComponent] GraphSnapshot reçu -> ", snapshot);
-
       try {
         if (!snapshot) {
-          console.error("[NetworkGraphComponent] Aucune donnée reçue");
+          error("[NetworkGraphComponent] GraphSnapshot sans donnée");
           return;
         }
         if (!snapshot.nodes || !snapshot.edges) {
-          console.error("[NetworkGraphComponent] Données de graphe invalides:", {
-            hasNodes: !!snapshot.nodes,
-            hasEdges: !!snapshot.edges
-          });
+          error(`[NetworkGraphComponent] Données de graphe invalides (nodes: ${!!snapshot.nodes}, edges: ${!!snapshot.edges})`);
           return;
         }
         if (!this.graph) return
@@ -359,10 +354,8 @@ export default defineComponent({
         this.resetGraph()
 
         const nodeEntries = Object.entries(snapshot.nodes || {});
-        console.log(`[NetworkGraphComponent] Chargement de ${nodeEntries.length} nœuds`);
-
         const edgeEntries = Object.entries(snapshot.edges || {});
-        console.log(`[NetworkGraphComponent] Chargement de ${edgeEntries.length} arêtes`);
+        info(`[NetworkGraphComponent] Chargement du snapshot : ${nodeEntries.length} nœuds, ${edgeEntries.length} arêtes`);
 
         // Positions initiales en couronne : ForceAtlas2 démêle ensuite.
         let i = 0
@@ -382,11 +375,11 @@ export default defineComponent({
         for (const [edgeId, edge] of edgeEntries) {
           if (!edge) continue;
           if (!edge.source || !edge.target) {
-            console.warn(`[NetworkGraphComponent] Arête ${edgeId} invalide: source ou target manquante`);
+            warn(`[NetworkGraphComponent] Arête ${edgeId} invalide: source ou target manquante`);
             continue;
           }
           if (!upsertEdge(this.graph, edge)) {
-            console.warn(`[NetworkGraphComponent] Arête orpheline ignorée: ${edge.source} -> ${edge.target} (${edge.label})`);
+            warn(`[NetworkGraphComponent] Arête orpheline ignorée: ${edge.source} -> ${edge.target} (${edge.label})`);
           }
         }
 
@@ -398,8 +391,8 @@ export default defineComponent({
 
         this.renderer?.getCamera().animatedReset()
 
-      } catch (error) {
-        console.error("[NetworkGraphComponent] Erreur critique dans loadFromGraphData:", error);
+      } catch (e) {
+        error(`[NetworkGraphComponent] Erreur critique dans loadFromGraphData: ${e}`);
       }
     },
 
@@ -447,7 +440,7 @@ export default defineComponent({
         })
         this.captureStore.applyGraphUpdates(updates)
       } catch (e) {
-        console.error("Erreur add_label:", e)
+        error(`Erreur add_label: ${e}`)
       } finally {
         this.isSavingLabel = false
       }
@@ -491,7 +484,7 @@ export default defineComponent({
       // Le typage Options API de Vue « déballe » l'instance Sigma (markRaw) ;
       // le cast rend le type nominal attendu par exportGraphToPng.
       await exportGraphToPng(this.renderer as Sigma, filePath)
-      console.log(`PNG exporté dans ${filePath}`)
+      info(`PNG exporté dans ${filePath}`)
     },
 
     // === Queue & updates ===================================================

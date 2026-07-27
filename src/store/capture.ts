@@ -4,6 +4,7 @@
 // composants par des abonnements (onGraphUpdate, onGraphSnapshot, …).
 import { defineStore } from "pinia";
 import { markRaw } from "vue";
+import { info, warn } from "@tauri-apps/plugin-log";
 import type { Channel } from "@tauri-apps/api/core";
 import { invoke } from "@tauri-apps/api/core";
 import type {
@@ -47,7 +48,7 @@ export const EXPECTED_PROTOCOL_VERSION = 1;
 // `protocol_version` permet de diagnostiquer, pas une raison de plus pour
 // perdre la session en cours.
 function logUnknownEvent(event: never): void {
-  console.warn("[CaptureStore] événement de capture inconnu ignoré (contrat IPC désynchronisé ?) :", event);
+  warn(`[CaptureStore] événement de capture inconnu ignoré (contrat IPC désynchronisé ?) : ${JSON.stringify(event)}`);
 }
 
 export const useCaptureStore = defineStore("capture", {
@@ -92,13 +93,13 @@ export const useCaptureStore = defineStore("capture", {
       const sid = status.session_id;
       if (typeof sid === "number" && sid > 0) {
         if (sid < this.sessionId) {
-          console.warn(
+          warn(
             `[CaptureStore] statut d'une session périmée ignoré (${sid} < ${this.sessionId})`,
           );
           return;
         }
         if (status.is_running && sid <= this.lastStoppedSessionId) {
-          console.warn(
+          warn(
             `[CaptureStore] statut Running tardif ignoré pour la session déjà arrêtée ${sid}`,
           );
           return;
@@ -121,8 +122,6 @@ export const useCaptureStore = defineStore("capture", {
     },
 
     setChannel(channel: Channel<CaptureEvent>) {
-      console.log("[CaptureStore] Channel attaché");
-
       // détacher l’ancien handler si besoin
       if (__channel) __channel.onmessage = () => {};
 
@@ -136,19 +135,19 @@ export const useCaptureStore = defineStore("capture", {
         if (typeof sid === "number" && sid > 0) {
           if (msg.event === "started") {
             if (sid < this.sessionId) {
-              console.warn(`[CaptureStore] started d'une session périmée ignoré (${sid} < ${this.sessionId})`);
+              warn(`[CaptureStore] started d'une session périmée ignoré (${sid} < ${this.sessionId})`);
               return;
             }
             this.sessionId = sid;
           } else if (sid !== this.sessionId) {
-            console.warn(`[CaptureStore] ${msg.event} d'une session périmée ignoré (${sid} ≠ ${this.sessionId})`);
+            warn(`[CaptureStore] ${msg.event} d'une session périmée ignoré (${sid} ≠ ${this.sessionId})`);
             return;
           }
         }
         switch (msg.event) {
           case "started":
             if (msg.data.protocolVersion !== EXPECTED_PROTOCOL_VERSION) {
-              console.warn(
+              warn(
                 `[CaptureStore] version du contrat IPC inattendue : reçu ${msg.data.protocolVersion}, attendu ${EXPECTED_PROTOCOL_VERSION} — frontend et backend probablement désynchronisés`
               );
             }
@@ -163,7 +162,7 @@ export const useCaptureStore = defineStore("capture", {
             for (const cb of this.finishedListeners) cb(msg.data);
             break;
           case "stopped":
-            console.log("[CaptureStore] Capture arrêtée :", msg.data.reason);
+            info(`[CaptureStore] Capture arrêtée : ${msg.data.reason}`);
             // Arrêt initié par le backend (ex. erreur pcap) : sans cette mise
             // à jour, l'UI croirait capturer indéfiniment.
             this.lastStoppedSessionId = Math.max(this.lastStoppedSessionId, msg.data.sessionId);
@@ -207,7 +206,6 @@ export const useCaptureStore = defineStore("capture", {
             }
             break;
           case "graphSnapshot":
-            console.log("[CaptureStore] GraphSnapshot reçu");
             for (const cb of this.graphSnapshotListeners) cb(msg.data.graphData);
             break;
           default:
@@ -260,12 +258,10 @@ export const useCaptureStore = defineStore("capture", {
       }
     },
     onGraphUpdate(cb: (u: GraphUpdate) => void) {
-      console.log("[CaptureStore] GraphUpdate abonné");
       this.graphUpdateListeners.push(cb);
       return unsubscribe(this.graphUpdateListeners, cb);
     },
     onGraphSnapshot(cb: (d: GraphData) => void) {
-      console.log("[CaptureStore] GraphSnapshot abonné");
       this.graphSnapshotListeners.push(cb);
       return unsubscribe(this.graphSnapshotListeners, cb);
     },
