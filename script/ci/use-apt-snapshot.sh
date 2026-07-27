@@ -73,11 +73,25 @@ EOF
 }
 
 run_apt_update() {
-  apt-get \
-    -o Acquire::Check-Valid-Until=false \
-    -o Acquire::Retries=5 \
-    -o APT::Update::Error-Mode=any \
-    update
+  local attempts="${APT_UPDATE_ATTEMPTS:-3}"
+  local backoff="${APT_UPDATE_BACKOFF_SECONDS:-15}"
+  local attempt
+
+  for attempt in $(seq 1 "$attempts"); do
+    if apt-get \
+      -o Acquire::Check-Valid-Until=false \
+      -o Acquire::Retries=5 \
+      -o APT::Update::Error-Mode=any \
+      update; then
+      return 0
+    fi
+    if [[ "$attempt" -lt "$attempts" ]]; then
+      echo "apt-get update failed (attempt ${attempt}/${attempts}); retrying in ${backoff}s" >&2
+      sleep "$backoff"
+    fi
+  done
+
+  return 1
 }
 
 main() {
