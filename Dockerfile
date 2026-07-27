@@ -48,10 +48,33 @@ RUN deno install --frozen
 # script/release/repro-build-container.sh).
 ARG SOURCE_DATE_EPOCH=1700000000
 ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
+
+
+FROM builder AS linux-builder
 RUN deno run -A ./security/repro-env.ts run deno task tauri build
 
 
 FROM scratch AS export
-COPY --from=builder /app/src-tauri/target/release/sonar /bin/sonar
-COPY --from=builder /app/src-tauri/target/release/bundle/deb/ /deb
-COPY --from=builder /app/src-tauri/target/release/bundle/rpm/ /rpm
+COPY --from=linux-builder /app/src-tauri/target/release/sonar /bin/sonar
+COPY --from=linux-builder /app/src-tauri/target/release/bundle/deb/ /deb
+COPY --from=linux-builder /app/src-tauri/target/release/bundle/rpm/ /rpm
+
+
+# Cross-compilation Windows depuis le même environnement épinglé :
+# cible MSVC via cargo-xwin (SDK Windows téléchargé et vérifié par xwin),
+# lien par lld. Les import libs Npcap sont versionnées dans le dépôt
+# (src-tauri/windows/npcap-sdk), build.rs les branche pour tout
+# CARGO_CFG_TARGET_OS=windows. Binaire seul (--no-bundle) : le bundling
+# NSIS cross reste un chantier séparé (#119).
+FROM builder AS windows-builder
+ARG WINDOWS_CROSS_APT_PACKAGES="clang=1:19.0-63 clang-tools=1:19.0-63 lld=1:19.0-63 llvm=1:19.0-63 nsis=3.11-1"
+RUN apt install -y ${WINDOWS_CROSS_APT_PACKAGES}
+ARG CARGO_XWIN_VERSION=0.23.0
+RUN rustup target add x86_64-pc-windows-msvc \
+  && cargo install cargo-xwin --locked --version "${CARGO_XWIN_VERSION}"
+RUN deno run -A ./security/repro-env.ts run deno task tauri build \
+  --runner cargo-xwin --target x86_64-pc-windows-msvc --no-bundle
+
+
+FROM scratch AS export-windows
+COPY --from=windows-builder /app/src-tauri/target/x86_64-pc-windows-msvc/release/sonar.exe /windows/sonar.exe

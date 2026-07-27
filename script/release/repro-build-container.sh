@@ -24,6 +24,15 @@ RUNS="${RUNS:-2}"
 NO_CACHE="${NO_CACHE:-1}"
 OUT="${OUT:-repro-container-out}"
 REF="${REF:-HEAD}"
+# PLATFORM=linux (binaire + deb/rpm) ou windows (sonar.exe cross-compilé
+# via cargo-xwin, cible MSVC).
+PLATFORM="${PLATFORM:-linux}"
+
+case "$PLATFORM" in
+  linux) target="export"; bin_rel="bin/sonar" ;;
+  windows) target="export-windows"; bin_rel="windows/sonar.exe" ;;
+  *) echo "PLATFORM invalide : $PLATFORM (linux|windows)" >&2; exit 1 ;;
+esac
 
 command -v docker >/dev/null 2>&1 || { echo "docker est requis" >&2; exit 1; }
 
@@ -38,7 +47,7 @@ commit="$(git rev-parse "$REF")"
 epoch="$(git log -1 --format=%ct "$commit")"
 
 echo "Commit construit : $commit (SOURCE_DATE_EPOCH=$epoch)"
-echo "Runs : $RUNS — no-cache : $NO_CACHE"
+echo "Runs : $RUNS — no-cache : $NO_CACHE — plateforme : $PLATFORM"
 
 workdir="$(mktemp -d)"
 trap 'rm -rf "$workdir"' EXIT
@@ -53,7 +62,7 @@ for i in $(seq 1 "$RUNS"); do
   git archive "$commit" | tar -x -C "$ctx"
 
   echo "=== Run $i/$RUNS : docker build ==="
-  args=(build --target export --output "type=local,dest=$out_abs/run$i"
+  args=(build --target "$target" --output "type=local,dest=$out_abs/run$i"
     --build-arg "SOURCE_DATE_EPOCH=$epoch")
   if [[ "$NO_CACHE" == "1" ]]; then
     args+=(--no-cache)
@@ -67,10 +76,10 @@ done
 echo
 echo "=== Comparaison ==="
 status=0
-ref_bin="$(sha256sum "$out_abs/run1/bin/sonar" | cut -d' ' -f1)"
+ref_bin="$(sha256sum "$out_abs/run1/$bin_rel" | cut -d' ' -f1)"
 echo "binaire run1 : $ref_bin"
 for i in $(seq 2 "$RUNS"); do
-  bin="$(sha256sum "$out_abs/run$i/bin/sonar" | cut -d' ' -f1)"
+  bin="$(sha256sum "$out_abs/run$i/$bin_rel" | cut -d' ' -f1)"
   echo "binaire run$i : $bin"
   if [[ "$bin" != "$ref_bin" ]]; then
     echo "ÉCHEC : le binaire du run$i diffère du run1" >&2
