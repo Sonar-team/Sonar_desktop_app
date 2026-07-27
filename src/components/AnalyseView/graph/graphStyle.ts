@@ -61,9 +61,9 @@ export const PORT_LABEL_ZOOM = 1.8
 // Tailles proportionnelles au trafic, en échelle log : les gros parleurs
 // ressortent sans écraser les hôtes discrets.
 export const NODE_SIZE_MIN = 7
-const NODE_SIZE_MAX = 18
+export const NODE_SIZE_MAX = 80
 export function nodeSizeFor(bytes: number) {
-  return Math.min(NODE_SIZE_MAX, NODE_SIZE_MIN + 1.1 * Math.log2(1 + bytes / 2000))
+  return Math.min(NODE_SIZE_MAX, NODE_SIZE_MIN + 2 * Math.log2(1 + bytes / 2000))
 }
 
 const EDGE_SIZE_MIN = 1.2

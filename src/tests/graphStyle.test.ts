@@ -8,6 +8,7 @@ import { DEFAULT_EDGE_CURVATURE } from "@sigma/edge-curve";
 
 import {
   MAC_CONFLICT_BORDER_COLOR,
+  NODE_SIZE_MAX,
   NODE_SIZE_MIN,
   brighten,
   darken,
@@ -102,13 +103,16 @@ Deno.test("nodeSizeFor - trafic nul -> taille minimale", () => {
   assertEquals(nodeSizeFor(0), NODE_SIZE_MIN);
 });
 
-Deno.test("nodeSizeFor - croît avec le trafic puis plafonne à 18", () => {
+Deno.test("nodeSizeFor - distingue les gros volumes puis plafonne à la taille maximale", () => {
   const small = nodeSizeFor(1_000);
   const big = nodeSizeFor(1_000_000);
-  const huge = nodeSizeFor(1e12);
+  const veryBig = nodeSizeFor(1_000_000_000);
+  const huge = nodeSizeFor(1e18);
 
   assertEquals(small < big, true, `small=${small} big=${big}`);
-  assertEquals(huge, 18);
+  assertEquals(big < veryBig, true, `big=${big} veryBig=${veryBig}`);
+  assertEquals(veryBig > 40, true, `veryBig=${veryBig}`);
+  assertEquals(huge, NODE_SIZE_MAX);
 });
 
 Deno.test("edgeSizeFor - trafic nul -> taille minimale, plafonne à 7", () => {
