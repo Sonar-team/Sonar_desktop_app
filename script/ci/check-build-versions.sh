@@ -39,6 +39,11 @@ check_contains .github/workflows/publish.yml 'sudo ./script/ci/use-apt-snapshot.
 check_contains .github/workflows/publish.yml 'sudo ./script/ci/apt-install-pinned.sh $LINUX_APT_PACKAGES'
 check_contains .github/workflows/publish.yml './script/ci/install-sbom-tools.sh'
 check_contains .github/workflows/publish.yml './script/ci/generate-sbom-artifacts.sh'
+check_contains .github/workflows/publish.yml 'cosign-release: "v${{ steps.versions.outputs.COSIGN_VERSION }}"'
+check_contains .github/workflows/publish.yml './script/ci/create-offline-verification-kit.sh'
+printf '%s  %s\n' \
+  "$SIGSTORE_TRUSTED_ROOT_SHA256" \
+  security/sigstore-trusted-root.json | sha256sum --check --status
 check_contains .github/workflows/publish-smoke.yml 'sudo ./script/ci/use-apt-snapshot.sh'
 check_contains .github/workflows/publish-smoke.yml 'sudo ./script/ci/apt-install-pinned.sh $LINUX_APT_PACKAGES'
 check_contains .github/workflows/publish-smoke.yml 'smoke build bundles with Tauri'

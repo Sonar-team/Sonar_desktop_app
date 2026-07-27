@@ -1,0 +1,83 @@
+e2e:signed-linux-vm:
+  stage: e2e
+  image: "${SONAR_E2E_RUNNER_IMAGE}"
+  timeout: 2 hours 30 minutes
+  interruptible: true
+  resource_group: sonar-e2e-linux-vm
+
+  variables:
+    SONAR_RELEASE_REPOSITORY: "Sonar-team/Sonar_desktop_app"
+    SONAR_RELEASE_WAIT_SECONDS: "7200"
+    SONAR_RELEASE_POLL_SECONDS: "15"
+
+  before_script:
+    - |
+      set -a
+      . "$CI_PROJECT_DIR/config/build-versions.env"
+      set +a
+      printf '%s  %s\n' \
+        "$SIGSTORE_TRUSTED_ROOT_SHA256" \
+        "$CI_PROJECT_DIR/security/sigstore-trusted-root.json" | \
+        sha256sum --check --status
+      cosign version 2>&1 | \
+        tr -d '\r' | \
+        grep -Eq "GitVersion:[[:space:]]+v?${COSIGN_VERSION}$"
+    - test -n "$SONAR_E2E_INVENTORY"
+    - test -n "$SONAR_E2E_SSH_KEY"
+    - test -n "$SONAR_E2E_KNOWN_HOSTS"
+    - test -n "$SONAR_GITHUB_TOKEN"
+    - test -n "$SONAR_SIGSTORE_TRUSTED_ROOT"
+    - cmp -s "$SONAR_SIGSTORE_TRUSTED_ROOT" "$CI_PROJECT_DIR/security/sigstore-trusted-root.json"
+    - install -m 600 "$SONAR_E2E_SSH_KEY" "$CI_PROJECT_DIR/.ansible-key"
+    - install -m 644 "$SONAR_E2E_KNOWN_HOSTS" "$CI_PROJECT_DIR/.known_hosts"
+    - export ANSIBLE_PRIVATE_KEY_FILE="$CI_PROJECT_DIR/.ansible-key"
+    - export ANSIBLE_HOST_KEY_CHECKING=True
+    - export ANSIBLE_SSH_ARGS="-o UserKnownHostsFile=$CI_PROJECT_DIR/.known_hosts"
+    - export GH_TOKEN="$SONAR_GITHUB_TOKEN"
+    - mkdir -p "$CI_PROJECT_DIR/.ansible/tmp" "$CI_PROJECT_DIR/e2e-artifacts"
+    - export ANSIBLE_LOCAL_TEMP="$CI_PROJECT_DIR/.ansible/tmp"
+
+  script:
+    - |
+      signed_release_dir="$CI_PROJECT_DIR/signed-release"
+      export SONAR_EXPECTED_COMMIT="$CI_COMMIT_SHA"
+      signed_deb="$($CI_PROJECT_DIR/script/ci/download-signed-release-for-e2e.sh \
+        "$CI_COMMIT_TAG" "$signed_release_dir" ubuntu-22.04)"
+      test -f "$signed_deb"
+
+      signed_kit_root="$(find "$signed_release_dir/extracted" \
+        -mindepth 1 -maxdepth 1 -type d \
+        -name 'sonar-offline-kit-*' -print -quit)"
+      test -n "$signed_kit_root"
+      test -d "$signed_kit_root/validation"
+      signed_deb_sha256="$(sha256sum "$signed_deb" | awk '{ print $1 }')"
+
+      set +e
+      ansible-playbook \
+        --inventory "$SONAR_E2E_INVENTORY" \
+        "$CI_PROJECT_DIR/ci/ansible/sonar-e2e.yml" \
+        --extra-vars "sonar_deb_local=$signed_deb" \
+        --extra-vars "sonar_deb_sha256=$signed_deb_sha256" \
+        --extra-vars "signed_kit_root_local=$signed_kit_root" \
+        --extra-vars "ci_job_id=$CI_JOB_ID" \
+        --extra-vars "local_artifacts_dir=$CI_PROJECT_DIR/e2e-artifacts"
+      e2e_status=$?
+      set -e
+
+      for archive in "$CI_PROJECT_DIR"/e2e-artifacts/*.tar.gz; do
+        [[ -e "$archive" ]] || continue
+        evidence_dir="${archive%.tar.gz}"
+        mkdir -p "$evidence_dir"
+        tar -xzf "$archive" -C "$evidence_dir"
+      done
+      exit "$e2e_status"
+
+  artifacts:
+    when: always
+    paths:
+      - e2e-artifacts/
+      - signed-release/verification.log
+    expire_in: 14 days
+
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/ && $SONAR_E2E_VM_ENABLED == "true"'

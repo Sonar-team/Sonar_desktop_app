@@ -5,6 +5,7 @@ default:
 
 stages:
   - build
+  - e2e
   - sonarqube
 
 variables:
@@ -14,4 +15,5 @@ variables:
 
 include:
   - local: ".gitlab/ci/build.yml"
+  - local: ".gitlab/ci/e2e-vm.yml"
   - local: ".gitlab/ci/sonarqube.yml"

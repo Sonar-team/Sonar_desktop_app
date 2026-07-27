@@ -1,0 +1,193 @@
+---
+- name: Validate the signed SONAR package on a Linux VM
+  hosts: sonar_e2e
+  gather_facts: true
+  become: true
+
+  vars:
+    e2e_user: sonar-e2e
+    e2e_home: /var/lib/sonar-e2e
+    remote_root: "/opt/sonar-e2e/{{ ci_job_id }}"
+    remote_fixtures: "{{ remote_root }}/fixtures"
+    remote_artifacts: "/var/tmp/sonar-e2e-{{ ci_job_id }}"
+    remote_archive: "/var/tmp/sonar-e2e-{{ ci_job_id }}.tar.gz"
+    remote_deb: "/var/tmp/sonar-under-test-{{ ci_job_id }}.deb"
+    sonar_binary: /usr/bin/sonar
+
+  pre_tasks:
+    - name: Validate the target and required variables
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.os_family == "Debian"
+          - ci_job_id | string is match('^[0-9]+$')
+          - sonar_deb_local | length > 0
+          - sonar_deb_sha256 is match('^[0-9a-f]{64}$')
+          - signed_kit_root_local | length > 0
+          - local_artifacts_dir | length > 0
+        fail_msg: >-
+          The playbook requires a Debian/Ubuntu VM and the verified signed-kit
+          variables supplied by the GitLab job.
+
+  tasks:
+    - name: Install the X11 E2E dependencies
+      ansible.builtin.apt:
+        name:
+          - build-essential
+          - pkg-config
+          - libx11-dev
+          - libxtst-dev
+          - xvfb
+          - openbox
+          - x11-utils
+          - wmctrl
+          - xclip
+          - imagemagick
+          - dbus-x11
+          - file
+        state: present
+        update_cache: true
+
+    - name: Create the unprivileged E2E account
+      ansible.builtin.user:
+        name: "{{ e2e_user }}"
+        home: "{{ e2e_home }}"
+        create_home: true
+        shell: /usr/sbin/nologin
+        system: true
+
+    - name: Copy the verified signed package
+      ansible.builtin.copy:
+        src: "{{ sonar_deb_local }}"
+        dest: "{{ remote_deb }}"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Calculate the transferred package checksum
+      ansible.builtin.stat:
+        path: "{{ remote_deb }}"
+        checksum_algorithm: sha256
+      register: remote_deb_stat
+
+    - name: Reject a package changed during transfer
+      ansible.builtin.assert:
+        that:
+          - remote_deb_stat.stat.checksum == sonar_deb_sha256
+        fail_msg: "The package SHA-256 changed during the Ansible transfer."
+
+    - name: Install the exact signed SONAR package
+      ansible.builtin.apt:
+        deb: "{{ remote_deb }}"
+        state: present
+
+    - name: Create isolated scenario directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ e2e_user }}"
+        group: "{{ e2e_user }}"
+        mode: "0750"
+      loop:
+        - "{{ remote_root }}"
+        - "{{ remote_root }}/script"
+        - "{{ remote_root }}/script/ci"
+        - "{{ remote_root }}/script/e2e"
+        - "{{ remote_root }}/dist"
+        - "{{ remote_fixtures }}"
+        - "{{ remote_artifacts }}"
+
+    - name: Deploy the signed X11 harness
+      ansible.builtin.copy:
+        src: "{{ signed_kit_root_local }}/validation/script/e2e/"
+        dest: "{{ remote_root }}/script/e2e/"
+        owner: "{{ e2e_user }}"
+        group: "{{ e2e_user }}"
+        mode: preserve
+
+    - name: Deploy the signed startup smoke test
+      ansible.builtin.copy:
+        src: "{{ signed_kit_root_local }}/validation/script/ci/smoke-test-release-binary.sh"
+        dest: "{{ remote_root }}/script/ci/smoke-test-release-binary.sh"
+        owner: "{{ e2e_user }}"
+        group: "{{ e2e_user }}"
+        mode: "0750"
+
+    - name: Deploy the signed frontend assets
+      ansible.builtin.copy:
+        src: "{{ signed_kit_root_local }}/validation/dist/"
+        dest: "{{ remote_root }}/dist/"
+        owner: "{{ e2e_user }}"
+        group: "{{ e2e_user }}"
+        mode: preserve
+
+    - name: Deploy the signed deterministic fixtures
+      ansible.builtin.copy:
+        src: "{{ signed_kit_root_local }}/validation/fixtures/"
+        dest: "{{ remote_fixtures }}/"
+        owner: "{{ e2e_user }}"
+        group: "{{ e2e_user }}"
+        mode: preserve
+
+    - name: Run and collect the E2E scenario
+      block:
+        - name: Run the installed binary in a fresh Xvfb display
+          become_user: "{{ e2e_user }}"
+          ansible.builtin.command:
+            argv:
+              - /usr/bin/env
+              - -u
+              - DISPLAY
+              - -u
+              - DBUS_SESSION_BUS_ADDRESS
+              - "{{ remote_root }}/script/e2e/run-sonar-x11-e2e.sh"
+              - --binary
+              - "{{ sonar_binary }}"
+              - --artifacts
+              - "{{ remote_artifacts }}"
+          environment:
+            HOME: "{{ e2e_home }}"
+            SONAR_E2E_PCAP: "{{ remote_fixtures }}/industrial_ethernet.pcap"
+            SONAR_E2E_MATRIX: "{{ remote_fixtures }}/matrice.csv"
+            SONAR_E2E_LABELS: "{{ remote_fixtures }}/labels.csv"
+          register: sonar_e2e_result
+          changed_when: false
+          failed_when: false
+
+        - name: Display the E2E summary
+          ansible.builtin.debug:
+            var: sonar_e2e_result.stdout_lines
+
+      always:
+        - name: Archive the VM evidence
+          ansible.builtin.command:
+            argv:
+              - /usr/bin/tar
+              - -C
+              - /var/tmp
+              - -czf
+              - "{{ remote_archive }}"
+              - "{{ remote_artifacts | basename }}"
+          changed_when: true
+
+        - name: Create the evidence directory on the GitLab runner
+          become: false
+          delegate_to: localhost
+          ansible.builtin.file:
+            path: "{{ local_artifacts_dir }}"
+            state: directory
+            mode: "0750"
+
+        - name: Fetch the VM evidence
+          ansible.builtin.fetch:
+            src: "{{ remote_archive }}"
+            dest: >-
+              {{ local_artifacts_dir }}/{{ inventory_hostname }}-{{ ci_job_id }}.tar.gz
+            flat: true
+
+    - name: Fail the gate after evidence collection
+      ansible.builtin.fail:
+        msg: >-
+          The SONAR E2E scenario failed with exit code
+          {{ sonar_e2e_result.rc | default('unknown') }}. See the collected
+          evidence archive.
+      when: sonar_e2e_result.rc | default(1) != 0

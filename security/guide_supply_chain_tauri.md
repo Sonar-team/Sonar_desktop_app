@@ -1,7 +1,7 @@
 # Sécuriser une application Tauri contre les attaques supply chain
 
-*Guide pratique illustré par les cas SolarWinds et XZ Utils, avec les
-contre-mesures réellement en place dans SONAR.*
+_Guide pratique illustré par les cas SolarWinds et XZ Utils, avec les
+contre-mesures réellement en place dans SONAR._
 
 ---
 
@@ -205,7 +205,7 @@ d'une injection. La reproductibilité transforme "faites-nous confiance" en
   `publish.yml` contient un job `verify unsigned reproducible binary` qui
   bloque la release si le binaire n'est pas reproductible.
 - **Périmètre explicite** : la reproductibilité porte sur le **binaire non
-  signé** ; signatures, hashes et attestations sont ajoutés *après*, en
+  signé** ; signatures, hashes et attestations sont ajoutés _après_, en
   fichiers détachés, pour ne pas modifier les octets du payload (voir
   `project_management/sprint_review_reproducible_builds.md`).
 
@@ -243,10 +243,21 @@ Personne ne comparait tarball et dépôt.
 **Vérification (utilisateur ou auditeur) :**
 
 ```bash
-sha256sum sonar_4.0.1_amd64.deb        # comparer à la valeur publiée
-gh attestation verify sonar_4.0.1_amd64.deb -R Sonar-team/Sonar_desktop_app
-cosign verify-blob --bundle sonar_4.0.1_amd64.deb.sigstore.json sonar_4.0.1_amd64.deb
+sha256sum <artefact>        # comparer à la valeur publiée
+gh attestation verify <artefact> -R Sonar-team/Sonar_desktop_app
+cosign verify-blob \
+  --trusted-root security/sigstore-trusted-root.json \
+  --certificate-identity \
+  "https://github.com/Sonar-team/Sonar_desktop_app/.github/workflows/publish.yml@refs/tags/<tag>" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  --bundle <bundle.sigstore.json> \
+  <artefact>
 ```
+
+Pour un poste isolé, utiliser le kit de release et le vérificateur versionné
+`script/ci/verify-offline-release-kit.sh`. La racine de confiance, Cosign et le
+vérificateur sont provisionnés séparément dans l'image de confiance ; ils ne
+sont jamais téléchargés au moment de l'installation.
 
 ---
 
@@ -341,17 +352,17 @@ d'invoquer des commandes Tauri sensibles.
 
 ## Tableau récapitulatif
 
-| # | Risque | Cas réel | Contre-mesure principale | Référence |
-|---|--------|----------|--------------------------|-----------|
-| 1 | Dépendance malveillante | XZ, event-stream | Lockfiles gelés, vendoring, cargo-vet, cargo-deny/audit | `src-tauri/vendor/`, `supply-chain/`, `deny.toml` |
-| 2 | Lockfile altéré | XZ | Lockfile relu comme du code, diff vendor visible | `sprint_secure_tauri_build_methodology.md` |
-| 3 | Dérive d'environnement | SolarWinds (prérequis) | Versions canoniques + digests + snapshots apt | `config/build-versions.env`, `check-build-versions.sh` |
-| 4 | Injection au build | **SolarWinds** | Builds reproductibles vérifiés avant release | `security/repro-env.ts`, `repro-check.sh` |
-| 5 | Artefact ≠ dépôt | **XZ** | CI seule source d'artefacts + attestations + cosign + SHA256 | `publish.yml`, `sign-release-artifacts.sh` |
-| 6 | CI compromise | tj-actions 2025 | Actions épinglées par SHA, permissions minimales | `.github/workflows/*.yml` |
-| 7 | CVE transitives | — | SBOM CycloneDX, cargo-audit, Trivy | `generate-sbom-artifacts.sh`, `trivy*.yml` |
-| 8 | Facteur humain | **XZ** | Provenance CI, pas de zone morte de revue, méthodologie écrite | `project_management/` |
-| 9 | Runtime webview | — | CSP stricte, permissions Tauri | `tauri.conf.json`, `capabilities/` |
+| #   | Risque                  | Cas réel               | Contre-mesure principale                                       | Référence                                              |
+| --- | ----------------------- | ---------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
+| 1   | Dépendance malveillante | XZ, event-stream       | Lockfiles gelés, vendoring, cargo-vet, cargo-deny/audit        | `src-tauri/vendor/`, `supply-chain/`, `deny.toml`      |
+| 2   | Lockfile altéré         | XZ                     | Lockfile relu comme du code, diff vendor visible               | `sprint_secure_tauri_build_methodology.md`             |
+| 3   | Dérive d'environnement  | SolarWinds (prérequis) | Versions canoniques + digests + snapshots apt                  | `config/build-versions.env`, `check-build-versions.sh` |
+| 4   | Injection au build      | **SolarWinds**         | Builds reproductibles vérifiés avant release                   | `security/repro-env.ts`, `repro-check.sh`              |
+| 5   | Artefact ≠ dépôt        | **XZ**                 | CI seule source d'artefacts + attestations + cosign + SHA256   | `publish.yml`, `sign-release-artifacts.sh`             |
+| 6   | CI compromise           | tj-actions 2025        | Actions épinglées par SHA, permissions minimales               | `.github/workflows/*.yml`                              |
+| 7   | CVE transitives         | —                      | SBOM CycloneDX, cargo-audit, Trivy                             | `generate-sbom-artifacts.sh`, `trivy*.yml`             |
+| 8   | Facteur humain          | **XZ**                 | Provenance CI, pas de zone morte de revue, méthodologie écrite | `project_management/`                                  |
+| 9   | Runtime webview         | —                      | CSP stricte, permissions Tauri                                 | `tauri.conf.json`, `capabilities/`                     |
 
 ---
 
@@ -370,7 +381,8 @@ d'invoquer des commandes Tauri sensibles.
 
 1. `sha256sum <artefact>` vs valeur publiée
 2. `gh attestation verify <artefact> -R Sonar-team/Sonar_desktop_app`
-3. `cosign verify-blob --bundle <artefact>.sigstore.json <artefact>`
+3. `script/ci/verify-offline-release-kit.sh` avec le tag exact et la racine
+   Sigstore versionnée
 4. Croiser le SBOM publié avec les bases de vulnérabilités
 5. Optionnel : rebuild local du commit taggé et comparaison des SHA256
 
@@ -384,8 +396,9 @@ que personne n'admettait ne pas couvrir :
 - La **reproductibilité porte sur le binaire**, pas encore sur tous les
   installateurs natifs (MSI/NSIS/DMG/DEB/RPM embarquent des métadonnées
   variables) ; ceux-ci sont couverts par hashes + attestations + signatures.
-- La **vérification post-release** (attestation, signature) reste une étape
-  manuelle documentée, pas encore automatisée.
+- La vérification Sigstore et E2E du paquet Linux signé est automatisée dans
+  GitLab pour les tags lorsque le gate VM est activé. L'installation sur le
+  poste sensible reste volontairement une opération hors ligne autorisée.
 - Les **exemptions cargo-vet** (`supply-chain/config.toml`) marquent des
   crates non encore auditées en profondeur : la couverture d'audit progresse
   release après release.

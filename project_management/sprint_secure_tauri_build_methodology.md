@@ -200,6 +200,10 @@ Verifications attendues:
 sha256sum <artifact>
 gh attestation verify <artifact> -R Sonar-team/Sonar_desktop_app
 cosign verify-blob \
+  --trusted-root security/sigstore-trusted-root.json \
+  --certificate-identity \
+  "https://github.com/Sonar-team/Sonar_desktop_app/.github/workflows/publish.yml@refs/tags/<tag>" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   --bundle <artifact>.sigstore.json \
   <artifact>
 ```
