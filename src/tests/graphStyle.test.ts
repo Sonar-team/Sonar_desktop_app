@@ -111,7 +111,7 @@ Deno.test("nodeSizeFor - distingue les gros volumes puis plafonne à la taille m
 
   assertEquals(small < big, true, `small=${small} big=${big}`);
   assertEquals(big < veryBig, true, `big=${big} veryBig=${veryBig}`);
-  assertEquals(veryBig > 18, true, `veryBig=${veryBig}`);
+  assertEquals(veryBig > 40, true, `veryBig=${veryBig}`);
   assertEquals(huge, NODE_SIZE_MAX);
 });
 
