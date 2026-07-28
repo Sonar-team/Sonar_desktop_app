@@ -538,6 +538,12 @@ pub fn convert_from_pcap_list(
         return Err(PcapImportError::MissingInput("l'import PCAP".to_string()).into());
     }
 
+    // Un même fichier sélectionné deux fois (doublon, chemin relatif, lien
+    // symbolique) doublerait ses paquets dans la matrice : la déduplication
+    // par identité réelle est faite ici, seul endroit qui puisse interroger
+    // le système de fichiers (#161).
+    let pcap_paths = super::dedupe_paths_by_identity(&pcap_paths);
+
     // Import et capture sont mutuellement exclusifs : la conversion
     // remplacerait la matrice et le graphe pendant que le pipeline les
     // alimente. La phase `Importing` est réservée atomiquement et détenue

@@ -12,6 +12,16 @@
   comme une information, pas comme une erreur, et voyage dans le contrat
   IPC typé (`import/cancelled`).
 
+## 🛠 Corrections
+
+- **Un fichier sélectionné deux fois n'est plus importé deux fois** (#161) :
+  la déduplication se fait désormais sur l'identité réelle du fichier et
+  non sur la chaîne du chemin. Deux désignations d'un même fichier (chemin
+  relatif, composants `.`/`..`, lien symbolique) ne doublent plus ses
+  paquets dans la matrice ni sa provenance dans la colonne `origin`. Un
+  chemin introuvable reste conservé pour que l'import échoue avec son
+  message précis.
+
 ## **[4.9.0] - 2026-07-28**
 
 ## ✨ Améliorations

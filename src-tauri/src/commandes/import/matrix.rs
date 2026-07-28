@@ -315,6 +315,10 @@ pub fn import_matrix_files(
     // la matrice et le graphe pendant que le pipeline les alimente. La phase
     // `Importing` est réservée atomiquement et détenue jusqu'à la fin de la
     // commande, swap inclus (#139).
+    // Même garantie que pour les PCAP : une matrice fusionnée deux fois
+    // doublerait ses compteurs et dupliquerait sa provenance (#161).
+    let incoming_file_paths = super::dedupe_paths_by_identity(&incoming_file_paths);
+
     let import_guard = crate::state::capture::ImportGuard::acquire(
         capture_state.inner(),
         "import de matrice CSV/XLSX",

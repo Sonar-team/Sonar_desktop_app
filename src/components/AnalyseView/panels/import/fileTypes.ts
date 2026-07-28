@@ -8,8 +8,14 @@ function extensionOf(path: string): string {
 }
 
 /** Ajoute des chemins à une liste en écartant ceux déjà présents : un même
- *  fichier resélectionné ou redéposé ne doit être importé qu'une fois (#161).
- *  L'ordre d'arrivée est préservé. */
+ *  fichier resélectionné ou redéposé ne doit apparaître qu'une fois dans la
+ *  liste affichée (#161). L'ordre d'arrivée est préservé.
+ *
+ *  Déduplication par chaîne uniquement : le webview n'a pas accès au système
+ *  de fichiers et ne peut donc pas reconnaître deux désignations du même
+ *  fichier (chemin relatif, lien symbolique). La garantie de fond — un
+ *  fichier n'est jamais compté deux fois dans la matrice — est tenue par
+ *  `dedupe_paths_by_identity` côté Rust, qui canonicalise avant l'import. */
 export function appendUniquePaths(existing: string[], incoming: string[]): string[] {
   return Array.from(new Set([...existing, ...incoming]));
 }
