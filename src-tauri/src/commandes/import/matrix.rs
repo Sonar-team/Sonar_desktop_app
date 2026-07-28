@@ -809,6 +809,7 @@ mod tests {
             &mut graph,
             &on_event,
             &mut None,
+            &std::sync::atomic::AtomicBool::new(false),
         )
         .unwrap();
 

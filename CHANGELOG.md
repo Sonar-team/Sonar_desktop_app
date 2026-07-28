@@ -2,6 +2,16 @@
 
 ## Non publié
 
+## ✨ Améliorations
+
+- **Annulation des imports PCAP en cours** (#161) : l'overlay de
+  progression propose un bouton « Annuler l'import ». L'annulation est
+  coopérative : le fichier en cours cesse d'être analysé, les fichiers
+  suivants ne sont pas ouverts et l'import étant transactionnel, le relevé
+  courant (matrice, graphe, labels) reste intact. L'issue est notifiée
+  comme une information, pas comme une erreur, et voyage dans le contrat
+  IPC typé (`import/cancelled`).
+
 ## **[4.9.0] - 2026-07-28**
 
 ## ✨ Améliorations

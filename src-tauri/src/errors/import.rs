@@ -22,6 +22,10 @@ pub enum PcapImportError {
     /// avant toute mutation, jamais parsé comme de l'Ethernet.
     #[error("Type de liaison non supporté dans {0} : {1}")]
     UnsupportedLinkType(String, String),
+    /// Import interrompu à la demande de l'opérateur : issue normale (pas un
+    /// défaut), l'état partagé est préservé comme pour tout import rejeté.
+    #[error("Import annulé par l'opérateur pendant {0}")]
+    Cancelled(String),
 }
 
 /// Représentation sérialisable de [`PcapImportError`] (forme `{ kind, message }`).
@@ -33,4 +37,5 @@ pub enum PcapImportErrorKind {
     OpenFileError(String, String),
     ReadPacketError(String, String),
     UnsupportedLinkType(String, String),
+    Cancelled(String),
 }

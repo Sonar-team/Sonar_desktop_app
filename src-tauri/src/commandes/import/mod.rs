@@ -14,7 +14,7 @@ pub use labels::{
     labels_to_matrix, normalize_label_key, resolve_label_conflicts,
 };
 pub use matrix::{import_matrix_file, import_matrix_files, is_matrix_empty};
-pub use pcap::convert_from_pcap_list;
+pub use pcap::{cancel_import, convert_from_pcap_list};
 
 use std::sync::{Arc, Mutex};
 use tauri::{State, ipc::Channel};

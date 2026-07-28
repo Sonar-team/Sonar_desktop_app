@@ -13,6 +13,7 @@ import {
   handleExportError,
   handleImportError,
   handleLabelerror,
+  isImportCancellation,
 } from "../errors/capture.ts";
 import type { ExportErrorKind } from "../types/generated/ExportErrorKind.ts";
 import type { LabelErrorKind } from "../types/generated/LabelErrorKind.ts";
@@ -76,9 +77,36 @@ Deno.test("handleImportError - unsupportedLinkType", () => {
   assertEquals(msg.includes("Type de liaison non supporté dans capture.pcap : DLT_RAW"), true, msg);
 });
 
+Deno.test("handleImportError - cancelled explique que le relevé est préservé", () => {
+  const err: PcapImportErrorKind = { kind: "cancelled", message: "capture.pcap" };
+  const msg = handleImportError(err);
+  assertEquals(msg.includes("Import annulé pendant capture.pcap"), true, msg);
+  assertEquals(msg.includes("relevé courant est inchangé"), true, msg);
+});
+
 Deno.test("handleImportError - forme inattendue -> message générique", () => {
   const msg = handleImportError(undefined as unknown as PcapImportErrorKind);
   assertEquals(msg.startsWith("Erreur d'import inconnue"), true, msg);
+});
+
+// --- isImportCancellation ----------------------------------------------------
+
+Deno.test("isImportCancellation - reconnaît l'enveloppe import/cancelled", () => {
+  const err = { kind: "import", message: { kind: "cancelled", message: "capture.pcap" } };
+  assertEquals(isImportCancellation(err), true);
+});
+
+Deno.test("isImportCancellation - refuse les autres erreurs d'import", () => {
+  const err = { kind: "import", message: { kind: "missingInput", message: "l'import PCAP" } };
+  assertEquals(isImportCancellation(err), false);
+});
+
+Deno.test("isImportCancellation - refuse les erreurs hors import et les valeurs hors contrat", () => {
+  assertEquals(isImportCancellation({ kind: "tauri", message: "cancelled" }), false);
+  assertEquals(isImportCancellation("cancelled"), false);
+  assertEquals(isImportCancellation(null), false);
+  assertEquals(isImportCancellation({ kind: "import", message: null }), false);
+  assertEquals(isImportCancellation({ kind: "import", message: "cancelled" }), false);
 });
 
 // --- capList -------------------------------------------------------------------

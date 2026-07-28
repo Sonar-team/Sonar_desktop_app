@@ -8,6 +8,7 @@ use packet_parser::timing::ParseTiming;
 #[cfg(feature = "capture_timing")]
 use serde_json::json;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 #[cfg(feature = "capture_timing")]
 use std::time::Instant;
@@ -368,6 +369,7 @@ fn process_packet_timed(
 
 /// Convertit un fichier PCAP : compte les paquets (pour la progression), les
 /// rejoue un à un dans la matrice et le graphe, puis signale la fin du fichier.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn handle_pcap_file(
     file_path: &str,
     file_index: usize,
@@ -376,11 +378,16 @@ pub(super) fn handle_pcap_file(
     graph: &mut GraphData,
     on_event: &Channel<CaptureEvent<'_>>,
     timing_logger: &mut Option<ImportTimingLogger>,
+    cancel: &AtomicBool,
 ) -> Result<(), CaptureStateError> {
     #[cfg(not(feature = "capture_timing"))]
     let _ = timing_logger;
     #[cfg(feature = "capture_timing")]
     let file_start = Instant::now();
+    // Annulation entre deux fichiers : le fichier suivant n'est pas ouvert.
+    if cancel.load(Ordering::Relaxed) {
+        return Err(PcapImportError::Cancelled(file_path.to_string()).into());
+    }
     // Un DLT sans décodeur échoue ici, avant toute lecture de paquet : le
     // fichier ne doit pas être parsé « comme si » c'était de l'Ethernet (#150).
     let link_type = sonar_flows_core::pcap::supported_parser_link_type(Path::new(file_path))?;
@@ -409,6 +416,13 @@ pub(super) fn handle_pcap_file(
     // l'import échoue explicitement au lieu de produire une matrice partielle
     // en silence.
     sonar_flows_core::pcap::for_each_raw_packet(Path::new(file_path), |packet| {
+        // Annulation en cours de fichier : la boucle du cœur ne peut pas être
+        // interrompue (closure sans retour), les paquets restants sont donc
+        // drainés sans parsing ni mise à jour — la partie coûteuse — et
+        // l'erreur typée est retournée après la boucle.
+        if cancel.load(Ordering::Relaxed) {
+            return;
+        }
         packet_count += 1;
         if packet_count.is_multiple_of(1000) || packet_count == total {
             send_import_progress_event(
@@ -446,6 +460,16 @@ pub(super) fn handle_pcap_file(
             &mut counters,
         );
     })?;
+
+    // Fichier drainé après annulation : ni Finished ni comptabilité, la
+    // commande échoue avec l'erreur typée et l'état partagé reste intact.
+    if cancel.load(Ordering::Relaxed) {
+        info!(
+            "[handle_pcap_file] {} : import annulé par l'opérateur après {} paquets",
+            file_path, packet_count
+        );
+        return Err(PcapImportError::Cancelled(file_path.to_string()).into());
+    }
 
     #[cfg(feature = "capture_timing")]
     let process_ns = elapsed_ns_since(process_start);
@@ -543,10 +567,17 @@ pub fn convert_from_pcap_list(
 
     // Import transactionnel : matrice et graphe sont construits en local et
     // l'état partagé n'est remplacé qu'en cas de succès complet. Une erreur
-    // (fichier illisible, tronqué…) préserve l'état courant, et les verrous
-    // ne sont tenus que le temps du swap au lieu de toute la conversion.
-    let (new_matrix, new_graph) =
-        build_matrix_and_graph_from_pcaps(&pcap_paths, &labels, &on_event, &mut timing_logger)?;
+    // (fichier illisible, tronqué…) ou une annulation de l'opérateur
+    // préserve l'état courant, et les verrous ne sont tenus que le temps du
+    // swap au lieu de toute la conversion.
+    let cancel = import_guard.cancel_token();
+    let (new_matrix, new_graph) = build_matrix_and_graph_from_pcaps(
+        &pcap_paths,
+        &labels,
+        &on_event,
+        &mut timing_logger,
+        &cancel,
+    )?;
 
     info!("[convert_from_pcap_list] FIN traitement liste PCAP");
 
@@ -611,6 +642,7 @@ fn build_matrix_and_graph_from_pcaps(
     labels: &LabelStore,
     on_event: &Channel<CaptureEvent<'_>>,
     timing_logger: &mut Option<ImportTimingLogger>,
+    cancel: &AtomicBool,
 ) -> Result<(FlowMatrix, GraphData), CaptureStateError> {
     let mut matrix = FlowMatrix::new();
     let mut graph = GraphData::new();
@@ -626,10 +658,24 @@ fn build_matrix_and_graph_from_pcaps(
             &mut graph,
             on_event,
             timing_logger,
+            cancel,
         )?;
     }
 
     Ok((matrix, graph))
+}
+
+/// Demande l'annulation coopérative de l'import PCAP en cours : le fichier
+/// courant est drainé sans analyse et les fichiers suivants ne sont pas
+/// ouverts. Retourne vrai si un import actif va être interrompu, faux sinon
+/// (course avec la fin d'import : sans effet, l'opérateur n'a rien à faire).
+#[tauri::command]
+pub fn cancel_import(
+    capture_state: State<'_, Arc<Mutex<CaptureState>>>,
+) -> Result<bool, CaptureStateError> {
+    let cancelled = capture_state.lock()?.request_import_cancel();
+    info!("[cancel_import] demande d'annulation, import actif : {cancelled}");
+    Ok(cancelled)
 }
 
 #[cfg(test)]
@@ -719,6 +765,7 @@ mod tests {
             &labels,
             &on_event,
             &mut None,
+            &AtomicBool::new(false),
         );
 
         assert!(result.is_err(), "fichier tronqué -> erreur propagée");
@@ -728,6 +775,7 @@ mod tests {
             &labels,
             &on_event,
             &mut None,
+            &AtomicBool::new(false),
         );
         assert!(missing.is_err(), "fichier absent -> erreur propagée");
     }
@@ -751,6 +799,7 @@ mod tests {
                 &labels,
                 &on_event,
                 &mut None,
+                &AtomicBool::new(false),
             )
             .unwrap_or_else(|error| panic!("import Tauri de {name}: {error}"));
 
@@ -794,6 +843,7 @@ mod tests {
             &mut graph,
             &on_event,
             &mut None,
+            &AtomicBool::new(false),
         )
         .unwrap();
 
@@ -962,6 +1012,7 @@ mod tests {
             &mut seeded_graph,
             &seed_channel,
             &mut None,
+            &AtomicBool::new(false),
         )
         .unwrap();
         seeded_matrix.add_label(
@@ -1037,6 +1088,122 @@ mod tests {
         );
     }
 
+    /// Une annulation demandée avant un fichier refuse de l'ouvrir : erreur
+    /// typée `Cancelled`, aucun événement de progression émis.
+    #[test]
+    fn cancelled_before_file_skips_it_entirely() {
+        let events = Arc::new(Mutex::new(Vec::<serde_json::Value>::new()));
+        let captured = Arc::clone(&events);
+        let on_event = Channel::new(move |body| {
+            if let InvokeResponseBody::Json(json) = body {
+                captured
+                    .lock()
+                    .unwrap()
+                    .push(serde_json::from_str(&json).unwrap());
+            }
+            Ok(())
+        });
+        let cancel = AtomicBool::new(true);
+
+        let result = build_matrix_and_graph_from_pcaps(
+            &[tunnel_pcap().to_string_lossy().into_owned()],
+            &crate::state::labels_list::LabelStore::new(),
+            &on_event,
+            &mut None,
+            &cancel,
+        );
+
+        match result {
+            Err(CaptureStateError::Import(PcapImportError::Cancelled(file))) => {
+                assert!(file.ends_with("ndpi_capwap.pcap"));
+            }
+            Err(other) => panic!("attendu Cancelled, obtenu {other:?}"),
+            Ok(_) => panic!("attendu Cancelled, obtenu un import réussi"),
+        }
+        assert!(events.lock().unwrap().is_empty(), "aucun événement émis");
+    }
+
+    /// Une annulation en cours de fichier draine les paquets restants sans
+    /// les intégrer, n'émet pas `Finished` et retourne l'erreur typée. La
+    /// matrice locale abandonnée ne contient que les paquets déjà traités —
+    /// l'état partagé, lui, n'est jamais touché (import transactionnel).
+    #[test]
+    fn cancelled_mid_file_drains_and_returns_typed_error() {
+        let cancel = Arc::new(AtomicBool::new(false));
+        let events = Arc::new(Mutex::new(Vec::<serde_json::Value>::new()));
+        let cancel_on_first_progress = Arc::clone(&cancel);
+        let captured = Arc::clone(&events);
+        let on_event = Channel::new(move |body| {
+            if let InvokeResponseBody::Json(json) = body {
+                let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+                // Annule dès le premier jalon de progression, comme le ferait
+                // l'opérateur via `cancel_import`.
+                if value["event"] == "importProgress" {
+                    cancel_on_first_progress.store(true, Ordering::Relaxed);
+                }
+                captured.lock().unwrap().push(value);
+            }
+            Ok(())
+        });
+        let mut matrix = FlowMatrix::new();
+        let mut graph = GraphData::new();
+
+        let result = handle_pcap_file(
+            tunnel_pcap().to_str().unwrap(),
+            1,
+            1,
+            &mut matrix,
+            &mut graph,
+            &on_event,
+            &mut None,
+            &cancel,
+        );
+
+        match result {
+            Err(CaptureStateError::Import(PcapImportError::Cancelled(file))) => {
+                assert!(file.ends_with("ndpi_capwap.pcap"));
+            }
+            other => panic!("attendu Cancelled, obtenu {other:?}"),
+        }
+        let events = events.lock().unwrap();
+        assert!(
+            events.iter().all(|e| e["event"] != "finished"),
+            "un fichier annulé ne doit pas être déclaré terminé : {events:?}"
+        );
+        // Le jalon initial (current = 0) est émis avant l'annulation, puis
+        // plus rien : le drainage n'annonce pas de progression.
+        assert!(
+            events
+                .iter()
+                .filter(|e| e["event"] == "importProgress")
+                .all(|e| e["data"]["current"].as_u64() == Some(0)),
+            "aucune progression après l'annulation : {events:?}"
+        );
+    }
+
+    /// `cancel_import` n'a d'effet que pendant un import : hors import la
+    /// demande est ignorée (course avec la fin d'import), et chaque nouvelle
+    /// réservation repart avec un jeton vierge.
+    #[test]
+    fn cancel_request_only_affects_active_import_and_resets_per_reservation() {
+        let state = Arc::new(Mutex::new(CaptureState::new()));
+
+        // Hors import : demande ignorée.
+        assert!(!state.lock().unwrap().request_import_cancel());
+
+        // Pendant un import : demande prise en compte, jeton levé.
+        let guard = crate::state::capture::ImportGuard::acquire(&state, "test annulation").unwrap();
+        assert!(!guard.cancel_token().load(Ordering::Relaxed));
+        assert!(state.lock().unwrap().request_import_cancel());
+        assert!(guard.cancel_token().load(Ordering::Relaxed));
+        drop(guard);
+
+        // Réservation suivante : le jeton de l'annulation périmée est remis
+        // à zéro par l'acquisition.
+        let next = crate::state::capture::ImportGuard::acquire(&state, "test annulation").unwrap();
+        assert!(!next.cancel_token().load(Ordering::Relaxed));
+    }
+
     /// Rejoue l'import PCAP réel et vérifie la comptabilité des tunnels :
     /// pour chaque tunnel, la somme des paquets attribués aux lignes internes
     /// (via la colonne `encap_id`, forme `id` ou `id:n|…`) doit être égale au
@@ -1056,6 +1223,7 @@ mod tests {
             &mut graph,
             &on_event,
             &mut None,
+            &AtomicBool::new(false),
         )
         .unwrap();
 

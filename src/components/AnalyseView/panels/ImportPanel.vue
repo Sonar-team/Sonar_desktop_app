@@ -46,6 +46,15 @@
             {{ importProgress.current.toLocaleString() }}/{{ importProgress.total.toLocaleString() }}
           </p>
         </div>
+        <button
+          v-if="cancellableImport"
+          class="btn btn-cancel-import"
+          @click="cancelImport"
+          :disabled="cancelRequested"
+          aria-label="Annuler l'import en cours"
+        >
+          {{ cancelRequested ? 'Annulation…' : "Annuler l'import" }}
+        </button>
       </div>
       <button class="btn image-btn cross" @click.prevent="windowClosed" :disabled="isConverting">❌</button>
       
@@ -123,13 +132,13 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { open } from '@tauri-apps/plugin-dialog';
+import { message, open } from '@tauri-apps/plugin-dialog';
 import { invoke, Channel } from '@tauri-apps/api/core';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from '../../../store/capture';
 import type { CaptureEvent, ImportProgress } from '../../../types/capture';
-import { displayCaptureError } from '../../../errors/capture';
+import { displayCaptureError, isImportCancellation } from '../../../errors/capture';
 import { classifyLabelImportError } from '../../../utils/labelImport';
 import { LabelConflictReport, LabelImportReport } from '../../../types/labels';
 import ConflictDialog from './ConflictDialog.vue'
@@ -161,6 +170,10 @@ export default defineComponent({
       filteredlabelRows: [] as [string, string, string][],
       searchInput: "",
       isConverting: false,
+      // Annulation : seul l'import PCAP est annulable (les autres imports
+      // sont courts et ne consultent pas le jeton backend).
+      cancellableImport: false,
+      cancelRequested: false,
       unsubs: [] as Array<() => void>,
       showConflictDialog: false,
       conflictsResolved: false,
@@ -299,6 +312,8 @@ export default defineComponent({
       info('convert_from_pcap_list : ' + this.packetFiles);
 
       this.isConverting = true;
+      this.cancellableImport = true;
+      this.cancelRequested = false;
       this.captureStore.clearImportProgress();
       // Verrou global : bloque les entrées de l'app pendant la conversion.
       useCaptureStore().isImporting = true;
@@ -308,12 +323,26 @@ export default defineComponent({
         info('réponse invoke');
         this.$emit('update:visible', false);
       } catch (err) {
-        await displayCaptureError(err);
+        // L'annulation demandée par l'opérateur est une issue normale : elle
+        // est notifiée comme telle, pas affichée en dialogue d'erreur. Le
+        // backend garantit que le relevé courant est intact (import
+        // transactionnel).
+        if (isImportCancellation(err)) {
+          info('import PCAP annulé par l\'opérateur ; relevé courant inchangé');
+          await message('Import annulé. Le relevé courant est inchangé.', {
+            title: 'Import annulé',
+            kind: 'info',
+          });
+        } else {
+          await displayCaptureError(err);
+        }
       } finally {
         await finalizeImportState(
           () => {
             this.captureStore.isImporting = false;
             this.isConverting = false;
+            this.cancellableImport = false;
+            this.cancelRequested = false;
             this.captureStore.clearImportProgress();
           },
           () => this.captureStore.refreshHasData(),
@@ -322,6 +351,26 @@ export default defineComponent({
       }
 
       this.packetFiles = [];
+    },
+
+    /** Demande l'annulation coopérative de l'import PCAP en cours. Le
+     *  backend draine le fichier courant sans l'analyser et n'ouvre pas les
+     *  suivants ; `convert_from_pcap_list` échoue alors avec l'erreur typée
+     *  `import/cancelled`, traitée ci-dessus comme une issue normale. */
+    async cancelImport() {
+      this.cancelRequested = true;
+      try {
+        const active = await invoke<boolean>('cancel_import');
+        if (!active) {
+          // Course avec la fin d'import : rien à annuler, l'issue normale
+          // (succès ou erreur) de l'invoke en cours reprend la main.
+          info('cancel_import : aucun import actif, demande ignorée');
+          this.cancelRequested = false;
+        }
+      } catch (err) {
+        this.cancelRequested = false;
+        await displayCaptureError(err);
+      }
     },
 
     async importMatrixFiles() {
@@ -847,6 +896,19 @@ export default defineComponent({
   color: white;
   font-size: 1.1rem;
   font-weight: 500;
+}
+
+.btn-cancel-import {
+  margin-top: 1.2rem;
+  border-color: #d8392b;
+}
+
+.btn-cancel-import:enabled:hover {
+  background-color: #313152;
+}
+
+.btn-cancel-import:active {
+  background-color: #d8392b;
 }
 
 .progress-group {

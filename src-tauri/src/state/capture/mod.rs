@@ -48,6 +48,11 @@ pub struct CaptureState {
     /// Channel d'événements de la capture live : les commandes d'import s'en
     /// servent aussi pour joindre le front pendant une capture.
     pub on_event: Option<Channel<CaptureEvent<'static>>>,
+    /// Demande d'annulation de l'import en cours, consultée sans verrou par
+    /// la boucle d'import. Remise à zéro par chaque nouvelle réservation
+    /// (`ImportGuard::acquire`) : une annulation périmée ne peut pas
+    /// interrompre l'import suivant.
+    import_cancel: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl CaptureState {
@@ -62,7 +67,20 @@ impl CaptureState {
             config: CaptureConfig::default(),
             filter: None,
             on_event: None,
+            import_cancel: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         }
+    }
+
+    /// Demande l'annulation de l'import en cours. Sans import actif
+    /// (course avec la fin de l'import), la demande est ignorée : retourne
+    /// vrai seulement si un import va effectivement être interrompu.
+    pub fn request_import_cancel(&self) -> bool {
+        if self.phase != CapturePhase::Importing {
+            return false;
+        }
+        self.import_cancel
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+        true
     }
 
     /// Statut exposé au frontend, dérivé de la machine d'état.
@@ -273,6 +291,7 @@ pub(crate) fn spawn_pipeline_reaper(
 pub struct ImportGuard {
     state: Arc<Mutex<CaptureState>>,
     operation_id: u64,
+    cancel: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl ImportGuard {
@@ -301,11 +320,25 @@ impl ImportGuard {
         let operation_id = locked.operation_generation;
         locked.active_operation_id = Some(operation_id);
         locked.phase = CapturePhase::Importing;
+        // Une demande d'annulation d'une opération précédente ne doit jamais
+        // interrompre cette nouvelle réservation.
+        locked
+            .import_cancel
+            .store(false, std::sync::atomic::Ordering::Relaxed);
+        let cancel = Arc::clone(&locked.import_cancel);
         drop(locked);
         Ok(Self {
             state: Arc::clone(state),
             operation_id,
+            cancel,
         })
+    }
+
+    /// Jeton d'annulation de cette réservation, consultable sans verrou par
+    /// la boucle d'import (chargements `Relaxed` : simple drapeau, aucune
+    /// donnée synchronisée par sa lecture).
+    pub fn cancel_token(&self) -> Arc<std::sync::atomic::AtomicBool> {
+        Arc::clone(&self.cancel)
     }
 
     /// Vérifie que le résultat sur le point d'être committé appartient

@@ -126,6 +126,9 @@ impl Serialize for CaptureStateError {
                     PcapImportError::UnsupportedLinkType(file, label) => {
                         PcapImportErrorKind::UnsupportedLinkType(file.clone(), label.clone())
                     }
+                    PcapImportError::Cancelled(operation) => {
+                        PcapImportErrorKind::Cancelled(operation.clone())
+                    }
                 };
                 CaptureStateErrorKind::Import(kind)
             }

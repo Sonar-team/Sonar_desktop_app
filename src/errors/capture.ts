@@ -182,9 +182,23 @@ export function handleImportError(importError: ImportErrorKind): string {
       const [file, label] = importError.message;
       return `Type de liaison non supporté dans ${file} : ${label}.\nL'import a été annulé, la matrice courante est inchangée.`;
     }
+    case "cancelled":
+      return `Import annulé pendant ${importError.message}.\nLe relevé courant est inchangé.`;
     default:
       return `Erreur d'import inconnue : ${JSON.stringify(importError)}`;
   }
+}
+
+/** Vrai si l'erreur IPC est l'annulation d'import demandée par l'opérateur :
+ *  une issue normale à notifier comme telle, pas un défaut à afficher en
+ *  dialogue d'erreur. */
+export function isImportCancellation(err: unknown): boolean {
+  if (typeof err !== "object" || err === null || !("kind" in err)) return false;
+  const captureError = err as CaptureStateErrorKind;
+  if (captureError.kind !== "import") return false;
+  const importError = captureError.message as ImportErrorKind;
+  return typeof importError === "object" && importError !== null &&
+    "kind" in importError && importError.kind === "cancelled";
 }
 
 /// Formate une liste d'erreurs en la plafonnant : au-delà de `max` entrées
