@@ -2,6 +2,65 @@
 
 ## Non publié
 
+## **[4.9.0] - 2026-07-28**
+
+## ✨ Améliorations
+
+- **Nœuds à fort volume mis en évidence dans le graphe** : la taille des
+  nœuds croît davantage avec le volume échangé (plafond relevé de 18 à
+  80 px et pente logarithmique accentuée), ce qui fait ressortir
+  immédiatement les équipements les plus bavards du réseau.
+- **Format SFMS documenté** : `SFMS.md` décrit le format v1 tel
+  qu'implémenté — préambule, colonnes et sémantique, extension tunnels,
+  provenance, règles d'import CSV/XLSX et protection tableur.
+
+## 🔒 Sécurité
+
+- **CSP stricte et capabilities en moindre privilège** : la politique de
+  sécurité de contenu interdit en production les styles inline, `data:`,
+  objets, formulaires et frames ; les capabilities Tauri perdent les accès
+  shell/os/process et les scopes fichiers récursifs sur les dossiers
+  personnels. La politique est verrouillée par des tests dédiés.
+- **Chaîne de release signée et vérifiable hors ligne** : la publication
+  produit un kit de vérification hors ligne (scripts bash et PowerShell,
+  racine de confiance Sigstore embarquée) permettant de contrôler
+  signatures et empreintes sans accès réseau, et un builder Windows
+  officiel signant via HSM est documenté et outillé.
+- **Assainissement Npcap des releases historiques** (#169) : retrait des
+  39 installateurs NSIS embarquant Npcap et des 119 tags exposant son
+  installeur dans les archives source, avec inventaire et manifestes
+  SHA-256 préservés.
+
+## 🛠 Corrections
+
+- **Erreurs de capture et de labels visibles** (#161) : toute erreur de
+  capture est affichée même si sa sérialisation échoue, les fichiers
+  resélectionnés sont dédupliqués avant import, un échec de rafraîchissement
+  ne masque plus l'erreur d'import d'origine, et l'édition optimiste d'un
+  label est annulée avec message si le backend la refuse.
+- **Réglages de capture typés** (#109) : le panneau de configuration
+  envoie un payload typé au backend au lieu de valeurs non contrôlées.
+- **Journalisation de production** (#112) : les diagnostics du frontend
+  (sessions périmées, contrat IPC, snapshots, erreurs graphe) passent par
+  `plugin-log` et rejoignent les logs de production au lieu de la console.
+
+## ✅ Tests
+
+- **Parcours complets rejoués sur le binaire release** : un harnais E2E
+  X11 pilote l'application de production (import PCAP, graphe, labels,
+  exports, reset), vérifie l'absence de violations CSP et de panics, et
+  archive captures et artefacts.
+
+## 🔧 Maintenance
+
+- **Reproductibilité prouvée entre conteneurs isolés** : deux builds
+  Docker indépendants du même commit produisent un binaire Linux au
+  SHA-256 identique ; le `sonar.exe` Windows est cross-compilé depuis le
+  même conteneur épinglé et rendu déterministe (GUID PDB figé puis debug
+  directory supprimé), avec un `repro-check.ps1` natif pour Windows.
+- Retrait de la dépendance frontend `chart.js`, devenue inutilisée.
+- Pins webkit Debian réalignés sur le snapshot (2.52.5-1~deb13u1).
+
 ## **[4.8.3] - 2026-07-27**
 
 ## ✨ Améliorations
