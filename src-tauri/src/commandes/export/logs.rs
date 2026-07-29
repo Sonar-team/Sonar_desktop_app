@@ -81,8 +81,7 @@ pub fn export_logs(app: AppHandle, destination: String) -> Result<String, Captur
 fn write_logs_zip(log_dir: &Path, destination: &Path) -> Result<(), CaptureStateError> {
     let file = File::create(destination)?;
     let mut zip = ZipWriter::new(file);
-    let options =
-        SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+    let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
     for entry in fs::read_dir(log_dir)? {
         let entry = entry?;
@@ -135,7 +134,10 @@ mod tests {
 
         write_logs_zip(&log_dir, &destination).unwrap();
 
-        assert!(destination.is_file(), "la destination doit être un fichier, pas un dossier");
+        assert!(
+            destination.is_file(),
+            "la destination doit être un fichier, pas un dossier"
+        );
 
         let file = File::open(&destination).unwrap();
         let mut archive = zip::ZipArchive::new(file).unwrap();
