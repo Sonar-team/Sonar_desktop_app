@@ -102,7 +102,7 @@ pub fn run() -> Result<(), tauri::Error> {
             if event.id() == "version" {
                 app.dialog()
                     .message(about_message())
-                    .title("Version")
+                    .title("À propos de SONAR")
                     .kind(MessageDialogKind::Info)
                     .buttons(MessageDialogButtons::Ok)
                     .show(|_| {});
@@ -146,8 +146,8 @@ pub fn run() -> Result<(), tauri::Error> {
 
                 let _ = start_cpu_monitor(app.handle().clone());
 
-                let apropos = SubmenuBuilder::new(app, "A propos")
-                    .text("version", "Version")
+                let apropos = SubmenuBuilder::new(app, "À propos")
+                    .text("version", "À propos de SONAR")
                     .text("changelog", "Changelog")
                     .build()?;
 
