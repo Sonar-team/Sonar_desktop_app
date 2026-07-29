@@ -147,6 +147,7 @@ import { appendUniquePaths, MATRIX_EXTENSIONS, PCAP_EXTENSIONS, routeDroppedPath
 import { progressFileNameOf, progressPercentOf } from './import/importProgress';
 import { filterLabelRows } from './import/labelSearch';
 import { finalizeImportState } from './import/importLifecycle';
+import { invokePcapImport } from '../../../utils/pcapImportContract';
 
 
 export default defineComponent({
@@ -319,7 +320,7 @@ export default defineComponent({
       useCaptureStore().isImporting = true;
 
       try {
-        await invoke('convert_from_pcap_list', { pcapPaths: this.packetFiles, onEvent });
+        await invokePcapImport(invoke, this.packetFiles, onEvent);
         info('réponse invoke');
         this.$emit('update:visible', false);
       } catch (err) {
