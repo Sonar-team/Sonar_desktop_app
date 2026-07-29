@@ -1055,6 +1055,36 @@ mod tests {
         }
     }
 
+    /// Retourne la couleur réellement attribuée par `sonar-flows-core` à un
+    /// nœud du graphe. Le paquet passe volontairement par `GraphData` : la
+    /// palette exportée vers TypeScript ci-dessous ne recopie donc aucune
+    /// constante Rust et dérive du même chemin que le rendu en production.
+    fn rendered_graph_node_color(ip_type: Option<IpType>) -> String {
+        let internet = ip_type.map(|kind| {
+            internet_with(
+                Ipv4Addr::new(192, 0, 2, 1),
+                kind.clone(),
+                Ipv4Addr::new(192, 0, 2, 2),
+                kind,
+            )
+        });
+        let packet = flow_with(ethernet_link(None), internet, None, None, None, None);
+        let mut graph = crate::state::graph::GraphData::default();
+        graph.add_packet_flow(&packet, None, None, 1, 60, &[]);
+
+        let colors: std::collections::BTreeSet<_> = graph
+            .nodes
+            .values()
+            .map(|node| node.color.clone())
+            .collect();
+        assert_eq!(
+            colors.len(),
+            1,
+            "une catégorie doit produire une couleur unique"
+        );
+        colors.into_iter().next().expect("au moins un nœud produit")
+    }
+
     /// Groupe transport *présent* mais ports individuellement absents (même
     /// principe qu'[`internet_without_addresses`]) : `full_transport` met
     /// toujours `Some` sur les deux ports.
@@ -1408,6 +1438,62 @@ mod tests {
                 "CorruptedLayer {kind:?} : miroir divergent du réel"
             );
         }
+    }
+
+    /// Génère la palette des catégories de nœuds à partir du graphe Rust
+    /// réel. La légende Vue importe directement ce fichier ; la gate CI
+    /// `export_ipc` le régénère puis vérifie le worktree, ce qui empêche une
+    /// modification des couleurs backend de dériver silencieusement du
+    /// frontend.
+    #[test]
+    fn export_ipc_graph_node_categories() {
+        #[derive(Serialize)]
+        struct Category {
+            kind: &'static str,
+            color: String,
+        }
+
+        let categories = [
+            ("Private", Some(IpType::Private)),
+            ("Public", Some(IpType::Public)),
+            ("Multicast", Some(IpType::Multicast)),
+            ("Loopback", Some(IpType::Loopback)),
+            ("Apipa", Some(IpType::Apipa)),
+            ("LinkLocal", Some(IpType::LinkLocal)),
+            ("Ula", Some(IpType::Ula)),
+            ("Documentation", Some(IpType::Documentation)),
+            ("Layer2", None),
+        ]
+        .into_iter()
+        .map(|(kind, ip_type)| Category {
+            kind,
+            color: rendered_graph_node_color(ip_type),
+        })
+        .collect::<Vec<_>>();
+
+        // `Unknown` suit le repli L2 dans GraphData : il ne constitue pas
+        // une dixième catégorie visuelle.
+        assert_eq!(
+            rendered_graph_node_color(Some(IpType::Unknown)),
+            rendered_graph_node_color(None)
+        );
+
+        let json = serde_json::to_string_pretty(&categories).expect("sérialisation palette");
+        let out = format!(
+            "// Généré par `cargo test export_ipc_graph_node_categories` — NE PAS ÉDITER À LA MAIN.\n\
+             // Couleurs observées en faisant passer chaque catégorie par GraphData.\n\
+             import type {{ IpType }} from \"./IpType\";\n\n\
+             export type GraphNodeCategory = Exclude<IpType, \"Unknown\"> | \"Layer2\";\n\n\
+             export const GRAPH_NODE_CATEGORIES = ({json}) as const satisfies ReadonlyArray<{{\n\
+               kind: GraphNodeCategory;\n\
+               color: string;\n\
+             }}>;\n"
+        );
+
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../src/types/generated");
+        std::fs::create_dir_all(&dir).expect("création du dossier généré");
+        std::fs::write(dir.join("graphNodeCategories.ts"), out)
+            .expect("écriture de la palette du graphe");
     }
 
     /// Écrit le JSON **réellement produit par `CaptureEvent`** (jamais par

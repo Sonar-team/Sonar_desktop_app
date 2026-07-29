@@ -66,8 +66,8 @@ export function nodeSizeFor(bytes: number) {
   return Math.min(NODE_SIZE_MAX, NODE_SIZE_MIN + 2 * Math.log2(1 + bytes / 2000))
 }
 
-const EDGE_SIZE_MIN = 1.2
-const EDGE_SIZE_MAX = 7
+export const EDGE_SIZE_MIN = 1.2
+export const EDGE_SIZE_MAX = 7
 export function edgeSizeFor(bytes: number) {
   return Math.min(EDGE_SIZE_MAX, EDGE_SIZE_MIN + 0.55 * Math.log2(1 + bytes / 1500))
 }
