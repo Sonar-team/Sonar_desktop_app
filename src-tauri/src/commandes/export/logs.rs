@@ -1,75 +1,54 @@
 //! Commande d'export des fichiers de logs de l'application.
 
-use std::fs;
-use std::path::PathBuf;
+use std::fs::{self, File};
+use std::io::copy;
+use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, command};
+use zip::ZipWriter;
+use zip::write::SimpleFileOptions;
 
 use crate::errors::CaptureStateError;
 use crate::errors::export::ExportError;
 
-/// Exporte les fichiers de logs de l'application vers un chemin donné par l'utilisateur.
+/// Exporte les fichiers de logs de l'application vers une archive ZIP dont le
+/// chemin est donné par l'utilisateur.
 ///
 /// Le dossier source est résolu par Tauri (`app_log_dir`), donc toujours
 /// aligné sur l'identifiant réel de l'application (`fr.sonar.ssf`) et sur
 /// l'emplacement où `tauri-plugin-log` écrit — l'ancien chemin codé en dur
 /// (`fr.sonar.app`) rendait l'export systématiquement introuvable.
 ///
+/// `destination` désigne le fichier ZIP à créer, pas un dossier : l'ancienne
+/// implémentation traitait systématiquement `destination` comme un
+/// répertoire (`create_dir_all` + copie fichier par fichier), si bien que
+/// choisir `sonar.log` dans le dialogue de sauvegarde créait un **dossier**
+/// `sonar.log/` au lieu du fichier annoncé.
+///
 /// # Paramètres
 ///
-/// - `destination`: Chemin absolu ou relatif fourni par le frontend où les logs doivent être copiés.
+/// - `destination`: Chemin du fichier ZIP à créer, fourni par le frontend.
 ///
 /// # Retour
 ///
-/// - `Ok(String)` : Message de succès si tous les fichiers ont été exportés correctement.
-/// - `Err(ExportError)` : Erreur en cas d’échec (log introuvable, erreur de lecture ou écriture, etc.).
+/// - `Ok(String)` : Message de succès si l'archive a été créée correctement.
+/// - `Err(ExportError)` : Erreur en cas d’échec (log introuvable, erreur de
+///   lecture/écriture, erreur d'archivage, etc.).
 ///
 /// # Erreurs possibles
 ///
 /// - [`ExportError::LogNotFound`] : Le dossier source de logs n’existe pas.
 /// - [`ExportError::Io`] : Une erreur d’entrée/sortie s’est produite lors de la copie ou de la lecture des fichiers.
+/// - [`ExportError::Zip`] : Une erreur s'est produite lors de l'écriture de l'archive ZIP.
 ///
 /// # Exemple d’usage (frontend)
 ///
 /// ```ts
-/// const path = await save({ title: "Choisissez où sauvegarder les logs" });
+/// const path = await save({ title: "Choisissez où sauvegarder les logs", defaultPath: "sonar-support.zip" });
 /// if (path) {
 ///   const result = await invoke("export_logs", { destination: path });
 ///   console.log(result);
 /// }
 /// ```
-///
-/// # Exemple d’enchaînement (logique utilisateur)
-///
-/// ```mermaid
-/// sequenceDiagram
-///     participant Utilisateur
-///     participant Frontend (Vue.js)
-///     participant Tauri Backend (Rust)
-///     participant FS (Système de fichiers)
-///
-///     Utilisateur->>Frontend (Vue.js): Clique sur "Exporter les logs"
-///     Frontend (Vue.js)->>Frontend (Vue.js): Ouvre une boîte de dialogue (save)
-///     Frontend (Vue.js)->>Utilisateur: Demande de choisir un fichier `.log`
-///     Utilisateur-->>Frontend (Vue.js): Sélectionne le chemin de destination
-///
-///     Frontend (Vue.js)->>Tauri Backend (Rust): invoke("export_logs", { destination })
-///     Tauri Backend (Rust)->>Tauri Backend (Rust): Détecte le chemin de logs selon l'OS
-///     Tauri Backend (Rust)->>FS: Vérifie si le dossier de logs existe
-///     alt Le dossier n'existe pas
-///         Tauri Backend (Rust)-->>Frontend (Vue.js): Retourne une erreur LogNotFound
-///     else Le dossier existe
-///         Tauri Backend (Rust)->>FS: Crée le dossier de destination (si nécessaire)
-///         Tauri Backend (Rust)->>FS: Copie tous les fichiers de log
-///         Tauri Backend (Rust)-->>Frontend (Vue.js): Retourne "Logs exportés avec succès"
-///         Frontend (Vue.js)->>Utilisateur: Affiche confirmation de sauvegarde
-///     end
-/// ```
-///
-/// # Sécurité
-///
-/// Cette commande n’écrase pas les fichiers existants si leurs noms sont différents,
-/// mais elle ne fait pas de vérification de doublons ou d'intégrité.
-/// Il est recommandé de filtrer les fichiers côté Rust si nécessaire.
 #[command(async)]
 pub fn export_logs(app: AppHandle, destination: String) -> Result<String, CaptureStateError> {
     let log_dir: PathBuf = app
@@ -82,23 +61,91 @@ pub fn export_logs(app: AppHandle, destination: String) -> Result<String, Captur
     }
 
     let destination = PathBuf::from(destination);
-
-    if !destination.exists() {
-        fs::create_dir_all(&destination)?;
+    if let Some(parent) = destination.parent()
+        && !parent.as_os_str().is_empty()
+    {
+        fs::create_dir_all(parent)?;
     }
 
-    for entry in fs::read_dir(&log_dir)? {
+    // Écriture dans un fichier temporaire puis renommage atomique, pour ne
+    // jamais laisser une archive partielle au chemin final en cas d'échec.
+    let tmp_destination = destination.with_extension("part");
+    write_logs_zip(&log_dir, &tmp_destination).inspect_err(|_| {
+        let _ = fs::remove_file(&tmp_destination);
+    })?;
+    fs::rename(&tmp_destination, &destination)?;
+
+    Ok("Logs exportés avec succès".to_string())
+}
+
+fn write_logs_zip(log_dir: &Path, destination: &Path) -> Result<(), CaptureStateError> {
+    let file = File::create(destination)?;
+    let mut zip = ZipWriter::new(file);
+    let options =
+        SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+
+    for entry in fs::read_dir(log_dir)? {
         let entry = entry?;
         let src_path = entry.path();
-        if src_path.is_file() {
-            // Un fichier issu de read_dir a toujours un nom ; sinon on l'ignore
-            // plutôt que de paniquer.
-            let Some(file_name) = src_path.file_name() else {
-                continue;
-            };
-            let dest_path = destination.join(file_name);
-            fs::copy(&src_path, &dest_path)?;
+        if !src_path.is_file() {
+            continue;
         }
+        // Un fichier issu de read_dir a toujours un nom ; sinon on l'ignore
+        // plutôt que de paniquer.
+        let Some(file_name) = src_path.file_name().and_then(|n| n.to_str()) else {
+            continue;
+        };
+        zip.start_file(file_name, options)
+            .map_err(ExportError::Zip)?;
+        let mut src_file = File::open(&src_path)?;
+        copy(&mut src_file, &mut zip)?;
     }
-    Ok("Logs exportés avec succès".to_string())
+
+    zip.finish().map_err(ExportError::Zip)?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicU32, Ordering};
+
+    static COUNTER: AtomicU32 = AtomicU32::new(0);
+
+    fn unique_temp_dir(label: &str) -> PathBuf {
+        let n = COUNTER.fetch_add(1, Ordering::SeqCst);
+        let dir = std::env::temp_dir().join(format!(
+            "sonar_export_logs_test_{label}_{}_{n}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn write_logs_zip_produces_a_single_archive_file_not_a_directory() {
+        let log_dir = unique_temp_dir("src");
+        fs::write(log_dir.join("sonar.log"), b"hello").unwrap();
+        fs::write(log_dir.join("sonar.log.1"), b"older").unwrap();
+        // Un sous-dossier ne doit pas être archivé : seuls les fichiers le sont.
+        fs::create_dir_all(log_dir.join("subdir")).unwrap();
+
+        let out_dir = unique_temp_dir("out");
+        let destination = out_dir.join("sonar-logs.zip");
+
+        write_logs_zip(&log_dir, &destination).unwrap();
+
+        assert!(destination.is_file(), "la destination doit être un fichier, pas un dossier");
+
+        let file = File::open(&destination).unwrap();
+        let mut archive = zip::ZipArchive::new(file).unwrap();
+        let mut names: Vec<_> = (0..archive.len())
+            .map(|i| archive.by_index(i).unwrap().name().to_string())
+            .collect();
+        names.sort();
+        assert_eq!(names, vec!["sonar.log", "sonar.log.1"]);
+
+        fs::remove_dir_all(&log_dir).ok();
+        fs::remove_dir_all(&out_dir).ok();
+    }
 }

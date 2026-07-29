@@ -151,6 +151,8 @@ export function handleExportError(exportError: ExportErrorKind): string {
       return `Erreur d'écriture du fichier exporté : ${exportError.message}`;
     case "csv":
       return `Erreur d'écriture CSV : ${exportError.message}`;
+    case "zip":
+      return `Erreur d'écriture de l'archive ZIP : ${exportError.message}`;
     case "poisonError":
       return `Erreur verrou pendant l'export : ${exportError.message}`;
     case "logNotFound":

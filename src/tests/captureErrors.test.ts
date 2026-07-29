@@ -39,6 +39,10 @@ Deno.test("handleExportError - io/csv/poisonError incluent le message backend", 
     handleExportError({ kind: "poisonError", message: "verrou empoisonné" } as ExportErrorKind),
     "Erreur verrou pendant l'export : verrou empoisonné"
   );
+  assertEquals(
+    handleExportError({ kind: "zip", message: "entrée dupliquée" } as ExportErrorKind),
+    "Erreur d'écriture de l'archive ZIP : entrée dupliquée"
+  );
 });
 
 Deno.test("handleExportError - logNotFound", () => {

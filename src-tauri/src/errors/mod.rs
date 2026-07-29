@@ -107,6 +107,7 @@ impl Serialize for CaptureStateError {
                     ExportError::EmptyPath => ExportErrorKind::EmptyPath,
                     ExportError::Io(e) => ExportErrorKind::Io(e.to_string()),
                     ExportError::Csv(e) => ExportErrorKind::Csv(e.to_string()),
+                    ExportError::Zip(e) => ExportErrorKind::Zip(e.to_string()),
                     ExportError::PoisonError(e) => ExportErrorKind::PoisonError(e.clone()),
                     ExportError::LogNotFound => ExportErrorKind::LogNotFound,
                 };

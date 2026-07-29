@@ -3,4 +3,4 @@
 /**
  * Représentation sérialisable de [`ExportError`] (forme `{ kind, message }`).
  */
-export type ExportErrorKind = { "kind": "emptyPath" } | { "kind": "io", "message": string } | { "kind": "csv", "message": string } | { "kind": "poisonError", "message": string } | { "kind": "logNotFound" };
+export type ExportErrorKind = { "kind": "emptyPath" } | { "kind": "io", "message": string } | { "kind": "csv", "message": string } | { "kind": "zip", "message": string } | { "kind": "poisonError", "message": string } | { "kind": "logNotFound" };

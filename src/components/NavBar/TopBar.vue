@@ -136,9 +136,9 @@ export default {
       info("export logs")
       await this.withImportLock(async () => {
         const response = await save({
-          filters: [{ name: '.log', extensions: ['log'] }],
+          filters: [{ name: '.zip', extensions: ['zip'] }],
           title: 'Sauvegarder les logs',
-          defaultPath: 'sonar.log'
+          defaultPath: 'sonar-logs.zip'
         });
 
         if (!response) {

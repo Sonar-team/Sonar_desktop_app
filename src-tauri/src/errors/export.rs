@@ -10,6 +10,8 @@ pub enum ExportError {
     Io(#[from] std::io::Error),
     #[error("Erreur CSV: {0}")]
     Csv(#[from] csv::Error),
+    #[error("Erreur d’archive ZIP: {0}")]
+    Zip(#[from] zip::result::ZipError),
     #[error("the mutex was poisoned")]
     PoisonError(String),
     #[error("Le dossier de logs est introuvable.")]
@@ -24,6 +26,7 @@ pub enum ExportErrorKind {
     EmptyPath,
     Io(String),
     Csv(String),
+    Zip(String),
     PoisonError(String),
     LogNotFound,
 }
