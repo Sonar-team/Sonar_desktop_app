@@ -10,7 +10,7 @@ ignore = [
 
 [bans]
 multiple-versions = "warn"
-wildcards = "allow"
+wildcards = "deny"
 
 [licenses]
 confidence-threshold = 0.8
