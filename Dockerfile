@@ -1,4 +1,6 @@
-FROM rust:1.96.0@sha256:f4d1e78866618fe7155aa6eaea26f9f6270d105e4918ee2c2f2dd5b2c11cc815 AS builder
+# syntax=docker/dockerfile:1.25.0@sha256:0adf442eae370b6087e08edc7c50b552d80ddf261576f4ebd6421006b2461f12
+
+FROM rust:1.96.0@sha256:f4d1e78866618fe7155aa6eaea26f9f6270d105e4918ee2c2f2dd5b2c11cc815 AS build-base
 ENV NODE_VERSION="24.15.0"
 ENV DENO_VERSION="2.8.3"
 ARG DOCKER_APT_PACKAGES="libgtk-3-dev=3.24.49-3 pkg-config=1.8.1-4 libjavascriptcoregtk-4.1-dev=2.52.5-1~deb13u1 libsoup-3.0-dev=3.6.5-3 libwebkit2gtk-4.1-dev=2.52.5-1~deb13u1 libpcap-dev=1.10.5-2 unzip"
@@ -40,6 +42,9 @@ RUN arch="$(dpkg --print-architecture)" && \
     rm -f "/tmp/${deno_archive}" "/tmp/${deno_archive}.sha256sum"
 
 WORKDIR /app
+
+
+FROM build-base AS builder
 COPY . .
 RUN deno install --frozen
 # Le contexte docker n'a pas de .git (.dockerignore) : l'epoch ne peut pas
@@ -61,17 +66,41 @@ COPY --from=linux-builder /app/src-tauri/target/release/bundle/rpm/ /rpm
 
 
 # Cross-compilation Windows depuis le même environnement épinglé :
-# cible MSVC via cargo-xwin (SDK Windows téléchargé et vérifié par xwin),
-# lien par lld. Les import libs Npcap sont versionnées dans le dépôt
+# cible MSVC via cargo-xwin. L'outillage et le sysroot Microsoft sont placés
+# dans une couche indépendante des sources applicatives : elle est réutilisable
+# entre builds et transportable avec l'image (`docker save`). Le lien utilise
+# lld. Les import libs Npcap sont versionnées dans le dépôt
 # (src-tauri/windows/npcap-sdk), build.rs les branche pour tout
 # CARGO_CFG_TARGET_OS=windows. Binaire seul (--no-bundle) : le bundling
 # NSIS cross reste un chantier séparé (#119).
-FROM builder AS windows-builder
+FROM build-base AS windows-toolchain
 ARG WINDOWS_CROSS_APT_PACKAGES="clang=1:19.0-63 clang-tools=1:19.0-63 lld=1:19.0-63 llvm=1:19.0-63 nsis=3.11-1"
 RUN apt install -y ${WINDOWS_CROSS_APT_PACKAGES}
 ARG CARGO_XWIN_VERSION=0.23.0
+ARG XWIN_VERSION=17
+ARG XWIN_SDK_VERSION=10.0.26100
+ARG XWIN_CRT_VERSION=14.44.17.14
+ARG XWIN_ARCH=x86_64
+ARG XWIN_HTTP_RETRIES=5
+ENV XWIN_VERSION="${XWIN_VERSION}" \
+    XWIN_SDK_VERSION="${XWIN_SDK_VERSION}" \
+    XWIN_CRT_VERSION="${XWIN_CRT_VERSION}" \
+    XWIN_ARCH="${XWIN_ARCH}" \
+    XWIN_HTTP_RETRIES="${XWIN_HTTP_RETRIES}"
+ENV XWIN_CACHE_DIR="/opt/cargo-xwin/${CARGO_XWIN_VERSION}/${XWIN_VERSION}-${XWIN_SDK_VERSION}-${XWIN_CRT_VERSION}-${XWIN_ARCH}"
 RUN rustup target add x86_64-pc-windows-msvc \
-  && cargo install cargo-xwin --locked --version "${CARGO_XWIN_VERSION}"
+  && cargo install cargo-xwin --locked --version "${CARGO_XWIN_VERSION}" \
+  && cargo xwin --version
+COPY script/ci/cache-xwin-toolchain.sh /usr/local/bin/cache-xwin-toolchain.sh
+RUN bash /usr/local/bin/cache-xwin-toolchain.sh
+
+
+FROM windows-toolchain AS windows-builder
+WORKDIR /app
+COPY . .
+RUN deno install --frozen
+ARG SOURCE_DATE_EPOCH=1700000000
+ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 # Hôte Linux, cible Windows : force /Brepro (timestamps PE dérivés du
 # contenu) que repro-env.ts n'active par défaut que sur hôte Windows, et
 # supprime toute émission de PDB (/DEBUG:NONE) — le GUID RSDS du PDB était
@@ -79,7 +108,9 @@ RUN rustup target add x86_64-pc-windows-msvc \
 # les symboles. repro-env.ts compose ses flags par-dessus cette RUSTFLAGS.
 ENV SONAR_REPRO_WINDOWS_BREPRO=1
 ENV RUSTFLAGS="-C link-arg=/DEBUG:NONE"
-RUN deno run -A ./security/repro-env.ts run deno task tauri build \
+# Le SDK/CRT a été splatté dans windows-toolchain. Couper le réseau ici prouve
+# qu'un rebuild de l'application ne dépend plus du CDN Microsoft.
+RUN --network=none deno run -A ./security/repro-env.ts run deno task tauri build \
   --runner cargo-xwin --target x86_64-pc-windows-msvc --no-bundle
 
 

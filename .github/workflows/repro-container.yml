@@ -1,14 +1,20 @@
 name: Repro Container
 
 # Vérifie que les artefacts SONAR sont re-dérivables : deux builds
-# indépendants (--no-cache) dans le conteneur épinglé doivent produire des
-# binaires au SHA-256 identique, pour la cible Linux et la cible Windows
-# cross-compilée. Le job natif Windows exécute security/repro-check.ps1
+# indépendants dans le conteneur épinglé doivent produire des binaires au
+# SHA-256 identique. La cible Windows cross est reconstruite sur deux runners
+# distincts, puis comparée à un hash local optionnel du même commit. Le job
+# natif Windows exécute security/repro-check.ps1
 # (même exigence, toolchain MSVC épinglée). Déclenchement manuel tant que
 # la bascule de publish.yml n'est pas décidée.
 
 on:
   workflow_dispatch:
+    inputs:
+      windows_reference_sha256:
+        description: "SHA-256 local de sonar.exe au même commit (optionnel)"
+        required: false
+        type: string
 
 jobs:
   repro-container-linux:
@@ -33,9 +39,13 @@ jobs:
           if-no-files-found: error
 
   repro-container-windows-cross:
-    name: container Windows cross (2 builds indépendants)
+    name: container Windows cross (${{ matrix.machine }})
     runs-on: ubuntu-22.04
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [machine-a, machine-b]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
@@ -43,15 +53,35 @@ jobs:
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
 
       - name: two independent container builds must match
-        run: RUNS=2 NO_CACHE=1 PRUNE=1 PLATFORM=windows OUT=repro-out ./script/release/repro-build-container.sh
+        run: RUNS=2 NO_CACHE=1 PRUNE=0 PLATFORM=windows OUT=repro-out ./script/release/repro-build-container.sh
 
       - name: upload hashes
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: repro-hashes-windows-cross
+          name: repro-hashes-windows-cross-${{ matrix.machine }}
           path: repro-out/run*/SHA256SUMS
           if-no-files-found: error
+
+  compare-windows-cross:
+    name: preuve Windows cross inter-machines
+    needs: repro-container-windows-cross
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: download hashes from both runners
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: repro-hashes-windows-cross-*
+          path: repro-hashes-windows-cross
+          merge-multiple: false
+
+      - name: compare runners and optional local reference
+        env:
+          EXPECTED_WINDOWS_SHA256: ${{ inputs.windows_reference_sha256 }}
+        run: ./script/ci/compare-repro-windows-hashes.sh repro-hashes-windows-cross
 
   repro-windows-native:
     name: natif Windows (repro-check.ps1)

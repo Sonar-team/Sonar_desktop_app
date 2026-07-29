@@ -20,7 +20,9 @@ check_contains() {
 check_contains src-tauri/rust-toolchain.toml "channel = \"${RUST_VERSION}\""
 check_contains package.json "\"node\": \"${NODE_VERSION}\""
 check_contains package.json "\"@tauri-apps/cli\": \"${TAURI_CLI_VERSION}\""
-check_contains Dockerfile "FROM rust:${RUST_VERSION}@${RUST_IMAGE_DIGEST} AS builder"
+check_contains Dockerfile "# syntax=docker/dockerfile:${DOCKERFILE_FRONTEND_VERSION}@${DOCKERFILE_FRONTEND_DIGEST}"
+check_contains Dockerfile "FROM rust:${RUST_VERSION}@${RUST_IMAGE_DIGEST} AS build-base"
+check_contains script/release/repro-build-container.sh 'args=(--platform "$docker_platform"'
 check_contains Dockerfile "ARG DOCKER_APT_PACKAGES=\"${DOCKER_APT_PACKAGES}\""
 check_contains Dockerfile 'RUN /app/script/ci/use-apt-snapshot.sh'
 check_contains Dockerfile 'RUN apt install -y ${DOCKER_APT_PACKAGES}'
@@ -30,6 +32,15 @@ check_contains Dockerfile 'https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.t
 check_contains Dockerfile 'sha256sum --check --status node.sha256sum'
 check_contains Dockerfile 'https://github.com/denoland/deno/releases/download/v${DENO_VERSION}/${deno_archive}.sha256sum'
 check_contains Dockerfile 'sha256sum --check --status "${deno_archive}.sha256sum"'
+check_contains Dockerfile "ARG WINDOWS_CROSS_APT_PACKAGES=\"${WINDOWS_CROSS_APT_PACKAGES}\""
+check_contains Dockerfile "ARG CARGO_XWIN_VERSION=${CARGO_XWIN_VERSION}"
+check_contains Dockerfile "ARG XWIN_VERSION=${XWIN_VERSION}"
+check_contains Dockerfile "ARG XWIN_SDK_VERSION=${XWIN_SDK_VERSION}"
+check_contains Dockerfile "ARG XWIN_CRT_VERSION=${XWIN_CRT_VERSION}"
+check_contains Dockerfile "ARG XWIN_ARCH=${XWIN_ARCH}"
+check_contains Dockerfile "ARG XWIN_HTTP_RETRIES=${XWIN_HTTP_RETRIES}"
+check_contains Dockerfile 'RUN bash /usr/local/bin/cache-xwin-toolchain.sh'
+check_contains Dockerfile 'RUN --network=none deno run -A ./security/repro-env.ts run deno task tauri build'
 check_contains .gitlab-ci.yml "image: rust:${RUST_VERSION}"
 check_contains .gitlab-ci.yml "NODE_VERSION: ${NODE_VERSION}"
 check_contains .gitlab-ci.yml "DENO_VERSION: ${DENO_VERSION}"
@@ -56,6 +67,8 @@ check_contains .github/workflows/covecode.yml 'node-version: "v${{ steps.version
 check_contains .github/workflows/rust-ci.yml 'cargo install cargo-vet --version "${{ steps.versions.outputs.CARGO_VET_VERSION }}" --locked'
 check_contains .github/workflows/rust-ci.yml 'cargo vet --locked --frozen --no-minimize-exemptions'
 check_contains .github/workflows/rust-ci.yml 'cargo vet --store-path ../src-tauri/supply-chain --locked --frozen --no-minimize-exemptions'
+check_contains .github/workflows/repro-container.yml 'machine: [machine-a, machine-b]'
+check_contains .github/workflows/repro-container.yml './script/ci/compare-repro-windows-hashes.sh repro-hashes-windows-cross'
 # Npcap est un prérequis téléchargé séparément : le bundle Windows est limité
 # à NSIS, dont le hook détecte le runtime et ouvre uniquement le site officiel.
 check_contains src-tauri/tauri.windows.conf.json '"targets": ["nsis"]'
