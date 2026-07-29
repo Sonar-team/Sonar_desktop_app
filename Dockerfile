@@ -74,6 +74,11 @@ COPY --from=linux-builder /app/src-tauri/target/release/bundle/rpm/ /rpm
 # CARGO_CFG_TARGET_OS=windows. Binaire seul (--no-bundle) : le bundling
 # NSIS cross reste un chantier séparé (#119).
 FROM build-base AS windows-toolchain
+# La copie ultérieure de rust-toolchain.toml ne doit pas pousser rustup à
+# consulter static.rust-lang.org pendant le build applicatif hors réseau.
+# Cette version exacte est déjà installée par l'image Rust et sa cohérence avec
+# config/build-versions.env est contrôlée par check-build-versions.sh.
+ENV RUSTUP_TOOLCHAIN="1.96.0"
 ARG WINDOWS_CROSS_APT_PACKAGES="clang=1:19.0-63 clang-tools=1:19.0-63 lld=1:19.0-63 llvm=1:19.0-63 nsis=3.11-1"
 RUN apt install -y ${WINDOWS_CROSS_APT_PACKAGES}
 ARG CARGO_XWIN_VERSION=0.23.0

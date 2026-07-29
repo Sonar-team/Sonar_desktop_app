@@ -22,6 +22,7 @@ check_contains package.json "\"node\": \"${NODE_VERSION}\""
 check_contains package.json "\"@tauri-apps/cli\": \"${TAURI_CLI_VERSION}\""
 check_contains Dockerfile "# syntax=docker/dockerfile:${DOCKERFILE_FRONTEND_VERSION}@${DOCKERFILE_FRONTEND_DIGEST}"
 check_contains Dockerfile "FROM rust:${RUST_VERSION}@${RUST_IMAGE_DIGEST} AS build-base"
+check_contains Dockerfile "ENV RUSTUP_TOOLCHAIN=\"${RUST_VERSION}\""
 check_contains script/release/repro-build-container.sh 'args=(--platform "$docker_platform"'
 check_contains Dockerfile "ARG DOCKER_APT_PACKAGES=\"${DOCKER_APT_PACKAGES}\""
 check_contains Dockerfile 'RUN /app/script/ci/use-apt-snapshot.sh'

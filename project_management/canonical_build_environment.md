@@ -289,6 +289,9 @@ The reproducibility container also cross-compiles the unsigned binary for
 splats the pinned CRT/SDK before application sources are copied. That layer can
 be reused or exported with `docker save`; the application build itself runs
 with `RUN --network=none`, proving that it does not contact the Microsoft CDN.
+`RUSTUP_TOOLCHAIN` also selects the exact compiler already provided by the
+pinned Rust image before `rust-toolchain.toml` is copied, so rustup does not try
+to query its distribution server from that offline layer.
 Whole-operation retries are implemented by
 `script/ci/cache-xwin-toolchain.sh`. If BuildKit DNS is broken on a local
 network, the proof helper accepts the explicit `NETWORK=host` override. On the

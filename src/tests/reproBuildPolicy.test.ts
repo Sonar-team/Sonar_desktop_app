@@ -71,7 +71,20 @@ Deno.test("les pins xwin du Dockerfile suivent la source de vérité", () => {
 
   assertMatch(versions.get("XWIN_SDK_VERSION") ?? "", /^\d+\.\d+\.\d+$/);
   assertMatch(versions.get("XWIN_CRT_VERSION") ?? "", /^\d+\.\d+\.\d+\.\d+$/);
-  assert(dockerfile.includes("FROM build-base AS windows-toolchain"));
+  const toolchainStage = dockerfile.indexOf(
+    "FROM build-base AS windows-toolchain",
+  );
+  const rustupPin = dockerfile.indexOf(
+    `ENV RUSTUP_TOOLCHAIN="${versions.get("RUST_VERSION")}"`,
+  );
+  const targetInstall = dockerfile.indexOf(
+    "RUN rustup target add x86_64-pc-windows-msvc",
+  );
+  assert(toolchainStage >= 0);
+  assert(
+    toolchainStage < rustupPin && rustupPin < targetInstall,
+    "le stage Windows doit sélectionner le toolchain installé avant sa cible",
+  );
   assert(
     dockerfile.includes("RUN bash /usr/local/bin/cache-xwin-toolchain.sh"),
   );
