@@ -145,6 +145,23 @@ jobs:
         shell: pwsh
         run: ./script/ci/check-windows-bundles-no-npcap.ps1
 
+      # Tauri's .deb bundler timestamps its ar/tar members with real build
+      # wall-clock time, ignoring SOURCE_DATE_EPOCH -- see #107 and
+      # script/package-deb-repro.sh's own comments. Repacked in place, right
+      # before it's collected/uploaded/hashed/signed below, so the artifact
+      # users actually receive is the deterministic one (this step is the
+      # real release path; script/release/repro-build-container.sh only
+      # proves the concept inside an isolated container build).
+      - name: Repack release .deb deterministically
+        if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          set -euo pipefail
+          epoch="$(git log -1 --format=%ct HEAD)"
+          for deb in src-tauri/target/release/bundle/deb/*.deb; do
+            SOURCE_DATE_EPOCH="$epoch" ./script/package-deb-repro.sh "$deb" "$deb"
+          done
+
       - name: Collect release bundles
         shell: bash
         run: ./script/ci/collect-release-bundles.sh "${{ matrix.platform }}"
