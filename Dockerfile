@@ -57,6 +57,14 @@ ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 
 FROM builder AS linux-builder
 RUN deno run -A ./security/repro-env.ts run deno task tauri build
+# Le bundler .deb de Tauri horodate ses archives (ar + tar internes) avec
+# l'heure réelle de build, en ignorant SOURCE_DATE_EPOCH — seul le binaire
+# lui-même est déterministe. Réemballage déterministe en place (extraction
+# complète avant toute écriture, donc source == destination est sûr) via
+# script/package-deb-repro.sh, restauré depuis 7e3c652b (#107).
+RUN for deb in src-tauri/target/release/bundle/deb/*.deb; do \
+      ./script/package-deb-repro.sh "$deb" "$deb"; \
+    done
 
 
 FROM scratch AS export
