@@ -89,6 +89,22 @@ de releases et leurs assets sains restent en place. Résidu connu : les
 commits historiques restent joignables par SHA sur `main`, une purge
 complète exigerait une réécriture d'historique — non réalisée à ce stade.
 
+**Décision du 30/07/2026 (#146, phase 1)** : pour tester réellement
+l'installation Windows et la détection de Npcap sans enfreindre la licence
+gratuite (point 5 ci-dessus), le mainteneur provisionne un runner GitHub
+Actions **self-hosted** sur une VM Windows persistante (serveur Proxmox
+interne), sur laquelle Npcap est installé **manuellement une seule fois**
+(case « WinPcap API-compatible Mode » cochée). Une installation manuelle par
+un humain reste dans le cadre de la licence gratuite : ce n'est plus une
+installation silencieuse/automatisée. Le job CI (`windows-e2e-npcap` dans
+`.github/workflows/publish-smoke.yml`) n'installe/désinstalle en boucle que
+l'installeur NSIS de SONAR lui-même — qui ne touche jamais à Npcap — et
+vérifie via `--sonar-smoke-test` (`src-tauri/src/startup_smoke.rs`) que
+l'application résout une interface de capture. Restreint à
+`workflow_dispatch` : un runner self-hosted ne doit jamais être exposé à un
+déclenchement `pull_request`. La capture live complète (au-delà de la simple
+détection) reste hors périmètre de cette phase 1, suivie dans #146.
+
 ## SBOM (#137)
 
 - SBOM backend : `cargo cyclonedx` sur `src-tauri` (inclut désormais

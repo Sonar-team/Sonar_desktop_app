@@ -10,6 +10,16 @@ installation réellement testée sur chaque OS supporté (machine propre).
 
 - [ ] US-01 — à rédiger : chaque release prouve que les parcours principaux
   fonctionnent sur les OS supportés
+  - Linux : fait — `.gitlab/ci/e2e-vm.yml` installe le `.deb` signé sur une
+    VM et rejoue capture/import/matrice/graphe/labels/export
+    (`script/e2e/run-sonar-x11-e2e.sh --live-capture`).
+  - Windows : partiel (30/07/2026) — job `windows-e2e-npcap`
+    (`.github/workflows/publish-smoke.yml`, `workflow_dispatch` uniquement,
+    runner self-hosted) installe le NSIS de release et vérifie via
+    `--sonar-smoke-test` que Npcap est détecté. La capture live et les
+    autres parcours (import/matrice/graphe/labels/export) restent à faire
+    sur Windows.
+  - macOS : à faire.
 - [ ] US-02 — intégrer Cypress Component et des E2E navigateur rapides pour
   Vue/Vite, avec un faux backend centralisé (`mockIPC`, événements et fenêtres
   Tauri), des sélecteurs stables et une exécution headless en CI

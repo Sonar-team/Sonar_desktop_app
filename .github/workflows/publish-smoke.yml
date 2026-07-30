@@ -85,3 +85,55 @@ jobs:
         if: matrix.platform != 'windows-2022'
         shell: bash
         run: ./script/ci/smoke-test-release-binary.sh "${{ steps.release-binary.outputs.binary_path }}"
+
+      - name: Collect Windows NSIS installer
+        if: matrix.platform == 'windows-2022'
+        shell: bash
+        run: ./script/ci/collect-release-bundles.sh windows-2022
+
+      # Artefact consommé par le job windows-e2e-npcap ci-dessous, qui
+      # exécute réellement l'installeur sur un runner self-hosted où Npcap
+      # est déjà présent (#146 phase 1 ; cf. security/licences.md).
+      - name: Upload Windows NSIS installer artifact
+        if: matrix.platform == 'windows-2022'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: sonar-windows-nsis-installer
+          path: release-artifacts/*setup.exe
+          if-no-files-found: error
+
+  # Installe réellement le paquet NSIS de release et vérifie que SONAR
+  # détecte Npcap au démarrage (#146 phase 1). Nécessite un runner
+  # self-hosted où Npcap est installé manuellement en mode "WinPcap
+  # API-compatible" (cf. security/licences.md, #138) : la licence Npcap
+  # gratuite n'autorise pas une installation silencieuse/automatisée sur un
+  # runner hébergé. Ce job ne doit JAMAIS être déclenché par une pull
+  # request (le workflow reste workflow_dispatch-only) — un runner
+  # self-hosted ne doit jamais exécuter de code provenant d'une fork non
+  # fiable.
+  windows-e2e-npcap:
+    needs: publish-smoke
+    runs-on: [self-hosted, windows, npcap]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Download Windows NSIS installer
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: sonar-windows-nsis-installer
+          path: windows-installer
+
+      - name: Install + Npcap detection E2E
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -Path windows-installer -Filter "*setup.exe" | Select-Object -First 1
+          if (-not $installer) { throw "No NSIS installer found in windows-installer/" }
+          ./script/ci/run-sonar-windows-e2e.ps1 -InstallerPath $installer.FullName -ArtifactsDir windows-e2e-artifacts
+
+      - name: Upload Windows E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: windows-e2e-npcap-logs
+          path: windows-e2e-artifacts/**
+          if-no-files-found: warn
