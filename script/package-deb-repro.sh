@@ -61,8 +61,16 @@ make_tar_xz() {
     exit 1
   fi
 
+  # --no-recursion : list_file énumère déjà chaque chemin (dossiers ET
+  # fichiers, récursivement, via find). Sans ce flag, tar re-descend dans
+  # chaque dossier listé et réinsère ses enfants une deuxième fois -- déjà
+  # présents avec le même contenu, ils deviennent des liens durs (dpkg refuse
+  # ensuite de les installer : "error creating hard link", constaté à
+  # l'installation réelle du .deb, jamais détecté par la seule comparaison de
+  # SHA256 entre deux builds).
   tar --null \
     --sort=name \
+    --no-recursion \
     --mtime="@${SOURCE_DATE_EPOCH}" \
     --owner=0 \
     --group=0 \
