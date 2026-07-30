@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## **[4.10.0] - 2026-07-30**
+
 ## ✨ Améliorations
 
 - **Annulation des imports PCAP en cours** (#161) : l'overlay de
@@ -11,6 +13,17 @@
   courant (matrice, graphe, labels) reste intact. L'issue est notifiée
   comme une information, pas comme une erreur, et voyage dans le contrat
   IPC typé (`import/cancelled`).
+- **Légende du graphe alignée sur le rendu** (#92) : les couleurs de la
+  légende sont désormais dérivées du même chemin Rust (`GraphData`) que
+  celui qui peint les nœuds, au lieu de recopier une palette séparée côté
+  frontend. Une gate CI régénère la palette exportée et échoue si le
+  worktree diverge, ce qui empêche légende et rendu de dériver
+  silencieusement l'un de l'autre.
+- **Dialogue « À propos » complet** (#89) : affiche désormais la
+  description, la licence, les auteurs et le dépôt du paquet, en plus des
+  versions de la chaîne de build, ainsi qu'un descriptif du format de
+  matrice SFMS (champs `count`, `total_bytes`, `last_seen`, `encap_id`,
+  `origin`).
 
 ## 🛠 Corrections
 
@@ -21,6 +34,25 @@
   paquets dans la matrice ni sa provenance dans la colonne `origin`. Un
   chemin introuvable reste conservé pour que l'import échoue avec son
   message précis.
+- **Export des logs en une archive ZIP** (#102) : `export_logs` traitait
+  systématiquement la destination comme un dossier ; choisir « sonar.log »
+  dans le dialogue de sauvegarde créait un dossier `sonar.log/` au lieu du
+  fichier annoncé. La commande écrit maintenant une archive ZIP unique, via
+  écriture atomique (fichier temporaire puis renommage).
+- **Suppression des vues legacy cassées** (#145) : les anciennes vues
+  `Matrice.vue`, `Capture.vue` et `FromPcap.vue`, non routées et non
+  maintenues, sont retirées avec leurs routes mortes.
+
+## 🔧 Maintenance
+
+- **Rust 1.97.1** : alignement de la version Rust dans Cargo, Docker, la CI
+  et les fichiers `rust-toolchain.toml`, avec un toolchain dédié pour
+  `sonar-rust`, des contrôles anti-dérive renforcés et le vendor
+  crates.io/checksums inchangés.
+- **Interdiction des dépendances Cargo en version wildcard** (#124) : une
+  gate CI refuse désormais toute dépendance sans borne de version explicite.
+- **Durcissement des builds reproductibles Windows et épinglage du
+  toolchain Rust hors-ligne pour la couverture** (#174).
 
 ## **[4.9.0] - 2026-07-28**
 
