@@ -1,4 +1,4 @@
-image: rust:1.96.0
+image: rust:1.97.1@sha256:1bcff4befb740599103a2c7cb51058e14479b2e35e3a34a3f0dc4ede09927488
 
 default:
   timeout: 10 hours

@@ -41,26 +41,31 @@ bundle for that platform is reproducible.
 
 Canonical toolchain versions are tracked in `config/build-versions.env`.
 
-- Rust: `1.96.0`
-- frontend Dockerfile: `docker/dockerfile:1.25.0` verrouillé par digest
-- plateforme hôte Docker: `linux/amd64`
-- Node.js: `24.15.0`
-- Deno: `2.8.3`
-- Tauri CLI: `2.11.3`
-- Vite: `8.0.16`
+- Rust: `RUST_VERSION`
+- nightly Rust (coverage and cargo-udeps): `RUST_NIGHTLY_VERSION`
+- Tarpaulin image: `TARPAULIN_IMAGE`, digest `TARPAULIN_IMAGE_DIGEST`
+- frontend Dockerfile: `DOCKERFILE_FRONTEND_VERSION`, digest `DOCKERFILE_FRONTEND_DIGEST`
+- Docker host platform: `DOCKER_BUILD_PLATFORM`
+- Node.js: `NODE_VERSION`
+- Deno: `DENO_VERSION`
+- Tauri CLI: `TAURI_CLI_VERSION`
+- Vite: `VITE_VERSION`
 
-Rust is pinned in `src-tauri/rust-toolchain.toml`. Node.js is declared in
-`package.json` under `engines.node`. Deno is pinned in `Dockerfile`. The Tauri
-CLI version and Vite version are pinned in `package.json`.
+Stable Rust is pinned in `src-tauri/rust-toolchain.toml` and
+`sonar-rust/rust-toolchain.toml`; the dated nightly is used by the coverage and
+cargo-udeps workflows. Node.js is declared in `package.json` under
+`engines.node`. Deno is pinned in `Dockerfile`. The Tauri CLI version and Vite
+version are pinned in `package.json`.
 
 The Windows cross toolchain is pinned in the same source of truth:
 
-- cargo-xwin: `0.23.0` (installed with its upstream lockfile, which selects
-  xwin `0.9.0`)
-- Visual Studio manifest: `17`
-- Windows SDK: `10.0.26100`
-- MSVC CRT: `14.44.17.14`
-- target architecture: `x86_64`
+- cargo-xwin: `CARGO_XWIN_VERSION` (installed with its upstream lockfile,
+  which currently selects xwin `0.9.0` — pinned by cargo-xwin's own
+  `Cargo.lock`, not tracked in `config/build-versions.env`)
+- Visual Studio manifest: `XWIN_VERSION`
+- Windows SDK: `XWIN_SDK_VERSION`
+- MSVC CRT: `XWIN_CRT_VERSION`
+- target architecture: `XWIN_ARCH`
 
 `XWIN_SDK_VERSION` and `XWIN_CRT_VERSION` must never be left implicit: xwin
 otherwise selects the newest entries in Microsoft's mutable manifest, which
@@ -101,9 +106,7 @@ The shared source of these settings is `security/repro-env.ts`.
 
 - OS: Ubuntu 22.04 for the Linux reproducibility check
 - Architecture: `x86_64` / `amd64`
-- Container base image: `rust:1.96.0`
-- Container image digest:
-  `sha256:5b1e3484ddcd22a3738c0ec34a5e98bf19382eb295fb6db54295e62379119040`
+- Container base image: `rust:${RUST_VERSION}` (see `config/build-versions.env`)
 - Binary target: `src-tauri/target/release/sonar`
 - Initial bundle target: Debian `.deb`
 

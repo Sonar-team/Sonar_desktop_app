@@ -7,7 +7,7 @@ jobs:
     name: coverage
     runs-on: ubuntu-22.04
     container:
-      image: xd009642/tarpaulin:develop-nightly@sha256:aa50bb80d14cb1cf54f8f904508a2d69b18d8804b46c9ee0ab435ac53f6861e6
+      image: xd009642/tarpaulin:develop-nightly@sha256:c6f519f6098d2e0a2036d119e17b3fa1e3de7270801ce03cbff0281c72d872a3
       options: --security-opt seccomp=unconfined
     steps:
       - name: Checkout repository
@@ -71,7 +71,7 @@ jobs:
       - name: Generate Rust coverage
         run: |
           cd src-tauri
-          cargo +nightly tarpaulin \
+          cargo "+${RUST_NIGHTLY_VERSION}" tarpaulin \
             --verbose \
             --all-features \
             --workspace \

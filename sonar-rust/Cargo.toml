@@ -11,7 +11,7 @@ authors = ["Sonar Team"]
 edition = "2024"
 license = "AGPL-3.0-only"
 repository = "https://github.com/Sonar-team/Sonar_desktop_app"
-rust-version = "1.96.0"
+rust-version = "1.97.1"
 version = "0.3.2"
 
 [workspace.dependencies]

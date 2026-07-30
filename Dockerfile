@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.25.0@sha256:0adf442eae370b6087e08edc7c50b552d80ddf261576f4ebd6421006b2461f12
 
-FROM rust:1.96.0@sha256:f4d1e78866618fe7155aa6eaea26f9f6270d105e4918ee2c2f2dd5b2c11cc815 AS build-base
+FROM rust:1.97.1@sha256:1bcff4befb740599103a2c7cb51058e14479b2e35e3a34a3f0dc4ede09927488 AS build-base
 ENV NODE_VERSION="24.15.0"
 ENV DENO_VERSION="2.8.3"
 ARG DOCKER_APT_PACKAGES="libgtk-3-dev=3.24.49-3 pkg-config=1.8.1-4 libjavascriptcoregtk-4.1-dev=2.52.5-1~deb13u1 libsoup-3.0-dev=3.6.5-3 libwebkit2gtk-4.1-dev=2.52.5-1~deb13u1 libpcap-dev=1.10.5-2 unzip"
@@ -78,7 +78,7 @@ FROM build-base AS windows-toolchain
 # consulter static.rust-lang.org pendant le build applicatif hors réseau.
 # Cette version exacte est déjà installée par l'image Rust et sa cohérence avec
 # config/build-versions.env est contrôlée par check-build-versions.sh.
-ENV RUSTUP_TOOLCHAIN="1.96.0"
+ENV RUSTUP_TOOLCHAIN="1.97.1"
 ARG WINDOWS_CROSS_APT_PACKAGES="clang=1:19.0-63 clang-tools=1:19.0-63 lld=1:19.0-63 llvm=1:19.0-63 nsis=3.11-1"
 RUN apt install -y ${WINDOWS_CROSS_APT_PACKAGES}
 ARG CARGO_XWIN_VERSION=0.23.0

@@ -28,7 +28,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Install nightly Rust for cargo udeps
-        run: rustup toolchain install nightly --profile minimal
+        run: rustup toolchain install "${RUST_NIGHTLY_VERSION}" --profile minimal
 
       - name: Install Linux system dependencies
         run: |
@@ -114,7 +114,7 @@ jobs:
         working-directory: ./src-tauri
 
       - name: Check unused dependencies with cargo udeps
-        run: cargo +nightly udeps --all-targets --locked
+        run: cargo "+${RUST_NIGHTLY_VERSION}" udeps --all-targets --locked
         working-directory: ./src-tauri
 
   # Gates du workspace sonar-rust (sonar-flows-core + sonar-flows-cli),

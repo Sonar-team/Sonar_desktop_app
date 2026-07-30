@@ -170,7 +170,7 @@ coarse: `FlowMatrix`, `FlowMatrixRow`, `GraphData`, `GraphUpdateBatch`,
 
 ## Development
 
-The workspace requires Rust 1.96.0 and uses edition 2024. From `sonar-rust/`:
+The workspace requires Rust 1.97.1 and uses edition 2024. From `sonar-rust/`:
 
 ```sh
 cargo fmt -- --check
