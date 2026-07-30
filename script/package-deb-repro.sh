@@ -141,11 +141,19 @@ main() {
 
   printf '2.0\n' > "$debian_binary"
 
+  # ar r insère/remplace des membres dans une archive EXISTANTE : si
+  # OUTPUT_DEB == SOURCE_DEB (réemballage en place), écrire directement dessus
+  # laisserait les anciens control.tar.gz/data.tar.gz du .deb d'origine dans
+  # l'archive, à côté des nouveaux membres .xz (noms différents, donc jamais
+  # remplacés). On assemble dans un fichier neuf du workdir puis on le déplace
+  # en place : `mv` remplace tout le fichier, jamais un append dans l'ancien.
+  local assembled_deb="${workdir}/assembled.deb"
   log "Assembling ${OUTPUT_DEB}"
   (
     cd "$workdir"
-    ar rcsD "$OUTPUT_DEB" debian-binary control.tar.xz data.tar.xz
+    ar rcsD "$assembled_deb" debian-binary control.tar.xz data.tar.xz
   )
+  mv "$assembled_deb" "$OUTPUT_DEB"
 
   printf '%s\n' "$OUTPUT_DEB"
 }
