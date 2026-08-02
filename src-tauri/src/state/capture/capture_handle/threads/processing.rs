@@ -846,6 +846,29 @@ fn handle_capture_message(
     true
 }
 
+/// Inactivité du canal : flush les batches en attente. Si le canal IPC
+/// frontend est cassé, arrête tout le pipeline (drain + finalize) et
+/// retourne `false` pour que la boucle appelante sorte. Extrait pour éviter
+/// un if imbriqué de plus dans la boucle principale.
+#[allow(clippy::too_many_arguments)]
+fn handle_receive_timeout(
+    worker: &mut PacketWorker,
+    emitter: &mut StatsEmitter,
+    rx: &Receiver<CaptureMessage>,
+    buffer_pool: &PacketBufferPool,
+    stop_flag: &AtomicBool,
+    terminal: &TerminalState,
+) -> bool {
+    if worker.flush_batches() {
+        return true;
+    }
+    error!("Canal IPC frontend cassé : arrêt du pipeline de capture");
+    terminal.record_autonomous("canal IPC frontend cassé : pipeline de capture arrêté".to_string());
+    stop_flag.store(true, Ordering::Release);
+    drain_and_finalize(worker, emitter, rx, buffer_pool, stop_flag, terminal);
+    false
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn spawn_processing_thread(
     rx: Receiver<CaptureMessage>,
@@ -925,21 +948,15 @@ pub fn spawn_processing_thread(
                 }
 
                 Err(RecvTimeoutError::Timeout) => {
-                    // Flush les batches restants après inactivité.
-                    if !worker.flush_batches() {
-                        error!("Canal IPC frontend cassé : arrêt du pipeline de capture");
-                        terminal.record_autonomous(
-                            "canal IPC frontend cassé : pipeline de capture arrêté".to_string(),
-                        );
-                        stop_flag.store(true, Ordering::Release);
-                        drain_and_finalize(
-                            &mut worker,
-                            &mut emitter,
-                            &rx,
-                            &buffer_pool,
-                            &stop_flag,
-                            &terminal,
-                        );
+                    let keep_going = handle_receive_timeout(
+                        &mut worker,
+                        &mut emitter,
+                        &rx,
+                        &buffer_pool,
+                        &stop_flag,
+                        &terminal,
+                    );
+                    if !keep_going {
                         break;
                     }
                 }
