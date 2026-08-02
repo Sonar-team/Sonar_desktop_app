@@ -147,3 +147,37 @@ export function edgeAttributes(e: Edge) {
     size: edgeSizeFor(totalBytes),
   }
 }
+
+// --- Libellé d'arête rendu (reducer Sigma) -----------------------------------
+interface EdgeLabelSource {
+  protocol?: string
+  ports?: number[]
+  has_dynamic_ports?: boolean
+  source_port?: number | string | null
+  destination_port?: number | string | null
+}
+
+/** Libellé d'arête affiché par le edgeReducer de NetworkGraphComponent.vue :
+ *  protocole, plus le détail des ports si affiché à ce niveau de zoom.
+ *  Extrait du reducer (complexité cognitive 18, hors du seuil Sonar de 15)
+ *  pour rester une fonction pure testable indépendamment. */
+export function edgeLabelFor(data: EdgeLabelSource, portLabelsShown: boolean): string {
+  const protocol = data.protocol ?? ""
+  if (!portLabelsShown) return protocol
+
+  const ports: number[] = Array.isArray(data.ports) ? data.ports : []
+  const hasDynamic = data.has_dynamic_ports === true
+  if (ports.length > 0) {
+    // Ports « service » de l'arête (les éphémères ne sont pas listés,
+    // le backend les résume par has_dynamic_ports → « … »).
+    return `${protocol} :${ports.join(",")}${hasDynamic ? ",…" : ""}`
+  }
+  if (hasDynamic) {
+    // Uniquement du trafic sur ports dynamiques : signalé sans liste.
+    return `${protocol} :…`
+  }
+  if (data.source_port != null || data.destination_port != null) {
+    return `${protocol} ${data.source_port ?? ""}→${data.destination_port ?? ""}`
+  }
+  return protocol
+}
