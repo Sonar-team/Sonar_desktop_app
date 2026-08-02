@@ -39,13 +39,13 @@
         if (typeof cpu_usage === 'number') {
           this.cpuUsage = cpu_usage;
         } else {
-          warn('[CPU.vue] Invalid cpu_usage:', cpu_usage);
+          warn(`[CPU.vue] Invalid cpu_usage: ${cpu_usage}`);
         }
       }).then(unlisten => {
         this.unlisten = unlisten;
         info('[CPU.vue] Listener registered');
       }).catch(err => {
-        error('[CPU.vue] Failed to register listener', err);
+        error(`[CPU.vue] Failed to register listener: ${err}`);
       });
     },
     beforeUnmount() {

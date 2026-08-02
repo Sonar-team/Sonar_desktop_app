@@ -73,6 +73,7 @@ import Cpu from './Cpu.vue';
 
 import { useCaptureStore } from '../../../store/capture';
 import { invoke } from '@tauri-apps/api/core';
+import { error } from '@tauri-apps/plugin-log';
 import type { Stats } from '../../../types/capture';
 
 type StatsView = Record<
@@ -153,7 +154,7 @@ export default defineComponent({
         await invoke('set_filter', { filter: '' });
         this.captureStore.setActiveFilter('');
       } catch (e) {
-        console.error('clear filter failed:', e);
+        error(`clear filter failed: ${e}`);
       }
     },
   },

@@ -16,7 +16,6 @@ export type { Node } from "./generated/Node";
 export type { Edge } from "./generated/Edge";
 export type { GraphUpdate } from "./generated/GraphUpdate";
 export type { GraphData } from "./generated/GraphData";
-export type { PacketFlow } from "./generated/PacketFlow";
 export type { DataLink } from "./generated/DataLink";
 export type { NetworkProtocol } from "./generated/NetworkProtocol";
 // Nom conservé côté frontend (le type Rust/généré s'appelle
