@@ -23,12 +23,23 @@ interface ParallelEdgeAttributes extends Record<string, unknown> {
   parallelMaxIndex?: number
 }
 
-/** Barycentre des nœuds existants (point d'apparition des nouveaux). */
+// Nombre de nœuds échantillonnés pour l'ancrage d'apparition : suffisant
+// pour retomber « raisonnablement près » du cluster existant (ForceAtlas2
+// corrige l'écart ensuite), sans coût O(n) par nouveau nœud — O(n²) cumulé
+// sur une capture longue avec beaucoup d'hôtes.
+const SPAWN_ANCHOR_SAMPLE_SIZE = 200
+
+/** Barycentre approché des nœuds existants (point d'apparition des nouveaux),
+ *  calculé sur un échantillon borné plutôt que sur tout le graphe. */
 export function spawnAnchor(graph: Graph): { x: number; y: number } {
   if (graph.order === 0) return { x: 0, y: 0 }
-  let sx = 0, sy = 0
-  graph.forEachNode((_n, attrs) => { sx += attrs.x; sy += attrs.y })
-  return { x: sx / graph.order, y: sy / graph.order }
+  let sx = 0, sy = 0, n = 0
+  graph.findNode((_node, attrs) => {
+    sx += attrs.x; sy += attrs.y
+    n += 1
+    return n >= SPAWN_ANCHOR_SAMPLE_SIZE
+  })
+  return { x: sx / n, y: sy / n }
 }
 
 /** Ajoute ou met à jour un nœud. Retourne true si un élément a été ajouté. */
@@ -45,11 +56,16 @@ export function upsertNode(graph: Graph, node: Node | null | undefined): boolean
   return true
 }
 
-/** Taille du nœud proportionnelle (log) au trafic cumulé de ses arêtes. */
-export function updateNodeTrafficSize(graph: Graph, nodeId: string) {
-  if (!graph.hasNode(nodeId)) return
-  let bytes = 0
-  graph.forEachEdge(nodeId, (_edge, attrs) => { bytes += attrs.total_bytes || 0 })
+/** Taille du nœud proportionnelle (log) au trafic cumulé de ses arêtes,
+ *  maintenue par delta (attribut interne `_trafficBytes`) plutôt que par un
+ *  rebalayage O(degré) de toutes les arêtes à chaque upsert — coûteux en
+ *  O(degré²) cumulé sur un nœud « hub » à fort degré. Sûr : les arêtes ne
+ *  sont jamais retirées individuellement (seul `graph.clear()` les efface,
+ *  ce qui efface aussi les nœuds et donc `_trafficBytes` avec eux). */
+function applyNodeTrafficDelta(graph: Graph, nodeId: string, deltaBytes: number) {
+  if (!graph.hasNode(nodeId) || deltaBytes === 0) return
+  const bytes = (Number(graph.getNodeAttribute(nodeId, "_trafficBytes")) || 0) + deltaBytes
+  graph.setNodeAttribute(nodeId, "_trafficBytes", bytes)
   graph.setNodeAttribute(nodeId, "size", nodeSizeFor(bytes))
 }
 
@@ -62,14 +78,18 @@ export function upsertEdge(graph: Graph, e: Edge | null | undefined): boolean {
   const key = edgeKey(e)
   const attrs = edgeAttributes(e)
   if (graph.hasEdge(key)) {
+    // Le backend envoie un compteur cumulé par arête : le delta face à
+    // l'ancienne valeur suffit à tenir la taille des nœuds à jour.
+    const previousBytes = Number(graph.getEdgeAttribute(key, "total_bytes")) || 0
     graph.mergeEdgeAttributes(key, attrs)
-    updateNodeTrafficSize(graph, e.source)
-    updateNodeTrafficSize(graph, e.target)
+    const delta = attrs.total_bytes - previousBytes
+    applyNodeTrafficDelta(graph, e.source, delta)
+    applyNodeTrafficDelta(graph, e.target, delta)
     return false
   }
   graph.addEdgeWithKey(key, e.source, e.target, attrs)
-  updateNodeTrafficSize(graph, e.source)
-  updateNodeTrafficSize(graph, e.target)
+  applyNodeTrafficDelta(graph, e.source, attrs.total_bytes)
+  applyNodeTrafficDelta(graph, e.target, attrs.total_bytes)
 
   // Un nœud fraîchement apparu est déplacé à côté de son premier voisin
   // déjà placé : ForceAtlas2 n'a plus qu'un ajustement local à faire.

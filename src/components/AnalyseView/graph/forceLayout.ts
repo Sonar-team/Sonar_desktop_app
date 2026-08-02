@@ -39,16 +39,27 @@ export function createForceLayoutController(graph: Graph): ForceLayoutController
     layout.start()
   }
 
+  // Le graphe a assez grandi depuis le dernier inferSettings pour que
+  // slowDown/BarnesHut (dépendants de la taille) soient devenus obsolètes.
+  function outgrown() {
+    return !layout || lastOrder === 0 || graph.order >= lastOrder * 4
+  }
+
   return {
     start,
     stop() { layout?.stop() },
     resume() {
-      if (layout && lastOrder > 0) layout.start()
+      // Le graphe peut avoir grandi pendant que le layout était en pause
+      // (Gravité désactivée côté composant) : ensureSettings() n'est alors
+      // pas appelé (gardé par forceEnabled), donc resume() doit refaire le
+      // même contrôle plutôt que reprendre aveuglément des réglages
+      // potentiellement obsolètes pour la taille actuelle du graphe.
+      if (layout && !outgrown()) layout.start()
       else start()
     },
     ensureSettings() {
       if (graph.order === 0) return
-      if (!layout || lastOrder === 0 || graph.order >= lastOrder * 4) start()
+      if (outgrown()) start()
     },
     kill,
   }
