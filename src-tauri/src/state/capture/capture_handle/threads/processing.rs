@@ -1822,4 +1822,13 @@ mod tests {
     // de la fonction (stop_flag, keep_going, drain_and_finalize) est déjà
     // couvert par les tests ci-dessus ; seul ce déclenchement précis reste
     // non exercé directement.
+    //
+    // spawn_processing_thread lui-même (la boucle du thread spawné, pas les
+    // fonctions qu'il compose) reste aussi hors de portée d'un test direct :
+    // son paramètre `app: AppHandle` est câblé sur le runtime Wry concret,
+    // pas générique sur `R: Runtime`, donc incompatible avec l'AppHandle<MockRuntime>
+    // que produit `tauri::test::mock_builder()` (utilisé ailleurs dans ce
+    // fichier de commandes pour tester les handlers IPC complets). Rendre la
+    // fonction générique sur le runtime pour la rendre testable serait un
+    // changement de signature publique dépassant le périmètre de ce refactor.
 }
