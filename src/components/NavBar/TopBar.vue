@@ -5,26 +5,26 @@
 -->
 <template>
   <div class="top-bar">
-    <button class="image-btn" @click="start" title="Démarrer (ctrl+p)" aria-label="Démarrer la capture" :disabled="isRunning || activePanel !== null">
+    <button type="button" class="image-btn" @click="start" title="Démarrer (ctrl+p)" aria-label="Démarrer la capture" :disabled="isRunning || activePanel !== null">
       <img src="../../../src-tauri/icons/StoreLogo.png" alt="Flux" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="stop" title="Arrêter (ctrl+shift+p)" aria-label="Arrêter la capture" :disabled="!isRunning">🛑</button>
-    <button class="image-btn" @click="reset" :disabled="activePanel !== null" title="Réinitialiser (ctrl+shift+r)" aria-label="Réinitialiser">🔄</button>
-    <button class="image-btn" title="Config (ctrl+,)" aria-label="Configuration" :disabled="isRunning" @click="handleConfigClick">
+    <button type="button" class="image-btn" @click="stop" title="Arrêter (ctrl+shift+p)" aria-label="Arrêter la capture" :disabled="!isRunning">🛑</button>
+    <button type="button" class="image-btn" @click="reset" :disabled="activePanel !== null" title="Réinitialiser (ctrl+shift+r)" aria-label="Réinitialiser">🔄</button>
+    <button type="button" class="image-btn" title="Config (ctrl+,)" aria-label="Configuration" :disabled="isRunning" @click="handleConfigClick">
       <img src="../../assets/mdi--gear.svg" alt="Configuration" class="icon-img" />
     </button>
 
-    <button class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)" aria-label="Sauvegarder la matrice de flux">💾</button>
-    <button class="image-btn" @click="SaveLabels" title="Exporter les labels" aria-label="Exporter les labels">🏷️</button>
-    <button class="image-btn" @click="handleLabelsClick" :disabled="isRunning" title="Gérer les labels" aria-label="Gérer les labels">🗂️</button>
+    <button type="button" class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)" aria-label="Sauvegarder la matrice de flux">💾</button>
+    <button type="button" class="image-btn" @click="SaveLabels" title="Exporter les labels" aria-label="Exporter les labels">🏷️</button>
+    <button type="button" class="image-btn" @click="handleLabelsClick" :disabled="isRunning" title="Gérer les labels" aria-label="Gérer les labels">🗂️</button>
 
-    <button class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap ou une matrice de flux (ctrl+o)" aria-label="Ouvrir un fichier Pcap ou une matrice de flux">📄</button>
-    <button class="image-btn" @click="displayCsvOpener" :disabled="isRunning" title="Importer un fichier de label"><img src="../../assets/images/import_csv.png" alt="Importer un fichier de label" /></button>
+    <button type="button" class="image-btn" @click="displayPcapOpener" :disabled="isRunning || captureStore.hasData" title="Ouvrir un fichier Pcap ou une matrice de flux (ctrl+o)" aria-label="Ouvrir un fichier Pcap ou une matrice de flux">📄</button>
+    <button type="button" class="image-btn" @click="displayCsvOpener" :disabled="isRunning" title="Importer un fichier de label"><img src="../../assets/images/import_csv.png" alt="Importer un fichier de label" /></button>
 
-    <button class="image-btn" @click="quit" title="Quitter (ctrl+q)" aria-label="Quitter">❎</button>
-    <button class="image-btn" @click="export_logs" title="Logs (ctrl+l)" aria-label="Exporter les logs">📒</button>
-    <button class="image-btn" @click="handleFilterClick" :disabled="isRunning" title="Filtrer (ctrl+f)" aria-label="Filtrer">🔍</button>
+    <button type="button" class="image-btn" @click="quit" title="Quitter (ctrl+q)" aria-label="Quitter">❎</button>
+    <button type="button" class="image-btn" @click="export_logs" title="Logs (ctrl+l)" aria-label="Exporter les logs">📒</button>
+    <button type="button" class="image-btn" @click="handleFilterClick" :disabled="isRunning" title="Filtrer (ctrl+f)" aria-label="Filtrer">🔍</button>
   </div>
 </template>
 

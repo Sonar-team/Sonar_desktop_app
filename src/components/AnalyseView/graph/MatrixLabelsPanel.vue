@@ -53,7 +53,7 @@ export default defineComponent({
     <div class="labels-modal">
       <div class="labels-modal-header">
         <h3>Labels appliqués à la matrice ({{ matrixLabels.length }})</h3>
-        <button class="labels-close" @click="$emit('close')" title="Fermer">✕</button>
+        <button type="button" class="labels-close" @click="$emit('close')" title="Fermer">✕</button>
       </div>
 
       <input

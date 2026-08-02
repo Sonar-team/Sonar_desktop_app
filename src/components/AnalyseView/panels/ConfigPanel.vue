@@ -24,12 +24,12 @@
     <div class="config-item">
       <label for="config-buffer-size">
         Taille du buffer :
-        <span
+        <button
+          type="button"
           class="help-tooltip"
-          tabindex="0"
           aria-label="Taille du buffer kernel pcap, en octets. Plus il est grand, plus SONAR absorbe les pics de trafic sans perte côté système."
           data-tooltip="Buffer kernel pcap, en octets. Plus il est grand, plus SONAR absorbe les pics de trafic sans perte côté système."
-        >?</span>
+        >?</button>
       </label>
       <input id="config-buffer-size" type="number" v-model.number="bufferSize" min="65536" max="536870912" step="1024" />
     </div>
@@ -37,12 +37,12 @@
     <div class="config-item">
       <label for="config-chan-capacity">
         Nombre de buffers:
-        <span
+        <button
+          type="button"
           class="help-tooltip"
-          tabindex="0"
           aria-label="Capacité du canal interne entre capture et traitement. Trop petit, l'application peut perdre des paquets sous charge; trop grand, elle consomme plus de mémoire."
           data-tooltip="Capacité du canal interne entre capture et traitement. Trop petit, l'application peut perdre des paquets sous charge; trop grand, elle consomme plus de mémoire."
-        >?</span>
+        >?</button>
       </label>
       <input id="config-chan-capacity" type="number" v-model.number="chanCapacity" min="1" max="1000000" />
     </div>
@@ -50,12 +50,12 @@
     <div class="config-item">
       <label for="config-timeout">
         Timeout (ms) :
-        <span
+        <button
+          type="button"
           class="help-tooltip"
-          tabindex="0"
           aria-label="Délai pcap avant livraison des paquets. Petit, il réduit la latence; plus grand, il favorise le batching."
           data-tooltip="Délai pcap avant livraison des paquets. Petit, il réduit la latence; plus grand, il favorise le batching."
-        >?</span>
+        >?</button>
       </label>
       <input id="config-timeout" type="number" v-model.number="timeout" min="1" max="10000" />
     </div>
@@ -63,19 +63,19 @@
     <div class="config-item">
       <label for="config-snaplen">
         Taille du snaplen :
-        <span
+        <button
+          type="button"
           class="help-tooltip"
-          tabindex="0"
           aria-label="Nombre maximum d'octets capturés par paquet. Grand, il garde les paquets complets; petit, il réduit CPU et mémoire mais peut tronquer le décodage."
           data-tooltip="Nombre maximum d'octets capturés par paquet. Grand, il garde les paquets complets; petit, il réduit CPU et mémoire mais peut tronquer le décodage."
-        >?</span>
+        >?</button>
       </label>
       <input id="config-snaplen" type="number" v-model.number="snaplen" min="64" max="262144" />
     </div>
 
     <div class="actions">
-      <button @click="save" :disabled="!selectedInterface">Sauvegarder</button>
-      <button @click="close">Fermer</button>
+      <button type="button" @click="save" :disabled="!selectedInterface">Sauvegarder</button>
+      <button type="button" @click="close">Fermer</button>
     </div>
   </div>
 </template>
@@ -279,10 +279,12 @@ export default defineComponent({
   justify-content: center;
   width: 18px;
   height: 18px;
+  padding: 0;
   border: 1px solid #8a8a8a;
   border-radius: 50%;
   color: #ffffff;
   background-color: #303744;
+  font-family: inherit;
   font-size: 12px;
   line-height: 1;
   cursor: help;
