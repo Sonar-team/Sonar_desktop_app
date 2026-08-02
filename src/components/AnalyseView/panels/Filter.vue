@@ -20,33 +20,33 @@
       <!-- Header -->
       <div class="panel-header">
         <h2>Filtre BPF</h2>
-        <button class="close-btn" @click="$emit('update:visible', false)">✕</button>
+        <button type="button" class="close-btn" @click="$emit('update:visible', false)">✕</button>
       </div>
 
       <!-- Filtre actif -->
       <div class="active-filter-bar" v-if="captureStore.activeFilter">
         <span class="active-filter-label">Filtre actif</span>
         <code class="active-filter-expr">{{ captureStore.activeFilter }}</code>
-        <button class="btn ghost active-filter-clear" @click="resetAll">Supprimer</button>
+        <button type="button" class="btn ghost active-filter-clear" @click="resetAll">Supprimer</button>
       </div>
 
       <!-- Filtre en attente (appliqué au prochain démarrage) -->
       <div class="pending-filter-bar" v-if="captureStore.pendingFilter">
         <span class="pending-filter-label">Prochain démarrage</span>
         <code class="active-filter-expr">{{ captureStore.pendingFilter }}</code>
-        <button class="btn ghost active-filter-clear" @click="cancelPending">Annuler</button>
+        <button type="button" class="btn ghost active-filter-clear" @click="cancelPending">Annuler</button>
       </div>
 
       <!-- Presets rapides -->
       <section class="card">
         <h3>Presets rapides</h3>
         <div class="chips">
-          <button class="chip" @click="preset('ipv4')">IPv4 only</button>
-          <button class="chip" @click="preset('web')">Web (80/443)</button>
-          <button class="chip" @click="preset('dns')">DNS (53)</button>
-          <button class="chip" @click="preset('ntp')">NTP (123)</button>
-          <button class="chip" @click="preset('syn')">TCP SYN only</button>
-          <button class="chip" @click="preset('no-arp-ipv6')">Tout sauf ARP/IPv6</button>
+          <button type="button" class="chip" @click="preset('ipv4')">IPv4 only</button>
+          <button type="button" class="chip" @click="preset('web')">Web (80/443)</button>
+          <button type="button" class="chip" @click="preset('dns')">DNS (53)</button>
+          <button type="button" class="chip" @click="preset('ntp')">NTP (123)</button>
+          <button type="button" class="chip" @click="preset('syn')">TCP SYN only</button>
+          <button type="button" class="chip" @click="preset('no-arp-ipv6')">Tout sauf ARP/IPv6</button>
         </div>
       </section>
 
@@ -171,9 +171,9 @@
           <span v-for="e in globalErrors" :key="e">• {{ e }}</span>
         </div>
         <div class="actions">
-          <button class="btn primary" @click="apply" :disabled="!canApply">Appliquer</button>
-          <button class="btn ghost" @click="resetAll">Réinitialiser</button>
-          <button class="btn ghost sync" v-if="isManualPreview" @click="syncPreview">↺ Sync auto</button>
+          <button type="button" class="btn primary" @click="apply" :disabled="!canApply">Appliquer</button>
+          <button type="button" class="btn ghost" @click="resetAll">Réinitialiser</button>
+          <button type="button" class="btn ghost sync" v-if="isManualPreview" @click="syncPreview">↺ Sync auto</button>
         </div>
       </section>
 

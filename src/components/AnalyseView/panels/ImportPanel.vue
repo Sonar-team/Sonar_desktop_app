@@ -52,23 +52,22 @@
             {{ importProgress.current.toLocaleString() }}/{{ importProgress.total.toLocaleString() }}
           </p>
         </div>
-        <button
+        <button type="button"
           v-if="cancellableImport"
           class="btn btn-cancel-import"
           @click="cancelImport"
           :disabled="cancelRequested"
-          aria-label="Annuler l'import en cours"
         >
           {{ cancelRequested ? 'Annulation…' : "Annuler l'import" }}
         </button>
       </div>
-      <button class="btn image-btn cross" @click.prevent="windowClosed" :disabled="isConverting">❌</button>
+      <button type="button" class="btn image-btn cross" @click.prevent="windowClosed" :disabled="isConverting">❌</button>
       
       <div v-if="mode === 'csv'" class="csv-group">
-          <button class="btn btn-add text" @click="addCsvFiles" :disabled="isConverting">
+          <button type="button" class="btn btn-add text" @click="addCsvFiles" :disabled="isConverting">
             Ajouter un fichier
           </button>
-          <button v-if="pendingConflicts > 0" class="btn btn-arbitrate" @click="openArbitration" :disabled="isConverting">
+          <button type="button" v-if="pendingConflicts > 0" class="btn btn-arbitrate" @click="openArbitration" :disabled="isConverting">
             ⚖️ Arbitrer les conflits ({{ pendingConflicts }})
           </button>
           <p v-show="labelRows.length == 0" class="text">Aucun label importé pour le moment</p>
@@ -76,7 +75,7 @@
             <h2 class="text table-title">Contenu importé</h2>
             <div class="search-group">
               <input class="input-search" v-model="searchInput" @input="listFilter" aria-label="Rechercher dans les labels importés"/>
-              <button class="btn image-btn icon-lg" @click.prevent="clearLabelStore()" title="Réinitialiser le contenu">🔄</button>
+              <button type="button" class="btn image-btn icon-lg" @click.prevent="clearLabelStore()" title="Réinitialiser le contenu">🔄</button>
             </div>
           </div>
           <div v-show="labelRows.length > 0" class="data-table">
@@ -99,10 +98,10 @@
       
       <div v-else-if="mode === 'pcap'">
         <div class="file-group">
-          <button class="btn btn-add text" @click="addPcapFiles" :disabled="isConverting">
+          <button type="button" class="btn btn-add text" @click="addPcapFiles" :disabled="isConverting">
             Ajouter des fichiers .pcap
           </button>
-          <button v-if="packetFiles.length > 0" class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
+          <button type="button" v-if="packetFiles.length > 0" class="btn btn-clear" @click="clearFiles" :disabled="isConverting">
             Effacer
           </button>
         </div>
@@ -111,15 +110,15 @@
             {{ file }}
           </li>
         </ul>
-        <button v-if="packetFiles.length > 0" @click="convertPcap" class="btn btn-open" :disabled="isConverting">
+        <button type="button" v-if="packetFiles.length > 0" @click="convertPcap" class="btn btn-open" :disabled="isConverting">
           Ouvrir
         </button>
         <div class="separator matrix-separator"></div>
         <div class="file-group">
-          <button class="btn btn-add text" @click="addMatrixFiles" :disabled="isConverting">
+          <button type="button" class="btn btn-add text" @click="addMatrixFiles" :disabled="isConverting">
             Ajouter une ou plusieurs matrices (CSV ou XLSX)
           </button>
-          <button v-if="matrixFiles.length > 0" class="btn btn-clear" @click="clearMatrixFiles" :disabled="isConverting">
+          <button type="button" v-if="matrixFiles.length > 0" class="btn btn-clear" @click="clearMatrixFiles" :disabled="isConverting">
             Effacer
           </button>
         </div>
@@ -128,7 +127,7 @@
             {{ file }}
           </li>
         </ul>
-        <button v-if="matrixFiles.length > 0" @click="importMatrixFiles" class="btn btn-open" :disabled="isConverting">
+        <button type="button" v-if="matrixFiles.length > 0" @click="importMatrixFiles" class="btn btn-open" :disabled="isConverting">
           Ouvrir
         </button>
       </div>
@@ -276,9 +275,12 @@ export default defineComponent({
     },
 
     async addFiles(type: 'pcap' | 'csv' | 'matrix', extensions: string[]) {
-        const label = type === 'csv' ? 'Label File'
-          : type === 'matrix' ? 'Matrice CSV ou XLSX'
-          : 'Capture File';
+        const labels: Record<'pcap' | 'csv' | 'matrix', string> = {
+          csv: 'Label File',
+          matrix: 'Matrice CSV ou XLSX',
+          pcap: 'Capture File',
+        };
+        const label = labels[type];
         useCaptureStore().isImporting = true;
 
       try {

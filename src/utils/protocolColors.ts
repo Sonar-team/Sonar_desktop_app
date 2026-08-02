@@ -150,6 +150,10 @@ function protocolColorKey(label: string): string {
 function fallbackColorForKey(key: string): string {
   let hash = 0
   for (let i = 0; i < key.length; i++) {
+    // `| 0` n'est pas une troncature de flottant ici (hash est déjà entier) :
+    // c'est un rebouclage volontaire sur 32 bits signés (hash de type
+    // String.hashCode Java), qui borne la valeur pour des clés longues.
+    // `Math.trunc` ne reproduit pas ce rebouclage — ne pas « corriger » S7767 ici.
     hash = (hash * 31 + key.charCodeAt(i)) | 0
   }
   return HASH_FALLBACK_COLORS[Math.abs(hash) % HASH_FALLBACK_COLORS.length]

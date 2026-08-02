@@ -16,7 +16,7 @@
       <div v-if="captureStore.activeFilter" class="filter-badge" :title="captureStore.activeFilter">
         <span class="filter-icon">⚗</span>
         <span class="filter-text">{{ captureStore.activeFilter }}</span>
-        <button class="filter-clear" @click="clearFilter" title="Supprimer le filtre">✕</button>
+        <button type="button" class="filter-clear" @click="clearFilter" title="Supprimer le filtre">✕</button>
       </div>
       <p
         v-if="lastImport"

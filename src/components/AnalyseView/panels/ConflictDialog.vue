@@ -34,25 +34,25 @@
               <ul v-show="same_ip_diff_mac.length > 0">
                 <h3 class="text">Conflits IP -> MAC</h3>
                 <li v-for="([lineA, lineB, ip, ref_mac, mac, rowA, rowB], index) in same_ip_diff_mac" :key="index">
-                  <label>
+                  <div class="conflict-entry">
                     <span class="text">'{{ ip }}'(IP) — lignes {{ lineA }} / {{ lineB }}:</span><br>
                     <span class="text indented">ligne {{ lineA }} MAC: '{{ ref_mac || "-" }}'</span>
                     <span class="text indented line-context">ligne {{ lineA }} complète : '{{ rowA }}'</span>
                     <span class="text indented">ligne {{ lineB }} MAC: '{{ mac || "-" }}'</span>
                     <span class="text indented line-context">ligne {{ lineB }} complète : '{{ rowB }}'</span>
-                  </label>
+                  </div>
                 </li>
               </ul>
               <ul v-show="same_ip_diff_label.length > 0">
                 <h3 class="text">Conflits IP -> Label</h3>
                 <li v-for="([lineA, lineB, ip, ref_label, label, rowA, rowB], index) in same_ip_diff_label" :key="index">
-                  <label>
+                  <div class="conflict-entry">
                     <span class="text">'{{ ip }}'(IP) — lignes {{ lineA }} / {{ lineB }}:</span><br>
                     <span class="text indented">ligne {{ lineA }} Label: '{{ ref_label || "-" }}'</span>
                     <span class="text indented line-context">ligne {{ lineA }} complète : '{{ rowA }}'</span>
                     <span class="text indented">ligne {{ lineB }} Label: '{{ label || "-" }}'</span>
                     <span class="text indented line-context">ligne {{ lineB }} complète : '{{ rowB }}'</span>
-                  </label>
+                  </div>
                 </li>
               </ul>
           </div>
@@ -61,10 +61,10 @@
               <ul v-show="invalid_mac.length > 0">
                 <h3 class="text">MAC invalides</h3>
                 <li v-for="([line, mac, row], index) in shownInvalidMac" :key="index">
-                  <label>
+                  <div class="conflict-entry">
                     <span class="text indented">ligne {{ line }} — MAC: '{{ mac }}'</span>
                     <span class="text indented line-context">ligne complète : '{{ row }}'</span>
-                  </label>
+                  </div>
                 </li>
                 <li v-if="invalid_mac.length > maxShown" class="text indented truncated">
                   … et {{ invalid_mac.length - maxShown }} autre{{ invalid_mac.length - maxShown > 1 ? 's' : '' }} (corrigez les premières : souvent la même cause)
@@ -73,10 +73,10 @@
               <ul v-show="invalid_ip.length > 0">
                 <h3 class="text">IP invalides</h3>
                 <li v-for="([line, ip, row], index) in shownInvalidIp" :key="index">
-                  <label>
+                  <div class="conflict-entry">
                     <span class="text indented">ligne {{ line }} — IP: '{{ ip }}'</span>
                     <span class="text indented line-context">ligne complète : '{{ row }}'</span>
-                  </label>
+                  </div>
                 </li>
                 <li v-if="invalid_ip.length > maxShown" class="text indented truncated">
                   … et {{ invalid_ip.length - maxShown }} autre{{ invalid_ip.length - maxShown > 1 ? 's' : '' }} (corrigez les premières : souvent la même cause)
@@ -87,9 +87,9 @@
             <ul>
               <h3 class="text">Lignes concernées :</h3>
               <li v-for="([line, value], index) in shownInvalidLines" :key="index">
-                <label>
+                <div class="conflict-entry">
                   <span class="text indented">ligne {{ line }} : '{{ value }}'</span>
-                </label>
+                </div>
               </li>
               <li v-if="invalid_lines.length > maxShown" class="text indented truncated">
                 … et {{ invalid_lines.length - maxShown }} autre{{ invalid_lines.length - maxShown > 1 ? 's' : '' }}
@@ -101,7 +101,7 @@
       </div>
 
       <div>
-          <button class="btn image-btn" @click.prevent="windowClosed">❌</button>
+          <button type="button" class="btn image-btn" @click.prevent="windowClosed">❌</button>
       </div>
      
     </div>
@@ -350,7 +350,7 @@ export default defineComponent({
   margin-right: auto;
 }
 
-.file-list label {
+.file-list .conflict-entry {
   display: flex;
   flex-direction: column;
   align-items: flex-start;

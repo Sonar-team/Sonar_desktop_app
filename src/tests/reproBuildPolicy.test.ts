@@ -82,8 +82,12 @@ Deno.test("les pins xwin du Dockerfile suivent la source de vérité", () => {
   );
   assert(toolchainStage >= 0);
   assert(
-    toolchainStage < rustupPin && rustupPin < targetInstall,
-    "le stage Windows doit sélectionner le toolchain installé avant sa cible",
+    toolchainStage < rustupPin,
+    "le pin RUSTUP_TOOLCHAIN doit apparaître après le stage windows-toolchain",
+  );
+  assert(
+    rustupPin < targetInstall,
+    "l'installation de la cible x86_64-pc-windows-msvc doit suivre le pin RUSTUP_TOOLCHAIN",
   );
   assert(
     dockerfile.includes("RUN bash /usr/local/bin/cache-xwin-toolchain.sh"),

@@ -6,7 +6,7 @@ import { Edge, EdgeData, EdgeId, Node } from "../../../types/capture"
 import { colorForProtocol } from "../../../utils/protocolColors"
 
 // --- Couleurs ---------------------------------------------------------------
-function clamp01(x: number) { return x < 0 ? 0 : x > 1 ? 1 : x }
+function clamp01(x: number) { return Math.min(1, Math.max(0, x)) }
 
 function hexToRgb(hex: string) {
   const h = hex.startsWith("#") ? hex.slice(1) : hex
@@ -20,15 +20,15 @@ function rgbToHex(r: number, g: number, b: number) {
 
 export function darken(hex: string, factor = 0.2) {
   const { r, g, b } = hexToRgb(hex)
-  return rgbToHex((r * (1 - factor)) | 0, (g * (1 - factor)) | 0, (b * (1 - factor)) | 0)
+  return rgbToHex(Math.trunc(r * (1 - factor)), Math.trunc(g * (1 - factor)), Math.trunc(b * (1 - factor)))
 }
 
 export function brighten(hex: string, factor = 0.15) {
   const { r, g, b } = hexToRgb(hex)
   return rgbToHex(
-    (clamp01(r / 255 + factor) * 255) | 0,
-    (clamp01(g / 255 + factor) * 255) | 0,
-    (clamp01(b / 255 + factor) * 255) | 0
+    Math.trunc(clamp01(r / 255 + factor) * 255),
+    Math.trunc(clamp01(g / 255 + factor) * 255),
+    Math.trunc(clamp01(b / 255 + factor) * 255)
   )
 }
 
@@ -46,10 +46,17 @@ export function edgeKey(e: EdgeData): EdgeId {
 }
 
 // --- Positionnement ---------------------------------------------------------
+// CSPRNG plutôt que Math.random() : purement cosmétique ici (jitter de
+// positionnement des nœuds), mais évite le signalement générique de
+// SonarQube sur Math.random() (S2245, "PRNG non sécurisé").
+export function randomFloat(): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32
+}
+
 // Jitter autour d'un point d'ancrage pour les nouveaux nœuds (évite l'empilement)
 export function jitterAround(x: number, y: number, radius = 120) {
-  const angle = Math.random() * 2 * Math.PI
-  const r = radius * (0.4 + 0.6 * Math.random())
+  const angle = randomFloat() * 2 * Math.PI
+  const r = radius * (0.4 + 0.6 * randomFloat())
   return { x: x + Math.cos(angle) * r, y: y + Math.sin(angle) * r }
 }
 
