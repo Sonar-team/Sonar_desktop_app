@@ -1593,4 +1593,196 @@ mod tests {
                 .contains("graphe")
         );
     }
+
+    /// handle_capture_message : arrêt déjà demandé quand le message arrive ->
+    /// le paquet est intégré silencieusement (pas d'émission IPC), puis le
+    /// reste du canal est drainé.
+    #[test]
+    fn handle_capture_message_ingests_silently_when_stop_already_requested() {
+        let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        let graph = Arc::new(Mutex::new(GraphData::new()));
+        let mut worker = PacketWorker::new(
+            Channel::new(|_| Ok(())),
+            11,
+            LinkType::ETHERNET,
+            flow_matrix,
+            graph,
+            TEST_DRAIN_STALL_BOUND,
+        );
+        let drop_counters = Arc::new(AppDropCounters::default());
+        let mut emitter = StatsEmitter::new(
+            8,
+            Arc::new(SharedCaptureStats::default()),
+            drop_counters,
+            11,
+        );
+        let stop_flag = AtomicBool::new(true); // arrêt déjà demandé
+        let terminal = TerminalState::default();
+        let pool = PacketBufferPool::new(2, 65_536);
+        let (tx, rx) = bounded::<CaptureMessage>(2);
+        let msg = packet_message(&pool, &arp_frame());
+        drop(tx); // canal vide et déconnecté : le drain qui suit se termine aussitôt
+
+        let keep_going =
+            handle_capture_message(msg, &mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
+
+        assert!(!keep_going);
+        assert_eq!(
+            worker.packets_integrated, 1,
+            "le paquet reçu pendant l'arrêt est tout de même intégré (#158)"
+        );
+    }
+
+    /// handle_capture_message : traitement normal (pas d'arrêt, canal IPC
+    /// vivant, plafond de flux non atteint) -> la boucle appelante continue.
+    #[test]
+    fn handle_capture_message_continues_on_normal_processing() {
+        let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        let graph = Arc::new(Mutex::new(GraphData::new()));
+        let mut worker = PacketWorker::new(
+            Channel::new(|_| Ok(())),
+            12,
+            LinkType::ETHERNET,
+            flow_matrix,
+            graph,
+            TEST_DRAIN_STALL_BOUND,
+        );
+        let drop_counters = Arc::new(AppDropCounters::default());
+        let mut emitter = StatsEmitter::new(
+            8,
+            Arc::new(SharedCaptureStats::default()),
+            drop_counters,
+            12,
+        );
+        let stop_flag = AtomicBool::new(false);
+        let terminal = TerminalState::default();
+        let pool = PacketBufferPool::new(2, 65_536);
+        let (_tx, rx) = bounded::<CaptureMessage>(2);
+        let msg = packet_message(&pool, &arp_frame());
+
+        let keep_going =
+            handle_capture_message(msg, &mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
+
+        assert!(keep_going, "traitement normal -> la boucle appelante continue");
+        assert_eq!(worker.packets_integrated, 1);
+        assert!(!stop_flag.load(Ordering::Acquire));
+    }
+
+    /// handle_capture_message : une erreur fatale pendant process_packet
+    /// (verrou empoisonné) bascule sur stop_on_processing_fatal.
+    #[test]
+    fn handle_capture_message_stops_on_processing_fatal() {
+        let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        poison(&flow_matrix);
+        let graph = Arc::new(Mutex::new(GraphData::new()));
+        let (on_event, events) = recording_channel();
+        let mut worker = PacketWorker::new(
+            on_event,
+            13,
+            LinkType::ETHERNET,
+            Arc::clone(&flow_matrix),
+            graph,
+            TEST_DRAIN_STALL_BOUND,
+        );
+        let drop_counters = Arc::new(AppDropCounters::default());
+        let mut emitter = StatsEmitter::new(
+            8,
+            Arc::new(SharedCaptureStats::default()),
+            Arc::clone(&drop_counters),
+            13,
+        );
+        let stop_flag = AtomicBool::new(false);
+        let terminal = TerminalState::default();
+        let pool = PacketBufferPool::new(2, 65_536);
+        let (tx, rx) = bounded::<CaptureMessage>(2);
+        let msg = packet_message(&pool, &arp_frame());
+        drop(tx);
+
+        let keep_going =
+            handle_capture_message(msg, &mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
+
+        assert!(!keep_going);
+        assert!(
+            stop_flag.load(Ordering::Acquire),
+            "le chemin fatal force l'arrêt"
+        );
+        worker
+            .on_event
+            .send(CaptureEvent::Stopped {
+                session_id: worker.session_id,
+                reason: terminal.preferred_reason().unwrap(),
+            })
+            .unwrap();
+        let events = events.lock().unwrap();
+        let stopped = events
+            .iter()
+            .find(|event| event["event"] == "stopped")
+            .expect("le chemin fatal publie une raison d'arrêt observable");
+        assert!(
+            stopped["data"]["reason"]
+                .as_str()
+                .unwrap()
+                .contains("matrice")
+        );
+    }
+
+    /// handle_capture_message : un canal IPC frontend cassé (flush échoue)
+    /// force l'arrêt du pipeline avec une raison explicite, sans passer par
+    /// stop_on_processing_fatal (ce n'est pas une erreur d'intégrité).
+    #[test]
+    fn handle_capture_message_stops_when_ipc_channel_is_broken() {
+        let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        let graph = Arc::new(Mutex::new(GraphData::new()));
+        let failing_channel =
+            Channel::new(|_| Err(tauri::Error::AssetNotFound("simulated IPC failure".into())));
+        let mut worker = PacketWorker::new(
+            failing_channel,
+            14,
+            LinkType::ETHERNET,
+            flow_matrix,
+            graph,
+            TEST_DRAIN_STALL_BOUND,
+        );
+        // Force le flush immédiat du batch de paquets dès le premier paquet,
+        // au lieu d'attendre PACKET_BATCH_INTERVAL.
+        worker.last_batch_flush = Instant::now() - PACKET_BATCH_INTERVAL - Duration::from_millis(1);
+        let drop_counters = Arc::new(AppDropCounters::default());
+        let mut emitter = StatsEmitter::new(
+            8,
+            Arc::new(SharedCaptureStats::default()),
+            drop_counters,
+            14,
+        );
+        let stop_flag = AtomicBool::new(false);
+        let terminal = TerminalState::default();
+        let pool = PacketBufferPool::new(2, 65_536);
+        let (tx, rx) = bounded::<CaptureMessage>(2);
+        let msg = packet_message(&pool, &arp_frame());
+        drop(tx);
+
+        let keep_going =
+            handle_capture_message(msg, &mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
+
+        assert!(!keep_going);
+        assert!(
+            stop_flag.load(Ordering::Acquire),
+            "canal IPC cassé -> arrêt de tout le pipeline"
+        );
+        assert!(
+            terminal
+                .preferred_reason()
+                .unwrap()
+                .contains("cassé"),
+            "la raison d'arrêt mentionne le canal IPC cassé"
+        );
+    }
+
+    // Note : la branche « plafond MAX_LIVE_FLOWS atteint » de
+    // handle_capture_message n'a pas de test dédié -- worker.processed est
+    // réécrit par process_packet à partir du row_count() réel de la matrice
+    // (pas un compteur qu'on peut présigner), et peupler une matrice de
+    // 250 000 flux réels dans un test unitaire n'est pas praticable. Le reste
+    // de la fonction (stop_flag, keep_going, drain_and_finalize) est déjà
+    // couvert par les tests ci-dessus ; seul ce déclenchement précis reste
+    // non exercé directement.
 }
