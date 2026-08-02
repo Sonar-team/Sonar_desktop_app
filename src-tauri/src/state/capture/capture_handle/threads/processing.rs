@@ -846,6 +846,29 @@ fn handle_capture_message(
     true
 }
 
+/// Inactivité du canal : flush les batches en attente. Si le canal IPC
+/// frontend est cassé, arrête tout le pipeline (drain + finalize) et
+/// retourne `false` pour que la boucle appelante sorte. Extrait pour éviter
+/// un if imbriqué de plus dans la boucle principale.
+#[allow(clippy::too_many_arguments)]
+fn handle_receive_timeout(
+    worker: &mut PacketWorker,
+    emitter: &mut StatsEmitter,
+    rx: &Receiver<CaptureMessage>,
+    buffer_pool: &PacketBufferPool,
+    stop_flag: &AtomicBool,
+    terminal: &TerminalState,
+) -> bool {
+    if worker.flush_batches() {
+        return true;
+    }
+    error!("Canal IPC frontend cassé : arrêt du pipeline de capture");
+    terminal.record_autonomous("canal IPC frontend cassé : pipeline de capture arrêté".to_string());
+    stop_flag.store(true, Ordering::Release);
+    drain_and_finalize(worker, emitter, rx, buffer_pool, stop_flag, terminal);
+    false
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn spawn_processing_thread(
     rx: Receiver<CaptureMessage>,
@@ -925,21 +948,15 @@ pub fn spawn_processing_thread(
                 }
 
                 Err(RecvTimeoutError::Timeout) => {
-                    // Flush les batches restants après inactivité.
-                    if !worker.flush_batches() {
-                        error!("Canal IPC frontend cassé : arrêt du pipeline de capture");
-                        terminal.record_autonomous(
-                            "canal IPC frontend cassé : pipeline de capture arrêté".to_string(),
-                        );
-                        stop_flag.store(true, Ordering::Release);
-                        drain_and_finalize(
-                            &mut worker,
-                            &mut emitter,
-                            &rx,
-                            &buffer_pool,
-                            &stop_flag,
-                            &terminal,
-                        );
+                    let keep_going = handle_receive_timeout(
+                        &mut worker,
+                        &mut emitter,
+                        &rx,
+                        &buffer_pool,
+                        &stop_flag,
+                        &terminal,
+                    );
+                    if !keep_going {
                         break;
                     }
                 }
@@ -1831,4 +1848,94 @@ mod tests {
     // fichier de commandes pour tester les handlers IPC complets). Rendre la
     // fonction générique sur le runtime pour la rendre testable serait un
     // changement de signature publique dépassant le périmètre de ce refactor.
+
+    /// handle_receive_timeout : le flush réussit (rien en attente ou canal
+    /// vivant) -> la boucle appelante continue, sans forcer l'arrêt.
+    #[test]
+    fn handle_receive_timeout_continues_when_flush_succeeds() {
+        let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        let graph = Arc::new(Mutex::new(GraphData::new()));
+        let mut worker = PacketWorker::new(
+            Channel::new(|_| Ok(())),
+            21,
+            LinkType::ETHERNET,
+            flow_matrix,
+            graph,
+            TEST_DRAIN_STALL_BOUND,
+        );
+        let drop_counters = Arc::new(AppDropCounters::default());
+        let mut emitter = StatsEmitter::new(
+            8,
+            Arc::new(SharedCaptureStats::default()),
+            drop_counters,
+            21,
+        );
+        let stop_flag = AtomicBool::new(false);
+        let terminal = TerminalState::default();
+        let pool = PacketBufferPool::new(2, 65_536);
+        let (_tx, rx) = bounded::<CaptureMessage>(2);
+
+        let keep_going =
+            handle_receive_timeout(&mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
+
+        assert!(keep_going);
+        assert!(!stop_flag.load(Ordering::Acquire));
+    }
+
+    /// handle_receive_timeout : le flush échoue (canal IPC cassé) -> arrêt de
+    /// tout le pipeline (drain + finalize), la boucle appelante doit sortir.
+    #[test]
+    fn handle_receive_timeout_stops_pipeline_when_flush_fails() {
+        let flow_matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        let graph = Arc::new(Mutex::new(GraphData::new()));
+        let failing_channel =
+            Channel::new(|_| Err(tauri::Error::AssetNotFound("simulated IPC failure".into())));
+        let mut worker = PacketWorker::new(
+            failing_channel,
+            22,
+            LinkType::ETHERNET,
+            flow_matrix,
+            graph,
+            TEST_DRAIN_STALL_BOUND,
+        );
+        let pool = PacketBufferPool::new(2, 65_536);
+        // Peuple packet_batch sans déclencher de flush (juste après
+        // construction, l'intervalle n'est pas écoulé) : handle_receive_timeout
+        // est le premier point qui tentera vraiment d'envoyer ce batch.
+        let msg = packet_message(&pool, &arp_frame());
+        let CaptureMessage::Packet(pkt) = msg;
+        assert!(worker.process_packet(&pkt).unwrap());
+        pool.put(pkt);
+
+        let drop_counters = Arc::new(AppDropCounters::default());
+        let mut emitter = StatsEmitter::new(
+            8,
+            Arc::new(SharedCaptureStats::default()),
+            drop_counters,
+            22,
+        );
+        let stop_flag = AtomicBool::new(false);
+        let terminal = TerminalState::default();
+        let (tx, rx) = bounded::<CaptureMessage>(2);
+        drop(tx);
+
+        let keep_going =
+            handle_receive_timeout(&mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
+
+        assert!(!keep_going);
+        assert!(
+            stop_flag.load(Ordering::Acquire),
+            "canal IPC cassé -> arrêt de tout le pipeline"
+        );
+        assert!(
+            terminal.preferred_reason().unwrap().contains("cassé"),
+            "la raison d'arrêt mentionne le canal IPC cassé"
+        );
+    }
+
+    // maybe_poll_capture_stats (capture.rs) reste hors de portée d'un test
+    // direct pour la même raison structurelle : elle prend un
+    // `&mut Capture<Active>`, une capture pcap réellement ouverte, non
+    // disponible dans cet environnement de test (pas de privilèges de
+    // capture live).
 }

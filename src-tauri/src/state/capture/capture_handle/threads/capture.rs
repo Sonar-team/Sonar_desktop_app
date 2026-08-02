@@ -123,6 +123,24 @@ fn maybe_report_drops(
     *last_drop_report = Instant::now();
 }
 
+/// Rafraîchit les stats pcap partagées si l'intervalle de sondage est
+/// écoulé. Extrait de la boucle de capture pour éviter un if/if-let imbriqué
+/// répété à chaque tour (complexité cognitive).
+fn maybe_poll_capture_stats(
+    cap: &mut Capture<Active>,
+    shared_stats: &SharedCaptureStats,
+    last_stats_poll: &mut Instant,
+    stats_poll_interval: Duration,
+) {
+    if last_stats_poll.elapsed() < stats_poll_interval {
+        return;
+    }
+    *last_stats_poll = Instant::now();
+    if let Ok(stats) = cap.stats() {
+        shared_stats.store(stats);
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn spawn_capture_thread_with_pool(
     tx: Sender<CaptureMessage>,
@@ -153,12 +171,12 @@ pub fn spawn_capture_thread_with_pool(
         let mut last_drop_report = Instant::now();
 
         while !stop_flag.load(Ordering::Acquire) {
-            if last_stats_poll.elapsed() >= stats_poll_interval {
-                last_stats_poll = Instant::now();
-                if let Ok(stats) = cap.stats() {
-                    shared_stats.store(stats);
-                }
-            }
+            maybe_poll_capture_stats(
+                &mut cap,
+                &shared_stats,
+                &mut last_stats_poll,
+                stats_poll_interval,
+            );
 
             match cap.next_packet() {
                 Ok(packet) => {

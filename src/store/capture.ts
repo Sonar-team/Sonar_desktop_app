@@ -183,9 +183,7 @@ export const useCaptureStore = defineStore("capture", {
           for (const cb of this.graphUpdateListeners) cb(msg.data.update);
           break;
         case "graphBatch":
-          for (const update of msg.data.updates) {
-            for (const cb of this.graphUpdateListeners) cb(update);
-          }
+          this.notifyGraphUpdates(msg.data.updates);
           break;
         case "graphSnapshot":
           for (const cb of this.graphSnapshotListeners) cb(msg.data.graphData);
@@ -276,6 +274,9 @@ export const useCaptureStore = defineStore("capture", {
     // labels #157) : mêmes abonnés que le flux du channel de capture, mais
     // sans dépendre de l'existence d'un channel (hors capture).
     applyGraphUpdates(updates: GraphUpdate[]) {
+      this.notifyGraphUpdates(updates);
+    },
+    notifyGraphUpdates(updates: GraphUpdate[]) {
       for (const update of updates) {
         for (const cb of this.graphUpdateListeners) cb(update);
       }
