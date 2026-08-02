@@ -212,21 +212,32 @@ export default defineComponent({
     },
 
     // === Reducers Sigma (état de survol/sélection -> rendu) ================
+    // Sigma appelle ces reducers pour chaque nœud/arête à chaque frame (donc
+    // en continu tant que ForceAtlas2 tourne, par défaut activé) : un chemin
+    // rapide qui renvoie `data` tel quel sans le copier évite une allocation
+    // par élément et par frame quand rien ne doit être surchargé.
     nodeReducer(node: string, data: NodeRenderAttributes): NodeRenderAttributes {
-      const res: NodeRenderAttributes = { ...data }
       const tunnelNodes = this.hoveredTunnelNodes
-      if (tunnelNodes && !tunnelNodes.has(node)) {
+      const dimmed = !!tunnelNodes && !tunnelNodes.has(node)
+      const isHovered = node === this.hoveredNode
+      const isSelected = node === this.selectedNodeId
+      if (!dimmed && !isHovered && !isSelected) return data
+
+      const res: NodeRenderAttributes = { ...data }
+      if (dimmed) {
         res.color = DIM_NODE_COLOR
         res.label = null
       }
-      if (node === this.hoveredNode) res.color = data.hoverColor ?? res.color
-      if (node === this.selectedNodeId) res.highlighted = true
+      if (isHovered) res.color = data.hoverColor ?? res.color
+      if (isSelected) res.highlighted = true
       return res
     },
 
     edgeReducer(edge: string, data: EdgeRenderAttributes): EdgeRenderAttributes {
-      const res: EdgeRenderAttributes = { ...data }
       const tunnelEdges = this.hoveredTunnelEdges
+      if (!tunnelEdges && !this._edgeLabelsShown) return data
+
+      const res: EdgeRenderAttributes = { ...data }
       const dimmed = !!tunnelEdges && !tunnelEdges.has(edge)
       if (tunnelEdges) {
         if (dimmed) {
@@ -335,6 +346,14 @@ export default defineComponent({
       this.graph?.clear()
       this.clearNodeInfos()
       this.unpinTunnelHighlight()
+      // Vide les updates de capture live déjà en file : sans ça, un update
+      // mis en attente avant le reset peut être rejoué sur le graphe qui
+      // vient d'être rechargé (nouveau fichier/snapshot).
+      this._queue.length = 0
+      if (this._raf) {
+        cancelAnimationFrame(this._raf)
+        this._raf = 0
+      }
     },
 
     /**

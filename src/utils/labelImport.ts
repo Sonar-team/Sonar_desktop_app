@@ -20,6 +20,13 @@ export function classifyLabelImportError(err: unknown): LabelFileIssues | null {
   if (!error || typeof error !== 'object' || error.kind !== 'label') return null;
 
   const labelError = error.message as LabelErrorKind;
+  // Garde objet/null (#161) : un payload `label` imbriqué non conforme au
+  // contrat (null/string) ne doit pas lever ici, juste retomber sur le
+  // fallback générique (`displayCaptureError`) plutôt que de planter en
+  // amont dans le catch synchrone du panneau d'import.
+  if (typeof labelError !== 'object' || labelError === null || !('kind' in labelError)) {
+    return null;
+  }
   switch (labelError.kind) {
     case 'invalidMacIpFormat': {
       const [invalidMac, invalidIp] = labelError.message;

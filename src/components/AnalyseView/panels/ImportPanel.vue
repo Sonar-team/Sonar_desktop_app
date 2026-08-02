@@ -5,8 +5,14 @@
   Props : mode ('csv' | 'pcap'). Événement principal : update:visible.
 -->
 <template>
-  <div class="container">
-    <div class="center-container" :class="{ 'drag-over': isDragOver }">
+  <div
+    class="container"
+    role="dialog"
+    aria-modal="true"
+    :aria-label="mode === 'csv' ? 'Import de labels' : 'Import de captures ou de matrices'"
+    @keydown.esc="closeOnEscape"
+  >
+    <div class="center-container" :class="{ 'drag-over': isDragOver }" ref="panel" tabindex="-1">
       <!-- Retour visuel de drag & drop -->
       <div class="drop-hint" v-if="isDragOver">
         <div class="drop-hint-inner">
@@ -69,7 +75,7 @@
           <div v-show="labelRows.length > 0" class="table-header-row">
             <h2 class="text table-title">Contenu importé</h2>
             <div class="search-group">
-              <input class="input-search" v-model="searchInput" @input="listFilter"/>
+              <input class="input-search" v-model="searchInput" @input="listFilter" aria-label="Rechercher dans les labels importés"/>
               <button class="btn image-btn icon-lg" @click.prevent="clearLabelStore()" title="Réinitialiser le contenu">🔄</button>
             </div>
           </div>
@@ -175,7 +181,6 @@ export default defineComponent({
       // sont courts et ne consultent pas le jeton backend).
       cancellableImport: false,
       cancelRequested: false,
-      unsubs: [] as Array<() => void>,
       showConflictDialog: false,
       conflictsResolved: false,
       showArbitration: false,
@@ -217,6 +222,13 @@ export default defineComponent({
   methods: {
     windowClosed() {
       this.$emit('update:visible', false);
+    },
+
+    // Échap ne ferme pas pendant une conversion en cours (même garde que le
+    // bouton ❌, désactivé via :disabled="isConverting").
+    closeOnEscape() {
+      if (this.isConverting) return;
+      this.windowClosed();
     },
 
     // Route les fichiers déposés (drag & drop) selon le mode du panneau et
@@ -461,7 +473,7 @@ export default defineComponent({
           },
           async () => {
             this.labelRows = await invoke('get_label_rows');
-            this.filteredlabelRows = this.labelRows;
+            this.filteredlabelRows = filterLabelRows(this.labelRows, this.searchInput);
           },
           displayCaptureError,
         );
@@ -494,7 +506,7 @@ export default defineComponent({
           await invoke('clear_label_store');
           info('réponse invoke');
           this.labelRows = await invoke('get_label_rows');
-          this.filteredlabelRows = this.labelRows;
+          this.filteredlabelRows = filterLabelRows(this.labelRows, this.searchInput);
         } catch (err) {
           displayCaptureError(err);
         }
@@ -504,21 +516,31 @@ export default defineComponent({
       this.showArbitration = false;
       this.arbitrationConflicts = [];
       this.pendingConflicts = 0;
-      // Rafraîchit la table de labels après arbitrage.
-      this.labelRows = await invoke('get_label_rows');
-      this.filteredlabelRows = this.labelRows;
+      try {
+        // Rafraîchit la table de labels après arbitrage.
+        this.labelRows = await invoke('get_label_rows');
+        this.filteredlabelRows = filterLabelRows(this.labelRows, this.searchInput);
+      } catch (err) {
+        await displayCaptureError(err);
+      }
     },
 
     async openArbitration() {
-      this.arbitrationConflicts = await invoke<LabelConflictReport[]>('get_label_conflicts');
-      if (this.arbitrationConflicts.length > 0) {
-        this.showArbitration = true;
+      try {
+        this.arbitrationConflicts = await invoke<LabelConflictReport[]>('get_label_conflicts');
+        if (this.arbitrationConflicts.length > 0) {
+          this.showArbitration = true;
+        }
+      } catch (err) {
+        await displayCaptureError(err);
       }
     },
 
   },
 
   mounted() {
+    (this.$refs.panel as HTMLElement | undefined)?.focus();
+
     // NB : les imports ne touchent plus à isRunning (réservé à la capture
     // live) — leur cycle de vie passe par isImporting. L'ancien couplage aux
     // événements Started/Finished laissait isRunning bloqué à vrai si la
@@ -548,9 +570,6 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    for (const unsub of this.unsubs) unsub();
-    this.unsubs = [];
-
     if (this.unlistenDrop) {
       this.unlistenDrop();
       this.unlistenDrop = null;

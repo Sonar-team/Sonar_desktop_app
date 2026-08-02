@@ -4,10 +4,11 @@
 -->
 <template>
   <div class="interface-selector">
-    <label class="selector-label">Interface réseau</label>
+    <label class="selector-label" for="interface-select">Interface réseau</label>
     <div class="selector-container">
-      <select 
-        v-model="selectedInterface" 
+      <select
+        id="interface-select"
+        v-model="selectedInterface"
         @change="onInterfaceChange"
         class="interface-select"
         :disabled="netInterfaces.length === 0"

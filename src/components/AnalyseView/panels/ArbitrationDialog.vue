@@ -48,6 +48,7 @@
 import { defineComponent, PropType } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { info, error } from '@tauri-apps/plugin-log';
+import { displayCaptureError } from '../../../errors/capture';
 import { LabelConflictReport } from '../../../types/labels';
 
 type Candidate = { label: string; lines: number[] };
@@ -96,6 +97,7 @@ export default defineComponent({
         this.$emit('resolved');
       } catch (err) {
         error(`Erreur arbitrage: ${err}`);
+        await displayCaptureError(err);
       } finally {
         this.resolving = false;
       }

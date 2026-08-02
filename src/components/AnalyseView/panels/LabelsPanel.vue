@@ -111,7 +111,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { Channel, invoke } from '@tauri-apps/api/core';
-import { info, error } from '@tauri-apps/plugin-log';
+import { info, warn, error } from '@tauri-apps/plugin-log';
 import { ask, open, save } from '@tauri-apps/plugin-dialog';
 
 import ArbitrationDialog from './ArbitrationDialog.vue';
@@ -252,7 +252,7 @@ export default defineComponent({
         const onEvent = new Channel<CaptureEvent>();
         onEvent.onmessage = (msg) => {
           if (msg.event === 'started' && msg.data.protocolVersion !== EXPECTED_PROTOCOL_VERSION) {
-            console.warn(
+            warn(
               `[LabelsPanel] version du contrat IPC inattendue : reçu ${msg.data.protocolVersion}, attendu ${EXPECTED_PROTOCOL_VERSION}`
             );
           }

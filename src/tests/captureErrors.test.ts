@@ -236,3 +236,17 @@ Deno.test("displayCaptureError - enveloppe du contrat : parcours nominal intact"
   );
   assertEquals(shown, ["Erreur Tauri : canal fermé"]);
 });
+
+Deno.test("displayCaptureError - payload capture imbriqué non conforme (null) : ne lève pas (régression)", async () => {
+  const shown = await withMockedDialog(() =>
+    displayCaptureError({ kind: "capture", message: null })
+  );
+  assertEquals(shown, ["Erreur inconnue"]);
+});
+
+Deno.test("displayCaptureError - payload capture imbriqué non conforme (chaîne) : ne lève pas (régression)", async () => {
+  const shown = await withMockedDialog(() =>
+    displayCaptureError({ kind: "capture", message: "panne" })
+  );
+  assertEquals(shown, ["Erreur inconnue"]);
+});

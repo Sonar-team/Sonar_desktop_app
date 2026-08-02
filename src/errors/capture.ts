@@ -68,7 +68,9 @@ export async function displayCaptureError(err: unknown) {
         break;
       case "capture": {
         const captureKind = captureError.message as CaptureErrorKind;
-        if ("kind" in captureKind) {
+        // Même garde objet/null que ci-dessus (#161) : le payload imbriqué
+        // peut aussi être non conforme au contrat, pas seulement le premier niveau.
+        if (typeof captureKind === "object" && captureKind !== null && "kind" in captureKind) {
           switch (captureKind.kind) {
             case "invalidConfig":
               userFriendlyMessage =

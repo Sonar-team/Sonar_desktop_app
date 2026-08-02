@@ -6,6 +6,7 @@
 <script lang="ts">
 import { defineComponent } from "vue"
 import { invoke } from "@tauri-apps/api/core"
+import { error } from "@tauri-apps/plugin-log"
 
 export default defineComponent({
   name: "MatrixLabelsPanel",
@@ -32,15 +33,23 @@ export default defineComponent({
     try {
       this.matrixLabels = await invoke<[string, string, string][]>("get_matrix_labels")
     } catch (e) {
-      console.error("Erreur get_matrix_labels:", e)
+      error(`Erreur get_matrix_labels: ${e}`)
       this.matrixLabels = []
     }
+    (this.$refs.search as HTMLInputElement | undefined)?.focus()
   },
 })
 </script>
 
 <template>
-  <div class="labels-overlay" @click.self="$emit('close')">
+  <div
+    class="labels-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Labels appliqués à la matrice"
+    @click.self="$emit('close')"
+    @keydown.esc="$emit('close')"
+  >
     <div class="labels-modal">
       <div class="labels-modal-header">
         <h3>Labels appliqués à la matrice ({{ matrixLabels.length }})</h3>
@@ -48,10 +57,12 @@ export default defineComponent({
       </div>
 
       <input
+        ref="search"
         v-model="search"
         class="labels-search"
         type="text"
         placeholder="Rechercher (MAC, IP, label)…"
+        aria-label="Rechercher un label"
       />
 
       <p v-if="matrixLabels.length === 0" class="labels-empty">
