@@ -82,7 +82,7 @@ jobs:
 
       - name: Generate frontend coverage
         run: |
-          deno test --coverage=coverage/frontend src/tests/*.test.js
+          deno test --coverage=coverage/frontend src/tests/*.test.ts
           deno coverage \
             --lcov \
             --include='^file:.*/src/' \
