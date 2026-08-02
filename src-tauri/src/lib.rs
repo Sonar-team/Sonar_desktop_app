@@ -60,6 +60,49 @@ mod utils;
 // Exposé pour le benchmark `examples/pool_bench.rs`.
 pub use state::capture::capture_handle::threads::packet_buffer;
 
+/// Gère les clics du menu natif (À propos, Changelog, Fermer).
+fn handle_menu_event(app: &tauri::AppHandle, event: tauri::menu::MenuEvent) {
+    if event.id() == "version" {
+        app.dialog()
+            .message(about_message())
+            .title("À propos de SONAR")
+            .kind(MessageDialogKind::Info)
+            .buttons(MessageDialogButtons::Ok)
+            .show(|_| {});
+    } else if event.id() == "changelog" {
+        app.dialog()
+            .message(changelog_message())
+            .title("Changelog")
+            .kind(MessageDialogKind::Info)
+            .buttons(MessageDialogButtons::Ok)
+            .show(|_| {});
+    } else if event.id() == "fermer" {
+        if let Some(window) = app.get_webview_window("main") {
+            if let Err(close_error) = window.close() {
+                error!("Failed to close main window: {close_error}");
+            }
+        } else {
+            app.exit(0);
+        }
+    }
+}
+
+/// Recharge la configuration de capture persistée au démarrage, si présente.
+fn restore_persisted_capture_config(app: &tauri::AppHandle) {
+    let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
+    match CaptureConfig::load_persisted(app) {
+        Ok(Some(config)) => match capture_state.lock() {
+            Ok(mut state) => {
+                info!("Configuration capture chargée depuis le disque");
+                state.config = config;
+            }
+            Err(err) => error!("Impossible de charger la configuration capture: {err}"),
+        },
+        Ok(None) => {}
+        Err(err) => error!("Configuration capture persistée ignorée: {err}"),
+    }
+}
+
 /// Point d'entrée de l'application : configure les plugins, l'état partagé,
 /// le menu et la fenêtre, puis démarre la boucle Tauri.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -98,31 +141,7 @@ pub fn run() -> Result<(), tauri::Error> {
         .manage(Arc::new(Mutex::new(PcInfoLabel::new())))
         .manage(Arc::new(Mutex::new(LabelStore::new())))
         .manage(Arc::new(Mutex::new(LabelConflictStore::default())))
-        .on_menu_event(|app, event| {
-            if event.id() == "version" {
-                app.dialog()
-                    .message(about_message())
-                    .title("À propos de SONAR")
-                    .kind(MessageDialogKind::Info)
-                    .buttons(MessageDialogButtons::Ok)
-                    .show(|_| {});
-            } else if event.id() == "changelog" {
-                app.dialog()
-                    .message(changelog_message())
-                    .title("Changelog")
-                    .kind(MessageDialogKind::Info)
-                    .buttons(MessageDialogButtons::Ok)
-                    .show(|_| {});
-            } else if event.id() == "fermer" {
-                if let Some(window) = app.get_webview_window("main") {
-                    if let Err(close_error) = window.close() {
-                        error!("Failed to close main window: {close_error}");
-                    }
-                } else {
-                    app.exit(0);
-                }
-            }
-        })
+        .on_menu_event(handle_menu_event)
         .setup({
             move |app| {
                 info!("{}", print_banner());
@@ -131,18 +150,7 @@ pub fn run() -> Result<(), tauri::Error> {
                 info!("Reading labels...");
                 read_labels(app.handle())?;
 
-                let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
-                match CaptureConfig::load_persisted(app.handle()) {
-                    Ok(Some(config)) => match capture_state.lock() {
-                        Ok(mut state) => {
-                            info!("Configuration capture chargée depuis le disque");
-                            state.config = config;
-                        }
-                        Err(err) => error!("Impossible de charger la configuration capture: {err}"),
-                    },
-                    Ok(None) => {}
-                    Err(err) => error!("Configuration capture persistée ignorée: {err}"),
-                }
+                restore_persisted_capture_config(app.handle());
 
                 let _ = start_cpu_monitor(app.handle().clone());
 

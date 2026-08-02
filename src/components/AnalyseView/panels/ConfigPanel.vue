@@ -386,7 +386,9 @@ select:focus {
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  background-color: #007bff;
+  /* #007bff était sous le seuil WCAG AA avec du texte blanc (3.98:1) ;
+     même bleu, légèrement assombri pour passer 4.5:1. */
+  background-color: #0071eb;
   color: white;
   font-weight: bold;
   transition: background-color 0.2s;

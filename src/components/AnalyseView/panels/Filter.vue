@@ -488,7 +488,9 @@ function preset(name: string) {
 }
 .row code {
   font-size: 11px;
-  color: #6080c0;
+  /* #6080c0 était sous le seuil WCAG AA (4.34:1 sur #1a1a2e) ; même teinte,
+     légèrement éclaircie pour passer 4.5:1. */
+  color: #6483c1;
   background: #1a1a2e;
   padding: 1px 4px;
   border-radius: 3px;
@@ -628,7 +630,9 @@ function preset(name: string) {
 }
 .chip {
   background: #1e1e30;
-  color: #8080b0;
+  /* #8080b0 était sous le seuil WCAG AA (4.39:1 sur #1e1e30) ; même teinte,
+     légèrement éclaircie pour passer 4.5:1. */
+  color: #8383b2;
   border: 1px solid #2d2d50;
   border-radius: 999px;
   padding: 5px 13px;

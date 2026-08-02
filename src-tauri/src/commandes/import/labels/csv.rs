@@ -63,6 +63,53 @@ fn is_matrix_export_header(record: &csv::StringRecord) -> bool {
     fields.next() == Some("mac_source") && fields.next() == Some("mac_destination")
 }
 
+/// Résultat du classement d'une ligne CSV lue avec succès par le parser.
+enum LabelRecordOutcome {
+    /// Ligne entièrement vide (champs blancs) : ignorée sans erreur.
+    Empty,
+    Valid(usize, csv::StringRecord),
+    Invalid(usize, String),
+}
+
+/// Classe une ligne CSV déjà parsée : vide, valide, invalide (moins de 3
+/// champs), ou erreur bloquante immédiate (mauvais type de fichier).
+/// Extrait de `read_label_records` pour garder sa complexité cognitive sous
+/// le seuil Sonar (16 -> hors seuil de 15 avec ce classement inline).
+fn classify_label_record(
+    index: usize,
+    record: csv::StringRecord,
+    fallback_line: usize,
+) -> Result<LabelRecordOutcome, CaptureStateError> {
+    let line = label_record_line(&record, fallback_line);
+    if record.iter().all(|field| clean_csv_field(field).is_empty()) {
+        return Ok(LabelRecordOutcome::Empty);
+    }
+    // Mauvais type de fichier : une matrice de flux exportée commence par son
+    // en-tête `mac_source,mac_destination,…`. Sans cette détection, chacune
+    // de ses lignes devenait une « erreur MAC/IP » et l'utilisateur recevait
+    // des centaines d'erreurs au lieu d'un diagnostic clair.
+    if index == 0 && is_matrix_export_header(&record) {
+        return Err(LabelError::InvalidRowsFormat {
+            invalid_lines: vec![(
+                line,
+                "ce fichier est une matrice de flux exportée (colonnes \
+                 mac_source, mac_destination…) : importez-le via « Ouvrir \
+                 un fichier CSV ». Un fichier de labels contient mac, ip, label."
+                    .to_string(),
+            )],
+        }
+        .into());
+    }
+    if record.len() < 3 {
+        Ok(LabelRecordOutcome::Invalid(
+            line,
+            label_record_to_display(&record),
+        ))
+    } else {
+        Ok(LabelRecordOutcome::Valid(line, record))
+    }
+}
+
 fn read_label_records(
     csv_path: &str,
 ) -> Result<Vec<(usize, csv::StringRecord)>, CaptureStateError> {
@@ -79,34 +126,11 @@ fn read_label_records(
     for (index, result) in rdr.records().enumerate() {
         let fallback_line = index + 1;
         match result {
-            Ok(record) => {
-                let line = label_record_line(&record, fallback_line);
-                if record.iter().all(|field| clean_csv_field(field).is_empty()) {
-                    continue;
-                }
-                // Mauvais type de fichier : une matrice de flux exportée
-                // commence par son en-tête `mac_source,mac_destination,…`.
-                // Sans cette détection, chacune de ses lignes devenait une
-                // « erreur MAC/IP » et l'utilisateur recevait des centaines
-                // d'erreurs au lieu d'un diagnostic clair.
-                if index == 0 && is_matrix_export_header(&record) {
-                    return Err(LabelError::InvalidRowsFormat {
-                        invalid_lines: vec![(
-                            line,
-                            "ce fichier est une matrice de flux exportée (colonnes \
-                             mac_source, mac_destination…) : importez-le via « Ouvrir \
-                             un fichier CSV ». Un fichier de labels contient mac, ip, label."
-                                .to_string(),
-                        )],
-                    }
-                    .into());
-                }
-                if record.len() < 3 {
-                    invalid_lines.push((line, label_record_to_display(&record)));
-                } else {
-                    records.push((line, record));
-                }
-            }
+            Ok(record) => match classify_label_record(index, record, fallback_line)? {
+                LabelRecordOutcome::Empty => continue,
+                LabelRecordOutcome::Valid(line, record) => records.push((line, record)),
+                LabelRecordOutcome::Invalid(line, display) => invalid_lines.push((line, display)),
+            },
             Err(error) => {
                 invalid_lines.push((label_error_line(&error, fallback_line), error.to_string()))
             }

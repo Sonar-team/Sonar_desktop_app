@@ -25,6 +25,7 @@ import {
   EDGE_LABEL_ZOOM,
   PORT_LABEL_ZOOM,
   drawNodeLabel,
+  edgeLabelFor,
   nodeAttributes,
   randomFloat,
 } from "./graph/graphStyle"
@@ -249,26 +250,7 @@ export default defineComponent({
           res.size = (data.size || 1) + 1
         }
       }
-      if (!this._edgeLabelsShown || dimmed) {
-        res.label = null
-        return res
-      }
-      let label = data.protocol ?? ""
-      if (this._portLabelsShown) {
-        const ports: number[] = Array.isArray(data.ports) ? data.ports : []
-        const hasDynamic = data.has_dynamic_ports === true
-        if (ports.length > 0) {
-          // Ports « service » de l'arête (les éphémères ne sont pas listés,
-          // le backend les résume par has_dynamic_ports → « … »).
-          label += ` :${ports.join(",")}${hasDynamic ? ",…" : ""}`
-        } else if (hasDynamic) {
-          // Uniquement du trafic sur ports dynamiques : signalé sans liste.
-          label += " :…"
-        } else if (data.source_port != null || data.destination_port != null) {
-          label += ` ${data.source_port ?? ""}→${data.destination_port ?? ""}`
-        }
-      }
-      res.label = label
+      res.label = (!this._edgeLabelsShown || dimmed) ? null : edgeLabelFor(data, this._portLabelsShown)
       return res
     },
 

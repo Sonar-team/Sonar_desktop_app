@@ -108,6 +108,30 @@ pub(super) fn dedup_labels_first_wins(
     (kept_rows, conflicts)
 }
 
+/// Même clé de store `(mac, ip)` mais label différent -> écrasement
+/// silencieux -> conflit réel. `None` sinon. Extrait de
+/// `verif_labels_conflicts` pour garder sa complexité cognitive sous le
+/// seuil Sonar (18 -> hors seuil de 15 avec cette comparaison inline).
+#[cfg(test)]
+fn label_pair_conflict(
+    row1: &LabelRow,
+    row2: &LabelRow,
+) -> Option<(usize, usize, String, String, String, String, String)> {
+    if row1.mac == row2.mac && row1.ip == row2.ip && row1.label != row2.label {
+        Some((
+            row1.line,
+            row2.line,
+            row1.ip.clone(),
+            row1.label.clone(),
+            row2.label.clone(),
+            row1.raw.clone(),
+            row2.raw.clone(),
+        ))
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 pub(super) fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureStateError> {
     let rows = super::csv::read_label_rows(&file_path)?;
@@ -137,18 +161,8 @@ pub(super) fn verif_labels_conflicts(file_path: String) -> Result<(), CaptureSta
             if !is_identifying(row2) {
                 continue;
             }
-            // Même clé de store (mac, ip) mais label différent -> écrasement
-            // silencieux -> conflit réel.
-            if row1.mac == row2.mac && row1.ip == row2.ip && row1.label != row2.label {
-                same_ip_different_label.push((
-                    row1.line,
-                    row2.line,
-                    row1.ip.clone(),
-                    row1.label.clone(),
-                    row2.label.clone(),
-                    row1.raw.clone(),
-                    row2.raw.clone(),
-                ))
+            if let Some(conflict) = label_pair_conflict(row1, row2) {
+                same_ip_different_label.push(conflict);
             }
         }
     }

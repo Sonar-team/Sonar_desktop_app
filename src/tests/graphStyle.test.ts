@@ -14,6 +14,7 @@ import {
   darken,
   edgeAttributes,
   edgeKey,
+  edgeLabelFor,
   edgeSizeFor,
   formatBytes,
   getCurvature,
@@ -187,4 +188,34 @@ Deno.test("edgeAttributes - transmet ports/tunnels tels quels", () => {
   assertEquals(attrs.has_dynamic_ports, true);
   assertEquals(attrs.encapIds, ["enc-1"]);
   assertEquals(attrs.total_bytes, 12345);
+});
+
+Deno.test("edgeLabelFor - ports masqués -> seulement le protocole", () => {
+  assertEquals(edgeLabelFor({ protocol: "TCP", ports: [80] }, false), "TCP");
+});
+
+Deno.test("edgeLabelFor - ports affichés, liste de ports -> protocole + ports triés", () => {
+  assertEquals(edgeLabelFor({ protocol: "TCP", ports: [80, 443] }, true), "TCP :80,443");
+});
+
+Deno.test("edgeLabelFor - ports affichés, ports dynamiques mêlés à des ports listés -> suffixe …", () => {
+  assertEquals(
+    edgeLabelFor({ protocol: "TCP", ports: [80], has_dynamic_ports: true }, true),
+    "TCP :80,…"
+  );
+});
+
+Deno.test("edgeLabelFor - ports affichés, uniquement dynamiques -> pas de liste", () => {
+  assertEquals(edgeLabelFor({ protocol: "TCP", ports: [], has_dynamic_ports: true }, true), "TCP :…");
+});
+
+Deno.test("edgeLabelFor - ports affichés, ports source/destination sans liste -> flèche", () => {
+  assertEquals(
+    edgeLabelFor({ protocol: "TCP", ports: [], source_port: 51234, destination_port: 443 }, true),
+    "TCP 51234→443"
+  );
+});
+
+Deno.test("edgeLabelFor - ports affichés, rien à montrer -> seulement le protocole", () => {
+  assertEquals(edgeLabelFor({ protocol: "ICMP", ports: [] }, true), "ICMP");
 });
