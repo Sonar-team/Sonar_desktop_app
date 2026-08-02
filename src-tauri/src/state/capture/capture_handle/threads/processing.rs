@@ -791,9 +791,15 @@ fn handle_capture_message(
         buffer_pool.put(pkt);
         match integration {
             Ok(()) => drain_and_finalize(worker, emitter, rx, buffer_pool, stop_flag, terminal),
-            Err(fatal) => {
-                stop_on_processing_fatal(worker, emitter, rx, buffer_pool, stop_flag, terminal, fatal)
-            }
+            Err(fatal) => stop_on_processing_fatal(
+                worker,
+                emitter,
+                rx,
+                buffer_pool,
+                stop_flag,
+                terminal,
+                fatal,
+            ),
         }
         return false;
     }
@@ -1520,7 +1526,10 @@ mod tests {
 
         drain_and_finalize(&mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
 
-        assert_eq!(worker.packets_integrated, 1, "le paquet en attente est drainé");
+        assert_eq!(
+            worker.packets_integrated, 1,
+            "le paquet en attente est drainé"
+        );
         assert!(
             !stop_flag.load(Ordering::Acquire),
             "le chemin nominal ne force pas l'arrêt lui-même"
@@ -1623,8 +1632,15 @@ mod tests {
         let msg = packet_message(&pool, &arp_frame());
         drop(tx); // canal vide et déconnecté : le drain qui suit se termine aussitôt
 
-        let keep_going =
-            handle_capture_message(msg, &mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
+        let keep_going = handle_capture_message(
+            msg,
+            &mut worker,
+            &mut emitter,
+            &rx,
+            &pool,
+            &stop_flag,
+            &terminal,
+        );
 
         assert!(!keep_going);
         assert_eq!(
@@ -1660,10 +1676,20 @@ mod tests {
         let (_tx, rx) = bounded::<CaptureMessage>(2);
         let msg = packet_message(&pool, &arp_frame());
 
-        let keep_going =
-            handle_capture_message(msg, &mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
+        let keep_going = handle_capture_message(
+            msg,
+            &mut worker,
+            &mut emitter,
+            &rx,
+            &pool,
+            &stop_flag,
+            &terminal,
+        );
 
-        assert!(keep_going, "traitement normal -> la boucle appelante continue");
+        assert!(
+            keep_going,
+            "traitement normal -> la boucle appelante continue"
+        );
         assert_eq!(worker.packets_integrated, 1);
         assert!(!stop_flag.load(Ordering::Acquire));
     }
@@ -1698,8 +1724,15 @@ mod tests {
         let msg = packet_message(&pool, &arp_frame());
         drop(tx);
 
-        let keep_going =
-            handle_capture_message(msg, &mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
+        let keep_going = handle_capture_message(
+            msg,
+            &mut worker,
+            &mut emitter,
+            &rx,
+            &pool,
+            &stop_flag,
+            &terminal,
+        );
 
         assert!(!keep_going);
         assert!(
@@ -1760,8 +1793,15 @@ mod tests {
         let msg = packet_message(&pool, &arp_frame());
         drop(tx);
 
-        let keep_going =
-            handle_capture_message(msg, &mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
+        let keep_going = handle_capture_message(
+            msg,
+            &mut worker,
+            &mut emitter,
+            &rx,
+            &pool,
+            &stop_flag,
+            &terminal,
+        );
 
         assert!(!keep_going);
         assert!(
@@ -1769,10 +1809,7 @@ mod tests {
             "canal IPC cassé -> arrêt de tout le pipeline"
         );
         assert!(
-            terminal
-                .preferred_reason()
-                .unwrap()
-                .contains("cassé"),
+            terminal.preferred_reason().unwrap().contains("cassé"),
             "la raison d'arrêt mentionne le canal IPC cassé"
         );
     }

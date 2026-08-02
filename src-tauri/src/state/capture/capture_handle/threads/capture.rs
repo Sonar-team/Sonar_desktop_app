@@ -360,7 +360,14 @@ mod tests {
         let mut last_drop_report = Instant::now() - DROP_REPORT_INTERVAL - Duration::from_millis(1);
         let (on_event, events) = recording_channel();
 
-        maybe_report_drops(&mut pending_drops, &mut last_drop_report, &on_event, 9, 128, 3);
+        maybe_report_drops(
+            &mut pending_drops,
+            &mut last_drop_report,
+            &on_event,
+            9,
+            128,
+            3,
+        );
 
         assert_eq!(
             pending_drops.total(),
@@ -382,7 +389,14 @@ mod tests {
         let mut last_drop_report = Instant::now() - DROP_REPORT_INTERVAL - Duration::from_millis(1);
         let (on_event, events) = recording_channel();
 
-        maybe_report_drops(&mut pending_drops, &mut last_drop_report, &on_event, 9, 128, 3);
+        maybe_report_drops(
+            &mut pending_drops,
+            &mut last_drop_report,
+            &on_event,
+            9,
+            128,
+            3,
+        );
 
         assert!(
             events.lock().unwrap().is_empty(),
@@ -399,7 +413,14 @@ mod tests {
         let mut last_drop_report = Instant::now(); // rapport tout juste émis
         let (on_event, events) = recording_channel();
 
-        maybe_report_drops(&mut pending_drops, &mut last_drop_report, &on_event, 9, 128, 3);
+        maybe_report_drops(
+            &mut pending_drops,
+            &mut last_drop_report,
+            &on_event,
+            9,
+            128,
+            3,
+        );
 
         assert_eq!(
             pending_drops.total(),
