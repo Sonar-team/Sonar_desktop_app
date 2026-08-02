@@ -931,36 +931,24 @@ pub fn spawn_processing_thread(
             }
 
             let timeout = PACKET_BATCH_INTERVAL.saturating_sub(worker.last_batch_flush.elapsed());
-            match rx.recv_timeout(timeout.max(Duration::from_millis(1))) {
-                Ok(msg) => {
-                    let keep_going = handle_capture_message(
-                        msg,
-                        &mut worker,
-                        &mut emitter,
-                        &rx,
-                        &buffer_pool,
-                        &stop_flag,
-                        &terminal,
-                    );
-                    if !keep_going {
-                        break;
-                    }
-                }
-
-                Err(RecvTimeoutError::Timeout) => {
-                    let keep_going = handle_receive_timeout(
-                        &mut worker,
-                        &mut emitter,
-                        &rx,
-                        &buffer_pool,
-                        &stop_flag,
-                        &terminal,
-                    );
-                    if !keep_going {
-                        break;
-                    }
-                }
-
+            let keep_going = match rx.recv_timeout(timeout.max(Duration::from_millis(1))) {
+                Ok(msg) => handle_capture_message(
+                    msg,
+                    &mut worker,
+                    &mut emitter,
+                    &rx,
+                    &buffer_pool,
+                    &stop_flag,
+                    &terminal,
+                ),
+                Err(RecvTimeoutError::Timeout) => handle_receive_timeout(
+                    &mut worker,
+                    &mut emitter,
+                    &rx,
+                    &buffer_pool,
+                    &stop_flag,
+                    &terminal,
+                ),
                 Err(RecvTimeoutError::Disconnected) => {
                     // Le thread de capture est mort : on récupère ce qui reste
                     // dans le canal avant de sortir.
@@ -973,8 +961,11 @@ pub fn spawn_processing_thread(
                         &stop_flag,
                         &terminal,
                     );
-                    break;
+                    false
                 }
+            };
+            if !keep_going {
+                break;
             }
 
             emitter.tick(rx.len(), &worker);
