@@ -26,6 +26,7 @@ import {
   PORT_LABEL_ZOOM,
   drawNodeLabel,
   nodeAttributes,
+  randomFloat,
 } from "./graph/graphStyle"
 import {
   logUnknownGraphUpdateType,
@@ -388,8 +389,8 @@ export default defineComponent({
           const radius = 100 + Math.sqrt(n) * 40
           this.graph.addNode(id, {
             ...nodeAttributes({ ...node, id }),
-            x: Math.cos(angle) * radius + (Math.random() - 0.5) * 30,
-            y: Math.sin(angle) * radius + (Math.random() - 0.5) * 30,
+            x: Math.cos(angle) * radius + (randomFloat() - 0.5) * 30,
+            y: Math.sin(angle) * radius + (randomFloat() - 0.5) * 30,
           })
         }
 
@@ -565,8 +566,8 @@ export default defineComponent({
 <template>
   <div class="graph-container">
     <div class="top-buttons">
-      <button class="download-button" @click="downloadPng" title="Exporter en PNG">⬇️ Export PNG</button>
-      <button
+      <button type="button" class="download-button" @click="downloadPng" title="Exporter en PNG">⬇️ Export PNG</button>
+      <button type="button"
         class="force-button"
         :class="{ on: forceEnabled }"
         @click="toggleForce"
@@ -587,7 +588,7 @@ export default defineComponent({
         <div class="tunnel-info">🚇 {{ tunnelHoverInfo }}</div>
       </template>
       <div class="sep" />
-      <button class="download-button" @click="showLabelsPanel = true" title="afficher les labels">Afficher les labels</button>
+      <button type="button" class="download-button" @click="showLabelsPanel = true" title="afficher les labels">Afficher les labels</button>
       <div class="sep" />
       <div class="node-infos" v-if="selectedNodeInfos.length">
         <strong>Nœud sélectionné</strong>
@@ -602,7 +603,7 @@ export default defineComponent({
             placeholder="Entrer un label…"
             @keydown="onEditKeydown"
           />
-          <button
+          <button type="button"
             class="primary"
             :disabled="isSavingLabel || !selectedNode"
             @click="editNodeLabel"
@@ -610,7 +611,7 @@ export default defineComponent({
           >
             {{ isSavingLabel ? "Enregistrement…" : "Enregistrer" }}
           </button>
-          <button class="ghost" @click="cancelEdit" :disabled="isSavingLabel">Annuler</button>
+          <button type="button" class="ghost" @click="cancelEdit" :disabled="isSavingLabel">Annuler</button>
         </div>
 
         <ul>
