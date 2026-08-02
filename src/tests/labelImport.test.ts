@@ -54,3 +54,8 @@ Deno.test("classifyLabelImportError - sous-type de label inconnu -> null", () =>
   });
   assertEquals(result, null);
 });
+
+Deno.test("classifyLabelImportError - payload label imbriqué non conforme (null) -> null, ne lève pas (régression)", () => {
+  assertEquals(classifyLabelImportError({ kind: "label", message: null }), null);
+  assertEquals(classifyLabelImportError({ kind: "label", message: "boom" }), null);
+});
