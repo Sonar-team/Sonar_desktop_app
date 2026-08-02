@@ -4,8 +4,14 @@
   ligne par ligne remonté par le backend.
 -->
 <template>
-  <div class="container">
-    <div class="center-container">
+  <div
+    class="container"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Conflits d'import de labels"
+    @keydown.esc="windowClosed"
+  >
+    <div class="center-container" ref="panel" tabindex="-1">
 
       <h1 v-show="(same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0) && !resolved" class="dialog-title">Conflits détectés</h1>
       <h1 v-show="(same_ip_diff_mac.length > 0 || same_ip_diff_label.length > 0) && resolved" class="dialog-title">Conflits de labels résolus</h1>
@@ -20,7 +26,7 @@
 
       <div class="panels">
         <div class="left-panel">
-          <img class="image" src="../../../assets/images/warning-sign.png"/>
+          <img class="image" src="../../../assets/images/warning-sign.png" alt="Attention"/>
         </div>
         <div class="right-panel">
 
@@ -168,6 +174,10 @@ export default defineComponent({
     shownInvalidLines(): LineValue[] {
       return this.invalid_lines.slice(0, this.maxShown);
     },
+  },
+
+  mounted() {
+    (this.$refs.panel as HTMLElement | undefined)?.focus();
   },
 
   methods: {
