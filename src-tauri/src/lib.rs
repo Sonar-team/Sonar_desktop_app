@@ -136,6 +136,10 @@ pub fn run() -> Result<(), tauri::Error> {
         )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        // Récents et préférences UI uniquement : le plugin écrit en
+        // `fs::write` direct (non atomique, vérifié dans la source vendorée
+        // 2.4.4) — la config de capture reste sur notre persistance atomique.
+        .plugin(tauri_plugin_store::Builder::default().build())
         .manage(Arc::new(Mutex::new(CaptureState::new())))
         .manage(Arc::new(Mutex::new(FlowMatrix::new())))
         .manage(Arc::new(Mutex::new(GraphData::new())))

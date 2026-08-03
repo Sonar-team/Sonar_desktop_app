@@ -40,6 +40,7 @@ import { getCurrentDate } from '../../utils/time';
 import { useCaptureStore } from '../../store/capture';
 import { CaptureEvent } from '../../types/capture';
 import { requestAppExit } from '../../utils/appExit';
+import { getLastProjectDir, recordRecentProject } from '../../utils/recentProjects';
 
 type Panel = 'config' | 'pcap' | 'csv' | 'filter' | 'labels';
 
@@ -206,10 +207,12 @@ export default {
       info("Enregistrement du projet");
       await this.withImportLock(async () => {
         try {
+          const lastDir = await getLastProjectDir();
+          const fileName = getCurrentDate() + '_projet.sonar';
           const response = await save({
             filters: [{ name: 'Projet SONAR', extensions: ['sonar'] }],
             title: 'Enregistrer le projet',
-            defaultPath: getCurrentDate() + '_projet.sonar'
+            defaultPath: lastDir ? `${lastDir}/${fileName}` : fileName
           });
 
           if (!response) {
@@ -217,6 +220,7 @@ export default {
             return;
           }
           await invoke('save_project', { path: response });
+          await recordRecentProject(response);
           info("Projet enregistré");
         } catch (err) {
           error(`Erreur enregistrement projet: ${err}`);
@@ -231,7 +235,8 @@ export default {
           const response = await open({
             multiple: false,
             filters: [{ name: 'Projet SONAR', extensions: ['sonar'] }],
-            title: 'Ouvrir un projet'
+            title: 'Ouvrir un projet',
+            defaultPath: await getLastProjectDir()
           });
 
           if (!response) {
@@ -248,6 +253,7 @@ export default {
           }
           store.clearImportProgress();
           await invoke('open_project', { path: response, onEvent });
+          await recordRecentProject(response);
           await store.refreshHasData();
           info("Projet ouvert");
         } catch (err) {

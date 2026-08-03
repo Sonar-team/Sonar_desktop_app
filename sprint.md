@@ -49,8 +49,14 @@ complète en commentaire de #159.
    retirée sur `RunEvent::Exit` ; sentinelle restante + autosave présent au
    démarrage → dialogue de récupération (App.vue) → `open_project`.
    *(04/08)*
-7. [ ] Projets récents + préférences via `tauri-plugin-store` (vérifier
-   l'atomicité d'écriture du plugin avant de lui confier la config).
+7. [x] Projets récents via `tauri-plugin-store` 2.4.4 (vetté, vendoré,
+   `store:default` ajouté à la capability et à son test de sécurité) :
+   dialogues save/open préremplis avec le dernier dossier, liste des 10
+   derniers projets persistée. Vérification faite : le plugin écrit en
+   `fs::write` NON atomique → il ne porte que des préférences UI, la
+   config de capture reste sur notre persistance atomique Rust. *(04/08)*
+
+**Phase A terminée le 04/08/2026.**
 
 ## Phase B — identité et migration *(après #154)*
 
