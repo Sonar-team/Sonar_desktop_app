@@ -1,6 +1,8 @@
 # SONAR — où va le produit
 
-> Mise à jour : juillet 2026 · Version actuelle : 4.4.0
+> Mise à jour : 3 août 2026 · Version actuelle : 4.10.0
+> Avancement : étape 1 ~75 % · étape 2 ~30 % · étape 3 ~20 % · étape 4 à venir
+> (détail et baromètre chiffré : `todo.md`)
 > Version détaillée pour l'équipe technique : `Roadmap.md`
 
 SONAR cartographie les flux réseau en écoutant passivement le trafic,

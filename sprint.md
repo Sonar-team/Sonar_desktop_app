@@ -1,7 +1,14 @@
 # Sprint P0 — Fidélité des données et intégrité des sessions
 
 > Statut : actif
-> Dernière revue : 15/07/2026 (rapport qualité, IPC généré, round-trip RAW/SLL/SLL2)
+> Dernière revue : 03/08/2026 — restants du sprint : #154 (identité d'actif),
+> reliquat corpus/fuzzing de #151, validations Windows/front de #88 ;
+> #150 essentiellement livrée mais l'issue GitHub reste ouverte (à fermer ou
+> découper). Depuis le 15/07 : oracle TShark livré (#168), interblocages
+> démarrage/arrêt (#166) et imports vides/resets concurrents (#167) corrigés,
+> #161 fermée (28/07) puis les 6 findings hauts de l'audit frontend du 01/08
+> corrigés (02/08, `b3d42a07`).
+> Revue précédente : 15/07/2026 (rapport qualité, IPC généré, round-trip RAW/SLL/SLL2)
 > Source : audit bêta → pro du 13/07/2026
 > Suivi GitHub : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 > Priorisation :
@@ -208,8 +215,9 @@ ignoré, fusionné ou remplacé silencieusement.
 
 ## Travail parallèle autorisé
 
-- [#161](https://github.com/Sonar-team/Sonar_desktop_app/issues/161) :
-  double batch, déduplication des fichiers et déverrouillage `finally` ;
+- [x] [#161](https://github.com/Sonar-team/Sonar_desktop_app/issues/161) :
+  double batch, déduplication des fichiers et déverrouillage `finally`
+  *(fermée le 28/07)* ;
 - [#162](https://github.com/Sonar-team/Sonar_desktop_app/issues/162) :
   workflow qualité commun aux PR et releases ;
 - conception de [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159),
