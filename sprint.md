@@ -32,10 +32,14 @@ complète en commentaire de #159.
    revalidée par bornes. Boutons TopBar 🗃️/📂. *(03/08, PR du sprint)*
 2. [x] `capture_config.json` écrit atomiquement (dernier fichier qui ne
    l'était pas). *(03/08, même PR)*
-3. [ ] État dirty : compteur de révision matrice/labels vs dernière
-   sauvegarde, confirmation avant reset et fermeture (`CloseRequested`).
-4. [ ] Arrêt gracieux branché sur la fermeture de fenêtre : `begin_stop` →
-   drainage (#158) → jointure → sauvegarde finale → sortie.
+3. [x] État dirty : révision dans `CaptureState` (marquée par démarrage de
+   capture, imports, éditions de labels ; blanchie par reset, save, open —
+   les modifications pendant une écriture longue restent comptées),
+   commande `is_session_dirty`, confirmation avant reset et fermeture
+   seulement si modifié. *(03/08, même PR)*
+4. [~] Arrêt gracieux à la fermeture : `stop_capture` (drainage #158 +
+   jointure) avant `exit`, best-effort. *(03/08 ; la « sauvegarde finale »
+   arrive avec l'autosave, point 5)*
 5. [ ] Autosave périodique + sur événements clés (fin d'import, arrêt de
    capture) vers `app_data/autosave/`, snapshot sous verrou court.
 6. [ ] Récupération après crash : sentinelle `session.lock` + autosave →
@@ -64,7 +68,8 @@ complète en commentaire de #159.
 - [x] Une écriture interrompue ne corrompt jamais le dernier projet valide.
   *(phase A.1 : `.part` + rename, testé)*
 - [ ] Un crash simulé propose la récupération du dernier checkpoint.
-- [ ] Reset et fermeture demandent confirmation si l'état est modifié.
+- [x] Reset et fermeture demandent confirmation si l'état est modifié.
+  *(phase A.3 ; la croix de fenêtre passait déjà par `onCloseRequested`)*
 - [x] Le format est versionné… *(v1 + refus des schémas futurs, testé)* —
   [ ] …et possède des tests de migration *(dès la v2, phase B)*.
 - [ ] Le bundle de preuve est déterministe et vérifiable hors de

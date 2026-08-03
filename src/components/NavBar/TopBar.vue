@@ -33,7 +33,7 @@
 <script lang="ts">
 import { Channel, invoke } from '@tauri-apps/api/core';
 import { info, error } from '@tauri-apps/plugin-log';
-import { open, save } from '@tauri-apps/plugin-dialog';
+import { ask, open, save } from '@tauri-apps/plugin-dialog';
 
 import { displayCaptureError } from '../../errors/capture'; // Gestion des erreurs propre
 import { getCurrentDate } from '../../utils/time';
@@ -265,6 +265,19 @@ export default {
       }
 
       try {
+        // Confirmation seulement si du travail non enregistré serait perdu
+        // (#159). En cas de doute (IPC en échec), on demande.
+        const dirty = await invoke<boolean>('is_session_dirty').catch(() => true);
+        if (dirty) {
+          const confirmed = await ask(
+            'La réinitialisation effacera le relevé non enregistré.\nContinuer ?',
+            { title: 'SONAR', kind: 'warning' },
+          );
+          if (!confirmed) {
+            info('reset annulé par l\'utilisateur');
+            return;
+          }
+        }
         await invoke('reset_capture');
         await useCaptureStore().refreshHasData();
         this.$bus.emit('reset');

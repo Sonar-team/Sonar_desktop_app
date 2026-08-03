@@ -97,12 +97,17 @@ pub fn save_project(
             matrix.export_labels(),
         )
     };
-    let settings = {
+    // La révision est capturée avec le snapshot : des modifications arrivées
+    // pendant l'écriture resteront comptées comme non enregistrées (#159).
+    let (settings, revision) = {
         let state = capture_state.lock()?;
-        ProjectCaptureSettings {
-            config: state.config.clone(),
-            filter: state.filter.clone(),
-        }
+        (
+            ProjectCaptureSettings {
+                config: state.config.clone(),
+                filter: state.filter.clone(),
+            },
+            state.current_revision(),
+        )
     };
 
     let manifest = ProjectManifest {
@@ -126,6 +131,7 @@ pub fn save_project(
         &labels,
         &settings,
     )?;
+    capture_state.lock()?.mark_clean_at(revision);
     info!(
         "✅ Projet enregistré vers {path} ({} flux, {} labels)",
         manifest.matrix_rows, manifest.label_rows
@@ -196,11 +202,24 @@ pub fn open_project(
         }
     }
 
+    // L'état courant correspond exactement au fichier projet : rien à
+    // perdre (les imports ci-dessus ont marqué dirty, on annule ici).
+    capture_state.lock()?.mark_clean();
+
     info!(
         "✅ Projet ouvert depuis {path} (schéma v{}, app {})",
         extracted.manifest.schema_version, extracted.manifest.app_version
     );
     Ok(())
+}
+
+/// Vrai si des données seraient perdues en quittant ou réinitialisant sans
+/// enregistrer (#159). Consommé par les confirmations du frontend.
+#[command(async)]
+pub fn is_session_dirty(
+    capture_state: State<'_, Arc<Mutex<CaptureState>>>,
+) -> Result<bool, CaptureStateError> {
+    Ok(capture_state.lock()?.is_dirty())
 }
 
 /// Écrit l'archive projet vers `dest` : entrées composées en staging via les
