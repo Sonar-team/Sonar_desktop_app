@@ -23,7 +23,7 @@ use sonar_flows_core::pcap::append_pcap_file;
 
 const EXPECTED_PACKETS: usize = 328;
 const EXPECTED_BYTES: u64 = 96_622;
-const EXPECTED_ROWS: usize = 216;
+const EXPECTED_ROWS: usize = 217;
 const EXPECTED_COMMON_PACKETS: u64 = 313;
 const EXPECTED_COMMON_BYTES: u64 = 94_091;
 const EXPECTED_COMMON_FLOWS: usize = 202;

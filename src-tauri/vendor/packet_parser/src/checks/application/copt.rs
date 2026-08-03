@@ -74,6 +74,12 @@ pub fn validate_parameter_len(
     Ok(())
 }
 
+/// Rejette un paramètre TPDU-number (0xC0 sur un DT) sans donnée.
+///
+/// Réutilise le variant [`CotpParseError::ParameterLengthExceedsPacket`] avec
+/// `declared: 1, available: 0`, à lire comme « au moins 1 octet attendu,
+/// 0 disponible » (la longueur déclarée sur le wire est 0). Un variant dédié
+/// serait plus fidèle mais changerait l'API publique.
 pub fn validate_tpdu_number_not_empty(offset: usize, len: usize) -> Result<(), CotpParseError> {
     if len == 0 {
         return Err(CotpParseError::ParameterLengthExceedsPacket {
@@ -122,6 +128,75 @@ pub fn parse_cotp_parameter<'a>(
     };
 
     Ok(param)
+}
+
+/// Vérifie les deux premiers octets du paquet et retourne le champ longueur
+/// (octet 0) et le type de PDU (octet 1) prêts à être placés.
+///
+/// Re-vérifie la longueur minimale : la branche d'erreur est inatteignable
+/// après [`validate_min_len`] et ne protège qu'un appel hors contrat.
+pub fn extract_length_and_pdu_type(data: &[u8]) -> Result<(u8, CotpPduType), CotpParseError> {
+    validate_min_len(data)?;
+
+    Ok((data[0], CotpPduType::from(data[1])))
+}
+
+/// Vérifie et extrait les champs de connexion d'un PDU CR/CC/DR/DC/ER :
+/// références destination et source, classe, puis les drapeaux
+/// « extended formats » et « no explicit flow control ».
+pub fn extract_connection_fields(
+    data: &[u8],
+    offset: usize,
+    declared_end: usize,
+) -> Result<(u16, u16, u8, bool, bool), CotpParseError> {
+    let expected = offset + 5;
+    validate_connection_header_len(declared_end, expected)?;
+    // Garde hors contrat : from_bytes a déjà vérifié
+    // data.len() >= declared_end (validate_declared_len), cette branche est
+    // donc inatteignable depuis le parseur. Elle garantit que les
+    // indexations ci-dessous sont bornées même sur un appel direct.
+    validate_declared_len(data.len(), declared_end)?;
+
+    let dst_ref = u16::from_be_bytes([data[offset], data[offset + 1]]);
+    let src_ref = u16::from_be_bytes([data[offset + 2], data[offset + 3]]);
+    let class = data[offset + 4] >> 4;
+    let extended_formats = (data[offset + 4] & 0x04) != 0;
+    let no_explicit_flow_control = (data[offset + 4] & 0x01) != 0;
+
+    Ok((
+        dst_ref,
+        src_ref,
+        class,
+        extended_formats,
+        no_explicit_flow_control,
+    ))
+}
+
+/// Vérifie et extrait le paramètre COTP situé à `offset` : en-tête
+/// type/longueur, longueur déclarée du paramètre, puis classification via
+/// [`parse_cotp_parameter`]. Retourne le paramètre typé (zero-copy) et
+/// l'offset du paramètre suivant.
+pub fn extract_parameter<'a>(
+    data: &'a [u8],
+    offset: usize,
+    declared_end: usize,
+    pdu_type: CotpPduType,
+) -> Result<(CotpParameter<'a>, usize), CotpParseError> {
+    // Garde hors contrat : inatteignable depuis from_bytes qui a déjà
+    // vérifié data.len() >= declared_end ; borne les indexations ci-dessous
+    // pour un appel direct.
+    validate_declared_len(data.len(), declared_end)?;
+    validate_parameter_header(declared_end, offset)?;
+
+    let param_type = data[offset];
+    let param_len = data[offset + 1] as usize;
+
+    validate_parameter_len(declared_end, offset, param_len)?;
+
+    let param_data = &data[offset + 2..offset + 2 + param_len];
+    let param = parse_cotp_parameter(pdu_type, param_type, offset, param_data)?;
+
+    Ok((param, offset + 2 + param_len))
 }
 
 #[cfg(test)]
@@ -249,6 +324,105 @@ mod tests {
                 offset: 2,
                 declared: 1,
                 available: 0
+            })
+        ));
+    }
+
+    #[test]
+    fn test_extract_length_and_pdu_type() {
+        let data = [0x06, 0xE0, 0x00, 0x01, 0x00, 0x02, 0x00];
+        assert_eq!(
+            extract_length_and_pdu_type(&data).unwrap(),
+            (0x06, CotpPduType::ConnectionRequest)
+        );
+        assert!(matches!(
+            extract_length_and_pdu_type(&[0x02, 0xF0]),
+            Err(CotpParseError::PacketTooShort {
+                expected: 3,
+                actual: 2
+            })
+        ));
+    }
+
+    #[test]
+    fn test_extract_connection_fields() {
+        // CR : refs, classe 4, extended formats et no explicit flow control.
+        let data = [0x06, 0xE0, 0x00, 0x01, 0x00, 0x02, 0x45];
+        assert_eq!(
+            extract_connection_fields(&data, 2, 7).unwrap(),
+            (0x0001, 0x0002, 4, true, true)
+        );
+    }
+
+    #[test]
+    fn test_extract_connection_fields_header_too_short() {
+        // declared_end = 5 : trop court pour refs + classe (7 attendus).
+        let data = [0x04, 0xE0, 0x00, 0x01, 0x00];
+        assert!(matches!(
+            extract_connection_fields(&data, 2, 5),
+            Err(CotpParseError::ConnectionHeaderTooShort {
+                expected: 7,
+                actual: 5
+            })
+        ));
+    }
+
+    #[test]
+    fn test_extract_connection_fields_out_of_contract_guard() {
+        // Appel hors contrat : declared_end dépasse la slice réelle.
+        let data = [0x06, 0xE0, 0x00];
+        assert!(matches!(
+            extract_connection_fields(&data, 2, 7),
+            Err(CotpParseError::LengthExceedsPacket {
+                declared: 7,
+                actual: 3
+            })
+        ));
+    }
+
+    #[test]
+    fn test_extract_parameter_tpdu_size() {
+        // CC : paramètre 0xC0 (TPDU size) à l'offset 7, declared_end = 10.
+        let data = [0x09, 0xD0, 0x00, 0x01, 0x00, 0x03, 0x00, 0xC0, 0x01, 0x09];
+        let (param, next_offset) =
+            extract_parameter(&data, 7, 10, CotpPduType::ConnectionConfirm).unwrap();
+        assert_eq!(param, CotpParameter::TpduSize(0x09));
+        assert_eq!(next_offset, 10);
+    }
+
+    #[test]
+    fn test_extract_parameter_header_truncated() {
+        // Un seul octet restant : impossible de lire type + longueur.
+        let data = [0x07, 0xD0, 0x00, 0x01, 0x00, 0x03, 0x00, 0xC1];
+        assert!(matches!(
+            extract_parameter(&data, 7, 8, CotpPduType::ConnectionConfirm),
+            Err(CotpParseError::ParameterHeaderTruncated { offset: 7 })
+        ));
+    }
+
+    #[test]
+    fn test_extract_parameter_length_exceeds_packet() {
+        // Le paramètre annonce 10 octets absents.
+        let data = [0x08, 0xD0, 0x00, 0x01, 0x00, 0x03, 0x00, 0xC1, 0x0A];
+        assert!(matches!(
+            extract_parameter(&data, 7, 9, CotpPduType::ConnectionConfirm),
+            Err(CotpParseError::ParameterLengthExceedsPacket {
+                offset: 7,
+                declared: 10,
+                available: 0
+            })
+        ));
+    }
+
+    #[test]
+    fn test_extract_parameter_out_of_contract_guard() {
+        // Appel hors contrat : declared_end dépasse la slice réelle.
+        let data = [0x09, 0xD0, 0x00, 0x01, 0x00, 0x03, 0x00];
+        assert!(matches!(
+            extract_parameter(&data, 7, 10, CotpPduType::ConnectionConfirm),
+            Err(CotpParseError::LengthExceedsPacket {
+                declared: 10,
+                actual: 7
             })
         ));
     }

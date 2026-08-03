@@ -7,9 +7,9 @@ use std::convert::TryFrom;
 
 use crate::{
     checks::application::giop::{
-        GIOP_HEADER_LEN, ensure_available, ensure_min_len, parse_cdr_string, parse_magic,
+        GIOP_HEADER_LEN, ensure_available, ensure_min_len, extract_flags, extract_message_length,
+        extract_version, parse_cdr_string, parse_magic, validate_message_type,
         validate_service_context_count, validate_target_discriminator, validate_total_length,
-        validate_version,
     },
     errors::application::giop::GiopParseError,
 };
@@ -37,6 +37,9 @@ impl TryFrom<u8> for GiopMessageType {
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         use GiopMessageType::*;
+        // La règle de validation (0..=7) vit dans checks ; ce match ne fait
+        // que typer une valeur déjà validée.
+        let value = validate_message_type(value)?;
         Ok(match value {
             0 => Request,
             1 => Reply,
@@ -46,6 +49,7 @@ impl TryFrom<u8> for GiopMessageType {
             5 => CloseConnection,
             6 => MessageError,
             7 => Fragment,
+            // Inatteignable : validate_message_type garantit value <= 7.
             _ => return Err(GiopParseError::UnknownMessageType(value)),
         })
     }
@@ -75,20 +79,18 @@ impl TryFrom<&[u8]> for GiopHeader {
     type Error = GiopParseError;
 
     fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
+        // Séquence linéaire canonique : pré-check de longueur, puis un
+        // extract_* par champ dans l'ordre du wire (l'ordre des checks est
+        // inchangé, donc mêmes erreurs pour les mêmes inputs).
         ensure_min_len(payload)?;
 
         let magic = parse_magic(payload)?;
-        let major_version = payload[4];
-        let minor_version = payload[5];
-
-        validate_version(major_version, minor_version)?;
-
-        let flags = payload[6];
-        let message_type_raw = payload[7];
-        let message_type = GiopMessageType::try_from(message_type_raw)?;
-
+        let (major_version, minor_version) = extract_version(&payload[4..6])?;
+        let flags = extract_flags(&payload[6])?;
+        let message_type = GiopMessageType::try_from(payload[7])?;
         // MessageSize est toujours en big-endian dans le header
-        let message_length = u32::from_be_bytes([payload[8], payload[9], payload[10], payload[11]]);
+        let message_length = extract_message_length(&payload[8..12])?;
+
         Ok(GiopHeader {
             magic,
             major_version,
@@ -178,12 +180,19 @@ impl<'a> TryFrom<&'a [u8]> for GiopPacket<'a> {
 
     fn try_from(buf: &'a [u8]) -> Result<Self, Self::Error> {
         let header = GiopHeader::try_from(buf)?;
-        let total_needed = GiopHeader::HEADER_LEN + header.message_length as usize;
+        // Sur cible 32 bits, HEADER_LEN + message_length (jusqu'à u32::MAX)
+        // peut déborder usize : checked_add avec repli sur InvalidSize.
+        // Branche inatteignable sur cible 64 bits, donc iso-sémantique sur
+        // les cibles actuelles.
+        let total_needed = GiopHeader::HEADER_LEN
+            .checked_add(header.message_length as usize)
+            .ok_or(GiopParseError::InvalidSize)?;
         validate_total_length(total_needed, buf.len())?;
 
-        // Bit 0 des flags = endianness du body
-        let _little_endian = (header.flags & 0x01) != 0;
-
+        // Le dispatch du body selon message_type (bit 0 des flags =
+        // endianness, GiopRequest::parse pour les Request) est volontairement
+        // différé : le câbler ici changerait les erreurs observables pour les
+        // Request au body malformé, aujourd'hui acceptés en Other.
         let payload = GiopMessage::Other;
         Ok(GiopPacket { header, payload })
     }

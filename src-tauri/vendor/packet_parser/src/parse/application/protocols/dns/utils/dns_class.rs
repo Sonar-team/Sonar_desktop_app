@@ -5,6 +5,9 @@
 
 use std::fmt;
 
+const MDNS_CLASS_FLAG: u16 = 0x8000;
+const MDNS_CLASS_MASK: u16 = !MDNS_CLASS_FLAG;
+
 #[allow(non_snake_case)]
 #[allow(non_upper_case_globals)]
 pub mod DnsClasses {
@@ -22,6 +25,15 @@ pub struct DnsClass(pub u16);
 impl DnsClass {
     pub fn new(value: u16) -> Self {
         Self(value)
+    }
+
+    /// Strip the mDNS-only high bit from the actual 15-bit DNS class.
+    ///
+    /// RFC 6762 uses the top bit as QU in questions and cache-flush in
+    /// resource records. Classic DNS must keep using [`DnsClass::new`], where
+    /// all 16 bits remain part of the class value.
+    pub(crate) fn from_mdns(value: u16) -> Self {
+        Self(value & MDNS_CLASS_MASK)
     }
 }
 
@@ -49,6 +61,13 @@ mod tests {
     fn test_new_wraps_value() {
         assert_eq!(DnsClass::new(1), DnsClasses::IN);
         assert_eq!(DnsClass::new(42).0, 42);
+        assert_eq!(DnsClass::new(0x8001), DnsClass(0x8001));
+    }
+
+    #[test]
+    fn test_from_mdns_strips_the_class_flag() {
+        assert_eq!(DnsClass::from_mdns(0x8001), DnsClasses::IN);
+        assert_eq!(DnsClass::from_mdns(0x0001), DnsClasses::IN);
     }
 
     #[test]

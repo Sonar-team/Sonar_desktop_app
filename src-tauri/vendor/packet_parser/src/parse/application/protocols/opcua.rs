@@ -7,8 +7,9 @@ use core::convert::TryFrom;
 
 use crate::{
     checks::application::opcua::{
-        OPCUA_TCP_HEADER_LEN, validate_body_len, validate_chunk_available, validate_message_size,
-        validate_tcp_header_length, validate_ua_string_available, validate_ua_string_len,
+        OPCUA_TCP_HEADER_LEN, extract_chunk_type, extract_message_type, extract_u32_le,
+        extract_ua_string, validate_body_len, validate_chunk_available, validate_message_size,
+        validate_tcp_header_length,
     },
     errors::application::opcua::OpcuaParseError,
 };
@@ -112,30 +113,20 @@ pub struct OpcuaSecureConversation<'a> {
 impl TryFrom<[u8; 3]> for OpcuaMessageType {
     type Error = OpcuaParseError;
 
+    /// Façade publique conservée pour compatibilité : la validation vit dans
+    /// `checks::application::opcua::extract_message_type`.
     fn try_from(value: [u8; 3]) -> Result<Self, Self::Error> {
-        match &value {
-            b"HEL" => Ok(OpcuaMessageType::Hello),
-            b"ACK" => Ok(OpcuaMessageType::Acknowledge),
-            b"ERR" => Ok(OpcuaMessageType::ErrorMessage),
-            b"RHE" => Ok(OpcuaMessageType::ReverseHello),
-            b"OPN" => Ok(OpcuaMessageType::OpenSecureChannel),
-            b"MSG" => Ok(OpcuaMessageType::Message),
-            b"CLO" => Ok(OpcuaMessageType::CloseSecureChannel),
-            _ => Err(OpcuaParseError::UnknownMessageType(value)),
-        }
+        extract_message_type(value)
     }
 }
 
 impl TryFrom<u8> for OpcuaChunkType {
     type Error = OpcuaParseError;
 
+    /// Façade publique conservée pour compatibilité : la validation vit dans
+    /// `checks::application::opcua::extract_chunk_type`.
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            b'F' => Ok(OpcuaChunkType::Final),
-            b'C' => Ok(OpcuaChunkType::Intermediate),
-            b'A' => Ok(OpcuaChunkType::Abort),
-            _ => Err(OpcuaParseError::UnknownChunkType(value)),
-        }
+        extract_chunk_type(value)
     }
 }
 
@@ -145,8 +136,8 @@ impl TryFrom<&[u8]> for OpcuaTcpHeader {
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         validate_tcp_header_length(bytes.len())?;
 
-        let message_type = OpcuaMessageType::try_from([bytes[0], bytes[1], bytes[2]])?;
-        let chunk_type = OpcuaChunkType::try_from(bytes[3])?;
+        let message_type = extract_message_type([bytes[0], bytes[1], bytes[2]])?;
+        let chunk_type = extract_chunk_type(bytes[3])?;
         let message_size = u32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
 
         validate_message_size(message_size)?;
@@ -215,30 +206,39 @@ fn parse_payload<'a>(
 
 fn parse_hello(bytes: &[u8]) -> Result<OpcuaHello<'_>, OpcuaParseError> {
     const FIXED_LEN: usize = 20;
+    // Le pré-check groupé garantit FIXED_LEN octets ; les extract_u32_le
+    // revérifient chacun leur borne et sont donc infaillibles ici.
     validate_body_len(bytes.len(), FIXED_LEN)?;
 
-    let (endpoint_url, _) = parse_ua_string(&bytes[FIXED_LEN..])?;
+    let protocol_version = extract_u32_le(bytes, 0)?;
+    let receive_buffer_size = extract_u32_le(bytes, 4)?;
+    let send_buffer_size = extract_u32_le(bytes, 8)?;
+    let max_message_size = extract_u32_le(bytes, 12)?;
+    let max_chunk_count = extract_u32_le(bytes, 16)?;
+    let (endpoint_url, _) = extract_ua_string(&bytes[FIXED_LEN..])?;
 
     Ok(OpcuaHello {
-        protocol_version: read_u32_le(bytes, 0),
-        receive_buffer_size: read_u32_le(bytes, 4),
-        send_buffer_size: read_u32_le(bytes, 8),
-        max_message_size: read_u32_le(bytes, 12),
-        max_chunk_count: read_u32_le(bytes, 16),
+        protocol_version,
+        receive_buffer_size,
+        send_buffer_size,
+        max_message_size,
+        max_chunk_count,
         endpoint_url,
     })
 }
 
 fn parse_acknowledge(bytes: &[u8]) -> Result<OpcuaAcknowledge, OpcuaParseError> {
     const ACK_LEN: usize = 20;
+    // Le pré-check groupé garantit ACK_LEN octets ; les extract_u32_le
+    // revérifient chacun leur borne et sont donc infaillibles ici.
     validate_body_len(bytes.len(), ACK_LEN)?;
 
     Ok(OpcuaAcknowledge {
-        protocol_version: read_u32_le(bytes, 0),
-        receive_buffer_size: read_u32_le(bytes, 4),
-        send_buffer_size: read_u32_le(bytes, 8),
-        max_message_size: read_u32_le(bytes, 12),
-        max_chunk_count: read_u32_le(bytes, 16),
+        protocol_version: extract_u32_le(bytes, 0)?,
+        receive_buffer_size: extract_u32_le(bytes, 4)?,
+        send_buffer_size: extract_u32_le(bytes, 8)?,
+        max_message_size: extract_u32_le(bytes, 12)?,
+        max_chunk_count: extract_u32_le(bytes, 16)?,
     })
 }
 
@@ -246,17 +246,18 @@ fn parse_error(bytes: &[u8]) -> Result<OpcuaError<'_>, OpcuaParseError> {
     const STATUS_LEN: usize = 4;
     validate_body_len(bytes.len(), STATUS_LEN)?;
 
-    let (reason, _) = parse_ua_string(&bytes[STATUS_LEN..])?;
+    let status_code = extract_u32_le(bytes, 0)?;
+    let (reason, _) = extract_ua_string(&bytes[STATUS_LEN..])?;
 
     Ok(OpcuaError {
-        status_code: read_u32_le(bytes, 0),
+        status_code,
         reason,
     })
 }
 
 fn parse_reverse_hello(bytes: &[u8]) -> Result<OpcuaReverseHello<'_>, OpcuaParseError> {
-    let (server_uri, consumed) = parse_ua_string(bytes)?;
-    let (endpoint_url, _) = parse_ua_string(&bytes[consumed..])?;
+    let (server_uri, consumed) = extract_ua_string(bytes)?;
+    let (endpoint_url, _) = extract_ua_string(&bytes[consumed..])?;
 
     Ok(OpcuaReverseHello {
         server_uri,
@@ -269,38 +270,9 @@ fn parse_secure_conversation(bytes: &[u8]) -> Result<OpcuaSecureConversation<'_>
     validate_body_len(bytes.len(), SECURE_CHANNEL_ID_LEN)?;
 
     Ok(OpcuaSecureConversation {
-        secure_channel_id: read_u32_le(bytes, 0),
+        secure_channel_id: extract_u32_le(bytes, 0)?,
         data: &bytes[SECURE_CHANNEL_ID_LEN..],
     })
-}
-
-fn parse_ua_string(bytes: &[u8]) -> Result<(Option<&str>, usize), OpcuaParseError> {
-    const LEN_FIELD: usize = 4;
-    validate_body_len(bytes.len(), LEN_FIELD)?;
-
-    let length = i32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
-    if length == -1 {
-        return Ok((None, LEN_FIELD));
-    }
-    validate_ua_string_len(length)?;
-
-    let length = length as usize;
-    let end = LEN_FIELD + length;
-    validate_ua_string_available(bytes.len(), end)?;
-
-    let value =
-        core::str::from_utf8(&bytes[LEN_FIELD..end]).map_err(|_| OpcuaParseError::InvalidUtf8)?;
-
-    Ok((Some(value), end))
-}
-
-fn read_u32_le(bytes: &[u8], offset: usize) -> u32 {
-    u32::from_le_bytes([
-        bytes[offset],
-        bytes[offset + 1],
-        bytes[offset + 2],
-        bytes[offset + 3],
-    ])
 }
 
 #[cfg(test)]

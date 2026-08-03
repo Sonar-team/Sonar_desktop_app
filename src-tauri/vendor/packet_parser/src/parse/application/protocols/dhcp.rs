@@ -9,8 +9,9 @@ use std::convert::TryFrom;
 
 use crate::{
     checks::application::dhcp::{
-        DHCP_MIN_LEN, validate_dhcp_min_length, validate_hardware_address_length,
-        validate_hardware_type, validate_magic_cookie, validate_operation,
+        DHCP_MIN_LEN, extract_chaddr, extract_file, extract_flags, extract_hardware_address_length,
+        extract_hardware_type, extract_hops, extract_ipv4_addr, extract_operation, extract_secs,
+        extract_sname, extract_xid, validate_dhcp_min_length, validate_magic_cookie,
     },
     errors::application::dhcp::DhcpParseError,
 };
@@ -76,35 +77,30 @@ pub fn parse_dhcp_packet(payload: &[u8]) -> Result<DhcpPacket<'_>, DhcpParseErro
     // Check minimum length before any indexing.
     validate_dhcp_min_length(payload)?;
 
-    let op = payload[0];
-    let htype = payload[1];
-    let hlen = payload[2];
-    let hops = payload[3];
-    let xid = u32::from_be_bytes([payload[4], payload[5], payload[6], payload[7]]);
-    let secs = u16::from_be_bytes([payload[8], payload[9]]);
-    let flags = u16::from_be_bytes([payload[10], payload[11]]);
-    let ciaddr = [payload[12], payload[13], payload[14], payload[15]];
-    let yiaddr = [payload[16], payload[17], payload[18], payload[19]];
-    let siaddr = [payload[20], payload[21], payload[22], payload[23]];
-    let giaddr = [payload[24], payload[25], payload[26], payload[27]];
+    // Linear extract_* sequence in wire order: check the bytes of each field,
+    // place the value if it is valid, move to the next field. The wire order
+    // (op, htype, hlen, then cookie) matches the previous validation order,
+    // so the same inputs yield exactly the same errors as before.
+    let op = extract_operation(payload[0])?;
+    let htype = extract_hardware_type(payload[1])?;
+    let hlen = extract_hardware_address_length(payload[2])?;
+    let hops = extract_hops(payload[3])?;
+    let xid = extract_xid(&payload[4..8])?;
+    let secs = extract_secs(&payload[8..10])?;
+    let flags = extract_flags(&payload[10..12])?;
+    let ciaddr = extract_ipv4_addr(&payload[12..16])?;
+    let yiaddr = extract_ipv4_addr(&payload[16..20])?;
+    let siaddr = extract_ipv4_addr(&payload[20..24])?;
+    let giaddr = extract_ipv4_addr(&payload[24..28])?;
 
-    // Borrow the fixed-size areas directly from the packet (zero-copy).
-    // The lengths are guaranteed by `validate_dhcp_min_length`, so these
-    // conversions cannot fail; the error mapping avoids any `unwrap()`.
-    let too_short = || DhcpParseError::PacketTooShort {
-        expected: DHCP_MIN_LEN,
-        actual: payload.len(),
-    };
-    let chaddr: &[u8; 16] = payload[28..44].try_into().map_err(|_| too_short())?;
-    let sname: &[u8; 64] = payload[44..108].try_into().map_err(|_| too_short())?;
-    let file: &[u8; 128] = payload[108..236].try_into().map_err(|_| too_short())?;
+    // Fixed-size areas borrowed directly from the packet (zero-copy). The
+    // slice lengths are guaranteed by `validate_dhcp_min_length`, so these
+    // extractions cannot fail here; no `unwrap()` is involved.
+    let chaddr = extract_chaddr(&payload[28..44])?;
+    let sname = extract_sname(&payload[44..108])?;
+    let file = extract_file(&payload[108..236])?;
 
     let options = &payload[DHCP_MIN_LEN..];
-
-    // Validate DHCP packet fields
-    validate_operation(op)?;
-    validate_hardware_type(htype)?;
-    validate_hardware_address_length(hlen)?;
     validate_magic_cookie(options)?;
 
     Ok(DhcpPacket {

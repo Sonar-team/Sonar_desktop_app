@@ -3,7 +3,10 @@
 // Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
 // This file may not be copied, modified, or distributed except according to those terms.
 
-use crate::errors::application::quic::QuicError;
+use crate::{
+    errors::application::quic::QuicError,
+    parse::application::protocols::quic::{ConnectionId, QuicLongHeader, QuicPacketType},
+};
 
 /// QUIC v1 version number (RFC 9000).
 pub const QUIC_V1: u32 = 1;
@@ -113,12 +116,51 @@ pub fn validate_fixed_bit(fixed_bit: bool) -> Result<(), QuicError> {
     Ok(())
 }
 
+/// Checks the Long Header bits of the first byte (RFC 9000 §17.2) and
+/// returns the packet type together with the Packet Number length (1..=4).
+///
+/// `NotLongHeader` is checked before `FixedBitNotSet` to preserve the
+/// historical error precedence on a byte failing both checks.
+pub fn extract_first_byte(b0: u8) -> Result<(QuicPacketType, u8), QuicError> {
+    let header_form_long = (b0 & 0b1000_0000) != 0;
+    validate_long_header(header_form_long)?;
+
+    let fixed_bit = (b0 & 0b0100_0000) != 0;
+    validate_fixed_bit(fixed_bit)?;
+
+    let lptype = (b0 >> 4) & 0b11; // Long Packet Type (2 bits)
+    // Bits 2-3 are reserved (protected by header protection, not validated).
+    let pn_len_code = b0 & 0b11; // PN length code
+    let pn_length = pn_len_code + 1; // 1..=4
+
+    let packet_type = match lptype {
+        0 => QuicPacketType::Initial,
+        1 => QuicPacketType::ZeroRtt,
+        2 => QuicPacketType::Handshake,
+        3 => QuicPacketType::Retry,
+        x => QuicPacketType::Unknown(x),
+    };
+
+    Ok((packet_type, pn_length))
+}
+
 /// Only QUIC v1 is accepted.
 pub fn validate_version(version: u32) -> Result<(), QuicError> {
     if version != QUIC_V1 {
         return Err(QuicError::UnsupportedVersion(version));
     }
     Ok(())
+}
+
+/// Reads the 4-byte Version field and checks that it is QUIC v1.
+///
+/// Error order is preserved from the historical inline extraction:
+/// `Truncated` if fewer than 4 bytes remain, then `UnsupportedVersion`.
+pub fn extract_version(cur: &mut QuicCursor<'_>) -> Result<u32, QuicError> {
+    let ver_bytes = cur.take(4)?;
+    let version = u32::from_be_bytes([ver_bytes[0], ver_bytes[1], ver_bytes[2], ver_bytes[3]]);
+    validate_version(version)?;
+    Ok(version)
 }
 
 /// The announced payload length must fit in the remaining bytes.
@@ -144,6 +186,48 @@ pub fn validate_length_field(
             length_field,
             pn_length: packet_number_length,
         })
+}
+
+/// Lit un Connection ID (longueur u8 + octets) sans copie, en vérifiant
+/// les bornes avant chaque lecture.
+pub(crate) fn read_cid<'a>(cur: &mut QuicCursor<'a>) -> Result<ConnectionId<'a>, QuicError> {
+    let len = cur.take_u8()?;
+    let bytes = cur.take(len as usize)?;
+    Ok(ConnectionId { len, bytes })
+}
+
+/// Lit Length (varint), Packet Number puis le payload chiffré.
+///
+/// Vérifie d'abord tous les champs, puis remplit `length_field` et
+/// `packet_number` dans le header seulement après la dernière validation
+/// (« check puis place »), et retourne le payload emprunté
+/// (Length - PN length octets).
+///
+/// L'ordre des vérifications (varint Length, octets du PN, cohérence
+/// Length/PN, disponibilité du payload) est identique à la séquence
+/// historique pour que les mêmes inputs produisent les mêmes erreurs.
+pub(crate) fn read_pn_and_payload<'a>(
+    cur: &mut QuicCursor<'a>,
+    header: &mut QuicLongHeader<'a>,
+) -> Result<&'a [u8], QuicError> {
+    let length_field = cur.read_varint()?;
+
+    // PN (1..=4 octets big-endian)
+    let pn_raw = cur.take(header.pn_length as usize)?;
+    let mut pn: u64 = 0;
+    for &b in pn_raw {
+        pn = (pn << 8) | (b as u64);
+    }
+
+    // Payload (length_field inclut PN + payload)
+    let payload_len = validate_length_field(length_field, header.pn_length)?;
+    validate_payload_available(cur.remaining(), payload_len)?;
+    let payload = cur.take(payload_len)?;
+
+    // Toutes les validations ont réussi : on place les valeurs.
+    header.length_field = length_field;
+    header.packet_number = Some(pn);
+    Ok(payload)
 }
 
 #[cfg(test)]
@@ -320,5 +404,111 @@ mod tests {
                 pn_length: 2
             })
         );
+    }
+
+    #[test]
+    fn test_extract_first_byte_valid_types() {
+        // 0xC3 : Long=1, Fixed=1, Initial (00), PN len code=3 -> 4 octets.
+        assert_eq!(extract_first_byte(0xC3), Ok((QuicPacketType::Initial, 4)));
+        // 0xD0 : 0-RTT, PN len 1.
+        assert_eq!(extract_first_byte(0xD0), Ok((QuicPacketType::ZeroRtt, 1)));
+        // 0xE1 : Handshake, PN len 2.
+        assert_eq!(extract_first_byte(0xE1), Ok((QuicPacketType::Handshake, 2)));
+        // 0xF2 : Retry, PN len 3.
+        assert_eq!(extract_first_byte(0xF2), Ok((QuicPacketType::Retry, 3)));
+    }
+
+    #[test]
+    fn test_extract_first_byte_error_precedence() {
+        // form=0 et fixed=0 : NotLongHeader doit primer sur FixedBitNotSet.
+        assert_eq!(extract_first_byte(0x00), Err(QuicError::NotLongHeader));
+        // form=0, fixed=1 : Short Header.
+        assert_eq!(extract_first_byte(0x40), Err(QuicError::NotLongHeader));
+        // form=1, fixed=0.
+        assert_eq!(extract_first_byte(0x80), Err(QuicError::FixedBitNotSet));
+    }
+
+    #[test]
+    fn test_extract_version() {
+        // Version v1, le curseur ne consomme que les 4 octets du champ.
+        let mut cur = QuicCursor::new(&[0x00, 0x00, 0x00, 0x01, 0xFF]);
+        assert_eq!(extract_version(&mut cur), Ok(1));
+        assert_eq!(cur.remaining(), 1);
+
+        // Version inconnue.
+        let mut cur = QuicCursor::new(&[0x00, 0x00, 0x00, 0x02]);
+        assert_eq!(
+            extract_version(&mut cur),
+            Err(QuicError::UnsupportedVersion(2))
+        );
+
+        // Tronqué : Truncated prime sur UnsupportedVersion.
+        let mut cur = QuicCursor::new(&[0x00, 0x00]);
+        assert_eq!(
+            extract_version(&mut cur),
+            Err(QuicError::Truncated {
+                needed: 4,
+                remaining: 2
+            })
+        );
+    }
+
+    #[test]
+    fn test_read_cid() {
+        let mut cur = QuicCursor::new(&[0x02, 0xAA, 0xBB, 0xCC]);
+        let cid = read_cid(&mut cur).expect("CID valide");
+        assert_eq!(cid.len, 2);
+        assert_eq!(cid.bytes, &[0xAA, 0xBB]);
+        assert_eq!(cur.remaining(), 1);
+
+        let mut cur = QuicCursor::new(&[0x05, 0x01]);
+        assert!(matches!(
+            read_cid(&mut cur),
+            Err(QuicError::Truncated {
+                needed: 5,
+                remaining: 1
+            })
+        ));
+    }
+
+    /// En-tête factice pour tester `read_pn_and_payload` isolément.
+    fn dummy_header<'a>(pn_length: u8) -> QuicLongHeader<'a> {
+        QuicLongHeader {
+            header_form_long: true,
+            fixed_bit: true,
+            packet_type: QuicPacketType::Handshake,
+            version: QUIC_V1,
+            dcid: ConnectionId { len: 0, bytes: &[] },
+            scid: ConnectionId { len: 0, bytes: &[] },
+            pn_length,
+            length_field: 0,
+            packet_number: None,
+        }
+    }
+
+    #[test]
+    fn test_read_pn_and_payload_places_after_checks() {
+        // length = 3 (PN(1) + payload(2)).
+        let data = [0x03, 0x09, 0x01, 0x02];
+        let mut cur = QuicCursor::new(&data);
+        let mut header = dummy_header(1);
+        let payload = read_pn_and_payload(&mut cur, &mut header).expect("valide");
+        assert_eq!(payload, &[0x01, 0x02]);
+        assert_eq!(header.length_field, 3);
+        assert_eq!(header.packet_number, Some(9));
+    }
+
+    #[test]
+    fn test_read_pn_and_payload_failure_leaves_header_untouched() {
+        // length = 10 mais un seul octet disponible après le PN.
+        let data = [0x0A, 0x00];
+        let mut cur = QuicCursor::new(&data);
+        let mut header = dummy_header(1);
+        assert!(matches!(
+            read_pn_and_payload(&mut cur, &mut header),
+            Err(QuicError::PayloadTooShort { .. })
+        ));
+        assert_eq!(header.length_field, 0);
+        assert_eq!(header.packet_number, None);
     }
 }

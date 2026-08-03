@@ -35,7 +35,11 @@ use application::Application;
 use application::protocols::ams::AmsPacket;
 use application::protocols::copt::CotpHeader;
 use application::protocols::dhcpv6::Dhcpv6Packet;
+use application::protocols::dns::DnsPacket;
+use application::protocols::ftp::FtpMessage;
+use application::protocols::nntp::NntpMessage;
 use application::protocols::postgresql::is_likely_postgresql_payload;
+use application::protocols::smtp::SmtpMessage;
 use application::protocols::snmp::SnmpPacket;
 use internet::Internet;
 use serde::Serialize;
@@ -75,7 +79,7 @@ pub fn parse(link_type: LinkType, bytes: &[u8]) -> Result<PacketFlow<'_>, ParseE
     PacketFlow::parse_decoded(link::decode(link_type, bytes)?, 0)
 }
 
-/// Timed counterpart of [`parse`], using the exact same link-type dispatcher.
+/// Timed counterpart of [`fn@parse`], using the exact same link-type dispatcher.
 #[cfg(feature = "parse_timing")]
 #[inline(always)]
 pub fn parse_timed<'a>(
@@ -170,6 +174,23 @@ pub struct PacketFlow<'a> {
     pub corrupted: Option<CorruptedLayer>,
 }
 
+/// Parses `bytes` **assuming [`LinkType::ETHERNET`]**.
+///
+/// Kept for compatibility; prefer [`fn@parse`], which takes the LINKTYPE the
+/// capture actually declares. This impl will be removed in a future major
+/// release.
+///
+/// # This does not fail on a non-Ethernet capture — it fabricates data
+///
+/// There is no plausibility check: any buffer of at least 14 bytes is read as
+/// an Ethernet header. Given a `LINKTYPE_LINUX_SLL` frame — what a capture on
+/// the Linux `any` interface produces — the 16 cooked-header bytes are
+/// reinterpreted as MAC addresses and an EtherType. The call returns `Ok` with
+/// invented MAC addresses, `internet: None` and `corrupted: None`. **Nothing
+/// signals the mistake**, and a flow matrix built from it fills up with
+/// addresses that never existed on the wire.
+///
+/// Reach for this only when the capture is known to be Ethernet.
 impl<'a> TryFrom<&'a [u8]> for PacketFlow<'a> {
     type Error = ParseError;
 
@@ -237,6 +258,56 @@ impl<'a> PacketFlow<'a> {
         {
             return Some(Application {
                 application_protocol: "COTP",
+            });
+        }
+
+        // FTP, SMTP et NNTP partagent la meme forme de reponse ("code SP
+        // texte CRLF") et plusieurs commandes (QUIT, LIST, MODE...). Meme un
+        // verbe distinctif peut apparaitre dans un corps SMTP ou un article
+        // NNTP : ces protocoles restent donc strictement gardes par port.
+        if transport.protocol == TransportProtocol::Tcp
+            && (is_ftp_tcp_port(transport.source_port)
+                || is_ftp_tcp_port(transport.destination_port))
+            && FtpMessage::try_from(payload).is_ok()
+        {
+            return Some(Application {
+                application_protocol: "FTP",
+            });
+        }
+
+        if transport.protocol == TransportProtocol::Tcp
+            && (is_smtp_tcp_port(transport.source_port)
+                || is_smtp_tcp_port(transport.destination_port))
+            && SmtpMessage::try_from(payload).is_ok()
+        {
+            return Some(Application {
+                application_protocol: "SMTP",
+            });
+        }
+
+        if transport.protocol == TransportProtocol::Tcp
+            && (is_nntp_tcp_port(transport.source_port)
+                || is_nntp_tcp_port(transport.destination_port))
+            && NntpMessage::try_from(payload).is_ok()
+        {
+            return Some(Application {
+                application_protocol: "NNTP",
+            });
+        }
+
+        // mDNS reprend le format DNS mais les reponses (RFC 6762 §6) omettent
+        // souvent la question : le validateur strict utilise par le DNS
+        // classique les rejetterait. Gate par le port reserve 5353 pour ne
+        // pas assouplir la detection DNS generale.
+        if transport.protocol == TransportProtocol::Udp
+            && (is_mdns_udp_port(transport.source_port)
+                || is_mdns_udp_port(transport.destination_port))
+        {
+            // Port 5353 is terminal for this payload: if the dedicated mDNS
+            // validation fails, do not let the looser generic DNS probe
+            // relabel the same bytes as ordinary DNS.
+            return DnsPacket::try_from_mdns(payload).ok().map(|_| Application {
+                application_protocol: "mDNS",
             });
         }
 
@@ -483,6 +554,29 @@ fn is_quic_udp_port(port: Option<u16>) -> bool {
     matches!(port, Some(443))
 }
 
+/// FTP control channel : TCP 21.
+fn is_ftp_tcp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(21))
+}
+
+/// SMTP en clair ou avec STARTTLS : TCP 25 (relais) et 587 (soumission).
+/// Le port 465 transporte du TLS implicite et ne peut pas contenir directement
+/// une commande SMTP dans le payload inspecte ici.
+fn is_smtp_tcp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(25 | 587))
+}
+
+/// NNTP en clair ou avec STARTTLS : TCP 119. Le port 563 transporte du TLS
+/// implicite et ne peut pas contenir directement une commande NNTP ici.
+fn is_nntp_tcp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(119))
+}
+
+/// mDNS : UDP 5353 (port reserve, RFC 6762).
+fn is_mdns_udp_port(port: Option<u16>) -> bool {
+    matches!(port, Some(5353))
+}
+
 #[cfg(test)]
 mod tests {
     use crate::parse::application::protocols::postgresql::{
@@ -517,6 +611,78 @@ mod tests {
     fn sample_ipv4_tcp_postgresql_backend_frame_19() -> Vec<u8> {
         hex::decode(
             "0000000000000000000000000800450000d5ef3a400040064ce67f0000017f0000011538b36bc949e22ac901b10c80187fffda6900000101080a13420d7613420d2c520000000800000000530000001c636c69656e745f656e636f64696e6700554e49434f4445005300000017446174655374796c650049534f2c204d445900530000001569735f737570657275736572006f66660053000000197365727665725f76657273696f6e00372e342e3600530000001f73657373696f6e5f617574686f72697a6174696f6e006f727978004b0000000c000058e9679266075a0000000549",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 5 : commande FTP `USER csanders` (pcaps_exemple/ftp.pcap).
+    fn sample_ipv4_tcp_ftp_user_command() -> Vec<u8> {
+        hex::decode(
+            "0015f24076ef0016ce6e8b24080045000037a7e540008006d057c0a80072c0a800c104710015dfb3b2ffc6c70160501843f20a98000055534552206373616e646572730d0a",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 4 : banniere de bienvenue FTP (pcaps_exemple/ftp.pcap).
+    fn sample_ipv4_tcp_ftp_welcome_reply() -> Vec<u8> {
+        hex::decode(
+            "0016ce6e8b240015f24076ef0800450000462961400080064ecdc0a800c1c0a8007200150471c6c70142dfb3b2ff5018ffffd97d00003232302043687269732053616e6465727320465450205365727665720d0a",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 2 (originale 7) : commande SMTP `EHLO GP`
+    /// (pcaps_exemple/protocols/smtp/smtp_control.pcapng).
+    fn sample_ipv4_tcp_smtp_ehlo_command() -> Vec<u8> {
+        hex::decode(
+            "001f33d9816000e01c3c17c2080045000031251f40008006f3cb0a0a01044a358c9905be00197ec453b1aeec62655018ff4ad911000045484c4f2047500d0a",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 4 (originale 17) : reponse SMTP `250 OK`
+    /// (pcaps_exemple/protocols/smtp/smtp_control.pcapng).
+    fn sample_ipv4_tcp_smtp_ok_reply() -> Vec<u8> {
+        hex::decode(
+            "00e01c3c17c2001f33d9816008004560003021e84000320644a44a358c990a0a0104001905beaeec63307ec4541a501816d00d9b0000323530204f4b0d0a",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 1 (originale 16) : commande NNTP `MODE READER`
+    /// (pcaps_exemple/protocols/nntp/nntp_control.pcapng).
+    fn sample_ipv4_tcp_nntp_mode_reader_command() -> Vec<u8> {
+        hex::decode(
+            "001a2b038a0c080027f618f9080045000041696f400040067520ac1a0014c190ee688e2400774eceed2df78993d2801800b7b98d00000101080a001f844e00e6ed794d4f4445205245414445520d0a",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 5 (originale 38) : reponse NNTP `224 data follows`
+    /// (pcaps_exemple/protocols/nntp/nntp_control.pcapng).
+    fn sample_ipv4_tcp_nntp_data_follows_reply() -> Vec<u8> {
+        hex::decode(
+            "080027f618f9001a2b038a0c080045000046edd44000fb0635b5c190ee68ac1a001400778e24f789954a4eceeda1801816a074f600000101080a00e6eebc001f876e323234206461746120666f6c6c6f77730d0a",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 1 (originale 21) : requete mDNS
+    /// (pcaps_exemple/protocols/mdns_llmnr_ssdp/mdns_query_response.pcapng),
+    /// question presente (RFC 6762 §8.2, sonde avec suppression de reponses
+    /// connues : l'enregistrement propose est place en autorite).
+    fn sample_ipv4_udp_mdns_query() -> Vec<u8> {
+        hex::decode(
+            "01005e0000fb02004c4f4f5008004500004601be0000ff11fa0e6f6f6f6fe00000fb14e914e90032f994000000000001000000010000026d31056c6f63616c0000010001c00c0001000100000e1000046f6f6f6f",
+        )
+        .expect("invalid test hex fixture")
+    }
+
+    /// Trame 1 : annonce mDNS non sollicitee, question vide
+    /// (pcaps_exemple/protocols/mdns_llmnr_ssdp/mdns_announcement.pcapng).
+    fn sample_ipv4_udp_mdns_announcement_empty_question() -> Vec<u8> {
+        hex::decode(
+            "000000000002000000000001080045000057000000004011bcd96f6f6f6f6f6f6f6f14e914e900430000000084000000000100000000075f62726f777365055f6d646e73045f756470056c6f63616c00000c000100001c20000b056170706c6503636f6d00",
         )
         .expect("invalid test hex fixture")
     }
@@ -641,6 +807,59 @@ mod tests {
             0x00, // UDP checksum
         ]);
         packet.extend_from_slice(&udp_payload);
+        packet
+    }
+
+    fn ethernet_ipv4_udp_packet_with(
+        source_port: u16,
+        destination_port: u16,
+        udp_payload: &[u8],
+    ) -> Vec<u8> {
+        let udp_total_len = 8 + udp_payload.len();
+        let ip_total_len = 20 + udp_total_len;
+
+        let mut packet = Vec::with_capacity(14 + ip_total_len);
+        packet.extend_from_slice(&[
+            0x00,
+            0x11,
+            0x22,
+            0x33,
+            0x44,
+            0x55, // Destination MAC
+            0x66,
+            0x77,
+            0x88,
+            0x99,
+            0xaa,
+            0xbb, // Source MAC
+            0x08,
+            0x00, // IPv4 EtherType
+            0x45, // Version + IHL
+            0x00, // DSCP/ECN
+            (ip_total_len >> 8) as u8,
+            ip_total_len as u8,
+            0x12,
+            0x34, // Identification
+            0x00,
+            0x00, // Flags/fragment
+            64,   // TTL
+            17,   // UDP
+            0x00,
+            0x00, // Header checksum
+            192,
+            168,
+            1,
+            10, // Source IP
+            192,
+            168,
+            1,
+            20, // Destination IP
+        ]);
+        packet.extend_from_slice(&source_port.to_be_bytes());
+        packet.extend_from_slice(&destination_port.to_be_bytes());
+        packet.extend_from_slice(&(udp_total_len as u16).to_be_bytes());
+        packet.extend_from_slice(&[0x00, 0x00]); // UDP checksum
+        packet.extend_from_slice(udp_payload);
         packet
     }
 
@@ -954,6 +1173,246 @@ mod tests {
 
         let application = flow.application.as_ref().expect("application layer");
         assert_ne!(application.application_protocol, "PostgreSQL");
+    }
+
+    #[test]
+    fn packetflow_detects_ftp_on_standard_port() {
+        let command = sample_ipv4_tcp_ftp_user_command();
+        let flow = PacketFlow::try_from(command.as_slice()).unwrap();
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.destination_port, Some(21));
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "FTP");
+
+        let reply = sample_ipv4_tcp_ftp_welcome_reply();
+        let flow = PacketFlow::try_from(reply.as_slice()).unwrap();
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.source_port, Some(21));
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "FTP");
+    }
+
+    #[test]
+    fn packetflow_does_not_detect_ftp_off_the_standard_port() {
+        // Regression synthetique : meme des commandes FTP distinctives ne
+        // suffisent pas sans TCP/21, car un protocole textuel peut transporter
+        // exactement les memes octets dans son contenu.
+        for payload in [
+            &b"USER alice\r\n"[..],
+            &b"PASV\r\n"[..],
+            &b"epsv ALL\r\n"[..],
+            &b"PORT 192,0,2,1,7,138\r\n"[..],
+            &b"EPRT |2|2001:db8::1|1930|\r\n"[..],
+            &b"LPRT 6,16,32,2,81,131,67,131,0,0,0,0,0,0,81,131,67,131,2,4,7\r\n"[..],
+            &b"220 Ready\r\n"[..],
+        ] {
+            let packet = ethernet_ipv4_tcp_packet(51_845, 2_121, payload);
+            let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+            assert_ne!(
+                flow.application
+                    .as_ref()
+                    .map(|application| application.application_protocol),
+                Some("FTP"),
+                "FTP payload classified away from TCP/21: {payload:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn packetflow_does_not_relabel_text_protocol_bodies_as_ftp() {
+        // Regression : ces lignes sont du contenu valide pendant SMTP DATA ou
+        // dans un article NNTP. Sans etat de session, le port doit l'emporter.
+        for destination_port in [25, 587, 119] {
+            for payload in [&b"PASV\r\n"[..], &b"PORT 192,0,2,1,7,138\r\n"[..]] {
+                let packet = ethernet_ipv4_tcp_packet(51_845, destination_port, payload);
+                let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+                assert_ne!(
+                    flow.application
+                        .as_ref()
+                        .map(|application| application.application_protocol),
+                    Some("FTP"),
+                    "body on TCP/{destination_port} relabelled FTP: {payload:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn packetflow_port_guards_win_for_shared_ftp_commands() {
+        for (destination_port, payload, expected) in [
+            (25, &b"AUTH PLAIN dGVzdA==\r\n"[..], "SMTP"),
+            (25, &b"QUIT\r\n"[..], "SMTP"),
+            (119, &b"MODE READER\r\n"[..], "NNTP"),
+            (119, &b"QUIT\r\n"[..], "NNTP"),
+        ] {
+            let packet = ethernet_ipv4_tcp_packet(51_845, destination_port, payload);
+            let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+            assert_eq!(
+                flow.application
+                    .as_ref()
+                    .map(|application| application.application_protocol),
+                Some(expected),
+                "payload on TCP/{destination_port}: {payload:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn packetflow_detects_smtp_on_standard_port() {
+        let command = sample_ipv4_tcp_smtp_ehlo_command();
+        let flow = PacketFlow::try_from(command.as_slice()).unwrap();
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.destination_port, Some(25));
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "SMTP");
+
+        let reply = sample_ipv4_tcp_smtp_ok_reply();
+        let flow = PacketFlow::try_from(reply.as_slice()).unwrap();
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.source_port, Some(25));
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "SMTP");
+    }
+
+    #[test]
+    fn packetflow_detects_smtp_on_submission_port() {
+        let packet = ethernet_ipv4_tcp_packet(51845, 587, b"EHLO GP\r\n");
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+        let application = flow.application.as_ref().expect("application layer");
+
+        assert_eq!(application.application_protocol, "SMTP");
+    }
+
+    #[test]
+    fn packetflow_does_not_detect_plain_smtp_off_standard_ports() {
+        for destination_port in [2525, 465] {
+            let packet = ethernet_ipv4_tcp_packet(51845, destination_port, b"EHLO GP\r\n");
+            let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+            let application = flow.application.as_ref();
+
+            assert_ne!(
+                application.map(|app| app.application_protocol),
+                Some("SMTP"),
+                "plain SMTP was classified on TCP port {destination_port}"
+            );
+        }
+    }
+
+    #[test]
+    fn packetflow_detects_nntp_on_standard_port() {
+        let command = sample_ipv4_tcp_nntp_mode_reader_command();
+        let flow = PacketFlow::try_from(command.as_slice()).unwrap();
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.destination_port, Some(119));
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "NNTP");
+
+        let reply = sample_ipv4_tcp_nntp_data_follows_reply();
+        let flow = PacketFlow::try_from(reply.as_slice()).unwrap();
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.source_port, Some(119));
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "NNTP");
+    }
+
+    #[test]
+    fn packetflow_does_not_detect_plain_nntp_off_standard_ports() {
+        for destination_port in [8119, 563] {
+            let packet = ethernet_ipv4_tcp_packet(51845, destination_port, b"MODE READER\r\n");
+            let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+            let application = flow.application.as_ref();
+
+            assert_ne!(
+                application.map(|app| app.application_protocol),
+                Some("NNTP"),
+                "plain NNTP was classified on TCP port {destination_port}"
+            );
+        }
+    }
+
+    #[test]
+    fn packetflow_detects_mdns_query_on_standard_port() {
+        let packet = sample_ipv4_udp_mdns_query();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let internet = flow.internet.as_ref().expect("internet layer");
+        assert_eq!(
+            internet.destination,
+            Some(IpAddr::V4(Ipv4Addr::new(224, 0, 0, 251)))
+        );
+
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.protocol, TransportProtocol::Udp);
+        assert_eq!(transport.source_port, Some(5353));
+        assert_eq!(transport.destination_port, Some(5353));
+
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "mDNS");
+    }
+
+    #[test]
+    fn packetflow_detects_mdns_announcement_with_empty_question() {
+        // Regression : une annonce mDNS non sollicitee (question vide) est
+        // rejetee par le validateur DNS strict et ne doit etre acceptee que
+        // via le chemin dedie, gate par le port 5353.
+        let packet = sample_ipv4_udp_mdns_announcement_empty_question();
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.protocol, TransportProtocol::Udp);
+        assert_eq!(transport.source_port, Some(5353));
+        assert_eq!(transport.destination_port, Some(5353));
+
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "mDNS");
+    }
+
+    #[test]
+    fn packetflow_does_not_detect_mdns_off_the_standard_port() {
+        // Memes octets, envoyes sur un port arbitraire : le validateur DNS
+        // strict resterait la seule voie de classification, donc aucune
+        // detection ne doit avoir lieu.
+        let full_frame = sample_ipv4_udp_mdns_announcement_empty_question();
+        // UDP payload = tout ce qui suit l'en-tete UDP (8 octets), a
+        // l'offset 14 (Ethernet) + 20 (IPv4) + 8 (UDP) = 42.
+        let payload = &full_frame[42..];
+        let packet = ethernet_ipv4_udp_packet_with(51845, 5000, payload);
+
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+        let transport = flow.transport.as_ref().expect("transport layer");
+        assert_eq!(transport.destination_port, Some(5000));
+
+        let application = flow.application.as_ref();
+        assert_ne!(
+            application.map(|app| app.application_protocol),
+            Some("mDNS")
+        );
+    }
+
+    #[test]
+    fn packetflow_does_not_fallback_to_dns_for_invalid_mdns_flags() {
+        for flags in [[0x08, 0x00], [0x00, 0x01]] {
+            let payload = [
+                0x00, 0x00, // transaction id
+                flags[0], flags[1], // invalid mDNS OPCODE or RCODE
+                0x00, 0x01, // one question
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // no records
+                0x05, b'l', b'o', b'c', b'a', b'l', 0x00, // local
+                0x00, 0x01, // A
+                0x00, 0x01, // IN
+            ];
+            let packet = ethernet_ipv4_udp_packet_with(5353, 5353, &payload);
+            let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+            assert!(
+                flow.application.is_none(),
+                "invalid mDNS flags were classified as {:?}",
+                flow.application
+            );
+        }
     }
 
     #[test]

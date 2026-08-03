@@ -7,8 +7,8 @@ use std::fmt;
 
 use crate::{
     checks::application::copt::{
-        parse_cotp_parameter, validate_connection_header_len, validate_declared_len,
-        validate_min_len, validate_parameter_header, validate_parameter_len,
+        extract_connection_fields, extract_length_and_pdu_type, extract_parameter,
+        validate_declared_len, validate_min_len,
     },
     errors::application::copt::CotpParseError,
 };
@@ -78,15 +78,21 @@ pub enum CotpParameter<'a> {
 }
 
 impl<'a> CotpHeader<'a> {
-    /// Minimum size of a COTP header (3 bytes for basic header)
+    /// Full size of a CR/CC connection header: length + PDU type +
+    /// destination/source references + class (7 bytes). Note that the
+    /// parser's actual length pre-check uses `COTP_MIN_LENGTH` (3 bytes)
+    /// from `checks::application::copt`, not this constant.
     pub const MIN_SIZE: usize = 7; // 1 + 1 + 2 + 2 + 1 (for CR/CC)
 
     /// Parse a COTP header from a byte slice
+    ///
+    /// Canonical linear sequence: length pre-check, then one `extract_*` per
+    /// wire field (each check lives in `checks::application::copt`), then
+    /// construction from the already-validated values.
     pub fn from_bytes(data: &'a [u8]) -> Result<(Self, usize), CotpParseError> {
         validate_min_len(data)?;
 
-        let length = data[0];
-        let pdu_type = CotpPduType::from(data[1]);
+        let (length, pdu_type) = extract_length_and_pdu_type(data)?;
         let declared_end = length as usize + 1;
 
         validate_declared_len(data.len(), declared_end)?;
@@ -98,21 +104,9 @@ impl<'a> CotpHeader<'a> {
             | CotpPduType::DisconnectRequest
             | CotpPduType::DisconnectConfirm
             | CotpPduType::TpduError => {
-                let expected = offset + 5;
-                validate_connection_header_len(declared_end, expected)?;
-                let dst_ref = u16::from_be_bytes([data[offset], data[offset + 1]]);
-                let src_ref = u16::from_be_bytes([data[offset + 2], data[offset + 3]]);
-                let class = data[offset + 4] >> 4;
-                let extended_formats = (data[offset + 4] & 0x04) != 0;
-                let no_explicit_flow_control = (data[offset + 4] & 0x01) != 0;
+                let fields = extract_connection_fields(data, offset, declared_end)?;
                 offset += 5;
-                (
-                    dst_ref,
-                    src_ref,
-                    class,
-                    extended_formats,
-                    no_explicit_flow_control,
-                )
+                fields
             }
             _ => (0, 0, 0, false, false),
         };
@@ -120,19 +114,9 @@ impl<'a> CotpHeader<'a> {
         // Parse parameters
         let mut parameters = Vec::new();
         while offset < declared_end {
-            validate_parameter_header(declared_end, offset)?;
-
-            let param_type = data[offset];
-            let param_len = data[offset + 1] as usize;
-
-            validate_parameter_len(declared_end, offset, param_len)?;
-
-            let param_data = &data[offset + 2..offset + 2 + param_len];
-
-            let param = parse_cotp_parameter(pdu_type, param_type, offset, param_data)?;
-
+            let (param, next_offset) = extract_parameter(data, offset, declared_end, pdu_type)?;
             parameters.push(param);
-            offset += 2 + param_len;
+            offset = next_offset;
         }
 
         Ok((
@@ -190,15 +174,21 @@ impl fmt::Display for CotpHeader<'_> {
         for param in &self.parameters {
             match param {
                 CotpParameter::TpduSize(size) => {
+                    // TpduSize est constructible avec n'importe quel octet du
+                    // wire : le shift doit etre borne, sinon un size >= 26
+                    // panique en debug (overflow de `1 << 32`).
                     let tpdu_size = match size {
-                        0x09 => 512,
-                        0x0A => 1024,
-                        0x0B => 2048,
-                        0x0C => 4096,
-                        0x0D => 8192,
-                        _ => 1 << (*size as u16 + 6),
+                        0x09 => Some(512),
+                        0x0A => Some(1024),
+                        0x0B => Some(2048),
+                        0x0C => Some(4096),
+                        0x0D => Some(8192),
+                        _ => 1u64.checked_shl(u32::from(*size) + 6),
                     };
-                    writeln!(f, "  TPDU size: {tpdu_size} bytes")?;
+                    match tpdu_size {
+                        Some(tpdu_size) => writeln!(f, "  TPDU size: {tpdu_size} bytes")?,
+                        None => writeln!(f, "  TPDU size: invalid (code 0x{size:02X})")?,
+                    }
                 }
                 CotpParameter::SrcTsap(tsap) => {
                     writeln!(f, "  Source TSAP: 0x{tsap:04X}")?;
@@ -485,5 +475,23 @@ mod tests {
         assert!(rendered.contains("Class: 4"));
         assert!(rendered.contains("Extended formats: True"));
         assert!(rendered.contains("No explicit flow control: True"));
+    }
+
+    /// Regression : un octet TPDU size hostile (>= 26) faisait paniquer le
+    /// Display par overflow de shift (`1 << 32`) en build debug.
+    #[test]
+    fn test_display_hostile_tpdu_size_does_not_panic() {
+        // CR avec un parametre 0xC0 de longueur 1 portant 0xFF.
+        let data = [0x09, 0xE0, 0x00, 0x01, 0x00, 0x02, 0x00, 0xC0, 0x01, 0xFF];
+        let header = CotpHeader::try_from(&data[..]).unwrap();
+        let rendered = header.to_string();
+
+        assert!(rendered.contains("TPDU size: invalid (code 0xFF)"));
+
+        // Une valeur hors table mais encore representable garde l'ancien
+        // calcul : 0x0E -> 1 << 20 = 1048576.
+        let data = [0x09, 0xE0, 0x00, 0x01, 0x00, 0x02, 0x00, 0xC0, 0x01, 0x0E];
+        let header = CotpHeader::try_from(&data[..]).unwrap();
+        assert!(header.to_string().contains("TPDU size: 1048576 bytes"));
     }
 }

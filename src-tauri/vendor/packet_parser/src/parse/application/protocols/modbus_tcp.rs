@@ -7,8 +7,9 @@ use core::convert::TryFrom;
 
 use crate::{
     checks::application::modbus_tcp::{
-        validate_consumed_length, validate_declared_total_length, validate_length_field,
-        validate_mbap_min_size, validate_pdu_not_empty, validate_protocol_identifier,
+        extract_function_code, extract_length, extract_protocol_identifier,
+        extract_transaction_identifier, extract_unit_identifier, validate_declared_total_length,
+        validate_mbap_min_size,
     },
     errors::application::modbus_tcp::ModbusTcpError,
 };
@@ -49,8 +50,11 @@ impl<'a> TryFrom<&'a [u8]> for ModbusTcpPacket<'a> {
             validate_mbap_min_size(slice)?;
 
             let mbap = MBAP::try_from(slice)?;
+            // Progression garantie : extract_length impose length >= 1, donc
+            // consumed = 6 + length >= 7 et la boucle avance toujours
+            // (l'appel à validate_consumed_length était vacueux : consumed
+            // ne peut jamais valoir 0 ici).
             let consumed = 6usize + mbap.length as usize;
-            validate_consumed_length(consumed, mbap.length)?;
 
             mbaps.push(mbap);
             offset += consumed;
@@ -81,23 +85,17 @@ impl<'a> TryFrom<&'a [u8]> for MBAP<'a> {
     fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
         validate_mbap_min_size(value)?;
 
-        let transaction_identifier = u16::from_be_bytes([value[0], value[1]]);
-        let protocol_identifier = u16::from_be_bytes([value[2], value[3]]);
-        let length = u16::from_be_bytes([value[4], value[5]]);
-        let unit_identifier = value[6];
-
-        validate_protocol_identifier(protocol_identifier)?;
-        validate_length_field(length)?;
+        let transaction_identifier = extract_transaction_identifier(value)?;
+        let protocol_identifier = extract_protocol_identifier(value)?;
+        let length = extract_length(value)?;
+        let unit_identifier = extract_unit_identifier(value)?;
 
         // Taille totale attendue = 6 + length
         let expected_total = validate_declared_total_length(value, length)?;
 
         // PDU = après unit id
         let pdu = &value[7..expected_total];
-        validate_pdu_not_empty(pdu)?;
-
-        let function_code = pdu[0];
-        let pdu_data = &pdu[1..];
+        let (function_code, pdu_data) = extract_function_code(pdu)?;
 
         let modbus_data = Modbus {
             function_code,

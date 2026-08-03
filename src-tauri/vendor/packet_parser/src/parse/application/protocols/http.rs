@@ -9,7 +9,7 @@ use std::convert::TryFrom;
 
 use crate::{
     checks::application::http::{
-        parse_payload_as_utf8, require_header_part, require_method, require_request_line,
+        extract_header_line, parse_payload_as_utf8, require_method, require_request_line,
         require_uri, require_version, split_head_body,
     },
     errors::application::http::HttpParseError,
@@ -51,6 +51,11 @@ impl<'a> TryFrom<&'a [u8]> for HttpRequest<'a> {
 }
 
 /// Parses an HTTP request from a given payload without copying packet bytes.
+///
+/// There is deliberately no up-front length pre-check: `HttpParseError` has
+/// no "empty payload" variant, and every access below is bounded (`find`,
+/// `split`, `split_whitespace` — no indexing), so an empty payload safely
+/// flows through the chain and fails with `MissingMethod`.
 pub fn parse_http_request(payload: &[u8]) -> Result<HttpRequest<'_>, HttpParseError> {
     let payload_str = parse_payload_as_utf8(payload)?;
 
@@ -70,10 +75,7 @@ pub fn parse_http_request(payload: &[u8]) -> Result<HttpRequest<'_>, HttpParseEr
         if line.is_empty() {
             break;
         }
-        let mut header_parts = line.splitn(2, ':');
-        let name = require_header_part(header_parts.next())?.trim();
-        let value = require_header_part(header_parts.next())?.trim();
-        headers.push((name, value));
+        headers.push(extract_header_line(line)?);
     }
 
     Ok(HttpRequest {

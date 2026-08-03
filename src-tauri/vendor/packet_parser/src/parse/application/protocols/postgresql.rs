@@ -8,20 +8,22 @@ use std::str;
 
 use crate::{
     checks::application::postgresql::{
-        POSTGRESQL_SECRET_KEY_MAX_LEN, POSTGRESQL_SECRET_KEY_MIN_LEN, POSTGRESQL_TYPED_HEADER_LEN,
-        POSTGRESQL_UNTYPED_HEADER_LEN, validate_no_trailing_bytes, validate_packet_not_empty,
-        validate_remaining, validate_secret_key_length, validate_typed_header_available,
-        validate_typed_message_available, validate_untyped_header_available,
-        validate_untyped_message_available,
+        Cursor, POSTGRESQL_SECRET_KEY_MAX_LEN, POSTGRESQL_SECRET_KEY_MIN_LEN,
+        POSTGRESQL_TYPED_HEADER_LEN, POSTGRESQL_UNTYPED_HEADER_LEN, extract_message_type,
+        extract_parameter_value_length, extract_typed_frame, extract_untyped_frame,
+        postgresql_startup_protocol_version_is_supported, validate_no_trailing_bytes,
+        validate_packet_not_empty, validate_remaining, validate_secret_key_length,
+        validate_startup_code, validate_typed_header_available,
     },
     errors::application::postgresql::PostgreSqlError,
 };
 
-const POSTGRESQL_PROTOCOL_VERSION_3_0: u32 = 196_608;
-const POSTGRESQL_PROTOCOL_VERSION_3_2: u32 = 196_610;
-const POSTGRESQL_SSL_REQUEST_CODE: u32 = 80_877_103;
-const POSTGRESQL_CANCEL_REQUEST_CODE: u32 = 80_877_102;
-const POSTGRESQL_GSSENC_REQUEST_CODE: u32 = 80_877_104;
+// Partagées avec les checks (`validate_startup_code`) : visibilité crate.
+pub(crate) const POSTGRESQL_PROTOCOL_VERSION_3_0: u32 = 196_608;
+pub(crate) const POSTGRESQL_PROTOCOL_VERSION_3_2: u32 = 196_610;
+pub(crate) const POSTGRESQL_SSL_REQUEST_CODE: u32 = 80_877_103;
+pub(crate) const POSTGRESQL_CANCEL_REQUEST_CODE: u32 = 80_877_102;
+pub(crate) const POSTGRESQL_GSSENC_REQUEST_CODE: u32 = 80_877_104;
 
 #[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// PostgreSQL frontend/backend protocol packet
@@ -130,38 +132,8 @@ impl TryFrom<u8> for PostgreSqlMessageType {
     type Error = PostgreSqlError;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        Ok(match value {
-            b'R' => PostgreSqlMessageType::Authentication,
-            b'K' => PostgreSqlMessageType::BackendKeyData,
-            b'B' => PostgreSqlMessageType::Bind,
-            b'2' => PostgreSqlMessageType::BindComplete,
-            b'C' => PostgreSqlMessageType::CloseOrCommandComplete,
-            b'3' => PostgreSqlMessageType::CloseComplete,
-            b'W' => PostgreSqlMessageType::CopyBothResponse,
-            b'd' => PostgreSqlMessageType::CopyData,
-            b'c' => PostgreSqlMessageType::CopyDone,
-            b'f' => PostgreSqlMessageType::CopyFail,
-            b'G' => PostgreSqlMessageType::CopyInResponse,
-            b'D' => PostgreSqlMessageType::DataRowOrDescribe,
-            b'I' => PostgreSqlMessageType::EmptyQueryResponse,
-            b'E' => PostgreSqlMessageType::ErrorResponseOrExecute,
-            b'H' => PostgreSqlMessageType::FlushOrCopyOutResponse,
-            b'F' => PostgreSqlMessageType::FunctionCall,
-            b'V' => PostgreSqlMessageType::FunctionCallResponse,
-            b'n' => PostgreSqlMessageType::NoData,
-            b'N' => PostgreSqlMessageType::NoticeResponse,
-            b'A' => PostgreSqlMessageType::NotificationResponse,
-            b't' => PostgreSqlMessageType::ParameterDescription,
-            b'S' => PostgreSqlMessageType::ParameterStatusOrSync,
-            b'P' => PostgreSqlMessageType::Parse,
-            b'1' => PostgreSqlMessageType::ParseComplete,
-            b's' => PostgreSqlMessageType::PortalSuspended,
-            b'Q' => PostgreSqlMessageType::Query,
-            b'Z' => PostgreSqlMessageType::ReadyForQuery,
-            b'T' => PostgreSqlMessageType::RowDescription,
-            b'X' => PostgreSqlMessageType::Terminate,
-            _ => return Err(PostgreSqlError::InvalidMessageType(value)),
-        })
+        // Façade publique conservée : la validation vit dans les checks.
+        extract_message_type(value)
     }
 }
 
@@ -216,6 +188,10 @@ impl<'a> TryFrom<&'a [u8]> for PostgreSqlPacket<'a> {
     fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
         validate_packet_not_empty(value)?;
 
+        // Écart assumé au modèle linéaire : le protocole impose deux formats
+        // de trame (messages typés vs startup sans octet de type). On tente
+        // d'abord le format typé puis, en cas d'échec, le format startup, en
+        // remontant l'erreur typée d'origine si les deux échouent.
         match parse_typed_messages(value) {
             Ok(packet) => Ok(packet),
             Err(typed_error) => parse_untyped_message(value).or(Err(typed_error)),
@@ -343,13 +319,6 @@ fn startup_has_known_parameter(startup: &PostgreSqlStartup<'_>) -> bool {
                     | "replication"
             )
     })
-}
-
-fn postgresql_startup_protocol_version_is_supported(code: u32) -> bool {
-    matches!(
-        code,
-        POSTGRESQL_PROTOCOL_VERSION_3_0 | POSTGRESQL_PROTOCOL_VERSION_3_2
-    )
 }
 
 fn looks_like_sql(query: &str) -> bool {
@@ -638,11 +607,13 @@ fn parse_typed_messages(payload: &[u8]) -> Result<PostgreSqlPacket<'_>, PostgreS
 
     while offset < payload.len() {
         let remaining = &payload[offset..];
+        // Ordre wire conservé : l'en-tête doit être disponible, puis l'octet
+        // de type (offset 0) est validé avant le champ length (offsets 1..5).
+        // Sur un paquet multi-fautes, InvalidMessageType doit sortir avant
+        // InvalidMessageLength/LengthMismatch, comme avant le refactor.
         validate_typed_header_available(remaining)?;
-
-        let message_type = PostgreSqlMessageType::try_from(remaining[0])?;
-        let length = u32::from_be_bytes([remaining[1], remaining[2], remaining[3], remaining[4]]);
-        let consumed = validate_typed_message_available(remaining, length)?;
+        let message_type = extract_message_type(remaining[0])?;
+        let (length, consumed) = extract_typed_frame(remaining)?;
 
         let body = &remaining[POSTGRESQL_TYPED_HEADER_LEN..consumed];
         let parsed_body = parse_typed_body(message_type, body)?;
@@ -661,11 +632,7 @@ fn parse_typed_messages(payload: &[u8]) -> Result<PostgreSqlPacket<'_>, PostgreS
 }
 
 fn parse_untyped_message(payload: &[u8]) -> Result<PostgreSqlPacket<'_>, PostgreSqlError> {
-    validate_untyped_header_available(payload)?;
-
-    let length = u32::from_be_bytes([payload[0], payload[1], payload[2], payload[3]]);
-    let consumed = validate_untyped_message_available(payload, length)?;
-    let code = u32::from_be_bytes([payload[4], payload[5], payload[6], payload[7]]);
+    let (length, code, consumed) = extract_untyped_frame(payload)?;
     let body = &payload[POSTGRESQL_UNTYPED_HEADER_LEN..consumed];
 
     let (message_type, parsed_body) = match code {
@@ -695,7 +662,15 @@ fn parse_untyped_message(payload: &[u8]) -> Result<PostgreSqlPacket<'_>, Postgre
             PostgreSqlMessageType::GssEncRequest,
             PostgreSqlMessageBody::Empty,
         ),
-        _ => return Err(PostgreSqlError::UnsupportedStartupCode(code)),
+        _ => {
+            // L'erreur typée (UnsupportedStartupCode) est construite par le
+            // check dédié, qui rejette tout code hors des bras ci-dessus.
+            validate_startup_code(code)?;
+            // Retour défensif, inatteignable tant que validate_startup_code
+            // et les bras du match couvrent le même ensemble de codes :
+            // garde le match exhaustif sans panic.
+            return Err(PostgreSqlError::UnsupportedStartupCode(code));
+        }
     };
 
     Ok(PostgreSqlPacket {
@@ -773,23 +748,21 @@ fn parse_bind(body: &[u8]) -> Result<PostgreSqlBind<'_>, PostgreSqlError> {
     }
 
     let value_count = cur.read_u16("parameter_value_count")? as usize;
+    // Symétrique de `parameter_type_oids` (l.746), `parameter_formats` (l.768)
+    // et `result_formats` (l.796) : chaque valeur porte au minimum son préfixe
+    // de longueur de 4 octets. Sans cette garde, `value_count = 0xFFFF` sur
+    // 11 octets de payload pré-alloue 1 Mo.
+    validate_remaining(cur.remaining(), value_count * 4, "parameter_values")?;
     let mut parameter_values = Vec::with_capacity(value_count);
     for _ in 0..value_count {
         let len = cur.read_i32("parameter_value_length")?;
-        if len == -1 {
-            parameter_values.push(None);
-            continue;
+        match extract_parameter_value_length(len)? {
+            None => parameter_values.push(None),
+            Some(value_len) => {
+                let value = cur.read_bytes(value_len, "parameter_value")?;
+                parameter_values.push(Some(value));
+            }
         }
-
-        if len < 0 {
-            return Err(PostgreSqlError::InvalidFieldLength {
-                field: "parameter_value_length",
-                got: len,
-            });
-        }
-
-        let value = cur.read_bytes(len as usize, "parameter_value")?;
-        parameter_values.push(Some(value));
     }
 
     let result_format_count = cur.read_u16("result_format_count")? as usize;
@@ -857,85 +830,6 @@ fn parse_startup<'a>(
         protocol_version,
         parameters,
     })
-}
-
-struct Cursor<'a> {
-    bytes: &'a [u8],
-    pos: usize,
-}
-
-impl<'a> Cursor<'a> {
-    fn new(bytes: &'a [u8]) -> Self {
-        Self { bytes, pos: 0 }
-    }
-
-    fn remaining(&self) -> usize {
-        self.bytes.len().saturating_sub(self.pos)
-    }
-
-    fn peek(&self) -> Option<u8> {
-        self.bytes.get(self.pos).copied()
-    }
-
-    fn skip(&mut self, count: usize) -> Result<(), PostgreSqlError> {
-        validate_remaining(self.remaining(), count, "skip")?;
-        self.pos += count;
-        Ok(())
-    }
-
-    fn read_u16(&mut self, field: &'static str) -> Result<u16, PostgreSqlError> {
-        validate_remaining(self.remaining(), 2, field)?;
-        let bytes = [self.bytes[self.pos], self.bytes[self.pos + 1]];
-        self.pos += 2;
-        Ok(u16::from_be_bytes(bytes))
-    }
-
-    fn read_u32(&mut self, field: &'static str) -> Result<u32, PostgreSqlError> {
-        validate_remaining(self.remaining(), 4, field)?;
-        let bytes = [
-            self.bytes[self.pos],
-            self.bytes[self.pos + 1],
-            self.bytes[self.pos + 2],
-            self.bytes[self.pos + 3],
-        ];
-        self.pos += 4;
-        Ok(u32::from_be_bytes(bytes))
-    }
-
-    fn read_i32(&mut self, field: &'static str) -> Result<i32, PostgreSqlError> {
-        validate_remaining(self.remaining(), 4, field)?;
-        let bytes = [
-            self.bytes[self.pos],
-            self.bytes[self.pos + 1],
-            self.bytes[self.pos + 2],
-            self.bytes[self.pos + 3],
-        ];
-        self.pos += 4;
-        Ok(i32::from_be_bytes(bytes))
-    }
-
-    fn read_bytes(
-        &mut self,
-        count: usize,
-        field: &'static str,
-    ) -> Result<&'a [u8], PostgreSqlError> {
-        validate_remaining(self.remaining(), count, field)?;
-        let value = &self.bytes[self.pos..self.pos + count];
-        self.pos += count;
-        Ok(value)
-    }
-
-    fn read_cstring(&mut self, field: &'static str) -> Result<&'a str, PostgreSqlError> {
-        let relative_end = self.bytes[self.pos..]
-            .iter()
-            .position(|byte| *byte == 0)
-            .ok_or(PostgreSqlError::MissingNullTerminator { field })?;
-
-        let value = &self.bytes[self.pos..self.pos + relative_end];
-        self.pos += relative_end + 1;
-
-        str::from_utf8(value).map_err(|_| PostgreSqlError::InvalidUtf8)
-    }
 }
 
 #[cfg(test)]

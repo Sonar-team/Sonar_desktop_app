@@ -5,8 +5,7 @@
 
 use crate::{
     checks::application::quic::{
-        QuicCursor, validate_fixed_bit, validate_length_field, validate_long_header,
-        validate_payload_available, validate_version,
+        QuicCursor, extract_first_byte, extract_version, read_cid, read_pn_and_payload,
     },
     errors::application::quic::QuicError,
 };
@@ -171,79 +170,32 @@ pub struct CryptoFrame<'a> {
     pub data: &'a [u8],
 }
 
-/// Lit un Connection ID (longueur u8 + octets) sans copie.
-fn read_cid<'a>(cur: &mut QuicCursor<'a>) -> Result<ConnectionId<'a>, QuicError> {
-    let len = cur.take_u8()?;
-    let bytes = cur.take(len as usize)?;
-    Ok(ConnectionId { len, bytes })
-}
-
-/// Lit Length (varint), Packet Number puis le payload chiffré.
-///
-/// Remplit `length_field` et `packet_number` dans le header et retourne
-/// le payload emprunté (Length - PN length octets).
-fn read_pn_and_payload<'a>(
-    cur: &mut QuicCursor<'a>,
-    header: &mut QuicLongHeader<'a>,
-) -> Result<&'a [u8], QuicError> {
-    let length_field = cur.read_varint()?;
-    header.length_field = length_field;
-
-    // PN (1..=4 octets big-endian)
-    let pn_raw = cur.take(header.pn_length as usize)?;
-    let mut pn: u64 = 0;
-    for &b in pn_raw {
-        pn = (pn << 8) | (b as u64);
-    }
-    header.packet_number = Some(pn);
-
-    // Payload (length_field inclut PN + payload)
-    let payload_len = validate_length_field(length_field, header.pn_length)?;
-    validate_payload_available(cur.remaining(), payload_len)?;
-    cur.take(payload_len)
-}
-
 impl<'a> TryFrom<&'a [u8]> for QuicPacket<'a> {
     type Error = QuicError;
 
     fn try_from(buf: &'a [u8]) -> Result<Self, Self::Error> {
+        // Pas de pré-check de longueur global : QuicCursor borne déjà chaque
+        // lecture (aucun indexage non vérifié) et un pré-check changerait les
+        // payloads des erreurs Truncated { needed, remaining } existantes.
         let mut cur = QuicCursor::new(buf);
 
-        // 1) Octet 0 : Long Header bits
+        // 1) Octet 0 : Long Header bits (NotLongHeader prime sur FixedBitNotSet)
         let b0 = cur.take_u8()?;
-
-        let header_form_long = (b0 & 0b1000_0000) != 0;
-        validate_long_header(header_form_long)?;
-
-        let fixed_bit = (b0 & 0b0100_0000) != 0;
-        validate_fixed_bit(fixed_bit)?;
-
-        let lptype = (b0 >> 4) & 0b11; // Long Packet Type (2 bits)
-        let _reserved = (b0 >> 2) & 0b11; // reserved
-        let pn_len_code = b0 & 0b11; // PN length code
-        let pn_length = pn_len_code + 1; // 1..=4
-
-        let packet_type = match lptype {
-            0 => QuicPacketType::Initial,
-            1 => QuicPacketType::ZeroRtt,
-            2 => QuicPacketType::Handshake,
-            3 => QuicPacketType::Retry,
-            x => QuicPacketType::Unknown(x),
-        };
+        let (packet_type, pn_length) = extract_first_byte(b0)?;
 
         // 2) Version
-        let ver_bytes = cur.take(4)?;
-        let version = u32::from_be_bytes([ver_bytes[0], ver_bytes[1], ver_bytes[2], ver_bytes[3]]);
-        validate_version(version)?;
+        let version = extract_version(&mut cur)?;
 
         // 3) DCID / SCID
         let dcid = read_cid(&mut cur)?;
         let scid = read_cid(&mut cur)?;
 
-        // 4) En-tête commun assemblé (length_field/pn/… à compléter après)
+        // 4) En-tête commun assemblé (length_field/pn complétés par
+        //    read_pn_and_payload après ses validations)
         let mut header = QuicLongHeader {
-            header_form_long,
-            fixed_bit,
+            // extract_first_byte a validé que ces deux bits valent 1.
+            header_form_long: true,
+            fixed_bit: true,
             packet_type,
             version,
             dcid,

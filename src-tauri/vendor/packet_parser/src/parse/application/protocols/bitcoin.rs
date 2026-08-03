@@ -5,7 +5,8 @@
 
 use crate::{
     checks::application::bitcoin::{
-        check_magic_number, check_minimum_length, parse_command_bytes, validate_total_length,
+        check_magic_number, check_minimum_length, extract_checksum, extract_command,
+        extract_length, extract_payload, validate_total_length,
     },
     errors::application::bitcoin::BitcoinError,
 };
@@ -37,27 +38,6 @@ pub struct BitcoinPacket<'a> {
     pub payload: &'a [u8],
 }
 
-/// Extracts the command string from the packet (12 bytes, null-padded ASCII),
-/// borrowed from the input with trailing NUL padding trimmed.
-fn extract_command(payload: &[u8]) -> Result<&str, BitcoinError> {
-    parse_command_bytes(&payload[4..16])
-}
-
-/// Extracts the length of the payload from the header (4 bytes)
-fn extract_length(payload: &[u8]) -> u32 {
-    u32::from_le_bytes([payload[16], payload[17], payload[18], payload[19]])
-}
-
-/// Extracts the checksum from the header (4 bytes)
-fn extract_checksum(payload: &[u8]) -> [u8; 4] {
-    [payload[20], payload[21], payload[22], payload[23]]
-}
-
-/// Extracts the actual payload data as a borrowed slice
-fn extract_payload(payload: &[u8]) -> &[u8] {
-    &payload[24..]
-}
-
 /// Parses a Bitcoin packet from a given payload.
 ///
 /// # Arguments
@@ -72,14 +52,21 @@ impl<'a> TryFrom<&'a [u8]> for BitcoinPacket<'a> {
     type Error = BitcoinError;
 
     fn try_from(payload: &'a [u8]) -> Result<Self, Self::Error> {
+        // Pre-check: the full 24-byte header must be present.
         check_minimum_length(payload)?;
+
+        // Wire-order extraction. Each extract_* re-checks its own bounds, and
+        // length/checksum extraction cannot fail once the pre-check above has
+        // passed, so this ordering produces the same error as before on
+        // multi-fault packets.
         let magic = check_magic_number(payload)?;
         let command = extract_command(payload)?;
-        let checksum = extract_checksum(payload);
+        let length = extract_length(payload)?;
+        let checksum = extract_checksum(payload)?;
 
-        let length = extract_length(payload);
+        // Cross-field validation: announced length vs actual packet size.
         validate_total_length(payload, length)?;
-        let actual_payload = extract_payload(payload);
+        let actual_payload = extract_payload(payload)?;
 
         Ok(BitcoinPacket {
             magic,
@@ -106,7 +93,7 @@ mod tests {
             0x5D, 0xF6, 0xE0, 0xE2, // Checksum (example)
         ];
         let expected_checksum = [0x5D, 0xF6, 0xE0, 0xE2];
-        let extracted_checksum = extract_checksum(&payload);
+        let extracted_checksum = extract_checksum(&payload).expect("complete Bitcoin header");
         assert_eq!(extracted_checksum, expected_checksum);
     }
 
@@ -114,10 +101,9 @@ mod tests {
     fn test_extract_checksum_incorrect_length() {
         // Test with a payload shorter than required length for checksum extraction
         let payload = vec![0xF9, 0xBE, 0xB4]; // Only 3 bytes, should fail
-        let result = std::panic::catch_unwind(|| extract_checksum(&payload));
-        assert!(
-            result.is_err(),
-            "Expected panic due to short payload length"
+        assert_eq!(
+            extract_checksum(&payload),
+            Err(BitcoinError::PacketTooShort { actual: 3 })
         );
     }
 
@@ -288,18 +274,19 @@ mod tests {
                 0x00, // Command (12 bytes)
                 0x05, 0x00, 0x00, 0x00, // Length (4 bytes, little-endian, 5 in this case)
             ]),
-            5
+            Ok(5)
         );
     }
 
     #[test]
     fn test_extract_payload() {
+        let packet = [
+            0xF9, 0xBE, 0xB4, 0xD9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04,
+            0x05,
+        ];
         assert_eq!(
-            extract_payload(&[
-                0xF9, 0xBE, 0xB4, 0xD9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04,
-                0x05
-            ]),
+            extract_payload(&packet).expect("complete Bitcoin header"),
             &[0x01, 0x02, 0x03, 0x04, 0x05]
         );
     }

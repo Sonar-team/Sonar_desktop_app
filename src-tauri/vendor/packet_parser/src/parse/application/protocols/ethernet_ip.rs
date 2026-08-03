@@ -7,13 +7,15 @@ use core::convert::TryFrom;
 
 use crate::{
     checks::application::ethernet_ip::{
-        ENCAPSULATION_HEADER_LEN, ensure_available, validate_common_packet_format_min_length,
-        validate_cpf_consumed, validate_declared_length, validate_empty_command_data,
-        validate_interface_handle, validate_min_length, validate_options,
-        validate_protocol_version, validate_register_options_flags,
-        validate_register_session_length,
+        CPF_ITEM_HEADER_LEN, ENCAPSULATION_HEADER_LEN, extract_command, extract_cpf_item,
+        extract_interface_handle, extract_item_count, extract_length, extract_options,
+        extract_protocol_version, extract_register_options_flags, extract_sender_context,
+        extract_session_handle, extract_status, extract_timeout,
+        validate_common_packet_format_min_length, validate_cpf_consumed,
+        validate_empty_command_data, validate_min_length, validate_register_session_length,
     },
     errors::application::ethernet_ip::EtherNetIpError,
+    parse::application::protocols::bounded_capacity,
 };
 
 #[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
@@ -127,18 +129,17 @@ impl<'a> TryFrom<&'a [u8]> for EtherNetIpPacket<'a> {
     type Error = EtherNetIpError;
 
     fn try_from(packet: &'a [u8]) -> Result<Self, Self::Error> {
+        // Séquence canonique : pré-check de longueur, puis un extract_* par
+        // champ dans l'ordre du wire (l'ordre des validations est inchangé,
+        // les erreurs produites restent donc identiques).
         validate_min_length(packet)?;
 
-        let command = u16::from_le_bytes([packet[0], packet[1]]);
-        let command = EtherNetIpCommand::try_from(command)?;
-        let length = u16::from_le_bytes([packet[2], packet[3]]);
-        validate_declared_length(length, packet.len())?;
-
-        let session_handle = u32::from_le_bytes([packet[4], packet[5], packet[6], packet[7]]);
-        let status = u32::from_le_bytes([packet[8], packet[9], packet[10], packet[11]]);
-        let sender_context = &packet[12..20];
-        let options = u32::from_le_bytes([packet[20], packet[21], packet[22], packet[23]]);
-        validate_options(options)?;
+        let command = extract_command(packet)?;
+        let length = extract_length(packet, packet.len())?;
+        let session_handle = extract_session_handle(packet)?;
+        let status = extract_status(packet)?;
+        let sender_context = extract_sender_context(packet)?;
+        let options = extract_options(packet)?;
 
         let data = &packet[ENCAPSULATION_HEADER_LEN..];
         let command_data = parse_command_data(command, data)?;
@@ -190,11 +191,8 @@ fn parse_register_session<'a>(
 ) -> Result<EtherNetIpCommandData<'a>, EtherNetIpError> {
     validate_register_session_length(data)?;
 
-    let protocol_version = u16::from_le_bytes([data[0], data[1]]);
-    validate_protocol_version(protocol_version)?;
-
-    let options_flags = u16::from_le_bytes([data[2], data[3]]);
-    validate_register_options_flags(options_flags)?;
+    let protocol_version = extract_protocol_version(data)?;
+    let options_flags = extract_register_options_flags(data)?;
 
     Ok(EtherNetIpCommandData::RegisterSession {
         protocol_version,
@@ -207,29 +205,23 @@ fn parse_common_packet_format<'a>(
 ) -> Result<EtherNetIpCommonPacketFormat<'a>, EtherNetIpError> {
     validate_common_packet_format_min_length(data)?;
 
-    let interface_handle = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
-    validate_interface_handle(interface_handle)?;
-
-    let timeout = u16::from_le_bytes([data[4], data[5]]);
-    let item_count = u16::from_le_bytes([data[6], data[7]]) as usize;
+    let interface_handle = extract_interface_handle(data)?;
+    let timeout = extract_timeout(data)?;
+    let item_count = extract_item_count(data)? as usize;
 
     let mut offset = 8usize;
-    let mut items = Vec::with_capacity(item_count);
+    // Un item CPF pèse au minimum CPF_ITEM_HEADER_LEN octets (type_id 2 +
+    // length 2), ce qui borne la pré-allocation pilotée par item_count.
+    let remaining = data.len().saturating_sub(offset);
+    let mut items =
+        Vec::with_capacity(bounded_capacity(item_count, remaining, CPF_ITEM_HEADER_LEN));
 
     for _ in 0..item_count {
-        let item_header_end = offset + 4;
-        ensure_available("cpf_item_header", data.len(), item_header_end)?;
-
-        let type_id = u16::from_le_bytes([data[offset], data[offset + 1]]);
-        let length = u16::from_le_bytes([data[offset + 2], data[offset + 3]]) as usize;
-        offset = item_header_end;
-
-        let item_end = offset + length;
-        ensure_available("cpf_item_data", data.len(), item_end)?;
+        let (type_id, item_data, item_end) = extract_cpf_item(data, offset)?;
 
         items.push(EtherNetIpCpfItem {
             type_id,
-            data: &data[offset..item_end],
+            data: item_data,
         });
         offset = item_end;
     }

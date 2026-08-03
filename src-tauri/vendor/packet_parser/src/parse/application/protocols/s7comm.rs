@@ -30,10 +30,9 @@ use std::fmt;
 
 use crate::{
     checks::application::s7comm::{
-        validate_cotp_header_length, validate_data_length, validate_min_size,
-        validate_parameter_data_not_empty, validate_parameter_item_header,
-        validate_parameter_item_length, validate_parameter_length, validate_s7_header_length,
-        validate_s7any_length, validate_tpkt_version,
+        extract_cotp_header, extract_parameter_item, extract_s7_header, extract_tpkt_header,
+        validate_data_length, validate_min_size, validate_parameter_data_not_empty,
+        validate_parameter_length,
     },
     errors::application::s7comm::S7CommParseError,
 };
@@ -186,6 +185,9 @@ pub struct S7ParameterItem<'a> {
     /// Transport size (0x02 = BYTE, 0x04 = WORD, etc.)
     pub transport_size: u8,
 
+    /// Number of elements to read/write (in transport-size units)
+    pub count: u16,
+
     /// DB number (0 for non-DB areas)
     pub db_number: u16,
 
@@ -222,50 +224,21 @@ impl<'a> S7CommPacket<'a> {
     /// }
     /// ```
     fn parse(packet: &'a [u8]) -> Result<Self, S7CommParseError> {
+        // Canonical linear sequence: length pre-check, then one extract_* per
+        // header (each one checks the bytes of its own fields in checks),
+        // then cross validations, then construction. The check order matches
+        // the historical one so the same inputs yield the same errors.
         validate_min_size(packet.len(), Self::MIN_SIZES)?;
 
-        // Parse TPKT Header (4 bytes)
-        validate_tpkt_version(packet[0])?;
+        // TPKT Header (4 bytes)
+        let tpkt = extract_tpkt_header(packet)?;
 
-        let tpkt = TpktHeader {
-            version: packet[0],
-            reserved: packet[1],
-            length: u16::from_be_bytes([packet[2], packet[3]]),
-        };
+        // COTP Header (starts at offset 4)
+        let cotp = extract_cotp_header(packet)?;
 
-        // Parse COTP Header (starts at offset 4)
-        let cotp_len = packet[4] as usize;
-        validate_cotp_header_length(4 + cotp_len + 1, packet.len())?;
-
-        let cotp = CotpHeader {
-            length: packet[4],
-            pdu_type: packet[5],
-            destination_reference: u16::from_be_bytes([packet[6], packet[7]]),
-            source_reference: u16::from_be_bytes([packet[8], packet[9]]),
-            last_data_unit: (packet[10] & 0x80) != 0,
-        };
-
-        // S7 Header starts after TPKT + COTP
-        let s7_start = 4 + cotp.length as usize + 1; // +1 for the length byte itself
-        validate_s7_header_length(s7_start + 10, packet.len())?;
-
-        // First create the header without error fields
-        let mut s7_header = S7Header {
-            protocol_id: packet[s7_start],
-            rosctr: packet[s7_start + 1],
-            reserved: u16::from_be_bytes([packet[s7_start + 2], packet[s7_start + 3]]),
-            pduref: u16::from_be_bytes([packet[s7_start + 4], packet[s7_start + 5]]),
-            parameter_length: u16::from_be_bytes([packet[s7_start + 6], packet[s7_start + 7]]),
-            data_length: u16::from_be_bytes([packet[s7_start + 8], packet[s7_start + 9]]),
-            error_class: None,
-            error_code: None,
-        };
-
-        // Update error fields if this is an ACK/Error message
-        if s7_header.rosctr == 0x03 && s7_start + 11 < packet.len() {
-            s7_header.error_class = Some(packet[s7_start + 10]);
-            s7_header.error_code = Some(packet[s7_start + 11]);
-        }
+        // S7 Header starts after TPKT + COTP (+1 for the length byte itself)
+        let s7_start = 4 + cotp.length as usize + 1;
+        let s7_header = extract_s7_header(packet, s7_start)?;
 
         // The parameter section starts right after the S7 header (10 bytes for header + 2 for error class/code if present)
         let s7_header_length = if s7_header.rosctr == 0x03 { 12 } else { 10 };
@@ -332,48 +305,9 @@ impl<'a> S7CommPacket<'a> {
         let mut offset = 2;
 
         for _ in 0..item_count {
-            validate_parameter_item_header(offset, data.len())?;
-
-            let spec_type = data[offset];
-            let length = data[offset + 1] as usize;
-
-            validate_parameter_item_length(offset, length, data.len())?;
-
-            if spec_type == 0x12 && length >= 0x0A {
-                validate_s7any_length(offset, data.len())?;
-
-                let syntax_id = data[offset + 2];
-                let transport_size = data[offset + 3];
-                let db_number = u16::from_be_bytes([data[offset + 5], data[offset + 6]]);
-                let area = data[offset + 7];
-                let address = ((data[offset + 8] as u32) << 16)
-                    | ((data[offset + 9] as u32) << 8)
-                    | (data[offset + 10] as u32);
-
-                items.push(S7ParameterItem {
-                    spec_type,
-                    length: length as u8,
-                    syntax_id,
-                    transport_size,
-                    db_number,
-                    area,
-                    address,
-                    raw: Some(&data[offset..offset + 2 + length]),
-                });
-            } else {
-                items.push(S7ParameterItem {
-                    spec_type,
-                    length: length as u8,
-                    syntax_id: 0,
-                    transport_size: 0,
-                    db_number: 0,
-                    area: 0,
-                    address: 0,
-                    raw: Some(&data[offset..offset + 2 + length]),
-                });
-            }
-
-            offset += 2 + length;
+            let item = extract_parameter_item(data, offset)?;
+            offset += 2 + item.length as usize;
+            items.push(item);
         }
 
         // Important : certains paquets ont item_count=0 => OK.
@@ -419,6 +353,41 @@ mod tests {
         );
 
         // Add more assertions based on the expected values from your packet
+    }
+
+    /// Golden test : trame 11 de
+    /// pcaps_exemple/protocols/s7comm/s7comm_varservice_libnodavedemo.pcap,
+    /// requete Read Var "DB 1.DBX 0.0 BYTE 64". Valeurs attendues verifiees
+    /// avec Wireshark (tshark -O s7comm).
+    #[test]
+    fn test_s7comm_read_var_real_frame_decodes_s7any_item() {
+        let hex_str = "0300001f02f080320100000000000e00000401120a10020040000184000000";
+        let bytes = hex::decode(hex_str).expect("Failed to decode hex string");
+
+        let packet = S7CommPacket::try_from(&bytes[..]).expect("valid Read Var frame");
+
+        assert_eq!(packet.tpkt.length, 0x1f);
+        assert_eq!(packet.cotp.pdu_type, 0xf0);
+        // DT TPDU : pas de references, bit EOT positionne.
+        assert_eq!(packet.cotp.destination_reference, 0);
+        assert_eq!(packet.cotp.source_reference, 0);
+        assert!(packet.cotp.last_data_unit);
+
+        assert_eq!(packet.s7_header.protocol_id, 0x32);
+        assert_eq!(packet.s7_header.rosctr, 0x01); // Job
+        assert_eq!(packet.s7_header.pduref, 0);
+        assert_eq!(packet.s7_header.parameter_length, 14);
+        assert_eq!(packet.s7_header.data_length, 0);
+
+        assert_eq!(packet.parameter.function, 0x04); // Read Var
+        assert_eq!(packet.parameter.items.len(), 1);
+        let item = &packet.parameter.items[0];
+        assert_eq!(item.syntax_id, 0x10); // S7ANY
+        assert_eq!(item.transport_size, 0x02); // BYTE
+        assert_eq!(item.count, 64);
+        assert_eq!(item.db_number, 1);
+        assert_eq!(item.area, 0x84); // Data blocks (DB)
+        assert_eq!(item.address, 0);
     }
 
     #[test]
