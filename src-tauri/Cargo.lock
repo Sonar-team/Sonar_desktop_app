@@ -1621,7 +1621,7 @@ dependencies = [
  "js-sys",
  "log",
  "wasm-bindgen",
- "windows-core 0.61.2",
+ "windows-core 0.62.2",
 ]
 
 [[package]]
@@ -3450,6 +3450,8 @@ dependencies = [
 [[package]]
 name = "sonar-flows-core"
 version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41e0f517638c592ebf37cebdb8d724d8cd8dad057b22458fcf2c6fc36a074a89"
 dependencies = [
  "chrono",
  "csv",
