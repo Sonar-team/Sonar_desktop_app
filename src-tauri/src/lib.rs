@@ -33,6 +33,7 @@ use crate::{
             import_matrix_files, is_matrix_empty, resolve_label_conflicts,
         },
         net_capture::{reset_capture, set_filter},
+        project::{open_project, save_project},
     },
     setup::{
         about::{about_message, changelog_message},
@@ -208,7 +209,9 @@ pub fn run() -> Result<(), tauri::Error> {
             import_matrix_file,
             import_matrix_files,
             clear_label_store,
-            is_matrix_empty
+            is_matrix_empty,
+            save_project,
+            open_project
         ])
         .run(tauri::generate_context!())
 }

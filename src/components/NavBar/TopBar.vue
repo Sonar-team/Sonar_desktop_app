@@ -16,6 +16,8 @@
     </button>
 
     <button type="button" class="image-btn" @click="triggerSave" title="Sauvegarder (ctrl+s)" aria-label="Sauvegarder la matrice de flux">💾</button>
+    <button type="button" class="image-btn" @click="saveProject" title="Enregistrer le projet (.sonar)" aria-label="Enregistrer le projet">🗃️</button>
+    <button type="button" class="image-btn" @click="openProject" :disabled="isRunning || captureStore.hasData" title="Ouvrir un projet (.sonar)" aria-label="Ouvrir un projet">📂</button>
     <button type="button" class="image-btn" @click="SaveLabels" title="Exporter les labels" aria-label="Exporter les labels">🏷️</button>
     <button type="button" class="image-btn" @click="handleLabelsClick" :disabled="isRunning" title="Gérer les labels" aria-label="Gérer les labels">🗂️</button>
 
@@ -31,7 +33,7 @@
 <script lang="ts">
 import { Channel, invoke } from '@tauri-apps/api/core';
 import { info, error } from '@tauri-apps/plugin-log';
-import { save } from '@tauri-apps/plugin-dialog';
+import { open, save } from '@tauri-apps/plugin-dialog';
 
 import { displayCaptureError } from '../../errors/capture'; // Gestion des erreurs propre
 import { getCurrentDate } from '../../utils/time';
@@ -198,7 +200,61 @@ export default {
     async triggerSave() {
       info("trigger save")
       this.SaveAsCsv();
-      
+
+    },
+    async saveProject() {
+      info("Enregistrement du projet");
+      await this.withImportLock(async () => {
+        try {
+          const response = await save({
+            filters: [{ name: 'Projet SONAR', extensions: ['sonar'] }],
+            title: 'Enregistrer le projet',
+            defaultPath: getCurrentDate() + '_projet.sonar'
+          });
+
+          if (!response) {
+            info("Aucun chemin sélectionné");
+            return;
+          }
+          await invoke('save_project', { path: response });
+          info("Projet enregistré");
+        } catch (err) {
+          error(`Erreur enregistrement projet: ${err}`);
+          await displayCaptureError(err);
+        }
+      });
+    },
+    async openProject() {
+      info("Ouverture d'un projet");
+      await this.withImportLock(async () => {
+        try {
+          const response = await open({
+            multiple: false,
+            filters: [{ name: 'Projet SONAR', extensions: ['sonar'] }],
+            title: 'Ouvrir un projet'
+          });
+
+          if (!response) {
+            info("Aucun projet sélectionné");
+            return;
+          }
+          // Même discipline que l'import de matrice : un Channel Tauri est à
+          // usage unique, on en crée un neuf par invoke ; pendant une capture
+          // live le backend passe par le channel de la capture.
+          const store = useCaptureStore();
+          const onEvent = new Channel<CaptureEvent>();
+          if (!store.isRunning) {
+            store.setChannel(onEvent);
+          }
+          store.clearImportProgress();
+          await invoke('open_project', { path: response, onEvent });
+          await store.refreshHasData();
+          info("Projet ouvert");
+        } catch (err) {
+          error(`Erreur ouverture projet: ${err}`);
+          await displayCaptureError(err);
+        }
+      });
     },
     async reset() {
       info("reset")

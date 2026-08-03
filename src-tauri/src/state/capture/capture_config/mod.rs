@@ -129,9 +129,21 @@ impl CaptureConfig {
         let content = serde_json::to_string_pretty(self).map_err(|err| {
             CaptureError::ConfigPersistence(format!("sérialisation JSON impossible: {err}"))
         })?;
-        fs::write(&path, content).map_err(|err| {
+        // Écriture atomique (temporaire + rename), même discipline que les
+        // exports CSV : une coupure en pleine écriture ne doit jamais laisser
+        // un JSON tronqué qui ferait échouer la restauration au prochain
+        // démarrage (#159).
+        let tmp_path = path.with_extension("json.tmp");
+        fs::write(&tmp_path, content).map_err(|err| {
             CaptureError::ConfigPersistence(format!(
                 "écriture {} impossible: {err}",
+                tmp_path.display()
+            ))
+        })?;
+        fs::rename(&tmp_path, &path).map_err(|err| {
+            let _ = fs::remove_file(&tmp_path);
+            CaptureError::ConfigPersistence(format!(
+                "renommage vers {} impossible: {err}",
                 path.display()
             ))
         })
