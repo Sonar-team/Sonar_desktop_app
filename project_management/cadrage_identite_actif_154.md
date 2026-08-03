@@ -96,12 +96,26 @@ fix amont → publier 0.5.x sur crates.io → re-vendorer → vet, comme pour
 packet_parser 9. Le desktop suit (contrat TS, UI, config). Prévoir la
 même mécanique de PR que #183.
 
-## Décisions demandées à Cyprien
+## Arbitrages de Cyprien — 04/08/2026
 
-1. Tranche 1 : OK pour clé de nœud `(vlan, ip)` et id stable ? (le
-   graphe changera visuellement sur les relevés multi-VLAN existants)
-2. Tranche 2 : contexte par relevé en préambule `#SFMS` + par flux via
-   `origin` généralisé — d'accord pour le garder HORS de la clé matrice ?
-3. Tranche 3 : reste dans #154 ou part dans #164 ?
-4. Saisie du site/capteur : config de capture (simple) ou notion de
-   « projet » du `.sonar` (plus cohérent mais couple #154 et #159) ?
+1. **Clé de nœud `(vlan, ip)` et id stable : validé.** Rationale : le
+   VLAN est spécifique au 802.1Q, il fait partie de l'identité observée.
+2. **Site/capteur HORS de la clé : validé.** Rationale décisive : le
+   même paquet peut être vu par plusieurs capteurs — mettre le capteur
+   dans la clé empêcherait de reconnaître ce recouvrement (dédup et
+   corrélation inter-capteurs).
+3. Tranche 3 : périmètre en cours de discussion (#154 vs epic #164).
+4. **Saisie du site/capteur : au moment de l'arrêt (stop) ou de
+   l'enregistrement, à la Wireshark** — pas de configuration a priori.
+   Implication : un dialogue de qualification du relevé au stop/save
+   (site, capteur ; interface déjà connue), valeurs écrites dans le
+   préambule `#SFMS` et le `manifest.json` du `.sonar`, mémorisées comme
+   proposition par défaut pour la fois suivante.
+
+## Note d'implémentation
+
+Le dépôt source de sonar-flows-core est ce même repo :
+`sonar-rust/crates/sonar-flows-core` (workspace avec sonar-flows-cli et
+fuzz), publié sur crates.io par `.github/workflows/publish-crates.yml`.
+Cycle tranche 1 : PR sur `sonar-rust` (0.5.0) → publication → re-vendor
+`src-tauri` → vet, comme pour packet_parser 9 (PR #183).
