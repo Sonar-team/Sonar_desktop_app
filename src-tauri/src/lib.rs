@@ -33,6 +33,7 @@ use crate::{
             import_matrix_files, is_matrix_empty, resolve_label_conflicts,
         },
         net_capture::{reset_capture, set_filter},
+        project::{get_recovery_offer, is_session_dirty, open_project, save_project},
     },
     setup::{
         about::{about_message, changelog_message},
@@ -135,6 +136,10 @@ pub fn run() -> Result<(), tauri::Error> {
         )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        // Récents et préférences UI uniquement : le plugin écrit en
+        // `fs::write` direct (non atomique, vérifié dans la source vendorée
+        // 2.4.4) — la config de capture reste sur notre persistance atomique.
+        .plugin(tauri_plugin_store::Builder::default().build())
         .manage(Arc::new(Mutex::new(CaptureState::new())))
         .manage(Arc::new(Mutex::new(FlowMatrix::new())))
         .manage(Arc::new(Mutex::new(GraphData::new())))
@@ -151,6 +156,11 @@ pub fn run() -> Result<(), tauri::Error> {
                 read_labels(app.handle())?;
 
                 restore_persisted_capture_config(app.handle());
+
+                // Persistance de session (#159) : offre de récupération
+                // figée AVANT la pose de la sentinelle, puis autosave.
+                let recovery_offer = commandes::project::init_session_persistence(app.handle());
+                app.manage(recovery_offer);
 
                 let _ = start_cpu_monitor(app.handle().clone());
 
@@ -208,7 +218,20 @@ pub fn run() -> Result<(), tauri::Error> {
             import_matrix_file,
             import_matrix_files,
             clear_label_store,
-            is_matrix_empty
+            is_matrix_empty,
+            save_project,
+            open_project,
+            is_session_dirty,
+            get_recovery_offer
         ])
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())?
+        .run(|app_handle, event| {
+            // Fermeture propre : sentinelle retirée, le prochain démarrage
+            // ne proposera pas de récupération (#159). Un crash ne passe pas
+            // ici — c'est exactement le signal recherché.
+            if let tauri::RunEvent::Exit = event {
+                commandes::project::remove_session_lock(app_handle);
+            }
+        });
+    Ok(())
 }

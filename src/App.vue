@@ -49,9 +49,12 @@ html, body {
 
 <script>
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { info } from '@tauri-apps/plugin-log';
+import { Channel, invoke } from '@tauri-apps/api/core';
+import { ask } from '@tauri-apps/plugin-dialog';
+import { error, info } from '@tauri-apps/plugin-log';
 import { useCaptureStore } from './store/capture'
 import { requestAppExit } from './utils/appExit';
+import { displayCaptureError } from './errors/capture';
 
 const appWindow = getCurrentWebviewWindow()
 
@@ -75,6 +78,29 @@ export default {
       event.preventDefault();
       await requestAppExit();
     });
+
+    // Récupération après crash (#159) : si la session précédente ne s'est
+    // pas fermée proprement, le backend propose son dernier autosave.
+    try {
+      const offer = await invoke('get_recovery_offer');
+      if (offer) {
+        const restore = await ask(
+          "La session précédente ne s'est pas fermée correctement.\n" +
+            'Récupérer le dernier relevé sauvegardé automatiquement ?',
+          { title: 'SONAR', kind: 'warning' },
+        );
+        if (restore) {
+          const onEvent = new Channel();
+          this.captureStore.setChannel(onEvent);
+          await invoke('open_project', { path: offer, onEvent });
+          await this.captureStore.refreshHasData();
+          info('Relevé récupéré depuis l\'autosave');
+        }
+      }
+    } catch (recoveryError) {
+      error(`Récupération impossible: ${String(recoveryError)}`);
+      await displayCaptureError(recoveryError);
+    }
   },
 
   beforeUnmount() {

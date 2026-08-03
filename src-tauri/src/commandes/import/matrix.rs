@@ -410,6 +410,11 @@ pub fn import_matrix_files(
 
     import_guard.verify_current("commit de l'import de matrice")?;
 
+    // Le commit est certain à partir d'ici (le swap est une pure
+    // affectation) : relevé marqué modifié avant de prendre les verrous de
+    // données, `CaptureState` ne s'imbrique jamais avec eux (#166, #159).
+    capture_state.lock()?.mark_dirty();
+
     // Même ordre de verrouillage que convert_from_pcap_list et net_capture
     // (matrice -> graph -> label_store) pour éviter un interblocage ABBA.
     let mut matrice_guard = matrice.lock()?;

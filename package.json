@@ -20,6 +20,7 @@
     "@tauri-apps/plugin-os": "2.3.2",
     "@tauri-apps/plugin-process": "2.3.1",
     "@tauri-apps/plugin-shell": "2.3.5",
+    "@tauri-apps/plugin-store": "2.4.4",
     "@sigma/edge-curve": "3.1.0",
     "@sigma/export-image": "3.0.0",
     "@sigma/node-border": "3.0.0",

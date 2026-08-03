@@ -82,6 +82,10 @@ pub fn start_capture(
             let status = {
                 let mut state_lock = state.lock()?;
                 state_lock.complete_start(session_id, capture, on_event)?;
+                // Une capture démarrée produit un relevé : à marquer modifié
+                // dès maintenant (#159) — le pipeline n'a pas à toucher cet
+                // état à chaque paquet.
+                state_lock.mark_dirty();
                 state_lock.status()
             };
             // Le coordinateur ne peut courir qu'après l'attachement. Si les
@@ -193,10 +197,15 @@ pub fn reset_capture(
     reset_guard.verify_current("commit de la réinitialisation")?;
 
     // Ordre global partagé par les imports : matrice -> graphe.
-    let mut matrix = matrix.lock()?;
-    let mut graph = graph.lock()?;
-    matrix.clear();
-    graph.clear();
+    {
+        let mut matrix = matrix.lock()?;
+        let mut graph = graph.lock()?;
+        matrix.clear();
+        graph.clear();
+    }
+    // Relevé vide : plus rien à perdre, la confirmation avant fermeture ne
+    // doit plus se déclencher (#159). Verrous de données relâchés d'abord (#166).
+    capture_state.lock()?.mark_clean();
     Ok(())
 }
 

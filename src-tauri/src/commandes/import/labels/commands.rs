@@ -154,6 +154,9 @@ pub fn import_label_file(
     // Mémorise les conflits pour le module d'arbitrage.
     conflict_store.lock()?.conflicts = conflicts.clone();
 
+    // Le store de labels a été remplacé : relevé modifié (#159).
+    capture_state.lock()?.mark_dirty();
+
     Ok(LabelImportReport { applied, conflicts })
 }
 
@@ -221,6 +224,12 @@ pub fn resolve_label_conflicts(
         });
         (store.conflicts.clone(), graph_updates)
     };
+
+    // Arbitrages appliqués : relevé modifié, marqué hors des verrous de
+    // données (#166, #159).
+    if !resolutions.is_empty() {
+        capture_state.lock()?.mark_dirty();
+    }
 
     // Best-effort : une erreur d'envoi ne remet pas en cause la transaction ;
     // le front se resynchronisera sur l'état backend cohérent.

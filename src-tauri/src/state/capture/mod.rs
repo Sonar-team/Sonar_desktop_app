@@ -53,6 +53,16 @@ pub struct CaptureState {
     /// (`ImportGuard::acquire`) : une annulation périmée ne peut pas
     /// interrompre l'import suivant.
     import_cancel: Arc<std::sync::atomic::AtomicBool>,
+    /// Révision du relevé : incrémentée à chaque opération qui produit ou
+    /// modifie des données (démarrage de capture, imports, édition de
+    /// labels). Comparée à `saved_revision` pour savoir si du travail non
+    /// enregistré serait perdu (#159). Granularité volontairement à
+    /// l'opération, pas au paquet : le pipeline de capture n'a pas à
+    /// verrouiller cet état.
+    revision: u64,
+    /// Révision au moment du dernier enregistrement de projet (ou du
+    /// dernier point où il n'y avait rien à perdre : reset, ouverture).
+    saved_revision: u64,
 }
 
 impl CaptureState {
@@ -68,7 +78,37 @@ impl CaptureState {
             filter: None,
             on_event: None,
             import_cancel: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            revision: 0,
+            saved_revision: 0,
         }
+    }
+
+    /// Marque le relevé comme modifié depuis le dernier enregistrement.
+    pub fn mark_dirty(&mut self) {
+        self.revision += 1;
+    }
+
+    /// Révision courante, à capturer AVANT un enregistrement long : si des
+    /// modifications arrivent pendant l'écriture, `mark_clean_at` avec cette
+    /// valeur les laisse comptées comme non enregistrées.
+    pub fn current_revision(&self) -> u64 {
+        self.revision
+    }
+
+    /// Marque comme enregistré tout ce qui existait à `revision`.
+    pub fn mark_clean_at(&mut self, revision: u64) {
+        self.saved_revision = revision;
+    }
+
+    /// Marque l'état courant comme n'ayant rien à perdre (reset, projet
+    /// fraîchement ouvert ou enregistré à l'instant).
+    pub fn mark_clean(&mut self) {
+        self.saved_revision = self.revision;
+    }
+
+    /// Vrai si des données seraient perdues sans enregistrement.
+    pub fn is_dirty(&self) -> bool {
+        self.revision != self.saved_revision
     }
 
     /// Demande l'annulation de l'import en cours. Sans import actif
@@ -385,6 +425,35 @@ mod tests {
     use super::*;
     use crossbeam::channel::bounded;
     use std::{thread, time::Duration};
+
+    #[test]
+    fn new_state_is_clean() {
+        assert!(!CaptureState::new().is_dirty());
+    }
+
+    #[test]
+    fn mark_dirty_then_clean_round_trip() {
+        let mut state = CaptureState::new();
+        state.mark_dirty();
+        assert!(state.is_dirty());
+        state.mark_clean();
+        assert!(!state.is_dirty());
+    }
+
+    #[test]
+    fn modifications_during_a_save_stay_dirty() {
+        let mut state = CaptureState::new();
+        state.mark_dirty();
+        let snapshot = state.current_revision();
+        // Une mutation arrive pendant l'écriture du projet…
+        state.mark_dirty();
+        // …l'enregistrement ne blanchit que ce qui existait au snapshot.
+        state.mark_clean_at(snapshot);
+        assert!(
+            state.is_dirty(),
+            "les modifications postérieures au snapshot doivent rester non enregistrées"
+        );
+    }
 
     #[test]
     fn reap_without_capture_does_nothing() {

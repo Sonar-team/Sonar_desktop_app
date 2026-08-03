@@ -588,6 +588,9 @@ pub fn convert_from_pcap_list(
     info!("[convert_from_pcap_list] FIN traitement liste PCAP");
 
     import_guard.verify_current("commit de l'import PCAP")?;
+    // Le commit est certain à partir d'ici : relevé marqué modifié avant de
+    // prendre les verrous de données (#166, #159).
+    capture_state.lock()?.mark_dirty();
     let mut matrice_guard = matrice.lock()?;
     let mut graph_guard = graph.lock()?;
     #[cfg(feature = "capture_timing")]

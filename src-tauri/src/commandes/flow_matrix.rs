@@ -56,7 +56,13 @@ pub(crate) fn resync_and_notify(
 
     // Best-effort : une erreur d'envoi ne remet pas en cause la mutation,
     // l'appelant reçoit de toute façon les updates dans la réponse.
-    let on_event = capture_state.lock()?.on_event.clone();
+    // Tous les appelants sont des mutations de labels : le relevé est marqué
+    // modifié ici, une fois les verrous de données relâchés (#166, #159).
+    let on_event = {
+        let mut state = capture_state.lock()?;
+        state.mark_dirty();
+        state.on_event.clone()
+    };
     if let Some(on_event) = on_event {
         for update in &updates {
             if let Err(e) = on_event.send(CaptureEvent::Graph { update }) {

@@ -14,6 +14,7 @@
     "npm:@tauri-apps/plugin-os@2.3.2": "2.3.2",
     "npm:@tauri-apps/plugin-process@2.3.1": "2.3.1",
     "npm:@tauri-apps/plugin-shell@2.3.5": "2.3.5",
+    "npm:@tauri-apps/plugin-store@2.4.4": "2.4.4",
     "npm:@vitejs/plugin-vue@6.0.7": "6.0.7_vite@8.0.16__yaml@2.9.0_vue@3.5.38__typescript@6.0.3_typescript@6.0.3",
     "npm:color-convert@3.1.3": "3.1.3",
     "npm:eslint-plugin-vue@^10.9.2": "10.9.2_@typescript-eslint+parser@8.64.0__eslint@9.39.5__typescript@6.0.3_eslint@9.39.5_vue-eslint-parser@10.4.1__eslint@9.39.5_typescript@6.0.3",
@@ -444,6 +445,12 @@
     },
     "@tauri-apps/plugin-shell@2.3.5": {
       "integrity": "sha512-jewtULhiQ7lI7+owCKAjc8tYLJr92U16bPOeAa472LHJdgaibLP83NcfAF2e+wkEcA53FxKQAZ7byDzs2eeizg==",
+      "dependencies": [
+        "@tauri-apps/api"
+      ]
+    },
+    "@tauri-apps/plugin-store@2.4.4": {
+      "integrity": "sha512-oxSMaj/QpVfJcBMYX5aOQV94fWvga0MwQMfD6TLlbK2dh+ShPWAzefd8HWXhvOKjPRJdGVAkW7ZGO76JzzjaDA==",
       "dependencies": [
         "@tauri-apps/api"
       ]
@@ -1693,6 +1700,7 @@
         "npm:@tauri-apps/plugin-os@2.3.2",
         "npm:@tauri-apps/plugin-process@2.3.1",
         "npm:@tauri-apps/plugin-shell@2.3.5",
+        "npm:@tauri-apps/plugin-store@2.4.4",
         "npm:@vitejs/plugin-vue@6.0.7",
         "npm:color-convert@3.1.3",
         "npm:eslint-plugin-vue@^10.9.2",

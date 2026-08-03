@@ -55,6 +55,9 @@ Deno.test("capability principale - uniquement les commandes frontend utilisées"
     "log:allow-log",
     "process:allow-exit",
     "fs:allow-write-file",
+    // Récents/préférences UI via tauri-plugin-store (#159). `store:default`
+    // n'expose que les opérations sur les stores de l'app, pas le FS.
+    "store:default",
   ]);
   assertEquals("fs" in desktopCapability, false);
 });
