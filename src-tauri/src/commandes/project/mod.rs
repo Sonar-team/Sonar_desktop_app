@@ -75,9 +75,10 @@ struct ProjectCaptureSettings {
 }
 
 /// Enregistre le relevé courant comme projet `.sonar` à `path`.
+/// Générique sur le runtime pour être testable avec le harnais mock de Tauri.
 #[command(async)]
-pub fn save_project(
-    app: AppHandle,
+pub fn save_project<R: tauri::Runtime>(
+    app: AppHandle<R>,
     matrice: State<'_, Arc<Mutex<FlowMatrix>>>,
     capture_state: State<'_, Arc<Mutex<CaptureState>>>,
     path: String,
@@ -143,8 +144,8 @@ pub fn save_project(
 /// courant (matrice, graphe, labels, config) par celui du projet.
 #[command(async)]
 #[allow(clippy::too_many_arguments)]
-pub fn open_project(
-    app: AppHandle,
+pub fn open_project<R: tauri::Runtime>(
+    app: AppHandle<R>,
     matrice: State<'_, Arc<Mutex<FlowMatrix>>>,
     graph: State<'_, Arc<Mutex<GraphData>>>,
     label_store: State<'_, Arc<Mutex<LabelStore>>>,
@@ -406,7 +407,153 @@ fn unique_temp_dir(label: &str) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commandes::import::import_matrix_files;
     use crate::state::flow_matrix::FlowMatrixRow;
+    use tauri::{
+        ipc::{CallbackFn, InvokeBody, InvokeResponseBody},
+        test::{INVOKE_KEY, get_ipc_response, mock_builder, mock_context, noop_assets},
+        webview::InvokeRequest,
+    };
+
+    fn invoke_request(cmd: &str, body: serde_json::Value) -> InvokeRequest {
+        InvokeRequest {
+            cmd: cmd.into(),
+            callback: CallbackFn(0),
+            error: CallbackFn(1),
+            url: if cfg!(any(windows, target_os = "android")) {
+                "http://tauri.localhost"
+            } else {
+                "tauri://localhost"
+            }
+            .parse()
+            .unwrap(),
+            body: InvokeBody::Json(body),
+            headers: Default::default(),
+            invoke_key: INVOKE_KEY.to_string(),
+        }
+    }
+
+    /// Critère d'acceptation n°1 de #159, joué via les vraies commandes
+    /// IPC : un relevé importé puis enregistré comme projet se rouvre avec
+    /// une matrice identique après un « redémarrage » (état vidé), et le
+    /// suivi dirty suit chaque étape (import → modifié, save/open → propre).
+    #[test]
+    fn tauri_round_trip_save_open_restores_the_same_survey() {
+        let matrix = Arc::new(Mutex::new(FlowMatrix::new()));
+        let graph = Arc::new(Mutex::new(crate::state::graph::GraphData::new()));
+        let labels = Arc::new(Mutex::new(LabelStore::new()));
+        let pcinfo = Arc::new(Mutex::new(PcInfoLabel::new()));
+        let capture_state = Arc::new(Mutex::new(CaptureState::new()));
+        let conflicts = Arc::new(Mutex::new(
+            crate::commandes::import::LabelConflictStore::default(),
+        ));
+
+        let app = mock_builder()
+            .channel_interceptor(|_webview, _callback, _index, _body| true)
+            .manage(Arc::clone(&matrix))
+            .manage(Arc::clone(&graph))
+            .manage(Arc::clone(&labels))
+            .manage(Arc::clone(&pcinfo))
+            .manage(Arc::clone(&capture_state))
+            .manage(Arc::clone(&conflicts))
+            .invoke_handler(tauri::generate_handler![
+                save_project,
+                open_project,
+                is_session_dirty
+            ])
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let webview = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+
+        let read_dirty = |webview: &tauri::WebviewWindow<_>| -> bool {
+            match get_ipc_response(
+                webview,
+                invoke_request("is_session_dirty", serde_json::json!({})),
+            )
+            .expect("is_session_dirty doit répondre")
+            {
+                InvokeResponseBody::Json(json) => serde_json::from_str(&json).unwrap(),
+                other => panic!("réponse inattendue: {other:?}"),
+            }
+        };
+
+        assert!(!read_dirty(&webview), "état initial propre");
+
+        // 1) Relevé peuplé par le VRAI chemin d'import (appel direct de la
+        // fonction de commande : les macros IPC d'un autre module ne sont
+        // pas visibles ici, la logique exercée est la même).
+        use tauri::Manager;
+        let source =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("test_files/20260703_NP_Matrice.csv");
+        import_matrix_files(
+            vec![source.to_string_lossy().into_owned()],
+            app.state(),
+            app.state(),
+            app.state(),
+            app.state(),
+            Channel::new(|_| Ok(())),
+        )
+        .expect("l'import de la matrice de test doit réussir");
+
+        let rows_before = matrix.lock().unwrap().to_flat_vec();
+        assert!(
+            !rows_before.is_empty(),
+            "la fixture doit peupler la matrice"
+        );
+        let nodes_before = graph.lock().unwrap().nodes.len();
+        assert!(read_dirty(&webview), "un import marque le relevé modifié");
+
+        // 2) Enregistrement du projet.
+        let dir = unique_temp_dir("test_e2e");
+        let project_path = dir.join("relevé de test.sonar");
+        get_ipc_response(
+            &webview,
+            invoke_request(
+                "save_project",
+                serde_json::json!({ "path": project_path.to_string_lossy() }),
+            ),
+        )
+        .expect("save_project doit réussir");
+        assert!(
+            !read_dirty(&webview),
+            "un enregistrement blanchit le relevé"
+        );
+
+        // 3) « Redémarrage » : état vidé puis projet rouvert.
+        matrix.lock().unwrap().clear();
+        graph.lock().unwrap().clear();
+        labels.lock().unwrap().clear();
+        get_ipc_response(
+            &webview,
+            invoke_request(
+                "open_project",
+                serde_json::json!({
+                    "path": project_path.to_string_lossy(),
+                    "onEvent": "__CHANNEL__:2",
+                }),
+            ),
+        )
+        .expect("open_project doit réussir");
+
+        assert_eq!(
+            matrix.lock().unwrap().to_flat_vec(),
+            rows_before,
+            "la matrice rouverte doit être identique à celle enregistrée"
+        );
+        assert_eq!(
+            graph.lock().unwrap().nodes.len(),
+            nodes_before,
+            "le graphe est reconstruit avec les mêmes nœuds"
+        );
+        assert!(
+            !read_dirty(&webview),
+            "un projet fraîchement ouvert n'a rien à perdre"
+        );
+
+        fs::remove_dir_all(&dir).ok();
+    }
 
     fn sample_row(port_destination: u16) -> FlowMatrixRow {
         FlowMatrixRow {

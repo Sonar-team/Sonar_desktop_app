@@ -63,8 +63,9 @@ complète en commentaire de #159.
 
 ## Definition of Done (critères de #159)
 
-- [ ] Un projet sauvegardé se rouvre avec matrice, graphe, labels et
-  métadonnées identiques.
+- [x] Un projet sauvegardé se rouvre avec matrice, graphe, labels et
+  métadonnées identiques. *(test bout-en-bout via les vraies commandes
+  IPC : import réel → save → état vidé → open → matrice identique)*
 - [x] Une écriture interrompue ne corrompt jamais le dernier projet valide.
   *(phase A.1 : `.part` + rename, testé)*
 - [ ] Un crash simulé propose la récupération du dernier checkpoint.

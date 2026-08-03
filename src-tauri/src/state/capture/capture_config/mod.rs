@@ -98,7 +98,9 @@ impl CaptureConfig {
         Ok(())
     }
 
-    pub fn load_persisted(app: &AppHandle) -> Result<Option<Self>, CaptureError> {
+    pub fn load_persisted<R: tauri::Runtime>(
+        app: &AppHandle<R>,
+    ) -> Result<Option<Self>, CaptureError> {
         let path = persisted_config_path(app)?;
         if !path.exists() {
             return Ok(None);
@@ -114,7 +116,10 @@ impl CaptureConfig {
         Ok(Some(config))
     }
 
-    pub fn save_persisted(&self, app: &AppHandle) -> Result<(), CaptureError> {
+    pub fn save_persisted<R: tauri::Runtime>(
+        &self,
+        app: &AppHandle<R>,
+    ) -> Result<(), CaptureError> {
         self.validate()?;
         let path = persisted_config_path(app)?;
         if let Some(parent) = path.parent() {
@@ -150,7 +155,7 @@ impl CaptureConfig {
     }
 }
 
-fn persisted_config_path(app: &AppHandle) -> Result<PathBuf, CaptureError> {
+fn persisted_config_path<R: tauri::Runtime>(app: &AppHandle<R>) -> Result<PathBuf, CaptureError> {
     let mut path = app.path().app_config_dir().map_err(|err| {
         CaptureError::ConfigPersistence(format!("dossier de config introuvable: {err}"))
     })?;
