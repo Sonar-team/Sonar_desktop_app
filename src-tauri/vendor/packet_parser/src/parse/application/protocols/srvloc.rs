@@ -5,13 +5,7 @@
 
 use core::convert::TryFrom;
 
-use crate::{
-    checks::application::srvloc::{
-        ensure_len, validate_declared_packet_length, validate_function, validate_packet_not_empty,
-        validate_utf8,
-    },
-    errors::application::srvloc::SrvlocPacketParseError,
-};
+use crate::{checks::application::srvloc::*, errors::application::srvloc::SrvlocPacketParseError};
 
 #[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// Service Location Protocol Packet
@@ -95,41 +89,15 @@ pub enum SrvlocMessage<'a> {
     Raw(&'a [u8]),
 }
 
-fn read_u16(buf: &[u8], offset: &mut usize) -> Result<u16, SrvlocPacketParseError> {
-    ensure_len(buf, *offset + 2)?;
-    let v = u16::from_be_bytes([buf[*offset], buf[*offset + 1]]);
-    *offset += 2;
-    Ok(v)
-}
-
-fn read_u24(buf: &[u8], offset: &mut usize) -> Result<u32, SrvlocPacketParseError> {
-    ensure_len(buf, *offset + 3)?;
-    let v = ((buf[*offset] as u32) << 16)
-        | ((buf[*offset + 1] as u32) << 8)
-        | (buf[*offset + 2] as u32);
-    *offset += 3;
-    Ok(v)
-}
-
-fn read_str<'a>(
-    buf: &'a [u8],
-    offset: &mut usize,
-    len: usize,
-    field: &'static str,
-) -> Result<&'a str, SrvlocPacketParseError> {
-    ensure_len(buf, *offset + len)?;
-    let slice = &buf[*offset..*offset + len];
-    *offset += len;
-    validate_utf8(slice, field)
-}
-
 impl<'a> TryFrom<&'a [u8]> for SrvlocPacket<'a> {
     type Error = SrvlocPacketParseError;
 
     fn try_from(payload: &'a [u8]) -> Result<Self, Self::Error> {
-        validate_packet_not_empty(payload)?;
-
-        let version = payload[0];
+        // Dispatch conserve dans TryFrom : SLPv1 et SLPv2 sont deux formats
+        // wire distincts, chaque branche deroule la sequence lineaire
+        // canonique (pre-check de longueur, extract_* champ par champ,
+        // validations croisees, construction).
+        let version = extract_version(payload)?;
 
         match version {
             1 => parse_v1_packet(payload),
@@ -157,38 +125,31 @@ fn parse_v1_packet(payload: &[u8]) -> Result<SrvlocPacket<'_>, SrvlocPacketParse
     //  ... : Scope List Length (u16)
     //  ... : Scope List
 
-    ensure_len(payload, 8)?;
-    let version = payload[0];
-    let function = payload[1];
-    validate_function(version, function)?;
+    // Pre-check de longueur : le header fixe v1 couvre les octets 0..8.
+    validate_v1_header_length(payload)?;
 
-    let packet_length = u16::from_be_bytes([payload[2], payload[3]]);
+    let version = extract_version(payload)?;
+    let function = extract_function(version, payload[1])?;
+
+    let packet_length = extract_packet_length_v1(&payload[2..4])?;
+    // La longueur declaree est validee des son extraction, et non apres les
+    // autres champs : c'est la garde principale contre les payloads etrangers
+    // (DHCP, issue #3), et la deplacer changerait quelle erreur sort en
+    // premier sur un paquet multi-fautes.
     validate_declared_packet_length(packet_length as usize, payload.len())?;
-    let flags = payload[4];
-    let dialect = payload[5];
 
-    let language = validate_utf8(&payload[6..8], "language")?;
+    let flags = extract_flags_v1(payload[4])?;
+    let dialect = extract_dialect(payload[5])?;
+    let language = extract_language(&payload[6..8])?;
 
     let mut offset = 8;
 
     // Body spécifique DA Advert (ce que Wireshark te montre)
-    ensure_len(payload, offset + 1)?;
-    let encoding = payload[offset];
-    offset += 1;
-
-    let transaction_id = read_u16(payload, &mut offset)?;
-    let error_code = read_u16(payload, &mut offset)?;
-
-    let url_length = read_u16(payload, &mut offset)?;
-    let url = read_str(payload, &mut offset, url_length as usize, "url")?;
-
-    let scope_list_lengh = read_u16(payload, &mut offset)?;
-    let scope_list = read_str(
-        payload,
-        &mut offset,
-        scope_list_lengh as usize,
-        "scope_list",
-    )?;
+    let encoding = extract_encoding(payload, &mut offset)?;
+    let transaction_id = extract_transaction_id(payload, &mut offset)?;
+    let error_code = extract_error_code(payload, &mut offset)?;
+    let (url_length, url) = extract_url(payload, &mut offset)?;
+    let (scope_list_lengh, scope_list) = extract_scope_list(payload, &mut offset)?;
 
     let header_v1 = SrvlocHeaderV1 {
         version,
@@ -228,23 +189,26 @@ fn parse_v2_packet(payload: &[u8]) -> Result<SrvlocPacket<'_>, SrvlocPacketParse
     //  12-13 : Lang Tag Len (u16)
     //  14.. : Lang Tag (UTF-8)
 
-    ensure_len(payload, 14)?;
-    let mut offset = 0;
+    // Pre-check de longueur : le header fixe v2 couvre les octets 0..14.
+    validate_v2_header_length(payload)?;
 
-    let version = payload[offset];
-    offset += 1;
+    let version = extract_version(payload)?;
+    let function = extract_function(version, payload[1])?;
 
-    let function = payload[offset];
-    offset += 1;
-    validate_function(version, function)?;
+    // version + function deja lus : le curseur reprend a l'octet 2.
+    let mut offset = 2;
 
-    let packet_length = read_u24(payload, &mut offset)?;
+    let packet_length = extract_packet_length_v2(payload, &mut offset)?;
+    // La longueur declaree est validee des son extraction : garde principale
+    // contre les payloads etrangers, l'ordre actuel fixe quelle erreur sort
+    // en premier sur un paquet multi-fautes.
     validate_declared_packet_length(packet_length as usize, payload.len())?;
-    let flags = read_u16(payload, &mut offset)?;
-    let next_extension_offset = read_u24(payload, &mut offset)?;
-    let xid = read_u16(payload, &mut offset)?;
-    let lang_tag_len = read_u16(payload, &mut offset)?;
-    let lang_tag = read_str(payload, &mut offset, lang_tag_len as usize, "lang_tag")?;
+
+    let flags = extract_flags_v2(payload, &mut offset)?;
+    let next_extension_offset = extract_next_extension_offset(payload, &mut offset)?;
+    let xid = extract_xid(payload, &mut offset)?;
+    let lang_tag_len = extract_lang_tag_len(payload, &mut offset)?;
+    let lang_tag = extract_lang_tag(payload, &mut offset, lang_tag_len as usize)?;
 
     let header_v2 = SrvlocHeaderV2 {
         version,

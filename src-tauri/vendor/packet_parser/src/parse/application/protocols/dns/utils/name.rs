@@ -97,12 +97,32 @@ pub(crate) fn parse_resource_record(
     message: &[u8],
     offset: &mut usize,
 ) -> Result<RawRecord, DnsQueryParseError> {
+    parse_resource_record_with_mode(message, offset, false)
+}
+
+pub(crate) fn parse_mdns_resource_record(
+    message: &[u8],
+    offset: &mut usize,
+) -> Result<RawRecord, DnsQueryParseError> {
+    parse_resource_record_with_mode(message, offset, true)
+}
+
+fn parse_resource_record_with_mode(
+    message: &[u8],
+    offset: &mut usize,
+    mdns: bool,
+) -> Result<RawRecord, DnsQueryParseError> {
     let (name, after_name) = parse_dns_name(message, *offset)?;
 
     // Type (2) + classe (2) + TTL (4) + longueur des données (2).
     check_dns_query_size(message, after_name, 10)?;
     let rtype = u16::from_be_bytes([message[after_name], message[after_name + 1]]);
-    let rclass = u16::from_be_bytes([message[after_name + 2], message[after_name + 3]]);
+    let raw_rclass = u16::from_be_bytes([message[after_name + 2], message[after_name + 3]]);
+    let rclass = if mdns {
+        super::dns_class::DnsClass::from_mdns(raw_rclass).0
+    } else {
+        raw_rclass
+    };
     let ttl = u32::from_be_bytes([
         message[after_name + 4],
         message[after_name + 5],
@@ -244,5 +264,31 @@ mod tests {
             result,
             Err(DnsQueryParseError::InsufficientData { .. })
         ));
+    }
+
+    #[test]
+    fn test_mdns_resource_record_strips_cache_flush_bit_from_class() {
+        let mut data = vec![0u8];
+        data.extend_from_slice(&[0x00, 0x01, 0x80, 0x01]);
+        data.extend_from_slice(&120u32.to_be_bytes());
+        data.extend_from_slice(&[0x00, 0x04, 192, 0, 2, 1]);
+        let mut offset = 0;
+
+        let record = parse_mdns_resource_record(&data, &mut offset).unwrap();
+
+        assert_eq!(record.rclass, 1);
+    }
+
+    #[test]
+    fn test_class_high_bit_remains_part_of_class_in_classic_record() {
+        let mut data = vec![0u8];
+        data.extend_from_slice(&[0x00, 0x01, 0x80, 0x01]);
+        data.extend_from_slice(&120u32.to_be_bytes());
+        data.extend_from_slice(&[0x00, 0x04, 192, 0, 2, 1]);
+        let mut offset = 0;
+
+        let record = parse_resource_record(&data, &mut offset).unwrap();
+
+        assert_eq!(record.rclass, 0x8001);
     }
 }

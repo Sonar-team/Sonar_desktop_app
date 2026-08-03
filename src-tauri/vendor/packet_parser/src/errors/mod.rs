@@ -5,11 +5,15 @@
 
 // errors/mod.rs
 
-pub(crate) mod application;
-pub(crate) mod data_link;
-pub(crate) mod internet;
+// Publics : le doc-comment de `lib.rs` promet aux consommateurs de pouvoir
+// nommer et matcher les types d'erreur par couche. Tant que ces modules
+// étaient `pub(crate)`, la promesse ne compilait pas (E0603) et les 120
+// `validate_*` publics de `checks/` renvoyaient des types innommables.
+pub mod application;
+pub mod data_link;
+pub mod internet;
 mod link_layer;
-pub(crate) mod transport;
+pub mod transport;
 
 use application::ApplicationError;
 use data_link::DataLinkError;

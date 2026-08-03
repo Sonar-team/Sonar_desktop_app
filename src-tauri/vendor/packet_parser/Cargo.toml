@@ -12,7 +12,7 @@
 [package]
 edition = "2024"
 name = "packet_parser"
-version = "8.1.0"
+version = "9.0.0"
 authors = ["Cyprien Avico avicocyprien@yahoo.com"]
 build = false
 exclude = [
@@ -24,6 +24,7 @@ exclude = [
     "perf_by_version.json",
     "pcaps_exemple/",
     "integration_test/",
+    "docs/",
 ]
 autolib = false
 autobins = false

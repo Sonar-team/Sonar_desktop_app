@@ -52,6 +52,57 @@ pub fn validate_version(major_version: u8, minor_version: u8) -> Result<(), Giop
     Ok(())
 }
 
+/// Extracts and validates the GIOP version pair (major, minor).
+///
+/// Expects the two version bytes of the header (offsets 4..6). The internal
+/// length guard is unreachable once [`ensure_min_len`] has passed; it only
+/// protects out-of-contract callers.
+pub fn extract_version(payload: &[u8]) -> Result<(u8, u8), GiopParseError> {
+    if payload.len() < 2 {
+        return Err(GiopParseError::InvalidSize);
+    }
+
+    let (major_version, minor_version) = (payload[0], payload[1]);
+    validate_version(major_version, minor_version)?;
+
+    Ok((major_version, minor_version))
+}
+
+/// Extracts the GIOP flags byte (bit 0 = body endianness).
+///
+/// Pure extraction: no flag value is rejected (reserved bits are not
+/// validated by GIOP 1.x parsers); the `Result` only keeps the canonical
+/// `extract_*` shape.
+pub fn extract_flags(flags: &u8) -> Result<u8, GiopParseError> {
+    Ok(*flags)
+}
+
+/// Validates the message type byte (0..=7, see `GiopMessageType`) and
+/// returns it unchanged.
+pub fn validate_message_type(message_type: u8) -> Result<u8, GiopParseError> {
+    if message_type > 7 {
+        return Err(GiopParseError::UnknownMessageType(message_type));
+    }
+
+    Ok(message_type)
+}
+
+/// Extracts the message length (always big-endian in the header, whatever
+/// the body endianness flag says).
+///
+/// Expects the four length bytes of the header (offsets 8..12). The internal
+/// length guard is unreachable once [`ensure_min_len`] has passed; it only
+/// protects out-of-contract callers.
+pub fn extract_message_length(payload: &[u8]) -> Result<u32, GiopParseError> {
+    if payload.len() < 4 {
+        return Err(GiopParseError::InvalidSize);
+    }
+
+    Ok(u32::from_be_bytes([
+        payload[0], payload[1], payload[2], payload[3],
+    ]))
+}
+
 /// Validates that the buffer holds the full message announced by the header
 /// (header length + message_length).
 pub fn validate_total_length(total_needed: usize, actual: usize) -> Result<(), GiopParseError> {
@@ -151,6 +202,52 @@ mod tests {
         assert!(matches!(
             validate_version(1, 3),
             Err(GiopParseError::UnsupportedVersion(1, 3))
+        ));
+    }
+
+    #[test]
+    fn test_extract_version() {
+        assert_eq!(extract_version(&[1, 0]), Ok((1, 0)));
+        assert_eq!(extract_version(&[1, 2]), Ok((1, 2)));
+        assert!(matches!(
+            extract_version(&[2, 0]),
+            Err(GiopParseError::UnsupportedVersion(2, 0))
+        ));
+        assert!(matches!(
+            extract_version(&[1, 3]),
+            Err(GiopParseError::UnsupportedVersion(1, 3))
+        ));
+        assert!(matches!(
+            extract_version(&[1]),
+            Err(GiopParseError::InvalidSize)
+        ));
+    }
+
+    #[test]
+    fn test_extract_flags() {
+        // Pure extraction: no flags value is ever rejected.
+        assert_eq!(extract_flags(&0x00), Ok(0x00));
+        assert_eq!(extract_flags(&0x01), Ok(0x01));
+        assert_eq!(extract_flags(&0xFF), Ok(0xFF));
+    }
+
+    #[test]
+    fn test_validate_message_type() {
+        assert_eq!(validate_message_type(0), Ok(0));
+        assert_eq!(validate_message_type(7), Ok(7));
+        assert!(matches!(
+            validate_message_type(8),
+            Err(GiopParseError::UnknownMessageType(8))
+        ));
+    }
+
+    #[test]
+    fn test_extract_message_length() {
+        assert_eq!(extract_message_length(&[0, 0, 0, 4]), Ok(4));
+        assert_eq!(extract_message_length(&[0xFF; 4]), Ok(u32::MAX));
+        assert!(matches!(
+            extract_message_length(&[0, 0]),
+            Err(GiopParseError::InvalidSize)
         ));
     }
 

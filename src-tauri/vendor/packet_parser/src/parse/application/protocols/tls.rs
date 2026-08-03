@@ -8,8 +8,8 @@ use std::fmt;
 
 use crate::{
     checks::application::tls::{
-        TLS_RECORD_HEADER_LEN, validate_tls_header_length, validate_tls_payload_length,
-        validate_tls_record_complete,
+        TLS_RECORD_HEADER_LEN, extract_content_type, extract_length, extract_version,
+        validate_tls_header_length, validate_tls_payload_length, validate_tls_record_complete,
     },
     errors::application::tls::TlsError,
 };
@@ -120,18 +120,22 @@ impl<'a> TryFrom<&'a [u8]> for TlsPacket<'a> {
     type Error = TlsError;
 
     fn try_from(buf: &'a [u8]) -> Result<Self, Self::Error> {
+        // Séquence canonique : pré-check de longueur, extract_* champ par
+        // champ dans l'ordre du wire, validation croisée, construction.
         validate_tls_header_length(buf)?;
 
-        let content_type = TlsContentType::try_from(buf[0])?;
-        let version = TlsVersion::new(buf[1], buf[2])?;
-        let length = u16::from_be_bytes([buf[3], buf[4]]);
+        let content_type = extract_content_type(buf)?;
+        let version = extract_version(buf)?;
+        let length = extract_length(buf)?;
 
-        let header_len = TLS_RECORD_HEADER_LEN;
-        let available = buf.len().saturating_sub(header_len);
-
+        // Validation croisée : la longueur annoncée doit tenir dans les
+        // octets restants après le header.
+        let available = buf.len().saturating_sub(TLS_RECORD_HEADER_LEN);
         validate_tls_payload_length(length, available)?;
 
-        let start = header_len;
+        // Slicing sûr : validate_tls_payload_length garantit
+        // buf.len() >= TLS_RECORD_HEADER_LEN + length.
+        let start = TLS_RECORD_HEADER_LEN;
         let end = start + length as usize;
         let payload = &buf[start..end];
 

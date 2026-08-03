@@ -6,7 +6,10 @@
 use std::fmt;
 
 use crate::{
-    checks::application::dns::{check_packet_length, validate_and_parse_count, verify_dns_flags},
+    checks::application::dns::{
+        check_packet_length, parse_count_allow_empty_question, validate_and_parse_count,
+        verify_dns_flags, verify_mdns_flags,
+    },
     errors::application::dns::DnsHeaderError,
 };
 
@@ -37,6 +40,23 @@ impl TryFrom<&[u8]> for DnsHeader {
     }
 }
 
+impl DnsHeader {
+    /// Like [`TryFrom::try_from`], but tolerates an empty question section
+    /// (mDNS responses, RFC 6762 §6).
+    pub(crate) fn try_from_mdns(bytes: &[u8]) -> Result<Self, DnsHeaderError> {
+        check_packet_length(bytes)?;
+
+        let transaction_id = u16::from_be_bytes([bytes[0], bytes[1]]);
+        let flags = verify_mdns_flags(u16::from_be_bytes([bytes[2], bytes[3]]))?;
+        let counts = parse_count_allow_empty_question(&bytes[4..12])?;
+        Ok(Self {
+            transaction_id,
+            flags,
+            counts,
+        })
+    }
+}
+
 impl fmt::Display for DnsHeader {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -55,6 +75,7 @@ impl fmt::Display for DnsHeader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::errors::application::dns::DnsFlagsError;
 
     #[test]
     fn test_check_packet_length() {
@@ -105,5 +126,29 @@ mod tests {
             result.is_err(),
             "Expected an error due to zero questions and non-zero resource records"
         );
+    }
+
+    #[test]
+    fn test_mdns_header_rejects_nonzero_opcode() {
+        let data = [
+            0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        ];
+
+        assert!(matches!(
+            DnsHeader::try_from_mdns(&data),
+            Err(DnsHeaderError::FlagsError(DnsFlagsError::InvalidOpcode(1)))
+        ));
+    }
+
+    #[test]
+    fn test_mdns_header_rejects_nonzero_rcode() {
+        let data = [
+            0x00, 0x00, 0x80, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        ];
+
+        assert!(matches!(
+            DnsHeader::try_from_mdns(&data),
+            Err(DnsHeaderError::FlagsError(DnsFlagsError::InvalidRCode(1)))
+        ));
     }
 }

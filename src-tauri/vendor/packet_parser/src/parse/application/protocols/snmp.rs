@@ -3,16 +3,17 @@
 // Licensed under the MIT License <LICENSE-MIT or http://opensource.org/licenses/MIT>.
 // This file may not be copied, modified, or distributed except according to those terms.
 
-use core::{convert::TryFrom, mem::size_of};
+use core::convert::TryFrom;
 
 use crate::{
     checks::application::snmp::{
         ASN1_INTEGER_TAG, ASN1_NULL_TAG, ASN1_OBJECT_IDENTIFIER_TAG, ASN1_OCTET_STRING_TAG,
-        ASN1_SEQUENCE_TAG, SNMP_COUNTER32_TAG, SNMP_COUNTER64_TAG, SNMP_END_OF_MIB_VIEW_TAG,
-        SNMP_GAUGE32_TAG, SNMP_IP_ADDRESS_TAG, SNMP_NO_SUCH_INSTANCE_TAG, SNMP_NO_SUCH_OBJECT_TAG,
-        SNMP_OPAQUE_TAG, SNMP_TIMETICKS_TAG, ensure_available, validate_integer_length,
-        validate_no_trailing, validate_pdu_type, validate_snmp_min_length, validate_tag,
-        validate_unsigned_length, validate_version,
+        ASN1_SEQUENCE_TAG, BerTlv, SNMP_COUNTER32_TAG, SNMP_COUNTER64_TAG,
+        SNMP_END_OF_MIB_VIEW_TAG, SNMP_GAUGE32_TAG, SNMP_IP_ADDRESS_TAG, SNMP_NO_SUCH_INSTANCE_TAG,
+        SNMP_NO_SUCH_OBJECT_TAG, SNMP_OPAQUE_TAG, SNMP_TIMETICKS_TAG, extract_ip_address,
+        extract_null, parse_integer_value, parse_u32_value, parse_unsigned_value, read_tlv,
+        validate_exception_empty, validate_no_trailing, validate_pdu_type,
+        validate_snmp_min_length, validate_tag, validate_v3_data_tag, validate_version,
     },
     errors::application::snmp::SnmpError,
 };
@@ -142,12 +143,6 @@ pub enum SnmpValue<'a> {
     Unsupported { tag: u8, data: &'a [u8] },
 }
 
-struct BerTlv<'a> {
-    tag: u8,
-    value: &'a [u8],
-    encoded: &'a [u8],
-}
-
 impl<'a> TryFrom<&'a [u8]> for SnmpPacket<'a> {
     type Error = SnmpError;
 
@@ -208,16 +203,14 @@ fn parse_v3_message<'a>(body: &'a [u8], offset: &mut usize) -> Result<SnmpMessag
     )?;
 
     let data = read_tlv(body, offset, "v3_data")?;
+    // Le tag est vérifié avant le dispatch : pour un tag invalide, l'erreur sort
+    // avant toute lecture du contenu, exactement comme le `match` historique.
+    validate_v3_data_tag(data.tag)?;
     let data = match data.tag {
         ASN1_SEQUENCE_TAG => SnmpV3Data::ScopedPdu(parse_scoped_pdu(data.value)?),
-        ASN1_OCTET_STRING_TAG => SnmpV3Data::EncryptedPdu(data.value),
-        tag => {
-            return Err(SnmpError::InvalidTag {
-                field: "v3_data",
-                expected: ASN1_SEQUENCE_TAG,
-                actual: tag,
-            });
-        }
+        // validate_v3_data_tag garantit que le seul autre tag possible est
+        // ASN1_OCTET_STRING_TAG (ScopedPDU chiffrée).
+        _ => SnmpV3Data::EncryptedPdu(data.value),
     };
 
     Ok(SnmpMessage::V3(SnmpV3Message {
@@ -314,17 +307,7 @@ fn parse_trap_v1_pdu<'a>(value: &'a [u8]) -> Result<SnmpPduPayload<'a>, SnmpErro
 
     let agent_address = read_tlv(value, &mut offset, "trap_agent_address")?;
     validate_tag("trap_agent_address", agent_address.tag, SNMP_IP_ADDRESS_TAG)?;
-    if agent_address.value.len() != 4 {
-        return Err(SnmpError::InvalidIpAddressLength {
-            actual: agent_address.value.len(),
-        });
-    }
-    let agent_address = [
-        agent_address.value[0],
-        agent_address.value[1],
-        agent_address.value[2],
-        agent_address.value[3],
-    ];
+    let agent_address = extract_ip_address(agent_address.value)?;
 
     let generic_trap = read_integer_field(value, &mut offset, "generic_trap")?;
     let specific_trap = read_integer_field(value, &mut offset, "specific_trap")?;
@@ -380,26 +363,9 @@ fn parse_snmp_value<'a>(tlv: BerTlv<'a>) -> Result<SnmpValue<'a>, SnmpError> {
             "value_integer",
         )?)),
         ASN1_OCTET_STRING_TAG => Ok(SnmpValue::OctetString(tlv.value)),
-        ASN1_NULL_TAG => {
-            if !tlv.value.is_empty() {
-                return Err(SnmpError::InvalidPduStructure("NULL value is not empty"));
-            }
-            Ok(SnmpValue::Null)
-        }
+        ASN1_NULL_TAG => extract_null(tlv.value),
         ASN1_OBJECT_IDENTIFIER_TAG => Ok(SnmpValue::ObjectIdentifier(tlv.value)),
-        SNMP_IP_ADDRESS_TAG => {
-            if tlv.value.len() != 4 {
-                return Err(SnmpError::InvalidIpAddressLength {
-                    actual: tlv.value.len(),
-                });
-            }
-            Ok(SnmpValue::IpAddress([
-                tlv.value[0],
-                tlv.value[1],
-                tlv.value[2],
-                tlv.value[3],
-            ]))
-        }
+        SNMP_IP_ADDRESS_TAG => Ok(SnmpValue::IpAddress(extract_ip_address(tlv.value)?)),
         SNMP_COUNTER32_TAG => Ok(SnmpValue::Counter32(parse_u32_value(
             tlv.value,
             "counter32",
@@ -433,14 +399,6 @@ fn parse_snmp_value<'a>(tlv: BerTlv<'a>) -> Result<SnmpValue<'a>, SnmpError> {
     }
 }
 
-fn validate_exception_empty(value: &[u8], field: &'static str) -> Result<(), SnmpError> {
-    if !value.is_empty() {
-        return Err(SnmpError::InvalidPduStructure(field));
-    }
-
-    Ok(())
-}
-
 fn read_integer_field(
     data: &[u8],
     offset: &mut usize,
@@ -449,93 +407,6 @@ fn read_integer_field(
     let tlv = read_tlv(data, offset, field)?;
     validate_tag(field, tlv.tag, ASN1_INTEGER_TAG)?;
     parse_integer_value(tlv.value, field)
-}
-
-fn parse_integer_value(value: &[u8], field: &'static str) -> Result<i64, SnmpError> {
-    validate_integer_length(field, value.len())?;
-
-    let negative = value[0] & 0x80 != 0;
-    let mut parsed = if negative { -1i64 } else { 0i64 };
-    for &byte in value {
-        parsed = (parsed << 8) | i64::from(byte);
-    }
-
-    Ok(parsed)
-}
-
-fn parse_u32_value(value: &[u8], field: &'static str) -> Result<u32, SnmpError> {
-    let parsed = parse_unsigned_value(value, field)?;
-    u32::try_from(parsed).map_err(|_| SnmpError::UnsignedOverflow { field })
-}
-
-fn parse_unsigned_value(value: &[u8], field: &'static str) -> Result<u64, SnmpError> {
-    validate_unsigned_length(field, value.len())?;
-
-    let mut parsed = 0u64;
-    for &byte in value {
-        parsed = (parsed << 8) | u64::from(byte);
-    }
-
-    Ok(parsed)
-}
-
-fn read_tlv<'a>(
-    data: &'a [u8],
-    offset: &mut usize,
-    field: &'static str,
-) -> Result<BerTlv<'a>, SnmpError> {
-    let start = *offset;
-    let header_needed = start
-        .checked_add(2)
-        .ok_or(SnmpError::LengthOverflow { field })?;
-    ensure_available(field, data.len(), header_needed)?;
-
-    let tag = data[start];
-    let first_len = data[start + 1];
-    *offset = header_needed;
-
-    let length = if first_len & 0x80 == 0 {
-        usize::from(first_len)
-    } else {
-        let len_len = usize::from(first_len & 0x7F);
-        if len_len == 0 {
-            return Err(SnmpError::UnsupportedIndefiniteLength { field });
-        }
-        if len_len > size_of::<usize>() {
-            return Err(SnmpError::UnsupportedLengthSize {
-                field,
-                actual: len_len,
-            });
-        }
-
-        let length_end = (*offset)
-            .checked_add(len_len)
-            .ok_or(SnmpError::LengthOverflow { field })?;
-        ensure_available(field, data.len(), length_end)?;
-
-        let mut length = 0usize;
-        for &byte in &data[*offset..length_end] {
-            length = length
-                .checked_mul(256)
-                .and_then(|value| value.checked_add(usize::from(byte)))
-                .ok_or(SnmpError::LengthOverflow { field })?;
-        }
-        *offset = length_end;
-        length
-    };
-
-    let value_start = *offset;
-    let value_end = value_start
-        .checked_add(length)
-        .ok_or(SnmpError::LengthOverflow { field })?;
-    ensure_available(field, data.len(), value_end)?;
-    *offset = value_end;
-
-    Ok(BerTlv {
-        tag,
-        value: &data[value_start..value_end],
-        encoded: &data[start..value_end],
-    })
 }
 
 #[cfg(test)]

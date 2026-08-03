@@ -7,7 +7,9 @@ use std::convert::TryFrom;
 
 use crate::{
     checks::application::ams::{
-        AMS_HEADER_LEN, validate_ams_header_length, validate_cb_data_length, validate_cmd_id,
+        AMS_HEADER_LEN, extract_cb_data, extract_cmd_id, extract_error_code, extract_invoke_id,
+        extract_sender_net_id, extract_sender_port, extract_state_flags, extract_target_net_id,
+        extract_target_port, validate_ams_header_length, validate_cb_data_length, validate_cmd_id,
         validate_state_flags,
     },
     errors::application::ams::AmsParseError,
@@ -76,29 +78,42 @@ impl<'a> TryFrom<&'a [u8]> for AmsPacket<'a> {
         // 28..=31  InvokeId (u32)
         // 32..     Data
 
-        let ams_target_net_id: [u8; 6] = bytes[0..6].try_into().unwrap();
-        let ams_target_port = u16::from_le_bytes(bytes[6..8].try_into().unwrap());
+        // 2) Extraction champ par champ, dans l'ordre du wire : chaque
+        //    extract_* vérifie les octets de SON champ et retourne la valeur
+        //    typée (jamais en erreur ici, le pré-check garantit 32 octets).
+        let ams_target_net_id = extract_target_net_id(&bytes[0..6])?;
+        let ams_target_port = extract_target_port(&bytes[6..8])?;
 
-        let ams_sender_net_id: [u8; 6] = bytes[8..14].try_into().unwrap();
-        let ams_sender_port = u16::from_le_bytes(bytes[14..16].try_into().unwrap());
+        let ams_sender_net_id = extract_sender_net_id(&bytes[8..14])?;
+        let ams_sender_port = extract_sender_port(&bytes[14..16])?;
 
-        let cmd_id = u16::from_le_bytes(bytes[16..18].try_into().unwrap());
-        let state_flags = u16::from_le_bytes(bytes[18..20].try_into().unwrap());
+        let cmd_id = extract_cmd_id(&bytes[16..18])?;
+        let state_flags = extract_state_flags(&bytes[18..20])?;
 
-        let cb_data = u32::from_le_bytes(bytes[20..24].try_into().unwrap());
-        let error_code = u32::from_le_bytes(bytes[24..28].try_into().unwrap());
-        let invoke_id = u32::from_le_bytes(bytes[28..32].try_into().unwrap());
+        let cb_data = extract_cb_data(&bytes[20..24])?;
+        let error_code = extract_error_code(&bytes[24..28])?;
+        let invoke_id = extract_invoke_id(&bytes[28..32])?;
 
         let data_start = AMS_HEADER_LEN;
         let actual_data_len = len - data_start;
 
-        // 2) Validation cb_data : la longueur déclarée doit coller à la réalité
+        // Validations post-extraction. NOTE : leur ordre (cb_data → cmd_id →
+        // state_flags) ne suit pas l'ordre du wire (cmd_id offset 16,
+        // state_flags offset 18, cb_data offset 20) et est volontairement
+        // conservé : fusionner validate_cmd_id / validate_state_flags dans
+        // leurs extract_* respectifs les exécuterait avant
+        // validate_cb_data_length, et un paquet où cb_data ET cmd_id sont
+        // tous deux invalides retournerait UnknownCommand au lieu
+        // d'InvalidCbDataLength. Le comportement observable (mêmes erreurs
+        // pour les mêmes inputs) doit rester identique.
+
+        // 3) Validation cb_data : la longueur déclarée doit coller à la réalité
         validate_cb_data_length(cb_data, actual_data_len)?;
 
-        // 3) Validation cmd_id : doit faire partie des commandes connues
+        // 4) Validation cmd_id : doit faire partie des commandes connues
         validate_cmd_id(cmd_id)?;
 
-        // 4) Validation des state_flags : pas de bits réservés
+        // 5) Validation des state_flags : pas de bits réservés
         validate_state_flags(state_flags)?;
 
         let data = &bytes[data_start..data_start + actual_data_len];

@@ -85,6 +85,59 @@ pub fn parse_command_bytes(bytes: &[u8]) -> Result<&str, BitcoinError> {
     core::str::from_utf8(&bytes[..end]).map_err(|_| BitcoinError::InvalidCommandBytes)
 }
 
+/// Checks that the command field (header bytes 4..16) is fully present and
+/// valid NUL-padded ASCII, and returns it borrowed as `&str` with the
+/// trailing NUL padding trimmed.
+pub fn extract_command(packet: &[u8]) -> Result<&str, BitcoinError> {
+    if packet.len() < 16 {
+        return Err(BitcoinError::PacketTooShort {
+            actual: packet.len(),
+        });
+    }
+
+    parse_command_bytes(&packet[4..16])
+}
+
+/// Checks that the length field (header bytes 16..20) is fully present and
+/// returns the announced payload length (little-endian).
+pub fn extract_length(packet: &[u8]) -> Result<u32, BitcoinError> {
+    if packet.len() < 20 {
+        return Err(BitcoinError::PacketTooShort {
+            actual: packet.len(),
+        });
+    }
+
+    Ok(u32::from_le_bytes([
+        packet[16], packet[17], packet[18], packet[19],
+    ]))
+}
+
+/// Checks that the checksum field (header bytes 20..24) is fully present and
+/// returns it as a fixed 4-byte array.
+pub fn extract_checksum(packet: &[u8]) -> Result<[u8; 4], BitcoinError> {
+    if packet.len() < BITCOIN_HEADER_LENGTH {
+        return Err(BitcoinError::PacketTooShort {
+            actual: packet.len(),
+        });
+    }
+
+    Ok([packet[20], packet[21], packet[22], packet[23]])
+}
+
+/// Checks that the 24-byte header is fully present and returns the actual
+/// payload (the bytes following the header) as a borrowed slice.
+///
+/// Zero-copy: the returned slice points into the original packet.
+pub fn extract_payload(packet: &[u8]) -> Result<&[u8], BitcoinError> {
+    if packet.len() < BITCOIN_HEADER_LENGTH {
+        return Err(BitcoinError::PacketTooShort {
+            actual: packet.len(),
+        });
+    }
+
+    Ok(&packet[BITCOIN_HEADER_LENGTH..])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,6 +244,58 @@ mod tests {
         assert!(matches!(
             parse_command_bytes(&[0xFFu8; 12]),
             Err(BitcoinError::InvalidCommandBytes)
+        ));
+    }
+
+    #[test]
+    fn test_extract_command_valid_and_too_short() {
+        let packet = [
+            0xF9, 0xBE, 0xB4, 0xD9, // Magic
+            0x76, 0x65, 0x72, 0x61, 0x63, 0x6B, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, // "verack"
+        ];
+        assert_eq!(extract_command(&packet).unwrap(), "verack");
+        assert!(matches!(
+            extract_command(&packet[..10]),
+            Err(BitcoinError::PacketTooShort { actual: 10 })
+        ));
+    }
+
+    #[test]
+    fn test_extract_length_little_endian_and_too_short() {
+        let mut packet = [0u8; 20];
+        packet[16] = 0x05; // length=5 (little-endian)
+        assert_eq!(extract_length(&packet), Ok(5));
+        assert!(matches!(
+            extract_length(&packet[..19]),
+            Err(BitcoinError::PacketTooShort { actual: 19 })
+        ));
+    }
+
+    #[test]
+    fn test_extract_checksum_valid_and_too_short() {
+        let mut packet = [0u8; 24];
+        packet[20..24].copy_from_slice(&[0x5D, 0xF6, 0xE0, 0xE2]);
+        assert_eq!(extract_checksum(&packet), Ok([0x5D, 0xF6, 0xE0, 0xE2]));
+        assert!(matches!(
+            extract_checksum(&packet[..23]),
+            Err(BitcoinError::PacketTooShort { actual: 23 })
+        ));
+    }
+
+    #[test]
+    fn test_extract_payload_borrows_and_too_short() {
+        let mut packet = [0u8; 27];
+        packet[24..27].copy_from_slice(&[0xDE, 0xAD, 0xBE]);
+        let payload = extract_payload(&packet).expect("header complet");
+        assert_eq!(payload, &[0xDE, 0xAD, 0xBE]);
+        // zero-copy : la reference pointe dans le buffer d'origine
+        assert_eq!(payload.as_ptr(), packet[24..].as_ptr());
+
+        assert!(extract_payload(&[0u8; 24]).expect("header seul").is_empty());
+        assert!(matches!(
+            extract_payload(&[0u8; 23]),
+            Err(BitcoinError::PacketTooShort { actual: 23 })
         ));
     }
 }

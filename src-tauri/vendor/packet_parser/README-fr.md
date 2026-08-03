@@ -20,7 +20,7 @@ decodees et laisse les couches suivantes a `None` quand c'est necessaire.
 
 ```toml
 [dependencies]
-packet_parser = "7.0.0"
+packet_parser = "9.0.0"
 ```
 
 Pour reproduire les exemples qui decodent de l'hexadecimal:
@@ -28,13 +28,13 @@ Pour reproduire les exemples qui decodent de l'hexadecimal:
 ```toml
 [dependencies]
 hex = "0.4"
-packet_parser = "7.0.0"
+packet_parser = "9.0.0"
 ```
 
 ## Exemple rapide
 
 ```rust
-use packet_parser::PacketFlow;
+use packet_parser::{LinkType, parse};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let raw = hex::decode(
@@ -43,7 +43,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
          c9c207ef14e3",
     )?;
 
-    let flow = PacketFlow::try_from(raw.as_slice())?;
+    // Toujours passer le LINKTYPE que la capture declare.
+    let flow = parse(LinkType::ETHERNET, &raw)?;
 
     println!("L2: {}", flow.data_link);
 
@@ -69,13 +70,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-Cet exemple utilise l'API de compatibilite Ethernet disponible dans la version
-7.0.0 publiee.
+## Choisir le LINKTYPE
 
-## API LINKTYPE explicite (non publiee, cible 7.0.0)
-
-La branche de developpement introduit une entree explicite et fermee par defaut
-pour les lecteurs de captures:
+`parse` est ferme par defaut sur la couche liaison: le LINKTYPE vient de
+l'appelant, il n'est jamais devine a partir des octets. Verifiez-le en amont
+pour refuser une capture avant d'avoir lu un seul paquet:
 
 ```rust
 use packet_parser::{LinkType, is_supported, parse};
@@ -95,7 +94,21 @@ les fichiers. Un adaptateur de capture live doit d'abord normaliser les valeurs
 l'interface referencee par chaque paquet et transmet le LINKTYPE de cette
 interface.
 
-Etat actuel de la branche de developpement:
+### Ne pas utiliser le raccourci Ethernet sur une capture inconnue
+
+`PacketFlow::try_from(&[u8])` et `DataLink::try_from(&[u8])` prennent une simple
+tranche d'octets et **presument Ethernet**. Ils sont conserves pour
+compatibilite et seront retires dans une prochaine version majeure.
+
+Ils n'echouent pas sur une capture non-Ethernet: ils produisent silencieusement
+des donnees fausses. Une trame `LINKTYPE_LINUX_SLL` (ce que donne une capture
+sur l'interface `any` sous Linux) voit ses 16 octets d'en-tete cooked relus
+comme un en-tete Ethernet: l'appel retourne `Ok` avec des adresses MAC
+fabriquees, `internet: None` et `corrupted: None`. Rien ne signale l'erreur, et
+une matrice de flux construite dessus se remplit d'adresses qui n'ont jamais
+existe sur le cable.
+
+LINKTYPE supportes:
 
 | LINKTYPE | Valeur | Etat du decodeur |
 | --- | ---: | --- |
@@ -154,15 +167,15 @@ puissent jamais fabriquer silencieusement des champs Ethernet.
 
 | Besoin | API |
 | --- | --- |
-| Verifier la presence d'un decodeur (cible 7.0.0) | `is_supported(LinkType)` |
-| Parser un paquet avec un type de liaison explicite (cible 7.0.0) | `parse(LinkType, &[u8])` |
-| Parser Ethernet avec le raccourci de compatibilite | `PacketFlow::try_from(&[u8])` |
-| Parser seulement Ethernet/VLAN | `DataLink::try_from(&[u8])` |
+| Verifier la presence d'un decodeur | `is_supported(LinkType)` |
+| **Parser un paquet (voie canonique)** | `parse(LinkType, &[u8])` |
+| Parser Ethernet, raccourci de compatibilite — presume Ethernet, voir plus haut | `PacketFlow::try_from(&[u8])` |
+| Parser seulement Ethernet/VLAN — presume Ethernet, voir plus haut | `DataLink::try_from(&[u8])` |
 | Parser seulement L3 | `Internet::try_from(&[u8])` |
 | Parser seulement L4 | `Transport::try_from(&[u8])` ou `Transport::try_from_parts(...)` |
 | Detacher le resultat du buffer d'origine | `flow.to_owned()` |
 | Recuperer les flux encapsules | `flow.flatten()` |
-| Mesurer un LINKTYPE explicite (cible 7.0.0) | `parse_timed(...)` avec la feature `parse_timing` |
+| Mesurer un LINKTYPE explicite | `parse_timed(...)` avec la feature `parse_timing` |
 | Mesurer Ethernet via l'API de compatibilite | `PacketFlow::try_from_timed(...)` avec la feature `parse_timing` |
 
 `PacketFlow` contient:
@@ -234,7 +247,7 @@ ils ne fournissent pas toujours ports et payload applicatif.
 La detection applicative est volontairement best-effort. Les modules de parsing
 incluent notamment:
 
-- DNS
+- DNS (mDNS inclus via `DnsPacket::try_from_mdns`)
 - TLS
 - SNMP
 - NTP
@@ -242,6 +255,9 @@ incluent notamment:
 - HTTP
 - MQTT
 - PostgreSQL
+- FTP
+- SMTP
+- NNTP
 - Modbus TCP
 - EtherNet/IP
 - OPC UA
@@ -252,6 +268,14 @@ incluent notamment:
 - SRVLOC
 - QUIC
 - Bitcoin
+
+Dans `PacketFlow`, la detection de FTP, SMTP et NNTP exige a la fois un payload
+valide et leur port de controle en clair (TCP 21, 25/587 et 119
+respectivement). Les payloads sur d'autres ports ne recoivent pas ces labels :
+leur syntaxe en lignes peut aussi apparaitre dans le corps d'un autre protocole
+textuel. Les enregistrements TLS complets sur des ports TLS implicites comme
+465, 563 et 990 restent classes TLS. Pour examiner des donnees applicatives
+dechiffrees en externe, utilisez directement le parseur detaille du protocole.
 
 `PacketFlow` remonte actuellement un nom de protocole applicatif simple dans
 `Application { application_protocol }`. Pour un parsing detaille d'un protocole
@@ -283,7 +307,7 @@ for level in flow.flatten() {
 | Feature | Effet |
 | --- | --- |
 | `doc-diagrams` | Active les diagrammes Rustdoc via `aquamarine` |
-| `parse_timing` | Expose `ParseTiming`, `PacketFlow::try_from_timed` et, sur la branche de developpement, `parse_timed` |
+| `parse_timing` | Expose `ParseTiming`, `parse_timed` et `PacketFlow::try_from_timed` |
 
 La feature `parse_timing` est faite pour les benchmarks. Le chemin normal
 `PacketFlow::try_from` ne mesure pas le temps de parsing.

@@ -97,6 +97,13 @@ pub struct DataLink<'a> {
     pub payload: &'a [u8],
 }
 
+/// Parses `packets` as an **Ethernet II** frame.
+///
+/// Low-level entry point, kept for compatibility. It only checks that the
+/// buffer is long enough — it never verifies that the bytes *are* Ethernet, so
+/// a capture in another LINKTYPE yields a successful parse holding fabricated
+/// MAC addresses. Prefer [`fn@crate::parse`], which dispatches on the LINKTYPE
+/// declared by the capture and refuses the ones it does not support.
 impl<'a> TryFrom<&'a [u8]> for DataLink<'a> {
     type Error = DataLinkError;
 

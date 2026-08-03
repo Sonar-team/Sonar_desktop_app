@@ -12,6 +12,7 @@ pub mod utils;
 
 use crate::{
     checks::application::dns::check_dns_minimum_size, errors::application::dns::DnsPacketError,
+    parse::application::protocols::bounded_capacity,
 };
 use dns_additional::AdditionalRecord;
 use dns_answers::Answer;
@@ -19,7 +20,7 @@ use dns_authoritative::AuthoritativeNameServer;
 use dns_header::DnsHeader;
 use dns_queries::DnsQueries;
 use std::fmt;
-use utils::name::{RawRecord, parse_resource_record};
+use utils::name::{RawRecord, parse_mdns_resource_record, parse_resource_record};
 
 #[cfg_attr(all(doc, feature = "doc-diagrams"), aquamarine::aquamarine)]
 /// DNS Packet
@@ -59,11 +60,48 @@ impl TryFrom<&[u8]> for DnsPacket {
         // compression (RFC 1035 §4.1.4) sont des offsets depuis l'octet 0.
         let mut offset = 12;
         let queries = DnsQueries::parse(bytes, &mut offset, header.counts[0])?;
-        let answers = parse_record_section::<Answer>(bytes, &mut offset, header.counts[1])?;
-        let authorities =
-            parse_record_section::<AuthoritativeNameServer>(bytes, &mut offset, header.counts[2])?;
+        let answers = parse_record_section::<Answer>(bytes, &mut offset, header.counts[1], false)?;
+        let authorities = parse_record_section::<AuthoritativeNameServer>(
+            bytes,
+            &mut offset,
+            header.counts[2],
+            false,
+        )?;
         let additionals =
-            parse_record_section::<AdditionalRecord>(bytes, &mut offset, header.counts[3])?;
+            parse_record_section::<AdditionalRecord>(bytes, &mut offset, header.counts[3], false)?;
+
+        Ok(DnsPacket {
+            header,
+            queries,
+            answers,
+            authorities,
+            additionals,
+        })
+    }
+}
+
+impl DnsPacket {
+    /// Like [`TryFrom::try_from`], but tolerates an empty question section.
+    ///
+    /// mDNS reuses the DNS wire format (RFC 6762 §1) but its responders send
+    /// unsolicited announcements that never echo a question — rejected by
+    /// the strict `TryFrom` used for classic unicast DNS.
+    pub fn try_from_mdns(bytes: &[u8]) -> Result<Self, DnsPacketError> {
+        check_dns_minimum_size(bytes)?;
+
+        let header = DnsHeader::try_from_mdns(bytes)?;
+
+        let mut offset = 12;
+        let queries = DnsQueries::parse_mdns(bytes, &mut offset, header.counts[0])?;
+        let answers = parse_record_section::<Answer>(bytes, &mut offset, header.counts[1], true)?;
+        let authorities = parse_record_section::<AuthoritativeNameServer>(
+            bytes,
+            &mut offset,
+            header.counts[2],
+            true,
+        )?;
+        let additionals =
+            parse_record_section::<AdditionalRecord>(bytes, &mut offset, header.counts[3], true)?;
 
         Ok(DnsPacket {
             header,
@@ -81,13 +119,24 @@ fn parse_record_section<T: From<RawRecord>>(
     message: &[u8],
     offset: &mut usize,
     count: u16,
+    mdns: bool,
 ) -> Result<Option<Vec<T>>, DnsPacketError> {
     if count == 0 {
         return Ok(None);
     }
-    let mut records = Vec::with_capacity(count as usize);
+    // Un RR pèse au minimum 11 octets : nom racine 1 + type 2 + classe 2
+    // + TTL 4 + rdlength 2.
+    const MIN_RECORD_LEN: usize = 11;
+    let remaining = message.len().saturating_sub(*offset);
+    let mut records =
+        Vec::with_capacity(bounded_capacity(count as usize, remaining, MIN_RECORD_LEN));
     for _ in 0..count {
-        records.push(T::from(parse_resource_record(message, offset)?));
+        let record = if mdns {
+            parse_mdns_resource_record(message, offset)?
+        } else {
+            parse_resource_record(message, offset)?
+        };
+        records.push(T::from(record));
     }
     Ok(Some(records))
 }
@@ -263,5 +312,77 @@ mod tests {
         let data = vec![0; 12]; // Exactement 12 octets, ce qui est suffisant
         let result = check_dns_minimum_size(&data);
         assert!(result.is_ok());
+    }
+
+    // Trame 1 (originale 1) :
+    // pcaps_exemple/protocols/mdns_llmnr_ssdp/mdns_announcement.pcapng —
+    // annonce mDNS non sollicitee (RFC 6762 §6), question vide.
+    const MDNS_ANNOUNCEMENT_EMPTY_QUESTION: &[u8] = &[
+        0x00, 0x00, 0x84, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x07, b'_', b'b',
+        b'r', b'o', b'w', b's', b'e', 0x05, b'_', b'm', b'd', b'n', b's', 0x04, b'_', b'u', b'd',
+        b'p', 0x05, b'l', b'o', b'c', b'a', b'l', 0x00, 0x00, 0x0c, 0x00, 0x01, 0x00, 0x00, 0x1c,
+        0x20, 0x00, 0x0b, 0x05, b'a', b'p', b'p', b'l', b'e', 0x03, b'c', b'o', b'm', 0x00,
+    ];
+
+    #[test]
+    fn test_dns_strict_try_from_rejects_empty_question_with_answers() {
+        // Un DNS classique n'a jamais de reponse sans la question qu'elle
+        // repond : c'est un signal utilise pour la classification a l'aveugle.
+        assert!(DnsPacket::try_from(MDNS_ANNOUNCEMENT_EMPTY_QUESTION).is_err());
+    }
+
+    #[test]
+    fn test_dns_try_from_mdns_accepts_empty_question_with_answers() {
+        let packet = DnsPacket::try_from_mdns(MDNS_ANNOUNCEMENT_EMPTY_QUESTION)
+            .expect("mDNS announcement with an empty question must parse");
+
+        assert_eq!(packet.header.counts, [0, 1, 0, 0]);
+        assert!(packet.queries.queries.is_empty());
+
+        let answers = packet.answers.as_ref().expect("answers");
+        assert_eq!(answers.len(), 1);
+        assert_eq!(answers[0].name, "_browse._mdns._udp.local");
+        assert_eq!(answers[0].answer_type.0, 12); // PTR
+        assert_eq!(answers[0].answer_class.0, 1); // IN
+    }
+
+    #[test]
+    fn test_mdns_query_decodes_qu_bit_without_changing_classic_dns() {
+        let packet = [
+            0x00, 0x00, // transaction id
+            0x00, 0x00, // standard query
+            0x00, 0x01, // one question
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // no records
+            0x05, b'l', b'o', b'c', b'a', b'l', 0x00, // local
+            0x00, 0x01, // A
+            0x80, 0x01, // QU + IN
+        ];
+
+        let mdns = DnsPacket::try_from_mdns(&packet).expect("valid mDNS QU question");
+        assert_eq!(mdns.queries.queries[0].qclass.0, 1);
+
+        let dns = DnsPacket::try_from(packet.as_slice()).expect("valid classic DNS question");
+        assert_eq!(dns.queries.queries[0].qclass.0, 0x8001);
+    }
+
+    #[test]
+    fn test_mdns_answer_strips_cache_flush_bit_from_class() {
+        let packet = [
+            0x00, 0x00, // transaction id
+            0x84, 0x00, // authoritative standard response
+            0x00, 0x00, // no question (unsolicited announcement)
+            0x00, 0x01, // one answer
+            0x00, 0x00, 0x00, 0x00, // no authority/additional records
+            0x00, // root name
+            0x00, 0x01, // A
+            0x80, 0x01, // cache-flush + IN
+            0x00, 0x00, 0x00, 0x78, // TTL 120
+            0x00, 0x04, 192, 0, 2, 1,
+        ];
+
+        let mdns = DnsPacket::try_from_mdns(&packet).expect("valid mDNS unique answer");
+        let answer = &mdns.answers.as_ref().expect("answer")[0];
+
+        assert_eq!(answer.answer_class.0, 1);
     }
 }

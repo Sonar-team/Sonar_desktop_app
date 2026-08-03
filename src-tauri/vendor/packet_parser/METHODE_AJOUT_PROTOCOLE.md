@@ -5,6 +5,7 @@ Ce document decrit la methode a suivre pour ajouter un protocole dans la librair
 ## Principes obligatoires
 
 - Le parseur du protocole doit implementer `TryFrom<&[u8]>`.
+- La logique canonique est celle de `ntp.rs` : verifier les octets d'un champ, placer la valeur si elle est valide, passer au champ suivant. Le premier echec retourne une erreur typee, et la chaine de detection essaye alors un autre protocole.
 - Le parseur ne doit pas consommer les donnees : il travaille sur une slice et garde des references avec des lifetimes quand c'est utile.
 - La strategie par defaut est zero-copy : aucune copie du paquet, du payload ou des champs variables.
 - Les erreurs doivent utiliser `thiserror`.
@@ -13,6 +14,7 @@ Ce document decrit la methode a suivre pour ajouter un protocole dans la librair
 - Le parseur doit retourner une erreur specifique des qu'une valeur de structure est invalide.
 - La rustdoc du type principal doit documenter le format du paquet avec un schema Mermaid `packet-beta`.
 - Les tests doivent couvrir au minimum un paquet valide, les tailles invalides, et les champs invalides importants.
+- Les golden tests et fixtures de reference valides utilisent uniquement des trames reelles extraites d'une capture (`pcaps_exemple/`). Les octets synthetiques sont reserves aux tests unitaires cibles (erreur, troncature, limite ou cas difficile a capturer) et doivent etre identifies comme tels.
 - Chaque fichier source ajoute pour un protocole doit contenir l'en-tete de licence MIT du projet.
 - Les constantes doivent etre nommees en majuscules, avec des underscores entre les mots si necessaire.
 
@@ -30,6 +32,7 @@ Regles a suivre :
 - Eviter de reconstruire un paquet ou une sous-partie du paquet.
 - Representer les champs texte en `&'a str` seulement si le protocole impose du texte UTF-8 et que la validation est faite ; sinon garder `&'a [u8]`.
 - Les conversions couteuses doivent etre placees dans des helpers optionnels ou dans la couche d'affichage, pas dans le parsing de base.
+- Borner toute pre-allocation dimensionnee par un champ du paquet avec `bounded_capacity` (`src/parse/application/protocols/mod.rs`) : un compteur controle par l'emetteur ne doit jamais piloter un `Vec::with_capacity` sans borne.
 
 `from_be_bytes` reste autorise et recommande pour les champs numeriques reseau. Il copie seulement quelques octets dans une valeur scalaire, par exemple 2 octets pour un `u16` ou 4 octets pour un `u32`. Ce n'est pas une allocation et ce n'est pas une copie du paquet.
 
@@ -148,7 +151,14 @@ Exemple existant a suivre : `src/errors/transport/tcp.rs` et `src/errors/applica
 
 ## 2. Creer les validations dans `checks`
 
-Les controles de taille, de bornes et de coherence doivent etre sortis du parseur quand ils ne sont pas triviaux. Le parseur doit appeler ces fonctions avant de lire les octets concernes.
+Les controles de taille, de bornes et de coherence doivent etre sortis du parseur : la validation vit dans `checks`, le parseur ne fait qu'enchainer les appels.
+
+Deux formes de fonctions, sur le modele de `src/checks/application/ntp.rs` :
+
+- `extract_*` : verifie les octets d'UN champ et retourne la valeur typee, prete a etre placee dans la structure. C'est la forme a privilegier — une fonction par champ contraint (cf. `extract_flags`, `extract_stratum`, `extract_reference_id` cote NTP).
+- `validate_*` : retourne `Result<(), FooError>` pour les controles sans valeur a produire — pre-check de longueur, coherence croisee entre champs deja extraits (cf. `validate_ntp_packet_length`, `validate_datetime_ordering`).
+
+Un champ sans aucune contrainte (compteur brut, identifiant libre) peut etre lu directement avec `from_be_bytes` dans le parseur, sans fonction dediee.
 
 Exemple :
 
@@ -167,9 +177,20 @@ pub fn validate_foo_min_length(packet: &[u8]) -> Result<(), FooError> {
     Ok(())
 }
 
-pub fn validate_foo_version(version: u8) -> Result<(), FooError> {
+pub fn extract_foo_version(byte: u8) -> Result<u8, FooError> {
+    let version = byte >> 4;
     if version != 1 {
         return Err(FooError::InvalidVersion(version));
+    }
+    Ok(version)
+}
+
+pub fn validate_foo_announced_length(packet: &[u8], length: u16) -> Result<(), FooError> {
+    if packet.len() < length as usize {
+        return Err(FooError::InvalidLength {
+            expected: length as usize,
+            actual: packet.len(),
+        });
     }
     Ok(())
 }
@@ -185,12 +206,15 @@ Exemples existants a suivre : `src/checks/transport/tcp/mod.rs` et `src/checks/a
 
 ## 3. Implementer le parseur avec `TryFrom<&[u8]>`
 
-Le fichier de parsing doit seulement :
+Le `TryFrom` est une sequence lineaire, sur le modele de `NtpPacket::try_from` :
 
-1. appeler les validations ;
-2. extraire les champs avec `from_be_bytes` ou des operations de bits claires ;
-3. construire la structure ;
-4. separer le header et le payload si le protocole en possede un.
+1. appeler le pre-check de longueur ;
+2. enchainer les `extract_*` champ par champ avec `?`, dans l'ordre du wire : check les octets du champ, placer la valeur si c'est bon, passer au champ suivant ;
+3. appliquer les validations croisees entre champs deja extraits ;
+4. construire la structure avec les valeurs deja validees ;
+5. separer le header et le payload si le protocole en possede un.
+
+Des qu'un check echoue, le `?` remonte l'erreur typee : le paquet n'est pas de ce protocole, et la chaine de detection essaye le suivant.
 
 Exemple :
 
@@ -198,7 +222,9 @@ Exemple :
 use std::convert::TryFrom;
 
 use crate::{
-    checks::application::foo::{validate_foo_min_length, validate_foo_version},
+    checks::application::foo::{
+        extract_foo_version, validate_foo_announced_length, validate_foo_min_length,
+    },
     errors::application::foo::FooError,
 };
 
@@ -216,18 +242,10 @@ impl<'a> TryFrom<&'a [u8]> for FooPacket<'a> {
     fn try_from(packet: &'a [u8]) -> Result<Self, Self::Error> {
         validate_foo_min_length(packet)?;
 
-        let version = packet[0] >> 4;
-        validate_foo_version(version)?;
-
+        let version = extract_foo_version(packet[0])?;
         let message_type = packet[1];
         let length = u16::from_be_bytes([packet[2], packet[3]]);
-
-        if packet.len() < length as usize {
-            return Err(FooError::InvalidLength {
-                expected: length as usize,
-                actual: packet.len(),
-            });
-        }
+        validate_foo_announced_length(packet, length)?;
 
         Ok(FooPacket {
             version,
@@ -242,7 +260,8 @@ impl<'a> TryFrom<&'a [u8]> for FooPacket<'a> {
 Points importants :
 
 - Toujours valider la longueur avant d'indexer dans la slice.
-- Ne pas faire de `unwrap()` dans le parseur.
+- Ne pas faire de `unwrap()` dans le parseur. Un `expect` justifie par un invariant prouve juste au-dessus est tolere, mais la forme `extract_*` permet en general de s'en passer.
+- Une fonction `extract_*` par champ contraint ; pas de validation inline dans le fichier de parsing.
 - Utiliser `u16::from_be_bytes`, `u32::from_be_bytes`, etc. pour les valeurs reseau.
 - Garder les slices empruntees (`&'a [u8]`) pour eviter les allocations inutiles.
 - Les valeurs reservees, versions, flags, longueurs et types doivent etre verifies.
@@ -305,36 +324,42 @@ Exemple application :
 pub mod foo;
 ```
 
-Ajouter le type dans l'enum si la couche expose une enum de protocoles.
+Exporter le module et son type principal. Ne pas ajouter automatiquement un
+variant a une enum publique exhaustive : cela casse les `match` exhaustifs des
+utilisateurs et exige donc une version majeure. Pour une version mineure,
+garder le nouveau parseur accessible par son module et exposer son nom via
+`Application`/`PacketFlow`.
 
-Exemple dans `src/parse/application/protocols/mod.rs` :
+Exemple compatible avec une version mineure dans
+`src/parse/application/protocols/mod.rs` :
 
 ```rust
-use foo::FooPacket;
-
 pub mod foo;
-
-#[derive(Debug)]
-pub enum ApplicationProtocol<'a> {
-    Foo(FooPacket<'a>),
-    Raw(&'a [u8]),
-    None,
-}
 ```
 
-Si le protocole doit etre detecte automatiquement, l'ajouter dans le `TryFrom<&[u8]>` de la couche concernee.
+Lors d'une version majeure qui autorise l'ajout d'un variant a
+`ApplicationProtocol`, ajouter simultanement son bras dans
+`src/displays/application/mod.rs` (`impl fmt::Display for ApplicationProtocol`).
 
-Exemple dans `src/parse/application/mod.rs` :
+### Choisir la voie de detection
+
+Deux voies existent, selon la force de la signature du protocole sur le wire.
+
+**Voie 1 — probing a l'aveugle** (`Application::try_from` dans `src/parse/application/mod.rs`) : reservee aux protocoles dont les octets s'identifient eux-memes. Exemples de signatures fortes : un marqueur litteral (`HTTP/`, `GIOP`), un en-tete binaire a contraintes serrees (DNS, NTP), une longueur annoncee qui doit correspondre exactement aux octets restants (PostgreSQL).
 
 ```rust
 if FooPacket::try_from(packet).is_ok() {
     return Ok(Application {
-        application_protocol: "Foo".to_string(),
+        application_protocol: "Foo",
     });
 }
 ```
 
-Attention : l'ordre de detection compte. Un parseur trop permissif peut capturer des paquets qui appartiennent a un autre protocole. Les validations doivent donc etre assez strictes avant d'ajouter le protocole dans la detection automatique.
+Attention : l'ordre de detection compte. Un parseur trop permissif peut capturer des paquets qui appartiennent a un autre protocole. Les contraintes d'ordre existantes sont documentees en commentaire dans la chaine (DHCP avant SRVLOC — issue #3 ; MQTT en dernier car son en-tete fixe est peu discriminant).
+
+**Voie 2 — detection gardee par port** (`PacketFlow::parse_application_from_transport` dans `src/parse/mod.rs`) : pour les protocoles a signature faible ou ambigue, que des checks meme parfaits ne peuvent pas distinguer d'un autre protocole. Exemples : les reponses FTP/SMTP/NNTP sont octet pour octet identiques (`2xx texte CRLF`) ; DHCPv6, AMS, COTP et QUIC short header ont des en-tetes trop peu contraints ; mDNS partage le format DNS mais avec une validation assouplie. Le port standard sert alors de garde-fou EN PLUS des checks du parseur, jamais a leur place.
+
+Critere de decision : si un payload valide du protocole peut aussi etre un payload valide d'un autre protocole deja detecte (ou d'un texte quelconque), le probing a l'aveugle est interdit — passer par la garde de port et documenter la raison en commentaire. Pour un protocole textuel, verifier aussi si une commande apparemment distinctive peut apparaitre dans le corps libre d'un autre protocole : sans etat de session, ce cas impose lui aussi une garde de port.
 
 ## 6. Ajouter les tests
 
@@ -367,23 +392,57 @@ fn test_foo_packet_too_short() {
 
 Les erreurs doivent etre testees avec `matches!` quand elles contiennent des champs.
 
+### Golden tests sur trames reelles
+
+Regle du projet : toute fixture de reference qui prouve le parsing ou la
+detection d'un message valide doit venir d'une trame reellement capturee.
+Un tableau d'octets synthetique ne doit jamais etre presente comme un golden
+test ni comme la reproduction d'une capture.
+
+Les octets synthetiques restent autorises dans les tests unitaires lorsqu'ils
+servent a construire precisement :
+
+- un paquet tronque a un offset donne ;
+- une valeur invalide ou reservee ;
+- une limite de taille ou de compteur ;
+- une combinaison d'erreurs difficile ou dangereuse a capturer ;
+- un test de non-regression minimal qui ne pretend pas etre une trame reelle.
+
+Ces tests doivent etre nommes ou commentes comme synthetiques. Lorsqu'un cas
+valide existe dans une capture, la capture reste la source de reference a
+privilegier.
+
+- Deposer la capture sous `pcaps_exemple/protocols/<proto>/` avec un `SOURCE.md` qui documente sa provenance.
+- Extraire le payload d'une trame avec tshark, par exemple :
+
+```bash
+tshark -r capture.pcap -Y "frame.number==5" -T fields -e tcp.payload
+```
+
+- Chaque fixture golden porte un commentaire citant le fichier pcap et le numero de trame source (`/// Trame 5 : commande USER (pcaps_exemple/ftp.pcap).`).
+- Ajouter au moins un test de niveau `PacketFlow` sur la trame complete (Ethernet + IP + transport) qui verifie que la detection remonte le bon nom de protocole.
+- Pour un protocole garde par port, tester aussi la non-detection quand les memes octets circulent hors du port standard.
+
 ## 7. Checklist avant commit
 
-- Le protocole implemente `TryFrom<&[u8]>`.
+- Le protocole implemente `TryFrom<&[u8]>` en sequence lineaire : pre-check de longueur, `extract_*` par champ dans l'ordre du wire, validations croisees, construction.
 - Les erreurs sont dans un fichier dedie et utilisent `thiserror::Error`.
-- Les validations sont dans un fichier separe sous `src/checks`.
+- Les validations et extractions sont dans un fichier separe sous `src/checks` (pas de validation inline dans le parseur).
 - Le type principal a une rustdoc avec un schema Mermaid `packet-beta`.
 - Les `mod.rs` necessaires exportent le nouveau module.
-- Les enums de protocoles sont mises a jour si necessaire.
-- La detection automatique est ajoutee seulement si les validations sont strictes.
+- La compatibilite semver de l'API publique est preservee ; un variant d'enum publique exhaustive n'est ajoute que dans une version majeure, avec son bras `Display`.
+- La voie de detection est choisie et justifiee : probing a l'aveugle si signature forte, garde de port sinon (avec commentaire expliquant pourquoi).
 - Les tests couvrent les cas valides et invalides.
+- Au moins un golden test sur trame reelle existe, avec le pcap source cite en commentaire ; les fixtures synthetiques eventuelles sont explicitement identifiees.
+- Les listes de protocoles de `README.md` et `README-fr.md` sont mises a jour.
 - `cargo fmt` passe.
-- `cargo test` passe.
+- `cargo test --all-features` passe.
+- `cargo clippy --all-targets --all-features -- -D warnings` passe.
 
 ## Commandes utiles
 
 ```bash
 cargo fmt
-cargo test
-cargo clippy --all-targets --all-features
+cargo test --all-features
+cargo clippy --all-targets --all-features -- -D warnings
 ```

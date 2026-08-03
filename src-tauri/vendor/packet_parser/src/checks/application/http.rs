@@ -32,6 +32,11 @@ pub fn split_head_body(payload: &str) -> (&str, &str) {
 }
 
 /// Requires the request line to be present and returns it borrowed.
+///
+/// Defensive check: through `HttpRequest::try_from`, the input comes from
+/// `head.split("\r\n").next()`, which always yields `Some` (even on an empty
+/// string), so `MissingRequestLine` is unreachable from that path and only
+/// guards direct callers of this function.
 pub fn require_request_line(line: Option<&str>) -> Result<&str, HttpParseError> {
     line.ok_or(HttpParseError::MissingRequestLine)
 }
@@ -70,6 +75,16 @@ pub fn require_version(part: Option<&str>) -> Result<&str, HttpParseError> {
 /// Requires a header name or value part to be present and returns it borrowed.
 pub fn require_header_part(part: Option<&str>) -> Result<&str, HttpParseError> {
     part.ok_or(HttpParseError::InvalidHeader)
+}
+
+/// Checks that a header line contains a `:` separator and returns the
+/// borrowed `(name, value)` pair, both trimmed of surrounding whitespace.
+/// A line without a `:` yields `InvalidHeader`.
+pub fn extract_header_line(line: &str) -> Result<(&str, &str), HttpParseError> {
+    let mut header_parts = line.splitn(2, ':');
+    let name = require_header_part(header_parts.next())?.trim();
+    let value = require_header_part(header_parts.next())?.trim();
+    Ok((name, value))
 }
 
 #[cfg(test)]
@@ -153,6 +168,33 @@ mod tests {
         assert_eq!(require_header_part(Some("Host")), Ok("Host"));
         assert_eq!(
             require_header_part(None),
+            Err(HttpParseError::InvalidHeader)
+        );
+    }
+
+    #[test]
+    fn test_extract_header_line_valid() {
+        assert_eq!(
+            extract_header_line("Host: www.example.com"),
+            Ok(("Host", "www.example.com"))
+        );
+        // No space after the colon, and surrounding whitespace is trimmed.
+        assert_eq!(extract_header_line("Accept:*/*"), Ok(("Accept", "*/*")));
+        assert_eq!(extract_header_line("  Host :  a  "), Ok(("Host", "a")));
+    }
+
+    #[test]
+    fn test_extract_header_line_keeps_extra_colons_in_value() {
+        assert_eq!(
+            extract_header_line("Referer: http://example.com/"),
+            Ok(("Referer", "http://example.com/"))
+        );
+    }
+
+    #[test]
+    fn test_extract_header_line_missing_colon() {
+        assert_eq!(
+            extract_header_line("NotAHeader"),
             Err(HttpParseError::InvalidHeader)
         );
     }

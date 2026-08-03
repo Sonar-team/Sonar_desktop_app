@@ -4,6 +4,46 @@ Tous les changements notables du projet seront documentes dans ce fichier.
 
 Le format suit l'esprit de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), avec des sections simples par type de changement.
 
+## [9.0.0] - 2026-08-03
+
+Version majeure : correction du decodage S7Comm et ajout des parseurs FTP,
+SMTP, NNTP et mDNS, avec une detection applicative durcie contre les faux
+positifs.
+
+### Rupture
+
+- `S7ParameterItem` gagne le champ public `count`. Les constructions par
+  litteral doivent maintenant le renseigner.
+- Les champs d'adressage S7ANY ne sont exposes que pour le syntax id `0x10` ;
+  les autres syntaxes conservent uniquement leurs octets bruts.
+
+### Ajoute
+
+- Parseurs zero-copy detailles pour FTP, SMTP et NNTP, avec validation des
+  commandes, reponses et fins de ligne.
+- Support mDNS distinct du DNS classique, notamment pour les annonces sans
+  question, le bit QU et le bit cache-flush.
+- Golden tests issus de captures reelles pour FTP, SMTP, NNTP et mDNS.
+- Oracle de fuzz : tout flux etiquete FTP doit obligatoirement etre transporte
+  par TCP avec le port source ou destination 21.
+
+### Corrige
+
+- Les offsets de `count`, `db_number`, `area` et `address` des items S7ANY,
+  ainsi que le decodage variable des en-tetes COTP DT/CR/CC.
+- Les payloads FTP hors TCP/21 ne sont plus etiquetes FTP : des commandes
+  comme `PASV` ou `PORT` peuvent apparaitre dans le corps d'un message SMTP ou
+  d'un article NNTP sans etre du FTP.
+- Le formatage COTP ne peut plus paniquer sur une valeur TPDU size hostile.
+- Mise a jour de `tokio-postgres` dans l'outil d'ingestion afin d'eliminer les
+  avis RustSec bloquants de son graphe de dependances.
+
+### Interne
+
+- Les parseurs applicatifs suivent desormais la meme sequence canonique de
+  checks et d'extraction que le parseur NTP, sans changement de comportement
+  attendu hors corrections documentees.
+
 ## [8.1.0] - 2026-07-14
 
 Reconstruction owned SLL/SLL2 hors parseur, pour les consommateurs qui
