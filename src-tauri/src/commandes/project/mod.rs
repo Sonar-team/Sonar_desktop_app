@@ -87,9 +87,32 @@ pub fn save_project<R: tauri::Runtime>(
         return Err(CaptureStateError::Export(ExportError::EmptyPath));
     }
 
-    // Verrous courts : snapshots seulement, toute l'I/O se fait hors verrou
-    // (même discipline que `export_csv` — le processing thread verrouille la
-    // matrice à chaque paquet).
+    let (manifest, revision) = write_snapshot(
+        &app.package_info().version.to_string(),
+        matrice.inner(),
+        capture_state.inner(),
+        Path::new(&path),
+    )?;
+    // Enregistrement explicite de l'utilisateur : blanchit le suivi dirty
+    // jusqu'à la révision snapshotée (l'autosave, lui, ne blanchit pas).
+    capture_state.lock()?.mark_clean_at(revision);
+    info!(
+        "✅ Projet enregistré vers {path} ({} flux, {} labels)",
+        manifest.matrix_rows, manifest.label_rows
+    );
+    Ok(())
+}
+
+/// Snapshot du relevé sous verrous courts puis écriture de l'archive vers
+/// `dest` (même discipline que `export_csv` : toute l'I/O hors verrou).
+/// Retourne le manifest écrit et la révision au moment du snapshot. Ne
+/// touche PAS au suivi dirty : l'appelant décide.
+fn write_snapshot(
+    app_version: &str,
+    matrice: &Arc<Mutex<FlowMatrix>>,
+    capture_state: &Arc<Mutex<CaptureState>>,
+    dest: &Path,
+) -> Result<(ProjectManifest, u64), CaptureStateError> {
     let (rows, link_type, labels) = {
         let matrix = matrice.lock()?;
         (
@@ -113,7 +136,7 @@ pub fn save_project<R: tauri::Runtime>(
 
     let manifest = ProjectManifest {
         schema_version: PROJECT_SCHEMA_VERSION,
-        app_version: app.package_info().version.to_string(),
+        app_version: app_version.to_string(),
         sfms_version: sonar_flows_core::sfms::SFMS_VERSION.to_string(),
         dlt: link_type.map(sonar_flows_core::sfms::link_type_name),
         matrix_rows: rows.len(),
@@ -124,20 +147,8 @@ pub fn save_project<R: tauri::Runtime>(
             .unwrap_or(0),
     };
 
-    write_project_archive(
-        Path::new(&path),
-        &manifest,
-        &rows,
-        link_type,
-        &labels,
-        &settings,
-    )?;
-    capture_state.lock()?.mark_clean_at(revision);
-    info!(
-        "✅ Projet enregistré vers {path} ({} flux, {} labels)",
-        manifest.matrix_rows, manifest.label_rows
-    );
-    Ok(())
+    write_project_archive(dest, &manifest, &rows, link_type, &labels, &settings)?;
+    Ok((manifest, revision))
 }
 
 /// Ouvre un projet `.sonar` : valide le manifest puis REMPLACE le relevé
@@ -221,6 +232,129 @@ pub fn is_session_dirty(
     capture_state: State<'_, Arc<Mutex<CaptureState>>>,
 ) -> Result<bool, CaptureStateError> {
     Ok(capture_state.lock()?.is_dirty())
+}
+
+// --- Autosave et récupération après crash (#159) ---
+
+/// Nom de l'archive d'autosave, réécrite en place (atomiquement) par le
+/// thread d'autosave tant que le relevé change.
+pub const AUTOSAVE_FILE: &str = "autosave.sonar";
+/// Sentinelle posée au démarrage et retirée à la fermeture propre : encore
+/// présente au démarrage suivant, elle signe un crash.
+const SESSION_LOCK_FILE: &str = "session.lock";
+/// Cadence de l'autosave. Le tick ne fait rien si la révision n'a pas bougé
+/// ou si un import est en cours.
+const AUTOSAVE_INTERVAL: std::time::Duration = std::time::Duration::from_secs(60);
+
+/// Offre de récupération figée au démarrage, AVANT la pose de la sentinelle
+/// de la session courante (sinon elle se détecterait elle-même).
+pub struct RecoveryOffer(Option<PathBuf>);
+
+/// Chemin de l'autosave de la session précédente si elle s'est terminée par
+/// un crash, sinon `None`. Le frontend propose alors la récupération.
+#[command(async)]
+pub fn get_recovery_offer(offer: State<'_, RecoveryOffer>) -> Option<String> {
+    offer
+        .0
+        .as_ref()
+        .map(|path| path.to_string_lossy().into_owned())
+}
+
+/// Dossier des fichiers d'autosave/sentinelle de l'application.
+fn autosave_dir<R: tauri::Runtime>(app: &AppHandle<R>) -> Option<PathBuf> {
+    use tauri::Manager;
+    match app.path().app_data_dir() {
+        Ok(dir) => Some(dir.join("autosave")),
+        Err(err) => {
+            warn!("[autosave] dossier de données introuvable: {err}");
+            None
+        }
+    }
+}
+
+/// Une sentinelle laissée par une session morte + un autosave lisible =
+/// récupération à proposer. Fonction pure sur le contenu du dossier.
+fn detect_recovery(dir: &Path) -> Option<PathBuf> {
+    let autosave = dir.join(AUTOSAVE_FILE);
+    (dir.join(SESSION_LOCK_FILE).exists() && autosave.is_file()).then_some(autosave)
+}
+
+/// À appeler une fois au setup : calcule l'offre de récupération, pose la
+/// sentinelle de cette session et démarre le thread d'autosave. L'offre
+/// retournée est à placer dans l'état managé.
+pub fn init_session_persistence<R: tauri::Runtime>(app: &AppHandle<R>) -> RecoveryOffer {
+    let Some(dir) = autosave_dir(app) else {
+        return RecoveryOffer(None);
+    };
+    if let Err(err) = fs::create_dir_all(&dir) {
+        warn!("[autosave] création {} impossible: {err}", dir.display());
+        return RecoveryOffer(None);
+    }
+
+    let offer = detect_recovery(&dir);
+    if offer.is_some() {
+        info!("[autosave] session précédente non fermée : récupération proposée");
+    }
+    if let Err(err) = fs::write(dir.join(SESSION_LOCK_FILE), std::process::id().to_string()) {
+        warn!("[autosave] sentinelle non posée: {err}");
+    }
+
+    spawn_autosaver(app.clone(), dir.join(AUTOSAVE_FILE));
+    RecoveryOffer(offer)
+}
+
+/// À appeler à la sortie propre (`RunEvent::Exit`) : la sentinelle retirée,
+/// le prochain démarrage ne proposera pas de récupération.
+pub fn remove_session_lock<R: tauri::Runtime>(app: &AppHandle<R>) {
+    if let Some(dir) = autosave_dir(app) {
+        let _ = fs::remove_file(dir.join(SESSION_LOCK_FILE));
+    }
+}
+
+/// Thread d'autosave : réécrit l'archive d'autosave quand la révision a
+/// bougé depuis la dernière écriture, jamais pendant un import (le prochain
+/// tick verra l'état stable d'après). Best-effort : une erreur est tracée
+/// et le tick suivant réessaie.
+fn spawn_autosaver<R: tauri::Runtime>(app: AppHandle<R>, autosave_path: PathBuf) {
+    use tauri::Manager;
+    std::thread::spawn(move || {
+        let mut last_written: u64 = 0;
+        loop {
+            std::thread::sleep(AUTOSAVE_INTERVAL);
+
+            let capture_state = app.state::<Arc<Mutex<CaptureState>>>();
+            let (revision, importing) = match capture_state.lock() {
+                Ok(state) => (
+                    state.current_revision(),
+                    state.phase == crate::state::capture::capture_status::CapturePhase::Importing,
+                ),
+                Err(err) => {
+                    warn!("[autosave] verrou empoisonné, tick ignoré: {err}");
+                    continue;
+                }
+            };
+            if revision == last_written || importing {
+                continue;
+            }
+
+            let matrice = app.state::<Arc<Mutex<FlowMatrix>>>();
+            match write_snapshot(
+                &app.package_info().version.to_string(),
+                matrice.inner(),
+                capture_state.inner(),
+                &autosave_path,
+            ) {
+                Ok((manifest, snapshot_revision)) => {
+                    last_written = snapshot_revision;
+                    info!(
+                        "[autosave] relevé sauvegardé ({} flux, révision {snapshot_revision})",
+                        manifest.matrix_rows
+                    );
+                }
+                Err(err) => warn!("[autosave] écriture échouée, retenté au prochain tick: {err:?}"),
+            }
+        }
+    });
 }
 
 /// Écrit l'archive projet vers `dest` : entrées composées en staging via les
@@ -712,6 +846,37 @@ mod tests {
         assert!(
             message.contains(MATRIX_ENTRY),
             "le refus doit nommer l'entrée manquante, trouvé: {message}"
+        );
+
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn recovery_needs_both_sentinel_and_autosave() {
+        let dir = unique_temp_dir("test_recovery");
+
+        assert!(
+            detect_recovery(&dir).is_none(),
+            "dossier vide : rien à récupérer"
+        );
+
+        fs::write(dir.join(SESSION_LOCK_FILE), b"42").unwrap();
+        assert!(
+            detect_recovery(&dir).is_none(),
+            "sentinelle sans autosave : rien à proposer"
+        );
+
+        fs::write(dir.join(AUTOSAVE_FILE), b"zip").unwrap();
+        assert_eq!(
+            detect_recovery(&dir),
+            Some(dir.join(AUTOSAVE_FILE)),
+            "sentinelle + autosave : récupération proposée"
+        );
+
+        fs::remove_file(dir.join(SESSION_LOCK_FILE)).unwrap();
+        assert!(
+            detect_recovery(&dir).is_none(),
+            "fermeture propre (sentinelle retirée) : pas de récupération"
         );
 
         fs::remove_dir_all(&dir).ok();

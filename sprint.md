@@ -40,10 +40,15 @@ complète en commentaire de #159.
 4. [~] Arrêt gracieux à la fermeture : `stop_capture` (drainage #158 +
    jointure) avant `exit`, best-effort. *(03/08 ; la « sauvegarde finale »
    arrive avec l'autosave, point 5)*
-5. [ ] Autosave périodique + sur événements clés (fin d'import, arrêt de
-   capture) vers `app_data/autosave/`, snapshot sous verrou court.
-6. [ ] Récupération après crash : sentinelle `session.lock` + autosave →
-   dialogue de récupération au démarrage.
+5. [x] Autosave : thread périodique (60 s) piloté par la révision — n'écrit
+   que si le relevé a changé, jamais pendant un import, snapshot sous
+   verrou court, écriture atomique, ne blanchit pas le suivi dirty.
+   *(04/08 ; déclenchement sur événements clés et intervalle adaptatif :
+   améliorations possibles, non bloquantes)*
+6. [x] Récupération après crash : sentinelle `session.lock` posée au setup,
+   retirée sur `RunEvent::Exit` ; sentinelle restante + autosave présent au
+   démarrage → dialogue de récupération (App.vue) → `open_project`.
+   *(04/08)*
 7. [ ] Projets récents + préférences via `tauri-plugin-store` (vérifier
    l'atomicité d'écriture du plugin avant de lui confier la config).
 
@@ -68,7 +73,9 @@ complète en commentaire de #159.
   IPC : import réel → save → état vidé → open → matrice identique)*
 - [x] Une écriture interrompue ne corrompt jamais le dernier projet valide.
   *(phase A.1 : `.part` + rename, testé)*
-- [ ] Un crash simulé propose la récupération du dernier checkpoint.
+- [x] Un crash simulé propose la récupération du dernier checkpoint.
+  *(détection sentinelle+autosave testée unitairement ; à rejouer en E2E
+  réel lors de la validation #146)*
 - [x] Reset et fermeture demandent confirmation si l'état est modifié.
   *(phase A.3 ; la croix de fenêtre passait déjà par `onCloseRequested`)*
 - [x] Le format est versionné… *(v1 + refus des schémas futurs, testé)* —
