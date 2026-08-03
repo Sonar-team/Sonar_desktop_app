@@ -35,20 +35,29 @@ Chemin critique vers la RC : #154 → #151 → #159/#160 → #136/#162 →
 
 ## Ordre immédiat
 
-1. Fermer le sprint fidélité : [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154)
-   (identité d'actif) puis le reliquat corpus/fuzzing de
+1. Sprint actif (démarré le 03/08) : sessions persistantes
+   [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159) —
+   phases et avancement dans `sprint.md`.
+2. Reliquat fidélité en parallèle : [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154)
+   (identité d'actif — prérequis de la phase B du sprint) puis corpus/fuzzing de
    [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151).
-2. Ouvrir le sprint sessions : [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159)
-   et [#160](https://github.com/Sonar-team/Sonar_desktop_app/issues/160).
-3. Chaîne de release : [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136)
-   (release immuable) et [#162](https://github.com/Sonar-team/Sonar_desktop_app/issues/162)
-   (gates bloquantes), puis [#94](https://github.com/Sonar-team/Sonar_desktop_app/issues/94)
+3. Ensuite [#160](https://github.com/Sonar-team/Sonar_desktop_app/issues/160),
+   puis la chaîne de release : [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136)
+   et [#162](https://github.com/Sonar-team/Sonar_desktop_app/issues/162),
+   puis [#94](https://github.com/Sonar-team/Sonar_desktop_app/issues/94)
    (signatures) et [#146](https://github.com/Sonar-team/Sonar_desktop_app/issues/146)
    (E2E installateurs).
 4. En parallèle court : [#175](https://github.com/Sonar-team/Sonar_desktop_app/issues/175)
    (Depends libpcap du .deb — petit et bloquant à l'installation).
 
-## Sprint actif — fidélité des données et intégrité des sessions
+## Sprint actif — sessions persistantes (#159)
+
+Démarré le 03/08/2026, phases A/B/C et Definition of Done dans `sprint.md`.
+Phase A en cours : format `.sonar` v1 + commandes save/open livrés (PR du
+03/08) ; restent dirty state, arrêt gracieux, autosave, récupération crash
+et projets récents.
+
+## Sprint précédent — fidélité des données et intégrité des sessions (reliquat)
 
 Suivi : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 
