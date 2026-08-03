@@ -1621,7 +1621,7 @@ dependencies = [
  "js-sys",
  "log",
  "wasm-bindgen",
- "windows-core 0.62.2",
+ "windows-core 0.61.2",
 ]
 
 [[package]]
@@ -2549,9 +2549,9 @@ dependencies = [
 
 [[package]]
 name = "packet_parser"
-version = "8.1.0"
+version = "9.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16c6a06f2dccae88389f37f4d14ffb4a643fc8cf429769edfe1bc507c21c4125"
+checksum = "12ffb2700810ad54acfb38c16c39ec5c995a2e8dce7765453abdde61fd0b497a"
 dependencies = [
  "chrono",
  "hex",
@@ -3449,9 +3449,7 @@ dependencies = [
 
 [[package]]
 name = "sonar-flows-core"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13ae63af83769c617dd10d667d57179704bc13fc03c9d7429437421f4799faf0"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "csv",

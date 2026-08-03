@@ -41,11 +41,11 @@ tauri-plugin-log = "2.8.0"
 tauri-plugin-process = "2.3.1"
 
 pcap = "2.4.0"
-packet_parser = "8.1.0"
+packet_parser = "9.0.0"
 netdev = "0.42.0"
 # Cœur métier partagé (matrice, CSV, paquets/tunnels, graphe, import PCAP),
 # consommé aussi par sonar-cli : source unique du domaine, cf. VISION.md.
-sonar-flows-core = { version = "=0.3.2", features = [
+sonar-flows-core = { version = "=0.4.0", features = [
   "pcap",
 ] }
 
@@ -82,3 +82,9 @@ tauri = { version = "2.11.5", features = ["test"] }
 [profile.release]
 debug = false
 strip = "symbols"
+
+# TEMPORAIRE : à retirer dès que sonar-flows-core 0.4.0 est publié sur
+# crates.io. Pointe sur le workspace local (packet_parser 9.0.0) pour que
+# chaque commit de la branche reste compilable avant publication.
+[patch.crates-io]
+sonar-flows-core = { path = "../sonar-rust/crates/sonar-flows-core" }
