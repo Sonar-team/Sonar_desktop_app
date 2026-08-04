@@ -216,6 +216,23 @@ click_main() {
   "$input_binary" click-id "$main_id" "$1" "$2"
 }
 
+# Boutons de la barre d'outils (TopBar.vue), repérés par leur RANG (1 = le
+# premier bouton à gauche). Les boutons ont un pas régulier : la position est
+# calculée au lieu d'être codée en dur, de sorte qu'insérer un bouton dans
+# TopBar.vue ne demande que de décaler les rangs ci-dessous — c'est ce qui
+# avait été oublié à l'ajout des boutons projet (#159), faisant cliquer le
+# scénario à côté de l'export des labels.
+TOOLBAR_Y=46
+TOOLBAR_FIRST_X=35
+# Pas horizontal en dixièmes de pixel (bash n'a pas de flottants).
+TOOLBAR_STEP_DECI=394
+
+click_toolbar() {
+  local rank="$1"
+  local x=$((TOOLBAR_FIRST_X + (rank - 1) * TOOLBAR_STEP_DECI / 10))
+  click_main "$x" "$TOOLBAR_Y"
+}
+
 focus_id() {
   local window_id="$1"
   if ((wm_available == 1)); then
@@ -257,6 +274,34 @@ fill_native_dialog() {
   focus_id "$main_id"
 }
 
+# Répond « oui » à une boîte de confirmation native (pas un sélecteur de
+# fichiers). Depuis #159, réinitialiser un relevé non enregistré en ouvre une :
+# sans y répondre, le scénario resterait bloqué sur le dialogue.
+confirm_native_dialog() {
+  local dialog_id
+  dialog_id="$("$input_binary" wait-dialog "$main_id" 15000)"
+  dialog_count=$((dialog_count + 1))
+  log "Dialogue de confirmation $dialog_count : $dialog_id"
+  import -window "$dialog_id" \
+    "$artifacts_dir/native-dialog-${dialog_count}-before.png"
+
+  # Le focus initial de GTK est sur le bouton de REFUS (« No ») : appuyer
+  # sur Entrée annulerait l'action. Le bouton d'acceptation est le dernier
+  # de la rangée du bas ; on le vise via la géométrie réelle du dialogue
+  # plutôt qu'avec des coordonnées fixes dépendantes du thème.
+  local width height
+  read -r width height _ _ < <("$input_binary" geometry-id "$dialog_id")
+  focus_id "$dialog_id"
+  "$input_binary" click-id "$dialog_id" \
+    "$((width * 3 / 4))" "$((height - 20))"
+  if ! "$input_binary" wait-gone "$dialog_id" 5000 2>/dev/null; then
+    import -window "$dialog_id" \
+      "$artifacts_dir/native-dialog-${dialog_count}-after.png" || true
+    fail "confirmation native non validée (dialogue $dialog_id)"
+  fi
+  focus_id "$main_id"
+}
+
 assert_bundled_assets() {
   local asset_prefix
   [[ -d "$ROOT_DIR/dist/assets" ]] || {
@@ -275,7 +320,7 @@ assert_bundled_assets() {
   pass "assets CSP présents et non incorporés en data:"
 }
 
-for command_name in cc pkg-config xclip import identify grep file; do
+for command_name in cc pkg-config xclip import identify grep file unzip; do
   require_command "$command_name"
 done
 
@@ -427,6 +472,7 @@ if ((live_capture == 1)); then
   send_ctrl_shift p
   wait_for_log "Capture arrêtée : false" 20
   send_ctrl_shift r
+  confirm_native_dialog
   sleep 1
   pass "capture live démarrée puis arrêtée"
 else
@@ -468,7 +514,7 @@ if ((png_width < main_width * 2 - 20 || png_height < 1000)); then
 fi
 pass "export PNG valide (${png_width}x${png_height})"
 
-click_main 350 46
+click_toolbar 11 # importer un fichier de labels (icône CSV)
 sleep 1
 capture_window "07-import-labels-dialog"
 click_main "$center_x" "$((center_y - 30))"
@@ -479,7 +525,7 @@ sleep 1
 capture_window "08-labels-imported"
 pass "import du fichier de labels"
 
-click_main 271 46
+click_toolbar 9 # gérer les labels
 sleep 1
 capture_window "09-labels-management"
 pass "panneau de gestion des labels"
@@ -495,7 +541,7 @@ fi
 pass "export CSV de la matrice"
 
 labels_export_base="$artifacts_dir/labels-export"
-click_main 232 46
+click_toolbar 8 # exporter les labels
 fill_native_dialog "$labels_export_base"
 labels_export="$labels_export_base.csv"
 wait_for_file "$labels_export"
@@ -504,22 +550,26 @@ if ! head -n 1 "$labels_export" | grep -Fxq "mac,ip,label"; then
 fi
 pass "export CSV des labels"
 
+# Depuis #102 (v4.10.0), `export_logs` écrit une archive ZIP unique et non
+# plus un dossier de fichiers `.log`.
 logs_export_base="$artifacts_dir/logs-export"
 send_ctrl l
 fill_native_dialog "$logs_export_base"
-logs_export_dir="$logs_export_base.log"
-logs_deadline=$((SECONDS + 20))
-while [[ ! -s "$logs_export_dir" ]] &&
-  ! find "$logs_export_dir" -maxdepth 1 -type f -name '*.log' -print -quit \
-    2>/dev/null | grep -q .; do
-  if ((SECONDS >= logs_deadline)); then
-    fail "aucun fichier de log exporté dans $logs_export_dir"
-  fi
-  sleep 0.25
-done
-pass "export des logs"
+logs_export="$logs_export_base.zip"
+wait_for_file "$logs_export" 20
+if ! file "$logs_export" | grep -Fq "Zip archive data"; then
+  fail "l'export des logs n'est pas une archive ZIP : $logs_export"
+fi
+if ! unzip -Z1 "$logs_export" | grep -q '\.log$'; then
+  fail "l'archive de logs ne contient aucun fichier .log"
+fi
+pass "export des logs en archive ZIP"
 
+# Le relevé courant est modifié : le reset demande confirmation (#159).
+# Que le reset ait bien vidé l'état est vérifié par le réimport ci-dessous,
+# dont les compteurs attendus supposent une matrice repartie de zéro.
 send_ctrl_shift r
+confirm_native_dialog
 sleep 1
 send_ctrl o
 sleep 1
