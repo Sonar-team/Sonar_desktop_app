@@ -93,6 +93,14 @@
       }
     },
 
+    "linux": {
+      "deb": {
+        "depends": [
+          "libpcap0.8"
+        ]
+      }
+    },
+
     "resources": {
       "resources/labels.csv": "resources/labels.csv"
     }
