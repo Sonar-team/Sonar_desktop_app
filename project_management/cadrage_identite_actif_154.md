@@ -104,7 +104,11 @@ même mécanique de PR que #183.
    même paquet peut être vu par plusieurs capteurs — mettre le capteur
    dans la clé empêcherait de reconnaître ce recouvrement (dédup et
    corrélation inter-capteurs).
-3. Tranche 3 : périmètre en cours de discussion (#154 vs epic #164).
+3. **Tranche 3 déplacée dans l'epic #164.** La corrélation explicite
+   d'actifs (fusion manuelle tracée et réversible de deux nœuds) relève du
+   même modèle que l'inventaire d'actifs et la baseline : la construire
+   dans #154 ferait deux modèles pour la même chose. #154 se ferme sur
+   les tranches 1 et 2.
 4. **Saisie du site/capteur : au moment de l'arrêt (stop) ou de
    l'enregistrement, à la Wireshark** — pas de configuration a priori.
    Implication : un dialogue de qualification du relevé au stop/save
@@ -119,3 +123,27 @@ Le dépôt source de sonar-flows-core est ce même repo :
 fuzz), publié sur crates.io par `.github/workflows/publish-crates.yml`.
 Cycle tranche 1 : PR sur `sonar-rust` (0.5.0) → publication → re-vendor
 `src-tauri` → vet, comme pour packet_parser 9 (PR #183).
+
+### Tranche 1 implémentée — 04/08/2026 (sonar-flows-core 0.5.0)
+
+- Clé de nœud `(vlan, ip)` (`l3_node_key`), repli L2 `(vlan, mac)` ;
+  hors trame taguée la clé reste l'IP nue (continuité des relevés).
+- Ids de nœuds **et** d'arêtes stables : hash FNV-1a de la clé
+  d'identité (le même hachage que `encap_id`), plus de compteurs
+  globaux — snapshots déterministes.
+- `Node.vlan_id: Option<u16>` et `Node.duplicate_ip: bool` (IP portée
+  par plusieurs VLAN : signalée via un index IP → nœuds, jamais
+  fusionnée). Contrat TS à régénérer côté desktop au re-vendoring.
+- Labels : `update_node_label` retourne désormais `Vec<GraphUpdate>`
+  (une (mac, ip) sur deux VLAN étiquette les deux nœuds) et matche
+  toutes les MAC observées ; `refresh_labels` essaie le résolveur sur
+  chaque MAC observée. **Précision de périmètre** : le palier de
+  précédence `(vlan, mac, ip)` exact demanderait le VLAN dans le store
+  de labels donc dans labels.csv — contradictoire avec « ne touche pas
+  au CSV » ; il part en tranche 2 avec le versionnage des formats.
+- sonar-flows-cli : le départage des égalités de trafic de l'export
+  Graphviz tranche sur l'identité lisible (IP/MAC), plus sur l'id.
+- Ripple attendu au re-vendoring dans src-tauri : signatures
+  `Node::new`/`Edge::new` (clé en premier argument), retour de
+  `update_node_label` (labels/commands.rs), nouveaux champs dans le
+  contrat d'événements.

@@ -89,7 +89,14 @@ fn filtered_edges<'a>(graph: &'a GraphData, options: &GraphOptions) -> Vec<&'a E
         .collect();
 
     // Les nœuds les plus actifs sont retenus, puis on garde le sous-graphe
-    // induit. La clé textuelle tranche les égalités de façon stable.
+    // induit. Les égalités de trafic sont tranchées par l'identité lisible
+    // (IP/MAC) : les ids de nœuds sont des hash opaques depuis
+    // sonar-flows-core 0.5 et leur ordre lexicographique n'a aucun sens.
+    let nodes_by_id: HashMap<&str, &Node> = graph
+        .nodes
+        .values()
+        .map(|node| (node.id.as_str(), node))
+        .collect();
     let mut traffic: HashMap<&str, u64> = HashMap::new();
     for edge in &candidates {
         for node_id in [&edge.source, &edge.target] {
@@ -99,7 +106,12 @@ fn filtered_edges<'a>(graph: &'a GraphData, options: &GraphOptions) -> Vec<&'a E
     }
     let mut ranked_nodes: Vec<(&str, u64)> = traffic.into_iter().collect();
     ranked_nodes.sort_by(|(id_a, bytes_a), (id_b, bytes_b)| {
-        bytes_b.cmp(bytes_a).then_with(|| id_a.cmp(id_b))
+        let key_a = nodes_by_id.get(id_a).map_or(*id_a, |n| stable_node_id(n));
+        let key_b = nodes_by_id.get(id_b).map_or(*id_b, |n| stable_node_id(n));
+        bytes_b
+            .cmp(bytes_a)
+            .then_with(|| key_a.cmp(key_b))
+            .then_with(|| id_a.cmp(id_b))
     });
     let retained: HashSet<&str> = ranked_nodes
         .into_iter()
