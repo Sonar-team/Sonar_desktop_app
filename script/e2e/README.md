@@ -15,7 +15,7 @@ Le scénario couvre actuellement :
 - l'import PCAP puis le rendu du graphe ;
 - l'activation et l'arrêt de ForceAtlas2 ;
 - l'import et la gestion des labels ;
-- les exports PNG, matrice CSV, labels CSV et logs ;
+- les exports PNG, matrice CSV, labels CSV et logs (archive ZIP) ;
 - le reset et l'import d'une matrice CSV ;
 - l'absence de violation CSP et de panic dans les logs runtime ;
 - la présence des images empaquetées lorsque `dist/` est disponible.
@@ -31,7 +31,7 @@ binaire Tauri lui-même :
 ```bash
 sudo apt-get install --yes \
   build-essential pkg-config libx11-dev libxtst-dev \
-  xvfb openbox x11-utils wmctrl xclip imagemagick dbus-x11 file
+  xvfb openbox x11-utils wmctrl xclip imagemagick dbus-x11 file unzip
 ```
 
 Le script utilise la session X11 courante lorsque `DISPLAY` est défini. Sinon,
