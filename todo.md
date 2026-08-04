@@ -1,13 +1,13 @@
 # Backlog SONAR — de la bêta avancée au produit Pro
 
-> Dernière synchronisation GitHub : 03/08/2026 (v4.10.0)
+> Dernière synchronisation GitHub : 04/08/2026 (v4.10.0)
 > Source : audit complet bêta → pro du 13/07/2026
 > Règle : les issues GitHub sont la source de vérité ; ce fichier fournit la
 > priorité et l'ordre d'exécution. `sprint.md` décrit uniquement le sprint actif.
 > Priorisation détaillée :
 > [project_management/priorisation_beta_to_pro.md](project_management/priorisation_beta_to_pro.md).
 
-## Baromètre « app pro » — 03/08/2026
+## Baromètre « app pro » — 04/08/2026
 
 Dérivé des règles de sortie de bêta (bas de ce fichier) : **9 P0 et
 9 P1 ouverts** (hors épic de suivi #165). La Release Candidate exige
@@ -16,19 +16,25 @@ Dérivé des règles de sortie de bêta (bas de ce fichier) : **9 P0 et
 
 | Étape | Avancement | Restant (issues) |
 | --- | --- | --- |
-| 1. Résultats fiables | ~75 % | #154, #151 (corpus/fuzzing), #150 (reliquat), #88 |
-| 2. Ne jamais perdre son travail | ~30 % | #159, #160, #111, #102 (reliquat), #144 |
-| 3. Installation professionnelle | ~20 % | #94, #146, #136, #162, #175, #163, #96, #143, #98 |
-| 4. Analyse différenciante | 0 % | #164, #156, #132 (démarrage prévu après les P0) |
+| 1. Résultats fiables | ~85 % | #154 (tranche 2), #151 (corpus/fuzzing), #150 (reliquat), #88 |
+| 2. Ne jamais perdre son travail | ~60 % | #159 (phases B/C), #160, #111, #102 (reliquat), #144 |
+| 3. Installation professionnelle | ~25 % | #94, #146, #136, #162, #163, #96, #143, #98 |
+| 4. Analyse différenciante | 0 % | #164 (+ tranche 3 de #154), #156, #132 (après les P0) |
 
-Acquis depuis la dernière sync (15/07 → 03/08) : intégrité frontend
+Acquis depuis la dernière sync (15/07 → 04/08) : intégrité frontend
 (#161) et erreurs enfin toujours visibles (audit du 01/08 corrigé le
 02/08, `b3d42a07`), routes mortes supprimées (#145), décision Npcap
 actée (#138 : prérequis externe, fermée le 20/07), releases historiques
 assainies (#169), interblocages démarrage/arrêt (#166) et imports
 vides/resets concurrents (#167) corrigés, oracle TShark livré (#168),
 Windows 11 validé (#97), packet_parser 9.0.0 intégré via
-sonar-flows-core 0.4.0 (PR #183).
+sonar-flows-core 0.4.0 (PR #183), sessions persistantes phase A
+(#159 : format `.sonar`, dirty state, autosave, récupération crash,
+projets récents — PR #184), Depends libpcap du .deb corrigé (#175,
+PR #185, fermée le 04/08), identité de nœud (vlan, ip) + ids stables
+livrée (tranche 1 de #154, sonar-flows-core 0.5.0, PR #186/#187 ;
+tranche 3 déplacée vers #164 — cadrage dans
+`project_management/cadrage_identite_actif_154.md`).
 
 Chemin critique vers la RC : #154 → #151 → #159/#160 → #136/#162 →
 #94/#146.
@@ -39,7 +45,8 @@ Chemin critique vers la RC : #154 → #151 → #159/#160 → #136/#162 →
    [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159) —
    phases et avancement dans `sprint.md`.
 2. Reliquat fidélité en parallèle : [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154)
-   (identité d'actif — prérequis de la phase B du sprint) puis corpus/fuzzing de
+   tranche 2 (contexte site/capteur saisi au stop/save — prérequis de la
+   phase B du sprint ; tranche 1 livrée le 04/08) puis corpus/fuzzing de
    [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151).
 3. Ensuite [#160](https://github.com/Sonar-team/Sonar_desktop_app/issues/160),
    puis la chaîne de release : [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136)
@@ -47,15 +54,14 @@ Chemin critique vers la RC : #154 → #151 → #159/#160 → #136/#162 →
    puis [#94](https://github.com/Sonar-team/Sonar_desktop_app/issues/94)
    (signatures) et [#146](https://github.com/Sonar-team/Sonar_desktop_app/issues/146)
    (E2E installateurs).
-4. En parallèle court : [#175](https://github.com/Sonar-team/Sonar_desktop_app/issues/175)
-   (Depends libpcap du .deb — petit et bloquant à l'installation).
 
 ## Sprint actif — sessions persistantes (#159)
 
 Démarré le 03/08/2026, phases A/B/C et Definition of Done dans `sprint.md`.
-Phase A en cours : format `.sonar` v1 + commandes save/open livrés (PR du
-03/08) ; restent dirty state, arrêt gracieux, autosave, récupération crash
-et projets récents.
+Phase A livrée le 04/08 (PR #184) : format `.sonar` v1, save/open, dirty
+state, arrêt gracieux, autosave, récupération crash, projets récents.
+Phase B (schéma v2 + contexte de relevé) attend la tranche 2 de #154 ;
+phase C (manifest de preuve, signature) ensuite.
 
 ## Sprint précédent — fidélité des données et intégrité des sessions (reliquat)
 
@@ -67,7 +73,7 @@ Suivi : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 - [ ] **P0** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — détecter le DLT et comptabiliser exhaustivement les résultats de parsing *(l'essentiel est livré depuis le 15/07 : rapport qualité visible, identité RAW/SLL/SLL2 réimportable ; l'issue reste ouverte pour le reliquat — la fermer ou la découper)*
 - [x] **P0** [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) — ne perdre aucun paquet accepté à l'arrêt ou au plafond de flux *(fait le 14/07)*
 - [x] **P0** [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) — générer et tester le contrat IPC Rust ↔ TypeScript *(refermée le 15/07 après huit revues — voir sprint.md)*
-- [ ] **P0** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée par site, capteur, interface et VLAN *(dernier gros morceau du sprint)*
+- [ ] **P0** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée par site, capteur, interface et VLAN *(tranche 1 — clé de nœud (vlan, ip), ids stables, anomalies IP dupliquée/multi-MAC — livrée le 04/08 via sonar-flows-core 0.5.0, PR #186/#187 ; reste la tranche 2 — site/capteur saisis au stop/save, SFMS v2 + manifest v2 ; tranche 3 déplacée vers #164)*
 - [ ] **P1 validation** [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) — revalider immédiatement les chemins espaces/Unicode *(backend testé le 14/07 ; restent Windows et front)*
 - [ ] **P1** *(sans issue — à ouvrir)* — créer les fichiers de test (pcap simples forgés + matrices CSV attendues) et les tests d'intégration couvrant import pcap, conversion pcap → matrice, export et ré-import de matrice *(arborescence `src-tauri/test_files/pcaps/` créée le 16/07 ; l'oracle TShark #168 couvre une partie de l'exactitude depuis le 23/07)*
 
@@ -92,7 +98,7 @@ La Definition of Done détaillée est dans `sprint.md` et dans l'issue #165.
     avec les API Tauri simulées ; conserver WebdriverIO/Tauri pour le binaire,
     l’IPC Rust et les validations natives par OS.
 - [ ] **P0** [#162](https://github.com/Sonar-team/Sonar_desktop_app/issues/162) — quality gates et scans bloquants sur toute release taggée
-- [ ] **à prioriser** [#175](https://github.com/Sonar-team/Sonar_desktop_app/issues/175) — le .deb ne déclare pas libpcap dans `Depends:` *(bloquant à l'installation Debian/Ubuntu, correctif petit)*
+- [x] [#175](https://github.com/Sonar-team/Sonar_desktop_app/issues/175) — le .deb ne déclare pas libpcap dans `Depends:` *(corrigé le 04/08, PR #185 — vérifié en conteneur Debian trixie propre)*
 - [ ] **P1** [#96](https://github.com/Sonar-team/Sonar_desktop_app/issues/96) — modèle de menace, preuve de passivité et durcissement runtime
 - [ ] **P1** [#143](https://github.com/Sonar-team/Sonar_desktop_app/issues/143) — moindre privilège Tauri, chemins validés et helper de capture
 - [ ] **P1** [#163](https://github.com/Sonar-team/Sonar_desktop_app/issues/163) — documentation et support d'une distribution professionnelle
