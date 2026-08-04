@@ -1,4 +1,4 @@
-#SFMS version=1 dlt=ETHERNET
+#SFMS version=2 dlt=ETHERNET
 mac_source,mac_destination,vlan_id,protocol_data_link,ip_source,ip_source_type,label_source,ip_destination,ip_destination_type,label_destination,port_source,port_destination,protocol_transport,application_protocol,count,total_bytes,last_seen,encap_id,origin
 00:00:00:00:00:00,00:00:00:00:00:00,,IPv4,127.0.0.1,Loopback,,127.0.0.1,Loopback,,5246,34751,UDP,Unknown,1,167,2014-02-10 20:06:58.957782 UTC,,
 00:00:00:00:00:00,00:00:00:00:00:00,,IPv4,127.0.0.1,Loopback,,127.0.0.1,Loopback,,5247,35981,UDP,Unknown,1,72,2014-02-10 20:06:59.066632 UTC,,

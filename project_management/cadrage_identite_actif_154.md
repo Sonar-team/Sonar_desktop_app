@@ -124,6 +124,31 @@ fuzz), publié sur crates.io par `.github/workflows/publish-crates.yml`.
 Cycle tranche 1 : PR sur `sonar-rust` (0.5.0) → publication → re-vendor
 `src-tauri` → vet, comme pour packet_parser 9 (PR #183).
 
+### Tranche 2, étape 1 — 04/08/2026 (sonar-flows-core 0.6.0)
+
+Contexte de relevé au niveau du **préambule SFMS** (le niveau « par
+relevé » de la tranche 2) :
+
+- `SurveyContext { site, sensor, interface }`, tous optionnels, avec
+  normalisation des saisies vides/blanches. **Clés du format en anglais**
+  (`site=`, `sensor=`, `interface=`) par cohérence avec les en-têtes de
+  colonnes, déjà anglais — « capteur » reste le terme d'interface.
+- `SFMS_VERSION` passe à **2**. Les valeurs libres (espaces, accents,
+  `=`, `%`) sont percent-encodées : le préambule reste un
+  `clé=valeur` non ambigu. Un échappement corrompu est une erreur, pas
+  une valeur devinée.
+- Lecture v1 inchangée (contexte vide) ; un fichier v2 lu par un SONAR
+  antérieur reste valide, ses clés inconnues étant déjà tolérées.
+- `FlowMatrix.context` + `write_rows_to_csv_with_context` ;
+  `write_rows_to_csv`/`format_preamble` conservent leur signature et
+  écrivent sans contexte.
+- Fixture de référence `ultimate_ethernet_sample.csv` régénérée en v2 ;
+  les autres fixtures restent en v1 et couvrent la lecture ascendante.
+
+Restent pour la tranche 2 : le dialogue de qualification au stop/save
+côté desktop, le `manifest.json` v2 du `.sonar`, et la généralisation
+d'`origin` en contexte par flux (fusion multi-sites).
+
 ### Tranche 1 implémentée — 04/08/2026 (sonar-flows-core 0.5.0)
 
 - Clé de nœud `(vlan, ip)` (`l3_node_key`), repli L2 `(vlan, mac)` ;
