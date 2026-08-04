@@ -85,6 +85,8 @@ export const graphNodeAddedFixture = ({
           "aa:bb:cc:dd:ee:ff"
         ],
         "ip": "192.168.1.10",
+        "vlan_id": null,
+        "duplicate_ip": false,
         "label": "Serveur"
       }
     }
@@ -105,6 +107,8 @@ export const graphNodeUpdatedFixture = ({
           "aa:bb:cc:dd:ee:ff"
         ],
         "ip": "192.168.1.10",
+        "vlan_id": null,
+        "duplicate_ip": false,
         "label": "Serveur"
       }
     }
@@ -180,6 +184,8 @@ export const graphBatchWithoutLabelOrPortsFixture = ({
             "aa:bb:cc:dd:ee:00"
           ],
           "ip": "192.168.1.20",
+          "vlan_id": 42,
+          "duplicate_ip": true,
           "label": null
         }
       },
@@ -218,6 +224,8 @@ export const graphSnapshotFixture = ({
             "aa:bb:cc:dd:ee:ff"
           ],
           "ip": "192.168.1.10",
+          "vlan_id": null,
+          "duplicate_ip": false,
           "label": "Serveur"
         }
       },

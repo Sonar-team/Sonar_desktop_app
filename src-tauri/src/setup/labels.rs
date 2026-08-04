@@ -385,10 +385,12 @@ mod tests {
         graph.nodes.insert(
             "192.168.1.1".to_string(),
             Node::new(
+                "192.168.1.1",
                 "192.168.1.1".to_string(),
                 "aa:bb:cc:dd:ee:ff".to_string(),
                 "#2196F3",
                 "192.168.1.1".to_string(),
+                None,
                 None,
             ),
         );

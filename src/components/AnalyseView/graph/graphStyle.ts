@@ -39,6 +39,10 @@ export const DIM_NODE_COLOR = "#3a3a3a"
 // Bordure d'alerte : IP observée avec plusieurs MAC (anomalie à investiguer)
 export const MAC_CONFLICT_BORDER_COLOR = "#FF5252"
 
+// Bordure d'alerte : même IP portée par plusieurs nœuds (VLAN différents,
+// #154). Moins sévère que le conflit de MAC (qui garde priorité) : ambre.
+export const DUPLICATE_IP_BORDER_COLOR = "#FFB300"
+
 // --- Clés d'arêtes ----------------------------------------------------------
 const EDGE_SEP = "__"
 export function edgeKey(e: EdgeData): EdgeId {
@@ -118,16 +122,29 @@ export function nodeAttributes(node: Node) {
   // Plusieurs MAC unicast pour une même IP : anomalie (IP partagée, VRRP,
   // usurpation ARP…) signalée par une bordure d'alerte.
   const macConflict = macs.length > 1
+  // Identité contextualisée (#154) : le VLAN fait partie de la clé du nœud,
+  // il est affiché dans le libellé ; une IP présente sur plusieurs VLAN est
+  // signalée (bordure ambre), le conflit de MAC (rouge) garde priorité.
+  const vlanId: number | null = typeof node.vlan_id === "number" ? node.vlan_id : null
+  const duplicateIp = node.duplicate_ip === true
+  const vlanSuffix = vlanId !== null ? ` (VLAN ${vlanId})` : ""
+  const borderColor = macConflict
+    ? MAC_CONFLICT_BORDER_COLOR
+    : duplicateIp
+    ? DUPLICATE_IP_BORDER_COLOR
+    : darken(color, 0.25)
   return {
     name: node.name || node.id,
     mac: node.mac || "",
     macs,
     macConflict,
     ip: node.ip || "",
+    vlanId,
+    duplicateIp,
     rawLabel,
-    label: rawLabel || node.name || node.id,
+    label: (rawLabel || node.name || node.id) + vlanSuffix,
     color,
-    borderColor: macConflict ? MAC_CONFLICT_BORDER_COLOR : darken(color, 0.25),
+    borderColor,
     hoverColor: brighten(color, 0.18),
   }
 }

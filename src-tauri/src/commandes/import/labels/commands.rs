@@ -207,13 +207,15 @@ pub fn resolve_label_conflicts(
             );
             labels.set(&resolution.mac, &resolution.ip, &resolution.label);
 
-            // Rafraîchit le nœud sans reconstruire le graphe. La notification
-            // part après la transaction, sans aucun verrou partagé conservé.
-            if let Some(update) =
-                graph.update_node_label(&resolution.mac, &resolution.ip, resolution.label.clone())
-            {
-                graph_updates.push(update);
-            }
+            // Rafraîchit les nœuds sans reconstruire le graphe (depuis
+            // sonar-flows-core 0.5, un endpoint peut toucher plusieurs
+            // nœuds : même (mac, ip) sur deux VLAN). La notification part
+            // après la transaction, sans aucun verrou partagé conservé.
+            graph_updates.extend(graph.update_node_label(
+                &resolution.mac,
+                &resolution.ip,
+                resolution.label.clone(),
+            ));
         }
 
         // Retire les conflits résolus, renvoie ceux qui restent.
