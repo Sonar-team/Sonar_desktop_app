@@ -2,6 +2,47 @@
 
 ## Non publié
 
+## **[4.11.0] - 2026-08-04**
+
+## ✨ Améliorations
+
+- **Projets `.sonar` : sauvegarder et rouvrir un relevé complet** (#159) :
+  nouveau format de projet (archive contenant matrice SFMS, labels,
+  configuration de capture et manifeste versionné), boutons Enregistrer/
+  Ouvrir dans la barre du haut, écriture atomique. Les modifications non
+  enregistrées sont suivies : la fermeture et le reset ne demandent
+  confirmation que s'il y a réellement quelque chose à perdre.
+- **Autosave et récupération après crash** (#159) : le relevé en cours est
+  sauvegardé automatiquement toutes les 60 secondes dès qu'il change ; si
+  l'application ne s'est pas fermée proprement, la session suivante
+  propose de restaurer le dernier autosave.
+- **Projets récents** (#159) : les derniers projets ouverts et le dernier
+  dossier utilisé sont mémorisés entre les sessions.
+- **Le graphe distingue les VLAN** (#154, tranche 1) : deux équipements
+  portant la même IP sur deux VLAN 802.1Q sont désormais deux nœuds
+  distincts (le VLAN est affiché dans le libellé et le bandeau du nœud),
+  au lieu d'être fusionnés silencieusement. Une IP présente sur plusieurs
+  VLAN est signalée par une bordure ambre — fuite de segmentation ou
+  équipement multi-pattes, à investiguer — documentée dans la légende ;
+  la bordure rouge (plusieurs MAC pour une IP) garde priorité. Les
+  identifiants de nœuds sont désormais stables d'une ouverture à l'autre
+  (préparation de la corrélation d'actifs, #164). Les relevés CSV
+  existants profitent du graphe corrigé à la réouverture, sans migration.
+- **Labels sur toutes les MAC observées** (#154) : un label posé via une
+  MAC secondaire d'un nœud (équipement multi-MAC) est maintenant retrouvé
+  et appliqué ; la même identité vue sur deux VLAN est étiquetée sur les
+  deux nœuds.
+- **Analyse protocolaire mise à jour** : packet_parser 9.0.0 via
+  sonar-flows-core 0.5.0.
+
+## 🛠 Corrections
+
+- **Installation Debian/Ubuntu réparée** (#175) : le paquet `.deb` ne
+  déclarait pas libpcap dans ses dépendances ; sur une machine sans
+  libpcap déjà présente, SONAR s'installait mais ne démarrait pas.
+  `libpcap0.8` est désormais déclaré et installé automatiquement
+  (vérifié sur conteneur Debian trixie vierge).
+
 ## **[4.10.0] - 2026-07-30**
 
 ## ✨ Améliorations
