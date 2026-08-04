@@ -40,12 +40,19 @@ export function buildNodeInfos(graph: Graph, nodeId: string): string[] {
     ? `⚠ MACs multiples (${n.macs.length}): ${n.macs.join(", ")}`
     : `MAC: ${n.mac ?? ""}`
 
+  // Identité contextualisée (#154) : le VLAN fait partie de la clé du
+  // nœud ; une IP portée par un autre nœud (autre VLAN) est une anomalie.
+  const ipInfo = n.duplicateIp
+    ? `⚠ IP: ${n.ip ?? ""} (aussi présente sur un autre VLAN)`
+    : `IP: ${n.ip ?? ""}`
+
   return [
     `ID: ${nodeId}`,
     `Nom: ${n.name ?? ""}`,
     `Label: ${n.rawLabel || "N/A"}`,
     macInfo,
-    `IP: ${n.ip ?? ""}`,
+    ipInfo,
+    `VLAN: ${n.vlanId ?? "—"}`,
     `Couleur: ${n.color}`,
     `Degré: ${degree}`,
     `Trafic: ${formatBytes(bytes)} (${packets} paquets)`,

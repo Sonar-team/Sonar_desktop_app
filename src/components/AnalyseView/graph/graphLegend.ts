@@ -8,6 +8,7 @@ import {
 import {
   DIM_EDGE_COLOR,
   DIM_NODE_COLOR,
+  DUPLICATE_IP_BORDER_COLOR,
   EDGE_LABEL_ZOOM,
   EDGE_SIZE_MAX,
   EDGE_SIZE_MIN,
@@ -45,6 +46,7 @@ export const GRAPH_RENDERING_LEGEND = Object.freeze({
   edgeLabelZoom: EDGE_LABEL_ZOOM,
   portLabelZoom: PORT_LABEL_ZOOM,
   macConflictBorderColor: MAC_CONFLICT_BORDER_COLOR,
+  duplicateIpBorderColor: DUPLICATE_IP_BORDER_COLOR,
   tunnelDimEdgeColor: DIM_EDGE_COLOR,
   tunnelDimNodeColor: DIM_NODE_COLOR,
 })

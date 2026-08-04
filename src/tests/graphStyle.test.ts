@@ -7,6 +7,7 @@ import { deepStrictEqual as assertEquals } from "node:assert/strict";
 import { DEFAULT_EDGE_CURVATURE } from "@sigma/edge-curve";
 
 import {
+  DUPLICATE_IP_BORDER_COLOR,
   MAC_CONFLICT_BORDER_COLOR,
   NODE_SIZE_MAX,
   NODE_SIZE_MIN,
@@ -32,6 +33,8 @@ function node(overrides: Partial<Node> = {}): Node {
     mac: "",
     macs: [],
     ip: "",
+    vlan_id: null,
+    duplicate_ip: false,
     label: null,
     ...overrides,
   };
@@ -168,6 +171,28 @@ Deno.test("nodeAttributes - plusieurs MAC -> conflit signalé par la bordure d'a
   const attrs = nodeAttributes(node({ macs: ["aa:bb:cc:dd:ee:ff", "11:22:33:44:55:66"] }));
   assertEquals(attrs.macConflict, true);
   assertEquals(attrs.borderColor, MAC_CONFLICT_BORDER_COLOR);
+});
+
+Deno.test("nodeAttributes - VLAN affiché dans le libellé et exposé en attribut (#154)", () => {
+  const attrs = nodeAttributes(node({ name: "192.168.1.10", vlan_id: 42 }));
+  assertEquals(attrs.vlanId, 42);
+  assertEquals(attrs.label, "192.168.1.10 (VLAN 42)");
+
+  const untagged = nodeAttributes(node({ name: "192.168.1.10" }));
+  assertEquals(untagged.vlanId, null);
+  assertEquals(untagged.label, "192.168.1.10");
+});
+
+Deno.test("nodeAttributes - IP dupliquée -> bordure ambre, le conflit MAC garde priorité (#154)", () => {
+  const attrs = nodeAttributes(node({ duplicate_ip: true }));
+  assertEquals(attrs.duplicateIp, true);
+  assertEquals(attrs.borderColor, DUPLICATE_IP_BORDER_COLOR);
+
+  const both = nodeAttributes(node({
+    duplicate_ip: true,
+    macs: ["aa:bb:cc:dd:ee:ff", "11:22:33:44:55:66"],
+  }));
+  assertEquals(both.borderColor, MAC_CONFLICT_BORDER_COLOR);
 });
 
 Deno.test("edgeAttributes - champs par défaut sur une arête minimale", () => {

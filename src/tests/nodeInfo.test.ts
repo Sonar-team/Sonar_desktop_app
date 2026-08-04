@@ -28,6 +28,18 @@ function newGraph(): Graph {
     rawLabel: "",
     color: "#f00",
   });
+  // Nœud tagué 802.1Q dont l'IP existe aussi sur un autre VLAN (#154).
+  g.addNode("vlan42:192.168.1.4", {
+    name: "192.168.1.4",
+    mac: "33:33:33:33:33:33",
+    macs: ["33:33:33:33:33:33"],
+    macConflict: false,
+    ip: "192.168.1.4",
+    vlanId: 42,
+    duplicateIp: true,
+    rawLabel: "",
+    color: "#0f0",
+  });
   return g;
 }
 
@@ -91,4 +103,24 @@ Deno.test("buildNodeInfos - conflit de MAC signalé", () => {
     true,
     infos.join(" | ")
   );
+});
+
+Deno.test("buildNodeInfos - VLAN affiché, IP dupliquée signalée (#154)", () => {
+  const g = newGraph();
+  const infos = buildNodeInfos(g, "vlan42:192.168.1.4");
+
+  assertEquals(infos.includes("VLAN: 42"), true, infos.join(" | "));
+  assertEquals(
+    infos.includes("⚠ IP: 192.168.1.4 (aussi présente sur un autre VLAN)"),
+    true,
+    infos.join(" | ")
+  );
+});
+
+Deno.test("buildNodeInfos - hors trame taguée, VLAN affiché comme absent", () => {
+  const g = newGraph();
+  const infos = buildNodeInfos(g, "192.168.1.1");
+
+  assertEquals(infos.includes("VLAN: —"), true, infos.join(" | "));
+  assertEquals(infos.includes("IP: 192.168.1.1"), true, infos.join(" | "));
 });

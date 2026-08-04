@@ -64,6 +64,21 @@
           </svg>
           <span>Bordure rouge : plusieurs MAC unicast observées pour la même IP.</span>
         </div>
+
+        <div class="legend-item legend-detail">
+          <svg class="node-color-swatch" viewBox="0 0 20 20" aria-hidden="true">
+            <circle
+              cx="10"
+              cy="10"
+              r="7"
+              fill="currentColor"
+              fill-opacity="0.25"
+              :stroke="rendering.duplicateIpBorderColor"
+              stroke-width="3"
+            />
+          </svg>
+          <span>Bordure ambre : même IP présente sur plusieurs VLAN.</span>
+        </div>
       </section>
 
       <section class="legend-section">

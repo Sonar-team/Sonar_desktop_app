@@ -1,11 +1,11 @@
-//! Graphe réseau : nœuds (équipements identifiés par IP ou MAC) et arêtes
-//! (conversations par protocole), construit incrémentalement pendant la
-//! capture ou l'import et synchronisé avec le frontend par `GraphUpdate`.
+//! Graphe réseau : nœuds (équipements identifiés par (VLAN, IP) ou
+//! (VLAN, MAC)) et arêtes (conversations par protocole), construit
+//! incrémentalement pendant la capture ou l'import et synchronisé avec le
+//! frontend par `GraphUpdate`.
 
 use packet_parser::{IpType, owned::PacketFlowOwned};
 use serde::Serialize;
 use std::collections::{BTreeSet, HashMap};
-use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::link::LinkView;
 use crate::matrix::FlowMatrix;
@@ -15,10 +15,42 @@ use crate::matrix::is_non_unicast_mac;
 /// reçoit soit des updates incrémentales, soit un snapshot entier.
 #[derive(Serialize, Default, Debug)]
 pub struct GraphData {
-    // clé = IP (stringifiée) ou "mac:XX:XX:..."
+    // clé = identité (VLAN, IP) ou (VLAN, MAC), cf. l3_node_key/l2_node_key
     pub nodes: HashMap<String, Node>,
     // clé = "a_id:b_id:protocol" (canonique: a_id <= b_id)
     pub edges: HashMap<String, Edge>,
+    // index IP -> clés de nœuds L3 : détection « même IP sur plusieurs
+    // VLAN » (anomalie duplicate_ip) sans balayage du graphe (#154).
+    #[serde(skip)]
+    ip_index: HashMap<String, BTreeSet<String>>,
+}
+
+/// Clé d'identité d'un nœud L3 : le VLAN 802.1Q fait partie de l'identité
+/// observée (#154) — la même IP sur deux VLAN est deux actifs distincts.
+/// Hors trame taguée, la clé reste l'IP nue (continuité avec les relevés
+/// existants).
+fn l3_node_key(vlan_id: Option<u16>, ip: &str) -> String {
+    match vlan_id {
+        None => ip.to_string(),
+        Some(id) => format!("vlan{id}:{ip}"),
+    }
+}
+
+/// Clé d'identité d'un nœud L2 (repli sans IP valide) : (VLAN, MAC).
+fn l2_node_key(vlan_id: Option<u16>, mac: &str) -> String {
+    match vlan_id {
+        None => format!("mac:{mac}"),
+        Some(id) => format!("vlan{id}:mac:{mac}"),
+    }
+}
+
+/// Identifiant stable d'un nœud ou d'une arête : hash FNV-1a de sa clé
+/// d'identité (le même hachage, stable entre builds, que `encap_id`).
+/// Remplace les compteurs globaux (#154) : le même relevé rouvert redonne
+/// les mêmes ids — prérequis des snapshots déterministes et de la future
+/// corrélation d'actifs (#164).
+fn stable_id(key: &str) -> String {
+    format!("{:016x}", crate::packet::fnv1a(key.as_bytes()))
 }
 
 #[derive(Clone, Serialize, Debug)]
@@ -33,9 +65,6 @@ pub enum GraphUpdate {
     #[serde(rename = "edgeUpdated")]
     EdgeUpdated(Edge),
 }
-
-static NODE_COUNTER: AtomicU64 = AtomicU64::new(1);
-static EDGE_COUNTER: AtomicU64 = AtomicU64::new(1);
 
 /// Accumulateur d'updates graphe avec coalescence par entité : au sein d'une
 /// fenêtre de batch, une seule entrée par nœud/arête (la dernière valeur gagne,
@@ -116,6 +145,8 @@ impl GraphUpdateBatch {
 
 #[derive(Serialize, Clone, Debug)]
 pub struct Node {
+    /// Id stable dérivé de la clé d'identité ([`stable_id`]) : identique
+    /// d'une exécution à l'autre pour le même relevé (#154).
     pub id: String,
     pub name: String,  // l’IP sous forme de string (ou MAC)
     pub color: String, // stockée en String côté struct (UI-friendly)
@@ -126,30 +157,39 @@ pub struct Node {
     /// usurpation ARP…) : le front la signale visuellement.
     pub macs: Vec<String>,
     pub ip: String,
+    /// VLAN 802.1Q du nœud (`None` hors trame taguée) : fait partie de la
+    /// clé d'identité — la même IP sur deux VLAN est deux nœuds (#154).
+    pub vlan_id: Option<u16>,
+    /// Vrai quand la même IP est portée par plusieurs nœuds (VLAN
+    /// différents) : anomalie signalée visuellement, jamais fusionnée (#154).
+    pub duplicate_ip: bool,
     pub label: Option<String>,
 }
 
 impl Node {
     pub fn new(
+        key: &str,
         name: String,
         mac: String,
         color: &'static str,
         ip: String,
+        vlan_id: Option<u16>,
         label: Option<String>,
     ) -> Self {
-        let id = NODE_COUNTER.fetch_add(1, Ordering::SeqCst);
         let macs = if mac.is_empty() || is_non_unicast_mac(&mac) {
             Vec::new()
         } else {
             vec![mac.clone()]
         };
         Self {
-            id: id.to_string(),
+            id: stable_id(key),
             name,
             color: color.to_string(),
             mac,
             macs,
             ip,
+            vlan_id,
+            duplicate_ip: false,
             label,
         }
     }
@@ -207,10 +247,11 @@ pub struct Edge {
 }
 
 impl Edge {
-    pub fn new(source: String, target: String) -> Self {
-        let id = EDGE_COUNTER.fetch_add(1, Ordering::SeqCst);
+    /// `key` : clé non orientée `{A,B,proto}` ([`undirected_edge_key`]) dont
+    /// dérive l'id stable — les compteurs globaux ont disparu (#154).
+    pub fn new(key: &str, source: String, target: String) -> Self {
         Self {
-            id: id.to_string(),
+            id: stable_id(key),
             source,
             target,
             label: String::new(),
@@ -333,7 +374,6 @@ impl GraphData {
         bytes: u64,
         encap_ids: &[u64],
     ) -> Vec<GraphUpdate> {
-        use std::collections::hash_map::Entry;
         let mut updates = Vec::new();
         let link = LinkView::of(&packet.data_link);
 
@@ -346,117 +386,34 @@ impl GraphData {
             let src_type = internet.ip_source_type.as_ref();
             let dst_type = internet.ip_destination_type.as_ref();
             if is_valid_ip(src_type) && is_valid_ip(dst_type) {
-                let src_color = color_of(src_type);
-                let dst_color = color_of(dst_type);
+                let src_node_id = self.ensure_l3_node(
+                    link.vlan_id,
+                    &src_ip.to_string(),
+                    &link.source_mac,
+                    color_of(src_type),
+                    source_label,
+                    &mut updates,
+                );
+                let dst_node_id = self.ensure_l3_node(
+                    link.vlan_id,
+                    &dst_ip.to_string(),
+                    &link.destination_mac,
+                    color_of(dst_type),
+                    destination_label,
+                    &mut updates,
+                );
 
-                let src_ip_str = src_ip.to_string();
-                let dst_ip_str = dst_ip.to_string();
-
-                // Nœud source
-                let src_node_id = match self.nodes.entry(src_ip_str.clone()) {
-                    Entry::Occupied(mut e) => {
-                        maybe_update_node_label(e.get_mut(), source_label.clone(), &mut updates);
-                        record_observed_mac(e.get_mut(), &link.source_mac, &mut updates);
-                        e.get().id.clone()
-                    }
-                    Entry::Vacant(v) => {
-                        let node = Node::new(
-                            src_ip_str.clone(),
-                            link.source_mac.clone(),
-                            src_color,
-                            src_ip_str.clone(),
-                            source_label.clone(),
-                        );
-                        let node_id = node.id.clone();
-                        v.insert(node.clone());
-                        updates.push(GraphUpdate::NewNode(node));
-                        node_id
-                    }
-                };
-
-                // Nœud destination
-                let dst_node_id = match self.nodes.entry(dst_ip_str.clone()) {
-                    Entry::Occupied(mut e) => {
-                        maybe_update_node_label(
-                            e.get_mut(),
-                            destination_label.clone(),
-                            &mut updates,
-                        );
-                        record_observed_mac(e.get_mut(), &link.destination_mac, &mut updates);
-                        e.get().id.clone()
-                    }
-                    Entry::Vacant(v) => {
-                        let node = Node::new(
-                            dst_ip_str.clone(),
-                            link.destination_mac.clone(),
-                            dst_color,
-                            dst_ip_str.clone(),
-                            destination_label.clone(),
-                        );
-                        let node_id = node.id.clone();
-                        v.insert(node.clone());
-                        updates.push(GraphUpdate::NewNode(node));
-                        node_id
-                    }
-                };
-
-                let protocol = best_protocol_label(packet);
-
-                // Clé non orientée : {A,B,proto} indépendamment du sens.
-                let edge_key = undirected_edge_key(&src_node_id, &dst_node_id, &protocol);
-
-                match self.edges.get_mut(&edge_key) {
-                    Some(edge) => {
-                        // Arête existe déjà (A—B:proto).
-                        let mut notify = false;
-
-                        // L'arête est stockée dans le sens du premier paquet
-                        // observé : bidir passe à vrai seulement quand le sens
-                        // courant en diffère réellement.
-                        if !edge.bidir && edge.source != src_node_id {
-                            edge.bidir = true;
-                            notify = true;
-                        }
-
-                        if accumulate_traffic(edge, packets, bytes) {
-                            notify = true;
-                        }
-
-                        if merge_encap_ids(edge, encap_ids) {
-                            notify = true;
-                        }
-
-                        // Chaque service observé s'ajoute à l'arête : le
-                        // premier couple de ports ne masque plus les autres
-                        // services (#154), et les ports éphémères ne polluent
-                        // pas la liste (port « service » + plage dynamique).
-                        if edge.record_service_port(
-                            packet.transport.as_ref().and_then(|t| t.source_port),
-                            packet.transport.as_ref().and_then(|t| t.destination_port),
-                        ) {
-                            notify = true;
-                        }
-
-                        if notify {
-                            updates.push(GraphUpdate::EdgeUpdated(edge.clone()));
-                        }
-                    }
-                    None => {
-                        // Première observation de {A,B,proto} : l'arête est
-                        // créée dans le sens réellement observé (la flèche du
-                        // rendu reflète le premier paquet).
-                        let mut edge = Edge::new(src_node_id.clone(), dst_node_id.clone())
-                            .with_label(protocol)
-                            .with_ports(
-                                packet.transport.as_ref().and_then(|t| t.source_port),
-                                packet.transport.as_ref().and_then(|t| t.destination_port),
-                            )
-                            .with_traffic(packets, bytes);
-                        merge_encap_ids(&mut edge, encap_ids);
-                        self.edges.insert(edge_key, edge.clone());
-                        updates.push(GraphUpdate::NewEdge(edge));
-                    }
-                }
+                self.upsert_edge(
+                    &src_node_id,
+                    &dst_node_id,
+                    best_protocol_label(packet),
+                    packet.transport.as_ref().and_then(|t| t.source_port),
+                    packet.transport.as_ref().and_then(|t| t.destination_port),
+                    packets,
+                    bytes,
+                    encap_ids,
+                    &mut updates,
+                );
 
                 return updates; // L3 traité
             }
@@ -465,23 +422,102 @@ impl GraphData {
         // ===============================
         // 2) Fallback L2 (MAC-only)
         // ===============================
+        let src_node_id = self.ensure_l2_node(link.vlan_id, &link.source_mac, &mut updates);
+        let dst_node_id = self.ensure_l2_node(link.vlan_id, &link.destination_mac, &mut updates);
+
+        self.upsert_edge(
+            &src_node_id,
+            &dst_node_id,
+            link.protocol.clone(),
+            None, // pas de ports en L2
+            None,
+            packets,
+            bytes,
+            encap_ids,
+            &mut updates,
+        );
+
+        updates
+    }
+
+    /// Retrouve ou crée le nœud L3 d'identité `(vlan, ip)` et retourne son id.
+    /// À la création, si d'autres nœuds portent déjà la même IP (autres VLAN),
+    /// tous les porteurs sont marqués `duplicate_ip` : l'anomalie est
+    /// signalée, jamais fusionnée (#154).
+    fn ensure_l3_node(
+        &mut self,
+        vlan_id: Option<u16>,
+        ip: &str,
+        mac: &str,
+        color: &'static str,
+        label: Option<String>,
+        updates: &mut Vec<GraphUpdate>,
+    ) -> String {
+        use std::collections::hash_map::Entry;
+
+        let key = l3_node_key(vlan_id, ip);
+        let (node_id, created) = match self.nodes.entry(key.clone()) {
+            Entry::Occupied(mut e) => {
+                maybe_update_node_label(e.get_mut(), label, updates);
+                record_observed_mac(e.get_mut(), mac, updates);
+                (e.get().id.clone(), false)
+            }
+            Entry::Vacant(v) => {
+                let node = Node::new(
+                    &key,
+                    ip.to_string(),
+                    mac.to_string(),
+                    color,
+                    ip.to_string(),
+                    vlan_id,
+                    label,
+                );
+                let node_id = node.id.clone();
+                v.insert(node.clone());
+                updates.push(GraphUpdate::NewNode(node));
+                (node_id, true)
+            }
+        };
+
+        if created {
+            let siblings = self.ip_index.entry(ip.to_string()).or_default();
+            siblings.insert(key);
+            if siblings.len() >= 2 {
+                for sibling_key in siblings.clone() {
+                    if let Some(node) = self.nodes.get_mut(&sibling_key)
+                        && !node.duplicate_ip
+                    {
+                        node.duplicate_ip = true;
+                        updates.push(GraphUpdate::NodeUpdated(node.clone()));
+                    }
+                }
+            }
+        }
+
+        node_id
+    }
+
+    /// Retrouve ou crée le nœud L2 d'identité `(vlan, mac)` et retourne son id.
+    fn ensure_l2_node(
+        &mut self,
+        vlan_id: Option<u16>,
+        mac: &str,
+        updates: &mut Vec<GraphUpdate>,
+    ) -> String {
+        use std::collections::hash_map::Entry;
         const L2_COLOR: &str = "#00BCD4";
 
-        let src_mac = link.source_mac.clone();
-        let dst_mac = link.destination_mac.clone();
-
-        let src_key = format!("mac:{src_mac}");
-        let dst_key = format!("mac:{dst_mac}");
-
-        // Nœud source (MAC)
-        let src_node_id = match self.nodes.entry(src_key.clone()) {
+        let key = l2_node_key(vlan_id, mac);
+        match self.nodes.entry(key.clone()) {
             Entry::Occupied(e) => e.get().id.clone(),
             Entry::Vacant(v) => {
                 let node = Node::new(
-                    src_mac.clone(),
-                    src_mac.clone(),
+                    &key,
+                    mac.to_string(),
+                    mac.to_string(),
                     L2_COLOR,
                     "".to_string(),
+                    vlan_id,
                     None,
                 );
                 let node_id = node.id.clone();
@@ -489,94 +525,117 @@ impl GraphData {
                 updates.push(GraphUpdate::NewNode(node));
                 node_id
             }
-        };
+        }
+    }
 
-        // Nœud destination (MAC)
-        let dst_node_id = match self.nodes.entry(dst_key.clone()) {
-            Entry::Occupied(e) => e.get().id.clone(),
-            Entry::Vacant(v) => {
-                let node = Node::new(
-                    dst_mac.clone(),
-                    dst_mac.clone(),
-                    L2_COLOR,
-                    "".to_string(),
-                    None,
-                );
-                let node_id = node.id.clone();
-                v.insert(node.clone());
-                updates.push(GraphUpdate::NewNode(node));
-                node_id
-            }
-        };
-
-        let l2_proto = link.protocol.clone();
-        let edge_key = undirected_edge_key(&src_node_id, &dst_node_id, &l2_proto);
+    /// Retrouve ou crée l'arête non orientée `{A,B,proto}` et y agrège le
+    /// trafic. L'arête est stockée dans le sens du premier paquet observé :
+    /// `bidir` ne passe à vrai que quand le sens courant en diffère. Chaque
+    /// service observé s'ajoute à la liste des ports (#154), les éphémères
+    /// levant seulement `has_dynamic_ports`.
+    #[allow(clippy::too_many_arguments)]
+    fn upsert_edge(
+        &mut self,
+        src_node_id: &str,
+        dst_node_id: &str,
+        protocol: String,
+        source_port: Option<u16>,
+        destination_port: Option<u16>,
+        packets: u64,
+        bytes: u64,
+        encap_ids: &[u64],
+        updates: &mut Vec<GraphUpdate>,
+    ) {
+        let edge_key = undirected_edge_key(src_node_id, dst_node_id, &protocol);
 
         match self.edges.get_mut(&edge_key) {
             Some(edge) => {
                 let mut notify = false;
+
                 if !edge.bidir && edge.source != src_node_id {
                     edge.bidir = true;
                     notify = true;
                 }
+
                 if accumulate_traffic(edge, packets, bytes) {
                     notify = true;
                 }
+
                 if merge_encap_ids(edge, encap_ids) {
                     notify = true;
                 }
+
+                if edge.record_service_port(source_port, destination_port) {
+                    notify = true;
+                }
+
                 if notify {
                     updates.push(GraphUpdate::EdgeUpdated(edge.clone()));
                 }
             }
             None => {
-                let mut edge = Edge::new(src_node_id.clone(), dst_node_id.clone())
-                    .with_label(l2_proto)
-                    .with_ports(None, None) // pas de ports en L2
-                    .with_traffic(packets, bytes);
+                // Première observation de {A,B,proto} : l'arête est créée
+                // dans le sens réellement observé (la flèche du rendu
+                // reflète le premier paquet).
+                let mut edge =
+                    Edge::new(&edge_key, src_node_id.to_string(), dst_node_id.to_string())
+                        .with_label(protocol)
+                        .with_ports(source_port, destination_port)
+                        .with_traffic(packets, bytes);
                 merge_encap_ids(&mut edge, encap_ids);
                 self.edges.insert(edge_key, edge.clone());
                 updates.push(GraphUpdate::NewEdge(edge));
             }
         }
-
-        updates
     }
 
     pub fn clear(&mut self) {
         self.nodes.clear();
         self.edges.clear();
+        self.ip_index.clear();
     }
 
     pub fn get_all_graph_data(&self) -> GraphData {
         let nodes = self.nodes.clone();
         let edges = self.edges.clone();
-        GraphData { nodes, edges }
+        GraphData {
+            nodes,
+            edges,
+            ip_index: HashMap::new(),
+        }
     }
 
-    pub fn update_node_label(&mut self, mac: &str, ip: &str, label: String) -> Option<GraphUpdate> {
+    /// Applique un label à tous les nœuds correspondant à l'endpoint
+    /// `(mac, ip)`. Le matching couvre **toutes** les MAC observées du nœud
+    /// (pas seulement la première, #154) et peut toucher plusieurs nœuds :
+    /// la même (mac, ip) vue sur deux VLAN est deux nœuds, tous étiquetés.
+    /// Une MAC vide matche par IP seule ; une IP vide matche les nœuds L2.
+    pub fn update_node_label(&mut self, mac: &str, ip: &str, label: String) -> Vec<GraphUpdate> {
         let normalized = if label.trim().is_empty() {
             None
         } else {
             Some(label)
         };
 
+        let mut updates = Vec::new();
         for node in self.nodes.values_mut() {
-            if node.mac == mac && node.ip == ip {
-                if node.label != normalized {
-                    node.label = normalized;
-                    return Some(GraphUpdate::NodeUpdated(node.clone()));
-                }
-                return None;
+            if !node_matches_endpoint(node, mac, ip) {
+                continue;
+            }
+            if node.label != normalized {
+                node.label = normalized.clone();
+                updates.push(GraphUpdate::NodeUpdated(node.clone()));
             }
         }
 
-        None
+        updates
     }
 
     /// Réapplique les labels de tous les nœuds via `resolve(mac, ip)`
-    /// (typiquement `FlowMatrix::get_label` et ses replis IP seule / MAC seule).
-    /// Retourne un `NodeUpdated` par nœud effectivement modifié.
+    /// (typiquement `FlowMatrix::get_label` et ses replis IP seule / MAC
+    /// seule). Le résolveur est essayé sur chaque MAC observée du nœud, la
+    /// première réponse gagne (#154) : un label attaché à une MAC secondaire
+    /// n'est plus invisible. Retourne un `NodeUpdated` par nœud modifié.
     pub fn refresh_labels<F>(&mut self, resolve: F) -> Vec<GraphUpdate>
     where
         F: Fn(&str, &str) -> Option<String>,
@@ -584,7 +643,15 @@ impl GraphData {
         let mut updates = Vec::new();
 
         for node in self.nodes.values_mut() {
-            let Some(label) = resolve(&node.mac, &node.ip) else {
+            let resolved = std::iter::once(node.mac.as_str())
+                .chain(
+                    node.macs
+                        .iter()
+                        .filter(|m| **m != node.mac)
+                        .map(String::as_str),
+                )
+                .find_map(|mac| resolve(mac, &node.ip));
+            let Some(label) = resolved else {
                 continue;
             };
 
@@ -602,6 +669,23 @@ impl GraphData {
 
         updates
     }
+}
+
+/// Un nœud correspond-il à l'endpoint `(mac, ip)` d'un label ? Une MAC vide
+/// vaut « n'importe quelle MAC » ; une IP vide ne matche que les nœuds sans
+/// IP (L2). Un couple entièrement vide ne matche rien.
+fn node_matches_endpoint(node: &Node, mac: &str, ip: &str) -> bool {
+    if mac.is_empty() && ip.is_empty() {
+        return false;
+    }
+    let mac_matches =
+        mac.is_empty() || node.mac == mac || node.macs.iter().any(|known| known == mac);
+    let ip_matches = if ip.is_empty() {
+        node.ip.is_empty()
+    } else {
+        node.ip == ip
+    };
+    mac_matches && ip_matches
 }
 
 // ————— helpers —————
@@ -758,6 +842,8 @@ mod graph_update_batch_tests {
             mac: "aa:bb:cc:dd:ee:ff".to_string(),
             macs: vec!["aa:bb:cc:dd:ee:ff".to_string()],
             ip: "10.0.0.1".to_string(),
+            vlan_id: None,
+            duplicate_ip: false,
             label: label.map(str::to_string),
         }
     }
@@ -850,6 +936,8 @@ mod add_packet_flow_tests {
     use super::*;
     use crate::link::ethernet_link_from_text;
     use packet_parser::owned::InternetOwned;
+    use packet_parser::parse::data_link::ethertype::Ethertype;
+    use packet_parser::parse::data_link::vlan_tag::VlanTag;
     use std::net::IpAddr;
 
     /// Flux L3 minimal : IPv4 privé des deux côtés (chemin L3 du graphe).
@@ -872,6 +960,29 @@ mod add_packet_flow_tests {
 
     fn add(graph: &mut GraphData, f: &PacketFlowOwned) -> Vec<GraphUpdate> {
         graph.add_packet_flow(f, None, None, 1, 100, &[])
+    }
+
+    /// Même flux L3, mais dans une trame 802.1Q taguée `vlan`.
+    fn flow_on_vlan(
+        src_mac: &str,
+        src_ip: &str,
+        dst_mac: &str,
+        dst_ip: &str,
+        vlan: u16,
+    ) -> PacketFlowOwned {
+        let mut f = flow(src_mac, src_ip, dst_mac, dst_ip);
+        f.data_link = ethernet_link_from_text(
+            src_mac,
+            dst_mac,
+            "IPv4",
+            Some(VlanTag {
+                id: vlan,
+                pcp: 0,
+                dei: false,
+                inner_ethertype: Ethertype(0x0800),
+            }),
+        );
+        f
     }
 
     fn flow_with_ports(
@@ -1105,6 +1216,328 @@ mod add_packet_flow_tests {
             node.macs.len(),
             MAX_MACS_PER_NODE,
             "la liste des MAC est plafonnée"
+        );
+    }
+
+    /// La même IP sur deux VLAN est deux actifs distincts : deux nœuds, avec
+    /// leur VLAN respectif, tous deux marqués `duplicate_ip` (anomalie
+    /// signalée, jamais fusionnée — #154).
+    #[test]
+    fn same_ip_on_two_vlans_makes_two_flagged_nodes() {
+        let mut graph = GraphData::new();
+        add(
+            &mut graph,
+            &flow_on_vlan(
+                "10:00:00:00:00:0a",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+                10,
+            ),
+        );
+        let updates = add(
+            &mut graph,
+            &flow_on_vlan(
+                "20:00:00:00:00:0a",
+                "192.168.1.10",
+                "20:00:00:00:00:0b",
+                "192.168.1.20",
+                20,
+            ),
+        );
+
+        assert_eq!(graph.nodes.len(), 4, "deux nœuds par IP, un par VLAN");
+
+        let on_vlan10 = graph.nodes.get("vlan10:192.168.1.10").unwrap();
+        let on_vlan20 = graph.nodes.get("vlan20:192.168.1.10").unwrap();
+        assert_eq!(on_vlan10.vlan_id, Some(10));
+        assert_eq!(on_vlan20.vlan_id, Some(20));
+        assert_ne!(on_vlan10.id, on_vlan20.id, "deux identités distinctes");
+        assert!(on_vlan10.duplicate_ip, "l'anomalie IP dupliquée est levée");
+        assert!(on_vlan20.duplicate_ip);
+        assert_eq!(
+            on_vlan10.macs,
+            vec!["10:00:00:00:00:0a".to_string()],
+            "les MAC ne se mélangent pas entre VLAN"
+        );
+        assert!(
+            updates.iter().any(
+                |u| matches!(u, GraphUpdate::NodeUpdated(n) if n.duplicate_ip
+                    && n.vlan_id == Some(10))
+            ),
+            "le nœud du premier VLAN est re-notifié avec l'anomalie"
+        );
+
+        // Le trafic ne se mélange pas non plus : deux arêtes distinctes.
+        assert_eq!(graph.edges.len(), 2);
+    }
+
+    /// Une trame non taguée et une trame taguée portant la même IP font
+    /// aussi deux nœuds : l'absence de tag est une identité à part entière.
+    #[test]
+    fn untagged_and_tagged_frames_with_same_ip_stay_distinct() {
+        let mut graph = GraphData::new();
+        add(
+            &mut graph,
+            &flow(
+                "10:00:00:00:00:0a",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
+        );
+        add(
+            &mut graph,
+            &flow_on_vlan(
+                "10:00:00:00:00:0a",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+                20,
+            ),
+        );
+
+        let untagged = graph.nodes.get("192.168.1.10").unwrap();
+        let tagged = graph.nodes.get("vlan20:192.168.1.10").unwrap();
+        assert_eq!(untagged.vlan_id, None);
+        assert_eq!(tagged.vlan_id, Some(20));
+        assert!(untagged.duplicate_ip && tagged.duplicate_ip);
+    }
+
+    /// Les ids de nœuds et d'arêtes sont dérivés de l'identité, plus d'un
+    /// compteur global : deux graphes construits séparément (ordre inversé)
+    /// donnent les mêmes ids — snapshots déterministes (#154).
+    #[test]
+    fn node_and_edge_ids_are_stable_across_graphs_and_insertion_order() {
+        let a_to_b = flow(
+            "10:00:00:00:00:0a",
+            "192.168.1.10",
+            "10:00:00:00:00:0b",
+            "192.168.1.20",
+        );
+        let c_to_d = flow_on_vlan(
+            "10:00:00:00:00:0c",
+            "192.168.1.30",
+            "10:00:00:00:00:0d",
+            "192.168.1.40",
+            30,
+        );
+
+        let mut first = GraphData::new();
+        add(&mut first, &a_to_b);
+        add(&mut first, &c_to_d);
+
+        let mut second = GraphData::new();
+        add(&mut second, &c_to_d);
+        add(&mut second, &a_to_b);
+
+        for key in first.nodes.keys() {
+            assert_eq!(
+                first.nodes[key].id, second.nodes[key].id,
+                "id de nœud instable pour {key}"
+            );
+        }
+        let mut first_edge_ids: Vec<_> = first.edges.values().map(|e| e.id.clone()).collect();
+        let mut second_edge_ids: Vec<_> = second.edges.values().map(|e| e.id.clone()).collect();
+        first_edge_ids.sort();
+        second_edge_ids.sort();
+        assert_eq!(first_edge_ids, second_edge_ids, "ids d'arêtes instables");
+    }
+
+    /// Changement de MAC (remplacement de carte, usurpation) : le nœud garde
+    /// son identité (clé (vlan, ip), id inchangé), la nouvelle MAC s'ajoute
+    /// aux MAC observées et l'anomalie multi-MAC est visible.
+    #[test]
+    fn mac_change_keeps_node_identity() {
+        let mut graph = GraphData::new();
+        add(
+            &mut graph,
+            &flow(
+                "10:00:00:00:00:0a",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
+        );
+        let id_before = graph.nodes.get("192.168.1.10").unwrap().id.clone();
+
+        add(
+            &mut graph,
+            &flow(
+                "de:ad:be:ef:00:01",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
+        );
+
+        let node = graph.nodes.get("192.168.1.10").unwrap();
+        assert_eq!(
+            node.id, id_before,
+            "l'identité du nœud survit au changement"
+        );
+        assert_eq!(node.macs.len(), 2, "les deux MAC restent observées");
+        assert!(!node.duplicate_ip, "pas de doublon d'IP inter-VLAN ici");
+    }
+
+    /// Un label posé via une MAC secondaire (pas la première observée)
+    /// atteint le nœud : le matching couvre toutes les MAC observées (#154).
+    #[test]
+    fn update_node_label_matches_all_observed_macs() {
+        let mut graph = GraphData::new();
+        add(
+            &mut graph,
+            &flow(
+                "10:00:00:00:00:0a",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
+        );
+        add(
+            &mut graph,
+            &flow(
+                "de:ad:be:ef:00:01",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
+        );
+
+        let updates =
+            graph.update_node_label("de:ad:be:ef:00:01", "192.168.1.10", "Automate 1".into());
+        assert_eq!(updates.len(), 1, "le nœud est trouvé via sa MAC secondaire");
+        assert_eq!(
+            graph.nodes.get("192.168.1.10").unwrap().label.as_deref(),
+            Some("Automate 1")
+        );
+    }
+
+    /// La même (mac, ip) vue sur deux VLAN : les deux nœuds reçoivent le
+    /// label (c'est le même équipement physique vu sur deux segments —
+    /// l'étiquette humaine s'applique aux deux).
+    #[test]
+    fn update_node_label_reaches_all_vlan_siblings() {
+        let mut graph = GraphData::new();
+        for vlan in [10, 20] {
+            add(
+                &mut graph,
+                &flow_on_vlan(
+                    "10:00:00:00:00:0a",
+                    "192.168.1.10",
+                    "10:00:00:00:00:0b",
+                    "192.168.1.20",
+                    vlan,
+                ),
+            );
+        }
+
+        let updates =
+            graph.update_node_label("10:00:00:00:00:0a", "192.168.1.10", "Poste SCADA".into());
+        assert_eq!(updates.len(), 2, "les deux nœuds VLAN sont étiquetés");
+
+        // Ré-application du même label : aucune notification superflue.
+        let updates =
+            graph.update_node_label("10:00:00:00:00:0a", "192.168.1.10", "Poste SCADA".into());
+        assert!(updates.is_empty());
+    }
+
+    /// `refresh_labels` essaie chaque MAC observée du nœud : un label stocké
+    /// pour la MAC secondaire est retrouvé (#154).
+    #[test]
+    fn refresh_labels_resolves_via_secondary_mac() {
+        let mut graph = GraphData::new();
+        add(
+            &mut graph,
+            &flow(
+                "10:00:00:00:00:0a",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
+        );
+        add(
+            &mut graph,
+            &flow(
+                "de:ad:be:ef:00:01",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+            ),
+        );
+
+        let updates = graph.refresh_labels(|mac, ip| {
+            (mac == "de:ad:be:ef:00:01" && ip == "192.168.1.10").then(|| "Automate 2".to_string())
+        });
+        assert_eq!(updates.len(), 1);
+        assert_eq!(
+            graph.nodes.get("192.168.1.10").unwrap().label.as_deref(),
+            Some("Automate 2")
+        );
+    }
+
+    /// Le repli L2 est lui aussi VLAN-aware : la même MAC taguée sur deux
+    /// VLAN fait deux nœuds.
+    #[test]
+    fn l2_fallback_separates_vlans() {
+        let mut graph = GraphData::new();
+        for vlan in [10, 20] {
+            let mut f = flow_on_vlan(
+                "10:00:00:00:00:0a",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+                vlan,
+            );
+            f.internet = None; // force le repli L2
+            add(&mut graph, &f);
+        }
+
+        assert_eq!(graph.nodes.len(), 4);
+        assert!(graph.nodes.contains_key("vlan10:mac:10:00:00:00:00:0a"));
+        assert!(graph.nodes.contains_key("vlan20:mac:10:00:00:00:00:0a"));
+        assert_eq!(
+            graph
+                .nodes
+                .get("vlan10:mac:10:00:00:00:00:0a")
+                .unwrap()
+                .vlan_id,
+            Some(10)
+        );
+    }
+
+    /// `clear` remet aussi l'index IP à zéro : après reset, une IP revue
+    /// seule n'est pas marquée dupliquée.
+    #[test]
+    fn clear_resets_duplicate_ip_tracking() {
+        let mut graph = GraphData::new();
+        for vlan in [10, 20] {
+            add(
+                &mut graph,
+                &flow_on_vlan(
+                    "10:00:00:00:00:0a",
+                    "192.168.1.10",
+                    "10:00:00:00:00:0b",
+                    "192.168.1.20",
+                    vlan,
+                ),
+            );
+        }
+        graph.clear();
+
+        add(
+            &mut graph,
+            &flow_on_vlan(
+                "10:00:00:00:00:0a",
+                "192.168.1.10",
+                "10:00:00:00:00:0b",
+                "192.168.1.20",
+                10,
+            ),
+        );
+        assert!(
+            !graph.nodes.get("vlan10:192.168.1.10").unwrap().duplicate_ip,
+            "plus de doublon après clear"
         );
     }
 

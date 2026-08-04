@@ -29,6 +29,8 @@ function node(overrides: Partial<Node> = {}): Node {
     mac: "",
     macs: [],
     ip: "",
+    vlan_id: null,
+    duplicate_ip: false,
     label: null,
     ...overrides,
   };
