@@ -177,9 +177,10 @@ jobs:
         working-directory: ./sonar-rust
 
   # Fuzzing borné du parseur PCAP et du lecteur de matrice (#151) : chaque
-  # cible tourne un budget fixe sur les seeds committées. Un crash fait
-  # échouer le job et son artefact est uploadé — la reproduction rejoint
-  # alors le corpus comme seed de régression.
+  # cible tourne un budget fixe sur un corpus dérivé des fixtures versionnées
+  # (seeds de régression comprises, cf. fuzz/README.md). Un crash fait
+  # échouer le job et son artefact est uploadé — la reproduction est alors
+  # promue dans fuzz/regressions/<cible>/.
   fuzz_smoke:
     runs-on: ubuntu-22.04
     steps:
@@ -202,6 +203,11 @@ jobs:
 
       - name: Install cargo-fuzz
         run: cargo install cargo-fuzz --version "${{ steps.versions.outputs.CARGO_FUZZ_VERSION }}" --locked
+
+      # Le corpus n'est pas committé (politique du fuzz/README.md) : il est
+      # dérivé des fixtures versionnées, seeds de régression comprises.
+      - name: Prepare fuzz corpus from versioned fixtures
+        run: ./script/pcap/prepare-fuzz-corpus.sh
 
       # Budget délibérément court : la CI prouve l'absence de crash trivial
       # et l'exécutabilité des cibles à chaque PR ; les campagnes longues se
