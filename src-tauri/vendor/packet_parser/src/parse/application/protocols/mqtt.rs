@@ -106,8 +106,6 @@ impl fmt::Display for MqttPacket<'_> {
 // - TryFrom boucle sur le buffer entier (garde anti-faux-positifs du probing
 //   à l'aveugle) au lieu d'une chaîne linéaire unique ; c'est parse_one qui
 //   porte la séquence canonique check → place → champ suivant.
-// - MqttError::UnsupportedPacketType est un variant public jamais construit,
-//   conservé tel quel pour la compatibilité d'API.
 // - MqttPacket ne stocke que des slices bruts (variable_header, payload) :
 //   les valeurs typées validées par les checks (topic, protocol level,
 //   packet id…) ne sont pas placées dans la struct, car cela changerait ses

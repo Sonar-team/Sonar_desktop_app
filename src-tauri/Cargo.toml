@@ -41,11 +41,11 @@ tauri-plugin-log = "2.8.0"
 tauri-plugin-process = "2.3.1"
 
 pcap = "2.4.0"
-packet_parser = "9.0.0"
+packet_parser = "10.0.0"
 netdev = "0.42.0"
 # Cœur métier partagé (matrice, CSV, paquets/tunnels, graphe, import PCAP),
 # consommé aussi par sonar-cli : source unique du domaine, cf. VISION.md.
-sonar-flows-core = { version = "=0.7.0", features = [
+sonar-flows-core = { version = "=0.8.0", features = [
   "pcap",
 ] }
 

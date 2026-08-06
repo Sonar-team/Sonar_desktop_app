@@ -264,7 +264,9 @@ pub(crate) fn parse_unsigned_value(value: &[u8], field: &'static str) -> Result<
 /// Vérifie qu'une valeur NULL BER est vide et retourne `SnmpValue::Null`.
 pub(crate) fn extract_null(value: &[u8]) -> Result<SnmpValue<'_>, SnmpError> {
     if !value.is_empty() {
-        return Err(SnmpError::InvalidPduStructure("NULL value is not empty"));
+        return Err(SnmpError::NonEmptyNull {
+            length: value.len(),
+        });
     }
 
     Ok(SnmpValue::Null)
@@ -286,7 +288,10 @@ pub(crate) fn extract_ip_address(value: &[u8]) -> Result<[u8; 4], SnmpError> {
 /// endOfMibView) est vide.
 pub(crate) fn validate_exception_empty(value: &[u8], field: &'static str) -> Result<(), SnmpError> {
     if !value.is_empty() {
-        return Err(SnmpError::InvalidPduStructure(field));
+        return Err(SnmpError::NonEmptyException {
+            field,
+            length: value.len(),
+        });
     }
 
     Ok(())
@@ -323,7 +328,7 @@ mod tests {
     fn extract_null_rejette_valeur_non_vide() {
         assert!(matches!(
             extract_null(&[0x01]),
-            Err(SnmpError::InvalidPduStructure("NULL value is not empty"))
+            Err(SnmpError::NonEmptyNull { length: 1 })
         ));
     }
 
@@ -353,7 +358,10 @@ mod tests {
     fn validate_exception_empty_rejette_valeur_non_vide() {
         assert!(matches!(
             validate_exception_empty(&[0x01], "no_such_object"),
-            Err(SnmpError::InvalidPduStructure("no_such_object"))
+            Err(SnmpError::NonEmptyException {
+                field: "no_such_object",
+                length: 1,
+            })
         ));
     }
 

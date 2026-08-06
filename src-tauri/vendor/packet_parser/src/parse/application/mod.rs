@@ -20,6 +20,12 @@ use crate::{
 };
 
 /// The `Application` struct contains information about the layer 7 protocol and its parsed data.
+///
+/// [`Application::try_from`] only receives application bytes and therefore
+/// cannot enforce transport or port constraints. For classification of a
+/// complete packet, use [`crate::parse::PacketFlow`]: it prevents, for
+/// example, a valid-looking S7Comm payload carried over UDP from being
+/// labelled as S7Comm and keeps weak COTP signatures behind TCP port 102.
 #[derive(Debug, Clone, Serialize, Eq)]
 pub struct Application {
     pub application_protocol: &'static str,

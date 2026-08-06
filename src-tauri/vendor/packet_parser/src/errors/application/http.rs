@@ -10,9 +10,6 @@ pub enum HttpParseError {
     #[error("Invalid UTF-8 in HTTP request")]
     InvalidUtf8,
 
-    #[error("Missing HTTP request line")]
-    MissingRequestLine,
-
     #[error("Missing HTTP method")]
     MissingMethod,
 

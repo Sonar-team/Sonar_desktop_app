@@ -78,7 +78,7 @@ pub struct SrvlocHeaderV1<'a> {
     pub url_length: u16,
     pub url: &'a str,
 
-    pub scope_list_lengh: u16,
+    pub scope_list_length: u16,
     pub scope_list: &'a str,
 }
 
@@ -149,7 +149,7 @@ fn parse_v1_packet(payload: &[u8]) -> Result<SrvlocPacket<'_>, SrvlocPacketParse
     let transaction_id = extract_transaction_id(payload, &mut offset)?;
     let error_code = extract_error_code(payload, &mut offset)?;
     let (url_length, url) = extract_url(payload, &mut offset)?;
-    let (scope_list_lengh, scope_list) = extract_scope_list(payload, &mut offset)?;
+    let (scope_list_length, scope_list) = extract_scope_list(payload, &mut offset)?;
 
     let header_v1 = SrvlocHeaderV1 {
         version,
@@ -163,7 +163,7 @@ fn parse_v1_packet(payload: &[u8]) -> Result<SrvlocPacket<'_>, SrvlocPacketParse
         error_code,
         url_length,
         url,
-        scope_list_lengh,
+        scope_list_length,
         scope_list,
     };
 
@@ -290,7 +290,7 @@ mod tests {
                 assert_eq!(header.error_code, 0);
                 assert_eq!(header.url_length, 3);
                 assert_eq!(header.url, "svc");
-                assert_eq!(header.scope_list_lengh, 2);
+                assert_eq!(header.scope_list_length, 2);
                 assert_eq!(header.scope_list, "sc");
             }
             other => panic!("attendu header V1, obtenu {other:?}"),

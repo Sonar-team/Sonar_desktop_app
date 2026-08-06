@@ -322,9 +322,9 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "packet_parser"
-version = "9.0.0"
+version = "10.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12ffb2700810ad54acfb38c16c39ec5c995a2e8dce7765453abdde61fd0b497a"
+checksum = "74009e0ef459899a00fdd7ea1baa82f7527771c02138b37c52881b9acfc228c1"
 dependencies = [
  "chrono",
  "hex",
@@ -492,7 +492,7 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "sonar-flows-core"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "chrono",
  "csv",

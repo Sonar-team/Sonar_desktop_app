@@ -200,15 +200,17 @@ fn validate_properties_fill_exactly(
 
 /// Topic name d'un PUBLISH : UTF-8 valide, non vide, sans caractère de
 /// contrôle ni wildcard ('#' et '+' sont interdits à la publication).
+/// Chaque mode d'échec sort avec son variant dédié.
 fn validate_publish_topic(topic: &[u8]) -> Result<(), MqttError> {
     if topic.is_empty() {
-        return Err(MqttError::InvalidTopic);
+        return Err(MqttError::EmptyTopic);
     }
-    let s = std::str::from_utf8(topic).map_err(|_| MqttError::InvalidTopic)?;
-    if s.chars()
-        .any(|c| c.is_control() || c == '#' || c == '+' || c == '\u{0}')
-    {
-        return Err(MqttError::InvalidTopic);
+    let s = std::str::from_utf8(topic).map_err(|_| MqttError::TopicNotUtf8)?;
+    if s.chars().any(|c| c == '#' || c == '+') {
+        return Err(MqttError::WildcardInPublishTopic);
+    }
+    if s.chars().any(char::is_control) {
+        return Err(MqttError::ControlCharacterInTopic);
     }
     Ok(())
 }
@@ -656,7 +658,22 @@ mod tests {
         // PUBLISH : wildcard interdit dans un topic name
         assert!(matches!(
             variable_header_len(MqttPacketType::Publish, 0x30, &[0, 3, b'a', b'/', b'#']),
-            Err(MqttError::InvalidTopic)
+            Err(MqttError::WildcardInPublishTopic)
+        ));
+        // PUBLISH : topic vide
+        assert!(matches!(
+            variable_header_len(MqttPacketType::Publish, 0x30, &[0, 0]),
+            Err(MqttError::EmptyTopic)
+        ));
+        // PUBLISH : topic non UTF-8
+        assert!(matches!(
+            variable_header_len(MqttPacketType::Publish, 0x30, &[0, 2, 0xFF, 0xFE]),
+            Err(MqttError::TopicNotUtf8)
+        ));
+        // PUBLISH : caractère de contrôle dans le topic
+        assert!(matches!(
+            variable_header_len(MqttPacketType::Publish, 0x30, &[0, 2, b'a', 0x01]),
+            Err(MqttError::ControlCharacterInTopic)
         ));
 
         // Types sans variable header
