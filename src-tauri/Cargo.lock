@@ -3450,9 +3450,9 @@ dependencies = [
 
 [[package]]
 name = "sonar-flows-core"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b4e22370be79f73652eb7ce86ad8057daab89d6299cb6e43c2dbae77de7d1cc"
+checksum = "c1648b8a9f797980a26ed05d3d30e28b3bdb6958e23e6c5fbf89efb78e0cdd70"
 dependencies = [
  "chrono",
  "csv",

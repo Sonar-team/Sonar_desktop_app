@@ -278,7 +278,7 @@ mod tests {
             .next()
             .map(str::to_string)
             .expect("fichier non vide");
-        assert_eq!(first_line, "#SFMS version=1 dlt=ETHERNET");
+        assert_eq!(first_line, "#SFMS version=2 dlt=ETHERNET");
 
         let reimported = merge_matrix_files(&[out]).expect("réimport avec préambule");
         assert_eq!(reimported.row_count(), matrix.row_count());

@@ -1,6 +1,6 @@
 {
   "git": {
-    "sha1": "343b1d1fc44cb8823f5905ac3f10c3d5f6512a13"
+    "sha1": "ce770b2d132e888ffd42d75e71233d7a048c6485"
   },
   "path_in_vcs": "sonar-rust/crates/sonar-flows-core"
 }
