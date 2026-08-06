@@ -55,7 +55,9 @@ export const finishedFixture = ({
     "fileName": "capture.pcap",
     "packetTotalCount": 100,
     "integratedCount": 95,
-    "parseErrorCount": 5,
+    "rejectedTruncatedCount": 3,
+    "rejectedUnsupportedLinkTypeCount": 1,
+    "rejectedMalformedCount": 1,
     "matrixTotalCount": 40
   }
 }) satisfies CaptureEvent;

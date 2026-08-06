@@ -10,6 +10,7 @@ pub mod matrix;
 pub mod packet;
 #[cfg(feature = "pcap")]
 pub mod pcap;
+pub mod report;
 pub mod sfms;
 
 pub use error::{Result, SonarCoreError};

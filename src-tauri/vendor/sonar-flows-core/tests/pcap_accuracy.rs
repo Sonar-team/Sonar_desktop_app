@@ -286,9 +286,9 @@ fn ultimate_ethernet_sample_matches_sfms_snapshot_flow_by_flow() {
 
     // Ces deux agrégats viennent directement de l'inventaire TShark committé
     // dans ultimate_ethernet_sample.tshark.md.
-    assert_eq!(report.packets, EXPECTED_PACKETS);
-    assert_eq!(report.parse_ok, EXPECTED_PACKETS);
-    assert_eq!(report.parse_errors, 0);
+    assert_eq!(report.read(), EXPECTED_PACKETS);
+    assert_eq!(report.decoded, EXPECTED_PACKETS);
+    assert_eq!(report.rejected(), 0);
     assert_eq!(matrix.link_type, Some(LinkType::ETHERNET));
 
     let actual = matrix.to_flat_vec();
@@ -377,9 +377,9 @@ fn multi_dlt_corpus_matches_tshark_flow_by_flow() {
         let mut matrix = FlowMatrix::new();
         let report = append_pcap_file(&mut matrix, &capture)
             .unwrap_or_else(|error| panic!("conversion de {name}: {error}"));
-        assert_eq!(report.packets as u64, metadata.included_packets, "{name}");
-        assert_eq!(report.parse_ok, report.packets, "{name}");
-        assert_eq!(report.parse_errors, 0, "{name}");
+        assert_eq!(report.read() as u64, metadata.included_packets, "{name}");
+        assert_eq!(report.decoded, report.read(), "{name}");
+        assert_eq!(report.rejected(), 0, "{name}");
         assert_eq!(matrix.link_type, Some(expected_link_type), "{name}");
 
         let actual = common_projection(&matrix.to_flat_vec());
@@ -409,7 +409,7 @@ fn capwap_data_matches_outer_and_inner_tshark_flows_and_encap_id() {
     let mut matrix = FlowMatrix::new();
     let report = append_pcap_file(&mut matrix, &capture).expect("conversion CAPWAP");
     assert_eq!(
-        (report.packets, report.parse_ok, report.parse_errors),
+        (report.read(), report.decoded, report.rejected()),
         (2, 2, 0)
     );
 

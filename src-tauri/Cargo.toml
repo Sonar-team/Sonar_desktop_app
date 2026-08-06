@@ -45,7 +45,7 @@ packet_parser = "9.0.0"
 netdev = "0.42.0"
 # Cœur métier partagé (matrice, CSV, paquets/tunnels, graphe, import PCAP),
 # consommé aussi par sonar-cli : source unique du domaine, cf. VISION.md.
-sonar-flows-core = { version = "=0.6.0", features = [
+sonar-flows-core = { version = "=0.7.0", features = [
   "pcap",
 ] }
 

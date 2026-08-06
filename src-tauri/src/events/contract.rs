@@ -619,7 +619,9 @@ pub enum CaptureEventContract {
         file_name: String,
         packet_total_count: u64,
         integrated_count: u64,
-        parse_error_count: u64,
+        rejected_truncated_count: u64,
+        rejected_unsupported_link_type_count: u64,
+        rejected_malformed_count: u64,
         matrix_total_count: u64,
     },
     ImportProgress {
@@ -712,13 +714,17 @@ pub fn to_contract(event: &super::CaptureEvent<'_>) -> CaptureEventContract {
             file_name,
             packet_total_count,
             integrated_count,
-            parse_error_count,
+            rejected_truncated_count,
+            rejected_unsupported_link_type_count,
+            rejected_malformed_count,
             matrix_total_count,
         } => CaptureEventContract::Finished {
             file_name: file_name.to_string(),
             packet_total_count: *packet_total_count as u64,
             integrated_count: *integrated_count as u64,
-            parse_error_count: *parse_error_count as u64,
+            rejected_truncated_count: *rejected_truncated_count as u64,
+            rejected_unsupported_link_type_count: *rejected_unsupported_link_type_count as u64,
+            rejected_malformed_count: *rejected_malformed_count as u64,
             matrix_total_count: *matrix_total_count as u64,
         },
         super::CaptureEvent::ImportProgress {
@@ -820,11 +826,15 @@ mod tests {
 
     #[test]
     fn finished_matches() {
+        // Les quatre catégories non nulles à la fois : le test de fidélité
+        // couvre chaque champ du bilan, pas seulement le chemin heureux.
         let real = crate::events::CaptureEvent::Finished {
             file_name: "capture.pcap",
             packet_total_count: 100,
             integrated_count: 95,
-            parse_error_count: 5,
+            rejected_truncated_count: 3,
+            rejected_unsupported_link_type_count: 1,
+            rejected_malformed_count: 1,
             matrix_total_count: 40,
         };
         assert_same_json(&real, &to_contract(&real), "finished");
@@ -1632,7 +1642,9 @@ mod tests {
                 file_name: "capture.pcap",
                 packet_total_count: 100,
                 integrated_count: 95,
-                parse_error_count: 5,
+                rejected_truncated_count: 3,
+                rejected_unsupported_link_type_count: 1,
+                rejected_malformed_count: 1,
                 matrix_total_count: 40,
             }
         );

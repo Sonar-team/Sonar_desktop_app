@@ -18,16 +18,10 @@ use crate::matrix::FlowMatrix;
 use crate::packet::CapturedPacket;
 use crate::{Result, SonarCoreError, validate_batch_paths};
 
-/// Bilan de conversion d'un fichier PCAP.
-#[derive(Debug, Default, Clone, Copy)]
-pub struct PcapFileReport {
-    /// Paquets lus dans le fichier.
-    pub packets: usize,
-    /// Paquets parsés et intégrés à la matrice.
-    pub parse_ok: usize,
-    /// Paquets lus mais non supportés par le parser (ignorés).
-    pub parse_errors: usize,
-}
+// Le bilan de conversion et sa classification vivent dans [`crate::report`],
+// hors feature `pcap` : la boucle d'import du desktop les partage sans tirer
+// libpcap. Réexportés ici pour les consommateurs historiques du module.
+pub use crate::report::{PacketDisposition, PcapFileReport, classify_packet};
 
 impl<'a> CapturedPacket<'a> {
     /// Construit un [`CapturedPacket`] depuis l'en-tête d'un paquet pcap et son
@@ -175,12 +169,11 @@ pub fn append_pcap_file(matrix: &mut FlowMatrix, path: &Path) -> Result<PcapFile
     // Un relevé = un réseau = un DLT : un fichier d'un autre type de liaison
     // que la matrice en cours est refusé (fusion inter-DLT, arbitrage 14/07).
     matrix.bind_link_type(link_type, path)?;
-    let mut parse_ok: usize = 0;
-    let mut parse_errors: usize = 0;
-    let packets = for_each_raw_packet(path, |packet| {
+    let mut report = PcapFileReport::default();
+    for_each_raw_packet(path, |packet| {
         match packet_parser::parse::parse(link_type, packet.data) {
             Ok(flow) => {
-                parse_ok += 1;
+                report.record(PacketDisposition::Decoded);
                 // Même chemin de dépliage des tunnels que le desktop
                 // (`CapturedPacket::to_owned_packets`) : encap_id identiques,
                 // matrices joignables entre CLI et desktop.
@@ -188,14 +181,16 @@ pub fn append_pcap_file(matrix: &mut FlowMatrix, path: &Path) -> Result<PcapFile
                     matrix.update_flow(&owned);
                 }
             }
-            Err(_) => parse_errors += 1,
+            // La cause du rejet est classée par la partition commune (#150) :
+            // troncature de capture, DLT inconnu ou trame malformée.
+            Err(error) => report.record(classify_packet(
+                packet.header.caplen,
+                packet.header.len,
+                Some(&error),
+            )),
         }
     })?;
-    Ok(PcapFileReport {
-        packets,
-        parse_ok,
-        parse_errors,
-    })
+    Ok(report)
 }
 
 /// Convertit un ou plusieurs fichiers PCAP en une matrice de flux unique.
@@ -231,7 +226,7 @@ pub fn convert_pcap_files_to_csv(
 
 #[cfg(test)]
 mod tests {
-    use super::{append_pcap_file, parser_link_type, supported_parser_link_type};
+    use super::{PcapFileReport, append_pcap_file, parser_link_type, supported_parser_link_type};
     use crate::SonarCoreError;
     use crate::matrix::FlowMatrix;
     use packet_parser::LinkType;
@@ -255,10 +250,16 @@ mod tests {
 
     /// Ajoute un enregistrement de paquet au PCAP en construction.
     fn push_packet_record(bytes: &mut Vec<u8>, data: &[u8]) {
+        push_cut_packet_record(bytes, data, data.len() as u32);
+    }
+
+    /// Enregistrement dont la capture a été coupée : `data` est ce qui a été
+    /// conservé (`incl_len`), `orig_len` la longueur de la trame sur le fil.
+    fn push_cut_packet_record(bytes: &mut Vec<u8>, data: &[u8], orig_len: u32) {
         bytes.extend_from_slice(&0u32.to_le_bytes()); // ts_sec
         bytes.extend_from_slice(&0u32.to_le_bytes()); // ts_usec
         bytes.extend_from_slice(&(data.len() as u32).to_le_bytes()); // incl_len
-        bytes.extend_from_slice(&(data.len() as u32).to_le_bytes()); // orig_len
+        bytes.extend_from_slice(&orig_len.to_le_bytes()); // orig_len
         bytes.extend_from_slice(data);
     }
 
@@ -378,9 +379,9 @@ mod tests {
         let mut matrix = FlowMatrix::new();
         let report = append_pcap_file(&mut matrix, &path).expect("pcap SLL lisible");
 
-        assert_eq!(report.packets, 1);
-        assert_eq!(report.parse_ok, 1, "le paquet SLL doit être parsé");
-        assert_eq!(report.parse_errors, 0);
+        assert_eq!(report.read(), 1);
+        assert_eq!(report.decoded, 1, "le paquet SLL doit être parsé");
+        assert_eq!(report.rejected(), 0);
         assert_eq!(matrix.row_count(), 1, "le flux IPv4 atteint la matrice");
     }
 
@@ -512,6 +513,44 @@ mod tests {
     /// longueur nulle se termine — chaque enregistrement avance la lecture,
     /// chaque paquet est classé (ici : illisible), aucune boucle infinie
     /// possible dans `for_each_raw_packet`.
+    /// Preuve terrain de la partition tronqué/malformé/décodé (#150) sur un
+    /// même fichier forgé :
+    /// - une trame coupée au snaplen dont il ne reste que 10 octets échoue au
+    ///   parse → imputée à la **troncature de capture** ;
+    /// - la même trame de 10 octets annoncée complète (`caplen == len`)
+    ///   échoue pareil → **malformée sur le réseau observé** ;
+    /// - une trame ARP complète dont seule la longueur d'origine est plus
+    ///   grande (padding non conservé) se décode → **intégrée**, la coupe de
+    ///   capture n'est pas un motif de rejet en soi.
+    #[test]
+    fn truncated_and_malformed_packets_are_distinguished_in_the_report() {
+        let arp = arp_frame();
+        let mut bytes = pcap_global_header();
+        push_cut_packet_record(&mut bytes, &arp[..10], 60); // coupée, illisible
+        push_packet_record(&mut bytes, &arp[..10]); // complète, malformée
+        push_cut_packet_record(&mut bytes, &arp, 60); // coupée, lisible
+        let path = write_pcap("sonar_core_pcap_truncation_test", "cut.pcap", &bytes);
+
+        let mut matrix = FlowMatrix::new();
+        let report = append_pcap_file(&mut matrix, &path).expect("lecture terminée");
+
+        assert_eq!(
+            report,
+            PcapFileReport {
+                decoded: 1,
+                rejected_truncated: 1,
+                rejected_unsupported_link_type: 0,
+                rejected_malformed: 1,
+            }
+        );
+        assert_eq!(report.read(), 3, "l'équation couvre les trois trames");
+        assert_eq!(
+            matrix.row_count(),
+            1,
+            "seule la trame décodée entre dans la matrice"
+        );
+    }
+
     #[test]
     fn zero_length_packets_terminate_with_explicit_accounting() {
         let mut bytes = pcap_global_header();
@@ -523,12 +562,14 @@ mod tests {
         let mut matrix = FlowMatrix::new();
         let report = append_pcap_file(&mut matrix, &path).expect("lecture terminée");
 
-        assert_eq!(report.packets, 100, "tous les enregistrements sont lus");
-        assert_eq!(report.parse_ok, 0);
+        assert_eq!(report.read(), 100, "tous les enregistrements sont lus");
+        assert_eq!(report.decoded, 0);
         assert_eq!(
-            report.parse_errors, 100,
-            "un paquet vide est classé illisible, pas avalé ni bloquant"
+            report.rejected_malformed, 100,
+            "un paquet vide (caplen == len) est une trame malformée du réseau \
+             observé, pas une troncature de capture — classé, jamais avalé"
         );
+        assert_eq!(report.rejected_truncated, 0);
         assert_eq!(matrix.row_count(), 0);
     }
 
@@ -557,8 +598,8 @@ mod tests {
             let mut matrix = FlowMatrix::new();
             let report = append_pcap_file(&mut matrix, &path)
                 .unwrap_or_else(|e| panic!("conversion de {name}: {e}"));
-            assert_eq!(report.packets, 1, "{name}");
-            assert_eq!(report.parse_ok, 1, "{name}");
+            assert_eq!(report.read(), 1, "{name}");
+            assert_eq!(report.decoded, 1, "{name}");
             assert_eq!(matrix.row_count(), 1, "{name}");
         }
     }
@@ -572,13 +613,11 @@ mod tests {
         let report =
             append_pcap_file(&mut matrix, &fixture("linux_sll.pcap")).expect("capture SLL réelle");
 
-        assert_eq!(report.packets, 2702, "toutes les trames du fichier lues");
-        assert_eq!(
-            report.parse_ok + report.parse_errors,
-            report.packets,
-            "chaque paquet lu est classé parsé ou non-parsé, sans trou"
-        );
-        assert!(report.parse_ok > 0, "des flux SLL sont décodés");
+        assert_eq!(report.read(), 2702, "toutes les trames du fichier lues");
+        // L'équation lus = décodés + rejetés est vraie par construction
+        // depuis #150 : le total est dérivé des catégories, plus un compteur
+        // indépendant qui pourrait diverger.
+        assert!(report.decoded > 0, "des flux SLL sont décodés");
         assert!(matrix.row_count() > 0, "la matrice contient des flux");
         assert_eq!(matrix.link_type, Some(LinkType::LINUX_SLL));
 
@@ -599,15 +638,14 @@ mod tests {
         let report = append_pcap_file(&mut matrix, &fixture("linux_sll2.pcap"))
             .expect("capture SLL2 réelle");
 
-        assert_eq!(report.packets, 779, "toutes les trames du fichier lues");
-        assert_eq!(report.parse_ok + report.parse_errors, report.packets);
+        assert_eq!(report.read(), 779, "toutes les trames du fichier lues");
         assert_matrix_identity_round_trip(
             &matrix,
             LinkType::LINUX_SLL2,
             "sonar_core_real_sll2_test",
             "releve_sll2.csv",
         );
-        assert!(report.parse_ok > 0, "des flux SLL2 sont décodés");
+        assert!(report.decoded > 0, "des flux SLL2 sont décodés");
         assert!(matrix.row_count() > 0, "la matrice contient des flux");
         assert_eq!(matrix.link_type, Some(LinkType::LINUX_SLL2));
     }

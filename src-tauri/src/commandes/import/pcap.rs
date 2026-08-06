@@ -7,6 +7,7 @@ use packet_parser::LinkType;
 use packet_parser::timing::ParseTiming;
 #[cfg(feature = "capture_timing")]
 use serde_json::json;
+use sonar_flows_core::report::{PacketDisposition, PcapFileReport, classify_packet};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -195,15 +196,24 @@ fn process_packet(
     matrice: &mut FlowMatrix,
     graph: &mut GraphData,
     on_event: &Channel<CaptureEvent<'_>>,
-    counters: &mut ParseCounters,
+    report: &mut PcapFileReport,
 ) {
-    let Ok(flow) = packet_parser::parse::parse(link_type, packet.data) else {
-        // Rapport qualité (#150) : un paquet illisible est compté, jamais
-        // silencieusement ignoré.
-        counters.errors += 1;
-        return;
+    let flow = match packet_parser::parse::parse(link_type, packet.data) {
+        Ok(flow) => flow,
+        Err(error) => {
+            // Rapport qualité (#150) : un paquet illisible est classé par la
+            // partition du cœur (troncature de capture, DLT inconnu, trame
+            // malformée), jamais silencieusement ignoré — la même
+            // classification que la CLI, pas une réimplémentation locale.
+            report.record(classify_packet(
+                packet.header.caplen,
+                packet.header.len,
+                Some(&error),
+            ));
+            return;
+        }
     };
-    counters.ok += 1;
+    report.record(PacketDisposition::Decoded);
     let packet_min = CapturedPacket::from_pcap(packet.header, flow);
 
     // Un paquet tunnelé (ex. CAPWAP) produit plusieurs niveaux de flux :
@@ -216,15 +226,6 @@ fn process_packet(
     if packet_count.is_multiple_of(1000) || packet_count == total {
         send_stats_event(on_event, packet_count, matrice.row_count());
     }
-}
-
-/// Comptabilité de parsing d'un fichier importé : chaque paquet lu est
-/// classé intégré (`ok`) ou illisible (`errors`) — le rapport qualité de
-/// l'import (#150), repris dans l'événement `Finished`.
-#[derive(Default)]
-struct ParseCounters {
-    ok: usize,
-    errors: usize,
 }
 
 /// Variante instrumentée de `process_packet` : mêmes traitements, avec mesure
@@ -241,7 +242,7 @@ fn process_packet_timed(
     graph: &mut GraphData,
     on_event: &Channel<CaptureEvent<'_>>,
     timing_logger: &mut Option<ImportTimingLogger>,
-    counters: &mut ParseCounters,
+    report: &mut PcapFileReport,
 ) {
     let timing_sample: Option<ImportTimingSample> = timing_logger
         .as_mut()
@@ -261,7 +262,7 @@ fn process_packet_timed(
 
     match parsed_flow {
         Ok((flow, parse_timing)) => {
-            counters.ok += 1;
+            report.record(PacketDisposition::Decoded);
             let packet_min = CapturedPacket::from_pcap(packet.header, flow);
 
             let packet_owned_start = timing_sample.map(|_| Instant::now());
@@ -337,7 +338,11 @@ fn process_packet_timed(
             }
         }
         Err((parse_error, parse_timing)) => {
-            counters.errors += 1;
+            report.record(classify_packet(
+                packet.header.caplen,
+                packet.header.len,
+                Some(&parse_error),
+            ));
 
             if let (Some(sample), Some(start)) = (timing_sample, pipeline_start) {
                 write_timing_or_disable(
@@ -409,7 +414,7 @@ pub(super) fn handle_pcap_file(
     let mut packet_count: usize = 0;
     #[cfg(feature = "capture_timing")]
     let process_start = Instant::now();
-    let mut counters = ParseCounters::default();
+    let mut report = PcapFileReport::default();
 
     // La boucle de lecture vient du cœur partagé : fin normale distinguée
     // d'une erreur en cours de fichier (tronqué, corrompu), propagée pour que
@@ -446,7 +451,7 @@ pub(super) fn handle_pcap_file(
             graph,
             on_event,
             timing_logger,
-            &mut counters,
+            &mut report,
         );
         #[cfg(not(feature = "capture_timing"))]
         process_packet(
@@ -457,7 +462,7 @@ pub(super) fn handle_pcap_file(
             matrice,
             graph,
             on_event,
-            &mut counters,
+            &mut report,
         );
     })?;
 
@@ -475,11 +480,15 @@ pub(super) fn handle_pcap_file(
     let process_ns = elapsed_ns_since(process_start);
     #[cfg(feature = "capture_timing")]
     let finished_ipc_start = Instant::now();
+    // Le total émis est la somme des catégories (`read()`) : l'équation du
+    // bilan tient par construction jusque dans l'IPC (#150).
     let finished_send_result = on_event.send(CaptureEvent::Finished {
         file_name: file_path,
-        packet_total_count: total,
-        integrated_count: counters.ok,
-        parse_error_count: counters.errors,
+        packet_total_count: report.read(),
+        integrated_count: report.decoded,
+        rejected_truncated_count: report.rejected_truncated,
+        rejected_unsupported_link_type_count: report.rejected_unsupported_link_type,
+        rejected_malformed_count: report.rejected_malformed,
         matrix_total_count: matrice.row_count(),
     });
     if let Err(e) = &finished_send_result {
@@ -496,8 +505,10 @@ pub(super) fn handle_pcap_file(
                 "file_path": file_path,
                 "total_packets": total,
                 "read_packets": packet_count,
-                "parse_ok": counters.ok,
-                "parse_errors": counters.errors,
+                "decoded": report.decoded,
+                "rejected_truncated": report.rejected_truncated,
+                "rejected_unsupported_link_type": report.rejected_unsupported_link_type,
+                "rejected_malformed": report.rejected_malformed,
                 "matrix_count": matrice.row_count(),
                 "graph_nodes": graph.nodes.len(),
                 "graph_edges": graph.edges.len(),
@@ -512,11 +523,14 @@ pub(super) fn handle_pcap_file(
     }
 
     info!(
-        "[handle_pcap_file] {} : {} paquets lus ({} intégrés, {} illisibles), {} lignes matrice",
+        "[handle_pcap_file] {} : {} paquets lus = {} intégrés + {} tronqués \
+         + {} DLT non supportés + {} malformés, {} lignes matrice",
         file_path,
-        total,
-        counters.ok,
-        counters.errors,
+        report.read(),
+        report.decoded,
+        report.rejected_truncated,
+        report.rejected_unsupported_link_type,
+        report.rejected_malformed,
         matrice.row_count()
     );
     Ok(())

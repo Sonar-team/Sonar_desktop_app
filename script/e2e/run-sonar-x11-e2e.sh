@@ -487,7 +487,8 @@ fill_native_dialog "$pcap_fixture"
 send_key Tab
 send_key Tab
 send_key Return
-wait_for_log "10 paquets lus (10 intégrés, 0 illisibles)" 30
+# Bilan par catégorie fine (#150) : l'équation complète est dans le log.
+wait_for_log "10 paquets lus = 10 intégrés + 0 tronqués + 0 DLT non supportés + 0 malformés" 30
 wait_for_log "FIN traitement liste PCAP" 30
 sleep 1
 capture_window "05-pcap-imported"
