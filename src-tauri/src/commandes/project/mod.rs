@@ -43,13 +43,61 @@ use crate::{
 
 /// Version du schéma de projet. À incrémenter à chaque évolution du contenu
 /// de l'archive, avec un test de migration depuis chaque version antérieure.
-/// La v2 attendue : identité d'actif contextualisée (#154).
-pub const PROJECT_SCHEMA_VERSION: u32 = 1;
+/// v2 : contexte de relevé (site, capteur, interface) — #154, tranche 2.
+pub const PROJECT_SCHEMA_VERSION: u32 = 2;
 
 const MANIFEST_ENTRY: &str = "manifest.json";
 const MATRIX_ENTRY: &str = "matrice.csv";
 const LABELS_ENTRY: &str = "labels.csv";
 const CAPTURE_ENTRY: &str = "capture.json";
+
+/// Miroir sérialisable de [`sonar_flows_core::sfms::SurveyContext`], qui ne
+/// dérive pas `serde` (le cœur écrit le préambule SFMS lui-même, il n'a pas
+/// besoin de JSON). Le manifest, lui, est du JSON.
+///
+/// Comme le miroir du contrat IPC (#142), la conversion depuis le type du
+/// cœur est **exhaustive par destructuration** : ajouter un champ à
+/// `SurveyContext` casse la compilation ici au lieu de le perdre en silence.
+#[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
+pub struct ManifestSurveyContext {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub site: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sensor: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interface: Option<String>,
+}
+
+impl From<&sonar_flows_core::sfms::SurveyContext> for ManifestSurveyContext {
+    fn from(context: &sonar_flows_core::sfms::SurveyContext) -> Self {
+        // Destructuration exhaustive volontaire : voir le commentaire du type.
+        let sonar_flows_core::sfms::SurveyContext {
+            site,
+            sensor,
+            interface,
+        } = context;
+        Self {
+            site: site.clone(),
+            sensor: sensor.clone(),
+            interface: interface.clone(),
+        }
+    }
+}
+
+impl From<&ManifestSurveyContext> for sonar_flows_core::sfms::SurveyContext {
+    fn from(context: &ManifestSurveyContext) -> Self {
+        let ManifestSurveyContext {
+            site,
+            sensor,
+            interface,
+        } = context;
+        Self {
+            site: site.clone(),
+            sensor: sensor.clone(),
+            interface: interface.clone(),
+        }
+    }
+}
 
 /// Carte d'identité du projet, écrite en tête d'archive et validée avant
 /// toute mutation de l'état à l'ouverture.
@@ -63,6 +111,11 @@ pub struct ProjectManifest {
     pub matrix_rows: usize,
     pub label_rows: usize,
     pub saved_at_epoch_secs: u64,
+    /// Contexte du relevé (schéma v2, #154). `#[serde(default)]` : un
+    /// manifest v1 ne porte pas la clé et se lit avec un contexte vide —
+    /// c'est toute la migration v1 → v2, aucune donnée n'est inventée.
+    #[serde(default)]
+    pub survey_context: ManifestSurveyContext,
 }
 
 /// Réglages de session embarqués dans le projet. `CaptureConfig` est
@@ -113,12 +166,13 @@ fn write_snapshot(
     capture_state: &Arc<Mutex<CaptureState>>,
     dest: &Path,
 ) -> Result<(ProjectManifest, u64), CaptureStateError> {
-    let (rows, link_type, labels) = {
+    let (rows, link_type, labels, context) = {
         let matrix = matrice.lock()?;
         (
             matrix.to_flat_vec(),
             matrix.link_type,
             matrix.export_labels(),
+            matrix.context.clone(),
         )
     };
     // La révision est capturée avec le snapshot : des modifications arrivées
@@ -145,9 +199,12 @@ fn write_snapshot(
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_secs())
             .unwrap_or(0),
+        survey_context: (&context).into(),
     };
 
-    write_project_archive(dest, &manifest, &rows, link_type, &labels, &settings)?;
+    write_project_archive(
+        dest, &manifest, &rows, link_type, &context, &labels, &settings,
+    )?;
     Ok((manifest, revision))
 }
 
@@ -187,13 +244,19 @@ pub fn open_project<R: tauri::Runtime>(
             labels_csv.to_string_lossy().into_owned(),
             label_store,
             pcinfo,
-            matrice,
+            matrice.clone(),
             graph,
             capture_state.clone(),
             conflict_store,
             on_event,
         )?;
     }
+
+    // Le contexte de relevé est rétabli APRÈS les imports : le swap
+    // transactionnel de `import_matrix_files` remplace la matrice entière,
+    // contexte compris. Le manifest fait foi pour le projet ; un projet v1
+    // n'en porte pas et laisse le contexte vide (migration v1 → v2).
+    matrice.lock()?.context = (&extracted.manifest.survey_context).into();
 
     // La configuration embarquée est revalidée ; une config invalide (projet
     // édité à la main, bornes qui ont changé) n'empêche pas l'ouverture du
@@ -360,11 +423,13 @@ fn spawn_autosaver<R: tauri::Runtime>(app: AppHandle<R>, autosave_path: PathBuf)
 /// Écrit l'archive projet vers `dest` : entrées composées en staging via les
 /// writers CSV existants, archive assemblée en `.part` puis renommée — une
 /// écriture interrompue ne laisse jamais d'archive partielle au chemin final.
+#[allow(clippy::too_many_arguments)]
 fn write_project_archive(
     dest: &Path,
     manifest: &ProjectManifest,
     rows: &[crate::state::flow_matrix::FlowMatrixRow],
     link_type: Option<packet_parser::LinkType>,
+    context: &sonar_flows_core::sfms::SurveyContext,
     labels: &[(String, String, String)],
     settings: &ProjectCaptureSettings,
 ) -> Result<(), CaptureStateError> {
@@ -377,7 +442,15 @@ fn write_project_archive(
     let staging = unique_temp_dir("save");
     let result = (|| -> Result<(), CaptureStateError> {
         let matrix_csv = staging.join(MATRIX_ENTRY);
-        FlowMatrix::write_rows_to_csv(rows, link_type, &matrix_csv.to_string_lossy())?;
+        // Le contexte du relevé voyage dans le préambule `#SFMS` de la
+        // matrice embarquée, pas seulement dans le manifest : la matrice
+        // extraite seule de l'archive reste qualifiée.
+        FlowMatrix::write_rows_to_csv_with_context(
+            rows,
+            link_type,
+            context,
+            &matrix_csv.to_string_lossy(),
+        )?;
         let labels_csv = staging.join(LABELS_ENTRY);
         FlowMatrix::write_label_rows_to_csv(labels, &labels_csv.to_string_lossy())?;
 
@@ -726,7 +799,22 @@ mod tests {
         }
     }
 
+    fn sample_context() -> sonar_flows_core::sfms::SurveyContext {
+        sonar_flows_core::sfms::SurveyContext {
+            site: Some("Usine Nord — atelier 3".to_string()),
+            sensor: Some("sonde=A 100%".to_string()),
+            interface: Some("eth0".to_string()),
+        }
+    }
+
     fn sample_manifest(schema_version: u32) -> ProjectManifest {
+        sample_manifest_with_context(schema_version, &sample_context())
+    }
+
+    fn sample_manifest_with_context(
+        schema_version: u32,
+        context: &sonar_flows_core::sfms::SurveyContext,
+    ) -> ProjectManifest {
         ProjectManifest {
             schema_version,
             app_version: "test".to_string(),
@@ -735,22 +823,38 @@ mod tests {
             matrix_rows: 2,
             label_rows: 1,
             saved_at_epoch_secs: 1_754_000_000,
+            survey_context: context.into(),
         }
     }
 
+    fn sample_rows_and_labels() -> (Vec<FlowMatrixRow>, Vec<(String, String, String)>) {
+        (
+            vec![sample_row(40000), sample_row(40001)],
+            vec![(
+                "aa:bb:cc:00:00:11".to_string(),
+                "192.168.50.11".to_string(),
+                "capteur".to_string(),
+            )],
+        )
+    }
+
     fn write_sample_project(dest: &Path, schema_version: u32) {
+        write_sample_project_with_context(dest, schema_version, &sample_context());
+    }
+
+    fn write_sample_project_with_context(
+        dest: &Path,
+        schema_version: u32,
+        context: &sonar_flows_core::sfms::SurveyContext,
+    ) {
         let link_type = sonar_flows_core::sfms::link_type_from_text("ETHERNET");
-        let rows = vec![sample_row(40000), sample_row(40001)];
-        let labels = vec![(
-            "aa:bb:cc:00:00:11".to_string(),
-            "192.168.50.11".to_string(),
-            "capteur".to_string(),
-        )];
+        let (rows, labels) = sample_rows_and_labels();
         write_project_archive(
             dest,
-            &sample_manifest(schema_version),
+            &sample_manifest_with_context(schema_version, context),
             &rows,
             link_type,
+            context,
             &labels,
             &sample_settings(),
         )
@@ -883,6 +987,135 @@ mod tests {
         assert!(
             detect_recovery(&dir).is_none(),
             "fermeture propre (sentinelle retirée) : pas de récupération"
+        );
+
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Migration v1 → v2 (#154, critère de DoD du sprint #159).
+    ///
+    /// L'archive est forgée **telle que la v1 l'écrivait réellement** : un
+    /// manifest JSON sans la clé `survey_context` et une matrice au préambule
+    /// `#SFMS version=1`. Reconstruire le fixture avec le writer courant ne
+    /// prouverait rien — il produirait déjà du v2.
+    #[test]
+    fn a_v1_project_opens_under_v2_with_an_empty_context() {
+        let dir = unique_temp_dir("test_migration_v1");
+        let dest = dir.join("relevé v1.sonar");
+
+        let manifest_v1 = serde_json::json!({
+            "schema_version": 1,
+            "app_version": "4.9.0",
+            "sfms_version": "1",
+            "dlt": "ETHERNET",
+            "matrix_rows": 2,
+            "label_rows": 1,
+            "saved_at_epoch_secs": 1_754_000_000u64,
+        });
+        assert!(
+            manifest_v1.get("survey_context").is_none(),
+            "le fixture doit être un vrai manifest v1, sans la clé de contexte"
+        );
+
+        let file = File::create(&dest).unwrap();
+        let mut zip = ZipWriter::new(file);
+        let options = SimpleFileOptions::default();
+        zip.start_file(MANIFEST_ENTRY, options).unwrap();
+        zip.write_all(manifest_v1.to_string().as_bytes()).unwrap();
+        zip.start_file(MATRIX_ENTRY, options).unwrap();
+        // Préambule v1 littéral : ce que la version précédente écrivait.
+        zip.write_all(b"#SFMS version=1 dlt=ETHERNET\n").unwrap();
+        zip.write_all(
+            b"mac_source,mac_destination,interface,l_3_protocol,ip_source,ip_destination,\
+              l_4_protocol,port_source,port_destination,l_7_protocol,packet_count,byte_count,\
+              vlan_id,label_source,label_destination,origin,encap_id\n",
+        )
+        .unwrap();
+        zip.finish().unwrap();
+
+        let extracted = extract_project_archive(&dest).unwrap();
+
+        assert_eq!(
+            extracted.manifest.schema_version, 1,
+            "la version lue est celle du fichier, pas celle du code"
+        );
+        assert_eq!(
+            extracted.manifest.survey_context,
+            ManifestSurveyContext::default(),
+            "un projet v1 s'ouvre avec un contexte vide — aucune métadonnée inventée"
+        );
+        let restored: sonar_flows_core::sfms::SurveyContext =
+            (&extracted.manifest.survey_context).into();
+        assert!(
+            restored.is_empty(),
+            "le contexte rétabli dans la matrice doit être vide, pas rempli de chaînes vides"
+        );
+
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Le contexte survit à l'aller-retour, dans le manifest **et** dans le
+    /// préambule de la matrice embarquée : une matrice extraite seule de
+    /// l'archive reste qualifiée. Le texte libre (espaces, tiret cadratin,
+    /// `=`, `%`) traverse sans rendre le préambule ambigu.
+    #[test]
+    fn survey_context_survives_the_project_round_trip() {
+        let dir = unique_temp_dir("test_context_roundtrip");
+        let dest = dir.join("relevé qualifié.sonar");
+        write_sample_project(&dest, PROJECT_SCHEMA_VERSION);
+
+        let extracted = extract_project_archive(&dest).unwrap();
+        let from_manifest: sonar_flows_core::sfms::SurveyContext =
+            (&extracted.manifest.survey_context).into();
+        assert_eq!(
+            from_manifest,
+            sample_context(),
+            "le manifest doit rendre le contexte exactement tel qu'il a été saisi"
+        );
+
+        let preamble = sonar_flows_core::sfms::read_preamble(&extracted.matrix_csv)
+            .unwrap()
+            .expect("la matrice embarquée doit porter un préambule");
+        assert_eq!(
+            preamble.context,
+            sample_context(),
+            "le préambule SFMS de la matrice doit porter le même contexte que le manifest"
+        );
+        assert_eq!(preamble.version, sonar_flows_core::sfms::SFMS_VERSION);
+
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Un projet écrit sans contexte reste indiscernable d'un relevé non
+    /// qualifié : pas de clés vides dans le manifest, pas de contexte dans le
+    /// préambule.
+    #[test]
+    fn a_project_without_context_stays_clean() {
+        let dir = unique_temp_dir("test_context_absent");
+        let dest = dir.join("sans contexte.sonar");
+        let empty = sonar_flows_core::sfms::SurveyContext::default();
+        write_sample_project_with_context(&dest, PROJECT_SCHEMA_VERSION, &empty);
+
+        let extracted = extract_project_archive(&dest).unwrap();
+        assert_eq!(
+            extracted.manifest.survey_context,
+            ManifestSurveyContext::default()
+        );
+
+        let manifest_json =
+            serde_json::to_value(&extracted.manifest).expect("manifest sérialisable");
+        let context_json = &manifest_json["survey_context"];
+        assert!(
+            context_json.as_object().is_some_and(|map| map.is_empty()),
+            "un contexte vide ne doit émettre aucune clé, trouvé: {context_json}"
+        );
+
+        let preamble = sonar_flows_core::sfms::read_preamble(&extracted.matrix_csv)
+            .unwrap()
+            .expect("préambule présent");
+        assert!(
+            preamble.context.is_empty(),
+            "aucun contexte ne doit apparaître dans le préambule"
         );
 
         fs::remove_dir_all(&dir).ok();
