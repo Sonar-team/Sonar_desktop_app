@@ -1,22 +1,22 @@
 # Backlog SONAR — de la bêta avancée au produit Pro
 
-> Dernière synchronisation GitHub : 04/08/2026 (v4.10.0)
+> Dernière synchronisation GitHub : 06/08/2026 (v4.11.0)
 > Source : audit complet bêta → pro du 13/07/2026
 > Règle : les issues GitHub sont la source de vérité ; ce fichier fournit la
 > priorité et l'ordre d'exécution. `sprint.md` décrit uniquement le sprint actif.
 > Priorisation détaillée :
 > [project_management/priorisation_beta_to_pro.md](project_management/priorisation_beta_to_pro.md).
 
-## Baromètre « app pro » — 04/08/2026
+## Baromètre « app pro » — 06/08/2026
 
 Dérivé des règles de sortie de bêta (bas de ce fichier) : **9 P0 et
-9 P1 ouverts** (hors épic de suivi #165). La Release Candidate exige
-0 P0 ; la 1.0 Pro exige 0 P1. Avancements estimés par étape de
-`roadmap_simple.md` :
+9 P1 ouverts** (hors épic de suivi #165), compteurs inchangés depuis le
+04/08. La Release Candidate exige 0 P0 ; la 1.0 Pro exige 0 P1.
+Avancements estimés par étape de `roadmap_simple.md` :
 
 | Étape | Avancement | Restant (issues) |
 | --- | --- | --- |
-| 1. Résultats fiables | ~85 % | #154 (tranche 2), #151 (corpus/fuzzing), #150 (reliquat), #88 |
+| 1. Résultats fiables | ~90 % | #154 (tranche 2 : câblage desktop), #151 (corpus/fuzzing), #150 (reliquat), #88 |
 | 2. Ne jamais perdre son travail | ~60 % | #159 (phases B/C), #160, #111, #102 (reliquat), #144 |
 | 3. Installation professionnelle | ~25 % | #94, #146, #136, #162, #163, #96, #143, #98 |
 | 4. Analyse différenciante | 0 % | #164 (+ tranche 3 de #154), #156, #132 (après les P0) |
@@ -36,6 +36,17 @@ livrée (tranche 1 de #154, sonar-flows-core 0.5.0, PR #186/#187 ;
 tranche 3 déplacée vers #164 — cadrage dans
 `project_management/cadrage_identite_actif_154.md`).
 
+Acquis du 05-06/08 : scénario E2E X11 resynchronisé avec l'app (PR #188),
+release v4.11.0, et **étape 1 de la tranche 2 de #154 livrée côté crate**
+— `SurveyContext { site, sensor, interface }` dans le préambule SFMS,
+`SFMS_VERSION` à 2, valeurs percent-encodées, lecture v1 inchangée
+(PR #189, sonar-flows-core/sonar-flows-cli 0.6.0 publiées sur crates.io
+le 06/08 par le tag `crates-v0.6.0`). Le re-vendor desktop est prêt mais
+pas encore mergé : tant qu'il ne l'est pas, l'application consomme
+toujours 0.5.0. Gates vérifiées vertes sur `ce770b2d` le 06/08 —
+frontend 181 tests + ESLint + `vue-tsc`, desktop 199 tests, cœur partagé
+91 tests, `fmt` et `clippy -D warnings` propres sur les trois.
+
 Chemin critique vers la RC : #154 → #151 → #159/#160 → #136/#162 →
 #94/#146.
 
@@ -45,8 +56,11 @@ Chemin critique vers la RC : #154 → #151 → #159/#160 → #136/#162 →
    [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159) —
    phases et avancement dans `sprint.md`.
 2. Reliquat fidélité en parallèle : [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154)
-   tranche 2 (contexte site/capteur saisi au stop/save — prérequis de la
-   phase B du sprint ; tranche 1 livrée le 04/08) puis corpus/fuzzing de
+   tranche 2 — le format est posé côté crate depuis le 06/08 (0.6.0), il
+   reste le câblage desktop : dialogue de qualification au stop/save,
+   `manifest.json` v2 du `.sonar`, généralisation d'`origin` en contexte
+   par flux. C'est le prérequis de la phase B du sprint. Puis
+   corpus/fuzzing de
    [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151).
 3. Ensuite [#160](https://github.com/Sonar-team/Sonar_desktop_app/issues/160),
    puis la chaîne de release : [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136)
@@ -73,7 +87,7 @@ Suivi : [#165](https://github.com/Sonar-team/Sonar_desktop_app/issues/165)
 - [ ] **P0** [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150) — détecter le DLT et comptabiliser exhaustivement les résultats de parsing *(l'essentiel est livré depuis le 15/07 : rapport qualité visible, identité RAW/SLL/SLL2 réimportable ; l'issue reste ouverte pour le reliquat — la fermer ou la découper)*
 - [x] **P0** [#158](https://github.com/Sonar-team/Sonar_desktop_app/issues/158) — ne perdre aucun paquet accepté à l'arrêt ou au plafond de flux *(fait le 14/07)*
 - [x] **P0** [#142](https://github.com/Sonar-team/Sonar_desktop_app/issues/142) — générer et tester le contrat IPC Rust ↔ TypeScript *(refermée le 15/07 après huit revues — voir sprint.md)*
-- [ ] **P0** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée par site, capteur, interface et VLAN *(tranche 1 — clé de nœud (vlan, ip), ids stables, anomalies IP dupliquée/multi-MAC — livrée le 04/08 via sonar-flows-core 0.5.0, PR #186/#187 ; reste la tranche 2 — site/capteur saisis au stop/save, SFMS v2 + manifest v2 ; tranche 3 déplacée vers #164)*
+- [ ] **P0** [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154) — identité d'actif contextualisée par site, capteur, interface et VLAN *(tranche 1 — clé de nœud (vlan, ip), ids stables, anomalies IP dupliquée/multi-MAC — livrée le 04/08 via sonar-flows-core 0.5.0, PR #186/#187 ; tranche 2 étape 1 — `SurveyContext` et SFMS v2 — livrée le 06/08 via sonar-flows-core 0.6.0, PR #189 ; reste le câblage desktop : saisie au stop/save, manifest v2, `origin` par flux ; tranche 3 déplacée vers #164)*
 - [ ] **P1 validation** [#88](https://github.com/Sonar-team/Sonar_desktop_app/issues/88) — revalider immédiatement les chemins espaces/Unicode *(backend testé le 14/07 ; restent Windows et front)*
 - [ ] **P1** *(sans issue — à ouvrir)* — créer les fichiers de test (pcap simples forgés + matrices CSV attendues) et les tests d'intégration couvrant import pcap, conversion pcap → matrice, export et ré-import de matrice *(arborescence `src-tauri/test_files/pcaps/` créée le 16/07 ; l'oracle TShark #168 couvre une partie de l'exactitude depuis le 23/07)*
 
@@ -126,6 +140,8 @@ sprint.
 
 ## Réalisé récemment
 
+- Hors issues : `SurveyContext` dans le préambule SFMS et `SFMS_VERSION` 2 — sonar-flows-core / sonar-flows-cli **0.6.0** publiées sur crates.io *(PR #189, tag `crates-v0.6.0`, 06/08)*. Étape 1 de la tranche 2 de #154 ; re-vendor desktop en attente de merge.
+- Hors issues : scénario E2E X11 resynchronisé avec l'application — boutons, ZIP, confirmation *(PR #188, 05/08)*
 - [x] [#161](https://github.com/Sonar-team/Sonar_desktop_app/issues/161) — intégrité du cycle frontend *(28/07)* + correction des 6 findings hauts de l'audit du 01/08 *(02/08)*
 - [x] [#145](https://github.com/Sonar-team/Sonar_desktop_app/issues/145) — routes et vues héritées supprimées *(29/07)*
 - [x] [#97](https://github.com/Sonar-team/Sonar_desktop_app/issues/97) — validation Windows 11 *(29/07)*
