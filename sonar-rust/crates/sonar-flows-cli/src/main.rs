@@ -80,12 +80,17 @@ fn main() -> ExitCode {
     let result = match cli.command {
         Command::Pcap { inputs, output } => {
             sonar_flows_core::pcap::convert_pcap_files_to_csv(&inputs, &output, |path, report| {
+                // Bilan par catégorie fine (#150) : le total « lus » est la
+                // somme des catégories, l'équation tient par construction.
                 eprintln!(
-                    "{}: {} paquet(s) lus, {} intégré(s), {} non parsé(s)",
+                    "{}: {} paquet(s) lus = {} intégré(s) + {} tronqué(s) \
+                     + {} DLT non supporté(s) + {} malformé(s)",
                     path.display(),
-                    report.packets,
-                    report.parse_ok,
-                    report.parse_errors
+                    report.read(),
+                    report.decoded,
+                    report.rejected_truncated,
+                    report.rejected_unsupported_link_type,
+                    report.rejected_malformed
                 );
             })
             .map(|rows| (rows, output))
