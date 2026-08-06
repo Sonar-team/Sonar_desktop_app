@@ -455,6 +455,20 @@ fn capwap_data_matches_outer_and_inner_tshark_flows_and_encap_id() {
     assert_deterministic_round_trip(&matrix, "capwap_data");
 }
 
+/// Loopback (LINKTYPE_NULL, DLT 0) : lisible par TShark, mais sans décodeur
+/// dans cette version — le refus doit être explicite et antérieur à toute
+/// mutation, jamais un parse « comme si » c'était de l'Ethernet (#151).
+#[test]
+fn loopback_null_capture_is_refused_before_matrix_mutation() {
+    let fixtures = corpus_dir();
+    let capture = fixtures.join("loopback_null.pcap");
+    assert_oracle_hash(&capture, &fixtures.join("loopback_null.flows.tsv"));
+    let mut matrix = FlowMatrix::new();
+    let error = append_pcap_file(&mut matrix, &capture).expect_err("DLT NULL refusé");
+    assert!(matches!(error, SonarCoreError::UnsupportedLinkType { .. }));
+    assert_eq!(matrix.row_count(), 0);
+}
+
 #[test]
 fn unsupported_ieee80211_capture_is_refused_before_matrix_mutation() {
     let fixtures = corpus_dir();

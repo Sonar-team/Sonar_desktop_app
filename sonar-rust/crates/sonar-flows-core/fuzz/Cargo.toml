@@ -20,5 +20,12 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "matrix_reader"
+path = "fuzz_targets/matrix_reader.rs"
+test = false
+doc = false
+bench = false
+
 [lints]
 workspace = true

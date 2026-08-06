@@ -1,0 +1,7 @@
+# generator=forgé à la main (struct.pack), voir README — fixture de frontière
+# tshark=TShark (Wireshark) 4.6.6.
+# capture_sha256=58fa0fec8d9619b063566071cd9df5a5f842d6eaad1e71083caa60f3c815db96
+# projection=outer
+# included_packets=0
+# included_bytes=0
+mac_source	mac_destination	vlan_id	ether_type	ip_source	ip_destination	ip_protocol	port_source	port_destination	count	total_bytes	last_seen_us

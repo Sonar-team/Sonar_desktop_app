@@ -77,6 +77,7 @@ check_contains .github/workflows/covecode.yml 'cargo "+${RUST_NIGHTLY_VERSION}" 
 check_contains .github/workflows/rust-ci.yml 'rustup toolchain install "${RUST_NIGHTLY_VERSION}" --profile minimal'
 check_contains .github/workflows/rust-ci.yml 'cargo "+${RUST_NIGHTLY_VERSION}" udeps --all-targets --locked'
 check_contains .github/workflows/rust-ci.yml 'cargo install cargo-vet --version "${{ steps.versions.outputs.CARGO_VET_VERSION }}" --locked'
+check_contains .github/workflows/rust-ci.yml 'cargo install cargo-fuzz --version "${{ steps.versions.outputs.CARGO_FUZZ_VERSION }}" --locked'
 check_contains .github/workflows/rust-ci.yml 'cargo vet --locked --frozen --no-minimize-exemptions'
 check_contains .github/workflows/rust-ci.yml 'cargo vet --store-path ../src-tauri/supply-chain --locked --frozen --no-minimize-exemptions'
 check_contains .github/workflows/repro-container.yml 'machine: [machine-a, machine-b]'
