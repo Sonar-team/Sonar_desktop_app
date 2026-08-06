@@ -31,16 +31,6 @@ pub fn split_head_body(payload: &str) -> (&str, &str) {
     }
 }
 
-/// Requires the request line to be present and returns it borrowed.
-///
-/// Defensive check: through `HttpRequest::try_from`, the input comes from
-/// `head.split("\r\n").next()`, which always yields `Some` (even on an empty
-/// string), so `MissingRequestLine` is unreachable from that path and only
-/// guards direct callers of this function.
-pub fn require_request_line(line: Option<&str>) -> Result<&str, HttpParseError> {
-    line.ok_or(HttpParseError::MissingRequestLine)
-}
-
 /// Standard HTTP request methods (RFC 9110) accepted by the parser.
 const HTTP_METHODS: [&str; 9] = [
     "GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH",
@@ -131,18 +121,6 @@ mod tests {
         let (head, body) = split_head_body(payload);
         assert_eq!(head, "GET / HTTP/1.1");
         assert_eq!(body, "");
-    }
-
-    #[test]
-    fn test_require_request_line() {
-        assert_eq!(
-            require_request_line(Some("GET / HTTP/1.1")),
-            Ok("GET / HTTP/1.1")
-        );
-        assert_eq!(
-            require_request_line(None),
-            Err(HttpParseError::MissingRequestLine)
-        );
     }
 
     #[test]

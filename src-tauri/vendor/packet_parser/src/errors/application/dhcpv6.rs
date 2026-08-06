@@ -10,9 +10,6 @@ pub enum Dhcpv6PacketParseError {
     #[error("Invalid DHCPv6 packet length")]
     PacketLength,
 
-    #[error("Invalid DHCPv6 transaction ID")]
-    TransactionId,
-
     #[error("Invalid DHCPv6 message type: {message_type}")]
     MessageType { message_type: u8 },
 }

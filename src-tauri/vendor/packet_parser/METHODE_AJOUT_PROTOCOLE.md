@@ -343,7 +343,8 @@ Lors d'une version majeure qui autorise l'ajout d'un variant a
 
 ### Choisir la voie de detection
 
-Deux voies existent, selon la force de la signature du protocole sur le wire.
+Trois voies existent, selon la force de la signature du protocole sur le wire
+et les transports sur lesquels il est defini.
 
 **Voie 1 — probing a l'aveugle** (`Application::try_from` dans `src/parse/application/mod.rs`) : reservee aux protocoles dont les octets s'identifient eux-memes. Exemples de signatures fortes : un marqueur litteral (`HTTP/`, `GIOP`), un en-tete binaire a contraintes serrees (DNS, NTP), une longueur annoncee qui doit correspondre exactement aux octets restants (PostgreSQL).
 
@@ -358,6 +359,15 @@ if FooPacket::try_from(packet).is_ok() {
 Attention : l'ordre de detection compte. Un parseur trop permissif peut capturer des paquets qui appartiennent a un autre protocole. Les contraintes d'ordre existantes sont documentees en commentaire dans la chaine (DHCP avant SRVLOC — issue #3 ; MQTT en dernier car son en-tete fixe est peu discriminant).
 
 **Voie 2 — detection gardee par port** (`PacketFlow::parse_application_from_transport` dans `src/parse/mod.rs`) : pour les protocoles a signature faible ou ambigue, que des checks meme parfaits ne peuvent pas distinguer d'un autre protocole. Exemples : les reponses FTP/SMTP/NNTP sont octet pour octet identiques (`2xx texte CRLF`) ; DHCPv6, AMS, COTP et QUIC short header ont des en-tetes trop peu contraints ; mDNS partage le format DNS mais avec une validation assouplie. Le port standard sert alors de garde-fou EN PLUS des checks du parseur, jamais a leur place.
+
+**Voie 3 — signature forte avec contrainte de transport** : lorsque le
+protocole s'identifie suffisamment pour etre reconnu hors de son port standard,
+mais n'est defini que sur un transport donne. `PacketFlow` applique alors le
+parseur strict sur ce transport uniquement. S7Comm suit cette voie :
+l'enveloppe complete TPKT + COTP-DT + S7 permet le probing sur n'importe quel
+port TCP, tandis que les memes octets sur UDP ne doivent jamais produire le
+label S7Comm. Tester explicitement le port standard, un port non standard et
+un transport interdit.
 
 Critere de decision : si un payload valide du protocole peut aussi etre un payload valide d'un autre protocole deja detecte (ou d'un texte quelconque), le probing a l'aveugle est interdit — passer par la garde de port et documenter la raison en commentaire. Pour un protocole textuel, verifier aussi si une commande apparemment distinctive peut apparaitre dans le corps libre d'un autre protocole : sans etat de session, ce cas impose lui aussi une garde de port.
 
@@ -422,6 +432,14 @@ tshark -r capture.pcap -Y "frame.number==5" -T fields -e tcp.payload
 - Chaque fixture golden porte un commentaire citant le fichier pcap et le numero de trame source (`/// Trame 5 : commande USER (pcaps_exemple/ftp.pcap).`).
 - Ajouter au moins un test de niveau `PacketFlow` sur la trame complete (Ethernet + IP + transport) qui verifie que la detection remonte le bon nom de protocole.
 - Pour un protocole garde par port, tester aussi la non-detection quand les memes octets circulent hors du port standard.
+- Pour toute detection ajoutee au probing generique, scanner le corpus des
+  autres protocoles et conserver un oracle negatif non vide. Un simple total
+  positif ne suffit pas : utiliser les numeros de trame attendus ou leur
+  empreinte deterministe afin qu'une fausse positive et une fausse negative
+  ne puissent pas se compenser.
+- Une cible de fuzz de detection doit partir aussi d'une trame structuree
+  valide (mutation XOR ou corpus seed), car des octets entierement aleatoires
+  atteignent rarement Ethernet + IP + transport + protocole applicatif.
 
 ## 7. Checklist avant commit
 
@@ -431,18 +449,29 @@ tshark -r capture.pcap -Y "frame.number==5" -T fields -e tcp.payload
 - Le type principal a une rustdoc avec un schema Mermaid `packet-beta`.
 - Les `mod.rs` necessaires exportent le nouveau module.
 - La compatibilite semver de l'API publique est preservee ; un variant d'enum publique exhaustive n'est ajoute que dans une version majeure, avec son bras `Display`.
-- La voie de detection est choisie et justifiee : probing a l'aveugle si signature forte, garde de port sinon (avec commentaire expliquant pourquoi).
+- La voie de detection est choisie et justifiee : probing a l'aveugle si la
+  signature et les transports le permettent, contrainte de transport si elle
+  est necessaire, garde de port si la signature reste ambigue.
 - Les tests couvrent les cas valides et invalides.
 - Au moins un golden test sur trame reelle existe, avec le pcap source cite en commentaire ; les fixtures synthetiques eventuelles sont explicitement identifiees.
+- Toute nouvelle detection est verifiee sur un corpus negatif non vide ; les
+  numeros de trame attendus ou une empreinte deterministe empechent qu'une
+  fausse positive masque une fausse negative.
+- Les cibles de fuzz concernees contiennent au moins une graine structuree
+  valide et verifient les invariants de transport et de classification.
 - Les listes de protocoles de `README.md` et `README-fr.md` sont mises a jour.
-- `cargo fmt` passe.
-- `cargo test --all-features` passe.
-- `cargo clippy --all-targets --all-features -- -D warnings` passe.
+- `cargo fmt --all -- --check` passe.
+- `cargo test --workspace --all-features` passe.
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings` passe.
+- `cargo +nightly fuzz build` passe et les cibles modifiees ont ete executees.
 
 ## Commandes utiles
 
 ```bash
-cargo fmt
-cargo test --all-features
-cargo clippy --all-targets --all-features -- -D warnings
+cargo fmt --all -- --check
+cargo test --workspace --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo +nightly fuzz build
+cargo audit
+cargo deny check --hide-inclusion-graph
 ```

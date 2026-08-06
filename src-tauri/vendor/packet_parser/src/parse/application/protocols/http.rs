@@ -9,8 +9,8 @@ use std::convert::TryFrom;
 
 use crate::{
     checks::application::http::{
-        extract_header_line, parse_payload_as_utf8, require_method, require_request_line,
-        require_uri, require_version, split_head_body,
+        extract_header_line, parse_payload_as_utf8, require_method, require_uri, require_version,
+        split_head_body,
     },
     errors::application::http::HttpParseError,
 };
@@ -63,7 +63,10 @@ pub fn parse_http_request(payload: &[u8]) -> Result<HttpRequest<'_>, HttpParseEr
 
     let mut lines = head.split("\r\n");
 
-    let request_line = require_request_line(lines.next())?;
+    // `split("\r\n")` produit toujours au moins un element, meme sur une
+    // chaine vide : la premiere ligne existe donc structurellement, et une
+    // ligne vide echoue ensuite en MissingMethod.
+    let request_line = lines.next().unwrap_or_default();
 
     let mut request_parts = request_line.split_whitespace();
     let method = require_method(request_parts.next())?;

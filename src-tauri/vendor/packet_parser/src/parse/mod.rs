@@ -33,12 +33,13 @@
 use crate::checks::application::quic::is_plausible_short_header;
 use application::Application;
 use application::protocols::ams::AmsPacket;
-use application::protocols::copt::CotpHeader;
+use application::protocols::copt::{CotpHeader, CotpNumberFormat, CotpParameter, CotpPduType};
 use application::protocols::dhcpv6::Dhcpv6Packet;
 use application::protocols::dns::DnsPacket;
 use application::protocols::ftp::FtpMessage;
 use application::protocols::nntp::NntpMessage;
 use application::protocols::postgresql::is_likely_postgresql_payload;
+use application::protocols::s7comm::S7CommPacket;
 use application::protocols::smtp::SmtpMessage;
 use application::protocols::snmp::SnmpPacket;
 use internet::Internet;
@@ -251,10 +252,22 @@ impl<'a> PacketFlow<'a> {
             });
         }
 
+        // RFC 1006 encapsulates COTP in a four-byte TPKT header. S7Comm is a
+        // COTP DT user and must win over the generic COTP label, including
+        // when TPKT's first length octet happens to make the raw payload look
+        // like a standalone COTP header (for example a total length of 256).
+        // Its signature is strong enough for TCP probing even away from
+        // TCP/102, but it is never probed on UDP or another transport.
+        if transport.protocol == TransportProtocol::Tcp && S7CommPacket::try_from(payload).is_ok() {
+            return Some(Application {
+                application_protocol: "S7Comm",
+            });
+        }
+
         if transport.protocol == TransportProtocol::Tcp
             && (is_iso_tsap_tcp_port(transport.source_port)
                 || is_iso_tsap_tcp_port(transport.destination_port))
-            && CotpHeader::try_from(payload).is_ok()
+            && cotp_from_tpkt(payload).is_some()
         {
             return Some(Application {
                 application_protocol: "COTP",
@@ -342,6 +355,15 @@ impl<'a> PacketFlow<'a> {
         }
 
         let parsed = Application::try_from(payload).ok();
+        if transport.protocol != TransportProtocol::Tcp
+            && matches!(
+                parsed.as_ref().map(|app| app.application_protocol),
+                Some("S7Comm")
+            )
+        {
+            return None;
+        }
+
         if matches!(
             parsed.as_ref().map(|app| app.application_protocol),
             Some("OPC UA")
@@ -537,6 +559,122 @@ fn is_snmp_udp_port(port: Option<u16>) -> bool {
 
 fn is_dhcpv6_udp_port(port: Option<u16>) -> bool {
     matches!(port, Some(546 | 547))
+}
+
+/// Decode the first RFC 1006 TPKT frame and its COTP header.
+///
+/// A TCP segment may contain bytes after the first TPKT (including another
+/// complete frame), so the declared TPKT boundary is used instead of requiring
+/// equality with the whole transport payload. LI delimits only the COTP
+/// header: CR/CC/DR, DT and ED may carry user data after it, while other TPDU
+/// types may be concatenated and are checked one by one.
+fn cotp_from_tpkt(payload: &[u8]) -> Option<CotpHeader<'_>> {
+    const TPKT_HEADER_LEN: usize = 4;
+    const TPKT_MIN_LEN: usize = 7;
+
+    if payload.len() < TPKT_MIN_LEN || payload[0] != 3 || payload[1] != 0 {
+        return None;
+    }
+
+    let tpkt_len = usize::from(u16::from_be_bytes([payload[2], payload[3]]));
+    if !(TPKT_MIN_LEN..=payload.len()).contains(&tpkt_len) {
+        return None;
+    }
+
+    let cotp_bytes = &payload[TPKT_HEADER_LEN..tpkt_len];
+    let (header, mut consumed) = CotpHeader::from_bytes(cotp_bytes).ok()?;
+    if !is_strict_cotp_header(&header) {
+        return None;
+    }
+
+    if cotp_may_consume_user_data(header.pdu_type) {
+        return Some(header);
+    }
+
+    while consumed < cotp_bytes.len() {
+        let (next, next_consumed) = CotpHeader::from_bytes(&cotp_bytes[consumed..]).ok()?;
+        if !is_strict_cotp_header(&next) || next_consumed == 0 {
+            return None;
+        }
+        consumed = consumed.checked_add(next_consumed)?;
+        if cotp_may_consume_user_data(next.pdu_type) {
+            return Some(header);
+        }
+    }
+
+    (consumed == cotp_bytes.len()).then_some(header)
+}
+
+fn cotp_may_consume_user_data(pdu_type: CotpPduType) -> bool {
+    matches!(
+        pdu_type,
+        CotpPduType::Data
+            | CotpPduType::ExpeditedData
+            | CotpPduType::ConnectionRequest
+            | CotpPduType::ConnectionConfirm
+            | CotpPduType::DisconnectRequest
+    )
+}
+
+fn is_strict_cotp_header(header: &CotpHeader<'_>) -> bool {
+    match header.pdu_type {
+        CotpPduType::Data => match header.number_format {
+            Some(CotpNumberFormat::Class01Normal) => header
+                .parameters
+                .iter()
+                .any(|parameter| matches!(parameter, CotpParameter::TpduNumber(0))),
+            Some(CotpNumberFormat::Normal | CotpNumberFormat::Extended) => true,
+            None | Some(CotpNumberFormat::Undetermined) => false,
+        },
+        CotpPduType::ExpeditedData
+        | CotpPduType::ExpeditedDataAcknowledgement
+        | CotpPduType::DataAcknowledgement
+        | CotpPduType::Reject => !matches!(
+            header.number_format,
+            None | Some(CotpNumberFormat::Undetermined)
+        ),
+        CotpPduType::ConnectionRequest | CotpPduType::ConnectionConfirm => {
+            is_strict_connection_header(header)
+        }
+        CotpPduType::DisconnectRequest
+        | CotpPduType::DisconnectConfirm
+        | CotpPduType::TpduError => true,
+        CotpPduType::Other(_) => false,
+    }
+}
+
+fn is_strict_connection_header(header: &CotpHeader<'_>) -> bool {
+    for parameter in &header.parameters {
+        if let CotpParameter::Other(code, _) = parameter {
+            // The tolerant CR decoder preserves unknown parameters as RFC 905
+            // permits. A detector cannot use that tolerance as evidence: only
+            // the defined connection parameters remain valid fingerprints.
+            if !matches!(
+                code,
+                0x85..=0x89 | 0x8B | 0xC1 | 0xC2 | 0xC4..=0xC7 | 0xF0 | 0xF2
+            ) {
+                return false;
+            }
+        }
+
+        if header.class == 0
+            && matches!(
+                parameter,
+                CotpParameter::TpduSize(0x0C | 0x0D)
+                    | CotpParameter::Checksum(_)
+                    | CotpParameter::AtnExtendedChecksum16(_)
+                    | CotpParameter::AtnExtendedChecksum32(_)
+                    | CotpParameter::Other(
+                        0x85..=0x89 | 0x8B | 0xC4..=0xC7 | 0xF0 | 0xF2,
+                        _
+                    )
+            )
+        {
+            return false;
+        }
+    }
+
+    true
 }
 
 /// ISO-TSAP (TPKT/COTP, notamment S7comm).
@@ -955,6 +1093,45 @@ mod tests {
         packet
     }
 
+    fn tpkt_cotp_connection(pdu_type: u8) -> Vec<u8> {
+        // LI=17: fixed CR/CC header followed by TPDU-size, source-TSAP and
+        // destination-TSAP parameters.
+        let mut cotp = [
+            0x11, pdu_type, 0x00, 0x00, 0x00, 0x01, 0x00, 0xC0, 0x01, 0x0A, 0xC1, 0x02, 0x01, 0x00,
+            0xC2, 0x02, 0x01, 0x02,
+        ];
+        // A CR must have a zero destination reference, whereas a CC must
+        // acknowledge a non-zero reference from the peer.
+        if pdu_type & 0xF0 == 0xD0 {
+            cotp[3] = 1;
+        }
+        let total_len = 4 + cotp.len();
+        let mut payload = vec![0x03, 0x00];
+        payload.extend_from_slice(&(total_len as u16).to_be_bytes());
+        payload.extend_from_slice(&cotp);
+        payload
+    }
+
+    fn s7_job_with_total_tpkt_len(total_len: usize) -> Vec<u8> {
+        const FIXED_LEN: usize = 4 + 3 + 10; // TPKT + COTP DT + S7 Job header
+        assert!((FIXED_LEN..=u16::MAX as usize).contains(&total_len));
+
+        let data_len = total_len - FIXED_LEN;
+        let mut payload = Vec::with_capacity(total_len);
+        payload.extend_from_slice(&[0x03, 0x00]);
+        payload.extend_from_slice(&(total_len as u16).to_be_bytes());
+        payload.extend_from_slice(&[0x02, 0xF0, 0x80]);
+        payload.extend_from_slice(&[
+            0x32, 0x01, // S7 protocol ID, ROSCTR Job
+            0x00, 0x00, // reserved
+            0x00, 0x01, // PDU reference
+            0x00, 0x00, // parameter length
+        ]);
+        payload.extend_from_slice(&(data_len as u16).to_be_bytes());
+        payload.resize(total_len, 0);
+        payload
+    }
+
     // fn sample_ipv6_udp_dhcpv6_silicit() -> Vec<u8> {
     //     hex::decode("333300010002080027fe8f9586dd60000000003c1101fe800000000000000a0027fffefe8f95ff02000000000000000000000001000202220223003cad08011008740001000e000100011c39cf88080027fe8f9500060004001700180008000200000019000c27fe8f9500000e1000001518")
     //         .expect("invalid test hex fixture")
@@ -1029,6 +1206,167 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn packetflow_detects_tpkt_cotp_connection_request_and_confirm_on_tcp_102() {
+        for pdu_type in [0xE0, 0xD0] {
+            let payload = tpkt_cotp_connection(pdu_type);
+            let packet = ethernet_ipv4_tcp_packet(51_845, 102, &payload);
+            let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+            let application = flow.application.as_ref().expect("application layer");
+            assert_eq!(application.application_protocol, "COTP");
+        }
+    }
+
+    #[test]
+    fn packetflow_requires_tcp_port_102_for_cotp() {
+        let payload = tpkt_cotp_connection(0xE0);
+
+        let tcp = ethernet_ipv4_tcp_packet(51_845, 10_102, &payload);
+        let tcp_flow = PacketFlow::try_from(tcp.as_slice()).unwrap();
+        assert_ne!(
+            tcp_flow
+                .application
+                .as_ref()
+                .map(|application| application.application_protocol),
+            Some("COTP")
+        );
+
+        let udp = ethernet_ipv4_udp_packet_with(51_845, 102, &payload);
+        let udp_flow = PacketFlow::try_from(udp.as_slice()).unwrap();
+        assert_ne!(
+            udp_flow
+                .application
+                .as_ref()
+                .map(|application| application.application_protocol),
+            Some("COTP")
+        );
+    }
+
+    #[test]
+    fn packetflow_validates_concatenated_non_user_tpdus() {
+        let cotp = [
+            0x05, 0xC0, 0, 1, 0, 2, // DC
+            0x04, 0x70, 0, 1, 0, // ER
+        ];
+        let total_len = 4 + cotp.len();
+        let mut payload = vec![0x03, 0x00];
+        payload.extend_from_slice(&(total_len as u16).to_be_bytes());
+        payload.extend_from_slice(&cotp);
+
+        assert!(cotp_from_tpkt(&payload).is_some());
+        let packet = ethernet_ipv4_tcp_packet(51_845, 102, &payload);
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+        assert_eq!(
+            flow.application
+                .as_ref()
+                .map(|application| application.application_protocol),
+            Some("COTP")
+        );
+
+        payload.pop();
+        let malformed_len = payload.len();
+        payload[2..4].copy_from_slice(&(malformed_len as u16).to_be_bytes());
+        assert!(cotp_from_tpkt(&payload).is_none());
+    }
+
+    #[test]
+    fn strict_fingerprint_rejects_class_zero_only_parameter_combinations() {
+        let mut payload = tpkt_cotp_connection(0xE0);
+        // The CR is class 0; TPDU sizes 4096/8192 are only valid outside
+        // class 0 even though 0x0c/0x0d are valid TPDU-size codes in general.
+        payload[13] = 0x0D;
+
+        assert!(CotpHeader::try_from(&payload[4..]).is_ok());
+        assert!(cotp_from_tpkt(&payload).is_none());
+    }
+
+    #[test]
+    fn strict_fingerprint_rejects_unknown_cr_parameters() {
+        let mut payload = tpkt_cotp_connection(0xE0);
+        payload[11] = 0xAA; // replace C0 with an unknown, structurally valid TLV
+
+        assert!(CotpHeader::try_from(&payload[4..]).is_ok());
+        assert!(cotp_from_tpkt(&payload).is_none());
+    }
+
+    #[test]
+    fn strict_fingerprint_requires_zero_class_zero_dt_number() {
+        let valid = [0x03, 0x00, 0x00, 0x07, 0x02, 0xF0, 0x00];
+        assert!(cotp_from_tpkt(&valid).is_some());
+
+        let invalid = [0x03, 0x00, 0x00, 0x07, 0x02, 0xF0, 0x7F];
+        assert!(CotpHeader::try_from(&invalid[4..]).is_ok());
+        assert!(cotp_from_tpkt(&invalid).is_none());
+    }
+
+    #[test]
+    fn packetflow_rejects_tpkt_cotp_with_nonzero_reserved_byte() {
+        let mut payload = tpkt_cotp_connection(0xE0);
+        payload[1] = 1;
+        assert!(cotp_from_tpkt(&payload).is_none());
+
+        let packet = ethernet_ipv4_tcp_packet(51_845, 102, &payload);
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+        assert_ne!(
+            flow.application
+                .as_ref()
+                .map(|application| application.application_protocol),
+            Some("COTP")
+        );
+    }
+
+    #[test]
+    fn packetflow_detects_strict_s7comm_on_tcp_with_or_without_standard_port() {
+        let payload = s7_job_with_total_tpkt_len(17);
+
+        for destination_port in [102, 10_102] {
+            let packet = ethernet_ipv4_tcp_packet(51_845, destination_port, &payload);
+            let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+            let application = flow.application.as_ref().expect("application layer");
+            assert_eq!(application.application_protocol, "S7Comm");
+        }
+    }
+
+    #[test]
+    fn packetflow_never_detects_s7comm_over_udp() {
+        let payload = s7_job_with_total_tpkt_len(17);
+        // Prove that these bytes are a valid transport-agnostic S7 payload;
+        // PacketFlow must nevertheless enforce the TCP transport contract.
+        assert_eq!(
+            Application::try_from(payload.as_slice())
+                .unwrap()
+                .application_protocol,
+            "S7Comm"
+        );
+
+        for destination_port in [102, 10_102] {
+            let packet = ethernet_ipv4_udp_packet_with(51_845, destination_port, &payload);
+            let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+            assert_ne!(
+                flow.application
+                    .as_ref()
+                    .map(|application| application.application_protocol),
+                Some("S7Comm")
+            );
+        }
+    }
+
+    #[test]
+    fn packetflow_does_not_preempt_256_byte_s7comm_as_cotp() {
+        // Regression: on a 256-byte TPKT the raw prefix `03 00 01 00` used
+        // to be accepted as LI=3 plus an unknown COTP PDU and returned before
+        // the S7 parser had a chance to run.
+        let payload = s7_job_with_total_tpkt_len(256);
+        let packet = ethernet_ipv4_tcp_packet(51_845, 102, &payload);
+        let flow = PacketFlow::try_from(packet.as_slice()).unwrap();
+
+        let application = flow.application.as_ref().expect("application layer");
+        assert_eq!(application.application_protocol, "S7Comm");
     }
 
     #[test]

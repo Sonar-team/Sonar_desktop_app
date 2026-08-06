@@ -13,7 +13,7 @@
 edition = "2024"
 rust-version = "1.97.1"
 name = "sonar-flows-core"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["Sonar Team"]
 build = false
 autolib = false
@@ -48,7 +48,7 @@ version = "1.4.0"
 version = "0.4.33"
 
 [dependencies.packet_parser]
-version = "9.0.0"
+version = "10.0.0"
 
 [dependencies.pcap]
 version = "2.4.0"

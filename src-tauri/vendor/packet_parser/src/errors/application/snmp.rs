@@ -53,8 +53,11 @@ pub enum SnmpError {
     #[error("Unsupported SNMP PDU tag 0x{tag:02X} for version {version:?}")]
     UnsupportedPduType { tag: u8, version: SnmpVersion },
 
-    #[error("Invalid SNMP PDU structure: {0}")]
-    InvalidPduStructure(&'static str),
+    #[error("SNMP NULL value must be empty, got {length} bytes")]
+    NonEmptyNull { length: usize },
+
+    #[error("SNMP v2 exception {field} must be empty, got {length} bytes")]
+    NonEmptyException { field: &'static str, length: usize },
 
     #[error("Invalid SNMP IP address length: {actual}")]
     InvalidIpAddressLength { actual: usize },

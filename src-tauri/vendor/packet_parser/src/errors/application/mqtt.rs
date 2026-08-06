@@ -43,9 +43,6 @@ pub enum MqttError {
     #[error("MQTT topic length {declared} exceeds available {available}")]
     InvalidTopicLength { declared: usize, available: usize },
 
-    #[error("Unsupported MQTT packet type: {packet_type:?}")]
-    UnsupportedPacketType { packet_type: MqttPacketType },
-
     /// CONNECT dont le nom de protocole n'est ni "MQTT" ni "MQIsdp".
     #[error("Invalid MQTT protocol name in CONNECT")]
     InvalidProtocolName,
@@ -80,10 +77,22 @@ pub enum MqttError {
         code: u8,
     },
 
-    /// Topic non UTF-8, vide, avec caractère de contrôle, ou wildcard dans un
-    /// PUBLISH.
-    #[error("Invalid MQTT topic")]
-    InvalidTopic,
+    /// Topic name de PUBLISH vide.
+    #[error("Empty MQTT topic")]
+    EmptyTopic,
+
+    /// Topic name de PUBLISH qui n'est pas de l'UTF-8 valide.
+    #[error("MQTT topic is not valid UTF-8")]
+    TopicNotUtf8,
+
+    /// Topic name de PUBLISH contenant un caractère de contrôle.
+    #[error("Control character in MQTT topic")]
+    ControlCharacterInTopic,
+
+    /// Wildcard '#' ou '+' dans un topic name de PUBLISH (interdits à la
+    /// publication, MQTT 3.1.1 §3.3.2.1).
+    #[error("Wildcard in MQTT PUBLISH topic")]
+    WildcardInPublishTopic,
 
     /// Payload de SUBSCRIBE/UNSUBSCRIBE qui ne se découpe pas en une suite
     /// exacte d'entrées (topic filter [+ QoS]).
@@ -171,15 +180,6 @@ mod tests {
         };
 
         assert_eq!(err.to_string(), "MQTT topic length 20 exceeds available 8");
-    }
-
-    #[test]
-    fn test_unsupported_packet_type_display() {
-        let err = MqttError::UnsupportedPacketType {
-            packet_type: MqttPacketType::Publish,
-        };
-
-        assert_eq!(err.to_string(), "Unsupported MQTT packet type: Publish");
     }
 
     #[test]
