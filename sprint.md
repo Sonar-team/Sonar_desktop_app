@@ -1,6 +1,6 @@
 # Sprint P0 — Sessions persistantes : projets, autosave et récupération
 
-> Statut : actif (démarré le 03/08/2026)
+> Statut : actif (démarré le 03/08/2026) — dernière revue : 06/08/2026
 > Suivi GitHub : [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159)
 > Sprint précédent (fidélité des données, #165) : essentiel livré, reliquat
 > suivi dans `todo.md` — #154 (identité d'actif, prérequis de la phase B
@@ -60,15 +60,26 @@ complète en commentaire de #159.
 
 ## Phase B — identité et migration *(après #154)*
 
-8. [ ] Identité d'actif contextualisée dans le schéma → `schema_version 2`,
+> Le format est posé côté crate depuis le 06/08 : `SurveyContext
+> { site, sensor, interface }` dans le préambule SFMS et `SFMS_VERSION` 2
+> (sonar-flows-core 0.6.0, PR #189). Le contexte reste **hors de la clé**
+> des flux et des nœuds : le même paquet peut être vu par plusieurs
+> capteurs, et le mettre dans la clé empêcherait de reconnaître ce
+> recouvrement. Reste le câblage desktop, ci-dessous.
+
+8. [ ] Saisie du contexte de relevé au stop/save, à la manière de
+   Wireshark — pas de configuration a priori (arbitrage du 04/08).
+9. [ ] Identité d'actif contextualisée dans le schéma → `schema_version 2`,
    premier test de migration réel v1 → v2.
+10. [ ] Généralisation d'`origin` en contexte par flux, pour la fusion
+    multi-sites.
 
 ## Phase C — manifest de preuve
 
-9. [ ] Hashes SHA-256 des entrées calculés à l'import, compteurs qualité
-   (#150), hashes des sorties ; manifest exportable seul et vérifiable
-   hors application (script fourni).
-10. [ ] Signature du manifest (ed25519/minisign ; gestion de clé à
+11. [ ] Hashes SHA-256 des entrées calculés à l'import, compteurs qualité
+    (#150), hashes des sorties ; manifest exportable seul et vérifiable
+    hors application (script fourni).
+12. [ ] Signature du manifest (ed25519/minisign ; gestion de clé à
     trancher — candidat `tauri-plugin-stronghold`, statut amont IOTA à
     vetter avant tout engagement supply-chain).
 
@@ -91,9 +102,11 @@ complète en commentaire de #159.
 
 ## Travail parallèle autorisé
 
-- reliquat fidélité : #154 (préalable de la phase B), corpus/fuzzing #151 ;
-- #175 (Depends libpcap du .deb) — petit, indépendant ;
+- reliquat fidélité : #154 (préalable de la phase B — côté crate livré le
+  06/08, reste le câblage desktop), corpus/fuzzing #151 ;
 - conception de #160 (matrice de production), sans mordre sur la phase A.
+
+*(#175, Depends libpcap du .deb, était listé ici : fermé le 04/08.)*
 
 ## Hors périmètre
 
