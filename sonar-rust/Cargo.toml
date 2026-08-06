@@ -12,7 +12,7 @@ edition = "2024"
 license = "AGPL-3.0-only"
 repository = "https://github.com/Sonar-team/Sonar_desktop_app"
 rust-version = "1.97.1"
-version = "0.5.0"
+version = "0.6.0"
 
 [workspace.dependencies]
 chrono = "0.4.45"
@@ -22,7 +22,7 @@ log = "0.4.33"
 packet_parser = "9.0.0"
 pcap = "2.4.0"
 serde = { version = "1", features = ["derive"] }
-sonar-flows-core = { path = "crates/sonar-flows-core", version = "0.5.0" }
+sonar-flows-core = { path = "crates/sonar-flows-core", version = "0.6.0" }
 thiserror = "2.0.19"
 
 # Même politique que src-tauri : pas de panic évitable en code de prod.
