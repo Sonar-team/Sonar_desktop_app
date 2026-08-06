@@ -64,6 +64,19 @@ pub fn start_capture(
         labels_to_matrix(label_store, &mut state_label)?;
         update_labels_in_state(&app, &mut state_label)?;
 
+        // Contexte du relevé (#154) : seule l'interface d'écoute est
+        // renseignée, parce qu'elle est la seule que SONAR connaisse sans
+        // rien demander. Le site n'est pas déductible, et le nom de machine
+        // est délibérément laissé vide : #96 traite la fuite du hostname
+        // dans les fichiers produits comme une menace à couvrir, et un
+        // export part chez le client.
+        //
+        // Aucune saisie, aucun dialogue : la métadonnée existe pour la
+        // baseline et le diff temporel à venir (axe A de VISION.md, #164),
+        // sans rien coûter au parcours d'aujourd'hui.
+        state_label.context.interface =
+            sonar_flows_core::sfms::SurveyContext::normalized_field(Some(&config.device_name));
+
         let mut capture = CaptureHandle::new(session_id);
         capture.start(config, app, on_event.clone(), filter, &mut state_label)?;
         let completion = capture.take_completion_receiver().ok_or_else(|| {
@@ -202,6 +215,12 @@ pub fn reset_capture(
         let mut graph = graph.lock()?;
         matrix.clear();
         graph.clear();
+        // `FlowMatrix::clear` ne touche pas au contexte de relevé : le vider
+        // explicitement ici est indispensable (#154). Le parcours réel est
+        // « arrêter, réinitialiser, se rebrancher sur un autre switch,
+        // recapturer » — garder la qualification précédente étiquetterait le
+        // nouveau point de mesure avec le nom de l'ancien, en silence.
+        matrix.context = sonar_flows_core::sfms::SurveyContext::default();
     }
     // Relevé vide : plus rien à perdre, la confirmation avant fermeture ne
     // doit plus se déclencher (#159). Verrous de données relâchés d'abord (#166).
@@ -493,5 +512,44 @@ mod tests {
         assert_eq!(capture_state.lock().unwrap().phase, CapturePhase::Importing);
         drop(import_guard);
         assert_eq!(capture_state.lock().unwrap().phase, CapturePhase::Idle);
+    }
+
+    /// Un reset repart d'un relevé non qualifié (#154).
+    ///
+    /// Parcours réel de l'opérateur : arrêter, réinitialiser, se rebrancher
+    /// sur un autre switch, recapturer. `FlowMatrix::clear` ne touchant pas au
+    /// contexte, le conserver étiquetterait le nouveau point de mesure avec le
+    /// nom de l'ancien — sans que rien ne le signale, puisque le dialogue de
+    /// qualification ne se rouvre que sur un contexte vide.
+    #[test]
+    fn tauri_reset_clears_the_survey_context() {
+        let mut seeded_matrix = FlowMatrix::new();
+        seeded_matrix.context = sonar_flows_core::sfms::SurveyContext {
+            site: Some("Usine Nord".to_string()),
+            sensor: Some("PC de relevé".to_string()),
+            interface: Some("eth0".to_string()),
+        };
+
+        let matrix = Arc::new(Mutex::new(seeded_matrix));
+        let graph = Arc::new(Mutex::new(GraphData::new()));
+        let capture_state = Arc::new(Mutex::new(CaptureState::new()));
+
+        let app = mock_builder()
+            .manage(Arc::clone(&matrix))
+            .manage(Arc::clone(&graph))
+            .manage(Arc::clone(&capture_state))
+            .invoke_handler(tauri::generate_handler![reset_capture])
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let webview = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+
+        get_ipc_response(&webview, reset_invoke_request()).expect("reset accepté");
+
+        assert!(
+            matrix.lock().unwrap().context.is_empty(),
+            "après reset, le relevé suivant doit être proposé à la qualification"
+        );
     }
 }

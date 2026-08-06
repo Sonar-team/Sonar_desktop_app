@@ -3,7 +3,7 @@
 //! provenance, reconstruction de la matrice et du graphe.
 
 use calamine::{Data, DataType, Range, Reader, Xlsx, open_workbook};
-use log::{error, info};
+use log::{error, info, warn};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tauri::{State, ipc::Channel};
@@ -235,6 +235,40 @@ fn read_matrix_rows_from_files(
     )
 }
 
+/// Contexte de relevé commun à des fichiers de matrice (#154).
+///
+/// Le contexte du préambule `#SFMS` décrit **un** point de mesure. Fusionner
+/// des relevés qui n'ont pas le même — deux switchs, deux armoires — ne peut
+/// donc pas produire un contexte unique honnête : on retourne alors un
+/// contexte vide plutôt que d'élire arbitrairement celui du premier fichier
+/// et d'étiqueter tout le reste avec.
+///
+/// Attribuer chaque flux à sa provenance demande le contexte **par ligne**
+/// (généralisation d'`origin`), qui n'est pas encore livré. Jusque-là, un
+/// contexte vide est la seule réponse qui ne ment pas.
+fn common_survey_context(paths: &[String]) -> sonar_flows_core::sfms::SurveyContext {
+    let mut common: Option<sonar_flows_core::sfms::SurveyContext> = None;
+    for path in paths {
+        let context = sonar_flows_core::sfms::read_preamble(std::path::Path::new(path))
+            .ok()
+            .flatten()
+            .map(|preamble| preamble.context)
+            .unwrap_or_default();
+        match &common {
+            None => common = Some(context),
+            Some(expected) if *expected == context => {}
+            Some(_) => {
+                warn!(
+                    "[import_matrix_files] contextes de relevé divergents entre fichiers : \
+                     le relevé fusionné reste non qualifié"
+                );
+                return sonar_flows_core::sfms::SurveyContext::default();
+            }
+        }
+    }
+    common.unwrap_or_default()
+}
+
 fn rebuild_matrix_and_graph_from_rows(
     rows: &[FlowMatrixRow],
     link_type: packet_parser::LinkType,
@@ -400,6 +434,10 @@ pub fn import_matrix_files(
 
     let mut new_matrix = FlowMatrix::new();
     let mut new_graph = GraphData::new();
+    // Le contexte du relevé vient des fichiers importés, jamais de la session
+    // précédente (#154) : `new_matrix` part d'un contexte vide, donc importer
+    // ne peut pas rhabiller un relevé avec la qualification de l'ancien.
+    new_matrix.context = common_survey_context(&incoming_file_paths);
     rebuild_matrix_and_graph_from_rows(
         &rows,
         link_type,
@@ -1011,5 +1049,90 @@ mod tests {
             serde_json::to_value(&locked_state.config).unwrap(),
             before_config
         );
+    }
+
+    /// Le contexte d'un relevé importé vient du fichier, et de lui seul
+    /// (#154). Un import ne doit jamais rhabiller les données entrantes avec
+    /// la qualification de la session précédente.
+    #[test]
+    fn survey_context_comes_from_the_imported_file() {
+        let dir = TempDir::new("import_context");
+        let path = dir.path().join("relevé switch 7.csv");
+        let context = sonar_flows_core::sfms::SurveyContext {
+            site: Some("Usine Nord".to_string()),
+            sensor: Some("PC de relevé".to_string()),
+            interface: Some("eth0".to_string()),
+        };
+        FlowMatrix::write_rows_to_csv_with_context(
+            &[],
+            Some(packet_parser::LinkType::ETHERNET),
+            &context,
+            &path.to_string_lossy(),
+        )
+        .unwrap();
+
+        let read = common_survey_context(&[path.to_string_lossy().into_owned()]);
+        assert_eq!(read, context, "le contexte du préambule doit être rétabli");
+    }
+
+    /// Fusionner deux relevés de points de mesure différents ne peut pas
+    /// produire un contexte unique honnête : le résultat reste non qualifié
+    /// plutôt que d'hériter arbitrairement du premier fichier.
+    ///
+    /// Attribuer chaque flux à sa provenance demande le contexte par ligne,
+    /// pas encore livré.
+    #[test]
+    fn merging_two_measurement_points_yields_no_context() {
+        let dir = TempDir::new("import_context_conflict");
+        let mut paths = Vec::new();
+        for (index, site) in ["Armoire B3", "Armoire C1"].iter().enumerate() {
+            let path = dir.path().join(format!("relevé {index}.csv"));
+            let context = sonar_flows_core::sfms::SurveyContext {
+                site: Some((*site).to_string()),
+                sensor: Some("PC de relevé".to_string()),
+                interface: Some("eth0".to_string()),
+            };
+            FlowMatrix::write_rows_to_csv_with_context(
+                &[],
+                Some(packet_parser::LinkType::ETHERNET),
+                &context,
+                &path.to_string_lossy(),
+            )
+            .unwrap();
+            paths.push(path.to_string_lossy().into_owned());
+        }
+
+        assert!(
+            common_survey_context(&paths).is_empty(),
+            "des contextes divergents doivent donner un relevé non qualifié, \
+             pas celui du premier fichier"
+        );
+    }
+
+    /// Deux fichiers du même point de mesure gardent leur contexte : la règle
+    /// ci-dessus ne doit pas punir une fusion légitime (un même relevé
+    /// découpé en plusieurs exports).
+    #[test]
+    fn merging_the_same_measurement_point_keeps_the_context() {
+        let dir = TempDir::new("import_context_same");
+        let context = sonar_flows_core::sfms::SurveyContext {
+            site: Some("Armoire B3".to_string()),
+            sensor: Some("PC de relevé".to_string()),
+            interface: Some("eth0".to_string()),
+        };
+        let mut paths = Vec::new();
+        for index in 0..2 {
+            let path = dir.path().join(format!("part {index}.csv"));
+            FlowMatrix::write_rows_to_csv_with_context(
+                &[],
+                Some(packet_parser::LinkType::ETHERNET),
+                &context,
+                &path.to_string_lossy(),
+            )
+            .unwrap();
+            paths.push(path.to_string_lossy().into_owned());
+        }
+
+        assert_eq!(common_survey_context(&paths), context);
     }
 }
