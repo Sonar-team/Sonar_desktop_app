@@ -15,6 +15,7 @@ décodés par la crate vendue dans SONAR, ainsi que sa frontière de support.
 | `capwap_management.pcap` | 1 | 2 | `capwap-association-valid.pcapng` normalisé en PCAP Ethernet |
 | `capwap_data.pcap` | 1 | 2 | trames réelles ToDS/FromDS embarquées dans les golden tests de `packet_parser` |
 | `unsupported_ieee80211.pcapng` | 105 | 1 | beacon réel, refus explicite attendu au niveau capture |
+| `loopback_null.pcap` | 0 | 1 | UDP 127.0.0.1→127.0.0.1 forgé (struct.pack), refus explicite attendu : pas de décodeur LINKTYPE_NULL (#151) |
 
 Les captures ICMP et 802.11 proviennent du corpus de Chris Sanders
 (`<https://github.com/chrissanders/packets>`), conformément aux fichiers

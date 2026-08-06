@@ -176,6 +176,56 @@ jobs:
         run: cargo vet --store-path ../src-tauri/supply-chain --locked --frozen --no-minimize-exemptions
         working-directory: ./sonar-rust
 
+  # Fuzzing borné du parseur PCAP et du lecteur de matrice (#151) : chaque
+  # cible tourne un budget fixe sur les seeds committées. Un crash fait
+  # échouer le job et son artefact est uploadé — la reproduction rejoint
+  # alors le corpus comme seed de régression.
+  fuzz_smoke:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: Setup Rust nightly (requis par cargo-fuzz)
+        run: |
+          rustup toolchain install "${RUST_NIGHTLY_VERSION}" --profile minimal
+          rustup component add rust-src --toolchain "${RUST_NIGHTLY_VERSION}"
+
+      - name: Install libpcap (feature pcap de sonar-flows-core)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --version "${{ steps.versions.outputs.CARGO_FUZZ_VERSION }}" --locked
+
+      # Budget délibérément court : la CI prouve l'absence de crash trivial
+      # et l'exécutabilité des cibles à chaque PR ; les campagnes longues se
+      # font hors CI. `-runs` borne aussi le cas où le temps ne suffit pas.
+      - name: Fuzz pcap_reader (budget borné)
+        run: |
+          cargo "+${RUST_NIGHTLY_VERSION}" fuzz run pcap_reader \
+            -- -max_total_time=90 -rss_limit_mb=4096 -timeout=10
+        working-directory: ./sonar-rust/crates/sonar-flows-core
+
+      - name: Fuzz matrix_reader (budget borné)
+        run: |
+          cargo "+${RUST_NIGHTLY_VERSION}" fuzz run matrix_reader \
+            -- -max_total_time=90 -rss_limit_mb=4096 -timeout=10
+        working-directory: ./sonar-rust/crates/sonar-flows-core
+
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: fuzz-artifacts
+          path: sonar-rust/crates/sonar-flows-core/fuzz/artifacts/
+          if-no-files-found: ignore
+
   # Gates frontend : typecheck vue-tsc et tests Deno (#135).
   frontend_checks:
     runs-on: ubuntu-22.04
