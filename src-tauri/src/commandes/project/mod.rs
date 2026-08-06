@@ -774,8 +774,14 @@ mod tests {
         assert_eq!(extracted.manifest, sample_manifest(PROJECT_SCHEMA_VERSION));
 
         let matrix_text = fs::read_to_string(&extracted.matrix_csv).unwrap();
+        // La version vient de la crate : un bump de SFMS_VERSION ne doit pas
+        // exiger de retoucher ce test, seulement de le voir rester vrai.
+        let expected_preamble = format!(
+            "#SFMS version={} dlt=ETHERNET",
+            sonar_flows_core::sfms::SFMS_VERSION
+        );
         assert!(
-            matrix_text.starts_with("#SFMS version=1 dlt=ETHERNET"),
+            matrix_text.starts_with(&expected_preamble),
             "la matrice embarquée doit porter le préambule SFMS, trouvé: {}",
             matrix_text.lines().next().unwrap_or_default()
         );

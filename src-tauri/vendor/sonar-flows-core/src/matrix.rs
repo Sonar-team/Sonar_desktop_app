@@ -149,6 +149,11 @@ pub struct FlowMatrix {
     // `bind_link_type`. Un relevé = un réseau = un DLT (arbitrage 14/07/2026) :
     // toute source d'un autre DLT est refusée. `None` = matrice vierge.
     pub link_type: Option<packet_parser::LinkType>,
+    // Contexte du relevé (site, capteur, interface), déclaré par l'opérateur
+    // à l'arrêt de la capture ou à l'enregistrement (#154, tranche 2). Écrit
+    // dans le préambule #SFMS à l'export ; volontairement hors de la clé des
+    // flux — le même paquet peut être vu par plusieurs capteurs.
+    pub context: crate::sfms::SurveyContext,
 }
 
 impl Default for FlowMatrix {
@@ -164,6 +169,7 @@ impl FlowMatrix {
             label: HashMap::new(),
             origins: HashMap::new(),
             link_type: None,
+            context: crate::sfms::SurveyContext::default(),
         }
     }
 
@@ -457,7 +463,12 @@ impl FlowMatrix {
     /// Exporte la matrice vers un fichier CSV (écriture atomique), préambule
     /// `#SFMS` en tête (version du format, DLT du relevé).
     pub fn export_to_csv(&self, path: String) -> std::io::Result<()> {
-        Self::write_rows_to_csv(&self.to_flat_vec(), self.link_type, &path)
+        Self::write_rows_to_csv_with_context(
+            &self.to_flat_vec(),
+            self.link_type,
+            &self.context,
+            &path,
+        )
     }
 
     /// Écrit des lignes de matrice (snapshot de [`Self::to_flat_vec`]) vers
@@ -469,7 +480,24 @@ impl FlowMatrix {
         link_type: Option<packet_parser::LinkType>,
         path: &str,
     ) -> std::io::Result<()> {
-        write_csv_atomically(path, Some(crate::sfms::format_preamble(link_type)), |wtr| {
+        Self::write_rows_to_csv_with_context(
+            rows,
+            link_type,
+            &crate::sfms::SurveyContext::default(),
+            path,
+        )
+    }
+
+    /// Variante portant le contexte du relevé (site, capteur, interface) dans
+    /// le préambule `#SFMS` (#154, tranche 2).
+    pub fn write_rows_to_csv_with_context(
+        rows: &[FlowMatrixRow],
+        link_type: Option<packet_parser::LinkType>,
+        context: &crate::sfms::SurveyContext,
+        path: &str,
+    ) -> std::io::Result<()> {
+        let preamble = crate::sfms::format_preamble_with_context(link_type, context);
+        write_csv_atomically(path, Some(preamble), |wtr| {
             for row in rows {
                 wtr.serialize(row)?;
             }
