@@ -667,7 +667,9 @@ pub fn to_contract(event: &super::CaptureEvent<'_>) -> CaptureEventContract {
             dropped,
             if_dropped,
             app_dropped,
-            parse_errors,
+            rejected_truncated,
+            rejected_unsupported_link_type,
+            rejected_malformed,
             processed,
         } => CaptureEventContract::Stats(StatsPayload {
             session_id: *session_id,
@@ -675,7 +677,9 @@ pub fn to_contract(event: &super::CaptureEvent<'_>) -> CaptureEventContract {
             dropped: *dropped,
             if_dropped: *if_dropped,
             app_dropped: *app_dropped,
-            parse_errors: *parse_errors,
+            rejected_truncated: *rejected_truncated,
+            rejected_unsupported_link_type: *rejected_unsupported_link_type,
+            rejected_malformed: *rejected_malformed,
             processed: *processed,
         }),
         super::CaptureEvent::ChannelCapacityPayload {
@@ -798,7 +802,9 @@ mod tests {
             dropped: 0,
             if_dropped: 0,
             app_dropped: 0,
-            parse_errors: 1,
+            rejected_truncated: 2,
+            rejected_unsupported_link_type: 0,
+            rejected_malformed: 1,
             processed: 3,
         };
         assert_same_json(&real, &to_contract(&real), "stats");
@@ -1616,7 +1622,9 @@ mod tests {
                 dropped: 0,
                 if_dropped: 0,
                 app_dropped: 0,
-                parse_errors: 1,
+                rejected_truncated: 2,
+                rejected_unsupported_link_type: 0,
+                rejected_malformed: 1,
                 processed: 3,
             }
         );

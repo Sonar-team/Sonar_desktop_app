@@ -82,8 +82,12 @@ pub enum CaptureEvent<'a> {
         /// Pertes côté application (pool de buffers épuisé ou canal plein),
         /// en plus des drops kernel remontés par pcap.
         app_dropped: u64,
-        /// Paquets acceptés par le pipeline mais illisibles par le parseur.
-        parse_errors: u64,
+        /// Rejets du parseur par catégorie fine (#150) : capture coupée au
+        /// snaplen, type de liaison inconnu du parser, trame malformée sur
+        /// le réseau observé. Même partition que l'import de fichier.
+        rejected_truncated: u64,
+        rejected_unsupported_link_type: u64,
+        rejected_malformed: u64,
         processed: u32,
     },
     /// Occupation du canal capture→processing (indicateur de backpressure).

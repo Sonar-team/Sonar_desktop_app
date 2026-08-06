@@ -26,7 +26,9 @@ export const statsFixture = ({
     "dropped": 0,
     "ifDropped": 0,
     "appDropped": 0,
-    "parseErrors": 1,
+    "rejectedTruncated": 2,
+    "rejectedUnsupportedLinkType": 0,
+    "rejectedMalformed": 1,
     "processed": 3
   }
 }) satisfies CaptureEvent;

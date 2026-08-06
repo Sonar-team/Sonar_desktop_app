@@ -128,7 +128,9 @@ fn send_stats_event(
             dropped: 0,
             if_dropped: 0,
             app_dropped: 0,
-            parse_errors: 0,
+            rejected_truncated: 0,
+            rejected_unsupported_link_type: 0,
+            rejected_malformed: 0,
             processed: processed as u32,
         })
         .map_err(|e| {

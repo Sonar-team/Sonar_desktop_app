@@ -173,13 +173,12 @@ struct PacketWorker {
     last_batch_flush: Instant,
     /// Nombre de flux de la matrice, rafraîchi à chaque update (pour les stats).
     processed: u32,
-    /// Paquets parsés et intégrés à la matrice depuis le début de la session
-    /// (un par paquet capturé, niveaux de tunnel non recomptés) : la
-    /// catégorie « intégré » du récapitulatif (#158).
-    packets_integrated: u64,
-    /// Total des paquets illisibles par le parseur depuis le début de la
-    /// session : la catégorie « illisible » du récapitulatif (#158).
-    parse_errors_total: u64,
+    /// Bilan de la session par catégorie fine (#150) : décodés/intégrés
+    /// (un par paquet capturé, niveaux de tunnel non recomptés) et rejets
+    /// classés par la partition du cœur — la même que l'import de fichier,
+    /// pas une réimplémentation locale. Le total lu est `report.read()`,
+    /// l'équation tient par construction.
+    report: sonar_flows_core::report::PcapFileReport,
     /// Erreurs de parsing accumulées depuis le dernier log (rate-limiting).
     parse_errors_pending: u64,
     last_parse_error_log: Instant,
@@ -207,8 +206,7 @@ impl PacketWorker {
             graph_batch: GraphUpdateBatch::default(),
             last_batch_flush: Instant::now(),
             processed: 0,
-            packets_integrated: 0,
-            parse_errors_total: 0,
+            report: sonar_flows_core::report::PcapFileReport::default(),
             parse_errors_pending: 0,
             last_parse_error_log: Instant::now(),
             #[cfg(feature = "capture_timing")]
@@ -222,11 +220,16 @@ impl PacketWorker {
         }
     }
 
-    /// Compte une erreur de parsing et la journalise au plus une fois par
-    /// [`PARSE_ERROR_LOG_INTERVAL`] : du trafic malformé en rafale ne doit
-    /// pas amplifier les logs (#147).
-    fn note_parse_error(&mut self, err: &dyn std::fmt::Display) {
-        self.parse_errors_total += 1;
+    /// Classe un paquet rejeté par la partition du cœur (#150) et journalise
+    /// au plus une fois par [`PARSE_ERROR_LOG_INTERVAL`] : du trafic malformé
+    /// en rafale ne doit pas amplifier les logs (#147).
+    fn note_rejected(&mut self, header: &pcap::PacketHeader, err: &packet_parser::ParseError) {
+        self.report
+            .record(sonar_flows_core::report::classify_packet(
+                header.caplen,
+                header.len,
+                Some(err),
+            ));
         self.parse_errors_pending += 1;
         if self.last_parse_error_log.elapsed() >= PARSE_ERROR_LOG_INTERVAL {
             error!(
@@ -336,7 +339,7 @@ impl PacketWorker {
             match parse_packet_flow_with_timing(self.link_type, pkt.as_ref()) {
                 Ok(parsed) => parsed,
                 Err(e) => {
-                    self.note_parse_error(&e);
+                    self.note_rejected(&pkt.header, &e);
                     return Ok(true);
                 }
             }
@@ -344,7 +347,7 @@ impl PacketWorker {
             match packet_parser::parse::parse(self.link_type, pkt.as_ref()) {
                 Ok(flow) => (flow, ParseTiming::default()),
                 Err(e) => {
-                    self.note_parse_error(&e);
+                    self.note_rejected(&pkt.header, &e);
                     return Ok(true);
                 }
             }
@@ -354,7 +357,7 @@ impl PacketWorker {
         let flow = match packet_parser::parse::parse(self.link_type, pkt.as_ref()) {
             Ok(flow) => flow,
             Err(e) => {
-                self.note_parse_error(&e);
+                self.note_rejected(&pkt.header, &e);
                 return Ok(true);
             }
         };
@@ -376,7 +379,8 @@ impl PacketWorker {
         // poison ne peut plus laisser matrice et graphe partiellement divergents.
         let integration = self.integrate_owned_levels(&owned_levels)?;
         self.processed = integration.processed;
-        self.packets_integrated += 1;
+        self.report
+            .record(sonar_flows_core::report::PacketDisposition::Decoded);
 
         // Les updates graphe sont coalescées puis envoyées par lot, au même
         // rythme que le batch de paquets.
@@ -443,7 +447,7 @@ impl PacketWorker {
             Err(e) => {
                 // Même comptabilité que le chemin nominal : un paquet drainé
                 // illisible reste un paquet classé, pas un paquet évaporé (#158).
-                self.note_parse_error(&e);
+                self.note_rejected(&pkt.header, &e);
                 return Ok(());
             }
         };
@@ -457,7 +461,8 @@ impl PacketWorker {
         let owned_levels = packet.to_owned_packets();
         let integration = self.integrate_owned_levels(&owned_levels)?;
         self.processed = integration.processed;
-        self.packets_integrated += 1;
+        self.report
+            .record(sonar_flows_core::report::PacketDisposition::Decoded);
         Ok(())
     }
 
@@ -632,7 +637,9 @@ impl StatsEmitter {
         triple.app_dropped = self.drop_counters.total();
         StatsSnapshot {
             triple,
-            parse_errors: worker.parse_errors_total,
+            rejected_truncated: worker.report.rejected_truncated as u64,
+            rejected_unsupported_link_type: worker.report.rejected_unsupported_link_type as u64,
+            rejected_malformed: worker.report.rejected_malformed as u64,
             processed: worker.processed,
         }
     }
@@ -1076,10 +1083,10 @@ mod tests {
         assert_eq!(drained, 3, "tous les paquets en attente sont consommés");
         assert!(rx.is_empty());
         assert_eq!(
-            worker.packets_integrated, 3,
+            worker.report.decoded, 3,
             "chaque paquet drainé est compté intégré (#158)"
         );
-        assert_eq!(worker.parse_errors_total, 0);
+        assert_eq!(worker.report.rejected(), 0);
         let matrix = flow_matrix.lock().unwrap();
         assert_eq!(matrix.row_count(), 1, "3 paquets du même flux -> 1 ligne");
         let packets: u64 = matrix
@@ -1121,10 +1128,10 @@ mod tests {
         assert_eq!(flow_matrix.lock().unwrap().row_count(), 1);
         // Comptabilité exhaustive (#158) : chaque paquet accepté par le
         // pipeline est classé — intégré ou illisible — jamais évaporé.
-        assert_eq!(worker.packets_integrated, 1);
-        assert_eq!(worker.parse_errors_total, 1);
+        assert_eq!(worker.report.decoded, 1);
+        assert_eq!(worker.report.rejected(), 1);
         assert_eq!(
-            worker.packets_integrated + worker.parse_errors_total,
+            worker.report.read() as u64,
             drained as u64,
             "la somme des catégories boucle avec les paquets drainés"
         );
@@ -1158,7 +1165,7 @@ mod tests {
         sender.join().unwrap();
 
         assert_eq!(drained, 1);
-        assert_eq!(worker.packets_integrated, 1);
+        assert_eq!(worker.report.decoded, 1);
         assert_eq!(flow_matrix.lock().unwrap().row_count(), 1);
     }
 
@@ -1233,7 +1240,7 @@ mod tests {
 
         assert_eq!(result, Err(ProcessingFatal::GraphPoisoned));
         assert_eq!(pool.len(), 1, "le buffer est rendu même sur erreur fatale");
-        assert_eq!(worker.packets_integrated, 0);
+        assert_eq!(worker.report.decoded, 0);
         assert_eq!(flow_matrix.lock().unwrap().row_count(), 0);
     }
 
@@ -1270,10 +1277,10 @@ mod tests {
             pool.put(buffer);
         }
 
-        assert_eq!(worker.packets_integrated, 3);
-        assert_eq!(worker.parse_errors_total, 2);
+        assert_eq!(worker.report.decoded, 3);
+        assert_eq!(worker.report.rejected(), 2);
         assert_eq!(
-            worker.packets_integrated + worker.parse_errors_total,
+            worker.report.read() as u64,
             frames.len() as u64,
             "chaque paquet accepté appartient à une catégorie explicite"
         );
@@ -1313,7 +1320,7 @@ mod tests {
         drop(tx);
 
         assert_eq!(fatal, ProcessingFatal::MatrixPoisoned);
-        assert_eq!(worker.packets_integrated, 0);
+        assert_eq!(worker.report.decoded, 0);
         assert!(worker.packet_batch.is_empty());
         assert!(worker.graph_batch.is_empty());
         assert!(graph.lock().unwrap().nodes.is_empty());
@@ -1407,7 +1414,7 @@ mod tests {
             0,
             "les deux verrous sont acquis avant la première mutation"
         );
-        assert_eq!(worker.packets_integrated, 0);
+        assert_eq!(worker.report.decoded, 0);
         assert!(worker.packet_batch.is_empty());
         assert!(worker.graph_batch.is_empty());
         let poisoned_graph = graph.lock().unwrap_err().into_inner();
@@ -1534,10 +1541,7 @@ mod tests {
 
         drain_and_finalize(&mut worker, &mut emitter, &rx, &pool, &stop_flag, &terminal);
 
-        assert_eq!(
-            worker.packets_integrated, 1,
-            "le paquet en attente est drainé"
-        );
+        assert_eq!(worker.report.decoded, 1, "le paquet en attente est drainé");
         assert!(
             !stop_flag.load(Ordering::Acquire),
             "le chemin nominal ne force pas l'arrêt lui-même"
@@ -1652,7 +1656,7 @@ mod tests {
 
         assert!(!keep_going);
         assert_eq!(
-            worker.packets_integrated, 1,
+            worker.report.decoded, 1,
             "le paquet reçu pendant l'arrêt est tout de même intégré (#158)"
         );
     }
@@ -1698,7 +1702,7 @@ mod tests {
             keep_going,
             "traitement normal -> la boucle appelante continue"
         );
-        assert_eq!(worker.packets_integrated, 1);
+        assert_eq!(worker.report.decoded, 1);
         assert!(!stop_flag.load(Ordering::Acquire));
     }
 
