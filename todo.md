@@ -54,16 +54,16 @@ Chemin critique vers la RC : #154 → #151 → #159/#160 → #136/#162 →
 
 ## Ordre immédiat
 
-1. Sprint actif (démarré le 03/08) : sessions persistantes
-   [#159](https://github.com/Sonar-team/Sonar_desktop_app/issues/159) —
-   phases et avancement dans `sprint.md`.
-2. Reliquat fidélité en parallèle : [#154](https://github.com/Sonar-team/Sonar_desktop_app/issues/154)
-   tranche 2 — le format est posé côté crate depuis le 06/08 (0.6.0), il
-   reste le câblage desktop : dialogue de qualification au stop/save,
-   `manifest.json` v2 du `.sonar`, généralisation d'`origin` en contexte
-   par flux. C'est le prérequis de la phase B du sprint. Puis
-   corpus/fuzzing de
-   [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151).
+1. Sprint actif (démarré le 06/08) : fiabilité prouvable —
+   [#150](https://github.com/Sonar-team/Sonar_desktop_app/issues/150)
+   (comptabilité), puis
+   [#151](https://github.com/Sonar-team/Sonar_desktop_app/issues/151)
+   (corpus/fuzzing) et
+   [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136)
+   (release immuable) — lots et avancement dans `sprint.md`.
+2. Livré le 06/08 sur #154 : contexte de relevé automatique dans le
+   préambule SFMS et manifest v2 du `.sonar` avec test de migration
+   (PR #193, mergée). Reliquat reporté : `origin` par flux.
 3. Ensuite [#160](https://github.com/Sonar-team/Sonar_desktop_app/issues/160),
    puis la chaîne de release : [#136](https://github.com/Sonar-team/Sonar_desktop_app/issues/136)
    et [#162](https://github.com/Sonar-team/Sonar_desktop_app/issues/162),
@@ -71,13 +71,18 @@ Chemin critique vers la RC : #154 → #151 → #159/#160 → #136/#162 →
    (signatures) et [#146](https://github.com/Sonar-team/Sonar_desktop_app/issues/146)
    (E2E installateurs).
 
-## Sprint actif — sessions persistantes (#159)
+## Sprint actif — fiabilité prouvable et chaîne de release
 
-Démarré le 03/08/2026, phases A/B/C et Definition of Done dans `sprint.md`.
-Phase A livrée le 04/08 (PR #184) : format `.sonar` v1, save/open, dirty
-state, arrêt gracieux, autosave, récupération crash, projets récents.
-Phase B (schéma v2 + contexte de relevé) attend la tranche 2 de #154 ;
-phase C (manifest de preuve, signature) ensuite.
+Démarré le 06/08/2026. Lots et Definition of Done dans `sprint.md` :
+comptabilité exhaustive des paquets (#150), corpus hostile et fuzzing (#151),
+release immuable (#136).
+
+**Arbitrage du 06/08** : recentrage sans retour arrière. La persistance
+(#159 phase A) et la qualification automatique du relevé (#193, demande
+utilisateur) restent dans main ; une extraction envisagée a été abandonnée le
+jour même. Aucune nouvelle fonctionnalité tant que les trois lots ne sont pas
+livrés. #191 (XLSX cœur + sigma.js) reste dormante en branche. Phases B/C de
+#159 et reliquat #154 (`origin` par flux) reportés.
 
 ## Sprint précédent — fidélité des données et intégrité des sessions (reliquat)
 
