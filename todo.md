@@ -1,6 +1,6 @@
 # Backlog SONAR — de la bêta avancée au produit Pro
 
-> Dernière synchronisation GitHub : 06/08/2026 (v4.11.0)
+> Dernière synchronisation GitHub : 06/08/2026 soir (v4.11.0, post-triage)
 > Source : audit complet bêta → pro du 13/07/2026
 > Règle : les issues GitHub sont la source de vérité ; ce fichier fournit la
 > priorité et l'ordre d'exécution. `sprint.md` décrit uniquement le sprint actif.
@@ -9,10 +9,12 @@
 
 ## Baromètre « app pro » — 06/08/2026
 
-Dérivé des règles de sortie de bêta (bas de ce fichier) : **9 P0 et
-9 P1 ouverts** (hors épic de suivi #165), compteurs inchangés depuis le
-04/08. La Release Candidate exige 0 P0 ; la 1.0 Pro exige 0 P1.
-Avancements estimés par étape de `roadmap_simple.md` :
+Dérivé des règles de sortie de bêta (bas de ce fichier) : **6 P0 et
+8 P1 ouverts** après le triage du 06/08 (fermées sur preuves : #88, #150,
+#154, #159, #165 ; « not planned » : #91, #101, #156 — reliquats transférés
+vers #111, #146 et #164, aucune issue ouverte). La Release Candidate exige
+0 P0 ; la 1.0 Pro exige 0 P1. Avancements estimés par étape de
+`roadmap_simple.md` :
 
 | Étape | Avancement | Restant (issues) |
 | --- | --- | --- |
