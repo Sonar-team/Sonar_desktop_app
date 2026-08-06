@@ -28,14 +28,6 @@
     <button type="button" class="image-btn" @click="export_logs" title="Logs (ctrl+l)" aria-label="Exporter les logs">📒</button>
     <button type="button" class="image-btn" @click="handleFilterClick" :disabled="isRunning" title="Filtrer (ctrl+f)" aria-label="Filtrer">🔍</button>
   </div>
-
-  <SurveyContextDialog
-    v-if="surveyDialog.visible"
-    :context="surveyDialog.context"
-    :confirm-label="surveyDialog.confirmLabel"
-    @confirm="onSurveyConfirm"
-    @cancel="onSurveyCancel"
-  />
 </template>
 
 <script lang="ts">
@@ -49,9 +41,6 @@ import { useCaptureStore } from '../../store/capture';
 import { CaptureEvent } from '../../types/capture';
 import { requestAppExit } from '../../utils/appExit';
 import { getLastProjectDir, recordRecentProject } from '../../utils/recentProjects';
-import SurveyContextDialog from '../AnalyseView/panels/SurveyContextDialog.vue';
-import type { SurveyContext } from '../../types/generated/SurveyContext';
-import { needsQualification } from '../../utils/surveyContextCore';
 
 type Panel = 'config' | 'pcap' | 'csv' | 'filter' | 'labels';
 
@@ -59,7 +48,6 @@ const BUSY_MESSAGE = "Une opération d'importation ou de sauvegarde est déjà e
 
 export default {
   name: "TopBar",
-  components: { SurveyContextDialog },
   emits: ['toggle-config', 'toggle-pcap','toggle-csv', 'toggle-filter', 'toggle-graph', 'toggle-labels'],
 
   props: {
@@ -91,15 +79,6 @@ export default {
     return {
       localHandler: null as ((e: KeyboardEvent) => void) | null,
       activePanel: null as Panel | null,
-      // Dialogue de qualification du relevé (#154). `resolve` transforme un
-      // échange par événements en une attente linéaire côté appelant : le
-      // parcours d'enregistrement peut attendre la réponse avant d'écrire.
-      surveyDialog: {
-        visible: false,
-        context: {} as SurveyContext,
-        confirmLabel: 'Valider',
-        resolve: null as ((answer: SurveyContext | null) => void) | null,
-      },
     };
   },
   async mounted() {
@@ -133,74 +112,6 @@ export default {
     }
   },
   methods: {
-    /**
-     * Demande la qualification du relevé si elle manque (#154, tranche 2).
-     *
-     * Le dialogue ne s'ouvre que si le contexte est encore vide : arrêter une
-     * capture puis l'enregistrer ne doit pas poser deux fois la même
-     * question. Une fois saisi, le contexte est réutilisé tel quel.
-     *
-     * Retourne `false` si l'opérateur a annulé — l'appelant renonce alors à
-     * l'action en cours plutôt que d'écrire un relevé qu'on s'apprêtait à
-     * qualifier.
-     */
-    async ensureSurveyContext(confirmLabel: string): Promise<boolean> {
-      let current: SurveyContext;
-      try {
-        current = await invoke<SurveyContext>('get_survey_context');
-      } catch (err) {
-        // La qualification est un enrichissement : son échec ne doit pas
-        // empêcher d'enregistrer un relevé. On trace et on continue.
-        error(`Lecture du contexte de relevé impossible: ${err}`);
-        return true;
-      }
-      if (!needsQualification(current)) {
-        return true;
-      }
-
-      // L'interface d'écoute est déjà connue du backend : elle est proposée,
-      // pas redemandée. Lue là plutôt que dans le store de configuration, qui
-      // n'est hydraté que si le panneau de config a été ouvert.
-      let device = '';
-      try {
-        const config = await invoke<{ device_name: string }>('get_config_capture');
-        device = config.device_name ?? '';
-      } catch (err) {
-        error(`Interface d'écoute indisponible pour le préremplissage: ${err}`);
-      }
-
-      const answer = await new Promise<SurveyContext | null>((resolve) => {
-        this.surveyDialog.context = { interface: device || undefined };
-        this.surveyDialog.confirmLabel = confirmLabel;
-        this.surveyDialog.resolve = resolve;
-        this.surveyDialog.visible = true;
-      });
-
-      if (!answer) {
-        return false;
-      }
-      try {
-        await invoke('set_survey_context', { context: answer });
-      } catch (err) {
-        error(`Enregistrement du contexte de relevé impossible: ${err}`);
-        await displayCaptureError(err);
-        return false;
-      }
-      return true;
-    },
-
-    onSurveyConfirm(context: SurveyContext) {
-      this.surveyDialog.visible = false;
-      this.surveyDialog.resolve?.(context);
-      this.surveyDialog.resolve = null;
-    },
-
-    onSurveyCancel() {
-      this.surveyDialog.visible = false;
-      this.surveyDialog.resolve?.(null);
-      this.surveyDialog.resolve = null;
-    },
-
     /** Pose le verrou global d'import/export, ferme le panneau actif,
      * exécute `action`, puis libère le verrou (même en cas d'erreur). Si une
      * opération est déjà en cours, `action` n'est pas exécutée. */
@@ -296,12 +207,6 @@ export default {
       info("Enregistrement du projet");
       await this.withImportLock(async () => {
         try {
-          // Qualifier avant de choisir le chemin : annuler la qualification
-          // ne doit pas laisser un sélecteur de fichier orphelin.
-          if (!(await this.ensureSurveyContext('Enregistrer'))) {
-            info("Enregistrement annulé à la qualification du relevé");
-            return;
-          }
           const lastDir = await getLastProjectDir();
           const fileName = getCurrentDate() + '_projet.sonar';
           const response = await save({
@@ -468,14 +373,6 @@ export default {
           displayCaptureError(err);
         })
         .finally(() =>useCaptureStore().refreshHasData());
-
-      // Qualification à l'arrêt (#154) : c'est le moment où l'opérateur sait
-      // ce qu'il vient de relever. Sans données, il n'y a rien à qualifier.
-      // Annuler ici est sans conséquence — la capture est déjà arrêtée, on
-      // ne revient pas dessus ; la question se reposera à l'enregistrement.
-      if (this.captureStore.hasData) {
-        await this.ensureSurveyContext('Valider');
-      }
     },
     async quit() {
       info('Fermeture demandée');

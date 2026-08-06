@@ -221,10 +221,6 @@ mod bindings {
         // émis par `crate::events::CaptureEvent`.
         crate::events::contract::CaptureEventContract::export_all(&cfg)
             .expect("export du contrat CaptureEvent");
-        // Contexte de relevé échangé par `get_survey_context` /
-        // `set_survey_context` (#154, tranche 2).
-        crate::commandes::survey::SurveyContextDto::export_all(&cfg)
-            .expect("export du contrat SurveyContext");
     }
 }
 

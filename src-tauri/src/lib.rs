@@ -34,7 +34,6 @@ use crate::{
         },
         net_capture::{reset_capture, set_filter},
         project::{get_recovery_offer, is_session_dirty, open_project, save_project},
-        survey::{get_survey_context, set_survey_context},
     },
     setup::{
         about::{about_message, changelog_message},
@@ -223,9 +222,7 @@ pub fn run() -> Result<(), tauri::Error> {
             save_project,
             open_project,
             is_session_dirty,
-            get_recovery_offer,
-            get_survey_context,
-            set_survey_context
+            get_recovery_offer
         ])
         .build(tauri::generate_context!())?
         .run(|app_handle, event| {

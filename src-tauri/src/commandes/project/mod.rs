@@ -1017,20 +1017,32 @@ mod tests {
             "le fixture doit être un vrai manifest v1, sans la clé de contexte"
         );
 
+        // Matrice v1 : le préambule est le littéral qu'écrivait la version
+        // précédente, mais l'en-tête de colonnes vient du writer réel — un
+        // en-tête recopié à la main mentirait sur le schéma dès qu'il
+        // évoluerait, et le fixture ne prouverait plus rien.
+        let (rows, _) = sample_rows_and_labels();
+        let real_csv = dir.join("v1_source.csv");
+        FlowMatrix::write_rows_to_csv(
+            &rows,
+            sonar_flows_core::sfms::link_type_from_text("ETHERNET"),
+            &real_csv.to_string_lossy(),
+        )
+        .unwrap();
+        let written = fs::read_to_string(&real_csv).unwrap();
+        let body = written
+            .split_once('\n')
+            .expect("le writer émet un préambule puis le corps")
+            .1;
+        let matrix_v1 = format!("#SFMS version=1 dlt=ETHERNET\n{body}");
+
         let file = File::create(&dest).unwrap();
         let mut zip = ZipWriter::new(file);
         let options = SimpleFileOptions::default();
         zip.start_file(MANIFEST_ENTRY, options).unwrap();
         zip.write_all(manifest_v1.to_string().as_bytes()).unwrap();
         zip.start_file(MATRIX_ENTRY, options).unwrap();
-        // Préambule v1 littéral : ce que la version précédente écrivait.
-        zip.write_all(b"#SFMS version=1 dlt=ETHERNET\n").unwrap();
-        zip.write_all(
-            b"mac_source,mac_destination,interface,l_3_protocol,ip_source,ip_destination,\
-              l_4_protocol,port_source,port_destination,l_7_protocol,packet_count,byte_count,\
-              vlan_id,label_source,label_destination,origin,encap_id\n",
-        )
-        .unwrap();
+        zip.write_all(matrix_v1.as_bytes()).unwrap();
         zip.finish().unwrap();
 
         let extracted = extract_project_archive(&dest).unwrap();
@@ -1049,6 +1061,15 @@ mod tests {
         assert!(
             restored.is_empty(),
             "le contexte rétabli dans la matrice doit être vide, pas rempli de chaînes vides"
+        );
+
+        // Les lignes du relevé v1 se relisent : le fixture est bien un projet
+        // ouvrable, pas seulement un manifest bien formé.
+        let rows_read = sonar_flows_core::csv::read_matrix_rows(&extracted.matrix_csv).unwrap();
+        assert_eq!(
+            rows_read.len(),
+            rows.len(),
+            "un projet v1 doit rendre toutes ses lignes sous le schéma v2"
         );
 
         fs::remove_dir_all(&dir).ok();

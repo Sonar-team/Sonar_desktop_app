@@ -64,6 +64,19 @@ pub fn start_capture(
         labels_to_matrix(label_store, &mut state_label)?;
         update_labels_in_state(&app, &mut state_label)?;
 
+        // Contexte du relevé (#154) : seule l'interface d'écoute est
+        // renseignée, parce qu'elle est la seule que SONAR connaisse sans
+        // rien demander. Le site n'est pas déductible, et le nom de machine
+        // est délibérément laissé vide : #96 traite la fuite du hostname
+        // dans les fichiers produits comme une menace à couvrir, et un
+        // export part chez le client.
+        //
+        // Aucune saisie, aucun dialogue : la métadonnée existe pour la
+        // baseline et le diff temporel à venir (axe A de VISION.md, #164),
+        // sans rien coûter au parcours d'aujourd'hui.
+        state_label.context.interface =
+            sonar_flows_core::sfms::SurveyContext::normalized_field(Some(&config.device_name));
+
         let mut capture = CaptureHandle::new(session_id);
         capture.start(config, app, on_event.clone(), filter, &mut state_label)?;
         let completion = capture.take_completion_receiver().ok_or_else(|| {
