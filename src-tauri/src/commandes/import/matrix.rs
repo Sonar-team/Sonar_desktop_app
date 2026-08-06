@@ -489,9 +489,12 @@ pub fn import_matrix_files(
             packet_total_count: *line_count,
             // Une matrice CSV/XLSX est validée ligne à ligne avant import : une
             // ligne invalide est fatale (#148), donc tout ce qui est lu est
-            // intégré.
+            // intégré — les trois catégories de rejet sont structurellement
+            // nulles pour ce chemin.
             integrated_count: *line_count,
-            parse_error_count: 0,
+            rejected_truncated_count: 0,
+            rejected_unsupported_link_type_count: 0,
+            rejected_malformed_count: 0,
             matrix_total_count,
         }) {
             error!("Erreur lors de l'envoi de Finished: {:?}", e);

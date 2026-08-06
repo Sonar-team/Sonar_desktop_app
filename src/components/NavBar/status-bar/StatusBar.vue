@@ -21,9 +21,9 @@
       <p
         v-if="lastImport"
         class="import-badge"
-        :title="`${lastImport.fileName} : ${lastImport.totalCount} lignes lues${lastImport.parseErrorCount ? `, ${lastImport.parseErrorCount} illisibles` : ''}`"
+        :title="importReportDetail"
       >
-        Import : {{ lastImport.fileName }} ({{ lastImport.totalCount }} lignes{{ lastImport.parseErrorCount ? `, ${lastImport.parseErrorCount} illisibles` : '' }})
+        Import : {{ lastImport.fileName }} ({{ lastImport.totalCount }} lignes{{ rejectedTotal ? `, ${rejectedTotal} rejetée${rejectedTotal > 1 ? 's' : ''}` : '' }})
       </p>
       <p v-if="lastStopReason" class="stopped-badge" :title="lastStopReason">
         Arrêt : {{ lastStopReason }}
@@ -89,7 +89,11 @@ interface LastImport {
   fileName: string;
   integratedCount: number;
   totalCount: number;
-  parseErrorCount: number;
+  // Catégories fines du bilan (#150) : chaque paquet lu appartient à
+  // exactement une, le total est leur somme.
+  truncatedCount: number;
+  unsupportedLinkTypeCount: number;
+  malformedCount: number;
 }
 
 export default defineComponent({
@@ -106,6 +110,21 @@ export default defineComponent({
   },
   computed: {
     captureStore() { return useCaptureStore(); },
+    rejectedTotal(): number {
+      const imported = this.lastImport;
+      if (!imported) return 0;
+      return imported.truncatedCount + imported.unsupportedLinkTypeCount
+        + imported.malformedCount;
+    },
+    /** Équation du bilan, lisible sans ouvrir un log (#150). */
+    importReportDetail(): string {
+      const imported = this.lastImport;
+      if (!imported) return '';
+      return `${imported.fileName} : ${imported.totalCount} lus = `
+        + `${imported.integratedCount} intégrés + ${imported.truncatedCount} tronqués `
+        + `+ ${imported.unsupportedLinkTypeCount} DLT non supportés `
+        + `+ ${imported.malformedCount} malformés`;
+    },
   },
   mounted() {
     // Stats live de la capture
@@ -120,14 +139,20 @@ export default defineComponent({
     this._unsub.push(this.captureStore.onFinished((f) => {
       this.stats.processed = f.matrixTotalCount;
       this.stats.received = f.packetTotalCount;
-      // Rapport qualité de l'import (#150) : les paquets illisibles du
-      // fichier sont visibles au même titre que les pertes de capture.
-      this.stats.parseErrors = f.parseErrorCount ?? 0;
+      // Rapport qualité de l'import (#150) : les paquets rejetés du fichier
+      // sont visibles au même titre que les pertes de capture, et leur cause
+      // (troncature de capture, DLT inconnu, trame malformée) est détaillée
+      // dans l'infobulle du badge.
+      this.stats.parseErrors = (f.rejectedTruncatedCount ?? 0)
+        + (f.rejectedUnsupportedLinkTypeCount ?? 0)
+        + (f.rejectedMalformedCount ?? 0);
       this.lastImport = {
         fileName: f.fileName,
         integratedCount: f.integratedCount,
         totalCount: f.packetTotalCount,
-        parseErrorCount: f.parseErrorCount,
+        truncatedCount: f.rejectedTruncatedCount ?? 0,
+        unsupportedLinkTypeCount: f.rejectedUnsupportedLinkTypeCount ?? 0,
+        malformedCount: f.rejectedMalformedCount ?? 0,
       };
     }));
     // Raison d'arrêt (backend, ex. erreur pcap) : sans cet affichage, seule

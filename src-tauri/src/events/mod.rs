@@ -110,18 +110,28 @@ pub enum CaptureEvent<'a> {
     /// une erreur.
     Stopped { session_id: u64, reason: String },
     /// Fin de traitement d'un fichier importé (PCAP ou matrice CSV), avec le
-    /// rapport qualité du fichier (#150) : chaque paquet lu est classé —
-    /// intégré à la matrice ou illisible par le parseur. Affiché dans la
-    /// barre de statut.
+    /// rapport qualité du fichier (#150) : chaque paquet lu appartient à
+    /// exactement une catégorie fine, et le total émis est la somme des
+    /// catégories (`PcapFileReport::read()`) — l'équation
+    /// `lus = intégrés + tronqués + DLT non supportés + malformés`
+    /// tient par construction. Affiché dans la barre de statut.
     Finished {
         file_name: &'a str,
         packet_total_count: usize,
         /// Paquets parsés et intégrés à la matrice (pour une matrice CSV :
         /// lignes importées).
         integrated_count: usize,
-        /// Paquets lus mais illisibles par le parseur (0 pour une matrice
-        /// CSV : une ligne invalide est une erreur fatale, pas un skip).
-        parse_error_count: usize,
+        /// Rejetés parce que la capture était coupée (`caplen < len`) :
+        /// snaplen trop court au moment du relevé, pas un défaut du réseau.
+        rejected_truncated_count: usize,
+        /// Rejetés pour type de liaison inconnu du parser. Zéro attendu :
+        /// la garde DLT rejette le fichier entier sinon — le bilan prouve
+        /// ce zéro au lieu de le supposer.
+        rejected_unsupported_link_type_count: usize,
+        /// Rejetés trame complète : malformés sur le réseau observé (0 pour
+        /// une matrice CSV : une ligne invalide est une erreur fatale, pas
+        /// un skip).
+        rejected_malformed_count: usize,
         matrix_total_count: usize,
     },
     /// Progression d'un import multi-fichiers. `current` et `total` comptent
