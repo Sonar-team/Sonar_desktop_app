@@ -41,9 +41,11 @@ release v4.11.0, et **étape 1 de la tranche 2 de #154 livrée côté crate**
 — `SurveyContext { site, sensor, interface }` dans le préambule SFMS,
 `SFMS_VERSION` à 2, valeurs percent-encodées, lecture v1 inchangée
 (PR #189, sonar-flows-core/sonar-flows-cli 0.6.0 publiées sur crates.io
-le 06/08 par le tag `crates-v0.6.0`). Le re-vendor desktop est prêt mais
-pas encore mergé : tant qu'il ne l'est pas, l'application consomme
-toujours 0.5.0. Gates vérifiées vertes sur `ce770b2d` le 06/08 —
+le 06/08 par le tag `crates-v0.6.0`), puis re-vendorées dans le desktop
+le même jour (PR #190) : l'application consomme désormais 0.6.0. Le
+format est donc en place de bout en bout ; ce qui reste de la tranche 2
+est le câblage fonctionnel, pas la dépendance. Gates vérifiées vertes
+sur `ce770b2d` le 06/08 —
 frontend 181 tests + ESLint + `vue-tsc`, desktop 199 tests, cœur partagé
 91 tests, `fmt` et `clippy -D warnings` propres sur les trois.
 
@@ -140,7 +142,7 @@ sprint.
 
 ## Réalisé récemment
 
-- Hors issues : `SurveyContext` dans le préambule SFMS et `SFMS_VERSION` 2 — sonar-flows-core / sonar-flows-cli **0.6.0** publiées sur crates.io *(PR #189, tag `crates-v0.6.0`, 06/08)*. Étape 1 de la tranche 2 de #154 ; re-vendor desktop en attente de merge.
+- Hors issues : `SurveyContext` dans le préambule SFMS et `SFMS_VERSION` 2 — sonar-flows-core / sonar-flows-cli **0.6.0** publiées sur crates.io *(PR #189, tag `crates-v0.6.0`, 06/08)*, re-vendorées dans le desktop le même jour *(PR #190)*. Étape 1 de la tranche 2 de #154.
 - Hors issues : scénario E2E X11 resynchronisé avec l'application — boutons, ZIP, confirmation *(PR #188, 05/08)*
 - [x] [#161](https://github.com/Sonar-team/Sonar_desktop_app/issues/161) — intégrité du cycle frontend *(28/07)* + correction des 6 findings hauts de l'audit du 01/08 *(02/08)*
 - [x] [#145](https://github.com/Sonar-team/Sonar_desktop_app/issues/145) — routes et vues héritées supprimées *(29/07)*
