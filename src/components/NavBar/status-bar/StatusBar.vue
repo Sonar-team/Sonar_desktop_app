@@ -56,7 +56,10 @@
       </p>
 
       <p title="Trames 🧩 acceptées mais illisibles par le parseur">
-        <span class="counter">{{ stats.parseErrors }} :🧩</span>
+        <span
+          class="counter"
+          :title="`Rejets du parseur : ${stats.rejectedTruncated} tronqués, ${stats.rejectedUnsupportedLinkType} DLT non supportés, ${stats.rejectedMalformed} malformés`"
+        >{{ rejectedLiveTotal }} :🧩</span>
       </p>
 
       <ChannelStatus />
@@ -77,12 +80,15 @@ import { error } from '@tauri-apps/plugin-log';
 import type { Stats } from '../../../types/capture';
 
 type StatsView = Record<
-  'received' | 'dropped' | 'ifDropped' | 'appDropped' | 'parseErrors' | 'processed',
+  'received' | 'dropped' | 'ifDropped' | 'appDropped' | 'rejectedTruncated'
+    | 'rejectedUnsupportedLinkType' | 'rejectedMalformed' | 'processed',
   number
 >;
 
 const EMPTY_STATS: StatsView = {
-  received: 0, dropped: 0, ifDropped: 0, appDropped: 0, parseErrors: 0, processed: 0,
+  received: 0, dropped: 0, ifDropped: 0, appDropped: 0,
+  rejectedTruncated: 0, rejectedUnsupportedLinkType: 0, rejectedMalformed: 0,
+  processed: 0,
 };
 
 interface LastImport {
@@ -110,6 +116,10 @@ export default defineComponent({
   },
   computed: {
     captureStore() { return useCaptureStore(); },
+    rejectedLiveTotal(): number {
+      return this.stats.rejectedTruncated + this.stats.rejectedUnsupportedLinkType
+        + this.stats.rejectedMalformed;
+    },
     rejectedTotal(): number {
       const imported = this.lastImport;
       if (!imported) return 0;
@@ -133,7 +143,11 @@ export default defineComponent({
       this.stats.dropped     = s.dropped ?? 0;
       this.stats.ifDropped   = s.ifDropped ?? 0;
       this.stats.appDropped  = s.appDropped ?? 0;
-      this.stats.parseErrors = s.parseErrors ?? 0;
+      // Catégories fines du bilan (#150) : la somme s'affiche, le détail est
+      // dans l'infobulle du compteur.
+      this.stats.rejectedTruncated = s.rejectedTruncated ?? 0;
+      this.stats.rejectedUnsupportedLinkType = s.rejectedUnsupportedLinkType ?? 0;
+      this.stats.rejectedMalformed = s.rejectedMalformed ?? 0;
       this.stats.processed   = s.processed ?? 0;
     }));
     this._unsub.push(this.captureStore.onFinished((f) => {
@@ -143,9 +157,9 @@ export default defineComponent({
       // sont visibles au même titre que les pertes de capture, et leur cause
       // (troncature de capture, DLT inconnu, trame malformée) est détaillée
       // dans l'infobulle du badge.
-      this.stats.parseErrors = (f.rejectedTruncatedCount ?? 0)
-        + (f.rejectedUnsupportedLinkTypeCount ?? 0)
-        + (f.rejectedMalformedCount ?? 0);
+      this.stats.rejectedTruncated = f.rejectedTruncatedCount ?? 0;
+      this.stats.rejectedUnsupportedLinkType = f.rejectedUnsupportedLinkTypeCount ?? 0;
+      this.stats.rejectedMalformed = f.rejectedMalformedCount ?? 0;
       this.lastImport = {
         fileName: f.fileName,
         integratedCount: f.integratedCount,

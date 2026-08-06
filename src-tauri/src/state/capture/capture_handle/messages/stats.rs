@@ -101,8 +101,12 @@ impl From<pcap::Stat> for StatTriple {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct StatsSnapshot {
     pub triple: StatTriple,
-    /// Paquets acceptés par le pipeline mais illisibles par le parseur.
-    pub parse_errors: u64,
+    /// Rejets du parseur par catégorie fine (#150), même partition que
+    /// l'import de fichier : capture coupée au snaplen, type de liaison
+    /// inconnu, trame malformée sur le réseau observé.
+    pub rejected_truncated: u64,
+    pub rejected_unsupported_link_type: u64,
+    pub rejected_malformed: u64,
     /// Flux distincts de la matrice (lignes du relevé).
     pub processed: u32,
 }
@@ -118,7 +122,9 @@ pub struct StatsPayload {
     pub dropped: u32,
     pub if_dropped: u32,
     pub app_dropped: u64,
-    pub parse_errors: u64,
+    pub rejected_truncated: u64,
+    pub rejected_unsupported_link_type: u64,
+    pub rejected_malformed: u64,
     pub processed: u32,
 }
 
@@ -131,7 +137,9 @@ impl StatsPayload {
             dropped: snapshot.triple.dropped,
             if_dropped: snapshot.triple.if_dropped,
             app_dropped: snapshot.triple.app_dropped,
-            parse_errors: snapshot.parse_errors,
+            rejected_truncated: snapshot.rejected_truncated,
+            rejected_unsupported_link_type: snapshot.rejected_unsupported_link_type,
+            rejected_malformed: snapshot.rejected_malformed,
             processed: snapshot.processed,
         }
     }
@@ -145,7 +153,9 @@ impl StatsPayload {
             dropped: self.dropped,
             if_dropped: self.if_dropped,
             app_dropped: self.app_dropped,
-            parse_errors: self.parse_errors,
+            rejected_truncated: self.rejected_truncated,
+            rejected_unsupported_link_type: self.rejected_unsupported_link_type,
+            rejected_malformed: self.rejected_malformed,
             processed: self.processed,
         })
     }
@@ -198,7 +208,9 @@ mod tests {
                 received: 10,
                 ..StatTriple::default()
             },
-            parse_errors: 0,
+            rejected_truncated: 0,
+            rejected_unsupported_link_type: 0,
+            rejected_malformed: 0,
             processed: 4,
         };
 
@@ -210,7 +222,7 @@ mod tests {
             "snapshot identique dédupliqué"
         );
 
-        snapshot.parse_errors += 1;
+        snapshot.rejected_malformed += 1;
         StatsPayload::maybe_send(&mut last, snapshot, 1, &ch).unwrap();
         assert_eq!(
             sent.load(Ordering::Relaxed),
