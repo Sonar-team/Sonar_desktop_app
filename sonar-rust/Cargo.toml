@@ -15,6 +15,7 @@ rust-version = "1.97.1"
 version = "0.6.0"
 
 [workspace.dependencies]
+calamine = { version = "0.36.0", default-features = false, features = ["dates"] }
 chrono = "0.4.45"
 clap = { version = "4.6.5", features = ["derive"] }
 csv = "1.4.0"
@@ -22,6 +23,7 @@ log = "0.4.33"
 packet_parser = "9.0.0"
 pcap = "2.4.0"
 serde = { version = "1", features = ["derive"] }
+serde_json = "1.0.145"
 sonar-flows-core = { path = "crates/sonar-flows-core", version = "0.6.0" }
 thiserror = "2.0.19"
 

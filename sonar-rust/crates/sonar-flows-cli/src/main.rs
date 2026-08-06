@@ -7,6 +7,7 @@ use std::{path::PathBuf, process::ExitCode};
 use clap::{Parser, Subcommand};
 
 mod graphviz;
+mod sigma;
 
 use graphviz::{GraphEngine, GraphOptions, NodeLabels};
 
@@ -31,9 +32,9 @@ enum Command {
         output: PathBuf,
     },
 
-    /// Merge one or more Sonar matrix CSV files.
+    /// Merge one or more Sonar matrix files.
     Matrix {
-        /// Sonar matrix CSV input files.
+        /// Sonar matrix input files (.csv or .xlsx).
         #[arg(required = true)]
         inputs: Vec<PathBuf>,
 
@@ -42,13 +43,13 @@ enum Command {
         output: PathBuf,
     },
 
-    /// Render one or more Sonar matrix CSV files as a relational graph.
+    /// Render one or more Sonar matrix files as a relational graph.
     Graph {
-        /// Sonar matrix CSV input files.
+        /// Sonar matrix input files (.csv or .xlsx).
         #[arg(required = true)]
         inputs: Vec<PathBuf>,
 
-        /// Output path (.dot, .svg, or .png).
+        /// Output path (.dot, .svg, .png, or .json for the sigma.js renderer).
         #[arg(short, long)]
         output: PathBuf,
 
@@ -111,17 +112,25 @@ fn main() -> ExitCode {
                     &matrix,
                     protocol.as_deref(),
                 );
-                graphviz::export_graph(
-                    &graph,
-                    &output,
-                    &GraphOptions {
-                        min_bytes,
-                        max_nodes,
-                        labels,
-                        engine,
-                    },
-                )
-                .map(|relations| (relations, output))
+                let options = GraphOptions {
+                    min_bytes,
+                    max_nodes,
+                    labels,
+                    engine,
+                };
+                // Le JSON alimente le rendu sigma.js (`script/graph/`) ; les
+                // autres formats passent par Graphviz.
+                let is_json = output
+                    .extension()
+                    .and_then(|extension| extension.to_str())
+                    .is_some_and(|extension| extension.eq_ignore_ascii_case("json"));
+                if is_json {
+                    sigma::export_graph_json(&graph, &output, &options)
+                        .map(|relations| (relations, output))
+                } else {
+                    graphviz::export_graph(&graph, &output, &options)
+                        .map(|relations| (relations, output))
+                }
             }),
     };
 

@@ -11,6 +11,8 @@ pub mod packet;
 #[cfg(feature = "pcap")]
 pub mod pcap;
 pub mod sfms;
+#[cfg(feature = "xlsx")]
+pub mod xlsx;
 
 pub use error::{Result, SonarCoreError};
 

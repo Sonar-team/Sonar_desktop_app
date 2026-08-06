@@ -13,11 +13,15 @@ default = []
 # La conversion PCAP tire libpcap (Npcap sous Windows) : optionnelle pour ne
 # pas imposer cette dépendance système aux consommateurs matrice/CSV.
 pcap = ["dep:pcap"]
+# Lecture des matrices exportées en classeur XLSX : optionnelle pour ne pas
+# imposer calamine (et sa pile zip) aux consommateurs qui ne lisent que du CSV.
+xlsx = ["dep:calamine"]
 
 [lints]
 workspace = true
 
 [dependencies]
+calamine = { workspace = true, optional = true }
 chrono.workspace = true
 csv.workspace = true
 log.workspace = true

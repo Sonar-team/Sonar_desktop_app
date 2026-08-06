@@ -236,6 +236,22 @@ pub fn matrix_file_link_type(path: &Path) -> Result<LinkType> {
         .unwrap_or(LinkType::ETHERNET))
 }
 
+/// Refuse un relevé dont le DLT n'a pas de projection d'identité SFMS définie
+/// dans cette version, plutôt que de le reconstruire sous un autre type de
+/// liaison. Garde commun à tous les formats de matrice (CSV, XLSX).
+pub fn ensure_reimportable(path: &Path, link_type: LinkType) -> Result<()> {
+    if matches!(
+        link_type,
+        LinkType::ETHERNET | LinkType::RAW | LinkType::LINUX_SLL | LinkType::LINUX_SLL2
+    ) {
+        return Ok(());
+    }
+    Err(SonarCoreError::UnreimportableLinkType {
+        path: path.to_path_buf(),
+        label: link_type_name(link_type),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
