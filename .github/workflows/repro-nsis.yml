@@ -52,8 +52,10 @@ jobs:
             # Le bundle est retiré entre les deux passes : makensis doit le
             # régénérer, sinon la seconde comparaison serait triviale.
             rm -rf src-tauri/target/release/bundle
+            # La sortie de compilation part sur stderr : seul le chemin de
+            # l'installateur doit atteindre stdout, que l'appelant capture.
             deno run -A ./security/repro-env.ts run bash -lc \
-              'deno task tauri build --ci --no-sign'
+              'deno task tauri build --ci --no-sign' >&2
             find src-tauri/target/release/bundle -name '*setup.exe' -print -quit
           }
 
