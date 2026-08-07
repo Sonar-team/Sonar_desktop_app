@@ -17,7 +17,7 @@ workspace = true
 
 [dependencies]
 clap.workspace = true
-sonar-flows-core = { workspace = true, features = ["pcap"] }
+sonar-flows-core = { workspace = true, features = ["pcap", "xlsx"] }
 
 [dev-dependencies]
 csv.workspace = true

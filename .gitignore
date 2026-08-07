@@ -53,6 +53,9 @@ src-tauri/vendor/**/target/**.dylib
 src-tauri/vendor/**/target/**.dll
 src-tauri/vendor/**/target/**.exe
 !src-tauri/test_files/*.csv
+# Fixture de matrice au format tableur, générée par
+# script/matrix/generate-xlsx-fixture.py et utilisée par les tests du cœur.
+!src-tauri/test_files/*.xlsx
 
 # Fixtures de test (pcap + CSV attendus) dans les sous-dossiers de scénarios
 !src-tauri/test_files/pcaps/**/*.csv

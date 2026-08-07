@@ -19,20 +19,20 @@ use crate::{Result, SonarCoreError, validate_batch_paths};
 /// sans projection d'identité SFMS définie est refusé plutôt que reconstruit
 /// sous un autre type de liaison.
 pub fn read_matrix_rows(csv_path: &Path) -> Result<Vec<FlowMatrixRow>> {
+    // Avec la feature `xlsx`, un classeur passe par [`crate::xlsx`] : même
+    // schéma, même validation, mêmes messages d'erreur — la seule différence
+    // est le décodage du conteneur.
+    #[cfg(feature = "xlsx")]
+    if crate::xlsx::is_xlsx(csv_path) {
+        return crate::xlsx::read_matrix_rows(csv_path);
+    }
+
     let preamble = sfms::read_preamble(csv_path)?;
     let link_type = preamble
         .as_ref()
         .and_then(|p| p.link_type)
         .unwrap_or(LinkType::ETHERNET);
-    if !matches!(
-        link_type,
-        LinkType::ETHERNET | LinkType::RAW | LinkType::LINUX_SLL | LinkType::LINUX_SLL2
-    ) {
-        return Err(SonarCoreError::UnreimportableLinkType {
-            path: csv_path.to_path_buf(),
-            label: sfms::link_type_name(link_type),
-        });
-    }
+    sfms::ensure_reimportable(csv_path, link_type)?;
     // Numéro de ligne réel dans le fichier : la première ligne de données
     // suit l'en-tête, lui-même précédé du préambule s'il est présent.
     let first_data_line = if preamble.is_some() { 3 } else { 2 };
@@ -65,13 +65,23 @@ pub fn read_matrix_rows(csv_path: &Path) -> Result<Vec<FlowMatrixRow>> {
     Ok(rows)
 }
 
+/// Type de liaison déclaré par un fichier de matrice, quel que soit son
+/// format (CSV ou, avec la feature `xlsx`, classeur XLSX).
+fn matrix_file_link_type(path: &Path) -> Result<LinkType> {
+    #[cfg(feature = "xlsx")]
+    if crate::xlsx::is_xlsx(path) {
+        return crate::xlsx::matrix_file_link_type(path);
+    }
+    sfms::matrix_file_link_type(path)
+}
+
 /// Type de liaison commun à des fichiers de matrice (préambule `#SFMS`,
 /// Ethernet implicite pour un export antérieur) : la fusion de relevés de DLT
 /// différents est refusée explicitement (arbitrage du 14/07/2026).
 pub fn common_matrix_link_type(paths: &[PathBuf]) -> Result<LinkType> {
     let mut common: Option<(LinkType, &PathBuf)> = None;
     for path in paths {
-        let link_type = sfms::matrix_file_link_type(path)?;
+        let link_type = matrix_file_link_type(path)?;
         match common {
             None => common = Some((link_type, path)),
             Some((expected, _)) if expected == link_type => {}

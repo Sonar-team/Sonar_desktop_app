@@ -42,9 +42,9 @@ enum Command {
         output: PathBuf,
     },
 
-    /// Render one or more Sonar matrix CSV files as a relational graph.
+    /// Render one or more Sonar matrix files (.csv or .xlsx) as a relational graph.
     Graph {
-        /// Sonar matrix CSV input files.
+        /// Sonar matrix input files (.csv or .xlsx).
         #[arg(required = true)]
         inputs: Vec<PathBuf>,
 
