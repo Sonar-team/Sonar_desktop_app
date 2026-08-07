@@ -59,22 +59,22 @@ jobs:
             find src-tauri/target/release/bundle -name '*setup.exe' -print -quit
           }
 
-          a="$(build)"; cp "$a" /tmp/setup-a.exe
-          b="$(build)"; cp "$b" /tmp/setup-b.exe
+          a="$(build)"; cp "$a" setup-a.exe
+          b="$(build)"; cp "$b" setup-b.exe
 
-          ha="$(sha256sum /tmp/setup-a.exe | cut -d' ' -f1)"
-          hb="$(sha256sum /tmp/setup-b.exe | cut -d' ' -f1)"
+          ha="$(sha256sum setup-a.exe | cut -d' ' -f1)"
+          hb="$(sha256sum setup-b.exe | cut -d' ' -f1)"
           echo "A: $ha"
           echo "B: $hb"
-          echo "Taille A : $(wc -c </tmp/setup-a.exe)"
-          echo "Taille B : $(wc -c </tmp/setup-b.exe)"
+          echo "Taille A : $(wc -c <setup-a.exe)"
+          echo "Taille B : $(wc -c <setup-b.exe)"
 
           if [[ "$ha" == "$hb" ]]; then
             echo "✅ setup.exe reproductible au même emplacement (#119 corrigé)"
             exit 0
           fi
           echo "::error::NON reproductible au même emplacement"
-          cmp /tmp/setup-a.exe /tmp/setup-b.exe || true
+          cmp setup-a.exe setup-b.exe || true
           exit 1
 
       - name: upload installers on failure
@@ -83,8 +83,8 @@ jobs:
         with:
           name: nsis-same-path
           path: |
-            /tmp/setup-a.exe
-            /tmp/setup-b.exe
+            setup-a.exe
+            setup-b.exe
           if-no-files-found: ignore
 
   # Test 2 — variation d'emplacement, exigence plus forte

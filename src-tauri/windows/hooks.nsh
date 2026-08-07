@@ -1,6 +1,21 @@
 !include "LogicLib.nsh"
 !include "x64.nsh"
 
+; Reproductibilité du setup.exe (#119) : par défaut (`SetDateSave on`), NSIS
+; stocke la date de modification de chaque fichier empaqueté dans le header
+; compressé. Or Tauri régénère des fichiers de travail pendant le bundling
+; (target/release/nsis/x64/), APRÈS la normalisation des mtimes du
+; beforeBundleCommand : leurs dates portent l'heure de chaque build et font
+; diverger le flux LZMA solide dès son premier bloc — d'où des écarts de
+; taille erratiques entre deux builds identiques (354, 1333, 2735 octets
+; observés). Prouvé par contre-épreuve : mtimes différentes, installateurs
+; identiques avec `off`, divergents avec `on`.
+; Effet assumé : les fichiers installés portent la date d'installation au
+; lieu de leur date de build — sans sémantique pour SONAR.
+; Ce fichier étant inclus en tête du script généré, la directive s'applique
+; à toute la compilation.
+SetDateSave off
+
 !define NPCAP_DOWNLOAD_URL "https://npcap.com/#download"
 
 ; Retourne dans $R0 : "absent", "incompatible" ou "ok".
