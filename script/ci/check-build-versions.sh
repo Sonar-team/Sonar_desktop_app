@@ -74,6 +74,10 @@ check_contains .github/workflows/publish-smoke.yml \
 check_contains .github/workflows/publish.yml \
   "deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign \${TAURI_BUILD_ARGS}'"
 # Les preuves d'inclusion tournent dans les deux chaînes, par format.
+# La normalisation des dates avant empaquetage (#119) est un crochet Tauri :
+# elle doit rester câblée, sinon les installateurs redeviennent non
+# reproductibles sans que rien ne le signale.
+check_contains src-tauri/tauri.conf.json '"beforeBundleCommand": "bash ./script/ci/normalize-bundle-mtimes.sh"'
 check_contains .github/workflows/publish-smoke.yml './script/ci/verify-deb-embeds-binary.sh'
 check_contains .github/workflows/publish.yml './script/ci/verify-deb-embeds-binary.sh'
 check_contains .github/workflows/publish-smoke.yml './script/ci/verify-macos-dmg-embeds-binary.sh'
