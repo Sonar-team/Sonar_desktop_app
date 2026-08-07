@@ -111,11 +111,15 @@ jobs:
       - name: install frontend dependencies deterministically
         run: deno install --frozen
 
-      - name: Build release binary
+      # UN SEUL build, bundles compris, dans l'environnement épinglé (#136) :
+      # le binaire smoke-testé ci-dessous est celui-là même que le bundler de
+      # cette invocation embarque dans les installateurs — plus de second
+      # build dont les octets ne seraient jamais validés.
+      - name: Build release binary and bundles (single build)
         shell: bash
         env:
           TAURI_BUILD_ARGS: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
-        run: deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign --no-bundle ${TAURI_BUILD_ARGS}'
+        run: deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign ${TAURI_BUILD_ARGS}'
 
       - name: Collect release binary
         id: release-binary
@@ -133,12 +137,6 @@ jobs:
         if: matrix.platform != 'windows-2022'
         shell: bash
         run: ./script/ci/smoke-test-release-binary.sh "${{ steps.release-binary.outputs.binary_path }}"
-
-      - name: Build release bundles
-        shell: bash
-        env:
-          TAURI_BUILD_ARGS: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
-        run: deno task tauri build --ci --no-sign ${TAURI_BUILD_ARGS}
 
       - name: Ensure Windows bundle does not embed Npcap
         if: matrix.platform == 'windows-2022'
@@ -160,6 +158,25 @@ jobs:
           epoch="$(git log -1 --format=%ct HEAD)"
           for deb in src-tauri/target/release/bundle/deb/*.deb; do
             SOURCE_DATE_EPOCH="$epoch" ./script/package-deb-repro.sh "$deb" "$deb"
+          done
+
+      # Preuve d'inclusion (#136) : le .deb réellement publié (après repack
+      # déterministe) embarque le binaire smoke-testé — identité stricte au
+      # seul marqueur de type de paquet Tauri près
+      # (__TAURI_BUNDLE_TYPE_VAR_UNK→DEB, patché par le bundler), normalisé
+      # des deux côtés ; tout autre octet divergent bloque. Pour
+      # les autres formats (AppImage, NSIS/MSI, DMG), l'extraction n'est pas
+      # praticable sur runner nu : la limite est explicite, et le binaire
+      # testé est publié à côté des installateurs avec son hash dans
+      # SHA256SUMS — un auditeur peut faire la comparaison hors ligne.
+      - name: Prove published .deb embeds the smoke-tested binary
+        if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for deb in src-tauri/target/release/bundle/deb/*.deb; do
+            ./script/ci/verify-deb-embeds-binary.sh "$deb" \
+              "${{ steps.release-binary.outputs.binary_path }}"
           done
 
       - name: Collect release bundles
