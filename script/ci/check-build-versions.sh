@@ -65,8 +65,17 @@ printf '%s  %s\n' \
   security/sigstore-trusted-root.json | sha256sum --check --status
 check_contains .github/workflows/publish-smoke.yml 'sudo ./script/ci/use-apt-snapshot.sh'
 check_contains .github/workflows/publish-smoke.yml 'sudo ./script/ci/apt-install-pinned.sh $LINUX_APT_PACKAGES'
-check_contains .github/workflows/publish-smoke.yml 'smoke build bundles with Tauri'
-check_contains .github/workflows/publish-smoke.yml 'npm run tauri build'
+# L'essai à blanc doit exercer la MÊME commande de build que la publication
+# (#136) : un seul build, bundles compris, dans l'environnement épinglé. Un
+# smoke qui construirait autrement pourrait passer au vert pendant que la
+# release réelle échoue — c'est précisément le défaut corrigé par #136.
+check_contains .github/workflows/publish-smoke.yml \
+  "deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign \${TAURI_BUILD_ARGS}'"
+check_contains .github/workflows/publish.yml \
+  "deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign \${TAURI_BUILD_ARGS}'"
+# La preuve d'inclusion du .deb tourne dans les deux chaînes.
+check_contains .github/workflows/publish-smoke.yml './script/ci/verify-deb-embeds-binary.sh'
+check_contains .github/workflows/publish.yml './script/ci/verify-deb-embeds-binary.sh'
 check_contains .github/workflows/publish-smoke.yml './script/ci/validate-windows-release-binary.ps1'
 check_contains .github/workflows/publish-smoke.yml './script/ci/check-windows-bundles-no-npcap.ps1'
 check_contains .github/workflows/publish-smoke.yml './script/ci/smoke-test-release-binary.sh'

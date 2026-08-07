@@ -2,6 +2,13 @@ name: Publish Smoke
 
 on:
   workflow_dispatch:
+    inputs:
+      run_windows_e2e:
+        description: >-
+          Exécuter l'E2E d'installation Windows (exige le runner self-hosted
+          avec Npcap ; laisser à false pour un essai à blanc simple).
+        type: boolean
+        default: false
 
 jobs:
   publish-smoke:
@@ -47,22 +54,15 @@ jobs:
       - name: install frontend dependencies deterministically
         run: deno install --frozen
 
-      - name: smoke build bundles with Tauri
+      # Essai à blanc de la VRAIE chaîne de release (#136) : exactement la
+      # commande de publish.yml — un seul build, bundles compris, dans
+      # l'environnement épinglé. Ce qui manque volontairement ici :
+      # création de release, signature Sigstore et publication d'assets.
+      - name: Build release binary and bundles (single build, as in publish)
         shell: bash
         env:
-          BUILD_ARGS: ${{ matrix.args }}
-          BUILD_TARGET: ${{ matrix.platform == 'macos-14' && steps.versions.outputs.MACOS_TARGET || '' }}
-        run: |
-          set -euo pipefail
-          if [[ -n "$BUILD_TARGET" && -n "$BUILD_ARGS" ]]; then
-            npm run tauri build -- $BUILD_ARGS --target "$BUILD_TARGET"
-          elif [[ -n "$BUILD_TARGET" ]]; then
-            npm run tauri build -- --target "$BUILD_TARGET"
-          elif [[ -n "$BUILD_ARGS" ]]; then
-            npm run tauri build -- $BUILD_ARGS
-          else
-            npm run tauri build
-          fi
+          TAURI_BUILD_ARGS: ${{ matrix.platform == 'macos-14' && format('--target {0}', steps.versions.outputs.MACOS_TARGET) || matrix.args }}
+        run: deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign ${TAURI_BUILD_ARGS}'
 
       - name: Collect release binary
         id: release-binary
@@ -86,10 +86,41 @@ jobs:
         shell: bash
         run: ./script/ci/smoke-test-release-binary.sh "${{ steps.release-binary.outputs.binary_path }}"
 
-      - name: Collect Windows NSIS installer
-        if: matrix.platform == 'windows-2022'
+      # Mêmes étapes que publish.yml : le .deb est repacké déterministe
+      # puis vérifié comme embarquant le binaire qui vient d'être
+      # smoke-testé. C'est le cœur de #136, exercé sans rien publier.
+      - name: Repack release .deb deterministically
+        if: matrix.platform == 'ubuntu-22.04'
         shell: bash
-        run: ./script/ci/collect-release-bundles.sh windows-2022
+        run: |
+          set -euo pipefail
+          epoch="$(git log -1 --format=%ct HEAD)"
+          for deb in src-tauri/target/release/bundle/deb/*.deb; do
+            SOURCE_DATE_EPOCH="$epoch" ./script/package-deb-repro.sh "$deb" "$deb"
+          done
+
+      - name: Prove .deb embeds the smoke-tested binary
+        if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for deb in src-tauri/target/release/bundle/deb/*.deb; do
+            ./script/ci/verify-deb-embeds-binary.sh "$deb" \
+              "${{ steps.release-binary.outputs.binary_path }}"
+          done
+
+      - name: Collect release bundles
+        shell: bash
+        run: ./script/ci/collect-release-bundles.sh "${{ matrix.platform }}"
+
+      # Les installateurs produits sont téléchargeables pour inspection
+      # manuelle — le but de l'essai à blanc.
+      - name: Upload built bundles for inspection
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: smoke-bundles-${{ matrix.platform }}
+          path: release-artifacts/*
+          if-no-files-found: error
 
       # Artefact consommé par le job windows-e2e-npcap ci-dessous, qui
       # exécute réellement l'installeur sur un runner self-hosted où Npcap
@@ -113,6 +144,7 @@ jobs:
   # fiable.
   windows-e2e-npcap:
     needs: publish-smoke
+    if: inputs.run_windows_e2e
     runs-on: [self-hosted, windows, npcap]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
