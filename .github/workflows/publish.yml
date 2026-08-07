@@ -63,11 +63,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./script/ci/create-release.sh "${GITHUB_REF_NAME}"
 
-  publish-tauri:
-    name: build and publish release artifacts
+  # Ce job CONSTRUIT, teste, signe et atteste — il ne publie rien (#136).
+  # `contents: read` : même compromis, il ne peut pas muter la release.
+  # `id-token`/`attestations` restent nécessaires ici et NON déplaçables :
+  # une provenance n'a de sens que produite par le job qui a construit les
+  # octets. Les artefacts partent vers `publish-release-assets`.
+  build-tauri:
+    name: build, test, sign and attest release artifacts
     needs: create-release
     permissions:
-      contents: write
+      contents: read
       id-token: write
       attestations: write
     strategy:
@@ -183,12 +188,6 @@ jobs:
         shell: bash
         run: ./script/ci/collect-release-bundles.sh "${{ matrix.platform }}"
 
-      - name: Upload release artifacts
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${GITHUB_REF_NAME}" release-artifacts/* --clobber
-
       - name: Generate SHA256 checksums
         shell: bash
         run: ./script/ci/generate-release-hashes.sh "${{ matrix.platform }}"
@@ -221,18 +220,6 @@ jobs:
         with:
           subject-path: offline-kits/*.tar.gz
 
-      - name: Upload offline verification kit to release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${GITHUB_REF_NAME}" offline-kits/*.tar.gz --clobber
-
-      - name: Upload Sigstore bundles to release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: ./script/ci/upload-sigstore-bundles.sh "${{ matrix.platform }}"
-
       - name: Upload Sigstore bundles artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -250,6 +237,15 @@ jobs:
             release-hashes-${{ matrix.platform }}-offline-kit.md
           if-no-files-found: error
 
+      # Les octets construits, testés et signés ici sont les SEULS qui seront
+      # publiés : `publish-release-assets` les reprend tels quels (#136).
+      - name: Upload built release bundles artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-bundles-${{ matrix.platform }}
+          path: release-artifacts/*
+          if-no-files-found: error
+
       - name: Upload offline verification kit artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -257,11 +253,12 @@ jobs:
           path: offline-kits/*.tar.gz
           if-no-files-found: error
 
-  publish-sbom:
-    name: generate and publish SBOM artifacts
+  # Même règle que build-tauri : produit et signe, ne publie pas (#136).
+  build-sbom:
+    name: generate, sign and attest SBOM artifacts
     needs: create-release
     permissions:
-      contents: write
+      contents: read
       id-token: write
       attestations: write
     runs-on: ubuntu-22.04
@@ -295,12 +292,6 @@ jobs:
             "sbom/sonar-frontend-${version}.cdx.json" \
             sbom-release-artifacts/
 
-      - name: Upload SBOM artifacts to release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${GITHUB_REF_NAME}" sbom-release-artifacts/* --clobber
-
       - name: Generate SHA256 checksums
         shell: bash
         run: ./script/ci/generate-release-hashes.sh sbom sbom-release-artifacts
@@ -324,12 +315,6 @@ jobs:
         shell: bash
         run: ./script/ci/sign-release-artifacts.sh sbom sbom-release-artifacts
 
-      - name: Upload Sigstore bundles to release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: ./script/ci/upload-sigstore-bundles.sh sbom
-
       - name: Upload Sigstore bundles artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -345,9 +330,62 @@ jobs:
           path: release-hashes-sbom.md
           if-no-files-found: error
 
+      - name: Upload built SBOM artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-bundles-sbom
+          path: sbom-release-artifacts/*
+          if-no-files-found: error
+
+  # SEUL job qui écrit dans la release (#136), avec les octets exacts que
+  # les jobs de build ont testés, signés et attestés — aucun rebuild.
+  # Pas d'`id-token` : il ne signe ni n'atteste, il transporte.
+  publish-release-assets:
+    name: publish the exact tested artifacts
+    needs: [build-tauri, build-sbom]
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Download built bundles
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: release-bundles-*
+          path: to-publish
+          merge-multiple: true
+
+      - name: Download offline verification kits
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: offline-verification-kit-*
+          path: to-publish
+          merge-multiple: true
+
+      - name: Download Sigstore bundles
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: sigstore-bundles-*
+          path: to-publish
+          merge-multiple: true
+
+      # `--clobber` est banni : un asset déjà publié n'est jamais remplacé.
+      # Un rerun est idempotent tant que les octets sont identiques, et
+      # échoue bruyamment sinon — comportement prouvé par
+      # script/ci/tests/test-upload-release-assets-once.sh.
+      - name: Publish assets without ever replacing
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mapfile -t assets < <(find to-publish -type f | sort)
+          ./script/ci/upload-release-assets-once.sh "${GITHUB_REF_NAME}" "${assets[@]}"
+
   update-release-body:
     name: publish release hashes after artifact build
-    needs: [publish-tauri, publish-sbom]
+    needs: [publish-release-assets]
     permissions:
       contents: write
     runs-on: ubuntu-22.04

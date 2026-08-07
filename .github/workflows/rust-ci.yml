@@ -232,6 +232,17 @@ jobs:
           path: sonar-rust/crates/sonar-flows-core/fuzz/artifacts/
           if-no-files-found: ignore
 
+  # Garde-fous de la chaîne de release (#136) : prouvent qu'une divergence
+  # d'artefact bloque AVANT publication, avec un faux `gh` — sans toucher à
+  # GitHub ni exiger un tag.
+  release_guard_tests:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Publication idempotente et jamais destructive
+        run: ./script/ci/tests/test-upload-release-assets-once.sh
+
   # Gates frontend : typecheck vue-tsc et tests Deno (#135).
   frontend_checks:
     runs-on: ubuntu-22.04
