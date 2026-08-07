@@ -81,10 +81,7 @@ pub fn export_graph(
     Ok(edges.len())
 }
 
-pub(crate) fn filtered_edges<'a>(
-    graph: &'a GraphData,
-    options: &GraphOptions,
-) -> Vec<&'a Edge> {
+pub(crate) fn filtered_edges<'a>(graph: &'a GraphData, options: &GraphOptions) -> Vec<&'a Edge> {
     let mut candidates: Vec<&Edge> = graph
         .edges
         .values()
