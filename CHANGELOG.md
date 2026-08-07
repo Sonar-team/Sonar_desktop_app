@@ -2,6 +2,56 @@
 
 ## Non publié
 
+## **[4.12.0] - 2026-08-07**
+
+## ✨ Améliorations
+
+- **Chaque paquet lu est classé, et vous pouvez le vérifier** (#150) : le
+  bilan d'un relevé distingue désormais les paquets **intégrés**, les
+  **tronqués** (capture coupée au snaplen), les **DLT non supportés** et
+  les **malformés** (trame complète que le décodeur refuse), au lieu d'un
+  unique compteur d'erreurs. L'équation `lus = intégrés + tronqués + DLT
+  non supportés + malformés` est vraie *par construction* : le total est
+  la somme des catégories, il ne peut pas diverger. Visible dans la barre
+  de statut à l'import comme en capture live, avec le détail en
+  infobulle.
+- **Contexte de relevé dans les fichiers exportés** (#154) : l'interface
+  d'écoute est enregistrée automatiquement dans le préambule `#SFMS` des
+  matrices exportées et dans le manifeste des projets, sans aucune saisie.
+  Le format prévoit aussi le site et le capteur, pour la comparaison de
+  relevés à venir.
+- **Analyse protocolaire mise à jour** : packet_parser 10.0.0 (décodage
+  COTP complet, validation stricte de l'enveloppe S7Comm) via
+  sonar-flows-core 0.8.0.
+
+## 🛠 Corrections
+
+- **Un fichier de capture hostile ne fait plus planter SONAR** (#151,
+  #96) : un PCAP/PCAPNG portant un horodatage négatif provoquait un
+  *panic* et la fermeture de l'application. Trouvé par le fuzzing
+  automatique introduit dans cette version, corrigé, et le fichier qui
+  reproduisait le crash est conservé comme test de non-régression.
+- **Un relevé réinitialisé ou importé n'hérite plus de la qualification
+  du précédent** (#154) : après un reset ou l'import d'une matrice, le
+  contexte du relevé précédent restait attaché et pouvait étiqueter à
+  tort un nouveau point de mesure.
+
+## 🔒 Sécurité et confiance
+
+- **La chaîne de publication ne peut plus livrer des octets non testés**
+  (#136) : les installateurs étaient issus d'un second build, distinct du
+  binaire qui avait passé les contrôles. Il n'y a désormais qu'**un seul
+  build**, et le paquet Debian publié est vérifié comme embarquant
+  exactement le binaire testé. Les tâches de compilation n'ont plus le
+  droit d'écrire dans une release : seule l'étape finale publie, et un
+  artefact déjà publié ne peut plus être remplacé silencieusement.
+- **Fuzzing continu des entrées non fiables** (#151) : les lecteurs de
+  capture et de matrice sont soumis à chaque proposition de modification
+  à une campagne de fuzzing bornée ; toute régression trouvée rejoint le
+  corpus de tests.
+- **Corpus de test audité** (#151) : inventaire publié de ce que les
+  captures de référence exposent.
+
 ## **[4.11.0] - 2026-08-04**
 
 ## ✨ Améliorations
