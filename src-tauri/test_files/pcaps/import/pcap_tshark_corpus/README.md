@@ -20,9 +20,26 @@ décodés par la crate vendue dans SONAR, ainsi que sa frontière de support.
 Les captures ICMP et 802.11 proviennent du corpus de Chris Sanders
 (`<https://github.com/chrissanders/packets>`), conformément aux fichiers
 `SOURCE.md` de `Packet-parser`. Les captures complètes SLL/SLL2 sont des
-captures locales `tcpdump -i any` datées du 14 juillet 2026. Elles peuvent
-contenir des adresses publiques et ne doivent pas être présentées comme des
-captures anonymisées.
+captures locales `tcpdump -i any` datées du 14 juillet 2026. Elles ne sont
+pas anonymisées.
+
+## Audit de sensibilité (#151, 07/08/2026)
+
+Inventaire exact de ce que `linux_sll.pcap` et `linux_sll2.pcap` exposent :
+
+- le préfixe IPv6 public du réseau de capture (`2001:861:3fc7:9b00::/64`,
+  Free), avec des identifiants d'interface EUI-64 dérivés de MACs réelles ;
+- les adresses MAC des équipements du réseau de capture ;
+- des requêtes DNS et SNI TLS vers des services publics
+  (`accounts.google.com`, `unagi.amazon.fr`, `unleash.codeium.com`, entre
+  autres) — des métadonnées de navigation, pas de contenu.
+
+**Décision du propriétaire (07/08/2026) : exposition documentée et
+acceptée.** Il s'agit de son propre réseau domestique et de ses propres
+métadonnées, publiées en connaissance de cause pour la valeur de test des
+captures cooked réelles. Le reste du corpus provient de corpus publics déjà
+publiés (nDPI, Chris Sanders, 4SICS, packet_parser) ou de fichiers forgés
+(`loopback_null.pcap`), sans donnée sensible.
 
 ## Oracles indépendants
 

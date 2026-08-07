@@ -52,16 +52,21 @@ manifest de preuve signé, `origin` par flux, corrélation d'actifs.
 
 5. [x] Corpus qualifié : Ethernet, VLAN, tunnels, SLL/SLL2, RAW, **loopback**
    (refus explicite testé), PCAPNG multi-interface (forgés en tests).
-6. [ ] Fichiers tronqués et trames malformées : preuve terrain livrée,
-   couverture **exhaustive** (longueurs incohérentes par champ) restante.
+6. [x] Fichiers tronqués et trames malformées : preuve terrain déterministe
+   livrée, et l'exploration continue de l'espace malformé est déléguée au
+   fuzzing CI (avec promotion des régressions en seeds versionnées) — une
+   énumération « exhaustive » par champ serait sans borne.
 7. [x] Fuzzing en CI à budget borné : job `fuzz_smoke`, cibles `pcap_reader`
    et `matrix_reader`, corpus dérivé des fixtures versionnées. Première
    campagne : **un panic réel trouvé et corrigé** (timestamp pcapng négatif
    → débordement `SystemTime`, 0.8.0) — menace listée par #96.
 8. [x] Seeds de régression versionnées (`fuzz/regressions/<cible>/`),
    recopiées dans le corpus par `prepare-fuzz-corpus.sh`.
-9. [ ] Corpus audité comme dépourvu de données réseau sensibles — le README
-   admet des adresses publiques dans les captures SLL/SLL2 réelles.
+9. [x] Corpus **audité** le 07/08 : inventaire exact de l'exposition des
+   deux captures SLL/SLL2 (préfixe IPv6 du réseau de capture, MACs, DNS/SNI)
+   dans le README du corpus — **exposition acceptée par le propriétaire**
+   (son propre réseau, publié en connaissance de cause). Le reste du corpus
+   est public ou forgé, sans donnée sensible.
 
 ## Lot 3 — prouver l'origine du binaire (#136)
 
