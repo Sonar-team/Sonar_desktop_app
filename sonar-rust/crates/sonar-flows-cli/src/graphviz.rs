@@ -81,7 +81,10 @@ pub fn export_graph(
     Ok(edges.len())
 }
 
-fn filtered_edges<'a>(graph: &'a GraphData, options: &GraphOptions) -> Vec<&'a Edge> {
+pub(crate) fn filtered_edges<'a>(
+    graph: &'a GraphData,
+    options: &GraphOptions,
+) -> Vec<&'a Edge> {
     let mut candidates: Vec<&Edge> = graph
         .edges
         .values()
@@ -200,7 +203,7 @@ fn stable_node_id(node: &Node) -> &str {
         .unwrap_or(&node.name)
 }
 
-fn node_label(node: &Node, labels: NodeLabels) -> &str {
+pub(crate) fn node_label(node: &Node, labels: NodeLabels) -> &str {
     match labels {
         NodeLabels::Ip => non_empty(&node.ip).unwrap_or(&node.name),
         NodeLabels::Mac => non_empty(&node.mac).unwrap_or(&node.name),
