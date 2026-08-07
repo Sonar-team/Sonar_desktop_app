@@ -86,6 +86,35 @@ jobs:
         shell: bash
         run: ./script/ci/smoke-test-release-binary.sh "${{ steps.release-binary.outputs.binary_path }}"
 
+      # macOS (#136) : le bundler DMG de Tauri échoue dans l'environnement
+      # reproductible (constaté sur macos-14, sa sortie d'erreur étant
+      # avalée). Le .app, lui, se construit correctement — c'est lui qui
+      # porte le binaire smoke-testé. On l'empaquette donc nous-mêmes, par
+      # simple recopie dans une image disque : aucun cargo réinvoqué, donc
+      # aucun octet ne peut différer de ce qui a été testé.
+      - name: Package macOS DMG from the built .app
+        if: matrix.platform == 'macos-14'
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$(find src-tauri/target -type d -name '*.app' -path '*/bundle/macos/*' -print -quit)"
+          test -n "$app" || { echo "aucun .app construit" >&2; exit 1; }
+          version="$(jq -r '.version' package.json)"
+          ./script/ci/package-macos-dmg.sh "$app" \
+            "src-tauri/target/${MACOS_TARGET}/release/bundle/dmg/sonar_${version}_x64.dmg"
+        env:
+          MACOS_TARGET: ${{ steps.versions.outputs.MACOS_TARGET }}
+
+      - name: Prove DMG embeds the smoke-tested binary
+        if: matrix.platform == 'macos-14'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for dmg in src-tauri/target/*/release/bundle/dmg/*.dmg; do
+            ./script/ci/verify-macos-dmg-embeds-binary.sh "$dmg" \
+              "${{ steps.release-binary.outputs.binary_path }}"
+          done
+
       # Mêmes étapes que publish.yml : le .deb est repacké déterministe
       # puis vérifié comme embarquant le binaire qui vient d'être
       # smoke-testé. C'est le cœur de #136, exercé sans rien publier.

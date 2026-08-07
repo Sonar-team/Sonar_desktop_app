@@ -73,9 +73,13 @@ check_contains .github/workflows/publish-smoke.yml \
   "deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign \${TAURI_BUILD_ARGS}'"
 check_contains .github/workflows/publish.yml \
   "deno run -A ./security/repro-env.ts run bash -lc 'deno task tauri build --ci --no-sign \${TAURI_BUILD_ARGS}'"
-# La preuve d'inclusion du .deb tourne dans les deux chaînes.
+# Les preuves d'inclusion tournent dans les deux chaînes, par format.
 check_contains .github/workflows/publish-smoke.yml './script/ci/verify-deb-embeds-binary.sh'
 check_contains .github/workflows/publish.yml './script/ci/verify-deb-embeds-binary.sh'
+check_contains .github/workflows/publish-smoke.yml './script/ci/verify-macos-dmg-embeds-binary.sh'
+check_contains .github/workflows/publish.yml './script/ci/verify-macos-dmg-embeds-binary.sh'
+check_contains .github/workflows/publish-smoke.yml './script/ci/package-macos-dmg.sh'
+check_contains .github/workflows/publish.yml './script/ci/package-macos-dmg.sh'
 check_contains .github/workflows/publish-smoke.yml './script/ci/validate-windows-release-binary.ps1'
 check_contains .github/workflows/publish-smoke.yml './script/ci/check-windows-bundles-no-npcap.ps1'
 check_contains .github/workflows/publish-smoke.yml './script/ci/smoke-test-release-binary.sh'
