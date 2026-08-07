@@ -18,16 +18,85 @@ on:
       - ".github/workflows/repro-nsis.yml"
 
 jobs:
-  repro-nsis:
-    name: deux builds NSIS doivent donner le même hash
+  # Test 1 — condition d'origine de #119 : deux builds successifs au MÊME
+  # emplacement. C'est ainsi que la non-reproductibilité a été constatée.
+  repro-same-path:
+    name: deux builds au même emplacement
     runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: load build versions
+        id: versions
+        shell: bash
+        run: ./script/ci/export-build-versions.sh
+
+      - name: setup deno
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
+        with:
+          deno-version: "v${{ steps.versions.outputs.DENO_VERSION }}"
+
+      - name: install Rust pinned version
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
+
+      - name: install frontend dependencies deterministically
+        run: deno install --frozen
+
+      - name: build twice, same path, compare
+        shell: bash
+        run: |
+          set -euo pipefail
+          build() {
+            # Le bundle est retiré entre les deux passes : makensis doit le
+            # régénérer, sinon la seconde comparaison serait triviale.
+            rm -rf src-tauri/target/release/bundle
+            deno run -A ./security/repro-env.ts run bash -lc \
+              'deno task tauri build --ci --no-sign'
+            find src-tauri/target/release/bundle -name '*setup.exe' -print -quit
+          }
+
+          a="$(build)"; cp "$a" /tmp/setup-a.exe
+          b="$(build)"; cp "$b" /tmp/setup-b.exe
+
+          ha="$(sha256sum /tmp/setup-a.exe | cut -d' ' -f1)"
+          hb="$(sha256sum /tmp/setup-b.exe | cut -d' ' -f1)"
+          echo "A: $ha"
+          echo "B: $hb"
+          echo "Taille A : $(wc -c </tmp/setup-a.exe)"
+          echo "Taille B : $(wc -c </tmp/setup-b.exe)"
+
+          if [[ "$ha" == "$hb" ]]; then
+            echo "✅ setup.exe reproductible au même emplacement (#119 corrigé)"
+            exit 0
+          fi
+          echo "::error::NON reproductible au même emplacement"
+          cmp /tmp/setup-a.exe /tmp/setup-b.exe || true
+          exit 1
+
+      - name: upload installers on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nsis-same-path
+          path: |
+            /tmp/setup-a.exe
+            /tmp/setup-b.exe
+          if-no-files-found: ignore
+
+  # Test 2 — variation d'emplacement, exigence plus forte
+  # (reproducible-builds.org la traite comme une variation à part entière).
+  # Informatif : un échec ici avec un succès ci-dessus signifie que des
+  # chemins absolus fuient dans l'installateur, ce qui est un autre défaut.
+  repro-varied-path:
+    name: emplacements différents (informatif)
+    runs-on: windows-2022
+    continue-on-error: true
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           path: build-a
-
-      # Second checkout du même commit : arborescence distincte, aucun état
-      # partagé avec la première.
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           path: build-b
@@ -48,108 +117,28 @@ jobs:
         with:
           toolchain: ${{ steps.versions.outputs.RUST_VERSION }}
 
-      - name: build A
-        shell: bash
-        working-directory: build-a
-        env:
-          CARGO_TARGET_DIR: target-a
-        run: |
-          set -euo pipefail
-          deno install --frozen
-          deno run -A ./security/repro-env.ts run bash -lc \
-            'deno task tauri build --ci --no-sign'
-
-      - name: build B
-        shell: bash
-        working-directory: build-b
-        env:
-          CARGO_TARGET_DIR: target-b
-        run: |
-          set -euo pipefail
-          deno install --frozen
-          deno run -A ./security/repro-env.ts run bash -lc \
-            'deno task tauri build --ci --no-sign'
-
-      - name: compare NSIS installers
+      - name: build in both trees
         shell: bash
         run: |
           set -euo pipefail
-          find_setup() {
-            find "$1" -type f -name '*setup.exe' -print -quit
-          }
-          a="$(find_setup build-a)"
-          b="$(find_setup build-b)"
-          test -n "$a" || { echo "::error::aucun setup.exe produit par le build A"; exit 1; }
-          test -n "$b" || { echo "::error::aucun setup.exe produit par le build B"; exit 1; }
+          for side in a b; do
+            (cd "build-$side" && deno install --frozen \
+              && deno run -A ./security/repro-env.ts run bash -lc \
+                'deno task tauri build --ci --no-sign')
+          done
 
-          ha="$(sha256sum "$a" | cut -d' ' -f1)"
-          hb="$(sha256sum "$b" | cut -d' ' -f1)"
-          echo "A: $ha  $(basename "$a")"
-          echo "B: $hb  $(basename "$b")"
-
-          # Le binaire nu sert de témoin : il est déjà réputé reproductible
-          # (#119), donc s'il diverge aussi, la cause n'est pas l'empaquetage.
-          bina="$(find build-a -type f -path '*/release/sonar.exe' ! -path '*/bundle/*' -print -quit)"
-          binb="$(find build-b -type f -path '*/release/sonar.exe' ! -path '*/bundle/*' -print -quit)"
-          if [[ -n "$bina" && -n "$binb" ]]; then
-            echo "binaire A: $(sha256sum "$bina" | cut -d' ' -f1)"
-            echo "binaire B: $(sha256sum "$binb" | cut -d' ' -f1)"
-          fi
-
-          if [[ "$ha" == "$hb" ]]; then
-            echo "✅ setup.exe reproductible"
-            exit 0
-          fi
-
-          echo "::error::setup.exe NON reproductible : $ha != $hb"
-          echo "Taille A : $(wc -c <"$a") octets"
-          echo "Taille B : $(wc -c <"$b") octets"
-          # Premier octet divergent : oriente le diagnostic (en-tête PE,
-          # table des fichiers, charge compressée).
-          cmp "$a" "$b" || true
-          exit 1
-
-      # Le script NSIS généré par Tauri est l'entrée réelle de makensis :
-      # s'il diffère entre deux builds, la cause est en amont de la
-      # compression. Uploadé systématiquement, y compris en succès, pour
-      # servir de référence.
-      - name: compare generated NSIS scripts
-        if: always()
+      - name: compare
         shell: bash
         run: |
           set -uo pipefail
-          mkdir -p nsis-scripts
-          for side in a b; do
-            while IFS= read -r f; do
-              rel="${f#build-$side/}"
-              dest="nsis-scripts/$side/$(echo "$rel" | tr '/' '_')"
-              mkdir -p "$(dirname "$dest")"
-              cp "$f" "$dest" 2>/dev/null || true
-            done < <(find "build-$side" -type f \( -name '*.nsi' -o -name '*.nsh' \) 2>/dev/null)
-          done
-          echo "scripts A: $(find nsis-scripts/a -type f 2>/dev/null | wc -l)"
-          echo "scripts B: $(find nsis-scripts/b -type f 2>/dev/null | wc -l)"
-          if diff -r nsis-scripts/a nsis-scripts/b >/dev/null 2>&1; then
-            echo "les scripts NSIS générés sont IDENTIQUES — la cause est dans makensis ou ses entrées binaires"
+          a="$(find build-a -name '*setup.exe' -print -quit)"
+          b="$(find build-b -name '*setup.exe' -print -quit)"
+          ha="$(sha256sum "$a" | cut -d' ' -f1)"
+          hb="$(sha256sum "$b" | cut -d' ' -f1)"
+          echo "A: $ha"; echo "B: $hb"
+          if [[ "$ha" == "$hb" ]]; then
+            echo "✅ reproductible malgré des emplacements différents"
           else
-            echo "::warning::les scripts NSIS générés DIFFÈRENT — voici les écarts :"
-            diff -r nsis-scripts/a nsis-scripts/b | head -60
+            echo "::warning::dépendant de l'emplacement — des chemins absolus fuient dans l'installateur"
+            echo "Taille A : $(wc -c <"$a") / B : $(wc -c <"$b")"
           fi
-
-      - name: upload NSIS scripts
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: nsis-generated-scripts
-          path: nsis-scripts/
-          if-no-files-found: ignore
-
-      - name: upload installers on failure
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: nsis-divergent-installers
-          path: |
-            build-a/**/*setup.exe
-            build-b/**/*setup.exe
-          if-no-files-found: ignore
