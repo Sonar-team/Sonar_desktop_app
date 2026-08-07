@@ -109,6 +109,41 @@ jobs:
           cmp "$a" "$b" || true
           exit 1
 
+      # Le script NSIS généré par Tauri est l'entrée réelle de makensis :
+      # s'il diffère entre deux builds, la cause est en amont de la
+      # compression. Uploadé systématiquement, y compris en succès, pour
+      # servir de référence.
+      - name: compare generated NSIS scripts
+        if: always()
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p nsis-scripts
+          for side in a b; do
+            while IFS= read -r f; do
+              rel="${f#build-$side/}"
+              dest="nsis-scripts/$side/$(echo "$rel" | tr '/' '_')"
+              mkdir -p "$(dirname "$dest")"
+              cp "$f" "$dest" 2>/dev/null || true
+            done < <(find "build-$side" -type f \( -name '*.nsi' -o -name '*.nsh' \) 2>/dev/null)
+          done
+          echo "scripts A: $(find nsis-scripts/a -type f 2>/dev/null | wc -l)"
+          echo "scripts B: $(find nsis-scripts/b -type f 2>/dev/null | wc -l)"
+          if diff -r nsis-scripts/a nsis-scripts/b >/dev/null 2>&1; then
+            echo "les scripts NSIS générés sont IDENTIQUES — la cause est dans makensis ou ses entrées binaires"
+          else
+            echo "::warning::les scripts NSIS générés DIFFÈRENT — voici les écarts :"
+            diff -r nsis-scripts/a nsis-scripts/b | head -60
+          fi
+
+      - name: upload NSIS scripts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nsis-generated-scripts
+          path: nsis-scripts/
+          if-no-files-found: ignore
+
       - name: upload installers on failure
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
