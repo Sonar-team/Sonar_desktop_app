@@ -2,6 +2,23 @@
 
 ## Non publié
 
+## **[4.12.1] - 2026-08-08**
+
+## 🔒 Sécurité et confiance
+
+- **L'installateur Windows est reproductible à l'octet près** (#119) : deux
+  compilations indépendantes du même code produisent désormais un
+  `setup.exe` au condensat SHA-256 identique. NSIS enregistrait la date de
+  modification de chaque fichier empaqueté ; l'installateur différait donc
+  à chaque compilation alors que son contenu était rigoureusement le même,
+  ce qui rendait impossible de vérifier qu'un installateur téléchargé
+  correspond bien au code publié. Ces dates sont désormais normalisées
+  avant l'empaquetage, et NSIS ne les enregistre plus. La preuve tourne en
+  intégration continue sur un runner Windows, qui construit deux fois et
+  compare les condensats — y compris depuis deux emplacements différents.
+  Seul effet visible : les fichiers installés portent la date
+  d'installation au lieu de leur date de compilation.
+
 ## **[4.12.0] - 2026-08-07**
 
 ## ✨ Améliorations
